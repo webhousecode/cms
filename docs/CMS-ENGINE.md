@@ -3,10 +3,18 @@
 ## Implementation Architecture & Development Plan
 
 **Version:** 0.1.0-draft
-**Status:** Architecture Specification
+**Status:** In Development — Phase 1 & 2 complete, Phase 3 next
 **Target:** npm package `@webhouse/cms`
 **Runtime:** Node.js 20+ / Edge Runtime compatible
 **Language:** TypeScript (strict mode)
+
+> **Implementeringsstatus (opdateret 2026-03-10)**
+> - Phase 1 ✅ — Schema, storage, build pipeline, CLI, tests
+> - Phase 2 ✅ — AI-integration (ContentAgent, SeoAgent), hierarkiske URLs, sitemap.xml
+> - AI Lock ✅ — Field-level content protection: `_fieldMeta`, `WriteContext` (inkl. `userId` audit trail), auto-lock, REST endpoints, CLI logging (se §4.7)
+> - Phase 3 🔜 — Supabase/PostgreSQL adapter, Docker + Fly.io deploy
+> - Phase 3.5 🔜 — Plugin API: Core-prerequisites til `@webhouse/cms-plugin-shop` (se §12, Phase 3.5)
+> - Phase 4+ 📋 — Admin Dashboard, Framework Adapters, Design System, Enterprise
 
 ---
 
@@ -876,7 +884,7 @@ Third-party developers can publish extensions:
 
 ## 12. Development Phases
 
-### Phase 1: Foundation (Weeks 1–4)
+### Phase 1: Foundation ✅ IMPLEMENTERET
 
 **Goal:** Core engine that can define schemas, store content, and output static HTML.
 
@@ -907,7 +915,7 @@ Deliverables:
 
 **Milestone:** `npx @webhouse/cms init` → define a blog collection → add posts → `npx cms build` → get a working static blog.
 
-### Phase 2: AI Integration (Weeks 5–8)
+### Phase 2: AI Integration ✅ IMPLEMENTERET
 
 **Goal:** AI agents can generate and manipulate content through the engine.
 
@@ -934,7 +942,7 @@ Deliverables:
 
 **Milestone:** AI can generate a full blog post with images from a single prompt, output is optimized static HTML with responsive images.
 
-### Phase 3: Admin Dashboard (Weeks 9–12)
+### Phase 3: Admin Dashboard 🔜 NÆSTE
 
 **Goal:** Visual editing experience for non-developers.
 
@@ -963,6 +971,80 @@ Deliverables:
 ```
 
 **Milestone:** A non-developer can log in, create/edit content visually, use AI assistance, and publish — all without touching code.
+
+### Phase 3.5: Plugin API — Core Prerequisites til `@webhouse/cms-plugin-shop` 📋
+
+**Goal:** Implementere de arkitekturlag i Core som shop-pluginet (og fremtidige plugins) er afhængige af. Denne fase blokerer **ikke** for WH design-eksemplet — den skal gennemføres inden `@webhouse/cms-plugin-shop` Phase 1 kan starte.
+
+> **Baggrund:** En gennemgang af `CMS-PLUGIN-SHOP.md` og `CMS-PLUGIN-SHOP-PATCH.md` afslørede fire strukturelle huller i Core. Shop-pluginet forudsætter at disse er på plads, da det bl.a. skal registrere egne routes (`/api/shop/...`), collections (`products`, `orders`) og block types (`CartIsland`, `ProductGridBlock`) — og reagere på hændelser som `content.afterCreate` for at synkronisere med Stripe.
+
+```
+De fire huller — hvad mangler i Core:
+
+1. Plugin-registreringssystem
+   Ingen cms.registerPlugin() eksisterer.
+   Shop-pluginet skal kunne tilmelde:
+   ├── Lifecycle hooks (content.afterCreate → Stripe sync, content.beforeDelete → archive)
+   ├── API routes (/api/shop/* monteret på den eksisterende Hono-server)
+   ├── Collections (products, categories, orders, customers, ...)
+   └── Block types (ProductGridBlock, CartIsland, CheckoutButtonBlock, ...)
+
+2. Build hooks
+   Den nuværende runBuild() pipeline har ingen hook-points.
+   Shop-pluginet skal bruge:
+   ├── build.beforeRender → injicere produkt-sidetemplates
+   └── build.afterRender  → generere produkt-sitemap og JSON-LD structured data
+
+3. Auth-middleware
+   Ingen auth-layer i Core overhovedet.
+   Shop-pluginet (og Admin Dashboard) kræver:
+   ├── auth.onAuthenticate → tjek subscription/purchase access rights
+   ├── JWT/session middleware i API-serveren
+   └── Konfiguerbar: standalone (magic link) eller delegate til host app
+
+4. AI hooks
+   cms-ai har ingen plugin-hooks.
+   Shop-pluginet bruger:
+   └── ai.afterGenerate → auto-kategorisering af produkter, generering af varianter
+```
+
+```
+Deliverables:
+├── Plugin API (@webhouse/cms)
+│   ├── cms.registerPlugin(plugin: CmsPlugin) — registrering
+│   ├── CmsPlugin interface
+│   │   ├── collections?: CollectionConfig[]
+│   │   ├── blocks?: BlockConfig[]
+│   │   ├── hooks?: PluginHooks (content.*, build.*, ai.*)
+│   │   └── routes?: (app: Hono) => void
+│   ├── PluginRegistry — håndterer load order og konflikt-detektion
+│   └── Plugin hooks eksekveres i registreringsrækkefølge (FIFO)
+│
+├── Build hooks
+│   ├── build.beforeRender(context) — hook-point tidligt i pipeline
+│   ├── build.afterRender(context, output) — hook-point efter HTML-generering
+│   └── Plugins kan injicere ekstra sider og output-filer
+│
+├── Auth middleware
+│   ├── Pluggable auth interface i API-serveren
+│   ├── Default: API key (eksisterende adfærd bevares)
+│   ├── Optional: JWT/session middleware (til Admin Dashboard)
+│   └── Plugin-registrerbart: plugins kan tilmelde egne auth-strategier
+│
+├── AI hooks
+│   ├── ai.beforeGenerate(task, context) → kan transformere task
+│   └── ai.afterGenerate(task, result, context) → kan reagere på output
+│
+└── Tests
+    ├── Plugin registrering (hooks, routes, collections, blocks)
+    ├── Build hooks eksekveres korrekt
+    ├── Auth middleware afviser uautoriserede kald
+    └── AI hooks kalder plugins i korrekt rækkefølge
+```
+
+**Milestone:** `cms.registerPlugin(shopPlugin)` i `cms.config.ts` → shop-pluginets routes, collections og hooks er aktive → AI-genereret produktindhold synkroniseres automatisk til Stripe via `content.afterCreate`-hook.
+
+**Afhænger af:** Phase 3 (Admin Dashboard) for auth-middleware. Build hooks og Plugin API kan implementeres uafhængigt.
 
 ### Phase 4: Framework Adapters (Weeks 13–16)
 
