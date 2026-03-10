@@ -1,0 +1,595 @@
+openapi: 3.1.0
+info:
+  title: "@webhouse/cms API"
+  version: "0.1.0"
+  description: |
+    Headless CMS REST API. Alle content-endpoints er under `/api/content`.
+    Schema-endpoints er under `/api/schema`. Manifest under `/api/manifest`.
+
+    ### Field-level AI lock
+    `_fieldMeta` eksponeres **ikke** i standard document-responses.
+    Brug de dedikerede `/_fieldMeta`-endpoints til at læse og manipulere lock-state.
+
+servers:
+  - url: http://localhost:3000
+    description: Local dev
+  - url: "{baseUrl}"
+    description: Custom
+    variables:
+      baseUrl:
+        default: http://localhost:3000
+
+tags:
+  - name: Content
+    description: CRUD-operationer på dokumenter
+  - name: FieldMeta
+    description: Field-level lock og AI-provenance metadata
+  - name: Schema
+    description: Collection JSON Schemas (read-only)
+  - name: Manifest
+    description: CMS-konfiguration og manifest
+
+# ---------------------------------------------------------------------------
+# Reusable components
+# ---------------------------------------------------------------------------
+components:
+  parameters:
+    collection:
+      name: collection
+      in: path
+      required: true
+      schema:
+        type: string
+        example: posts
+      description: Navn på collection som defineret i cms.config.ts
+
+    slug:
+      name: slug
+      in: path
+      required: true
+      schema:
+        type: string
+        example: hello-world
+      description: Dokumentets URL-slug
+
+    fieldPath:
+      name: fieldPath
+      in: path
+      required: true
+      schema:
+        type: string
+        example: title
+      description: Feltnavnet der skal låses/åbnes
+
+    status:
+      name: status
+      in: query
+      schema:
+        $ref: "#/components/schemas/DocumentStatus"
+      description: Filtrer på status
+
+    limit:
+      name: limit
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        example: 20
+      description: Maks antal dokumenter i svaret
+
+    offset:
+      name: offset
+      in: query
+      schema:
+        type: integer
+        minimum: 0
+        example: 0
+      description: Antal dokumenter at springe over (pagination)
+
+  schemas:
+    DocumentStatus:
+      type: string
+      enum: [draft, published, archived]
+
+    FieldMeta:
+      type: object
+      description: |
+        Per-felt metadata. Beskriver om feltet er låst og/eller AI-genereret.
+        `lockedBy` angiver hvem der låste feltet — er den sat, vil AI-writes blive afvist.
+      properties:
+        lockedBy:
+          type: string
+          enum: [user, ai, import]
+          description: Hvem der har låst feltet
+        lockedAt:
+          type: string
+          format: date-time
+          description: ISO-timestamp for hvornår feltet blev låst
+        userId:
+          type: string
+          description: ID på brugeren der låste feltet (audit trail)
+        reason:
+          type: string
+          description: Human-readable årsag til låsning (f.eks. "user-edit", "import", "manual-lock")
+        aiGenerated:
+          type: boolean
+          description: Om feltets nuværende indhold er AI-genereret
+        aiGeneratedAt:
+          type: string
+          format: date-time
+          description: ISO-timestamp for hvornår AI genererede indholdet
+        aiModel:
+          type: string
+          description: AI-modellen der genererede indholdet (f.eks. "claude-sonnet-4-6")
+
+    DocumentFieldMeta:
+      type: object
+      description: Map fra feltnavn til FieldMeta
+      additionalProperties:
+        $ref: "#/components/schemas/FieldMeta"
+      example:
+        title:
+          lockedBy: user
+          lockedAt: "2024-06-01T10:00:00Z"
+          userId: user-abc
+          reason: user-edit
+          aiGenerated: true
+          aiGeneratedAt: "2024-05-31T09:00:00Z"
+          aiModel: claude-sonnet-4-6
+        content:
+          aiGenerated: true
+          aiGeneratedAt: "2024-05-31T09:00:00Z"
+          aiModel: claude-sonnet-4-6
+
+    Document:
+      type: object
+      required: [id, slug, collection, status, data, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          description: Unik dokument-ID (nanoid)
+          example: V1StGXR8_Z5jdHi6B-myT
+        slug:
+          type: string
+          description: URL-venligt slug (unikt inden for collection)
+          example: hello-world
+        collection:
+          type: string
+          example: posts
+        status:
+          $ref: "#/components/schemas/DocumentStatus"
+        data:
+          type: object
+          description: Dokumentets felt-data (fri form, defineret af collection-schema)
+          additionalProperties: true
+          example:
+            title: Hello World
+            content: "# Min første post"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+      description: |
+        `_fieldMeta` returneres **ikke** i dette objekt.
+        Brug `GET /{collection}/{slug}/_fieldMeta` for at hente det.
+
+    DocumentList:
+      type: object
+      required: [documents, total]
+      properties:
+        documents:
+          type: array
+          items:
+            $ref: "#/components/schemas/Document"
+        total:
+          type: integer
+          description: Samlet antal dokumenter (uanset limit/offset)
+
+    CreateDocumentBody:
+      type: object
+      required: [data]
+      properties:
+        slug:
+          type: string
+          description: Valgfrit. Autogenereres fra title-felt hvis udeladt.
+        status:
+          $ref: "#/components/schemas/DocumentStatus"
+        data:
+          type: object
+          additionalProperties: true
+
+    UpdateDocumentBody:
+      type: object
+      properties:
+        slug:
+          type: string
+        status:
+          $ref: "#/components/schemas/DocumentStatus"
+        data:
+          type: object
+          additionalProperties: true
+          description: Felter merges med eksisterende data (partial update)
+
+    LockFieldBody:
+      type: object
+      properties:
+        userId:
+          type: string
+          description: ID på den bruger der udfører låsningen (audit trail)
+        reason:
+          type: string
+          description: Årsag til manuel låsning
+          example: sensitive-copy
+
+    LockAllBody:
+      type: object
+      properties:
+        userId:
+          type: string
+          description: ID på den bruger der udfører bulk-låsningen
+
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+
+  responses:
+    NotFound:
+      description: Dokument eller collection ikke fundet
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    BadRequest:
+      description: Ugyldig input
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+# ---------------------------------------------------------------------------
+# Root
+# ---------------------------------------------------------------------------
+paths:
+  /:
+    get:
+      summary: API info
+      operationId: getInfo
+      tags: [Content]
+      responses:
+        "200":
+          description: Navn, version og API-prefix
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    example: "@webhouse/cms"
+                  version:
+                    type: string
+                    example: "0.1.0"
+                  api:
+                    type: string
+                    example: /api
+
+# ---------------------------------------------------------------------------
+# Content
+# ---------------------------------------------------------------------------
+  /api/content/{collection}:
+    get:
+      summary: List dokumenter
+      operationId: listDocuments
+      tags: [Content]
+      parameters:
+        - $ref: "#/components/parameters/collection"
+        - $ref: "#/components/parameters/status"
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/offset"
+      responses:
+        "200":
+          description: Pagineret liste af dokumenter (uden _fieldMeta)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DocumentList"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+    post:
+      summary: Opret dokument
+      operationId: createDocument
+      tags: [Content]
+      parameters:
+        - $ref: "#/components/parameters/collection"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDocumentBody"
+      responses:
+        "201":
+          description: Oprettet dokument (uden _fieldMeta)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Document"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /api/content/{collection}/{slug}:
+    get:
+      summary: Hent dokument
+      operationId: getDocument
+      tags: [Content]
+      parameters:
+        - $ref: "#/components/parameters/collection"
+        - $ref: "#/components/parameters/slug"
+      responses:
+        "200":
+          description: Dokument (uden _fieldMeta)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Document"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+    put:
+      summary: Opdater dokument
+      operationId: updateDocument
+      tags: [Content]
+      description: |
+        Felter i `data` merges med eksisterende data (shallow merge).
+        Felter der er låst af en bruger vil **ikke** blive overskrevet —
+        kaldet sker med `actor: user`, så eksisterende user-locks respekteres ikke her.
+        Brug `/_fieldMeta`-endpoints til at styre locks manuelt.
+      parameters:
+        - $ref: "#/components/parameters/collection"
+        - $ref: "#/components/parameters/slug"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateDocumentBody"
+      responses:
+        "200":
+          description: Opdateret dokument (uden _fieldMeta)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Document"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+    delete:
+      summary: Slet dokument
+      operationId: deleteDocument
+      tags: [Content]
+      parameters:
+        - $ref: "#/components/parameters/collection"
+        - $ref: "#/components/parameters/slug"
+      responses:
+        "200":
+          description: Slettet
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+# ---------------------------------------------------------------------------
+# FieldMeta
+# ---------------------------------------------------------------------------
+  /api/content/{collection}/{slug}/_fieldMeta:
+    get:
+      summary: Hent field metadata
+      operationId: getFieldMeta
+      tags: [FieldMeta]
+      description: |
+        Returnerer `_fieldMeta` for dokumentet: lock-state og AI-provenance pr. felt.
+        Denne information er stripet fra alle standard GET-responses.
+      parameters:
+        - $ref: "#/components/parameters/collection"
+        - $ref: "#/components/parameters/slug"
+      responses:
+        "200":
+          description: Field metadata map
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DocumentFieldMeta"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/content/{collection}/{slug}/_fieldMeta/lock-all:
+    put:
+      summary: Lås alle AI-genererede felter
+      operationId: lockAllFields
+      tags: [FieldMeta]
+      description: Sætter `lockedBy: user` på alle felter der har `aiGenerated: true`.
+      parameters:
+        - $ref: "#/components/parameters/collection"
+        - $ref: "#/components/parameters/slug"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LockAllBody"
+      responses:
+        "200":
+          description: Opdateret field metadata map
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DocumentFieldMeta"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/content/{collection}/{slug}/_fieldMeta/unlock-all:
+    put:
+      summary: Fjern alle locks
+      operationId: unlockAllFields
+      tags: [FieldMeta]
+      description: Fjerner `lockedBy`, `lockedAt`, `userId` og `reason` fra alle felter. AI-genererings-metadata bevares.
+      parameters:
+        - $ref: "#/components/parameters/collection"
+        - $ref: "#/components/parameters/slug"
+      responses:
+        "200":
+          description: Opdateret field metadata map
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DocumentFieldMeta"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/content/{collection}/{slug}/_fieldMeta/{fieldPath}/lock:
+    put:
+      summary: Lås enkelt felt manuelt
+      operationId: lockField
+      tags: [FieldMeta]
+      description: |
+        Sætter `lockedBy: user` på det angivne felt.
+        Fremtidige AI-writes til dette felt vil blive afvist.
+      parameters:
+        - $ref: "#/components/parameters/collection"
+        - $ref: "#/components/parameters/slug"
+        - $ref: "#/components/parameters/fieldPath"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LockFieldBody"
+      responses:
+        "200":
+          description: Opdateret FieldMeta for det låste felt
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FieldMeta"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/content/{collection}/{slug}/_fieldMeta/{fieldPath}/unlock:
+    put:
+      summary: Fjern lock fra enkelt felt
+      operationId: unlockField
+      tags: [FieldMeta]
+      description: |
+        Fjerner `lockedBy`, `lockedAt`, `userId` og `reason` fra feltet.
+        AI-genererings-metadata (`aiGenerated`, `aiModel` osv.) bevares intakt.
+      parameters:
+        - $ref: "#/components/parameters/collection"
+        - $ref: "#/components/parameters/slug"
+        - $ref: "#/components/parameters/fieldPath"
+      responses:
+        "200":
+          description: Opdateret FieldMeta for det åbnede felt
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FieldMeta"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+# ---------------------------------------------------------------------------
+# Schema
+# ---------------------------------------------------------------------------
+  /api/schema:
+    get:
+      summary: Hent alle collection-schemas
+      operationId: listSchemas
+      tags: [Schema]
+      responses:
+        "200":
+          description: Alle collections med JSON Schema
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  collections:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name:
+                          type: string
+                        label:
+                          type: string
+                        slug:
+                          type: string
+                        jsonSchema:
+                          type: object
+                          description: JSON Schema for collectionens data-felter
+                  blocks:
+                    type: array
+                    items:
+                      type: object
+
+  /api/schema/{collection}:
+    get:
+      summary: Hent schema for én collection
+      operationId: getSchema
+      tags: [Schema]
+      parameters:
+        - $ref: "#/components/parameters/collection"
+      responses:
+        "200":
+          description: Collection med JSON Schema
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  label:
+                    type: string
+                  jsonSchema:
+                    type: object
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+# ---------------------------------------------------------------------------
+# Manifest
+# ---------------------------------------------------------------------------
+  /api/manifest:
+    get:
+      summary: Hent CMS-manifest
+      operationId: getManifest
+      tags: [Manifest]
+      description: Returnerer fuld CMS-konfiguration (collections, build-config, storage-type osv.)
+      responses:
+        "200":
+          description: CMS manifest
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Serialiseret CmsConfig

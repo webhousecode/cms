@@ -1,0 +1,15 @@
+{
+  "id": "fpIUbGKTgDkaDxpfLSLlN",
+  "slug": "pitchet-via-api",
+  "collection": "posts",
+  "status": "published",
+  "data": {
+    "title": "Pitchet via API",
+    "excerpt": "Oprettet live under demoen.",
+    "content": "# Det virker!\n\nDette post blev oprettet via REST API mens vi demonstrerede CMS-enginen.\n\nIngen database-opsætning. Ingen WordPress. Bare `POST /api/content/posts`.",
+    "author": "Christian",
+    "date": "2026-03-09T21:48:00.000Z"
+  },
+  "createdAt": "2026-03-09T21:22:24.033Z",
+  "updatedAt": "2026-03-09T21:22:24.033Z"
+}
