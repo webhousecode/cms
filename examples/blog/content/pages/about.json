@@ -1,0 +1,12 @@
+{
+  "id": "page-about-001",
+  "slug": "about",
+  "collection": "pages",
+  "status": "published",
+  "data": {
+    "title": "About",
+    "content": "# About\n\nThis site is built with **@webhouse/cms** — an AI-native CMS engine.\n\n## Features\n\n- Schema-driven content\n- Static site generation\n- AI content generation\n- Hierarchical URLs"
+  },
+  "createdAt": "2026-03-09T00:00:00.000Z",
+  "updatedAt": "2026-03-09T00:00:00.000Z"
+}

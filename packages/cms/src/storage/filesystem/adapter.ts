@@ -1,0 +1,152 @@
+import { existsSync, mkdirSync, readdirSync, readFileSync, unlinkSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import type { StorageAdapter, Document, DocumentInput, QueryOptions, QueryResult } from '../types.js';
+import { generateId } from '../../utils/id.js';
+import { generateSlug } from '../../utils/slug.js';
+import { now } from '../../utils/date.js';
+
+export class FilesystemStorageAdapter implements StorageAdapter {
+  private contentDir: string;
+
+  constructor(contentDir: string = 'content') {
+    this.contentDir = contentDir;
+  }
+
+  async initialize(): Promise<void> {
+    if (!existsSync(this.contentDir)) {
+      mkdirSync(this.contentDir, { recursive: true });
+    }
+  }
+
+  private collectionDir(collection: string): string {
+    return join(this.contentDir, collection);
+  }
+
+  private documentPath(collection: string, slug: string): string {
+    return join(this.collectionDir(collection), `${slug}.json`);
+  }
+
+  private readDocument(collection: string, slug: string): Document | null {
+    const path = this.documentPath(collection, slug);
+    if (!existsSync(path)) return null;
+    try {
+      return JSON.parse(readFileSync(path, 'utf-8')) as Document;
+    } catch {
+      return null;
+    }
+  }
+
+  async migrate(collections: string[]): Promise<void> {
+    for (const collection of collections) {
+      const dir = this.collectionDir(collection);
+      if (!existsSync(dir)) {
+        mkdirSync(dir, { recursive: true });
+      }
+    }
+  }
+
+  async create(collection: string, input: DocumentInput): Promise<Document> {
+    const dir = this.collectionDir(collection);
+    if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
+
+    const id = generateId();
+    const slug = input.slug ?? generateSlug(String(input.data['title'] ?? id));
+    const timestamp = now();
+
+    const doc: Document = {
+      id,
+      slug,
+      collection,
+      status: input.status ?? 'draft',
+      data: input.data,
+      _fieldMeta: input._fieldMeta ?? {},
+      createdAt: timestamp,
+      updatedAt: timestamp,
+    };
+
+    writeFileSync(this.documentPath(collection, slug), JSON.stringify(doc, null, 2), 'utf-8');
+    return doc;
+  }
+
+  async findById(collection: string, id: string): Promise<Document | null> {
+    const dir = this.collectionDir(collection);
+    if (!existsSync(dir)) return null;
+
+    const files = readdirSync(dir).filter(f => f.endsWith('.json'));
+    for (const file of files) {
+      const slug = file.replace('.json', '');
+      const doc = this.readDocument(collection, slug);
+      if (doc?.id === id) return doc;
+    }
+    return null;
+  }
+
+  async findBySlug(collection: string, slug: string): Promise<Document | null> {
+    return this.readDocument(collection, slug);
+  }
+
+  async findMany(collection: string, options: QueryOptions = {}): Promise<QueryResult> {
+    const dir = this.collectionDir(collection);
+    if (!existsSync(dir)) return { documents: [], total: 0 };
+
+    const files = readdirSync(dir).filter(f => f.endsWith('.json'));
+    let documents: Document[] = [];
+
+    for (const file of files) {
+      const slug = file.replace('.json', '');
+      const doc = this.readDocument(collection, slug);
+      if (doc) documents.push(doc);
+    }
+
+    if (options.status) {
+      documents = documents.filter(d => d.status === options.status);
+    }
+
+    const orderBy = options.orderBy ?? 'createdAt';
+    const order = options.order ?? 'desc';
+    documents.sort((a, b) => {
+      const aVal = a[orderBy as keyof Document] as string;
+      const bVal = b[orderBy as keyof Document] as string;
+      return order === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+    });
+
+    const total = documents.length;
+    const offset = options.offset ?? 0;
+    const limit = options.limit ?? total;
+    documents = documents.slice(offset, offset + limit);
+
+    return { documents, total };
+  }
+
+  async update(collection: string, id: string, input: Partial<DocumentInput>): Promise<Document> {
+    const existing = await this.findById(collection, id);
+    if (!existing) throw new Error(`Document ${id} not found in collection ${collection}`);
+
+    const updated: Document = {
+      ...existing,
+      status: input.status ?? existing.status,
+      data: input.data ? { ...existing.data, ...input.data } : existing.data,
+      _fieldMeta: input._fieldMeta ?? existing._fieldMeta ?? {},
+      updatedAt: now(),
+    };
+
+    if (input.slug && input.slug !== existing.slug) {
+      unlinkSync(this.documentPath(collection, existing.slug));
+      updated.slug = input.slug;
+    }
+
+    writeFileSync(this.documentPath(collection, updated.slug), JSON.stringify(updated, null, 2), 'utf-8');
+    return updated;
+  }
+
+  async delete(collection: string, id: string): Promise<void> {
+    const doc = await this.findById(collection, id);
+    if (!doc) throw new Error(`Document ${id} not found in collection ${collection}`);
+    const path = this.documentPath(collection, doc.slug);
+    if (existsSync(path)) unlinkSync(path);
+  }
+
+  async close(): Promise<void> {
+    // No-op for filesystem adapter
+  }
+}

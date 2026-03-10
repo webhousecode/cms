@@ -1,0 +1,15 @@
+{
+  "id": "second-post-002",
+  "slug": "building-with-ai",
+  "collection": "posts",
+  "status": "published",
+  "data": {
+    "title": "Building Websites with AI",
+    "excerpt": "How AI coding agents can use @webhouse/cms to scaffold complete websites.",
+    "content": "# Building Websites with AI\n\nAI coding agents like Claude Code can use **@webhouse/cms** to build complete, production-ready websites in minutes.\n\n## The Protocol\n\n1. Install the package: `npm install @webhouse/cms`\n2. Read the manifest at `GET /api/manifest`\n3. Generate a `cms.config.ts` tailored to the site's purpose\n4. Create content via the REST API\n5. Run `cms build` to generate the static site\n\n## Why This Works\n\nThe CMS is designed to be introspectable. Every collection, field, and block type is described in a machine-readable manifest that AI agents can read and act upon.\n\nThis means less time writing boilerplate and more time building unique features.",
+    "date": "2026-03-09T01:00:00.000Z",
+    "author": "webhouse"
+  },
+  "createdAt": "2026-03-09T01:00:00.000Z",
+  "updatedAt": "2026-03-09T01:00:00.000Z"
+}
