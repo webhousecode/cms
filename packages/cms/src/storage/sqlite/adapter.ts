@@ -54,6 +54,7 @@ export class SqliteStorageAdapter implements StorageAdapter {
       );
       CREATE INDEX IF NOT EXISTS idx_documents_collection ON documents(collection);
       CREATE INDEX IF NOT EXISTS idx_documents_status ON documents(status);
+      CREATE INDEX IF NOT EXISTS idx_documents_collection_slug ON documents(collection, slug);
     `);
     // Add field_meta column to existing databases that pre-date this migration
     try {
@@ -105,38 +106,64 @@ export class SqliteStorageAdapter implements StorageAdapter {
     return rows[0] ? this.rowToDocument(rows[0]) : null;
   }
 
-  async findBySlug(_collection: string, slug: string): Promise<Document | null> {
+  async findBySlug(collection: string, slug: string): Promise<Document | null> {
     const rows = await this.db
       .select()
       .from(documentsTable)
-      .where(eq(documentsTable.slug, slug))
+      .where(and(
+        eq(documentsTable.collection, collection),
+        eq(documentsTable.slug, slug),
+      ))
       .limit(1);
     return rows[0] ? this.rowToDocument(rows[0]) : null;
   }
 
   async findMany(collection: string, options: QueryOptions = {}): Promise<QueryResult> {
     const conditions = [eq(documentsTable.collection, collection)];
+
     if (options.status) {
       conditions.push(eq(documentsTable.status, options.status));
+    }
+
+    // Tags: AND logic — each tag must exist in the JSON array
+    if (options.tags && options.tags.length > 0) {
+      for (const tag of options.tags) {
+        conditions.push(
+          sql`EXISTS (
+            SELECT 1 FROM json_each(json_extract(${documentsTable.data}, '$.tags'))
+            WHERE value = ${tag}
+          )`,
+        );
+      }
     }
 
     const whereClause = conditions.length > 1
       ? and(...conditions)!
       : conditions[0]!;
 
-    const orderCol = options.orderBy === 'slug'
-      ? documentsTable.slug
-      : options.orderBy === 'updatedAt'
-        ? documentsTable.updatedAt
-        : documentsTable.createdAt;
+    // orderBy: support document-level keys and data.* fields via json_extract
+    const orderBy = options.orderBy ?? 'createdAt';
+    const isAsc = options.order === 'asc';
 
-    const orderFn = options.order === 'asc' ? asc : desc;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let orderExpr: any;
+    switch (orderBy) {
+      case 'slug':      orderExpr = isAsc ? asc(documentsTable.slug)      : desc(documentsTable.slug);      break;
+      case 'status':    orderExpr = isAsc ? asc(documentsTable.status)    : desc(documentsTable.status);    break;
+      case 'updatedAt': orderExpr = isAsc ? asc(documentsTable.updatedAt) : desc(documentsTable.updatedAt); break;
+      case 'createdAt': orderExpr = isAsc ? asc(documentsTable.createdAt) : desc(documentsTable.createdAt); break;
+      default:
+        // data.* field: use json_extract with CAST for numeric support
+        orderExpr = isAsc
+          ? asc(sql`CAST(json_extract(${documentsTable.data}, ${`$.${orderBy}`}) AS REAL)`)
+          : desc(sql`CAST(json_extract(${documentsTable.data}, ${`$.${orderBy}`}) AS REAL)`);
+    }
 
-    const documents = await this.db
+    const rows = await this.db
       .select()
       .from(documentsTable)
       .where(whereClause)
-      .orderBy(orderFn(orderCol))
+      .orderBy(orderExpr)
       .limit(options.limit ?? 1000)
       .offset(options.offset ?? 0);
 
@@ -146,7 +173,7 @@ export class SqliteStorageAdapter implements StorageAdapter {
       .where(whereClause);
 
     return {
-      documents: documents.map(r => this.rowToDocument(r)),
+      documents: rows.map(r => this.rowToDocument(r)),
       total: Number(totalRows[0]?.count ?? 0),
     };
   }

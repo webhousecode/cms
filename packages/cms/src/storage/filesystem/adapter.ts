@@ -30,7 +30,8 @@ export class FilesystemStorageAdapter implements StorageAdapter {
     const path = this.documentPath(collection, slug);
     if (!existsSync(path)) return null;
     try {
-      return JSON.parse(readFileSync(path, 'utf-8')) as Document;
+      const doc = JSON.parse(readFileSync(path, 'utf-8')) as Document;
+      return { ...doc, _fieldMeta: doc._fieldMeta ?? {} };
     } catch {
       return null;
     }
@@ -102,11 +103,29 @@ export class FilesystemStorageAdapter implements StorageAdapter {
       documents = documents.filter(d => d.status === options.status);
     }
 
+    if (options.tags && options.tags.length > 0) {
+      documents = documents.filter(d => {
+        const docTags = d.data['tags'];
+        if (!Array.isArray(docTags)) return false;
+        return options.tags!.every(tag => docTags.includes(tag));
+      });
+    }
+
     const orderBy = options.orderBy ?? 'createdAt';
     const order = options.order ?? 'desc';
+    const DOC_KEYS = new Set<string>(['id', 'slug', 'collection', 'status', 'createdAt', 'updatedAt']);
     documents.sort((a, b) => {
-      const aVal = a[orderBy as keyof Document] as string;
-      const bVal = b[orderBy as keyof Document] as string;
+      const getVal = (doc: Document): string => {
+        if (DOC_KEYS.has(orderBy)) return String(doc[orderBy as keyof Document] ?? '');
+        return String(doc.data[orderBy] ?? '');
+      };
+      const aVal = getVal(a);
+      const bVal = getVal(b);
+      const aNum = Number(aVal);
+      const bNum = Number(bVal);
+      if (!isNaN(aNum) && !isNaN(bNum)) {
+        return order === 'asc' ? aNum - bNum : bNum - aNum;
+      }
       return order === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
     });
 

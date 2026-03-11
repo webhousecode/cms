@@ -53,6 +53,25 @@ export class ContentService {
     return this.storage.findMany(collection, options);
   }
 
+  /**
+   * Find all documents across one or more collections that have the given tag.
+   * If no collections are specified, searches all configured collections.
+   */
+  async findByTag(
+    tag: string,
+    collections?: string[],
+    options?: Omit<QueryOptions, 'tags'>,
+  ): Promise<QueryResult> {
+    const targets = collections ?? this.config.collections.map(c => c.name);
+    const results = await Promise.all(
+      targets.map(col =>
+        this.storage.findMany(col, { ...options, tags: [tag] }).catch(() => ({ documents: [], total: 0 })),
+      ),
+    );
+    const documents = results.flatMap(r => r.documents);
+    return { documents, total: documents.length };
+  }
+
   async update(
     collection: string,
     id: string,

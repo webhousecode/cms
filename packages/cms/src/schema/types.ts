@@ -10,7 +10,8 @@ export type FieldType =
   | 'array'
   | 'object'
   | 'blocks'
-  | 'select';
+  | 'select'
+  | 'tags';
 
 export interface FieldConfig {
   name: string;
@@ -74,13 +75,31 @@ export interface BuildConfig {
   baseUrl?: string;
 }
 
+export interface AutolinkConfig {
+  /** The term to match (case-sensitive, first occurrence per page) */
+  term: string;
+  /** The URL to link to */
+  href: string;
+  /** Optional tooltip / title attribute */
+  title?: string;
+}
+
 export interface CmsConfig {
   collections: CollectionConfig[];
   blocks?: BlockConfig[];
+  /** Automatic internal linking — applied as a post-build HTML pass */
+  autolinks?: AutolinkConfig[];
   storage?: {
-    adapter?: 'sqlite' | 'filesystem';
+    adapter?: 'sqlite' | 'filesystem' | 'github';
     sqlite?: { path?: string };
     filesystem?: { contentDir?: string };
+    github?: {
+      owner: string;
+      repo: string;
+      branch?: string;
+      contentDir?: string;
+      token: string;
+    };
   };
   build?: BuildConfig;
   api?: {

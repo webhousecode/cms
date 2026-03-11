@@ -2,11 +2,13 @@
 export { defineConfig, defineCollection, defineBlock, defineField } from './schema/define.js';
 export { validateConfig, safeValidateConfig } from './schema/validate.js';
 export { collectionToJsonSchema, configToManifest } from './schema/introspect.js';
-export type { CmsConfig, CollectionConfig, FieldConfig, BlockConfig, FieldType, BuildConfig } from './schema/types.js';
+export type { CmsConfig, CollectionConfig, FieldConfig, BlockConfig, FieldType, BuildConfig, AutolinkConfig } from './schema/types.js';
 
 // Storage
 export { FilesystemStorageAdapter } from './storage/filesystem/adapter.js';
 export { SqliteStorageAdapter } from './storage/sqlite/adapter.js';
+export { GitHubStorageAdapter } from './storage/github/adapter.js';
+export type { GitHubAdapterConfig } from './storage/github/adapter.js';
 export type { StorageAdapter, Document, DocumentInput, QueryOptions, QueryResult, DocumentStatus, FieldMeta, DocumentFieldMeta, WriteContext } from './storage/types.js';
 
 // Content
@@ -35,6 +37,7 @@ export { now, formatDate } from './utils/date.js';
 import { validateConfig } from './schema/validate.js';
 import { FilesystemStorageAdapter } from './storage/filesystem/adapter.js';
 import { SqliteStorageAdapter } from './storage/sqlite/adapter.js';
+import { GitHubStorageAdapter } from './storage/github/adapter.js';
 import { ContentService } from './content/service.js';
 import { createApiServer } from './api/server.js';
 import { runBuild } from './build/pipeline.js';
@@ -51,6 +54,8 @@ export async function createCms(config: CmsConfig, options?: { storage?: Storage
     storage = options.storage;
   } else if (validated.storage?.adapter === 'filesystem') {
     storage = new FilesystemStorageAdapter(validated.storage.filesystem?.contentDir);
+  } else if (validated.storage?.adapter === 'github') {
+    storage = new GitHubStorageAdapter(validated.storage.github!);
   } else {
     storage = new SqliteStorageAdapter(validated.storage?.sqlite?.path);
   }

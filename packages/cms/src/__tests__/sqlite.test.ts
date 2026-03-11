@@ -2,17 +2,17 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { FilesystemStorageAdapter } from '../storage/filesystem/adapter.js';
+import { SqliteStorageAdapter } from '../storage/sqlite/adapter.js';
 
-describe('FilesystemStorageAdapter', () => {
+describe('SqliteStorageAdapter', () => {
   let tmpDir: string;
-  let adapter: FilesystemStorageAdapter;
+  let adapter: SqliteStorageAdapter;
 
   beforeEach(async () => {
-    tmpDir = mkdtempSync(join(tmpdir(), 'cms-test-'));
-    adapter = new FilesystemStorageAdapter(join(tmpDir, 'content'));
+    tmpDir = mkdtempSync(join(tmpdir(), 'cms-sqlite-test-'));
+    adapter = new SqliteStorageAdapter(join(tmpDir, 'content.db'));
     await adapter.initialize();
-    await adapter.migrate(['posts']);
+    await adapter.migrate(['posts', 'pages']);
   });
 
   afterEach(async () => {
@@ -35,6 +35,17 @@ describe('FilesystemStorageAdapter', () => {
     expect(found?.id).toBe(doc.id);
   });
 
+  it('findBySlug is scoped to collection', async () => {
+    await adapter.create('posts', { slug: 'home', data: { title: 'Blog Home' } });
+    await adapter.create('pages', { slug: 'home', data: { title: 'Page Home' } });
+
+    const postHome = await adapter.findBySlug('posts', 'home');
+    const pageHome = await adapter.findBySlug('pages', 'home');
+
+    expect(postHome?.data['title']).toBe('Blog Home');
+    expect(pageHome?.data['title']).toBe('Page Home');
+  });
+
   it('lists documents', async () => {
     await adapter.create('posts', { data: { title: 'Post 1' }, status: 'published' });
     await adapter.create('posts', { data: { title: 'Post 2' }, status: 'draft' });
@@ -46,13 +57,29 @@ describe('FilesystemStorageAdapter', () => {
     expect(published.total).toBe(1);
   });
 
+  it('findMany is scoped to collection', async () => {
+    await adapter.create('posts', { data: { title: 'Post' }, status: 'published' });
+    await adapter.create('pages', { data: { title: 'Page' }, status: 'published' });
+
+    const posts = await adapter.findMany('posts', { status: 'published' });
+    expect(posts.total).toBe(1);
+    expect(posts.documents[0].data['title']).toBe('Post');
+  });
+
   it('updates a document', async () => {
     const doc = await adapter.create('posts', { data: { title: 'Original' } });
     const updated = await adapter.update('posts', doc.id, { data: { title: 'Updated' } });
     expect(updated.data['title']).toBe('Updated');
   });
 
-  it('sorts by data field (sortOrder)', async () => {
+  it('deletes a document', async () => {
+    const doc = await adapter.create('posts', { data: { title: 'To Delete' } });
+    await adapter.delete('posts', doc.id);
+    const found = await adapter.findById('posts', doc.id);
+    expect(found).toBeNull();
+  });
+
+  it('sorts by data field (sortOrder) ascending', async () => {
     await adapter.create('posts', { data: { title: 'C', sortOrder: 3 }, status: 'published' });
     await adapter.create('posts', { data: { title: 'A', sortOrder: 1 }, status: 'published' });
     await adapter.create('posts', { data: { title: 'B', sortOrder: 2 }, status: 'published' });
@@ -62,12 +89,6 @@ describe('FilesystemStorageAdapter', () => {
 
     const desc = await adapter.findMany('posts', { orderBy: 'sortOrder', order: 'desc' });
     expect(desc.documents.map(d => d.data['title'])).toEqual(['C', 'B', 'A']);
-  });
-
-  it('backfills _fieldMeta when missing from JSON', async () => {
-    const doc = await adapter.create('posts', { data: { title: 'Test' } });
-    const found = await adapter.findBySlug('posts', doc.slug);
-    expect(found?._fieldMeta).toEqual({});
   });
 
   it('filters by single tag', async () => {
@@ -96,10 +117,22 @@ describe('FilesystemStorageAdapter', () => {
     expect(result.total).toBe(0);
   });
 
-  it('deletes a document', async () => {
-    const doc = await adapter.create('posts', { data: { title: 'To Delete' } });
-    await adapter.delete('posts', doc.id);
-    const found = await adapter.findById('posts', doc.id);
-    expect(found).toBeNull();
+  it('persists _fieldMeta correctly', async () => {
+    const doc = await adapter.create('posts', {
+      data: { title: 'Test' },
+      _fieldMeta: { title: { lockedBy: 'user', lockedAt: '2026-01-01T00:00:00Z' } },
+    });
+    const found = await adapter.findBySlug('posts', doc.slug);
+    expect(found?._fieldMeta['title']?.lockedBy).toBe('user');
+  });
+
+  it('total reflects filtered count, not full table count', async () => {
+    await adapter.create('posts', { data: { title: 'P', tags: ['cms'] }, status: 'published' });
+    await adapter.create('posts', { data: { title: 'Q', tags: ['ai'] }, status: 'published' });
+    await adapter.create('posts', { data: { title: 'R', tags: ['cms'] }, status: 'published' });
+
+    const result = await adapter.findMany('posts', { tags: ['cms'], limit: 1 });
+    expect(result.documents).toHaveLength(1);
+    expect(result.total).toBe(2); // total = all matching, not just page
   });
 });

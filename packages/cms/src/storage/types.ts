@@ -54,8 +54,10 @@ export interface QueryOptions {
   status?: DocumentStatus;
   limit?: number;
   offset?: number;
-  orderBy?: 'createdAt' | 'updatedAt' | 'slug';
+  orderBy?: string;
   order?: 'asc' | 'desc';
+  /** Filter documents where data.tags contains ALL of the given tags */
+  tags?: string[];
 }
 
 export interface QueryResult {

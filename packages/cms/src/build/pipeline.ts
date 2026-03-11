@@ -1,11 +1,12 @@
 import { join } from 'node:path';
-import { writeFileSync, mkdirSync, existsSync } from 'node:fs';
+import { writeFileSync, mkdirSync, existsSync, readdirSync, readFileSync } from 'node:fs';
 import type { StorageAdapter } from '../storage/types.js';
 import type { CmsConfig } from '../schema/types.js';
 import { resolveSite } from './resolve.js';
 import { renderSite } from './render.js';
 import { writeOutput } from './output.js';
 import { generateSitemap } from './sitemap.js';
+import { applyAutolinks } from './autolink.js';
 
 export interface BuildOptions {
   outDir?: string;
@@ -39,6 +40,18 @@ export async function runBuild(
   const sitemap = generateSitemap(context, baseUrl);
   if (!existsSync(outDir)) mkdirSync(outDir, { recursive: true });
   writeFileSync(join(outDir, 'sitemap.xml'), sitemap, 'utf-8');
+
+  // Phase 5: Autolinks — post-process all HTML files
+  if (config.autolinks && config.autolinks.length > 0) {
+    const htmlFiles = readdirSync(outDir)
+      .filter(f => f.endsWith('.html'))
+      .map(f => join(outDir, f));
+    for (const file of htmlFiles) {
+      const original = readFileSync(file, 'utf-8');
+      const linked = applyAutolinks(original, config.autolinks);
+      if (linked !== original) writeFileSync(file, linked, 'utf-8');
+    }
+  }
 
   return {
     pages: pages.length,

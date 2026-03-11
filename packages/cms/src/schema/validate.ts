@@ -3,7 +3,7 @@ import type { CmsConfig } from './types.js';
 
 const fieldTypeSchema = z.enum([
   'text', 'textarea', 'richtext', 'number', 'boolean',
-  'date', 'image', 'relation', 'array', 'object', 'blocks', 'select',
+  'date', 'image', 'relation', 'array', 'object', 'blocks', 'select', 'tags',
 ]);
 
 const fieldConfigSchema: z.ZodType<any> = z.lazy(() =>
