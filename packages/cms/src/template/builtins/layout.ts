@@ -8,9 +8,11 @@ export function layoutTemplate(content: string, context: TemplateContext): strin
   const canonicalUrl = context.page.canonicalUrl;
   const jsonLd = context.page.jsonLd;
   const ogImage = context.page.ogImage;
+  const lang = context.page.lang ?? context.site.lang ?? 'en';
+  const alternates = context.page.alternates ?? {};
 
   return html`<!DOCTYPE html>
-<html lang="en">
+<html lang="${lang}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -21,6 +23,7 @@ export function layoutTemplate(content: string, context: TemplateContext): strin
   <meta property="og:type" content="website">
   ${ogImage ? raw(`<meta property="og:image" content="${ogImage}">`) : ''}
   ${canonicalUrl ? raw(`<link rel="canonical" href="${canonicalUrl}">`) : ''}
+  ${raw(Object.entries(alternates).map(([l, u]) => `<link rel="alternate" hreflang="${l}" href="${u}">`).join('\n  '))}
   ${jsonLd ? raw(`<script type="application/ld+json">${JSON.stringify(jsonLd)}</script>`) : ''}
   <style>
     :root {

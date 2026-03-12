@@ -106,6 +106,31 @@ function renderHomePage(context: SiteContext, allDocsMap: Map<string, Document>)
 </section>`;
 }
 
+/** Build a locale → absolute-URL map for all known translations of a document */
+function buildAlternates(
+  doc: Document,
+  collectionName: string,
+  allDocs: Document[],
+  collectionConfig: ReturnType<typeof Array.prototype.find> | undefined,
+  allDocsMap: Map<string, Document>,
+  baseUrl: string,
+): Record<string, string> {
+  const base = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
+  const sourceSlug = doc.translationOf ?? doc.slug;
+  const siblings = allDocs.filter(
+    d => d.collection === collectionName && (d.slug === sourceSlug || d.translationOf === sourceSlug),
+  );
+  const alternates: Record<string, string> = {};
+  for (const s of siblings) {
+    if (!s.locale) continue;
+    const url = collectionConfig
+      ? getDocumentUrl(s, collectionConfig, allDocsMap)
+      : `/${collectionName}/${s.slug}/`;
+    alternates[s.locale] = `${base}${url}`;
+  }
+  return alternates;
+}
+
 export async function renderSite(context: SiteContext): Promise<RenderedPage[]> {
   const pages: RenderedPage[] = [];
   const siteTitle = getSiteTitle(context);
@@ -122,7 +147,11 @@ export async function renderSite(context: SiteContext): Promise<RenderedPage[]> 
     label: col.label ?? col.name,
     href: getCollectionIndexUrl(col),
   }));
-  const siteContext = { title: siteTitle, baseUrl, nav };
+  const siteLang = context.config.defaultLocale ?? 'en';
+  const siteContext = { title: siteTitle, baseUrl, nav, lang: siteLang };
+
+  // Flat list of all documents for alternates lookup
+  const allDocsList = Object.values(context.collections).flat();
 
   // Home page
   const homeContent = renderHomePage(context, allDocsMap);
@@ -174,6 +203,15 @@ export async function renderSite(context: SiteContext): Promise<RenderedPage[]> 
       const canonicalBase = baseUrl.endsWith('/') ? baseUrl.slice(0, -1) : baseUrl;
       const canonicalUrl = `${canonicalBase}${docUrl}`;
 
+      const docLang =
+        doc.locale ??
+        collectionConfig?.sourceLocale ??
+        context.config.defaultLocale;
+
+      const alternates = buildAlternates(
+        doc, collectionName, allDocsList, collectionConfig, allDocsMap, baseUrl,
+      );
+
       pages.push({
         path: docPath,
         content: layoutTemplate(docContent, {
@@ -185,6 +223,8 @@ export async function renderSite(context: SiteContext): Promise<RenderedPage[]> 
             description: String(seoData?.['metaDescription'] ?? description ?? ''),
             canonicalUrl,
             jsonLd: seoData?.['jsonLd'] as Record<string, unknown> | undefined,
+            lang: docLang,
+            alternates: Object.keys(alternates).length > 0 ? alternates : undefined,
           },
         }),
       });

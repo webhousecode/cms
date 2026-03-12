@@ -62,6 +62,10 @@ export interface CollectionConfig {
   urlPrefix?: string;
   parentField?: string;
   fields: FieldConfig[];
+  /** The locale items in this collection are normally authored in, e.g. "en" */
+  sourceLocale?: string;
+  /** Locales this collection can be translated to. Empty = no i18n. */
+  locales?: string[];
   hooks?: {
     beforeCreate?: string;
     afterCreate?: string;
@@ -89,6 +93,10 @@ export interface AutolinkConfig {
 export interface CmsConfig {
   collections: CollectionConfig[];
   blocks?: BlockConfig[];
+  /** Default locale for the site, used for <html lang=""> when a document has no locale. E.g. "en" */
+  defaultLocale?: string;
+  /** All locales the site supports. Used by AI translation agents. */
+  locales?: string[];
   /** Automatic internal linking — applied as a post-build HTML pass */
   autolinks?: AutolinkConfig[];
   storage?: {

@@ -40,6 +40,10 @@ export interface Document {
   _fieldMeta: DocumentFieldMeta;
   createdAt: string;
   updatedAt: string;
+  /** BCP 47 locale tag, e.g. "en", "da", "se". Defaults to collection sourceLocale or config defaultLocale. */
+  locale?: string;
+  /** Slug of the source document this is a translation of (loose reference, same collection). */
+  translationOf?: string;
 }
 
 export interface DocumentInput {
@@ -48,6 +52,10 @@ export interface DocumentInput {
   data: Record<string, unknown>;
   /** Per-field metadata to persist alongside data */
   _fieldMeta?: DocumentFieldMeta;
+  /** BCP 47 locale tag for this document */
+  locale?: string;
+  /** Slug of the source document this is a translation of */
+  translationOf?: string;
 }
 
 export interface QueryOptions {
@@ -58,6 +66,10 @@ export interface QueryOptions {
   order?: 'asc' | 'desc';
   /** Filter documents where data.tags contains ALL of the given tags */
   tags?: string[];
+  /** Filter documents by locale */
+  locale?: string;
+  /** Filter documents that are translations of a given source slug */
+  translationOf?: string;
 }
 
 export interface QueryResult {

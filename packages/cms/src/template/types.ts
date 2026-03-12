@@ -9,6 +9,8 @@ export interface TemplateContext {
     baseUrl: string;
     description?: string;
     nav?: NavItem[];
+    /** Default locale for the site */
+    lang?: string;
   };
   page: {
     title: string;
@@ -18,6 +20,10 @@ export interface TemplateContext {
     canonicalUrl?: string;
     ogImage?: string;
     jsonLd?: Record<string, unknown>;
+    /** BCP 47 locale for this specific page, overrides site.lang */
+    lang?: string;
+    /** hreflang alternates: { locale → absolute URL } */
+    alternates?: Record<string, string>;
   };
 }
 
