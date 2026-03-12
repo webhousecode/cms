@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="da">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>@cms: AI-Orkestreret Content Management - Interaktiv Rapport</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+	<style>
+		.chart-container {
+			position: relative;
+			width: 100%;
+			max-width: 700px;
+			margin-left: auto;
+			margin-right: auto;
+			height: 350px;
+			max-height: 400px;
+		}
+
+		@media (min-width: 768px) {
+			.chart-container {
+				height: 400px;
+			}
+		}
+
+		input[type=range] {
+			accent-color: #F4BA41;
+		}
+
+		.step-active {
+			background-color: #F4BA41;
+			color: #000000;
+			border-color: #F4BA41;
+		}
+
+		.step-inactive {
+			background-color: #ffffff;
+			color: #64748b;
+			border-color: #e2e8f0;
+		}
+
+		.fade-in {
+			animation: fadeIn 0.3s ease-in-out;
+		}
+
+		@keyframes fadeIn {
+			from {
+				opacity: 0;
+				transform: translateY(5px);
+			}
+
+			to {
+				opacity: 1;
+				transform: translateY(0);
+			}
+		}
+	</style>
+</head>
+
+<body class="bg-[#FAF9F6] text-slate-800 font-sans antialiased selection:bg-[#F4BA41] selection:text-black">
+
+	<!-- Chosen Palette: Warm Neutrals & Gold (#FAF9F6 background, #F4BA41 Gold accent, #1E293B Dark Slate text, #3B82F6 Blue, #10B981 Green) -->
+	<!-- Application Structure Plan: The SPA is designed as an interactive executive summary flowing logically through the provided report. 1. Vision (Paradigmeskift) shows the core value proposition (time saved) using an interactive comparison chart. 2. Architecture (AI Command Center & Agenter) uses interactive sliders simulating the real product to engage the user, paired with a doughnut chart showing agent distribution. 3. User Journey (Brugerrejsen) uses an interactive stepper to break down the process. 4. Tech Stack is presented cleanly. This narrative structure moves from "Why" to "How" to "What", maximizing comprehension of the @cms platform. -->
+	<!-- Visualization & Content Choices: 1. Vision -> Compare time allocation -> Chart.js Stacked Bar (Interactive toggle) -> Clearly contrasts traditional vs. AI workflows. NO SVG. 2. Agent Ecosystem -> Organize/Distribute roles -> Chart.js Doughnut -> Shows composition of AI workforce. NO SVG. 3. Orchestration Simulation -> Interact -> HTML Range Sliders + JS Math -> Tangible demonstration of abstract "Command Center" concepts. NO SVG. 4. User Journey -> Process flow -> HTML/CSS Interactive Stepper -> Breaks down linear steps cleanly. NO SVG/Mermaid. -->
+	<!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+
+	<nav
+		class="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-slate-200 px-6 py-4 flex items-center justify-between shadow-sm">
+		<div class="flex items-center gap-3">
+			<div class="w-10 h-10 bg-[#F4BA41] rounded-xl flex items-center justify-center overflow-hidden shadow-md">
+				<div class="grid grid-cols-2 gap-0.5 p-1">
+					<div class="w-3 h-3 bg-black rounded-sm"></div>
+					<div class="w-3 h-3 bg-black rounded-full"></div>
+					<div class="w-3 h-3 bg-black rounded-bl-lg"></div>
+				</div>
+			</div>
+			<span class="text-2xl font-bold tracking-tighter italic text-slate-900">@cms</span>
+		</div>
+		<div class="hidden md:flex gap-6 text-sm font-semibold text-slate-500">
+			<a href="#vision" class="hover:text-[#F4BA41] transition-colors">Vision</a>
+			<a href="#architecture" class="hover:text-[#F4BA41] transition-colors">Arkitektur</a>
+			<a href="#journey" class="hover:text-[#F4BA41] transition-colors">Brugerrejse</a>
+			<a href="#tech" class="hover:text-[#F4BA41] transition-colors">Teknologi</a>
+		</div>
+	</nav>
+
+	<header class="max-w-4xl mx-auto px-6 pt-20 pb-16 text-center">
+		<div
+			class="inline-block px-4 py-1.5 rounded-full border border-[#F4BA41] bg-[#F4BA41]/10 text-[#B4831B] font-bold text-xs uppercase tracking-widest mb-6 shadow-sm">
+			Projektplan & Teknisk Blueprint
+		</div>
+		<h1 class="text-5xl md:text-6xl font-extrabold tracking-tight text-slate-900 mb-6">
+			Fra Editor til <span class="text-[#F4BA41] italic">Orkestrator</span>
+		</h1>
+		<p class="text-xl text-slate-600 leading-relaxed max-w-3xl mx-auto">
+			Det traditionelle CMS kræver manuel indtastning, billedredigering og SEO-optimering.
+			<strong>@cms vender bøtten:</strong> AI'en gør 90% af arbejdet. Udforsk hvordan fremtidens
+			indholdsproduktion skaleres gennem intelligent orkestrering.
+		</p>
+	</header>
+
+	<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-24 pb-24">
+
+		<section id="vision" class="scroll-mt-24">
+			<div class="max-w-3xl mb-8">
+				<h2 class="text-3xl font-bold text-slate-900 mb-4 flex items-center gap-3">
+					<span class="text-4xl text-[#F4BA41]">⏱️</span> Paradigmeskiftet
+				</h2>
+				<p class="text-slate-600 leading-relaxed text-lg">
+					I et traditionelt setup er site-ejeren en "Editor", der bruger størstedelen af sin tid på mekanisk
+					udførelse. @cms transformerer rollen til en "Orkestrator". Visualiseringen herunder viser den
+					radikale forskydning i tidsforbrug, hvor manuelt arbejde erstattes af strategisk styring og
+					godkendelse.
+				</p>
+			</div>
+
+			<div class="bg-white rounded-2xl shadow-lg border border-slate-100 p-6 md:p-8">
+				<div class="flex justify-center gap-4 mb-8">
+					<button id="btnTrad"
+						class="px-6 py-2 rounded-lg font-bold text-sm transition-all bg-[#F4BA41] text-black shadow-md hover:scale-105">Traditionelt
+						CMS</button>
+					<button id="btnAi"
+						class="px-6 py-2 rounded-lg font-bold text-sm transition-all bg-slate-100 text-slate-600 hover:bg-slate-200">@cms
+						Orkestrering</button>
+				</div>
+				<div class="chart-container">
+					<canvas id="workflowChart"></canvas>
+				</div>
+				<p id="workflowContext" class="text-center text-sm font-medium text-slate-500 mt-6 italic">
+					Viser et typisk tidsforbrug ved manuel indholdsproduktion.
+				</p>
+			</div>
+		</section>
+
+		<section id="architecture"
+			class="scroll-mt-24 bg-slate-900 rounded-3xl p-8 md:p-12 text-white shadow-2xl relative overflow-hidden">
+			<div
+				class="absolute top-0 right-0 w-[400px] h-[400px] bg-[#F4BA41] opacity-10 blur-[100px] pointer-events-none rounded-full">
+			</div>
+
+			<div class="max-w-3xl mb-12 relative z-10">
+				<h2 class="text-3xl font-bold mb-4 flex items-center gap-3">
+					<span class="text-4xl text-[#F4BA41]">🧠</span> Arkitektur & AI Engine
+				</h2>
+				<p class="text-slate-300 leading-relaxed text-lg">
+					Systemets nervesystem er <strong>AI Command Center</strong>, hvor globale parametre styres.
+					Opgaveløsningen uddelegeres til <strong>specialiserede digitale medarbejdere (Agenter)</strong> med
+					unikke system prompts og værktøjer. Prøv selv at justere orkestratorens parametre herunder.
+				</p>
+			</div>
+
+			<div class="grid grid-cols-1 lg:grid-cols-2 gap-12 relative z-10">
+
+				<div class="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-2xl p-8 shadow-inner">
+					<h3 class="text-xl font-bold mb-6 text-[#F4BA41] flex items-center gap-2">🎛️ AI Command Center
+						Simulator</h3>
+
+					<div class="space-y-8">
+						<div>
+							<div class="flex justify-between mb-2">
+								<label class="text-sm font-bold text-slate-300 uppercase tracking-wide">Kreativitet
+									(Temperature)</label>
+								<span id="valTemp" class="text-sm font-mono text-[#F4BA41]">50%</span>
+							</div>
+							<input type="range" id="slideTemp" min="0" max="100" value="50"
+								class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+							<p class="text-xs text-slate-400 mt-2">Justerer hvor konservativt eller eksperimenterende
+								AI'en skal skrive.</p>
+						</div>
+
+						<div>
+							<div class="flex justify-between mb-2">
+								<label class="text-sm font-bold text-slate-300 uppercase tracking-wide">SEO
+									Vægtning</label>
+								<span id="valSeo" class="text-sm font-mono text-[#F4BA41]">80%</span>
+							</div>
+							<input type="range" id="slideSeo" min="0" max="100" value="80"
+								class="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer">
+							<p class="text-xs text-slate-400 mt-2">Balance mellem algoritme-optimering og menneskelig
+								læsbarhed.</p>
+						</div>
+
+						<div class="pt-6 border-t border-slate-700 flex items-center justify-between">
+							<div>
+								<p class="text-sm text-slate-400 uppercase font-bold">Estimeret Output Kapacitet</p>
+								<p class="text-[10px] text-slate-500">Artikler / Uge baseret på parametre</p>
+							</div>
+							<div class="text-4xl font-black text-[#10B981]" id="outputMetric">142</div>
+						</div>
+					</div>
+				</div>
+
+				<div class="bg-white rounded-2xl p-8 shadow-xl">
+					<h3 class="text-xl font-bold mb-6 text-slate-900 text-center">Agent Økosystemet</h3>
+					<div class="chart-container" style="height: 280px;">
+						<canvas id="agentChart"></canvas>
+					</div>
+					<p class="text-center text-xs text-slate-500 mt-4">Fordeling af opgaver blandt specialiserede
+						AI-agenter.</p>
+				</div>
+			</div>
+		</section>
+
+		<section id="journey" class="scroll-mt-24">
+			<div class="max-w-3xl mb-12">
+				<h2 class="text-3xl font-bold text-slate-900 mb-4 flex items-center gap-3">
+					<span class="text-4xl text-[#3B82F6]">🛤️</span> Brugerrejsen
+				</h2>
+				<p class="text-slate-600 leading-relaxed text-lg">
+					Processen i @cms er lineær og fokuseret på kontrol. Alt genereret indhold (uden fuld autonomi)
+					lander i Kurerings-køen (Curation Logic). Dette sikrer, at maskinen gør det tunge løft, mens
+					mennesket har det sidste ord.
+				</p>
+			</div>
+
+			<div class="flex flex-col md:flex-row gap-6">
+				<div class="md:w-1/3 flex flex-col gap-3" id="stepButtons">
+					<button data-step="1"
+						class="step-btn step-active text-left p-4 rounded-xl border font-bold text-lg shadow-sm transition-colors flex justify-between items-center">
+						<span>1. Konfiguration</span> <span class="text-2xl">⚙️</span>
+					</button>
+					<button data-step="2"
+						class="step-btn step-inactive text-left p-4 rounded-xl border font-bold text-lg shadow-sm transition-colors flex justify-between items-center">
+						<span>2. Agent Deployment</span> <span class="text-2xl">🤖</span>
+					</button>
+					<button data-step="3"
+						class="step-btn step-inactive text-left p-4 rounded-xl border font-bold text-lg shadow-sm transition-colors flex justify-between items-center">
+						<span>3. Orkestrering</span> <span class="text-2xl">🎛️</span>
+					</button>
+					<button data-step="4"
+						class="step-btn step-inactive text-left p-4 rounded-xl border font-bold text-lg shadow-sm transition-colors flex justify-between items-center">
+						<span>4. Godkendelse</span> <span class="text-2xl">✅</span>
+					</button>
+					<button data-step="5"
+						class="step-btn step-inactive text-left p-4 rounded-xl border font-bold text-lg shadow-sm transition-colors flex justify-between items-center">
+						<span>5. Vækst & Feedback</span> <span class="text-2xl">📈</span>
+					</button>
+				</div>
+
+				<div
+					class="md:w-2/3 bg-white rounded-2xl shadow-lg border border-slate-100 p-8 flex flex-col justify-center min-h-[300px]">
+					<div id="stepContent1" class="step-content fade-in">
+						<div
+							class="inline-block px-3 py-1 bg-slate-100 text-slate-600 text-xs font-bold uppercase rounded-md mb-4">
+							Trin 1 af 5</div>
+						<h3 class="text-2xl font-black text-slate-900 mb-4">Konfiguration af Systemet</h3>
+						<p class="text-slate-600 text-lg leading-relaxed">Du definerer dit sites brand-persona og de
+							overordnede mål i indstillingerne. Dette danner grundlaget for, hvordan hele AI-motoren
+							forstår din forretning og din målgruppe før produktionen starter.</p>
+					</div>
+					<div id="stepContent2" class="step-content hidden">
+						<div
+							class="inline-block px-3 py-1 bg-slate-100 text-slate-600 text-xs font-bold uppercase rounded-md mb-4">
+							Trin 2 af 5</div>
+						<h3 class="text-2xl font-black text-slate-900 mb-4">Byg Dine Digitale Medarbejdere</h3>
+						<p class="text-slate-600 text-lg leading-relaxed">Du bygger og træner dine digitale medarbejdere
+							i "Ny Agent"-modulet. Her udstyrer du dem med specifikke System Prompts, definerer deres
+							adfærd (tone-of-voice) og giver dem "sanser" i form af adgang til Live Web Search eller
+							interne databaser.</p>
+					</div>
+					<div id="stepContent3" class="step-content hidden">
+						<div
+							class="inline-block px-3 py-1 bg-slate-100 text-slate-600 text-xs font-bold uppercase rounded-md mb-4">
+							Trin 3 af 5</div>
+						<h3 class="text-2xl font-black text-slate-900 mb-4">Live Orkestrering</h3>
+						<p class="text-slate-600 text-lg leading-relaxed">Via AI Command Dashboardet overvåger du
+							systemets OPS (Operations Per Second). Du fungerer som dirigenten, der justerer farten på
+							produktionen og skifter mellem underliggende sprogmodeller (f.eks. GPT-4.5 Ultra eller
+							Claude 3.5) efter behov.</p>
+					</div>
+					<div id="stepContent4" class="step-content hidden">
+						<div
+							class="inline-block px-3 py-1 bg-slate-100 text-slate-600 text-xs font-bold uppercase rounded-md mb-4">
+							Trin 4 af 5</div>
+						<h3 class="text-2xl font-black text-slate-900 mb-4">Kurerings-køen (Menneskelig Validering)</h3>
+						<p class="text-slate-600 text-lg leading-relaxed">Alt genereret indhold fra agenter med standard
+							autonomi (Kladde & Godkendelse) lander her med status "Ready". Du tjekker indbakken dagligt,
+							kurerer det bedste indhold, afviser det svage, og sender live med ét klik (One-click
+							Publish).</p>
+					</div>
+					<div id="stepContent5" class="step-content hidden">
+						<div
+							class="inline-block px-3 py-1 bg-[#F4BA41]/20 text-[#B4831B] text-xs font-bold uppercase rounded-md mb-4">
+							Trin 5 af 5</div>
+						<h3 class="text-2xl font-black text-slate-900 mb-4">Det Intelligente Feedback Loop</h3>
+						<p class="text-slate-600 text-lg leading-relaxed">Når du retter i en tekst i review-processen,
+							lærer systemet og agenten af dine rettelser til næste gang. Samtidig overvåger du
+							Performance-fanen for at se den automatiske forbedring af SEO-dominans og trafik.</p>
+					</div>
+				</div>
+			</div>
+		</section>
+
+		<section id="tech" class="scroll-mt-24">
+			<div class="max-w-3xl mb-12 mx-auto text-center">
+				<h2 class="text-3xl font-bold text-slate-900 mb-4 flex items-center justify-center gap-3">
+					<span class="text-4xl">🛠️</span> Tekniske Komponenter
+				</h2>
+				<p class="text-slate-600 leading-relaxed text-lg">
+					Et overblik over den underliggende stak, der muliggør skiftet fra manuelt CMS til AI-orkestrering.
+				</p>
+			</div>
+
+			<div class="bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden max-w-4xl mx-auto">
+				<table class="w-full text-left border-collapse">
+					<thead>
+						<tr class="bg-slate-50 border-b border-slate-200">
+							<th class="py-4 px-6 font-bold text-slate-900 uppercase text-xs tracking-wider">Komponent
+							</th>
+							<th class="py-4 px-6 font-bold text-slate-900 uppercase text-xs tracking-wider">Teknologi
+							</th>
+							<th class="py-4 px-6 font-bold text-slate-900 uppercase text-xs tracking-wider">Funktion
+							</th>
+						</tr>
+					</thead>
+					<tbody class="divide-y divide-slate-100">
+						<tr class="hover:bg-slate-50 transition-colors">
+							<td class="py-4 px-6 font-bold text-slate-800">Frontend</td>
+							<td class="py-4 px-6 text-slate-600 font-mono text-sm">React + Tailwind</td>
+							<td class="py-4 px-6 text-slate-600">Hurtig, mørk og luksuriøs UI med guld-accenter.</td>
+						</tr>
+						<tr class="hover:bg-slate-50 transition-colors">
+							<td class="py-4 px-6 font-bold text-slate-800">AI Backend</td>
+							<td class="py-4 px-6 text-slate-600 font-mono text-sm">LLM API Integration</td>
+							<td class="py-4 px-6 text-slate-600">Motoren bag tekstgenerering og logik (GPT/Claude).</td>
+						</tr>
+						<tr class="hover:bg-slate-50 transition-colors">
+							<td class="py-4 px-6 font-bold text-slate-800">Asset Pipeline</td>
+							<td class="py-4 px-6 text-slate-600 font-mono text-sm">Billed-AI Integration</td>
+							<td class="py-4 px-6 text-slate-600">Automatisk generering af unikke illustrationer.</td>
+						</tr>
+						<tr class="hover:bg-slate-50 transition-colors">
+							<td class="py-4 px-6 font-bold text-slate-800">Data & SEO</td>
+							<td class="py-4 px-6 text-slate-600 font-mono text-sm">Real-time Search APIs</td>
+							<td class="py-4 px-6 text-slate-600">Giver agenterne adgang til live data og trends.</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</section>
+
+	</main>
+
+	<footer class="bg-slate-900 text-center py-8 text-slate-400 text-sm border-t border-slate-800 mt-12">
+		<p>@cms er bygget til dem, der vil eje indholdet og sætte retningen, men ikke skrive det hver dag.</p>
+	</footer>
+
+	<script>
+		const wrapLabel = (text) => {
+			if (typeof text !== 'string') return text;
+			if (text.length <= 16) return text;
+			const words = text.split(' ');
+			const lines = [];
+			let currentLine = '';
+			words.forEach(word => {
+				if ((currentLine + word).length > 16) {
+					if (currentLine) lines.push(currentLine.trim());
+					currentLine = word + ' ';
+				} else {
+					currentLine += word + ' ';
+				}
+			});
+			if (currentLine) lines.push(currentLine.trim());
+			return lines;
+		};
+
+		const tooltipConfig = {
+			callbacks: {
+				title: function (tooltipItems) {
+					const item = tooltipItems[0];
+					let label = item.chart.data.labels[item.dataIndex];
+					if (Array.isArray(label)) return label.join(' ');
+					return label;
+				}
+			}
+		};
+
+		Chart.defaults.font.family = "'Segoe UI', Roboto, Helvetica, Arial, sans-serif";
+		Chart.defaults.color = '#64748b';
+
+		const ctxWorkflow = document.getElementById('workflowChart').getContext('2d');
+		const dataTrad = [60, 25, 10, 5, 0];
+		const dataAi = [5, 5, 0, 70, 20];
+		const workflowLabels = ['Mekanisk Skrivning', 'SEO & Research', 'Billedhåndtering', 'Strategi & Orkestrering', 'Review & Godkendelse'].map(wrapLabel);
+
+		let workflowChart = new Chart(ctxWorkflow, {
+			type: 'bar',
+			data: {
+				labels: workflowLabels,
+				datasets: [{
+					label: 'Tidsforbrug (%)',
+					data: dataTrad,
+					backgroundColor: ['#e2e8f0', '#cbd5e1', '#94a3b8', '#F4BA41', '#3B82F6'],
+					borderWidth: 0,
+					borderRadius: 4
+				}]
+			},
+			options: {
+				responsive: true,
+				maintainAspectRatio: false,
+				plugins: {
+					tooltip: tooltipConfig,
+					legend: { display: false }
+				},
+				scales: {
+					y: {
+						beginAtZero: true,
+						max: 100,
+						grid: { color: '#f1f5f9', drawBorder: false },
+						ticks: { callback: function (val) { return val + '%'; } }
+					},
+					x: {
+						grid: { display: false, drawBorder: false }
+					}
+				}
+			}
+		});
+
+		const btnTrad = document.getElementById('btnTrad');
+		const btnAi = document.getElementById('btnAi');
+		const contextText = document.getElementById('workflowContext');
+
+		btnTrad.addEventListener('click', () => {
+			workflowChart.data.datasets[0].data = dataTrad;
+			workflowChart.data.datasets[0].backgroundColor = ['#e2e8f0', '#cbd5e1', '#94a3b8', '#F4BA41', '#3B82F6'];
+			workflowChart.update();
+			btnTrad.classList.replace('bg-slate-100', 'bg-[#F4BA41]');
+			btnTrad.classList.replace('text-slate-600', 'text-black');
+			btnAi.classList.replace('bg-[#F4BA41]', 'bg-slate-100');
+			btnAi.classList.replace('text-black', 'text-slate-600');
+			contextText.innerText = "Viser et typisk tidsforbrug ved manuel indholdsproduktion.";
+		});
+
+		btnAi.addEventListener('click', () => {
+			workflowChart.data.datasets[0].data = dataAi;
+			workflowChart.data.datasets[0].backgroundColor = ['#f8fafc', '#f8fafc', '#f8fafc', '#F4BA41', '#3B82F6'];
+			workflowChart.update();
+			btnAi.classList.replace('bg-slate-100', 'bg-[#F4BA41]');
+			btnAi.classList.replace('text-slate-600', 'text-black');
+			btnTrad.classList.replace('bg-[#F4BA41]', 'bg-slate-100');
+			btnTrad.classList.replace('text-black', 'text-slate-600');
+			contextText.innerText = "Viser tidsforbruget som Orkestrator i @cms: Fokus flyttes markant.";
+		});
+
+		const ctxAgent = document.getElementById('agentChart').getContext('2d');
+		const agentLabels = ['SEO Strateg', 'Copy-Wizard', 'Social Media Pilot', 'Andre Agenter'].map(wrapLabel);
+		new Chart(ctxAgent, {
+			type: 'doughnut',
+			data: {
+				labels: agentLabels,
+				datasets: [{
+					data: [35, 45, 15, 5],
+					backgroundColor: ['#F4BA41', '#3B82F6', '#10B981', '#cbd5e1'],
+					borderWidth: 0,
+					hoverOffset: 10
+				}]
+			},
+			options: {
+				responsive: true,
+				maintainAspectRatio: false,
+				cutout: '70%',
+				plugins: {
+					tooltip: tooltipConfig,
+					legend: { position: 'right', labels: { usePointStyle: true, boxWidth: 8 } }
+				}
+			}
+		});
+
+		const slideTemp = document.getElementById('slideTemp');
+		const slideSeo = document.getElementById('slideSeo');
+		const valTemp = document.getElementById('valTemp');
+		const valSeo = document.getElementById('valSeo');
+		const outputMetric = document.getElementById('outputMetric');
+
+		const calculateOutput = () => {
+			const temp = parseInt(slideTemp.value);
+			const seo = parseInt(slideSeo.value);
+			valTemp.innerText = temp + '%';
+			valSeo.innerText = seo + '%';
+			let base = 50;
+			let speedBonus = (temp / 100) * 40;
+			let seoDrag = ((100 - seo) / 100) * 60;
+			let total = Math.floor(base + speedBonus + seoDrag);
+			outputMetric.innerText = total;
+
+			if (total > 120) outputMetric.className = "text-4xl font-black text-[#10B981]";
+			else if (total > 80) outputMetric.className = "text-4xl font-black text-[#F4BA41]";
+			else outputMetric.className = "text-4xl font-black text-[#ef4444]";
+		};
+
+		slideTemp.addEventListener('input', calculateOutput);
+		slideSeo.addEventListener('input', calculateOutput);
+
+		const stepBtns = document.querySelectorAll('.step-btn');
+		const stepContents = document.querySelectorAll('.step-content');
+
+		stepBtns.forEach(btn => {
+			btn.addEventListener('click', () => {
+				const stepId = btn.getAttribute('data-step');
+
+				stepBtns.forEach(b => {
+					b.classList.remove('step-active');
+					b.classList.add('step-inactive');
+				});
+
+				btn.classList.remove('step-inactive');
+				btn.classList.add('step-active');
+
+				stepContents.forEach(content => {
+					content.classList.add('hidden');
+					content.classList.remove('fade-in');
+				});
+
+				const activeContent = document.getElementById('stepContent' + stepId);
+				activeContent.classList.remove('hidden');
+
+				void activeContent.offsetWidth;
+				activeContent.classList.add('fade-in');
+			});
+		});
+
+	</script>
+</body>
+
+</html>

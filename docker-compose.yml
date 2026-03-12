@@ -1,0 +1,37 @@
+services:
+  cms-admin:
+    build:
+      context: .                          # monorepo root
+      dockerfile: packages/cms-admin/Dockerfile
+    ports:
+      - "4010:3010"
+    volumes:
+      # Mount the site directory so the CMS can read/write content + config
+      - ${SITE_DIR:-../webhouse-site}:/site
+    environment:
+      # Point to the mounted cms.config.ts — process.chdir() in lib/cms.ts
+      # resolves all relative paths (contentDir, etc.) from this file's directory
+      CMS_CONFIG_PATH: /site/cms.config.ts
+      # Uploads are written to the site's public dir so Next.js can serve them
+      UPLOAD_DIR: /site/public/uploads
+      NODE_ENV: production
+      PORT: "3010"
+    restart: unless-stopped
+
+  webhouse-site:
+    build:
+      context: ..                         # /Users/cb/Apps/webhouse/ — needed for file: dep on @webhouse/cms
+      dockerfile: webhouse-site/Dockerfile
+    ports:
+      - "4009:3000"
+    volumes:
+      # Mount content dir so live edits in CMS are instantly visible
+      - ${SITE_DIR:-../webhouse-site}/content:/app/webhouse-site/content:ro
+      # Mount uploads so images uploaded via admin are served by the site
+      - ${SITE_DIR:-../webhouse-site}/public/uploads:/app/webhouse-site/public/uploads:ro
+    environment:
+      # Tells lib/cms.ts where to find the content JSON files
+      CONTENT_DIR: /app/webhouse-site/content
+      NODE_ENV: production
+      PORT: "3000"
+    restart: unless-stopped

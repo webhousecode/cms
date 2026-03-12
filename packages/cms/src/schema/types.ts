@@ -11,7 +11,9 @@ export type FieldType =
   | 'object'
   | 'blocks'
   | 'select'
-  | 'tags';
+  | 'tags'
+  | 'image-gallery'
+  | 'video';
 
 export interface FieldConfig {
   name: string;
