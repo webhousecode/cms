@@ -63,6 +63,8 @@ export class FilesystemStorageAdapter implements StorageAdapter {
       _fieldMeta: input._fieldMeta ?? {},
       createdAt: timestamp,
       updatedAt: timestamp,
+      ...(input.locale !== undefined && { locale: input.locale }),
+      ...(input.translationOf !== undefined && { translationOf: input.translationOf }),
     };
 
     writeFileSync(this.documentPath(collection, slug), JSON.stringify(doc, null, 2), 'utf-8');
@@ -101,6 +103,14 @@ export class FilesystemStorageAdapter implements StorageAdapter {
 
     if (options.status) {
       documents = documents.filter(d => d.status === options.status);
+    }
+
+    if (options.locale) {
+      documents = documents.filter(d => d.locale === options.locale);
+    }
+
+    if (options.translationOf) {
+      documents = documents.filter(d => d.translationOf === options.translationOf);
     }
 
     if (options.tags && options.tags.length > 0) {
@@ -147,6 +157,8 @@ export class FilesystemStorageAdapter implements StorageAdapter {
       data: input.data ? { ...existing.data, ...input.data } : existing.data,
       _fieldMeta: input._fieldMeta ?? existing._fieldMeta ?? {},
       updatedAt: now(),
+      ...(((input.locale !== undefined ? input.locale : existing.locale) !== undefined) && { locale: input.locale !== undefined ? input.locale : existing.locale }),
+      ...(((input.translationOf !== undefined ? input.translationOf : existing.translationOf) !== undefined) && { translationOf: input.translationOf !== undefined ? input.translationOf : existing.translationOf }),
     };
 
     if (input.slug && input.slug !== existing.slug) {
