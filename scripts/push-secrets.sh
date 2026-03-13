@@ -21,8 +21,9 @@ GH_REPO="webhousecode/cms-engine"
 # Only these keys are considered secrets — dev-only vars stay local.
 SECRET_KEYS=(
   CMS_JWT_SECRET
-  ANTHROPIC_API_KEY
 )
+# Note: AI API keys (ANTHROPIC_API_KEY etc.) are site-specific and stored in
+# {projectDir}/_data/ai-config.json via the Admin UI (Settings → AI).
 
 # ── Parse target ──────────────────────────────────────────────────────────
 TARGET="${1:-all}"

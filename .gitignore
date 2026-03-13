@@ -141,3 +141,6 @@ vite.config.ts.timestamp-*
 .DS_Store
 # Turbo cache
 .turbo/
+
+# CMS per-site data (AI keys, user data — never committed)
+_data/
