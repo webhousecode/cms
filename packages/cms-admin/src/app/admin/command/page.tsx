@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Loader2, RefreshCw } from "lucide-react";
+import { CustomSelect } from "@/components/ui/custom-select";
 
 interface CockpitParams {
   temperature: number;
@@ -202,19 +203,11 @@ export default function CommandPage() {
 
             <div>
               <label style={labelStyle}>Primary model</label>
-              <select
+              <CustomSelect
+                options={MODELS}
                 value={params.primaryModel}
-                onChange={(e) =>
-                  setParams({ ...params, primaryModel: e.target.value })
-                }
-                style={inputStyle}
-              >
-                {MODELS.map((m) => (
-                  <option key={m.value} value={m.value}>
-                    {m.label}
-                  </option>
-                ))}
-              </select>
+                onChange={(v) => setParams({ ...params, primaryModel: v })}
+              />
             </div>
 
             <label className="flex items-center gap-2 text-sm">

@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Loader2, Sparkles } from "lucide-react";
+import { CustomSelect } from "@/components/ui/custom-select";
 
 const ROLES = [
   { value: "copywriter", label: "Content Writer" },
@@ -135,17 +136,11 @@ export default function NewAgentPage() {
         {/* Role */}
         <div>
           <label style={labelStyle}>Role</label>
-          <select
+          <CustomSelect
+            options={ROLES.map((r) => ({ value: r.value, label: r.label }))}
             value={role}
-            onChange={(e) => setRole(e.target.value)}
-            style={inputStyle}
-          >
-            {ROLES.map((r) => (
-              <option key={r.value} value={r.value}>
-                {r.label}
-              </option>
-            ))}
-          </select>
+            onChange={setRole}
+          />
         </div>
 
         {/* System Prompt */}
@@ -275,17 +270,15 @@ export default function NewAgentPage() {
             <div className="grid grid-cols-3 gap-3">
               <div>
                 <label style={labelStyle}>Frequency</label>
-                <select
+                <CustomSelect
+                  options={[
+                    { value: "daily", label: "Daily" },
+                    { value: "weekly", label: "Weekly" },
+                    { value: "manual", label: "Manual" },
+                  ]}
                   value={frequency}
-                  onChange={(e) =>
-                    setFrequency(e.target.value as "daily" | "weekly" | "manual")
-                  }
-                  style={inputStyle}
-                >
-                  <option value="daily">Daily</option>
-                  <option value="weekly">Weekly</option>
-                  <option value="manual">Manual</option>
-                </select>
+                  onChange={(v) => setFrequency(v as "daily" | "weekly" | "manual")}
+                />
               </div>
               <div>
                 <label style={labelStyle}>Time</label>

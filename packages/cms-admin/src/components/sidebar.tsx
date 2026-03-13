@@ -9,7 +9,6 @@ import {
   Bot,
   Inbox,
   FolderOpen,
-  FileText,
   Image,
   Search,
   Link2,
@@ -154,21 +153,25 @@ export function AppSidebar({ collections }: Props) {
 
         {/* Content section (collapsible) */}
         <SidebarGroup style={{ padding: "0 0.5rem" }}>
-          <button
-            type="button"
-            onClick={() => setContentOpen((o) => !o)}
-            className="flex items-center gap-2 w-full px-2 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors rounded-md"
-          >
-            {contentOpen ? (
-              <ChevronDown className="w-3.5 h-3.5" />
-            ) : (
-              <ChevronRight className="w-3.5 h-3.5" />
-            )}
-            <FolderOpen className="w-3.5 h-3.5" />
-            <span className="uppercase tracking-wider">Content</span>
-          </button>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                tooltip="Content"
+                onClick={() => setContentOpen((o) => !o)}
+                render={<button type="button" />}
+              >
+                <FolderOpen className="!w-5 !h-5" />
+                <span className="flex-1 text-left">Content</span>
+                {contentOpen ? (
+                  <ChevronDown className="!w-4 !h-4 ml-auto" />
+                ) : (
+                  <ChevronRight className="!w-4 !h-4 ml-auto" />
+                )}
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
           {contentOpen && (
-            <SidebarGroupContent style={{ marginTop: "0.25rem" }}>
+            <SidebarGroupContent>
               <SidebarMenu>
                 {collections.map((col) => (
                   <SidebarMenuItem key={col.name}>
@@ -176,8 +179,8 @@ export function AppSidebar({ collections }: Props) {
                       isActive={pathname.startsWith(`/admin/${col.name}`)}
                       tooltip={col.label}
                       render={<Link href={`/admin/${col.name}`} />}
+                      style={{ paddingLeft: "1.75rem" }}
                     >
-                      <FileText className="!w-5 !h-5" />
                       <span>{col.label}</span>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
