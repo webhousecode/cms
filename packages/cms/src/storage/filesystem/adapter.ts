@@ -65,6 +65,7 @@ export class FilesystemStorageAdapter implements StorageAdapter {
       updatedAt: timestamp,
       ...(input.locale !== undefined && { locale: input.locale }),
       ...(input.translationOf !== undefined && { translationOf: input.translationOf }),
+      ...(input.publishAt != null && { publishAt: input.publishAt }),
     };
 
     writeFileSync(this.documentPath(collection, slug), JSON.stringify(doc, null, 2), 'utf-8');
@@ -159,6 +160,11 @@ export class FilesystemStorageAdapter implements StorageAdapter {
       updatedAt: now(),
       ...(((input.locale !== undefined ? input.locale : existing.locale) !== undefined) && { locale: input.locale !== undefined ? input.locale : existing.locale }),
       ...(((input.translationOf !== undefined ? input.translationOf : existing.translationOf) !== undefined) && { translationOf: input.translationOf !== undefined ? input.translationOf : existing.translationOf }),
+      ...(() => {
+        // null = clear, string = set, undefined = keep existing
+        const pa = input.publishAt === null ? undefined : (input.publishAt !== undefined ? input.publishAt : existing.publishAt);
+        return pa !== undefined ? { publishAt: pa } : {};
+      })(),
     };
 
     if (input.slug && input.slug !== existing.slug) {

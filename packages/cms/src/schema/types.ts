@@ -28,6 +28,7 @@ export interface FieldConfig {
   options?: Array<{ label: string; value: string }>;
   // relation
   collection?: string;
+  multiple?: boolean;
   // array/object
   fields?: FieldConfig[];
   // blocks

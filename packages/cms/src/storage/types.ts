@@ -44,6 +44,8 @@ export interface Document {
   locale?: string;
   /** Slug of the source document this is a translation of (loose reference, same collection). */
   translationOf?: string;
+  /** ISO timestamp for scheduled auto-publish. Cleared after the cron job publishes the document. */
+  publishAt?: string;
 }
 
 export interface DocumentInput {
@@ -56,6 +58,8 @@ export interface DocumentInput {
   locale?: string;
   /** Slug of the source document this is a translation of */
   translationOf?: string;
+  /** ISO timestamp for scheduled auto-publish. Pass null to clear. */
+  publishAt?: string | null;
 }
 
 export interface QueryOptions {

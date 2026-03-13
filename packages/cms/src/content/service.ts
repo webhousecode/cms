@@ -158,6 +158,30 @@ export class ContentService {
     return { document: doc, skippedFields };
   }
 
+  /**
+   * Publish all draft documents whose publishAt timestamp is in the past.
+   * Called by the cron job every minute. Returns slugs of published documents.
+   */
+  async publishDue(collections?: string[]): Promise<{ collection: string; slug: string }[]> {
+    const targets = collections ?? this.config.collections.map(c => c.name);
+    const now = new Date();
+    const published: { collection: string; slug: string }[] = [];
+
+    for (const col of targets) {
+      const { documents } = await this.storage.findMany(col, { status: 'draft' }).catch(() => ({ documents: [] }));
+      for (const doc of documents) {
+        if (!doc.publishAt) continue;
+        if (new Date(doc.publishAt) > now) continue;
+        await this.storage.update(col, doc.id, {
+          status: 'published',
+          publishAt: null, // clear the schedule
+        });
+        published.push({ collection: col, slug: doc.slug });
+      }
+    }
+    return published;
+  }
+
   async delete(collection: string, id: string, context: WriteContext = DEFAULT_CONTEXT): Promise<void> {
     this.getCollection(collection);
 

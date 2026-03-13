@@ -1,0 +1,18 @@
+[
+    {
+        "type": "File",
+        "name": "/Users/cb/Apps/webhouse/cms-engine/docs/CMS-ENGINE.md",
+        "parent_id": null,
+        "workspaceRoot": "/Users/cb/Apps/webhouse/cms-engine",
+        "workspacePath": "docs/CMS-ENGINE.md",
+        "id": "CwjtpQgyHr5eclEN"
+    },
+    {
+        "type": "File",
+        "name": "/Users/cb/Apps/webhouse/cms-engine/packages/cms-admin/.env.local",
+        "parent_id": null,
+        "workspaceRoot": "/Users/cb/Apps/webhouse/cms-engine",
+        "workspacePath": "packages/cms-admin/.env.local",
+        "id": "M1VREt0jL3ieU9bf"
+    }
+]

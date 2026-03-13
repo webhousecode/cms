@@ -8,7 +8,11 @@
     "dev": "turbo run dev --parallel",
     "test": "vitest",
     "test:run": "vitest run",
-    "lint": "tsc -b"
+    "lint": "tsc -b",
+    "push-secrets": "bash scripts/push-secrets.sh",
+    "push-secrets:fly": "bash scripts/push-secrets.sh fly",
+    "push-secrets:docker": "bash scripts/push-secrets.sh docker",
+    "push-secrets:github": "bash scripts/push-secrets.sh github"
   },
   "devDependencies": {
     "turbo": "^2.3.3",

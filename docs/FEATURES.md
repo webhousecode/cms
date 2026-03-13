@@ -120,5 +120,6 @@ Language ?
   4. Revision history — gem tidligere versioner af et dokument, diff-view, restore
   5. Media library — samlet oversigt over alle uploadede filer på tværs af collections
   6. Horizontal Ruler
-  7. 
+  7. Import (users, data, content)
+  8. WP Migration - API/Admin user access to WP, and migrate ALL data to @cms. 
 
