@@ -23,21 +23,21 @@ interface QueueItem {
 type TabId = "ready" | "in_review" | "approved" | "rejected";
 
 const TABS: { id: TabId; label: string }[] = [
-  { id: "ready", label: "Klar" },
-  { id: "in_review", label: "Under review" },
-  { id: "approved", label: "Godkendt" },
-  { id: "rejected", label: "Afvist" },
+  { id: "ready", label: "Ready" },
+  { id: "in_review", label: "In review" },
+  { id: "approved", label: "Approved" },
+  { id: "rejected", label: "Rejected" },
 ];
 
 function relativeTime(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return "Lige nu";
-  if (mins < 60) return `${mins}m siden`;
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins}m ago`;
   const hours = Math.floor(mins / 60);
-  if (hours < 24) return `${hours}t siden`;
+  if (hours < 24) return `${hours}h ago`;
   const days = Math.floor(hours / 24);
-  return `${days}d siden`;
+  return `${days}d ago`;
 }
 
 export default function CurationPage() {
@@ -103,7 +103,7 @@ export default function CurationPage() {
         <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">
           AI
         </p>
-        <h1 className="text-3xl font-bold text-foreground">Kurerings-koe</h1>
+        <h1 className="text-3xl font-bold text-foreground">Curation Queue</h1>
       </div>
 
       {/* Tabs */}
@@ -131,11 +131,11 @@ export default function CurationPage() {
 
       {/* Items */}
       {loading ? (
-        <p className="text-sm text-muted-foreground">Indlaeser...</p>
+        <p className="text-sm text-muted-foreground">Loading...</p>
       ) : items.length === 0 ? (
         <div className="rounded-xl border border-border p-12 text-center text-muted-foreground">
           <Inbox className="w-12 h-12 mx-auto mb-4 opacity-20" />
-          <p>Ingen items i denne kategori.</p>
+          <p>No items in this category.</p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -173,7 +173,7 @@ export default function CurationPage() {
                 <div className="flex items-center gap-1.5 shrink-0">
                   <button
                     type="button"
-                    title="Laes op"
+                    title="Read aloud"
                     onClick={() => handleSpeak(item)}
                     className="p-1.5 rounded-md hover:bg-secondary transition-colors text-muted-foreground"
                   >
@@ -183,28 +183,28 @@ export default function CurationPage() {
                     <>
                       <button
                         type="button"
-                        title="Godkend & Publicer"
+                        title="Approve & Publish"
                         onClick={() => handleApprove(item.id)}
                         className="flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium bg-green-600 text-white hover:opacity-90 transition-opacity"
                       >
                         <Check className="w-3.5 h-3.5" />
-                        Godkend
+                        Approve
                       </button>
                       <Link
                         href={`/admin/${item.collection}/${item.slug}`}
                         className="flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium border border-border hover:bg-secondary transition-colors"
                       >
                         <Pencil className="w-3.5 h-3.5" />
-                        Rediger
+                        Edit
                       </Link>
                       <button
                         type="button"
-                        title="Afvis"
+                        title="Reject"
                         onClick={() => setRejectingId(item.id)}
                         className="flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
                       >
                         <X className="w-3.5 h-3.5" />
-                        Afvis
+                        Reject
                       </button>
                     </>
                   )}
@@ -217,7 +217,7 @@ export default function CurationPage() {
                   <textarea
                     value={rejectFeedback}
                     onChange={(e) => setRejectFeedback(e.target.value)}
-                    placeholder="Feedback til agenten..."
+                    placeholder="Feedback for the agent..."
                     rows={2}
                     className="flex-1 text-sm p-2 rounded-md border border-border bg-background resize-none"
                   />
@@ -228,7 +228,7 @@ export default function CurationPage() {
                       disabled={!rejectFeedback.trim()}
                       className="px-3 py-1.5 rounded-md text-xs bg-destructive text-white hover:opacity-90 disabled:opacity-50"
                     >
-                      Bekraeft
+                      Confirm
                     </button>
                     <button
                       type="button"
@@ -238,7 +238,7 @@ export default function CurationPage() {
                       }}
                       className="px-3 py-1.5 rounded-md text-xs border border-border hover:bg-secondary"
                     >
-                      Annuller
+                      Cancel
                     </button>
                   </div>
                 </div>

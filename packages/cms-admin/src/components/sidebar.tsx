@@ -124,17 +124,17 @@ export function AppSidebar({ collections }: Props) {
             <SidebarMenuItem>
               <SidebarMenuButton
                 isActive={pathname.startsWith("/admin/agents")}
-                tooltip="AI Agenter"
+                tooltip="AI Agents"
                 render={<Link href="/admin/agents" />}
               >
                 <Bot className="!w-5 !h-5" />
-                <span>AI Agenter</span>
+                <span>AI Agents</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton
                 isActive={pathname === "/admin/curation"}
-                tooltip="Kurerings-kø"
+                tooltip="Curation Queue"
                 render={<Link href="/admin/curation" />}
               >
                 <Inbox className="!w-5 !h-5" />
@@ -165,7 +165,7 @@ export function AppSidebar({ collections }: Props) {
               <ChevronRight className="w-3.5 h-3.5" />
             )}
             <FolderOpen className="w-3.5 h-3.5" />
-            <span className="uppercase tracking-wider">Indhold</span>
+            <span className="uppercase tracking-wider">Content</span>
           </button>
           {contentOpen && (
             <SidebarGroupContent style={{ marginTop: "0.25rem" }}>

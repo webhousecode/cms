@@ -4,11 +4,11 @@ import { Bot, Plus } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const ROLE_LABELS: Record<string, string> = {
-  copywriter: "Indholdsskribent",
-  seo: "SEO Optimering",
-  translator: "Oversætter",
-  refresher: "Indholdsopdatering",
-  custom: "Brugerdefineret",
+  copywriter: "Content Writer",
+  seo: "SEO",
+  translator: "Translator",
+  refresher: "Content Refresher",
+  custom: "Custom",
 };
 
 export default async function AgentsPage() {
@@ -21,30 +21,30 @@ export default async function AgentsPage() {
           <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">
             AI
           </p>
-          <h1 className="text-3xl font-bold text-foreground">AI Agenter</h1>
+          <h1 className="text-3xl font-bold text-foreground">AI Agents</h1>
         </div>
         <Link
           href="/admin/agents/new"
           className="flex items-center gap-1.5 text-sm px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity font-medium"
         >
           <Plus className="w-4 h-4" />
-          Ny Agent
+          New Agent
         </Link>
       </div>
 
       {agents.length === 0 ? (
         <div className="rounded-xl border border-border p-12 text-center text-muted-foreground">
           <Bot className="w-12 h-12 mx-auto mb-4 opacity-20" />
-          <p className="text-lg font-medium mb-2">Ingen agenter endnu</p>
+          <p className="text-lg font-medium mb-2">No agents yet</p>
           <p className="text-sm mb-6">
-            Opret din første AI-agent til at generere indhold automatisk.
+            Create your first AI agent to generate content automatically.
           </p>
           <Link
             href="/admin/agents/new"
             className="inline-flex items-center gap-1.5 text-sm px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity font-medium"
           >
             <Plus className="w-4 h-4" />
-            Opret Agent
+            Create Agent
           </Link>
         </div>
       ) : (
@@ -80,19 +80,19 @@ export default async function AgentsPage() {
 
                 <div className="text-xs text-muted-foreground space-y-1">
                   <p>
-                    {agent.stats.totalGenerated} genereret
+                    {agent.stats.totalGenerated} generated
                     {agent.stats.totalGenerated > 0 && (
-                      <> &middot; {approvalRate}% godkendelse</>
+                      <> &middot; {approvalRate}% approval</>
                     )}
                   </p>
                   {agent.schedule.enabled && (
                     <p>
                       {agent.schedule.frequency === "daily"
-                        ? "Daglig"
+                        ? "Daily"
                         : agent.schedule.frequency === "weekly"
-                        ? "Ugentlig"
-                        : "Manuel"}{" "}
-                      kl. {agent.schedule.time}
+                        ? "Weekly"
+                        : "Manual"}{" "}
+                      at {agent.schedule.time}
                     </p>
                   )}
                 </div>
