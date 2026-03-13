@@ -122,6 +122,15 @@ importers:
       '@webhouse/cms':
         specifier: workspace:*
         version: link:../cms
+      '@webhouse/cms-ai':
+        specifier: workspace:*
+        version: link:../cms-ai
+      '@webhouse/cms-mcp-client':
+        specifier: workspace:*
+        version: link:../cms-mcp-client
+      '@webhouse/cms-mcp-server':
+        specifier: workspace:*
+        version: link:../cms-mcp-server
       bcryptjs:
         specifier: ^3.0.3
         version: 3.0.3
@@ -244,6 +253,47 @@ importers:
       picocolors:
         specifier: ^1.1.1
         version: 1.1.1
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.2
+        version: 22.19.15
+      tsup:
+        specifier: ^8.3.5
+        version: 8.5.1(jiti@2.6.1)(postcss@8.5.8)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
+  packages/cms-mcp-client:
+    dependencies:
+      '@modelcontextprotocol/sdk':
+        specifier: ^1.27.1
+        version: 1.27.1(zod@3.25.76)
+      '@webhouse/cms':
+        specifier: workspace:*
+        version: link:../cms
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.2
+        version: 22.19.15
+      tsup:
+        specifier: ^8.3.5
+        version: 8.5.1(jiti@2.6.1)(postcss@8.5.8)(typescript@5.9.3)
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
+  packages/cms-mcp-server:
+    dependencies:
+      '@modelcontextprotocol/sdk':
+        specifier: ^1.27.1
+        version: 1.27.1(zod@3.25.76)
+      '@webhouse/cms':
+        specifier: workspace:*
+        version: link:../cms
+      '@webhouse/cms-mcp-client':
+        specifier: workspace:*
+        version: link:../cms-mcp-client
     devDependencies:
       '@types/node':
         specifier: ^22.10.2
@@ -4670,7 +4720,7 @@ snapshots:
 
   '@types/better-sqlite3@7.6.13':
     dependencies:
-      '@types/node': 22.19.15
+      '@types/node': 25.4.0
 
   '@types/estree@1.0.8': {}
 
@@ -4694,7 +4744,7 @@ snapshots:
 
   '@types/node-fetch@2.6.13':
     dependencies:
-      '@types/node': 22.19.15
+      '@types/node': 25.4.0
       form-data: 4.0.5
 
   '@types/node@18.19.130':

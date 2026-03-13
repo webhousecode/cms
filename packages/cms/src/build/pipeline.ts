@@ -7,6 +7,8 @@ import { renderSite } from './render.js';
 import { writeOutput } from './output.js';
 import { generateSitemap } from './sitemap.js';
 import { applyAutolinks } from './autolink.js';
+import { generateLlmsTxt } from './llms.js';
+import { generateAiPlugin } from './ai-plugin.js';
 
 export interface BuildOptions {
   outDir?: string;
@@ -52,6 +54,14 @@ export async function runBuild(
       if (linked !== original) writeFileSync(file, linked, 'utf-8');
     }
   }
+
+  // Phase 6: AI access files — llms.txt + .well-known/ai-plugin.json
+  const llmsTxt = generateLlmsTxt(context, baseUrl);
+  writeFileSync(join(outDir, 'llms.txt'), llmsTxt, 'utf-8');
+
+  const wellKnownDir = join(outDir, '.well-known');
+  if (!existsSync(wellKnownDir)) mkdirSync(wellKnownDir, { recursive: true });
+  writeFileSync(join(wellKnownDir, 'ai-plugin.json'), generateAiPlugin(context, baseUrl), 'utf-8');
 
   return {
     pages: pages.length,
