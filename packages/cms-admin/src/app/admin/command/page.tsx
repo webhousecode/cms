@@ -77,7 +77,7 @@ export default function CommandPage() {
   if (!params) {
     return (
       <div className="p-8">
-        <p className="text-sm text-muted-foreground">Indlaeser...</p>
+        <p className="text-sm text-muted-foreground">Loading...</p>
       </div>
     );
   }
@@ -104,7 +104,7 @@ export default function CommandPage() {
           {/* Global params */}
           <div className="rounded-xl border border-border p-5 space-y-5">
             <h2 className="font-semibold text-foreground">
-              Globale Parametre
+              Global Parameters
             </h2>
 
             <div>
@@ -128,18 +128,18 @@ export default function CommandPage() {
                 className="w-full accent-[var(--primary)]"
               />
               <div className="flex justify-between text-[10px] text-muted-foreground">
-                <span>Faktuel</span>
-                <span>Kreativ</span>
+                <span>Factual</span>
+                <span>Creative</span>
               </div>
             </div>
 
             <div>
-              <label style={labelStyle}>Prompt Dybde</label>
+              <label style={labelStyle}>Prompt Depth</label>
               <SegmentedControl
                 options={[
                   { value: "minimal", label: "Minimal" },
                   { value: "medium", label: "Medium" },
-                  { value: "deep", label: "Dybde" },
+                  { value: "deep", label: "Deep" },
                 ]}
                 value={params.promptDepth}
                 onChange={(v) =>
@@ -153,7 +153,7 @@ export default function CommandPage() {
 
             <div>
               <div className="flex items-center justify-between mb-1">
-                <span className="text-xs font-medium">SEO Vaegtning</span>
+                <span className="text-xs font-medium">SEO Weight</span>
                 <span className="text-xs text-muted-foreground font-mono">
                   {params.seoWeight}
                 </span>
@@ -172,18 +172,18 @@ export default function CommandPage() {
                 className="w-full accent-[var(--primary)]"
               />
               <div className="flex justify-between text-[10px] text-muted-foreground">
-                <span>Kreativ frihed</span>
-                <span>SEO Optimeret</span>
+                <span>Creative freedom</span>
+                <span>SEO optimized</span>
               </div>
             </div>
 
             <div>
-              <label style={labelStyle}>Hastighed / Kvalitet</label>
+              <label style={labelStyle}>Speed / Quality</label>
               <SegmentedControl
                 options={[
-                  { value: "fast", label: "Hurtig" },
-                  { value: "balanced", label: "Balanceret" },
-                  { value: "thorough", label: "Grundig" },
+                  { value: "fast", label: "Fast" },
+                  { value: "balanced", label: "Balanced" },
+                  { value: "thorough", label: "Thorough" },
                 ]}
                 value={params.speedQuality}
                 onChange={(v) =>
@@ -201,7 +201,7 @@ export default function CommandPage() {
             <h2 className="font-semibold text-foreground">Model Engine</h2>
 
             <div>
-              <label style={labelStyle}>Primaer model</label>
+              <label style={labelStyle}>Primary model</label>
               <select
                 value={params.primaryModel}
                 onChange={(e) =>
@@ -228,12 +228,12 @@ export default function CommandPage() {
                   })
                 }
               />
-              Multi-model sammenligning
+              Multi-model comparison
             </label>
 
             {params.multiModelEnabled && (
               <div>
-                <label style={labelStyle}>Sammenligningsmodeller</label>
+                <label style={labelStyle}>Compare models</label>
                 <div className="space-y-1.5">
                   {MODELS.filter((m) => m.value !== params.primaryModel).map(
                     (m) => (
@@ -270,7 +270,7 @@ export default function CommandPage() {
             className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity disabled:opacity-60"
           >
             {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-            {saving ? "Gemmer..." : "Gem Indstillinger"}
+            {saving ? "Saving..." : "Save Settings"}
           </button>
         </div>
 
@@ -280,7 +280,7 @@ export default function CommandPage() {
           <div className="rounded-xl border border-border p-5 space-y-3">
             <h2 className="font-semibold text-foreground">Budget</h2>
             <div>
-              <label style={labelStyle}>Maanedligt budget (USD)</label>
+              <label style={labelStyle}>Monthly budget (USD)</label>
               <input
                 type="number"
                 min={0}
@@ -296,7 +296,7 @@ export default function CommandPage() {
               />
             </div>
             <div>
-              <label style={labelStyle}>Brugt denne maaned</label>
+              <label style={labelStyle}>Spent this month</label>
               <p className="text-lg font-mono font-bold text-foreground">
                 ${params.currentMonthSpentUsd.toFixed(2)}
               </p>
@@ -309,7 +309,7 @@ export default function CommandPage() {
                 />
               </div>
               <p className="text-xs text-muted-foreground mt-1">
-                {budgetPct.toFixed(0)}% af budget brugt
+                {budgetPct.toFixed(0)}% of budget used
               </p>
             </div>
           </div>
@@ -319,19 +319,19 @@ export default function CommandPage() {
             <h2 className="font-semibold text-foreground">Status Monitor</h2>
             <div className="space-y-2 text-sm">
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Klar</span>
+                <span className="text-muted-foreground">Ready</span>
                 <span className="font-mono">{queueStats.ready ?? 0}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Under review</span>
+                <span className="text-muted-foreground">In review</span>
                 <span className="font-mono">{queueStats.in_review ?? 0}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Godkendt</span>
+                <span className="text-muted-foreground">Approved</span>
                 <span className="font-mono">{queueStats.approved ?? 0}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-muted-foreground">Afvist</span>
+                <span className="text-muted-foreground">Rejected</span>
                 <span className="font-mono">{queueStats.rejected ?? 0}</span>
               </div>
             </div>
@@ -347,7 +347,7 @@ export default function CommandPage() {
             <RefreshCw
               className={`w-4 h-4 ${syncing ? "animate-spin" : ""}`}
             />
-            {syncing ? "Synkroniserer..." : "Re-Sync Orchestrator"}
+            {syncing ? "Syncing..." : "Re-Sync Orchestrator"}
           </button>
         </div>
       </div>

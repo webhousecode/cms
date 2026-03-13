@@ -6,11 +6,11 @@ import { Loader2, Sparkles, Trash2 } from "lucide-react";
 import type { AgentConfig } from "@/lib/agents";
 
 const ROLES = [
-  { value: "copywriter", label: "Indholdsskribent" },
-  { value: "seo", label: "SEO Optimering" },
-  { value: "translator", label: "Oversætter" },
-  { value: "refresher", label: "Indholdsopdatering" },
-  { value: "custom", label: "Brugerdefineret" },
+  { value: "copywriter", label: "Content Writer" },
+  { value: "seo", label: "SEO" },
+  { value: "translator", label: "Translator" },
+  { value: "refresher", label: "Content Refresher" },
+  { value: "custom", label: "Custom" },
 ] as const;
 
 const labelStyle: React.CSSProperties = {
@@ -88,7 +88,7 @@ export default function AgentDetailPage() {
         setLoading(false);
       })
       .catch(() => {
-        setError("Kunne ikke indlæse agent");
+        setError("Failed to load agent");
         setLoading(false);
       });
   }, [id]);
@@ -105,7 +105,7 @@ export default function AgentDetailPage() {
       if (data.prompt) setSystemPrompt(data.prompt);
       else if (data.error) setError(data.error);
     } catch {
-      setError("Kunne ikke generere prompt");
+      setError("Failed to generate prompt");
     }
     setGenerating(false);
   }
@@ -132,9 +132,9 @@ export default function AgentDetailPage() {
         }),
       });
       const data = await res.json();
-      if (!res.ok) setError(data.error ?? "Kunne ikke gemme");
+      if (!res.ok) setError(data.error ?? "Failed to save");
     } catch {
-      setError("Netværksfejl");
+      setError("Network error");
     }
     setSaving(false);
   }
@@ -145,7 +145,7 @@ export default function AgentDetailPage() {
       await fetch(`/api/cms/agents/${id}`, { method: "DELETE" });
       router.push("/admin/agents");
     } catch {
-      setError("Kunne ikke slette agent");
+      setError("Failed to delete agent");
       setDeleting(false);
     }
   }
@@ -153,7 +153,7 @@ export default function AgentDetailPage() {
   if (loading) {
     return (
       <div className="p-8">
-        <p className="text-sm text-muted-foreground">Indlaeser...</p>
+        <p className="text-sm text-muted-foreground">Loading...</p>
       </div>
     );
   }
@@ -162,19 +162,19 @@ export default function AgentDetailPage() {
     <div className="p-8 max-w-2xl">
       <div className="mb-8">
         <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">
-          AI Agenter
+          AI Agents
         </p>
-        <h1 className="text-2xl font-bold text-foreground">Rediger Agent</h1>
+        <h1 className="text-2xl font-bold text-foreground">Edit Agent</h1>
       </div>
 
       {/* Stats */}
       {stats.totalGenerated > 0 && (
         <div className="grid grid-cols-4 gap-3 mb-8">
           {[
-            { label: "Genereret", value: stats.totalGenerated },
-            { label: "Godkendt", value: stats.approved },
-            { label: "Afvist", value: stats.rejected },
-            { label: "Redigeret", value: stats.edited },
+            { label: "Generated", value: stats.totalGenerated },
+            { label: "Approved", value: stats.approved },
+            { label: "Rejected", value: stats.rejected },
+            { label: "Edited", value: stats.edited },
           ].map((s) => (
             <div
               key={s.label}
@@ -190,7 +190,7 @@ export default function AgentDetailPage() {
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Name */}
         <div>
-          <label style={labelStyle}>Agent Navn</label>
+          <label style={labelStyle}>Agent Name</label>
           <input
             type="text"
             value={name}
@@ -201,7 +201,7 @@ export default function AgentDetailPage() {
 
         {/* Role */}
         <div>
-          <label style={labelStyle}>Rolle</label>
+          <label style={labelStyle}>Role</label>
           <select
             value={role}
             onChange={(e) => setRole(e.target.value)}
@@ -232,7 +232,7 @@ export default function AgentDetailPage() {
               ) : (
                 <Sparkles className="w-3 h-3" />
               )}
-              Auto-generer
+              Auto-generate
             </button>
           </div>
           <textarea
@@ -245,25 +245,25 @@ export default function AgentDetailPage() {
 
         {/* Behavior sliders */}
         <div className="rounded-lg border border-border p-4 space-y-4">
-          <p style={{ ...labelStyle, marginBottom: 0 }}>Adfærd</p>
+          <p style={{ ...labelStyle, marginBottom: 0 }}>Behavior</p>
           <SliderField
-            label="Kreativitet"
-            leftLabel="Faktuel"
-            rightLabel="Kreativ"
+            label="Creativity"
+            leftLabel="Factual"
+            rightLabel="Creative"
             value={temperature}
             onChange={setTemperature}
           />
           <SliderField
-            label="Formalitet"
+            label="Formality"
             leftLabel="Casual"
-            rightLabel="Akademisk"
+            rightLabel="Academic"
             value={formality}
             onChange={setFormality}
           />
           <SliderField
             label="Verbosity"
-            leftLabel="Kort"
-            rightLabel="Detaljeret"
+            leftLabel="Concise"
+            rightLabel="Detailed"
             value={verbosity}
             onChange={setVerbosity}
           />
@@ -271,7 +271,7 @@ export default function AgentDetailPage() {
 
         {/* Tools */}
         <div>
-          <p style={labelStyle}>Vaerktoejer</p>
+          <p style={labelStyle}>Tools</p>
           <div className="space-y-2">
             <label className="flex items-center gap-2 text-sm">
               <input
@@ -279,7 +279,7 @@ export default function AgentDetailPage() {
                 checked={webSearch}
                 onChange={(e) => setWebSearch(e.target.checked)}
               />
-              Websogning
+              Web search
             </label>
             <label className="flex items-center gap-2 text-sm">
               <input
@@ -287,14 +287,14 @@ export default function AgentDetailPage() {
                 checked={internalDatabase}
                 onChange={(e) => setInternalDatabase(e.target.checked)}
               />
-              Intern database
+              Internal database
             </label>
           </div>
         </div>
 
         {/* Autonomy */}
         <div>
-          <p style={labelStyle}>Autonomi</p>
+          <p style={labelStyle}>Autonomy</p>
           <div className="space-y-2">
             <label className="flex items-center gap-2 text-sm">
               <input
@@ -304,9 +304,9 @@ export default function AgentDetailPage() {
                 onChange={() => setAutonomy("draft")}
               />
               <span>
-                <strong>Kladde & Godkendelse</strong>
+                <strong>Draft &amp; Review</strong>
                 <span className="text-muted-foreground ml-1">
-                  — sendes til kurerings-koen
+                  — goes to curation queue
                 </span>
               </span>
             </label>
@@ -318,9 +318,9 @@ export default function AgentDetailPage() {
                 onChange={() => setAutonomy("full")}
               />
               <span>
-                <strong>Fuld Autonomi</strong>
+                <strong>Full Autonomy</strong>
                 <span className="text-muted-foreground ml-1">
-                  — publicerer direkte
+                  — publishes directly
                 </span>
               </span>
             </label>
@@ -335,12 +335,12 @@ export default function AgentDetailPage() {
               checked={scheduleEnabled}
               onChange={(e) => setScheduleEnabled(e.target.checked)}
             />
-            Planlaegning aktiveret
+            Enable schedule
           </label>
           {scheduleEnabled && (
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <label style={labelStyle}>Frekvens</label>
+                <label style={labelStyle}>Frequency</label>
                 <select
                   value={frequency}
                   onChange={(e) =>
@@ -350,13 +350,13 @@ export default function AgentDetailPage() {
                   }
                   style={inputStyle}
                 >
-                  <option value="daily">Daglig</option>
-                  <option value="weekly">Ugentlig</option>
-                  <option value="manual">Manuel</option>
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="manual">Manual</option>
                 </select>
               </div>
               <div>
-                <label style={labelStyle}>Tidspunkt</label>
+                <label style={labelStyle}>Time</label>
                 <input
                   type="time"
                   value={time}
@@ -365,7 +365,7 @@ export default function AgentDetailPage() {
                 />
               </div>
               <div>
-                <label style={labelStyle}>Maks per koersel</label>
+                <label style={labelStyle}>Max per run</label>
                 <input
                   type="number"
                   min={1}
@@ -386,7 +386,7 @@ export default function AgentDetailPage() {
             checked={active}
             onChange={(e) => setActive(e.target.checked)}
           />
-          Agent er aktiv
+          Agent is active
         </label>
 
         {error && <p className="text-sm text-destructive">{error}</p>}
@@ -397,7 +397,7 @@ export default function AgentDetailPage() {
           className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity disabled:opacity-60"
         >
           {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-          {saving ? "Gemmer..." : "Gem Aendringer"}
+          {saving ? "Saving..." : "Save Changes"}
         </button>
       </form>
 
@@ -409,7 +409,7 @@ export default function AgentDetailPage() {
           className="flex items-center gap-1.5 text-sm text-destructive hover:opacity-80 transition-opacity"
         >
           <Trash2 className="w-4 h-4" />
-          Slet agent
+          Delete agent
         </button>
       </div>
 
@@ -437,10 +437,10 @@ export default function AgentDetailPage() {
               width: "90%",
             }}
           >
-            <p className="font-semibold text-foreground mb-2">Slet agent?</p>
+            <p className="font-semibold text-foreground mb-2">Delete agent?</p>
             <p className="text-sm text-muted-foreground mb-4">
-              Denne handling kan ikke fortrydes. Agenten &ldquo;{name}&rdquo; og
-              al dens konfiguration vil blive slettet permanent.
+              This action cannot be undone. The agent &ldquo;{name}&rdquo; and
+              all its configuration will be permanently deleted.
             </p>
             <div className="flex gap-2 justify-end">
               <button
@@ -448,7 +448,7 @@ export default function AgentDetailPage() {
                 onClick={() => setShowDelete(false)}
                 className="px-4 py-2 text-sm rounded-md border border-border bg-transparent hover:bg-secondary transition-colors"
               >
-                Annuller
+                Cancel
               </button>
               <button
                 type="button"
@@ -456,7 +456,7 @@ export default function AgentDetailPage() {
                 disabled={deleting}
                 className="px-4 py-2 text-sm rounded-md bg-destructive text-white hover:opacity-90 transition-opacity disabled:opacity-60"
               >
-                {deleting ? "Sletter..." : "Slet"}
+                {deleting ? "Deleting..." : "Delete"}
               </button>
             </div>
           </div>

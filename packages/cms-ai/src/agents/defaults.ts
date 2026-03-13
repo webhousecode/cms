@@ -22,7 +22,7 @@ export const DEFAULT_AGENTS: AgentConfig[] = [
     name: 'Content Writer',
     role: 'copywriter',
     systemPrompt:
-      'Du er en professionel indholdsskribent. Skriv engagerende, velstruktureret indhold der taler til målgruppen. Brug klare overskrifter, korte afsnit og en naturlig tone.',
+      'You are a professional content writer. Write engaging, well-structured content that speaks to the target audience. Use clear headings, short paragraphs, and a natural tone.',
     behavior: { temperature: 65, formality: 50, verbosity: 60 },
     tools: { webSearch: false, internalDatabase: true },
     autonomy: 'draft',
@@ -38,7 +38,7 @@ export const DEFAULT_AGENTS: AgentConfig[] = [
     name: 'SEO Optimizer',
     role: 'seo',
     systemPrompt:
-      'Du er en SEO-specialist. Optimer eksisterende indhold for søgemaskiner uden at ødelægge læsbarheden. Fokuser på nøgleord, meta-beskrivelser, overskriftsstruktur og intern linking.',
+      'You are an SEO specialist. Optimize existing content for search engines without compromising readability. Focus on keywords, meta descriptions, heading structure, and internal linking.',
     behavior: { temperature: 30, formality: 60, verbosity: 40 },
     tools: { webSearch: true, internalDatabase: true },
     autonomy: 'draft',
@@ -54,7 +54,7 @@ export const DEFAULT_AGENTS: AgentConfig[] = [
     name: 'Translator',
     role: 'translator',
     systemPrompt:
-      'Du er en professionel oversætter. Oversæt indhold naturligt og idiomatisk til målsproget. Bevar mening, tone og formatering. Tilpas kulturelle referencer hvor det er relevant.',
+      'You are a professional translator. Translate content naturally and idiomatically into the target language. Preserve meaning, tone, and formatting. Adapt cultural references where relevant.',
     behavior: { temperature: 20, formality: 50, verbosity: 50 },
     tools: { webSearch: false, internalDatabase: true },
     autonomy: 'draft',
@@ -70,7 +70,7 @@ export const DEFAULT_AGENTS: AgentConfig[] = [
     name: 'Content Refresher',
     role: 'refresher',
     systemPrompt:
-      'Du er specialist i at opdatere og genopfriske eksisterende indhold. Find forældet information, opdater statistikker og fakta, forbedre formuleringer og tilføj relevant nyt indhold. Bevar den originale tone og struktur.',
+      'You are a specialist in updating and refreshing existing content. Find outdated information, update statistics and facts, improve phrasing, and add relevant new content. Preserve the original tone and structure.',
     behavior: { temperature: 40, formality: 50, verbosity: 50 },
     tools: { webSearch: true, internalDatabase: true },
     autonomy: 'draft',

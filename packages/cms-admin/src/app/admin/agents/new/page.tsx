@@ -5,11 +5,11 @@ import { useRouter } from "next/navigation";
 import { Loader2, Sparkles } from "lucide-react";
 
 const ROLES = [
-  { value: "copywriter", label: "Indholdsskribent" },
-  { value: "seo", label: "SEO Optimering" },
-  { value: "translator", label: "Oversætter" },
-  { value: "refresher", label: "Indholdsopdatering" },
-  { value: "custom", label: "Brugerdefineret" },
+  { value: "copywriter", label: "Content Writer" },
+  { value: "seo", label: "SEO" },
+  { value: "translator", label: "Translator" },
+  { value: "refresher", label: "Content Refresher" },
+  { value: "custom", label: "Custom" },
 ] as const;
 
 const labelStyle: React.CSSProperties = {
@@ -67,7 +67,7 @@ export default function NewAgentPage() {
       if (data.prompt) setSystemPrompt(data.prompt);
       else if (data.error) setError(data.error);
     } catch {
-      setError("Kunne ikke generere prompt");
+      setError("Failed to generate prompt");
     }
     setGenerating(false);
   }
@@ -75,7 +75,7 @@ export default function NewAgentPage() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!name.trim()) {
-      setError("Agent navn er påkrævet");
+      setError("Agent name is required");
       return;
     }
     setSaving(true);
@@ -99,13 +99,13 @@ export default function NewAgentPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? "Kunne ikke oprette agent");
+        setError(data.error ?? "Failed to create agent");
         setSaving(false);
         return;
       }
       router.push(`/admin/agents/${data.id}`);
     } catch {
-      setError("Netværksfejl");
+      setError("Network error");
       setSaving(false);
     }
   }
@@ -114,27 +114,27 @@ export default function NewAgentPage() {
     <div className="p-8 max-w-2xl">
       <div className="mb-8">
         <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">
-          AI Agenter
+          AI Agents
         </p>
-        <h1 className="text-2xl font-bold text-foreground">Ny Agent</h1>
+        <h1 className="text-2xl font-bold text-foreground">New Agent</h1>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Name */}
         <div>
-          <label style={labelStyle}>Agent Navn</label>
+          <label style={labelStyle}>Agent Name</label>
           <input
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="F.eks. Blog Skribent"
+            placeholder="e.g. Blog Writer"
             style={inputStyle}
           />
         </div>
 
         {/* Role */}
         <div>
-          <label style={labelStyle}>Rolle</label>
+          <label style={labelStyle}>Role</label>
           <select
             value={role}
             onChange={(e) => setRole(e.target.value)}
@@ -165,39 +165,39 @@ export default function NewAgentPage() {
               ) : (
                 <Sparkles className="w-3 h-3" />
               )}
-              Auto-generer
+              Auto-generate
             </button>
           </div>
           <textarea
             value={systemPrompt}
             onChange={(e) => setSystemPrompt(e.target.value)}
             rows={6}
-            placeholder="Beskriv agentens rolle, tone og begrænsninger..."
+            placeholder="Describe the agent's role, tone and constraints..."
             style={{ ...inputStyle, resize: "vertical" }}
           />
         </div>
 
         {/* Behavior sliders */}
         <div className="rounded-lg border border-border p-4 space-y-4">
-          <p style={{ ...labelStyle, marginBottom: 0 }}>Adfærd</p>
+          <p style={{ ...labelStyle, marginBottom: 0 }}>Behavior</p>
           <SliderField
-            label="Kreativitet"
-            leftLabel="Faktuel"
-            rightLabel="Kreativ"
+            label="Creativity"
+            leftLabel="Factual"
+            rightLabel="Creative"
             value={temperature}
             onChange={setTemperature}
           />
           <SliderField
-            label="Formalitet"
+            label="Formality"
             leftLabel="Casual"
-            rightLabel="Akademisk"
+            rightLabel="Academic"
             value={formality}
             onChange={setFormality}
           />
           <SliderField
             label="Verbosity"
-            leftLabel="Kort"
-            rightLabel="Detaljeret"
+            leftLabel="Concise"
+            rightLabel="Detailed"
             value={verbosity}
             onChange={setVerbosity}
           />
@@ -205,7 +205,7 @@ export default function NewAgentPage() {
 
         {/* Tools */}
         <div>
-          <p style={labelStyle}>Vaerktoejer</p>
+          <p style={labelStyle}>Tools</p>
           <div className="space-y-2">
             <label className="flex items-center gap-2 text-sm">
               <input
@@ -213,7 +213,7 @@ export default function NewAgentPage() {
                 checked={webSearch}
                 onChange={(e) => setWebSearch(e.target.checked)}
               />
-              Websogning
+              Web search
             </label>
             <label className="flex items-center gap-2 text-sm">
               <input
@@ -221,14 +221,14 @@ export default function NewAgentPage() {
                 checked={internalDatabase}
                 onChange={(e) => setInternalDatabase(e.target.checked)}
               />
-              Intern database
+              Internal database
             </label>
           </div>
         </div>
 
         {/* Autonomy */}
         <div>
-          <p style={labelStyle}>Autonomi</p>
+          <p style={labelStyle}>Autonomy</p>
           <div className="space-y-2">
             <label className="flex items-center gap-2 text-sm">
               <input
@@ -238,9 +238,9 @@ export default function NewAgentPage() {
                 onChange={() => setAutonomy("draft")}
               />
               <span>
-                <strong>Kladde & Godkendelse</strong>
+                <strong>Draft & Review</strong>
                 <span className="text-muted-foreground ml-1">
-                  — AI-kladder sendes til kurerings-koen
+                  — AI drafts go to the curation queue
                 </span>
               </span>
             </label>
@@ -252,9 +252,9 @@ export default function NewAgentPage() {
                 onChange={() => setAutonomy("full")}
               />
               <span>
-                <strong>Fuld Autonomi</strong>
+                <strong>Full Autonomy</strong>
                 <span className="text-muted-foreground ml-1">
-                  — Publicerer direkte (kraever &gt;95% godkendelse & 20+ items)
+                  — Publishes directly (requires &gt;95% approval &amp; 20+ items)
                 </span>
               </span>
             </label>
@@ -269,12 +269,12 @@ export default function NewAgentPage() {
               checked={scheduleEnabled}
               onChange={(e) => setScheduleEnabled(e.target.checked)}
             />
-            Planlaegning aktiveret
+            Enable schedule
           </label>
           {scheduleEnabled && (
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <label style={labelStyle}>Frekvens</label>
+                <label style={labelStyle}>Frequency</label>
                 <select
                   value={frequency}
                   onChange={(e) =>
@@ -282,13 +282,13 @@ export default function NewAgentPage() {
                   }
                   style={inputStyle}
                 >
-                  <option value="daily">Daglig</option>
-                  <option value="weekly">Ugentlig</option>
-                  <option value="manual">Manuel</option>
+                  <option value="daily">Daily</option>
+                  <option value="weekly">Weekly</option>
+                  <option value="manual">Manual</option>
                 </select>
               </div>
               <div>
-                <label style={labelStyle}>Tidspunkt</label>
+                <label style={labelStyle}>Time</label>
                 <input
                   type="time"
                   value={time}
@@ -297,7 +297,7 @@ export default function NewAgentPage() {
                 />
               </div>
               <div>
-                <label style={labelStyle}>Maks per koersel</label>
+                <label style={labelStyle}>Max per run</label>
                 <input
                   type="number"
                   min={1}
@@ -318,7 +318,7 @@ export default function NewAgentPage() {
             checked={active}
             onChange={(e) => setActive(e.target.checked)}
           />
-          Agent er aktiv
+          Agent is active
         </label>
 
         {error && (
@@ -333,7 +333,7 @@ export default function NewAgentPage() {
           {saving ? (
             <Loader2 className="w-4 h-4 animate-spin" />
           ) : null}
-          {saving ? "Opretter..." : "Opret Agent"}
+          {saving ? "Creating..." : "Create Agent"}
         </button>
       </form>
     </div>

@@ -9,9 +9,9 @@ export default function PerformancePage() {
       <h1 className="text-3xl font-bold mb-6">Performance</h1>
       <div className="rounded-xl border border-border p-8 text-center text-muted-foreground">
         <BarChart2 className="w-12 h-12 mx-auto mb-4 opacity-20" />
-        <p>Analytics kommer i Phase D.</p>
+        <p>Analytics coming in Phase D.</p>
         <p className="text-sm mt-2">
-          Her vil du se trafik, konvertering og agent-leaderboard.
+          Traffic, conversion rates, and agent leaderboard will appear here.
         </p>
       </div>
     </div>
