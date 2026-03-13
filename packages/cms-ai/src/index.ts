@@ -10,6 +10,25 @@ export type { GenerateOptions, GenerateResult, RewriteOptions } from './agents/c
 export { SeoAgent } from './agents/seo.js';
 export type { SeoResult } from './agents/seo.js';
 
+// Orchestrator
+export { OrchestratorEngine } from './orchestrator/engine.js';
+export { CurationQueue } from './orchestrator/queue.js';
+export { AgentRunner } from './orchestrator/runner.js';
+export { AgentScheduler } from './orchestrator/scheduler.js';
+export type {
+  AgentConfig,
+  QueueItem,
+  CockpitParams,
+  OrchestratorResult,
+} from './orchestrator/types.js';
+
+// Budget
+export { TokenBudgetTracker } from './budget/tracker.js';
+export type { BudgetData, BudgetEntry } from './budget/tracker.js';
+
+// Default agents
+export { DEFAULT_AGENTS } from './agents/defaults.js';
+
 export async function createAi(config: import('./providers/registry.js').ProviderConfig = {}) {
   const { ProviderRegistry } = await import('./providers/registry.js');
   const { ContentAgent } = await import('./agents/content.js');

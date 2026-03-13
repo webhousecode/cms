@@ -1,0 +1,264 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Default dark theme */
+:root {
+  --background:          oklch(0.211 0 0);    /* #171717 */
+  --foreground:          oklch(0.985 0 0);    /* #FAFAFA */
+  --card:                oklch(0.239 0 0);    /* #1F1F1F */
+  --card-foreground:     oklch(0.985 0 0);
+  --popover:             oklch(0.239 0 0);
+  --popover-foreground:  oklch(0.985 0 0);
+  --primary:             oklch(0.82 0.17 85); /* keep CMS yellow/gold */
+  --primary-foreground:  oklch(0.1 0 0);
+  --secondary:           oklch(0.301 0 0);    /* #2E2E2E */
+  --secondary-foreground:oklch(0.985 0 0);
+  --muted:               oklch(0.260 0 0);    /* #242424 */
+  --muted-foreground:    oklch(0.630 0 0);    /* #898989 */
+  --accent:              oklch(0.301 0 0);
+  --accent-foreground:   oklch(0.985 0 0);
+  --destructive:         oklch(0.65 0.22 25);
+  --border:              oklch(0.301 0 0);    /* #2E2E2E */
+  --input:               oklch(0.260 0 0);    /* #242424 */
+  --ring:                oklch(0.82 0.17 85);
+  --radius:              0.5rem;
+  --sidebar:             oklch(0 0 0);         /* #000000 — pure black */
+  --sidebar-foreground:  oklch(0.985 0 0);
+  --sidebar-border:      oklch(0.301 0 0);    /* #2E2E2E — visible separator */
+  --sidebar-header-border: oklch(0.062 0 0);  /* hairline on black — same visual weight as --border on --card */
+  --sidebar-accent:      oklch(0.82 0.17 85 / 15%);
+  --sidebar-accent-foreground: oklch(0.82 0.17 85);
+}
+
+@theme inline {
+  --color-background:         var(--background);
+  --color-foreground:         var(--foreground);
+  --color-card:               var(--card);
+  --color-card-foreground:    var(--card-foreground);
+  --color-popover:            var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary:            var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary:          var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted:              var(--muted);
+  --color-muted-foreground:   var(--muted-foreground);
+  --color-accent:             var(--accent);
+  --color-accent-foreground:  var(--accent-foreground);
+  --color-destructive:        var(--destructive);
+  --color-border:             var(--border);
+  --color-input:              var(--input);
+  --color-ring:               var(--ring);
+  --color-sidebar:            var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-border:     var(--sidebar-border);
+  --color-sidebar-accent:     var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --radius-sm:  calc(var(--radius) * 0.6);
+  --radius-md:  calc(var(--radius) * 0.8);
+  --radius-lg:  var(--radius);
+  --radius-xl:  calc(var(--radius) * 1.4);
+}
+
+/* Light theme override */
+:root.light {
+  --background:          oklch(1 0 0);
+  --foreground:          oklch(0.145 0 0);
+  --card:                oklch(1 0 0);
+  --card-foreground:     oklch(0.145 0 0);
+  --popover:             oklch(1 0 0);
+  --popover-foreground:  oklch(0.145 0 0);
+  --primary:             oklch(0.72 0.17 85);
+  --primary-foreground:  oklch(1 0 0);
+  --secondary:           oklch(0.97 0 0);
+  --secondary-foreground:oklch(0.205 0 0);
+  --muted:               oklch(0.97 0 0);
+  --muted-foreground:    oklch(0.556 0 0);
+  --accent:              oklch(0.97 0 0);
+  --accent-foreground:   oklch(0.205 0 0);
+  --destructive:         oklch(0.577 0.245 27);
+  --border:              oklch(0.922 0 0);
+  --input:               oklch(0.922 0 0);
+  --ring:                oklch(0.72 0.17 85);
+  --sidebar:             oklch(0.955 0 0);
+  --sidebar-foreground:  oklch(0.145 0 0);
+  --sidebar-border:      oklch(0.922 0 0);
+  --sidebar-header-border: oklch(0.862 0 0);  /* same visual weight as --border on white --card */
+  --sidebar-accent:      oklch(0.72 0.17 85 / 12%);
+  --sidebar-accent-foreground: oklch(0.3 0.1 85);
+}
+
+@layer base {
+  * { @apply border-border outline-ring/50; }
+  body { @apply bg-background text-foreground; }
+}
+
+/* Rich text editor — .rte targets the ProseMirror div directly */
+.rte {
+  font-size: 15px !important;
+  line-height: 1.75 !important;
+  color: var(--foreground);
+}
+.rte > * + * { margin-top: 0.8em; }
+.rte p { margin: 0; }
+
+/* Force heading sizes — override Tailwind preflight */
+.rte h1 { font-size: 2rem !important; font-weight: 700 !important; line-height: 1.2 !important; letter-spacing: -0.02em; margin-top: 1.5em; margin-bottom: 0.35em; }
+.rte h2 { font-size: 1.5rem !important; font-weight: 700 !important; line-height: 1.25 !important; letter-spacing: -0.01em; margin-top: 1.25em; margin-bottom: 0.3em; }
+.rte h3 { font-size: 1.15rem !important; font-weight: 600 !important; line-height: 1.4 !important; margin-top: 1em; margin-bottom: 0.2em; }
+.rte > h1:first-child, .rte > h2:first-child, .rte > h3:first-child { margin-top: 0; }
+
+.rte ul { list-style: disc; padding-left: 1.5em; }
+.rte ol { list-style: decimal; padding-left: 1.5em; }
+.rte li + li { margin-top: 0.3em; }
+.rte li > p { margin: 0; }
+
+.rte blockquote {
+  border-left: 3px solid var(--primary);
+  padding-left: 1em;
+  color: var(--muted-foreground);
+  font-style: italic;
+  margin: 1em 0;
+}
+.rte code {
+  font-family: ui-monospace, 'Cascadia Code', monospace;
+  font-size: 0.85em;
+  background: oklch(0.2 0 0);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+.rte strong { font-weight: 700 !important; }
+.rte em { font-style: italic !important; }
+.rte s { text-decoration: line-through; opacity: 0.65; }
+.rte a { color: var(--primary); text-decoration: underline; text-underline-offset: 3px; }
+.rte p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: oklch(0.38 0 0);
+  pointer-events: none;
+  float: left;
+  height: 0;
+}
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: oklch(1 0 0 / 12%); border-radius: 3px; }
+
+/* Tailwind v4 does not always compile position utilities — force them */
+.sticky { position: sticky; }
+.relative { position: relative; }
+
+/* Sidebar background — use CSS var so light theme works */
+[data-slot="sidebar-inner"] {
+  background-color: var(--sidebar);
+  min-height: 100svh;
+}
+
+/* Sidebar border-right */
+[data-slot="sidebar-container"] {
+  border-right: 1px solid var(--sidebar-border);
+  height: 100svh;
+}
+
+
+/* Native select — styled to match Input */
+.native-select {
+  height: 2.25rem;
+  width: 16rem;
+  padding: 0 2rem 0 0.625rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--input);
+  background-color: transparent;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.5rem center;
+  appearance: none;
+  font-size: 0.875rem;
+  color: var(--foreground);
+  outline: none;
+  cursor: pointer;
+  transition: border-color 150ms;
+}
+.native-select:focus {
+  border-color: var(--ring);
+  box-shadow: 0 0 0 3px color-mix(in oklch, var(--ring) 20%, transparent);
+}
+.native-select:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.native-select option {
+  background-color: var(--popover);
+  color: var(--foreground);
+}
+
+/* Rich text editor body padding */
+.rte-body {
+  padding: 1.5rem 2rem 1.5rem 2.5rem; /* extra left room for drag handles */
+  overflow: visible;
+}
+
+/* Drag handle — show on NodeViewWrapper hover */
+[data-node-view-wrapper] { overflow: visible !important; }
+[data-node-view-wrapper]:hover .drag-handle { opacity: 0.45; }
+.drag-handle:hover { opacity: 0.85 !important; background: var(--accent); }
+
+/* Tables in RTE */
+.rte table { border-collapse: collapse; width: 100%; margin: 1em 0; }
+.rte th, .rte td { border: 1px solid var(--border); padding: 0.5rem 0.75rem; text-align: left; font-size: 0.875rem; }
+.rte th { background: rgba(255,255,255,0.04); font-weight: 600; color: var(--foreground); }
+.rte td { color: var(--muted-foreground); }
+.rte .selectedCell { background: rgba(255,255,255,0.06); }
+
+/* Images in RTE */
+.rte img { max-width: 100%; border-radius: 0.5rem; margin: 0.5em 0; display: block; }
+.rte img.ProseMirror-selectednode { outline: 2px solid var(--primary); }
+
+/* Document editor content wrapper — left-aligned, full width with padding */
+.doc-editor-body {
+  padding: 2rem 1rem;
+}
+.doc-editor-body > * + * {
+  margin-top: 2.5rem;
+}
+
+/* Dropdown menu items — guarantee flex row so icon + label stay on one line */
+[data-slot="dropdown-menu-item"],
+[data-slot="dropdown-menu-sub-trigger"] {
+  display: flex !important;
+  align-items: center !important;
+  flex-direction: row !important;
+}
+
+/* Ensure sr-only is always hidden (Tailwind v4 may not compile this in all contexts) */
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border-width: 0 !important;
+}
+
+/* Sidebar layout — Tailwind v4 doesn't compile w-(--var) CSS variable shorthand */
+[data-slot="sidebar-gap"] {
+  flex-shrink: 0;
+  width: var(--sidebar-width);
+  transition: width 200ms linear;
+  background-color: var(--sidebar);
+}
+[data-collapsible="offcanvas"] [data-slot="sidebar-gap"] {
+  width: 0;
+}
+[data-slot="sidebar-container"] {
+  width: var(--sidebar-width);
+  transition: width 200ms linear;
+}
+[data-collapsible="offcanvas"] [data-slot="sidebar-container"] {
+  width: 0;
+}

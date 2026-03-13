@@ -1,0 +1,17 @@
+import type { NextConfig } from "next";
+
+const nextConfig: NextConfig = {
+  // Admin UI runs standalone — no static export
+  // CMS_CONFIG_PATH env var points to the project's cms.config.ts
+  serverExternalPackages: ["better-sqlite3", "@webhouse/cms", "jiti"],
+  // Serve /uploads/* via the dynamic API route which reads from UPLOAD_DIR.
+  // This means uploaded files can live anywhere (e.g. the site's public dir)
+  // and admin thumbnails still work.
+  async rewrites() {
+    return [
+      { source: "/uploads/:path*", destination: "/api/uploads/:path*" },
+    ];
+  },
+};
+
+export default nextConfig;
