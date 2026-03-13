@@ -9,6 +9,9 @@ const AppSidebarInner = dynamic(
   { ssr: false }
 );
 
-export function AppSidebarClient(props: { collections: { name: string; label: string }[] }) {
+export function AppSidebarClient(props: {
+  collections: { name: string; label: string }[];
+  globals: { name: string; label: string }[];
+}) {
   return <AppSidebarInner {...props} />;
 }

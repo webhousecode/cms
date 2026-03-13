@@ -7,6 +7,7 @@ export interface SiteConfig {
   trashRetentionDays: number;
   schemaEditEnabled: boolean;
   devInspector: boolean;
+  showCloseAllTabs: boolean;
 }
 
 function getConfigPath(): string {
@@ -23,6 +24,7 @@ function defaults(): SiteConfig {
     trashRetentionDays: parseInt(process.env.TRASH_RETENTION_DAYS ?? "30", 10),
     schemaEditEnabled: process.env.SCHEMA_EDIT_ENABLED === "true",
     devInspector: process.env.DEV_INSPECTOR === "true",
+    showCloseAllTabs: false,
   };
 }
 

@@ -1,6 +1,7 @@
 "use client";
 
-import { X, Plus, LayoutDashboard } from "lucide-react";
+import { X, Plus, LayoutDashboard, AlertTriangle } from "lucide-react";
+import { useState, useEffect } from "react";
 
 const STATUS_DOT: Record<string, { color: string; title: string }> = {
   published: { color: "rgb(74 222 128)",  title: "Published" },
@@ -14,7 +15,23 @@ import { cn } from "@/lib/utils";
 const TAB_MAX_WIDTH = 180;
 
 export function TabBar() {
-  const { tabs, activeId, openTab, closeTab, switchTab } = useTabs();
+  const { tabs, activeId, openTab, closeTab, closeAllTabs, switchTab } = useTabs();
+  const [showCloseAll, setShowCloseAll] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/admin/site-config")
+      .then((r) => r.json())
+      .then((d: { showCloseAllTabs?: boolean }) => setShowCloseAll(d.showCloseAllTabs ?? false))
+      .catch(() => {});
+
+    function onCfgUpdate(e: Event) {
+      const detail = (e as CustomEvent<{ showCloseAllTabs?: boolean }>).detail;
+      setShowCloseAll(detail.showCloseAllTabs ?? false);
+    }
+    window.addEventListener("cms:site-config-updated", onCfgUpdate);
+    return () => window.removeEventListener("cms:site-config-updated", onCfgUpdate);
+  }, []);
 
   if (tabs.length === 0) return null;
 
@@ -153,6 +170,52 @@ export function TabBar() {
       >
         <Plus style={{ width: "14px", height: "14px" }} />
       </button>
+
+      {/* Close All pill — only when user setting is on and there are multiple tabs */}
+      {showCloseAll && tabs.length > 1 && (
+        <button
+          type="button"
+          onClick={() => setConfirmOpen(true)}
+          style={{
+            flexShrink: 0,
+            alignSelf: "center",
+            marginLeft: "0.375rem",
+            padding: "0.15rem 0.45rem",
+            borderRadius: "4px",
+            border: "1px solid hsl(38 60% 55% / 0.5)",
+            background: "transparent",
+            color: "hsl(38 92% 48%)",
+            fontSize: "0.68rem",
+            cursor: "pointer",
+            whiteSpace: "nowrap",
+            lineHeight: 1.4,
+          }}
+          title="Close all tabs"
+        >
+          Close all
+        </button>
+      )}
+
+      {/* Confirm close-all dialog */}
+      {confirmOpen && (
+        <div
+          style={{ position: "fixed", inset: 0, zIndex: 200, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center" }}
+          onMouseDown={(e) => { if (e.target === e.currentTarget) setConfirmOpen(false); }}
+        >
+          <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "10px", padding: "1.5rem", minWidth: "320px", maxWidth: "420px", boxShadow: "0 8px 32px rgba(0,0,0,0.4)", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+            <div style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem" }}>
+              <AlertTriangle style={{ width: "18px", height: "18px", color: "var(--destructive)", flexShrink: 0, marginTop: "1px" }} />
+              <p style={{ fontSize: "0.9rem", color: "var(--foreground)", margin: 0 }}>
+                Close all {tabs.length} tabs? All open documents will be closed and you'll return to Dashboard.
+              </p>
+            </div>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem" }}>
+              <button type="button" onClick={() => setConfirmOpen(false)} style={{ padding: "0.4rem 0.875rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", fontSize: "0.8rem", cursor: "pointer" }}>Cancel</button>
+              <button type="button" onClick={() => { setConfirmOpen(false); closeAllTabs(); }} style={{ padding: "0.4rem 0.875rem", borderRadius: "6px", border: "none", background: "var(--destructive)", color: "#fff", fontSize: "0.8rem", cursor: "pointer" }}>Close all</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

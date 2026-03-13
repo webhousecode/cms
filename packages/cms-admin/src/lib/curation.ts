@@ -42,6 +42,20 @@ async function writeQueue(items: QueueItem[]): Promise<void> {
   await fs.writeFile(filePath, JSON.stringify(items, null, 2));
 }
 
+export async function addQueueItem(
+  data: Omit<QueueItem, "id" | "generatedAt">
+): Promise<QueueItem> {
+  const items = await readQueue();
+  const item: QueueItem = {
+    ...data,
+    id: `qi-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+    generatedAt: new Date().toISOString(),
+  };
+  items.unshift(item);
+  await writeQueue(items);
+  return item;
+}
+
 export async function listQueueItems(
   status?: QueueItem["status"]
 ): Promise<QueueItem[]> {

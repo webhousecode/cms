@@ -104,22 +104,51 @@ Din analyse er spot-on. Her er de tre modellers trade-offs i praksis:
   1. Nu: Fly.io deploy med same-host model — cms-admin + webhouse-site på én machine, shared /data/ volume
   2. Første kunde: GitHub adapter — admin hostet af jer, kunden deployer fra GitHub
   3. SaaS: Hub med Supabase + per-kunde Fly.io spokes, GitHub adapter som "sync-lag"
-  
+
+Orchestrator scheduling: Skal agenter køre som en persistent background worker (kraftigere, kan køre 24/7) eller som Next.js
+cron/API routes (simplere, kører kun når serveren er oppe)?
+
+  1. Next.js cron routes (Anbefalet)
+     Simplere arkitektur. Scheduling via instrumentation.ts (som vi allerede bruger til publishAt). Kører kun når
+     admin-serveren kører. Nemmere at deploye.
+  2. Persistent worker process
+     Separat Node.js process der kører 24/7. Kraftigere, kan køre uafhængigt af admin UI. Men kræver process management
+     (PM2/systemd) og er mere komplekst at deploye.
+❯ 3. Hybrid
+     Start med Next.js cron, men arkitektér orchestratoren så den kan flyttes til en worker senere. Best of both worlds, men
+     kræver lidt ekstra abstraktionslag.
+
+
 Fra Drupal:
 Content Types (eg. Article (Posts), Pages, Products, Crops, Media, Retailer)
 
-Clone content
-Language ? 
 
-  CMS komponenter — her er hvad der giver mest mening at tage næste:
-
-  1. Video embed — [video:url] block eller et video field type (YouTube/Vimeo + native upload)
-  2. Relations/references — et relation field der linker dokumenter på tværs af collections (f.eks. "related posts" på
+- Clone content
+- Localisation / Language
+- Video embed — [video:url] block eller et video field type (YouTube/Vimeo + native upload)
+- Relations/references — et relation field der linker dokumenter på tværs af collections (f.eks. "related posts" på
   en artikel)
-  3. Scheduled publishing — publishAt timestamp, cron-baseret auto-publish
-  4. Revision history — gem tidligere versioner af et dokument, diff-view, restore
-  5. Media library — samlet oversigt over alle uploadede filer på tværs af collections
-  6. Horizontal Ruler
-  7. Import (users, data, content)
-  8. WP Migration - API/Admin user access to WP, and migrate ALL data to @cms. 
+- Scheduled publishing — publishAt timestamp, cron-baseret auto-publish
+- Revision history — gem tidligere versioner af et dokument, diff-view, restore
+- Media library — samlet oversigt over alle uploadede filer på tværs af collections
+- Horizontal Ruler
+
+- Invite user
+- Import (users, data, content)
+- WP Migration - API/Admin user access to WP, and migrate ALL data to @cms.
+- MCP server
+- Podcast
+- Content speaker
+- CMS Mobile (Content Orchestrator & Curator - COCpit) - AI Cockpit
+- RAG (baseret på artikler + mere og som bliver større med flere artikler)
+- cms-chat-plug-in
+- Learning - ML til at gøre AI bedre baseret på redaktørens rettelser og sprog. 
+- Flere sprogmodeller (Simple, Advanced, Expert)
+- One-click Publish (OcP)
+- Discord + andre til nitifikation (eks. Slach, WhatsApp, Signal, Telegram)
+- Newsletter
+- AI Agent schedules and notifikations setup. 
+- Skal vi have en built-in Link checker agent, der også har en schedule?
+- AI Agent friendly content/RSS/AI agent index to facilitate at en anden agent (web research) nemt kan traversere alt content igennem til sin research.   
+  
 

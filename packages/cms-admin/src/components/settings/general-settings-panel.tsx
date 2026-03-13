@@ -258,6 +258,7 @@ function SiteSection() {
     trashRetentionDays: 30,
     schemaEditEnabled: false,
     devInspector: false,
+    showCloseAllTabs: false,
   });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -279,7 +280,13 @@ function SiteSection() {
     });
     const d = await res.json();
     if (!res.ok) { setError((d as { error?: string }).error ?? "Save failed"); }
-    else { setCfg(d); setSaved(true); setTimeout(() => setSaved(false), 2500); router.refresh(); }
+    else {
+      setCfg(d);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2500);
+      window.dispatchEvent(new CustomEvent("cms:site-config-updated", { detail: d }));
+      router.refresh();
+    }
     setSaving(false);
   }
 
@@ -327,6 +334,18 @@ function SiteSection() {
               <span style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>days</span>
             </div>
           </div>
+        </Card>
+      </div>
+
+      <div>
+        <SectionHeading>Interface</SectionHeading>
+        <Card>
+          <Toggle
+            label="Show Close All in tab bar"
+            description="Adds a 'Close all' pill next to the new-tab button."
+            checked={cfg.showCloseAllTabs}
+            onChange={(v) => setCfg((c) => ({ ...c, showCloseAllTabs: v }))}
+          />
         </Card>
       </div>
 

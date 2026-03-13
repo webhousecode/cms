@@ -12,9 +12,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Settings, Check, Moon, Sun, Monitor, LogOut } from "lucide-react";
+import { Settings, Fingerprint, Check, Moon, Sun, Monitor, LogOut } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 interface SessionUser {
   email: string;
@@ -60,10 +61,11 @@ function ThemeItems() {
 function UserNav({ user }: { user: SessionUser | null }) {
   const displayName = user?.name ?? "Admin";
   const initials = user ? getInitials(user.name) : "?";
+  const router = useRouter();
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
-    window.location.href = "/admin/login";
+    router.push("/admin/login");
   }
 
   return (
@@ -85,11 +87,13 @@ function UserNav({ user }: { user: SessionUser | null }) {
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem onClick={() => window.location.href = "/admin/settings"}>
-            <span style={{ display: "flex", alignItems: "center", gap: "0.5rem", width: "100%" }}>
-              <Settings style={{ width: "1rem", height: "1rem", flexShrink: 0 }} />
-              Settings
-            </span>
+          <DropdownMenuItem onClick={() => router.push("/admin/settings")}>
+            <Settings className="mr-2 h-4 w-4" />
+            Settings
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => router.push("/admin/settings/brand-voice")}>
+            <Fingerprint className="mr-2 h-4 w-4" />
+            Brand Voice
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />

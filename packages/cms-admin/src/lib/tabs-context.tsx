@@ -14,6 +14,7 @@ type TabsCtx = {
   activeId: string | null;
   openTab: (path: string, title?: string, forceNew?: boolean) => void;
   closeTab: (id: string) => void;
+  closeAllTabs: () => void;
   switchTab: (id: string) => void;
   setTabTitle: (title: string) => void;
   setTabStatus: (status: string) => void;
@@ -194,6 +195,15 @@ export function TabsProvider({ children }: { children: ReactNode }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
+  const closeAllTabs = useCallback(() => {
+    const id2 = uid();
+    const dash: Tab = { id: id2, path: "/admin", title: "Dashboard" };
+    applyTabs([dash], id2);
+    skipNextPathChange.current = true;
+    router.push("/admin");
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router]);
+
   const switchTab = useCallback((id: string) => {
     const prev = tabsRef.current;
     const tab = prev.find((t) => t.id === id);
@@ -219,7 +229,7 @@ export function TabsProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <Ctx.Provider value={{ tabs, activeId, openTab, closeTab, switchTab, setTabTitle, setTabStatus }}>
+    <Ctx.Provider value={{ tabs, activeId, openTab, closeTab, closeAllTabs, switchTab, setTabTitle, setTabStatus }}>
       {children}
     </Ctx.Provider>
   );

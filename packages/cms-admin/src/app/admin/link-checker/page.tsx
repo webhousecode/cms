@@ -1,11 +1,20 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { Link2, Play, CheckCircle, XCircle, AlertTriangle, ArrowRight, ExternalLink, Loader2 } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { Link2, Play, CheckCircle, XCircle, ArrowRight, ExternalLink, Loader2 } from "lucide-react";
 import type { LinkResult, ProgressEvent } from "@/app/api/check-links/route";
+import type { LinkCheckRecord } from "@/lib/link-check-store";
 import { cn } from "@/lib/utils";
 
 type RunState = "idle" | "running" | "done" | "error";
+
+function timeAgo(iso: string): string {
+  const secs = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+  if (secs < 60) return `${secs} seconds`;
+  if (secs < 3600) return `${Math.floor(secs / 60)} minutes`;
+  if (secs < 86400) return `${Math.floor(secs / 3600)} hours`;
+  return `${Math.floor(secs / 86400)} days`;
+}
 
 function statusIcon(status: LinkResult["status"]) {
   if (status === "ok") return <CheckCircle style={{ width: "0.875rem", height: "0.875rem", color: "#4ade80", flexShrink: 0 }} />;
@@ -28,6 +37,21 @@ export default function LinkCheckerPage() {
   const [filter, setFilter] = useState<"all" | "broken" | "redirect" | "ok">("broken");
   const [checkedAt, setCheckedAt] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+
+  // Load last persisted result on mount
+  useEffect(() => {
+    fetch("/api/check-links/last")
+      .then((r) => r.json())
+      .then((d: LinkCheckRecord | null) => {
+        if (!d) return;
+        setResults(d.results);
+        setTotal(d.total);
+        setChecked(d.total);
+        setCheckedAt(d.checkedAt);
+        setState("done");
+      })
+      .catch(() => {});
+  }, []);
 
   async function runCheck() {
     setState("running");
@@ -120,7 +144,14 @@ export default function LinkCheckerPage() {
 
       <div className="p-6 max-w-5xl">
 
-        {/* Idle state */}
+        {/* Last-run notice */}
+        {checkedAt && state !== "running" && (
+          <p className="text-xs text-muted-foreground mb-4 font-mono">
+            Last checked: {new Date(checkedAt).toLocaleString()} &nbsp;·&nbsp; It has been {timeAgo(checkedAt)} since your last link check.
+          </p>
+        )}
+
+        {/* Idle state — no previous results */}
         {state === "idle" && results.length === 0 && (
           <div className="flex flex-col items-center justify-center gap-4 py-24 text-muted-foreground">
             <Link2 style={{ width: "3rem", height: "3rem", opacity: 0.2 }} />

@@ -14,21 +14,25 @@ import { ZoomApplier } from "@/components/zoom-applier";
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const config = await getAdminConfig();
 
-  const collections = config.collections.map((c) => ({
+  const allCollections = config.collections.map((c) => ({
     name: c.name,
     label: c.label ?? c.name,
   }));
+  const collections = allCollections
+    .filter((c) => c.name !== "global")
+    .sort((a, b) => a.label.localeCompare(b.label));
+  const globals = allCollections.filter((c) => c.name === "global");
 
   return (
     <SidebarProvider>
-      <AppSidebarClient collections={collections} />
+      <AppSidebarClient collections={collections} globals={globals} />
       <SidebarInset>
         <TabsProvider>
           <AdminHeader />
           <TabBar />
           <CommandPaletteProvider>
             {children}
-            <footer className="mt-auto py-4 text-center">
+            <footer className="mt-16 py-8 text-center">
               <p className="text-[10px] font-mono text-muted-foreground/40">@webhouse/cms v0.1</p>
             </footer>
           </CommandPaletteProvider>

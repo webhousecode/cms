@@ -13,7 +13,6 @@ import {
   Search,
   Link2,
   Trash2,
-  Settings2,
   BarChart2,
   ChevronDown,
   ChevronRight,
@@ -33,6 +32,7 @@ import {
 
 interface Props {
   collections: { name: string; label: string }[];
+  globals: { name: string; label: string }[];
 }
 
 export function AppSidebar({ collections }: Props) {
@@ -288,7 +288,25 @@ export function AppSidebar({ collections }: Props) {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter>
+      <SidebarFooter style={{ paddingBottom: "3rem" }}>
+        {/* Trash */}
+        <SidebarGroup style={{ padding: "0.25rem 0.5rem 0" }}>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                isActive={pathname === "/admin/trash"}
+                tooltip="Trash"
+                render={<Link href="/admin/trash" />}
+              >
+                <Trash2 className="!w-5 !h-5" />
+                <span>Trash</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
+
+        <div className="border-t border-border" />
+
         {/* Budget bar */}
         <div className="px-3 pb-2">
           <div className="text-[10px] text-muted-foreground mb-1 font-mono">
@@ -302,33 +320,6 @@ export function AppSidebar({ collections }: Props) {
           </div>
         </div>
 
-        <div className="border-t border-border" />
-
-        {/* Trash & Settings */}
-        <SidebarGroup style={{ padding: "0.25rem 0.5rem" }}>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                isActive={pathname === "/admin/trash"}
-                tooltip="Trash"
-                render={<Link href="/admin/trash" />}
-              >
-                <Trash2 className="!w-5 !h-5" />
-                <span>Trash</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                isActive={pathname.startsWith("/admin/settings")}
-                tooltip="Settings"
-                render={<Link href="/admin/settings" />}
-              >
-                <Settings2 className="!w-5 !h-5" />
-                <span>Settings</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroup>
       </SidebarFooter>
     </Sidebar>
   );

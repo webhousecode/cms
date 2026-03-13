@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, useRef, type FormEvent, type KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Sparkles } from "lucide-react";
+import { Loader2, Sparkles, Send, ChevronDown } from "lucide-react";
 import { CustomSelect } from "@/components/ui/custom-select";
 
 const ROLES = [
@@ -39,6 +39,14 @@ export default function NewAgentPage() {
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState("");
 
+  // AI description chat
+  const [description, setDescription] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState("");
+  const [formFilled, setFormFilled] = useState(false);
+  const [formCollapsed, setFormCollapsed] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
   const [name, setName] = useState("");
   const [role, setRole] = useState<string>("copywriter");
   const [systemPrompt, setSystemPrompt] = useState("");
@@ -55,6 +63,58 @@ export default function NewAgentPage() {
   const [time, setTime] = useState("06:00");
   const [maxPerRun, setMaxPerRun] = useState(3);
   const [active, setActive] = useState(true);
+
+  async function handleDescribe() {
+    if (!description.trim()) return;
+    setAiLoading(true);
+    setAiError("");
+    try {
+      const res = await fetch("/api/cms/agents/create-from-description", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ description }),
+      });
+      const data = await res.json();
+      if (!res.ok || !data.config) {
+        setAiError(data.error ?? "Failed to generate agent");
+        return;
+      }
+      const c = data.config;
+      if (c.name) setName(c.name);
+      if (c.role) setRole(c.role);
+      if (c.systemPrompt) setSystemPrompt(c.systemPrompt);
+      if (c.behavior) {
+        if (c.behavior.temperature !== undefined) setTemperature(c.behavior.temperature);
+        if (c.behavior.formality !== undefined) setFormality(c.behavior.formality);
+        if (c.behavior.verbosity !== undefined) setVerbosity(c.behavior.verbosity);
+      }
+      if (c.tools) {
+        if (c.tools.webSearch !== undefined) setWebSearch(c.tools.webSearch);
+        if (c.tools.internalDatabase !== undefined) setInternalDatabase(c.tools.internalDatabase);
+      }
+      if (c.autonomy) setAutonomy(c.autonomy);
+      if (c.schedule) {
+        if (c.schedule.enabled !== undefined) setScheduleEnabled(c.schedule.enabled);
+        if (c.schedule.frequency) setFrequency(c.schedule.frequency);
+        if (c.schedule.time) setTime(c.schedule.time);
+        if (c.schedule.maxPerRun) setMaxPerRun(c.schedule.maxPerRun);
+      }
+      if (c.active !== undefined) setActive(c.active);
+      setFormFilled(true);
+      setFormCollapsed(false);
+    } catch {
+      setAiError("Network error");
+    } finally {
+      setAiLoading(false);
+    }
+  }
+
+  function handleDescribeKey(e: KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+      e.preventDefault();
+      handleDescribe();
+    }
+  }
 
   async function handleGeneratePrompt() {
     setGenerating(true);
@@ -120,6 +180,93 @@ export default function NewAgentPage() {
         <h1 className="text-2xl font-bold text-foreground">New Agent</h1>
       </div>
 
+      {/* ── AI describe-to-create panel ─────────────────────────── */}
+      <div
+        style={{
+          marginBottom: "2rem",
+          borderRadius: "12px",
+          border: "1px solid color-mix(in srgb, var(--primary) 30%, var(--border))",
+          background: "color-mix(in srgb, var(--primary) 4%, var(--card))",
+          overflow: "hidden",
+        }}
+      >
+        {/* Header */}
+        <div style={{ display: "flex", alignItems: "center", gap: "0.6rem", padding: "0.875rem 1rem 0.75rem" }}>
+          <Sparkles style={{ width: "15px", height: "15px", color: "var(--primary)", flexShrink: 0 }} />
+          <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "var(--foreground)", flex: 1 }}>
+            Describe your agent
+          </span>
+          {formFilled && (
+            <button
+              type="button"
+              onClick={() => setFormCollapsed((v) => !v)}
+              style={{ display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.72rem", color: "var(--muted-foreground)", background: "none", border: "none", cursor: "pointer", padding: 0 }}
+            >
+              {formCollapsed ? "Show form" : "Hide form"}
+              <ChevronDown style={{ width: "12px", height: "12px", transform: formCollapsed ? "rotate(-90deg)" : "none", transition: "transform 150ms" }} />
+            </button>
+          )}
+        </div>
+
+        {/* Input area */}
+        <div style={{ padding: "0 1rem 1rem", display: "flex", flexDirection: "column", gap: "0.625rem" }}>
+          <textarea
+            ref={textareaRef}
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            onKeyDown={handleDescribeKey}
+            rows={3}
+            placeholder={"e.g. \"An agent that writes evidence-based physiotherapy articles in Danish, academic tone, can search the web, runs every Monday at 7am\""}
+            style={{
+              width: "100%",
+              padding: "0.625rem 0.75rem",
+              borderRadius: "8px",
+              border: "1px solid var(--border)",
+              background: "var(--background)",
+              color: "var(--foreground)",
+              fontSize: "0.85rem",
+              outline: "none",
+              resize: "vertical",
+              boxSizing: "border-box",
+              lineHeight: 1.5,
+            }}
+          />
+
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+            <button
+              type="button"
+              onClick={handleDescribe}
+              disabled={aiLoading || !description.trim()}
+              style={{
+                display: "flex", alignItems: "center", gap: "0.4rem",
+                padding: "0.45rem 1rem", borderRadius: "7px", border: "none",
+                background: "var(--primary)", color: "var(--primary-foreground)",
+                fontSize: "0.8rem", fontWeight: 600, cursor: aiLoading || !description.trim() ? "not-allowed" : "pointer",
+                opacity: aiLoading || !description.trim() ? 0.6 : 1,
+                transition: "opacity 150ms",
+              }}
+            >
+              {aiLoading
+                ? <><Loader2 style={{ width: "13px", height: "13px" }} className="animate-spin" /> Generating…</>
+                : <><Send style={{ width: "13px", height: "13px" }} /> Generate agent</>
+              }
+            </button>
+            <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)" }}>⌘ Enter</span>
+            {formFilled && !aiLoading && (
+              <span style={{ fontSize: "0.72rem", color: "hsl(142 71% 45%)", marginLeft: "auto" }}>
+                ✓ Form filled — review and save below
+              </span>
+            )}
+          </div>
+
+          {aiError && (
+            <p style={{ fontSize: "0.75rem", color: "var(--destructive)", margin: 0 }}>{aiError}</p>
+          )}
+        </div>
+      </div>
+
+      {/* ── Manual form (collapsible after AI fill) ─────────────── */}
+      {!formCollapsed && (
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Name */}
         <div>
@@ -329,6 +476,7 @@ export default function NewAgentPage() {
           {saving ? "Creating..." : "Create Agent"}
         </button>
       </form>
+      )}
     </div>
   );
 }

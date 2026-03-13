@@ -2,7 +2,7 @@
 
 import { useState, useEffect, type FormEvent } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { Loader2, Sparkles, Trash2 } from "lucide-react";
+import { Loader2, Sparkles, Trash2, Play, CheckCircle } from "lucide-react";
 import { CustomSelect } from "@/components/ui/custom-select";
 import type { AgentConfig } from "@/lib/agents";
 
@@ -43,6 +43,10 @@ export default function AgentDetailPage() {
   const [error, setError] = useState("");
   const [showDelete, setShowDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [runPrompt, setRunPrompt] = useState("");
+  const [running, setRunning] = useState(false);
+  const [runResult, setRunResult] = useState<{ title: string } | null>(null);
+  const [runError, setRunError] = useState("");
 
   const [name, setName] = useState("");
   const [role, setRole] = useState<string>("copywriter");
@@ -138,6 +142,26 @@ export default function AgentDetailPage() {
       setError("Network error");
     }
     setSaving(false);
+  }
+
+  async function handleRun() {
+    if (!runPrompt.trim()) return;
+    setRunning(true);
+    setRunError("");
+    setRunResult(null);
+    try {
+      const res = await fetch(`/api/cms/agents/${id}/run`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt: runPrompt }),
+      });
+      const data = await res.json();
+      if (!res.ok) setRunError(data.error ?? "Failed to run agent");
+      else setRunResult(data);
+    } catch {
+      setRunError("Network error");
+    }
+    setRunning(false);
   }
 
   async function handleDelete() {
@@ -392,8 +416,40 @@ export default function AgentDetailPage() {
         </button>
       </form>
 
+      {/* Run now */}
+      <div className="mt-8 pt-6 border-t border-border space-y-3">
+        <p style={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--muted-foreground)", margin: 0 }}>
+          Run agent now
+        </p>
+        <textarea
+          value={runPrompt}
+          onChange={(e) => setRunPrompt(e.target.value)}
+          rows={2}
+          placeholder="Describe what to generate, e.g. &quot;Write an article about rotator cuff injuries for athletes&quot;"
+          style={{ width: "100%", padding: "0.5rem 0.75rem", borderRadius: "7px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.875rem", outline: "none", resize: "vertical", boxSizing: "border-box" }}
+        />
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+          <button
+            type="button"
+            onClick={handleRun}
+            disabled={running || !runPrompt.trim()}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-60"
+          >
+            {running ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+            {running ? "Running…" : "Run now"}
+          </button>
+          {runResult && (
+            <span style={{ display: "flex", alignItems: "center", gap: "0.35rem", fontSize: "0.8rem", color: "hsl(142 71% 45%)" }}>
+              <CheckCircle style={{ width: "14px", height: "14px" }} />
+              &ldquo;{runResult.title}&rdquo; added to Curation Queue
+            </span>
+          )}
+          {runError && <span style={{ fontSize: "0.8rem", color: "var(--destructive)" }}>{runError}</span>}
+        </div>
+      </div>
+
       {/* Delete section */}
-      <div className="mt-10 pt-6 border-t border-border">
+      <div className="mt-6 pt-6 border-t border-border">
         <button
           type="button"
           onClick={() => setShowDelete(true)}
