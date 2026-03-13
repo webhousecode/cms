@@ -4,6 +4,7 @@ import { devCommand } from './commands/dev.js';
 import { buildCommand } from './commands/build.js';
 import { serveCommand } from './commands/serve.js';
 import { aiGenerateCommand, aiRewriteCommand, aiSeoCommand } from './commands/ai.js';
+import { mcpKeygenCommand, mcpTestCommand, mcpStatusCommand } from './commands/mcp.js';
 
 const init = defineCommand({
   meta: { name: 'init', description: 'Initialize a new CMS project' },
@@ -93,13 +94,49 @@ const ai = defineCommand({
   subCommands: { generate: aiGenerate, rewrite: aiRewrite, seo: aiSeo },
 });
 
+const mcpKeygen = defineCommand({
+  meta: { name: 'keygen', description: 'Generate a new MCP API key' },
+  args: {
+    label: { type: 'string', description: 'Key label (e.g. "Claude iOS")', default: 'My key' },
+    scopes: { type: 'string', description: 'Comma-separated scopes', default: 'read,write,publish,deploy,ai' },
+  },
+  async run({ args }) {
+    await mcpKeygenCommand({ label: args.label, scopes: args.scopes });
+  },
+});
+
+const mcpTest = defineCommand({
+  meta: { name: 'test', description: 'Test the local MCP server' },
+  args: {
+    endpoint: { type: 'string', description: 'MCP endpoint URL', default: 'http://localhost:3001/api/mcp' },
+  },
+  async run({ args }) {
+    await mcpTestCommand({ endpoint: args.endpoint });
+  },
+});
+
+const mcpStatus = defineCommand({
+  meta: { name: 'status', description: 'Check MCP server status' },
+  args: {
+    endpoint: { type: 'string', description: 'Admin server base URL', default: 'http://localhost:3001' },
+  },
+  async run({ args }) {
+    await mcpStatusCommand({ endpoint: args.endpoint });
+  },
+});
+
+const mcp = defineCommand({
+  meta: { name: 'mcp', description: 'MCP server management' },
+  subCommands: { keygen: mcpKeygen, test: mcpTest, status: mcpStatus },
+});
+
 const main = defineCommand({
   meta: {
     name: 'cms',
     description: '@webhouse/cms — AI-native CMS engine',
     version: '0.1.0',
   },
-  subCommands: { init, dev, build, serve, ai },
+  subCommands: { init, dev, build, serve, ai, mcp },
 });
 
 runMain(main);
