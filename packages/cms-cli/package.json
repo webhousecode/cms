@@ -48,8 +48,8 @@
     "access": "public"
   },
   "dependencies": {
-    "@webhouse/cms": "^0.1.1",
-    "@webhouse/cms-ai": "^0.1.1",
+    "@webhouse/cms": "workspace:*",
+    "@webhouse/cms-ai": "workspace:*",
     "@hono/node-server": "^1.13.7",
     "jiti": "^2.4.2",
     "citty": "^0.1.6",
