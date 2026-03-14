@@ -31,7 +31,7 @@ export async function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL("/admin", request.url));
       } catch { /* fall through to landing */ }
     }
-    return NextResponse.rewrite(new URL("/landing.html", request.url));
+    return NextResponse.rewrite(new URL("/home.html", request.url));
   }
 
   // Allow public paths
