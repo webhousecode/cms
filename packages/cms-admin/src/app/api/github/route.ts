@@ -132,7 +132,6 @@ export async function POST(request: NextRequest) {
         private: body.private ?? true,
         description: body.description ?? "",
         auto_init: true,
-        gitignore_template: "Node",
       }),
     });
 
@@ -142,9 +141,14 @@ export async function POST(request: NextRequest) {
     }
 
     const repo = (await res.json()) as { name: string; full_name: string; default_branch: string; private: boolean };
+    const repoUrl = `https://api.github.com/repos/${repo.full_name}`;
 
-    // Seed cms.config.ts into the repo
-    const configContent = `import { defineConfig, defineCollection } from '@webhouse/cms';
+    // ── Seed files into the repo ──────────────────────────────
+
+    const siteName = body.name.replace(/[-_]/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase());
+
+    const seedFiles: Record<string, string> = {
+      "cms.config.ts": `import { defineConfig, defineCollection } from '@webhouse/cms';
 
 export default defineConfig({
   collections: [
@@ -169,17 +173,86 @@ export default defineConfig({
     },
   },
 });
-`;
+`,
+      ".gitignore": `# Dependencies
+node_modules/
 
-    await fetch(`https://api.github.com/repos/${repo.full_name}/contents/cms.config.ts`, {
-      method: "PUT",
-      headers,
-      body: JSON.stringify({
-        message: "chore: add cms.config.ts",
-        content: Buffer.from(configContent).toString("base64"),
-        branch: repo.default_branch,
-      }),
-    });
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Build output
+.next/
+out/
+dist/
+build/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+`,
+      ".env.example": `# ${siteName}
+# Copy to .env.local and fill in values
+
+# CMS Admin URL (for preview links)
+# NEXT_PUBLIC_SITE_URL=https://example.com
+
+# AI keys (optional — can also be set via CMS Admin → Settings → AI)
+# ANTHROPIC_API_KEY=
+# OPENAI_API_KEY=
+`,
+      ".nvmrc": "22\n",
+      "content/.gitkeep": "",
+      "README.md": `# ${siteName}
+
+Content-managed site powered by [@webhouse/cms](https://github.com/webhousecode/cms).
+
+## Getting started
+
+1. Open CMS Admin and select this site
+2. Add collections and content via the admin UI
+3. Content is stored as JSON in the \`content/\` directory
+
+## Structure
+
+\`\`\`
+cms.config.ts    # CMS schema definition
+content/         # Content JSON files (managed by CMS)
+.env.example     # Environment variable template
+\`\`\`
+
+## Links
+
+- [CMS Documentation](https://github.com/webhousecode/cms)
+- [CMS Admin](http://localhost:3010/admin)
+`,
+    };
+
+    // Use the Contents API to create files one by one
+    // (simpler than tree API and works fine for a handful of files)
+    for (const [path, content] of Object.entries(seedFiles)) {
+      await fetch(`${repoUrl}/contents/${path}`, {
+        method: "PUT",
+        headers,
+        body: JSON.stringify({
+          message: path === "cms.config.ts" ? "chore: initialize CMS site" : `chore: add ${path}`,
+          content: Buffer.from(content).toString("base64"),
+          branch: repo.default_branch,
+        }),
+      });
+    }
 
     return NextResponse.json({
       ok: true,
