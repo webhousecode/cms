@@ -22,6 +22,18 @@ const PUBLIC_PREFIXES = [
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // Root path: authenticated → /admin, unauthenticated → landing page
+  if (pathname === "/") {
+    const token = request.cookies.get(COOKIE_NAME)?.value;
+    if (token) {
+      try {
+        await jwtVerify(token, getJwtSecret());
+        return NextResponse.redirect(new URL("/admin", request.url));
+      } catch { /* fall through to landing */ }
+    }
+    return NextResponse.rewrite(new URL("/landing.html", request.url));
+  }
+
   // Allow public paths
   if (PUBLIC_PATHS.includes(pathname)) return NextResponse.next();
   if (PUBLIC_PREFIXES.some((p) => pathname.startsWith(p))) return NextResponse.next();
@@ -64,5 +76,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/api/cms/:path*"],
+  matcher: ["/", "/admin/:path*", "/api/cms/:path*"],
 };

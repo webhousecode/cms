@@ -19,6 +19,6 @@ export default async function Root() {
   if (await isAuthenticated()) {
     redirect("/admin");
   }
-  // Serve static landing page for unauthenticated users
-  redirect("/landing.html");
+  // Unauthenticated users go to login
+  redirect("/admin/login");
 }
