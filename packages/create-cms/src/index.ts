@@ -138,6 +138,21 @@ write('.mcp.json', JSON.stringify({
 // ── 4. content/.gitkeep ─────────────────────────────────────────────────
 write('content/.gitkeep', '');
 
+// ── 4b. public/favicon.svg ──────────────────────────────────────────────
+mkdirSync(join(dir, 'public'), { recursive: true });
+write('public/favicon.svg', `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
+  <path fill="#2a2a3e" d="M32,0C16.8,0,1.5,9.1,1.5,27.3s9.1,32.2,21.3,36.5c6.1,1.8,9.1-1.8,9.1-7.9"/>
+  <path fill="#212135" d="M1.5,27.3c-3,9.1-1.2,22.5,4.9,29.8,4.9,4.9,12.2,7.3,16.4,6.7"/>
+  <path fill="#f7bb2e" d="M32,0c15.2,0,30.4,9.1,30.4,27.3s-9.1,32.2-21.3,36.5c-6.1,1.8-9.1-1.8-9.1-7.9"/>
+  <path fill="#d9a11a" d="M62.3,27.3c3,9.1,1.2,22.5-4.9,29.8-4.9,4.9-12.2,7.3-16.4,6.7"/>
+  <path fill="#fff" d="M10,30.4c7.3-11.3,14.6-17,21.9-17s14.6,5.7,21.9,17c-7.3,11.3-14.6,17-21.9,17s-14.6-5.7-21.9-17Z"/>
+  <circle fill="#f7bb2e" cx="32" cy="30.4" r="9.1"/>
+  <circle fill="#0d0d0d" cx="32" cy="30.4" r="4"/>
+  <circle fill="#fff" opacity=".9" cx="34.4" cy="27.9" r="1.7"/>
+  <circle fill="#fff" opacity=".3" cx="30" cy="32.5" r=".8"/>
+</svg>
+`);
+
 // ── 5. .gitignore ───────────────────────────────────────────────────────
 write('.gitignore', `# CMS per-site data (AI keys, user data — never committed)
 _data/
