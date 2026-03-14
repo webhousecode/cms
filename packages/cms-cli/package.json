@@ -1,8 +1,9 @@
 {
   "name": "@webhouse/cms-cli",
   "version": "0.1.0",
-  "description": "CLI for @webhouse/cms",
+  "description": "CLI for @webhouse/cms — init, dev, build, and AI content tools",
   "type": "module",
+  "license": "MIT",
   "bin": {
     "cms": "./dist/index.js"
   },
@@ -12,10 +13,39 @@
       "types": "./dist/index.d.ts"
     }
   },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/webhousecode/cms.git",
+    "directory": "packages/cms-cli"
+  },
+  "homepage": "https://github.com/webhousecode/cms#readme",
+  "bugs": {
+    "url": "https://github.com/webhousecode/cms/issues"
+  },
+  "keywords": [
+    "cms",
+    "cli",
+    "webhouse",
+    "ai-native",
+    "static-site-generator",
+    "content-management",
+    "typescript"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "dependencies": {
     "@webhouse/cms": "workspace:*",
