@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Link2, Play, CheckCircle, XCircle, ArrowRight, ExternalLink, Loader2 } from "lucide-react";
+import { Link2, Play, CheckCircle, XCircle, ArrowRight, ExternalLink, Loader2, Wrench, Check, X } from "lucide-react";
 import type { LinkResult, ProgressEvent } from "@/app/api/check-links/route";
 import type { LinkCheckRecord } from "@/lib/link-check-store";
 import { cn } from "@/lib/utils";
 
 type RunState = "idle" | "running" | "done" | "error";
+type FixState = { loading: boolean; suggestion?: string | null; reason?: string; confidence?: string; applied?: boolean; error?: string };
 
 function timeAgo(iso: string): string {
   const secs = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
@@ -27,6 +28,125 @@ function statusLabel(r: LinkResult) {
   if (r.status === "redirect") return `${r.httpStatus} → ${r.redirectTo}`;
   if (r.status === "broken") return r.httpStatus ? `${r.httpStatus} Broken` : r.error ?? "Not found";
   return r.error ?? "Error";
+}
+
+function FixButton({ link, onFixed }: { link: LinkResult; onFixed: (newUrl: string) => void }) {
+  const [fix, setFix] = useState<FixState>({ loading: false });
+
+  async function getSuggestion() {
+    setFix({ loading: true });
+    try {
+      const res = await fetch("/api/check-links/fix", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          url: link.url,
+          text: link.text,
+          docCollection: link.docCollection,
+          docSlug: link.docSlug,
+          type: link.type,
+          error: link.error,
+        }),
+      });
+      const data = await res.json();
+      setFix({ loading: false, suggestion: data.suggestion, reason: data.reason, confidence: data.confidence });
+    } catch {
+      setFix({ loading: false, error: "Failed to get suggestion" });
+    }
+  }
+
+  async function applySuggestion() {
+    if (!fix.suggestion) return;
+    setFix((s) => ({ ...s, loading: true }));
+    try {
+      const res = await fetch("/api/check-links/apply-fix", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          docCollection: link.docCollection,
+          docSlug: link.docSlug,
+          field: link.field,
+          oldUrl: link.url,
+          newUrl: fix.suggestion,
+          linkText: link.text,
+        }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        setFix((s) => ({ ...s, loading: false, error: err.error }));
+        return;
+      }
+      setFix((s) => ({ ...s, loading: false, applied: true }));
+      onFixed(fix.suggestion!);
+    } catch {
+      setFix((s) => ({ ...s, loading: false, error: "Failed to apply fix" }));
+    }
+  }
+
+  if (fix.applied) {
+    return (
+      <span className="flex items-center gap-1 text-xs text-green-400 font-mono">
+        <Check style={{ width: "0.75rem", height: "0.75rem" }} /> Fixed
+      </span>
+    );
+  }
+
+  if (fix.suggestion !== undefined) {
+    return (
+      <div className="flex flex-col gap-1">
+        {fix.suggestion ? (
+          <>
+            <div className="flex items-center gap-1.5">
+              <span className="font-mono text-xs text-foreground truncate max-w-[180px]" title={fix.suggestion}>
+                {fix.suggestion}
+              </span>
+              {fix.confidence === "high" && (
+                <span className="text-[9px] px-1 py-px rounded bg-green-500/10 text-green-400">high</span>
+              )}
+            </div>
+            <div className="text-[10px] text-muted-foreground">{fix.reason}</div>
+            <div className="flex gap-1.5 mt-0.5">
+              <button
+                type="button"
+                onClick={applySuggestion}
+                disabled={fix.loading}
+                className="flex items-center gap-1 text-[11px] px-2 py-0.5 rounded bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50"
+              >
+                {fix.loading ? <Loader2 style={{ width: "0.6rem", height: "0.6rem", animation: "spin 1s linear infinite" }} /> : <Check style={{ width: "0.6rem", height: "0.6rem" }} />}
+                Apply
+              </button>
+              <button
+                type="button"
+                onClick={() => setFix({ loading: false })}
+                className="flex items-center gap-1 text-[11px] px-2 py-0.5 rounded border border-border hover:bg-accent"
+              >
+                <X style={{ width: "0.6rem", height: "0.6rem" }} />
+              </button>
+            </div>
+          </>
+        ) : (
+          <span className="text-[11px] text-muted-foreground">{fix.reason ?? "No suggestion"}</span>
+        )}
+        {fix.error && <span className="text-[11px] text-red-400">{fix.error}</span>}
+      </div>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={getSuggestion}
+      disabled={fix.loading}
+      className="flex items-center gap-1 text-[11px] px-2 py-1 rounded border border-border hover:bg-accent hover:border-primary/40 transition-colors disabled:opacity-50"
+    >
+      {fix.loading ? (
+        <Loader2 style={{ width: "0.7rem", height: "0.7rem", animation: "spin 1s linear infinite" }} />
+      ) : (
+        <Wrench style={{ width: "0.7rem", height: "0.7rem" }} />
+      )}
+      Fix
+    </button>
+  );
 }
 
 export default function LinkCheckerPage() {
@@ -217,7 +337,7 @@ export default function LinkCheckerPage() {
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem" }}>
               <thead>
                 <tr style={{ borderBottom: "1px solid var(--border)", background: "var(--muted)" }}>
-                  {["", "URL", "Item", "Field", "Status"].map((h) => (
+                  {["", "URL", "Item", "Field", "Status", ""].map((h) => (
                     <th key={h} style={{ padding: "0.5rem 0.875rem", textAlign: "left", fontFamily: "monospace", fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--muted-foreground)", fontWeight: 400 }}>{h}</th>
                   ))}
                 </tr>
@@ -272,6 +392,18 @@ export default function LinkCheckerPage() {
                       >
                         {statusLabel(r)}
                       </span>
+                    </td>
+                    <td style={{ padding: "0.5rem 0.875rem" }}>
+                      {(r.status === "broken" || r.status === "error") && (
+                        <FixButton
+                          link={r}
+                          onFixed={(newUrl) => {
+                            setResults((prev) => prev.map((p) =>
+                              p === r ? { ...p, url: newUrl, status: "ok", error: undefined, httpStatus: undefined } : p
+                            ));
+                          }}
+                        />
+                      )}
                     </td>
                   </tr>
                 ))}
