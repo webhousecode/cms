@@ -8,6 +8,7 @@ import { buildContentContext } from "@/lib/content-context";
 import { buildToolRegistry, type ToolDefinition, type ToolHandler } from "@/lib/tools";
 import fs from "fs/promises";
 import path from "path";
+import { getActiveSitePaths } from "./site-paths";
 
 interface FeedbackExample {
   original: string;
@@ -23,14 +24,13 @@ export interface AgentRunResult {
   alternatives?: { model: string; contentData: Record<string, unknown>; costUsd: number }[];
 }
 
-function getDataDir(): string {
-  const configPath = process.env.CMS_CONFIG_PATH;
-  if (!configPath) throw new Error("CMS_CONFIG_PATH not set");
-  return path.join(path.dirname(configPath), "_data");
+async function getDataDir(): Promise<string> {
+  const { dataDir } = await getActiveSitePaths();
+  return dataDir;
 }
 
 async function loadFeedback(agentId: string): Promise<FeedbackExample[]> {
-  const feedbackPath = path.join(getDataDir(), "agents", agentId, "feedback.json");
+  const feedbackPath = path.join(await getDataDir(), "agents", agentId, "feedback.json");
   try {
     const raw = await fs.readFile(feedbackPath, "utf-8");
     return (JSON.parse(raw) as FeedbackExample[]).slice(-5);

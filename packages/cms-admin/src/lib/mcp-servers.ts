@@ -1,5 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
+import { getActiveSitePaths } from "./site-paths";
 
 /** Configuration for an external MCP server that agents can connect to */
 export interface McpServerDef {
@@ -14,15 +15,14 @@ export interface McpServerDef {
   enabled: boolean;
 }
 
-function getConfigPath(): string {
-  const configPath = process.env.CMS_CONFIG_PATH;
-  if (!configPath) throw new Error("CMS_CONFIG_PATH not set");
-  return path.join(path.dirname(configPath), "_data", "mcp-servers.json");
+async function getConfigPath(): Promise<string> {
+  const { dataDir } = await getActiveSitePaths();
+  return path.join(dataDir, "mcp-servers.json");
 }
 
 export async function listMcpServers(): Promise<McpServerDef[]> {
   try {
-    const raw = await fs.readFile(getConfigPath(), "utf-8");
+    const raw = await fs.readFile(await getConfigPath(), "utf-8");
     return JSON.parse(raw) as McpServerDef[];
   } catch {
     return [];
@@ -30,7 +30,7 @@ export async function listMcpServers(): Promise<McpServerDef[]> {
 }
 
 export async function saveMcpServers(servers: McpServerDef[]): Promise<void> {
-  const filePath = getConfigPath();
+  const filePath = await getConfigPath();
   await fs.mkdir(path.dirname(filePath), { recursive: true });
   await fs.writeFile(filePath, JSON.stringify(servers, null, 2));
 }

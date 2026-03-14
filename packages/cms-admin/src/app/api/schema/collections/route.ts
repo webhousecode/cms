@@ -3,8 +3,8 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { writeConfigCollections } from "@/lib/config-writer";
 import type { CollectionDef } from "@/lib/config-writer";
-import { resolve } from "node:path";
 import { readSiteConfig } from "@/lib/site-config";
+import { getActiveSitePaths } from "@/lib/site-paths";
 
 export async function GET() {
   const config = await getAdminConfig();
@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
   }
   const body = await req.json() as CollectionDef;
   const config = await getAdminConfig();
-  const configPath = resolve(process.env.CMS_CONFIG_PATH!);
+  const { configPath } = await getActiveSitePaths();
 
   const existing = config.collections.map((col) => ({
     name: col.name,

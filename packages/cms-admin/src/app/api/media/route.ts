@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { readdir, stat } from "fs/promises";
 import path from "path";
-import { UPLOAD_DIR } from "@/lib/upload-dir";
+import { getUploadDir } from "@/lib/upload-dir";
 
 const IMAGE_EXTS = new Set(["jpg", "jpeg", "png", "gif", "webp", "svg", "avif"]);
 
@@ -54,7 +54,8 @@ async function scanDir(dir: string, folder: string): Promise<MediaFile[]> {
 
 export async function GET() {
   try {
-    const files = await scanDir(UPLOAD_DIR, "");
+    const uploadDir = await getUploadDir();
+    const files = await scanDir(uploadDir, "");
     files.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
     return NextResponse.json(files);
   } catch (err) {

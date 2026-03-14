@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { writeFile, mkdir } from "fs/promises";
 import path from "path";
-import { UPLOAD_DIR, safeUploadPath } from "@/lib/upload-dir";
+import { getUploadDir, safeUploadPath } from "@/lib/upload-dir";
 
 const UPLOAD_BASE = process.env.UPLOAD_BASE ?? "";
 
@@ -21,7 +21,8 @@ export async function POST(req: NextRequest) {
     const ext = file.name.split(".").pop()?.toLowerCase() ?? "bin";
     const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
 
-    const destDir = folder ? safeUploadPath([folder]) : UPLOAD_DIR;
+    const uploadDir = await getUploadDir();
+    const destDir = folder ? safeUploadPath([folder], uploadDir) : uploadDir;
     await mkdir(destDir, { recursive: true });
     await writeFile(path.join(destDir, filename), buffer);
 

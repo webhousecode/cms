@@ -1,5 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
+import { getActiveSitePaths } from "./site-paths";
 
 export interface SiteConfig {
   previewSiteUrl: string;
@@ -11,16 +12,16 @@ export interface SiteConfig {
   showCloseAllTabs: boolean;
 }
 
-function getConfigPath(): string {
-  const configPath = process.env.CMS_CONFIG_PATH;
-  if (!configPath) throw new Error("CMS_CONFIG_PATH not set");
-  return path.join(path.dirname(configPath), "_data", "site-config.json");
+async function getConfigPath(): Promise<string> {
+  const { dataDir } = await getActiveSitePaths();
+  return path.join(dataDir, "site-config.json");
 }
 
 /** Defaults fall back to env vars so existing setups keep working */
-function defaults(): SiteConfig {
+async function defaults(): Promise<SiteConfig> {
+  const { previewUrl } = await getActiveSitePaths();
   return {
-    previewSiteUrl: process.env.NEXT_PUBLIC_PREVIEW_SITE_URL ?? "",
+    previewSiteUrl: previewUrl,
     previewInIframe: process.env.NEXT_PUBLIC_PREVIEW_IN_IFRAME === "true",
     trashRetentionDays: parseInt(process.env.TRASH_RETENTION_DAYS ?? "30", 10),
     curationRetentionDays: 30,
@@ -31,18 +32,18 @@ function defaults(): SiteConfig {
 }
 
 export async function readSiteConfig(): Promise<SiteConfig> {
-  const filePath = getConfigPath();
+  const filePath = await getConfigPath();
   try {
     const raw = await fs.readFile(filePath, "utf-8");
     const stored = JSON.parse(raw) as Partial<SiteConfig>;
-    return { ...defaults(), ...stored };
+    return { ...(await defaults()), ...stored };
   } catch {
     return defaults();
   }
 }
 
 export async function writeSiteConfig(patch: Partial<SiteConfig>): Promise<SiteConfig> {
-  const filePath = getConfigPath();
+  const filePath = await getConfigPath();
   await fs.mkdir(path.dirname(filePath), { recursive: true });
 
   // Merge with existing stored values (not defaults) so we only persist explicit choices
@@ -53,5 +54,5 @@ export async function writeSiteConfig(patch: Partial<SiteConfig>): Promise<SiteC
 
   const next = { ...existing, ...patch };
   await fs.writeFile(filePath, JSON.stringify(next, null, 2));
-  return { ...defaults(), ...next };
+  return { ...(await defaults()), ...next };
 }

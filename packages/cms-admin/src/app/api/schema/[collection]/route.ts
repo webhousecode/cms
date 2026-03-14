@@ -3,8 +3,8 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { writeConfigCollections } from "@/lib/config-writer";
 import type { CollectionDef } from "@/lib/config-writer";
-import { resolve } from "node:path";
 import { readSiteConfig } from "@/lib/site-config";
+import { getActiveSitePaths } from "@/lib/site-paths";
 
 type Ctx = { params: Promise<{ collection: string }> };
 
@@ -16,7 +16,7 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
   const { collection } = await params;
   const body = await req.json() as CollectionDef;
   const config = await getAdminConfig();
-  const configPath = resolve(process.env.CMS_CONFIG_PATH!);
+  const { configPath } = await getActiveSitePaths();
 
   const collections: CollectionDef[] = config.collections.map((col) => {
     const base = {
@@ -39,7 +39,7 @@ export async function DELETE(_req: NextRequest, { params }: Ctx) {
   }
   const { collection } = await params;
   const config = await getAdminConfig();
-  const configPath = resolve(process.env.CMS_CONFIG_PATH!);
+  const { configPath } = await getActiveSitePaths();
 
   const collections: CollectionDef[] = config.collections
     .filter((col) => col.name !== collection)

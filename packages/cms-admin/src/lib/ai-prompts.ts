@@ -1,5 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
+import { getActiveSitePaths } from "./site-paths";
 
 export interface AIPromptDef {
   id: string;
@@ -62,15 +63,14 @@ ABSOLUTE RULES — violating any of these makes your output useless:
   },
 };
 
-function getPromptsPath(): string {
-  const configPath = process.env.CMS_CONFIG_PATH;
-  if (!configPath) throw new Error("CMS_CONFIG_PATH not set");
-  return path.join(path.dirname(configPath), "_data", "ai-prompts.json");
+async function getPromptsPath(): Promise<string> {
+  const { dataDir } = await getActiveSitePaths();
+  return path.join(dataDir, "ai-prompts.json");
 }
 
 export async function readPrompts(): Promise<Record<string, string>> {
   try {
-    const raw = await fs.readFile(getPromptsPath(), "utf-8");
+    const raw = await fs.readFile(await getPromptsPath(), "utf-8");
     return JSON.parse(raw) as Record<string, string>;
   } catch {
     return {};
@@ -78,7 +78,7 @@ export async function readPrompts(): Promise<Record<string, string>> {
 }
 
 export async function writePrompts(prompts: Record<string, string>): Promise<void> {
-  const filePath = getPromptsPath();
+  const filePath = await getPromptsPath();
   await fs.mkdir(path.dirname(filePath), { recursive: true });
   await fs.writeFile(filePath, JSON.stringify(prompts, null, 2));
 }

@@ -1,5 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
+import { getActiveSitePaths } from "./site-paths";
 
 export interface CockpitParams {
   temperature: number;
@@ -25,15 +26,14 @@ export const DEFAULT_COCKPIT: CockpitParams = {
   currentMonthSpentUsd: 0,
 };
 
-function getCommandPath(): string {
-  const configPath = process.env.CMS_CONFIG_PATH;
-  if (!configPath) throw new Error("CMS_CONFIG_PATH not set");
-  return path.join(path.dirname(configPath), "_data", "ai-command.json");
+async function getCommandPath(): Promise<string> {
+  const { dataDir } = await getActiveSitePaths();
+  return path.join(dataDir, "ai-command.json");
 }
 
 export async function readCockpit(): Promise<CockpitParams> {
   try {
-    const raw = await fs.readFile(getCommandPath(), "utf-8");
+    const raw = await fs.readFile(await getCommandPath(), "utf-8");
     const stored = JSON.parse(raw) as Partial<CockpitParams>;
     return { ...DEFAULT_COCKPIT, ...stored };
   } catch {
@@ -42,7 +42,7 @@ export async function readCockpit(): Promise<CockpitParams> {
 }
 
 export async function writeCockpit(params: CockpitParams): Promise<void> {
-  const filePath = getCommandPath();
+  const filePath = await getCommandPath();
   await fs.mkdir(path.dirname(filePath), { recursive: true });
   await fs.writeFile(filePath, JSON.stringify(params, null, 2));
 }
@@ -54,7 +54,7 @@ export async function addCost(usd: number): Promise<void> {
   const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
 
   // Check if we need to reset for new month
-  const filePath = getCommandPath();
+  const filePath = await getCommandPath();
   let storedMonth = "";
   try {
     const raw = await fs.readFile(filePath, "utf-8");

@@ -1,5 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
+import { getActiveSitePaths } from "./site-paths";
 
 // Default agents seeded on first run
 const DEFAULT_AGENTS: Omit<AgentConfig, "createdAt" | "updatedAt">[] = [
@@ -88,14 +89,13 @@ export interface AgentConfig {
   active: boolean;
 }
 
-function getAgentsDir(): string {
-  const configPath = process.env.CMS_CONFIG_PATH;
-  if (!configPath) throw new Error("CMS_CONFIG_PATH not set");
-  return path.join(path.dirname(configPath), "_data", "agents");
+async function getAgentsDir(): Promise<string> {
+  const { dataDir } = await getActiveSitePaths();
+  return path.join(dataDir, "agents");
 }
 
 export async function listAgents(): Promise<AgentConfig[]> {
-  const dir = getAgentsDir();
+  const dir = await getAgentsDir();
   await fs.mkdir(dir, { recursive: true });
 
   let files: string[];
@@ -140,7 +140,7 @@ export async function listAgents(): Promise<AgentConfig[]> {
 }
 
 export async function getAgent(id: string): Promise<AgentConfig | null> {
-  const dir = getAgentsDir();
+  const dir = await getAgentsDir();
   try {
     const raw = await fs.readFile(path.join(dir, `${id}.json`), "utf-8");
     return JSON.parse(raw) as AgentConfig;
@@ -152,7 +152,7 @@ export async function getAgent(id: string): Promise<AgentConfig | null> {
 export async function createAgent(
   data: Omit<AgentConfig, "id" | "createdAt" | "updatedAt" | "stats">
 ): Promise<AgentConfig> {
-  const dir = getAgentsDir();
+  const dir = await getAgentsDir();
   await fs.mkdir(dir, { recursive: true });
 
   const id = `agent-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -183,12 +183,12 @@ export async function updateAgent(
     updatedAt: new Date().toISOString(),
   };
 
-  const dir = getAgentsDir();
+  const dir = await getAgentsDir();
   await fs.writeFile(path.join(dir, `${id}.json`), JSON.stringify(updated, null, 2));
   return updated;
 }
 
 export async function deleteAgent(id: string): Promise<void> {
-  const dir = getAgentsDir();
+  const dir = await getAgentsDir();
   await fs.unlink(path.join(dir, `${id}.json`));
 }

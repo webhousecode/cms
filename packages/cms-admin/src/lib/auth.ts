@@ -2,6 +2,7 @@ import bcrypt from "bcryptjs";
 import { SignJWT, jwtVerify } from "jose";
 import fs from "fs/promises";
 import path from "path";
+import { getActiveSitePaths } from "./site-paths";
 
 export interface User {
   id: string;
@@ -29,10 +30,7 @@ function getJwtSecret(): Uint8Array {
 }
 
 async function getUsersFilePath(): Promise<string> {
-  const configPath = process.env.CMS_CONFIG_PATH;
-  if (!configPath) throw new Error("CMS_CONFIG_PATH not set");
-  const projectDir = path.dirname(configPath);
-  const dataDir = path.join(projectDir, "_data");
+  const { dataDir } = await getActiveSitePaths();
   await fs.mkdir(dataDir, { recursive: true });
   return path.join(dataDir, "users.json");
 }

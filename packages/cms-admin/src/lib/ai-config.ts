@@ -1,5 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
+import { getActiveSitePaths } from "./site-paths";
 
 export interface AiConfig {
   defaultProvider: "anthropic" | "openai" | "gemini";
@@ -20,15 +21,13 @@ export interface AiConfigMasked {
   webSearchApiKey?: string;
 }
 
-function getConfigPath(): string {
-  const configPath = process.env.CMS_CONFIG_PATH;
-  if (!configPath) throw new Error("CMS_CONFIG_PATH not set");
-  const projectDir = path.dirname(configPath);
-  return path.join(projectDir, "_data", "ai-config.json");
+async function getConfigPath(): Promise<string> {
+  const { dataDir } = await getActiveSitePaths();
+  return path.join(dataDir, "ai-config.json");
 }
 
 export async function readAiConfig(): Promise<AiConfig> {
-  const filePath = getConfigPath();
+  const filePath = await getConfigPath();
   try {
     const raw = await fs.readFile(filePath, "utf-8");
     return JSON.parse(raw) as AiConfig;
@@ -38,7 +37,7 @@ export async function readAiConfig(): Promise<AiConfig> {
 }
 
 export async function writeAiConfig(config: AiConfig): Promise<void> {
-  const filePath = getConfigPath();
+  const filePath = await getConfigPath();
   await fs.mkdir(path.dirname(filePath), { recursive: true });
   await fs.writeFile(filePath, JSON.stringify(config, null, 2));
 }

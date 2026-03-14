@@ -4,7 +4,7 @@ import { createAdminMcpServer, validateApiKey, initAuditLog, type AiGenerator } 
 import { getAdminCms, getAdminConfig } from "@/lib/cms";
 import { getApiKey } from "@/lib/ai-config";
 import { getMcpApiKeys } from "@/lib/mcp-config";
-import path from "node:path";
+import { getActiveSitePaths } from "@/lib/site-paths";
 
 export const dynamic = "force-dynamic";
 
@@ -26,10 +26,8 @@ export async function GET(request: NextRequest) {
   const config = await getAdminConfig();
 
   // Init audit log in the same _data dir as the rest
-  const configPath = process.env.CMS_CONFIG_PATH ?? "";
-  if (configPath) {
-    initAuditLog(path.join(path.dirname(configPath), "_data"));
-  }
+  const { dataDir } = await getActiveSitePaths();
+  initAuditLog(dataDir);
 
   // Build AI generator if API key is configured
   let ai: AiGenerator | undefined;

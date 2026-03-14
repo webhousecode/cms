@@ -7,6 +7,7 @@
 import { readFile, writeFile, mkdir } from "fs/promises";
 import path from "path";
 import type { Document } from "@webhouse/cms";
+import { getActiveSitePaths } from "./site-paths";
 
 const MAX_REVISIONS = 20;
 
@@ -16,19 +17,18 @@ export interface Revision {
   data: Record<string, unknown>;
 }
 
-function getRevisionsDir(): string {
-  const configPath = process.env.CMS_CONFIG_PATH;
-  if (!configPath) throw new Error("CMS_CONFIG_PATH not set");
-  return path.join(path.dirname(path.resolve(configPath)), "_revisions");
+async function getRevisionsDir(): Promise<string> {
+  const { projectDir } = await getActiveSitePaths();
+  return path.join(projectDir, "_revisions");
 }
 
-function revisionFile(collection: string, slug: string): string {
-  return path.join(getRevisionsDir(), collection, `${slug}.json`);
+async function revisionFile(collection: string, slug: string): Promise<string> {
+  return path.join(await getRevisionsDir(), collection, `${slug}.json`);
 }
 
 export async function listRevisions(collection: string, slug: string): Promise<Revision[]> {
   try {
-    const raw = await readFile(revisionFile(collection, slug), "utf8");
+    const raw = await readFile(await revisionFile(collection, slug), "utf8");
     return JSON.parse(raw) as Revision[];
   } catch {
     return [];
@@ -36,7 +36,7 @@ export async function listRevisions(collection: string, slug: string): Promise<R
 }
 
 export async function saveRevision(collection: string, doc: Document): Promise<void> {
-  const file = revisionFile(collection, doc.slug);
+  const file = await revisionFile(collection, doc.slug);
   await mkdir(path.dirname(file), { recursive: true });
 
   const existing = await listRevisions(collection, doc.slug);

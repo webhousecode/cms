@@ -1,5 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
+import { getActiveSitePaths } from "./site-paths";
 
 export interface BrandVoice {
   name: string;
@@ -26,10 +27,9 @@ interface BrandVoiceStore {
   versions: BrandVoiceVersion[];
 }
 
-function getPath(): string {
-  const configPath = process.env.CMS_CONFIG_PATH;
-  if (!configPath) throw new Error("CMS_CONFIG_PATH not set");
-  return path.join(path.dirname(configPath), "_data", "brand-voice.json");
+async function getPath(): Promise<string> {
+  const { dataDir } = await getActiveSitePaths();
+  return path.join(dataDir, "brand-voice.json");
 }
 
 function genId(): string {
@@ -38,7 +38,7 @@ function genId(): string {
 
 async function readStore(): Promise<BrandVoiceStore> {
   try {
-    const raw = JSON.parse(await fs.readFile(getPath(), "utf-8")) as Record<string, unknown>;
+    const raw = JSON.parse(await fs.readFile(await getPath(), "utf-8")) as Record<string, unknown>;
     // Migrate from old single-object format — write back so IDs are stable
     if (!Array.isArray(raw.versions)) {
       const id = genId();
@@ -53,7 +53,7 @@ async function readStore(): Promise<BrandVoiceStore> {
 }
 
 async function writeStore(store: BrandVoiceStore): Promise<void> {
-  const p = getPath();
+  const p = await getPath();
   await fs.mkdir(path.dirname(p), { recursive: true });
   await fs.writeFile(p, JSON.stringify(store, null, 2));
 }

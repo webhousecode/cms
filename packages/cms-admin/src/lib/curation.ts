@@ -1,5 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
+import { getActiveSitePaths } from "./site-paths";
 
 export interface QueueItem {
   id: string;
@@ -21,15 +22,14 @@ export interface QueueItem {
   rejectionFeedback?: string;
 }
 
-function getQueuePath(): string {
-  const configPath = process.env.CMS_CONFIG_PATH;
-  if (!configPath) throw new Error("CMS_CONFIG_PATH not set");
-  return path.join(path.dirname(configPath), "_data", "curation-queue.json");
+async function getQueuePath(): Promise<string> {
+  const { dataDir } = await getActiveSitePaths();
+  return path.join(dataDir, "curation-queue.json");
 }
 
 async function readQueue(): Promise<QueueItem[]> {
   try {
-    const raw = await fs.readFile(getQueuePath(), "utf-8");
+    const raw = await fs.readFile(await getQueuePath(), "utf-8");
     return JSON.parse(raw) as QueueItem[];
   } catch {
     return [];
@@ -37,7 +37,7 @@ async function readQueue(): Promise<QueueItem[]> {
 }
 
 async function writeQueue(items: QueueItem[]): Promise<void> {
-  const filePath = getQueuePath();
+  const filePath = await getQueuePath();
   await fs.mkdir(path.dirname(filePath), { recursive: true });
   await fs.writeFile(filePath, JSON.stringify(items, null, 2));
 }

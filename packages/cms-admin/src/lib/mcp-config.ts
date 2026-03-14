@@ -1,5 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
+import { getActiveSitePaths } from "./site-paths";
 
 export interface McpApiKey {
   key: string;
@@ -22,15 +23,13 @@ export interface McpConfigMasked {
   keys: McpApiKeyMasked[];
 }
 
-function getConfigPath(): string {
-  const configPath = process.env.CMS_CONFIG_PATH;
-  if (!configPath) throw new Error("CMS_CONFIG_PATH not set");
-  const projectDir = path.dirname(configPath);
-  return path.join(projectDir, "_data", "mcp-config.json");
+async function getConfigPath(): Promise<string> {
+  const { dataDir } = await getActiveSitePaths();
+  return path.join(dataDir, "mcp-config.json");
 }
 
 export async function readMcpConfig(): Promise<McpConfig> {
-  const filePath = getConfigPath();
+  const filePath = await getConfigPath();
   try {
     const raw = await fs.readFile(filePath, "utf-8");
     return JSON.parse(raw) as McpConfig;
@@ -40,7 +39,7 @@ export async function readMcpConfig(): Promise<McpConfig> {
 }
 
 export async function writeMcpConfig(config: McpConfig): Promise<void> {
-  const filePath = getConfigPath();
+  const filePath = await getConfigPath();
   await fs.mkdir(path.dirname(filePath), { recursive: true });
   await fs.writeFile(filePath, JSON.stringify(config, null, 2));
 }

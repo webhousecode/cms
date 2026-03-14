@@ -1,5 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
+import { getActiveSitePaths } from "./site-paths";
 import { listAgents, type AgentConfig } from "@/lib/agents";
 import { readCockpit } from "@/lib/cockpit";
 import { runAgent } from "@/lib/agent-runner";
@@ -9,15 +10,14 @@ interface SchedulerState {
   lastRuns: Record<string, string>; // agentId -> ISO timestamp
 }
 
-function getStatePath(): string {
-  const configPath = process.env.CMS_CONFIG_PATH;
-  if (!configPath) throw new Error("CMS_CONFIG_PATH not set");
-  return path.join(path.dirname(configPath), "_data", "scheduler-state.json");
+async function getStatePath(): Promise<string> {
+  const { dataDir } = await getActiveSitePaths();
+  return path.join(dataDir, "scheduler-state.json");
 }
 
 async function readState(): Promise<SchedulerState> {
   try {
-    const raw = await fs.readFile(getStatePath(), "utf-8");
+    const raw = await fs.readFile(await getStatePath(), "utf-8");
     return JSON.parse(raw) as SchedulerState;
   } catch {
     return { lastRuns: {} };
@@ -25,7 +25,7 @@ async function readState(): Promise<SchedulerState> {
 }
 
 async function writeState(state: SchedulerState): Promise<void> {
-  const filePath = getStatePath();
+  const filePath = await getStatePath();
   await fs.mkdir(path.dirname(filePath), { recursive: true });
   await fs.writeFile(filePath, JSON.stringify(state, null, 2));
 }
