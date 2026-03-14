@@ -39,6 +39,8 @@ proving that @webhouse/cms can manage its own marketing page.
 | 2026-03-14 | Assets copied | eye icon, wordmark, architecture diagram |
 | 2026-03-14 | Can't run two cms-admin instances | Same .next/dev/lock — Next.js limitation |
 | 2026-03-14 | Decision: multi-site admin | One admin manages N sites via site registry + instance pool. See MULTI-SITE.md |
+| 2026-03-14 | Sites Dashboard works | Can switch between sites, see cards, enter workspace |
+| 2026-03-14 | Known issue: Media library shared | UPLOAD_DIR is hardcoded env var, not site-scoped. Need to read from active site's registry entry |
 
 ## Architecture
 
