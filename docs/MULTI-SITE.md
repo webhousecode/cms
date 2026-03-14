@@ -1,20 +1,24 @@
 # Multi-Site Admin — Design Document
 
-> One cms-admin instance. Multiple sites. Runtime switching.
+> One cms-admin instance. Multiple organizations. Multiple sites per org. Runtime switching.
 
 ## Overview
 
-A single `cms-admin` on port 3010 manages N sites. Each site has its own
-config, content storage, uploads, and users. The admin UI provides a site
-switcher to move between them without restart.
+A single `cms-admin` on port 3010 manages N organizations, each with M sites.
+Each site has its own config, content storage, uploads, and users. The admin UI
+provides org + site switchers to move between them without restart.
 
 ## Test Setup (proof of concept)
 
 ```
 cms-admin (port 3010)
-├── "webhouse-site"  → local filesystem, /Users/cb/Apps/webhouse/webhouse-site
-├── "landing"        → local filesystem, /Users/cb/Apps/webhouse/cms/examples/landing
-└── "client-x"       → GitHub storage, webhousecode/client-x-content repo
+├── Org: "WebHouse" (id: webhouse)
+│   ├── "WebHouse Site"  → local filesystem
+│   └── "Landing Page"   → local filesystem
+├── Org: "Clients" (id: clients)
+│   └── "Client X"       → GitHub storage
+└── Org: "Personal" (id: personal)   ← default org for single-site mode
+    └── (auto-created from CMS_CONFIG_PATH)
 ```
 
 ## Architecture
@@ -23,42 +27,55 @@ cms-admin (port 3010)
 
 Admin stores registered sites in its own config file, separate from any site.
 
-**Location:** `_admin/sites.json` (in admin's own data dir, NOT in any site)
+**Location:** `_admin/registry.json` (in admin's own data dir, NOT in any site)
 
 ```json
 {
-  "sites": [
+  "orgs": [
     {
-      "id": "webhouse-site",
-      "name": "WebHouse Site",
-      "adapter": "filesystem",
-      "configPath": "/Users/cb/Apps/webhouse/webhouse-site/cms.config.ts",
-      "contentDir": "/Users/cb/Apps/webhouse/webhouse-site/content",
-      "uploadDir": "/Users/cb/Apps/webhouse/webhouse-site/public/uploads",
-      "previewUrl": "http://localhost:3009"
+      "id": "webhouse",
+      "name": "WebHouse",
+      "sites": [
+        {
+          "id": "webhouse-site",
+          "name": "WebHouse Site",
+          "adapter": "filesystem",
+          "configPath": "/Users/cb/Apps/webhouse/webhouse-site/cms.config.ts",
+          "contentDir": "/Users/cb/Apps/webhouse/webhouse-site/content",
+          "uploadDir": "/Users/cb/Apps/webhouse/webhouse-site/public/uploads",
+          "previewUrl": "http://localhost:3009"
+        },
+        {
+          "id": "landing",
+          "name": "Landing Page",
+          "adapter": "filesystem",
+          "configPath": "/Users/cb/Apps/webhouse/cms/examples/landing/cms.config.ts",
+          "contentDir": "/Users/cb/Apps/webhouse/cms/examples/landing/content",
+          "uploadDir": "/Users/cb/Apps/webhouse/cms/examples/landing/public"
+        }
+      ]
     },
     {
-      "id": "landing",
-      "name": "Landing Page",
-      "adapter": "filesystem",
-      "configPath": "/Users/cb/Apps/webhouse/cms/examples/landing/cms.config.ts",
-      "contentDir": "/Users/cb/Apps/webhouse/cms/examples/landing/content",
-      "uploadDir": "/Users/cb/Apps/webhouse/cms/examples/landing/public"
-    },
-    {
-      "id": "client-x",
-      "name": "Client X",
-      "adapter": "github",
-      "github": {
-        "owner": "webhousecode",
-        "repo": "client-x-content",
-        "branch": "main",
-        "contentDir": "content",
-        "token": "env:GITHUB_TOKEN_CLIENT_X"
-      },
-      "configPath": "github://webhousecode/client-x-content/cms.config.ts"
+      "id": "clients",
+      "name": "Clients",
+      "sites": [
+        {
+          "id": "client-x",
+          "name": "Client X",
+          "adapter": "github",
+          "github": {
+            "owner": "webhousecode",
+            "repo": "client-x-content",
+            "branch": "main",
+            "contentDir": "content",
+            "token": "env:GITHUB_TOKEN_CLIENT_X"
+          },
+          "configPath": "github://webhousecode/client-x-content/cms.config.ts"
+        }
+      ]
     }
   ],
+  "defaultOrgId": "webhouse",
   "defaultSiteId": "webhouse-site"
 }
 ```
@@ -87,19 +104,83 @@ Each site gets its own isolated instances. Nothing is shared between sites:
 
 ### 3. Active Site Session
 
-The active site is stored as a cookie: `cms-active-site=webhouse-site`
+Two cookies track the active context:
+- `cms-active-org=webhouse`
+- `cms-active-site=webhouse-site`
 
-Every API request reads this cookie to determine which CMS instance to use.
+Every API request reads these cookies to determine which CMS instance to use.
 
 ```typescript
-// Pseudocode for the core switch
 async function getActiveCms(request: NextRequest): Promise<CmsInstance> {
-  const siteId = request.cookies.get("cms-active-site")?.value
-    ?? registry.defaultSiteId;
+  const orgId = request.cookies.get("cms-active-org")?.value ?? registry.defaultOrgId;
+  const siteId = request.cookies.get("cms-active-site")?.value ?? registry.defaultSiteId;
 
-  return sitePool.getOrCreate(siteId);
+  return sitePool.getOrCreate(orgId, siteId);
 }
 ```
+
+### 3b. Backwards Compatibility — Single-Site Mode
+
+When `CMS_CONFIG_PATH` env var is set and NO `_admin/registry.json` exists,
+admin runs in **single-site mode** exactly as today:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ Startup                                                     │
+│                                                             │
+│  CMS_CONFIG_PATH set?  ──yes──→  registry.json exists?      │
+│       │                              │            │         │
+│       no                            yes           no        │
+│       │                              │            │         │
+│       ▼                              ▼            ▼         │
+│   ERROR: no config              Multi-site    Single-site   │
+│                                 mode          mode          │
+│                                                             │
+│  Single-site mode:                                          │
+│  - getAdminCms() reads CMS_CONFIG_PATH directly (as today)  │
+│  - No site switcher shown in UI                             │
+│  - No org switcher shown in UI                              │
+│  - Zero breaking changes                                    │
+│                                                             │
+│  Multi-site mode:                                           │
+│  - getAdminCms() reads from SitePool                        │
+│  - CMS_CONFIG_PATH is ignored (registry is source of truth) │
+│  - Site switcher + org switcher shown in header              │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**How getAdminCms() changes:**
+
+```typescript
+// BEFORE (current code)
+export async function getAdminCms() {
+  const configPath = process.env.CMS_CONFIG_PATH;
+  if (!configPath) throw new Error("CMS_CONFIG_PATH not set");
+  const config = await loadConfig(configPath);
+  return createCms(config);
+}
+
+// AFTER (backwards compatible)
+export async function getAdminCms(request?: NextRequest) {
+  const registry = await loadRegistry();      // returns null if no registry.json
+
+  if (!registry) {
+    // Single-site mode — exactly as before
+    const configPath = process.env.CMS_CONFIG_PATH;
+    if (!configPath) throw new Error("CMS_CONFIG_PATH not set");
+    const config = await loadConfig(configPath);
+    return createCms(config);
+  }
+
+  // Multi-site mode — read from pool
+  const orgId = request?.cookies.get("cms-active-org")?.value ?? registry.defaultOrgId;
+  const siteId = request?.cookies.get("cms-active-site")?.value ?? registry.defaultSiteId;
+  return sitePool.getOrCreate(orgId, siteId);
+}
+```
+
+The signature change (optional `request` param) is backwards compatible.
+All existing call sites pass no argument and get single-site behavior.
 
 ### 4. CMS Instance Pool
 
@@ -146,17 +227,19 @@ original `OrgSwitcher` component in `user-org-bar.tsx` which still exists but
 is not imported).
 
 ```
-┌──────────────────────────────────────────────────────┐
-│  ☰  Dashboard            ▼ WebHouse Site    [avatar] │
-│                           ──────────────             │
-│                           ● WebHouse Site            │
-│                           ○ Landing Page             │
-│                           ○ Client X (GH)            │
-│                           ──────────────             │
-│                           + Add site                 │
-│                           ⚙ Manage sites             │
-└──────────────────────────────────────────────────────┘
+┌────────────────────────────────────────────────────────────┐
+│  ☰  Dashboard         ▼ WebHouse  ▼ WebHouse Site  [avatar] │
+│                        ─────────   ───────────────         │
+│                        ● WebHouse  ● WebHouse Site         │
+│                        ○ Clients   ○ Landing Page          │
+│                        ○ Personal  ───────────────         │
+│                        ─────────   + Add site              │
+│                        + New org                           │
+└────────────────────────────────────────────────────────────┘
 ```
+
+When switching org, the site dropdown updates to show that org's sites.
+The first site in the org is auto-selected.
 
 Switching sites:
 1. Sets `cms-active-site` cookie
@@ -188,25 +271,31 @@ Cache locally with TTL. Re-fetch on manual refresh or webhook.
 
 ### 9. Implementation Order
 
-1. **Site registry** — `_admin/sites.json`, CRUD API, seed with webhouse-site + landing
-2. **Instance pool** — `SitePool` class, lazy creation, config loading
-3. **Request scoping** — Middleware reads `cms-active-site` cookie, injects into request context
-4. **Refactor `getAdminCms()`** — Read from pool instead of env var
-5. **Site switcher UI** — Dropdown in sidebar
-6. **GitHub adapter test** — Create `client-x-content` repo, register as third site
-7. **Polish** — Seamless switching, collection reload, cache invalidation
+1. **Registry file + types** — `_admin/registry.json` schema, TypeScript types, load/save helpers
+2. **Seed registry** — Auto-create from CMS_CONFIG_PATH on first boot if no registry exists
+3. **SitePool** — Lazy CMS instance creation, keyed by `orgId:siteId`
+4. **Refactor `getAdminCms()`** — Backwards-compatible: env var fallback → pool lookup
+5. **Cookie middleware** — Read `cms-active-org` + `cms-active-site` cookies, pass to API
+6. **API routes** — `/api/cms/registry` CRUD for orgs and sites
+7. **Org switcher UI** — Dropdown in header, left of site switcher
+8. **Site switcher UI** — Dropdown in header, left of user avatar
+9. **Add landing site** — Register examples/landing via UI or API
+10. **GitHub adapter test** — Create `client-x-content` repo, register as third site
+11. **Polish** — Collection reload on switch, cache invalidation, loading states
 
 ### 10. Files to Change
 
 | File | Change |
 |------|--------|
-| `packages/cms-admin/src/lib/cms.ts` | `getAdminCms()` reads from pool, not env |
-| `packages/cms-admin/src/lib/site-registry.ts` | NEW — registry CRUD |
-| `packages/cms-admin/src/lib/site-pool.ts` | NEW — instance pool |
-| `packages/cms-admin/src/middleware.ts` | Read `cms-active-site` cookie |
-| `packages/cms-admin/src/app/api/cms/sites/` | NEW — API routes for registry |
-| `packages/cms-admin/src/components/sidebar.tsx` | Site switcher dropdown |
-| `packages/cms-admin/src/components/site-switcher.tsx` | NEW — switcher component |
+| `packages/cms-admin/src/lib/cms.ts` | `getAdminCms()` backwards-compat refactor |
+| `packages/cms-admin/src/lib/site-registry.ts` | NEW — registry load/save, types |
+| `packages/cms-admin/src/lib/site-pool.ts` | NEW — instance pool, keyed by org:site |
+| `packages/cms-admin/src/middleware.ts` | Read `cms-active-org` + `cms-active-site` cookies |
+| `packages/cms-admin/src/app/api/cms/registry/` | NEW — CRUD API for orgs + sites |
+| `packages/cms-admin/src/components/admin-header.tsx` | Add org + site switchers |
+| `packages/cms-admin/src/components/org-switcher.tsx` | NEW — org dropdown |
+| `packages/cms-admin/src/components/site-switcher.tsx` | NEW — site dropdown |
+| `packages/cms-admin/src/components/user-org-bar.tsx` | REUSE — existing component, refactor |
 | `packages/cms/src/storage/github/adapter.ts` | Verify/fix for real usage |
 
 ### 11. Risks & Open Questions
