@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Building2, Globe, Check, Plus, ChevronDown } from "lucide-react";
+import { useEffect, useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { Building2, ChevronDown, Check, Plus, LayoutGrid, Globe } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -36,168 +36,133 @@ function getCookie(name: string): string | null {
 }
 
 function setCookie(name: string, value: string) {
-  document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${60 * 60 * 24 * 365}`;
+  document.cookie = `${name}=${encodeURIComponent(value)};path=/;max-age=${60 * 60 * 24 * 365};samesite=lax`;
 }
 
 export function SiteSwitcher() {
+  const router = useRouter();
   const [registry, setRegistry] = useState<Registry | null>(null);
   const [mode, setMode] = useState<"single-site" | "multi-site">("single-site");
   const [activeOrgId, setActiveOrgId] = useState<string>("");
   const [activeSiteId, setActiveSiteId] = useState<string>("");
+  const [loaded, setLoaded] = useState(false);
 
-  useEffect(() => {
-    fetch("/api/cms/registry")
-      .then((r) => r.json())
-      .then((d: { mode: string; registry: Registry | null }) => {
+  const fetchRegistry = useCallback(async () => {
+    try {
+      const res = await fetch("/api/cms/registry");
+      if (res.ok) {
+        const d = await res.json() as { mode: string; registry: Registry | null };
         setMode(d.mode as "single-site" | "multi-site");
         if (d.registry) {
           setRegistry(d.registry);
           setActiveOrgId(getCookie("cms-active-org") ?? d.registry.defaultOrgId);
           setActiveSiteId(getCookie("cms-active-site") ?? d.registry.defaultSiteId);
         }
-      })
-      .catch(() => {});
+      }
+    } finally {
+      setLoaded(true);
+    }
   }, []);
 
-  // Single-site mode — don't render anything
-  if (mode === "single-site" || !registry) return null;
+  useEffect(() => {
+    fetchRegistry();
+  }, [fetchRegistry]);
+
+  useEffect(() => {
+    function handleChange() { fetchRegistry(); }
+    window.addEventListener("cms-registry-change", handleChange);
+    return () => window.removeEventListener("cms-registry-change", handleChange);
+  }, [fetchRegistry]);
+
+  // Single-site mode or loading — don't render
+  if (!loaded || mode === "single-site" || !registry) return null;
 
   const activeOrg = registry.orgs.find((o) => o.id === activeOrgId) ?? registry.orgs[0];
   const activeSite = activeOrg?.sites.find((s) => s.id === activeSiteId) ?? activeOrg?.sites[0];
 
-  function switchOrg(orgId: string) {
-    const org = registry!.orgs.find((o) => o.id === orgId);
-    if (!org) return;
+  function handleSelectOrg(org: OrgEntry) {
     const firstSite = org.sites[0];
-    setCookie("cms-active-org", orgId);
+    setActiveOrgId(org.id);
+    setActiveSiteId(firstSite?.id ?? "");
+    setCookie("cms-active-org", org.id);
     setCookie("cms-active-site", firstSite?.id ?? "");
-    window.location.reload();
+    window.dispatchEvent(new CustomEvent("cms-registry-change"));
+    router.push("/admin");
+    router.refresh();
   }
 
-  function switchSite(siteId: string) {
-    setCookie("cms-active-site", siteId);
-    window.location.reload();
-  }
-
-  async function bootstrapRegistry() {
-    await fetch("/api/cms/registry", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "bootstrap" }),
-    });
-    window.location.reload();
+  function handleSelectSite(site: SiteEntry) {
+    setActiveSiteId(site.id);
+    setCookie("cms-active-site", site.id);
+    window.dispatchEvent(new CustomEvent("cms-registry-change"));
+    router.push("/admin");
+    router.refresh();
   }
 
   return (
     <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
       {/* Org switcher */}
-      {registry.orgs.length > 1 && (
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none bg-transparent border-0 cursor-pointer p-0"
-          >
-            <Building2 style={{ width: "0.875rem", height: "0.875rem" }} />
-            <span style={{ fontSize: "0.8rem", fontWeight: 500 }}>{activeOrg?.name}</span>
-            <ChevronDown style={{ width: "0.7rem", height: "0.7rem", opacity: 0.5 }} />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" style={{ minWidth: "180px" }}>
-            <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">Organizations</DropdownMenuLabel>
-            {registry.orgs.map((org) => (
-              <DropdownMenuItem key={org.id} onClick={() => switchOrg(org.id)}>
-                <Building2 className="mr-2 h-4 w-4 text-muted-foreground" />
-                {org.name}
-                {org.id === activeOrgId && <Check className="ml-auto h-4 w-4" />}
-              </DropdownMenuItem>
-            ))}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )}
-
-      {/* Separator */}
-      {registry.orgs.length > 1 && (
-        <div style={{ width: "1px", height: "1rem", backgroundColor: "var(--border)", margin: "0 0.25rem" }} />
-      )}
-
-      {/* Site switcher */}
       <DropdownMenu>
-        <DropdownMenuTrigger
-          className="flex items-center gap-1 text-sm text-foreground hover:text-muted-foreground transition-colors focus-visible:outline-none bg-transparent border-0 cursor-pointer p-0"
-        >
-          <Globe style={{ width: "0.875rem", height: "0.875rem", color: "var(--muted-foreground)" }} />
-          <span style={{ fontSize: "0.8rem", fontWeight: 500 }}>{activeSite?.name}</span>
-          <ChevronDown style={{ width: "0.7rem", height: "0.7rem", opacity: 0.5 }} />
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="sm" className="gap-2 text-sm font-medium">
+            <Building2 className="h-4 w-4 text-muted-foreground" />
+            <span className="max-w-[120px] truncate">{activeOrg?.name ?? "Select org"}</span>
+            <ChevronDown className="h-3 w-3 text-muted-foreground" />
+          </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" style={{ minWidth: "200px" }}>
-          <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
-            {activeOrg?.name} sites
-          </DropdownMenuLabel>
-          {activeOrg?.sites.map((site) => (
-            <DropdownMenuItem key={site.id} onClick={() => switchSite(site.id)}>
-              <span style={{ display: "flex", alignItems: "center", gap: "0.5rem", width: "100%" }}>
-                <span style={{
-                  width: "6px", height: "6px", borderRadius: "50%",
-                  backgroundColor: site.id === activeSiteId ? "#22c55e" : "var(--muted-foreground)",
-                  flexShrink: 0,
-                }} />
-                {site.name}
+        <DropdownMenuContent align="end" className="w-56">
+          {registry.orgs.map((org) => (
+            <DropdownMenuItem key={org.id} onClick={() => handleSelectOrg(org)}>
+              <Building2 className="mr-2 h-4 w-4 text-muted-foreground" />
+              <span className="truncate">{org.name}</span>
+              {org.id === activeOrgId && <Check className="ml-auto h-4 w-4" />}
+            </DropdownMenuItem>
+          ))}
+          <DropdownMenuSeparator />
+          <DropdownMenuItem className="text-muted-foreground">
+            <LayoutGrid className="mr-2 h-4 w-4" />
+            All organizations
+          </DropdownMenuItem>
+          <DropdownMenuItem className="text-muted-foreground">
+            <Plus className="mr-2 h-4 w-4" />
+            New organization
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Site switcher — only if org has multiple sites */}
+      {activeOrg && activeOrg.sites.length > 1 && (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="gap-2 text-sm font-medium">
+              <Globe className="h-4 w-4 text-muted-foreground" />
+              <span className="max-w-[140px] truncate">{activeSite?.name ?? "Select site"}</span>
+              <ChevronDown className="h-3 w-3 text-muted-foreground" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="w-56">
+            {activeOrg.sites.map((site) => (
+              <DropdownMenuItem key={site.id} onClick={() => handleSelectSite(site)}>
+                <Globe className="mr-2 h-4 w-4 text-muted-foreground" />
+                <span className="truncate">{site.name}</span>
                 {site.adapter === "github" && (
                   <span style={{
                     fontSize: "0.6rem", color: "var(--muted-foreground)",
                     backgroundColor: "var(--muted)", padding: "1px 5px",
-                    borderRadius: "3px", marginLeft: "auto",
+                    borderRadius: "3px", marginLeft: "0.25rem",
                   }}>GH</span>
                 )}
-              </span>
+                {site.id === activeSiteId && <Check className="ml-auto h-4 w-4" />}
+              </DropdownMenuItem>
+            ))}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="text-muted-foreground">
+              <Plus className="mr-2 h-4 w-4" />
+              Add site
             </DropdownMenuItem>
-          ))}
-          <DropdownMenuSeparator />
-          <DropdownMenuItem className="text-muted-foreground text-xs">
-            <Plus className="mr-2 h-3 w-3" />
-            Add site
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
     </div>
-  );
-}
-
-/** Bootstrap button — shown in settings when in single-site mode */
-export function EnableMultiSiteButton() {
-  const [mode, setMode] = useState<string>("loading");
-
-  useEffect(() => {
-    fetch("/api/cms/registry")
-      .then((r) => r.json())
-      .then((d: { mode: string }) => setMode(d.mode))
-      .catch(() => setMode("single-site"));
-  }, []);
-
-  if (mode !== "single-site") return null;
-
-  async function enable() {
-    await fetch("/api/cms/registry", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "bootstrap" }),
-    });
-    window.location.reload();
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={enable}
-      style={{
-        padding: "0.5rem 1rem",
-        borderRadius: "8px",
-        border: "1px solid var(--border)",
-        background: "var(--card)",
-        color: "var(--foreground)",
-        fontSize: "0.8rem",
-        cursor: "pointer",
-      }}
-    >
-      Enable multi-site management
-    </button>
   );
 }
