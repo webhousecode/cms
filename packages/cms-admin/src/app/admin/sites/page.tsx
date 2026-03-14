@@ -50,6 +50,11 @@ function setCookie(name: string, value: string) {
   document.cookie = `${name}=${encodeURIComponent(value)};path=/;max-age=${60 * 60 * 24 * 365};samesite=lax`;
 }
 
+/* ─── GitHub types ─────────────────────────────────────────── */
+
+interface GitHubAccount { login: string; avatar: string; type: "user" | "org" }
+interface GitHubRepo { name: string; fullName: string; private: boolean; description: string | null; defaultBranch: string }
+
 /* ─── New Site Dialog ──────────────────────────────────────── */
 
 function NewSiteDialog({ orgId, onClose, onCreated }: {
@@ -59,17 +64,69 @@ function NewSiteDialog({ orgId, onClose, onCreated }: {
 }) {
   const [adapter, setAdapter] = useState<"github" | "filesystem">("github");
   const [name, setName] = useState("");
-  const [owner, setOwner] = useState("");
-  const [repo, setRepo] = useState("");
+  // GitHub OAuth state
+  const [ghConnected, setGhConnected] = useState(false);
+  const [ghUser, setGhUser] = useState<string>("");
+  const [ghAccounts, setGhAccounts] = useState<GitHubAccount[]>([]);
+  const [ghSelectedAccount, setGhSelectedAccount] = useState("");
+  const [ghRepos, setGhRepos] = useState<GitHubRepo[]>([]);
+  const [ghSelectedRepo, setGhSelectedRepo] = useState("");
+  const [ghLoadingRepos, setGhLoadingRepos] = useState(false);
   const [branch, setBranch] = useState("main");
   const [contentDir, setContentDir] = useState("content");
-  const [tokenEnvVar, setTokenEnvVar] = useState("");
+  // Filesystem state
   const [configPath, setConfigPath] = useState("");
   const [fsContentDir, setFsContentDir] = useState("");
+  // Shared state
   const [previewUrl, setPreviewUrl] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const overlayRef = useRef<HTMLDivElement>(null);
+
+  // Check GitHub connection status on mount
+  useEffect(() => {
+    fetch("/api/github?action=status")
+      .then((r) => r.json())
+      .then((d: { connected: boolean; user?: { login: string } }) => {
+        if (d.connected && d.user) {
+          setGhConnected(true);
+          setGhUser(d.user.login);
+          // Fetch accounts
+          fetch("/api/github?action=orgs")
+            .then((r) => r.json())
+            .then((o: { accounts?: GitHubAccount[] }) => {
+              if (o.accounts) {
+                setGhAccounts(o.accounts);
+                if (o.accounts.length > 0) setGhSelectedAccount(o.accounts[0].login);
+              }
+            });
+        }
+      });
+  }, []);
+
+  // Fetch repos when account changes
+  useEffect(() => {
+    if (!ghSelectedAccount || !ghConnected) return;
+    setGhLoadingRepos(true);
+    setGhRepos([]);
+    setGhSelectedRepo("");
+    fetch(`/api/github?action=repos&org=${ghSelectedAccount}`)
+      .then((r) => r.json())
+      .then((d: { repos?: GitHubRepo[] }) => {
+        if (d.repos) setGhRepos(d.repos);
+      })
+      .finally(() => setGhLoadingRepos(false));
+  }, [ghSelectedAccount, ghConnected]);
+
+  // Auto-fill name + branch when repo is selected
+  useEffect(() => {
+    if (!ghSelectedRepo) return;
+    const repo = ghRepos.find((r) => r.name === ghSelectedRepo);
+    if (repo) {
+      if (!name) setName(repo.name.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()));
+      setBranch(repo.defaultBranch);
+    }
+  }, [ghSelectedRepo, ghRepos, name]);
 
   function siteId(): string {
     return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "new-site";
@@ -83,15 +140,14 @@ function NewSiteDialog({ orgId, onClose, onCreated }: {
     const site: SiteEntry = { id, name: name.trim(), adapter, configPath: "", previewUrl: previewUrl || undefined };
 
     if (adapter === "github") {
-      if (!owner.trim() || !repo.trim()) { setError("Owner and repo are required"); return; }
-      if (!tokenEnvVar.trim()) { setError("Token env var is required"); return; }
-      site.configPath = `github://${owner}/${repo}/cms.config.ts`;
+      if (!ghSelectedAccount || !ghSelectedRepo) { setError("Select a GitHub account and repository"); return; }
+      site.configPath = `github://${ghSelectedAccount}/${ghSelectedRepo}/cms.config.ts`;
       site.github = {
-        owner: owner.trim(),
-        repo: repo.trim(),
+        owner: ghSelectedAccount,
+        repo: ghSelectedRepo,
         branch: branch || "main",
         contentDir: contentDir || "content",
-        token: `env:${tokenEnvVar.trim()}`,
+        token: "oauth",
       };
     } else {
       if (!configPath.trim()) { setError("Config path is required"); return; }
@@ -119,6 +175,21 @@ function NewSiteDialog({ orgId, onClose, onCreated }: {
     }
   }
 
+  function connectGitHub() {
+    // Open OAuth flow in same window — callback will redirect back
+    window.location.href = "/api/auth/github";
+  }
+
+  async function disconnectGitHub() {
+    await fetch("/api/github", { method: "DELETE" });
+    setGhConnected(false);
+    setGhUser("");
+    setGhAccounts([]);
+    setGhRepos([]);
+    setGhSelectedAccount("");
+    setGhSelectedRepo("");
+  }
+
   const inputStyle: React.CSSProperties = {
     width: "100%", padding: "0.5rem 0.75rem", borderRadius: "6px",
     border: "1px solid var(--border)", background: "var(--background)",
@@ -127,6 +198,12 @@ function NewSiteDialog({ orgId, onClose, onCreated }: {
   const labelStyle: React.CSSProperties = {
     display: "block", fontSize: "0.75rem", fontWeight: 500, marginBottom: "0.25rem",
     color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: "0.05em",
+  };
+  const selectStyle: React.CSSProperties = {
+    ...inputStyle, cursor: "pointer", appearance: "none",
+    backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\")",
+    backgroundRepeat: "no-repeat", backgroundPosition: "right 0.75rem center",
+    paddingRight: "2rem",
   };
 
   return (
@@ -177,51 +254,108 @@ function NewSiteDialog({ orgId, onClose, onCreated }: {
             ))}
           </div>
 
-          {/* Site name */}
-          <div>
-            <label style={labelStyle}>Site Name</label>
-            <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="My Site" style={inputStyle} />
-            {name && <p style={{ margin: "0.25rem 0 0", fontSize: "0.7rem", color: "var(--muted-foreground)", fontFamily: "monospace" }}>ID: {siteId()}</p>}
-          </div>
-
           {adapter === "github" ? (
             <>
-              {/* Owner + Repo */}
-              <div style={{ display: "flex", gap: "0.75rem" }}>
-                <div style={{ flex: 1 }}>
-                  <label style={labelStyle}>Owner</label>
-                  <input type="text" value={owner} onChange={(e) => setOwner(e.target.value)} placeholder="webhousecode" style={inputStyle} />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <label style={labelStyle}>Repository</label>
-                  <input type="text" value={repo} onChange={(e) => setRepo(e.target.value)} placeholder="my-site" style={inputStyle} />
-                </div>
-              </div>
-              {/* Branch + Content dir */}
-              <div style={{ display: "flex", gap: "0.75rem" }}>
-                <div style={{ flex: 1 }}>
-                  <label style={labelStyle}>Branch</label>
-                  <input type="text" value={branch} onChange={(e) => setBranch(e.target.value)} placeholder="main" style={inputStyle} />
-                </div>
-                <div style={{ flex: 1 }}>
-                  <label style={labelStyle}>Content Directory</label>
-                  <input type="text" value={contentDir} onChange={(e) => setContentDir(e.target.value)} placeholder="content" style={inputStyle} />
-                </div>
-              </div>
-              {/* Token env var */}
-              <div>
-                <label style={labelStyle}>GitHub Token (env variable name)</label>
-                <div style={{ display: "flex", alignItems: "center", gap: "0" }}>
-                  <span style={{ padding: "0.5rem 0.6rem", borderRadius: "6px 0 0 6px", border: "1px solid var(--border)", borderRight: "none", background: "var(--muted)", color: "var(--muted-foreground)", fontSize: "0.8rem", fontFamily: "monospace", whiteSpace: "nowrap" }}>env:</span>
-                  <input type="text" value={tokenEnvVar} onChange={(e) => setTokenEnvVar(e.target.value)} placeholder="GITHUB_TOKEN_MY_SITE" style={{ ...inputStyle, borderRadius: "0 6px 6px 0" }} />
-                </div>
-                <p style={{ margin: "0.25rem 0 0", fontSize: "0.7rem", color: "var(--muted-foreground)" }}>
-                  The env var must be set on the server where CMS admin runs
-                </p>
-              </div>
+              {/* GitHub connection status */}
+              {!ghConnected ? (
+                <button
+                  type="button"
+                  onClick={connectGitHub}
+                  style={{
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem",
+                    padding: "0.75rem 1rem", borderRadius: "8px", cursor: "pointer",
+                    border: "1px solid var(--border)", background: "var(--background)",
+                    color: "var(--foreground)", fontSize: "0.875rem", fontWeight: 500,
+                  }}
+                  className="hover:bg-accent transition-colors"
+                >
+                  <Github style={{ width: 18, height: 18 }} />
+                  Connect GitHub
+                </button>
+              ) : (
+                <>
+                  {/* Connected badge */}
+                  <div style={{
+                    display: "flex", alignItems: "center", justifyContent: "space-between",
+                    padding: "0.5rem 0.75rem", borderRadius: "8px",
+                    background: "color-mix(in srgb, #22c55e 10%, transparent)",
+                    border: "1px solid color-mix(in srgb, #22c55e 25%, transparent)",
+                  }}>
+                    <span style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.85rem" }}>
+                      <Github style={{ width: 16, height: 16 }} />
+                      Connected as <strong>{ghUser}</strong>
+                    </span>
+                    <button type="button" onClick={disconnectGitHub} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "0.75rem", textDecoration: "underline" }}>
+                      Disconnect
+                    </button>
+                  </div>
+
+                  {/* Account picker */}
+                  <div>
+                    <label style={labelStyle}>Account / Organization</label>
+                    <select
+                      value={ghSelectedAccount}
+                      onChange={(e) => setGhSelectedAccount(e.target.value)}
+                      style={selectStyle}
+                    >
+                      {ghAccounts.map((a) => (
+                        <option key={a.login} value={a.login}>
+                          {a.login} {a.type === "org" ? "(org)" : "(personal)"}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Repo picker */}
+                  <div>
+                    <label style={labelStyle}>Repository</label>
+                    {ghLoadingRepos ? (
+                      <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--muted-foreground)", padding: "0.5rem 0" }}>Loading repositories...</p>
+                    ) : (
+                      <select
+                        value={ghSelectedRepo}
+                        onChange={(e) => setGhSelectedRepo(e.target.value)}
+                        style={selectStyle}
+                      >
+                        <option value="">Select repository...</option>
+                        {ghRepos.map((r) => (
+                          <option key={r.name} value={r.name}>
+                            {r.name} {r.private ? "(private)" : ""}{r.description ? ` — ${r.description}` : ""}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+
+                  {/* Site name (auto-filled from repo) */}
+                  <div>
+                    <label style={labelStyle}>Site Name</label>
+                    <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="My Site" style={inputStyle} />
+                    {name && <p style={{ margin: "0.25rem 0 0", fontSize: "0.7rem", color: "var(--muted-foreground)", fontFamily: "monospace" }}>ID: {siteId()}</p>}
+                  </div>
+
+                  {/* Branch + Content dir */}
+                  <div style={{ display: "flex", gap: "0.75rem" }}>
+                    <div style={{ flex: 1 }}>
+                      <label style={labelStyle}>Branch</label>
+                      <input type="text" value={branch} onChange={(e) => setBranch(e.target.value)} placeholder="main" style={inputStyle} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <label style={labelStyle}>Content Directory</label>
+                      <input type="text" value={contentDir} onChange={(e) => setContentDir(e.target.value)} placeholder="content" style={inputStyle} />
+                    </div>
+                  </div>
+                </>
+              )}
             </>
           ) : (
             <>
+              {/* Site name for filesystem */}
+              <div>
+                <label style={labelStyle}>Site Name</label>
+                <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="My Site" style={inputStyle} />
+                {name && <p style={{ margin: "0.25rem 0 0", fontSize: "0.7rem", color: "var(--muted-foreground)", fontFamily: "monospace" }}>ID: {siteId()}</p>}
+              </div>
               {/* Filesystem: config path + content dir */}
               <div>
                 <label style={labelStyle}>Config Path (absolute)</label>
@@ -255,12 +389,13 @@ function NewSiteDialog({ orgId, onClose, onCreated }: {
           <button
             type="button"
             onClick={handleCreate}
-            disabled={saving}
+            disabled={saving || (adapter === "github" && !ghConnected)}
             style={{
               padding: "0.5rem 1.25rem", borderRadius: "8px", border: "none",
               background: "var(--primary)", color: "var(--primary-foreground)",
-              fontSize: "0.85rem", fontWeight: 600, cursor: saving ? "wait" : "pointer",
-              opacity: saving ? 0.7 : 1,
+              fontSize: "0.85rem", fontWeight: 600,
+              cursor: saving || (adapter === "github" && !ghConnected) ? "not-allowed" : "pointer",
+              opacity: saving || (adapter === "github" && !ghConnected) ? 0.5 : 1,
             }}
           >
             {saving ? "Creating..." : "Create Site"}

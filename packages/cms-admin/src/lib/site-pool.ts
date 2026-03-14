@@ -11,13 +11,26 @@ import type { SiteEntry } from "./site-registry";
 
 // ─── GitHub helpers ────────────────────────────────────────
 
-/** Resolve "env:VAR_NAME" → process.env.VAR_NAME, or return raw value */
-function resolveToken(token: string): string {
+/**
+ * Resolve token reference:
+ * - "env:VAR_NAME" → process.env.VAR_NAME
+ * - "oauth" → read from github-token cookie (OAuth flow)
+ * - raw string → return as-is
+ */
+async function resolveToken(token: string): Promise<string> {
   if (token.startsWith("env:")) {
     const envVar = token.slice(4);
     const resolved = process.env[envVar];
     if (!resolved) throw new Error(`Environment variable "${envVar}" is not set (needed for GitHub token)`);
     return resolved;
+  }
+  if (token === "oauth") {
+    // Read from cookie via next/headers
+    const { cookies } = await import("next/headers");
+    const cookieStore = await cookies();
+    const oauthToken = cookieStore.get("github-token")?.value;
+    if (!oauthToken) throw new Error("GitHub not connected — please connect via Sites → New Site → Connect GitHub");
+    return oauthToken;
   }
   return token;
 }
@@ -44,7 +57,7 @@ async function loadGitHubConfig(site: SiteEntry): Promise<CmsConfig> {
   const gh = site.github;
   if (!gh) throw new Error(`Site "${site.id}" is github adapter but has no github config`);
 
-  const token = resolveToken(gh.token);
+  const token = await resolveToken(gh.token);
   const branch = gh.branch ?? "main";
 
   // Determine config file path within the repo
