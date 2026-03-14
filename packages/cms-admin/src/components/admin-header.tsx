@@ -65,7 +65,7 @@ function UserNav({ user }: { user: SessionUser | null }) {
 
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
-    router.push("/admin/login");
+    window.location.href = "/";
   }
 
   return (
