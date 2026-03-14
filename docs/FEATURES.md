@@ -159,6 +159,14 @@ Content Types (eg. Article (Posts), Pages, Products, Crops, Media, Retailer)
 - Playbook/manuscript (drejebog) for an AI to implement at site for the CMS. How does an AI know which tools we have and what to use when designing. Not that the cms in any way should control how a design looks, but for designers and devs it is nice to know that your cms can manage your content visually. 
 - Buckets (WebHouse.Buckets eller AWS S3 eller Supabase buckets ...)
 - Login med Github og opret konto med Github. 
+- Backup
+- Vibe Coding Flow
+- Mail send
+- Form Engine (simple)
+- Documentation + (OpenAPI.yml) - DocSite
+- Online template registry (som npm create next-app med --example)
+
+
 
 http://localhost:3009/
 http://localhost:3009/about
