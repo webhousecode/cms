@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Github, HardDrive, ArrowLeft } from "lucide-react";
+import { Github, HardDrive } from "lucide-react";
 import { CustomSelect } from "@/components/ui/custom-select";
-import Link from "next/link";
 
 /* ─── Types ───────────────────────────────────────────────── */
 
@@ -223,28 +222,13 @@ export default function NewSitePage() {
   };
 
   return (
-    <div style={{ padding: "2rem", maxWidth: "560px", margin: "0 auto" }}>
-      {/* Back link */}
-      <Link
-        href="/admin/sites"
-        style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem", fontSize: "0.8rem", color: "var(--muted-foreground)", textDecoration: "none", marginBottom: "1.5rem" }}
-        className="hover:text-foreground transition-colors"
-      >
-        <ArrowLeft style={{ width: 14, height: 14 }} /> Back to sites
-      </Link>
-
-      {/* Title */}
-      <div style={{ marginBottom: "2rem" }}>
+    <div className="p-8 max-w-2xl">
+      <div className="mb-8">
         <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">Sites</p>
-        <h1 style={{ margin: 0, fontSize: "1.5rem", fontWeight: 700 }}>New site</h1>
+        <h1 className="text-2xl font-bold text-foreground">New site</h1>
       </div>
 
-      {/* Form card */}
-      <div style={{
-        background: "var(--card)", border: "1px solid var(--border)",
-        borderRadius: "12px", overflow: "hidden",
-      }}>
-        <div style={{ padding: "1.5rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           {/* Adapter picker */}
           <div style={{ display: "flex", gap: "0.5rem" }}>
             {([
@@ -444,18 +428,14 @@ export default function NewSitePage() {
             <input type="url" value={previewUrl} onChange={(e) => setPreviewUrl(e.target.value)} placeholder="https://my-site.example.com" style={inputStyle} />
           </div>
 
-          {error && (
-            <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--destructive)", padding: "0.5rem 0.75rem", borderRadius: "6px", background: "color-mix(in srgb, var(--destructive) 10%, transparent)" }}>
-              {error}
-            </p>
-          )}
-        </div>
+        {error && (
+          <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--destructive)", padding: "0.5rem 0.75rem", borderRadius: "6px", background: "color-mix(in srgb, var(--destructive) 10%, transparent)" }}>
+            {error}
+          </p>
+        )}
 
-        {/* Footer */}
-        <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.75rem", padding: "1rem 1.5rem", borderTop: "1px solid var(--border)" }}>
-          <button type="button" onClick={() => router.push("/admin/sites")} style={{ padding: "0.5rem 1rem", borderRadius: "8px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", fontSize: "0.85rem", cursor: "pointer" }}>
-            Cancel
-          </button>
+        {/* Actions */}
+        <div style={{ display: "flex", gap: "0.75rem", marginTop: "0.5rem" }}>
           <button
             type="button"
             onClick={handleCreate}
@@ -468,7 +448,10 @@ export default function NewSitePage() {
               opacity: saving || (adapter === "github" && !ghConnected) ? 0.5 : 1,
             }}
           >
-            {saving ? "Creating..." : "Create Site"}
+            {saving ? "Creating..." : "Create site"}
+          </button>
+          <button type="button" onClick={() => router.push("/admin/sites")} style={{ padding: "0.5rem 1rem", borderRadius: "8px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.85rem", cursor: "pointer" }}>
+            Cancel
           </button>
         </div>
       </div>
