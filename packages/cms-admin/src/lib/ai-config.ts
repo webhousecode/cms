@@ -6,13 +6,18 @@ export interface AiConfig {
   anthropicApiKey?: string;
   openaiApiKey?: string;
   geminiApiKey?: string;
+  /** Web search API key (Brave, Tavily, etc.) */
+  webSearchProvider?: "brave" | "tavily";
+  webSearchApiKey?: string;
 }
 
 export interface AiConfigMasked {
   defaultProvider: AiConfig["defaultProvider"];
-  anthropicApiKey?: string;   // masked: "sk-ant-...XXXX"
+  anthropicApiKey?: string;
   openaiApiKey?: string;
   geminiApiKey?: string;
+  webSearchProvider?: "brave" | "tavily";
+  webSearchApiKey?: string;
 }
 
 function getConfigPath(): string {
@@ -49,7 +54,18 @@ export function maskAiConfig(config: AiConfig): AiConfigMasked {
     anthropicApiKey: mask(config.anthropicApiKey),
     openaiApiKey: mask(config.openaiApiKey),
     geminiApiKey: mask(config.geminiApiKey),
+    webSearchProvider: config.webSearchProvider,
+    webSearchApiKey: mask(config.webSearchApiKey),
   };
+}
+
+/** Returns the active web search API key */
+export async function getWebSearchKey(): Promise<{ provider: string; key: string } | null> {
+  const config = await readAiConfig();
+  const provider = config.webSearchProvider ?? "brave";
+  const key = config.webSearchApiKey ?? process.env.BRAVE_API_KEY ?? process.env.TAVILY_API_KEY;
+  if (!key) return null;
+  return { provider, key };
 }
 
 /** Returns the active API key for a given provider, or null if not configured */

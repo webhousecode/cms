@@ -31,40 +31,16 @@ export async function register() {
   // ── 2. AI agent scheduler (every 5 minutes) ───────────────────
   async function agentTick() {
     try {
-      const { listAgents } = await import("./lib/agents");
-      const { runAgent } = await import("./lib/agent-runner");
-
-      const agents = await listAgents();
-      const now = new Date();
-
-      // Simple schedule check: agent.schedule.enabled + frequency/time match
-      for (const agent of agents) {
-        if (!agent.active || !agent.schedule.enabled) continue;
-        if (agent.schedule.frequency === "manual") continue;
-        if (agent.schedule.frequency === "weekly" && now.getDay() !== 1) continue;
-
-        const [h, m] = agent.schedule.time.split(":").map(Number);
-        const agentMinutes = (h ?? 0) * 60 + (m ?? 0);
-        const nowMinutes = now.getHours() * 60 + now.getMinutes();
-        const diff = Math.abs(nowMinutes - agentMinutes);
-
-        if (diff > 5 && diff < 1435) continue; // outside 5-minute window
-
-        console.log(`[agents] Running scheduled agent: ${agent.name}`);
-        const prompt = `Generate a new ${agent.role === "seo" ? "SEO-optimised" : "engaging"} piece of content for the site. Today is ${now.toLocaleDateString("en-GB", { weekday: "long", year: "numeric", month: "long", day: "numeric" })}.`;
-
-        for (let i = 0; i < Math.min(agent.schedule.maxPerRun, 5); i++) {
-          try {
-            const result = await runAgent(agent.id, prompt);
-            console.log(`[agents] ✓ ${agent.name}: "${result.title}" → queue`);
-          } catch (err) {
-            console.error(`[agents] ✗ ${agent.name} run ${i + 1}:`, err);
-            break;
-          }
-        }
+      const { runScheduledAgents } = await import("./lib/scheduler");
+      const result = await runScheduledAgents();
+      if (result.ran.length > 0) {
+        console.log(`[scheduler] Ran agents: ${result.ran.join(", ")}`);
+      }
+      if (result.errors.length > 0) {
+        console.error(`[scheduler] Errors: ${result.errors.join("; ")}`);
       }
     } catch (err) {
-      console.error("[agents] scheduler error:", err);
+      console.error("[scheduler] fatal:", err);
     }
   }
 

@@ -16,21 +16,19 @@ export async function POST(request: NextRequest) {
     const body = (await request.json()) as Partial<AiConfig>;
     const existing = await readAiConfig();
 
+    function mergeKey(newVal: string | undefined, existingVal: string | undefined): string | undefined {
+      if (typeof newVal === "string" && newVal.trim()) return newVal.trim();
+      if (newVal === "") return undefined;
+      return existingVal;
+    }
+
     const updated: AiConfig = {
       defaultProvider: body.defaultProvider ?? existing.defaultProvider,
-      // Only overwrite if a non-empty value was sent (allow clearing with "")
-      anthropicApiKey:
-        typeof body.anthropicApiKey === "string" && body.anthropicApiKey.trim()
-          ? body.anthropicApiKey.trim()
-          : (body.anthropicApiKey === "" ? undefined : existing.anthropicApiKey),
-      openaiApiKey:
-        typeof body.openaiApiKey === "string" && body.openaiApiKey.trim()
-          ? body.openaiApiKey.trim()
-          : (body.openaiApiKey === "" ? undefined : existing.openaiApiKey),
-      geminiApiKey:
-        typeof body.geminiApiKey === "string" && body.geminiApiKey.trim()
-          ? body.geminiApiKey.trim()
-          : (body.geminiApiKey === "" ? undefined : existing.geminiApiKey),
+      anthropicApiKey: mergeKey(body.anthropicApiKey, existing.anthropicApiKey),
+      openaiApiKey: mergeKey(body.openaiApiKey, existing.openaiApiKey),
+      geminiApiKey: mergeKey(body.geminiApiKey, existing.geminiApiKey),
+      webSearchProvider: body.webSearchProvider ?? existing.webSearchProvider,
+      webSearchApiKey: mergeKey(body.webSearchApiKey, existing.webSearchApiKey),
     };
 
     await writeAiConfig(updated);

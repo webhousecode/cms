@@ -9,7 +9,7 @@ export { FilesystemStorageAdapter } from './storage/filesystem/adapter.js';
 export { SqliteStorageAdapter } from './storage/sqlite/adapter.js';
 export { GitHubStorageAdapter } from './storage/github/adapter.js';
 export type { GitHubAdapterConfig } from './storage/github/adapter.js';
-export type { StorageAdapter, Document, DocumentInput, QueryOptions, QueryResult, DocumentStatus, FieldMeta, DocumentFieldMeta, WriteContext } from './storage/types.js';
+export type { StorageAdapter, Document, DocumentInput, QueryOptions, QueryResult, DocumentStatus, FieldMeta, DocumentFieldMeta, WriteContext, SearchOptions, SearchResult } from './storage/types.js';
 
 // Content
 export { ContentService } from './content/service.js';

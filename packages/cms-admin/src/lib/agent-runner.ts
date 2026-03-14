@@ -1,8 +1,11 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { getAgent } from "@/lib/agents";
-import { readCockpit } from "@/lib/cockpit";
+import { readCockpit, addCost } from "@/lib/cockpit";
 import { readBrandVoice, brandVoiceToPromptContext } from "@/lib/brand-voice";
 import { getApiKey } from "@/lib/ai-config";
+import { getAdminConfig } from "@/lib/cms";
+import { buildContentContext } from "@/lib/content-context";
+import { buildToolRegistry, type ToolDefinition, type ToolHandler } from "@/lib/tools";
 import fs from "fs/promises";
 import path from "path";
 
@@ -17,6 +20,7 @@ export interface AgentRunResult {
   collection: string;
   slug: string;
   costUsd: number;
+  alternatives?: { model: string; contentData: Record<string, unknown>; costUsd: number }[];
 }
 
 function getDataDir(): string {
@@ -29,10 +33,36 @@ async function loadFeedback(agentId: string): Promise<FeedbackExample[]> {
   const feedbackPath = path.join(getDataDir(), "agents", agentId, "feedback.json");
   try {
     const raw = await fs.readFile(feedbackPath, "utf-8");
-    return (JSON.parse(raw) as FeedbackExample[]).slice(-5); // last 5 examples
+    return (JSON.parse(raw) as FeedbackExample[]).slice(-5);
   } catch {
     return [];
   }
+}
+
+interface SelectOption { label: string; value: string }
+interface FieldDef { name: string; type: string; required?: boolean; label?: string; options?: SelectOption[] }
+
+function buildSchemaInstructions(fields: FieldDef[]): string {
+  const fieldList = fields
+    .map((f) => {
+      let hint = `<${f.type}>`;
+      if (f.type === "select" && f.options && f.options.length > 0) {
+        const validValues = f.options.map((o) => `"${o.value}"`).join(" | ");
+        hint = `<select: MUST be one of ${validValues}>`;
+      }
+      const req = f.required ? " (required)" : "";
+      const lbl = f.label ? ` — ${f.label}` : "";
+      return `  "${f.name}": ${hint}${req}${lbl}`;
+    })
+    .join(",\n");
+  return `## Output format
+Respond with ONLY a valid JSON object. No markdown fences, no explanation. Use this exact shape:
+{\n${fieldList}\n}
+- "content" / "body" fields: use Markdown with headings, paragraphs, lists. Use "- " for bullet lists. NEVER use "> " blockquotes for list items — blockquotes are ONLY for actual quotations from a person or source.
+- "date": ISO date string (YYYY-MM-DD), use today's date
+- "tags": array of lowercase strings
+- For select fields: use ONLY the exact values listed — never invent new values
+- Omit fields you have no meaningful value for`;
 }
 
 function buildSystemPrompt(
@@ -43,7 +73,8 @@ function buildSystemPrompt(
   seoWeight: number,
   promptDepth: string,
   brandVoiceContext: string | null,
-  feedbackExamples: FeedbackExample[]
+  feedbackExamples: FeedbackExample[],
+  schemaFields: FieldDef[]
 ): string {
   const parts: string[] = [agentSystemPrompt];
 
@@ -71,6 +102,8 @@ function buildSystemPrompt(
     });
   }
 
+  parts.push(`\n${buildSchemaInstructions(schemaFields)}`);
+
   return parts.join("\n");
 }
 
@@ -79,8 +112,94 @@ function selectModel(cockpitPrimaryModel: string, speedQuality: string): string 
   return cockpitPrimaryModel;
 }
 
+function estimateCost(model: string, inputTokens: number, outputTokens: number): number {
+  const rateIn = model.includes("haiku") ? 0.00000025 : model.includes("opus") ? 0.000015 : 0.000003;
+  const rateOut = model.includes("haiku") ? 0.00000125 : model.includes("opus") ? 0.000075 : 0.000015;
+  return inputTokens * rateIn + outputTokens * rateOut;
+}
+
+/**
+ * Core LLM call with tool-use loop.
+ * Handles Anthropic's tool_use → tool_result → continue pattern.
+ * Max 10 iterations to prevent runaway loops.
+ */
+async function callModelWithTools(params: {
+  client: Anthropic;
+  model: string;
+  systemPrompt: string;
+  userPrompt: string;
+  maxTokens: number;
+  tools: ToolDefinition[];
+  handlers: Map<string, ToolHandler>;
+}): Promise<{ rawText: string; totalInputTokens: number; totalOutputTokens: number }> {
+  const { client, model, systemPrompt, userPrompt, maxTokens, tools, handlers } = params;
+
+  const messages: Anthropic.MessageParam[] = [{ role: "user", content: userPrompt }];
+  const anthropicTools: Anthropic.Tool[] = tools.map((t) => ({
+    name: t.name,
+    description: t.description,
+    input_schema: t.input_schema as Anthropic.Tool.InputSchema,
+  }));
+
+  let totalInputTokens = 0;
+  let totalOutputTokens = 0;
+  const MAX_ITERATIONS = 10;
+
+  for (let i = 0; i < MAX_ITERATIONS; i++) {
+    const response = await client.messages.create({
+      model,
+      max_tokens: maxTokens,
+      system: systemPrompt,
+      messages,
+      ...(anthropicTools.length > 0 ? { tools: anthropicTools } : {}),
+    });
+
+    totalInputTokens += response.usage.input_tokens;
+    totalOutputTokens += response.usage.output_tokens;
+
+    // Check if the model wants to use tools
+    const toolUseBlocks = response.content.filter(
+      (b): b is Anthropic.ContentBlock & { type: "tool_use"; id: string; name: string; input: Record<string, unknown> } =>
+        b.type === "tool_use"
+    );
+
+    if (toolUseBlocks.length === 0 || response.stop_reason === "end_turn") {
+      // No tool calls — extract final text
+      const text = response.content
+        .filter((b): b is Anthropic.TextBlock => b.type === "text")
+        .map((b) => b.text)
+        .join("");
+      return { rawText: text, totalInputTokens, totalOutputTokens };
+    }
+
+    // Process tool calls
+    messages.push({ role: "assistant", content: response.content });
+
+    const toolResults: Anthropic.ToolResultBlockParam[] = [];
+    for (const block of toolUseBlocks) {
+      const handler = handlers.get(block.name);
+      let result: string;
+      if (handler) {
+        try {
+          result = await handler(block.input);
+        } catch (err) {
+          result = `Tool error: ${err instanceof Error ? err.message : "unknown"}`;
+        }
+      } else {
+        result = `Unknown tool: ${block.name}`;
+      }
+      toolResults.push({ type: "tool_result", tool_use_id: block.id, content: result });
+    }
+
+    messages.push({ role: "user", content: toolResults });
+  }
+
+  // Hit max iterations — extract whatever text we have
+  return { rawText: "[Agent reached maximum tool iterations]", totalInputTokens, totalOutputTokens };
+}
+
 /** Runs a single agent with a given prompt. Adds result to curation queue. */
-export async function runAgent(agentId: string, userPrompt: string): Promise<AgentRunResult> {
+export async function runAgent(agentId: string, userPrompt: string, overrideCollection?: string): Promise<AgentRunResult> {
   const agent = await getAgent(agentId);
   if (!agent) throw new Error(`Agent ${agentId} not found`);
   if (!agent.active) throw new Error(`Agent ${agentId} is not active`);
@@ -88,15 +207,23 @@ export async function runAgent(agentId: string, userPrompt: string): Promise<Age
   const apiKey = await getApiKey("anthropic");
   if (!apiKey) throw new Error("Anthropic API key not configured");
 
-  const [cockpit, brandVoice, feedback] = await Promise.all([
+  const targetCollection = overrideCollection ?? agent.targetCollections[0] ?? "posts";
+
+  const cmsConfig = await getAdminConfig();
+  const collectionDef = cmsConfig.collections.find((c) => c.name === targetCollection);
+  const schemaFields: FieldDef[] = (collectionDef?.fields ?? []) as FieldDef[];
+
+  const [cockpit, brandVoice, feedback, contentContext, toolRegistry] = await Promise.all([
     readCockpit(),
     readBrandVoice(),
     loadFeedback(agentId),
+    buildContentContext().catch(() => ""),
+    buildToolRegistry(agent),
   ]);
 
   const brandContext = brandVoice ? brandVoiceToPromptContext(brandVoice) : null;
 
-  const systemPrompt = buildSystemPrompt(
+  let systemPrompt = buildSystemPrompt(
     agent.systemPrompt,
     agent.behavior.temperature,
     agent.behavior.formality,
@@ -104,31 +231,55 @@ export async function runAgent(agentId: string, userPrompt: string): Promise<Age
     cockpit.seoWeight,
     cockpit.promptDepth,
     brandContext,
-    feedback
+    feedback,
+    schemaFields
   );
+  if (contentContext) systemPrompt += `\n\n${contentContext}`;
+
+  // Add tool instructions if tools are available
+  if (toolRegistry.definitions.length > 0) {
+    const toolNames = toolRegistry.definitions.map((t) => t.name).join(", ");
+    systemPrompt += `\n\n## Available tools\nYou have access to these tools: ${toolNames}. Use them when they help you produce better content. After using tools, return your final answer as the JSON object described above.`;
+  }
 
   const model = selectModel(cockpit.primaryModel, cockpit.speedQuality);
-
+  const maxTokens = cockpit.speedQuality === "thorough" ? 4096 : 2048;
   const client = new Anthropic({ apiKey });
-  const message = await client.messages.create({
-    model,
-    max_tokens: cockpit.speedQuality === "thorough" ? 4096 : 2048,
-    system: systemPrompt,
-    messages: [{ role: "user", content: userPrompt }],
+
+  // Primary model call with tool-use
+  const { rawText, totalInputTokens, totalOutputTokens } = await callModelWithTools({
+    client, model, systemPrompt, userPrompt, maxTokens,
+    tools: toolRegistry.definitions,
+    handlers: toolRegistry.handlers,
   });
 
-  const rawText = message.content
-    .filter((b) => b.type === "text")
-    .map((b) => (b as { type: "text"; text: string }).text)
-    .join("");
-
-  // Try to parse as JSON (structured output), fall back to plain text
   let contentData: Record<string, unknown>;
   try {
-    const parsed = JSON.parse(rawText) as Record<string, unknown>;
-    contentData = parsed;
+    contentData = JSON.parse(rawText.trim()) as Record<string, unknown>;
   } catch {
-    contentData = { content: rawText };
+    // Try markdown fences
+    const fenceMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)```/);
+    if (fenceMatch) {
+      try { contentData = JSON.parse(fenceMatch[1].trim()) as Record<string, unknown>; }
+      catch { contentData = extractJson(rawText); }
+    } else {
+      contentData = extractJson(rawText);
+    }
+  }
+
+  function extractJson(text: string): Record<string, unknown> {
+    const start = text.indexOf("{");
+    const end = text.lastIndexOf("}");
+    if (start !== -1 && end > start) {
+      try { return JSON.parse(text.slice(start, end + 1)) as Record<string, unknown>; }
+      catch { /* fall through */ }
+    }
+    return { content: text };
+  }
+
+  // Apply field defaults
+  if (agent.fieldDefaults && Object.keys(agent.fieldDefaults).length > 0) {
+    contentData = { ...contentData, ...agent.fieldDefaults };
   }
 
   const title = typeof contentData["title"] === "string"
@@ -141,14 +292,39 @@ export async function runAgent(agentId: string, userPrompt: string): Promise<Age
     .replace(/^-|-$/g, "")
     .slice(0, 80);
 
-  // Cost estimate (input + output tokens × model rate)
-  const inputTokens = message.usage.input_tokens;
-  const outputTokens = message.usage.output_tokens;
-  const rateIn = model.includes("haiku") ? 0.00000025 : model.includes("opus") ? 0.000015 : 0.000003;
-  const rateOut = model.includes("haiku") ? 0.00000125 : model.includes("opus") ? 0.000075 : 0.000015;
-  const costUsd = inputTokens * rateIn + outputTokens * rateOut;
+  const costUsd = estimateCost(model, totalInputTokens, totalOutputTokens);
 
-  // Determine if agent qualifies for full autonomy
+  // Multi-model: run alternate models in parallel if enabled
+  let alternatives: AgentRunResult["alternatives"] = undefined;
+  if (cockpit.multiModelEnabled && cockpit.compareModels.length >= 2) {
+    const altModels = cockpit.compareModels.filter((m) => m !== model);
+    const altResults = await Promise.allSettled(
+      altModels.map(async (altModel) => {
+        const { rawText: altRaw, totalInputTokens: altIn, totalOutputTokens: altOut } =
+          await callModelWithTools({
+            client, model: altModel, systemPrompt, userPrompt, maxTokens,
+            tools: toolRegistry.definitions,
+            handlers: toolRegistry.handlers,
+          });
+        const altCleaned = altRaw.replace(/^```(?:json)?\s*/i, "").replace(/\s*```\s*$/, "").trim();
+        let altData: Record<string, unknown>;
+        try { altData = JSON.parse(altCleaned); } catch { altData = { content: altRaw }; }
+        if (agent.fieldDefaults) altData = { ...altData, ...agent.fieldDefaults };
+        return { model: altModel, contentData: altData, costUsd: estimateCost(altModel, altIn, altOut) };
+      })
+    );
+    alternatives = altResults
+      .filter((r): r is PromiseFulfilledResult<{ model: string; contentData: Record<string, unknown>; costUsd: number }> => r.status === "fulfilled")
+      .map((r) => r.value);
+  }
+
+  // Total cost including alternatives
+  const totalCost = costUsd + (alternatives?.reduce((sum, a) => sum + a.costUsd, 0) ?? 0);
+
+  // Track cost in budget
+  await addCost(totalCost).catch(() => {});
+
+  // Determine autonomy
   const approvalRate = agent.stats.totalGenerated > 0
     ? agent.stats.approved / (agent.stats.approved + agent.stats.rejected)
     : 0;
@@ -156,7 +332,6 @@ export async function runAgent(agentId: string, userPrompt: string): Promise<Age
     agent.autonomy === "full" &&
     agent.stats.totalGenerated >= 20 &&
     approvalRate > 0.95;
-
   const status = qualifiesFullAutonomy ? "approved" : "ready";
 
   // Write to curation queue
@@ -164,19 +339,23 @@ export async function runAgent(agentId: string, userPrompt: string): Promise<Age
   const queueItem = await addQueueItem({
     agentId: agent.id,
     agentName: agent.name,
-    collection: agent.targetCollections[0] ?? "posts",
+    collection: targetCollection,
     slug,
     title,
     status,
     contentData,
-    costUsd,
+    costUsd: totalCost,
+    ...(alternatives && alternatives.length > 0 ? { alternatives } : {}),
   });
 
-  return {
-    queueItemId: queueItem.id,
-    title,
-    collection: agent.targetCollections[0] ?? "posts",
-    slug,
-    costUsd,
-  };
+  // Increment agent stats
+  const { updateAgent } = await import("@/lib/agents");
+  await updateAgent(agent.id, {
+    stats: { ...agent.stats, totalGenerated: agent.stats.totalGenerated + 1 },
+  }).catch(() => {});
+
+  // Cleanup MCP connections
+  await toolRegistry.cleanup();
+
+  return { queueItemId: queueItem.id, title, collection: targetCollection, slug, costUsd: totalCost, alternatives };
 }

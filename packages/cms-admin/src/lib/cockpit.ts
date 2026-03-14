@@ -46,3 +46,29 @@ export async function writeCockpit(params: CockpitParams): Promise<void> {
   await fs.mkdir(path.dirname(filePath), { recursive: true });
   await fs.writeFile(filePath, JSON.stringify(params, null, 2));
 }
+
+/** Add cost to monthly budget tracker. Auto-resets on new month. */
+export async function addCost(usd: number): Promise<void> {
+  const cockpit = await readCockpit();
+  const now = new Date();
+  const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+
+  // Check if we need to reset for new month
+  const filePath = getCommandPath();
+  let storedMonth = "";
+  try {
+    const raw = await fs.readFile(filePath, "utf-8");
+    const stored = JSON.parse(raw) as { _budgetMonth?: string };
+    storedMonth = stored._budgetMonth ?? "";
+  } catch { /* first write */ }
+
+  if (storedMonth !== currentMonth) {
+    cockpit.currentMonthSpentUsd = 0;
+  }
+
+  cockpit.currentMonthSpentUsd += usd;
+
+  const data = { ...cockpit, _budgetMonth: currentMonth };
+  await fs.mkdir(path.dirname(filePath), { recursive: true });
+  await fs.writeFile(filePath, JSON.stringify(data, null, 2));
+}

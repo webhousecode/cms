@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getQueueItem, approveQueueItem, rejectQueueItem } from "@/lib/curation";
-import { getAdminCms } from "@/lib/cms";
+import { getQueueItem, approveQueueItem, rejectQueueItem, updateQueueItemData, pickAlternative } from "@/lib/curation";
 
 export async function GET(
   _request: NextRequest,
@@ -17,11 +16,16 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const { action, feedback } = (await request.json()) as {
-    action: "approve" | "reject";
-    feedback?: string;
-  };
+  const body = await request.json() as Record<string, unknown>;
 
+  // Field update (inline edit in curation queue)
+  if (body.type === "update-fields") {
+    const item = await updateQueueItemData(id, body.fields as Record<string, unknown>);
+    return NextResponse.json(item);
+  }
+
+  // Legacy approve/reject actions
+  const { action, feedback } = body as { action?: string; feedback?: string };
   const item = await getQueueItem(id);
   if (!item) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
@@ -31,22 +35,14 @@ export async function PATCH(
   }
 
   if (action === "approve") {
-    // Approve → mark approved
     const updated = await approveQueueItem(id);
+    return NextResponse.json(updated);
+  }
 
-    // Then actually create the CMS document
-    try {
-      const cms = await getAdminCms();
-      await cms.content.create(item.collection, {
-        slug: item.slug,
-        status: "draft",
-        data: item.contentData,
-      });
-    } catch (err) {
-      // Non-fatal: item is approved in queue even if CMS write fails
-      console.error("[curation] CMS create failed:", err);
-    }
-
+  if (action === "pick-alternative") {
+    const altIndex = (body as { alternativeIndex?: number }).alternativeIndex;
+    if (typeof altIndex !== "number") return NextResponse.json({ error: "alternativeIndex required" }, { status: 400 });
+    const updated = await pickAlternative(id, altIndex);
     return NextResponse.json(updated);
   }
 

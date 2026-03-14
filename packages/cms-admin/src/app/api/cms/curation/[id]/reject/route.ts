@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { rejectQueueItem } from "@/lib/curation";
+import { rejectQueueItem, getQueueItem } from "@/lib/curation";
+import { getAgent, updateAgent } from "@/lib/agents";
 
 export async function POST(
   request: NextRequest,
@@ -11,7 +12,19 @@ export async function POST(
     if (!feedback) {
       return NextResponse.json({ error: "feedback required" }, { status: 400 });
     }
+    const queueItem = await getQueueItem(id);
     const item = await rejectQueueItem(id, feedback);
+
+    // Increment agent rejected stat
+    if (queueItem?.agentId) {
+      const agent = await getAgent(queueItem.agentId);
+      if (agent) {
+        await updateAgent(agent.id, {
+          stats: { ...agent.stats, rejected: agent.stats.rejected + 1 },
+        }).catch(() => {});
+      }
+    }
+
     return NextResponse.json(item);
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Failed to reject";

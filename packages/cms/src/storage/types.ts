@@ -81,6 +81,26 @@ export interface QueryResult {
   total: number;
 }
 
+export interface SearchOptions {
+  /** Collections to search. Defaults to all configured collections. */
+  collections?: string[];
+  /** Only return documents with this status. Defaults to all. */
+  status?: DocumentStatus;
+  /** Max results. Defaults to 20. */
+  limit?: number;
+}
+
+export interface SearchResult {
+  collection: string;
+  collectionLabel: string;
+  slug: string;
+  title: string;
+  excerpt: string;
+  url: string;
+  status: DocumentStatus;
+  score: number;
+}
+
 export interface StorageAdapter {
   initialize(): Promise<void>;
   create(collection: string, input: DocumentInput): Promise<Document>;
