@@ -24,7 +24,7 @@ export default async function AdminDashboard() {
       <div className="p-8 max-w-5xl">
       <div className="mb-10">
         <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">Dashboard</p>
-        <h1 className="text-3xl font-bold text-foreground">Content Overview</h1>
+        <h1 className="text-2xl font-bold text-foreground">Content Overview</h1>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
