@@ -337,8 +337,8 @@ export default function LinkCheckerPage() {
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem" }}>
               <thead>
                 <tr style={{ borderBottom: "1px solid var(--border)", background: "var(--muted)" }}>
-                  {["", "URL", "Item", "Field", "Status", ""].map((h) => (
-                    <th key={h} style={{ padding: "0.5rem 0.875rem", textAlign: "left", fontFamily: "monospace", fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--muted-foreground)", fontWeight: 400 }}>{h}</th>
+                  {["icon", "URL", "Item", "Field", "Status", "Fix"].map((h) => (
+                    <th key={h} style={{ padding: "0.5rem 0.875rem", textAlign: "left", fontFamily: "monospace", fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--muted-foreground)", fontWeight: 400 }}>{h === "icon" ? "" : h}</th>
                   ))}
                 </tr>
               </thead>
