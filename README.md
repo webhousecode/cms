@@ -193,18 +193,103 @@ Install globally for the short `cms` command:
 npm install -g @webhouse/cms-cli
 ```
 
-Or use `npx` without installing:
+> **Note:** Do not use `npx cms` — npm resolves it to an unrelated package. Use `npx @webhouse/cms-cli` if you prefer not to install globally.
+
+### Commands
+
+| Command | Description |
+|---------|-------------|
+| `cms init [name]` | Scaffold a new project |
+| `cms dev [--port 3000]` | Start dev server with REST API and hot reload |
+| `cms build [--outDir dist]` | Build static site (HTML, sitemap, llms.txt) |
+| `cms serve [--port 5000]` | Serve built site locally |
+
+### AI commands
+
+Require `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` in `.env`.
+
+| Command | Description |
+|---------|-------------|
+| `cms ai generate <collection> "<prompt>"` | Generate a new document with AI |
+| `cms ai rewrite <collection>/<slug> "<instruction>"` | Rewrite existing content |
+| `cms ai seo [--status published]` | Run SEO optimization across all documents |
 
 ```bash
-npx cms init [name]                          # Scaffold new project
-npx cms dev                                  # Start dev server
-npx cms build                                # Build static output
-npx cms serve                                # Serve built site
-npx cms ai generate <collection> "<prompt>"  # Generate content with AI
-npx cms ai rewrite <collection>/<slug> "<instruction>"  # Rewrite content
-npx cms ai seo                               # SEO optimization
-npx cms mcp serve                            # Start stdio MCP server
-npx cms mcp keygen                           # Generate MCP API key
+# Examples
+cms ai generate posts "Write a guide to TypeScript generics"
+cms ai rewrite posts/hello-world "Make it more concise and add code examples"
+cms ai seo
+```
+
+### MCP commands
+
+| Command | Description |
+|---------|-------------|
+| `cms mcp serve` | Start stdio MCP server (for Claude Code / `.mcp.json`) |
+| `cms mcp keygen` | Generate MCP API key |
+| `cms mcp test` | Test MCP server connection |
+| `cms mcp status` | Check MCP server status |
+
+### Content creation — 3 ways
+
+**A) Via AI generation**
+```bash
+cms ai generate posts "Write a blog post about TypeScript best practices"
+```
+
+**B) Via REST API**
+```bash
+curl -X POST http://localhost:3000/api/content/posts \
+  -H "Content-Type: application/json" \
+  -d '{"slug":"my-post","status":"published","data":{"title":"My Post","content":"# Hello"}}'
+```
+
+**C) Via Claude Code**
+```
+> Create a blog post about why file-based CMS is the future
+```
+
+---
+
+## REST API
+
+The dev server (`cms dev`) exposes a full REST API. See the complete [OpenAPI specification](docs/openapi.yml).
+
+### Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `GET` | `/api/manifest` | CMS configuration and collection list |
+| `GET` | `/api/schema/:collection` | JSON Schema for a collection |
+| `GET` | `/api/content/:collection` | List all documents in a collection |
+| `GET` | `/api/content/:collection/:slug` | Get a single document by slug |
+| `POST` | `/api/content/:collection` | Create a new document |
+| `PATCH` | `/api/content/:collection/:slug` | Update a document |
+| `DELETE` | `/api/content/:collection/:slug` | Delete a document |
+| `GET` | `/api/content/:collection/:slug/_fieldMeta` | Get field-level AI lock metadata |
+| `PATCH` | `/api/content/:collection/:slug/_fieldMeta` | Update field locks |
+
+### Example
+
+```bash
+# List all published posts
+curl http://localhost:3000/api/content/posts?status=published
+
+# Get a single post
+curl http://localhost:3000/api/content/posts/hello-world
+
+# Create a post
+curl -X POST http://localhost:3000/api/content/posts \
+  -H "Content-Type: application/json" \
+  -d '{
+    "slug": "my-post",
+    "status": "draft",
+    "data": {
+      "title": "My First Post",
+      "content": "# Hello\n\nThis is my first post.",
+      "date": "2026-03-15"
+    }
+  }'
 ```
 
 ---
