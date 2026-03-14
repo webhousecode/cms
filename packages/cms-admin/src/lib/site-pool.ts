@@ -9,6 +9,83 @@ import type { CmsConfig } from "@webhouse/cms";
 import { dirname, resolve } from "node:path";
 import type { SiteEntry } from "./site-registry";
 
+// ─── GitHub helpers ────────────────────────────────────────
+
+/** Resolve "env:VAR_NAME" → process.env.VAR_NAME, or return raw value */
+function resolveToken(token: string): string {
+  if (token.startsWith("env:")) {
+    const envVar = token.slice(4);
+    const resolved = process.env[envVar];
+    if (!resolved) throw new Error(`Environment variable "${envVar}" is not set (needed for GitHub token)`);
+    return resolved;
+  }
+  return token;
+}
+
+/** Fetch a file from a GitHub repo and return its decoded text content */
+async function fetchGitHubFile(owner: string, repo: string, path: string, branch: string, token: string): Promise<string> {
+  const url = `https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`;
+  const res = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+      Accept: "application/vnd.github+json",
+      "X-GitHub-Api-Version": "2022-11-28",
+    },
+  });
+  if (res.status === 404) throw new Error(`GitHub: file not found: ${owner}/${repo}/${path}`);
+  if (res.status === 401) throw new Error(`GitHub: bad token or no access to ${owner}/${repo}`);
+  if (!res.ok) throw new Error(`GitHub: fetch ${path} failed: ${res.status} ${res.statusText}`);
+  const data = (await res.json()) as { content: string };
+  return Buffer.from(data.content.replace(/\n/g, ""), "base64").toString("utf-8");
+}
+
+/** Fetch cms.config.ts from a GitHub repo and evaluate it with jiti */
+async function loadGitHubConfig(site: SiteEntry): Promise<CmsConfig> {
+  const gh = site.github;
+  if (!gh) throw new Error(`Site "${site.id}" is github adapter but has no github config`);
+
+  const token = resolveToken(gh.token);
+  const branch = gh.branch ?? "main";
+
+  // Determine config file path within the repo
+  let configPath = "cms.config.ts";
+  if (site.configPath.startsWith("github://")) {
+    // Format: github://owner/repo/path/to/cms.config.ts
+    const parts = site.configPath.replace("github://", "").split("/");
+    configPath = parts.slice(2).join("/"); // skip owner/repo
+  }
+
+  const configSource = await fetchGitHubFile(gh.owner, gh.repo, configPath, branch, token);
+
+  // Write to a temp file so jiti can import it (jiti needs a file path)
+  const { writeFileSync, mkdirSync } = await import("node:fs");
+  const { join } = await import("node:path");
+  const { tmpdir } = await import("node:os");
+  const tempDir = join(tmpdir(), "cms-github-configs", `${gh.owner}-${gh.repo}`);
+  mkdirSync(tempDir, { recursive: true });
+  const tempFile = join(tempDir, "cms.config.ts");
+  writeFileSync(tempFile, configSource);
+
+  const { createJiti } = await import("jiti");
+  const jiti = createJiti(tempFile, { debug: false, moduleCache: false });
+  const mod = (await jiti.import(tempFile)) as { default?: CmsConfig } | CmsConfig;
+  const config = ((mod as { default?: CmsConfig }).default ?? mod) as CmsConfig;
+
+  // Ensure storage config points to the right GitHub repo with resolved token
+  config.storage = {
+    adapter: "github",
+    github: {
+      owner: gh.owner,
+      repo: gh.repo,
+      branch,
+      contentDir: gh.contentDir ?? "content",
+      token,
+    },
+  };
+
+  return config;
+}
+
 export interface CmsInstance {
   cms: Awaited<ReturnType<typeof createCms>>;
   config: CmsConfig;
@@ -33,8 +110,11 @@ export async function getOrCreateInstance(
   }
 
   if (site.adapter === "github") {
-    // TODO: implement GitHub config loading + storage adapter
-    throw new Error(`GitHub adapter not yet implemented for site "${site.id}"`);
+    const config = await loadGitHubConfig(site);
+    const cms = await createCms(config);
+    const instance: CmsInstance = { cms, config, site };
+    pool.set(key, instance);
+    return instance;
   }
 
   // Filesystem adapter — load config via jiti
