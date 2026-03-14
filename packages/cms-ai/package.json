@@ -1,23 +1,54 @@
 {
   "name": "@webhouse/cms-ai",
   "version": "0.1.0",
-  "description": "AI agents for @webhouse/cms",
+  "description": "AI agents for @webhouse/cms — content generation with Anthropic Claude and OpenAI",
   "type": "module",
+  "license": "MIT",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "require": "./dist/index.cjs",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.cjs"
     }
   },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
     "test": "vitest run",
     "typecheck": "tsc --noEmit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/webhousecode/cms.git",
+    "directory": "packages/cms-ai"
+  },
+  "homepage": "https://github.com/webhousecode/cms#readme",
+  "bugs": {
+    "url": "https://github.com/webhousecode/cms/issues"
+  },
+  "keywords": [
+    "cms",
+    "ai",
+    "content-generation",
+    "anthropic",
+    "claude",
+    "openai",
+    "agents",
+    "typescript"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "dependencies": {
     "@webhouse/cms": "workspace:*",

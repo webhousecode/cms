@@ -3,20 +3,50 @@
   "version": "0.1.0",
   "description": "Authenticated read+write MCP server for @webhouse/cms content production",
   "type": "module",
+  "license": "MIT",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
-      "require": "./dist/index.cjs",
-      "types": "./dist/index.d.ts"
+      "require": "./dist/index.cjs"
     }
   },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/webhousecode/cms.git",
+    "directory": "packages/cms-mcp-server"
+  },
+  "homepage": "https://github.com/webhousecode/cms#readme",
+  "bugs": {
+    "url": "https://github.com/webhousecode/cms/issues"
+  },
+  "keywords": [
+    "cms",
+    "mcp",
+    "model-context-protocol",
+    "ai",
+    "content-management",
+    "authenticated",
+    "typescript"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.27.1",
