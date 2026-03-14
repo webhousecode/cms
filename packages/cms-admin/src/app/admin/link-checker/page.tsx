@@ -5,6 +5,7 @@ import { Link2, Play, CheckCircle, XCircle, ArrowRight, ExternalLink, Loader2, W
 import type { LinkResult, ProgressEvent } from "@/app/api/check-links/route";
 import type { LinkCheckRecord } from "@/lib/link-check-store";
 import { cn } from "@/lib/utils";
+import { useTabs } from "@/lib/tabs-context";
 
 type RunState = "idle" | "running" | "done" | "error";
 type FixState = { loading: boolean; suggestion?: string | null; reason?: string; confidence?: string; applied?: boolean; error?: string };
@@ -157,6 +158,7 @@ export default function LinkCheckerPage() {
   const [filter, setFilter] = useState<"all" | "broken" | "redirect" | "ok">("broken");
   const [checkedAt, setCheckedAt] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
+  const { openTab } = useTabs();
 
   // Load last persisted result on mount
   useEffect(() => {
@@ -367,13 +369,14 @@ export default function LinkCheckerPage() {
                       </div>
                     </td>
                     <td style={{ padding: "0.5rem 0.875rem" }}>
-                      <a
-                        href={`/admin/${r.docCollection}/${r.docSlug}`}
-                        className="hover:underline"
-                        style={{ color: "var(--foreground)", fontSize: "0.8rem" }}
+                      <button
+                        type="button"
+                        onClick={() => openTab(`/admin/${r.docCollection}/${r.docSlug}`, r.docTitle)}
+                        className="hover:underline text-left"
+                        style={{ color: "var(--foreground)", fontSize: "0.8rem", background: "none", border: "none", cursor: "pointer", padding: 0 }}
                       >
                         {r.docTitle}
-                      </a>
+                      </button>
                       <div style={{ fontSize: "0.65rem", fontFamily: "monospace", color: "var(--muted-foreground)" }}>
                         {r.docCollection}
                       </div>
