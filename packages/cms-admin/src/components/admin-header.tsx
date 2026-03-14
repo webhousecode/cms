@@ -2,6 +2,7 @@
 
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useTabs } from "@/lib/tabs-context";
+import { SiteSwitcher } from "@/components/site-switcher";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -148,6 +149,7 @@ export function AdminHeader() {
         )}
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0 1rem" }}>
+        <SiteSwitcher />
         <UserNav user={user} />
       </div>
     </header>
