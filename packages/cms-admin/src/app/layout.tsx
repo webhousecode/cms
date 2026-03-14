@@ -8,7 +8,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 export const metadata: Metadata = {
-  title: "@webhouse/cms — Admin",
+  title: "webhouse.app",
   description: "Content management admin UI",
   icons: { icon: "/favicon.svg" },
 };

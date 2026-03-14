@@ -33,7 +33,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <CommandPaletteProvider>
             {children}
             <footer className="mt-16 py-8 text-center">
-              <p className="text-[10px] font-mono text-muted-foreground/40">@webhouse/cms v0.1</p>
+              <p className="text-[10px] font-mono text-muted-foreground/40">webhouse.app v0.1</p>
             </footer>
           </CommandPaletteProvider>
           <DevInspector />
