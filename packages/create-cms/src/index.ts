@@ -193,9 +193,6 @@ write('package.json', JSON.stringify({
   },
 }, null, 2) + '\n');
 
-// ── 8. .nvmrc ───────────────────────────────────────────────────────────
-write('.nvmrc', '22\n');
-
 // ── Install dependencies ────────────────────────────────────────────────
 console.log('');
 
