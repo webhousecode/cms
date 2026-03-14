@@ -117,8 +117,6 @@ export function TabsProvider({ children }: { children: ReactNode }) {
       const id = uid();
       applyTabs([{ id, path: pathname, title: pathTitle(pathname) }], id);
     }
-    // Prevent the pathname effect from overwriting tabs on initial mount
-    skipNextPathChange.current = true;
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
