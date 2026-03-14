@@ -5,16 +5,19 @@ CLI for [@webhouse/cms](https://github.com/webhousecode/cms) — scaffold projec
 ## Quick start
 
 ```bash
-# 1. Create a new project
+# 1. Install the CLI globally
+npm install -g @webhouse/cms-cli
+
+# 2. Create a new project
 npm create @webhouse/cms my-site
 cd my-site
 npm install
 
-# 2. Add your AI key (optional, for AI content generation)
+# 3. Add your AI key (optional, for AI content generation)
 echo "ANTHROPIC_API_KEY=sk-ant-..." >> .env
 
-# 3. Start developing
-npx cms dev
+# 4. Start developing
+cms dev
 ```
 
 Your site is running at `http://localhost:3000` with a full REST API.
@@ -81,7 +84,7 @@ curl -X POST http://localhost:3000/api/content/posts \
 
 **B) Via AI generation** (from terminal)
 ```bash
-npx cms ai generate posts "Write a blog post about TypeScript best practices"
+cms ai generate posts "Write a blog post about TypeScript best practices"
 ```
 
 **C) Via Claude Code** (AI-assisted development)
@@ -95,7 +98,7 @@ Claude Code will edit `cms.config.ts`, call the API to create content, and verif
 ### Step 4: Build & deploy
 
 ```bash
-npx cms build    # Generates static HTML, sitemap, llms.txt
+cms build    # Generates static HTML, sitemap, llms.txt
 ```
 
 Output goes to `dist/` — deploy anywhere (Fly.io, Vercel, Cloudflare Pages, etc.)
@@ -116,13 +119,13 @@ Claude: I'll set up the project for you.
 You:    Create a blog post about AI-native CMS
 
 Claude: I'll use the AI content generator.
-        [runs: npx cms ai generate posts "Write about AI-native CMS"]
+        [runs: cms ai generate posts "Write about AI-native CMS"]
         ✓ Created: why-ai-native-cms-is-the-future
           Cost: $0.0096 | Tokens: 195 in / 602 out
 
 You:    Build it
 
-Claude: [runs: npx cms build]
+Claude: [runs: cms build]
         ✓ Build complete — 6 pages in dist/
 ```
 
@@ -155,14 +158,23 @@ At least one AI key is required for `cms ai` commands. Anthropic is used by defa
 ## Installation
 
 ```bash
-# Global install
+# Global install (recommended) — gives you the `cms` command directly
 npm install -g @webhouse/cms-cli
 
-# Or use npx (no install needed)
-npx @webhouse/cms-cli dev
+cms --version
+cms dev
+cms ai generate posts "..."
+```
 
-# Or add to your project
+> **Note:** Do not use `npx cms` — npm will resolve it to an unrelated package called `cms`.
+> Use `npx @webhouse/cms-cli` if you prefer not to install globally, or install as a project dependency.
+
+```bash
+# As a project dependency (added automatically by `npm create @webhouse/cms`)
 npm install @webhouse/cms-cli
+
+# Then use via npx within the project
+npx @webhouse/cms-cli dev
 ```
 
 ## Documentation
