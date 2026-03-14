@@ -141,27 +141,31 @@ via GitHub REST API. This means:
 
 ### 6. UI — Site Switcher
 
-**Location:** Top of sidebar, above the logo area. Or inline with the logo.
+**Location:** Header bar, to the LEFT of the user avatar (same position as the
+original `OrgSwitcher` component in `user-org-bar.tsx` which still exists but
+is not imported).
 
 ```
-┌─────────────────────┐
-│  [eye] webhouse.app │
-│  ▼ WebHouse Site    │  ← click to switch
-│─────────────────────│
-│  ● WebHouse Site    │  ← active (green dot)
-│  ○ Landing Page     │
-│  ○ Client X (GH)   │  ← badge showing GitHub
-│─────────────────────│
-│  + Add site         │
-│  ⚙ Manage sites    │
-└─────────────────────┘
+┌──────────────────────────────────────────────────────┐
+│  ☰  Dashboard            ▼ WebHouse Site    [avatar] │
+│                           ──────────────             │
+│                           ● WebHouse Site            │
+│                           ○ Landing Page             │
+│                           ○ Client X (GH)            │
+│                           ──────────────             │
+│                           + Add site                 │
+│                           ⚙ Manage sites             │
+└──────────────────────────────────────────────────────┘
 ```
 
 Switching sites:
 1. Sets `cms-active-site` cookie
-2. Invalidates client-side cache (React Query, etc.)
-3. Reloads sidebar collections (they differ per site)
-4. URL stays at `/admin` — no page reload needed if we invalidate properly
+2. Full page reload (simplest — ensures all server components re-render with new config)
+3. Sidebar collections update automatically (they come from the active site's config)
+
+**Backwards compatibility (single-site mode):**
+If `CMS_CONFIG_PATH` env var is set and no site registry exists, admin runs
+in single-site mode exactly as before. No switcher shown. No breaking changes.
 
 ### 7. Auth Considerations
 
