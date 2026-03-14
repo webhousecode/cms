@@ -8,6 +8,7 @@ import { ImageGalleryEditor } from "./image-gallery-editor";
 import type { GalleryImage } from "./image-gallery-editor";
 import { BlocksEditor } from "./blocks-editor";
 import { StructuredArrayEditor } from "./structured-array-editor";
+import { StructuredObjectEditor } from "./structured-object-editor";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -543,6 +544,19 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
     }
 
     case "object": {
+      if (field.fields && field.fields.length > 0) {
+        const objVal = (typeof value === "object" && value !== null && !Array.isArray(value))
+          ? (value as Record<string, unknown>) : {};
+        return (
+          <StructuredObjectEditor
+            field={field}
+            value={objVal}
+            onChange={onChange}
+            locked={locked}
+            blocksConfig={blocksConfig}
+          />
+        );
+      }
       const jsonStr = typeof value === "string" ? value : JSON.stringify(value ?? {}, null, 2);
       return (
         <Textarea
