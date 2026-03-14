@@ -1,6 +1,6 @@
 {
   "name": "@webhouse/cms-cli",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "CLI for @webhouse/cms — init, dev, build, and AI content tools",
   "type": "module",
   "license": "MIT",
@@ -48,8 +48,8 @@
     "access": "public"
   },
   "dependencies": {
-    "@webhouse/cms": "workspace:*",
-    "@webhouse/cms-ai": "workspace:*",
+    "@webhouse/cms": "^0.1.1",
+    "@webhouse/cms-ai": "^0.1.1",
     "@hono/node-server": "^1.13.7",
     "jiti": "^2.4.2",
     "citty": "^0.1.6",
