@@ -214,6 +214,15 @@ importers:
         specifier: ^5.7.2
         version: 5.9.3
 
+  packages/cms-admin-cli:
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.2
+        version: 22.19.15
+      tsup:
+        specifier: ^8.4.0
+        version: 8.5.1(jiti@2.6.1)(postcss@8.5.8)(typescript@5.9.3)
+
   packages/cms-ai:
     dependencies:
       '@anthropic-ai/sdk':

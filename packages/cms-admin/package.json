@@ -2,7 +2,7 @@
   "name": "@webhouse/cms-admin",
   "version": "0.1.0",
   "description": "Admin UI for @webhouse/cms",
-  "private": true,
+  "private": false,
   "scripts": {
     "dev": "next dev --port 3010",
     "build": "next build",
