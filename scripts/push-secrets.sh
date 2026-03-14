@@ -15,7 +15,7 @@ ENV_FILE="$ROOT_DIR/packages/cms-admin/.env.local"
 DOCKER_SECRETS_FILE="$ROOT_DIR/.env.secrets"
 
 FLY_APP="webhouse-cms"
-GH_REPO="webhousecode/cms-engine"
+GH_REPO="webhousecode/cms"
 
 # ── Secrets to push (picked from .env.local) ──────────────────────────────
 # Only these keys are considered secrets — dev-only vars stay local.

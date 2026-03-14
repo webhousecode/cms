@@ -1,6 +1,6 @@
 #!/bin/bash
 # Deploy webhouse-cms to Fly.io (arn/Stockholm)
-# Run from cms-engine/ directory: ./scripts/fly-deploy.sh
+# Run from cms/ directory: ./scripts/fly-deploy.sh
 
 set -e
 
