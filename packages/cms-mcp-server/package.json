@@ -1,6 +1,6 @@
 {
   "name": "@webhouse/cms-mcp-server",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Authenticated read+write MCP server for @webhouse/cms content production",
   "type": "module",
   "license": "MIT",
