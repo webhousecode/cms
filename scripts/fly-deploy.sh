@@ -5,7 +5,8 @@
 set -e
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-WEBHOUSE_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"  # /Users/cb/Apps/webhouse/
+ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"          # /Users/cb/Apps/webhouse/cms
+WEBHOUSE_DIR="$(cd "$ROOT_DIR/.." && pwd)"         # /Users/cb/Apps/webhouse/
 
 echo "→ Building and deploying webhouse-cms to Fly.io (arn)..."
 echo "  Build context: $WEBHOUSE_DIR"
@@ -14,8 +15,8 @@ cd "$WEBHOUSE_DIR"
 
 fly deploy \
   --app webhouse-cms \
-  --config fly.toml \
-  --dockerfile Dockerfile.cms \
+  --config "$ROOT_DIR/deploy/fly.toml" \
+  --dockerfile "$ROOT_DIR/deploy/Dockerfile.cms" \
   "$@"
 
 echo ""

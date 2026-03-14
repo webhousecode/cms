@@ -101,10 +101,15 @@ export function TabsProvider({ children }: { children: ReactNode }) {
       if (match) {
         applyTabs(migrated, match.id);
       } else if (saved.activeId) {
-        const updated = migrated.map((t) =>
-          t.id === saved.activeId ? { ...t, path: pathname, title: pathTitle(pathname) } : t
-        );
-        applyTabs(updated, saved.activeId);
+        // Restore saved tabs as-is and navigate to the active tab's saved path.
+        // Do NOT overwrite the saved path with the current pathname — that
+        // corrupts tabs when the browser loads at /admin (e.g. after restart).
+        const activeTab = migrated.find((t) => t.id === saved.activeId);
+        applyTabs(migrated, saved.activeId);
+        if (activeTab && activeTab.path !== pathname) {
+          skipNextPathChange.current = true;
+          router.push(activeTab.path);
+        }
       } else {
         applyTabs(migrated, saved.activeId);
       }
@@ -112,6 +117,8 @@ export function TabsProvider({ children }: { children: ReactNode }) {
       const id = uid();
       applyTabs([{ id, path: pathname, title: pathTitle(pathname) }], id);
     }
+    // Prevent the pathname effect from overwriting tabs on initial mount
+    skipNextPathChange.current = true;
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

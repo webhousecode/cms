@@ -1,0 +1,55 @@
+app = "webhouse-cms"
+primary_region = "arn"
+
+[build]
+  dockerfile = "Dockerfile.cms"
+
+[env]
+  DATA_DIR = "/data"
+
+[mounts]
+  source = "cms_data"
+  destination = "/data"
+
+# ── webhouse-site: HTTPS on standard 80/443 ─────────────────────
+[[services]]
+  internal_port = 3000
+  protocol = "tcp"
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [[services.ports]]
+    handlers = ["http"]
+    port = 80
+    force_https = true
+
+  [[services.ports]]
+    handlers = ["tls", "http"]
+    port = 443
+
+  [services.concurrency]
+    type = "connections"
+    hard_limit = 25
+    soft_limit = 20
+
+# ── cms-admin: accessible on port 3010 ──────────────────────────
+[[services]]
+  internal_port = 3010
+  protocol = "tcp"
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [[services.ports]]
+    handlers = ["tls", "http"]
+    port = 3010
+
+  [services.concurrency]
+    type = "connections"
+    hard_limit = 10
+    soft_limit = 8
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "1gb"

@@ -1,0 +1,112 @@
+# Combined image: webhouse-site + cms-admin on one machine
+# Build context: /Users/cb/Apps/webhouse/ (parent of both repos)
+
+# ── Stage 1: site-deps ──────────────────────────────────────────
+FROM node:22-alpine AS site-deps
+
+RUN apk add --no-cache libc6-compat python3 make g++
+WORKDIR /app
+RUN corepack enable && corepack prepare pnpm@10.30.3 --activate
+
+COPY cms/packages/cms      ./cms/packages/cms
+COPY cms/tsconfig.base.json ./cms/
+
+COPY webhouse-site/package.json webhouse-site/pnpm-lock.yaml ./webhouse-site/
+
+WORKDIR /app/webhouse-site
+RUN pnpm install --frozen-lockfile
+
+# ── Stage 2: admin-deps ─────────────────────────────────────────
+FROM node:22-alpine AS admin-deps
+
+RUN apk add --no-cache libc6-compat python3 make g++
+WORKDIR /app
+RUN corepack enable && corepack prepare pnpm@10.30.3 --activate
+
+COPY cms/package.json cms/pnpm-lock.yaml cms/pnpm-workspace.yaml ./cms/
+# .npmrc and .pnpmfile.cjs may not exist — copy conditionally via glob
+COPY cms/.npmrc*         ./cms/
+COPY cms/.pnpmfile.cjs*  ./cms/
+COPY cms/tsconfig.base.json ./cms/
+
+COPY cms/packages/cms/package.json        ./cms/packages/cms/
+COPY cms/packages/cms-cli/package.json    ./cms/packages/cms-cli/
+COPY cms/packages/cms-ai/package.json     ./cms/packages/cms-ai/
+COPY cms/packages/cms-admin/package.json  ./cms/packages/cms-admin/
+
+WORKDIR /app/cms
+RUN pnpm install --frozen-lockfile
+
+# ── Stage 3: builder ────────────────────────────────────────────
+FROM node:22-alpine AS builder
+
+RUN apk add --no-cache libc6-compat python3 make g++
+WORKDIR /app
+RUN corepack enable && corepack prepare pnpm@10.30.3 --activate
+
+# Copy installed deps
+COPY --from=site-deps /app/webhouse-site/node_modules ./webhouse-site/node_modules
+COPY --from=admin-deps /app/cms/node_modules   ./cms/node_modules
+
+# Copy source
+COPY cms   ./cms
+COPY webhouse-site ./webhouse-site
+
+# Build @webhouse/cms (shared dep)
+WORKDIR /app/cms/packages/cms
+RUN pnpm install --no-frozen-lockfile
+RUN pnpm build
+
+# Build webhouse-site
+WORKDIR /app/webhouse-site
+RUN mkdir -p ./content
+ENV CONTENT_DIR=/app/webhouse-site/content
+RUN pnpm build
+
+# Build cms-admin
+WORKDIR /app/cms
+RUN pnpm --filter @webhouse/cms-admin build
+
+# ── Stage 4: runner ─────────────────────────────────────────────
+FROM node:22-alpine AS runner
+
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+RUN corepack enable && corepack prepare pnpm@10.30.3 --activate
+
+ENV NODE_ENV=production
+ENV HOSTNAME=0.0.0.0
+
+# webhouse-site
+COPY --from=builder /app/webhouse-site/.next          ./webhouse-site/.next
+COPY --from=builder /app/webhouse-site/node_modules   ./webhouse-site/node_modules
+COPY --from=builder /app/webhouse-site/package.json   ./webhouse-site/
+COPY --from=builder /app/webhouse-site/next.config.ts ./webhouse-site/
+COPY --from=builder /app/webhouse-site/cms.config.ts  ./webhouse-site/
+
+# Bake in the initial content so the volume can be seeded on first boot
+COPY --from=builder /app/webhouse-site/content        ./webhouse-site/content-seed
+COPY --from=builder /app/webhouse-site/public         ./webhouse-site/public-seed
+
+# cms-admin
+COPY --from=builder /app/cms/node_modules              ./cms/node_modules
+COPY --from=builder /app/cms/packages/cms              ./cms/packages/cms
+COPY --from=builder /app/cms/packages/cms-admin        ./cms/packages/cms-admin
+COPY --from=builder /app/cms/packages/cms/dist         ./cms/packages/cms/dist
+COPY --from=builder /app/cms/packages/cms/package.json ./cms/packages/cms/
+
+# Start script
+COPY fly-start.sh /fly-start.sh
+RUN chmod +x /fly-start.sh
+
+RUN addgroup --system --gid 1001 nodejs \
+ && adduser  --system --uid 1001 nextjs \
+ && chown -R nextjs:nodejs /app \
+ && chown nextjs:nodejs /fly-start.sh
+
+USER nextjs
+
+# webhouse-site on 3000 (served as HTTPS via fly), cms-admin on 3010
+EXPOSE 3000 3010
+
+CMD ["/fly-start.sh"]
