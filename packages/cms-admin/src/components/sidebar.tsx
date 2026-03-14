@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
+import { useTheme } from "next-themes";
 import {
   LayoutDashboard,
   Cpu,
@@ -37,6 +38,12 @@ interface Props {
 
 export function AppSidebar({ collections }: Props) {
   const pathname = usePathname();
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const wordmarkSrc = mounted && resolvedTheme === "light"
+    ? "/webhouse-wordmark-light.svg"
+    : "/webhouse-wordmark-dark.svg";
   const [contentOpen, setContentOpen] = useState(true);
   const [readyCount, setReadyCount] = useState(0);
   const [budgetSpent, setBudgetSpent] = useState(0);
@@ -78,14 +85,10 @@ export function AppSidebar({ collections }: Props) {
             className="sidebar-logo flex items-center gap-2 min-w-0"
           >
             <img
-              src="/webhouse-icon.svg"
-              alt=""
-              className="h-7 w-7 shrink-0"
-              aria-hidden="true"
+              src={wordmarkSrc}
+              alt="webhouse.app"
+              className="h-6 w-auto"
             />
-            <span className="font-bold text-base tracking-tight text-foreground truncate">
-              @webhouse/cms
-            </span>
           </Link>
         </div>
       </SidebarHeader>
