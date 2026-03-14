@@ -220,6 +220,36 @@ write('.claude/settings.json', JSON.stringify({
   },
 }, null, 2) + '\n');
 
+// ── 9. start.sh ─────────────────────────────────────────────────────────
+write('start.sh', `#!/bin/bash
+# Start a Claude Code session to build your site
+# Usage: bash start.sh [optional prompt]
+
+set -e
+cd "$(dirname "$0")"
+
+# Install dependencies if needed
+if [ ! -d "node_modules" ]; then
+  echo "Installing dependencies..."
+  npm install 2>/dev/null || pnpm install 2>/dev/null || yarn install 2>/dev/null
+fi
+
+# Default prompt if none provided
+PROMPT="\${1:-Byg et Next.js site med App Router og Tailwind CSS. Læs CLAUDE.md for at forstå CMS\\'et og dets field types. Opret content i content/ mappen som JSON-filer. Start med et homepage og en blog sektion.}"
+
+echo ""
+echo "Starting Claude Code..."
+echo ""
+
+claude "$PROMPT"
+`);
+
+// Make start.sh executable
+try {
+  const { chmodSync } = require('node:fs');
+  chmodSync(join(dir, 'start.sh'), 0o755);
+} catch {}
+
 // ── Install dependencies ────────────────────────────────────────────────
 console.log('');
 
@@ -260,18 +290,15 @@ try {
 console.log('');
 console.log(`${green('✓')} Project created at ${dim(projectDir)}`);
 console.log('');
-console.log(bold('Next steps:'));
+console.log(bold('Quick start:'));
 console.log('');
 console.log(`  ${dim('$')} cd ${projectName}`);
-console.log(`  ${dim('$')} npx @webhouse/cms-cli dev   ${dim('# Start CMS admin UI')}`);
+console.log(`  ${dim('$')} bash start.sh              ${dim('# Start Claude Code to build your site')}`);
 console.log('');
-console.log(bold('AI content generation:'));
+console.log(bold('Or with a custom prompt:'));
 console.log('');
-console.log(`  1. Add your ANTHROPIC_API_KEY to .env`);
-console.log(`  2. ${dim('$')} npx @webhouse/cms-cli ai generate posts "Write a blog post about..."`);
+console.log(`  ${dim('$')} bash start.sh "Build a portfolio site with dark theme"`);
 console.log('');
-console.log(bold('MCP integration:'));
-console.log('');
-console.log(`  .mcp.json is already configured — Claude Code and other`);
-console.log(`  MCP-compatible agents can manage your content automatically.`);
+console.log(dim('  Claude Code will read CLAUDE.md and understand how to use the CMS.'));
+console.log(dim('  Content is stored as JSON in content/ — no server needed.'));
 console.log('');
