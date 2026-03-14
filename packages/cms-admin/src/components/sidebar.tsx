@@ -98,6 +98,22 @@ export function AppSidebar({ collections }: Props) {
       </SidebarHeader>
 
       <SidebarContent>
+        {/* Back to Sites (multi-site mode only) */}
+        <SidebarGroup style={{ padding: "0.25rem 0.5rem 0" }}>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                tooltip="All Sites"
+                render={<Link href="/admin/sites" />}
+                className="text-muted-foreground hover:text-foreground"
+              >
+                <ChevronRight className="!w-4 !h-4 rotate-180" />
+                <span className="text-xs">Sites</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
+
         {/* Dashboard */}
         <SidebarGroup style={{ padding: "0.5rem 0.5rem 0" }}>
           <SidebarMenu>

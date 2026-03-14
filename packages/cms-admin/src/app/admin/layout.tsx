@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebarClient } from "@/components/sidebar-client";
-import { getAdminConfig } from "@/lib/cms";
+import { getAdminConfig, getActiveSiteInfo } from "@/lib/cms";
 import { CommandPaletteProvider } from "@/components/command-palette";
 import { TabsProvider } from "@/lib/tabs-context";
 import { TabBar } from "@/components/tab-bar";
@@ -12,6 +12,19 @@ import { DevInspector } from "@/components/dev-inspector";
 import { ZoomApplier } from "@/components/zoom-applier";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const siteInfo = await getActiveSiteInfo();
+
+  // Multi-site mode with no site selected → minimal layout (Sites Dashboard)
+  if (siteInfo && !siteInfo.activeSiteId) {
+    return (
+      <div style={{ minHeight: "100vh", background: "var(--background)" }}>
+        <AdminHeader />
+        {children}
+      </div>
+    );
+  }
+
+  // Normal workspace layout (single-site mode or site selected)
   const config = await getAdminConfig();
 
   const allCollections = config.collections.map((c) => ({

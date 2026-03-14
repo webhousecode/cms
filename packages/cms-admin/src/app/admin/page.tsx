@@ -1,6 +1,13 @@
-import { getAdminCms, getAdminConfig } from "@/lib/cms";
+import { getAdminCms, getAdminConfig, getActiveSiteInfo } from "@/lib/cms";
+import { redirect } from "next/navigation";
 import Link from "next/link";
 export default async function AdminDashboard() {
+  // Multi-site with no site selected → go to sites dashboard
+  const siteInfo = await getActiveSiteInfo();
+  if (siteInfo && !siteInfo.activeSiteId) {
+    redirect("/admin/sites");
+  }
+
   const [cms, config] = await Promise.all([getAdminCms(), getAdminConfig()]);
 
   const stats = await Promise.all(
