@@ -4,7 +4,7 @@ import { Database, Plus, Edit2, Fingerprint, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/page-header";
 import { AISettingsPanel } from "@/components/settings/ai-settings-panel";
-import { GeneralSettingsPanel } from "@/components/settings/general-settings-panel";
+import { SiteGeneralSettingsPanel } from "@/components/settings/general-settings-panel";
 import { MCPSettingsPanel } from "@/components/settings/mcp-settings-panel";
 import { AIPromptsPanel } from "@/components/settings/ai-prompts-panel";
 import { readSiteConfig } from "@/lib/site-config";
@@ -62,10 +62,10 @@ export default async function SettingsPage({
           ))}
         </div>
 
-        {/* General tab */}
+        {/* General tab — site-specific settings */}
         {tab === "general" && (
           <div className="max-w-lg">
-            <GeneralSettingsPanel />
+            <SiteGeneralSettingsPanel />
           </div>
         )}
 

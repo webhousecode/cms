@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { PageHeader } from "@/components/page-header";
-import { GeneralSettingsPanel } from "@/components/settings/general-settings-panel";
+import { GeneralSettingsPanel, PasswordChangePanel } from "@/components/settings/general-settings-panel";
 
 export default async function AccountPage({
   searchParams,
@@ -60,16 +60,8 @@ export default async function AccountPage({
               </p>
             </div>
 
-            {/* Change password */}
-            <div className="rounded-lg border border-border bg-card p-5 space-y-4">
-              <div>
-                <h3 className="text-sm font-semibold">Change Password</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">Update your account password.</p>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Use the password form on the General tab to change your password.
-              </p>
-            </div>
+            {/* Change password — real form */}
+            <PasswordChangePanel />
 
             {/* 2FA placeholder */}
             <div className="rounded-lg border border-border bg-card p-5 space-y-4">

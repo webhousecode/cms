@@ -158,93 +158,45 @@ function ProfileSection() {
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-      <div>
-        <SectionHeading>Profile</SectionHeading>
-        <Card>
-          <form onSubmit={saveProfile} style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
-            <InputRow label="Name" value={name} onChange={(e) => setName(e.target.value)} required />
-            <InputRow label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+    <div>
+      <SectionHeading>Profile</SectionHeading>
+      <Card>
+        <form onSubmit={saveProfile} style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
+          <InputRow label="Name" value={name} onChange={(e) => setName(e.target.value)} required />
+          <InputRow label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
 
-            {/* Zoom select */}
-            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-              <label style={{ fontSize: "0.75rem", fontWeight: 500, flexShrink: 0 }}>UI zoom</label>
-              <CustomSelect
-                options={ZOOM_OPTIONS.map((z) => ({ value: String(z), label: z === 100 ? "100% (default)" : `${z}%` }))}
-                value={String(zoom)}
-                onChange={(v) => { const n = parseInt(v); setZoom(n); applyZoomPreview(n); }}
-                style={{ width: "190px" }}
-              />
-              {zoom !== 100 && (
-                <button
-                  type="button"
-                  onClick={() => { setZoom(100); applyZoomPreview(100); }}
-                  style={{
-                    fontSize: "0.75rem",
-                    padding: "0.35rem 0.65rem",
-                    borderRadius: "6px",
-                    border: "1px solid var(--border)",
-                    background: "transparent",
-                    color: "var(--muted-foreground)",
-                    cursor: "pointer",
-                  }}
-                >
-                  Reset
-                </button>
-              )}
-            </div>
+          {/* Zoom select */}
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+            <label style={{ fontSize: "0.75rem", fontWeight: 500, flexShrink: 0 }}>UI zoom</label>
+            <CustomSelect
+              options={ZOOM_OPTIONS.map((z) => ({ value: String(z), label: z === 100 ? "100% (default)" : `${z}%` }))}
+              value={String(zoom)}
+              onChange={(v) => { const n = parseInt(v); setZoom(n); applyZoomPreview(n); }}
+              style={{ width: "190px" }}
+            />
+            {zoom !== 100 && (
+              <button
+                type="button"
+                onClick={() => { setZoom(100); applyZoomPreview(100); }}
+                style={{
+                  fontSize: "0.75rem",
+                  padding: "0.35rem 0.65rem",
+                  borderRadius: "6px",
+                  border: "1px solid var(--border)",
+                  background: "transparent",
+                  color: "var(--muted-foreground)",
+                  cursor: "pointer",
+                }}
+              >
+                Reset
+              </button>
+            )}
+          </div>
 
-            <ErrorMsg msg={error} />
-            <div><SaveButton saving={saving} saved={saved} /></div>
-          </form>
-        </Card>
-      </div>
-
-      <div>
-        <SectionHeading>Change password</SectionHeading>
-        <Card>
-          <form onSubmit={savePassword} style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
-              <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Current password</label>
-              <div style={{ position: "relative" }}>
-                <input
-                  type={showCur ? "text" : "password"}
-                  value={curPw}
-                  onChange={(e) => setCurPw(e.target.value)}
-                  required
-                  style={{ padding: "0.45rem 2.25rem 0.45rem 0.75rem", borderRadius: "7px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.875rem", outline: "none", width: "100%", boxSizing: "border-box" }}
-                  onFocus={(e) => { e.target.style.borderColor = "var(--primary)"; }}
-                  onBlur={(e) => { e.target.style.borderColor = "var(--border)"; }}
-                />
-                <button type="button" onClick={() => setShowCur((v) => !v)} style={{ position: "absolute", right: "0.5rem", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.1rem" }}>
-                  {showCur ? <EyeOff style={{ width: "0.9rem", height: "0.9rem" }} /> : <Eye style={{ width: "0.9rem", height: "0.9rem" }} />}
-                </button>
-              </div>
-            </div>
-            <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
-              <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>New password</label>
-              <div style={{ position: "relative" }}>
-                <input
-                  type={showNew ? "text" : "password"}
-                  value={newPw}
-                  onChange={(e) => setNewPw(e.target.value)}
-                  required
-                  minLength={8}
-                  placeholder="Min 8 characters"
-                  style={{ padding: "0.45rem 2.25rem 0.45rem 0.75rem", borderRadius: "7px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.875rem", outline: "none", width: "100%", boxSizing: "border-box" }}
-                  onFocus={(e) => { e.target.style.borderColor = "var(--primary)"; }}
-                  onBlur={(e) => { e.target.style.borderColor = "var(--border)"; }}
-                />
-                <button type="button" onClick={() => setShowNew((v) => !v)} style={{ position: "absolute", right: "0.5rem", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.1rem" }}>
-                  {showNew ? <EyeOff style={{ width: "0.9rem", height: "0.9rem" }} /> : <Eye style={{ width: "0.9rem", height: "0.9rem" }} />}
-                </button>
-              </div>
-            </div>
-            <ErrorMsg msg={pwError} />
-            <div><SaveButton saving={pwSaving} saved={pwSaved} /></div>
-          </form>
-        </Card>
-      </div>
+          <ErrorMsg msg={error} />
+          <div><SaveButton saving={saving} saved={saved} /></div>
+        </form>
+      </Card>
     </div>
   );
 }
@@ -454,12 +406,82 @@ function DangerZone() {
   );
 }
 
-/* ─── Export ──────────────────────────────────────────────────── */
+/* ─── Exports ─────────────────────────────────────────────────── */
+
+/** Account Preferences → General tab — profile, zoom */
 export function GeneralSettingsPanel() {
+  return <ProfileSection />;
+}
+
+/** Account Preferences → Security tab — change password */
+export function PasswordChangePanel() {
+  const [curPw, setCurPw] = useState("");
+  const [newPw, setNewPw] = useState("");
+  const [showCur, setShowCur] = useState(false);
+  const [showNew, setShowNew] = useState(false);
+  const [pwSaving, setPwSaving] = useState(false);
+  const [pwSaved, setPwSaved] = useState(false);
+  const [pwError, setPwError] = useState("");
+
+  async function savePassword(e: FormEvent) {
+    e.preventDefault();
+    setPwSaving(true); setPwError(""); setPwSaved(false);
+    const res = await fetch("/api/admin/profile", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ currentPassword: curPw, newPassword: newPw }),
+    });
+    const d = (await res.json()) as { error?: string };
+    if (!res.ok) { setPwError(d.error ?? "Failed"); }
+    else { setPwSaved(true); setCurPw(""); setNewPw(""); setTimeout(() => setPwSaved(false), 2500); }
+    setPwSaving(false);
+  }
+
+  return (
+    <div>
+      <SectionHeading>Change password</SectionHeading>
+      <Card>
+        <form onSubmit={savePassword} style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+            <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Current password</label>
+            <div style={{ position: "relative" }}>
+              <input
+                type={showCur ? "text" : "password"} value={curPw} onChange={(e) => setCurPw(e.target.value)} required
+                style={{ padding: "0.45rem 2.25rem 0.45rem 0.75rem", borderRadius: "7px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.875rem", outline: "none", width: "100%", boxSizing: "border-box" }}
+                onFocus={(e) => { e.target.style.borderColor = "var(--primary)"; }}
+                onBlur={(e) => { e.target.style.borderColor = "var(--border)"; }}
+              />
+              <button type="button" onClick={() => setShowCur((v) => !v)} style={{ position: "absolute", right: "0.5rem", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.1rem" }}>
+                {showCur ? <EyeOff style={{ width: "0.9rem", height: "0.9rem" }} /> : <Eye style={{ width: "0.9rem", height: "0.9rem" }} />}
+              </button>
+            </div>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+            <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>New password</label>
+            <div style={{ position: "relative" }}>
+              <input
+                type={showNew ? "text" : "password"} value={newPw} onChange={(e) => setNewPw(e.target.value)} required minLength={8} placeholder="Min 8 characters"
+                style={{ padding: "0.45rem 2.25rem 0.45rem 0.75rem", borderRadius: "7px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.875rem", outline: "none", width: "100%", boxSizing: "border-box" }}
+                onFocus={(e) => { e.target.style.borderColor = "var(--primary)"; }}
+                onBlur={(e) => { e.target.style.borderColor = "var(--border)"; }}
+              />
+              <button type="button" onClick={() => setShowNew((v) => !v)} style={{ position: "absolute", right: "0.5rem", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.1rem" }}>
+                {showNew ? <EyeOff style={{ width: "0.9rem", height: "0.9rem" }} /> : <Eye style={{ width: "0.9rem", height: "0.9rem" }} />}
+              </button>
+            </div>
+          </div>
+          <ErrorMsg msg={pwError} />
+          <div><SaveButton saving={pwSaving} saved={pwSaved} /></div>
+        </form>
+      </Card>
+    </div>
+  );
+}
+
+/** Site Settings → General tab — site-specific (preview, retention, dev) */
+export function SiteGeneralSettingsPanel() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "2.5rem" }}>
-      <ProfileSection />
-      <div style={{ height: "1px", background: "var(--border)" }} />
       <SiteSection />
       <div style={{ height: "1px", background: "var(--border)" }} />
       <DangerZone />
