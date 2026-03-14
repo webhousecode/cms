@@ -1,0 +1,139 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 878 480" width="878" height="480">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#141414" />
+      <stop offset="100%" stop-color="#0a0a0a" />
+    </linearGradient>
+    
+    <linearGradient id="goldGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#F4BA41" />
+      <stop offset="100%" stop-color="#E29D1B" />
+    </linearGradient>
+
+    <filter id="drop-shadow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#000" flood-opacity="0.5"/>
+    </filter>
+
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#FFFFFF" stroke-opacity="0.03"/>
+    </pattern>
+
+    <marker id="arrow" viewBox="0 0 10 10" refX="10" refY="5" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#F4BA41" />
+    </marker>
+
+    <marker id="arrow-down" viewBox="0 0 10 10" refX="5" refY="10" markerWidth="6" markerHeight="6" orient="auto">
+      <path d="M 0 0 L 5 10 L 10 0 z" fill="#555555" />
+    </marker>
+  </defs>
+
+  <style>
+    .font-main { font-family: 'Segoe UI', system-ui, -apple-system, sans-serif; }
+  </style>
+
+  <!-- Solid background to ensure it looks good when downloaded -->
+  <rect width="100%" height="100%" fill="#0A0A0A" />
+
+  <!-- Outer Container -->
+  <rect x="10" y="10" width="858" height="460" rx="20" fill="url(#bgGrad)" stroke="#262626" stroke-width="2"/>
+  <rect x="10" y="10" width="858" height="460" rx="20" fill="url(#grid)"/>
+  
+  <!-- Header -->
+  <g transform="translate(330, 38)">
+     <rect x="0" y="0" width="22" height="22" rx="6" fill="url(#goldGrad)" />
+     <circle cx="11" cy="11" r="3.5" fill="#111"/>
+  </g>
+  <text x="439" y="55" font-size="22" font-weight="800" fill="#FFFFFF" text-anchor="middle" letter-spacing="0.5" class="font-main">@webhouse/cms</text>
+  <path d="M 370 70 L 508 70" stroke="url(#goldGrad)" stroke-width="2" opacity="0.8"/>
+
+  <!-- Row 1: Pipeline Blocks -->
+  
+  <!-- Content Layer -->
+  <g transform="translate(40, 100)" filter="url(#drop-shadow)">
+    <rect width="180" height="130" rx="12" fill="#161616" stroke="#262626" stroke-width="1"/>
+    <rect width="180" height="4" rx="2" fill="url(#goldGrad)" opacity="0.6"/>
+    <text x="90" y="35" font-size="15" font-weight="bold" fill="#FFF" text-anchor="middle" class="font-main">Content Layer</text>
+    <line x1="90" y1="56" x2="90" y2="76" stroke="#555" stroke-width="2" marker-end="url(#arrow-down)"/>
+    <text x="90" y="102" font-size="13" fill="#A1A1AA" text-anchor="middle" class="font-main">Storage Adapters</text>
+  </g>
+
+  <!-- Arrow 1 to 2 -->
+  <line x1="220" y1="165" x2="246" y2="165" stroke="#F4BA41" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- AI Agent Layer -->
+  <g transform="translate(246, 100)" filter="url(#drop-shadow)">
+    <rect width="180" height="130" rx="12" fill="#161616" stroke="#262626" stroke-width="1"/>
+    <rect width="180" height="4" rx="2" fill="url(#goldGrad)" opacity="0.6"/>
+    <text x="90" y="35" font-size="15" font-weight="bold" fill="#FFF" text-anchor="middle" class="font-main">AI Agent Layer</text>
+    <line x1="90" y1="56" x2="90" y2="76" stroke="#555" stroke-width="2" marker-end="url(#arrow-down)"/>
+    <text x="90" y="102" font-size="13" fill="#A1A1AA" text-anchor="middle" class="font-main">Provider Registry</text>
+  </g>
+
+  <!-- Arrow 2 to 3 -->
+  <line x1="426" y1="165" x2="452" y2="165" stroke="#F4BA41" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Media Pipeline -->
+  <g transform="translate(452, 100)" filter="url(#drop-shadow)">
+    <rect width="180" height="130" rx="12" fill="#161616" stroke="#262626" stroke-width="1"/>
+    <rect width="180" height="4" rx="2" fill="url(#goldGrad)" opacity="0.6"/>
+    <text x="90" y="35" font-size="15" font-weight="bold" fill="#FFF" text-anchor="middle" class="font-main">Media Pipeline</text>
+    <line x1="90" y1="56" x2="90" y2="76" stroke="#555" stroke-width="2" marker-end="url(#arrow-down)"/>
+    <text x="90" y="102" font-size="13" fill="#A1A1AA" text-anchor="middle" class="font-main">CDN / Storage</text>
+  </g>
+
+  <!-- Arrow 3 to 4 -->
+  <line x1="632" y1="165" x2="658" y2="165" stroke="#F4BA41" stroke-width="2" marker-end="url(#arrow)"/>
+
+  <!-- Build Pipeline -->
+  <g transform="translate(658, 100)" filter="url(#drop-shadow)">
+    <rect width="180" height="130" rx="12" fill="#161616" stroke="#262626" stroke-width="1"/>
+    <rect width="180" height="4" rx="2" fill="url(#goldGrad)" opacity="0.6"/>
+    <text x="90" y="32" font-size="14" font-weight="bold" fill="#FFF" text-anchor="middle" class="font-main">Build Pipeline</text>
+    <text x="90" y="48" font-size="11" fill="#71717A" text-anchor="middle" class="font-main">(Static Output)</text>
+    <line x1="90" y1="58" x2="90" y2="73" stroke="#555" stroke-width="2" marker-end="url(#arrow-down)"/>
+    <text x="90" y="94" font-size="13" fill="#A1A1AA" text-anchor="middle" class="font-main">Deploy Adapters</text>
+    <text x="90" y="110" font-size="11" fill="#71717A" text-anchor="middle" class="font-main">(Vercel/CF/Raw)</text>
+  </g>
+
+  <!-- Connection Bus from Row 1 to Row 2 -->
+  <g opacity="0.6">
+    <line x1="130" y1="230" x2="130" y2="245" stroke="#A1A1AA" stroke-width="1.5" stroke-dasharray="3 3"/>
+    <line x1="336" y1="230" x2="336" y2="245" stroke="#A1A1AA" stroke-width="1.5" stroke-dasharray="3 3"/>
+    <line x1="542" y1="230" x2="542" y2="245" stroke="#A1A1AA" stroke-width="1.5" stroke-dasharray="3 3"/>
+    <line x1="748" y1="230" x2="748" y2="245" stroke="#A1A1AA" stroke-width="1.5" stroke-dasharray="3 3"/>
+    
+    <line x1="130" y1="245" x2="748" y2="245" stroke="#A1A1AA" stroke-width="1.5" stroke-dasharray="3 3"/>
+    <line x1="439" y1="245" x2="439" y2="258" stroke="#A1A1AA" stroke-width="1.5" stroke-dasharray="3 3" marker-end="url(#arrow-down)"/>
+  </g>
+
+  <!-- Row 2: Admin API -->
+  <g filter="url(#drop-shadow)">
+    <rect x="40" y="260" width="798" height="60" rx="12" fill="#161616" stroke="#F4BA41" stroke-width="1"/>
+    <text x="439" y="296" font-size="16" font-weight="bold" fill="#F4BA41" text-anchor="middle" class="font-main">Admin API + Dashboard</text>
+  </g>
+
+  <!-- Connection Bus from Row 2 to Row 3 -->
+  <g opacity="0.6">
+    <path d="M 439 320 L 439 335 L 232 335 L 232 348" fill="none" stroke="#A1A1AA" stroke-width="1.5" stroke-dasharray="3 3" marker-end="url(#arrow-down)"/>
+    <path d="M 439 320 L 439 335 L 646 335 L 646 348" fill="none" stroke="#A1A1AA" stroke-width="1.5" stroke-dasharray="3 3" marker-end="url(#arrow-down)"/>
+  </g>
+
+  <!-- Row 3: MCP Blocks -->
+  
+  <!-- MCP Client -->
+  <g filter="url(#drop-shadow)">
+    <rect x="40" y="350" width="384" height="80" rx="12" fill="#161616" stroke="#262626" stroke-width="1"/>
+    <rect x="40" y="350" width="4" height="80" rx="2" fill="#3B82F6"/>
+    <text x="232" y="385" font-size="15" font-weight="bold" fill="#FFF" text-anchor="middle" class="font-main">MCP Client (public)</text>
+    <text x="232" y="405" font-size="13" fill="#A1A1AA" text-anchor="middle" class="font-main">Read-only, every site</text>
+  </g>
+
+  <!-- MCP Server -->
+  <g filter="url(#drop-shadow)">
+    <rect x="454" y="350" width="384" height="80" rx="12" fill="#161616" stroke="#262626" stroke-width="1"/>
+    <rect x="454" y="350" width="4" height="80" rx="2" fill="#10B981"/>
+    <text x="646" y="385" font-size="15" font-weight="bold" fill="#FFF" text-anchor="middle" class="font-main">MCP Server (auth)</text>
+    <text x="646" y="405" font-size="13" fill="#A1A1AA" text-anchor="middle" class="font-main">Read+Write, admin</text>
+  </g>
+
+</svg>

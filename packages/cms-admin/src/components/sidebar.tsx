@@ -316,7 +316,7 @@ export function AppSidebar({ collections }: Props) {
         {/* Usage bar */}
         <div className="px-3 pb-2">
           <div className="text-[10px] text-muted-foreground mb-1 font-mono">
-            AI Usage: {Math.round(budgetPct)}%
+            Usage: {Math.round(budgetPct)}%
           </div>
           <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
             <div
