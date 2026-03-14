@@ -77,20 +77,31 @@ export function AppSidebar({ collections }: Props) {
 
   return (
     <Sidebar collapsible="offcanvas">
-      {/* Header: logo */}
+      {/* Header: stacked logo */}
       <SidebarHeader className="p-0">
-        <div className="flex h-12 items-center gap-2 px-3">
-          <Link
-            href="/admin"
-            className="sidebar-logo flex items-center gap-2 min-w-0"
-          >
-            <img
-              src={wordmarkSrc}
-              alt="webhouse.app"
-              className="h-6 w-auto"
-            />
-          </Link>
-        </div>
+        <Link href="/admin" className="flex flex-col items-center gap-2 py-5 px-4">
+          {/* Eye icon */}
+          <svg viewBox="0 0 335.2 338.48" className="w-14 h-14">
+            <path fill={mounted && resolvedTheme === "light" ? "#1c1c1c" : "#2a2a3e"} d="M167.6,0C87.6,0,7.6,48,7.6,144s48,169.6,112,192c32,9.6,48-9.6,48-41.6"/>
+            <path fill={mounted && resolvedTheme === "light" ? "#0d0d0d" : "#212135"} d="M7.6,144c-16,48-6.4,118.4,25.6,156.8,25.6,25.6,64,38.4,86.4,35.2"/>
+            <path fill="#f7bb2e" d="M167.6,0c80,0,160,48,160,144s-48,169.6-112,192c-32,9.6-48-9.6-48-41.6"/>
+            <path fill="#d9a11a" d="M327.6,144c16,48,6.4,118.4-25.6,156.8-25.6,25.6-64,38.4-86.4,35.2"/>
+            <path fill="#fff" d="M52.4,160c38.4-59.73,76.8-89.6,115.2-89.6s76.8,29.87,115.2,89.6c-38.4,59.73-76.8,89.6-115.2,89.6s-76.8-29.87-115.2-89.6Z"/>
+            <circle fill="#f7bb2e" cx="167.6" cy="160" r="48"/>
+            <circle fill="#0d0d0d" cx="167.6" cy="160" r="20.8"/>
+            <circle fill="#fff" opacity=".9" cx="180.4" cy="147.2" r="8.96"/>
+            <circle fill="#fff" opacity=".3" cx="158" cy="171.2" r="4.16"/>
+          </svg>
+          {/* Wordmark */}
+          <span className="text-lg font-bold tracking-tight">
+            <span className="text-foreground">webhouse</span>
+            <span style={{ color: "#F7BB2E" }}>.app</span>
+          </span>
+          {/* Tagline */}
+          <span style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: "0.6rem", letterSpacing: "0.08em" }} className="text-muted-foreground">
+            AI-native content engine
+          </span>
+        </Link>
       </SidebarHeader>
 
       <SidebarContent>
