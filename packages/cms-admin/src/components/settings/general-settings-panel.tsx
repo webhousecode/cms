@@ -204,6 +204,8 @@ function ProfileSection() {
 /* ─── Site section ────────────────────────────────────────────── */
 function SiteSection() {
   const router = useRouter();
+  const [siteName, setSiteName] = useState("");
+  const [siteNameOriginal, setSiteNameOriginal] = useState("");
   const [cfg, setCfg] = useState({
     previewSiteUrl: "",
     previewInIframe: false,
@@ -221,6 +223,18 @@ function SiteSection() {
     fetch("/api/admin/site-config")
       .then((r) => r.json())
       .then((d) => setCfg(d));
+    // Load site name from registry
+    fetch("/api/cms/registry")
+      .then((r) => r.json())
+      .then((d: { registry?: { orgs: Array<{ id: string; sites: Array<{ id: string; name: string }> }> } }) => {
+        if (!d.registry) return;
+        const orgId = document.cookie.match(/(?:^|; )cms-active-org=([^;]*)/)?.[1];
+        const siteId = document.cookie.match(/(?:^|; )cms-active-site=([^;]*)/)?.[1];
+        if (!orgId || !siteId) return;
+        const org = d.registry.orgs.find((o) => o.id === decodeURIComponent(orgId));
+        const site = org?.sites.find((s) => s.id === decodeURIComponent(siteId));
+        if (site) { setSiteName(site.name); setSiteNameOriginal(site.name); }
+      });
   }, []);
 
   async function handleSave(e: FormEvent) {
@@ -235,6 +249,20 @@ function SiteSection() {
     if (!res.ok) { setError((d as { error?: string }).error ?? "Save failed"); }
     else {
       setCfg(d);
+      // Update site name in registry if changed
+      if (siteName.trim() && siteName !== siteNameOriginal) {
+        const orgId = document.cookie.match(/(?:^|; )cms-active-org=([^;]*)/)?.[1];
+        const siteId = document.cookie.match(/(?:^|; )cms-active-site=([^;]*)/)?.[1];
+        if (orgId && siteId) {
+          await fetch("/api/cms/registry/rename", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ orgId: decodeURIComponent(orgId), siteId: decodeURIComponent(siteId), name: siteName.trim() }),
+          });
+          setSiteNameOriginal(siteName.trim());
+          window.dispatchEvent(new CustomEvent("cms-registry-change"));
+        }
+      }
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
       window.dispatchEvent(new CustomEvent("cms:site-config-updated", { detail: d }));
@@ -245,6 +273,19 @@ function SiteSection() {
 
   return (
     <form onSubmit={handleSave} style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+      <div>
+        <SectionHeading>Site</SectionHeading>
+        <Card>
+          <InputRow
+            label="Site name"
+            description="Display name shown in the site switcher and Sites Dashboard."
+            value={siteName}
+            onChange={(e) => setSiteName(e.target.value)}
+            placeholder="My Site"
+          />
+        </Card>
+      </div>
+
       <div>
         <SectionHeading>Preview</SectionHeading>
         <Card>
