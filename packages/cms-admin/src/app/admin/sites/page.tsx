@@ -9,6 +9,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { CustomSelect } from "@/components/ui/custom-select";
 
 interface SiteGitHub {
   owner: string;
@@ -199,12 +200,6 @@ function NewSiteDialog({ orgId, onClose, onCreated }: {
     display: "block", fontSize: "0.75rem", fontWeight: 500, marginBottom: "0.25rem",
     color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: "0.05em",
   };
-  const selectStyle: React.CSSProperties = {
-    ...inputStyle, cursor: "pointer", appearance: "none",
-    backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\")",
-    backgroundRepeat: "no-repeat", backgroundPosition: "right 0.75rem center",
-    paddingRight: "2rem",
-  };
 
   return (
     <div
@@ -286,9 +281,9 @@ function NewSiteDialog({ orgId, onClose, onCreated }: {
                       Connected as <strong>{ghUser}</strong>
                     </span>
                     <span style={{ display: "flex", gap: "0.75rem" }}>
-                      <button type="button" onClick={connectGitHub} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "0.75rem", textDecoration: "underline" }}>
-                        Re-authorize
-                      </button>
+                      <a href={`https://github.com/settings/connections/applications/${process.env.NEXT_PUBLIC_GITHUB_OAUTH_CLIENT_ID ?? ""}`} target="_blank" rel="noopener noreferrer" style={{ color: "var(--muted-foreground)", fontSize: "0.75rem", textDecoration: "underline", cursor: "pointer" }}>
+                        Manage access
+                      </a>
                       <button type="button" onClick={disconnectGitHub} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "0.75rem", textDecoration: "underline" }}>
                         Disconnect
                       </button>
@@ -298,17 +293,14 @@ function NewSiteDialog({ orgId, onClose, onCreated }: {
                   {/* Account picker */}
                   <div>
                     <label style={labelStyle}>Account / Organization</label>
-                    <select
+                    <CustomSelect
+                      options={ghAccounts.map((a) => ({
+                        value: a.login,
+                        label: `${a.login} ${a.type === "org" ? "(org)" : "(personal)"}`,
+                      }))}
                       value={ghSelectedAccount}
-                      onChange={(e) => setGhSelectedAccount(e.target.value)}
-                      style={selectStyle}
-                    >
-                      {ghAccounts.map((a) => (
-                        <option key={a.login} value={a.login}>
-                          {a.login} {a.type === "org" ? "(org)" : "(personal)"}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(v) => setGhSelectedAccount(v)}
+                    />
                   </div>
 
                   {/* Repo picker */}
@@ -317,18 +309,14 @@ function NewSiteDialog({ orgId, onClose, onCreated }: {
                     {ghLoadingRepos ? (
                       <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--muted-foreground)", padding: "0.5rem 0" }}>Loading repositories...</p>
                     ) : (
-                      <select
+                      <CustomSelect
+                        options={[
+                          { value: "", label: "Select repository..." },
+                          ...ghRepos.map((r) => ({ value: r.name, label: r.name })),
+                        ]}
                         value={ghSelectedRepo}
-                        onChange={(e) => setGhSelectedRepo(e.target.value)}
-                        style={selectStyle}
-                      >
-                        <option value="">Select repository...</option>
-                        {ghRepos.map((r) => (
-                          <option key={r.name} value={r.name}>
-                            {r.name}
-                          </option>
-                        ))}
-                      </select>
+                        onChange={(v) => setGhSelectedRepo(v)}
+                      />
                     )}
                   </div>
 
