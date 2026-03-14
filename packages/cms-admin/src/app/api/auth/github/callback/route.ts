@@ -44,7 +44,7 @@ export async function GET(request: NextRequest) {
   }
 
   // Store token in httpOnly cookie
-  const response = NextResponse.redirect(new URL("/admin/sites?new=1&github=connected", request.url));
+  const response = NextResponse.redirect(new URL("/admin/sites/new?github=connected", request.url));
   response.cookies.set("github-token", tokenData.access_token, {
     httpOnly: true,
     sameSite: "lax",

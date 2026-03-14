@@ -106,7 +106,7 @@ export function SiteSwitcher() {
           <LayoutGrid className="mr-2 h-4 w-4" />
           All sites
         </DropdownMenuItem>
-        <DropdownMenuItem className="text-muted-foreground" onClick={() => { router.push("/admin/sites?new=1"); }}>
+        <DropdownMenuItem className="text-muted-foreground" onClick={() => { router.push("/admin/sites/new"); }}>
           <Plus className="mr-2 h-4 w-4" />
           New site
         </DropdownMenuItem>
