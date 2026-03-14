@@ -77,12 +77,10 @@ export function OrgSwitcher() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="gap-2 text-sm font-medium">
-          <Building2 className="h-4 w-4 text-muted-foreground" />
-          <span className="max-w-[120px] truncate">{activeOrg?.name ?? "Select org"}</span>
-          <ChevronDown className="h-3 w-3 text-muted-foreground" />
-        </Button>
+      <DropdownMenuTrigger className="flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-md hover:bg-accent transition-colors focus-visible:outline-none bg-transparent border-0 cursor-pointer">
+        <Building2 className="h-4 w-4 text-muted-foreground" />
+        <span className="max-w-[120px] truncate">{activeOrg?.name ?? "Select org"}</span>
+        <ChevronDown className="h-3 w-3 text-muted-foreground" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         {registry.orgs.map((org) => (
