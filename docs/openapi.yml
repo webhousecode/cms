@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: "@webhouse/cms API"
-  version: "0.1.0"
+  version: "0.2.6"
   description: |
     Headless CMS REST API. Alle content-endpoints er under `/api/content`.
     Schema-endpoints er under `/api/schema`. Manifest under `/api/manifest`.
@@ -85,6 +85,31 @@ components:
         minimum: 0
         example: 0
       description: Antal dokumenter at springe over (pagination)
+
+    orderBy:
+      name: orderBy
+      in: query
+      schema:
+        type: string
+        example: createdAt
+      description: Felt at sortere på (createdAt, updatedAt, eller et data-felt)
+
+    order:
+      name: order
+      in: query
+      schema:
+        type: string
+        enum: [asc, desc]
+        default: desc
+      description: Sorteringsretning
+
+    tags:
+      name: tags
+      in: query
+      schema:
+        type: string
+        example: "typescript,cms"
+      description: Komma-separeret liste af tags at filtrere på (AND logik)
 
   schemas:
     DocumentStatus:
@@ -171,6 +196,18 @@ components:
         updatedAt:
           type: string
           format: date-time
+        locale:
+          type: string
+          description: BCP 47 locale tag (e.g. "en", "da")
+          example: en
+        translationOf:
+          type: string
+          description: Slug of the source document (for translations)
+          example: hello-world
+        publishAt:
+          type: string
+          format: date-time
+          description: Scheduled publish timestamp (ISO)
       description: |
         `_fieldMeta` returneres **ikke** i dette objekt.
         Brug `GET /{collection}/{slug}/_fieldMeta` for at hente det.
@@ -211,6 +248,16 @@ components:
           type: object
           additionalProperties: true
           description: Felter merges med eksisterende data (partial update)
+        locale:
+          type: string
+          description: BCP 47 locale tag
+        translationOf:
+          type: string
+          description: Slug of source document
+        publishAt:
+          type: string
+          format: date-time
+          description: Schedule publish at this time (null to clear)
 
     LockFieldBody:
       type: object
@@ -291,6 +338,9 @@ paths:
         - $ref: "#/components/parameters/status"
         - $ref: "#/components/parameters/limit"
         - $ref: "#/components/parameters/offset"
+        - $ref: "#/components/parameters/orderBy"
+        - $ref: "#/components/parameters/order"
+        - $ref: "#/components/parameters/tags"
       responses:
         "200":
           description: Pagineret liste af dokumenter (uden _fieldMeta)
