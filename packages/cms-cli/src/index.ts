@@ -23,6 +23,7 @@ import { buildCommand } from './commands/build.js';
 import { serveCommand } from './commands/serve.js';
 import { aiGenerateCommand, aiRewriteCommand, aiSeoCommand } from './commands/ai.js';
 import { mcpKeygenCommand, mcpTestCommand, mcpStatusCommand } from './commands/mcp.js';
+import { mcpServeCommand } from './commands/mcp-serve.js';
 
 const init = defineCommand({
   meta: { name: 'init', description: 'Initialize a new CMS project' },
@@ -143,9 +144,16 @@ const mcpStatus = defineCommand({
   },
 });
 
+const mcpServe = defineCommand({
+  meta: { name: 'serve', description: 'Start stdio MCP server (for Claude Code / .mcp.json)' },
+  async run() {
+    await mcpServeCommand({});
+  },
+});
+
 const mcp = defineCommand({
   meta: { name: 'mcp', description: 'MCP server management' },
-  subCommands: { keygen: mcpKeygen, test: mcpTest, status: mcpStatus },
+  subCommands: { serve: mcpServe, keygen: mcpKeygen, test: mcpTest, status: mcpStatus },
 });
 
 const main = defineCommand({

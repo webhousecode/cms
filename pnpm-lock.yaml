@@ -247,12 +247,18 @@ importers:
       '@hono/node-server':
         specifier: ^1.13.7
         version: 1.19.11(hono@4.12.5)
+      '@modelcontextprotocol/sdk':
+        specifier: ^1.12.1
+        version: 1.27.1(zod@3.25.76)
       '@webhouse/cms':
         specifier: workspace:*
         version: link:../cms
       '@webhouse/cms-ai':
         specifier: workspace:*
         version: link:../cms-ai
+      '@webhouse/cms-mcp-client':
+        specifier: workspace:*
+        version: link:../cms-mcp-client
       chokidar:
         specifier: ^4.0.3
         version: 4.0.3
