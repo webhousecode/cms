@@ -170,3 +170,7 @@ Phase C — det der mangler for reel autonomi:
   curation queue uden at nogen trykker på noget. Vil du starte der?
   
   
+  
+Write an article about the latest 10 repositories on the webhousecode and cbroberg GitHub accounts. Use the github tools to look up real repository data — names, descriptions, languages, and recent activity and what the app or code is tasked to do. Present it as a tour of what we've been building. Make a remark whether each repo is public or private. 
+  
+  
