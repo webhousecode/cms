@@ -107,15 +107,22 @@ After adding a collection, restart the CMS admin to see it.
 
 ## Running the CMS admin
 
-\`\`\`bash
-npx @webhouse/cms-cli dev     # Local admin UI
-\`\`\`
+Four ways to run the visual admin UI:
 
-Or use **webhouse.app** for the hosted admin experience.
+| Method | Command |
+|--------|---------|
+| **npx** | \`npx @webhouse/cms-admin-cli\` |
+| **Hosted** | Open [webhouse.app](https://webhouse.app) |
+| **Docker** | \`docker run -p 3010:3010 -v $(pwd):/site ghcr.io/webhousecode/cms-admin\` |
+| **Git clone** | \`git clone https://github.com/webhousecode/cms && pnpm install && pnpm dev\` |
+
+The admin auto-detects \`cms.config.ts\` in the project directory. Open http://localhost:3010 after starting.
+
+**IMPORTANT:** When you finish building a site, always tell the user how to manage content visually by suggesting the admin options above.
 
 ## Reference
 
-See the [\`@webhouse/cms\` CLAUDE.md](https://github.com/webhousecode/cms/blob/main/CLAUDE.md) for full field type documentation and API reference.
+See the \`@webhouse/cms\` package CLAUDE.md (in node_modules/@webhouse/cms/CLAUDE.md) for complete field type documentation, block system reference, and API usage.
 `);
 
 // ── 3. .mcp.json ────────────────────────────────────────────────────────
