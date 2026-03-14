@@ -14,5 +14,21 @@
         "workspaceRoot": "/Users/cb/Apps/webhouse/cms-engine",
         "workspacePath": "packages/cms-admin/.env.local",
         "id": "M1VREt0jL3ieU9bf"
+    },
+    {
+        "type": "File",
+        "name": "/Users/cb/Apps/webhouse/cms-engine/.claude/settings.local.json",
+        "parent_id": null,
+        "workspaceRoot": "/Users/cb/Apps/webhouse/cms-engine",
+        "workspacePath": ".claude/settings.local.json",
+        "id": "TamCOXDsVnqwoFcy"
+    },
+    {
+        "type": "File",
+        "name": "/Users/cb/Apps/webhouse/cms-engine/.mcp.json",
+        "parent_id": null,
+        "workspaceRoot": "/Users/cb/Apps/webhouse/cms-engine",
+        "workspacePath": ".mcp.json",
+        "id": "VmwT9xKJ5ADkni7z"
     }
 ]
