@@ -44,7 +44,7 @@ export default function SitesDashboard() {
   const router = useRouter();
   const [registry, setRegistry] = useState<Registry | null>(null);
   const [activeOrgId, setActiveOrgId] = useState<string>("");
-  const [stats, setStats] = useState<Record<string, { collections: number; documents: number; published: number }>>({});
+  const [stats, setStats] = useState<Record<string, { pages: number; collections: number }>>({});
 
   useEffect(() => {
     fetch("/api/cms/registry")
@@ -52,7 +52,21 @@ export default function SitesDashboard() {
       .then((d: { mode: string; registry: Registry | null }) => {
         if (d.registry) {
           setRegistry(d.registry);
-          setActiveOrgId(getCookie("cms-active-org") ?? d.registry.defaultOrgId);
+          const orgId = getCookie("cms-active-org") ?? d.registry.defaultOrgId;
+          setActiveOrgId(orgId);
+
+          // Fetch stats for each site
+          const org = d.registry.orgs.find((o) => o.id === orgId) ?? d.registry.orgs[0];
+          if (org) {
+            for (const site of org.sites) {
+              fetch(`/api/cms/registry/stats?orgId=${orgId}&siteId=${site.id}`)
+                .then((r) => r.json())
+                .then((s: { pages: number; collections: number }) => {
+                  setStats((prev) => ({ ...prev, [site.id]: s }));
+                })
+                .catch(() => {});
+            }
+          }
         }
       });
   }, []);
@@ -169,10 +183,15 @@ export default function SitesDashboard() {
               </DropdownMenu>
             </div>
 
-            {/* Adapter badge */}
-            <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", margin: "0 0 0.75rem", fontFamily: "monospace" }}>
+            {/* Site info */}
+            <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", margin: "0 0 0.5rem", fontFamily: "monospace" }}>
               {site.adapter === "github" ? "GitHub" : "Filesystem"}{site.previewUrl ? ` · ${site.previewUrl.replace(/^https?:\/\//, "")}` : ""}
             </p>
+            {stats[site.id] && (
+              <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", margin: "0 0 0.75rem" }}>
+                Pages: {stats[site.id].pages} · Collections: {stats[site.id].collections}
+              </p>
+            )}
 
             {/* Status badges */}
             <div style={{ display: "flex", gap: "0.375rem" }}>
