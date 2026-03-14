@@ -28,7 +28,8 @@ export async function POST(request: NextRequest) {
       openaiApiKey: mergeKey(body.openaiApiKey, existing.openaiApiKey),
       geminiApiKey: mergeKey(body.geminiApiKey, existing.geminiApiKey),
       webSearchProvider: body.webSearchProvider ?? existing.webSearchProvider,
-      webSearchApiKey: mergeKey(body.webSearchApiKey, existing.webSearchApiKey),
+      braveApiKey: mergeKey(body.braveApiKey, existing.braveApiKey),
+      tavilyApiKey: mergeKey(body.tavilyApiKey, existing.tavilyApiKey),
     };
 
     await writeAiConfig(updated);

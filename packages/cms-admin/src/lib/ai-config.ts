@@ -7,8 +7,10 @@ export interface AiConfig {
   anthropicApiKey?: string;
   openaiApiKey?: string;
   geminiApiKey?: string;
-  /** Web search API key (Brave, Tavily, etc.) */
   webSearchProvider?: "brave" | "tavily";
+  braveApiKey?: string;
+  tavilyApiKey?: string;
+  /** @deprecated Use braveApiKey/tavilyApiKey instead */
   webSearchApiKey?: string;
 }
 
@@ -18,7 +20,8 @@ export interface AiConfigMasked {
   openaiApiKey?: string;
   geminiApiKey?: string;
   webSearchProvider?: "brave" | "tavily";
-  webSearchApiKey?: string;
+  braveApiKey?: string;
+  tavilyApiKey?: string;
 }
 
 async function getConfigPath(): Promise<string> {
@@ -48,13 +51,18 @@ function mask(key?: string): string | undefined {
 }
 
 export function maskAiConfig(config: AiConfig): AiConfigMasked {
+  // Migrate legacy webSearchApiKey → provider-specific key
+  const brave = config.braveApiKey ?? (config.webSearchProvider !== "tavily" ? config.webSearchApiKey : undefined);
+  const tavily = config.tavilyApiKey ?? (config.webSearchProvider === "tavily" ? config.webSearchApiKey : undefined);
+
   return {
     defaultProvider: config.defaultProvider,
     anthropicApiKey: mask(config.anthropicApiKey),
     openaiApiKey: mask(config.openaiApiKey),
     geminiApiKey: mask(config.geminiApiKey),
     webSearchProvider: config.webSearchProvider,
-    webSearchApiKey: mask(config.webSearchApiKey),
+    braveApiKey: mask(brave),
+    tavilyApiKey: mask(tavily),
   };
 }
 
@@ -62,7 +70,12 @@ export function maskAiConfig(config: AiConfig): AiConfigMasked {
 export async function getWebSearchKey(): Promise<{ provider: string; key: string } | null> {
   const config = await readAiConfig();
   const provider = config.webSearchProvider ?? "brave";
-  const key = config.webSearchApiKey ?? process.env.BRAVE_API_KEY ?? process.env.TAVILY_API_KEY;
+  let key: string | undefined;
+  if (provider === "brave") {
+    key = config.braveApiKey ?? config.webSearchApiKey ?? process.env.BRAVE_API_KEY;
+  } else {
+    key = config.tavilyApiKey ?? config.webSearchApiKey ?? process.env.TAVILY_API_KEY;
+  }
   if (!key) return null;
   return { provider, key };
 }

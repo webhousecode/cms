@@ -9,7 +9,8 @@ interface AiConfigMasked {
   openaiApiKey?: string;
   geminiApiKey?: string;
   webSearchProvider?: "brave" | "tavily";
-  webSearchApiKey?: string;
+  braveApiKey?: string;
+  tavilyApiKey?: string;
 }
 
 const PROVIDERS = [
@@ -231,51 +232,61 @@ export function AISettingsPanel() {
           ))}
         </div>
 
-        {/* API key field */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>
-              {(config.webSearchProvider ?? "brave") === "brave" ? "Brave" : "Tavily"} API key
-            </label>
-            {config.webSearchApiKey && !("webSearchApiKey" in editing) && (
-              <span style={{
-                fontSize: "0.65rem", fontFamily: "monospace",
-                padding: "0.1rem 0.4rem", borderRadius: "4px",
-                background: "color-mix(in srgb, var(--primary) 10%, transparent)",
-                color: "var(--primary)",
-              }}>configured</span>
-            )}
-          </div>
-          {"webSearchApiKey" in editing ? (
-            <div style={{ display: "flex", gap: "0.375rem" }}>
-              <input
-                type="text"
-                value={editing.webSearchApiKey ?? ""}
-                onChange={(e) => setEditing((prev) => ({ ...prev, webSearchApiKey: e.target.value }))}
-                placeholder={(config.webSearchProvider ?? "brave") === "brave" ? "BSA…" : "tvly-…"}
-                autoFocus
-                style={{ ...fieldStyle, flex: 1 }}
-                onFocus={(e) => { e.target.style.borderColor = "var(--primary)"; }}
-                onBlur={(e) => { e.target.style.borderColor = "var(--border)"; }}
-              />
-              <button
-                type="button"
-                onClick={() => setEditing((prev) => { const n = { ...prev }; delete n.webSearchApiKey; return n; })}
-                style={{ padding: "0.5rem 0.625rem", borderRadius: "7px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: "pointer" }}
-              >
-                Cancel
-              </button>
+        {/* API key field — per provider */}
+        {(() => {
+          const provider = config.webSearchProvider ?? "brave";
+          const keyField = provider === "brave" ? "braveApiKey" : "tavilyApiKey";
+          const currentKey = provider === "brave" ? config.braveApiKey : config.tavilyApiKey;
+          const providerLabel = provider === "brave" ? "Brave" : "Tavily";
+          const placeholder = provider === "brave" ? "BSA…" : "tvly-…";
+
+          return (
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>
+                  {providerLabel} API key
+                </label>
+                {currentKey && !(keyField in editing) && (
+                  <span style={{
+                    fontSize: "0.65rem", fontFamily: "monospace",
+                    padding: "0.1rem 0.4rem", borderRadius: "4px",
+                    background: "color-mix(in srgb, var(--primary) 10%, transparent)",
+                    color: "var(--primary)",
+                  }}>configured</span>
+                )}
+              </div>
+              {keyField in editing ? (
+                <div style={{ display: "flex", gap: "0.375rem" }}>
+                  <input
+                    type="text"
+                    value={editing[keyField] ?? ""}
+                    onChange={(e) => setEditing((prev) => ({ ...prev, [keyField]: e.target.value }))}
+                    placeholder={placeholder}
+                    autoFocus
+                    style={{ ...fieldStyle, flex: 1 }}
+                    onFocus={(e) => { e.target.style.borderColor = "var(--primary)"; }}
+                    onBlur={(e) => { e.target.style.borderColor = "var(--border)"; }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setEditing((prev) => { const n = { ...prev }; delete n[keyField]; return n; })}
+                    style={{ padding: "0.5rem 0.625rem", borderRadius: "7px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: "pointer" }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setEditing((prev) => ({ ...prev, [keyField]: "" }))}
+                  style={{ ...fieldStyle, textAlign: "left", cursor: "pointer", color: "var(--muted-foreground)", opacity: currentKey ? 1 : 0.6 }}
+                >
+                  {currentKey ? currentKey : `Click to set API key…`}
+                </button>
+              )}
             </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setEditing((prev) => ({ ...prev, webSearchApiKey: "" }))}
-              style={{ ...fieldStyle, textAlign: "left", cursor: "pointer", color: "var(--muted-foreground)", opacity: config.webSearchApiKey ? 1 : 0.6 }}
-            >
-              {config.webSearchApiKey ? config.webSearchApiKey : `Click to set API key…`}
-            </button>
-          )}
-        </div>
+          );
+        })()}
       </div>
 
       {error && (
