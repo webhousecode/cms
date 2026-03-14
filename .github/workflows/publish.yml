@@ -59,7 +59,7 @@ jobs:
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
           echo "Bumping all packages to $NEW_VERSION"
 
-          PACKAGES=(cms cms-ai cms-cli cms-mcp-client cms-mcp-server create-cms)
+          PACKAGES=(cms cms-ai cms-cli cms-mcp-client cms-mcp-server create-cms cms-admin-cli)
           for pkg in "${PACKAGES[@]}"; do
             node -e "
               const fs = require('fs');
