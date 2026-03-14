@@ -6,7 +6,7 @@ export default function PerformancePage() {
       <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">
         Analytics
       </p>
-      <h1 className="text-3xl font-bold mb-6">Performance</h1>
+      <h1 className="text-2xl font-bold mb-6">Performance</h1>
       <div className="rounded-xl border border-border p-8 text-center text-muted-foreground">
         <BarChart2 className="w-12 h-12 mx-auto mb-4 opacity-20" />
         <p>Analytics coming in Phase D.</p>
