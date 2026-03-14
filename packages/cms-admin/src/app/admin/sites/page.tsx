@@ -328,33 +328,34 @@ function NewSiteDialog({ orgId, onClose, onCreated }: {
                     </span>
                   </div>
 
-                  {/* Account picker */}
-                  <div>
-                    <label style={labelStyle}>Account / Organization</label>
-                    <CustomSelect
-                      options={ghAccounts.map((a) => ({
-                        value: a.login,
-                        label: `${a.login} ${a.type === "org" ? "(org)" : "(personal)"}`,
-                      }))}
-                      value={ghSelectedAccount}
-                      onChange={(v) => setGhSelectedAccount(v)}
-                    />
+                  {/* New repo / Import existing tabs */}
+                  <div style={{ display: "flex", gap: "0.25rem", background: "var(--muted)", borderRadius: "8px", padding: "0.2rem" }}>
+                    {([
+                      { value: true, label: "+ New repo" },
+                      { value: false, label: "Import existing" },
+                    ] as const).map(({ value, label }) => (
+                      <button
+                        key={label}
+                        type="button"
+                        onClick={() => { setGhCreateNew(value); setGhSelectedRepo(""); setGhNewRepoName(""); }}
+                        style={{
+                          flex: 1, padding: "0.45rem 0.75rem", borderRadius: "6px", border: "none",
+                          cursor: "pointer", fontSize: "0.8rem", fontWeight: 500,
+                          background: ghCreateNew === value ? "var(--card)" : "transparent",
+                          color: ghCreateNew === value ? "var(--foreground)" : "var(--muted-foreground)",
+                          boxShadow: ghCreateNew === value ? "0 1px 3px rgba(0,0,0,0.2)" : "none",
+                        }}
+                      >
+                        {label}
+                      </button>
+                    ))}
                   </div>
 
-                  {/* Repo picker */}
-                  <div>
-                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.25rem" }}>
-                      <label style={{ ...labelStyle, marginBottom: 0 }}>Repository</label>
-                      <button
-                        type="button"
-                        onClick={() => { setGhCreateNew(!ghCreateNew); setGhSelectedRepo(""); setGhNewRepoName(""); }}
-                        style={{ background: "none", border: "none", cursor: "pointer", color: "var(--primary)", fontSize: "0.75rem", fontWeight: 500 }}
-                      >
-                        {ghCreateNew ? "Use existing" : "+ Create new"}
-                      </button>
-                    </div>
-                    {ghCreateNew ? (
-                      <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                  {ghCreateNew ? (
+                    <>
+                      {/* New repo form */}
+                      <div>
+                        <label style={labelStyle}>Repository name</label>
                         <input
                           type="text"
                           value={ghNewRepoName}
@@ -365,29 +366,59 @@ function NewSiteDialog({ orgId, onClose, onCreated }: {
                           placeholder="my-new-site"
                           style={{ ...inputStyle, fontFamily: "monospace" }}
                         />
-                        <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.8rem", color: "var(--muted-foreground)", cursor: "pointer" }}>
-                          <input
-                            type="checkbox"
-                            checked={ghNewRepoPrivate}
-                            onChange={(e) => setGhNewRepoPrivate(e.target.checked)}
-                            style={{ accentColor: "var(--primary)" }}
-                          />
-                          Private repository
-                        </label>
                       </div>
-                    ) : ghLoadingRepos ? (
-                      <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--muted-foreground)", padding: "0.5rem 0" }}>Loading repositories...</p>
-                    ) : (
-                      <CustomSelect
-                        options={[
-                          { value: "", label: "Select repository..." },
-                          ...ghRepos.map((r) => ({ value: r.name, label: r.name })),
-                        ]}
-                        value={ghSelectedRepo}
-                        onChange={(v) => setGhSelectedRepo(v)}
-                      />
-                    )}
-                  </div>
+                      <div>
+                        <label style={labelStyle}>Organisation</label>
+                        <CustomSelect
+                          options={ghAccounts.map((a) => ({
+                            value: a.login,
+                            label: `${a.login} ${a.type === "org" ? "(org)" : "(personal)"}`,
+                          }))}
+                          value={ghSelectedAccount}
+                          onChange={(v) => setGhSelectedAccount(v)}
+                        />
+                      </div>
+                      <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.8rem", color: "var(--muted-foreground)", cursor: "pointer" }}>
+                        <input
+                          type="checkbox"
+                          checked={ghNewRepoPrivate}
+                          onChange={(e) => setGhNewRepoPrivate(e.target.checked)}
+                          style={{ accentColor: "var(--primary)" }}
+                        />
+                        Private
+                      </label>
+                    </>
+                  ) : (
+                    <>
+                      {/* Import existing form */}
+                      <div>
+                        <label style={labelStyle}>Organisation</label>
+                        <CustomSelect
+                          options={ghAccounts.map((a) => ({
+                            value: a.login,
+                            label: `${a.login} ${a.type === "org" ? "(org)" : "(personal)"}`,
+                          }))}
+                          value={ghSelectedAccount}
+                          onChange={(v) => setGhSelectedAccount(v)}
+                        />
+                      </div>
+                      <div>
+                        <label style={labelStyle}>Repository</label>
+                        {ghLoadingRepos ? (
+                          <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--muted-foreground)", padding: "0.5rem 0" }}>Loading repositories...</p>
+                        ) : (
+                          <CustomSelect
+                            options={[
+                              { value: "", label: "Select repository..." },
+                              ...ghRepos.map((r) => ({ value: r.name, label: r.name })),
+                            ]}
+                            value={ghSelectedRepo}
+                            onChange={(v) => setGhSelectedRepo(v)}
+                          />
+                        )}
+                      </div>
+                    </>
+                  )}
 
                   {/* Site name (auto-filled from repo) */}
                   <div>
