@@ -58,9 +58,16 @@ const cmsConfigSchema = z.object({
     fields: z.array(fieldConfigSchema),
   })).optional(),
   storage: z.object({
-    adapter: z.enum(['sqlite', 'filesystem']).optional(),
+    adapter: z.enum(['sqlite', 'filesystem', 'github']).optional(),
     sqlite: z.object({ path: z.string().optional() }).optional(),
     filesystem: z.object({ contentDir: z.string().optional() }).optional(),
+    github: z.object({
+      owner: z.string(),
+      repo: z.string(),
+      branch: z.string().optional(),
+      contentDir: z.string().optional(),
+      token: z.string(),
+    }).optional(),
   }).optional(),
   build: z.object({
     outDir: z.string().optional(),
