@@ -113,4 +113,5 @@ jobs:
           git add packages/*/package.json
           git commit -m "chore: release v${{ env.NEW_VERSION }}" || echo "No changes to commit"
           git tag "v${{ env.NEW_VERSION }}"
+          git pull --rebase origin main
           git push && git push --tags
