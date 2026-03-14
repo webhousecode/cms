@@ -295,18 +295,22 @@ Built with [@webhouse/cms](https://github.com/webhousecode/cms) — AI-native co
 `,
     };
 
-    // Use the Contents API to create files one by one
-    // (simpler than tree API and works fine for a handful of files)
-    for (const [path, content] of Object.entries(seedFiles)) {
-      await fetch(`${repoUrl}/contents/${path}`, {
+    // Seed files sequentially (each commit must finish before the next)
+    for (const [filePath, content] of Object.entries(seedFiles)) {
+      const putRes = await fetch(`${repoUrl}/contents/${filePath}`, {
         method: "PUT",
         headers,
         body: JSON.stringify({
-          message: path === "cms.config.ts" ? "chore: initialize CMS site" : `chore: add ${path}`,
+          message: filePath === "cms.config.ts" ? "chore: initialize CMS site" : `chore: add ${filePath}`,
           content: Buffer.from(content).toString("base64"),
           branch: repo.default_branch,
         }),
       });
+      if (!putRes.ok) {
+        const putErr = await putRes.json().catch(() => ({})) as { message?: string };
+        console.error(`[create-repo] Failed to seed ${filePath}:`, putErr.message ?? putRes.status);
+        // Continue seeding other files — non-fatal
+      }
     }
 
     return NextResponse.json({

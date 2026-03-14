@@ -110,10 +110,11 @@ export default function NewSitePage() {
     if (!ghSelectedRepo) return;
     const repo = ghRepos.find((r) => r.name === ghSelectedRepo);
     if (repo) {
-      if (!name) setName(repo.name.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()));
+      setName((prev) => prev || repo.name.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()));
       setBranch(repo.defaultBranch);
     }
-  }, [ghSelectedRepo, ghRepos, name]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ghSelectedRepo, ghRepos]);
 
   function siteId(): string {
     return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "new-site";
