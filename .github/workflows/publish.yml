@@ -31,8 +31,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Build all packages
-        run: pnpm build
+      - name: Build publishable packages
+        run: pnpm build --filter='!@webhouse/cms-admin' --filter='!@webhouse/cms-example-blog'
 
       - name: Run tests
         run: pnpm test:run
