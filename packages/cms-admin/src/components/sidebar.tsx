@@ -78,7 +78,7 @@ export function AppSidebar({ collections }: Props) {
             className="sidebar-logo flex items-center gap-2 min-w-0"
           >
             <img
-              src="/cms-logo-icon.svg"
+              src="/webhouse-icon.svg"
               alt=""
               className="h-7 w-7 shrink-0"
               aria-hidden="true"
