@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readFile } from "fs/promises";
-import { safeUploadPath } from "@/lib/upload-dir";
+import { getUploadDir, safeUploadPath } from "@/lib/upload-dir";
 
 const MIME: Record<string, string> = {
   jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png",
@@ -12,7 +12,8 @@ const MIME: Record<string, string> = {
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
   const { path: segments } = await params;
   try {
-    const filePath = safeUploadPath(segments);
+    const uploadDir = await getUploadDir();
+    const filePath = safeUploadPath(segments, uploadDir);
     const data = await readFile(filePath);
     const ext = segments[segments.length - 1].split(".").pop()?.toLowerCase() ?? "";
     const contentType = MIME[ext] ?? "application/octet-stream";
