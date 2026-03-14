@@ -256,6 +256,7 @@ function SiteSection() {
     previewSiteUrl: "",
     previewInIframe: false,
     trashRetentionDays: 30,
+    curationRetentionDays: 30,
     schemaEditEnabled: false,
     devInspector: false,
     showCloseAllTabs: false,
@@ -327,6 +328,26 @@ function SiteSection() {
                 max={365}
                 value={cfg.trashRetentionDays}
                 onChange={(e) => setCfg((c) => ({ ...c, trashRetentionDays: parseInt(e.target.value) || 30 }))}
+                style={{ width: "72px", padding: "0.4rem 0.5rem", borderRadius: "6px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.875rem", textAlign: "center", outline: "none" }}
+                onFocus={(e) => { e.target.style.borderColor = "var(--primary)"; }}
+                onBlur={(e) => { e.target.style.borderColor = "var(--border)"; }}
+              />
+              <span style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>days</span>
+            </div>
+          </div>
+          <div style={{ height: "1px", background: "var(--border)" }} />
+          <div style={{ display: "flex", alignItems: "center", gap: "1rem" }}>
+            <div style={{ flex: 1 }}>
+              <p style={{ fontSize: "0.875rem", fontWeight: 500, margin: 0 }}>Curation queue retention</p>
+              <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", margin: "0.15rem 0 0" }}>Days before approved/published items are removed from the curation queue.</p>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
+              <input
+                type="number"
+                min={1}
+                max={365}
+                value={cfg.curationRetentionDays}
+                onChange={(e) => setCfg((c) => ({ ...c, curationRetentionDays: parseInt(e.target.value) || 30 }))}
                 style={{ width: "72px", padding: "0.4rem 0.5rem", borderRadius: "6px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.875rem", textAlign: "center", outline: "none" }}
                 onFocus={(e) => { e.target.style.borderColor = "var(--primary)"; }}
                 onBlur={(e) => { e.target.style.borderColor = "var(--border)"; }}

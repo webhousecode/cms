@@ -4,10 +4,14 @@ import { DocumentEditor } from "@/components/editor/document-editor";
 import { TabTitle } from "@/lib/tabs-context";
 import { readSiteConfig } from "@/lib/site-config";
 
-type Props = { params: Promise<{ collection: string; slug: string }> };
+type Props = {
+  params: Promise<{ collection: string; slug: string }>;
+  searchParams: Promise<{ from?: string }>;
+};
 
-export default async function DocumentPage({ params }: Props) {
+export default async function DocumentPage({ params, searchParams }: Props) {
   const { collection, slug } = await params;
+  const { from } = await searchParams;
   const [cms, config, siteConfig] = await Promise.all([getAdminCms(), getAdminConfig(), readSiteConfig()]);
 
   const colConfig = config.collections.find((c) => c.name === collection);
@@ -51,6 +55,7 @@ export default async function DocumentPage({ params }: Props) {
         translations={translations}
         previewSiteUrl={siteConfig.previewSiteUrl}
         previewInIframe={siteConfig.previewInIframe}
+        backHref={from === "curation" ? "/admin/curation" : undefined}
       />
     </>
   );

@@ -63,7 +63,7 @@ export function AIBubbleMenu({ editor }: Props) {
       editor={editor}
       tippyOptions={{ duration: 100, placement: "top-start", maxWidth: "none" }}
       shouldShow={({ editor, from, to }) => {
-        return !editor.isActive("image") && from !== to;
+        return editor.isEditable && !editor.isActive("image") && from !== to;
       }}
     >
       <div

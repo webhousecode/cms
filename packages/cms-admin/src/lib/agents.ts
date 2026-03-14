@@ -70,6 +70,7 @@ export interface AgentConfig {
   tools: { webSearch: boolean; internalDatabase: boolean };
   autonomy: "draft" | "full";
   targetCollections: string[];
+  fieldDefaults?: Record<string, unknown>;
   schedule: {
     enabled: boolean;
     frequency: "daily" | "weekly" | "manual";

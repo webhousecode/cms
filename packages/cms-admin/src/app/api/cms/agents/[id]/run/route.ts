@@ -6,14 +6,14 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const { prompt } = (await request.json()) as { prompt?: string };
+  const { prompt, collection } = (await request.json()) as { prompt?: string; collection?: string };
 
   if (!prompt?.trim()) {
     return NextResponse.json({ error: "prompt is required" }, { status: 400 });
   }
 
   try {
-    const result = await runAgent(id, prompt.trim());
+    const result = await runAgent(id, prompt.trim(), collection?.trim() || undefined);
     return NextResponse.json(result);
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Failed to run agent";

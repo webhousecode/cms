@@ -6,8 +6,13 @@ import { Menu as MenuPrimitive } from "@base-ui/react/menu"
 import { cn } from "@/lib/utils"
 import { ChevronRightIcon, CheckIcon } from "lucide-react"
 
-function DropdownMenu({ ...props }: MenuPrimitive.Root.Props) {
-  return <MenuPrimitive.Root data-slot="dropdown-menu" {...props} />
+function DropdownMenu({ children, ...props }: MenuPrimitive.Root.Props) {
+  // base-ui generates non-deterministic IDs that differ server vs client,
+  // causing hydration mismatch. Render children only after mount.
+  const [mounted, setMounted] = React.useState(false)
+  React.useEffect(() => setMounted(true), [])
+  if (!mounted) return null
+  return <MenuPrimitive.Root data-slot="dropdown-menu" {...props}>{children}</MenuPrimitive.Root>
 }
 
 function DropdownMenuPortal({ ...props }: MenuPrimitive.Portal.Props) {

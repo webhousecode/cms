@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Trash2, RotateCcw, X, Search, AlertTriangle } from "lucide-react";
+import { useTabs } from "@/lib/tabs-context";
 
 const RETENTION_DAYS = parseInt(process.env.NEXT_PUBLIC_TRASH_RETENTION_DAYS ?? "30");
 
@@ -46,6 +47,12 @@ export default function TrashPage() {
   const [search, setSearch] = useState("");
   const [confirmEmpty, setConfirmEmpty] = useState(false);
   const [working, setWorking] = useState<string | null>(null); // item id being acted on
+  const { tabs, closeTab } = useTabs();
+
+  function closeTabsForPaths(paths: string[]) {
+    const pathSet = new Set(paths);
+    tabs.filter(t => pathSet.has(t.path.split("?")[0])).forEach(t => closeTab(t.id));
+  }
 
   async function load() {
     setLoading(true);
@@ -71,14 +78,18 @@ export default function TrashPage() {
   async function deletePermanently(item: TrashedItem) {
     setWorking(item.doc.id);
     await fetch(`/api/cms/${item.collection}/${item.doc.slug}?permanent=true`, { method: "DELETE" });
+    closeTabsForPaths([`/admin/${item.collection}/${item.doc.slug}`]);
     await load();
     setWorking(null);
   }
 
   async function emptyTrash() {
     setConfirmEmpty(false);
+    // Collect all paths before deleting so we can close their tabs
+    const pathsToClose = items.map(i => `/admin/${i.collection}/${i.doc.slug}`);
     setLoading(true);
     await fetch("/api/trash", { method: "DELETE" });
+    closeTabsForPaths(pathsToClose);
     await load();
   }
 

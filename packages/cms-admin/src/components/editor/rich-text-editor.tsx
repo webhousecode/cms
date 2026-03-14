@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { useEditor, EditorContent, useEditorState, NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react";
 import { AIBubbleMenu } from "./ai-bubble-menu";
 import type { NodeViewProps } from "@tiptap/react";
@@ -931,7 +932,7 @@ function LinkPopup({ onConfirm, onRemove, onClose, initial }: {
 }
 
 /* ─── Main editor ─────────────────────────────────────────────── */
-export function RichTextEditor({ value, onChange, disabled }: Props) {
+function RichTextEditorInner({ value, onChange, disabled }: Props) {
   const [headingOpen, setHeadingOpen] = useState(false);
   const [hoveredKey, setHoveredKey] = useState<string | null>(null);
   const [linkOpen, setLinkOpen] = useState(false);
@@ -967,7 +968,15 @@ export function RichTextEditor({ value, onChange, disabled }: Props) {
     editable: !disabled,
     onUpdate: ({ editor }) => onChange(editor.storage.markdown.getMarkdown()),
     editorProps: {
-      attributes: { class: "rte outline-none min-h-[300px]" },
+      attributes: {
+        class: "rte outline-none min-h-[300px]",
+        // Block browser extensions (Grammarly, spell-checkers) from injecting
+        // DOM nodes that break React's reconciliation with ProseMirror
+        "data-gramm": "false",
+        "data-gramm_editor": "false",
+        "data-enable-grammarly": "false",
+        translate: "no",
+      },
     },
   });
 
@@ -1378,7 +1387,7 @@ export function RichTextEditor({ value, onChange, disabled }: Props) {
         {/* ── Body ── */}
         <div className="rte-body">
           <EditorContent editor={editor} />
-          {editor && !disabled && <AIBubbleMenu editor={editor} />}
+          {editor && <AIBubbleMenu editor={editor} />}
         </div>
       </div>
 
@@ -1461,3 +1470,10 @@ export function RichTextEditor({ value, onChange, disabled }: Props) {
     </TooltipProvider>
   );
 }
+
+// Wrap in memo — only re-render when value or disabled actually changes.
+// This prevents TipTap/ProseMirror DOM conflicts when unrelated parent state
+// (e.g. _fieldMeta AI lock toggle) causes a re-render.
+export const RichTextEditor = memo(RichTextEditorInner, (prev, next) =>
+  prev.value === next.value && prev.disabled === next.disabled
+);

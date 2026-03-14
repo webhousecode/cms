@@ -57,7 +57,9 @@ export async function GET(request: NextRequest) {
   }
 
   const sessionId = crypto.randomUUID();
-  const transport = new NextSSETransport(sessionId);
+  const origin = request.headers.get("origin") ?? request.nextUrl.origin;
+  const messageUrl = `${origin}/api/mcp/admin/message?sessionId=${sessionId}`;
+  const transport = new NextSSETransport(sessionId, messageUrl);
   registerTransportSession(transport);
 
   const server = createAdminMcpServer({

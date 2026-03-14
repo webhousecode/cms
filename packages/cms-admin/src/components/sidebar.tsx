@@ -307,10 +307,10 @@ export function AppSidebar({ collections }: Props) {
 
         <div className="border-t border-border" />
 
-        {/* Budget bar */}
+        {/* Usage bar */}
         <div className="px-3 pb-2">
           <div className="text-[10px] text-muted-foreground mb-1 font-mono">
-            AI Budget: ${budgetSpent.toFixed(2)} / ${budgetTotal.toFixed(2)}
+            AI Usage: {Math.round(budgetPct)}%
           </div>
           <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
             <div

@@ -440,8 +440,26 @@ export function FieldEditor({ field, value, onChange, locked }: Props) {
 
     case "array": {
       // Simple string array (no sub-fields defined) → line-by-line editor
+      // But if items are objects, fall through to JSON textarea
       if (!field.fields) {
         const arrVal = Array.isArray(value) ? (value as unknown[]) : [];
+        const hasObjects = arrVal.some(v => typeof v === "object" && v !== null);
+        if (hasObjects) {
+          // Object array without schema → JSON textarea
+          const jsonStr = typeof value === "string" ? value : JSON.stringify(value ?? [], null, 2);
+          return (
+            <Textarea
+              value={jsonStr}
+              onChange={(e) => {
+                try { onChange(JSON.parse(e.target.value)); } catch { onChange(e.target.value); }
+              }}
+              disabled={locked}
+              rows={10}
+              className="resize-y min-h-[200px] font-mono text-xs"
+              spellCheck={false}
+            />
+          );
+        }
         const strArr = arrVal.map(v => String(v ?? ""));
         return (
           <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>

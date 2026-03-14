@@ -1,5 +1,6 @@
 import { getAdminCms } from "@/lib/cms";
 import { saveRevision } from "@/lib/revisions";
+import { removeQueueItemsBySlug } from "@/lib/curation";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
@@ -56,28 +57,41 @@ export async function POST(req: NextRequest, { params }: Ctx) {
 export async function PATCH(req: NextRequest, { params }: Ctx) {
   try {
     const { collection, slug } = await params;
-    const body = await req.json() as { data?: Record<string, unknown>; status?: string; locale?: string; translationOf?: string | null; publishAt?: string | null };
+    const body = await req.json() as { data?: Record<string, unknown>; status?: string; locale?: string; translationOf?: string | null; publishAt?: string | null; slug?: string };
     const cms = await getAdminCms();
 
     const doc = await cms.content.findBySlug(collection, slug);
     if (!doc) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
+    // Validate new slug if provided
+    if (body.slug !== undefined && body.slug !== slug) {
+      const existing = await cms.content.findBySlug(collection, body.slug);
+      if (existing) return NextResponse.json({ error: "Slug already exists" }, { status: 409 });
+    }
+
     // Save revision snapshot before overwriting
     await saveRevision(collection, doc).catch(() => { /* non-fatal */ });
 
-    const nextStatus = (body.status as "draft" | "published") ?? doc.status;
+    const nextStatus = (body.status as "draft" | "published" | "trashed") ?? doc.status;
     // Manually publishing clears any pending schedule
     const publishAt = nextStatus === "published" ? null : body.publishAt;
 
     await cms.content.update(collection, doc.id, {
       data: body.data ?? doc.data,
       status: nextStatus,
+      ...(body.slug !== undefined && { slug: body.slug }),
       ...(body.locale !== undefined && { locale: body.locale }),
       ...(body.translationOf !== undefined && { translationOf: body.translationOf ?? undefined }),
       ...("publishAt" in body || nextStatus === "published" ? { publishAt } : {}),
     });
 
-    const updated = await cms.content.findBySlug(collection, slug);
+    // If trashing, clean up any pending curation queue entries for this doc
+    if (nextStatus === "trashed") {
+      await removeQueueItemsBySlug(collection, slug).catch(() => {});
+    }
+
+    const newSlug = body.slug ?? slug;
+    const updated = await cms.content.findBySlug(collection, newSlug);
     return NextResponse.json(updated);
   } catch (err) {
     console.error(err);
@@ -102,6 +116,8 @@ export async function DELETE(req: NextRequest, { params }: Ctx) {
         data: { ...doc.data, _trashedAt: new Date().toISOString() },
       });
     }
+    // Either way, clean up any pending curation queue entries
+    await removeQueueItemsBySlug(collection, slug).catch(() => {});
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error(err);

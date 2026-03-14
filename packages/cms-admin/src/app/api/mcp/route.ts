@@ -18,7 +18,9 @@ export async function GET(request: NextRequest) {
   const server = createPublicMcpServer(cms.content, config);
 
   const sessionId = crypto.randomUUID();
-  const transport = new NextSSETransport(sessionId);
+  const origin = request.headers.get("origin") ?? request.nextUrl.origin;
+  const messageUrl = `${origin}/api/mcp/message?sessionId=${sessionId}`;
+  const transport = new NextSSETransport(sessionId, messageUrl);
   registerTransportSession(transport);
 
   await server.connect(transport);

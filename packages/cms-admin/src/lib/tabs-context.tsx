@@ -23,11 +23,25 @@ type TabsCtx = {
 /* ─── Helpers ────────────────────────────────────────────────── */
 function uid() { return Math.random().toString(36).slice(2, 10); }
 
+const PATH_TITLES: Record<string, string> = {
+  "/admin": "Dashboard",
+  "/admin/": "Dashboard",
+  "/admin/media": "Media",
+  "/admin/link-checker": "Link Checker",
+  "/admin/curation": "Curation Queue",
+  "/admin/agents": "AI Agents",
+  "/admin/agents/new": "New Agent",
+  "/admin/command": "AI Cockpit",
+  "/admin/performance": "Performance",
+  "/admin/settings": "Settings",
+  "/admin/trash": "Trash",
+};
+
 function pathTitle(path: string): string {
-  if (path === "/admin" || path === "/admin/") return "Dashboard";
-  if (path === "/admin/media") return "Media";
-  if (path === "/admin/link-checker") return "Link Checker";
-  const parts = path.replace(/^\/admin\/?/, "").split("/").filter(Boolean);
+  // Strip query params for lookup
+  const bare = path.split("?")[0];
+  if (PATH_TITLES[bare]) return PATH_TITLES[bare];
+  const parts = bare.replace(/^\/admin\/?/, "").split("/").filter(Boolean);
   if (parts.length === 0) return "Dashboard";
   return decodeURIComponent(parts[parts.length - 1]);
 }
@@ -78,16 +92,21 @@ export function TabsProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const saved = load();
     if (saved && saved.tabs.length > 0) {
-      const match = saved.tabs.find((t) => t.path === pathname);
+      // Migrate stale tab titles from before PATH_TITLES was introduced
+      const migrated = saved.tabs.map((t) => ({
+        ...t,
+        title: PATH_TITLES[t.path.split("?")[0]] ?? t.title,
+      }));
+      const match = migrated.find((t) => t.path === pathname);
       if (match) {
-        applyTabs(saved.tabs, match.id);
+        applyTabs(migrated, match.id);
       } else if (saved.activeId) {
-        const updated = saved.tabs.map((t) =>
+        const updated = migrated.map((t) =>
           t.id === saved.activeId ? { ...t, path: pathname, title: pathTitle(pathname) } : t
         );
         applyTabs(updated, saved.activeId);
       } else {
-        applyTabs(saved.tabs, saved.activeId);
+        applyTabs(migrated, saved.activeId);
       }
     } else {
       const id = uid();
@@ -105,8 +124,16 @@ export function TabsProvider({ children }: { children: ReactNode }) {
     const id = activeIdRef.current;
     const prev = tabsRef.current;
     if (!id || prev.length === 0) return;
+    // For document paths (/admin/collection/slug), don't overwrite the title —
+    // TabTitle in the page component sets the real document title via setTabTitle.
+    // For shallow paths (collection lists, known routes), use pathTitle.
+    const bare = pathname.split("?")[0];
+    const parts = bare.replace(/^\/admin\/?/, "").split("/").filter(Boolean);
+    const isDocumentPath = parts.length >= 2;
     const updated = prev.map((t) =>
-      t.id === id ? { ...t, path: pathname, title: pathTitle(pathname) } : t
+      t.id === id
+        ? { ...t, path: pathname, title: isDocumentPath ? t.title : pathTitle(pathname) }
+        : t
     );
     applyTabs(updated, id);
   // eslint-disable-next-line react-hooks/exhaustive-deps

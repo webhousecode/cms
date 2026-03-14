@@ -31,6 +31,13 @@ export async function middleware(request: NextRequest) {
   const isCmsApi = pathname.startsWith("/api/cms");
   if (!isAdminPath && !isCmsApi) return NextResponse.next();
 
+  // Allow internal service calls with X-CMS-Service-Token header (matches CMS_JWT_SECRET)
+  const serviceToken = request.headers.get("x-cms-service-token");
+  if (serviceToken) {
+    const secret = process.env.CMS_JWT_SECRET ?? "cms-dev-secret-change-me-in-production";
+    if (serviceToken === secret) return NextResponse.next();
+  }
+
   const token = request.cookies.get(COOKIE_NAME)?.value;
 
   if (!token) {

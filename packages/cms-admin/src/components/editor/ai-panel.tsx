@@ -28,8 +28,9 @@ export function AIPanel({ collection, colConfig, doc, onClose, onInsert }: Props
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const abortRef = useRef<AbortController | null>(null);
 
+  const fieldMeta = (doc.data["_fieldMeta"] as Record<string, unknown> | undefined) ?? {};
   const richTextFields = colConfig.fields
-    .filter((f) => f.type === "richtext" || f.type === "text" || f.type === "textarea")
+    .filter((f) => (f.type === "richtext" || f.type === "text" || f.type === "textarea") && !fieldMeta[f.name])
     .map((f) => {
       const raw = f.label ?? f.name;
       const label = raw.charAt(0).toUpperCase() + raw.slice(1);
@@ -134,9 +135,38 @@ export function AIPanel({ collection, colConfig, doc, onClose, onInsert }: Props
     setTimeout(() => setCopied(null), 1500);
   }
 
+  function cleanAIContent(raw: string): string {
+    const lines = raw.split("\n");
+
+    // Only strip known AI metadata patterns — never strip user-requested content
+    // These patterns are AI scaffold, not real content:
+    while (lines.length > 0) {
+      const l = lines[0].trim();
+      if (l === "") { lines.shift(); continue; }
+      if (l === "---") { lines.shift(); continue; }
+      if (/^\*\*Field:\*\*/i.test(l)) { lines.shift(); continue; }
+      // Preamble sentences (AI explaining what it's about to output)
+      if (/^(Here is|The content below|Below is|The following|Ready for|Content for)/i.test(l) && l.endsWith(":")) { lines.shift(); continue; }
+      break;
+    }
+
+    // Strip trailing AI commentary
+    while (lines.length > 0) {
+      const l = lines[lines.length - 1].trim();
+      if (l === "") { lines.pop(); continue; }
+      if (l === "---") { lines.pop(); continue; }
+      // Trailing suggestions in italics: *Feel free to adjust...*
+      if (/^\*[^*]+\*$/.test(l)) { lines.pop(); continue; }
+      if (/^(Feel free|Adjust|Let me know|Would you like|I can also)/i.test(l)) { lines.pop(); continue; }
+      break;
+    }
+
+    return lines.join("\n").trim();
+  }
+
   function insertMessage(content: string) {
     if (!insertTarget) return;
-    onInsert(insertTarget, content);
+    onInsert(insertTarget, cleanAIContent(content));
   }
 
   return (
@@ -204,6 +234,71 @@ export function AIPanel({ collection, colConfig, doc, onClose, onInsert }: Props
             <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", margin: 0 }}>
               Ask me to generate, rewrite, or improve content for this document.
             </p>
+
+            {/* Generate new version — primary action */}
+            <button
+              type="button"
+              onClick={() => {
+                const prompt = `Generate a completely new version of this document. Use the existing title and topic as a guide, but write fresh content with a new structure and angle. Return only the content for the "${insertTarget || richTextFields[0]?.name || "content"}" field.`;
+                setInput(prompt);
+                setTimeout(() => {
+                  setInput("");
+                  const newMessages: Message[] = [{ role: "user", content: prompt }];
+                  setMessages(newMessages);
+                  setStreaming(true);
+                  const ctrl = new AbortController();
+                  abortRef.current = ctrl;
+                  let out = "";
+                  setMessages(prev => [...prev, { role: "assistant", content: "" }]);
+                  fetch("/api/cms/ai/chat", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    signal: ctrl.signal,
+                    body: JSON.stringify({
+                      message: prompt,
+                      docData: doc.data,
+                      collectionName: colConfig.label ?? collection,
+                      fields: colConfig.fields.map(f => ({ name: f.name, type: f.type, label: f.label })),
+                    }),
+                  }).then(async res => {
+                    if (!res.ok || !res.body) { setStreaming(false); return; }
+                    const reader = res.body.getReader();
+                    const dec = new TextDecoder();
+                    while (true) {
+                      const { done, value } = await reader.read();
+                      if (done) break;
+                      out += dec.decode(value, { stream: true });
+                      setMessages(prev => { const n = [...prev]; const last = n[n.length - 1]; if (last) last.content = out; return n; });
+                    }
+                    setStreaming(false);
+                    abortRef.current = null;
+                  }).catch(() => setStreaming(false));
+                }, 0);
+              }}
+              style={{
+                padding: "0.5rem 0.75rem",
+                borderRadius: "8px",
+                border: "1px solid color-mix(in oklch, var(--primary) 40%, transparent)",
+                background: "color-mix(in oklch, var(--primary) 8%, transparent)",
+                color: "var(--primary)",
+                fontSize: "0.8rem",
+                cursor: "pointer",
+                textAlign: "left",
+                display: "flex",
+                alignItems: "center",
+                gap: "0.5rem",
+                fontWeight: 500,
+                transition: "background 100ms",
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "color-mix(in oklch, var(--primary) 15%, transparent)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "color-mix(in oklch, var(--primary) 8%, transparent)"; }}
+            >
+              <Sparkles style={{ width: "0.875rem", height: "0.875rem", flexShrink: 0 }} />
+              Generate a new version
+            </button>
+
+            <div style={{ height: "1px", background: "var(--border)", margin: "0.125rem 0" }} />
+
             {[
               "Write an introduction paragraph",
               "Generate a summary of this article",

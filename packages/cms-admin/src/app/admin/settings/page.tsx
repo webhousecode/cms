@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/page-header";
 import { AISettingsPanel } from "@/components/settings/ai-settings-panel";
 import { GeneralSettingsPanel } from "@/components/settings/general-settings-panel";
 import { MCPSettingsPanel } from "@/components/settings/mcp-settings-panel";
+import { AIPromptsPanel } from "@/components/settings/ai-prompts-panel";
 import { readSiteConfig } from "@/lib/site-config";
 import { readBrandVoice } from "@/lib/brand-voice";
 
@@ -30,6 +31,7 @@ export default async function SettingsPage({
     { id: "mcp",         label: "MCP" },
     ...(globals.length > 0 ? [{ id: "globals", label: "Globals" }] : []),
     ...(siteConfig.schemaEditEnabled ? [{ id: "schema", label: "Schema" }] : []),
+    ...(process.env.CMS_DEV_MODE === "true" ? [{ id: "prompts", label: "AI Prompts" }] : []),
   ];
 
   return (
@@ -214,6 +216,13 @@ export default async function SettingsPage({
               </p>
             </div>
             <MCPSettingsPanel />
+          </div>
+        )}
+
+        {/* AI Prompts tab (developer mode only) */}
+        {tab === "prompts" && process.env.CMS_DEV_MODE === "true" && (
+          <div className="max-w-3xl">
+            <AIPromptsPanel />
           </div>
         )}
       </div>

@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useEffect, type FormEvent } from "react";
+import { useState, useEffect, useRef, type FormEvent } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { Loader2, Sparkles, Trash2, Play, CheckCircle } from "lucide-react";
+import { Loader2, Sparkles, Trash2, Play, CheckCircle, X, Plus, Copy, ChevronDown, ArrowLeft } from "lucide-react";
+import Link from "next/link";
 import { CustomSelect } from "@/components/ui/custom-select";
 import type { AgentConfig } from "@/lib/agents";
+import { TabTitle } from "@/lib/tabs-context";
 
 const ROLES = [
   { value: "copywriter", label: "Content Writer" },
@@ -64,12 +66,27 @@ export default function AgentDetailPage() {
   const [time, setTime] = useState("06:00");
   const [maxPerRun, setMaxPerRun] = useState(3);
   const [active, setActive] = useState(true);
+  const [targetCollections, setTargetCollections] = useState<string[]>([]);
+  const [fieldDefaults, setFieldDefaults] = useState<{ key: string; value: string }[]>([]);
+  const [cloning, setCloning] = useState(false);
+  const [schemaFields, setSchemaFields] = useState<{ name: string; type: string; label?: string; options?: { value: string; label?: string }[] }[]>([]);
+  const [availableCollections, setAvailableCollections] = useState<{ name: string; label: string }[]>([]);
   const [stats, setStats] = useState<AgentConfig["stats"]>({
     totalGenerated: 0,
     approved: 0,
     rejected: 0,
     edited: 0,
   });
+
+  // Load available collections once
+  useEffect(() => {
+    fetch("/api/schema/collections")
+      .then((r) => r.json())
+      .then((data: { collections: { name: string; label: string }[] }) => {
+        setAvailableCollections(data.collections ?? []);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     fetch(`/api/cms/agents/${id}`)
@@ -89,6 +106,13 @@ export default function AgentDetailPage() {
         setTime(agent.schedule.time);
         setMaxPerRun(agent.schedule.maxPerRun);
         setActive(agent.active);
+        setTargetCollections(agent.targetCollections ?? []);
+        setFieldDefaults(
+          Object.entries(agent.fieldDefaults ?? {}).map(([key, value]) => ({
+            key,
+            value: String(value),
+          }))
+        );
         setStats(agent.stats);
         setLoading(false);
       })
@@ -97,6 +121,39 @@ export default function AgentDetailPage() {
         setLoading(false);
       });
   }, [id]);
+
+  // Fetch schema fields — use targetCollections if set, otherwise all available collections
+  useEffect(() => {
+    const cols = targetCollections.length > 0
+      ? targetCollections
+      : availableCollections.map((c) => c.name);
+    if (cols.length === 0) return;
+    Promise.all(
+      cols.map((col) =>
+        fetch(`/api/cms/collections/${col}/schema`).then((r) => r.ok ? r.json() : null).catch(() => null)
+      )
+    ).then((results) => {
+      const seen = new Map<string, typeof schemaFields[0]>();
+      for (const result of results) {
+        if (!result?.fields) continue;
+        for (const f of result.fields as typeof schemaFields) {
+          const existing = seen.get(f.name);
+          if (!existing) {
+            seen.set(f.name, { ...f });
+          } else if (f.options && existing.options) {
+            // Merge options from multiple collections (dedup by value)
+            const existingVals = new Set(existing.options.map((o) => o.value));
+            for (const o of f.options) {
+              if (!existingVals.has(o.value)) existing.options.push(o);
+            }
+          }
+        }
+      }
+      const merged = Array.from(seen.values());
+      setSchemaFields(merged);
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(targetCollections), JSON.stringify(availableCollections)]);
 
   async function handleGeneratePrompt() {
     setGenerating(true);
@@ -131,7 +188,10 @@ export default function AgentDetailPage() {
           behavior: { temperature, formality, verbosity },
           tools: { webSearch, internalDatabase },
           autonomy,
-          targetCollections: [],
+          targetCollections,
+          fieldDefaults: Object.fromEntries(
+            fieldDefaults.filter((f) => f.key.trim()).map((f) => [f.key.trim(), f.value])
+          ),
           schedule: { enabled: scheduleEnabled, frequency, time, maxPerRun },
           active,
         }),
@@ -164,6 +224,19 @@ export default function AgentDetailPage() {
     setRunning(false);
   }
 
+  async function handleClone() {
+    setCloning(true);
+    try {
+      const res = await fetch(`/api/cms/agents/${id}/clone`, { method: "POST" });
+      const data = await res.json();
+      if (res.ok && data.id) router.push(`/admin/agents/${data.id}`);
+      else setError(data.error ?? "Clone failed");
+    } catch {
+      setError("Network error");
+    }
+    setCloning(false);
+  }
+
   async function handleDelete() {
     setDeleting(true);
     try {
@@ -184,13 +257,32 @@ export default function AgentDetailPage() {
   }
 
   return (
-    <div className="p-8 max-w-2xl">
-      <div className="mb-8">
-        <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">
-          AI Agents
-        </p>
-        <h1 className="text-2xl font-bold text-foreground">Edit Agent</h1>
+    <>
+    {/* Breadcrumb bar */}
+    <div className="sticky flex items-center justify-between px-4 border-b border-border shrink-0" style={{ top: 84, height: "48px", zIndex: 30, backgroundColor: "var(--card)" }}>
+      <div className="flex items-center gap-2">
+        <div style={{ width: "1px", height: "1rem", backgroundColor: "var(--border)", alignSelf: "center" }} />
+        <Link href="/admin/agents" className="text-muted-foreground hover:text-foreground transition-colors" title="Back to Agents">
+          <ArrowLeft className="w-4 h-4" />
+        </Link>
+        <span className="text-muted-foreground text-sm font-mono">agents</span>
+        <span className="text-muted-foreground">/</span>
+        <span className="text-sm font-mono text-foreground">{name || id}</span>
       </div>
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={handleClone}
+          disabled={cloning}
+          className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-md border border-border hover:bg-secondary transition-colors text-muted-foreground disabled:opacity-60"
+        >
+          <Copy style={{ width: "0.8rem", height: "0.8rem" }} /> Clone
+        </button>
+      </div>
+    </div>
+
+    <div className="p-8 max-w-2xl">
+      <TabTitle value={name || "Agent"} />
 
       {/* Stats */}
       {stats.totalGenerated > 0 && (
@@ -308,6 +400,109 @@ export default function AgentDetailPage() {
               />
               Internal database
             </label>
+          </div>
+        </div>
+
+        {/* Target Collections */}
+        <div>
+          <p style={labelStyle}>Target Collections</p>
+          <p className="text-xs text-muted-foreground mb-2">Which collections this agent generates content for.</p>
+          <div className="flex flex-wrap gap-1.5 mb-2">
+            {targetCollections.map((col) => (
+              <span
+                key={col}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "0.25rem",
+                  padding: "0.2rem 0.5rem",
+                  borderRadius: "99px",
+                  background: "color-mix(in oklch, var(--primary) 12%, transparent)",
+                  border: "1px solid color-mix(in oklch, var(--primary) 30%, transparent)",
+                  color: "var(--primary)",
+                  fontSize: "0.75rem",
+                  fontWeight: 500,
+                }}
+              >
+                {availableCollections.find((c) => c.name === col)?.label ?? col}
+                <button
+                  type="button"
+                  onClick={() => setTargetCollections((prev) => prev.filter((c) => c !== col))}
+                  style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "inherit", display: "flex", lineHeight: 1 }}
+                >
+                  <X style={{ width: "0.65rem", height: "0.65rem" }} />
+                </button>
+              </span>
+            ))}
+          </div>
+          {availableCollections.filter((c) => !targetCollections.includes(c.name)).length > 0 && (
+            <CustomSelect
+              options={[
+                { value: "", label: "— add a collection —" },
+                ...availableCollections
+                  .filter((c) => !targetCollections.includes(c.name))
+                  .map((c) => ({ value: c.name, label: c.label })),
+              ]}
+              value=""
+              onChange={(val) => { if (val) setTargetCollections((prev) => [...prev, val]); }}
+            />
+          )}
+        </div>
+
+        {/* Field Defaults */}
+        <div>
+          <div className="flex items-center justify-between mb-2">
+            <p style={labelStyle}>Field Defaults</p>
+            <span className="text-xs text-muted-foreground">Override LLM — agent always uses these values</span>
+          </div>
+          <div className="space-y-2">
+            {fieldDefaults.map((fd, i) => {
+              const fieldDef = schemaFields.find((f) => f.name === fd.key);
+              const valueOptions = fieldDef?.options ?? (fieldDef?.type === "boolean" ? [{ value: "true", label: "true" }, { value: "false", label: "false" }] : null);
+              return (
+                <div key={i} className="flex gap-2 items-center">
+                  {/* Field name — autocomplete with schema suggestions */}
+                  <FieldAutocomplete
+                    value={fd.key}
+                    suggestions={schemaFields}
+                    onChange={(val) => setFieldDefaults((prev) => prev.map((f, j) => j === i ? { key: val, value: "" } : f))}
+                    style={{ width: "42%" }}
+                  />
+                  {/* Value — dropdown for select/boolean, text for others */}
+                  {valueOptions ? (
+                    <CustomSelect
+                      options={valueOptions.map((o) => ({ value: o.value, label: o.label ?? o.value }))}
+                      value={fd.value}
+                      onChange={(val) => setFieldDefaults((prev) => prev.map((f, j) => j === i ? { ...f, value: val } : f))}
+                      style={{ flex: 1 }}
+                    />
+                  ) : (
+                    <input
+                      type={fieldDef?.type === "number" ? "number" : "text"}
+                      value={fd.value}
+                      onChange={(e) => setFieldDefaults((prev) => prev.map((f, j) => j === i ? { ...f, value: e.target.value } : f))}
+                      placeholder={fd.key ? `value for ${fd.key}` : "value"}
+                      style={{ ...inputStyle, flex: 1, fontSize: "0.8rem" }}
+                    />
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setFieldDefaults((prev) => prev.filter((_, j) => j !== i))}
+                    style={{ padding: "0.3rem", color: "var(--destructive)", background: "none", border: "none", cursor: "pointer", borderRadius: "4px" }}
+                    className="hover:bg-destructive/10"
+                  >
+                    <X style={{ width: "0.8rem", height: "0.8rem" }} />
+                  </button>
+                </div>
+              );
+            })}
+            <button
+              type="button"
+              onClick={() => setFieldDefaults((prev) => [...prev, { key: "", value: "" }])}
+              className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <Plus style={{ width: "0.75rem", height: "0.75rem" }} /> Add default
+            </button>
           </div>
         </div>
 
@@ -507,6 +702,129 @@ export default function AgentDetailPage() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+    </div>
+    </>
+  );
+}
+
+// Autocomplete input for field names — shows schema suggestions but accepts any value
+function FieldAutocomplete({
+  value,
+  suggestions,
+  onChange,
+  style,
+}: {
+  value: string;
+  suggestions: { name: string; type: string; label?: string }[];
+  onChange: (val: string) => void;
+  style?: React.CSSProperties;
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState(value);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Sync query when value changes externally (e.g. after row reset)
+  useEffect(() => { setQuery(value); }, [value]);
+
+  const filtered = query
+    ? suggestions.filter(
+        (s) =>
+          s.name.toLowerCase().includes(query.toLowerCase()) ||
+          (s.label ?? "").toLowerCase().includes(query.toLowerCase())
+      )
+    : suggestions;
+
+  function commit(val: string) {
+    onChange(val);
+    setQuery(val);
+    setOpen(false);
+  }
+
+  // Close on outside click
+  useEffect(() => {
+    if (!open) return;
+    function handler(e: MouseEvent) {
+      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+        // Commit current query on blur
+        onChange(query);
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [open, query, onChange]);
+
+  return (
+    <div ref={containerRef} style={{ position: "relative", ...style }}>
+      <input
+        type="text"
+        value={query}
+        onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
+        onFocus={() => setOpen(true)}
+        onBlur={() => { onChange(query); }}
+        onKeyDown={(e) => {
+          if (e.key === "Escape") { setOpen(false); }
+          if (e.key === "Enter") { e.preventDefault(); onChange(query); setOpen(false); }
+        }}
+        placeholder="field name"
+        style={{
+          width: "100%",
+          padding: "0.5rem 0.75rem",
+          borderRadius: "7px",
+          border: "1px solid var(--border)",
+          background: "var(--background)",
+          color: "var(--foreground)",
+          fontSize: "0.8rem",
+          outline: "none",
+          boxSizing: "border-box",
+          fontFamily: "monospace",
+        }}
+        onFocusCapture={(e) => { e.target.style.borderColor = "var(--primary)"; }}
+        onBlurCapture={(e) => { e.target.style.borderColor = "var(--border)"; }}
+      />
+      {open && filtered.length > 0 && (
+        <div style={{
+          position: "absolute",
+          top: "100%",
+          left: 0,
+          right: 0,
+          marginTop: "2px",
+          background: "var(--popover)",
+          border: "1px solid var(--border)",
+          borderRadius: "7px",
+          boxShadow: "0 4px 16px rgba(0,0,0,0.25)",
+          zIndex: 50,
+          maxHeight: "200px",
+          overflowY: "auto",
+        }}>
+          {filtered.map((s) => (
+            <button
+              key={s.name}
+              type="button"
+              onMouseDown={(e) => { e.preventDefault(); commit(s.name); }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                width: "100%",
+                padding: "0.4rem 0.625rem",
+                background: "transparent",
+                border: "none",
+                cursor: "pointer",
+                textAlign: "left",
+                fontSize: "0.8rem",
+                color: "var(--foreground)",
+                gap: "0.5rem",
+              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "var(--accent)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; }}
+            >
+              <span style={{ fontFamily: "monospace" }}>{s.name}</span>
+              <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", flexShrink: 0 }}>{s.type}</span>
+            </button>
+          ))}
         </div>
       )}
     </div>

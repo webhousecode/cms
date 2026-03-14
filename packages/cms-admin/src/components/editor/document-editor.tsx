@@ -5,13 +5,14 @@ import { CustomSelect } from "@/components/ui/custom-select";
 import { useRouter } from "next/navigation";
 import type { CollectionConfig, BlockConfig } from "@webhouse/cms";
 import { FieldEditor } from "./field-editor";
-import { Save, Globe, FileText, Trash2, ArrowLeft, Lock, LockOpen, Copy, Clock, History, Eye, Languages, Sparkles } from "lucide-react";
+import { Save, Globe, FileText, Trash2, ArrowLeft, Lock, LockOpen, Copy, Clock, History, Eye, Languages, Sparkles, Settings2, Wand2 } from "lucide-react";
 import Link from "next/link";
 import { formatDate, cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useTabs } from "@/lib/tabs-context";
 import { AIPanel } from "./ai-panel";
+import { GenerateDocumentDialog } from "@/components/generate-document-dialog";
 
 // Fallback to env vars for backwards compatibility — overridden by props from server
 const PREVIEW_SITE_URL_DEFAULT = process.env.NEXT_PUBLIC_PREVIEW_SITE_URL ?? "";
@@ -422,6 +423,185 @@ function RevisionPanel({ collection, slug, currentData, onRestore, onClose }: {
   );
 }
 
+/* ─── Properties panel ─────────────────────────────────────── */
+function PropertiesPanel({ doc, collection, onClose, onSaved }: {
+  doc: DocSnapshot;
+  collection: string;
+  onClose: () => void;
+  onSaved: (updated: DocSnapshot) => void;
+}) {
+  const router = useRouter();
+  const [slug, setSlug] = useState(doc.slug);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+
+  function sanitizeSlug(value: string) {
+    return value.trim().toLowerCase()
+      .replace(/[^a-z0-9-]/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "");
+  }
+
+  function validateSlug(value: string): string {
+    if (!value.trim()) return "Slug cannot be empty";
+    if (/[A-Z]/.test(value)) return "Slug must be lowercase";
+    if (/\s/.test(value)) return "Slug cannot contain spaces";
+    if (/[^a-z0-9-]/.test(value)) return "Only letters a–z, numbers and hyphens allowed";
+    if (/^-|-$/.test(value)) return "Slug cannot start or end with a hyphen";
+    if (/--/.test(value)) return "Slug cannot contain consecutive hyphens";
+    return "";
+  }
+
+  const slugChanged = slug !== doc.slug;
+  const slugError = validateSlug(slug);
+
+  async function saveSlug() {
+    if (!slugChanged || slugError) return;
+    setSaving(true);
+    setError("");
+    const res = await fetch(`/api/cms/${collection}/${doc.slug}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ slug }),
+    });
+    if (res.ok) {
+      const updated = await res.json() as DocSnapshot;
+      onSaved(updated);
+      router.replace(`/admin/${collection}/${slug}`);
+      router.refresh();
+    } else {
+      const body = await res.json().catch(() => ({})) as { error?: string };
+      setError(body.error ?? "Failed to save");
+    }
+    setSaving(false);
+  }
+
+  const labelStyle: React.CSSProperties = {
+    fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase",
+    letterSpacing: "0.06em", color: "var(--muted-foreground)", marginBottom: "0.25rem",
+  };
+  const valueStyle: React.CSSProperties = {
+    fontSize: "0.8rem", fontFamily: "monospace", color: "var(--foreground)",
+  };
+
+  return (
+    <div style={{
+      position: "fixed", top: 0, right: 0, bottom: 0, width: "340px", zIndex: 100,
+      background: "var(--card)", borderLeft: "1px solid var(--border)",
+      boxShadow: "-4px 0 20px rgba(0,0,0,0.3)",
+      display: "flex", flexDirection: "column",
+    }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.75rem 1rem", borderBottom: "1px solid var(--border)" }}>
+        <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>Properties</span>
+        <button type="button" onClick={onClose} style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1.1rem", lineHeight: 1 }}>×</button>
+      </div>
+
+      <div style={{ flex: 1, overflowY: "auto", padding: "1rem", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+        {/* ID */}
+        <div>
+          <p style={labelStyle}>ID</p>
+          <p style={{ ...valueStyle, color: "var(--muted-foreground)", fontSize: "0.72rem" }}>{doc.id}</p>
+        </div>
+
+        {/* Slug — editable */}
+        <div>
+          <p style={labelStyle}>Slug</p>
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            <input
+              type="text"
+              value={slug}
+              onChange={e => { setSlug(e.target.value); setError(""); }}
+              onBlur={() => { const s = sanitizeSlug(slug); if (s !== slug) setSlug(s); }}
+              onKeyDown={e => { if (e.key === "Enter") saveSlug(); }}
+              style={{
+                flex: 1, padding: "0.35rem 0.5rem", borderRadius: "5px",
+                border: `1px solid ${slugError && slug !== doc.slug ? "var(--destructive)" : slugChanged ? "var(--primary)" : "var(--border)"}`,
+                background: "var(--background)", color: "var(--foreground)",
+                fontSize: "0.8rem", fontFamily: "monospace", outline: "none",
+              }}
+            />
+            {slugChanged && (
+              <button
+                type="button"
+                onClick={saveSlug}
+                disabled={saving || !!slugError}
+                title={slugError || undefined}
+                style={{
+                  padding: "0.35rem 0.625rem", borderRadius: "5px",
+                  border: "none", background: slugError ? "var(--muted)" : "var(--primary)",
+                  color: slugError ? "var(--muted-foreground)" : "var(--primary-foreground)",
+                  fontSize: "0.75rem",
+                  cursor: saving ? "wait" : slugError ? "not-allowed" : "pointer",
+                  flexShrink: 0,
+                }}
+              >
+                {saving ? "…" : "Save"}
+              </button>
+            )}
+          </div>
+          {(slugError && slug !== doc.slug) && (
+            <p style={{ fontSize: "0.72rem", color: "var(--destructive)", marginTop: "0.25rem" }}>{slugError}</p>
+          )}
+          {error && <p style={{ fontSize: "0.72rem", color: "var(--destructive)", marginTop: "0.25rem" }}>{error}</p>}
+          <p style={{ fontSize: "0.68rem", color: "var(--muted-foreground)", marginTop: "0.3rem" }}>
+            Lowercase letters, numbers and hyphens only
+          </p>
+        </div>
+
+        {/* Status */}
+        <div>
+          <p style={labelStyle}>Status</p>
+          <p style={valueStyle}>{doc.status}</p>
+        </div>
+
+        {/* Collection */}
+        <div>
+          <p style={labelStyle}>Collection</p>
+          <p style={valueStyle}>{collection}</p>
+        </div>
+
+        {/* Locale */}
+        {doc.locale && (
+          <div>
+            <p style={labelStyle}>Locale</p>
+            <p style={valueStyle}>{doc.locale}</p>
+          </div>
+        )}
+
+        {/* Translation of */}
+        {doc.translationOf && (
+          <div>
+            <p style={labelStyle}>Translation of</p>
+            <p style={valueStyle}>{doc.translationOf}</p>
+          </div>
+        )}
+
+        {/* Scheduled */}
+        {doc.publishAt && (
+          <div>
+            <p style={labelStyle}>Scheduled publish</p>
+            <p style={valueStyle}>{new Date(doc.publishAt).toLocaleString()}</p>
+          </div>
+        )}
+
+        {/* Dates */}
+        <div style={{ borderTop: "1px solid var(--border)", paddingTop: "1rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+          <div>
+            <p style={labelStyle}>Created</p>
+            <p style={valueStyle}>{new Date(doc.createdAt).toLocaleString()}</p>
+          </div>
+          <div>
+            <p style={labelStyle}>Last updated</p>
+            <p style={valueStyle}>{new Date(doc.updatedAt).toLocaleString()}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 interface DocSnapshot {
   id: string;
   slug: string;
@@ -444,9 +624,10 @@ interface Props {
   translations?: { slug: string; locale: string | null; status: string; translationOf: string | null }[];
   previewSiteUrl?: string;
   previewInIframe?: boolean;
+  backHref?: string;
 }
 
-export function DocumentEditor({ collection, colConfig, blocksConfig = [], locales = [], defaultLocale = "en", initialDoc, translations = [], previewSiteUrl, previewInIframe }: Props) {
+export function DocumentEditor({ collection, colConfig, blocksConfig = [], locales = [], defaultLocale = "en", initialDoc, translations = [], previewSiteUrl, previewInIframe, backHref }: Props) {
   const PREVIEW_SITE_URL = previewSiteUrl ?? PREVIEW_SITE_URL_DEFAULT;
   const PREVIEW_IN_IFRAME = previewInIframe ?? PREVIEW_IN_IFRAME_DEFAULT;
   const [doc, setDoc] = useState(() => {
@@ -465,6 +646,8 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
   const [savedAt, setSavedAt] = useState<Date | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [aiPanelOpen, setAiPanelOpen] = useState(false);
+  const [propertiesOpen, setPropertiesOpen] = useState(false);
+  const [generateOpen, setGenerateOpen] = useState(false);
   const [cloning, setCloning] = useState(false);
   const [confirmTrash, setConfirmTrash] = useState(false);
   const [locale, setLocale] = useState(initialDoc.locale ?? "");
@@ -568,12 +751,13 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
         <div className="flex items-center gap-2">
           <div style={{ width: "1px", height: "1rem", backgroundColor: "var(--border)", alignSelf: "center" }} />
           <Link
-            href={`/admin/${collection}`}
+            href={backHref ?? `/admin/${collection}`}
             className="text-muted-foreground hover:text-foreground transition-colors"
+            title={`Back to ${backHref === "/admin/curation" ? "Curation Queue" : collection}`}
           >
             <ArrowLeft className="w-4 h-4" />
           </Link>
-          <span className="text-muted-foreground text-sm font-mono">{collection}</span>
+          <span className="text-muted-foreground text-sm font-mono">{backHref === "/admin/curation" ? "curation" : collection}</span>
           <span className="text-muted-foreground">/</span>
           <span className="text-sm font-mono text-foreground">{doc.slug}</span>
           {dirty && (
@@ -607,6 +791,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
               <button
                 type="button"
                 onClick={() => setLocaleOpen(o => !o)}
+                title="Set document locale"
                 style={{
                   display: "flex", alignItems: "center", gap: "0.375rem",
                   padding: "0.25rem 0.5rem", borderRadius: "6px",
@@ -661,6 +846,17 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
           <Button
             variant="ghost"
             size="sm"
+            onClick={() => setGenerateOpen(true)}
+            className="gap-1.5 text-muted-foreground hover:text-foreground"
+            title="Generate all fields with AI"
+          >
+            <Wand2 className="w-3.5 h-3.5" />
+            Generate
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => { setAiPanelOpen((o) => !o); if (historyOpen) setHistoryOpen(false); }}
             className={aiPanelOpen ? "gap-1.5 text-primary" : "gap-1.5 text-muted-foreground hover:text-foreground"}
             title="AI Assistant"
@@ -672,12 +868,22 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => { setHistoryOpen((o) => !o); if (aiPanelOpen) setAiPanelOpen(false); }}
+            onClick={() => { setHistoryOpen((o) => !o); if (aiPanelOpen) setAiPanelOpen(false); if (propertiesOpen) setPropertiesOpen(false); }}
             className="text-muted-foreground hover:text-foreground gap-1.5"
             title="Revision history"
           >
             <History className="w-3.5 h-3.5" />
             History
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => { setPropertiesOpen((o) => !o); if (historyOpen) setHistoryOpen(false); if (aiPanelOpen) setAiPanelOpen(false); }}
+            className={propertiesOpen ? "text-primary" : "text-muted-foreground hover:text-foreground"}
+            title="Document properties (slug, ID, dates)"
+          >
+            <Settings2 className="w-4 h-4" />
           </Button>
 
           <Button
@@ -709,6 +915,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
               onClick={() => save("draft")}
               disabled={saving}
               className="gap-1.5"
+              title="Revert to draft (unpublish)"
             >
               <FileText className="w-3.5 h-3.5" />
               Unpublish
@@ -729,6 +936,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
                 onClick={() => save("published")}
                 disabled={saving}
                 className="gap-1.5 border-green-500/30 text-green-400 hover:bg-green-500/10 hover:text-green-400"
+                title="Save and publish immediately"
               >
                 <Globe className="w-3.5 h-3.5" />
                 Publish
@@ -742,6 +950,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
             onClick={() => save()}
             disabled={saving || !dirty}
             className="gap-1.5"
+            title={dirty ? "Save changes (⌘S)" : "No unsaved changes"}
           >
             <Save className="w-3.5 h-3.5" />
             {saving ? "Saving…" : "Save"}
@@ -852,6 +1061,12 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
                         newMeta[field.name] = { lockedBy: "user", lockedAt: new Date().toISOString() };
                       }
                       updateField("_fieldMeta", newMeta);
+                      // Persist lock immediately — silent, no spinner, doesn't affect dirty state
+                      fetch(`/api/cms/${collection}/${doc.slug}`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ data: { _fieldMeta: newMeta } }),
+                      }).catch(() => { /* non-fatal */ });
                     }}
                     style={{
                       display: "flex", alignItems: "center", gap: "0.2rem",
@@ -927,6 +1142,36 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
           onClose={() => setAiPanelOpen(false)}
           onInsert={(fieldName, content) => {
             updateField(fieldName, content);
+          }}
+        />
+      )}
+
+      {generateOpen && (
+        <GenerateDocumentDialog
+          collection={collection}
+          collectionLabel={colConfig.label ?? collection}
+          existingData={doc.data}
+          existingSlug={doc.slug}
+          onClose={() => setGenerateOpen(false)}
+          onGenerated={(data) => {
+            setDoc((prev) => ({
+              ...prev,
+              data: { ...prev.data, ...data },
+            }));
+            setDirty(true);
+            setGenerateOpen(false);
+          }}
+        />
+      )}
+
+      {propertiesOpen && (
+        <PropertiesPanel
+          doc={doc}
+          collection={collection}
+          onClose={() => setPropertiesOpen(false)}
+          onSaved={(updated) => {
+            setDoc(updated);
+            setPropertiesOpen(false);
           }}
         />
       )}

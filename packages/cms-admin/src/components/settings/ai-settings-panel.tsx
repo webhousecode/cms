@@ -8,6 +8,8 @@ interface AiConfigMasked {
   anthropicApiKey?: string;
   openaiApiKey?: string;
   geminiApiKey?: string;
+  webSearchProvider?: "brave" | "tavily";
+  webSearchApiKey?: string;
 }
 
 const PROVIDERS = [
@@ -57,6 +59,7 @@ export function AISettingsPanel() {
 
     const body: Record<string, string> = {
       defaultProvider: config.defaultProvider,
+      webSearchProvider: config.webSearchProvider ?? "brave",
       ...editing,
     };
 
@@ -190,6 +193,89 @@ export function AISettingsPanel() {
             </div>
           );
         })}
+      </div>
+
+      {/* Web Search */}
+      <div style={{ borderTop: "1px solid var(--border)", paddingTop: "1.25rem", marginBottom: "1.5rem" }}>
+        <h3 style={{ fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--muted-foreground)", marginBottom: "0.75rem" }}>
+          Web Search (for AI agents)
+        </h3>
+        <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginBottom: "0.75rem" }}>
+          Enables the <code style={{ fontSize: "0.7rem" }}>web_search</code> tool for agents with &ldquo;Web search&rdquo; enabled.
+        </p>
+
+        {/* Provider selector */}
+        <div style={{ display: "flex", gap: "0.5rem", marginBottom: "0.75rem" }}>
+          {([
+            { id: "brave" as const, label: "Brave Search", url: "https://api.search.brave.com/register" },
+            { id: "tavily" as const, label: "Tavily", url: "https://tavily.com/" },
+          ]).map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => setConfig((c) => ({ ...c, webSearchProvider: p.id }))}
+              style={{
+                padding: "0.35rem 0.875rem",
+                borderRadius: "6px",
+                border: `1px solid ${(config.webSearchProvider ?? "brave") === p.id ? "var(--primary)" : "var(--border)"}`,
+                background: (config.webSearchProvider ?? "brave") === p.id ? "color-mix(in srgb, var(--primary) 12%, transparent)" : "transparent",
+                color: (config.webSearchProvider ?? "brave") === p.id ? "var(--primary)" : "var(--muted-foreground)",
+                fontSize: "0.8rem",
+                cursor: "pointer",
+                fontWeight: (config.webSearchProvider ?? "brave") === p.id ? 600 : 400,
+                transition: "all 120ms",
+              }}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+
+        {/* API key field */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>
+              {(config.webSearchProvider ?? "brave") === "brave" ? "Brave" : "Tavily"} API key
+            </label>
+            {config.webSearchApiKey && !("webSearchApiKey" in editing) && (
+              <span style={{
+                fontSize: "0.65rem", fontFamily: "monospace",
+                padding: "0.1rem 0.4rem", borderRadius: "4px",
+                background: "color-mix(in srgb, var(--primary) 10%, transparent)",
+                color: "var(--primary)",
+              }}>configured</span>
+            )}
+          </div>
+          {"webSearchApiKey" in editing ? (
+            <div style={{ display: "flex", gap: "0.375rem" }}>
+              <input
+                type="text"
+                value={editing.webSearchApiKey ?? ""}
+                onChange={(e) => setEditing((prev) => ({ ...prev, webSearchApiKey: e.target.value }))}
+                placeholder={(config.webSearchProvider ?? "brave") === "brave" ? "BSA…" : "tvly-…"}
+                autoFocus
+                style={{ ...fieldStyle, flex: 1 }}
+                onFocus={(e) => { e.target.style.borderColor = "var(--primary)"; }}
+                onBlur={(e) => { e.target.style.borderColor = "var(--border)"; }}
+              />
+              <button
+                type="button"
+                onClick={() => setEditing((prev) => { const n = { ...prev }; delete n.webSearchApiKey; return n; })}
+                style={{ padding: "0.5rem 0.625rem", borderRadius: "7px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: "pointer" }}
+              >
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setEditing((prev) => ({ ...prev, webSearchApiKey: "" }))}
+              style={{ ...fieldStyle, textAlign: "left", cursor: "pointer", color: "var(--muted-foreground)", opacity: config.webSearchApiKey ? 1 : 0.6 }}
+            >
+              {config.webSearchApiKey ? config.webSearchApiKey : `Click to set API key…`}
+            </button>
+          )}
+        </div>
       </div>
 
       {error && (

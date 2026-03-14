@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Inbox, Check, X, Pencil, Volume2 } from "lucide-react";
+import { Inbox, Check, X, Pencil, Volume2, StopCircle, SlidersHorizontal } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { TabTitle } from "@/lib/tabs-context";
 
 interface QueueItem {
   id: string;
@@ -40,13 +42,39 @@ function relativeTime(iso: string): string {
   return `${days}d ago`;
 }
 
+const VALID_TABS: TabId[] = ["ready", "in_review", "approved", "rejected"];
+const STORAGE_KEY = "cms:curation-tab";
+
+function getSavedTab(): TabId {
+  try {
+    const v = localStorage.getItem(STORAGE_KEY) as TabId | null;
+    return v && VALID_TABS.includes(v) ? v : "ready";
+  } catch { return "ready"; }
+}
+
 export default function CurationPage() {
-  const [tab, setTab] = useState<TabId>("ready");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [tab, setTab] = useState<TabId>(() => {
+    // URL param wins (e.g. coming back from editor), otherwise localStorage
+    const urlTab = searchParams.get("tab") as TabId | null;
+    if (urlTab && VALID_TABS.includes(urlTab)) return urlTab;
+    return getSavedTab();
+  });
+
+  function switchTab(t: TabId) {
+    setTab(t);
+    try { localStorage.setItem(STORAGE_KEY, t); } catch {}
+    router.replace(`/admin/curation?tab=${t}`, { scroll: false });
+  }
   const [items, setItems] = useState<QueueItem[]>([]);
   const [counts, setCounts] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
   const [rejectingId, setRejectingId] = useState<string | null>(null);
   const [rejectFeedback, setRejectFeedback] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState<Record<string, unknown>>({});
+  const [schemas, setSchemas] = useState<Record<string, { name: string; type: string; options?: { label: string; value: string }[] }[]>>({});
 
   const loadItems = useCallback(async () => {
     const res = await fetch(`/api/cms/curation?status=${tab}`);
@@ -74,6 +102,18 @@ export default function CurationPage() {
     loadCounts();
   }
 
+  async function handleEditFirst(item: QueueItem) {
+    // Create the document as a draft so the editor can open it
+    const res = await fetch(`/api/cms/curation/${item.id}/approve`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ asDraft: true }),
+    });
+    if (res.ok) {
+      router.push(`/admin/${item.collection}/${item.slug}?from=curation`);
+    }
+  }
+
   async function handleReject(id: string) {
     if (!rejectFeedback.trim()) return;
     await fetch(`/api/cms/curation/${id}/reject`, {
@@ -87,18 +127,71 @@ export default function CurationPage() {
     loadCounts();
   }
 
+  const [speakingId, setSpeakingId] = useState<string | null>(null);
+
   function handleSpeak(item: QueueItem) {
+    if (speakingId) {
+      window.speechSynthesis.cancel();
+      setSpeakingId(null);
+      if (speakingId === item.id) return; // toggle off
+    }
     const text = `${item.title}. ${
       typeof item.contentData.content === "string"
         ? item.contentData.content.slice(0, 300)
         : ""
     }`;
     const utterance = new SpeechSynthesisUtterance(text);
+    utterance.onend = () => setSpeakingId(null);
+    utterance.onerror = () => setSpeakingId(null);
     window.speechSynthesis.speak(utterance);
+    setSpeakingId(item.id);
+  }
+
+  function handleStop() {
+    window.speechSynthesis.cancel();
+    setSpeakingId(null);
+  }
+
+  async function loadSchema(collection: string) {
+    if (schemas[collection]) return;
+    const res = await fetch(`/api/cms/collections/${collection}/schema`);
+    if (res.ok) {
+      const data = await res.json();
+      setSchemas((prev) => ({ ...prev, [collection]: data.fields }));
+    }
+  }
+
+  async function handleEditFields(item: QueueItem) {
+    if (editingId === item.id) {
+      setEditingId(null);
+      return;
+    }
+    await loadSchema(item.collection);
+    setEditDraft({ ...item.contentData });
+    setEditingId(item.id);
+  }
+
+  async function handleSaveFields(item: QueueItem) {
+    const res = await fetch(`/api/cms/curation/${item.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "update-fields", fields: editDraft }),
+    });
+    if (res.ok) {
+      setItems((prev) =>
+        prev.map((i) =>
+          i.id === item.id
+            ? { ...i, contentData: editDraft, title: (editDraft.title as string) ?? i.title }
+            : i
+        )
+      );
+      setEditingId(null);
+    }
   }
 
   return (
     <div className="p-8 max-w-5xl">
+      <TabTitle value="Curation Queue" />
       <div className="mb-8">
         <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">
           AI
@@ -112,7 +205,7 @@ export default function CurationPage() {
           <button
             key={t.id}
             type="button"
-            onClick={() => setTab(t.id)}
+            onClick={() => switchTab(t.id)}
             className={`px-4 py-2 text-sm font-medium -mb-px transition-colors ${
               tab === t.id
                 ? "border-b-2 border-primary text-primary"
@@ -146,10 +239,14 @@ export default function CurationPage() {
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="min-w-0 flex-1">
-                  <p className="font-semibold text-foreground truncate">
-                    {item.title}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 shrink-0 animate-pulse" />
+                    <p className="font-semibold text-foreground truncate">
+                      {item.title}
+                    </p>
+                  </div>
                   <div className="flex items-center gap-2 mt-1 flex-wrap">
+                    <Badge variant="outline" className="bg-yellow-500/10 text-yellow-400 border-yellow-500/20 text-xs">draft</Badge>
                     <span className="text-xs text-muted-foreground">
                       {item.agentName}
                     </span>
@@ -173,14 +270,23 @@ export default function CurationPage() {
                 <div className="flex items-center gap-1.5 shrink-0">
                   <button
                     type="button"
-                    title="Read aloud"
-                    onClick={() => handleSpeak(item)}
-                    className="p-1.5 rounded-md hover:bg-secondary transition-colors text-muted-foreground"
+                    title={speakingId === item.id ? "Stop" : "Read aloud"}
+                    onClick={() => speakingId === item.id ? handleStop() : handleSpeak(item)}
+                    className={`p-1.5 rounded-md hover:bg-secondary transition-colors ${speakingId === item.id ? "text-primary animate-pulse" : "text-muted-foreground"}`}
                   >
-                    <Volume2 className="w-4 h-4" />
+                    {speakingId === item.id ? <StopCircle className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
                   </button>
-                  {tab === "ready" && (
+                  {(tab === "ready" || tab === "in_review") && (
                     <>
+                      <button
+                        type="button"
+                        onClick={() => handleEditFields(item)}
+                        title="Edit fields before approving"
+                        className={`flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium border transition-colors ${editingId === item.id ? "border-primary text-primary bg-primary/10" : "border-border hover:bg-secondary"}`}
+                      >
+                        <SlidersHorizontal className="w-3.5 h-3.5" />
+                        Fields
+                      </button>
                       <button
                         type="button"
                         title="Approve & Publish"
@@ -190,13 +296,26 @@ export default function CurationPage() {
                         <Check className="w-3.5 h-3.5" />
                         Approve
                       </button>
-                      <Link
-                        href={`/admin/${item.collection}/${item.slug}`}
-                        className="flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium border border-border hover:bg-secondary transition-colors"
-                      >
-                        <Pencil className="w-3.5 h-3.5" />
-                        Edit
-                      </Link>
+                      {tab === "ready" && (
+                        <button
+                          type="button"
+                          onClick={() => handleEditFirst(item)}
+                          className="flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium border border-border hover:bg-secondary transition-colors"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                          Edit
+                        </button>
+                      )}
+                      {tab === "in_review" && (
+                        <button
+                          type="button"
+                          onClick={() => handleEditFirst(item)}
+                          className="flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium border border-border hover:bg-secondary transition-colors"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                          Open in editor
+                        </button>
+                      )}
                       <button
                         type="button"
                         title="Reject"
@@ -236,6 +355,79 @@ export default function CurationPage() {
                         setRejectingId(null);
                         setRejectFeedback("");
                       }}
+                      className="px-3 py-1.5 rounded-md text-xs border border-border hover:bg-secondary"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Inline field editor */}
+              {editingId === item.id && (
+                <div className="mt-3 p-3 rounded-lg border border-primary/20 bg-primary/5 space-y-2">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Edit fields</p>
+                  {(schemas[item.collection] ?? [])
+                    .filter((f) => !["content", "body", "richtext"].includes(f.type) && f.name !== "relatedPosts")
+                    .map((field) => (
+                      <div key={field.name} className="flex items-center gap-2">
+                        <label style={{ fontSize: "0.72rem", fontWeight: 600, color: "var(--muted-foreground)", width: "7rem", flexShrink: 0, fontFamily: "monospace" }}>
+                          {field.name}
+                        </label>
+                        {field.type === "select" && field.options ? (
+                          <select
+                            value={String(editDraft[field.name] ?? "")}
+                            onChange={(e) => setEditDraft((prev) => ({ ...prev, [field.name]: e.target.value }))}
+                            style={{ flex: 1, padding: "0.25rem 0.5rem", borderRadius: "5px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.8rem" }}
+                          >
+                            <option value="">— none —</option>
+                            {field.options.map((o) => (
+                              <option key={o.value} value={o.value}>{o.label}</option>
+                            ))}
+                          </select>
+                        ) : field.type === "tags" ? (
+                          <input
+                            type="text"
+                            value={((editDraft[field.name] as string[]) ?? []).join(", ")}
+                            onChange={(e) =>
+                              setEditDraft((prev) => ({
+                                ...prev,
+                                [field.name]: e.target.value
+                                  .split(",")
+                                  .map((t) => t.trim())
+                                  .filter(Boolean),
+                              }))
+                            }
+                            placeholder="tag1, tag2, tag3"
+                            style={{ flex: 1, padding: "0.25rem 0.5rem", borderRadius: "5px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.8rem" }}
+                          />
+                        ) : field.type === "boolean" ? (
+                          <input
+                            type="checkbox"
+                            checked={Boolean(editDraft[field.name])}
+                            onChange={(e) => setEditDraft((prev) => ({ ...prev, [field.name]: e.target.checked }))}
+                          />
+                        ) : (
+                          <input
+                            type={field.type === "date" ? "date" : field.type === "number" ? "number" : "text"}
+                            value={String(editDraft[field.name] ?? "")}
+                            onChange={(e) => setEditDraft((prev) => ({ ...prev, [field.name]: e.target.value }))}
+                            style={{ flex: 1, padding: "0.25rem 0.5rem", borderRadius: "5px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.8rem" }}
+                          />
+                        )}
+                      </div>
+                    ))}
+                  <div className="flex gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => handleSaveFields(item)}
+                      className="px-3 py-1.5 rounded-md text-xs bg-primary text-primary-foreground hover:opacity-90"
+                    >
+                      Save fields
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEditingId(null)}
                       className="px-3 py-1.5 rounded-md text-xs border border-border hover:bg-secondary"
                     >
                       Cancel
