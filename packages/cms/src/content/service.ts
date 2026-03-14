@@ -1,4 +1,4 @@
-import type { StorageAdapter, Document, DocumentInput, QueryOptions, QueryResult, WriteContext } from '../storage/types.js';
+import type { StorageAdapter, Document, DocumentInput, QueryOptions, QueryResult, WriteContext, SearchOptions, SearchResult } from '../storage/types.js';
 import type { ContentHooks } from './hooks.js';
 import type { CmsConfig } from '../schema/types.js';
 import { computeFieldMetaChanges, buildInitialFieldMeta } from './field-meta.js';
@@ -180,6 +180,74 @@ export class ContentService {
       }
     }
     return published;
+  }
+
+  /**
+   * Full-text search across collections. Searches title, slug, excerpt, description and content.
+   * Results are scored: exact title > slug match > prefix > excerpt > content body.
+   */
+  async search(query: string, options?: SearchOptions): Promise<SearchResult[]> {
+    const q = query.trim().toLowerCase();
+    if (!q) return [];
+
+    const limit = options?.limit ?? 20;
+    const targets = options?.collections
+      ? this.config.collections.filter(c => options.collections!.includes(c.name))
+      : this.config.collections.filter(c => c.name !== 'global');
+
+    const results: SearchResult[] = [];
+
+    for (const col of targets) {
+      const queryOpts: QueryOptions = {};
+      if (options?.status) queryOpts.status = options.status;
+      const { documents } = await this.storage
+        .findMany(col.name, queryOpts)
+        .catch(() => ({ documents: [] as Document[] }));
+
+      for (const doc of documents) {
+        const title = String(doc.data['title'] ?? doc.data['name'] ?? doc.data['label'] ?? doc.slug).toLowerCase();
+        const slug = doc.slug.toLowerCase();
+        const excerpt = String(doc.data['excerpt'] ?? doc.data['description'] ?? '').toLowerCase();
+        const rawContent = String(doc.data['content'] ?? '');
+        const content = rawContent.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').toLowerCase();
+
+        let score = 0;
+        if (title === q) score = 100;
+        else if (slug === q) score = 80;
+        else if (title.startsWith(q)) score = 50;
+        else if (slug.startsWith(q)) score = 40;
+        else if (title.includes(q)) score = 30;
+        else if (excerpt.includes(q)) score = 20;
+        else if (content.includes(q)) score = 10;
+
+        if (score === 0) continue;
+
+        const urlPrefix = (col as { urlPrefix?: string }).urlPrefix ?? '';
+        const url = urlPrefix ? `${urlPrefix}/${doc.slug}` : `/${doc.slug}`;
+
+        // Build excerpt: prefer excerpt field, fallback to stripped content
+        const excerptText = String(doc.data['excerpt'] ?? doc.data['description'] ?? '');
+        const snippetSource = excerptText || rawContent.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+        const snippetMax = 160;
+        const snippet = snippetSource.length > snippetMax
+          ? snippetSource.slice(0, snippetMax) + '…'
+          : snippetSource;
+
+        results.push({
+          collection: col.name,
+          collectionLabel: col.label ?? col.name,
+          slug: doc.slug,
+          title: String(doc.data['title'] ?? doc.data['name'] ?? doc.data['label'] ?? doc.slug),
+          excerpt: snippet,
+          url,
+          status: doc.status,
+          score,
+        });
+      }
+    }
+
+    results.sort((a, b) => b.score - a.score || a.title.localeCompare(b.title));
+    return results.slice(0, limit);
   }
 
   async delete(collection: string, id: string, context: WriteContext = DEFAULT_CONTEXT): Promise<void> {

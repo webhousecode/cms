@@ -384,7 +384,7 @@ Settings (i bunden, ikke i dropdown)
 
 ## DEL 6: IMPLEMENTERINGSPLAN — FASEOPDELT
 
-### Phase A+B: Orchestrator Foundation + UI (parallel, 3-4 sessions)
+### Phase A+B: Orchestrator Foundation + UI ✅ DONE (2026-03-13)
 
 Køres som **to parallelle workstreams** (Agent Teams):
 
@@ -393,91 +393,55 @@ Køres som **to parallelle workstreams** (Agent Teams):
 **Mål:** Grundmotor der kan køre agenter autonomt.
 
 **Session A1:** Agent Definition + Orchestrator Engine
-1. **Agent Definition Model** — JSON-baseret agent-konfiguration i `_data/agents/`
-   - Standard `AgentConfig` interface med: id, name, role, systemPrompt, behavior (sliders), tools, autonomy, schedule, stats
-   - CRUD operationer: create, read, update, delete agent configs
-   - 4 default agenter pre-installed: Content Writer, SEO Optimizer, Translator, Content Refresher
-2. **Orchestrator Engine** — `packages/cms-ai/src/orchestrator/`
-   - `OrchestratorInterface` — abstraktion der tillader Next.js cron nu, worker senere
-   - `engine.ts` — tager agent config + global command params → kører agent → returnerer result
-   - `scheduler.ts` — timer-baseret (bruger instrumentation.ts pattern), checker schedule per agent
-   - `runner.ts` — wrapper der: læser agent config, bygger system prompt med global params + brand voice + feedback examples, kalder provider, formatter output
+- [x] **Agent Definition Model** — JSON-baseret agent-konfiguration i `_data/agents/`
+  - [x] Standard `AgentConfig` interface med: id, name, role, systemPrompt, behavior (sliders), tools, autonomy, schedule, stats
+  - [x] CRUD operationer: create, read, update, delete agent configs
+  - [x] 4 default agenter pre-installed: Content Writer, SEO Optimizer, Translator, Content Refresher
+- [x] **Orchestrator Engine** — `packages/cms-ai/src/orchestrator/`
+  - [x] `engine.ts` — tager agent config + global command params → kører agent → returnerer result
+  - [x] `scheduler.ts` — timer-baseret, checker schedule per agent
+  - [x] `runner.ts` — bygger system prompt med global params + brand voice + feedback examples, kalder provider
 
 **Session A2:** Curation Queue + Budget
-3. **Curation Queue Backend** — `packages/cms-ai/src/orchestrator/queue.ts`
-   - CRUD for QueueItem (ready, in_review, approved, rejected, published)
-   - Approve → creates real CMS document via `cms.content.create()`
-   - Reject → stores feedback for agent learning
-   - Multi-draft support: `alternatives[]` array med forslag fra forskellige modeller
-4. **Token Budget Tracking** — `packages/cms-ai/src/budget/tracker.ts`
-   - Akkumulér cost per kald i `_data/ai-budget.json`
-   - Månedligt budget med alerts (warn at 80%, stop at 100%)
-   - Per-agent cost breakdown
-
-**Filer:**
-- `packages/cms-ai/src/orchestrator/engine.ts` (ny)
-- `packages/cms-ai/src/orchestrator/scheduler.ts` (ny)
-- `packages/cms-ai/src/orchestrator/runner.ts` (ny)
-- `packages/cms-ai/src/orchestrator/queue.ts` (ny)
-- `packages/cms-ai/src/orchestrator/types.ts` (ny — AgentConfig, QueueItem, CockpitParams interfaces)
-- `packages/cms-ai/src/budget/tracker.ts` (ny)
-- `packages/cms-ai/src/agents/types.ts` (udvid med standard AgentInterface)
-- `packages/cms-ai/src/agents/content-refresher.ts` (ny — ny agent)
+- [x] **Curation Queue Backend** — `packages/cms-ai/src/orchestrator/queue.ts`
+  - [x] CRUD for QueueItem (ready, in_review, approved, rejected, published)
+  - [x] Approve → creates real CMS document via `cms.content.create()`
+  - [x] Reject → stores feedback for agent learning
+  - [x] Multi-draft support: `alternatives[]` array
+- [x] **Token Budget Tracking** — `packages/cms-ai/src/budget/tracker.ts`
+  - [x] Akkumulér cost per kald i `_data/ai-budget.json`
+  - [x] Månedligt budget med alerts (warn at 80%, stop at 100%)
+  - [x] Per-agent cost breakdown
 
 #### Workstream 2: Admin UI
 
 **Mål:** Sidebar redesign + nye views for agent management og curation.
 
-**Session B1:** Sidebar + Agents UI
-1. **Sidebar navigation redesign**
-   - Collapsible "Indhold" sektion med collections
-   - AI Cockpit, AI Agenter, Curation Queue som top-level items
-   - Curation Queue badge med live counter
-   - AI Kapacitet bar i bunden
-   - Performance item
-2. **AI Agenter view** (`/admin/agents`)
-   - Liste med agent-kort: navn, rolle, effektivitet %, status (active/paused)
-   - Klik → agent detail/edit
-3. **Opret Ny Agent flow** (`/admin/agents/new`)
-   - Agent Profil (navn, rolle dropdown)
-   - System Prompt textarea + "Auto-generer" knap
-   - Adfærd-skydere (kreativitet, formalitet, verbosity)
-   - Værktøjer toggles
-   - Autonomi-valg (draft/full)
-   - Deploy Agent knap
+- [x] **Sidebar navigation redesign** — Collapsible "Indhold", AI Cockpit, AI Agenter, Curation Queue, badge-counter, AI Kapacitet bar
+- [x] **AI Agenter view** (`/admin/agents`) — Liste med agent-kort, effektivitet %, status
+- [x] **Opret Ny Agent flow** (`/admin/agents/new`) — Profil, system prompt, adfærd-skydere, autonomi, deploy
+- [x] **Curation Queue view** (`/admin/curation`) — Filter, preview, Godkend/Rediger/Afvis, TTS-knap
+- [x] **AI Cockpit Center** (`/admin/command`) — Globale parameter-skydere, model selector, budget, status monitor
 
-**Session B2:** Curation Queue + AI Cockpit UI
-4. **Curation Queue view** (`/admin/curation`)
-   - Liste med filter (Ready, In Review, Approved, Rejected)
-   - Klik item → preview med alle felter
-   - Action buttons: Godkend & Publicer, Rediger først, Afvis (med feedback textarea)
-   - Content Speaker knap (Web Speech API TTS)
-   - Multi-draft comparison (side-by-side) når tilgængelig
-5. **AI Cockpit Center** (`/admin/command`)
-   - Globale parameter-skydere (temperature, prompt depth, SEO weight, speed/quality)
-   - Model Engine selector
-   - AI Kapacitet / budget overview
-   - Status Monitor (kørende agenter, queue depth, health)
+---
 
-**Filer:**
-- `packages/cms-admin/src/components/sidebar.tsx` (redesign)
-- `packages/cms-admin/src/app/admin/agents/page.tsx` (ny)
-- `packages/cms-admin/src/app/admin/agents/new/page.tsx` (ny)
-- `packages/cms-admin/src/app/admin/agents/[id]/page.tsx` (ny — edit)
-- `packages/cms-admin/src/app/admin/curation/page.tsx` (ny)
-- `packages/cms-admin/src/app/admin/command/page.tsx` (ny)
-- `packages/cms-admin/src/app/api/cms/agents/route.ts` (ny — CRUD)
-- `packages/cms-admin/src/app/api/cms/curation/route.ts` (ny — CRUD + approve/reject)
-- `packages/cms-admin/src/app/api/cms/command/route.ts` (ny — global params)
+### Phase C: MCP + Tool-Use + Multi-Model + Scheduling ✅ DONE (2026-03-14)
 
-### Phase C: MCP Integration + Multi-model (1-2 sessions)
+**Mål:** Agenter kan bruge eksterne tools. CMS eksponeret som MCP server. Fuld autonom scheduling.
 
-**Mål:** Agenter kan bruge eksterne tools og generere multi-forslag.
-
-1. **MCP Client integration** i orchestrator
-2. **Tool-use i agent execution** — Anthropic tool_use, OpenAI function calling
-3. **Multi-draft generation** — Send til 2-3 modeller, præsentér i queue
-4. **MCP Settings UI** — Tilslut/fjern MCP servers
+- [x] **Admin MCP Server** (`/api/mcp/admin`) — SSE transport, Bearer auth, 15 tools
+- [x] **Public MCP Server** (`/api/mcp`) — Read-only, rate-limited
+- [x] **MCP Settings UI** (`/admin/settings?tab=mcp`) — Endpoints, API key management med scopes
+- [x] **Project-level MCP config** (`.mcp.json`) — Claude Code integration fungerer
+- [x] **Tool-use i agent execution** — Anthropic tool_use loop i runner.ts (max 10 iterationer, kumulativ cost tracking)
+- [x] **Built-in CMS tools** — `cms_search`, `cms_get_document`, `cms_list_collection`, `cms_list_collections` (agents kan søge/læse eksisterende content)
+- [x] **Web search tool** — Brave Search API integration (`BRAVE_API_KEY` env)
+- [x] **Tool registry** — `src/lib/tools/` med pluggable tool system (CMS tools + web search + fremtidige MCP tools)
+- [x] **Multi-draft generation** — Når `multiModelEnabled=true` i cockpit, sender til alle `compareModels` parallelt, gemmer som `alternatives[]` i queue
+- [x] **Pick alternative** — API endpoint + UI for at vælge bedste version fra multi-model output
+- [x] **Autonom scheduling end-to-end** — `src/lib/scheduler.ts` med deduplication (state file), budget gate, smart prompt generation, per-agent last-run tracking
+- [x] **Budget tracking** — `addCost()` i cockpit, månedlig auto-reset, alle LLM-kald tracked
+- [x] **Content Context (RAG-lite)** — Alle AI-prompter injiceres med kompakt oversigt over alt published content (titler, URLs, excerpts, tags)
 
 ### Phase D: Analytics + Feedback Loop (1-2 sessions)
 

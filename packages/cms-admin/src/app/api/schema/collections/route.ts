@@ -6,6 +6,14 @@ import type { CollectionDef } from "@/lib/config-writer";
 import { resolve } from "node:path";
 import { readSiteConfig } from "@/lib/site-config";
 
+export async function GET() {
+  const config = await getAdminConfig();
+  const collections = config.collections
+    .filter((c) => c.name !== "global")
+    .map((c) => ({ name: c.name, label: c.label ?? c.name }));
+  return NextResponse.json({ collections });
+}
+
 export async function POST(req: NextRequest) {
   const { schemaEditEnabled } = await readSiteConfig();
   if (!schemaEditEnabled) {

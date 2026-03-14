@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { getApiKey } from "@/lib/ai-config";
+import { buildContentContext } from "@/lib/content-context";
 
 export async function POST(request: NextRequest) {
   const apiKey = await getApiKey("anthropic");
@@ -24,15 +25,20 @@ export async function POST(request: NextRequest) {
       ?.map((f) => `- ${f.label ?? f.name} (${f.type})`)
       .join("\n");
 
-    const systemPrompt = [
-      "You are a professional content writer and editor working inside a CMS.",
-      collectionName ? `Collection: ${collectionName}` : null,
-      fieldDescriptions ? `Available fields:\n${fieldDescriptions}` : null,
-      "When asked to generate or rewrite content, produce clean, publication-ready text.",
-      "If asked to generate content for a specific field, clearly label it.",
-    ]
-      .filter(Boolean)
-      .join("\n");
+    const contentContext = await buildContentContext().catch(() => "");
+
+    const systemPrompt = `You are a content writer inside a CMS. ${collectionName ? `Collection: ${collectionName}.` : ""}
+${fieldDescriptions ? `Fields:\n${fieldDescriptions}` : ""}
+
+ABSOLUTE RULES — violating any of these makes your output useless:
+1. Output ONLY the final content. Nothing else. No preamble, no explanation, no commentary, no suggestions.
+2. NEVER output "---", "**Field:**", "# Heading", or any metadata/labels/dividers.
+3. NEVER add notes like "Here is...", "The content below...", "Feel free to adjust...".
+4. Start your response with the FIRST WORD of the actual content.
+5. End your response with the LAST WORD of the actual content.
+6. Use Markdown for formatting. Use "- " for bullet lists. Never use ">" for lists.
+
+${contentContext}`;
 
     const contextMessage = docData
       ? `Current document content:\n${JSON.stringify(docData, null, 2)}\n\n---\n\n${message}`

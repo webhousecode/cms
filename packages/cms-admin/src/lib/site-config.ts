@@ -5,6 +5,7 @@ export interface SiteConfig {
   previewSiteUrl: string;
   previewInIframe: boolean;
   trashRetentionDays: number;
+  curationRetentionDays: number;
   schemaEditEnabled: boolean;
   devInspector: boolean;
   showCloseAllTabs: boolean;
@@ -22,6 +23,7 @@ function defaults(): SiteConfig {
     previewSiteUrl: process.env.NEXT_PUBLIC_PREVIEW_SITE_URL ?? "",
     previewInIframe: process.env.NEXT_PUBLIC_PREVIEW_IN_IFRAME === "true",
     trashRetentionDays: parseInt(process.env.TRASH_RETENTION_DAYS ?? "30", 10),
+    curationRetentionDays: 30,
     schemaEditEnabled: process.env.SCHEMA_EDIT_ENABLED === "true",
     devInspector: process.env.DEV_INSPECTOR === "true",
     showCloseAllTabs: false,
