@@ -174,13 +174,17 @@ export default defineConfig({
   },
 });
 `,
-      ".gitignore": `# Dependencies
-node_modules/
+      ".gitignore": `# CMS per-site data (AI keys, user data — never committed)
+_data/
+.mcp.json
 
-# Environment
+# dotenv environment variable files
 .env
-.env.local
-.env.*.local
+.env.*
+!.env.example
+
+# Dependency directories
+node_modules/
 
 # Build output
 .next/
@@ -206,7 +210,7 @@ yarn-error.log*
       ".env.example": `# ${siteName}
 # Copy to .env.local and fill in values
 
-# CMS Admin URL (for preview links)
+# Site URL (used for preview links and OG tags)
 # NEXT_PUBLIC_SITE_URL=https://example.com
 
 # AI keys (optional — can also be set via CMS Admin → Settings → AI)
@@ -217,26 +221,77 @@ yarn-error.log*
       "content/.gitkeep": "",
       "README.md": `# ${siteName}
 
-Content-managed site powered by [@webhouse/cms](https://github.com/webhousecode/cms).
+Content-managed site powered by [**@webhouse/cms**](https://github.com/webhousecode/cms) — the AI-native, developer-first CMS engine.
 
 ## Getting started
 
-1. Open CMS Admin and select this site
-2. Add collections and content via the admin UI
-3. Content is stored as JSON in the \`content/\` directory
+### 1. Install dependencies
 
-## Structure
-
-\`\`\`
-cms.config.ts    # CMS schema definition
-content/         # Content JSON files (managed by CMS)
-.env.example     # Environment variable template
+\`\`\`bash
+npm install @webhouse/cms
 \`\`\`
 
-## Links
+Or scaffold a full project from scratch:
 
-- [CMS Documentation](https://github.com/webhousecode/cms)
-- [CMS Admin](http://localhost:3010/admin)
+\`\`\`bash
+npm create @webhouse/cms my-site
+\`\`\`
+
+### 2. Define your schema
+
+Edit \`cms.config.ts\` to add collections, fields, blocks, and locales:
+
+\`\`\`typescript
+import { defineConfig, defineCollection } from '@webhouse/cms';
+
+export default defineConfig({
+  collections: [
+    defineCollection({
+      name: 'pages',
+      label: 'Pages',
+      fields: [
+        { name: 'title', type: 'text', required: true },
+        { name: 'content', type: 'richtext' },
+      ],
+    }),
+  ],
+});
+\`\`\`
+
+### 3. Manage content
+
+Open **[webhouse.app](https://webhouse.app)** (CMS Admin) and select this site — or run the admin locally:
+
+\`\`\`bash
+npx @webhouse/cms-cli dev
+\`\`\`
+
+### 4. Use the CLI
+
+\`\`\`bash
+npx @webhouse/cms-cli build       # Build static output
+npx @webhouse/cms-cli ai run      # Run AI agents
+npx @webhouse/cms-cli ai translate # Translate content
+\`\`\`
+
+## Project structure
+
+\`\`\`
+cms.config.ts      # Collection schemas and CMS configuration
+content/           # Content JSON files (managed by CMS admin)
+_data/             # Per-site data: AI keys, user prefs (git-ignored)
+.env.example       # Environment variable template
+\`\`\`
+
+## Resources
+
+- **CMS Admin** — [webhouse.app](https://webhouse.app) or \`localhost:3010/admin\`
+- **Documentation** — [github.com/webhousecode/cms](https://github.com/webhousecode/cms)
+- **npm** — [@webhouse/cms](https://www.npmjs.com/package/@webhouse/cms) · [@webhouse/cms-cli](https://www.npmjs.com/package/@webhouse/cms-cli)
+
+---
+
+Built with [@webhouse/cms](https://github.com/webhousecode/cms) — AI-native content management for developers.
 `,
     };
 
