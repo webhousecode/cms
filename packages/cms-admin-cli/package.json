@@ -1,6 +1,6 @@
 {
   "name": "@webhouse/cms-admin-cli",
-  "version": "0.2.4",
+  "version": "0.2.5",
   "description": "Run the CMS admin UI locally — npx @webhouse/cms-admin-cli",
   "type": "module",
   "license": "MIT",
@@ -19,7 +19,12 @@
     "url": "git+https://github.com/webhousecode/cms.git",
     "directory": "packages/cms-admin-cli"
   },
-  "keywords": ["cms", "admin", "webhouse", "nextjs"],
+  "keywords": [
+    "cms",
+    "admin",
+    "webhouse",
+    "nextjs"
+  ],
   "devDependencies": {
     "tsup": "^8.4.0",
     "@types/node": "^22.10.2"
