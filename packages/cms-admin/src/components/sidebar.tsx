@@ -15,6 +15,7 @@ import {
   Link2,
   Trash2,
   BarChart2,
+  Settings2,
   ChevronDown,
   ChevronRight,
 } from "lucide-react";
@@ -295,9 +296,19 @@ export function AppSidebar({ collections }: Props) {
       </SidebarContent>
 
       <SidebarFooter style={{ paddingBottom: "3rem" }}>
-        {/* Trash */}
+        {/* Site Settings + Trash */}
         <SidebarGroup style={{ padding: "0.25rem 0.5rem 0" }}>
           <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                isActive={pathname.startsWith("/admin/settings")}
+                tooltip="Site Settings"
+                render={<Link href="/admin/settings" />}
+              >
+                <Settings2 className="!w-5 !h-5" />
+                <span>Site Settings</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton
                 isActive={pathname === "/admin/trash"}

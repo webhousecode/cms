@@ -37,12 +37,12 @@ export default async function SettingsPage({
   return (
     <>
       <PageHeader>
-        <span className="text-sm text-muted-foreground font-mono">Settings</span>
+        <span className="text-sm text-muted-foreground font-mono">Site Settings</span>
       </PageHeader>
       <div className="p-8 max-w-4xl">
         <div className="mb-8">
-          <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">Settings</p>
-          <h1 className="text-2xl font-bold text-foreground">Settings</h1>
+          <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">Site Settings</p>
+          <h1 className="text-2xl font-bold text-foreground">Site Settings</h1>
         </div>
 
         {/* Tab strip */}

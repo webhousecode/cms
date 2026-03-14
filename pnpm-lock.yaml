@@ -38,6 +38,15 @@ importers:
         specifier: workspace:*
         version: link:../../packages/cms-cli
 
+  examples/landing:
+    dependencies:
+      '@webhouse/cms':
+        specifier: workspace:*
+        version: link:../../packages/cms
+      '@webhouse/cms-cli':
+        specifier: workspace:*
+        version: link:../../packages/cms-cli
+
   packages/cms:
     dependencies:
       '@hono/node-server':

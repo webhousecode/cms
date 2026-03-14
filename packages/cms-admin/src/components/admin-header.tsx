@@ -2,7 +2,7 @@
 
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useTabs } from "@/lib/tabs-context";
-import { SiteSwitcher } from "@/components/site-switcher";
+import { OrgSwitcher } from "@/components/site-switcher";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -88,13 +88,9 @@ function UserNav({ user }: { user: SessionUser | null }) {
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem onClick={() => router.push("/admin/settings")}>
+          <DropdownMenuItem onClick={() => router.push("/admin/account")}>
             <Settings className="mr-2 h-4 w-4" />
-            Settings
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => router.push("/admin/settings/brand-voice")}>
-            <Fingerprint className="mr-2 h-4 w-4" />
-            Brand Voice
+            Account Preferences
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
@@ -149,7 +145,7 @@ export function AdminHeader() {
         )}
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0 1rem" }}>
-        <SiteSwitcher />
+        <OrgSwitcher />
         <UserNav user={user} />
       </div>
     </header>

@@ -14,21 +14,51 @@
         "secondaryCta": "Log In →",
         "secondaryCtaUrl": "/login",
         "terminal": [
-          { "type": "cmd", "text": "npx @webhouse/cms init --framework next" },
-          { "type": "success", "text": "Created cms.config.ts" },
-          { "type": "success", "text": "Schema definitions ready" },
-          { "type": "success", "text": "AI agents configured" },
-          { "type": "success", "text": "Admin dashboard at localhost:3000/admin" },
-          { "type": "cmd", "text": "Ready in 847ms" }
+          {
+            "type": "cmd",
+            "text": "npx @webhouse/cms init --framework next"
+          },
+          {
+            "type": "success",
+            "text": "Created cms.config.ts"
+          },
+          {
+            "type": "success",
+            "text": "Schema definitions ready"
+          },
+          {
+            "type": "success",
+            "text": "AI agents configured"
+          },
+          {
+            "type": "success",
+            "text": "Admin dashboard at localhost:3000/admin"
+          },
+          {
+            "type": "cmd",
+            "text": "Ready in 847ms"
+          }
         ]
       },
       {
         "_block": "stats",
         "items": [
-          { "value": "<3min", "label": "AI scaffold time" },
-          { "value": "<50", "label": "Lines of CMS code needed" },
-          { "value": "95+", "label": "Lighthouse score" },
-          { "value": "0", "label": "Runtime JS in output" }
+          {
+            "value": "<3min",
+            "label": "AI scaffold time"
+          },
+          {
+            "value": "<50",
+            "label": "Lines of CMS code needed"
+          },
+          {
+            "value": "95+",
+            "label": "Lighthouse score"
+          },
+          {
+            "value": "0",
+            "label": "Runtime JS in output"
+          }
         ]
       },
       {
@@ -115,5 +145,7 @@
         "secondaryCtaUrl": "https://github.com/webhousecode/cms"
       }
     ]
-  }
+  },
+  "id": "LybNbCXd_3Xe5wPlpn0sx",
+  "_fieldMeta": {}
 }
