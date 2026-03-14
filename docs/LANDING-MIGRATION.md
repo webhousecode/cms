@@ -37,6 +37,8 @@ proving that @webhouse/cms can manage its own marketing page.
 | 2026-03-14 | Schema designed with 6 block types | hero, stats, features, architecture, mcp, cta |
 | 2026-03-14 | Content seeded from landing.html | home.json with all sections as blocks |
 | 2026-03-14 | Assets copied | eye icon, wordmark, architecture diagram |
+| 2026-03-14 | Can't run two cms-admin instances | Same .next/dev/lock — Next.js limitation |
+| 2026-03-14 | Decision: multi-site admin | One admin manages N sites via site registry + instance pool. See MULTI-SITE.md |
 
 ## Architecture
 
