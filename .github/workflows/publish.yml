@@ -1,0 +1,119 @@
+name: Publish to npm
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version bump (patch, minor, major, or exact like 0.2.0)"
+        required: true
+        default: "patch"
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: npm
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build all packages
+        run: pnpm build
+
+      - name: Run tests
+        run: pnpm test:run
+
+      - name: Bump versions
+        run: |
+          VERSION="${{ github.event.inputs.version }}"
+
+          # If exact version (contains a dot), use it directly
+          if [[ "$VERSION" == *.* ]]; then
+            NEW_VERSION="$VERSION"
+          else
+            # Get current version from core package
+            CURRENT=$(node -p "require('./packages/cms/package.json').version")
+            NEW_VERSION=$(node -e "
+              const [major, minor, patch] = '$CURRENT'.split('.').map(Number);
+              const bump = '$VERSION';
+              if (bump === 'major') console.log(\`\${major+1}.0.0\`);
+              else if (bump === 'minor') console.log(\`\${major}.\${minor+1}.0\`);
+              else console.log(\`\${major}.\${minor}.\${patch+1}\`);
+            ")
+          fi
+
+          echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
+          echo "Bumping all packages to $NEW_VERSION"
+
+          PACKAGES=(cms cms-ai cms-cli cms-mcp-client cms-mcp-server create-cms)
+          for pkg in "${PACKAGES[@]}"; do
+            node -e "
+              const fs = require('fs');
+              const path = './packages/$pkg/package.json';
+              const p = JSON.parse(fs.readFileSync(path, 'utf-8'));
+              p.version = '$NEW_VERSION';
+              // Replace workspace:* with ^version for publish
+              if (p.dependencies) {
+                for (const [k,v] of Object.entries(p.dependencies)) {
+                  if (v === 'workspace:*') p.dependencies[k] = '^$NEW_VERSION';
+                }
+              }
+              fs.writeFileSync(path, JSON.stringify(p, null, 2) + '\n');
+            "
+            echo "  $pkg → $NEW_VERSION"
+          done
+
+      - name: Publish packages
+        env:
+          NODE_AUTH_TOKEN: ""
+          NPM_CONFIG_PROVENANCE: "true"
+        run: |
+          # Publish in dependency order
+          PACKAGES=(cms cms-ai cms-mcp-client cms-mcp-server cms-cli create-cms)
+          for pkg in "${PACKAGES[@]}"; do
+            echo "📦 Publishing @webhouse/$pkg@${{ env.NEW_VERSION }}..."
+            cd packages/$pkg
+            npm publish --access public
+            cd ../..
+            echo "✅ @webhouse/$pkg published"
+          done
+
+      - name: Restore workspace deps and commit version bump
+        run: |
+          PACKAGES=(cms-ai cms-cli cms-mcp-client cms-mcp-server create-cms)
+          for pkg in "${PACKAGES[@]}"; do
+            node -e "
+              const fs = require('fs');
+              const path = './packages/$pkg/package.json';
+              const p = JSON.parse(fs.readFileSync(path, 'utf-8'));
+              if (p.dependencies) {
+                for (const [k,v] of Object.entries(p.dependencies)) {
+                  if (k.startsWith('@webhouse/')) p.dependencies[k] = 'workspace:*';
+                }
+              }
+              fs.writeFileSync(path, JSON.stringify(p, null, 2) + '\n');
+            "
+          done
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add packages/*/package.json
+          git commit -m "chore: release v${{ env.NEW_VERSION }}" || echo "No changes to commit"
+          git tag "v${{ env.NEW_VERSION }}"
+          git push && git push --tags
