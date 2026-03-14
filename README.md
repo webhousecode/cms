@@ -185,7 +185,15 @@ storage: { adapter: 'sqlite', sqlite: { path: './data/cms.db' } }
 
 ---
 
-## CLI commands
+## CLI
+
+Install globally for the short `cms` command:
+
+```bash
+npm install -g @webhouse/cms-cli
+```
+
+Or use `npx` without installing:
 
 ```bash
 npx cms init [name]                          # Scaffold new project
