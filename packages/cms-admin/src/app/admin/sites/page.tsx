@@ -285,9 +285,14 @@ function NewSiteDialog({ orgId, onClose, onCreated }: {
                       <Github style={{ width: 16, height: 16 }} />
                       Connected as <strong>{ghUser}</strong>
                     </span>
-                    <button type="button" onClick={disconnectGitHub} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "0.75rem", textDecoration: "underline" }}>
-                      Disconnect
-                    </button>
+                    <span style={{ display: "flex", gap: "0.75rem" }}>
+                      <button type="button" onClick={connectGitHub} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "0.75rem", textDecoration: "underline" }}>
+                        Re-authorize
+                      </button>
+                      <button type="button" onClick={disconnectGitHub} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "0.75rem", textDecoration: "underline" }}>
+                        Disconnect
+                      </button>
+                    </span>
                   </div>
 
                   {/* Account picker */}
