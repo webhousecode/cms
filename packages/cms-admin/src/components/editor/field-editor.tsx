@@ -1,11 +1,13 @@
 "use client";
 
-import type { FieldConfig } from "@webhouse/cms";
+import type { FieldConfig, BlockConfig } from "@webhouse/cms";
 import { X } from "lucide-react";
 import { RichTextEditor } from "./rich-text-editor";
 import { TagsInput } from "./tags-input";
 import { ImageGalleryEditor } from "./image-gallery-editor";
 import type { GalleryImage } from "./image-gallery-editor";
+import { BlocksEditor } from "./blocks-editor";
+import { StructuredArrayEditor } from "./structured-array-editor";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,6 +19,7 @@ interface Props {
   value: unknown;
   onChange: (value: unknown) => void;
   locked?: boolean;
+  blocksConfig?: BlockConfig[];
 }
 
 function getVideoEmbedSrc(url: string): string | null {
@@ -308,7 +311,7 @@ function textWidth(fieldName: string): string | undefined {
   return undefined;
 }
 
-export function FieldEditor({ field, value, onChange, locked }: Props) {
+export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Props) {
   const strVal = String(value ?? "");
 
   switch (field.type) {
@@ -439,92 +442,102 @@ export function FieldEditor({ field, value, onChange, locked }: Props) {
     }
 
     case "array": {
-      // Simple string array (no sub-fields defined) → line-by-line editor
-      // But if items are objects, fall through to JSON textarea
-      if (!field.fields) {
-        const arrVal = Array.isArray(value) ? (value as unknown[]) : [];
-        const hasObjects = arrVal.some(v => typeof v === "object" && v !== null);
-        if (hasObjects) {
-          // Object array without schema → JSON textarea
-          const jsonStr = typeof value === "string" ? value : JSON.stringify(value ?? [], null, 2);
-          return (
-            <Textarea
-              value={jsonStr}
-              onChange={(e) => {
-                try { onChange(JSON.parse(e.target.value)); } catch { onChange(e.target.value); }
-              }}
-              disabled={locked}
-              rows={10}
-              className="resize-y min-h-[200px] font-mono text-xs"
-              spellCheck={false}
-            />
-          );
-        }
-        const strArr = arrVal.map(v => String(v ?? ""));
+      // Structured array with field definitions → StructuredArrayEditor
+      if (field.fields && field.fields.length > 0) {
+        const arrVal = Array.isArray(value) ? (value as Record<string, unknown>[]) : [];
         return (
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-            {strArr.map((item, i) => (
-              <div key={i} style={{ display: "flex", gap: "0.4rem", alignItems: "center" }}>
-                <Input
-                  value={item}
-                  disabled={locked}
-                  onChange={(e) => {
-                    const next = [...strArr];
-                    next[i] = e.target.value;
-                    onChange(next);
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      const next = [...strArr];
-                      next.splice(i + 1, 0, "");
-                      onChange(next);
-                    }
-                    if (e.key === "Backspace" && item === "" && strArr.length > 1) {
-                      e.preventDefault();
-                      const next = strArr.filter((_, j) => j !== i);
-                      onChange(next);
-                    }
-                  }}
-                  style={{ flex: 1 }}
-                />
-                {!locked && (
-                  <button
-                    type="button"
-                    onClick={() => onChange(strArr.filter((_, j) => j !== i))}
-                    style={{ flexShrink: 0, background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.25rem" }}
-                    className="hover:text-destructive transition-colors"
-                  >
-                    <X style={{ width: "14px", height: "14px" }} />
-                  </button>
-                )}
-              </div>
-            ))}
-            {!locked && (
-              <button
-                type="button"
-                onClick={() => onChange([...strArr, ""])}
-                style={{ alignSelf: "flex-start", background: "none", border: "1px dashed var(--border)", borderRadius: "5px", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "0.75rem", padding: "0.25rem 0.75rem", marginTop: "0.1rem" }}
-                className="hover:border-primary hover:text-primary transition-colors"
-              >
-                + Add item
-              </button>
-            )}
-          </div>
+          <StructuredArrayEditor
+            field={field}
+            value={arrVal}
+            onChange={onChange}
+            locked={locked}
+            blocksConfig={blocksConfig}
+          />
         );
       }
-      // Array of objects → JSON textarea
-      const jsonStr = typeof value === "string" ? value : JSON.stringify(value ?? [], null, 2);
+      // Simple string array (no sub-fields defined) → line-by-line editor
+      // But if items are objects, fall through to JSON textarea
+      const arrVal = Array.isArray(value) ? (value as unknown[]) : [];
+      const hasObjects = arrVal.some(v => typeof v === "object" && v !== null);
+      if (hasObjects) {
+        // Object array without schema → JSON textarea
+        const jsonStr = typeof value === "string" ? value : JSON.stringify(value ?? [], null, 2);
+        return (
+          <Textarea
+            value={jsonStr}
+            onChange={(e) => {
+              try { onChange(JSON.parse(e.target.value)); } catch { onChange(e.target.value); }
+            }}
+            disabled={locked}
+            rows={10}
+            className="resize-y min-h-[200px] font-mono text-xs"
+            spellCheck={false}
+          />
+        );
+      }
+      const strArr = arrVal.map(v => String(v ?? ""));
       return (
-        <Textarea
-          value={jsonStr}
-          onChange={(e) => {
-            try { onChange(JSON.parse(e.target.value)); } catch { onChange(e.target.value); }
-          }}
-          disabled={locked}
-          rows={8}
-          className="resize-y min-h-[160px] font-mono text-xs"
-          spellCheck={false}
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+          {strArr.map((item, i) => (
+            <div key={i} style={{ display: "flex", gap: "0.4rem", alignItems: "center" }}>
+              <Input
+                value={item}
+                disabled={locked}
+                onChange={(e) => {
+                  const next = [...strArr];
+                  next[i] = e.target.value;
+                  onChange(next);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    const next = [...strArr];
+                    next.splice(i + 1, 0, "");
+                    onChange(next);
+                  }
+                  if (e.key === "Backspace" && item === "" && strArr.length > 1) {
+                    e.preventDefault();
+                    const next = strArr.filter((_, j) => j !== i);
+                    onChange(next);
+                  }
+                }}
+                style={{ flex: 1 }}
+              />
+              {!locked && (
+                <button
+                  type="button"
+                  onClick={() => onChange(strArr.filter((_, j) => j !== i))}
+                  style={{ flexShrink: 0, background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.25rem" }}
+                  className="hover:text-destructive transition-colors"
+                >
+                  <X style={{ width: "14px", height: "14px" }} />
+                </button>
+              )}
+            </div>
+          ))}
+          {!locked && (
+            <button
+              type="button"
+              onClick={() => onChange([...strArr, ""])}
+              style={{ alignSelf: "flex-start", background: "none", border: "1px dashed var(--border)", borderRadius: "5px", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "0.75rem", padding: "0.25rem 0.75rem", marginTop: "0.1rem" }}
+              className="hover:border-primary hover:text-primary transition-colors"
+            >
+              + Add item
+            </button>
+          )}
+        </div>
+      );
+    }
+
+    case "blocks": {
+      const blocksVal = Array.isArray(value) ? (value as Record<string, unknown>[]) : [];
+      return (
+        <BlocksEditor
+          field={field}
+          value={blocksVal}
+          onChange={onChange}
+          locked={locked}
+          blocksConfig={blocksConfig}
         />
       );
     }

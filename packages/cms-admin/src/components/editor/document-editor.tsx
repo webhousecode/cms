@@ -1118,6 +1118,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
                   value={doc.data[field.name]}
                   onChange={(val) => updateField(field.name, val)}
                   locked={isLocked}
+                  blocksConfig={blocksConfig}
                 />
               </div>
             );
