@@ -79,7 +79,7 @@ export function AppSidebar({ collections }: Props) {
     <Sidebar collapsible="offcanvas">
       {/* Header: stacked logo */}
       <SidebarHeader className="p-0">
-        <Link href="/admin" className="flex flex-col items-center gap-2 py-5 px-4">
+        <Link href="/admin" className="flex flex-col items-center gap-2 py-5 px-3" style={{ marginRight: "auto", marginLeft: "0.5rem" }}>
           <img
             src={mounted && resolvedTheme === "light" ? "/webhouse.app-light-icon.svg" : "/webhouse.app-dark-icon.svg"}
             alt=""
@@ -88,9 +88,9 @@ export function AppSidebar({ collections }: Props) {
           <img
             src={mounted && resolvedTheme === "light" ? "/webhouse-wordmark-light.svg" : "/webhouse-wordmark-dark.svg"}
             alt="webhouse.app"
-            className="h-5 w-auto"
+            className="h-11 w-auto"
           />
-          <span style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: "0.6rem", letterSpacing: "0.08em" }} className="text-muted-foreground">
+          <span style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: "0.75rem", marginTop: "-0.25rem", letterSpacing: "0.08em" }} className="text-muted-foreground">
             AI-native content engine
           </span>
         </Link>
