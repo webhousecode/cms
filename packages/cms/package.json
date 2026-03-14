@@ -1,6 +1,6 @@
 {
   "name": "@webhouse/cms",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "AI-native CMS engine built on Hono, Drizzle ORM, and SQLite",
   "type": "module",
   "license": "MIT",
