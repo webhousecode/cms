@@ -150,5 +150,23 @@ Content Types (eg. Article (Posts), Pages, Products, Crops, Media, Retailer)
 - AI Agent schedules and notifikations setup. 
 - Skal vi have en built-in Link checker agent, der også har en schedule?
 - AI Agent friendly content/RSS/AI agent index to facilitate at en anden agent (web research) nemt kan traversere alt content igennem til sin research.   
-  
+- Design System — generative themes, design agent, infographic engine
+- Enterprise — multi-user roles, approval workflows, i18n, import from WordPress/Ghost/Contentful 
+- Playwright dev test og playwright screenshots af web pages. (Thumbs + Large)
+- Dashboard med upcoming og queue items og autonomi % og dagens output og konvertering. 
 
+http://localhost:3009/
+http://localhost:3009/about
+http://localhost:3009/cms
+
+Phase C — det der mangler for reel autonomi:
+
+  1. Scheduler kører ikke end-to-end — Selve cron/scheduler i scheduler.ts er skrevet, men er den faktisk aktiveret via
+  instrumentation.ts? Det er her autonomien sidder fast.
+  2. Tool-use i runner — Agenter kan ikke endnu kalde websøgning eller andre MCP servers mens de genererer content.
+  3. Multi-draft — Send samme task til fx Claude + GPT, præsentér side-by-side i køen.
+
+  Det mest kritiske og hurtigst gevinstgivende er punkt 1 — at verificere at scheduleren faktisk fyrer af og lander items i
+  curation queue uden at nogen trykker på noget. Vil du starte der?
+  
+  

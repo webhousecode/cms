@@ -31,6 +31,11 @@ export class FilesystemStorageAdapter implements StorageAdapter {
     if (!existsSync(path)) return null;
     try {
       const doc = JSON.parse(readFileSync(path, 'utf-8')) as Document;
+      // Legacy files may lack an id — assign and persist one immediately
+      if (!doc.id) {
+        doc.id = generateId();
+        writeFileSync(path, JSON.stringify({ ...doc, _fieldMeta: doc._fieldMeta ?? {} }, null, 2), 'utf-8');
+      }
       return { ...doc, _fieldMeta: doc._fieldMeta ?? {} };
     } catch {
       return null;
@@ -73,6 +78,7 @@ export class FilesystemStorageAdapter implements StorageAdapter {
   }
 
   async findById(collection: string, id: string): Promise<Document | null> {
+    if (!id) return null; // guard: never match documents with missing ids
     const dir = this.collectionDir(collection);
     if (!existsSync(dir)) return null;
 

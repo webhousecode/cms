@@ -17,11 +17,17 @@ export class NextSSETransport {
   onerror?: (error: Error) => void;
   onmessage?: (message: JSONRPCMessage) => void;
 
-  constructor(sessionId: string) {
+  constructor(sessionId: string, endpointUrl?: string) {
     this.sessionId = sessionId;
+    const encoder = this.encoder;
     this.stream = new ReadableStream<Uint8Array>({
       start: (ctrl) => {
         this.controller = ctrl;
+        // MCP SSE protocol requires an initial "endpoint" event so the client
+        // knows where to POST messages. Send it synchronously before any other event.
+        if (endpointUrl) {
+          ctrl.enqueue(encoder.encode(`event: endpoint\ndata: ${endpointUrl}\n\n`));
+        }
       },
       cancel: () => {
         this.onclose?.();
