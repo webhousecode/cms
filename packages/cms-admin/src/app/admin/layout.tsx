@@ -45,13 +45,6 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           <TabBar />
           <CommandPaletteProvider>
             {children}
-            <footer className="mt-16 py-8 flex items-center justify-center gap-2 opacity-25 hover:opacity-40 transition-opacity">
-              <img src="/webhouse.app-dark-icon.svg" alt="" className="h-5 w-5 dark:block hidden" />
-              <img src="/webhouse.app-light-icon.svg" alt="" className="h-5 w-5 dark:hidden block" />
-              <img src="/webhouse-wordmark-dark.svg" alt="webhouse.app" className="h-4 dark:block hidden" />
-              <img src="/webhouse-wordmark-light.svg" alt="webhouse.app" className="h-4 dark:hidden block" />
-              <span className="text-xs font-mono text-muted-foreground">v0.1</span>
-            </footer>
           </CommandPaletteProvider>
           <DevInspector />
           <ZoomApplier />
