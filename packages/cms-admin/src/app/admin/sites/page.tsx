@@ -73,6 +73,9 @@ function NewSiteDialog({ orgId, onClose, onCreated }: {
   const [ghRepos, setGhRepos] = useState<GitHubRepo[]>([]);
   const [ghSelectedRepo, setGhSelectedRepo] = useState("");
   const [ghLoadingRepos, setGhLoadingRepos] = useState(false);
+  const [ghCreateNew, setGhCreateNew] = useState(false);
+  const [ghNewRepoName, setGhNewRepoName] = useState("");
+  const [ghNewRepoPrivate, setGhNewRepoPrivate] = useState(true);
   const [branch, setBranch] = useState("main");
   const [contentDir, setContentDir] = useState("content");
   // Filesystem state
@@ -141,11 +144,46 @@ function NewSiteDialog({ orgId, onClose, onCreated }: {
     const site: SiteEntry = { id, name: name.trim(), adapter, configPath: "", previewUrl: previewUrl || undefined };
 
     if (adapter === "github") {
-      if (!ghSelectedAccount || !ghSelectedRepo) { setError("Select a GitHub account and repository"); return; }
-      site.configPath = `github://${ghSelectedAccount}/${ghSelectedRepo}/cms.config.ts`;
+      if (!ghSelectedAccount) { setError("Select a GitHub account"); return; }
+      let repoName = ghSelectedRepo;
+
+      if (ghCreateNew) {
+        if (!ghNewRepoName.trim()) { setError("Enter a repository name"); return; }
+        // Create repo via API
+        setSaving(true);
+        try {
+          const createRes = await fetch("/api/github", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              action: "create-repo",
+              org: ghSelectedAccount,
+              name: ghNewRepoName.trim(),
+              private: ghNewRepoPrivate,
+            }),
+          });
+          if (!createRes.ok) {
+            const d = await createRes.json().catch(() => ({}));
+            setError(d.error ?? "Failed to create repository");
+            setSaving(false);
+            return;
+          }
+          const created = (await createRes.json()) as { repo: { name: string; defaultBranch: string } };
+          repoName = created.repo.name;
+          setBranch(created.repo.defaultBranch);
+        } catch (err) {
+          setError(err instanceof Error ? err.message : "Failed to create repository");
+          setSaving(false);
+          return;
+        }
+      } else {
+        if (!repoName) { setError("Select a repository"); return; }
+      }
+
+      site.configPath = `github://${ghSelectedAccount}/${repoName}/cms.config.ts`;
       site.github = {
         owner: ghSelectedAccount,
-        repo: ghSelectedRepo,
+        repo: repoName,
         branch: branch || "main",
         contentDir: contentDir || "content",
         token: "oauth",
@@ -305,8 +343,39 @@ function NewSiteDialog({ orgId, onClose, onCreated }: {
 
                   {/* Repo picker */}
                   <div>
-                    <label style={labelStyle}>Repository</label>
-                    {ghLoadingRepos ? (
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.25rem" }}>
+                      <label style={{ ...labelStyle, marginBottom: 0 }}>Repository</label>
+                      <button
+                        type="button"
+                        onClick={() => { setGhCreateNew(!ghCreateNew); setGhSelectedRepo(""); setGhNewRepoName(""); }}
+                        style={{ background: "none", border: "none", cursor: "pointer", color: "var(--primary)", fontSize: "0.75rem", fontWeight: 500 }}
+                      >
+                        {ghCreateNew ? "Use existing" : "+ Create new"}
+                      </button>
+                    </div>
+                    {ghCreateNew ? (
+                      <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                        <input
+                          type="text"
+                          value={ghNewRepoName}
+                          onChange={(e) => {
+                            setGhNewRepoName(e.target.value);
+                            if (!name) setName(e.target.value.replace(/[-_]/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()));
+                          }}
+                          placeholder="my-new-site"
+                          style={{ ...inputStyle, fontFamily: "monospace" }}
+                        />
+                        <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.8rem", color: "var(--muted-foreground)", cursor: "pointer" }}>
+                          <input
+                            type="checkbox"
+                            checked={ghNewRepoPrivate}
+                            onChange={(e) => setGhNewRepoPrivate(e.target.checked)}
+                            style={{ accentColor: "var(--primary)" }}
+                          />
+                          Private repository
+                        </label>
+                      </div>
+                    ) : ghLoadingRepos ? (
                       <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--muted-foreground)", padding: "0.5rem 0" }}>Loading repositories...</p>
                     ) : (
                       <CustomSelect
