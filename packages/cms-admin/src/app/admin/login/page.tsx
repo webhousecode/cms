@@ -106,7 +106,7 @@ function LoginForm() {
           boxShadow: "0 16px 64px rgba(0,0,0,0.4), 0 0 0 1px hsl(0 0% 15%)",
         }}>
           <div style={{ marginBottom: "1.75rem", textAlign: "center" }}>
-            <img src="/cms-logo-icon.svg" alt="CMS" style={{ width: "48px", height: "48px", marginBottom: "0.75rem" }} />
+            <img src="/webhouse-icon.svg" alt="CMS" style={{ width: "48px", height: "48px", marginBottom: "0.75rem" }} />
             <h1 style={{ fontSize: "1.125rem", fontWeight: 700, margin: "0 0 0.25rem", color: "#fff" }}>CMS Admin</h1>
             <p style={{ fontSize: "0.8rem", color: "hsl(0 0% 50%)", margin: 0 }}>Sign in to continue</p>
           </div>
