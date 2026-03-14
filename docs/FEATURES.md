@@ -154,6 +154,11 @@ Content Types (eg. Article (Posts), Pages, Products, Crops, Media, Retailer)
 - Enterprise — multi-user roles, approval workflows, i18n, import from WordPress/Ghost/Contentful 
 - Playwright dev test og playwright screenshots af web pages. (Thumbs + Large)
 - Dashboard med upcoming og queue items og autonomi % og dagens output og konvertering. 
+- Block editor
+- New site wizard. 
+- Playbook/manuscript (drejebog) for an AI to implement at site for the CMS. How does an AI know which tools we have and what to use when designing. Not that the cms in any way should control how a design looks, but for designers and devs it is nice to know that your cms can manage your content visually. 
+- Buckets (WebHouse.Buckets eller AWS S3 eller Supabase buckets ...)
+- Login med Github og opret konto med Github. 
 
 http://localhost:3009/
 http://localhost:3009/about
@@ -166,11 +171,4 @@ Phase C — det der mangler for reel autonomi:
   2. Tool-use i runner — Agenter kan ikke endnu kalde websøgning eller andre MCP servers mens de genererer content.
   3. Multi-draft — Send samme task til fx Claude + GPT, præsentér side-by-side i køen.
 
-  Det mest kritiske og hurtigst gevinstgivende er punkt 1 — at verificere at scheduleren faktisk fyrer af og lander items i
-  curation queue uden at nogen trykker på noget. Vil du starte der?
-  
-  
-  
-Write an article about the latest 10 repositories on the webhousecode and cbroberg GitHub accounts. Use the github tools to look up real repository data — names, descriptions, languages, and recent activity and what the app or code is tasked to do. Present it as a tour of what we've been building. Make a remark whether each repo is public or private. 
-  
   
