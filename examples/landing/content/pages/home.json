@@ -1,0 +1,119 @@
+{
+  "slug": "home",
+  "status": "published",
+  "data": {
+    "title": "webhouse.app — AI-Native Content Engine",
+    "metaDescription": "The CMS where you describe what you want and get a production-ready site. Schema-driven content. AI-powered authoring. Static-first output.",
+    "sections": [
+      {
+        "_block": "hero",
+        "badge": "Now in active development",
+        "tagline": "AI-native content engine",
+        "primaryCta": "Get Started Free",
+        "primaryCtaUrl": "/signup",
+        "secondaryCta": "Log In →",
+        "secondaryCtaUrl": "/login",
+        "terminal": [
+          { "type": "cmd", "text": "npx @webhouse/cms init --framework next" },
+          { "type": "success", "text": "Created cms.config.ts" },
+          { "type": "success", "text": "Schema definitions ready" },
+          { "type": "success", "text": "AI agents configured" },
+          { "type": "success", "text": "Admin dashboard at localhost:3000/admin" },
+          { "type": "cmd", "text": "Ready in 847ms" }
+        ]
+      },
+      {
+        "_block": "stats",
+        "items": [
+          { "value": "<3min", "label": "AI scaffold time" },
+          { "value": "<50", "label": "Lines of CMS code needed" },
+          { "value": "95+", "label": "Lighthouse score" },
+          { "value": "0", "label": "Runtime JS in output" }
+        ]
+      },
+      {
+        "_block": "features",
+        "label": "Features",
+        "title": "Everything the AI\nshouldn't reinvent.",
+        "description": "Content modeling, persistence, media pipelines, AI orchestration, and static output — all in one embeddable TypeScript library.",
+        "items": [
+          {
+            "icon": "🧠",
+            "title": "AI Agent Orchestration",
+            "description": "Provider-agnostic agents for content generation, rewriting, translation, SEO optimization, and design token generation. Swap between Anthropic, OpenAI, or local models.",
+            "tag": "@webhouse/cms-ai"
+          },
+          {
+            "icon": "📐",
+            "title": "Schema-Driven Content",
+            "description": "JSON Schema powered collections and blocks. Every piece of content is typed, validated, and introspectable — so AI agents can reason about structure.",
+            "tag": "cms.config.ts"
+          },
+          {
+            "icon": "⚡",
+            "title": "Static-First Output",
+            "description": "The production artifact is always pre-rendered HTML + CSS + minimal JS. No runtime framework unless you opt in. Incremental builds with dependency tracking.",
+            "tag": "npx cms build"
+          },
+          {
+            "icon": "🔌",
+            "title": "Framework Adapters",
+            "description": "First-class integration with Next.js (App Router, Server Components, ISR), Astro (island architecture), and generic Node.js/Express.",
+            "tag": "@webhouse/cms-adapter-next"
+          },
+          {
+            "icon": "🖼️",
+            "title": "Media Pipeline",
+            "description": "Sharp-based image processing with AI generation (Flux, DALL-E), responsive variants, WebP/AVIF conversion, blur hashes, and auto alt-text generation.",
+            "tag": "@webhouse/cms-media"
+          },
+          {
+            "icon": "🔒",
+            "title": "AI Lock System",
+            "description": "Field-level protection enforced at the engine level. AI agents can never unlock fields — only humans can. WriteContext actor threading through all CRUD operations.",
+            "tag": "PATCH-AI-LOCK"
+          }
+        ]
+      },
+      {
+        "_block": "architecture",
+        "label": "Architecture",
+        "title": "Composable by design.",
+        "description": "A pipeline of discrete stages. Each can be extended, replaced, or bypassed.",
+        "diagramSrc": "/architecture-diagram.svg"
+      },
+      {
+        "_block": "mcp",
+        "label": "Model Context Protocol",
+        "title": "Every site speaks\nto every AI.",
+        "description": "Two MCP servers. One public and read-only — bundled with every built site. One authenticated — for content production from Claude, Cursor, or any MCP client.",
+        "cards": [
+          {
+            "type": "public",
+            "badge": "PUBLIC · READ-ONLY",
+            "title": "cms-mcp-client",
+            "description": "Bundled with every site. Any AI agent can discover and query published content — no API keys, no documentation needed.",
+            "tools": "get_site_summary\nlist_collection\nsearch_content\nget_page\nget_schema\nexport_all"
+          },
+          {
+            "type": "auth",
+            "badge": "AUTHENTICATED · READ+WRITE",
+            "title": "cms-mcp-server",
+            "description": "Full content production from Claude iOS, Claude.ai, Cursor, or Claude Code. Create, edit, publish, generate with AI — all via MCP.",
+            "tools": "create_document · update_document\npublish · unpublish\ngenerate_with_ai · rewrite_field\nupload_media · generate_image\ntrigger_build · get_build_status"
+          }
+        ]
+      },
+      {
+        "_block": "cta",
+        "label": "Get Started",
+        "title": "Describe what you want.\nGet a production-ready site.",
+        "subtitle": "Then keep iterating with AI or by hand.",
+        "primaryCta": "Create Free Account",
+        "primaryCtaUrl": "/signup",
+        "secondaryCta": "View on GitHub →",
+        "secondaryCtaUrl": "https://github.com/webhousecode/cms"
+      }
+    ]
+  }
+}
