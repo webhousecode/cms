@@ -131,21 +131,21 @@ export function AppSidebar({ collections }: Props) {
             <SidebarMenuItem>
               <SidebarMenuButton
                 isActive={pathname === "/admin/command"}
-                tooltip="AI Cockpit"
+                tooltip="Cockpit"
                 render={<Link href="/admin/command" />}
               >
                 <Cpu className="!w-5 !h-5" />
-                <span>AI Cockpit</span>
+                <span>Cockpit</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton
                 isActive={pathname.startsWith("/admin/agents")}
-                tooltip="AI Agents"
+                tooltip="Agents"
                 render={<Link href="/admin/agents" />}
               >
                 <Bot className="!w-5 !h-5" />
-                <span>AI Agents</span>
+                <span>Agents</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>

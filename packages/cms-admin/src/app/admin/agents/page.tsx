@@ -9,12 +9,12 @@ export default async function AgentsPage() {
 
   return (
     <>
-      <TabTitle value="AI Agents" />
+      <TabTitle value="Agents" />
       <div className="p-8 max-w-5xl">
         <div className="mb-8 flex items-start justify-between">
           <div>
             <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">AI</p>
-            <h1 className="text-2xl font-bold text-foreground">AI Agents</h1>
+            <h1 className="text-2xl font-bold text-foreground">Agents</h1>
           </div>
           <Link
             href="/admin/agents/new"

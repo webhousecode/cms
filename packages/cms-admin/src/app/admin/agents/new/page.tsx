@@ -175,7 +175,7 @@ export default function NewAgentPage() {
     <div className="p-8 max-w-2xl">
       <div className="mb-8">
         <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">
-          AI Agents
+          Agents
         </p>
         <h1 className="text-2xl font-bold text-foreground">New Agent</h1>
       </div>

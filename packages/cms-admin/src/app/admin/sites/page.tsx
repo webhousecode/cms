@@ -82,14 +82,12 @@ export default function SitesDashboard() {
   }
 
   return (
-    <div style={{ maxWidth: "1100px", margin: "0 auto", padding: "3rem 2rem" }}>
+    <div className="p-8 max-w-5xl">
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "2rem" }}>
+      <div className="mb-8 flex items-start justify-between">
         <div>
-          <h1 style={{ fontSize: "1.75rem", fontWeight: 700, margin: "0 0 0.25rem" }}>Sites</h1>
-          <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)", margin: 0 }}>
-            {activeOrg.sites.length} site{activeOrg.sites.length !== 1 ? "s" : ""} in {activeOrg.name}
-          </p>
+          <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">Sites</p>
+          <h1 className="text-2xl font-bold text-foreground">Sites</h1>
         </div>
         <button
           type="button"
@@ -101,8 +99,25 @@ export default function SitesDashboard() {
           }}
         >
           <Plus style={{ width: "0.875rem", height: "0.875rem" }} />
-          New site
+          New Site
         </button>
+      </div>
+
+      {/* Filter tabs */}
+      <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem" }}>
+        {[
+          { label: `All (${activeOrg.sites.length})`, active: true },
+          { label: `Local (${activeOrg.sites.filter(s => s.adapter === "filesystem").length})`, active: false },
+          { label: `GitHub (${activeOrg.sites.filter(s => s.adapter === "github").length})`, active: false },
+        ].map((f) => (
+          <span key={f.label} style={{
+            padding: "0.3rem 0.75rem", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 500,
+            cursor: "pointer",
+            background: f.active ? "var(--secondary)" : "transparent",
+            color: f.active ? "var(--foreground)" : "var(--muted-foreground)",
+            border: f.active ? "1px solid var(--border)" : "1px solid transparent",
+          }}>{f.label}</span>
+        ))}
       </div>
 
       {/* Site cards grid */}

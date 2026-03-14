@@ -96,7 +96,7 @@ export default function CommandPage() {
         <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">
           AI
         </p>
-        <h1 className="text-3xl font-bold text-foreground">AI Cockpit</h1>
+        <h1 className="text-3xl font-bold text-foreground">Cockpit</h1>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
