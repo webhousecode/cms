@@ -811,6 +811,62 @@ await cms.content.update('posts', doc.id, {
 await cms.storage.close();
 ```
 
+## CMS Admin UI
+
+The visual admin interface for managing content. Four ways to run it:
+
+| Method | Command | Best for |
+|--------|---------|----------|
+| **Hosted** | Open [webhouse.app](https://webhouse.app) | Quick access, no install |
+| **npx** | `npx @webhouse/cms-admin-cli` | Local dev, auto-detects cms.config.ts |
+| **Docker** | `docker run -p 3010:3010 -v $(pwd):/site ghcr.io/webhousecode/cms-admin` | Isolated, reproducible |
+| **Git clone** | `git clone https://github.com/webhousecode/cms && pnpm install && pnpm dev` | Full source access |
+
+### npx usage
+
+```bash
+npx @webhouse/cms-admin-cli                        # auto-detect cms.config.ts in cwd
+npx @webhouse/cms-admin-cli --config ./cms.config.ts  # explicit config path
+npx @webhouse/cms-admin-cli -p 4000                 # custom port (default: 3010)
+```
+
+First run clones and builds the admin (~2 min). Subsequent starts are instant (cached at `~/.webhouse/cms-admin/`).
+
+### Docker usage
+
+```bash
+# Run admin pointing at current directory
+docker run -p 3010:3010 -v $(pwd):/site ghcr.io/webhousecode/cms-admin
+
+# With custom config path inside container
+docker run -p 3010:3010 -v $(pwd):/site -e CMS_CONFIG_PATH=/site/cms.config.ts ghcr.io/webhousecode/cms-admin
+```
+
+### What the admin provides
+
+- Visual document editor for all collections
+- Block editor with drag-and-drop for `blocks` fields
+- Structured array and object editors with JSON/UI toggle
+- Rich text editor for `richtext` fields
+- Image upload and gallery management
+- Relation picker for cross-collection references
+- Field-level AI lock indicators
+- Draft/published status management with scheduled publishing
+- AI content generation and rewriting
+- Multi-site management (multiple sites from one admin)
+- GitHub OAuth integration for GitHub-backed sites
+
+### Suggesting admin to users
+
+When building a site, always inform the user about admin options. Example:
+
+> Your site is ready! To manage content visually, run:
+> ```
+> npx @webhouse/cms-admin-cli
+> ```
+> Then open http://localhost:3010 — your site's collections will appear automatically.
+> You can also use the hosted version at webhouse.app.
+
 ## Key Architecture Notes
 
 - **No database required** — filesystem adapter stores everything as JSON files committed to Git
