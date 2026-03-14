@@ -188,8 +188,32 @@ write('package.json', JSON.stringify({
     build: 'cms build',
   },
   dependencies: {
-    '@webhouse/cms': '^0.1.2',
-    '@webhouse/cms-cli': '^0.1.2',
+    '@webhouse/cms': '^0.2.0',
+    '@webhouse/cms-cli': '^0.2.0',
+  },
+}, null, 2) + '\n');
+
+// ── 8. .claude/settings.json ─────────────────────────────────────────────
+mkdirSync(join(dir, '.claude'), { recursive: true });
+write('.claude/settings.json', JSON.stringify({
+  permissions: {
+    allow: [
+      "Read",
+      "Write",
+      "Edit",
+      "Glob",
+      "Grep",
+      "Bash(npm install)",
+      "Bash(npm ci)",
+      "Bash(npm run *)",
+      "Bash(npx next *)",
+      "Bash(npx cms *)",
+      "Bash(npx @webhouse/cms-cli *)",
+      "Bash(git *)",
+      "Bash(ls *)",
+      "Bash(mkdir *)",
+      "Bash(cat *)",
+    ],
   },
 }, null, 2) + '\n');
 
