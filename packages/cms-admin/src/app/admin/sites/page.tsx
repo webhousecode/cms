@@ -325,7 +325,7 @@ function NewSiteDialog({ orgId, onClose, onCreated }: {
                         <option value="">Select repository...</option>
                         {ghRepos.map((r) => (
                           <option key={r.name} value={r.name}>
-                            {r.name} {r.private ? "(private)" : ""}{r.description ? ` — ${r.description}` : ""}
+                            {r.name}
                           </option>
                         ))}
                       </select>
