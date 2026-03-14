@@ -131,7 +131,8 @@ export async function POST(request: NextRequest) {
         name: body.name,
         private: body.private ?? true,
         description: body.description ?? "",
-        auto_init: true, // Creates initial commit with README
+        auto_init: true,
+        gitignore_template: "Node",
       }),
     });
 
