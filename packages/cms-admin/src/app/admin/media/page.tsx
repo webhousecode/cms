@@ -50,6 +50,7 @@ export default function MediaPage() {
   const [jobs, setJobs] = useState<UploadJob[]>([]);
   const [dragOver, setDragOver] = useState(false);
   const [newFolder, setNewFolder] = useState("");
+  const [typeFilter, setTypeFilter] = useState<string>(""); // "" = all
   const inputRef = useRef<HTMLInputElement>(null);
   const pageRef = useRef<HTMLDivElement>(null);
   const dragCounter = useRef(0);
@@ -77,6 +78,7 @@ export default function MediaPage() {
 
   const filtered = allFiles.filter((f) => {
     if (folder !== "" && f.folder !== folder) return false;
+    if (typeFilter && (f as any).mediaType !== typeFilter) return false;
     if (query) {
       const q = query.toLowerCase();
       return f.name.toLowerCase().includes(q) || f.folder.toLowerCase().includes(q);
@@ -283,7 +285,7 @@ export default function MediaPage() {
           ref={inputRef}
           type="file"
           multiple
-          accept="image/*,video/*,.pdf,.svg,.gif"
+          accept="*/*"
           style={{ display: "none" }}
           onChange={(e) => uploadFiles(e.target.files)}
         />
@@ -329,6 +331,41 @@ export default function MediaPage() {
               onClick={() => setFolder(folder === f ? "" : f)}
             />
           ))}
+
+          {/* Type filter */}
+          <div style={{ marginTop: "1rem", borderTop: "1px solid var(--border)", paddingTop: "0.75rem" }}>
+            <p style={{ fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted-foreground)", marginBottom: "0.375rem", paddingLeft: "0.25rem" }}>
+              Type
+            </p>
+            {[
+              { value: "", label: "All types" },
+              { value: "image", label: "Images" },
+              { value: "audio", label: "Audio" },
+              { value: "video", label: "Video" },
+              { value: "document", label: "Documents" },
+            ].map((t) => {
+              const count = t.value ? allFiles.filter((f) => (f as any).mediaType === t.value).length : allFiles.length;
+              if (t.value && count === 0) return null;
+              return (
+                <button
+                  key={t.value}
+                  type="button"
+                  onClick={() => setTypeFilter(t.value)}
+                  style={{
+                    display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%",
+                    padding: "0.3rem 0.5rem", borderRadius: "5px", border: "none", cursor: "pointer",
+                    background: typeFilter === t.value ? "var(--secondary)" : "transparent",
+                    color: typeFilter === t.value ? "var(--foreground)" : "var(--muted-foreground)",
+                    fontSize: "0.8rem", marginBottom: "0.125rem",
+                  }}
+                  className="hover:bg-secondary/50"
+                >
+                  <span>{t.label}</span>
+                  <span style={{ fontSize: "0.7rem", opacity: 0.6 }}>{count}</span>
+                </button>
+              );
+            })}
+          </div>
 
           {/* New folder input */}
           <div style={{ marginTop: "1rem", borderTop: "1px solid var(--border)", paddingTop: "0.75rem" }}>
