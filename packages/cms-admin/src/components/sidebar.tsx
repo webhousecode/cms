@@ -164,16 +164,6 @@ export function AppSidebar({ collections }: Props) {
                 )}
               </SidebarMenuButton>
             </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                isActive={pathname.startsWith("/admin/interactives")}
-                tooltip="Interactives"
-                render={<Link href="/admin/interactives" />}
-              >
-                <Zap className="!w-5 !h-5" />
-                <span>Interactives</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
 
@@ -219,9 +209,19 @@ export function AppSidebar({ collections }: Props) {
           )}
         </SidebarGroup>
 
-        {/* Media & Links */}
+        {/* Interactives, Media & Links */}
         <SidebarGroup style={{ padding: "0 0.5rem" }}>
           <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                isActive={pathname.startsWith("/admin/interactives")}
+                tooltip="Interactives"
+                render={<Link href="/admin/interactives" />}
+              >
+                <Zap className="!w-5 !h-5" />
+                <span>Interactives</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
             <SidebarMenuItem>
               <SidebarMenuButton
                 isActive={pathname === "/admin/media"}
