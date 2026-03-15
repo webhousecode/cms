@@ -4,6 +4,9 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Eye, MousePointer2, Code, Save, RotateCcw, Loader2 } from "lucide-react";
 import Link from "next/link";
+import dynamic from "next/dynamic";
+
+const MonacoEditor = dynamic(() => import("@monaco-editor/react").then(m => m.default), { ssr: false });
 
 /* ─── Types ──────────────────────────────────────────────────── */
 interface InteractiveDetail {
@@ -396,110 +399,111 @@ export default function InteractiveDetailPage() {
   ];
 
   return (
-    <div className="p-8 max-w-4xl">
-      {/* Header */}
-      <div className="mb-6">
-        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.25rem" }}>
-          <Link
-            href="/admin/interactives"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "0.25rem",
-              fontSize: "0.75rem",
-              fontFamily: "monospace",
-              letterSpacing: "0.05em",
-              textTransform: "uppercase",
-              color: "var(--muted-foreground)",
-              textDecoration: "none",
-            }}
-          >
-            <ArrowLeft style={{ width: "0.75rem", height: "0.75rem" }} />
-            Interactives
-          </Link>
-        </div>
-        <h1 className="text-2xl font-bold text-foreground">{detail.name}</h1>
-        <p
-          style={{
-            fontSize: "0.7rem",
-            color: "var(--muted-foreground)",
-            fontFamily: "monospace",
-            marginTop: "0.25rem",
-          }}
-        >
-          {detail.filename} &middot; {formatSize(detail.size)} &middot; Updated {formatDate(detail.updatedAt)}
-        </p>
-      </div>
-
-      {/* Mode tabs (pill style) */}
+    <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 84px)" }}>
+      {/* Header bar */}
       <div
         style={{
           display: "flex",
-          gap: "0.25rem",
-          background: "var(--muted)",
-          borderRadius: "8px",
-          padding: "0.2rem",
-          marginBottom: "1rem",
+          alignItems: "center",
+          gap: "1rem",
+          padding: "0.5rem 1rem",
+          borderBottom: "1px solid var(--border)",
+          background: "var(--card)",
+          flexShrink: 0,
         }}
       >
-        {modes.map(({ value, label, icon: Icon }) => (
-          <button
-            key={value}
-            type="button"
-            onClick={() => setMode(value)}
+        <Link
+          href="/admin/interactives"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.25rem",
+            fontSize: "0.7rem",
+            fontFamily: "monospace",
+            letterSpacing: "0.05em",
+            textTransform: "uppercase",
+            color: "var(--muted-foreground)",
+            textDecoration: "none",
+            flexShrink: 0,
+          }}
+        >
+          <ArrowLeft style={{ width: "0.75rem", height: "0.75rem" }} />
+          Interactives
+        </Link>
+
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <span className="text-sm font-bold text-foreground truncate block">{detail.name}</span>
+          <span
             style={{
-              flex: 1,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: "0.375rem",
-              padding: "0.45rem 0.75rem",
-              borderRadius: "6px",
-              border: "none",
-              cursor: "pointer",
-              fontSize: "0.8rem",
-              fontWeight: 500,
-              background: mode === value ? "var(--card)" : "transparent",
-              color: mode === value ? "var(--foreground)" : "var(--muted-foreground)",
-              boxShadow: mode === value ? "0 1px 3px rgba(0,0,0,0.2)" : "none",
-              transition: "all 150ms",
+              fontSize: "0.65rem",
+              color: "var(--muted-foreground)",
+              fontFamily: "monospace",
             }}
           >
-            <Icon style={{ width: "0.875rem", height: "0.875rem" }} />
-            {label}
-          </button>
-        ))}
+            {detail.filename} &middot; {formatSize(detail.size)} &middot; {formatDate(detail.updatedAt)}
+          </span>
+        </div>
+
+        {/* Mode tabs (compact pill style) */}
+        <div
+          style={{
+            display: "flex",
+            gap: "0.2rem",
+            background: "var(--muted)",
+            borderRadius: "7px",
+            padding: "0.15rem",
+            flexShrink: 0,
+          }}
+        >
+          {modes.map(({ value, label, icon: Icon }) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setMode(value)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.3rem",
+                padding: "0.35rem 0.75rem",
+                borderRadius: "5px",
+                border: "none",
+                cursor: "pointer",
+                fontSize: "0.75rem",
+                fontWeight: 500,
+                background: mode === value ? "var(--card)" : "transparent",
+                color: mode === value ? "var(--foreground)" : "var(--muted-foreground)",
+                boxShadow: mode === value ? "0 1px 3px rgba(0,0,0,0.2)" : "none",
+                transition: "all 150ms",
+                whiteSpace: "nowrap",
+              }}
+            >
+              <Icon style={{ width: "0.8rem", height: "0.8rem" }} />
+              {label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Content area */}
-      <div
-        style={{
-          border: "1px solid var(--border)",
-          borderRadius: "10px",
-          overflow: "hidden",
-          background: "var(--card)",
-        }}
-      >
+      {/* Content area — fills remaining space, same padding as document editor */}
+      <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", padding: "0 1rem" }}>
         {/* Preview mode */}
         {mode === "preview" && (
-          <div style={{ width: "100%", height: "600px" }}>
-            <iframe
-              src={`/api/interactives/${id}/preview?t=${Date.now()}`}
-              title={detail.name}
-              sandbox="allow-scripts allow-same-origin"
-              style={{
-                width: "100%",
-                height: "100%",
-                border: "none",
-                background: "white",
-              }}
-            />
-          </div>
+          <iframe
+            src={`/api/interactives/${id}/preview?t=${Date.now()}`}
+            title={detail.name}
+            sandbox="allow-scripts allow-same-origin"
+            style={{
+              width: "100%",
+              flex: 1,
+              border: "none",
+              background: "white",
+            }}
+          />
         )}
 
         {/* Visual edit mode */}
         {mode === "visual" && (
-          <div style={{ display: "flex", flexDirection: "column" }}>
+          <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
             <div
               style={{
                 display: "flex",
@@ -560,26 +564,24 @@ export default function InteractiveDetailPage() {
                 {saved ? "Saved!" : saving ? "Saving..." : "Save"}
               </button>
             </div>
-            <div style={{ width: "100%", height: "600px" }}>
-              <iframe
-                ref={iframeRef}
-                srcDoc={injectWysiwyg(codeValue)}
-                title={`${detail.name} - Visual Edit`}
-                sandbox="allow-scripts allow-same-origin"
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  border: "none",
-                  background: "white",
-                }}
-              />
-            </div>
+            <iframe
+              ref={iframeRef}
+              srcDoc={injectWysiwyg(codeValue)}
+              title={`${detail.name} - Visual Edit`}
+              sandbox="allow-scripts allow-same-origin"
+              style={{
+                width: "100%",
+                flex: 1,
+                border: "none",
+                background: "white",
+              }}
+            />
           </div>
         )}
 
         {/* Code mode */}
         {mode === "code" && (
-          <div style={{ display: "flex", flexDirection: "column" }}>
+          <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
             <div
               style={{
                 display: "flex",
@@ -589,6 +591,7 @@ export default function InteractiveDetailPage() {
                 padding: "0.5rem 0.75rem",
                 borderBottom: "1px solid var(--border)",
                 background: "var(--muted)",
+                flexShrink: 0,
               }}
             >
               <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", flex: 1, fontFamily: "monospace" }}>
@@ -640,25 +643,24 @@ export default function InteractiveDetailPage() {
                 {saved ? "Saved!" : saving ? "Saving..." : "Save"}
               </button>
             </div>
-            <textarea
-              value={codeValue}
-              onChange={(e) => setCodeValue(e.target.value)}
-              spellCheck={false}
-              style={{
-                width: "100%",
-                minHeight: "600px",
-                padding: "1rem",
-                border: "none",
-                background: "var(--background)",
-                color: "var(--foreground)",
-                fontFamily: "'SF Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace",
-                fontSize: "0.8rem",
-                lineHeight: 1.6,
-                resize: "vertical",
-                outline: "none",
-                tabSize: 2,
-              }}
-            />
+            <div style={{ flex: 1 }}>
+              <MonacoEditor
+                language="html"
+                theme="vs-dark"
+                value={codeValue}
+                onChange={(v) => setCodeValue(v ?? "")}
+                options={{
+                  minimap: { enabled: false },
+                  fontSize: 13,
+                  lineNumbers: "on",
+                  wordWrap: "on",
+                  scrollBeyondLastLine: false,
+                  automaticLayout: true,
+                  tabSize: 2,
+                  padding: { top: 12 },
+                }}
+              />
+            </div>
           </div>
         )}
       </div>
