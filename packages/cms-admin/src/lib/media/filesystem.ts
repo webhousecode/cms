@@ -150,6 +150,7 @@ export class FilesystemMediaAdapter implements MediaAdapter {
       name: filename.replace(/\.html?$/i, ""),
       filename: finalFilename,
       size: content.length,
+      status: "draft",
       createdAt: now,
       updatedAt: now,
     };
@@ -158,17 +159,20 @@ export class FilesystemMediaAdapter implements MediaAdapter {
     return entry;
   }
 
-  async updateInteractive(id: string, content: string, name?: string): Promise<InteractiveMeta | null> {
+  async updateInteractive(id: string, updates: { content?: string; name?: string; status?: InteractiveMeta["status"] }): Promise<InteractiveMeta | null> {
     const meta = await this.loadMeta();
     const idx = meta.findIndex((m) => m.id === id);
     if (idx === -1) return null;
 
-    const buffer = Buffer.from(content, "utf-8");
-    await writeFile(path.join(this.interactivesDir, meta[idx].filename), buffer);
+    if (updates.content !== undefined) {
+      const buffer = Buffer.from(updates.content, "utf-8");
+      await writeFile(path.join(this.interactivesDir, meta[idx].filename), buffer);
+      meta[idx].size = buffer.length;
+    }
 
-    meta[idx].size = buffer.length;
     meta[idx].updatedAt = new Date().toISOString();
-    if (name) meta[idx].name = name;
+    if (updates.name) meta[idx].name = updates.name;
+    if (updates.status) meta[idx].status = updates.status;
 
     await this.saveMeta(meta);
     return meta[idx];

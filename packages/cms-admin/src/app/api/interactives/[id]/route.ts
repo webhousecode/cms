@@ -26,11 +26,13 @@ export async function PUT(
   try {
     const { id } = await params;
     const body = await req.json();
-    const html = body.content as string;
-    if (!html) return NextResponse.json({ error: "No content" }, { status: 400 });
 
     const adapter = await getMediaAdapter();
-    const updated = await adapter.updateInteractive(id, html, body.name);
+    const updated = await adapter.updateInteractive(id, {
+      content: body.content,
+      name: body.name,
+      status: body.status,
+    });
     if (!updated) return NextResponse.json({ error: "Not found" }, { status: 404 });
     return NextResponse.json(updated);
   } catch (err) {

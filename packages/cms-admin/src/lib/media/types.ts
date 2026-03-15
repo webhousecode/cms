@@ -23,11 +23,14 @@ export interface MediaFileInfo {
 
 export type MediaType = "image" | "audio" | "video" | "document" | "interactive" | "other";
 
+export type InteractiveStatus = "draft" | "published" | "trashed";
+
 export interface InteractiveMeta {
   id: string;
   name: string;
   filename: string;
   size: number;
+  status: InteractiveStatus;
   createdAt: string;
   updatedAt: string;
 }
@@ -65,9 +68,9 @@ export interface MediaAdapter {
   /** Upload a new interactive. Returns the metadata. */
   createInteractive(filename: string, content: Buffer): Promise<InteractiveMeta>;
 
-  /** Update interactive content and/or name */
-  updateInteractive(id: string, content: string, name?: string): Promise<InteractiveMeta | null>;
+  /** Update interactive content and/or name and/or status */
+  updateInteractive(id: string, updates: { content?: string; name?: string; status?: InteractiveStatus }): Promise<InteractiveMeta | null>;
 
-  /** Delete an interactive */
+  /** Permanently delete an interactive (use updateInteractive with status:"trashed" for soft delete) */
   deleteInteractive(id: string): Promise<boolean>;
 }

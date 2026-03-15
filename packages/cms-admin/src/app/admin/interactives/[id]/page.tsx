@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Eye, MousePointer2, Code, Save, Loader2, Copy, History, Settings2, Trash2 } from "lucide-react";
+import { ArrowLeft, Eye, MousePointer2, Code, Save, Loader2, Copy, History, Settings2, Trash2, Globe, FileText, AlertTriangle } from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useTabs } from "@/lib/tabs-context";
@@ -16,6 +16,7 @@ interface InteractiveDetail {
   name: string;
   filename: string;
   size: number;
+  status: "draft" | "published" | "trashed";
   createdAt: string;
   updatedAt: string;
   content: string;
@@ -305,6 +306,7 @@ export default function InteractiveDetailPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [cloning, setCloning] = useState(false);
+  const [confirmTrash, setConfirmTrash] = useState(false);
   const [originalContent, setOriginalContent] = useState("");
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const { setTabTitle } = useTabs();
@@ -405,6 +407,26 @@ export default function InteractiveDetailPage() {
     }
   }
 
+  async function setStatus(status: "draft" | "published" | "trashed") {
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/interactives/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status }),
+      });
+      if (res.ok) {
+        const updated = await res.json();
+        setDetail((prev) => prev ? { ...prev, ...updated } : prev);
+        if (status === "trashed") {
+          router.push("/admin/interactives");
+        }
+      }
+    } finally {
+      setSaving(false);
+    }
+  }
+
   if (loading) {
     return (
       <div className="p-8 max-w-4xl">
@@ -447,18 +469,17 @@ export default function InteractiveDetailPage() {
             <span className="text-xs text-muted-foreground">Saved</span>
           )}
 
-          {/* Preview — icon only, same as editor */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setMode("preview")}
-            className={mode === "preview" ? "text-foreground" : "text-muted-foreground hover:text-foreground"}
-            title="Preview"
-          >
-            <Eye className="w-4 h-4" />
-          </Button>
+          {/* Status badge — same as editor */}
+          <span className={`flex items-center gap-1 text-xs font-mono px-2.5 py-1 rounded-full ${
+            detail.status === "published"
+              ? "bg-green-500/10 text-green-400"
+              : "bg-yellow-500/10 text-yellow-400"
+          }`}>
+            <Globe className="w-3 h-3" />
+            {detail.status ?? "draft"}
+          </span>
 
-          {/* Clone — same as editor */}
+          {/* Clone */}
           <Button
             variant="ghost"
             size="sm"
@@ -518,22 +539,56 @@ export default function InteractiveDetailPage() {
             <Settings2 className="w-4 h-4" />
           </Button>
 
-          {/* Delete */}
+          {/* Trash */}
           <Button
             variant="ghost"
             size="icon"
-            onClick={async () => {
-              if (!confirm(`Delete interactive "${detail.name}"?`)) return;
-              await fetch(`/api/interactives/${id}`, { method: "DELETE" });
-              router.push("/admin/interactives");
-            }}
+            onClick={() => setConfirmTrash(true)}
             className="text-muted-foreground hover:text-destructive"
-            title="Delete interactive"
+            title="Move to trash"
           >
             <Trash2 className="w-4 h-4" />
           </Button>
 
-          {/* Save — matches editor Save exactly */}
+          {/* Preview — icon only */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setMode("preview")}
+            className={mode === "preview" ? "text-foreground" : "text-muted-foreground hover:text-foreground"}
+            title="Preview"
+          >
+            <Eye className="w-4 h-4" />
+          </Button>
+
+          {/* Publish / Unpublish — same as editor */}
+          {detail.status === "published" ? (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setStatus("draft")}
+              disabled={saving}
+              className="gap-1.5"
+              title="Revert to draft (unpublish)"
+            >
+              <FileText className="w-3.5 h-3.5" />
+              Unpublish
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setStatus("published")}
+              disabled={saving}
+              className="gap-1.5 border-green-500/30 text-green-400 hover:bg-green-500/10 hover:text-green-400"
+              title="Publish"
+            >
+              <Globe className="w-3.5 h-3.5" />
+              Publish
+            </Button>
+          )}
+
+          {/* Save */}
           <Button
             size="sm"
             onClick={mode === "visual" ? handleVisualSave : handleCodeSave}
@@ -609,6 +664,36 @@ export default function InteractiveDetailPage() {
           </div>
         )}
       </div>
+
+      {/* Trash confirmation dialog */}
+      {confirmTrash && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}>
+          <div style={{ background: "var(--card)", border: "1px solid rgb(239 68 68 / 0.3)", borderRadius: "12px", padding: "1.5rem", maxWidth: "420px", width: "90%", display: "flex", flexDirection: "column", gap: "1rem" }}>
+            <div style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem" }}>
+              <AlertTriangle style={{ width: "1.25rem", height: "1.25rem", color: "rgb(239 68 68)", flexShrink: 0, marginTop: "1px" }} />
+              <div>
+                <p style={{ fontWeight: 600, fontSize: "0.9rem" }}>Move to trash?</p>
+                <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", fontFamily: "monospace", wordBreak: "break-all", marginTop: "0.2rem" }}>{detail.name}</p>
+              </div>
+            </div>
+            <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>
+              This interactive will be moved to trash. You can restore it later from the trash.
+            </p>
+            <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
+              <Button variant="outline" size="sm" onClick={() => setConfirmTrash(false)}>
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => { setConfirmTrash(false); setStatus("trashed"); }}
+              >
+                Move to trash
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

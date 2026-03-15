@@ -10,6 +10,7 @@ interface InteractiveMeta {
   name: string;
   filename: string;
   size: number;
+  status?: "draft" | "published" | "trashed";
   createdAt: string;
   updatedAt: string;
 }
@@ -43,7 +44,7 @@ export default function InteractivesPage() {
     try {
       const res = await fetch("/api/interactives");
       const data = await res.json();
-      setItems(Array.isArray(data) ? data : []);
+      setItems(Array.isArray(data) ? data.filter((d: InteractiveMeta) => d.status !== "trashed") : []);
     } catch {
       setItems([]);
     } finally {
@@ -266,6 +267,21 @@ export default function InteractivesPage() {
                   }}
                 >
                   {formatSize(item.size)} &middot; {formatDate(item.createdAt)}
+                  {item.status && (
+                    <span style={{
+                      marginLeft: "0.375rem",
+                      fontSize: "0.6rem",
+                      fontWeight: 600,
+                      padding: "0.1rem 0.35rem",
+                      borderRadius: "3px",
+                      background: item.status === "published" ? "rgba(34,197,94,0.15)" : "rgba(234,179,8,0.15)",
+                      color: item.status === "published" ? "#22c55e" : "#eab308",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.03em",
+                    }}>
+                      {item.status}
+                    </span>
+                  )}
                 </p>
               </div>
 
