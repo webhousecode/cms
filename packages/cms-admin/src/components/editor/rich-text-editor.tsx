@@ -1613,6 +1613,7 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
   const [availableBlocks, setAvailableBlocks] = useState<{ slug: string; label: string; blockType: string }[]>([]);
   const [blocksLoading, setBlocksLoading] = useState(false);
   const [showInteractivePicker, setShowInteractivePicker] = useState(false);
+  const [intSearch, setIntSearch] = useState("");
   const [availableInteractives, setAvailableInteractives] = useState<{ id: string; title: string }[]>([]);
   const [interactivesLoading, setInteractivesLoading] = useState(false);
   const headingRef = useRef<HTMLDivElement>(null);
@@ -1700,6 +1701,13 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, []);
+
+  useEffect(() => {
+    if (!showInteractivePicker) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setShowInteractivePicker(false); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [showInteractivePicker]);
 
   function activeKey(): HeadingKey {
     if (!editor) return "paragraph";
@@ -2081,6 +2089,7 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
             {/* Insert Interactive */}
             <Btn tooltip="Insert interactive" onClick={() => {
               setShowInteractivePicker(true);
+              setIntSearch("");
               setInteractivesLoading(true);
               fetch("/api/interactives")
                 .then(r => r.json())
@@ -2231,56 +2240,82 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
       </div>
 
       {/* ── Interactive Picker dialog ── */}
-      {showInteractivePicker && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0,0,0,0.5)" }}
-          onMouseDown={() => setShowInteractivePicker(false)}>
-          <div onMouseDown={(e) => e.stopPropagation()} style={{
-            width: "100%", maxWidth: "480px", maxHeight: "70vh",
-            backgroundColor: "var(--background)", border: "1px solid var(--border)",
-            borderRadius: "0.75rem", boxShadow: "0 16px 48px rgba(0,0,0,0.3)",
-            display: "flex", flexDirection: "column", overflow: "hidden",
-          }}>
-            <div style={{ padding: "1rem 1.25rem", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <span style={{ fontSize: "0.95rem", fontWeight: 600, color: "var(--foreground)" }}>Insert Interactive</span>
-              <button type="button" onClick={() => setShowInteractivePicker(false)}
-                style={{ width: "24px", height: "24px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1.1rem", display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
-            </div>
-            <div style={{ flex: 1, overflow: "auto", padding: "0.75rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-              {interactivesLoading && (
-                <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)", padding: "1rem 0", textAlign: "center" }}>Loading…</p>
-              )}
-              {!interactivesLoading && availableInteractives.length === 0 && (
-                <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)", padding: "1rem 0", textAlign: "center" }}>
-                  No interactives found. Create one in the <strong>Interactives Manager</strong> first.
-                </p>
-              )}
-              {availableInteractives.map(item => (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => {
-                    editor?.chain().focus().insertContent({ type: "interactiveEmbed", attrs: { interactiveId: item.id, title: item.title } }).run();
-                    setShowInteractivePicker(false);
-                  }}
+      {showInteractivePicker && (() => {
+        const filtered = intSearch.trim()
+          ? availableInteractives.filter(i =>
+              i.title.toLowerCase().includes(intSearch.toLowerCase()) ||
+              i.id.toLowerCase().includes(intSearch.toLowerCase())
+            )
+          : availableInteractives;
+        return (
+          <div style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0,0,0,0.5)" }}
+            onMouseDown={() => setShowInteractivePicker(false)}>
+            <div onMouseDown={(e) => e.stopPropagation()} style={{
+              width: "100%", maxWidth: "480px", maxHeight: "70vh",
+              backgroundColor: "var(--card)", border: "1px solid var(--border)",
+              borderRadius: "1rem", boxShadow: "0 24px 48px rgba(0,0,0,0.5)",
+              display: "flex", flexDirection: "column", overflow: "hidden",
+            }}>
+              {/* Header */}
+              <div style={{ padding: "1rem 1.25rem", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <span style={{ fontSize: "0.95rem", fontWeight: 600, color: "var(--foreground)" }}>Insert Interactive</span>
+                <button type="button" onClick={() => setShowInteractivePicker(false)}
+                  style={{ width: "24px", height: "24px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1.1rem", display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
+              </div>
+              {/* Search */}
+              <div style={{ padding: "0.75rem 1.25rem", borderBottom: "1px solid var(--border)" }}>
+                <input
+                  type="text"
+                  value={intSearch}
+                  onChange={(e) => setIntSearch(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Escape") { e.stopPropagation(); setShowInteractivePicker(false); } }}
+                  placeholder="Search interactives…"
+                  autoFocus
                   style={{
-                    display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.75rem 1rem",
-                    borderRadius: "0.625rem", border: "1px solid var(--border)", backgroundColor: "transparent",
-                    cursor: "pointer", textAlign: "left", transition: "border-color 120ms, background 120ms",
+                    width: "100%", padding: "0.4rem 0.625rem", borderRadius: "6px",
+                    border: "1px solid var(--border)", background: "var(--background)",
+                    color: "var(--foreground)", fontSize: "0.85rem", outline: "none",
                   }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(255,255,255,0.05)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "#F7BB2E"; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--border)"; }}
-                >
-                  <span style={{ fontSize: "1.25rem", flexShrink: 0, color: "#F7BB2E" }}>⚡</span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--foreground)", margin: 0 }}>{item.title}</p>
-                    <p style={{ fontSize: "0.7rem", fontFamily: "monospace", color: "var(--muted-foreground)", margin: 0, marginTop: "2px" }}>{item.id}</p>
-                  </div>
-                </button>
-              ))}
+                />
+              </div>
+              {/* List */}
+              <div style={{ flex: 1, overflow: "auto", padding: "0.75rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                {interactivesLoading && (
+                  <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)", padding: "1rem 0", textAlign: "center" }}>Loading…</p>
+                )}
+                {!interactivesLoading && filtered.length === 0 && (
+                  <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)", padding: "1rem 0", textAlign: "center" }}>
+                    {intSearch ? `No interactives matching "${intSearch}"` : "No interactives found. Create one in the Interactives Manager first."}
+                  </p>
+                )}
+                {filtered.map(item => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => {
+                      editor?.chain().focus().insertContent({ type: "interactiveEmbed", attrs: { interactiveId: item.id, title: item.title } }).run();
+                      setShowInteractivePicker(false);
+                      setIntSearch("");
+                    }}
+                    style={{
+                      display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.75rem 1rem",
+                      borderRadius: "0.625rem", border: "1px solid var(--border)", backgroundColor: "transparent",
+                      cursor: "pointer", textAlign: "left", transition: "border-color 120ms, background 120ms",
+                    }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(255,255,255,0.05)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "#F7BB2E"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--border)"; }}
+                  >
+                    <span style={{ fontSize: "1.25rem", flexShrink: 0, color: "#F7BB2E" }}>⚡</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--foreground)", margin: 0 }}>{item.title}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* ── Block Picker dialog ── */}
       {blockPickerOpen && (() => {
