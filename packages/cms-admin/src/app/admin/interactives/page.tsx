@@ -66,6 +66,13 @@ export default function InteractivesPage() {
 
   useEffect(() => { loadItems(); }, [loadItems]);
 
+  useEffect(() => {
+    if (!confirmTrash) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setConfirmTrash(null); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [confirmTrash]);
+
   async function handleUpload(fileList: FileList | null) {
     if (!fileList || fileList.length === 0) return;
     setUploading(true);

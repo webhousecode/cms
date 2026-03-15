@@ -61,6 +61,12 @@ function BrandVoiceHistoryPanel({ versions, onRestore, onClose }: {
   const [restoring, setRestoring] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
 
+  useEffect(() => {
+    const onKey = (e: globalThis.KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
   async function restore(v: BrandVoiceVersion) {
     setRestoring(v.id);
     await fetch(`/api/cms/brand-voice/versions/${v.id}`, {

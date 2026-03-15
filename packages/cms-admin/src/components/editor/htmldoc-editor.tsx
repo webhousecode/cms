@@ -176,6 +176,14 @@ export function HtmlDocEditor({ field, value, onChange, locked }: Props) {
   const [aiPreview, setAiPreview] = useState("");
   const [aiError, setAiError] = useState("");
 
+  // Exit fullscreen on Escape
+  useEffect(() => {
+    if (!fullscreen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setFullscreen(false); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [fullscreen]);
+
   // Sync codeValue when value changes externally
   useEffect(() => {
     setCodeValue(value);

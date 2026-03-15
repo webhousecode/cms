@@ -78,6 +78,13 @@ export default function AgentDetailPage() {
     edited: 0,
   });
 
+  useEffect(() => {
+    if (!showDelete) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setShowDelete(false); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [showDelete]);
+
   // Load available collections once
   useEffect(() => {
     fetch("/api/schema/collections")
