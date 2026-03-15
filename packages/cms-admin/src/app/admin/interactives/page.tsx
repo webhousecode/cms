@@ -211,12 +211,12 @@ export default function InteractivesPage() {
           {filtered.map((item) => (
             <div
               key={item.id}
-              className="group relative rounded-lg border border-border bg-card overflow-hidden"
+              className="group relative rounded-lg border border-border bg-card"
               style={{ cursor: "pointer", transition: "border-color 150ms" }}
               onClick={() => router.push(`/admin/interactives/${item.id}`)}
             >
               {/* Thumbnail */}
-              <div style={{ width: "100%", height: "150px", background: "var(--muted)", overflow: "hidden", position: "relative" }}>
+              <div style={{ width: "100%", height: "150px", background: "var(--muted)", overflow: "hidden", position: "relative", borderRadius: "0.5rem 0.5rem 0 0" }}>
                 <iframe
                   src={`/api/interactives/${item.id}/preview`}
                   title={item.name}
