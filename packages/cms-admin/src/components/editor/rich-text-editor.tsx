@@ -1094,8 +1094,19 @@ function FileNodeView({ node, updateAttributes, deleteNode, selected }: NodeView
   };
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const [mediaBrowserOpen, setMediaBrowserOpen] = useState(false);
+  const [mediaItems, setMediaItems] = useState<Array<{ name: string; url: string; isImage: boolean; mediaType?: string; size: number }>>([]);
+  const [mediaLoading, setMediaLoading] = useState(false);
+  const [mediaSearch, setMediaSearch] = useState("");
   const fileRef = useRef<HTMLInputElement>(null);
   const del = useConfirmDelete(deleteNode);
+
+  useEffect(() => {
+    if (!mediaBrowserOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setMediaBrowserOpen(false); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [mediaBrowserOpen]);
 
   const handleUpload = async (file: File) => {
     setUploading(true);
@@ -1111,7 +1122,160 @@ function FileNodeView({ node, updateAttributes, deleteNode, selected }: NodeView
     }
   };
 
+  const openMediaBrowser = () => {
+    setMediaBrowserOpen(true);
+    setMediaLoading(true);
+    setMediaSearch("");
+    fetch("/api/media")
+      .then((r) => r.json())
+      .then((items: Array<{ name: string; url: string; isImage: boolean; mediaType?: string; size: number }>) => {
+        setMediaItems(items);
+      })
+      .catch(() => setMediaItems([]))
+      .finally(() => setMediaLoading(false));
+  };
+
+  const mediaBrowserModal = mediaBrowserOpen && (
+    <div
+      style={{
+        position: "fixed", inset: 0, zIndex: 100,
+        display: "flex", alignItems: "center", justifyContent: "center",
+        background: "rgba(0,0,0,0.5)",
+      }}
+      onClick={(e) => { if (e.target === e.currentTarget) setMediaBrowserOpen(false); }}
+    >
+      <div style={{
+        background: "var(--popover)", border: "1px solid var(--border)",
+        borderRadius: "12px", boxShadow: "0 8px 40px rgba(0,0,0,0.4)",
+        width: "min(640px, 90vw)", maxHeight: "70vh",
+        display: "flex", flexDirection: "column", overflow: "hidden",
+      }}>
+        {/* Modal header */}
+        <div style={{
+          display: "flex", alignItems: "center", justifyContent: "space-between",
+          padding: "0.75rem 1rem", borderBottom: "1px solid var(--border)",
+        }}>
+          <span style={{ fontWeight: 500, fontSize: "0.9rem", display: "flex", alignItems: "center", gap: "0.4rem" }}>
+            <IconFile />
+            Media Library
+          </span>
+          <button
+            type="button"
+            onClick={() => setMediaBrowserOpen(false)}
+            style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.25rem", fontSize: "1.1rem", lineHeight: 1 }}
+          >
+            &times;
+          </button>
+        </div>
+        {/* Search */}
+        <div style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid var(--border)" }}>
+          <input
+            type="text"
+            value={mediaSearch}
+            onChange={(e) => setMediaSearch(e.target.value)}
+            placeholder="Search files..."
+            autoFocus
+            style={{
+              width: "100%", padding: "0.35rem 0.5rem",
+              borderRadius: "6px", border: "1px solid var(--border)",
+              background: "var(--background)", color: "var(--foreground)",
+              fontSize: "0.8rem", outline: "none",
+            }}
+          />
+        </div>
+        {/* Modal body */}
+        <div style={{ overflowY: "auto", padding: "0.75rem" }}>
+          {mediaLoading && (
+            <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>
+              Loading media...
+            </div>
+          )}
+          {!mediaLoading && mediaItems.length === 0 && (
+            <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>
+              No files found in Media library
+            </div>
+          )}
+          {!mediaLoading && mediaItems.length > 0 && (() => {
+            const filtered = mediaItems.filter((item) => !mediaSearch || item.name.toLowerCase().includes(mediaSearch.toLowerCase()));
+            if (filtered.length === 0) return (
+              <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>
+                No files match &ldquo;{mediaSearch}&rdquo;
+              </div>
+            );
+            return (
+              <div style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))",
+                gap: "0.5rem",
+              }}>
+                {filtered.map((item) => (
+                  <button
+                    key={item.url}
+                    type="button"
+                    onClick={() => {
+                      let storedUrl = item.url;
+                      try { const u = new URL(item.url); storedUrl = u.pathname; } catch { /* already relative */ }
+                      const sizeStr = item.size ? formatFileSize(item.size) : "";
+                      updateAttributes({ src: storedUrl, filename: item.name, size: sizeStr });
+                      setMediaBrowserOpen(false);
+                    }}
+                    style={{
+                      background: "none",
+                      border: "1px solid var(--border)",
+                      borderRadius: "6px", cursor: "pointer",
+                      padding: "0.25rem", display: "flex",
+                      flexDirection: "column", alignItems: "center",
+                      gap: "0.25rem", overflow: "hidden",
+                    }}
+                    className="hover:border-primary transition-colors"
+                    title={item.name}
+                  >
+                    {item.isImage ? (
+                      <img src={item.url} alt={item.name}
+                        style={{ width: "100%", height: "80px", objectFit: "cover", borderRadius: "4px" }} />
+                    ) : (
+                      <div style={{
+                        width: "100%", height: "80px", display: "flex",
+                        flexDirection: "column", alignItems: "center", justifyContent: "center",
+                        gap: "0.25rem", color: "var(--muted-foreground)", borderRadius: "4px",
+                        background: "var(--muted)",
+                      }}>
+                        <IconFile />
+                        <span style={{ fontSize: "0.55rem", textTransform: "uppercase", fontWeight: 600, opacity: 0.7 }}>
+                          {item.mediaType ?? item.name.split(".").pop() ?? "file"}
+                        </span>
+                      </div>
+                    )}
+                    <span style={{
+                      fontSize: "0.6rem", color: "var(--muted-foreground)",
+                      overflow: "hidden", textOverflow: "ellipsis",
+                      whiteSpace: "nowrap", width: "100%", textAlign: "center",
+                    }}>
+                      {item.name}
+                    </span>
+                    {item.size > 0 && (
+                      <span style={{ fontSize: "0.5rem", color: "var(--muted-foreground)", opacity: 0.7 }}>
+                        {formatFileSize(item.size)}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            );
+          })()}
+        </div>
+      </div>
+    </div>
+  );
+
   if (!src) {
+    const btnStyle: React.CSSProperties = {
+      display: "inline-flex", alignItems: "center", gap: "0.35rem",
+      padding: "0.5rem 0.85rem", borderRadius: "6px",
+      border: "1px solid var(--border)", background: "var(--card)",
+      cursor: "pointer", fontSize: "0.8rem", color: "var(--muted-foreground)",
+      transition: "border-color 150ms, color 150ms",
+    };
     return (
       <NodeViewWrapper draggable contentEditable={false} style={{ margin: "0.75rem 0", position: "relative" }}>
         <DragHandle />
@@ -1119,19 +1283,34 @@ function FileNodeView({ node, updateAttributes, deleteNode, selected }: NodeView
           onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
           onDragLeave={() => setDragOver(false)}
           onDrop={(e) => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files?.[0]; if (f) handleUpload(f); }}
-          onClick={() => fileRef.current?.click()}
           style={{
-            width: "100%", maxWidth: "400px", padding: "2rem", textAlign: "center",
+            width: "100%", maxWidth: "400px", padding: "1.5rem", textAlign: "center",
             borderRadius: "8px", border: `2px dashed ${dragOver ? "var(--primary)" : "var(--border)"}`,
             backgroundColor: dragOver ? "rgba(255,255,255,0.04)" : "var(--card)",
-            cursor: "pointer", color: "var(--muted-foreground)", fontSize: "0.875rem",
+            color: "var(--muted-foreground)", fontSize: "0.875rem",
             transition: "border-color 150ms, background 150ms",
+            display: "flex", flexDirection: "column", alignItems: "center", gap: "0.75rem",
           }}
         >
-          {uploading ? "Uploading…" : "Drop or click to attach file"}
+          {uploading ? "Uploading..." : (
+            <>
+              <span style={{ fontSize: "0.8rem" }}>Drop file here or</span>
+              <div style={{ display: "flex", gap: "0.5rem" }}>
+                <button type="button" onClick={(e) => { e.stopPropagation(); fileRef.current?.click(); }}
+                  style={btnStyle} className="hover:border-primary hover:text-primary">
+                  <IconAttachment /> Upload file
+                </button>
+                <button type="button" onClick={(e) => { e.stopPropagation(); openMediaBrowser(); }}
+                  style={btnStyle} className="hover:border-primary hover:text-primary">
+                  <IconFile /> Browse Media
+                </button>
+              </div>
+            </>
+          )}
           <input ref={fileRef} type="file" accept="*" style={{ display: "none" }}
             onChange={(e) => { const f = e.target.files?.[0]; if (f) handleUpload(f); e.target.value = ""; }} />
         </div>
+        {mediaBrowserModal}
       </NodeViewWrapper>
     );
   }
@@ -1626,7 +1805,6 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
   const linkRef = useRef<HTMLDivElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
   const audioInputRef = useRef<HTMLInputElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [imgDelConfirming, setImgDelConfirming] = useState(false);
   const imgDelTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -2046,40 +2224,11 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
             />
 
             {/* Insert File */}
-            <Btn tooltip="Attach file" onClick={() => fileInputRef.current?.click()}>
+            <Btn tooltip="Attach file" onClick={() => {
+              editor.chain().focus().insertContent({ type: "fileAttachment", attrs: { src: "", filename: "", size: "" } }).run();
+            }}>
               <IconAttachment />
             </Btn>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="*"
-              style={{ display: "none" }}
-              onChange={(e) => {
-                const f = e.target.files?.[0];
-                if (f) {
-                  editor.chain().focus().insertContent({ type: "fileAttachment", attrs: { src: "", filename: f.name, size: "" } }).run();
-                  (async () => {
-                    const fd = new FormData();
-                    fd.append("file", f);
-                    fd.append("folder", "files");
-                    const res = await fetch("/api/upload", { method: "POST", body: fd });
-                    const { url } = await res.json();
-                    const sizeStr = f.size < 1024 ? `${f.size} B` : f.size < 1024*1024 ? `${(f.size/1024).toFixed(1)} KB` : `${(f.size/(1024*1024)).toFixed(1)} MB`;
-                    const { state } = editor;
-                    state.doc.descendants((node, pos) => {
-                      if (node.type.name === "fileAttachment" && !node.attrs.src && node.attrs.filename === f.name) {
-                        editor.chain().command(({ tr }) => {
-                          tr.setNodeMarkup(pos, undefined, { ...node.attrs, src: url, size: sizeStr });
-                          return true;
-                        }).run();
-                        return false;
-                      }
-                    });
-                  })();
-                }
-                e.target.value = "";
-              }}
-            />
 
             {/* Insert Callout */}
             <Btn tooltip="Insert callout" onClick={() => {
