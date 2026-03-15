@@ -330,6 +330,12 @@ function RevisionPanel({ collection, slug, currentData, onRestore, onClose }: {
   const [expanded, setExpanded] = useState<number | null>(null);
 
   useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [onClose]);
+
+  useEffect(() => {
     fetch(`/api/cms/${collection}/${slug}/revisions`)
       .then((r) => r.json())
       .then((data) => { setRevisions(Array.isArray(data) ? data : []); setLoading(false); })
@@ -434,6 +440,12 @@ function PropertiesPanel({ doc, collection, onClose, onSaved }: {
   const [slug, setSlug] = useState(doc.slug);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  }, [onClose]);
 
   const SLUG_RE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
