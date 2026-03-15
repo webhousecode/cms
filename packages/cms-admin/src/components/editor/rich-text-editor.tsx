@@ -1846,11 +1846,11 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
       TableRow,
       TableHeader,
       TableCell,
-      Markdown.configure({ html: true, transformPastedText: true }),
+      Markdown.configure({ html: false, transformPastedText: true }),
     ],
     content: value || "",
     editable: !disabled,
-    onUpdate: ({ editor }) => onChange(editor.storage.markdown.getMarkdown()),
+    onUpdate: ({ editor }) => onChange(editor.getHTML()),
     editorProps: {
       attributes: {
         class: "rte outline-none min-h-[300px]",
@@ -1890,7 +1890,7 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
 
   useEffect(() => {
     if (editor && !editor.isFocused) {
-      const current = editor.storage.markdown.getMarkdown();
+      const current = editor.getHTML();
       if (value !== current) editor.commands.setContent(value || "", false);
     }
   }, [value, editor]);
