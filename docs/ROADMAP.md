@@ -83,6 +83,7 @@ Full feature list with individual plan docs in [FEATURES.md](FEATURES.md) and [d
 | F33 | PWA Support | Planned |
 | F34 | Multi-Tenancy (Full) | In progress |
 | F35 | Webhooks | Planned |
+| F36 | Framework Integrations (Next.js, Astro, Remix, Nuxt, SvelteKit, Vite) | Planned |
 
 ---
 

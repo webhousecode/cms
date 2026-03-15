@@ -52,6 +52,7 @@
 | F33 | [PWA Support](#f33-pwa-support) | Planned | [docs/features/F33-pwa-support.md](features/F33-pwa-support.md) |
 | F34 | [Multi-Tenancy (Full)](#f34-multi-tenancy) | In progress | [docs/features/F34-multi-tenancy.md](features/F34-multi-tenancy.md) |
 | F35 | [Webhooks](#f35-webhooks) | Planned | [docs/features/F35-webhooks.md](features/F35-webhooks.md) |
+| F36 | [Framework Integrations](#f36-framework-integrations) | Planned | [docs/features/F36-framework-integrations.md](features/F36-framework-integrations.md) |
 
 ---
 
@@ -159,3 +160,6 @@ Complete multi-tenant architecture. Hub-and-spoke model — central admin managi
 
 ## F35 — Webhooks
 Outbound webhook system for machine-to-machine integration. Dispatches content lifecycle events (created, published, deleted) to external URLs with HMAC signing, exponential backoff retry (3 attempts), and delivery logging. Preset templates for Vercel, Netlify, and Cloudflare deploy hooks. Admin UI with webhook management and delivery log viewer. Built on top of #21 lifecycle hooks.
+
+## F36 — Framework Integrations
+First-class integration packages for Next.js (enhanced), Astro, Remix, Nuxt, SvelteKit, and Vite/Vike. Each adds framework-specific features: auto route generation, metadata helpers, ISR revalidation, preview mode, HMR on content changes. Priority: Next.js → Astro → Remix → rest. Dispatches content lifecycle events (created, published, deleted) to external URLs with HMAC signing, exponential backoff retry (3 attempts), and delivery logging. Preset templates for Vercel, Netlify, and Cloudflare deploy hooks. Admin UI with webhook management and delivery log viewer. Built on top of #21 lifecycle hooks.
