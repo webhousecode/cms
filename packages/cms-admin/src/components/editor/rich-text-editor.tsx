@@ -1037,8 +1037,14 @@ const InteractiveEmbed = TipTapNode.create({
           state.closeBlock(node);
         },
         parse: {
-          updateDOM(_dom: Element) {
-            // Nothing to transform — the div is already in the right format
+          updateDOM(dom: Element) {
+            // Unwrap from <p> wrappers that markdown parser may add
+            dom.querySelectorAll("p").forEach((p) => {
+              const child = p.querySelector("div[data-interactive-embed]");
+              if (child && p.childNodes.length === 1) {
+                p.parentNode?.replaceChild(child, p);
+              }
+            });
           },
         },
       },
@@ -2093,7 +2099,10 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
               setInteractivesLoading(true);
               fetch("/api/interactives")
                 .then(r => r.json())
-                .then((data) => setAvailableInteractives(Array.isArray(data) ? data : (data.interactives ?? [])))
+                .then((data) => {
+                  const items = Array.isArray(data) ? data : (data.interactives ?? []);
+                  setAvailableInteractives(items.map((i: Record<string, string>) => ({ id: i.id, title: i.name || i.title || i.id })));
+                })
                 .catch(() => setAvailableInteractives([]))
                 .finally(() => setInteractivesLoading(false));
             }}>
