@@ -200,6 +200,7 @@ async function callModelWithTools(params: {
 
 /** Runs a single agent with a given prompt. Adds result to curation queue. */
 export async function runAgent(agentId: string, userPrompt: string, overrideCollection?: string): Promise<AgentRunResult> {
+  const runStartTime = Date.now();
   const agent = await getAgent(agentId);
   if (!agent) throw new Error(`Agent ${agentId} not found`);
   if (!agent.active) throw new Error(`Agent ${agentId} is not active`);
@@ -353,6 +354,35 @@ export async function runAgent(agentId: string, userPrompt: string, overrideColl
   await updateAgent(agent.id, {
     stats: { ...agent.stats, totalGenerated: agent.stats.totalGenerated + 1 },
   }).catch(() => {});
+
+  // Record analytics
+  const { recordRun, recordContentEdit } = await import("@/lib/analytics");
+  await recordRun({
+    agentId: agent.id,
+    agentName: agent.name,
+    timestamp: new Date().toISOString(),
+    collection: targetCollection,
+    documentsProcessed: 1,
+    tokensUsed: { input: totalInputTokens, output: totalOutputTokens },
+    costUsd: totalCost,
+    durationMs: Date.now() - runStartTime,
+    model,
+    status: "success",
+  }).catch(() => {});
+
+  // Record AI content edit for each field produced
+  const fieldNames = Object.keys(contentData);
+  for (const field of fieldNames) {
+    await recordContentEdit({
+      collection: targetCollection,
+      slug,
+      field,
+      source: "ai",
+      agentId: agent.id,
+      timestamp: new Date().toISOString(),
+      wasModified: false,
+    }).catch(() => {});
+  }
 
   // Cleanup MCP connections
   await toolRegistry.cleanup();

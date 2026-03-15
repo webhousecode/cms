@@ -125,6 +125,28 @@ export async function updateQueueItemData(
   const items = await readQueue();
   const idx = items.findIndex((i) => i.id === id);
   if (idx === -1) throw new Error(`Queue item ${id} not found`);
+
+  const item = items[idx];
+
+  // Track human edits to AI content for analytics
+  try {
+    const { recordContentEdit } = await import("@/lib/analytics");
+    for (const field of Object.keys(patch)) {
+      // Record the human edit
+      await recordContentEdit({
+        collection: item.collection,
+        slug: item.slug,
+        field,
+        source: "human",
+        agentId: item.agentId,
+        timestamp: new Date().toISOString(),
+        wasModified: true,
+      });
+    }
+  } catch {
+    // Analytics recording is best-effort
+  }
+
   items[idx].contentData = { ...items[idx].contentData, ...patch };
   // If title field is patched, update the top-level title too
   if (typeof patch["title"] === "string") {

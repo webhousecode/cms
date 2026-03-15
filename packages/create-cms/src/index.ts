@@ -1,9 +1,10 @@
-import { existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { chmodSync, existsSync, mkdirSync, readdirSync, writeFileSync } from 'node:fs';
+import { basename, join, resolve } from 'node:path';
 import { execSync } from 'node:child_process';
 
-const projectName = process.argv[2] || 'my-cms-site';
-const projectDir = resolve(process.cwd(), projectName);
+const projectArg = process.argv[2] || 'my-cms-site';
+const projectDir = resolve(process.cwd(), projectArg);
+const projectName = basename(projectDir);
 
 // ── Colors ──────────────────────────────────────────────────────────────
 const cyan = (s: string) => `\x1b[36m${s}\x1b[0m`;
@@ -88,16 +89,70 @@ content/
 
 ## Reading content in Next.js
 
-Use the \`@webhouse/cms\` SDK to load content:
+Content is stored as flat JSON files. Read them directly with \`fs\` — no SDK client needed:
 
 \`\`\`ts
-import { loadContent } from '@webhouse/cms';
+// lib/content.ts
+import { readFileSync, readdirSync, existsSync } from 'node:fs';
+import { join } from 'node:path';
 
-// Load all entries in a collection
-const posts = await loadContent('posts');
+const CONTENT_DIR = join(process.cwd(), 'content');
 
-// Load a single entry by slug
-const post = await loadContent('posts', 'hello-world');
+interface Document<T = Record<string, unknown>> {
+  id: string;
+  slug: string;
+  collection: string;
+  status: 'draft' | 'published' | 'archived';
+  data: T;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** Get all documents in a collection */
+export function getCollection<T = Record<string, unknown>>(
+  collection: string,
+  status: 'published' | 'draft' | 'all' = 'published'
+): Document<T>[] {
+  const dir = join(CONTENT_DIR, collection);
+  if (!existsSync(dir)) return [];
+
+  return readdirSync(dir)
+    .filter(f => f.endsWith('.json'))
+    .map(f => JSON.parse(readFileSync(join(dir, f), 'utf-8')) as Document<T>)
+    .filter(doc => status === 'all' || doc.status === status)
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+}
+
+/** Get a single document by slug */
+export function getDocument<T = Record<string, unknown>>(
+  collection: string,
+  slug: string
+): Document<T> | null {
+  const filePath = join(CONTENT_DIR, collection, slug + '.json');
+  if (!existsSync(filePath)) return null;
+  return JSON.parse(readFileSync(filePath, 'utf-8')) as Document<T>;
+}
+\`\`\`
+
+Then use in a page:
+
+\`\`\`ts
+// app/blog/page.tsx
+import { getCollection } from '@/lib/content';
+
+export default function BlogPage() {
+  const posts = getCollection<{ title: string; excerpt: string }>('posts');
+  return (
+    <main>
+      {posts.map(post => (
+        <article key={post.slug}>
+          <h2>{post.data.title}</h2>
+          <p>{post.data.excerpt}</p>
+        </article>
+      ))}
+    </main>
+  );
+}
 \`\`\`
 
 ## Adding new collections
@@ -139,7 +194,7 @@ write('.mcp.json', JSON.stringify({
 write('content/.gitkeep', '');
 
 // ── 4b. public/favicon.svg ──────────────────────────────────────────────
-mkdirSync(join(dir, 'public'), { recursive: true });
+mkdirSync(join(projectDir, 'public'), { recursive: true });
 write('public/favicon.svg', `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64">
   <path fill="#2a2a3e" d="M32,0C16.8,0,1.5,9.1,1.5,27.3s9.1,32.2,21.3,36.5c6.1,1.8,9.1-1.8,9.1-7.9"/>
   <path fill="#212135" d="M1.5,27.3c-3,9.1-1.2,22.5,4.9,29.8,4.9,4.9,12.2,7.3,16.4,6.7"/>
@@ -216,7 +271,7 @@ write('package.json', JSON.stringify({
 }, null, 2) + '\n');
 
 // ── 8. .claude/settings.json ─────────────────────────────────────────────
-mkdirSync(join(dir, '.claude'), { recursive: true });
+mkdirSync(join(projectDir, '.claude'), { recursive: true });
 write('.claude/settings.json', JSON.stringify({
   permissions: {
     allow: [
@@ -268,8 +323,7 @@ claude "$PROMPT"
 
 // Make start.sh executable
 try {
-  const { chmodSync } = require('node:fs');
-  chmodSync(join(dir, 'start.sh'), 0o755);
+  chmodSync(join(projectDir, 'start.sh'), 0o755);
 } catch {}
 
 // ── Install dependencies ────────────────────────────────────────────────
