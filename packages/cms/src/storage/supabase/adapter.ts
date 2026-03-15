@@ -165,9 +165,28 @@ export class SupabaseStorageAdapter implements StorageAdapter {
       CREATE INDEX IF NOT EXISTS idx_${this.tableName}_locale
         ON ${this.tableName} (locale);
 
-      -- Disable RLS — CMS uses service_role key which bypasses it anyway.
-      -- If you need RLS, create policies manually after migration.
-      ALTER TABLE ${this.tableName} DISABLE ROW LEVEL SECURITY;
+      -- Enable RLS with service_role full access policy
+      ALTER TABLE ${this.tableName} ENABLE ROW LEVEL SECURITY;
+
+      -- Allow service_role full access (CMS admin operations)
+      DO $$ BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_policies WHERE tablename = '${this.tableName}' AND policyname = 'cms_service_role_all'
+        ) THEN
+          CREATE POLICY cms_service_role_all ON ${this.tableName}
+            FOR ALL TO service_role USING (true) WITH CHECK (true);
+        END IF;
+      END $$;
+
+      -- Allow anon read access to published documents (for public MCP/API)
+      DO $$ BEGIN
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_policies WHERE tablename = '${this.tableName}' AND policyname = 'cms_anon_read_published'
+        ) THEN
+          CREATE POLICY cms_anon_read_published ON ${this.tableName}
+            FOR SELECT TO anon USING (status = 'published');
+        END IF;
+      END $$;
     `;
 
     const { error } = await client.rpc('exec_sql', { query: sql });
