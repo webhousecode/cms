@@ -8,8 +8,14 @@ import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
 
 type StatusFilter = "all" | "published" | "draft" | "scheduled" | "trashed";
-type SortKey = "updatedAt" | "title" | "status" | "date";
+type SortKey = string;
 type SortDir = "asc" | "desc";
+
+interface FieldConfig {
+  name: string;
+  type: string;
+  label?: string;
+}
 
 interface Doc {
   id: string;
@@ -23,8 +29,60 @@ interface Doc {
 interface Props {
   collection: string;
   titleField: string;
+  fields: FieldConfig[];
   initialDocs: Doc[];
 }
+
+/* ─── Column definitions ─────────────────────────────────────── */
+
+// Fields that should appear as columns (skip title — it's always first, skip richtext/blocks — too large)
+const SKIP_COLUMN_TYPES = new Set(["richtext", "blocks", "image", "image-gallery", "video", "object"]);
+// Max extra columns beyond title + status + updated
+const MAX_EXTRA_COLUMNS = 4;
+
+function buildColumns(fields: FieldConfig[], titleField: string) {
+  const extra = fields
+    .filter(f => f.name !== titleField && !SKIP_COLUMN_TYPES.has(f.type))
+    .slice(0, MAX_EXTRA_COLUMNS);
+  return extra;
+}
+
+function renderCellValue(field: FieldConfig, value: unknown): React.ReactNode {
+  if (value === undefined || value === null || value === "") {
+    return <span style={{ opacity: 0.3, fontSize: "0.8rem" }}>—</span>;
+  }
+
+  switch (field.type) {
+    case "tags": {
+      const tags = Array.isArray(value) ? value as string[] : [];
+      if (tags.length === 0) return <span style={{ opacity: 0.3, fontSize: "0.8rem" }}>—</span>;
+      return (
+        <div style={{ display: "flex", gap: "0.25rem", flexWrap: "wrap" }}>
+          {tags.slice(0, 3).map((t) => (
+            <span key={t} style={{ fontSize: "0.65rem", padding: "0.1rem 0.4rem", borderRadius: "4px", background: "var(--secondary)", color: "var(--muted-foreground)", fontFamily: "monospace" }}>{t}</span>
+          ))}
+          {tags.length > 3 && <span style={{ fontSize: "0.65rem", color: "var(--muted-foreground)" }}>+{tags.length - 3}</span>}
+        </div>
+      );
+    }
+    case "boolean":
+      return <span style={{ fontSize: "0.75rem", color: "var(--muted-foreground)" }}>{value ? "Yes" : "No"}</span>;
+    case "date":
+      return <span style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>{formatDate(String(value))}</span>;
+    case "relation":
+      if (Array.isArray(value)) return <span style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", fontFamily: "monospace" }}>{value.length} items</span>;
+      return <span style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", fontFamily: "monospace" }}>{String(value)}</span>;
+    case "array":
+      if (Array.isArray(value)) return <span style={{ fontSize: "0.75rem", color: "var(--muted-foreground)" }}>{value.length} items</span>;
+      return <span style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>{String(value)}</span>;
+    default: {
+      const str = String(value);
+      return <span style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", display: "block", maxWidth: "12rem" }}>{str}</span>;
+    }
+  }
+}
+
+/* ─── Sub-components ──────────────────────────────────────────── */
 
 function StatusDot({ status, publishAt }: { status: string; publishAt?: string }) {
   const isScheduled = status === "draft" && !!publishAt && new Date(publishAt) > new Date();
@@ -99,7 +157,9 @@ function RowMenu({ doc, collection, onClone, onToggle, onTrash, cloning }: {
   );
 }
 
-export function CollectionList({ collection, titleField, initialDocs }: Props) {
+/* ─── Main component ──────────────────────────────────────────── */
+
+export function CollectionList({ collection, titleField, fields, initialDocs }: Props) {
   const [docs, setDocs] = useState(initialDocs);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
@@ -108,6 +168,8 @@ export function CollectionList({ collection, titleField, initialDocs }: Props) {
   const [cloningSlug, setCloningSlug] = useState<string | null>(null);
   const [, startTransition] = useTransition();
   const router = useRouter();
+
+  const extraColumns = buildColumns(fields, titleField);
 
   const counts = {
     published: docs.filter((d) => d.status === "published").length,
@@ -140,21 +202,29 @@ export function CollectionList({ collection, titleField, initialDocs }: Props) {
       return true;
     })
     .sort((a, b) => {
-      let av = 0, bv = 0;
-      if (sortKey === "updatedAt") { av = new Date(a.updatedAt).getTime(); bv = new Date(b.updatedAt).getTime(); }
-      else if (sortKey === "date") {
-        av = new Date((a.data["date"] as string) || a.updatedAt).getTime();
-        bv = new Date((b.data["date"] as string) || b.updatedAt).getTime();
+      if (sortKey === "updatedAt") {
+        const av = new Date(a.updatedAt).getTime();
+        const bv = new Date(b.updatedAt).getTime();
+        return sortDir === "asc" ? av - bv : bv - av;
       }
-      else if (sortKey === "title") {
+      if (sortKey === "title") {
         const at = String(a.data[titleField] ?? a.slug).toLowerCase();
         const bt = String(b.data[titleField] ?? b.slug).toLowerCase();
         return sortDir === "asc" ? at.localeCompare(bt) : bt.localeCompare(at);
       }
-      else if (sortKey === "status") {
+      if (sortKey === "status") {
         return sortDir === "asc" ? a.status.localeCompare(b.status) : b.status.localeCompare(a.status);
       }
-      return sortDir === "asc" ? av - bv : bv - av;
+      // Sort by data field
+      const av = String(a.data[sortKey] ?? "");
+      const bv = String(b.data[sortKey] ?? "");
+      // Try numeric sort first
+      const an = Number(av), bn = Number(bv);
+      if (!isNaN(an) && !isNaN(bn)) return sortDir === "asc" ? an - bn : bn - an;
+      // Date sort
+      const ad = Date.parse(av), bd = Date.parse(bv);
+      if (!isNaN(ad) && !isNaN(bd)) return sortDir === "asc" ? ad - bd : bd - ad;
+      return sortDir === "asc" ? av.localeCompare(bv) : bv.localeCompare(av);
     });
 
   function toggleSort(key: SortKey) {
@@ -266,9 +336,9 @@ export function CollectionList({ collection, titleField, initialDocs }: Props) {
               <tr>
                 <SortTh label="Title" sk="title" />
                 <SortTh label="Status" sk="status" />
-                <th style={thStyle}>Category</th>
-                <th style={thStyle}>Tags</th>
-                <SortTh label="Date" sk="date" />
+                {extraColumns.map((col) => (
+                  <SortTh key={col.name} label={col.label ?? col.name} sk={col.name} />
+                ))}
                 <SortTh label="Updated" sk="updatedAt" />
                 <th style={{ ...thStyle, width: "2.5rem" }} />
               </tr>
@@ -277,9 +347,6 @@ export function CollectionList({ collection, titleField, initialDocs }: Props) {
               {filtered.map((doc, i) => {
                 const title = String(doc.data[titleField] ?? doc.data["title"] ?? doc.slug);
                 const isScheduled = doc.status === "draft" && !!doc.publishAt && new Date(doc.publishAt) > new Date();
-                const category = doc.data["category"] as string | undefined;
-                const tags = doc.data["tags"] as string[] | undefined;
-                const contentDate = doc.data["date"] as string | undefined;
 
                 return (
                   <tr
@@ -325,27 +392,12 @@ export function CollectionList({ collection, titleField, initialDocs }: Props) {
                       </button>
                     </td>
 
-                    {/* Category */}
-                    <td style={{ padding: "0.625rem 0.75rem", fontSize: "0.8rem", color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>
-                      {category ?? <span style={{ opacity: 0.3 }}>—</span>}
-                    </td>
-
-                    {/* Tags */}
-                    <td style={{ padding: "0.625rem 0.75rem" }}>
-                      {tags && tags.length > 0 ? (
-                        <div style={{ display: "flex", gap: "0.25rem", flexWrap: "wrap" }}>
-                          {tags.slice(0, 3).map((t) => (
-                            <span key={t} style={{ fontSize: "0.65rem", padding: "0.1rem 0.4rem", borderRadius: "4px", background: "var(--secondary)", color: "var(--muted-foreground)", fontFamily: "monospace" }}>{t}</span>
-                          ))}
-                          {tags.length > 3 && <span style={{ fontSize: "0.65rem", color: "var(--muted-foreground)" }}>+{tags.length - 3}</span>}
-                        </div>
-                      ) : <span style={{ opacity: 0.3, fontSize: "0.8rem" }}>—</span>}
-                    </td>
-
-                    {/* Date */}
-                    <td style={{ padding: "0.625rem 0.75rem", fontSize: "0.75rem", color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>
-                      {contentDate ? formatDate(contentDate) : <span style={{ opacity: 0.3 }}>—</span>}
-                    </td>
+                    {/* Dynamic columns */}
+                    {extraColumns.map((col) => (
+                      <td key={col.name} style={{ padding: "0.625rem 0.75rem" }}>
+                        {renderCellValue(col, doc.data[col.name])}
+                      </td>
+                    ))}
 
                     {/* Updated */}
                     <td style={{ padding: "0.625rem 0.75rem", fontSize: "0.75rem", color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>

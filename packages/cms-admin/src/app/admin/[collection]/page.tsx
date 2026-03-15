@@ -53,6 +53,7 @@ export default async function CollectionPage({ params }: Props) {
       <CollectionList
         collection={collection}
         titleField={colConfig.fields[0]?.name ?? "title"}
+        fields={colConfig.fields}
         initialDocs={sorted}
       />
     </div>
