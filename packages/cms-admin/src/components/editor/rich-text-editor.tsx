@@ -1033,26 +1033,24 @@ const InteractiveEmbed = TipTapNode.create({
     return {
       markdown: {
         serialize(state: { write: (s: string) => void; closeBlock: (node: unknown) => void }, node: { attrs: Record<string, unknown> }) {
-          state.write(`<iframe data-interactive="${node.attrs.interactiveId}" data-interactive-title="${node.attrs.title || ''}"></iframe>`);
+          state.write(`<!-- interactive:${node.attrs.interactiveId}|${node.attrs.title || ''} -->`);
           state.closeBlock(node);
         },
         parse: {
           updateDOM(dom: Element) {
-            // Convert <iframe data-interactive="..."> to <div data-interactive-embed="...">
-            // so parseHTML() can pick it up as an interactiveEmbed node
-            dom.querySelectorAll("iframe[data-interactive]").forEach((iframe) => {
-              const div = document.createElement("div");
-              div.setAttribute("data-interactive-embed", iframe.getAttribute("data-interactive") ?? "");
-              div.setAttribute("data-interactive-title", iframe.getAttribute("data-interactive-title") ?? "");
-              iframe.parentNode?.replaceChild(div, iframe);
-            });
-            // Also unwrap from <p> wrappers
-            dom.querySelectorAll("p").forEach((p) => {
-              const child = p.querySelector("div[data-interactive-embed]");
-              if (child && p.childNodes.length === 1) {
-                p.parentNode?.replaceChild(child, p);
+            // Find HTML comments <!-- interactive:id|title --> and convert to div nodes
+            const walker = document.createTreeWalker(dom, NodeFilter.SHOW_COMMENT);
+            const comments: Comment[] = [];
+            while (walker.nextNode()) comments.push(walker.currentNode as Comment);
+            for (const c of comments) {
+              const m = c.textContent?.trim().match(/^interactive:([^|]+)\|?(.*)$/);
+              if (m) {
+                const div = document.createElement("div");
+                div.setAttribute("data-interactive-embed", m[1]);
+                div.setAttribute("data-interactive-title", m[2] || "");
+                c.parentNode?.replaceChild(div, c);
               }
-            });
+            }
           },
         },
       },
@@ -1398,11 +1396,27 @@ const FileAttachment = TipTapNode.create({
       markdown: {
         serialize(state: { write: (s: string) => void; closeBlock: (node: unknown) => void }, node: { attrs: Record<string, unknown> }) {
           const { src, filename } = node.attrs as { src: string; filename: string };
-          state.write(`<a href="${src}" download>${filename}</a>`);
+          const { size } = node.attrs as { size: number };
+          state.write(`<!-- file:${src}|${filename}|${size || 0} -->`);
           state.closeBlock(node);
         },
         parse: {
           updateDOM(dom: Element) {
+            // Find HTML comments <!-- file:src|filename|size --> and convert to div nodes
+            const walker = document.createTreeWalker(dom, NodeFilter.SHOW_COMMENT);
+            const comments: Comment[] = [];
+            while (walker.nextNode()) comments.push(walker.currentNode as Comment);
+            for (const c of comments) {
+              const m = c.textContent?.trim().match(/^file:([^|]+)\|([^|]*)\|?(.*)$/);
+              if (m) {
+                const div = document.createElement("div");
+                div.setAttribute("data-file-attachment", m[1]);
+                div.setAttribute("data-file-name", m[2] || "");
+                div.setAttribute("data-file-size", m[3] || "0");
+                c.parentNode?.replaceChild(div, c);
+              }
+            }
+            // Also handle legacy <a download> tags
             dom.querySelectorAll("a[download]").forEach((a) => {
               const src = a.getAttribute("href") ?? "";
               const filename = a.textContent ?? "";
@@ -1410,18 +1424,6 @@ const FileAttachment = TipTapNode.create({
               div.setAttribute("data-file-attachment", src);
               div.setAttribute("data-file-name", filename);
               a.parentNode?.replaceChild(div, a);
-            });
-            // Also handle <p><a download>...</a></p> wrapping
-            dom.querySelectorAll("p").forEach((p) => {
-              const a = p.querySelector("a[download]");
-              if (a && p.childNodes.length === 1) {
-                const src = a.getAttribute("href") ?? "";
-                const filename = a.textContent ?? "";
-                const div = document.createElement("div");
-                div.setAttribute("data-file-attachment", src);
-                div.setAttribute("data-file-name", filename);
-                p.parentNode?.replaceChild(div, p);
-              }
             });
           },
         },
@@ -1846,7 +1848,7 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
       TableRow,
       TableHeader,
       TableCell,
-      Markdown.configure({ html: true, transformPastedText: true }),
+      Markdown.configure({ html: false, transformPastedText: true }),
     ],
     content: value || "",
     editable: !disabled,
@@ -1891,7 +1893,10 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
   useEffect(() => {
     if (editor && !editor.isFocused) {
       const current = editor.storage.markdown.getMarkdown();
-      if (value !== current) editor.commands.setContent(value || "", false);
+      if (value !== current) {
+        // Defer to avoid flushSync inside lifecycle
+        queueMicrotask(() => editor.commands.setContent(value || "", false));
+      }
     }
   }, [value, editor]);
 
