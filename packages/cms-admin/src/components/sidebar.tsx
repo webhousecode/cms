@@ -16,6 +16,7 @@ import {
   Trash2,
   BarChart2,
   Settings2,
+  Zap,
   Boxes,
   ChevronDown,
   ChevronRight,
@@ -161,6 +162,16 @@ export function AppSidebar({ collections }: Props) {
                     {readyCount}
                   </span>
                 )}
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                isActive={pathname.startsWith("/admin/interactives")}
+                tooltip="Interactives"
+                render={<Link href="/admin/interactives" />}
+              >
+                <Zap className="!w-5 !h-5" />
+                <span>Interactives</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
