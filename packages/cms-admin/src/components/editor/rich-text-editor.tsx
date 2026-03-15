@@ -1033,22 +1033,22 @@ const InteractiveEmbed = TipTapNode.create({
     return {
       markdown: {
         serialize(state: { write: (s: string) => void; closeBlock: (node: unknown) => void }, node: { attrs: Record<string, unknown> }) {
-          state.write(`<!-- interactive:${node.attrs.interactiveId}|${node.attrs.title || ''} -->`);
+          state.write(`!!INTERACTIVE[${node.attrs.interactiveId}|${node.attrs.title || ''}]`);
           state.closeBlock(node);
         },
         parse: {
           updateDOM(dom: Element) {
-            // Find HTML comments <!-- interactive:id|title --> and convert to div nodes
-            const walker = document.createTreeWalker(dom, NodeFilter.SHOW_COMMENT);
-            const comments: Comment[] = [];
-            while (walker.nextNode()) comments.push(walker.currentNode as Comment);
-            for (const c of comments) {
-              const m = c.textContent?.trim().match(/^interactive:([^|]+)\|?(.*)$/);
+            // Find !!INTERACTIVE[id|title] text nodes and convert to div elements
+            const walker = document.createTreeWalker(dom, NodeFilter.SHOW_TEXT);
+            const nodes: Text[] = [];
+            while (walker.nextNode()) nodes.push(walker.currentNode as Text);
+            for (const t of nodes) {
+              const m = t.textContent?.match(/^!!INTERACTIVE\[([^|]+)\|?(.*?)\]$/);
               if (m) {
                 const div = document.createElement("div");
                 div.setAttribute("data-interactive-embed", m[1]);
                 div.setAttribute("data-interactive-title", m[2] || "");
-                c.parentNode?.replaceChild(div, c);
+                t.parentNode?.replaceChild(div, t);
               }
             }
           },
@@ -1397,15 +1397,29 @@ const FileAttachment = TipTapNode.create({
         serialize(state: { write: (s: string) => void; closeBlock: (node: unknown) => void }, node: { attrs: Record<string, unknown> }) {
           const { src, filename } = node.attrs as { src: string; filename: string };
           const { size } = node.attrs as { size: number };
-          state.write(`<!-- file:${src}|${filename}|${size || 0} -->`);
+          state.write(`!!FILE[${src}|${filename}|${size || 0}]`);
           state.closeBlock(node);
         },
         parse: {
           updateDOM(dom: Element) {
-            // Find HTML comments <!-- file:src|filename|size --> and convert to div nodes
-            const walker = document.createTreeWalker(dom, NodeFilter.SHOW_COMMENT);
+            // Find !!FILE[src|filename|size] text nodes and convert to div elements
+            const walker = document.createTreeWalker(dom, NodeFilter.SHOW_TEXT);
+            const textNodes: Text[] = [];
+            while (walker.nextNode()) textNodes.push(walker.currentNode as Text);
+            for (const t of textNodes) {
+              const m = t.textContent?.match(/^!!FILE\[([^|]+)\|([^|]*)\|?(.*?)\]$/);
+              if (m) {
+                const div = document.createElement("div");
+                div.setAttribute("data-file-attachment", m[1]);
+                div.setAttribute("data-file-name", m[2] || "");
+                div.setAttribute("data-file-size", m[3] || "0");
+                t.parentNode?.replaceChild(div, t);
+              }
+            }
+            // Also handle legacy <!-- file:... --> comments
+            const cWalker = document.createTreeWalker(dom, NodeFilter.SHOW_COMMENT);
             const comments: Comment[] = [];
-            while (walker.nextNode()) comments.push(walker.currentNode as Comment);
+            while (cWalker.nextNode()) comments.push(cWalker.currentNode as Comment);
             for (const c of comments) {
               const m = c.textContent?.trim().match(/^file:([^|]+)\|([^|]*)\|?(.*)$/);
               if (m) {
