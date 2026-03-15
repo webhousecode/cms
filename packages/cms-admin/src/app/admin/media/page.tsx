@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Trash2, Copy, Check, Upload, LayoutGrid, List, FolderOpen, Folder, ChevronLeft, ChevronRight, Search, X, ZoomIn, ExternalLink, FileWarning } from "lucide-react";
+import { Trash2, Copy, Check, Upload, LayoutGrid, List, FolderOpen, Folder, ChevronLeft, ChevronRight, Search, X, ZoomIn, ExternalLink, FileWarning, Music, Video, FileText, Code, File } from "lucide-react";
 import type { UsageRef } from "@/app/api/cms/media/usage/route";
 import { cn } from "@/lib/utils";
 
@@ -475,6 +475,17 @@ export default function MediaPage() {
   );
 }
 
+function MediaIcon({ mediaType, size = "1.5rem" }: { mediaType: string; size?: string }) {
+  const s = { width: size, height: size, color: "var(--muted-foreground)" };
+  switch (mediaType) {
+    case "audio": return <Music style={s} />;
+    case "video": return <Video style={s} />;
+    case "document": return <FileText style={s} />;
+    case "interactive": return <Code style={s} />;
+    default: return <File style={s} />;
+  }
+}
+
 /* ─── Sub-components ─────────────────────────────────────────── */
 
 function FolderBtn({ label, count, active, icon, onClick }: {
@@ -547,7 +558,7 @@ function GridView({ files, copied, deleting, usageMap, onCopy, onDelete, onOpen 
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={file.url} alt={file.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               ) : (
-                <span style={{ fontSize: "2rem" }}>📄</span>
+                <MediaIcon mediaType={file.mediaType} size="2rem" />
               )}
             </div>
 
@@ -617,7 +628,9 @@ function ListView({ files, copied, deleting, usageMap, onCopy, onDelete, onOpen 
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={file.url} alt="" onClick={() => onOpen(file)} style={{ width: "2rem", height: "2rem", objectFit: "cover", borderRadius: "4px", flexShrink: 0, background: "var(--muted)", cursor: "zoom-in" }} />
                   ) : (
-                    <span style={{ width: "2rem", height: "2rem", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>📄</span>
+                    <span style={{ width: "2rem", height: "2rem", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <MediaIcon mediaType={file.mediaType} size="1.25rem" />
+                    </span>
                   )}
                   <span className="font-mono truncate" style={{ maxWidth: "260px" }} title={file.name}>{file.name}</span>
                 </td>
