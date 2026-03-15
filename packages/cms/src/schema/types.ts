@@ -13,7 +13,8 @@ export type FieldType =
   | 'select'
   | 'tags'
   | 'image-gallery'
-  | 'video';
+  | 'video'
+  | 'audio';
 
 export interface FieldConfig {
   name: string;

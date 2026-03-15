@@ -442,6 +442,29 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
       );
     }
 
+    case "audio": {
+      return (
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+          <Input
+            type="url"
+            value={strVal}
+            onChange={(e) => onChange(e.target.value)}
+            disabled={locked}
+            placeholder="Audio file URL (mp3, wav, ogg)"
+            className="font-mono text-sm"
+          />
+          {strVal && (
+            <audio
+              controls
+              src={strVal}
+              style={{ width: "100%", borderRadius: "6px" }}
+              preload="metadata"
+            />
+          )}
+        </div>
+      );
+    }
+
     case "array": {
       // Structured array with field definitions → StructuredArrayEditor
       if (field.fields && field.fields.length > 0) {
