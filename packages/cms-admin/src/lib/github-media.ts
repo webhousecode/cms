@@ -119,6 +119,7 @@ export class GitHubMediaClient {
 
   /**
    * Get a single file's raw binary content.
+   * Handles files >1MB where GitHub returns download_url instead of base64 content.
    */
   async getFileRaw(filePath: string): Promise<{ buffer: Buffer; sha: string } | null> {
     const url = `${this.url(filePath)}?ref=${this.branch}`;
@@ -127,7 +128,22 @@ export class GitHubMediaClient {
     if (res.status === 404) return null;
     if (!res.ok) throw new Error(`GitHub getFileRaw ${filePath}: ${res.status}`);
 
-    const data = (await res.json()) as { content: string; sha: string };
+    const data = (await res.json()) as {
+      content: string | null;
+      sha: string;
+      encoding: string;
+      download_url: string | null;
+    };
+
+    // Files >1MB: GitHub returns encoding:"none" with no content — use download_url
+    if (!data.content || data.encoding === "none") {
+      if (!data.download_url) return null;
+      const rawRes = await fetch(data.download_url);
+      if (!rawRes.ok) return null;
+      const buffer = Buffer.from(await rawRes.arrayBuffer());
+      return { buffer, sha: data.sha };
+    }
+
     const buffer = Buffer.from(data.content.replace(/\n/g, ""), "base64");
     return { buffer, sha: data.sha };
   }

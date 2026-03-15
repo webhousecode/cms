@@ -35,10 +35,6 @@ export class GitHubMediaAdapter implements MediaAdapter {
     private branch: string,
   ) {}
 
-  private get rawBase(): string {
-    return `https://raw.githubusercontent.com/${this.owner}/${this.repo}/${this.branch}`;
-  }
-
   /* ─── Media listing ─────────────────────────────────────── */
 
   async listMedia(): Promise<MediaFileInfo[]> {
@@ -55,7 +51,8 @@ export class GitHubMediaAdapter implements MediaAdapter {
           return {
             name: f.name,
             folder,
-            url: `${this.rawBase}/${f.path}`,
+            // Proxy via /api/uploads/ which serves with correct Content-Type
+            url: `/api/uploads/${relPath}`,
             size: f.size,
             isImage: IMAGE_EXTS.has(ext),
             mediaType: getMediaType(ext),
@@ -74,7 +71,8 @@ export class GitHubMediaAdapter implements MediaAdapter {
     const repoDir = folder ? `public/uploads/${folder}` : "public/uploads";
     const repoPath = `${repoDir}/${filename}`;
     await this.client.putFile(repoPath, content, `cms: upload ${filename}`);
-    return { url: `${this.rawBase}/${repoPath}` };
+    const relPath = repoPath.replace(/^public\//, "");
+    return { url: `/api/uploads/${relPath}` };
   }
 
   async deleteFile(folder: string, name: string): Promise<void> {
