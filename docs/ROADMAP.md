@@ -27,6 +27,7 @@
 | 24 | **Framework adapters** — `@webhouse/cms/adapters` with getCollection/getDocument/getSingleton | PHASES.md (Phase 4) | 2026-03-15 |
 | 16 | **Analytics dashboard** — run history, cost tracking, agent leaderboard, AI acceptance rate | redesign/plan-patch.md (Phase D-E) | 2026-03-15 |
 | 18 | **Scaffolder test + bugfixes** — path refs, ESM, package name, CLAUDE.md content loader | — | 2026-03-15 |
+| 22 | **Supabase storage adapter** — full StorageAdapter impl with dynamic import, migrate, CRUD | PHASES.md (Phase 3) | 2026-03-15 |
 
 ---
 
@@ -35,7 +36,7 @@
 | # | Task | Plan doc | Status |
 |---|------|----------|--------|
 | 17 | **Docker admin image** — standalone `Dockerfile.admin`, test build + run | — | Building + testing |
-| 22 | **Database adapters** — Supabase/PostgreSQL adapter | PHASES.md (Phase 3) | Building Supabase adapter |
+| 22 | ~~Database adapters~~ — moved to Done | | |
 | 23 | **UI screenshot agent** — Playwright-based automated visual docs | UI-SCREENSHOT-AGENT.md | Building screenshot script |
 
 ---
