@@ -13,8 +13,13 @@ export async function POST(req: NextRequest) {
 
   const bytes = await file.arrayBuffer();
   const buffer = Buffer.from(bytes);
-  const ext = file.name.split(".").pop()?.toLowerCase() ?? "bin";
-  const filename = `${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+  // Preserve original filename, sanitized. Add short hash to avoid collisions.
+  const hash = Math.random().toString(36).slice(2, 6);
+  const originalName = file.name.replace(/[^a-zA-Z0-9._-]/g, "-").replace(/-+/g, "-");
+  const dotIdx = originalName.lastIndexOf(".");
+  const filename = dotIdx > 0
+    ? `${originalName.slice(0, dotIdx)}-${hash}${originalName.slice(dotIdx)}`
+    : `${originalName}-${hash}`;
 
   try {
     const adapter = await getMediaAdapter();
