@@ -967,3 +967,120 @@ When building a site, always inform the user about admin options. Example:
 - **`_fieldMeta` tracks AI provenance** — when AI writes a field, metadata records which model, when, and whether the field is locked against future AI overwrites
 - **Status workflow** — documents are `draft`, `published`, or `archived`. Use `publishAt` for scheduled publishing
 - **Richtext fields store markdown** — when importing or seeding content, always convert HTML to markdown first. TipTap's editor expects markdown input, not raw HTML. If you feed HTML directly, it will display as escaped text instead of rendered content.
+
+## Common Mistakes (avoid these)
+
+1. **HTML in richtext fields** — Never store raw HTML in richtext fields. Convert to markdown first. TipTap will display `<h2>Title</h2>` as literal text, not as a heading.
+
+2. **Accessing fields wrong** — Document fields live in `doc.data.title`, not `doc.title`. Top-level properties (`id`, `slug`, `status`, `createdAt`) are system fields. Everything from the schema is inside `data`.
+
+3. **Block discriminator** — Blocks use `_block` as the type key, not `_type` or `type`. Always check `item._block === "hero"`, not `item.type`.
+
+4. **Hardcoded ports** — Don't assume `:3000` or `:3010`. Use environment variables or auto-detect with port scanning.
+
+5. **Missing status filter** — `getCollection()` defaults to published only. To include drafts, pass `{ status: 'all' }`. Raw `findMany()` returns all statuses.
+
+6. **Richtext HTML output** — Richtext content rendered on the site may contain embedded media tags: `<audio controls>`, `<a download>`, `<div class="callout callout-info">`. Render with `dangerouslySetInnerHTML` and add CSS for these elements.
+
+7. **Image references** — Image fields store URL strings (e.g. `/uploads/image.jpg`), not file objects. In Next.js, use `<img>` or `next/image` with the URL directly.
+
+8. **Relation values** — Relations store slugs as strings (single) or string arrays (multiple), not full document objects. To get the related document, do a separate `getDocument()` lookup.
+
+## Site Building Patterns
+
+### Recommended Next.js App Router structure
+
+```
+app/
+  layout.tsx          # Shared navbar + footer
+  page.tsx            # Homepage (read from content/pages/home.json)
+  about/page.tsx      # About page
+  blog/
+    page.tsx          # Blog listing (getCollection('posts'))
+    [slug]/page.tsx   # Blog post (getDocument('posts', slug))
+  api/
+    revalidate/route.ts  # Webhook endpoint for on-demand ISR
+lib/
+  content.ts          # getCollection(), getDocument() helpers
+  markdown.ts         # Markdown-to-HTML renderer
+components/
+  navbar.tsx
+  footer.tsx
+content/              # CMS content (JSON files)
+public/
+  images/             # Static assets
+  favicon.svg         # Site favicon
+cms.config.ts         # CMS schema definition
+```
+
+### SEO metadata pattern
+
+```typescript
+// app/blog/[slug]/page.tsx
+import { getDocument } from '@/lib/content';
+import type { Metadata } from 'next';
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const post = getDocument('posts', params.slug);
+  if (!post) return { title: 'Not Found' };
+  return {
+    title: post.data.title,
+    description: post.data.excerpt,
+    openGraph: {
+      title: post.data.title,
+      description: post.data.excerpt,
+      type: 'article',
+      publishedTime: post.data.date,
+    },
+  };
+}
+```
+
+### Static generation with generateStaticParams
+
+```typescript
+// app/blog/[slug]/page.tsx
+import { getCollection } from '@/lib/content';
+
+export function generateStaticParams() {
+  return getCollection('posts').map(post => ({ slug: post.slug }));
+}
+```
+
+### Rendering markdown content safely
+
+```typescript
+// lib/markdown.ts — minimal markdown renderer
+export function renderMarkdown(md: string): string {
+  return md
+    .replace(/^### (.*$)/gm, '<h3>$1</h3>')
+    .replace(/^## (.*$)/gm, '<h2>$1</h2>')
+    .replace(/^# (.*$)/gm, '<h1>$1</h1>')
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/`(.*?)`/g, '<code>$1</code>')
+    .replace(/^\- (.*$)/gm, '<li>$1</li>')
+    .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
+    .replace(/\n\n/g, '</p><p>')
+    .replace(/^(.+)$/gm, '<p>$1</p>')
+    .replace(/<p><h/g, '<h').replace(/<\/h(\d)><\/p>/g, '</h$1>')
+    .replace(/<p><ul>/g, '<ul>').replace(/<\/ul><\/p>/g, '</ul>')
+    .replace(/<p><\/p>/g, '');
+}
+
+// Or use a proper library:
+// import { marked } from 'marked';
+// const html = marked(content);
+```
+
+## After Building a Site
+
+Always inform the user about content management options:
+
+> Your site is ready! To manage content visually:
+> ```
+> npx @webhouse/cms-admin-cli
+> ```
+> Then open http://localhost:3010 — your collections appear automatically.
+>
+> You can also use the hosted version at [webhouse.app](https://webhouse.app).
