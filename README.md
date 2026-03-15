@@ -22,7 +22,7 @@ cd my-site
 bash start.sh
 ```
 
-That's it. Claude Code reads your schema, builds a Next.js site, and you manage content through the admin UI.
+That's it. Claude Code or other AI platforms reads your schema, builds a Next.js site, and you manage content through the admin UI.
 
 <p align="center">
   <img src="docs/screenshots/dashboard.png" alt="Dashboard" width="800" />
@@ -44,7 +44,7 @@ That's it. Claude Code reads your schema, builds a Next.js site, and you manage 
 
 ## What is this?
 
-WebHouse CMS is a **file-based, code-first content management system**. You define collections and fields in `cms.config.ts`, and the CMS stores content as flat JSON files in a `content/` directory. No database required. Git-committable. AI-native from day one.
+@webhouse/cms is a **file-based, code-first content management system**. You define collections and fields in `cms.config.ts`, and the CMS stores content as flat JSON files in a `content/` directory. No database required. Git-committable. AI-native from day one.
 
 ```typescript
 // cms.config.ts
