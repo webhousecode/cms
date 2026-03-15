@@ -29,6 +29,7 @@
 | 18 | **Scaffolder test + bugfixes** — path refs, ESM, package name, CLAUDE.md content loader | — | 2026-03-15 |
 | 22 | **Supabase storage adapter** — full StorageAdapter impl with dynamic import, migrate, CRUD | PHASES.md (Phase 3) | 2026-03-15 |
 | 23 | **Screenshot agent** — Playwright script, 10 admin surfaces, JWT auth, `pnpm screenshots` | UI-SCREENSHOT-AGENT.md | 2026-03-15 |
+| 17 | **Docker admin image** — standalone image built + tested, HTTP 200 in 403ms | — | 2026-03-15 |
 
 ---
 
@@ -36,7 +37,7 @@
 
 | # | Task | Plan doc | Status |
 |---|------|----------|--------|
-| 17 | **Docker admin image** — standalone `Dockerfile.admin`, test build + run | — | Building + testing |
+| 17 | ~~Docker admin image~~ — moved to Done | | |
 | 22 | ~~Database adapters~~ — moved to Done | | |
 | 23 | ~~UI screenshot agent~~ — moved to Done | | |
 
