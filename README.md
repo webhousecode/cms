@@ -24,6 +24,22 @@ bash start.sh
 
 That's it. Claude Code reads your schema, builds a Next.js site, and you manage content through the admin UI.
 
+<p align="center">
+  <img src="docs/screenshots/dashboard.png" alt="Dashboard" width="800" />
+</p>
+
+<details>
+<summary>More screenshots</summary>
+
+| | |
+|---|---|
+| <img src="docs/screenshots/collection-case-studies.png" alt="Collection list" width="400" /> | <img src="docs/screenshots/editor-posts.png" alt="Document editor" width="400" /> |
+| <img src="docs/screenshots/cockpit.png" alt="AI Cockpit" width="400" /> | <img src="docs/screenshots/sites.png" alt="Multi-site management" width="400" /> |
+| <img src="docs/screenshots/settings.png" alt="Site Settings" width="400" /> | <img src="docs/screenshots/new-site.png" alt="New site wizard" width="400" /> |
+| <img src="docs/screenshots/media.png" alt="Media library" width="400" /> | <img src="docs/screenshots/curation.png" alt="Curation queue" width="400" /> |
+
+</details>
+
 ---
 
 ## What is this?
