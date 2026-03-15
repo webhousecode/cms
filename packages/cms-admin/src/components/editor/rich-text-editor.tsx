@@ -1033,12 +1033,20 @@ const InteractiveEmbed = TipTapNode.create({
     return {
       markdown: {
         serialize(state: { write: (s: string) => void; closeBlock: (node: unknown) => void }, node: { attrs: Record<string, unknown> }) {
-          state.write(`<div data-interactive-embed="${node.attrs.interactiveId}" data-interactive-title="${node.attrs.title || ''}"></div>`);
+          state.write(`<iframe data-interactive="${node.attrs.interactiveId}" data-interactive-title="${node.attrs.title || ''}"></iframe>`);
           state.closeBlock(node);
         },
         parse: {
           updateDOM(dom: Element) {
-            // Unwrap from <p> wrappers that markdown parser may add
+            // Convert <iframe data-interactive="..."> to <div data-interactive-embed="...">
+            // so parseHTML() can pick it up as an interactiveEmbed node
+            dom.querySelectorAll("iframe[data-interactive]").forEach((iframe) => {
+              const div = document.createElement("div");
+              div.setAttribute("data-interactive-embed", iframe.getAttribute("data-interactive") ?? "");
+              div.setAttribute("data-interactive-title", iframe.getAttribute("data-interactive-title") ?? "");
+              iframe.parentNode?.replaceChild(div, iframe);
+            });
+            // Also unwrap from <p> wrappers
             dom.querySelectorAll("p").forEach((p) => {
               const child = p.querySelector("div[data-interactive-embed]");
               if (child && p.childNodes.length === 1) {
@@ -1798,6 +1806,8 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
   const [availableBlocks, setAvailableBlocks] = useState<{ slug: string; label: string; blockType: string }[]>([]);
   const [blocksLoading, setBlocksLoading] = useState(false);
   const [showInteractivePicker, setShowInteractivePicker] = useState(false);
+  const [showVideoDialog, setShowVideoDialog] = useState(false);
+  const [videoUrl, setVideoUrl] = useState("");
   const [intSearch, setIntSearch] = useState("");
   const [availableInteractives, setAvailableInteractives] = useState<{ id: string; title: string }[]>([]);
   const [interactivesLoading, setInteractivesLoading] = useState(false);
@@ -2266,11 +2276,7 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
             </Btn>
 
             {/* Insert Video */}
-            <Btn tooltip="Insert video embed" onClick={() => {
-              const url = window.prompt("YouTube or Vimeo URL");
-              if (!url) return;
-              editor.chain().focus().insertContent({ type: "videoEmbed", attrs: { url } }).run();
-            }}>
+            <Btn tooltip="Insert video embed" onClick={() => { setShowVideoDialog(true); setVideoUrl(""); }}>
               <IconVideo />
             </Btn>
 
@@ -2599,6 +2605,53 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
           </div>
         );
       })()}
+
+      {/* ── Video URL dialog ── */}
+      {showVideoDialog && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0,0,0,0.5)" }}
+          onMouseDown={() => setShowVideoDialog(false)}>
+          <div onMouseDown={(e) => e.stopPropagation()} style={{
+            width: "100%", maxWidth: "420px",
+            backgroundColor: "var(--card)", border: "1px solid var(--border)",
+            borderRadius: "1rem", boxShadow: "0 24px 48px rgba(0,0,0,0.5)",
+            display: "flex", flexDirection: "column", gap: "0.875rem", padding: "1.5rem",
+          }}>
+            <span style={{ fontSize: "0.95rem", fontWeight: 600 }}>Insert Video</span>
+            <input
+              type="url"
+              value={videoUrl}
+              onChange={(e) => setVideoUrl(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Escape") setShowVideoDialog(false);
+                if (e.key === "Enter" && videoUrl.trim()) {
+                  editor?.chain().focus().insertContent({ type: "videoEmbed", attrs: { url: videoUrl.trim() } }).run();
+                  setShowVideoDialog(false);
+                }
+              }}
+              placeholder="YouTube or Vimeo URL"
+              autoFocus
+              style={{
+                width: "100%", padding: "0.5rem 0.75rem", borderRadius: "8px",
+                border: "1px solid var(--border)", background: "var(--background)",
+                color: "var(--foreground)", fontSize: "0.875rem", outline: "none",
+              }}
+            />
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem" }}>
+              <button type="button" onClick={() => setShowVideoDialog(false)}
+                style={{ padding: "0.4rem 0.875rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", fontSize: "0.8rem", cursor: "pointer" }}>
+                Cancel
+              </button>
+              <button type="button" disabled={!videoUrl.trim()} onClick={() => {
+                editor?.chain().focus().insertContent({ type: "videoEmbed", attrs: { url: videoUrl.trim() } }).run();
+                setShowVideoDialog(false);
+              }}
+                style={{ padding: "0.4rem 0.875rem", borderRadius: "6px", border: "none", background: videoUrl.trim() ? "var(--primary)" : "var(--muted)", color: videoUrl.trim() ? "var(--primary-foreground)" : "var(--muted-foreground)", fontSize: "0.8rem", cursor: videoUrl.trim() ? "pointer" : "not-allowed" }}>
+                Insert
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Block Picker dialog ── */}
       {blockPickerOpen && (() => {

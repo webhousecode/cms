@@ -63,7 +63,10 @@ export function AIBubbleMenu({ editor }: Props) {
       editor={editor}
       tippyOptions={{ duration: 100, placement: "top-start", maxWidth: "none" }}
       shouldShow={({ editor, from, to }) => {
-        return editor.isEditable && !editor.isActive("image") && from !== to;
+        // Hide for non-text atom nodes where AI text operations don't make sense
+        const nonTextNodes = ["image", "interactiveEmbed", "audioEmbed", "videoEmbed", "fileAttachment", "blockMarker"];
+        if (nonTextNodes.some((n) => editor.isActive(n))) return false;
+        return editor.isEditable && from !== to;
       }}
     >
       <div
