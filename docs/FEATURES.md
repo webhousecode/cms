@@ -54,6 +54,7 @@
 | F35 | [Webhooks](#f35-webhooks) | Planned | [docs/features/F35-webhooks.md](features/F35-webhooks.md) |
 | F36 | [Framework Integrations](#f36-framework-integrations) | Planned | [docs/features/F36-framework-integrations.md](features/F36-framework-integrations.md) |
 | F37 | [HTML Document Field](#f37-htmldoc-field) | Planned | [docs/features/F37-htmldoc-field.md](features/F37-htmldoc-field.md) |
+| F38 | [Environment Manager](#f38-environment-manager) | Planned | [docs/features/F38-environment-manager.md](features/F38-environment-manager.md) |
 
 ---
 
@@ -166,4 +167,7 @@ Outbound webhook system for machine-to-machine integration. Dispatches content l
 First-class integration packages for Next.js (enhanced), Astro, Remix, Nuxt, SvelteKit, and Vite/Vike.
 
 ## F37 — HTML Document Field (`htmldoc`)
-New field type for interactive HTML documents (infographics, presentations, simulations). Sandboxed iframe preview, visual inline editing (contentEditable injection), AI edit via shared chat component, and code view. First implementation of Interactive Islands (CMS-ENGINE.md 6.4). Adapted from Pitch Vault's proven HTML editing pattern. Each adds framework-specific features: auto route generation, metadata helpers, ISR revalidation, preview mode, HMR on content changes. Priority: Next.js → Astro → Remix → rest. Dispatches content lifecycle events (created, published, deleted) to external URLs with HMAC signing, exponential backoff retry (3 attempts), and delivery logging. Preset templates for Vercel, Netlify, and Cloudflare deploy hooks. Admin UI with webhook management and delivery log viewer. Built on top of #21 lifecycle hooks.
+New field type for interactive HTML documents (infographics, presentations, simulations). Sandboxed iframe preview, visual inline editing (contentEditable injection), AI edit via shared chat component, and code view. First implementation of Interactive Islands (CMS-ENGINE.md 6.4). Adapted from Pitch Vault's proven HTML editing pattern.
+
+## F38 — Environment Manager
+Dev/Staging/Production environment switcher in admin header. Each environment has its own preview URL, deploy target, and feature flags. In Dev mode, admin can spawn a local Next.js dev server on a vacant port (Code Launcher API for port scanning). Environment badge in header shows active environment with color coding (blue=Dev, amber=Staging, green=Prod). Clicking badge switches environment and updates all preview URLs instantly. Each adds framework-specific features: auto route generation, metadata helpers, ISR revalidation, preview mode, HMR on content changes. Priority: Next.js → Astro → Remix → rest. Dispatches content lifecycle events (created, published, deleted) to external URLs with HMAC signing, exponential backoff retry (3 attempts), and delivery logging. Preset templates for Vercel, Netlify, and Cloudflare deploy hooks. Admin UI with webhook management and delivery log viewer. Built on top of #21 lifecycle hooks.
