@@ -40,14 +40,7 @@ const collectionConfigSchema = z.object({
   urlPrefix: z.string().optional(),
   parentField: z.string().optional(),
   fields: z.array(fieldConfigSchema).min(1),
-  hooks: z.object({
-    beforeCreate: z.string().optional(),
-    afterCreate: z.string().optional(),
-    beforeUpdate: z.string().optional(),
-    afterUpdate: z.string().optional(),
-    beforeDelete: z.string().optional(),
-    afterDelete: z.string().optional(),
-  }).optional(),
+  hooks: z.record(z.any()).optional(),
 });
 
 const cmsConfigSchema = z.object({

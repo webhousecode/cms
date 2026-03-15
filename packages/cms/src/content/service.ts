@@ -1,5 +1,5 @@
 import type { StorageAdapter, Document, DocumentInput, QueryOptions, QueryResult, WriteContext, SearchOptions, SearchResult } from '../storage/types.js';
-import type { ContentHooks } from './hooks.js';
+import type { ContentHooks, CollectionHooks } from './hooks.js';
 import type { CmsConfig } from '../schema/types.js';
 import { computeFieldMetaChanges, buildInitialFieldMeta } from './field-meta.js';
 
@@ -12,6 +12,12 @@ export class ContentService {
     private hooks: ContentHooks = {},
   ) {}
 
+  /** Get collection-level hooks from the collection config, if any. */
+  private getCollectionHooks(name: string): CollectionHooks | undefined {
+    const col = this.config.collections.find(c => c.name === name);
+    return col?.hooks;
+  }
+
   private getCollection(name: string) {
     const col = this.config.collections.find(c => c.name === name);
     if (!col) throw new Error(`Collection "${name}" not found in config`);
@@ -20,17 +26,31 @@ export class ContentService {
 
   async create(collection: string, input: DocumentInput, context: WriteContext = DEFAULT_CONTEXT): Promise<Document> {
     this.getCollection(collection);
+    const colHooks = this.getCollectionHooks(collection);
 
     // Build initial _fieldMeta for AI-generated content
     const fieldMeta = buildInitialFieldMeta(input.data, context);
     let processedInput: DocumentInput = { ...input, _fieldMeta: { ...fieldMeta, ...input._fieldMeta } };
 
+    // Collection-level beforeCreate hook — can modify input
+    if (colHooks?.beforeCreate) {
+      const modified = await colHooks.beforeCreate(processedInput, context);
+      if (modified) processedInput = modified;
+    }
+
+    // Engine-level beforeCreate hook
     if (this.hooks.beforeCreate) {
       processedInput = await this.hooks.beforeCreate(collection, processedInput, context);
     }
 
     const doc = await this.storage.create(collection, processedInput);
 
+    // Collection-level afterCreate hook
+    if (colHooks?.afterCreate) {
+      await colHooks.afterCreate(doc, context);
+    }
+
+    // Engine-level afterCreate hook
     if (this.hooks.afterCreate) {
       await this.hooks.afterCreate(collection, doc, context);
     }
@@ -79,10 +99,22 @@ export class ContentService {
     context: WriteContext = DEFAULT_CONTEXT,
   ): Promise<Document> {
     this.getCollection(collection);
+    const colHooks = this.getCollectionHooks(collection);
 
     let processedInput = input;
+
+    // Collection-level beforeUpdate hook — can modify input
+    if (colHooks?.beforeUpdate) {
+      const existing = await this.storage.findById(collection, id);
+      if (existing) {
+        const modified = await colHooks.beforeUpdate(id, processedInput, existing, context);
+        if (modified) processedInput = modified;
+      }
+    }
+
+    // Engine-level beforeUpdate hook
     if (this.hooks.beforeUpdate) {
-      processedInput = await this.hooks.beforeUpdate(collection, id, input, context);
+      processedInput = await this.hooks.beforeUpdate(collection, id, processedInput, context);
     }
 
     // Apply field-level lock logic when data is being updated
@@ -105,6 +137,12 @@ export class ContentService {
 
     const doc = await this.storage.update(collection, id, processedInput);
 
+    // Collection-level afterUpdate hook
+    if (colHooks?.afterUpdate) {
+      await colHooks.afterUpdate(doc, context);
+    }
+
+    // Engine-level afterUpdate hook
     if (this.hooks.afterUpdate) {
       await this.hooks.afterUpdate(collection, doc, context);
     }
@@ -123,10 +161,22 @@ export class ContentService {
     context: WriteContext,
   ): Promise<{ document: Document; skippedFields: string[] }> {
     this.getCollection(collection);
+    const colHooks = this.getCollectionHooks(collection);
 
     let processedInput = input;
+
+    // Collection-level beforeUpdate hook — can modify input
+    if (colHooks?.beforeUpdate) {
+      const existing = await this.storage.findById(collection, id);
+      if (existing) {
+        const modified = await colHooks.beforeUpdate(id, processedInput, existing, context);
+        if (modified) processedInput = modified;
+      }
+    }
+
+    // Engine-level beforeUpdate hook
     if (this.hooks.beforeUpdate) {
-      processedInput = await this.hooks.beforeUpdate(collection, id, input, context);
+      processedInput = await this.hooks.beforeUpdate(collection, id, processedInput, context);
     }
 
     let skippedFields: string[] = [];
@@ -151,6 +201,12 @@ export class ContentService {
 
     const doc = await this.storage.update(collection, id, processedInput);
 
+    // Collection-level afterUpdate hook
+    if (colHooks?.afterUpdate) {
+      await colHooks.afterUpdate(doc, context);
+    }
+
+    // Engine-level afterUpdate hook
     if (this.hooks.afterUpdate) {
       await this.hooks.afterUpdate(collection, doc, context);
     }
@@ -252,13 +308,30 @@ export class ContentService {
 
   async delete(collection: string, id: string, context: WriteContext = DEFAULT_CONTEXT): Promise<void> {
     this.getCollection(collection);
+    const colHooks = this.getCollectionHooks(collection);
 
+    // Fetch the document before deletion so hooks receive the full document
+    const doc = await this.storage.findById(collection, id);
+
+    // Collection-level beforeDelete hook — return false to cancel
+    if (colHooks?.beforeDelete && doc) {
+      const result = await colHooks.beforeDelete(doc, context);
+      if (result === false) return;
+    }
+
+    // Engine-level beforeDelete hook
     if (this.hooks.beforeDelete) {
       await this.hooks.beforeDelete(collection, id, context);
     }
 
     await this.storage.delete(collection, id);
 
+    // Collection-level afterDelete hook
+    if (colHooks?.afterDelete && doc) {
+      await colHooks.afterDelete(doc, context);
+    }
+
+    // Engine-level afterDelete hook
     if (this.hooks.afterDelete) {
       await this.hooks.afterDelete(collection, id, context);
     }
