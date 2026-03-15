@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Eye, MousePointer2, Code, Save, RotateCcw, Loader2 } from "lucide-react";
+import { ArrowLeft, Eye, MousePointer2, Code, Save, Loader2 } from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useTabs } from "@/lib/tabs-context";
+import { Button } from "@/components/ui/button";
 
 const MonacoEditor = dynamic(() => import("@monaco-editor/react").then(m => m.default), { ssr: false });
 
@@ -427,31 +428,47 @@ export default function InteractiveDetailPage() {
             <span className="text-xs text-muted-foreground">Saved</span>
           )}
 
-          {/* Mode tabs */}
-          {modes.map(({ value, label, icon: Icon }) => (
-            <button
-              key={value}
-              type="button"
-              onClick={() => setMode(value)}
-              className={`flex items-center gap-1.5 text-xs px-2 py-1 rounded-md transition-colors ${
-                mode === value
-                  ? "text-foreground bg-accent"
-                  : "text-muted-foreground hover:text-foreground"
-              }`}
-              style={{ border: "none", cursor: "pointer", background: mode === value ? "var(--accent)" : "transparent" }}
-            >
-              <Icon className="w-3.5 h-3.5" />
-              {label}
-            </button>
-          ))}
+          {/* Preview — icon only, same as editor */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setMode("preview")}
+            className={mode === "preview" ? "text-foreground" : "text-muted-foreground hover:text-foreground"}
+            title="Preview"
+          >
+            <Eye className="w-4 h-4" />
+          </Button>
 
-          {/* Save button — matches editor's Save */}
-          <button
-            type="button"
+          {/* Visual Edit */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setMode("visual")}
+            className={`gap-1.5 ${mode === "visual" ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+            title="Visual Edit"
+          >
+            <MousePointer2 className="w-3.5 h-3.5" />
+            Visual
+          </Button>
+
+          {/* Code */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setMode("code")}
+            className={`gap-1.5 ${mode === "code" ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+            title="Code Editor"
+          >
+            <Code className="w-3.5 h-3.5" />
+            Code
+          </Button>
+
+          {/* Save — matches editor Save exactly */}
+          <Button
+            size="sm"
             onClick={mode === "visual" ? handleVisualSave : handleCodeSave}
             disabled={saving || (mode === "code" && codeValue === originalContent)}
-            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
-            style={{ border: "none", cursor: saving ? "wait" : "pointer" }}
+            className="gap-1.5"
           >
             {saving ? (
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -459,7 +476,7 @@ export default function InteractiveDetailPage() {
               <Save className="w-3.5 h-3.5" />
             )}
             {saved ? "Saved!" : "Save"}
-          </button>
+          </Button>
         </div>
       </div>
 
