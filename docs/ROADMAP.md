@@ -25,6 +25,8 @@
 | 15 | **Landing page build pipeline** — CMS content → static HTML, 6 block renderers | LANDING-MIGRATION.md | 2026-03-15 |
 | 21 | **Plugin lifecycle hooks** — beforeCreate/afterUpdate/beforeDelete wired in ContentService | CMS-ENGINE.md (Phase 3.5) | 2026-03-15 |
 | 24 | **Framework adapters** — `@webhouse/cms/adapters` with getCollection/getDocument/getSingleton | PHASES.md (Phase 4) | 2026-03-15 |
+| 16 | **Analytics dashboard** — run history, cost tracking, agent leaderboard, AI acceptance rate | redesign/plan-patch.md (Phase D-E) | 2026-03-15 |
+| 18 | **Scaffolder test + bugfixes** — path refs, ESM, package name, CLAUDE.md content loader | — | 2026-03-15 |
 
 ---
 
@@ -32,9 +34,7 @@
 
 | # | Task | Plan doc | Status |
 |---|------|----------|--------|
-| 16 | **Analytics + feedback loop** — agent performance metrics, few-shot learning | redesign/plan-patch.md (Phase D-E) | Building analytics module |
 | 17 | **Docker admin image** — standalone `Dockerfile.admin`, test build + run | — | Building + testing |
-| 18 | **Test blank CC session** — scaffold site with `create-cms`, verify CLAUDE.md | — | Running scaffolder tests |
 | 22 | **Database adapters** — Supabase/PostgreSQL adapter | PHASES.md (Phase 3) | Building Supabase adapter |
 | 23 | **UI screenshot agent** — Playwright-based automated visual docs | UI-SCREENSHOT-AGENT.md | Building screenshot script |
 
