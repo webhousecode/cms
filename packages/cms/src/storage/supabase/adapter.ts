@@ -191,6 +191,11 @@ export class SupabaseStorageAdapter implements StorageAdapter {
 
     const { error } = await client.rpc('exec_sql', { query: sql });
 
+    // Reload PostgREST schema cache so it sees the new table/policies
+    if (!error) {
+      await client.rpc('exec_sql', { query: "NOTIFY pgrst, 'reload schema'" });
+    }
+
     if (error) {
       // If exec_sql RPC doesn't exist, fall back to raw REST (requires service key)
       // This is a known limitation: Supabase doesn't expose raw SQL via the client
