@@ -164,6 +164,10 @@ export class SupabaseStorageAdapter implements StorageAdapter {
 
       CREATE INDEX IF NOT EXISTS idx_${this.tableName}_locale
         ON ${this.tableName} (locale);
+
+      -- Disable RLS — CMS uses service_role key which bypasses it anyway.
+      -- If you need RLS, create policies manually after migration.
+      ALTER TABLE ${this.tableName} DISABLE ROW LEVEL SECURITY;
     `;
 
     const { error } = await client.rpc('exec_sql', { query: sql });
