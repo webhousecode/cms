@@ -1,7 +1,7 @@
 "use client";
 
 import type { FieldConfig, BlockConfig } from "@webhouse/cms";
-import { X } from "lucide-react";
+import { X, Upload, Image as ImageIcon, FolderOpen } from "lucide-react";
 import { RichTextEditor } from "./rich-text-editor";
 import { TagsInput } from "./tags-input";
 import { ImageGalleryEditor } from "./image-gallery-editor";
@@ -415,6 +415,278 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
           disabled={locked}
         />
       );
+
+    case "image": {
+      const [imgUploading, setImgUploading] = useState(false);
+      const [mediaBrowserOpen, setMediaBrowserOpen] = useState(false);
+      const [mediaItems, setMediaItems] = useState<Array<{ name: string; url: string; isImage: boolean; mediaType?: string }>>([]);
+      const [mediaLoading, setMediaLoading] = useState(false);
+      const imgInputRef = useRef<HTMLInputElement>(null);
+
+      async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setImgUploading(true);
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("folder", "images");
+        try {
+          const res = await fetch("/api/upload", { method: "POST", body: formData });
+          if (res.ok) {
+            const data = await res.json() as { url: string };
+            onChange(data.url);
+          }
+        } finally {
+          setImgUploading(false);
+          if (imgInputRef.current) imgInputRef.current.value = "";
+        }
+      }
+
+      function openMediaBrowser() {
+        setMediaBrowserOpen(true);
+        setMediaLoading(true);
+        fetch("/api/media")
+          .then((r) => r.json())
+          .then((items: Array<{ name: string; url: string; isImage: boolean; mediaType?: string }>) => {
+            setMediaItems(items.filter((item) => item.isImage));
+          })
+          .catch(() => setMediaItems([]))
+          .finally(() => setMediaLoading(false));
+      }
+
+      return (
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+          {/* Thumbnail preview */}
+          {strVal && (
+            <div style={{ position: "relative", width: "fit-content" }}>
+              <img
+                src={strVal}
+                alt="Preview"
+                style={{
+                  maxWidth: "200px",
+                  maxHeight: "120px",
+                  borderRadius: "6px",
+                  border: "1px solid var(--border)",
+                  objectFit: "cover",
+                }}
+              />
+              {!locked && (
+                <button
+                  type="button"
+                  onClick={() => onChange("")}
+                  title="Remove image"
+                  style={{
+                    position: "absolute",
+                    top: "-6px",
+                    right: "-6px",
+                    width: "20px",
+                    height: "20px",
+                    borderRadius: "50%",
+                    background: "var(--destructive)",
+                    color: "white",
+                    border: "none",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    padding: 0,
+                  }}
+                >
+                  <X style={{ width: "12px", height: "12px" }} />
+                </button>
+              )}
+            </div>
+          )}
+          {/* URL input + action buttons */}
+          <div style={{ display: "flex", gap: "0.4rem", alignItems: "center" }}>
+            <Input
+              type="text"
+              value={strVal}
+              onChange={(e) => onChange(e.target.value)}
+              disabled={locked}
+              placeholder="Image URL"
+              className="font-mono text-xs"
+              style={{ flex: 1 }}
+            />
+            {!locked && (
+              <>
+                <label
+                  title="Upload image"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    gap: "0.3rem",
+                    padding: "0.4rem 0.6rem",
+                    borderRadius: "6px",
+                    border: "1px solid var(--border)",
+                    background: "var(--background)",
+                    cursor: imgUploading ? "wait" : "pointer",
+                    fontSize: "0.75rem",
+                    color: "var(--muted-foreground)",
+                    whiteSpace: "nowrap",
+                    flexShrink: 0,
+                  }}
+                  className="hover:border-primary hover:text-primary transition-colors"
+                >
+                  <input
+                    ref={imgInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    disabled={locked || imgUploading}
+                    style={{ display: "none" }}
+                  />
+                  <Upload style={{ width: "14px", height: "14px" }} />
+                  {imgUploading ? "..." : "Upload"}
+                </label>
+                <button
+                  type="button"
+                  onClick={openMediaBrowser}
+                  title="Browse Media"
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: "0.3rem",
+                    padding: "0.4rem 0.6rem",
+                    borderRadius: "6px",
+                    border: "1px solid var(--border)",
+                    background: "var(--background)",
+                    cursor: "pointer",
+                    fontSize: "0.75rem",
+                    color: "var(--muted-foreground)",
+                    whiteSpace: "nowrap",
+                    flexShrink: 0,
+                  }}
+                  className="hover:border-primary hover:text-primary transition-colors"
+                >
+                  <FolderOpen style={{ width: "14px", height: "14px" }} />
+                  Browse
+                </button>
+              </>
+            )}
+          </div>
+
+          {/* Media browser modal */}
+          {mediaBrowserOpen && (
+            <div
+              style={{
+                position: "fixed",
+                inset: 0,
+                zIndex: 100,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                background: "rgba(0,0,0,0.5)",
+              }}
+              onClick={(e) => { if (e.target === e.currentTarget) setMediaBrowserOpen(false); }}
+            >
+              <div
+                style={{
+                  background: "var(--popover)",
+                  border: "1px solid var(--border)",
+                  borderRadius: "12px",
+                  boxShadow: "0 8px 40px rgba(0,0,0,0.4)",
+                  width: "min(640px, 90vw)",
+                  maxHeight: "70vh",
+                  display: "flex",
+                  flexDirection: "column",
+                  overflow: "hidden",
+                }}
+              >
+                {/* Modal header */}
+                <div style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  padding: "0.75rem 1rem",
+                  borderBottom: "1px solid var(--border)",
+                }}>
+                  <span style={{ fontWeight: 500, fontSize: "0.9rem" }}>
+                    <ImageIcon style={{ width: "16px", height: "16px", display: "inline", verticalAlign: "text-bottom", marginRight: "0.4rem" }} />
+                    Media Library
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setMediaBrowserOpen(false)}
+                    style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.25rem" }}
+                  >
+                    <X style={{ width: "16px", height: "16px" }} />
+                  </button>
+                </div>
+                {/* Modal body */}
+                <div style={{ overflowY: "auto", padding: "0.75rem" }}>
+                  {mediaLoading && (
+                    <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>
+                      Loading media...
+                    </div>
+                  )}
+                  {!mediaLoading && mediaItems.length === 0 && (
+                    <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>
+                      No images found in Media library
+                    </div>
+                  )}
+                  {!mediaLoading && mediaItems.length > 0 && (
+                    <div style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))",
+                      gap: "0.5rem",
+                    }}>
+                      {mediaItems.map((item) => (
+                        <button
+                          key={item.url}
+                          type="button"
+                          onClick={() => {
+                            onChange(item.url);
+                            setMediaBrowserOpen(false);
+                          }}
+                          style={{
+                            background: "none",
+                            border: item.url === strVal ? "2px solid var(--primary)" : "1px solid var(--border)",
+                            borderRadius: "6px",
+                            cursor: "pointer",
+                            padding: "0.25rem",
+                            display: "flex",
+                            flexDirection: "column",
+                            alignItems: "center",
+                            gap: "0.25rem",
+                            overflow: "hidden",
+                          }}
+                          className="hover:border-primary transition-colors"
+                          title={item.name}
+                        >
+                          <img
+                            src={item.url}
+                            alt={item.name}
+                            style={{
+                              width: "100%",
+                              height: "80px",
+                              objectFit: "cover",
+                              borderRadius: "4px",
+                            }}
+                          />
+                          <span style={{
+                            fontSize: "0.6rem",
+                            color: "var(--muted-foreground)",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                            width: "100%",
+                            textAlign: "center",
+                          }}>
+                            {item.name}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
 
     case "video": {
       const embedSrc = getVideoEmbedSrc(strVal);
