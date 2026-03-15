@@ -51,7 +51,7 @@ const cmsConfigSchema = z.object({
     fields: z.array(fieldConfigSchema),
   })).optional(),
   storage: z.object({
-    adapter: z.enum(['sqlite', 'filesystem', 'github']).optional(),
+    adapter: z.enum(['sqlite', 'filesystem', 'github', 'supabase']).optional(),
     sqlite: z.object({ path: z.string().optional() }).optional(),
     filesystem: z.object({ contentDir: z.string().optional() }).optional(),
     github: z.object({
@@ -60,6 +60,12 @@ const cmsConfigSchema = z.object({
       branch: z.string().optional(),
       contentDir: z.string().optional(),
       token: z.string(),
+    }).optional(),
+    supabase: z.object({
+      url: z.string(),
+      anonKey: z.string(),
+      serviceKey: z.string().optional(),
+      tableName: z.string().optional(),
     }).optional(),
   }).optional(),
   build: z.object({

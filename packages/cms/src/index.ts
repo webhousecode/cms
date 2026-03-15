@@ -9,6 +9,8 @@ export { FilesystemStorageAdapter } from './storage/filesystem/adapter.js';
 export { SqliteStorageAdapter } from './storage/sqlite/adapter.js';
 export { GitHubStorageAdapter } from './storage/github/adapter.js';
 export type { GitHubAdapterConfig } from './storage/github/adapter.js';
+export { SupabaseStorageAdapter } from './storage/supabase/adapter.js';
+export type { SupabaseAdapterConfig } from './storage/supabase/adapter.js';
 export type { StorageAdapter, Document, DocumentInput, QueryOptions, QueryResult, DocumentStatus, FieldMeta, DocumentFieldMeta, WriteContext, SearchOptions, SearchResult } from './storage/types.js';
 
 // Content
@@ -38,6 +40,7 @@ import { validateConfig } from './schema/validate.js';
 import { FilesystemStorageAdapter } from './storage/filesystem/adapter.js';
 import { SqliteStorageAdapter } from './storage/sqlite/adapter.js';
 import { GitHubStorageAdapter } from './storage/github/adapter.js';
+import { SupabaseStorageAdapter } from './storage/supabase/adapter.js';
 import { ContentService } from './content/service.js';
 import { createApiServer } from './api/server.js';
 import { runBuild } from './build/pipeline.js';
@@ -56,6 +59,8 @@ export async function createCms(config: CmsConfig, options?: { storage?: Storage
     storage = new FilesystemStorageAdapter(validated.storage.filesystem?.contentDir);
   } else if (validated.storage?.adapter === 'github') {
     storage = new GitHubStorageAdapter(validated.storage.github!);
+  } else if (validated.storage?.adapter === 'supabase') {
+    storage = new SupabaseStorageAdapter(validated.storage.supabase!);
   } else {
     storage = new SqliteStorageAdapter(validated.storage?.sqlite?.path);
   }

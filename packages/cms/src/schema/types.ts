@@ -95,7 +95,7 @@ export interface CmsConfig {
   /** Automatic internal linking — applied as a post-build HTML pass */
   autolinks?: AutolinkConfig[];
   storage?: {
-    adapter?: 'sqlite' | 'filesystem' | 'github';
+    adapter?: 'sqlite' | 'filesystem' | 'github' | 'supabase';
     sqlite?: { path?: string };
     filesystem?: { contentDir?: string };
     github?: {
@@ -104,6 +104,12 @@ export interface CmsConfig {
       branch?: string;
       contentDir?: string;
       token: string;
+    };
+    supabase?: {
+      url: string;
+      anonKey: string;
+      serviceKey?: string;
+      tableName?: string;
     };
   };
   build?: BuildConfig;
