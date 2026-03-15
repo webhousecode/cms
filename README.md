@@ -109,10 +109,10 @@ npx @webhouse/cms-admin-cli --update                   # force rebuild
 ### 3. Docker — isolated, reproducible
 
 ```bash
-docker run -p 3010:3010 -v $(pwd):/site ghcr.io/webhousecode/cms-admin
+docker run -p 3010:3010 -v $(pwd):/site webhousecode/cms-admin
 ```
 
-Mounts your project at `/site`, auto-detects `cms.config.ts`, serves admin on port 3010.
+Available on [Docker Hub](https://hub.docker.com/r/webhousecode/cms-admin). Mounts your project at `/site`, auto-detects `cms.config.ts`, serves admin on port 3010.
 
 ### 4. Git clone — full source access
 
