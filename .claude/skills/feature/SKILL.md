@@ -1,72 +1,105 @@
 ---
 name: feature
-description: Implement a CMS feature from its plan document
-argument-hint: "<feature-code> e.g. F25"
+description: Propose a new CMS feature — checks for duplicates, creates plan doc, adds to roadmap
+argument-hint: "<feature idea in plain text>"
 ---
 
-# Implement Feature $ARGUMENTS
+# New Feature Proposal: $ARGUMENTS
 
-## Step 1: Read the plan
+## Step 1: Check for duplicates
 
-Read the feature plan from `docs/features/`. The feature code is the first argument (e.g. F25).
+Read `docs/FEATURES.md` and scan all existing features (F01-F34+) to determine if this idea is already covered — fully or partially — by an existing feature.
 
-Find the matching file:
+Also scan `docs/features/F*-*.md` plan documents for overlap.
+
+**If the idea IS already covered:**
+- Tell the user which feature(s) cover it (e.g. "This is covered by F25 — Storage Buckets")
+- Show the relevant section from the existing plan
+- Ask if they want to extend/modify the existing feature instead
+- STOP here — do not create a duplicate
+
+**If the idea is PARTIALLY covered:**
+- Tell the user which feature(s) overlap and how
+- Ask if they want to extend the existing feature or create a new one
+- If they want a new one, continue to Step 2
+
+**If the idea is NOT covered:**
+- Continue to Step 2
+
+## Step 2: Assign feature number
+
+Read `docs/FEATURES.md` to find the highest existing feature number. Assign the next number (e.g. if F34 is the last, the new one is F35).
+
+## Step 3: Analyze the feature
+
+Before writing the plan, analyze the feature idea in context of the CMS:
+
+- How does it relate to existing architecture? (packages, storage adapters, admin UI, CLI, AI agents)
+- What existing code/infrastructure can be reused?
+- What are the dependencies? (which existing features must be done first)
+- What's the right scope? (don't over-engineer, but don't leave gaps)
+- Is this a core CMS feature, an admin UI feature, a plugin, or a standalone package?
+
+## Step 4: Write the plan document
+
+Create `docs/features/F{number}-{slug}.md` with this structure:
+
+```markdown
+# F{number} — {Feature Name}
+
+> {One-line description}
+
+## Problem
+{What's missing today, why does the user need this}
+
+## Solution
+{High-level approach, 2-3 sentences}
+
+## Technical Design
+
+### {Key Component 1}
+{TypeScript interfaces, file paths, API endpoints}
+
+### {Key Component 2}
+{...}
+
+## Implementation Steps
+1. {Concrete, ordered tasks}
+2. {...}
+
+## Dependencies
+- {What must exist first, e.g. "F08 RAG Knowledge Base"}
+
+## Effort Estimate
+**{Small|Medium|Large}** — {estimated days}
 ```
-docs/features/F*-*.md
+
+The plan must be specific: real file paths in the monorepo, TypeScript interfaces that fit the existing architecture, actual npm packages to use. Think like a senior engineer writing a spec.
+
+## Step 5: Update FEATURES.md
+
+Add the new feature to `docs/FEATURES.md`:
+
+1. Add a row to the features table with the new number, name, status ("Planned" or "Idea"), and link to the plan doc
+2. Add a description section at the bottom (same format as existing features)
+
+## Step 6: Update ROADMAP.md
+
+Add the feature to the Feature roadmap table in `docs/ROADMAP.md`.
+
+## Step 7: Commit
+
+```
+git add docs/features/F{number}-*.md docs/FEATURES.md docs/ROADMAP.md
+git commit -m "feat: add F{number} {Feature Name} to feature roadmap"
+git push
 ```
 
-Match on the feature code prefix (F01, F02, ..., F34). Read the full plan document — it contains:
-- Problem statement
-- Solution approach
-- Technical design with TypeScript interfaces
-- Implementation steps (ordered)
-- Dependencies
+## Step 8: Summary
+
+Tell the user:
+- Feature number and name
+- One-sentence summary
+- Key dependencies
 - Effort estimate
-
-## Step 2: Check dependencies
-
-Before implementing, verify that all dependencies listed in the plan are met. If a dependency is not yet implemented, tell the user and suggest implementing that first.
-
-## Step 3: Update status
-
-In `docs/FEATURES.md`, find the feature entry and change its status from "Planned" or "Idea" to "In progress".
-
-In `docs/ROADMAP.md`, add the feature to the "In progress" section if not already there.
-
-## Step 4: Implement
-
-Follow the implementation steps from the plan document:
-
-1. Create files at the paths specified in the technical design
-2. Follow existing code patterns in the codebase
-3. Use the TypeScript interfaces defined in the plan
-4. Build and type-check after each major step
-5. Commit frequently with descriptive messages
-
-**Important conventions:**
-- Use `CustomSelect` instead of native `<select>` in admin UI
-- Use inline styles with CSS variables (`var(--border)`, `var(--card)`, etc.) for editor components
-- Use Tailwind classes for admin pages
-- Deploy region: always `arn` (Stockholm) for Fly.io/Supabase
-- Never hardcode secrets — use env vars or `_data/` config files
-
-## Step 5: Test
-
-- Run `npx tsc --noEmit -p packages/cms-admin/tsconfig.json` for type checking
-- Build the relevant package(s) with `npx tsup`
-- Test manually if applicable
-
-## Step 6: Mark complete
-
-1. Update `docs/FEATURES.md` — change status to "Done"
-2. Update `docs/ROADMAP.md` — move to Done section with today's date
-3. Final commit: `feat: implement $ARGUMENTS`
-4. Push to main
-
-## Step 7: Publish (if applicable)
-
-If the feature changes a publishable npm package (`@webhouse/cms`, `@webhouse/cms-cli`, etc.), trigger a patch release:
-
-```bash
-gh workflow run publish.yml -f version=patch
-```
+- Link to the plan doc
