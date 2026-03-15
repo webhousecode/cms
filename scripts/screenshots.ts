@@ -126,10 +126,15 @@ async function main() {
     await page.waitForTimeout(1000);
   }
 
-  // New site (direct URL — it's a dedicated route)
+  // New site — navigate via Sites sidebar, then click "New site" button
   log("Capturing new-site");
-  await page.goto(`${BASE_URL}/admin/sites/new`, { waitUntil: "networkidle" });
-  await page.waitForTimeout(1500);
+  if (await clickSidebar(page, "Sites")) {
+    const newSiteBtn = page.locator('button, a').filter({ hasText: "New site" }).first();
+    if (await newSiteBtn.isVisible({ timeout: 3000 }).catch(() => false)) {
+      await newSiteBtn.click();
+      await page.waitForTimeout(2000);
+    }
+  }
   await capture("new-site", page);
 
   // ── Dynamic: discover collections from sidebar ──
