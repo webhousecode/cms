@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Eye, MousePointer2, Code, Save, Loader2 } from "lucide-react";
+import { ArrowLeft, Eye, MousePointer2, Code, Save, Loader2, Copy } from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useTabs } from "@/lib/tabs-context";
@@ -304,6 +304,7 @@ export default function InteractiveDetailPage() {
   const [codeValue, setCodeValue] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [cloning, setCloning] = useState(false);
   const [originalContent, setOriginalContent] = useState("");
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const { setTabTitle } = useTabs();
@@ -386,6 +387,24 @@ export default function InteractiveDetailPage() {
     saveContent(codeValue);
   }
 
+  async function cloneInteractive() {
+    if (!detail) return;
+    setCloning(true);
+    try {
+      const blob = new Blob([codeValue], { type: "text/html" });
+      const file = new File([blob], `${detail.name}-copy.html`, { type: "text/html" });
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/interactives", { method: "POST", body: fd });
+      if (res.ok) {
+        const created = await res.json();
+        router.push(`/admin/interactives/${created.id}`);
+      }
+    } finally {
+      setCloning(false);
+    }
+  }
+
   if (loading) {
     return (
       <div className="p-8 max-w-4xl">
@@ -437,6 +456,19 @@ export default function InteractiveDetailPage() {
             title="Preview"
           >
             <Eye className="w-4 h-4" />
+          </Button>
+
+          {/* Clone — same as editor */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={cloneInteractive}
+            disabled={cloning}
+            className="text-muted-foreground hover:text-foreground gap-1.5"
+            title="Clone interactive"
+          >
+            <Copy className="w-3.5 h-3.5" />
+            {cloning ? "Cloning…" : "Clone"}
           </Button>
 
           {/* Visual Edit */}
