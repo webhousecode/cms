@@ -2806,14 +2806,10 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
                           key={item.url}
                           type="button"
                           onClick={() => {
-                            // Store relative path for portability, but use proxy for editor display
+                            // Store relative path — portable across environments
                             let storedUrl = item.url;
                             try { const u = new URL(item.url); storedUrl = u.pathname; } catch { /* already relative */ }
-                            // For paths like /images/... that aren't servable from CMS admin, use proxy
-                            const displayUrl = storedUrl.startsWith("/uploads/") || storedUrl.startsWith("http")
-                              ? storedUrl
-                              : `/api/uploads${storedUrl}`;
-                            editor?.chain().focus().setImage({ src: displayUrl, alt: item.name }).run();
+                            editor?.chain().focus().setImage({ src: storedUrl, alt: item.name }).run();
                             setShowImageMediaBrowser(false);
                           }}
                           style={{
