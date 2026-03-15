@@ -66,7 +66,22 @@ export async function getActiveSitePaths(): Promise<SitePaths> {
   return siteToPaths(site);
 }
 
-function siteToPaths(site: { configPath: string; contentDir?: string; uploadDir?: string; previewUrl?: string }): SitePaths {
+function siteToPaths(site: { id?: string; configPath: string; contentDir?: string; uploadDir?: string; previewUrl?: string; adapter?: string }): SitePaths {
+  // GitHub sites don't have a local project directory — use a cache folder
+  if (site.adapter === "github" || site.configPath.startsWith("github://")) {
+    const siteId = (site as { id?: string }).id ?? "github-site";
+    const homeDir = process.env.HOME ?? "/tmp";
+    const cacheDir = path.join(homeDir, ".webhouse", "sites", siteId);
+    return {
+      configPath: site.configPath,
+      projectDir: cacheDir,
+      dataDir: path.join(cacheDir, "_data"),
+      contentDir: path.join(cacheDir, "content"),
+      uploadDir: site.uploadDir ?? path.join(cacheDir, "uploads"),
+      previewUrl: site.previewUrl ?? "",
+    };
+  }
+
   const abs = path.resolve(site.configPath);
   const projectDir = path.dirname(abs);
   return {
