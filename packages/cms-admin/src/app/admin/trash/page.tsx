@@ -66,19 +66,33 @@ export default function TrashPage() {
 
   async function restore(item: TrashedItem) {
     setWorking(item.doc.id);
-    await fetch(`/api/cms/${item.collection}/${item.doc.slug}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "restore" }),
-    });
+    if (item.collection === "_interactives") {
+      // Restore interactive → set status back to draft
+      await fetch(`/api/interactives/${item.doc.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "draft" }),
+      });
+    } else {
+      await fetch(`/api/cms/${item.collection}/${item.doc.slug}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "restore" }),
+      });
+    }
     await load();
     setWorking(null);
   }
 
   async function deletePermanently(item: TrashedItem) {
     setWorking(item.doc.id);
-    await fetch(`/api/cms/${item.collection}/${item.doc.slug}?permanent=true`, { method: "DELETE" });
-    closeTabsForPaths([`/admin/${item.collection}/${item.doc.slug}`]);
+    if (item.collection === "_interactives") {
+      await fetch(`/api/interactives/${item.doc.id}`, { method: "DELETE" });
+      closeTabsForPaths([`/admin/interactives/${item.doc.id}`]);
+    } else {
+      await fetch(`/api/cms/${item.collection}/${item.doc.slug}?permanent=true`, { method: "DELETE" });
+      closeTabsForPaths([`/admin/${item.collection}/${item.doc.slug}`]);
+    }
     await load();
     setWorking(null);
   }
