@@ -1,182 +1,159 @@
-- "How we build AI tools that actually work in production"
-- "30 years of CMS lessons — why we rebuilt from scratch"
-- "Why we chose fly.io over AWS for every client project"
-- "React Native in 2025: what we've learned from 50+ app submissions"
+# @webhouse/cms — Feature Roadmap
 
-Altså opinionated, teknisk, erfaring-drevet indhold. Ikke "10 tips to..."-clickbait. Det matcher profilen og ranker godt
-på long-tail søgninger fra folk der faktisk køber software-udvikling.
-   
-- CMS Admin UI skal kunne lave en OAuth op mod GitHub, så det muligvis ikke er nødvendigt med en token, men at det enkelte website der anvender CMS bliver authenticated som en GH app og på den måde kan brugeren switche til at bruge GH som StorageAdapter. 
+**Last updated:** 2026-03-15
 
-Du laver alle 3 og billeder gemmer du lokalt i første omgang indtil vi finder en storage løsning. Vi kunne jo lave vores
-egen Bucket system på en fly.io maskine blot som en test og et midlertidigt asset til det. Men lokale billeder er ok mens
-vi udvikler vi har jo lang vej endnu men tons af features. Vi er jo slet ikke kommet i gang med AI endnu hvor vi både skal
-auto generere tekster, SEO og billeder. Og block-editor det skal vi også have det har jeg lovet en kunde
-  
-API - hvor er vi der - og en MCP server til CMS for at producere content fra en ekstern chat. Et must. 
-Der skal ligeledes kunne installeres MCP servere til at lave/hente/søge efter indhold eller viden der skal bruges i content production. 
+All features have individual plan documents in `/docs/features/`. This file is the master index.
 
------- 
-Hosting og site Access:
+---
 
-Hvordan connecter man en given cms admin til et site der skal administreres? Indtil videre har det jo været
-      hardcodet fil connection, men det dur jo ikke når site er deployed et sted og cms admin måske et helt andet. De
-      kører jo på forskellige porte og setups
+## Legend
 
-    Det er et arkitekturspørgsmål der har flere lag:
+- **Done** — shipped and working
+- **In progress** — actively being built
+- **Planned** — designed, ready to build
+- **Idea** — needs design/spec work
 
-    Problemet
+---
 
-    CMS admin og det site den administrerer er to separate processer. Lige nu deler de data via:
-    - Fælles filsystem (filesystem adapter — content/ mappe)
-    - Eller fælles SQLite fil
+## Features
 
-    Det virker lokalt og i Docker med shared volumes, men ikke når de er deployet separat.
+| # | Feature | Status | Plan |
+|---|---------|--------|------|
+| F01 | [Invite Users](#f01-invite-users) | Planned | [docs/features/F01-invite-users.md](features/F01-invite-users.md) |
+| F02 | [Import Engine](#f02-import-engine) | Planned | [docs/features/F02-import-engine.md](features/F02-import-engine.md) |
+| F03 | [WordPress Migration](#f03-wordpress-migration) | Planned | [docs/features/F03-wordpress-migration.md](features/F03-wordpress-migration.md) |
+| F04 | [MCP Server Enhancements](#f04-mcp-server-enhancements) | In progress | [docs/features/F04-mcp-server.md](features/F04-mcp-server.md) |
+| F05 | [Podcast Engine](#f05-podcast-engine) | Idea | [docs/features/F05-podcast-engine.md](features/F05-podcast-engine.md) |
+| F06 | [Content Speaker (TTS)](#f06-content-speaker) | Idea | [docs/features/F06-content-speaker.md](features/F06-content-speaker.md) |
+| F07 | [CMS Mobile — COCpit](#f07-cms-mobile) | Idea | [docs/features/F07-cms-mobile.md](features/F07-cms-mobile.md) |
+| F08 | [RAG Knowledge Base](#f08-rag-knowledge-base) | Planned | [docs/features/F08-rag-knowledge-base.md](features/F08-rag-knowledge-base.md) |
+| F09 | [Chat Plugin](#f09-chat-plugin) | Planned | [docs/features/F09-chat-plugin.md](features/F09-chat-plugin.md) |
+| F10 | [AI Learning Loop](#f10-ai-learning-loop) | Planned | [docs/features/F10-ai-learning-loop.md](features/F10-ai-learning-loop.md) |
+| F11 | [Multi-Model AI](#f11-multi-model-ai) | Planned | [docs/features/F11-multi-model-ai.md](features/F11-multi-model-ai.md) |
+| F12 | [One-Click Publish](#f12-one-click-publish) | Planned | [docs/features/F12-one-click-publish.md](features/F12-one-click-publish.md) |
+| F13 | [Notification Channels](#f13-notification-channels) | Planned | [docs/features/F13-notification-channels.md](features/F13-notification-channels.md) |
+| F14 | [Newsletter Engine](#f14-newsletter-engine) | Planned | [docs/features/F14-newsletter-engine.md](features/F14-newsletter-engine.md) |
+| F15 | [Agent Scheduler & Notifications](#f15-agent-scheduler) | In progress | [docs/features/F15-agent-scheduler.md](features/F15-agent-scheduler.md) |
+| F16 | [Link Checker Agent](#f16-link-checker-agent) | Done | [docs/features/F16-link-checker-agent.md](features/F16-link-checker-agent.md) |
+| F17 | [AI-Friendly Content Index](#f17-ai-content-index) | Planned | [docs/features/F17-ai-content-index.md](features/F17-ai-content-index.md) |
+| F18 | [Design System & Themes](#f18-design-system) | Idea | [docs/features/F18-design-system.md](features/F18-design-system.md) |
+| F19 | [Enterprise Features](#f19-enterprise) | Idea | [docs/features/F19-enterprise.md](features/F19-enterprise.md) |
+| F20 | [Visual Testing & Screenshots](#f20-visual-testing) | Planned | [docs/features/F20-visual-testing.md](features/F20-visual-testing.md) |
+| F21 | [Analytics Dashboard](#f21-analytics-dashboard) | Planned | [docs/features/F21-analytics-dashboard.md](features/F21-analytics-dashboard.md) |
+| F22 | [Block Editor](#f22-block-editor) | Done | — |
+| F23 | [New Site Wizard](#f23-new-site-wizard) | Done | — |
+| F24 | [AI Playbook / Site Builder Guide](#f24-ai-playbook) | In progress | [docs/features/F24-ai-playbook.md](features/F24-ai-playbook.md) |
+| F25 | [Storage Buckets](#f25-storage-buckets) | Planned | [docs/features/F25-storage-buckets.md](features/F25-storage-buckets.md) |
+| F26 | [GitHub Login](#f26-github-login) | Done | — |
+| F27 | [Backup & Restore](#f27-backup-restore) | Planned | [docs/features/F27-backup-restore.md](features/F27-backup-restore.md) |
+| F28 | [Vibe Coding Flow](#f28-vibe-coding-flow) | Idea | [docs/features/F28-vibe-coding-flow.md](features/F28-vibe-coding-flow.md) |
+| F29 | [Transactional Email](#f29-transactional-email) | Planned | [docs/features/F29-transactional-email.md](features/F29-transactional-email.md) |
+| F30 | [Form Engine](#f30-form-engine) | Planned | [docs/features/F30-form-engine.md](features/F30-form-engine.md) |
+| F31 | [Documentation Site](#f31-documentation-site) | Planned | [docs/features/F31-documentation-site.md](features/F31-documentation-site.md) |
+| F32 | [Template Registry](#f32-template-registry) | Planned | [docs/features/F32-template-registry.md](features/F32-template-registry.md) |
+| F33 | [PWA Support](#f33-pwa-support) | Planned | [docs/features/F33-pwa-support.md](features/F33-pwa-support.md) |
+| F34 | [Multi-Tenancy (Full)](#f34-multi-tenancy) | In progress | [docs/features/F34-multi-tenancy.md](features/F34-multi-tenancy.md) |
 
-    De tre modeller
+---
 
-    1. Same-host model (nuværende + Fly.io plan)
+## F01 — Invite Users
+Invite editors and collaborators to a site via email. Role-based access (admin, editor, viewer). Invitation tokens with expiry. Self-service onboarding flow.
 
-    Admin og site kører på samme server/container, deler et mounted volume:
-    - /data/content/ — CMS data
-    - /data/uploads/ — Media
+## F02 — Import Engine
+Generic import pipeline for bulk content ingestion. CSV, JSON, Markdown file imports. Field mapping UI. Dry-run preview before commit. Import history and rollback.
 
-    Site læser fra samme volume (enten direkte fra filsystem, eller via GitHub adapter). Det er den model vi går mod
-    med Fly.io — én machine, to processer eller to containers med shared volume.
+## F03 — WordPress Migration
+Automated WordPress-to-CMS migration. Connect via WP REST API or WP admin credentials. Import posts, pages, media, categories, tags, users. Content transformation (Gutenberg blocks → CMS blocks). Preserves URL structure for SEO.
 
-    2. GitHub adapter model
+## F04 — MCP Server Enhancements
+Extend the dual MCP architecture. Add write tools to the public server (with rate limits). Improve tool descriptions for better AI tool selection. Add `cms_get_schema` tool for AI introspection. Stdio-based local MCP server via `cms mcp serve`.
 
-    Admin skriver til et GitHub repo (via GitHub adapter). Sitet deployes fra samme repo (Vercel/Netlify/Fly.io). Det
-    er den klassiske headless CMS-model:
+## F05 — Podcast Engine
+First-class podcast support. Episode collection with audio file management. RSS feed generation (Apple Podcasts, Spotify compatible). Show notes as richtext. AI-generated episode summaries and transcripts. Chapters and timestamps.
 
-    Admin UI → commit til GitHub → site rebuilder/revaliderer
+## F06 — Content Speaker (TTS)
+Text-to-speech for any content. Generate audio versions of blog posts and pages. Multiple voice options via ElevenLabs or OpenAI TTS. Embedded audio player component. Auto-generate on publish. Accessibility benefit.
 
-    GitHub adapter er allerede implementeret i @webhouse/cms. Det er den mest robuste decoupled løsning.
+## F07 — CMS Mobile — COCpit
+Mobile-first content orchestration and curation app. React Native / Expo. Push notifications for curation queue items. Quick approve/reject/edit workflow. Offline support with sync. Dashboard with daily AI output summary.
 
-    3. API model (fremtidig)
+## F08 — RAG Knowledge Base
+Retrieval-augmented generation over all site content. Auto-index published documents into vector store (pgvector or local). AI agents use RAG for context-aware content generation. Knowledge base grows with every published article. Cross-site knowledge sharing within an org.
 
-    Admin eksponerer en REST API som sitet henter data fra. Sitet kalder admin's API i stedet for at læse filer
-    direkte. Kræver auth + en egentlig "content API" — det er Phase 4+ (managed SaaS).
+## F09 — Chat Plugin
+Embeddable chat widget powered by site content. `<script>` tag for any website. RAG-backed responses from published content. Configurable persona and tone. Lead capture. Conversation history. Rate limiting. Hosted at `chat.webhouse.app` or self-hosted.
 
-    Anbefaling til jer nu
+## F10 — AI Learning Loop
+Machine learning from editor corrections. Track when editors modify AI-generated content. Extract patterns (tone, vocabulary, structure). Feed corrections as few-shot examples into future prompts. Per-site and per-collection learning. Quality metrics over time.
 
-    Fly.io deploy: Same-host model med persistent volume. Admin og webhouse-site kører begge på fly.io/arn, deler /data
-     volume. Site læser content lokalt — ingen netværkskald, ingen latency.
+## F11 — Multi-Model AI
+Support multiple AI providers and model tiers. Simple (Haiku — fast, cheap), Advanced (Sonnet — balanced), Expert (Opus — maximum quality). Per-agent model selection. Fallback chain on failure. Cost tracking per model. A/B testing content quality across models.
 
-    For fremtidige kunder på managed SaaS: GitHub adapter — admin committer, kunde-site deployes fra GitHub. Nul
-    infrastruktur at vedligeholde per kunde.
-	
-	CMS admin bliver slutteligt et multi-tenant multi-site admin så en developer kan styre alle sine kunders websites fra 1 login. 
-	
-	
-Din analyse er spot-on. Her er de tre modellers trade-offs i praksis:
+## F12 — One-Click Publish (OcP)
+Single-button deployment from admin. Integrations: Vercel, Netlify, Fly.io, Cloudflare Pages. Git-based deploy (push to branch → auto-deploy). Deploy status and preview URLs in admin. Rollback to previous deploy.
 
-  Same-host model (vores Fly.io plan)
+## F13 — Notification Channels
+Multi-channel notifications for CMS events. Discord, Slack, WhatsApp, Signal, Telegram. Configurable per event type (new content, publish, AI completion, errors). Webhook support for custom integrations. Notification preferences per user.
 
-  Admin og site kører på samme maskine med et shared persistent volume /data/. Det er simpelt, har nul latency på
-  reads, og kræver ingen GitHub-integration. Ulempen: du kan ikke skalere admin og site uafhængigt, og du er bundet til
-   Fly.io's persistent volumes (ikke S3-kompatible, ingen CDN).
+## F14 — Newsletter Engine
+AI-powered newsletter generation from published content. Select articles → AI composes newsletter. Template system with brand voice. ESP integration (Resend, SendGrid, AWS SES). Subscriber management. Schedule and send from admin.
 
-  For webhouse.dk + cms-admin er dette den rigtige model nu — én Fly.io machine i arn, shared /data/content volume.
+## F15 — Agent Scheduler & Notifications
+Cron-based AI agent execution. Define schedules per agent (daily, weekly, custom cron). Notification on completion (email, Discord, webhook). Run history with output logs. Manual trigger from admin. Queue management.
 
-  GitHub adapter model (managed SaaS)
+## F16 — Link Checker Agent
+Automated broken link detection across all published content. Scheduled crawl (daily/weekly). Reports broken internal and external links. Suggests fixes for internal links. Dashboard with link health metrics. Already implemented — has its own admin page.
 
-  Det er den klassiske decoupled headless CMS-tilgang. Admin committer ændringer til GitHub → sitet rebuilder via
-  webhook (Vercel/Netlify trigger) eller revaliderer via on-demand ISR. Fordele: ingen server-til-server kommunikation,
-   content er versioneret i Git, kunden ejer sit eget repo. Ulemper: der er delay (sekunder til minutter) fra save til
-  live, og du kan ikke gøre preview uden en separat preview-deployment.
+## F17 — AI-Friendly Content Index
+Machine-readable content index for external AI agents. Auto-generated `llms.txt` at build time. RSS feed with full content. Structured data (JSON-LD) on every page. Sitemap with lastmod. Designed to make the site easily traversable by research agents.
 
-  GitHub adapteren er allerede implementeret i @webhouse/cms — det er den rigtige løsning til managed kunder.
+## F18 — Design System & Themes
+Generative design system. AI-powered theme generation from brand colors and fonts. Component library (cards, grids, hero sections). Design tokens as CSS variables. Theme preview in admin. Export to Tailwind config. Infographic engine for data visualization.
 
-  Multi-tenant admin (Phase 4+)
+## F19 — Enterprise Features
+Multi-user roles (admin, editor, reviewer, viewer). Approval workflows (draft → review → approved → published). Granular permissions per collection. Audit logs for all actions. SSO (SAML, OIDC). Import from enterprise CMS (Contentful, Sanity, Strapi). SLA and support tiers.
 
-  Ideen om ét login til alle kunders sites er en hub-and-spoke model:
-  - Hub: én admin-app med Supabase (kunder, sites, subscriptions, OAuth)
-  - Spoke: én Fly.io machine per kunde (eller shared infra med silo-isolering)
-  - Admin UI kender til alle spokes via en sites tabel — du switcher context og admin proxier mod den rigtige Fly.io
-  machine/GitHub repo
+## F20 — Visual Testing & Screenshots
+Playwright-based automated visual testing. Screenshot capture of all admin pages and rendered site pages. Visual regression detection. Thumbnail generation for content previews. Integration with CI/CD. Screenshots used for documentation and marketing.
 
-  Det er en clean arkitektur. Hub bruger Supabase til sin egen state. Per-site data bor aldrig i hubben — det er altid
-  i kundens silo (GitHub repo eller Fly.io volume).
+## F21 — Analytics Dashboard
+Content performance metrics. Page views, time on page, bounce rate (via lightweight analytics or GA4 integration). AI agent leaderboard (which agents produce best-performing content). Conversion tracking. Content freshness metrics. Autonomy percentage (AI vs human content ratio).
 
-  Anbefalet vej fremad:
+## F22 — Block Editor
+Visual editor for `type: "blocks"` fields. Done — collapsible block cards, type badges, reorder, add/remove. Nested structured arrays and objects with JSON/UI toggle. Shipped 2026-03-14.
 
-  1. Nu: Fly.io deploy med same-host model — cms-admin + webhouse-site på én machine, shared /data/ volume
-  2. Første kunde: GitHub adapter — admin hostet af jer, kunden deployer fra GitHub
-  3. SaaS: Hub med Supabase + per-kunde Fly.io spokes, GitHub adapter som "sync-lag"
+## F23 — New Site Wizard
+Create new sites from admin UI. GitHub OAuth integration, org/repo picker, create new repos with scaffolding. Filesystem sites via config path. Done — shipped 2026-03-14.
 
-Orchestrator scheduling: Skal agenter køre som en persistent background worker (kraftigere, kan køre 24/7) eller som Next.js
-cron/API routes (simplere, kører kun når serveren er oppe)?
+## F24 — AI Playbook / Site Builder Guide
+Documentation and tooling that enables a "blank" AI session to build a complete site. CLAUDE.md in npm package (822 lines). Project-level CLAUDE.md in scaffolded sites. MCP server for AI content access. `.claude/settings.json` with pre-approved permissions. `start.sh` for one-command AI kickoff.
 
-  1. Next.js cron routes (Anbefalet)
-     Simplere arkitektur. Scheduling via instrumentation.ts (som vi allerede bruger til publishAt). Kører kun når
-     admin-serveren kører. Nemmere at deploye.
-  2. Persistent worker process
-     Separat Node.js process der kører 24/7. Kraftigere, kan køre uafhængigt af admin UI. Men kræver process management
-     (PM2/systemd) og er mere komplekst at deploye.
-❯ 3. Hybrid
-     Start med Next.js cron, men arkitektér orchestratoren så den kan flyttes til en worker senere. Best of both worlds, men
-     kræver lidt ekstra abstraktionslag.
+## F25 — Storage Buckets
+Configurable media storage backends. Local filesystem (current), AWS S3, Supabase Storage, Cloudflare R2, WebHouse.Buckets (custom). Upload API abstraction. CDN integration. Image optimization and resizing. Storage quota management.
 
+## F26 — GitHub Login
+OAuth-based GitHub authentication. Done — connect GitHub account, browse orgs and repos, create repos, manage GitHub-backed sites. Token stored in httpOnly cookie. Shipped 2026-03-14.
 
-Fra Drupal:
-Content Types (eg. Article (Posts), Pages, Products, Crops, Media, Retailer)
+## F27 — Backup & Restore
+Automated content backup. Scheduled snapshots of content directory. Backup to S3/Supabase/local. Point-in-time restore. Backup before destructive operations (trash purge, bulk delete). Export as zip for migration.
 
+## F28 — Vibe Coding Flow
+In-browser AI-assisted site building. Live preview of AI-generated pages. Conversational UI for design decisions. Template selection and customization. Real-time content population. Deploy when satisfied. Bridges the gap between "I have an idea" and "I have a website."
 
-- Clone content
-- Localisation / Language
-- Video embed — [video:url] block eller et video field type (YouTube/Vimeo + native upload)
-- Relations/references — et relation field der linker dokumenter på tværs af collections (f.eks. "related posts" på
-  en artikel)
-- Scheduled publishing — publishAt timestamp, cron-baseret auto-publish
-- Revision history — gem tidligere versioner af et dokument, diff-view, restore
-- Media library — samlet oversigt over alle uploadede filer på tværs af collections
-- Horizontal Ruler
+## F29 — Transactional Email
+Send emails from the CMS. AWS SES, Resend, SendGrid integration. Email templates with CMS content. Triggered by events (form submission, publish, schedule). Template editor in admin. Send history and delivery tracking.
 
-- Invite user
-- Import (users, data, content)
-- WP Migration - API/Admin user access to WP, and migrate ALL data to @cms.
-- MCP server
-- Podcast
-- Content speaker
-- CMS Mobile (Content Orchestrator & Curator - COCpit) - AI Cockpit
-- RAG (baseret på artikler + mere og som bliver større med flere artikler)
-- cms-chat-plug-in
-- Learning - ML til at gøre AI bedre baseret på redaktørens rettelser og sprog. 
-- Flere sprogmodeller (Simple, Advanced, Expert)
-- One-click Publish (OcP)
-- Discord + andre til nitifikation (eks. Slach, WhatsApp, Signal, Telegram)
-- Newsletter
-- AI Agent schedules and notifikations setup. 
-- Skal vi have en built-in Link checker agent, der også har en schedule?
-- AI Agent friendly content/RSS/AI agent index to facilitate at en anden agent (web research) nemt kan traversere alt content igennem til sin research.   
-- Design System — generative themes, design agent, infographic engine
-- Enterprise — multi-user roles, approval workflows, i18n, import from WordPress/Ghost/Contentful 
-- Playwright dev test og playwright screenshots af web pages. (Thumbs + Large)
-- Dashboard med upcoming og queue items og autonomi % og dagens output og konvertering. 
-- Block editor
-- New site wizard. 
-- Playbook/manuscript (drejebog) for an AI to implement at site for the CMS. How does an AI know which tools we have and what to use when designing. Not that the cms in any way should control how a design looks, but for designers and devs it is nice to know that your cms can manage your content visually. 
-- Buckets (WebHouse.Buckets eller AWS S3 eller Supabase buckets ...)
-- Login med Github og opret konto med Github. 
-- Backup
-- Vibe Coding Flow
-- Mail send
-- Form Engine (simple)
-- Documentation + (OpenAPI.yml) - DocSite
-- Online template registry (som npm create next-app med --example)
+## F30 — Form Engine
+Simple form builder and submission handler. Define forms in config or admin UI. Submissions stored as CMS documents. Email notification on submit. Spam protection (honeypot + rate limit). Webhook forwarding. Embeddable form widget.
 
+## F31 — Documentation Site
+Full documentation built with AI + webhouse.app. Auto-generated from OpenAPI spec, CLAUDE.md, and source code. Versioned docs. Search. Code examples in multiple languages. Hosted at `docs.webhouse.app`. Dog-fooded — the docs site itself runs on @webhouse/cms.
 
+## F32 — Template Registry
+Online template marketplace. `npm create @webhouse/cms --example portfolio`. 5+ high-fidelity templates: portfolio, blog, docs, landing page, e-commerce. Each template includes complete cms.config.ts, content, and Next.js pages. Community submissions. Preview before install.
 
-http://localhost:3009/
-http://localhost:3009/about
-http://localhost:3009/cms
+## F33 — PWA Support
+Progressive Web App capabilities for CMS-powered sites. Service worker generation. Offline content caching. App manifest generation from CMS config. Push notifications via web push. Install prompt. Built with @serwist/next.
 
-Phase C — det der mangler for reel autonomi:
-
-  1. Scheduler kører ikke end-to-end — Selve cron/scheduler i scheduler.ts er skrevet, men er den faktisk aktiveret via
-  instrumentation.ts? Det er her autonomien sidder fast.
-  2. Tool-use i runner — Agenter kan ikke endnu kalde websøgning eller andre MCP servers mens de genererer content.
-  3. Multi-draft — Send samme task til fx Claude + GPT, præsentér side-by-side i køen.
-
-  
+## F34 — Multi-Tenancy (Full)
+Complete multi-tenant architecture. Hub-and-spoke model — central admin managing distributed sites. Per-tenant isolation (data, config, storage). Tenant provisioning API. Usage metering and billing hooks. White-label admin UI. Custom domains per tenant.
