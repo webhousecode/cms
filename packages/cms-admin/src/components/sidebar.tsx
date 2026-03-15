@@ -47,7 +47,11 @@ export function AppSidebar({ collections }: Props) {
   const wordmarkSrc = mounted && resolvedTheme === "light"
     ? "/webhouse-wordmark-light.svg"
     : "/webhouse-wordmark-dark.svg";
-  const [contentOpen, setContentOpen] = useState(true);
+  const [contentOpen, setContentOpen] = useState(() => {
+    if (typeof window === "undefined") return true;
+    const saved = localStorage.getItem("cms-sidebar-content-open");
+    return saved !== null ? saved === "true" : true;
+  });
   const [readyCount, setReadyCount] = useState(0);
   const [budgetSpent, setBudgetSpent] = useState(0);
   const [budgetTotal, setBudgetTotal] = useState(50);
@@ -176,7 +180,7 @@ export function AppSidebar({ collections }: Props) {
             <SidebarMenuItem>
               <SidebarMenuButton
                 tooltip="Content"
-                onClick={() => setContentOpen((o) => !o)}
+                onClick={() => setContentOpen((o) => { const next = !o; localStorage.setItem("cms-sidebar-content-open", String(next)); return next; })}
                 render={<button type="button" />}
               >
                 <FolderOpen className="!w-5 !h-5" />
