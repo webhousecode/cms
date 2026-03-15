@@ -208,6 +208,14 @@ export function IconDownload() {
   );
 }
 
+export function IconInteractive() {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+      <path d="M7 2v11h3v9l7-12h-4l4-8z" />
+    </svg>
+  );
+}
+
 export function IconFile() {
   return (
     <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">

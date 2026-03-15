@@ -27,7 +27,7 @@ import {
   IconLink, IconTable, IconImage, IconBlocks,
   IconAlignLeft, IconAlignCenter, IconAlignRight, IconTrash, IconMaximize,
   IconHorizontalRule, IconVideo, IconAudio, IconAttachment, IconCallout,
-  IconFile, IconDownload,
+  IconInteractive, IconFile, IconDownload,
 } from "./editor-icons";
 
 interface Props {
@@ -941,6 +941,140 @@ const AudioEmbed = TipTapNode.create({
   },
 });
 
+/* ─── Interactive embed node + NodeView ─────────────────────── */
+function InteractiveNodeView({ node, deleteNode, selected }: NodeViewProps) {
+  const { interactiveId, title } = node.attrs as { interactiveId: string; title: string };
+  const del = useConfirmDelete(deleteNode);
+  const btnSm: React.CSSProperties = { fontSize: "0.7rem", padding: "0.15rem 0.4rem", borderRadius: "3px", border: "1px solid var(--border)", cursor: "pointer", background: "transparent", color: "var(--foreground)", lineHeight: 1 };
+
+  if (!interactiveId) {
+    return (
+      <NodeViewWrapper draggable contentEditable={false} style={{ display: "flex", justifyContent: "center", margin: "0.75rem 0", position: "relative" }}>
+        <DragHandle />
+        <div style={{
+          width: "100%", maxWidth: "700px", padding: "2rem", textAlign: "center",
+          borderRadius: "8px", border: "2px dashed var(--border)",
+          backgroundColor: "var(--card)", color: "var(--muted-foreground)", fontSize: "0.875rem",
+        }}>
+          Select an interactive…
+        </div>
+      </NodeViewWrapper>
+    );
+  }
+
+  return (
+    <NodeViewWrapper draggable contentEditable={false} style={{ display: "flex", justifyContent: "center", margin: "0.75rem 0", position: "relative" }}>
+      <DragHandle />
+      <div style={{
+        width: "100%", maxWidth: "700px", borderRadius: "8px",
+        border: del.confirming ? "2px solid var(--destructive)" : selected ? "2px solid #F7BB2E" : "1px solid #F7BB2E55",
+        backgroundColor: "var(--card)", overflow: "hidden", position: "relative",
+        transition: "border-color 150ms",
+      }}>
+        <div style={{ borderRadius: "6px 6px 0 0", overflow: "hidden", height: "300px" }}>
+          <iframe
+            src={`/api/interactives/${interactiveId}/preview`}
+            style={{ width: "100%", height: "100%", border: "none" }}
+            title={title || "Interactive preview"}
+          />
+        </div>
+        {del.confirming && (
+          <div style={{
+            position: "absolute", inset: 0, zIndex: 30, borderRadius: "6px",
+            backgroundColor: "rgba(0,0,0,0.55)",
+            display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem",
+          }}>
+            <span style={{ fontSize: "0.8rem", color: "var(--destructive)", fontWeight: 600 }}>Remove interactive?</span>
+            <button type="button" onMouseDown={(e) => { e.preventDefault(); del.confirm(); }} style={{ ...btnSm, background: "var(--destructive)", color: "#fff", border: "none" }}>Confirm</button>
+            <button type="button" onMouseDown={(e) => { e.preventDefault(); del.cancel(); }} style={btnSm}>Cancel</button>
+          </div>
+        )}
+        <div style={{ display: "flex", alignItems: "center", gap: "4px", padding: "0.2rem 0.375rem", borderTop: "1px solid var(--border)", backgroundColor: "var(--muted)", borderRadius: "0 0 6px 6px" }}>
+          <span style={{ fontSize: "0.65rem", color: "#F7BB2E", fontWeight: 600, padding: "0 4px", flexShrink: 0 }}>⚡</span>
+          <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", padding: "0 4px", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {title || "Interactive"}
+          </span>
+          <button type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); del.request(); }}
+            style={{ width: "18px", height: "18px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: "0.9rem", lineHeight: 1, flexShrink: 0 }}
+            title="Remove interactive">×</button>
+        </div>
+      </div>
+    </NodeViewWrapper>
+  );
+}
+
+const InteractiveEmbed = TipTapNode.create({
+  name: "interactiveEmbed",
+  group: "block",
+  atom: true,
+  draggable: true,
+
+  addAttributes() {
+    return {
+      interactiveId: { default: "" },
+      title: { default: "" },
+    };
+  },
+
+  parseHTML() {
+    return [{ tag: "div[data-interactive-embed]", getAttrs: (el) => ({
+      interactiveId: (el as Element).getAttribute("data-interactive-embed") ?? "",
+      title: (el as Element).getAttribute("data-interactive-title") ?? "",
+    }) }];
+  },
+
+  renderHTML({ node }) {
+    const attrs: Record<string, string> = { "data-interactive-embed": node.attrs.interactiveId };
+    if (node.attrs.title) attrs["data-interactive-title"] = node.attrs.title;
+    return ["div", attrs];
+  },
+
+  addStorage() {
+    return {
+      markdown: {
+        serialize(state: { write: (s: string) => void; closeBlock: (node: unknown) => void }, node: { attrs: Record<string, unknown> }) {
+          state.write(`<div data-interactive-embed="${node.attrs.interactiveId}" data-interactive-title="${node.attrs.title || ''}"></div>`);
+          state.closeBlock(node);
+        },
+        parse: {
+          updateDOM(_dom: Element) {
+            // Nothing to transform — the div is already in the right format
+          },
+        },
+      },
+    };
+  },
+
+  addKeyboardShortcuts() {
+    return {
+      ArrowDown: ({ editor }) => {
+        const { selection, doc } = editor.state;
+        const node = doc.nodeAt(selection.from);
+        if (node?.type.name !== "interactiveEmbed") return false;
+        const end = selection.from + node.nodeSize;
+        if (end >= doc.content.size) {
+          editor.chain().insertContentAt(end, { type: "paragraph" }).setTextSelection(end + 1).run();
+          return true;
+        }
+        editor.commands.setTextSelection(end + 1);
+        return true;
+      },
+      Enter: ({ editor }) => {
+        const { selection, doc } = editor.state;
+        const node = doc.nodeAt(selection.from);
+        if (node?.type.name !== "interactiveEmbed") return false;
+        const end = selection.from + node.nodeSize;
+        editor.chain().insertContentAt(end, { type: "paragraph" }).setTextSelection(end + 1).run();
+        return true;
+      },
+    };
+  },
+
+  addNodeView() {
+    return ReactNodeViewRenderer(InteractiveNodeView);
+  },
+});
+
 /* ─── File attachment node + NodeView ──────────────────────── */
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -1478,6 +1612,9 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
   const [replacePos, setReplacePos] = useState<number | null>(null);
   const [availableBlocks, setAvailableBlocks] = useState<{ slug: string; label: string; blockType: string }[]>([]);
   const [blocksLoading, setBlocksLoading] = useState(false);
+  const [showInteractivePicker, setShowInteractivePicker] = useState(false);
+  const [availableInteractives, setAvailableInteractives] = useState<{ id: string; title: string }[]>([]);
+  const [interactivesLoading, setInteractivesLoading] = useState(false);
   const headingRef = useRef<HTMLDivElement>(null);
   const linkRef = useRef<HTMLDivElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -1498,6 +1635,7 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
       VideoEmbed,
       AudioEmbed,
       FileAttachment,
+      InteractiveEmbed,
       Callout,
       TextDragDrop,
       Table.configure({ resizable: false }),
@@ -1940,6 +2078,19 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
               <IconCallout />
             </Btn>
 
+            {/* Insert Interactive */}
+            <Btn tooltip="Insert interactive" onClick={() => {
+              setShowInteractivePicker(true);
+              setInteractivesLoading(true);
+              fetch("/api/interactives")
+                .then(r => r.json())
+                .then((data) => setAvailableInteractives(Array.isArray(data) ? data : (data.interactives ?? [])))
+                .catch(() => setAvailableInteractives([]))
+                .finally(() => setInteractivesLoading(false));
+            }}>
+              <IconInteractive />
+            </Btn>
+
           </div>
         )}
 
@@ -2078,6 +2229,58 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
           {editor && <AIBubbleMenu editor={editor} />}
         </div>
       </div>
+
+      {/* ── Interactive Picker dialog ── */}
+      {showInteractivePicker && (
+        <div style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0,0,0,0.5)" }}
+          onMouseDown={() => setShowInteractivePicker(false)}>
+          <div onMouseDown={(e) => e.stopPropagation()} style={{
+            width: "100%", maxWidth: "480px", maxHeight: "70vh",
+            backgroundColor: "var(--background)", border: "1px solid var(--border)",
+            borderRadius: "0.75rem", boxShadow: "0 16px 48px rgba(0,0,0,0.3)",
+            display: "flex", flexDirection: "column", overflow: "hidden",
+          }}>
+            <div style={{ padding: "1rem 1.25rem", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <span style={{ fontSize: "0.95rem", fontWeight: 600, color: "var(--foreground)" }}>Insert Interactive</span>
+              <button type="button" onClick={() => setShowInteractivePicker(false)}
+                style={{ width: "24px", height: "24px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1.1rem", display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
+            </div>
+            <div style={{ flex: 1, overflow: "auto", padding: "0.75rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+              {interactivesLoading && (
+                <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)", padding: "1rem 0", textAlign: "center" }}>Loading…</p>
+              )}
+              {!interactivesLoading && availableInteractives.length === 0 && (
+                <p style={{ fontSize: "0.875rem", color: "var(--muted-foreground)", padding: "1rem 0", textAlign: "center" }}>
+                  No interactives found. Create one in the <strong>Interactives Manager</strong> first.
+                </p>
+              )}
+              {availableInteractives.map(item => (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => {
+                    editor?.chain().focus().insertContent({ type: "interactiveEmbed", attrs: { interactiveId: item.id, title: item.title } }).run();
+                    setShowInteractivePicker(false);
+                  }}
+                  style={{
+                    display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.75rem 1rem",
+                    borderRadius: "0.625rem", border: "1px solid var(--border)", backgroundColor: "transparent",
+                    cursor: "pointer", textAlign: "left", transition: "border-color 120ms, background 120ms",
+                  }}
+                  onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(255,255,255,0.05)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "#F7BB2E"; }}
+                  onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--border)"; }}
+                >
+                  <span style={{ fontSize: "1.25rem", flexShrink: 0, color: "#F7BB2E" }}>⚡</span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--foreground)", margin: 0 }}>{item.title}</p>
+                    <p style={{ fontSize: "0.7rem", fontFamily: "monospace", color: "var(--muted-foreground)", margin: 0, marginTop: "2px" }}>{item.id}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Block Picker dialog ── */}
       {blockPickerOpen && (() => {
