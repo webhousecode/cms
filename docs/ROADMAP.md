@@ -82,6 +82,7 @@ Full feature list with individual plan docs in [FEATURES.md](FEATURES.md) and [d
 | F32 | Template Registry | Planned |
 | F33 | PWA Support | Planned |
 | F34 | Multi-Tenancy (Full) | In progress |
+| F35 | Webhooks | Planned |
 
 ---
 
