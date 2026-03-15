@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readFile, writeFile, unlink, mkdir } from "fs/promises";
 import path from "path";
-import { getUploadDir } from "@/lib/upload-dir";
+import { getActiveSitePaths } from "@/lib/site-paths";
 
 /* ─── Types ──────────────────────────────────────────────────── */
 interface InteractiveMeta {
@@ -15,13 +15,12 @@ interface InteractiveMeta {
 
 /* ─── Helpers ────────────────────────────────────────────────── */
 async function getInteractivesDir(): Promise<string> {
-  const uploadDir = await getUploadDir();
+  const { uploadDir } = await getActiveSitePaths();
   return path.join(uploadDir, "interactives");
 }
 
 async function getMetaPath(): Promise<string> {
-  const uploadDir = await getUploadDir();
-  const dataDir = path.join(uploadDir, "..", "..", "_data");
+  const { dataDir } = await getActiveSitePaths();
   await mkdir(dataDir, { recursive: true });
   return path.join(dataDir, "interactives.json");
 }
