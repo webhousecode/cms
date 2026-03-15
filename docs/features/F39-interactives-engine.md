@@ -227,7 +227,7 @@ The existing Infographics collection with a `type: "interactive"` field pointing
 - [ ] Convert SproutLake infographics to data-driven Interactives
 
 ### Phase 4: Embedding
-- [ ] TipTap `interactiveEmbed` node (toolbar button, picker, preview in editor)
+- [x] TipTap `interactiveEmbed` node (toolbar button, picker, preview in editor)
 - [ ] Block type `interactive` for blocks fields
 - [ ] Standalone page rendering (collection with interactive field)
 
