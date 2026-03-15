@@ -405,87 +405,61 @@ export default function InteractiveDetailPage() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 84px)" }}>
-      {/* Header bar */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "1rem",
-          padding: "0.5rem 1rem",
-          borderBottom: "1px solid var(--border)",
-          background: "var(--card)",
-          flexShrink: 0,
-        }}
-      >
-        <Link
-          href="/admin/interactives"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: "0.25rem",
-            fontSize: "0.7rem",
-            fontFamily: "monospace",
-            letterSpacing: "0.05em",
-            textTransform: "uppercase",
-            color: "var(--muted-foreground)",
-            textDecoration: "none",
-            flexShrink: 0,
-          }}
-        >
-          <ArrowLeft style={{ width: "0.75rem", height: "0.75rem" }} />
-          Interactives
-        </Link>
-
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <span className="text-sm font-bold text-foreground truncate block">{detail.name}</span>
-          <span
-            style={{
-              fontSize: "0.65rem",
-              color: "var(--muted-foreground)",
-              fontFamily: "monospace",
-            }}
+      {/* Top bar — matches document editor exactly */}
+      <div className="sticky flex items-center justify-between px-4 border-b border-border shrink-0" style={{ top: 84, height: "48px", zIndex: 30, backgroundColor: "var(--card)" }}>
+        <div className="flex items-center gap-2">
+          <div style={{ width: "1px", height: "1rem", backgroundColor: "var(--border)", alignSelf: "center" }} />
+          <Link
+            href="/admin/interactives"
+            className="text-muted-foreground hover:text-foreground transition-colors"
+            title="Back to Interactives"
           >
-            {detail.filename} &middot; {formatSize(detail.size)} &middot; {formatDate(detail.updatedAt)}
-          </span>
+            <ArrowLeft className="w-4 h-4" />
+          </Link>
+          <span className="text-muted-foreground text-sm font-mono">interactives</span>
+          <span className="text-muted-foreground">/</span>
+          <span className="text-sm font-mono text-foreground">{detail.name}</span>
+          <span className="text-xs text-muted-foreground font-mono">{formatSize(detail.size)}</span>
         </div>
 
-        {/* Mode tabs (compact pill style) */}
-        <div
-          style={{
-            display: "flex",
-            gap: "0.2rem",
-            background: "var(--muted)",
-            borderRadius: "7px",
-            padding: "0.15rem",
-            flexShrink: 0,
-          }}
-        >
+        <div className="flex items-center gap-2">
+          {saved && (
+            <span className="text-xs text-muted-foreground">Saved</span>
+          )}
+
+          {/* Mode tabs */}
           {modes.map(({ value, label, icon: Icon }) => (
             <button
               key={value}
               type="button"
               onClick={() => setMode(value)}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "0.3rem",
-                padding: "0.35rem 0.75rem",
-                borderRadius: "5px",
-                border: "none",
-                cursor: "pointer",
-                fontSize: "0.75rem",
-                fontWeight: 500,
-                background: mode === value ? "var(--card)" : "transparent",
-                color: mode === value ? "var(--foreground)" : "var(--muted-foreground)",
-                boxShadow: mode === value ? "0 1px 3px rgba(0,0,0,0.2)" : "none",
-                transition: "all 150ms",
-                whiteSpace: "nowrap",
-              }}
+              className={`flex items-center gap-1.5 text-xs px-2 py-1 rounded-md transition-colors ${
+                mode === value
+                  ? "text-foreground bg-accent"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+              style={{ border: "none", cursor: "pointer", background: mode === value ? "var(--accent)" : "transparent" }}
             >
-              <Icon style={{ width: "0.8rem", height: "0.8rem" }} />
+              <Icon className="w-3.5 h-3.5" />
               {label}
             </button>
           ))}
+
+          {/* Save button — matches editor's Save */}
+          <button
+            type="button"
+            onClick={mode === "visual" ? handleVisualSave : handleCodeSave}
+            disabled={saving || (mode === "code" && codeValue === originalContent)}
+            className="flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{ border: "none", cursor: saving ? "wait" : "pointer" }}
+          >
+            {saving ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Save className="w-3.5 h-3.5" />
+            )}
+            {saved ? "Saved!" : "Save"}
+          </button>
         </div>
       </div>
 
@@ -509,66 +483,6 @@ export default function InteractiveDetailPage() {
         {/* Visual edit mode */}
         {mode === "visual" && (
           <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "flex-end",
-                gap: "0.5rem",
-                padding: "0.5rem 0.75rem",
-                borderBottom: "1px solid var(--border)",
-                background: "var(--muted)",
-              }}
-            >
-              <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", flex: 1 }}>
-                Click on text elements to edit them in place
-              </span>
-              <button
-                type="button"
-                onClick={handleVisualReset}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.25rem",
-                  padding: "0.3rem 0.625rem",
-                  borderRadius: "5px",
-                  border: "1px solid var(--border)",
-                  background: "transparent",
-                  color: "var(--muted-foreground)",
-                  fontSize: "0.75rem",
-                  cursor: "pointer",
-                }}
-              >
-                <RotateCcw style={{ width: "0.75rem", height: "0.75rem" }} />
-                Reset
-              </button>
-              <button
-                type="button"
-                onClick={handleVisualSave}
-                disabled={saving}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.25rem",
-                  padding: "0.3rem 0.625rem",
-                  borderRadius: "5px",
-                  border: "none",
-                  background: "var(--primary)",
-                  color: "var(--primary-foreground)",
-                  fontSize: "0.75rem",
-                  fontWeight: 600,
-                  cursor: saving ? "wait" : "pointer",
-                  opacity: saving ? 0.7 : 1,
-                }}
-              >
-                {saving ? (
-                  <Loader2 style={{ width: "0.75rem", height: "0.75rem", animation: "spin 1s linear infinite" }} />
-                ) : (
-                  <Save style={{ width: "0.75rem", height: "0.75rem" }} />
-                )}
-                {saved ? "Saved!" : saving ? "Saving..." : "Save"}
-              </button>
-            </div>
             <iframe
               ref={iframeRef}
               srcDoc={injectWysiwyg(codeValue)}
@@ -587,67 +501,6 @@ export default function InteractiveDetailPage() {
         {/* Code mode */}
         {mode === "code" && (
           <div style={{ display: "flex", flexDirection: "column", flex: 1 }}>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "flex-end",
-                gap: "0.5rem",
-                padding: "0.5rem 0.75rem",
-                borderBottom: "1px solid var(--border)",
-                background: "var(--muted)",
-                flexShrink: 0,
-              }}
-            >
-              <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", flex: 1, fontFamily: "monospace" }}>
-                {codeValue.length.toLocaleString()} characters
-              </span>
-              <button
-                type="button"
-                onClick={() => setCodeValue(originalContent)}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.25rem",
-                  padding: "0.3rem 0.625rem",
-                  borderRadius: "5px",
-                  border: "1px solid var(--border)",
-                  background: "transparent",
-                  color: "var(--muted-foreground)",
-                  fontSize: "0.75rem",
-                  cursor: "pointer",
-                }}
-              >
-                <RotateCcw style={{ width: "0.75rem", height: "0.75rem" }} />
-                Reset
-              </button>
-              <button
-                type="button"
-                onClick={handleCodeSave}
-                disabled={saving || codeValue === originalContent}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: "0.25rem",
-                  padding: "0.3rem 0.625rem",
-                  borderRadius: "5px",
-                  border: "none",
-                  background: "var(--primary)",
-                  color: "var(--primary-foreground)",
-                  fontSize: "0.75rem",
-                  fontWeight: 600,
-                  cursor: saving || codeValue === originalContent ? "not-allowed" : "pointer",
-                  opacity: saving || codeValue === originalContent ? 0.6 : 1,
-                }}
-              >
-                {saving ? (
-                  <Loader2 style={{ width: "0.75rem", height: "0.75rem", animation: "spin 1s linear infinite" }} />
-                ) : (
-                  <Save style={{ width: "0.75rem", height: "0.75rem" }} />
-                )}
-                {saved ? "Saved!" : saving ? "Saving..." : "Save"}
-              </button>
-            </div>
             <div style={{ flex: 1 }}>
               <MonacoEditor
                 language="html"
