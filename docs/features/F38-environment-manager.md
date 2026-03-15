@@ -89,13 +89,24 @@ interface DevServerState {
 // API: DELETE /api/admin/dev-server — stop
 ```
 
-**Port discovery** uses Code Launcher API:
-```
-GET https://cl.broberg.dk/api/vacant-port → { port: 3005 }
-POST https://cl.broberg.dk/api/apps/report-port → register port
-```
+**Port discovery** — built-in port scanner, no external dependencies:
+```typescript
+// packages/cms-admin/src/lib/port-scanner.ts
+import net from 'node:net';
 
-Fallback if Code Launcher is unavailable: scan ports 3001-3099 with `net.createServer().listen()`.
+export async function findVacantPort(start = 3001, end = 3099): Promise<number> {
+  for (let port = start; port <= end; port++) {
+    const available = await new Promise<boolean>((resolve) => {
+      const server = net.createServer();
+      server.once('error', () => resolve(false));
+      server.once('listening', () => { server.close(); resolve(true); });
+      server.listen(port);
+    });
+    if (available) return port;
+  }
+  throw new Error('No vacant port found');
+}
+```
 
 **Server spawning:**
 ```typescript
@@ -171,7 +182,7 @@ When in Dev mode with a filesystem site, content saves are instant (file write).
 ## Dependencies
 
 - None critical — extends existing site-config and admin header
-- **Code Launcher API** at `cl.broberg.dk` for port scanning (optional, has fallback)
+- Built-in port scanner (no external dependencies)
 - **F12 One-Click Publish** is complementary — deploy targets per environment
 
 ## Effort Estimate
