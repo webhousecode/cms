@@ -151,6 +151,12 @@ Video reference (URL or embed).
 { name: 'intro', type: 'video', label: 'Intro Video' }
 ```
 
+#### audio
+Audio reference. Accepts a URL input or file upload in the admin UI. Stores the URL as a string. Renders an HTML5 `<audio>` player in the admin for preview.
+```typescript
+{ name: 'podcast', type: 'audio', label: 'Episode Audio' }
+```
+
 #### select
 Dropdown selection from predefined options. Requires `options` array.
 ```typescript
@@ -296,6 +302,90 @@ function renderSection(block: Record<string, unknown>) {
     case 'hero': return <Hero tagline={block.tagline as string} />;
     case 'features': return <Features items={block.items as Item[]} />;
   }
+}
+```
+
+## Richtext Embedded Media
+
+Every `richtext` field includes built-in TipTap nodes for embedding media and structured content. These are available on ALL sites in ALL richtext fields without any configuration — they are part of the editor itself.
+
+| Node | Description |
+|------|-------------|
+| **Image** | Upload or paste an image. Supports resize handles and alignment (left, center, right). |
+| **Video embed** | Paste a YouTube or Vimeo URL. Renders as a responsive iframe. |
+| **Audio embed** | Upload an mp3, wav, or ogg file. Renders an inline `<audio>` player. |
+| **File attachment** | Upload any file type. Renders as a download-link card with filename and size. |
+| **Callout** | Styled info/warning/tip box with editable text inside. |
+
+### Embedded media vs. CMS blocks
+
+These embedded media nodes are **not** the same as CMS blocks defined in `cms.config.ts`:
+
+- **Richtext embedded media** — built into the TipTap editor, available everywhere, no config needed. The content is stored as HTML within the richtext field value.
+- **CMS blocks** — defined per-site in `cms.config.ts`, used in `blocks`-type fields, stored as structured JSON with a `_block` discriminator.
+
+### Rendering richtext embedded media in Next.js
+
+Richtext field values contain HTML that may include tags like `<audio>`, `<video>`, `<a download>`, and `<div class="callout callout-info">`. To render these correctly in Next.js, use `dangerouslySetInnerHTML` or a sanitizer that preserves these tags:
+
+```typescript
+// Simple approach: dangerouslySetInnerHTML (content is trusted, authored in your CMS)
+function RichtextContent({ html }: { html: string }) {
+  return <div className="prose" dangerouslySetInnerHTML={{ __html: html }} />;
+}
+
+// Usage in a page
+export default async function PostPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const post = getDocument<{ title: string; content: string }>('posts', slug);
+  if (!post) notFound();
+
+  return (
+    <article>
+      <h1>{post.data.title}</h1>
+      <RichtextContent html={post.data.content} />
+    </article>
+  );
+}
+```
+
+Style the embedded elements with CSS to match your site design:
+
+```css
+/* Audio players */
+.prose audio {
+  width: 100%;
+  margin: 1.5rem 0;
+}
+
+/* File attachment cards */
+.prose a[download] {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.5rem;
+  text-decoration: none;
+}
+
+/* Callout boxes */
+.prose .callout {
+  padding: 1rem 1.25rem;
+  border-radius: 0.5rem;
+  margin: 1.5rem 0;
+}
+.prose .callout-info {
+  background: #eff6ff;
+  border-left: 4px solid #3b82f6;
+}
+.prose .callout-warning {
+  background: #fffbeb;
+  border-left: 4px solid #f59e0b;
+}
+.prose .callout-tip {
+  background: #f0fdf4;
+  border-left: 4px solid #22c55e;
 }
 ```
 
