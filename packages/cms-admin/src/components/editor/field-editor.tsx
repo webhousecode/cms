@@ -13,8 +13,30 @@ import { StructuredObjectEditor } from "./structured-object-editor";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { CustomSelect } from "@/components/ui/custom-select";
+
+/* ─── Inline confirm hook for destructive actions ──────────── */
+function useInlineConfirm() {
+  const [confirmId, setConfirmId] = useState<string | null>(null);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const requestConfirm = useCallback((id: string, onConfirm: () => void) => {
+    if (confirmId === id) {
+      // Second click — execute
+      if (timerRef.current) clearTimeout(timerRef.current);
+      setConfirmId(null);
+      onConfirm();
+    } else {
+      // First click — show "Sure?"
+      if (timerRef.current) clearTimeout(timerRef.current);
+      setConfirmId(id);
+      timerRef.current = setTimeout(() => setConfirmId(null), 3000);
+    }
+  }, [confirmId]);
+
+  return { confirmId, requestConfirm };
+}
 
 interface Props {
   field: FieldConfig;
@@ -421,6 +443,7 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
       const [mediaBrowserOpen, setMediaBrowserOpen] = useState(false);
       const [mediaItems, setMediaItems] = useState<Array<{ name: string; url: string; isImage: boolean; mediaType?: string }>>([]);
       const [mediaLoading, setMediaLoading] = useState(false);
+      const [mediaSearch, setMediaSearch] = useState("");
       const imgInputRef = useRef<HTMLInputElement>(null);
 
       async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -445,6 +468,7 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
       function openMediaBrowser() {
         setMediaBrowserOpen(true);
         setMediaLoading(true);
+        setMediaSearch("");
         fetch("/api/media")
           .then((r) => r.json())
           .then((items: Array<{ name: string; url: string; isImage: boolean; mediaType?: string }>) => {
@@ -615,6 +639,22 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
                     <X style={{ width: "16px", height: "16px" }} />
                   </button>
                 </div>
+                {/* Search */}
+                <div style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid var(--border)" }}>
+                  <input
+                    type="text"
+                    value={mediaSearch}
+                    onChange={(e) => setMediaSearch(e.target.value)}
+                    placeholder="Search images…"
+                    autoFocus
+                    style={{
+                      width: "100%", padding: "0.35rem 0.5rem",
+                      borderRadius: "6px", border: "1px solid var(--border)",
+                      background: "var(--background)", color: "var(--foreground)",
+                      fontSize: "0.8rem", outline: "none",
+                    }}
+                  />
+                </div>
                 {/* Modal body */}
                 <div style={{ overflowY: "auto", padding: "0.75rem" }}>
                   {mediaLoading && (
@@ -633,7 +673,7 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
                       gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))",
                       gap: "0.5rem",
                     }}>
-                      {mediaItems.map((item) => (
+                      {mediaItems.filter((item) => !mediaSearch || item.name.toLowerCase().includes(mediaSearch.toLowerCase())).map((item) => (
                         <button
                           key={item.url}
                           type="button"
