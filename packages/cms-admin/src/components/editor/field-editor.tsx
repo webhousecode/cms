@@ -459,9 +459,10 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
           {/* Thumbnail preview */}
           {strVal && (
             <div style={{ position: "relative", width: "fit-content" }}>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={strVal}
-                alt="Preview"
+                src={strVal.startsWith("http") || strVal.startsWith("/uploads/") ? strVal : `/api/uploads${strVal.startsWith("/") ? "" : "/"}${strVal}`}
+                alt={strVal.split("/").pop() ?? "Preview"}
                 style={{
                   maxWidth: "200px",
                   maxHeight: "120px",
@@ -637,7 +638,13 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
                           key={item.url}
                           type="button"
                           onClick={() => {
-                            onChange(item.url);
+                            // Store relative path, not full URL (strip previewUrl host)
+                            let storedUrl = item.url;
+                            try {
+                              const u = new URL(item.url);
+                              storedUrl = u.pathname;
+                            } catch { /* already relative */ }
+                            onChange(storedUrl);
                             setMediaBrowserOpen(false);
                           }}
                           style={{
