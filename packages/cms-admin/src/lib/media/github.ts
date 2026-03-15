@@ -5,13 +5,15 @@
 import type { MediaAdapter, MediaFileInfo, MediaType, InteractiveMeta } from "./types";
 import { GitHubMediaClient } from "../github-media";
 
-const IMAGE_EXTS = new Set(["jpg", "jpeg", "png", "gif", "webp", "svg", "avif"]);
+const IMAGE_EXTS = new Set(["jpg", "jpeg", "png", "gif", "webp", "avif"]);
+const SVG_EXTS = new Set(["svg"]);
 const AUDIO_EXTS = new Set(["mp3", "wav", "ogg", "flac", "aac", "m4a", "wma"]);
 const VIDEO_EXTS = new Set(["mp4", "webm", "mov", "avi", "mkv"]);
 const DOC_EXTS = new Set(["pdf", "doc", "docx", "xls", "xlsx", "pptx", "txt", "md", "csv", "json"]);
 const INTERACTIVE_EXTS = new Set(["html", "htm"]);
 
 function getMediaType(ext: string): MediaType {
+  if (SVG_EXTS.has(ext)) return "svg";
   if (IMAGE_EXTS.has(ext)) return "image";
   if (AUDIO_EXTS.has(ext)) return "audio";
   if (VIDEO_EXTS.has(ext)) return "video";
@@ -60,7 +62,7 @@ export class GitHubMediaAdapter implements MediaAdapter {
             folder,
             url,
             size: f.size,
-            isImage: IMAGE_EXTS.has(ext),
+            isImage: IMAGE_EXTS.has(ext) || SVG_EXTS.has(ext),
             mediaType: getMediaType(ext),
             createdAt: new Date().toISOString(),
             meta: { sha: f.sha, repoPath: f.path },

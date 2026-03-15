@@ -439,6 +439,27 @@ export default function InteractiveDetailPage() {
     );
   }
 
+  async function renameTo(newName: string) {
+    const res = await fetch(`/api/interactives/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: newName }),
+    });
+    if (res.ok) {
+      const updated = await res.json();
+      setDetail((prev) => prev ? { ...prev, ...updated } : prev);
+      setTabTitle(newName);
+    }
+  }
+
+  const labelStyle: React.CSSProperties = {
+    fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase",
+    letterSpacing: "0.06em", color: "var(--muted-foreground)", marginBottom: "0.25rem",
+  };
+  const valueStyle: React.CSSProperties = {
+    fontSize: "0.8rem", fontFamily: "monospace", color: "var(--foreground)",
+  };
+
   if (!detail) return null;
 
   const modes: { value: EditMode; label: string; icon: typeof Eye }[] = [
@@ -607,79 +628,87 @@ export default function InteractiveDetailPage() {
         </div>
       </div>
 
-      {/* Properties panel — slides open below top bar */}
+      {/* Properties panel — right sidebar, same as document editor */}
       {propertiesOpen && (
         <div style={{
-          borderBottom: "1px solid var(--border)",
-          background: "var(--background)",
-          padding: "1rem 1.5rem",
-          display: "flex",
-          flexDirection: "column",
-          gap: "0.75rem",
-          flexShrink: 0,
+          position: "fixed", top: 0, right: 0, bottom: 0, width: "340px", zIndex: 100,
+          background: "var(--card)", borderLeft: "1px solid var(--border)",
+          boxShadow: "-4px 0 20px rgba(0,0,0,0.3)",
+          display: "flex", flexDirection: "column",
         }}>
-          {/* Name (editable) */}
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
-            <label style={{ fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted-foreground)" }}>
-              Name
-            </label>
-            <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-              <input
-                type="text"
-                value={editName}
-                onChange={(e) => setEditName(e.target.value)}
-                style={{
-                  flex: 1, padding: "0.4rem 0.625rem", borderRadius: "6px",
-                  border: "1px solid var(--border)", background: "var(--card)",
-                  color: "var(--foreground)", fontSize: "0.85rem", fontFamily: "monospace",
-                  outline: "none", maxWidth: "400px",
-                }}
-              />
-              {editName !== detail.name && (
-                <Button
-                  size="sm"
-                  onClick={async () => {
-                    const res = await fetch(`/api/interactives/${id}`, {
-                      method: "PUT",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ name: editName }),
-                    });
-                    if (res.ok) {
-                      const updated = await res.json();
-                      setDetail((prev) => prev ? { ...prev, ...updated } : prev);
-                      setTabTitle(editName);
-                    }
-                  }}
-                  className="gap-1"
-                >
-                  <Save className="w-3 h-3" />
-                  Rename
-                </Button>
-              )}
-            </div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.75rem 1rem", borderBottom: "1px solid var(--border)" }}>
+            <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>Properties</span>
+            <button type="button" onClick={() => setPropertiesOpen(false)} style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1.1rem", lineHeight: 1 }}>×</button>
           </div>
 
-          {/* Read-only properties */}
-          <div style={{ display: "flex", gap: "2rem", flexWrap: "wrap" }}>
+          <div style={{ flex: 1, overflowY: "auto", padding: "1rem", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
+            {/* ID */}
             <div>
-              <span style={{ fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted-foreground)", display: "block", marginBottom: "0.15rem" }}>ID</span>
-              <span style={{ fontSize: "0.8rem", fontFamily: "monospace", color: "var(--foreground)" }}>{detail.id}</span>
+              <p style={labelStyle}>ID</p>
+              <p style={{ ...valueStyle, color: "var(--muted-foreground)", fontSize: "0.72rem" }}>{detail.id}</p>
             </div>
+
+            {/* Name — editable */}
             <div>
-              <span style={{ fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted-foreground)", display: "block", marginBottom: "0.15rem" }}>Filename</span>
-              <span style={{ fontSize: "0.8rem", fontFamily: "monospace", color: "var(--foreground)" }}>{detail.filename}</span>
+              <p style={labelStyle}>Name</p>
+              <div style={{ display: "flex", gap: "0.5rem" }}>
+                <input
+                  type="text"
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter" && editName !== detail.name) renameTo(editName); }}
+                  style={{
+                    flex: 1, padding: "0.35rem 0.5rem", borderRadius: "5px",
+                    border: `1px solid ${editName !== detail.name ? "var(--primary)" : "var(--border)"}`,
+                    background: "var(--background)", color: "var(--foreground)",
+                    fontSize: "0.8rem", fontFamily: "monospace", outline: "none",
+                  }}
+                />
+                {editName !== detail.name && (
+                  <button
+                    type="button"
+                    onClick={() => renameTo(editName)}
+                    style={{
+                      padding: "0.35rem 0.625rem", borderRadius: "5px",
+                      border: "none", background: "var(--primary)",
+                      color: "var(--primary-foreground)", fontSize: "0.75rem",
+                      cursor: "pointer", flexShrink: 0,
+                    }}
+                  >
+                    Save
+                  </button>
+                )}
+              </div>
             </div>
+
+            {/* Filename */}
             <div>
-              <span style={{ fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted-foreground)", display: "block", marginBottom: "0.15rem" }}>Size</span>
-              <span style={{ fontSize: "0.8rem", fontFamily: "monospace", color: "var(--foreground)" }}>{formatSize(detail.size)}</span>
+              <p style={labelStyle}>Filename</p>
+              <p style={valueStyle}>{detail.filename}</p>
             </div>
+
+            {/* Status */}
             <div>
-              <span style={{ fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted-foreground)", display: "block", marginBottom: "0.15rem" }}>Created</span>
-              <span style={{ fontSize: "0.8rem", fontFamily: "monospace", color: "var(--foreground)" }}>{formatDate(detail.createdAt)}</span>
+              <p style={labelStyle}>Status</p>
+              <p style={valueStyle}>{detail.status ?? "draft"}</p>
             </div>
+
+            {/* Size */}
             <div>
-              <span style={{ fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted-foreground)", display: "block", marginBottom: "0.15rem" }}>Updated</span>
-              <span style={{ fontSize: "0.8rem", fontFamily: "monospace", color: "var(--foreground)" }}>{formatDate(detail.updatedAt)}</span>
+              <p style={labelStyle}>Size</p>
+              <p style={valueStyle}>{formatSize(detail.size)}</p>
+            </div>
+
+            {/* Dates */}
+            <div style={{ borderTop: "1px solid var(--border)", paddingTop: "1rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+              <div>
+                <p style={labelStyle}>Created</p>
+                <p style={valueStyle}>{new Date(detail.createdAt).toLocaleString()}</p>
+              </div>
+              <div>
+                <p style={labelStyle}>Last updated</p>
+                <p style={valueStyle}>{new Date(detail.updatedAt).toLocaleString()}</p>
+              </div>
             </div>
           </div>
         </div>
