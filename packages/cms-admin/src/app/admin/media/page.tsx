@@ -350,7 +350,7 @@ export default function MediaPage() {
                 typeCounts.set(mt, (typeCounts.get(mt) ?? 0) + 1);
               }
               const TYPE_LABELS: Record<string, string> = {
-                image: "Images", audio: "Audio", video: "Video",
+                image: "Images", svg: "SVG", audio: "Audio", video: "Video",
                 document: "Documents", interactive: "Interactives", other: "Other",
               };
               const typeList = [

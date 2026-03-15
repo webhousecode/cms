@@ -727,10 +727,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
 
   function openPreview() {
     if (!colConfig.urlPrefix) return;
-    const category = typeof doc.data.category === "string" ? doc.data.category : null;
-    const path = category
-      ? `${colConfig.urlPrefix}/${category}/${doc.slug}`
-      : `${colConfig.urlPrefix}/${doc.slug}`;
+    const path = `${colConfig.urlPrefix}/${doc.slug}`;
     const url = `${PREVIEW_SITE_URL}${path}`;
     if (PREVIEW_IN_IFRAME) {
       openTab(`/admin/preview?url=${encodeURIComponent(url)}`, `Preview: ${doc.slug}`, true);

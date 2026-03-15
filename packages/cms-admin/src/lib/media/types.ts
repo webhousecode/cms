@@ -21,7 +21,7 @@ export interface MediaFileInfo {
   meta?: Record<string, unknown>;
 }
 
-export type MediaType = "image" | "audio" | "video" | "document" | "interactive" | "other";
+export type MediaType = "image" | "svg" | "audio" | "video" | "document" | "interactive" | "other";
 
 export type InteractiveStatus = "draft" | "published" | "trashed";
 
