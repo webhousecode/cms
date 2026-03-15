@@ -215,6 +215,8 @@ function FieldRow({
 }) {
   const [dragOver, setDragOver] = useState<"above" | "below" | null>(null);
   const dragRef = useRef<number | null>(null);
+  const [confirmRemove, setConfirmRemove] = useState(false);
+  const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function handleDragStart(e: React.DragEvent) {
     dragRef.current = index;
@@ -303,10 +305,21 @@ function FieldRow({
 
       {/* Delete */}
       <button
-        onClick={onRemove}
-        className="text-muted-foreground hover:text-destructive transition-colors pt-1.5 shrink-0"
+        onClick={() => {
+          if (confirmRemove) {
+            if (confirmTimer.current) clearTimeout(confirmTimer.current);
+            setConfirmRemove(false);
+            onRemove();
+          } else {
+            if (confirmTimer.current) clearTimeout(confirmTimer.current);
+            setConfirmRemove(true);
+            confirmTimer.current = setTimeout(() => setConfirmRemove(false), 3000);
+          }
+        }}
+        className={confirmRemove ? "text-destructive pt-1.5 shrink-0" : "text-muted-foreground hover:text-destructive transition-colors pt-1.5 shrink-0"}
+        style={confirmRemove ? { fontSize: "0.65rem", fontWeight: 600, whiteSpace: "nowrap" } : undefined}
       >
-        <Trash2 className="w-3.5 h-3.5" />
+        {confirmRemove ? "Sure?" : <Trash2 className="w-3.5 h-3.5" />}
       </button>
     </div>
   );

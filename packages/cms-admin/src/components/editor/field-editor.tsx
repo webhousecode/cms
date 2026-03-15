@@ -13,30 +13,8 @@ import { StructuredObjectEditor } from "./structured-object-editor";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import { CustomSelect } from "@/components/ui/custom-select";
-
-/* ─── Inline confirm hook for destructive actions ──────────── */
-function useInlineConfirm() {
-  const [confirmId, setConfirmId] = useState<string | null>(null);
-  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  const requestConfirm = useCallback((id: string, onConfirm: () => void) => {
-    if (confirmId === id) {
-      // Second click — execute
-      if (timerRef.current) clearTimeout(timerRef.current);
-      setConfirmId(null);
-      onConfirm();
-    } else {
-      // First click — show "Sure?"
-      if (timerRef.current) clearTimeout(timerRef.current);
-      setConfirmId(id);
-      timerRef.current = setTimeout(() => setConfirmId(null), 3000);
-    }
-  }, [confirmId]);
-
-  return { confirmId, requestConfirm };
-}
 
 interface Props {
   field: FieldConfig;
@@ -785,6 +763,8 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
 
     case "audio": {
       const [audioUploading, setAudioUploading] = useState(false);
+      const [audioConfirm, setAudioConfirm] = useState(false);
+      const audioConfirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
       async function handleAudioUpload(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0];
@@ -821,10 +801,19 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
                 {!locked && (
                   <button
                     type="button"
-                    onClick={() => onChange("")}
-                    style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "0.7rem", textDecoration: "underline" }}
+                    onClick={() => {
+                      if (audioConfirm) {
+                        if (audioConfirmTimer.current) clearTimeout(audioConfirmTimer.current);
+                        setAudioConfirm(false);
+                        onChange("");
+                      } else {
+                        setAudioConfirm(true);
+                        audioConfirmTimer.current = setTimeout(() => setAudioConfirm(false), 3000);
+                      }
+                    }}
+                    style={{ background: "none", border: "none", cursor: "pointer", color: audioConfirm ? "var(--destructive)" : "var(--muted-foreground)", fontSize: "0.7rem", textDecoration: "underline", fontWeight: audioConfirm ? 600 : 400 }}
                   >
-                    Remove
+                    {audioConfirm ? "Sure?" : "Remove"}
                   </button>
                 )}
               </div>
@@ -898,6 +887,10 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
         );
       }
       const strArr = arrVal.map(v => String(v ?? ""));
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      const [arrConfirmIdx, setArrConfirmIdx] = useState<number | null>(null);
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      const arrConfirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
       return (
         <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
           {strArr.map((item, i) => (
@@ -928,11 +921,26 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
               {!locked && (
                 <button
                   type="button"
-                  onClick={() => onChange(strArr.filter((_, j) => j !== i))}
-                  style={{ flexShrink: 0, background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.25rem" }}
-                  className="hover:text-destructive transition-colors"
+                  onClick={() => {
+                    // Empty items can be removed immediately
+                    if (!item.trim()) {
+                      onChange(strArr.filter((_, j) => j !== i));
+                      return;
+                    }
+                    if (arrConfirmIdx === i) {
+                      if (arrConfirmTimer.current) clearTimeout(arrConfirmTimer.current);
+                      setArrConfirmIdx(null);
+                      onChange(strArr.filter((_, j) => j !== i));
+                    } else {
+                      if (arrConfirmTimer.current) clearTimeout(arrConfirmTimer.current);
+                      setArrConfirmIdx(i);
+                      arrConfirmTimer.current = setTimeout(() => setArrConfirmIdx(null), 3000);
+                    }
+                  }}
+                  style={{ flexShrink: 0, background: "none", border: "none", cursor: "pointer", color: arrConfirmIdx === i ? "var(--destructive)" : "var(--muted-foreground)", padding: "0.25rem", fontSize: arrConfirmIdx === i ? "0.65rem" : undefined, fontWeight: arrConfirmIdx === i ? 600 : undefined, whiteSpace: "nowrap" }}
+                  className={arrConfirmIdx === i ? "" : "hover:text-destructive transition-colors"}
                 >
-                  <X style={{ width: "14px", height: "14px" }} />
+                  {arrConfirmIdx === i ? "Sure?" : <X style={{ width: "14px", height: "14px" }} />}
                 </button>
               )}
             </div>

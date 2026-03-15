@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Trash2, RotateCcw, X, Search, AlertTriangle } from "lucide-react";
 import { useTabs } from "@/lib/tabs-context";
 
@@ -22,6 +22,12 @@ interface TrashedItem {
 function ConfirmDialog({ message, confirmLabel = "Confirm", onConfirm, onCancel }: {
   message: string; confirmLabel?: string; onConfirm: () => void; onCancel: () => void;
 }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onCancel(); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onCancel]);
+
   return (
     <div
       style={{ position: "fixed", inset: 0, zIndex: 200, backgroundColor: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center" }}
@@ -46,6 +52,8 @@ export default function TrashPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [confirmEmpty, setConfirmEmpty] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const confirmDeleteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [working, setWorking] = useState<string | null>(null); // item id being acted on
   const { tabs, closeTab } = useTabs();
 
@@ -230,13 +238,35 @@ export default function TrashPage() {
                     <button
                       type="button"
                       disabled={isWorking}
-                      onClick={() => deletePermanently(item)}
+                      onClick={() => {
+                        if (confirmDeleteId === item.doc.id) {
+                          if (confirmDeleteTimer.current) clearTimeout(confirmDeleteTimer.current);
+                          setConfirmDeleteId(null);
+                          deletePermanently(item);
+                        } else {
+                          if (confirmDeleteTimer.current) clearTimeout(confirmDeleteTimer.current);
+                          setConfirmDeleteId(item.doc.id);
+                          confirmDeleteTimer.current = setTimeout(() => setConfirmDeleteId(null), 3000);
+                        }
+                      }}
                       title="Delete permanently"
-                      style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "28px", height: "28px", borderRadius: "5px", border: "1px solid transparent", background: "transparent", color: "var(--muted-foreground)", cursor: isWorking ? "wait" : "pointer" }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.color = "var(--destructive)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "color-mix(in oklch, var(--destructive) 30%, transparent)"; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.color = "var(--muted-foreground)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "transparent"; }}
+                      style={{
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        minWidth: confirmDeleteId === item.doc.id ? "auto" : "28px",
+                        height: "28px", borderRadius: "5px",
+                        border: confirmDeleteId === item.doc.id ? "1px solid color-mix(in oklch, var(--destructive) 30%, transparent)" : "1px solid transparent",
+                        background: "transparent",
+                        color: confirmDeleteId === item.doc.id ? "var(--destructive)" : "var(--muted-foreground)",
+                        cursor: isWorking ? "wait" : "pointer",
+                        fontSize: confirmDeleteId === item.doc.id ? "0.65rem" : undefined,
+                        fontWeight: confirmDeleteId === item.doc.id ? 600 : undefined,
+                        padding: confirmDeleteId === item.doc.id ? "0 8px" : undefined,
+                        whiteSpace: "nowrap",
+                      }}
+                      onMouseEnter={e => { if (confirmDeleteId !== item.doc.id) { (e.currentTarget as HTMLButtonElement).style.color = "var(--destructive)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "color-mix(in oklch, var(--destructive) 30%, transparent)"; } }}
+                      onMouseLeave={e => { if (confirmDeleteId !== item.doc.id) { (e.currentTarget as HTMLButtonElement).style.color = "var(--muted-foreground)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "transparent"; } }}
                     >
-                      <X style={{ width: "13px", height: "13px" }} />
+                      {confirmDeleteId === item.doc.id ? "Sure?" : <X style={{ width: "13px", height: "13px" }} />}
                     </button>
                   </div>
                 </div>

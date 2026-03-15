@@ -22,6 +22,12 @@ const PREVIEW_IN_IFRAME_DEFAULT = process.env.NEXT_PUBLIC_PREVIEW_IN_IFRAME === 
 function ConfirmDialog({ message, confirmLabel = "Delete", onConfirm, onCancel }: {
   message: string; confirmLabel?: string; onConfirm: () => void; onCancel: () => void;
 }) {
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onCancel(); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onCancel]);
+
   return (
     <div style={{
       position: "fixed", inset: 0, zIndex: 200,
@@ -72,6 +78,12 @@ function CreateTranslationDialog({
   const [newSlug, setNewSlug] = useState(`${originalSlug}-${availableLocales[0] ?? locales[0] ?? "xx"}`);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
 
   const handleLocaleChange = (l: string) => {
     setTargetLocale(l);

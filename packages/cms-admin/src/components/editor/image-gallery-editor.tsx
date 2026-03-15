@@ -17,6 +17,8 @@ export function ImageGalleryEditor({ value = [], onChange, disabled }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const [confirmRemoveIdx, setConfirmRemoveIdx] = useState<number | null>(null);
+  const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const uploadFiles = useCallback(async (files: File[]) => {
     setUploading(true);
@@ -161,9 +163,28 @@ export function ImageGalleryEditor({ value = [], onChange, disabled }: Props) {
                 <button
                   type="button"
                   title="Remove"
-                  onClick={() => removeImage(idx)}
-                  style={{ ...iconBtn, color: "var(--destructive)" }}
-                >×</button>
+                  onClick={() => {
+                    if (confirmRemoveIdx === idx) {
+                      if (confirmTimer.current) clearTimeout(confirmTimer.current);
+                      setConfirmRemoveIdx(null);
+                      removeImage(idx);
+                    } else {
+                      if (confirmTimer.current) clearTimeout(confirmTimer.current);
+                      setConfirmRemoveIdx(idx);
+                      confirmTimer.current = setTimeout(() => setConfirmRemoveIdx(null), 3000);
+                    }
+                  }}
+                  style={{
+                    ...iconBtn,
+                    color: "var(--destructive)",
+                    width: confirmRemoveIdx === idx ? "auto" : "22px",
+                    minWidth: confirmRemoveIdx === idx ? "auto" : undefined,
+                    padding: confirmRemoveIdx === idx ? "0 6px" : undefined,
+                    fontSize: confirmRemoveIdx === idx ? "0.6rem" : "0.75rem",
+                    fontWeight: 700,
+                    whiteSpace: "nowrap",
+                  }}
+                >{confirmRemoveIdx === idx ? "Sure?" : "×"}</button>
               </div>
 
               {/* Index badge */}

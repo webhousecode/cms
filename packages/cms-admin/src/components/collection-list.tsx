@@ -100,6 +100,7 @@ function RowMenu({ doc, collection, onClone, onToggle, onTrash, cloning }: {
   cloning: boolean;
 }) {
   const [open, setOpen] = useState(false);
+  const [confirmTrash, setConfirmTrash] = useState(false);
   return (
     <div style={{ position: "relative" }}>
       <button
@@ -145,11 +146,20 @@ function RowMenu({ doc, collection, onClone, onToggle, onTrash, cloning }: {
           <div style={{ height: "1px", background: "var(--border)", margin: "0.25rem 0" }} />
           <button
             type="button"
-            onClick={(e) => { onTrash(e); setOpen(false); }}
-            style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.4rem 0.6rem", borderRadius: "5px", fontSize: "0.8rem", color: "var(--destructive)", background: "none", border: "none", cursor: "pointer", width: "100%" }}
+            onClick={(e) => {
+              if (confirmTrash) {
+                onTrash(e);
+                setOpen(false);
+                setConfirmTrash(false);
+              } else {
+                setConfirmTrash(true);
+                setTimeout(() => setConfirmTrash(false), 3000);
+              }
+            }}
+            style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.4rem 0.6rem", borderRadius: "5px", fontSize: "0.8rem", color: "var(--destructive)", background: confirmTrash ? "color-mix(in srgb, var(--destructive) 10%, transparent)" : "none", border: "none", cursor: "pointer", width: "100%", fontWeight: confirmTrash ? 600 : 400 }}
             className="hover:bg-destructive/10"
           >
-            <FileX style={{ width: "0.8rem", height: "0.8rem" }} /> Move to trash
+            <FileX style={{ width: "0.8rem", height: "0.8rem" }} /> {confirmTrash ? "Sure? Click to confirm" : "Move to trash"}
           </button>
         </div>
       )}

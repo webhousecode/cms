@@ -3,7 +3,7 @@
 import type { FieldConfig, BlockConfig } from "@webhouse/cms";
 import { FieldEditor } from "./field-editor";
 import { ChevronDown, ChevronRight, Trash2, ArrowUp, ArrowDown, Plus, Code, LayoutList } from "lucide-react";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Textarea } from "@/components/ui/textarea";
 
 interface Props {
@@ -51,6 +51,8 @@ export function StructuredArrayEditor({ field, value, onChange, locked, blocksCo
   const [expanded, setExpanded] = useState<Record<number, boolean>>({});
   const [mode, setMode] = useState<"ui" | "json">("ui");
   const [jsonDraft, setJsonDraft] = useState<string | null>(null);
+  const [confirmRemoveIdx, setConfirmRemoveIdx] = useState<number | null>(null);
+  const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function toggle(i: number) {
     setExpanded((prev) => ({ ...prev, [i]: !prev[i] }));
@@ -172,8 +174,18 @@ export function StructuredArrayEditor({ field, value, onChange, locked, blocksCo
                       <button type="button" disabled={i === items.length - 1} onClick={() => moveItem(i, 1)} style={{ background: "none", border: "none", cursor: i === items.length - 1 ? "not-allowed" : "pointer", color: "var(--muted-foreground)", padding: "2px", opacity: i === items.length - 1 ? 0.3 : 1 }}>
                         <ArrowDown style={{ width: 14, height: 14 }} />
                       </button>
-                      <button type="button" onClick={() => removeItem(i)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "2px" }} className="hover:text-destructive transition-colors">
-                        <Trash2 style={{ width: 14, height: 14 }} />
+                      <button type="button" onClick={() => {
+                        if (confirmRemoveIdx === i) {
+                          if (confirmTimer.current) clearTimeout(confirmTimer.current);
+                          setConfirmRemoveIdx(null);
+                          removeItem(i);
+                        } else {
+                          if (confirmTimer.current) clearTimeout(confirmTimer.current);
+                          setConfirmRemoveIdx(i);
+                          confirmTimer.current = setTimeout(() => setConfirmRemoveIdx(null), 3000);
+                        }
+                      }} style={{ background: "none", border: "none", cursor: "pointer", color: confirmRemoveIdx === i ? "var(--destructive)" : "var(--muted-foreground)", padding: "2px", fontSize: confirmRemoveIdx === i ? "0.65rem" : undefined, fontWeight: confirmRemoveIdx === i ? 600 : undefined, whiteSpace: "nowrap" }} className={confirmRemoveIdx === i ? "" : "hover:text-destructive transition-colors"}>
+                        {confirmRemoveIdx === i ? "Sure?" : <Trash2 style={{ width: 14, height: 14 }} />}
                       </button>
                     </span>
                   )}
