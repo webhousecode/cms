@@ -1806,6 +1806,15 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
   const imageInputRef = useRef<HTMLInputElement>(null);
   const audioInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [showImagePicker, setShowImagePicker] = useState(false);
+  const [showAudioPicker, setShowAudioPicker] = useState(false);
+  const [showImageMediaBrowser, setShowImageMediaBrowser] = useState(false);
+  const [showAudioMediaBrowser, setShowAudioMediaBrowser] = useState(false);
+  const [mediaBrowserItems, setMediaBrowserItems] = useState<Array<{ name: string; url: string; isImage: boolean; mediaType?: string; size: number }>>([]);
+  const [mediaBrowserLoading, setMediaBrowserLoading] = useState(false);
+  const [mediaBrowserSearch, setMediaBrowserSearch] = useState("");
+  const imagePickerRef = useRef<HTMLDivElement>(null);
+  const audioPickerRef = useRef<HTMLDivElement>(null);
   const [imgDelConfirming, setImgDelConfirming] = useState(false);
   const imgDelTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -1881,6 +1890,8 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
     const handler = (e: MouseEvent) => {
       if (headingRef.current && !headingRef.current.contains(e.target as Node)) setHeadingOpen(false);
       if (linkRef.current && !linkRef.current.contains(e.target as Node)) setLinkOpen(false);
+      if (imagePickerRef.current && !imagePickerRef.current.contains(e.target as Node)) setShowImagePicker(false);
+      if (audioPickerRef.current && !audioPickerRef.current.contains(e.target as Node)) setShowAudioPicker(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -1892,6 +1903,20 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [showInteractivePicker]);
+
+  useEffect(() => {
+    if (!showImageMediaBrowser) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setShowImageMediaBrowser(false); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [showImageMediaBrowser]);
+
+  useEffect(() => {
+    if (!showAudioMediaBrowser) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setShowAudioMediaBrowser(false); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [showAudioMediaBrowser]);
 
   function activeKey(): HeadingKey {
     if (!editor) return "paragraph";
@@ -1919,6 +1944,34 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
   function insertTable() {
     if (!editor) return;
     editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run();
+  }
+
+  function openImageMediaBrowser() {
+    setShowImagePicker(false);
+    setShowImageMediaBrowser(true);
+    setMediaBrowserLoading(true);
+    setMediaBrowserSearch("");
+    fetch("/api/media")
+      .then((r) => r.json())
+      .then((items: Array<{ name: string; url: string; isImage: boolean; mediaType?: string; size: number }>) => {
+        setMediaBrowserItems(items.filter((i) => i.isImage));
+      })
+      .catch(() => setMediaBrowserItems([]))
+      .finally(() => setMediaBrowserLoading(false));
+  }
+
+  function openAudioMediaBrowser() {
+    setShowAudioPicker(false);
+    setShowAudioMediaBrowser(true);
+    setMediaBrowserLoading(true);
+    setMediaBrowserSearch("");
+    fetch("/api/media")
+      .then((r) => r.json())
+      .then((items: Array<{ name: string; url: string; isImage: boolean; mediaType?: string; size: number }>) => {
+        setMediaBrowserItems(items.filter((i) => i.mediaType === "audio"));
+      })
+      .catch(() => setMediaBrowserItems([]))
+      .finally(() => setMediaBrowserLoading(false));
   }
 
   const uploadImage = useCallback(async (file: File) => {
@@ -2159,10 +2212,46 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
             </Btn>
 
             {/* Image */}
-            <Btn tooltip={uploading ? "Uploading…" : "Insert image"} disabled={uploading}
-              onClick={() => imageInputRef.current?.click()}>
-              <IconImage />
-            </Btn>
+            <div style={{ position: "relative" }} ref={imagePickerRef}>
+              <Btn tooltip={uploading ? "Uploading…" : "Insert image"} disabled={uploading}
+                onClick={() => setShowImagePicker((o) => !o)}>
+                <IconImage />
+              </Btn>
+              {showImagePicker && (
+                <div style={{
+                  position: "absolute", top: "100%", left: 0, zIndex: 50,
+                  marginTop: "4px", minWidth: "160px",
+                  background: "var(--popover)", border: "1px solid var(--border)",
+                  borderRadius: "8px", boxShadow: "0 4px 16px rgba(0,0,0,0.3)",
+                  overflow: "hidden",
+                }}>
+                  <button type="button" style={{
+                    display: "flex", alignItems: "center", gap: "0.5rem",
+                    width: "100%", padding: "0.5rem 0.75rem", border: "none",
+                    background: "transparent", color: "var(--foreground)",
+                    fontSize: "0.8rem", cursor: "pointer", textAlign: "left",
+                  }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(255,255,255,0.07)"; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
+                    onClick={() => { setShowImagePicker(false); imageInputRef.current?.click(); }}
+                  >
+                    Upload file
+                  </button>
+                  <button type="button" style={{
+                    display: "flex", alignItems: "center", gap: "0.5rem",
+                    width: "100%", padding: "0.5rem 0.75rem", border: "none",
+                    background: "transparent", color: "var(--foreground)",
+                    fontSize: "0.8rem", cursor: "pointer", textAlign: "left",
+                  }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(255,255,255,0.07)"; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
+                    onClick={openImageMediaBrowser}
+                  >
+                    Browse Media
+                  </button>
+                </div>
+              )}
+            </div>
             <input
               ref={imageInputRef}
               type="file"
@@ -2186,9 +2275,45 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
             </Btn>
 
             {/* Insert Audio */}
-            <Btn tooltip="Insert audio" onClick={() => audioInputRef.current?.click()}>
-              <IconAudio />
-            </Btn>
+            <div style={{ position: "relative" }} ref={audioPickerRef}>
+              <Btn tooltip="Insert audio" onClick={() => setShowAudioPicker((o) => !o)}>
+                <IconAudio />
+              </Btn>
+              {showAudioPicker && (
+                <div style={{
+                  position: "absolute", top: "100%", left: 0, zIndex: 50,
+                  marginTop: "4px", minWidth: "160px",
+                  background: "var(--popover)", border: "1px solid var(--border)",
+                  borderRadius: "8px", boxShadow: "0 4px 16px rgba(0,0,0,0.3)",
+                  overflow: "hidden",
+                }}>
+                  <button type="button" style={{
+                    display: "flex", alignItems: "center", gap: "0.5rem",
+                    width: "100%", padding: "0.5rem 0.75rem", border: "none",
+                    background: "transparent", color: "var(--foreground)",
+                    fontSize: "0.8rem", cursor: "pointer", textAlign: "left",
+                  }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(255,255,255,0.07)"; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
+                    onClick={() => { setShowAudioPicker(false); audioInputRef.current?.click(); }}
+                  >
+                    Upload file
+                  </button>
+                  <button type="button" style={{
+                    display: "flex", alignItems: "center", gap: "0.5rem",
+                    width: "100%", padding: "0.5rem 0.75rem", border: "none",
+                    background: "transparent", color: "var(--foreground)",
+                    fontSize: "0.8rem", cursor: "pointer", textAlign: "left",
+                  }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(255,255,255,0.07)"; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
+                    onClick={openAudioMediaBrowser}
+                  >
+                    Browse Media
+                  </button>
+                </div>
+              )}
+            </div>
             <input
               ref={audioInputRef}
               type="file"
@@ -2546,6 +2671,185 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
                     <span style={{ fontSize: "0.7rem", fontFamily: "monospace", color: "var(--muted-foreground)", opacity: 0.5, flexShrink: 0, marginLeft: "0.5rem" }}>[block:{block.slug}]</span>
                   </button>
                 ))}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ── Image Media Browser ── */}
+      {showImageMediaBrowser && (() => {
+        const filtered = mediaBrowserItems.filter((item) =>
+          !mediaBrowserSearch || item.name.toLowerCase().includes(mediaBrowserSearch.toLowerCase())
+        );
+        return (
+          <div
+            style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0,0,0,0.5)" }}
+            onMouseDown={(e) => { if (e.target === e.currentTarget) setShowImageMediaBrowser(false); }}
+          >
+            <div onMouseDown={(e) => e.stopPropagation()} style={{
+              width: "min(640px, 90vw)", maxHeight: "70vh",
+              backgroundColor: "var(--card)", border: "1px solid var(--border)",
+              borderRadius: "1rem", boxShadow: "0 24px 48px rgba(0,0,0,0.5)",
+              display: "flex", flexDirection: "column", overflow: "hidden",
+            }}>
+              <div style={{ padding: "0.75rem 1rem", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <span style={{ fontWeight: 500, fontSize: "0.9rem", display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                  <IconImage /> Select Image
+                </span>
+                <button type="button" onClick={() => setShowImageMediaBrowser(false)}
+                  style={{ width: "24px", height: "24px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1.1rem", display: "flex", alignItems: "center", justifyContent: "center" }}>&times;</button>
+              </div>
+              <div style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid var(--border)" }}>
+                <input
+                  type="text"
+                  value={mediaBrowserSearch}
+                  onChange={(e) => setMediaBrowserSearch(e.target.value)}
+                  placeholder="Search images..."
+                  autoFocus
+                  style={{
+                    width: "100%", padding: "0.35rem 0.5rem", borderRadius: "6px",
+                    border: "1px solid var(--border)", background: "var(--background)",
+                    color: "var(--foreground)", fontSize: "0.8rem", outline: "none",
+                  }}
+                />
+              </div>
+              <div style={{ overflowY: "auto", padding: "0.75rem" }}>
+                {mediaBrowserLoading && (
+                  <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>Loading media...</div>
+                )}
+                {!mediaBrowserLoading && mediaBrowserItems.length === 0 && (
+                  <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>No images found in Media library</div>
+                )}
+                {!mediaBrowserLoading && mediaBrowserItems.length > 0 && (() => {
+                  if (filtered.length === 0) return (
+                    <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>
+                      No images match &ldquo;{mediaBrowserSearch}&rdquo;
+                    </div>
+                  );
+                  return (
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))", gap: "0.5rem" }}>
+                      {filtered.map((item) => (
+                        <button
+                          key={item.url}
+                          type="button"
+                          onClick={() => {
+                            let storedUrl = item.url;
+                            try { const u = new URL(item.url); storedUrl = u.pathname; } catch { /* already relative */ }
+                            editor?.chain().focus().setImage({ src: storedUrl, alt: item.name }).run();
+                            setShowImageMediaBrowser(false);
+                          }}
+                          style={{
+                            background: "none", border: "1px solid var(--border)",
+                            borderRadius: "6px", cursor: "pointer", padding: "0.25rem",
+                            display: "flex", flexDirection: "column", alignItems: "center",
+                            gap: "0.25rem", overflow: "hidden",
+                          }}
+                          className="hover:border-primary transition-colors"
+                          title={item.name}
+                        >
+                          <img src={item.url} alt={item.name}
+                            style={{ width: "100%", height: "80px", objectFit: "cover", borderRadius: "4px" }} />
+                          <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", width: "100%", textAlign: "center" }}>
+                            {item.name}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ── Audio Media Browser ── */}
+      {showAudioMediaBrowser && (() => {
+        const filtered = mediaBrowserItems.filter((item) =>
+          !mediaBrowserSearch || item.name.toLowerCase().includes(mediaBrowserSearch.toLowerCase())
+        );
+        return (
+          <div
+            style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0,0,0,0.5)" }}
+            onMouseDown={(e) => { if (e.target === e.currentTarget) setShowAudioMediaBrowser(false); }}
+          >
+            <div onMouseDown={(e) => e.stopPropagation()} style={{
+              width: "min(640px, 90vw)", maxHeight: "70vh",
+              backgroundColor: "var(--card)", border: "1px solid var(--border)",
+              borderRadius: "1rem", boxShadow: "0 24px 48px rgba(0,0,0,0.5)",
+              display: "flex", flexDirection: "column", overflow: "hidden",
+            }}>
+              <div style={{ padding: "0.75rem 1rem", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <span style={{ fontWeight: 500, fontSize: "0.9rem", display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                  <IconAudio /> Select Audio
+                </span>
+                <button type="button" onClick={() => setShowAudioMediaBrowser(false)}
+                  style={{ width: "24px", height: "24px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1.1rem", display: "flex", alignItems: "center", justifyContent: "center" }}>&times;</button>
+              </div>
+              <div style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid var(--border)" }}>
+                <input
+                  type="text"
+                  value={mediaBrowserSearch}
+                  onChange={(e) => setMediaBrowserSearch(e.target.value)}
+                  placeholder="Search audio files..."
+                  autoFocus
+                  style={{
+                    width: "100%", padding: "0.35rem 0.5rem", borderRadius: "6px",
+                    border: "1px solid var(--border)", background: "var(--background)",
+                    color: "var(--foreground)", fontSize: "0.8rem", outline: "none",
+                  }}
+                />
+              </div>
+              <div style={{ overflowY: "auto", padding: "0.75rem" }}>
+                {mediaBrowserLoading && (
+                  <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>Loading media...</div>
+                )}
+                {!mediaBrowserLoading && mediaBrowserItems.length === 0 && (
+                  <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>No audio files found in Media library</div>
+                )}
+                {!mediaBrowserLoading && mediaBrowserItems.length > 0 && (() => {
+                  if (filtered.length === 0) return (
+                    <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>
+                      No audio files match &ldquo;{mediaBrowserSearch}&rdquo;
+                    </div>
+                  );
+                  return (
+                    <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem" }}>
+                      {filtered.map((item) => (
+                        <button
+                          key={item.url}
+                          type="button"
+                          onClick={() => {
+                            let storedUrl = item.url;
+                            try { const u = new URL(item.url); storedUrl = u.pathname; } catch { /* already relative */ }
+                            editor?.chain().focus().insertContent({ type: "audioEmbed", attrs: { src: storedUrl, title: item.name } }).run();
+                            setShowAudioMediaBrowser(false);
+                          }}
+                          style={{
+                            display: "flex", alignItems: "center", gap: "0.75rem",
+                            padding: "0.5rem 0.75rem", border: "1px solid var(--border)",
+                            borderRadius: "8px", background: "transparent",
+                            cursor: "pointer", textAlign: "left",
+                            transition: "border-color 120ms, background 120ms",
+                          }}
+                          className="hover:border-primary transition-colors"
+                          title={item.name}
+                          onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(255,255,255,0.05)"; }}
+                          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
+                        >
+                          <span style={{ fontSize: "1.25rem", flexShrink: 0, color: "var(--muted-foreground)" }}><IconAudio /></span>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <p style={{ fontSize: "0.85rem", fontWeight: 500, color: "var(--foreground)", margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.name}</p>
+                            {item.size > 0 && (
+                              <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", margin: 0 }}>{formatFileSize(item.size)}</p>
+                            )}
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  );
+                })()}
               </div>
             </div>
           </div>
