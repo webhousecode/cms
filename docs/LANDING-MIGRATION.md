@@ -19,10 +19,10 @@ proving that @webhouse/cms can manage its own marketing page.
 - [x] Nested arrays for terminal lines, stats items, feature cards, MCP cards
 - [x] Content seeded into content/pages/home.json
 
-### Phase 3: Build Pipeline
-- [ ] Template that renders blocks → static HTML+CSS (same output as current landing.html)
-- [ ] No framework dependency — pure static output
-- [ ] Assets (SVGs, fonts) bundled correctly
+### Phase 3: Build Pipeline ✅
+- [x] Template that renders blocks → static HTML+CSS (same output as current landing.html)
+- [x] No framework dependency — pure static output
+- [x] Assets (SVGs, fonts) bundled correctly
 
 ### Phase 4: Integration
 - [ ] Admin can edit landing page content via cms-admin
