@@ -81,9 +81,9 @@ export async function approveQueueItem(id: string, asDraft = false): Promise<Que
   // Create the actual CMS document
   const { getAdminCms } = await import("@/lib/cms");
   const cms = await getAdminCms();
-  const status = asDraft ? "draft" : "published";
+  const status = asDraft ? "draft" : "published" as const;
 
-  const input = {
+  const input: { slug: string; status: "draft" | "published"; data: Record<string, unknown> } = {
     slug: item.slug,
     status,
     data: item.contentData,
