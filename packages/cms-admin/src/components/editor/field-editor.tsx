@@ -444,7 +444,16 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
       const [mediaItems, setMediaItems] = useState<Array<{ name: string; url: string; isImage: boolean; mediaType?: string }>>([]);
       const [mediaLoading, setMediaLoading] = useState(false);
       const [mediaSearch, setMediaSearch] = useState("");
+      const [imgConfirm, setImgConfirm] = useState(false);
+      const imgConfirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
       const imgInputRef = useRef<HTMLInputElement>(null);
+
+      useEffect(() => {
+        if (!mediaBrowserOpen) return;
+        const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setMediaBrowserOpen(false); };
+        document.addEventListener("keydown", onKey);
+        return () => document.removeEventListener("keydown", onKey);
+      }, [mediaBrowserOpen]);
 
       async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0];
@@ -498,15 +507,24 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
               {!locked && (
                 <button
                   type="button"
-                  onClick={() => onChange("")}
+                  onClick={() => {
+                    if (imgConfirm) {
+                      if (imgConfirmTimer.current) clearTimeout(imgConfirmTimer.current);
+                      setImgConfirm(false);
+                      onChange("");
+                    } else {
+                      setImgConfirm(true);
+                      imgConfirmTimer.current = setTimeout(() => setImgConfirm(false), 3000);
+                    }
+                  }}
                   title="Remove image"
                   style={{
                     position: "absolute",
                     top: "-6px",
                     right: "-6px",
-                    width: "20px",
+                    minWidth: imgConfirm ? "auto" : "20px",
                     height: "20px",
-                    borderRadius: "50%",
+                    borderRadius: imgConfirm ? "10px" : "50%",
                     background: "var(--destructive)",
                     color: "white",
                     border: "none",
@@ -514,10 +532,13 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    padding: 0,
+                    padding: imgConfirm ? "0 8px" : 0,
+                    fontSize: "0.65rem",
+                    fontWeight: 600,
+                    whiteSpace: "nowrap",
                   }}
                 >
-                  <X style={{ width: "12px", height: "12px" }} />
+                  {imgConfirm ? "Sure?" : <X style={{ width: "12px", height: "12px" }} />}
                 </button>
               )}
             </div>
