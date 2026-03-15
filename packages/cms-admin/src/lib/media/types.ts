@@ -23,7 +23,17 @@ export interface MediaFileInfo {
 
 export type MediaType = "image" | "svg" | "audio" | "video" | "document" | "interactive" | "other";
 
+export type MediaStatus = "active" | "trashed";
 export type InteractiveStatus = "draft" | "published" | "trashed";
+
+export interface MediaMeta {
+  /** Unique key: "folder/name" or just "name" */
+  key: string;
+  name: string;
+  folder: string;
+  status: MediaStatus;
+  trashedAt?: string;
+}
 
 export interface InteractiveMeta {
   id: string;
@@ -49,7 +59,16 @@ export interface MediaAdapter {
   /** Upload a file. Returns the browser-renderable URL. */
   uploadFile(filename: string, content: Buffer, folder?: string): Promise<{ url: string }>;
 
-  /** Delete a media file by its folder + name */
+  /** Move a media file to trash (soft delete) */
+  trashFile(folder: string, name: string): Promise<void>;
+
+  /** Restore a media file from trash */
+  restoreFile(folder: string, name: string): Promise<void>;
+
+  /** List trashed media files */
+  listTrashed(): Promise<MediaMeta[]>;
+
+  /** Permanently delete a media file */
   deleteFile(folder: string, name: string): Promise<void>;
 
   /* ─── File serving (for adapters that need proxying) ───── */

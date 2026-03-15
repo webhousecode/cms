@@ -3,7 +3,7 @@
  */
 import { readdir, stat, readFile, writeFile, mkdir, unlink } from "fs/promises";
 import path from "path";
-import type { MediaAdapter, MediaFileInfo, MediaType, InteractiveMeta } from "./types";
+import type { MediaAdapter, MediaFileInfo, MediaType, MediaMeta, InteractiveMeta } from "./types";
 
 const IMAGE_EXTS = new Set(["jpg", "jpeg", "png", "gif", "webp", "avif"]);
 const SVG_EXTS = new Set(["svg"]);
@@ -33,7 +33,9 @@ export class FilesystemMediaAdapter implements MediaAdapter {
   /* ─── Media listing ─────────────────────────────────────── */
 
   async listMedia(): Promise<MediaFileInfo[]> {
-    return this.scanDir(this.uploadDir, "");
+    const [files, meta] = await Promise.all([this.scanDir(this.uploadDir, ""), this.loadMediaMeta()]);
+    const trashedKeys = new Set(meta.filter((m) => m.status === "trashed").map((m) => m.key));
+    return files.filter((f) => !trashedKeys.has(this.mediaKey(f.folder, f.name)));
   }
 
   private async scanDir(dir: string, folder: string): Promise<MediaFileInfo[]> {
@@ -70,6 +72,26 @@ export class FilesystemMediaAdapter implements MediaAdapter {
     return results;
   }
 
+  /* ─── Media metadata (trash support) ─────────────────────── */
+
+  private get mediaMetaPath() { return path.join(this.dataDir, "media-meta.json"); }
+
+  private async loadMediaMeta(): Promise<MediaMeta[]> {
+    try {
+      const raw = await readFile(this.mediaMetaPath, "utf-8");
+      return JSON.parse(raw);
+    } catch { return []; }
+  }
+
+  private async saveMediaMeta(meta: MediaMeta[]): Promise<void> {
+    await mkdir(this.dataDir, { recursive: true });
+    await writeFile(this.mediaMetaPath, JSON.stringify(meta, null, 2), "utf-8");
+  }
+
+  private mediaKey(folder: string, name: string): string {
+    return folder ? `${folder}/${name}` : name;
+  }
+
   /* ─── Upload / write ────────────────────────────────────── */
 
   async uploadFile(filename: string, content: Buffer, folder?: string): Promise<{ url: string }> {
@@ -80,11 +102,47 @@ export class FilesystemMediaAdapter implements MediaAdapter {
     return { url: urlPath };
   }
 
+  async trashFile(folder: string, name: string): Promise<void> {
+    const meta = await this.loadMediaMeta();
+    const key = this.mediaKey(folder, name);
+    const existing = meta.find((m) => m.key === key);
+    if (existing) {
+      existing.status = "trashed";
+      existing.trashedAt = new Date().toISOString();
+    } else {
+      meta.push({ key, name, folder, status: "trashed", trashedAt: new Date().toISOString() });
+    }
+    await this.saveMediaMeta(meta);
+  }
+
+  async restoreFile(folder: string, name: string): Promise<void> {
+    const meta = await this.loadMediaMeta();
+    const key = this.mediaKey(folder, name);
+    const idx = meta.findIndex((m) => m.key === key);
+    if (idx !== -1) {
+      meta.splice(idx, 1); // Remove from meta = active again
+      await this.saveMediaMeta(meta);
+    }
+  }
+
+  async listTrashed(): Promise<MediaMeta[]> {
+    const meta = await this.loadMediaMeta();
+    return meta.filter((m) => m.status === "trashed");
+  }
+
   async deleteFile(folder: string, name: string): Promise<void> {
     const filePath = folder
       ? path.join(this.uploadDir, folder, name)
       : path.join(this.uploadDir, name);
     await unlink(filePath);
+    // Also remove from metadata
+    const meta = await this.loadMediaMeta();
+    const key = this.mediaKey(folder, name);
+    const idx = meta.findIndex((m) => m.key === key);
+    if (idx !== -1) {
+      meta.splice(idx, 1);
+      await this.saveMediaMeta(meta);
+    }
   }
 
   /* ─── File serving ──────────────────────────────────────── */

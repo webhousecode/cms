@@ -2,7 +2,7 @@
  * GitHub Media Adapter — reads/writes media via GitHub Contents API.
  * URLs point directly to raw.githubusercontent.com for zero-latency rendering.
  */
-import type { MediaAdapter, MediaFileInfo, MediaType, InteractiveMeta } from "./types";
+import type { MediaAdapter, MediaFileInfo, MediaType, MediaMeta, InteractiveMeta } from "./types";
 import { GitHubMediaClient } from "../github-media";
 
 const IMAGE_EXTS = new Set(["jpg", "jpeg", "png", "gif", "webp", "avif"]);
@@ -70,7 +70,36 @@ export class GitHubMediaAdapter implements MediaAdapter {
         });
       }),
     );
-    return results.flat();
+    const allFiles = results.flat();
+    // Filter out trashed files
+    const { meta } = await this.loadMediaMeta();
+    const trashedKeys = new Set(meta.filter((m) => m.status === "trashed").map((m) => m.key));
+    return allFiles.filter((f) => !trashedKeys.has(this.mediaKey(f.folder, f.name)));
+  }
+
+  /* ─── Media metadata (trash support) ─────────────────────── */
+
+  private static readonly MEDIA_META_PATH = "_data/media-meta.json";
+
+  private async loadMediaMeta(): Promise<{ meta: MediaMeta[]; sha?: string }> {
+    const file = await this.client.getFile(GitHubMediaAdapter.MEDIA_META_PATH);
+    if (file) {
+      try { return { meta: JSON.parse(file.content), sha: file.sha }; } catch { /* fall through */ }
+    }
+    return { meta: [] };
+  }
+
+  private async saveMediaMeta(meta: MediaMeta[], sha?: string): Promise<void> {
+    await this.client.putFile(
+      GitHubMediaAdapter.MEDIA_META_PATH,
+      JSON.stringify(meta, null, 2),
+      "cms: update media metadata",
+      sha,
+    );
+  }
+
+  private mediaKey(folder: string, name: string): string {
+    return folder ? `${folder}/${name}` : name;
   }
 
   /* ─── Upload / write ────────────────────────────────────── */
@@ -100,6 +129,42 @@ export class GitHubMediaAdapter implements MediaAdapter {
       return;
     }
     await this.client.deleteFile(repoPath, file.sha, `cms: delete ${name}`);
+    // Remove from meta
+    const { meta, sha: metaSha } = await this.loadMediaMeta();
+    const key = this.mediaKey(folder, name);
+    const idx = meta.findIndex((m) => m.key === key);
+    if (idx !== -1) {
+      meta.splice(idx, 1);
+      await this.saveMediaMeta(meta, metaSha);
+    }
+  }
+
+  async trashFile(folder: string, name: string): Promise<void> {
+    const { meta, sha } = await this.loadMediaMeta();
+    const key = this.mediaKey(folder, name);
+    const existing = meta.find((m) => m.key === key);
+    if (existing) {
+      existing.status = "trashed";
+      existing.trashedAt = new Date().toISOString();
+    } else {
+      meta.push({ key, name, folder, status: "trashed", trashedAt: new Date().toISOString() });
+    }
+    await this.saveMediaMeta(meta, sha);
+  }
+
+  async restoreFile(folder: string, name: string): Promise<void> {
+    const { meta, sha } = await this.loadMediaMeta();
+    const key = this.mediaKey(folder, name);
+    const idx = meta.findIndex((m) => m.key === key);
+    if (idx !== -1) {
+      meta.splice(idx, 1);
+      await this.saveMediaMeta(meta, sha);
+    }
+  }
+
+  async listTrashed(): Promise<MediaMeta[]> {
+    const { meta } = await this.loadMediaMeta();
+    return meta.filter((m) => m.status === "trashed");
   }
 
   /* ─── File serving ──────────────────────────────────────── */

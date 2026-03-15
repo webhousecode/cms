@@ -7,7 +7,7 @@
  *
  * The caller never needs to know if it's filesystem, GitHub, or Supabase.
  */
-export { type MediaAdapter, type MediaFileInfo, type MediaType, type InteractiveMeta } from "./types";
+export { type MediaAdapter, type MediaFileInfo, type MediaType, type MediaMeta, type InteractiveMeta } from "./types";
 
 import type { MediaAdapter } from "./types";
 import { FilesystemMediaAdapter } from "./filesystem";

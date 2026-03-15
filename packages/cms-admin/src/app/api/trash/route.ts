@@ -24,6 +24,23 @@ export async function GET() {
       }
     }
 
+    // Trashed media files
+    const trashedMedia = await media.listTrashed();
+    for (const m of trashedMedia) {
+      allTrashed.push({
+        collection: "_media",
+        collectionLabel: "Media",
+        doc: {
+          id: m.key,
+          slug: m.key,
+          status: "trashed",
+          data: { title: m.name, _trashedAt: m.trashedAt },
+          createdAt: m.trashedAt ?? new Date().toISOString(),
+          updatedAt: m.trashedAt ?? new Date().toISOString(),
+        },
+      });
+    }
+
     // Trashed interactives
     const ints = await media.listInteractives();
     for (const int of ints) {
@@ -61,6 +78,12 @@ export async function DELETE() {
           await cms.content.delete(col.name, doc.id).catch(() => {});
         }
       }
+    }
+
+    // Permanently delete trashed media files
+    const trashedMedia = await media.listTrashed();
+    for (const m of trashedMedia) {
+      await media.deleteFile(m.folder, m.name).catch(() => {});
     }
 
     // Permanently delete trashed interactives

@@ -838,7 +838,7 @@ function DeleteConfirmDialog({ file, usages, onConfirm, onCancel }: {
         )}
 
         {!inUse && (
-          <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>This cannot be undone.</p>
+          <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>This file will be moved to trash. You can restore it later.</p>
         )}
 
         <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
@@ -846,7 +846,7 @@ function DeleteConfirmDialog({ file, usages, onConfirm, onCancel }: {
             Cancel
           </button>
           <button type="button" onClick={onConfirm} style={{ padding: "0.4rem 1rem", borderRadius: "6px", border: "none", background: "var(--destructive)", color: "white", cursor: "pointer", fontSize: "0.875rem" }}>
-            {inUse ? "Delete anyway" : "Delete"}
+            {inUse ? "Trash anyway" : "Move to trash"}
           </button>
         </div>
       </div>

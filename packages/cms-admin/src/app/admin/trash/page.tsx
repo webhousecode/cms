@@ -66,8 +66,17 @@ export default function TrashPage() {
 
   async function restore(item: TrashedItem) {
     setWorking(item.doc.id);
-    if (item.collection === "_interactives") {
-      // Restore interactive → set status back to draft
+    if (item.collection === "_media") {
+      // Restore media file — key is "folder/name" or just "name"
+      const parts = item.doc.slug.split("/");
+      const name = parts.pop()!;
+      const folder = parts.join("/");
+      await fetch(`/api/media/restore`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ folder, name }),
+      });
+    } else if (item.collection === "_interactives") {
       await fetch(`/api/interactives/${item.doc.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -86,7 +95,12 @@ export default function TrashPage() {
 
   async function deletePermanently(item: TrashedItem) {
     setWorking(item.doc.id);
-    if (item.collection === "_interactives") {
+    if (item.collection === "_media") {
+      const parts = item.doc.slug.split("/");
+      const name = parts.pop()!;
+      const folder = parts.join("/");
+      await fetch(`/api/media/${encodeURIComponent(item.doc.slug)}?permanent=true`, { method: "DELETE" });
+    } else if (item.collection === "_interactives") {
       await fetch(`/api/interactives/${item.doc.id}`, { method: "DELETE" });
       closeTabsForPaths([`/admin/interactives/${item.doc.id}`]);
     } else {
