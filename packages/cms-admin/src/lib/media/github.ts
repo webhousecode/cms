@@ -20,8 +20,8 @@ function getMediaType(ext: string): MediaType {
   return "other";
 }
 
-/** Directories in the repo that contain media */
-const MEDIA_DIRS = ["public/images", "public/audio", "public/uploads", "public/interactives"];
+/** Directories in the repo that contain media (not interactives — those have their own manager) */
+const MEDIA_DIRS = ["public/images", "public/audio", "public/uploads"];
 const GH_INTERACTIVES_DIR = "public/interactives";
 const GH_META_PATH = "_data/interactives.json";
 
@@ -33,6 +33,7 @@ export class GitHubMediaAdapter implements MediaAdapter {
     private owner: string,
     private repo: string,
     private branch: string,
+    private previewUrl?: string,
   ) {}
 
   /* ─── Media listing ─────────────────────────────────────── */
@@ -48,11 +49,16 @@ export class GitHubMediaAdapter implements MediaAdapter {
           const folder = relPath.includes("/")
             ? relPath.substring(0, relPath.lastIndexOf("/"))
             : "";
+          // Use preview site URL if available (serves with correct MIME type, no proxy needed)
+          // Fall back to CMS admin proxy (/api/uploads/) for GitHub API
+          const url = this.previewUrl
+            ? `${this.previewUrl}/${relPath}`
+            : `/api/uploads/${relPath}`;
+
           return {
             name: f.name,
             folder,
-            // Proxy via /api/uploads/ which serves with correct Content-Type
-            url: `/api/uploads/${relPath}`,
+            url,
             size: f.size,
             isImage: IMAGE_EXTS.has(ext),
             mediaType: getMediaType(ext),
@@ -72,7 +78,10 @@ export class GitHubMediaAdapter implements MediaAdapter {
     const repoPath = `${repoDir}/${filename}`;
     await this.client.putFile(repoPath, content, `cms: upload ${filename}`);
     const relPath = repoPath.replace(/^public\//, "");
-    return { url: `/api/uploads/${relPath}` };
+    const url = this.previewUrl
+      ? `${this.previewUrl}/${relPath}`
+      : `/api/uploads/${relPath}`;
+    return { url };
   }
 
   async deleteFile(folder: string, name: string): Promise<void> {

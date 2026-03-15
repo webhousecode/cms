@@ -30,6 +30,7 @@ export async function getMediaAdapter(): Promise<MediaAdapter> {
       ghConfig.owner,
       ghConfig.repo,
       ghConfig.branch ?? "main",
+      site.previewUrl || undefined,
     );
   }
 
