@@ -966,3 +966,4 @@ When building a site, always inform the user about admin options. Example:
 - **Relations store slugs or IDs** — relation fields store references to other documents, not embedded data
 - **`_fieldMeta` tracks AI provenance** — when AI writes a field, metadata records which model, when, and whether the field is locked against future AI overwrites
 - **Status workflow** — documents are `draft`, `published`, or `archived`. Use `publishAt` for scheduled publishing
+- **Richtext fields store markdown** — when importing or seeding content, always convert HTML to markdown first. TipTap's editor expects markdown input, not raw HTML. If you feed HTML directly, it will display as escaped text instead of rendered content.
