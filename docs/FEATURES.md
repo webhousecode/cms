@@ -56,6 +56,7 @@
 | F37 | [HTML Document Field](#f37-htmldoc-field) | Planned | [docs/features/F37-htmldoc-field.md](features/F37-htmldoc-field.md) |
 | F38 | [Environment Manager](#f38-environment-manager) | Planned | [docs/features/F38-environment-manager.md](features/F38-environment-manager.md) |
 | F39 | [Interactives Engine](#f39-interactives-engine) | In progress | [docs/features/F39-interactives-engine.md](features/F39-interactives-engine.md) |
+| F40 | [Drag and Drop Tab Reordering](#f40-drag-drop-tabs) | Planned | [docs/features/F40-drag-drop-tabs.md](features/F40-drag-drop-tabs.md) |
 
 ---
 
@@ -175,3 +176,6 @@ Dev/Staging/Production environment switcher in admin header.
 
 ## F39 — Interactives Engine
 Dedicated system for interactive content — charts, animations, demos, calculators, mini-apps. Interactives Manager in admin sidebar (upload, preview, visual edit, AI edit, code view). Data-driven: all text and numbers in CMS collections, visualization in Interactive components. Embeddable in richtext (TipTap node), blocks fields, and standalone pages. Native React rendering, no iframes. AI can generate Interactives from prompts. Each environment has its own preview URL, deploy target, and feature flags. In Dev mode, admin can spawn a local Next.js dev server on a vacant port (Code Launcher API for port scanning). Environment badge in header shows active environment with color coding (blue=Dev, amber=Staging, green=Prod). Clicking badge switches environment and updates all preview URLs instantly. Each adds framework-specific features: auto route generation, metadata helpers, ISR revalidation, preview mode, HMR on content changes. Priority: Next.js → Astro → Remix → rest. Dispatches content lifecycle events (created, published, deleted) to external URLs with HMAC signing, exponential backoff retry (3 attempts), and delivery logging. Preset templates for Vercel, Netlify, and Cloudflare deploy hooks. Admin UI with webhook management and delivery log viewer. Built on top of #21 lifecycle hooks.
+
+## F40 — Drag and Drop Tab Reordering
+Allow users to reorder open tabs by dragging them. Uses `@dnd-kit/sortable` integrated into the existing `TabBar` and `TabsProvider`. Adds a `reorderTabs` method to the tab context, wraps tab elements in `SortableContext`, and persists new order via the existing `localStorage` mechanism. Keyboard and touch support included. Small, additive change — no modifications to the tab state shape.
