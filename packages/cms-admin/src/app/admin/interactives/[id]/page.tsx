@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Eye, MousePointer2, Code, Save, Loader2, Copy } from "lucide-react";
+import { ArrowLeft, Eye, MousePointer2, Code, Save, Loader2, Copy, History, Settings2, Trash2 } from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useTabs } from "@/lib/tabs-context";
@@ -493,6 +493,44 @@ export default function InteractiveDetailPage() {
           >
             <Code className="w-3.5 h-3.5" />
             Code
+          </Button>
+
+          {/* History */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground hover:text-foreground gap-1.5"
+            title="Revision history"
+            disabled
+          >
+            <History className="w-3.5 h-3.5" />
+            History
+          </Button>
+
+          {/* Properties */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="text-muted-foreground hover:text-foreground"
+            title="Properties (filename, dates)"
+            disabled
+          >
+            <Settings2 className="w-4 h-4" />
+          </Button>
+
+          {/* Delete */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={async () => {
+              if (!confirm(`Delete interactive "${detail.name}"?`)) return;
+              await fetch(`/api/interactives/${id}`, { method: "DELETE" });
+              router.push("/admin/interactives");
+            }}
+            className="text-muted-foreground hover:text-destructive"
+            title="Delete interactive"
+          >
+            <Trash2 className="w-4 h-4" />
           </Button>
 
           {/* Save — matches editor Save exactly */}
