@@ -1,6 +1,6 @@
 # @webhouse/cms — Feature Roadmap
 
-**Last updated:** 2026-03-15
+**Last updated:** 2026-03-16
 
 ---
 
@@ -57,6 +57,7 @@
 | F38 | [Environment Manager](#f38-environment-manager) | Planned | [docs/features/F38-environment-manager.md](features/F38-environment-manager.md) |
 | F39 | [Interactives Engine](#f39-interactives-engine) | In progress | [docs/features/F39-interactives-engine.md](features/F39-interactives-engine.md) |
 | F40 | [Drag and Drop Tab Reordering](#f40-drag-drop-tabs) | Planned | [docs/features/F40-drag-drop-tabs.md](features/F40-drag-drop-tabs.md) |
+| F41 | [GitHub Site Auto-Sync & Webhook Revalidation](#f41-github-site-sync) | Planned | [docs/features/F41-github-site-sync.md](features/F41-github-site-sync.md) |
 
 ---
 
@@ -179,3 +180,6 @@ Dedicated system for interactive content — charts, animations, demos, calculat
 
 ## F40 — Drag and Drop Tab Reordering
 Allow users to reorder open tabs by dragging them. Uses `@dnd-kit/sortable` integrated into the existing `TabBar` and `TabsProvider`. Adds a `reorderTabs` method to the tab context, wraps tab elements in `SortableContext`, and persists new order via the existing `localStorage` mechanism. Keyboard and touch support included. Small, additive change — no modifications to the tab state shape.
+
+## F41 — GitHub Site Auto-Sync & Webhook Revalidation
+Automatic content synchronization for GitHub-backed sites. Dev mode: CMS CLI polls for new commits and runs `git pull --ff-only` so local dev servers reflect CMS changes instantly. Production: after committing content via GitHub API, CMS dispatches a signed webhook to the site's `/api/revalidate` endpoint, triggering `revalidatePath()` for only the changed paths. CLI scaffolder generates the revalidation route with HMAC-SHA256 secret validation. CLAUDE.md includes setup instructions for AI site builders. Adds `revalidateUrl` and `revalidateSecret` to site settings, with a "Revalidation" section in the admin UI.
