@@ -84,6 +84,7 @@ Full feature list with individual plan docs in [FEATURES.md](FEATURES.md) and [d
 | F34 | Multi-Tenancy (Full) | In progress |
 | F35 | Webhooks | Planned |
 | F36 | Framework Integrations (Next.js, Astro, Remix, Nuxt, SvelteKit, Vite) | Planned |
+| F37 | HTML Document Field (`htmldoc`) — iframe preview, visual edit, AI edit, code view | Planned |
 
 ---
 
