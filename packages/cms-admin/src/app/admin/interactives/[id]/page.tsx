@@ -338,6 +338,15 @@ export default function InteractiveDetailPage() {
     if (detail?.name) setTabTitle(detail.name);
   }, [detail?.name, setTabTitle]);
 
+  /* Close panels on Escape */
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape" && propertiesOpen) { setPropertiesOpen(false); e.preventDefault(); }
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [propertiesOpen]);
+
   /* Listen for postMessage from WYSIWYG iframe */
   useEffect(() => {
     function onMessage(e: MessageEvent) {
