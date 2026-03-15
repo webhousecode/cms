@@ -338,14 +338,17 @@ export default function InteractiveDetailPage() {
     if (detail?.name) setTabTitle(detail.name);
   }, [detail?.name, setTabTitle]);
 
-  /* Close panels on Escape */
+  /* Close panels and dialogs on Escape */
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (e.key === "Escape" && propertiesOpen) { setPropertiesOpen(false); e.preventDefault(); }
+      if (e.key === "Escape") {
+        if (confirmTrash) { setConfirmTrash(false); e.preventDefault(); return; }
+        if (propertiesOpen) { setPropertiesOpen(false); e.preventDefault(); }
+      }
     }
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [propertiesOpen]);
+  }, [propertiesOpen, confirmTrash]);
 
   /* Listen for postMessage from WYSIWYG iframe */
   useEffect(() => {

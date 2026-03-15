@@ -49,6 +49,12 @@ export function AIPanel({ collection, colConfig, doc, onClose, onInsert }: Props
     }
   }, []);
 
+  useEffect(() => {
+    const onKey = (e: globalThis.KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
   async function send() {
     const text = input.trim();
     if (!text || streaming) return;

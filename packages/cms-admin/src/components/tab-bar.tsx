@@ -33,6 +33,13 @@ export function TabBar() {
     return () => window.removeEventListener("cms:site-config-updated", onCfgUpdate);
   }, []);
 
+  useEffect(() => {
+    if (!confirmOpen) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setConfirmOpen(false); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [confirmOpen]);
+
   if (tabs.length === 0) return null;
 
   return (

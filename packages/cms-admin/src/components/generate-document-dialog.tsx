@@ -47,6 +47,12 @@ export function GenerateDocumentDialog({
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, []);
 
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape" && !generating) onClose(); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose, generating]);
+
   function startTimer() {
     setElapsed(0);
     setStatusIdx(0);
