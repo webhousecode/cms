@@ -5,6 +5,7 @@ import { X } from "lucide-react";
 import { RichTextEditor } from "./rich-text-editor";
 import { TagsInput } from "./tags-input";
 import { ImageGalleryEditor } from "./image-gallery-editor";
+import { HtmlDocEditor } from "./htmldoc-editor";
 import type { GalleryImage } from "./image-gallery-editor";
 import { BlocksEditor } from "./blocks-editor";
 import { StructuredArrayEditor } from "./structured-array-editor";
@@ -443,22 +444,79 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
     }
 
     case "audio": {
+      const [audioUploading, setAudioUploading] = useState(false);
+
+      async function handleAudioUpload(e: React.ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setAudioUploading(true);
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("folder", "audio");
+        try {
+          const res = await fetch("/api/upload", { method: "POST", body: formData });
+          if (res.ok) {
+            const data = await res.json() as { url: string };
+            onChange(data.url);
+          }
+        } finally {
+          setAudioUploading(false);
+        }
+      }
+
       return (
         <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-          <Input
-            type="url"
-            value={strVal}
-            onChange={(e) => onChange(e.target.value)}
-            disabled={locked}
-            placeholder="Audio file URL (mp3, wav, ogg)"
-            className="font-mono text-sm"
-          />
-          {strVal && (
-            <audio
-              controls
-              src={strVal}
-              style={{ width: "100%", borderRadius: "6px" }}
-              preload="metadata"
+          {strVal ? (
+            <>
+              <audio
+                controls
+                src={strVal}
+                style={{ width: "100%", borderRadius: "6px" }}
+                preload="metadata"
+              />
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <span style={{ fontSize: "0.7rem", fontFamily: "monospace", color: "var(--muted-foreground)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {strVal}
+                </span>
+                {!locked && (
+                  <button
+                    type="button"
+                    onClick={() => onChange("")}
+                    style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "0.7rem", textDecoration: "underline" }}
+                  >
+                    Remove
+                  </button>
+                )}
+              </div>
+            </>
+          ) : (
+            <label style={{
+              display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem",
+              padding: "1.5rem", borderRadius: "8px", border: "1px dashed var(--border)",
+              cursor: locked ? "not-allowed" : "pointer", color: "var(--muted-foreground)",
+              fontSize: "0.85rem", transition: "border-color 150ms",
+            }}
+              className="hover:border-primary hover:text-primary"
+            >
+              <input
+                type="file"
+                accept="audio/*"
+                onChange={handleAudioUpload}
+                disabled={locked || audioUploading}
+                style={{ display: "none" }}
+              />
+              {audioUploading ? "Uploading..." : "Drop or click to upload audio file"}
+            </label>
+          )}
+          {!strVal && !locked && (
+            <Input
+              type="url"
+              value=""
+              onChange={(e) => { if (e.target.value) onChange(e.target.value); }}
+              disabled={locked}
+              placeholder="Or paste audio URL"
+              className="font-mono text-xs"
+              style={{ opacity: 0.6 }}
             />
           )}
         </div>
@@ -594,6 +652,16 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
         />
       );
     }
+
+    case "htmldoc":
+      return (
+        <HtmlDocEditor
+          field={field}
+          value={strVal}
+          onChange={(html) => onChange(html)}
+          locked={locked}
+        />
+      );
 
     default:
       return (

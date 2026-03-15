@@ -14,7 +14,8 @@ export type FieldType =
   | 'tags'
   | 'image-gallery'
   | 'video'
-  | 'audio';
+  | 'audio'
+  | 'htmldoc';
 
 export interface FieldConfig {
   name: string;
