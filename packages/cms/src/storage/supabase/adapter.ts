@@ -120,7 +120,7 @@ export class SupabaseStorageAdapter implements StorageAdapter {
   // ── StorageAdapter implementation ─────────────────────────────────────────
 
   async initialize(): Promise<void> {
-    const client = await this.getClient();
+    const client = await this.getAdminClient();
 
     // Verify connectivity by attempting a lightweight query.
     // This does NOT create the table — that's migrate()'s job.
@@ -181,7 +181,7 @@ export class SupabaseStorageAdapter implements StorageAdapter {
   }
 
   async create(collection: string, input: DocumentInput): Promise<Document> {
-    const client = await this.getClient();
+    const client = await this.getAdminClient();
 
     const id = generateId();
     const slug = input.slug ?? generateSlug(String(input.data['title'] ?? id));
@@ -216,7 +216,7 @@ export class SupabaseStorageAdapter implements StorageAdapter {
 
   async findById(collection: string, id: string): Promise<Document | null> {
     if (!id) return null;
-    const client = await this.getClient();
+    const client = await this.getAdminClient();
 
     const { data, error } = await client
       .from(this.tableName)
@@ -235,7 +235,7 @@ export class SupabaseStorageAdapter implements StorageAdapter {
   }
 
   async findBySlug(collection: string, slug: string): Promise<Document | null> {
-    const client = await this.getClient();
+    const client = await this.getAdminClient();
 
     const { data, error } = await client
       .from(this.tableName)
@@ -253,7 +253,7 @@ export class SupabaseStorageAdapter implements StorageAdapter {
   }
 
   async findMany(collection: string, options: QueryOptions = {}): Promise<QueryResult> {
-    const client = await this.getClient();
+    const client = await this.getAdminClient();
 
     let query = client
       .from(this.tableName)
@@ -362,7 +362,7 @@ export class SupabaseStorageAdapter implements StorageAdapter {
       updates['publish_at'] = input.publishAt;
     }
 
-    const client = await this.getClient();
+    const client = await this.getAdminClient();
 
     const { data, error } = await client
       .from(this.tableName)
@@ -380,7 +380,7 @@ export class SupabaseStorageAdapter implements StorageAdapter {
   }
 
   async delete(collection: string, id: string): Promise<void> {
-    const client = await this.getClient();
+    const client = await this.getAdminClient();
 
     const { error } = await client
       .from(this.tableName)
