@@ -1846,7 +1846,7 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
       TableRow,
       TableHeader,
       TableCell,
-      Markdown.configure({ html: false, transformPastedText: true }),
+      Markdown.configure({ html: true, transformPastedText: true }),
     ],
     content: value || "",
     editable: !disabled,
