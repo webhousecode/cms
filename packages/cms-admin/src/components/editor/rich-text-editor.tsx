@@ -1850,7 +1850,7 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
     ],
     content: value || "",
     editable: !disabled,
-    onUpdate: ({ editor }) => onChange(editor.getHTML()),
+    onUpdate: ({ editor }) => onChange(editor.storage.markdown.getMarkdown()),
     editorProps: {
       attributes: {
         class: "rte outline-none min-h-[300px]",
@@ -1890,7 +1890,7 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
 
   useEffect(() => {
     if (editor && !editor.isFocused) {
-      const current = editor.getHTML();
+      const current = editor.storage.markdown.getMarkdown();
       if (value !== current) editor.commands.setContent(value || "", false);
     }
   }, [value, editor]);
