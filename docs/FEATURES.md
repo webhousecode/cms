@@ -2,8 +2,6 @@
 
 **Last updated:** 2026-03-15
 
-All features have individual plan documents in `/docs/features/`. This file is the master index.
-
 ---
 
 ## Legend
