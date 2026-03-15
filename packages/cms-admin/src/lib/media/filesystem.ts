@@ -1,0 +1,191 @@
+/**
+ * Filesystem Media Adapter — reads/writes media from local disk.
+ */
+import { readdir, stat, readFile, writeFile, mkdir, unlink } from "fs/promises";
+import path from "path";
+import type { MediaAdapter, MediaFileInfo, MediaType, InteractiveMeta } from "./types";
+
+const IMAGE_EXTS = new Set(["jpg", "jpeg", "png", "gif", "webp", "svg", "avif"]);
+const AUDIO_EXTS = new Set(["mp3", "wav", "ogg", "flac", "aac", "m4a", "wma"]);
+const VIDEO_EXTS = new Set(["mp4", "webm", "mov", "avi", "mkv"]);
+const DOC_EXTS = new Set(["pdf", "doc", "docx", "xls", "xlsx", "pptx", "txt", "md", "csv", "json"]);
+const INTERACTIVE_EXTS = new Set(["html", "htm"]);
+
+function getMediaType(ext: string): MediaType {
+  if (IMAGE_EXTS.has(ext)) return "image";
+  if (AUDIO_EXTS.has(ext)) return "audio";
+  if (VIDEO_EXTS.has(ext)) return "video";
+  if (INTERACTIVE_EXTS.has(ext)) return "interactive";
+  if (DOC_EXTS.has(ext)) return "document";
+  return "other";
+}
+
+export class FilesystemMediaAdapter implements MediaAdapter {
+  readonly type = "filesystem";
+
+  constructor(
+    private uploadDir: string,
+    private dataDir: string,
+  ) {}
+
+  /* ─── Media listing ─────────────────────────────────────── */
+
+  async listMedia(): Promise<MediaFileInfo[]> {
+    return this.scanDir(this.uploadDir, "");
+  }
+
+  private async scanDir(dir: string, folder: string): Promise<MediaFileInfo[]> {
+    let entries: string[];
+    try { entries = await readdir(dir); } catch { return []; }
+
+    const results: MediaFileInfo[] = [];
+
+    await Promise.all(
+      entries.map(async (entry) => {
+        const fullPath = path.join(dir, entry);
+        const info = await stat(fullPath).catch(() => null);
+        if (!info) return;
+
+        if (info.isDirectory() && folder === "") {
+          const sub = await this.scanDir(fullPath, entry);
+          results.push(...sub);
+        } else if (info.isFile()) {
+          const ext = entry.split(".").pop()?.toLowerCase() ?? "";
+          const urlPath = folder ? `/uploads/${folder}/${entry}` : `/uploads/${entry}`;
+          results.push({
+            name: entry,
+            folder,
+            url: urlPath,
+            size: info.size,
+            isImage: IMAGE_EXTS.has(ext),
+            mediaType: getMediaType(ext),
+            createdAt: info.birthtime.toISOString(),
+          });
+        }
+      }),
+    );
+
+    return results;
+  }
+
+  /* ─── Upload / write ────────────────────────────────────── */
+
+  async uploadFile(filename: string, content: Buffer, folder?: string): Promise<{ url: string }> {
+    const destDir = folder ? path.join(this.uploadDir, folder) : this.uploadDir;
+    await mkdir(destDir, { recursive: true });
+    await writeFile(path.join(destDir, filename), content);
+    const urlPath = folder ? `/uploads/${folder}/${filename}` : `/uploads/${filename}`;
+    return { url: urlPath };
+  }
+
+  async deleteFile(folder: string, name: string): Promise<void> {
+    const filePath = folder
+      ? path.join(this.uploadDir, folder, name)
+      : path.join(this.uploadDir, name);
+    await unlink(filePath);
+  }
+
+  /* ─── File serving ──────────────────────────────────────── */
+
+  async readFile(pathSegments: string[]): Promise<Buffer | null> {
+    const safePath = this.safePath(pathSegments);
+    if (!safePath) return null;
+    try { return await readFile(safePath); } catch { return null; }
+  }
+
+  private safePath(segments: string[]): string | null {
+    const clean = segments
+      .map((s) => s.replace(/\.\./g, "").replace(/^[\\/]+/, "").trim())
+      .filter(Boolean);
+    const resolved = path.join(this.uploadDir, ...clean);
+    if (!resolved.startsWith(this.uploadDir)) return null;
+    return resolved;
+  }
+
+  /* ─── Interactives ──────────────────────────────────────── */
+
+  private get interactivesDir() { return path.join(this.uploadDir, "interactives"); }
+  private get metaPath() { return path.join(this.dataDir, "interactives.json"); }
+
+  private async loadMeta(): Promise<InteractiveMeta[]> {
+    try {
+      const raw = await readFile(this.metaPath, "utf-8");
+      return JSON.parse(raw);
+    } catch { return []; }
+  }
+
+  private async saveMeta(meta: InteractiveMeta[]): Promise<void> {
+    await mkdir(this.dataDir, { recursive: true });
+    await writeFile(this.metaPath, JSON.stringify(meta, null, 2), "utf-8");
+  }
+
+  async listInteractives(): Promise<InteractiveMeta[]> {
+    return this.loadMeta();
+  }
+
+  async getInteractive(id: string): Promise<{ meta: InteractiveMeta; content: string } | null> {
+    const meta = await this.loadMeta();
+    const entry = meta.find((m) => m.id === id);
+    if (!entry) return null;
+    try {
+      const content = await readFile(path.join(this.interactivesDir, entry.filename), "utf-8");
+      return { meta: entry, content };
+    } catch { return null; }
+  }
+
+  async createInteractive(filename: string, content: Buffer): Promise<InteractiveMeta> {
+    const meta = await this.loadMeta();
+    const baseId = this.slugify(filename);
+    let id = baseId || "interactive";
+    let counter = 1;
+    while (meta.some((m) => m.id === id)) { id = `${baseId}-${counter++}`; }
+
+    const finalFilename = `${id}.html`;
+    await mkdir(this.interactivesDir, { recursive: true });
+    await writeFile(path.join(this.interactivesDir, finalFilename), content);
+
+    const now = new Date().toISOString();
+    const entry: InteractiveMeta = {
+      id,
+      name: filename.replace(/\.html?$/i, ""),
+      filename: finalFilename,
+      size: content.length,
+      createdAt: now,
+      updatedAt: now,
+    };
+    meta.push(entry);
+    await this.saveMeta(meta);
+    return entry;
+  }
+
+  async updateInteractive(id: string, content: string, name?: string): Promise<InteractiveMeta | null> {
+    const meta = await this.loadMeta();
+    const idx = meta.findIndex((m) => m.id === id);
+    if (idx === -1) return null;
+
+    const buffer = Buffer.from(content, "utf-8");
+    await writeFile(path.join(this.interactivesDir, meta[idx].filename), buffer);
+
+    meta[idx].size = buffer.length;
+    meta[idx].updatedAt = new Date().toISOString();
+    if (name) meta[idx].name = name;
+
+    await this.saveMeta(meta);
+    return meta[idx];
+  }
+
+  async deleteInteractive(id: string): Promise<boolean> {
+    const meta = await this.loadMeta();
+    const idx = meta.findIndex((m) => m.id === id);
+    if (idx === -1) return false;
+
+    try { await unlink(path.join(this.interactivesDir, meta[idx].filename)); } catch { /* ok */ }
+    meta.splice(idx, 1);
+    await this.saveMeta(meta);
+    return true;
+  }
+
+  private slugify(name: string): string {
+    return name.toLowerCase().replace(/\.html?$/i, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  }
+}

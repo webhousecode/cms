@@ -1,14 +1,15 @@
-import { NextResponse } from "next/server";
-import { unlink } from "fs/promises";
-import { safeUploadPath } from "@/lib/upload-dir";
+import { NextRequest, NextResponse } from "next/server";
+import { getMediaAdapter } from "@/lib/media";
 
 type Ctx = { params: Promise<{ path: string[] }> };
 
-export async function DELETE(_req: Request, { params }: Ctx) {
+export async function DELETE(_req: NextRequest, { params }: Ctx) {
   try {
     const { path: segments } = await params;
-    const filePath = safeUploadPath(segments);
-    await unlink(filePath);
+    const adapter = await getMediaAdapter();
+    const name = segments[segments.length - 1];
+    const folder = segments.length > 1 ? segments.slice(0, -1).join("/") : "";
+    await adapter.deleteFile(folder, name);
     return NextResponse.json({ ok: true });
   } catch (err: unknown) {
     const code = (err as NodeJS.ErrnoException).code;

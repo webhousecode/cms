@@ -75,6 +75,7 @@ export default function SitesDashboard() {
   function enterSite(site: SiteEntry) {
     setCookie("cms-active-site", site.id);
     setCookie("cms-active-org", activeOrgId);
+    window.dispatchEvent(new CustomEvent("cms-registry-change"));
     router.push("/admin");
     router.refresh();
   }
@@ -82,6 +83,7 @@ export default function SitesDashboard() {
   function goToSiteSettings(site: SiteEntry) {
     setCookie("cms-active-site", site.id);
     setCookie("cms-active-org", activeOrgId);
+    window.dispatchEvent(new CustomEvent("cms-registry-change"));
     router.push("/admin/settings");
     router.refresh();
   }

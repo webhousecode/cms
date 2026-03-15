@@ -6,13 +6,18 @@ import type { UsageRef } from "@/app/api/cms/media/usage/route";
 import { cn } from "@/lib/utils";
 
 /* ─── Types ──────────────────────────────────────────────────── */
+type MediaType = "image" | "audio" | "video" | "document" | "interactive" | "other";
+
 type MediaFile = {
   name: string;
   folder: string;
   url: string;
   size: number;
   isImage: boolean;
+  mediaType: MediaType;
   createdAt: string;
+  sha?: string;
+  repoPath?: string;
 };
 
 type ViewMode = "grid" | "list";
@@ -78,7 +83,7 @@ export default function MediaPage() {
 
   const filtered = allFiles.filter((f) => {
     if (folder !== "" && f.folder !== folder) return false;
-    if (typeFilter && (f as any).mediaType !== typeFilter) return false;
+    if (typeFilter && f.mediaType !== typeFilter) return false;
     if (query) {
       const q = query.toLowerCase();
       return f.name.toLowerCase().includes(q) || f.folder.toLowerCase().includes(q);
@@ -337,14 +342,26 @@ export default function MediaPage() {
             <p style={{ fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted-foreground)", marginBottom: "0.375rem", paddingLeft: "0.25rem" }}>
               Type
             </p>
-            {[
-              { value: "", label: "All types" },
-              { value: "image", label: "Images" },
-              { value: "audio", label: "Audio" },
-              { value: "video", label: "Video" },
-              { value: "document", label: "Documents" },
-            ].map((t) => {
-              const count = t.value ? allFiles.filter((f) => (f as any).mediaType === t.value).length : allFiles.length;
+            {(() => {
+              // Build type list dynamically from actual files
+              const typeCounts = new Map<string, number>();
+              for (const f of allFiles) {
+                const mt = f.mediaType ?? "other";
+                typeCounts.set(mt, (typeCounts.get(mt) ?? 0) + 1);
+              }
+              const TYPE_LABELS: Record<string, string> = {
+                image: "Images", audio: "Audio", video: "Video",
+                document: "Documents", interactive: "Interactives", other: "Other",
+              };
+              const typeList = [
+                { value: "", label: "All types" },
+                ...Array.from(typeCounts.entries())
+                  .sort(([a], [b]) => a.localeCompare(b))
+                  .map(([value]) => ({ value, label: TYPE_LABELS[value] ?? value })),
+              ];
+              return typeList;
+            })().map((t) => {
+              const count = t.value ? allFiles.filter((f) => f.mediaType === t.value).length : allFiles.length;
               if (t.value && count === 0) return null;
               return (
                 <button
