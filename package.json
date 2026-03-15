@@ -12,14 +12,17 @@
     "push-secrets": "bash scripts/push-secrets.sh",
     "push-secrets:fly": "bash scripts/push-secrets.sh fly",
     "push-secrets:docker": "bash scripts/push-secrets.sh docker",
-    "push-secrets:github": "bash scripts/push-secrets.sh github"
+    "push-secrets:github": "bash scripts/push-secrets.sh github",
+    "screenshots": "pnpm dlx tsx scripts/screenshots.ts"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/node": "^22.10.2",
+    "jose": "^6.2.1",
+    "playwright": "^1.58.2",
+    "tsup": "^8.3.5",
     "turbo": "^2.3.3",
     "typescript": "^5.7.2",
-    "vitest": "^2.1.8",
-    "@types/node": "^22.10.2",
-    "@types/better-sqlite3": "^7.6.12",
-    "tsup": "^8.3.5"
+    "vitest": "^2.1.8"
   }
 }
