@@ -67,14 +67,8 @@ export interface CollectionConfig {
   sourceLocale?: string;
   /** Locales this collection can be translated to. Empty = no i18n. */
   locales?: string[];
-  hooks?: {
-    beforeCreate?: string;
-    afterCreate?: string;
-    beforeUpdate?: string;
-    afterUpdate?: string;
-    beforeDelete?: string;
-    afterDelete?: string;
-  };
+  /** Lifecycle hooks for this collection. Functions called during create/update/delete. */
+  hooks?: import('../content/hooks.js').CollectionHooks;
 }
 
 export interface BuildConfig {

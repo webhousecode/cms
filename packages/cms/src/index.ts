@@ -13,7 +13,7 @@ export type { StorageAdapter, Document, DocumentInput, QueryOptions, QueryResult
 
 // Content
 export { ContentService } from './content/service.js';
-export type { ContentHooks } from './content/hooks.js';
+export type { ContentHooks, CollectionHooks } from './content/hooks.js';
 export { isFieldLocked, getLockedFields, filterUnlockedFields, computeFieldMetaChanges, buildInitialFieldMeta } from './content/field-meta.js';
 export type { FieldMetaChanges } from './content/field-meta.js';
 
