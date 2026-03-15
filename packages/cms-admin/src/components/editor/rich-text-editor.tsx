@@ -26,7 +26,8 @@ import {
   IconUndo, IconRedo, IconChevronDown, IconCheck,
   IconLink, IconTable, IconImage, IconBlocks,
   IconAlignLeft, IconAlignCenter, IconAlignRight, IconTrash, IconMaximize,
-  IconHorizontalRule, IconVideo,
+  IconHorizontalRule, IconVideo, IconAudio, IconAttachment, IconCallout,
+  IconFile, IconDownload,
 } from "./editor-icons";
 
 interface Props {
@@ -759,6 +760,542 @@ const VideoEmbed = TipTapNode.create({
   },
 });
 
+/* ─── Audio embed node + NodeView ───────────────────────────── */
+function AudioNodeView({ node, updateAttributes, deleteNode, selected }: NodeViewProps) {
+  const { src, title, align } = node.attrs as {
+    src: string; title: string; align: "left" | "center" | "right";
+  };
+  const [uploading, setUploading] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const del = useConfirmDelete(deleteNode);
+  const currentAlign = align ?? "center";
+
+  const handleUpload = async (file: File) => {
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("folder", "audio");
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      const { url } = await res.json();
+      updateAttributes({ src: url, title: file.name });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const wrapperJustify = currentAlign === "left" ? "flex-start" : currentAlign === "right" ? "flex-end" : "center";
+
+  if (!src) {
+    return (
+      <NodeViewWrapper draggable contentEditable={false} style={{ display: "flex", justifyContent: wrapperJustify, margin: "0.75rem 0", position: "relative" }}>
+        <DragHandle />
+        <div
+          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={(e) => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files?.[0]; if (f) handleUpload(f); }}
+          onClick={() => fileRef.current?.click()}
+          style={{
+            width: "100%", maxWidth: "500px", padding: "2rem", textAlign: "center",
+            borderRadius: "8px", border: `2px dashed ${dragOver ? "var(--primary)" : "var(--border)"}`,
+            backgroundColor: dragOver ? "rgba(255,255,255,0.04)" : "var(--card)",
+            cursor: "pointer", color: "var(--muted-foreground)", fontSize: "0.875rem",
+            transition: "border-color 150ms, background 150ms",
+          }}
+        >
+          {uploading ? "Uploading…" : "Drop or click to upload audio"}
+          <input ref={fileRef} type="file" accept="audio/*" style={{ display: "none" }}
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) handleUpload(f); e.target.value = ""; }} />
+        </div>
+      </NodeViewWrapper>
+    );
+  }
+
+  const btnSm: React.CSSProperties = { fontSize: "0.7rem", padding: "0.15rem 0.4rem", borderRadius: "3px", border: "1px solid var(--border)", cursor: "pointer", background: "transparent", color: "var(--foreground)", lineHeight: 1 };
+
+  return (
+    <NodeViewWrapper draggable contentEditable={false} style={{ display: "flex", justifyContent: wrapperJustify, margin: "0.75rem 0", position: "relative" }}>
+      <DragHandle />
+      <div style={{
+        width: "100%", maxWidth: "500px", borderRadius: "8px",
+        border: del.confirming ? "2px solid var(--destructive)" : selected ? "2px solid var(--primary)" : "1px solid var(--border)",
+        backgroundColor: "var(--card)", overflow: "hidden", position: "relative",
+        transition: "border-color 150ms",
+      }}>
+        <div style={{ padding: "0.75rem 1rem" }}>
+          <audio controls src={src} style={{ width: "100%", height: "36px" }} />
+        </div>
+        {del.confirming && (
+          <div style={{
+            position: "absolute", inset: 0, zIndex: 30, borderRadius: "6px",
+            backgroundColor: "rgba(0,0,0,0.55)",
+            display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem",
+          }}>
+            <span style={{ fontSize: "0.8rem", color: "var(--destructive)", fontWeight: 600 }}>Remove audio?</span>
+            <button type="button" onMouseDown={(e) => { e.preventDefault(); del.confirm(); }} style={{ ...btnSm, background: "var(--destructive)", color: "#fff", border: "none" }}>Confirm</button>
+            <button type="button" onMouseDown={(e) => { e.preventDefault(); del.cancel(); }} style={btnSm}>Cancel</button>
+          </div>
+        )}
+        <div style={{ display: "flex", alignItems: "center", gap: "4px", padding: "0.2rem 0.375rem", borderTop: "1px solid var(--border)", backgroundColor: "var(--muted)", borderRadius: "0 0 6px 6px" }}>
+          <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", padding: "0 4px", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+            {title || "Audio"}
+          </span>
+          <button type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); del.request(); }}
+            style={{ width: "18px", height: "18px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: "0.9rem", lineHeight: 1, flexShrink: 0 }}
+            title="Remove audio">×</button>
+        </div>
+      </div>
+    </NodeViewWrapper>
+  );
+}
+
+const AudioEmbed = TipTapNode.create({
+  name: "audioEmbed",
+  group: "block",
+  atom: true,
+  draggable: true,
+
+  addAttributes() {
+    return {
+      src:   { default: "" },
+      title: { default: "" },
+      align: { default: "center", parseHTML: el => el.getAttribute("data-audio-align") || "center" },
+    };
+  },
+
+  parseHTML() {
+    return [{ tag: "div[data-audio-embed]", getAttrs: (el) => ({
+      src:   (el as Element).getAttribute("data-audio-embed") ?? "",
+      title: (el as Element).getAttribute("data-audio-title") ?? "",
+      align: (el as Element).getAttribute("data-audio-align") || "center",
+    }) }];
+  },
+
+  renderHTML({ node }) {
+    const attrs: Record<string, string> = { "data-audio-embed": node.attrs.src };
+    if (node.attrs.title) attrs["data-audio-title"] = node.attrs.title;
+    if (node.attrs.align && node.attrs.align !== "center") attrs["data-audio-align"] = node.attrs.align;
+    return ["div", attrs];
+  },
+
+  addStorage() {
+    return {
+      markdown: {
+        serialize(state: { write: (s: string) => void; closeBlock: (node: unknown) => void }, node: { attrs: Record<string, unknown> }) {
+          const { src } = node.attrs as { src: string };
+          state.write(`<audio controls src="${src}"></audio>`);
+          state.closeBlock(node);
+        },
+        parse: {
+          updateDOM(dom: Element) {
+            dom.querySelectorAll("audio[src]").forEach((audio) => {
+              const src = audio.getAttribute("src") ?? "";
+              const div = document.createElement("div");
+              div.setAttribute("data-audio-embed", src);
+              audio.parentNode?.replaceChild(div, audio);
+            });
+            // Also handle <p><audio ...></audio></p> wrapping
+            dom.querySelectorAll("p").forEach((p) => {
+              const audio = p.querySelector("audio[src]");
+              if (audio && p.childNodes.length === 1) {
+                const src = audio.getAttribute("src") ?? "";
+                const div = document.createElement("div");
+                div.setAttribute("data-audio-embed", src);
+                p.parentNode?.replaceChild(div, p);
+              }
+            });
+          },
+        },
+      },
+    };
+  },
+
+  addKeyboardShortcuts() {
+    return {
+      ArrowDown: ({ editor }) => {
+        const { selection, doc } = editor.state;
+        const node = doc.nodeAt(selection.from);
+        if (node?.type.name !== "audioEmbed") return false;
+        const end = selection.from + node.nodeSize;
+        if (end >= doc.content.size) {
+          editor.chain().insertContentAt(end, { type: "paragraph" }).setTextSelection(end + 1).run();
+          return true;
+        }
+        editor.commands.setTextSelection(end + 1);
+        return true;
+      },
+      Enter: ({ editor }) => {
+        const { selection, doc } = editor.state;
+        const node = doc.nodeAt(selection.from);
+        if (node?.type.name !== "audioEmbed") return false;
+        const end = selection.from + node.nodeSize;
+        editor.chain().insertContentAt(end, { type: "paragraph" }).setTextSelection(end + 1).run();
+        return true;
+      },
+    };
+  },
+
+  addNodeView() {
+    return ReactNodeViewRenderer(AudioNodeView);
+  },
+});
+
+/* ─── File attachment node + NodeView ──────────────────────── */
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function FileNodeView({ node, updateAttributes, deleteNode, selected }: NodeViewProps) {
+  const { src, filename, size } = node.attrs as {
+    src: string; filename: string; size: string;
+  };
+  const [uploading, setUploading] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const del = useConfirmDelete(deleteNode);
+
+  const handleUpload = async (file: File) => {
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("folder", "files");
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      const { url } = await res.json();
+      updateAttributes({ src: url, filename: file.name, size: formatFileSize(file.size) });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  if (!src) {
+    return (
+      <NodeViewWrapper draggable contentEditable={false} style={{ margin: "0.75rem 0", position: "relative" }}>
+        <DragHandle />
+        <div
+          onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+          onDragLeave={() => setDragOver(false)}
+          onDrop={(e) => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files?.[0]; if (f) handleUpload(f); }}
+          onClick={() => fileRef.current?.click()}
+          style={{
+            width: "100%", maxWidth: "400px", padding: "2rem", textAlign: "center",
+            borderRadius: "8px", border: `2px dashed ${dragOver ? "var(--primary)" : "var(--border)"}`,
+            backgroundColor: dragOver ? "rgba(255,255,255,0.04)" : "var(--card)",
+            cursor: "pointer", color: "var(--muted-foreground)", fontSize: "0.875rem",
+            transition: "border-color 150ms, background 150ms",
+          }}
+        >
+          {uploading ? "Uploading…" : "Drop or click to attach file"}
+          <input ref={fileRef} type="file" accept="*" style={{ display: "none" }}
+            onChange={(e) => { const f = e.target.files?.[0]; if (f) handleUpload(f); e.target.value = ""; }} />
+        </div>
+      </NodeViewWrapper>
+    );
+  }
+
+  const btnSm: React.CSSProperties = { fontSize: "0.7rem", padding: "0.15rem 0.4rem", borderRadius: "3px", border: "1px solid var(--border)", cursor: "pointer", background: "transparent", color: "var(--foreground)", lineHeight: 1 };
+
+  return (
+    <NodeViewWrapper draggable contentEditable={false} style={{ margin: "0.75rem 0", position: "relative" }}>
+      <DragHandle />
+      <div style={{
+        display: "inline-flex", alignItems: "center", gap: "0.75rem",
+        padding: "0.75rem 1rem", borderRadius: "8px",
+        border: del.confirming ? "2px solid var(--destructive)" : selected ? "2px solid var(--primary)" : "1px solid var(--border)",
+        backgroundColor: "var(--card)", maxWidth: "100%", position: "relative",
+        transition: "border-color 150ms",
+      }}>
+        {del.confirming ? (
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <span style={{ fontSize: "0.8rem", color: "var(--destructive)", fontWeight: 600 }}>Remove file?</span>
+            <button type="button" onMouseDown={(e) => { e.preventDefault(); del.confirm(); }} style={{ ...btnSm, background: "var(--destructive)", color: "#fff", border: "none" }}>Confirm</button>
+            <button type="button" onMouseDown={(e) => { e.preventDefault(); del.cancel(); }} style={btnSm}>Cancel</button>
+          </div>
+        ) : (
+          <>
+            <span style={{ color: "var(--muted-foreground)", flexShrink: 0 }}><IconFile /></span>
+            <div style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
+              <p style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--foreground)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", margin: 0 }}>{filename}</p>
+              {size && <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", margin: 0 }}>{size}</p>}
+            </div>
+            <a href={src} download={filename} target="_blank" rel="noopener noreferrer"
+              onMouseDown={(e) => e.stopPropagation()}
+              style={{ color: "var(--muted-foreground)", flexShrink: 0, display: "flex", alignItems: "center" }}
+              title="Download">
+              <IconDownload />
+            </a>
+            <button type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); del.request(); }}
+              style={{ width: "18px", height: "18px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: "0.9rem", lineHeight: 1, flexShrink: 0 }}
+              title="Remove file">×</button>
+          </>
+        )}
+      </div>
+    </NodeViewWrapper>
+  );
+}
+
+const FileAttachment = TipTapNode.create({
+  name: "fileAttachment",
+  group: "block",
+  atom: true,
+  draggable: true,
+
+  addAttributes() {
+    return {
+      src:      { default: "" },
+      filename: { default: "" },
+      size:     { default: "" },
+    };
+  },
+
+  parseHTML() {
+    return [{ tag: "div[data-file-attachment]", getAttrs: (el) => ({
+      src:      (el as Element).getAttribute("data-file-attachment") ?? "",
+      filename: (el as Element).getAttribute("data-file-name") ?? "",
+      size:     (el as Element).getAttribute("data-file-size") ?? "",
+    }) }];
+  },
+
+  renderHTML({ node }) {
+    const attrs: Record<string, string> = { "data-file-attachment": node.attrs.src };
+    if (node.attrs.filename) attrs["data-file-name"] = node.attrs.filename;
+    if (node.attrs.size)     attrs["data-file-size"] = node.attrs.size;
+    return ["div", attrs];
+  },
+
+  addStorage() {
+    return {
+      markdown: {
+        serialize(state: { write: (s: string) => void; closeBlock: (node: unknown) => void }, node: { attrs: Record<string, unknown> }) {
+          const { src, filename } = node.attrs as { src: string; filename: string };
+          state.write(`<a href="${src}" download>${filename}</a>`);
+          state.closeBlock(node);
+        },
+        parse: {
+          updateDOM(dom: Element) {
+            dom.querySelectorAll("a[download]").forEach((a) => {
+              const src = a.getAttribute("href") ?? "";
+              const filename = a.textContent ?? "";
+              const div = document.createElement("div");
+              div.setAttribute("data-file-attachment", src);
+              div.setAttribute("data-file-name", filename);
+              a.parentNode?.replaceChild(div, a);
+            });
+            // Also handle <p><a download>...</a></p> wrapping
+            dom.querySelectorAll("p").forEach((p) => {
+              const a = p.querySelector("a[download]");
+              if (a && p.childNodes.length === 1) {
+                const src = a.getAttribute("href") ?? "";
+                const filename = a.textContent ?? "";
+                const div = document.createElement("div");
+                div.setAttribute("data-file-attachment", src);
+                div.setAttribute("data-file-name", filename);
+                p.parentNode?.replaceChild(div, p);
+              }
+            });
+          },
+        },
+      },
+    };
+  },
+
+  addKeyboardShortcuts() {
+    return {
+      ArrowDown: ({ editor }) => {
+        const { selection, doc } = editor.state;
+        const node = doc.nodeAt(selection.from);
+        if (node?.type.name !== "fileAttachment") return false;
+        const end = selection.from + node.nodeSize;
+        if (end >= doc.content.size) {
+          editor.chain().insertContentAt(end, { type: "paragraph" }).setTextSelection(end + 1).run();
+          return true;
+        }
+        editor.commands.setTextSelection(end + 1);
+        return true;
+      },
+      Enter: ({ editor }) => {
+        const { selection, doc } = editor.state;
+        const node = doc.nodeAt(selection.from);
+        if (node?.type.name !== "fileAttachment") return false;
+        const end = selection.from + node.nodeSize;
+        editor.chain().insertContentAt(end, { type: "paragraph" }).setTextSelection(end + 1).run();
+        return true;
+      },
+    };
+  },
+
+  addNodeView() {
+    return ReactNodeViewRenderer(FileNodeView);
+  },
+});
+
+/* ─── Callout node + NodeView ──────────────────────────────── */
+type CalloutVariant = "info" | "warning" | "tip";
+
+const CALLOUT_STYLES: Record<CalloutVariant, { border: string; bg: string; icon: string }> = {
+  info:    { border: "#3b82f6", bg: "rgba(59,130,246,0.08)", icon: "ℹ️" },
+  warning: { border: "#f59e0b", bg: "rgba(245,158,11,0.08)", icon: "⚠️" },
+  tip:     { border: "#22c55e", bg: "rgba(34,197,94,0.08)",  icon: "💡" },
+};
+
+function CalloutNodeView({ node, updateAttributes, deleteNode, selected }: NodeViewProps) {
+  const variant = (node.attrs.variant as CalloutVariant) || "info";
+  const style = CALLOUT_STYLES[variant];
+  const del = useConfirmDelete(deleteNode);
+
+  const btnVariant = (v: CalloutVariant, label: string) => (
+    <button
+      type="button"
+      onMouseDown={(e) => { e.preventDefault(); updateAttributes({ variant: v }); }}
+      style={{
+        fontSize: "0.65rem", padding: "0.1rem 0.4rem", borderRadius: "3px",
+        border: variant === v ? `1px solid ${CALLOUT_STYLES[v].border}` : "1px solid var(--border)",
+        cursor: "pointer", lineHeight: 1.4,
+        background: variant === v ? CALLOUT_STYLES[v].bg : "transparent",
+        color: variant === v ? CALLOUT_STYLES[v].border : "var(--muted-foreground)",
+        fontWeight: variant === v ? 600 : 400,
+      }}
+    >{label}</button>
+  );
+
+  const btnSm: React.CSSProperties = { fontSize: "0.7rem", padding: "0.15rem 0.4rem", borderRadius: "3px", border: "1px solid var(--border)", cursor: "pointer", background: "transparent", color: "var(--foreground)", lineHeight: 1 };
+
+  return (
+    <NodeViewWrapper draggable style={{ margin: "0.75rem 0", position: "relative" }}>
+      <DragHandle />
+      <div style={{
+        borderLeft: `4px solid ${style.border}`,
+        backgroundColor: style.bg,
+        borderRadius: "0 8px 8px 0",
+        padding: "0",
+        outline: selected ? `2px solid var(--primary)` : "none",
+        outlineOffset: "2px",
+        transition: "outline 150ms",
+      }}>
+        {/* Variant selector bar */}
+        <div contentEditable={false} style={{ display: "flex", alignItems: "center", gap: "4px", padding: "0.35rem 0.75rem", borderBottom: `1px solid ${style.border}22`, userSelect: "none" }}>
+          <span style={{ fontSize: "0.8rem", lineHeight: 1 }}>{style.icon}</span>
+          <span style={{ fontSize: "0.65rem", color: style.border, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", marginRight: "auto" }}>{variant}</span>
+          {btnVariant("info", "Info")}
+          {btnVariant("warning", "Warning")}
+          {btnVariant("tip", "Tip")}
+          {del.confirming ? (
+            <>
+              <span style={{ fontSize: "0.7rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
+              <button type="button" onMouseDown={(e) => { e.preventDefault(); del.confirm(); }} style={{ ...btnSm, background: "var(--destructive)", color: "#fff", border: "none", fontSize: "0.65rem" }}>Yes</button>
+              <button type="button" onMouseDown={(e) => { e.preventDefault(); del.cancel(); }} style={{ ...btnSm, fontSize: "0.65rem" }}>No</button>
+            </>
+          ) : (
+            <button type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); del.request(); }}
+              style={{ width: "16px", height: "16px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: "0.8rem", lineHeight: 1, flexShrink: 0 }}
+              title="Remove callout">×</button>
+          )}
+        </div>
+        {/* Editable content area */}
+        <div data-node-view-content="" style={{ padding: "0.5rem 0.75rem 0.75rem" }} />
+      </div>
+    </NodeViewWrapper>
+  );
+}
+
+const Callout = TipTapNode.create({
+  name: "callout",
+  group: "block",
+  content: "paragraph+",
+  draggable: true,
+
+  addAttributes() {
+    return {
+      variant: { default: "info", parseHTML: el => el.getAttribute("data-callout-variant") || "info" },
+    };
+  },
+
+  parseHTML() {
+    return [{ tag: "div[data-callout]", getAttrs: (el) => ({
+      variant: (el as Element).getAttribute("data-callout-variant") || "info",
+    }) }];
+  },
+
+  renderHTML({ node, HTMLAttributes }) {
+    return ["div", { ...HTMLAttributes, "data-callout": "", "data-callout-variant": node.attrs.variant }, 0];
+  },
+
+  addStorage() {
+    return {
+      markdown: {
+        serialize(state: { write: (s: string) => void; closeBlock: (node: unknown) => void; renderContent: (node: unknown) => void; out: string }, node: { attrs: Record<string, unknown>; content: { forEach: (cb: (child: unknown) => void) => void } }) {
+          const variant = (node.attrs.variant as string || "info").toUpperCase();
+          state.write(`> [!${variant}]`);
+          state.write("\n");
+          // Serialize child paragraphs as "> content"
+          node.content.forEach((child: unknown) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const c = child as any;
+            if (c.type?.name === "paragraph") {
+              let text = "";
+              if (c.content) {
+                c.content.forEach((inline: { text?: string; type?: { name: string }; marks?: { type: { name: string }; attrs?: Record<string, string> }[] }) => {
+                  let t = inline.text ?? "";
+                  if (inline.marks) {
+                    for (const mark of inline.marks) {
+                      if (mark.type.name === "bold") t = `**${t}**`;
+                      else if (mark.type.name === "italic") t = `*${t}*`;
+                      else if (mark.type.name === "code") t = `\`${t}\``;
+                      else if (mark.type.name === "link") t = `[${t}](${mark.attrs?.href ?? ""})`;
+                    }
+                  }
+                  text += t;
+                });
+              }
+              state.write(`> ${text}`);
+              state.write("\n");
+            }
+          });
+          state.closeBlock(node);
+        },
+        parse: {
+          updateDOM(dom: Element) {
+            // Convert GitHub-style alerts: > [!INFO] / > [!WARNING] / > [!TIP]
+            dom.querySelectorAll("blockquote").forEach((bq) => {
+              const firstP = bq.querySelector("p");
+              if (!firstP) return;
+              const text = firstP.textContent ?? "";
+              const match = text.match(/^\[!(INFO|WARNING|TIP)\]\s*/i);
+              if (!match) return;
+              const variant = match[1].toLowerCase();
+              // Remove the marker text from the first paragraph
+              firstP.textContent = text.slice(match[0].length);
+              if (!firstP.textContent.trim()) {
+                // If marker was the only content in this p, remove it
+                firstP.remove();
+              }
+              // Replace blockquote with callout div
+              const div = document.createElement("div");
+              div.setAttribute("data-callout", "");
+              div.setAttribute("data-callout-variant", variant);
+              // Move remaining children
+              while (bq.firstChild) div.appendChild(bq.firstChild);
+              // Ensure at least one paragraph child
+              if (!div.querySelector("p")) {
+                const p = document.createElement("p");
+                div.appendChild(p);
+              }
+              bq.parentNode?.replaceChild(div, bq);
+            });
+          },
+        },
+      },
+    };
+  },
+
+  addNodeView() {
+    return ReactNodeViewRenderer(CalloutNodeView);
+  },
+});
+
 /* ─── Toolbar button ─────────────────────────────────────────── */
 function Btn({
   tooltip, active, disabled, onClick, children,
@@ -944,6 +1481,8 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
   const headingRef = useRef<HTMLDivElement>(null);
   const linkRef = useRef<HTMLDivElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
+  const audioInputRef = useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [imgDelConfirming, setImgDelConfirming] = useState(false);
   const imgDelTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -957,6 +1496,9 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
       ResizableImage.configure({ inline: false }),
       BlockMarker,
       VideoEmbed,
+      AudioEmbed,
+      FileAttachment,
+      Callout,
       TextDragDrop,
       Table.configure({ resizable: false }),
       TableRow,
@@ -991,6 +1533,15 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
       isVideo: ctx.editor?.isActive("videoEmbed") ?? false,
       videoAlign: (ctx.editor?.isActive("videoEmbed")
         ? (ctx.editor?.getAttributes("videoEmbed").align as string | undefined) ?? "center"
+        : null) as string | null,
+      isAudio: ctx.editor?.isActive("audioEmbed") ?? false,
+      audioAlign: (ctx.editor?.isActive("audioEmbed")
+        ? (ctx.editor?.getAttributes("audioEmbed").align as string | undefined) ?? "center"
+        : null) as string | null,
+      isFile: ctx.editor?.isActive("fileAttachment") ?? false,
+      isCallout: ctx.editor?.isActive("callout") ?? false,
+      calloutVariant: (ctx.editor?.isActive("callout")
+        ? (ctx.editor?.getAttributes("callout").variant as string | undefined) ?? "info"
         : null) as string | null,
     }),
   });
@@ -1304,6 +1855,91 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
               <IconVideo />
             </Btn>
 
+            {/* Insert Audio */}
+            <Btn tooltip="Insert audio" onClick={() => audioInputRef.current?.click()}>
+              <IconAudio />
+            </Btn>
+            <input
+              ref={audioInputRef}
+              type="file"
+              accept="audio/*"
+              style={{ display: "none" }}
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) {
+                  // Insert an empty audioEmbed node; the NodeView will handle the upload dropzone
+                  editor.chain().focus().insertContent({ type: "audioEmbed", attrs: { src: "", title: f.name } }).run();
+                  // Upload immediately and update the most recent audioEmbed
+                  (async () => {
+                    const fd = new FormData();
+                    fd.append("file", f);
+                    fd.append("folder", "audio");
+                    const res = await fetch("/api/upload", { method: "POST", body: fd });
+                    const { url } = await res.json();
+                    // Find the audioEmbed we just inserted and update it
+                    const { state } = editor;
+                    state.doc.descendants((node, pos) => {
+                      if (node.type.name === "audioEmbed" && !node.attrs.src && node.attrs.title === f.name) {
+                        editor.chain().command(({ tr }) => {
+                          tr.setNodeMarkup(pos, undefined, { ...node.attrs, src: url });
+                          return true;
+                        }).run();
+                        return false; // stop traversal
+                      }
+                    });
+                  })();
+                }
+                e.target.value = "";
+              }}
+            />
+
+            {/* Insert File */}
+            <Btn tooltip="Attach file" onClick={() => fileInputRef.current?.click()}>
+              <IconAttachment />
+            </Btn>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="*"
+              style={{ display: "none" }}
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) {
+                  editor.chain().focus().insertContent({ type: "fileAttachment", attrs: { src: "", filename: f.name, size: "" } }).run();
+                  (async () => {
+                    const fd = new FormData();
+                    fd.append("file", f);
+                    fd.append("folder", "files");
+                    const res = await fetch("/api/upload", { method: "POST", body: fd });
+                    const { url } = await res.json();
+                    const sizeStr = f.size < 1024 ? `${f.size} B` : f.size < 1024*1024 ? `${(f.size/1024).toFixed(1)} KB` : `${(f.size/(1024*1024)).toFixed(1)} MB`;
+                    const { state } = editor;
+                    state.doc.descendants((node, pos) => {
+                      if (node.type.name === "fileAttachment" && !node.attrs.src && node.attrs.filename === f.name) {
+                        editor.chain().command(({ tr }) => {
+                          tr.setNodeMarkup(pos, undefined, { ...node.attrs, src: url, size: sizeStr });
+                          return true;
+                        }).run();
+                        return false;
+                      }
+                    });
+                  })();
+                }
+                e.target.value = "";
+              }}
+            />
+
+            {/* Insert Callout */}
+            <Btn tooltip="Insert callout" onClick={() => {
+              editor.chain().focus().insertContent({
+                type: "callout",
+                attrs: { variant: "info" },
+                content: [{ type: "paragraph", content: [{ type: "text", text: "Type your note here…" }] }],
+              }).run();
+            }}>
+              <IconCallout />
+            </Btn>
+
           </div>
         )}
 
@@ -1380,6 +2016,58 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
             <CtxBtn title="Float right"  active={toolbarState.videoAlign === "right"}
               onClick={() => editor.chain().focus().updateAttributes("videoEmbed", { align: "right" }).run()}>
               <IconAlignRight />
+            </CtxBtn>
+          </div>
+        )}
+
+        {/* ── Context toolbar — audio controls ── */}
+        {!disabled && editor && toolbarState?.isAudio && (
+          <div style={{
+            display: "flex", alignItems: "center", gap: "2px",
+            padding: "0.25rem 0.75rem",
+            borderBottom: "1px solid var(--border)",
+            backgroundColor: "var(--background)",
+            position: "sticky", top: "calc(132px + 49px)", zIndex: 19,
+          }}>
+            <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", marginRight: "0.25rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.06em" }}>Audio</span>
+            <CtxSep />
+            <CtxBtn title="Align left"   active={toolbarState.audioAlign === "left"}
+              onClick={() => editor.chain().focus().updateAttributes("audioEmbed", { align: "left" }).run()}>
+              <IconAlignLeft />
+            </CtxBtn>
+            <CtxBtn title="Center" active={toolbarState.audioAlign === "center"}
+              onClick={() => editor.chain().focus().updateAttributes("audioEmbed", { align: "center" }).run()}>
+              <IconAlignCenter />
+            </CtxBtn>
+            <CtxBtn title="Align right"  active={toolbarState.audioAlign === "right"}
+              onClick={() => editor.chain().focus().updateAttributes("audioEmbed", { align: "right" }).run()}>
+              <IconAlignRight />
+            </CtxBtn>
+          </div>
+        )}
+
+        {/* ── Context toolbar — callout controls ── */}
+        {!disabled && editor && toolbarState?.isCallout && (
+          <div style={{
+            display: "flex", alignItems: "center", gap: "2px",
+            padding: "0.25rem 0.75rem",
+            borderBottom: "1px solid var(--border)",
+            backgroundColor: "var(--background)",
+            position: "sticky", top: "calc(132px + 49px)", zIndex: 19,
+          }}>
+            <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", marginRight: "0.25rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.06em" }}>Callout</span>
+            <CtxSep />
+            <CtxBtn title="Info" active={toolbarState.calloutVariant === "info"}
+              onClick={() => editor.chain().focus().updateAttributes("callout", { variant: "info" }).run()}>
+              <span style={{ fontSize: "0.7rem", fontWeight: 600 }}>Info</span>
+            </CtxBtn>
+            <CtxBtn title="Warning" active={toolbarState.calloutVariant === "warning"}
+              onClick={() => editor.chain().focus().updateAttributes("callout", { variant: "warning" }).run()}>
+              <span style={{ fontSize: "0.7rem", fontWeight: 600 }}>Warn</span>
+            </CtxBtn>
+            <CtxBtn title="Tip" active={toolbarState.calloutVariant === "tip"}
+              onClick={() => editor.chain().focus().updateAttributes("callout", { variant: "tip" }).run()}>
+              <span style={{ fontSize: "0.7rem", fontWeight: 600 }}>Tip</span>
             </CtxBtn>
           </div>
         )}
