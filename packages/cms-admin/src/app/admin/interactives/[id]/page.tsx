@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Eye, MousePointer2, Code, Save, RotateCcw, Loader2 } from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import { useTabs } from "@/lib/tabs-context";
 
 const MonacoEditor = dynamic(() => import("@monaco-editor/react").then(m => m.default), { ssr: false });
 
@@ -304,6 +305,7 @@ export default function InteractiveDetailPage() {
   const [saved, setSaved] = useState(false);
   const [originalContent, setOriginalContent] = useState("");
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const { setTabTitle } = useTabs();
 
   const loadDetail = useCallback(async () => {
     try {
@@ -323,9 +325,12 @@ export default function InteractiveDetailPage() {
     }
   }, [id, router]);
 
+  useEffect(() => { loadDetail(); }, [loadDetail]);
+
+  // Set tab title when detail loads
   useEffect(() => {
-    loadDetail();
-  }, [loadDetail]);
+    if (detail?.name) setTabTitle(detail.name);
+  }, [detail?.name, setTabTitle]);
 
   /* Listen for postMessage from WYSIWYG iframe */
   useEffect(() => {
