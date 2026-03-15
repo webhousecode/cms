@@ -72,13 +72,13 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
     // Save revision snapshot before overwriting
     await saveRevision(collection, doc).catch(() => { /* non-fatal */ });
 
-    const nextStatus = (body.status as "draft" | "published" | "trashed") ?? doc.status;
+    const nextStatus = (body.status as string) ?? doc.status;
     // Manually publishing clears any pending schedule
     const publishAt = nextStatus === "published" ? null : body.publishAt;
 
     await cms.content.update(collection, doc.id, {
       data: body.data ?? doc.data,
-      status: nextStatus,
+      status: nextStatus as "draft" | "published" | "archived",
       ...(body.slug !== undefined && { slug: body.slug }),
       ...(body.locale !== undefined && { locale: body.locale }),
       ...(body.translationOf !== undefined && { translationOf: body.translationOf ?? undefined }),

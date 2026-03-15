@@ -12,6 +12,7 @@ RUN corepack enable && corepack prepare pnpm@10.30.3 --activate
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY .npmrc* ./
 COPY pnpm-approve-builds.json ./
+COPY .pnpmfile.cjs ./
 COPY tsconfig.base.json ./
 
 COPY packages/cms/package.json            ./packages/cms/
