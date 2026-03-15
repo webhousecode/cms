@@ -546,12 +546,12 @@ function GridView({ files, copied, deleting, usageMap, onCopy, onDelete, onOpen 
         return (
           <div
             key={file.url}
-            className="group relative rounded-lg border border-border bg-card overflow-hidden"
+            className="group relative rounded-lg border border-border bg-card"
             style={{ aspectRatio: "1 / 1.15" }}
           >
             {/* Thumbnail */}
             <div
-              style={{ width: "100%", height: "72%", background: "var(--muted)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", cursor: file.isImage ? "zoom-in" : "default" }}
+              style={{ width: "100%", height: "72%", background: "var(--muted)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", borderRadius: "0.5rem 0.5rem 0 0", cursor: file.isImage ? "zoom-in" : "default" }}
               onClick={() => file.isImage && onOpen(file)}
             >
               {file.isImage ? (

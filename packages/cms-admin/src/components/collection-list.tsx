@@ -330,7 +330,7 @@ export function CollectionList({ collection, titleField, fields, initialDocs }: 
 
       {/* Table */}
       {filtered.length > 0 && (
-        <div style={{ border: "1px solid var(--border)", borderRadius: "10px", overflow: "hidden" }}>
+        <div style={{ border: "1px solid var(--border)", borderRadius: "10px" }}>
           <table style={{ width: "100%", borderCollapse: "collapse" }}>
             <thead>
               <tr>
