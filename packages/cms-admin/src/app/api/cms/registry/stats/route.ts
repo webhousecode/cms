@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
     for (const col of collections) {
       if (col.urlPrefix !== undefined) {
         const { documents } = await instance.cms.content.findMany(col.name, {});
-        pages += documents.filter((d) => d.status !== "trashed").length;
+        pages += documents.filter((d) => (d.status as string) !== "trashed").length;
       }
     }
 
