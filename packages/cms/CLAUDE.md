@@ -2208,8 +2208,30 @@ webhouse.app automatically sends a signed webhook to your site after every conte
 import { revalidatePath } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'node:crypto';
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 
+const exec = promisify(execFile);
 const SECRET = process.env.REVALIDATE_SECRET;
+
+/**
+ * Pull latest content from GitHub before revalidating.
+ * In dev mode this triggers HMR; in production it updates the local checkout.
+ */
+async function gitPull(): Promise<string[]> {
+  try {
+    const cwd = process.cwd();
+    await exec('git', ['fetch', 'origin', '--quiet'], { cwd });
+    const { stdout: before } = await exec('git', ['rev-parse', 'HEAD'], { cwd });
+    const { stdout: remote } = await exec('git', ['rev-parse', 'origin/main'], { cwd });
+    if (before.trim() === remote.trim()) return [];
+    const { stdout: diff } = await exec('git', ['diff', '--name-only', before.trim(), remote.trim()], { cwd });
+    await exec('git', ['pull', '--ff-only', '--quiet'], { cwd });
+    return diff.trim().split('\n').filter(Boolean);
+  } catch {
+    return [];
+  }
+}
 
 export async function POST(request: NextRequest) {
   const signature = request.headers.get('x-cms-signature');
@@ -2233,11 +2255,19 @@ export async function POST(request: NextRequest) {
   const payload = JSON.parse(body);
   const paths: string[] = payload.paths ?? ['/'];
 
+  // Pull latest from GitHub, then revalidate
+  const changedFiles = await gitPull();
+
   for (const path of paths) {
     revalidatePath(path);
   }
 
-  return NextResponse.json({ revalidated: true, paths, timestamp: new Date().toISOString() });
+  return NextResponse.json({
+    revalidated: true,
+    paths,
+    pulled: changedFiles.length,
+    timestamp: new Date().toISOString(),
+  });
 }
 ```
 
