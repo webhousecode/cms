@@ -1,6 +1,6 @@
 # @webhouse/cms — Roadmap
 
-**Last updated:** 2026-03-16
+**Last updated:** 2026-03-17
 
 ---
 
@@ -42,7 +42,7 @@
 
 ---
 
-## Feature roadmap (36 features)
+## Feature roadmap (37 features)
 
 Full feature list with individual plan docs in [FEATURES.md](FEATURES.md) and [docs/features/](features/).
 
@@ -88,6 +88,7 @@ Full feature list with individual plan docs in [FEATURES.md](FEATURES.md) and [d
 | F38 | Environment Manager — Dev/Staging/Prod switcher, dev server spawning, port scanning | Planned |
 | F40 | Drag and Drop Tab Reordering — reorder open tabs via drag, @dnd-kit/sortable | Planned |
 | F41 | GitHub Site Auto-Sync & Webhook Revalidation — dev auto-pull, production revalidation, scaffolded endpoint | Planned |
+| F42 | Framework Boilerplates — production-ready Next.js starter template, AI-cloneable, react-markdown, blocks, dark mode, revalidation | Planned |
 
 ---
 

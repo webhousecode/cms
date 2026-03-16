@@ -1,6 +1,6 @@
 # @webhouse/cms — Feature Roadmap
 
-**Last updated:** 2026-03-16
+**Last updated:** 2026-03-17
 
 ---
 
@@ -58,6 +58,7 @@
 | F39 | [Interactives Engine](#f39-interactives-engine) | In progress | [docs/features/F39-interactives-engine.md](features/F39-interactives-engine.md) |
 | F40 | [Drag and Drop Tab Reordering](#f40-drag-drop-tabs) | Planned | [docs/features/F40-drag-drop-tabs.md](features/F40-drag-drop-tabs.md) |
 | F41 | [GitHub Site Auto-Sync & Webhook Revalidation](#f41-github-site-sync) | Planned | [docs/features/F41-github-site-sync.md](features/F41-github-site-sync.md) |
+| F42 | [Framework Boilerplates](#f42-framework-boilerplates) | Planned | [docs/features/F42-framework-boilerplates.md](features/F42-framework-boilerplates.md) |
 
 ---
 
@@ -183,3 +184,6 @@ Allow users to reorder open tabs by dragging them. Uses `@dnd-kit/sortable` inte
 
 ## F41 — GitHub Site Auto-Sync & Webhook Revalidation
 Automatic content synchronization for GitHub-backed sites. Dev mode: CMS CLI polls for new commits and runs `git pull --ff-only` so local dev servers reflect CMS changes instantly. Production: after committing content via GitHub API, CMS dispatches a signed webhook to the site's `/api/revalidate` endpoint, triggering `revalidatePath()` for only the changed paths. CLI scaffolder generates the revalidation route with HMAC-SHA256 secret validation. CLAUDE.md includes setup instructions for AI site builders. Adds `revalidateUrl` and `revalidateSecret` to site settings, with a "Revalidation" section in the admin UI.
+
+## F42 — Framework Boilerplates
+Production-ready starter templates in `examples/` that AI site builders clone instead of starting from scratch. Phase 1: `examples/nextjs-boilerplate/` — a complete, working Next.js site with `react-markdown` + `remark-gfm`, `ArticleBody` component with all custom renderers (including TipTap image float/width parsing), `BlockRenderer` for hero/features/cta/notice blocks, light/dark mode with theme toggle, `/api/revalidate` webhook endpoint (F41-compatible), `cms.config.ts` with standard collections (global, pages with blocks, posts), Tailwind CSS, `lib/content.ts`, `generateMetadata`, `generateStaticParams`, sitemap, robots.txt, and sample content. The CLI scaffolder gains a `--boilerplate nextjs` flag. Future phases add Astro, Remix, and Nuxt boilerplates. Distinct from F32 (Template Registry) which builds themed templates ON TOP of these boilerplates.
