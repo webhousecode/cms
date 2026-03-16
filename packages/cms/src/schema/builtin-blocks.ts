@@ -37,4 +37,12 @@ export const builtinBlocks: BlockConfig[] = [
       { name: 'caption', type: 'text', label: 'Caption' },
     ],
   },
+  {
+    name: 'file',
+    label: 'File Attachment',
+    fields: [
+      { name: 'src', type: 'file' as const, label: 'File', required: true },
+      { name: 'filename', type: 'text', label: 'Display Name' },
+    ],
+  },
 ];

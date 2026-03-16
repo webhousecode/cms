@@ -16,6 +16,7 @@ export type FieldType =
   | 'video'
   | 'audio'
   | 'htmldoc'
+  | 'file'
   | 'column-slots';
 
 export interface FieldConfig {
