@@ -31,7 +31,6 @@
 | 23 | **Screenshot agent** — Playwright, 24 surfaces, dynamic collections, JWT auth | 2026-03-15 |
 | 24 | **Framework adapters** — `@webhouse/cms/adapters` with getCollection/getDocument | 2026-03-15 |
 | F41 | **Content push revalidation** — HMAC webhook, content push to disk, LiveRefresh SSE | 2026-03-16 |
-| F39 | **Interactives Engine** — create/edit/preview interactive HTML content | 2026-03-16 |
 
 ---
 
@@ -45,14 +44,15 @@ _Without these, we cannot build and deliver professional sites on the platform._
 
 | Priority | Feature | Size | Why it blocks |
 |----------|---------|------|---------------|
-| 1 | **F42 Framework Boilerplates** | Medium | Without a working starter template, every site starts from scratch. AI builders need a reference. Two variants: filesystem + GitHub. |
+| 1 | **F39 Interactives Engine** _(in progress, ~70%)_ | Small | Almost done. Unique differentiator — no other CMS has native interactive embeds. Remaining: AI Edit, blocks integration, standalone rendering. |
 | 2 | **F01 Invite Users** | Small | Can't run a team without editors. Role-based access (admin/editor/viewer). |
 | 3 | **F47 Content Scheduling** | Small | publishAt/unpublishAt — every professional CMS needs this. API partially exists. |
 | 4 | **F43 Persist User State** | Small | Tabs/preferences lost on cookie clear is unacceptable for daily-use tool. |
 | 5 | **F12 One-Click Publish** | Medium | Need to deploy sites. Vercel deploy hook, Fly.io redeploy, GitHub Pages. |
 | 6 | **F27 Backup & Restore** | Small | Content is the customer's most valuable asset. Export/import full site. |
 | 7 | **F44 Media Processing Pipeline** | Medium | Images must be optimized. No srcset = poor Lighthouse. Sharp, WebP/AVIF. |
-| 8 | **F31 Documentation Site** | Medium | Can't ship without docs. API reference, guides, tutorials. |
+| 8 | **F42 Framework Boilerplates** | Medium | Starter templates + Claude Code skills/hooks/agents. Last in Tier 1 because best practices evolve as we build earlier features. Includes `/.claude/` with skills, hooks, and agent configs for AI site builders. |
+| 9 | **F31 Documentation Site** | Medium | Can't ship without docs. Last because it documents everything above. |
 
 ### Tier 2 — Competitive Edge (v1.1-1.2)
 
@@ -60,16 +60,16 @@ _Makes us stand out. Customers expect these from a modern CMS._
 
 | Priority | Feature | Size | Why it matters |
 |----------|---------|------|----------------|
-| 9 | **F48 i18n** | Medium | Multi-language is table stakes for European/global sites. Storage layer ready. |
-| 10 | **F38 Environment Manager** | Medium | Dev/Staging/Prod. Professional workflow for agencies. |
-| 11 | **F02 Import Engine** | Medium | Migrating FROM another CMS is the #1 adoption barrier. |
-| 12 | **F03 WordPress Migration** | Medium | WP is the biggest migration source. Built on F02. |
-| 13 | **F13 Notification Channels** | Small | Discord/Slack/webhook notifications on content changes. |
-| 14 | **F15 Agent Scheduler** | Small | Cron agents (link check, SEO audit, content refresh). Already in progress. |
-| 15 | **F35 Webhooks** | Small | Generic outbound events for integrations. F41 revalidation is a specific case. |
-| 16 | **F40 Drag and Drop Tabs** | Small | Polish. Expected UX in a tabbed interface. |
-| 17 | **F04 MCP Enhancements** | Small | Already in progress. More tools, better context. |
-| 18 | **F49 Incremental Builds** | Small | Performance. Only matters at scale (100+ pages). |
+| 10 | **F48 i18n** | Medium | Multi-language is table stakes for European/global sites. Storage layer ready. |
+| 11 | **F38 Environment Manager** | Medium | Dev/Staging/Prod. Professional workflow for agencies. |
+| 12 | **F02 Import Engine** | Medium | Migrating FROM another CMS is the #1 adoption barrier. |
+| 13 | **F03 WordPress Migration** | Medium | WP is the biggest migration source. Built on F02. |
+| 14 | **F13 Notification Channels** | Small | Discord/Slack/webhook notifications on content changes. |
+| 15 | **F15 Agent Scheduler** | Small | Cron agents (link check, SEO audit, content refresh). Already in progress. |
+| 16 | **F35 Webhooks** | Small | Generic outbound events for integrations. F41 revalidation is a specific case. |
+| 17 | **F40 Drag and Drop Tabs** | Small | Polish. Expected UX in a tabbed interface. |
+| 18 | **F04 MCP Enhancements** | Small | Already in progress. More tools, better context. |
+| 19 | **F49 Incremental Builds** | Small | Performance. Only matters at scale (100+ pages). |
 
 ### Tier 3 — Differentiation (v1.3+)
 
@@ -77,33 +77,33 @@ _Unique selling points and advanced features._
 
 | Priority | Feature | Size | Category |
 |----------|---------|------|----------|
-| 19 | **F46 Plugin System** | Large | Extensibility — `registerPlugin()`, build/AI hooks, custom fields |
-| 20 | **F36 Framework Integrations** | Large | Astro, Remix, Nuxt, SvelteKit adapters |
-| 21 | **F45 AI Image Generation** | Medium | Flux/DALL-E in editor. Differentiator. |
-| 22 | **F30 Form Engine** | Medium | Contact forms, surveys, submissions |
-| 23 | **F29 Transactional Email** | Medium | Password reset, invites, notifications |
-| 24 | **F08 RAG Knowledge Base** | Large | AI grounded in site content |
-| 25 | **F09 Chat Plugin** | Medium | AI chat widget built on F08 |
-| 26 | **F37 HTML Document Field** | Medium | Visual editor for standalone HTML pages |
-| 27 | **F14 Newsletter Engine** | Medium | Email campaigns from CMS content |
-| 28 | **F32 Template Registry** | Large | Marketplace of themes built on F42 boilerplates |
-| 29 | **F17 AI Content Index** | Small | llms.txt, AI-friendly sitemaps |
-| 30 | **F25 Storage Buckets** | Medium | S3, R2, Supabase storage for large media |
+| 20 | **F46 Plugin System** | Large | Extensibility — `registerPlugin()`, build/AI hooks, custom fields |
+| 21 | **F36 Framework Integrations** | Large | Astro, Remix, Nuxt, SvelteKit adapters |
+| 22 | **F45 AI Image Generation** | Medium | Flux/DALL-E in editor. Differentiator. |
+| 23 | **F30 Form Engine** | Medium | Contact forms, surveys, submissions |
+| 24 | **F29 Transactional Email** | Medium | Password reset, invites, notifications |
+| 25 | **F08 RAG Knowledge Base** | Large | AI grounded in site content |
+| 26 | **F09 Chat Plugin** | Medium | AI chat widget built on F08 |
+| 27 | **F37 HTML Document Field** | Medium | Visual editor for standalone HTML pages |
+| 28 | **F14 Newsletter Engine** | Medium | Email campaigns from CMS content |
+| 29 | **F32 Template Registry** | Large | Marketplace of themes built on F42 boilerplates |
+| 30 | **F17 AI Content Index** | Small | llms.txt, AI-friendly sitemaps |
+| 31 | **F25 Storage Buckets** | Medium | S3, R2, Supabase storage for large media |
 
 ### Tier 4 — Growth & Enterprise (v2.0+)
 
 | Priority | Feature | Size | Category |
 |----------|---------|------|----------|
-| 31 | **F34 Multi-Tenancy** | Large | In progress. Full isolation, billing, quotas. |
-| 32 | **F19 Enterprise** | Large | RBAC, audit log, SSO, A/B testing, approval workflows |
-| 33 | **F10 AI Learning Loop** | Medium | AI improves from editor feedback |
-| 34 | **F11 Multi-Model AI** | Small | Use different models for different tasks |
-| 35 | **F33 PWA Support** | Small | Offline CMS admin |
-| 36 | **F05 Podcast Engine** | Medium | RSS, chapters, transcript |
-| 37 | **F06 Content Speaker (TTS)** | Medium | AI narration of articles |
-| 38 | **F07 CMS Mobile (COCpit)** | Large | Expo/React Native review app |
-| 39 | **F18 Design System** | Large | Generative themes, design tokens |
-| 40 | **F28 Vibe Coding Flow** | Medium | AI-assisted site building from admin |
+| 32 | **F34 Multi-Tenancy** | Large | In progress. Full isolation, billing, quotas. |
+| 33 | **F19 Enterprise** | Large | RBAC, audit log, SSO, A/B testing, approval workflows |
+| 34 | **F10 AI Learning Loop** | Medium | AI improves from editor feedback |
+| 35 | **F11 Multi-Model AI** | Small | Use different models for different tasks |
+| 36 | **F33 PWA Support** | Small | Offline CMS admin |
+| 37 | **F05 Podcast Engine** | Medium | RSS, chapters, transcript |
+| 38 | **F06 Content Speaker (TTS)** | Medium | AI narration of articles |
+| 39 | **F07 CMS Mobile (COCpit)** | Large | Expo/React Native review app |
+| 40 | **F18 Design System** | Large | Generative themes, design tokens |
+| 41 | **F28 Vibe Coding Flow** | Medium | AI-assisted site building from admin |
 
 ---
 

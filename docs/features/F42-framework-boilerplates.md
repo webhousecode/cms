@@ -71,8 +71,23 @@ examples/nextjs-boilerplate/
 ├── .env.example                      # REVALIDATE_SECRET, NEXT_PUBLIC_SITE_URL
 ├── .gitignore                        # Standard Next.js + CMS ignores
 ├── CLAUDE.md                         # AI builder instructions referencing the boilerplate
+├── .claude/
+│   ├── settings.json                 # Claude Code permissions (bypass for CMS operations)
+│   ├── hooks/
+│   │   └── post-build.sh             # Auto-run after build (lint, type-check, screenshot)
+│   └── skills/
+│       ├── publish.md                # /publish — build + deploy in one command
+│       ├── content-check.md          # /content-check — validate all content, broken links, missing images
+│       └── new-page.md               # /new-page — scaffold a new page with route, content file, and types
+├── .mcp.json                         # MCP server config for Claude Code / Cursor / AI tools
 └── README.md                         # Human-readable setup instructions
 ```
+
+The `.claude/` directory gives AI site builders (Claude Code sessions) a complete toolkit:
+- **Skills** — slash commands for common workflows (`/publish`, `/content-check`, `/new-page`)
+- **Hooks** — automated quality checks after builds
+- **Settings** — pre-configured permissions so AI can operate efficiently
+- **MCP config** — connects AI tools to the CMS content API
 
 ## Technical Design
 
