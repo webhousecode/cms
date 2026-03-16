@@ -59,6 +59,7 @@
 | F40 | [Drag and Drop Tab Reordering](#f40-drag-drop-tabs) | Planned | [docs/features/F40-drag-drop-tabs.md](features/F40-drag-drop-tabs.md) |
 | F41 | [GitHub Site Auto-Sync & Webhook Revalidation](#f41-github-site-sync) | Done | [docs/features/F41-github-site-sync.md](features/F41-github-site-sync.md) |
 | F42 | [Framework Boilerplates](#f42-framework-boilerplates) | Planned | [docs/features/F42-framework-boilerplates.md](features/F42-framework-boilerplates.md) |
+| F43 | [Persist User State](#f43-persist-user-state) | Planned | [docs/features/F43-persist-user-state.md](features/F43-persist-user-state.md) |
 
 ---
 
@@ -187,3 +188,6 @@ Automatic content synchronization for GitHub-backed sites. Dev mode: CMS CLI pol
 
 ## F42 — Framework Boilerplates
 Production-ready starter templates in `examples/` that AI site builders clone instead of starting from scratch. Phase 1: `examples/nextjs-boilerplate/` — a complete, working Next.js site with `react-markdown` + `remark-gfm`, `ArticleBody` component with all custom renderers (including TipTap image float/width parsing), `BlockRenderer` for hero/features/cta/notice blocks, light/dark mode with theme toggle, `/api/revalidate` webhook endpoint (F41-compatible), `cms.config.ts` with standard collections (global, pages with blocks, posts), Tailwind CSS, `lib/content.ts`, `generateMetadata`, `generateStaticParams`, sitemap, robots.txt, and sample content. The CLI scaffolder gains a `--boilerplate nextjs` flag. Future phases add Astro, Remix, and Nuxt boilerplates. Distinct from F32 (Template Registry) which builds themed templates ON TOP of these boilerplates.
+
+## F43 — Persist User State
+Server-side persistence of open tabs, UI preferences (zoom, sidebar state, content toggle), editor state, recent searches, and column sort preferences. Stored per-user in `_data/user-state/{userId}.json`. Survives browser clears, device switches, and cookie resets. Client uses localStorage as fast cache with debounced sync to server. Automatic migration from existing localStorage on first use.

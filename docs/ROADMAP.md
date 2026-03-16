@@ -89,6 +89,7 @@ Full feature list with individual plan docs in [FEATURES.md](FEATURES.md) and [d
 | F40 | Drag and Drop Tab Reordering — reorder open tabs via drag, @dnd-kit/sortable | Planned |
 | F41 | GitHub Site Auto-Sync & Webhook Revalidation — dev auto-pull, production revalidation, scaffolded endpoint | Planned |
 | F42 | Framework Boilerplates — production-ready Next.js starter template, AI-cloneable, react-markdown, blocks, dark mode, revalidation | Planned |
+| F43 | Persist User State — open tabs, sidebar, zoom, searches stored per-user on server, survives browser clears | Planned |
 
 ---
 
