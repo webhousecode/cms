@@ -390,6 +390,7 @@ function SiteSection() {
 
 /* ─── Revalidation section ─────────────────────────────────────── */
 function RevalidationSection() {
+	const [adapter, setAdapter] = useState<string | null>(null); // null = loading
 	const [url, setUrl] = useState("");
 	const [secret, setSecret] = useState("");
 	const [showSecret, setShowSecret] = useState(false);
@@ -406,11 +407,12 @@ function RevalidationSection() {
 		fetch("/api/cms/revalidation")
 			.then((r) => r.json())
 			.then((d) => {
+				setAdapter(d.adapter ?? "filesystem");
 				setUrl(d.revalidateUrl ?? "");
 				setSecret(d.revalidateSecret ?? "");
 				setLog(d.log ?? []);
 			})
-			.catch(() => { });
+			.catch(() => { setAdapter("filesystem"); });
 		// Load preview URL for auto-generate
 		fetch("/api/admin/site-config")
 			.then((r) => r.json())
@@ -419,6 +421,10 @@ function RevalidationSection() {
 			})
 			.catch(() => { });
 	}, []);
+
+	// Only show for GitHub-backed sites
+	if (adapter === null) return null; // Loading
+	if (adapter === "filesystem") return null;
 
 	function autoGenerateUrl() {
 		if (!previewUrl) return;

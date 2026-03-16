@@ -13,6 +13,7 @@ export async function GET() {
   const log = await readRevalidationLog();
 
   return NextResponse.json({
+    adapter: site.adapter ?? "filesystem",
     revalidateUrl: site.revalidateUrl ?? "",
     revalidateSecret: site.revalidateSecret ?? "",
     log,
