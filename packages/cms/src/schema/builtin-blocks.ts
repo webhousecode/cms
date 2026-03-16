@@ -21,4 +21,20 @@ export const builtinBlocks: BlockConfig[] = [
       { name: 'columns', type: 'column-slots' as const, label: 'Columns' },
     ],
   },
+  {
+    name: 'video',
+    label: 'Video',
+    fields: [
+      { name: 'src', type: 'video', label: 'Video URL', required: true },
+      { name: 'caption', type: 'text', label: 'Caption' },
+    ],
+  },
+  {
+    name: 'audio',
+    label: 'Audio',
+    fields: [
+      { name: 'src', type: 'audio', label: 'Audio File', required: true },
+      { name: 'caption', type: 'text', label: 'Caption' },
+    ],
+  },
 ];
