@@ -402,6 +402,7 @@ function RevalidationSection() {
 	const [copied, setCopied] = useState<"url" | "secret" | null>(null);
 	const [log, setLog] = useState<Array<{ timestamp: string; paths: string[]; ok: boolean; status: number | null; durationMs: number }>>([]);
 	const [previewUrl, setPreviewUrl] = useState("");
+	const [logOpen, setLogOpen] = useState(false);
 
 	useEffect(() => {
 		fetch("/api/cms/revalidation")
@@ -425,6 +426,14 @@ function RevalidationSection() {
 	// Only show for GitHub-backed sites
 	if (adapter === null) return null; // Loading
 	if (adapter === "filesystem") return null;
+
+	// Wrapped in fragment with leading HR so it doesn't leave orphan dividers
+	const SectionWrapper = ({ children }: { children: React.ReactNode }) => (
+		<>
+			<div style={{ height: "1px", background: "var(--border)" }} />
+			{children}
+		</>
+	);
 
 	function autoGenerateUrl() {
 		if (!previewUrl) return;
@@ -483,7 +492,7 @@ function RevalidationSection() {
 	}
 
 	return (
-		<div>
+		<SectionWrapper><div>
 			<SectionHeading>Revalidation</SectionHeading>
 			<form onSubmit={handleSave} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
 				<Card>
@@ -634,10 +643,15 @@ function RevalidationSection() {
 				{/* Recent delivery log */}
 				{log.length > 0 && (
 					<div style={{ marginTop: "0.25rem" }}>
-						<p style={{ fontSize: "0.7rem", fontWeight: 600, color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.5rem" }}>
-							Recent deliveries
-						</p>
-						<div style={{ border: "1px solid var(--border)", borderRadius: "8px", overflow: "hidden" }}>
+						<button
+							type="button"
+							onClick={() => setLogOpen((v) => !v)}
+							style={{ fontSize: "0.7rem", fontWeight: 600, color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: logOpen ? "0.5rem" : 0, background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", gap: "0.35rem" }}
+						>
+							<span style={{ display: "inline-block", transform: logOpen ? "rotate(90deg)" : "rotate(0deg)", transition: "transform 150ms", fontSize: "0.6rem" }}>&#9654;</span>
+							Recent deliveries ({log.length})
+						</button>
+						{logOpen && <div style={{ border: "1px solid var(--border)", borderRadius: "8px", overflow: "hidden" }}>
 							{log.slice(0, 10).map((entry, i) => (
 								<div
 									key={i}
@@ -666,11 +680,11 @@ function RevalidationSection() {
 									</span>
 								</div>
 							))}
-						</div>
+						</div>}
 					</div>
 				)}
 			</form>
-		</div>
+		</div></SectionWrapper>
 	);
 }
 
@@ -810,7 +824,6 @@ export function SiteGeneralSettingsPanel() {
 	return (
 		<div style={{ display: "flex", flexDirection: "column", gap: "2.5rem" }}>
 			<SiteSection />
-			<div style={{ height: "1px", background: "var(--border)" }} />
 			<RevalidationSection />
 			<div style={{ height: "1px", background: "var(--border)" }} />
 			<DangerZone />
