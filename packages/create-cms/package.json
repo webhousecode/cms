@@ -1,6 +1,6 @@
 {
   "name": "@webhouse/create-cms",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "description": "Scaffold a new @webhouse/cms project",
   "type": "module",
   "license": "MIT",
