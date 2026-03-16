@@ -100,7 +100,7 @@ export default async function SettingsPage({
                     </p>
                   </div>
                 </div>
-                <Link href={`/admin/settings/${col.name}`}>
+                <Link href={`/admin/settings/${col.name}?from=settings`}>
                   <Button variant="outline" size="sm" className="gap-1.5">
                     <Edit2 className="w-3.5 h-3.5" />
                     Edit schema
