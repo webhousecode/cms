@@ -2298,7 +2298,7 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
 
         {/* ── Main Toolbar ── */}
         {!disabled && editor && (
-          <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "2px", padding: "0.375rem 0.75rem", borderBottom: "1px solid var(--border)", position: "sticky", top: "132px", zIndex: 20, backgroundColor: "var(--background)", borderRadius: "0.5rem 0.5rem 0 0" }}>
+          <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "2px", padding: "0.375rem 0.75rem", borderBottom: "1px solid var(--border)", position: "sticky", top: 0, zIndex: 20, backgroundColor: "var(--background)", borderRadius: "0.5rem 0.5rem 0 0" }}>
 
             <Btn tooltip="Undo (⌘Z)" disabled={!editor.can().undo()}
               onClick={() => editor.chain().focus().undo().run()}>
@@ -2671,7 +2671,7 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
             padding: "0.25rem 0.75rem",
             borderBottom: "1px solid var(--border)",
             backgroundColor: "var(--background)",
-            position: "sticky", top: "calc(132px + 49px)", zIndex: 19,
+            position: "sticky", top: 0, zIndex: 19,
           }}>
             <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", marginRight: "0.25rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.06em" }}>Image</span>
             <CtxSep />
@@ -2702,7 +2702,7 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
             padding: "0.25rem 0.75rem",
             borderBottom: "1px solid var(--border)",
             backgroundColor: "var(--background)",
-            position: "sticky", top: "calc(132px + 49px)", zIndex: 19,
+            position: "sticky", top: 0, zIndex: 19,
           }}>
             <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", marginRight: "0.25rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.06em" }}>Video</span>
             <CtxSep />
@@ -2733,7 +2733,7 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
             padding: "0.25rem 0.75rem",
             borderBottom: "1px solid var(--border)",
             backgroundColor: "var(--background)",
-            position: "sticky", top: "calc(132px + 49px)", zIndex: 19,
+            position: "sticky", top: 0, zIndex: 19,
           }}>
             <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", marginRight: "0.25rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.06em" }}>Audio</span>
             <CtxSep />
@@ -2759,7 +2759,7 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
             padding: "0.25rem 0.75rem",
             borderBottom: "1px solid var(--border)",
             backgroundColor: "var(--background)",
-            position: "sticky", top: "calc(132px + 49px)", zIndex: 19,
+            position: "sticky", top: 0, zIndex: 19,
           }}>
             <span style={{ fontSize: "0.7rem", color: "#F7BB2E", marginRight: "0.25rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.06em" }}>Interactive</span>
             <CtxSep />
@@ -2790,7 +2790,7 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
             padding: "0.25rem 0.75rem",
             borderBottom: "1px solid var(--border)",
             backgroundColor: "var(--background)",
-            position: "sticky", top: "calc(132px + 49px)", zIndex: 19,
+            position: "sticky", top: 0, zIndex: 19,
           }}>
             <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", marginRight: "0.25rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.06em" }}>Callout</span>
             <CtxSep />
