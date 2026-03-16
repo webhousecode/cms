@@ -1150,13 +1150,10 @@ const InteractiveEmbed = TipTapNode.create({
         parse: {
           updateDOM(dom: Element) {
             // Convert <p>!!INTERACTIVE[id|title|width:x|height:y]</p> → <div data-interactive-embed>
-            console.log("[INT updateDOM] called, dom paragraphs:", dom.querySelectorAll("p").length);
             dom.querySelectorAll("p").forEach((p) => {
               const text = (p.textContent ?? "").trim();
-              if (text.startsWith("!!INTERACTIVE")) console.log("[INT updateDOM] found p:", JSON.stringify(text));
               const m = text.match(/^!!INTERACTIVE\[([^\]]+)\]$/);
               if (!m) return;
-              console.log("[INT updateDOM] MATCHED:", m[1]);
               const parts = m[1].split("|");
               const id = parts[0];
               let title = "";
@@ -1536,13 +1533,10 @@ const FileAttachment = TipTapNode.create({
         parse: {
           updateDOM(dom: Element) {
             // Convert <p>!!FILE[src|filename|size]</p> → <div data-file-attachment>
-            console.log("[FILE updateDOM] called, paragraphs:", dom.querySelectorAll("p").length);
             dom.querySelectorAll("p").forEach((p) => {
               const text = (p.textContent ?? "").trim();
-              if (text.startsWith("!!FILE")) console.log("[FILE updateDOM] found p:", JSON.stringify(text));
               const m = text.match(/^!!FILE\[([^|]+)\|([^|]*)\|?(.*?)\]$/);
               if (!m) return;
-              console.log("[FILE updateDOM] MATCHED:", m[1]);
               const div = document.createElement("div");
               div.setAttribute("data-file-attachment", m[1]);
               div.setAttribute("data-file-name", m[2] || "");
@@ -2001,11 +1995,34 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
     content: value || "",
     editable: !disabled,
     onCreate: ({ editor }) => {
-      // Debug: verify extension storage for markdown specs
-      editor.extensionManager.extensions.forEach((ext) => {
-        const spec = ext.storage?.markdown;
-        if (spec) console.log(`[STORAGE] ${ext.name}: serialize=${!!spec.serialize}, parse.updateDOM=${!!spec.parse?.updateDOM}`);
+      // Fallback: scan for any !!INTERACTIVE[...] or !!FILE[...] text nodes that
+      // survived markdown parsing and convert them to proper embed nodes.
+      // This handles cases where tiptap-markdown's updateDOM didn't successfully
+      // create the nodes that ProseMirror could parse.
+      const { doc, tr } = editor.state;
+      let modified = false;
+      doc.descendants((node, pos) => {
+        if (node.isText && node.text) {
+          const intMatch = node.text.match(/^!!INTERACTIVE\[([^\]]+)\]$/);
+          if (intMatch) {
+            const parts = intMatch[1].split("|");
+            const id = parts[0];
+            let title = "", alignVal = "", widthVal = "", heightVal = "";
+            for (let i = 1; i < parts.length; i++) {
+              if (parts[i].startsWith("align:")) alignVal = parts[i].slice(6);
+              else if (parts[i].startsWith("width:")) widthVal = parts[i].slice(6);
+              else if (parts[i].startsWith("height:")) heightVal = parts[i].slice(7);
+              else if (!title) title = parts[i];
+            }
+            const intNode = editor.schema.nodes.interactiveEmbed.create({ interactiveId: id, title, align: alignVal, width: widthVal, height: heightVal });
+            // Replace the paragraph containing this text node
+            const parentPos = editor.state.doc.resolve(pos).before(1);
+            tr.replaceWith(parentPos, parentPos + node.nodeSize + 2, intNode);
+            modified = true;
+          }
+        }
       });
+      if (modified) editor.view.dispatch(tr);
     },
     onUpdate: ({ editor }) => onChange(editor.storage.markdown.getMarkdown()),
     editorProps: {
