@@ -116,8 +116,48 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
     setShowPicker(false);
   }
 
+  const allOpen = blocks.length > 0 && blocks.every((_, i) => expanded[i]);
+  const allClosed = blocks.length > 0 && blocks.every((_, i) => !expanded[i]);
+
+  function toggleAll(open: boolean) {
+    const next: Record<number, boolean> = {};
+    blocks.forEach((_, i) => { next[i] = open; });
+    setExpandedPersist(() => next);
+  }
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+      {blocks.length >= 2 && (
+        <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.25rem" }}>
+          <button
+            type="button"
+            onClick={() => toggleAll(true)}
+            disabled={allOpen}
+            style={{
+              background: "none", border: "none", cursor: allOpen ? "default" : "pointer",
+              fontSize: "0.6rem", color: allOpen ? "var(--muted-foreground)/40" : "var(--muted-foreground)",
+              opacity: allOpen ? 0.4 : 1, padding: "0.1rem 0.3rem",
+            }}
+            className={allOpen ? "" : "hover:text-foreground transition-colors"}
+          >
+            Open all
+          </button>
+          <span style={{ fontSize: "0.6rem", color: "var(--muted-foreground)", opacity: 0.3 }}>|</span>
+          <button
+            type="button"
+            onClick={() => toggleAll(false)}
+            disabled={allClosed}
+            style={{
+              background: "none", border: "none", cursor: allClosed ? "default" : "pointer",
+              fontSize: "0.6rem", color: allClosed ? "var(--muted-foreground)/40" : "var(--muted-foreground)",
+              opacity: allClosed ? 0.4 : 1, padding: "0.1rem 0.3rem",
+            }}
+            className={allClosed ? "" : "hover:text-foreground transition-colors"}
+          >
+            Close all
+          </button>
+        </div>
+      )}
       {blocks.length === 0 && (
         <div style={{ padding: "1.5rem", textAlign: "center", color: "var(--muted-foreground)", fontSize: "0.85rem", border: "1px dashed var(--border)", borderRadius: "8px" }}>
           No sections added
