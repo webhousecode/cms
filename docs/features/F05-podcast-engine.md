@@ -110,10 +110,29 @@ export class PodcastAgent {
 7. Add episode player component for preview in admin
 8. Wire "Transcribe" button on episode edit page that calls the podcast agent
 
+## Research: Podcastfy
+
+Check out [Podcastfy](https://github.com/souzatharsis/podcastfy) — a Python library for NotebookLM-style AI-generated podcasts. Could be used as inspiration or integrated directly for:
+
+- Generating conversational podcast episodes from CMS content (blog posts, docs, etc.)
+- Multi-voice TTS with natural dialogue
+- Content-to-podcast pipeline
+
+## Podcast Agent
+
+Build a dedicated **Podcast Agent** in `packages/cms-ai/src/agents/podcast.ts` that can:
+
+- Generate podcast episodes from existing site content (à la NotebookLM)
+- Transcribe uploaded audio (Whisper)
+- Summarize episodes and extract chapters
+- Create show notes from transcripts
+- Orchestrate the full content → audio → published episode pipeline
+
 ## Dependencies
 
 - F25 (Storage Buckets) — for audio file storage (can use local filesystem initially)
 - OpenAI API key — for Whisper transcription
+- Podcastfy or similar — for AI-generated conversational audio
 
 ## Effort Estimate
 
