@@ -122,13 +122,21 @@ export function InteractiveAIPanel({ interactiveId, title, content, onApply }: P
 
   /** Extract HTML from code fences in the message — handles various fence formats */
   function extractHtml(text: string): string | null {
-    // Try ```html ... ``` first
+    // Try ```html ... ``` first (complete fences)
     const fenced = text.match(/```(?:html)?\s*\n([\s\S]*?)```/);
     if (fenced) return fenced[1].trim();
 
+    // Handle incomplete fences (missing closing ```) — common during streaming or truncation
+    const openFence = text.match(/```(?:html)?\s*\n([\s\S]+)$/);
+    if (openFence) {
+      const content = openFence[1].trim();
+      // Only use if it looks like HTML
+      if (content.startsWith("<") || content.startsWith("<!")) return content;
+    }
+
     // If the entire response looks like HTML (starts with < or <!), use it directly
     const trimmed = text.trim();
-    if (trimmed.startsWith("<!") || trimmed.startsWith("<html") || trimmed.startsWith("<div") || trimmed.startsWith("<style")) {
+    if (trimmed.startsWith("<!") || trimmed.startsWith("<html") || trimmed.startsWith("<div") || trimmed.startsWith("<style") || trimmed.startsWith("<head") || trimmed.startsWith("<body")) {
       return trimmed;
     }
 
@@ -217,9 +225,9 @@ export function InteractiveAIPanel({ interactiveId, title, content, onApply }: P
                 {extractHtml(msg.content) && (
                   <button
                     onClick={() => applyHtml(msg.content)}
-                    style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", padding: "0.25rem 0.5rem", borderRadius: "5px", border: "none", background: "var(--primary)", color: "var(--primary-foreground)", fontSize: "0.65rem", fontWeight: 600, cursor: "pointer" }}
+                    style={{ display: "inline-flex", alignItems: "center", gap: "0.375rem", padding: "0.375rem 0.75rem", borderRadius: "6px", border: "none", background: "var(--primary)", color: "var(--primary-foreground)", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer" }}
                   >
-                    <Replace style={{ width: "0.6rem", height: "0.6rem" }} /> Apply
+                    <Replace style={{ width: "0.75rem", height: "0.75rem" }} /> Apply Changes
                   </button>
                 )}
               </div>

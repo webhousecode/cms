@@ -29,6 +29,7 @@ import {
   IconHorizontalRule, IconVideo, IconAudio, IconAttachment, IconCallout,
   IconInteractive, IconFile, IconDownload,
 } from "./editor-icons";
+import { Image as LucideImage, Zap } from "lucide-react";
 
 interface Props {
   value: string;
@@ -503,7 +504,6 @@ function VideoNodeView({ node, updateAttributes, deleteNode, selected }: NodeVie
   const [nodeDragging, setNodeDragging] = useState(false);
   const [draft, setDraft] = useState(url);
   const [draftStart, setDraftStart] = useState(String(startAt || 0));
-  const del = useConfirmDelete(deleteNode);
   const containerRef = useRef<HTMLDivElement>(null);
   const urlInputRef = useRef<HTMLInputElement>(null);
   const startX = useRef(0);
@@ -551,9 +551,6 @@ function VideoNodeView({ node, updateAttributes, deleteNode, selected }: NodeVie
     ? { float: "right", width: effectiveWidth, margin: "0.75rem 0 0.75rem 1.5rem" }
     : { display: "flex", justifyContent: "center", margin: "1rem 0", clear: "both" };
 
-  const btnBase: React.CSSProperties = { fontSize: "0.7rem", padding: "0.15rem 0.375rem", borderRadius: "3px", border: "1px solid var(--border)", cursor: "pointer", background: "transparent" };
-  const btnSm: React.CSSProperties = { fontSize: "0.7rem", padding: "0.15rem 0.4rem", borderRadius: "3px", border: "1px solid var(--border)", cursor: "pointer", background: "transparent", color: "var(--foreground)", lineHeight: 1 };
-
   return (
     <NodeViewWrapper
       draggable
@@ -564,7 +561,7 @@ function VideoNodeView({ node, updateAttributes, deleteNode, selected }: NodeVie
     >
       <DragHandle />
       {/* Container: no overflow:hidden so resize handle isn't clipped */}
-      <div ref={containerRef} style={{ position: "relative", width: (currentAlign === "left" || currentAlign === "right") ? "100%" : effectiveWidth, maxWidth: "100%", borderRadius: "8px", border: del.confirming ? "2px solid var(--destructive)" : selected ? "2px solid var(--primary)" : "1px solid var(--border)", backgroundColor: "var(--card)", transition: "border-color 150ms" }}>
+      <div ref={containerRef} style={{ position: "relative", width: (currentAlign === "left" || currentAlign === "right") ? "100%" : effectiveWidth, maxWidth: "100%", borderRadius: "8px", border: selected ? "2px solid var(--primary)" : "1px solid var(--border)", backgroundColor: "var(--card)", transition: "border-color 150ms" }}>
         {/* Iframe wrapper: own overflow:hidden for rounded top corners */}
         <div style={{ borderRadius: "6px 6px 0 0", overflow: "hidden" }}>
           {embedSrc ? (
@@ -586,21 +583,8 @@ function VideoNodeView({ node, updateAttributes, deleteNode, selected }: NodeVie
           )}
         </div>
 
-        {/* Confirm-remove overlay — same pattern as block marker */}
-        {del.confirming && (
-          <div style={{
-            position: "absolute", inset: 0, zIndex: 30, borderRadius: "6px",
-            backgroundColor: "rgba(0,0,0,0.55)",
-            display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem",
-          }}>
-            <span style={{ fontSize: "0.8rem", color: "var(--destructive)", fontWeight: 600 }}>Remove video?</span>
-            <button type="button" onMouseDown={(e) => { e.preventDefault(); del.confirm(); }} style={{ ...btnSm, background: "var(--destructive)", color: "#fff", border: "none" }}>Confirm</button>
-            <button type="button" onMouseDown={(e) => { e.preventDefault(); del.cancel(); }} style={btnSm}>Cancel</button>
-          </div>
-        )}
-
         {/* Resize handle — absolute inside container (no overflow:hidden here), above footer */}
-        {selected && !editing && !del.confirming && (
+        {selected && !editing && (
           <div
             title="Træk for at ændre størrelse"
             onMouseDown={handleResizeMouseDown}
@@ -650,9 +634,6 @@ function VideoNodeView({ node, updateAttributes, deleteNode, selected }: NodeVie
               <span style={{ flex: 1 }} />
               <button type="button" onMouseDown={(e) => { e.preventDefault(); setDraft(url); setDraftStart(String(startAt || 0)); setEditing(true); }}
                 style={{ fontSize: "0.7rem", padding: "0.15rem 0.375rem", borderRadius: "3px", border: "1px solid var(--border)", cursor: "pointer", background: "transparent", color: "var(--foreground)" }}>Edit</button>
-              <button type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); del.request(); }}
-                style={{ width: "18px", height: "18px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: "0.9rem", lineHeight: 1, flexShrink: 0 }}
-                title="Remove video">×</button>
             </>
           )}
         </div>
@@ -944,7 +925,6 @@ const AudioEmbed = TipTapNode.create({
 /* ─── Interactive embed node + NodeView ─────────────────────── */
 function InteractiveNodeView({ node, deleteNode, updateAttributes, selected }: NodeViewProps) {
   const { interactiveId, title, align, width } = node.attrs as { interactiveId: string; title: string; align: string; width: string };
-  const del = useConfirmDelete(deleteNode);
   const containerRef = useRef<HTMLDivElement>(null);
   const startX = useRef(0);
   const startWidth = useRef(0);
@@ -1006,25 +986,12 @@ function InteractiveNodeView({ node, deleteNode, updateAttributes, selected }: N
             title={title || "Interactive preview"}
           />
         </div>
-        {/* Footer bar — title + inline delete (same pattern as image/video delete in context toolbar) */}
+        {/* Footer bar — title only (delete is in context toolbar) */}
         <div style={{ display: "flex", alignItems: "center", gap: "4px", padding: "0.2rem 0.375rem", borderTop: "1px solid var(--border)", backgroundColor: "var(--muted)", borderRadius: "0 0 6px 6px" }}>
           <span style={{ fontSize: "0.65rem", color: "#F7BB2E", fontWeight: 600, padding: "0 4px", flexShrink: 0 }}>⚡</span>
           <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", padding: "0 4px", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {title || "Interactive"}
           </span>
-          {del.confirming ? (
-            <>
-              <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
-              <button type="button" onMouseDown={(e) => { e.preventDefault(); del.confirm(); }}
-                style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
-              <button type="button" onMouseDown={(e) => { e.preventDefault(); del.cancel(); }}
-                style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
-            </>
-          ) : (
-            <button type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); del.request(); }}
-              style={{ width: "18px", height: "18px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: "0.9rem", lineHeight: 1, flexShrink: 0 }}
-              title="Remove interactive">×</button>
-          )}
         </div>
         {/* Resize knob (same as Image) */}
         {selected && (
@@ -1924,6 +1891,10 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
   const mediaDropdownRef = useRef<HTMLDivElement>(null);
   const [imgDelConfirming, setImgDelConfirming] = useState(false);
   const imgDelTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [vidDelConfirming, setVidDelConfirming] = useState(false);
+  const vidDelTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [intDelConfirming, setIntDelConfirming] = useState(false);
+  const intDelTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -2330,7 +2301,7 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
             <div style={{ position: "relative" }} ref={mediaDropdownRef}>
               <Btn tooltip={uploading ? "Uploading…" : "Insert media"} disabled={uploading}
                 onClick={() => { setShowMediaDropdown((o) => !o); setMediaSubMenu(null); }}>
-                <IconImage />
+                <LucideImage className="w-[18px] h-[18px]" />
               </Btn>
               {showMediaDropdown && (
                 <div style={{
@@ -2557,7 +2528,7 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
                 .catch(() => setAvailableInteractives([]))
                 .finally(() => setInteractivesLoading(false));
             }}>
-              <IconInteractive />
+              <Zap className="w-[18px] h-[18px]" />
             </Btn>
 
           </div>
@@ -2637,6 +2608,31 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
               onClick={() => editor.chain().focus().updateAttributes("videoEmbed", { align: "right" }).run()}>
               <IconAlignRight />
             </CtxBtn>
+            <CtxSep />
+            <CtxBtn title="Reset width to full" active={false}
+              onClick={() => editor.chain().focus().updateAttributes("videoEmbed", { width: null }).run()}>
+              <IconMaximize />
+            </CtxBtn>
+            <CtxSep />
+            {vidDelConfirming ? (
+              <>
+                <span style={{ fontSize: "0.7rem", color: "var(--destructive)", fontWeight: 500, padding: "0 4px" }}>Remove?</span>
+                <CtxBtn title="Confirm delete" danger onClick={() => {
+                  if (vidDelTimer.current) clearTimeout(vidDelTimer.current);
+                  setVidDelConfirming(false);
+                  editor.chain().focus().deleteSelection().run();
+                }}><IconTrash /></CtxBtn>
+                <CtxBtn title="Cancel" active={false} onClick={() => {
+                  if (vidDelTimer.current) clearTimeout(vidDelTimer.current);
+                  setVidDelConfirming(false);
+                }}>✕</CtxBtn>
+              </>
+            ) : (
+              <CtxBtn title="Delete video" danger onClick={() => {
+                setVidDelConfirming(true);
+                vidDelTimer.current = setTimeout(() => setVidDelConfirming(false), 3500);
+              }}><IconTrash /></CtxBtn>
+            )}
           </div>
         )}
 
@@ -2695,9 +2691,25 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
               <IconMaximize />
             </CtxBtn>
             <CtxSep />
-            <CtxBtn title="Delete interactive" danger onClick={() => {
-              editor.chain().focus().deleteSelection().run();
-            }}><IconTrash /></CtxBtn>
+            {intDelConfirming ? (
+              <>
+                <span style={{ fontSize: "0.7rem", color: "var(--destructive)", fontWeight: 500, padding: "0 4px" }}>Remove?</span>
+                <CtxBtn title="Confirm delete" danger onClick={() => {
+                  if (intDelTimer.current) clearTimeout(intDelTimer.current);
+                  setIntDelConfirming(false);
+                  editor.chain().focus().deleteSelection().run();
+                }}><IconTrash /></CtxBtn>
+                <CtxBtn title="Cancel" active={false} onClick={() => {
+                  if (intDelTimer.current) clearTimeout(intDelTimer.current);
+                  setIntDelConfirming(false);
+                }}>✕</CtxBtn>
+              </>
+            ) : (
+              <CtxBtn title="Delete interactive" danger onClick={() => {
+                setIntDelConfirming(true);
+                intDelTimer.current = setTimeout(() => setIntDelConfirming(false), 3500);
+              }}><IconTrash /></CtxBtn>
+            )}
           </div>
         )}
 
