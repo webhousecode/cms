@@ -105,7 +105,6 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
               border: "1px solid var(--border)",
               borderRadius: "8px",
               background: "var(--card)",
-              overflow: "hidden",
             }}
           >
             {/* Header */}
