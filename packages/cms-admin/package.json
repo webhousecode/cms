@@ -1,6 +1,6 @@
 {
   "name": "@webhouse/cms-admin",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Admin UI for @webhouse/cms",
   "private": false,
   "scripts": {
