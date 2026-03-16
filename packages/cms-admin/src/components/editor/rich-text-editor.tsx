@@ -2000,6 +2000,13 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
     ],
     content: value || "",
     editable: !disabled,
+    onCreate: ({ editor }) => {
+      // Debug: verify extension storage for markdown specs
+      editor.extensionManager.extensions.forEach((ext) => {
+        const spec = ext.storage?.markdown;
+        if (spec) console.log(`[STORAGE] ${ext.name}: serialize=${!!spec.serialize}, parse.updateDOM=${!!spec.parse?.updateDOM}`);
+      });
+    },
     onUpdate: ({ editor }) => onChange(editor.storage.markdown.getMarkdown()),
     editorProps: {
       attributes: {
