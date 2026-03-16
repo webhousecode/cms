@@ -288,6 +288,8 @@ export function ColumnsEditor({ block, onChange, locked, blocksConfig = [] }: Co
                 borderRadius: "6px",
                 padding: "0.5rem",
                 minHeight: "80px",
+                minWidth: 0,
+                overflow: "hidden",
                 background: "var(--background)",
               }}
             >
