@@ -66,6 +66,7 @@
 | F47 | [Content Scheduling](#f47-content-scheduling) | Planned | [docs/features/F47-content-scheduling.md](features/F47-content-scheduling.md) |
 | F48 | [Internationalization (i18n)](#f48-internationalization-i18n) | Planned | [docs/features/F48-i18n.md](features/F48-i18n.md) |
 | F49 | [Incremental Builds](#f49-incremental-builds) | Planned | [docs/features/F49-incremental-builds.md](features/F49-incremental-builds.md) |
+| F50 | [Sign In Providers](#f50-sign-in-providers) | Planned | [docs/features/F50-sign-in-providers.md](features/F50-sign-in-providers.md) |
 
 ---
 
@@ -215,3 +216,6 @@ Complete multi-language content management built on existing locale/translationO
 
 ## F49 — Incremental Builds
 Checksum-based change detection for `cms build`. SHA-256 hashes of document content and dependencies (relations, globals). Dependency graph tracks which pages depend on which documents. Only rebuilds pages whose hash changed since last build. Build cache stored in `_data/build-cache.json`. `--force` flag bypasses cache. Config changes trigger full rebuild. Significant speedup for large sites (100+ pages).
+
+## F50 — Sign In Providers
+Multiple OAuth authentication providers with account linking. Extends F26 (GitHub OAuth) to a generic provider registry supporting Google, Discord, Apple, and Azure AD/Entra ID. Provider buttons on login page, enable/disable per provider in Site Settings → Auth tab. Account linking merges multiple OAuth providers to one user via email matching. Enterprise SSO via Azure AD tenant configuration.
