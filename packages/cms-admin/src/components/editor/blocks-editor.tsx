@@ -12,6 +12,9 @@ interface Props {
   onChange: (value: Record<string, unknown>[]) => void;
   locked?: boolean;
   blocksConfig?: BlockConfig[];
+  /** Controlled expanded state — if provided, component uses this instead of internal state */
+  expandedState?: Record<number, boolean>;
+  onExpandedChange?: (expanded: Record<number, boolean>) => void;
 }
 
 function getBlockLabel(block: Record<string, unknown>, config: BlockConfig | undefined): string {
@@ -26,28 +29,35 @@ function getBlockLabel(block: Record<string, unknown>, config: BlockConfig | und
   return config.label ?? config.name;
 }
 
-export function BlocksEditor({ field, value, onChange, locked, blocksConfig = [] }: Props) {
+export function BlocksEditor({ field, value, onChange, locked, blocksConfig = [], expandedState, onExpandedChange }: Props) {
   const blocks = Array.isArray(value) ? value : [];
   const baseNames = field.blocks ?? blocksConfig.map((b) => b.name);
   const allowedBlockNames = baseNames.includes("columns") ? baseNames : [...baseNames, "columns"];
   const storageKey = `cms-blocks-expanded:${field.name}`;
-  const [expanded, setExpanded] = useState<Record<number, boolean>>(() => {
+  const controlled = expandedState !== undefined;
+  const [internalExpanded, setInternalExpanded] = useState<Record<number, boolean>>(() => {
     if (typeof window === "undefined") return {};
     try {
       const stored = localStorage.getItem(storageKey);
       return stored ? JSON.parse(stored) : {};
     } catch { return {}; }
   });
+  const expanded = controlled ? expandedState : internalExpanded;
   const [showPicker, setShowPicker] = useState(false);
   const [confirmRemoveIdx, setConfirmRemoveIdx] = useState<number | null>(null);
   const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   function setExpandedPersist(updater: (prev: Record<number, boolean>) => Record<number, boolean>) {
-    setExpanded((prev) => {
-      const next = updater(prev);
-      try { localStorage.setItem(storageKey, JSON.stringify(next)); } catch {}
-      return next;
-    });
+    if (controlled) {
+      const next = updater(expandedState);
+      onExpandedChange?.(next);
+    } else {
+      setInternalExpanded((prev) => {
+        const next = updater(prev);
+        try { localStorage.setItem(storageKey, JSON.stringify(next)); } catch {}
+        return next;
+      });
+    }
   }
 
   function toggle(i: number) {

@@ -37,6 +37,8 @@ export function ColumnsEditor({ block, onChange, locked, blocksConfig = [] }: Co
   const colCount = getColumnCount(layout);
   const [focusedCol, setFocusedCol] = useState<number | null>(null);
   const [pendingLayout, setPendingLayout] = useState<string | null>(null);
+  // Shared expanded state per column so grid-view and focus-view stay in sync
+  const [colExpanded, setColExpanded] = useState<Record<number, Record<number, boolean>>>({});
 
   // Ensure columns array matches layout count
   const normalizedColumns: Record<string, unknown>[][] = [];
@@ -218,6 +220,8 @@ export function ColumnsEditor({ block, onChange, locked, blocksConfig = [] }: Co
             onChange={(newBlocks) => updateColumn(focusedCol, newBlocks as Record<string, unknown>[])}
             locked={locked}
             blocksConfig={nestedBlocksConfig}
+            expandedState={colExpanded[focusedCol] ?? {}}
+            onExpandedChange={(exp) => setColExpanded((prev) => ({ ...prev, [focusedCol]: exp }))}
           />
         </div>
       ) : (
@@ -288,6 +292,8 @@ export function ColumnsEditor({ block, onChange, locked, blocksConfig = [] }: Co
                 onChange={(newBlocks) => updateColumn(colIdx, newBlocks as Record<string, unknown>[])}
                 locked={locked}
                 blocksConfig={nestedBlocksConfig}
+                expandedState={colExpanded[colIdx] ?? {}}
+                onExpandedChange={(exp) => setColExpanded((prev) => ({ ...prev, [colIdx]: exp }))}
               />
             </div>
           ))}
