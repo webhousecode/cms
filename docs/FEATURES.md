@@ -67,6 +67,7 @@
 | F48 | [Internationalization (i18n)](#f48-internationalization-i18n) | Planned | [docs/features/F48-i18n.md](features/F48-i18n.md) |
 | F49 | [Incremental Builds](#f49-incremental-builds) | Planned | [docs/features/F49-incremental-builds.md](features/F49-incremental-builds.md) |
 | F50 | [Sign In Providers](#f50-sign-in-providers) | Planned | [docs/features/F50-sign-in-providers.md](features/F50-sign-in-providers.md) |
+| F51 | [Admin AI Assistant](#f51-admin-ai-assistant) | Planned | [docs/features/F51-admin-ai-assistant.md](features/F51-admin-ai-assistant.md) |
 
 ---
 
@@ -219,3 +220,6 @@ Checksum-based change detection for `cms build`. SHA-256 hashes of document cont
 
 ## F50 — Sign In Providers
 Multiple OAuth authentication providers with account linking. Extends F26 (GitHub OAuth) to a generic provider registry supporting Google, Discord, Apple, and Azure AD/Entra ID. Provider buttons on login page, enable/disable per provider in Site Settings → Auth tab. Account linking merges multiple OAuth providers to one user via email matching. Enterprise SSO via Azure AD tenant configuration.
+
+## F51 — Admin AI Assistant
+Persistent AI chat panel in the CMS admin — like Supabase's AI assistant. Accessible from every page via sidebar toggle or Cmd+I. Full context of site, collections, documents, and current page. Executes actions via existing MCP tools (create/update/publish content, search, generate). Streaming responses with tool execution audit trail. Context-aware suggestions adapt to current page. Conversation history per user. Confirmation required for destructive actions.

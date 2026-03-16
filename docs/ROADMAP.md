@@ -70,6 +70,7 @@ _Makes us stand out. Customers expect these from a modern CMS._
 | 17 | **F40 Drag and Drop Tabs** | Small | Polish. Expected UX in a tabbed interface. |
 | 18 | **F04 MCP Enhancements** | Small | Already in progress. More tools, better context. |
 | 19 | **F49 Incremental Builds** | Small | Performance. Only matters at scale (100+ pages). |
+| 20 | **F51 Admin AI Assistant** | Medium | Persistent AI chat in admin. Executes MCP tools. Huge differentiator. |
 
 ### Tier 3 — Differentiation (v1.3+)
 
