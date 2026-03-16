@@ -36,6 +36,7 @@ export function ColumnsEditor({ block, onChange, locked, blocksConfig = [] }: Co
 
   const colCount = getColumnCount(layout);
   const [focusedCol, setFocusedCol] = useState<number | null>(null);
+  const [pendingLayout, setPendingLayout] = useState<string | null>(null);
 
   // Ensure columns array matches layout count
   const normalizedColumns: Record<string, unknown>[][] = [];
@@ -45,25 +46,54 @@ export function ColumnsEditor({ block, onChange, locked, blocksConfig = [] }: Co
 
   // Close on Escape
   useEffect(() => {
-    if (focusedCol === null) return;
+    if (focusedCol === null && pendingLayout === null) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setFocusedCol(null);
+      if (e.key === "Escape") {
+        setFocusedCol(null);
+        setPendingLayout(null);
+      }
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [focusedCol]);
+  }, [focusedCol, pendingLayout]);
 
-  function updateLayout(newLayout: string) {
+  function applyLayout(newLayout: string) {
     const newColCount = getColumnCount(newLayout);
     const newColumns: Record<string, unknown>[][] = [];
     for (let i = 0; i < newColCount; i++) {
       newColumns.push(columns[i] ?? []);
     }
     onChange({ ...block, layout: newLayout, columns: newColumns });
-    // If focused column no longer exists, close focus
     if (focusedCol !== null && focusedCol >= newColCount) {
       setFocusedCol(null);
     }
+    setPendingLayout(null);
+  }
+
+  function requestLayout(newLayout: string) {
+    if (newLayout === layout) return;
+    const newColCount = getColumnCount(newLayout);
+    // Check if any columns with content would be removed
+    const willLoseContent = columns
+      .slice(newColCount)
+      .some((col) => Array.isArray(col) && col.length > 0);
+    if (willLoseContent) {
+      setPendingLayout(newLayout);
+    } else {
+      applyLayout(newLayout);
+    }
+  }
+
+  /** Which column numbers (1-based) will lose content */
+  function droppedColumnsWithContent(newLayout: string): number[] {
+    const newColCount = getColumnCount(newLayout);
+    const dropped: number[] = [];
+    for (let i = newColCount; i < columns.length; i++) {
+      if (Array.isArray(columns[i]) && columns[i].length > 0) {
+        dropped.push(i + 1);
+      }
+    }
+    return dropped;
   }
 
   function updateColumn(colIndex: number, newBlocks: Record<string, unknown>[]) {
@@ -79,28 +109,51 @@ export function ColumnsEditor({ block, onChange, locked, blocksConfig = [] }: Co
     <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", position: "relative" }}>
       {/* Layout selector */}
       {!locked && (
-        <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap" }}>
-          {LAYOUT_PRESETS.map((preset) => (
-            <button
-              key={preset.value}
-              type="button"
-              onClick={() => updateLayout(preset.value)}
-              style={{
-                padding: "0.25rem 0.6rem",
-                fontSize: "0.7rem",
-                fontWeight: layout === preset.value ? 600 : 400,
-                borderRadius: "4px",
-                border: `1px solid ${layout === preset.value ? "var(--primary)" : "var(--border)"}`,
-                background: layout === preset.value ? "var(--primary)" : "transparent",
-                color: layout === preset.value ? "var(--primary-foreground)" : "var(--muted-foreground)",
-                cursor: "pointer",
-                whiteSpace: "nowrap",
-              }}
-              className={layout === preset.value ? "" : "hover:border-primary transition-colors"}
-            >
-              {preset.label}
-            </button>
-          ))}
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+          <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap" }}>
+            {LAYOUT_PRESETS.map((preset) => (
+              <button
+                key={preset.value}
+                type="button"
+                onClick={() => requestLayout(preset.value)}
+                style={{
+                  padding: "0.25rem 0.6rem",
+                  fontSize: "0.7rem",
+                  fontWeight: layout === preset.value ? 600 : 400,
+                  borderRadius: "4px",
+                  border: `1px solid ${layout === preset.value ? "var(--primary)" : "var(--border)"}`,
+                  background: layout === preset.value ? "var(--primary)" : "transparent",
+                  color: layout === preset.value ? "var(--primary-foreground)" : "var(--muted-foreground)",
+                  cursor: "pointer",
+                  whiteSpace: "nowrap",
+                }}
+                className={layout === preset.value ? "" : "hover:border-primary transition-colors"}
+              >
+                {preset.label}
+              </button>
+            ))}
+          </div>
+          {/* Warning when layout change would remove columns with content */}
+          {pendingLayout && (
+            <div style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "0.4rem",
+              padding: "0.3rem 0.6rem",
+              borderRadius: "4px",
+              background: "var(--destructive)/10",
+              border: "1px solid var(--destructive)",
+              fontSize: "0.7rem",
+            }}>
+              <span style={{ color: "var(--destructive)", fontWeight: 500 }}>
+                Column {droppedColumnsWithContent(pendingLayout).join(", ")} content will be removed.
+              </span>
+              <button type="button" onClick={() => applyLayout(pendingLayout)}
+                style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>OK</button>
+              <button type="button" onClick={() => setPendingLayout(null)}
+                style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>Cancel</button>
+            </div>
+          )}
         </div>
       )}
 
