@@ -1045,24 +1045,38 @@ const InteractiveEmbed = TipTapNode.create({
     return {
       markdown: {
         serialize(state: { write: (s: string) => void; closeBlock: (node: unknown) => void }, node: { attrs: Record<string, unknown> }) {
-          const parts = [node.attrs.interactiveId, node.attrs.title || ''];
-          if (node.attrs.align) parts.push(`align:${node.attrs.align}`);
+          const parts = [node.attrs.interactiveId];
+          if (node.attrs.title) parts.push(node.attrs.title);
+          else parts.push('');
+          if (node.attrs.align && node.attrs.align !== 'center') parts.push(`align:${node.attrs.align}`);
           if (node.attrs.width) parts.push(`width:${node.attrs.width}`);
           state.write(`!!INTERACTIVE[${parts.join('|')}]`);
           state.closeBlock(node);
         },
         parse: {
           updateDOM(dom: Element) {
-            // Find !!INTERACTIVE[id|title] text nodes and convert to div elements
+            // Find !!INTERACTIVE[id|title|align:x|width:y] text nodes and convert to div elements
             const walker = document.createTreeWalker(dom, NodeFilter.SHOW_TEXT);
             const nodes: Text[] = [];
             while (walker.nextNode()) nodes.push(walker.currentNode as Text);
             for (const t of nodes) {
-              const m = t.textContent?.match(/^!!INTERACTIVE\[([^|]+)\|?(.*?)\]$/);
+              const m = t.textContent?.match(/^!!INTERACTIVE\[([^\]]+)\]$/);
               if (m) {
+                const parts = m[1].split("|");
+                const id = parts[0];
+                let title = "";
+                let align = "";
+                let width = "";
+                for (let i = 1; i < parts.length; i++) {
+                  if (parts[i].startsWith("align:")) align = parts[i].slice(6);
+                  else if (parts[i].startsWith("width:")) width = parts[i].slice(6);
+                  else if (!title) title = parts[i];
+                }
                 const div = document.createElement("div");
-                div.setAttribute("data-interactive-embed", m[1]);
-                div.setAttribute("data-interactive-title", m[2] || "");
+                div.setAttribute("data-interactive-embed", id);
+                if (title) div.setAttribute("data-interactive-title", title);
+                if (align) div.setAttribute("data-interactive-align", align);
+                if (width) div.setAttribute("data-interactive-width", width);
                 t.parentNode?.replaceChild(div, t);
               }
             }
