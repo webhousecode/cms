@@ -15,7 +15,8 @@ export type FieldType =
   | 'image-gallery'
   | 'video'
   | 'audio'
-  | 'htmldoc';
+  | 'htmldoc'
+  | 'column-slots';
 
 export interface FieldConfig {
   name: string;

@@ -1,4 +1,5 @@
 import { getAdminCms, getAdminConfig } from "@/lib/cms";
+import { builtinBlocks } from "@webhouse/cms";
 import { notFound } from "next/navigation";
 import { DocumentEditor } from "@/components/editor/document-editor";
 import { TabTitle } from "@/lib/tabs-context";
@@ -39,7 +40,7 @@ export default async function DocumentPage({ params, searchParams }: Props) {
       <DocumentEditor
         collection={collection}
         colConfig={colConfig}
-        blocksConfig={config.blocks ?? []}
+        blocksConfig={[...builtinBlocks, ...(config.blocks ?? [])]}
         locales={config.locales ?? []}
         defaultLocale={config.defaultLocale ?? "en"}
         initialDoc={{

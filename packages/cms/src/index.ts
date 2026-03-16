@@ -2,6 +2,7 @@
 export { defineConfig, defineCollection, defineBlock, defineField } from './schema/define.js';
 export { validateConfig, safeValidateConfig } from './schema/validate.js';
 export { collectionToJsonSchema, configToManifest } from './schema/introspect.js';
+export { builtinBlocks } from './schema/builtin-blocks.js';
 export type { CmsConfig, CollectionConfig, FieldConfig, BlockConfig, FieldType, BuildConfig, AutolinkConfig } from './schema/types.js';
 
 // Storage

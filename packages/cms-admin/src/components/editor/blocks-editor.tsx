@@ -2,6 +2,7 @@
 
 import type { FieldConfig, BlockConfig } from "@webhouse/cms";
 import { FieldEditor } from "./field-editor";
+import { ColumnsEditor } from "./columns-editor";
 import { ChevronDown, ChevronRight, Trash2, ArrowUp, ArrowDown, Plus } from "lucide-react";
 import { useState, useRef } from "react";
 
@@ -71,7 +72,11 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
   function addBlock(blockName: string) {
     const config = getConfig(blockName);
     const empty: Record<string, unknown> = { _block: blockName };
-    if (config) {
+    if (blockName === "columns") {
+      // Initialize columns block with default layout and 2 empty columns
+      empty.layout = "1-1";
+      empty.columns = [[], []];
+    } else if (config) {
       for (const f of config.fields) {
         if (f.type === "boolean") empty[f.name] = false;
         else if (f.type === "array" || f.type === "blocks") empty[f.name] = [];
@@ -167,25 +172,39 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
             {/* Fields */}
             {isOpen && (
               <div style={{ padding: "0.75rem", display: "flex", flexDirection: "column", gap: "0.75rem", borderTop: "1px solid var(--border)" }}>
-                {fields.length === 0 && (
-                  <div style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>
-                    No block definition found for &ldquo;{blockType}&rdquo;
-                  </div>
+                {blockType === "columns" ? (
+                  <ColumnsEditor
+                    block={block}
+                    onChange={(updated) => {
+                      const next = blocks.map((b, j) => (j === i ? updated : b));
+                      onChange(next);
+                    }}
+                    locked={locked}
+                    blocksConfig={blocksConfig}
+                  />
+                ) : (
+                  <>
+                    {fields.length === 0 && (
+                      <div style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>
+                        No block definition found for &ldquo;{blockType}&rdquo;
+                      </div>
+                    )}
+                    {fields.map((f) => (
+                      <div key={f.name}>
+                        <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 500, marginBottom: "0.25rem", color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                          {f.label ?? f.name}
+                        </label>
+                        <FieldEditor
+                          field={f}
+                          value={block[f.name]}
+                          onChange={(val) => updateBlockField(i, f.name, val)}
+                          locked={locked}
+                          blocksConfig={blocksConfig}
+                        />
+                      </div>
+                    ))}
+                  </>
                 )}
-                {fields.map((f) => (
-                  <div key={f.name}>
-                    <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 500, marginBottom: "0.25rem", color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                      {f.label ?? f.name}
-                    </label>
-                    <FieldEditor
-                      field={f}
-                      value={block[f.name]}
-                      onChange={(val) => updateBlockField(i, f.name, val)}
-                      locked={locked}
-                      blocksConfig={blocksConfig}
-                    />
-                  </div>
-                ))}
               </div>
             )}
           </div>
