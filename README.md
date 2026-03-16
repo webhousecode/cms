@@ -22,7 +22,7 @@ cd my-site
 bash start.sh
 ```
 
-That's it. Claude Code or other AI platforms reads your schema, builds a Next.js site, and you manage content through the admin UI.
+That's it. Claude Code or other AI platforms reads your schema, builds a Next.js site or through other frameworks, and you manage content through the admin UI.
 
 <p align="center">
   <img src="docs/screenshots/dashboard.png" alt="Dashboard" width="800" />
