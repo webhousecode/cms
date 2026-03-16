@@ -42,7 +42,7 @@
 
 ---
 
-## Feature roadmap (37 features)
+## Feature roadmap (48 features)
 
 Full feature list with individual plan docs in [FEATURES.md](FEATURES.md) and [docs/features/](features/).
 
@@ -87,9 +87,15 @@ Full feature list with individual plan docs in [FEATURES.md](FEATURES.md) and [d
 | F37 | HTML Document Field (`htmldoc`) — iframe preview, visual edit, AI edit, code view | Planned |
 | F38 | Environment Manager — Dev/Staging/Prod switcher, dev server spawning, port scanning | Planned |
 | F40 | Drag and Drop Tab Reordering — reorder open tabs via drag, @dnd-kit/sortable | Planned |
-| F41 | GitHub Site Auto-Sync & Webhook Revalidation — dev auto-pull, production revalidation, scaffolded endpoint | Planned |
+| F41 | GitHub Site Auto-Sync & Webhook Revalidation — dev auto-pull, production revalidation, scaffolded endpoint | Done |
 | F42 | Framework Boilerplates — production-ready Next.js starter template, AI-cloneable, react-markdown, blocks, dark mode, revalidation | Planned |
 | F43 | Persist User State — open tabs, sidebar, zoom, searches stored per-user on server, survives browser clears | Planned |
+| F44 | Media Processing Pipeline — Sharp image processing, WebP/AVIF, srcset, SVG optimization, audio waveforms | Planned |
+| F45 | AI Image Generation — text-to-image in Media Manager and editor, Flux/DALL-E providers, img2img | Planned |
+| F46 | Plugin System — `cms.registerPlugin()`, lifecycle, content/build/AI hooks, custom fields and blocks | Planned |
+| F47 | Content Scheduling — publishAt/unpublishAt, scheduler daemon, date pickers, calendar view | Planned |
+| F48 | Internationalization (i18n) — side-by-side translation editor, AI translation, locale routing helpers | Planned |
+| F49 | Incremental Builds — checksum change detection, dependency graph, build cache, `--force` flag | Planned |
 
 ---
 
