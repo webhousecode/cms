@@ -5,7 +5,7 @@ import { CustomSelect } from "@/components/ui/custom-select";
 import { useRouter } from "next/navigation";
 import type { CollectionConfig, BlockConfig } from "@webhouse/cms";
 import { FieldEditor } from "./field-editor";
-import { Save, Globe, FileText, Trash2, ArrowLeft, Lock, LockOpen, Copy, Clock, History, Eye, Languages, Sparkles, Settings2, Wand2 } from "lucide-react";
+import { Save, Globe, FileText, Trash2, ArrowLeft, Lock, LockOpen, Copy, Clock, History, Eye, Languages, Sparkles, Settings2, Wand2, ChevronDown, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { formatDate, cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -56,6 +56,82 @@ function ConfirmDialog({ message, confirmLabel = "Delete", onConfirm, onCancel }
           }}>{confirmLabel}</button>
         </div>
       </div>
+    </div>
+  );
+}
+
+/* ─── Collapsible richtext field (TEXT badge, like blocks) ──── */
+function RichtextCollapsible({ field, value, onChange, locked, blocksConfig, defaultOpen, storageKey, collection, slug, fieldMeta, onToggleLock }: {
+  field: import("@webhouse/cms").FieldConfig;
+  value: unknown;
+  onChange: (val: unknown) => void;
+  locked: boolean;
+  blocksConfig: import("@webhouse/cms").BlockConfig[];
+  defaultOpen: boolean;
+  storageKey: string;
+  collection: string;
+  slug: string;
+  fieldMeta?: Record<string, unknown>;
+  onToggleLock: () => void;
+}) {
+  const [open, setOpen] = useState(defaultOpen);
+
+  function toggle() {
+    const next = !open;
+    setOpen(next);
+    try { localStorage.setItem(storageKey, next ? "1" : "0"); } catch {}
+  }
+
+  // Preview text for collapsed state
+  const strVal = String(value ?? "");
+  const preview = strVal.replace(/[#*_`>\[\]!]/g, "").trim();
+  const previewShort = preview.length > 80 ? preview.slice(0, 80) + "…" : preview;
+
+  return (
+    <div style={{ border: "1px solid var(--border)", borderRadius: "8px", background: "var(--card)" }}>
+      {/* Header */}
+      <div
+        onClick={toggle}
+        style={{
+          display: "flex", alignItems: "center", gap: "0.5rem",
+          padding: "0.5rem 0.75rem", cursor: "pointer", userSelect: "none",
+          background: open ? "var(--accent)" : "transparent",
+          borderRadius: open ? "7px 7px 0 0" : "7px",
+        }}
+      >
+        {open ? <ChevronDown style={{ width: 14, height: 14, flexShrink: 0 }} /> : <ChevronRight style={{ width: 14, height: 14, flexShrink: 0 }} />}
+        <span style={{
+          fontSize: "0.65rem", fontWeight: 600, textTransform: "uppercase",
+          letterSpacing: "0.05em", padding: "0.1rem 0.4rem", borderRadius: "4px",
+          background: "var(--primary)", color: "var(--primary-foreground)", flexShrink: 0,
+        }}>Text</span>
+        <span style={{ flex: 1, fontSize: "0.85rem", color: "var(--muted-foreground)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          {open ? (field.label ?? field.name) : (previewShort || (field.label ?? field.name))}
+        </span>
+        {/* Lock button */}
+        <span onClick={(e) => { e.stopPropagation(); onToggleLock(); }} style={{
+          display: "flex", alignItems: "center", gap: "0.2rem",
+          fontSize: "0.65rem", color: locked ? "var(--primary)" : "var(--muted-foreground)",
+          opacity: locked ? 1 : 0.45, cursor: "pointer", fontFamily: "monospace",
+        }}>
+          {locked
+            ? <><Lock style={{ width: "0.7rem", height: "0.7rem" }} /> Lock</>
+            : <><LockOpen style={{ width: "0.7rem", height: "0.7rem" }} /> Lock</>
+          }
+        </span>
+      </div>
+      {/* Body */}
+      {open && (
+        <div style={{ padding: "0.75rem", borderTop: "1px solid var(--border)" }}>
+          <FieldEditor
+            field={field}
+            value={value}
+            onChange={onChange}
+            locked={locked}
+            blocksConfig={blocksConfig}
+          />
+        </div>
+      )}
     </div>
   );
 }
@@ -1063,6 +1139,38 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
               doc.data["_fieldMeta"] as Record<string, unknown> | undefined
             )?.[field.name];
             const isReadTime = /^read.?time$/i.test(field.name);
+
+            // Richtext fields get a collapsible TEXT header (like blocks)
+            if (field.type === "richtext") {
+              const rtKey = `cms-rt-open:${collection}:${doc.slug}:${field.name}`;
+              const isRtOpen = (() => {
+                if (typeof window === "undefined") return true;
+                try { const s = localStorage.getItem(rtKey); return s === null ? true : s === "1"; } catch { return true; }
+              })();
+              return (
+                <RichtextCollapsible
+                  key={field.name}
+                  field={field}
+                  value={doc.data[field.name]}
+                  onChange={(val) => updateField(field.name, val)}
+                  locked={isLocked}
+                  blocksConfig={blocksConfig}
+                  defaultOpen={isRtOpen}
+                  storageKey={rtKey}
+                  collection={collection}
+                  slug={doc.slug}
+                  fieldMeta={doc.data["_fieldMeta"] as Record<string, unknown> | undefined}
+                  onToggleLock={() => {
+                    const currentMeta = (doc.data["_fieldMeta"] as Record<string, unknown> | undefined) ?? {};
+                    const newMeta = { ...currentMeta };
+                    if (isLocked) { delete newMeta[field.name]; } else { newMeta[field.name] = { lockedBy: "user", lockedAt: new Date().toISOString() }; }
+                    updateField("_fieldMeta", newMeta);
+                    fetch(`/api/cms/${collection}/${doc.slug}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ data: { _fieldMeta: newMeta } }) }).catch(() => {});
+                  }}
+                />
+              );
+            }
+
             return (
               <div key={field.name} className="space-y-2">
                 <div className="flex items-center gap-2">

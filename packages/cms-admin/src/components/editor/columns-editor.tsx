@@ -148,18 +148,6 @@ export function ColumnsEditor({ block, onChange, locked, blocksConfig = [] }: Co
       {!locked && (
         <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
           <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap", alignItems: "center" }}>
-            {/* Open all / Close all for columns */}
-            {totalBlocks >= 2 && (
-              <div style={{ display: "flex", gap: "0.25rem", marginRight: "auto" }}>
-                <button type="button" onClick={() => toggleAllColumns(true)} disabled={allOpen}
-                  style={{ background: "none", border: "none", cursor: allOpen ? "default" : "pointer", fontSize: "0.6rem", color: "var(--muted-foreground)", opacity: allOpen ? 0.4 : 1, padding: "0.1rem 0.3rem" }}
-                  className={allOpen ? "" : "hover:text-foreground transition-colors"}>Open all</button>
-                <span style={{ fontSize: "0.6rem", color: "var(--muted-foreground)", opacity: 0.3 }}>|</span>
-                <button type="button" onClick={() => toggleAllColumns(false)} disabled={allClosed}
-                  style={{ background: "none", border: "none", cursor: allClosed ? "default" : "pointer", fontSize: "0.6rem", color: "var(--muted-foreground)", opacity: allClosed ? 0.4 : 1, padding: "0.1rem 0.3rem" }}
-                  className={allClosed ? "" : "hover:text-foreground transition-colors"}>Close all</button>
-              </div>
-            )}
             {LAYOUT_PRESETS.map((preset) => (
               <button
                 key={preset.value}
@@ -181,6 +169,18 @@ export function ColumnsEditor({ block, onChange, locked, blocksConfig = [] }: Co
                 {preset.label}
               </button>
             ))}
+            {/* Open all / Close all — right-aligned */}
+            {totalBlocks >= 2 && (
+              <div style={{ display: "flex", gap: "0.25rem", marginLeft: "auto" }}>
+                <button type="button" onClick={() => toggleAllColumns(true)} disabled={allOpen}
+                  style={{ background: "none", border: "none", cursor: allOpen ? "default" : "pointer", fontSize: "0.6rem", color: "var(--muted-foreground)", opacity: allOpen ? 0.4 : 1, padding: "0.1rem 0.3rem" }}
+                  className={allOpen ? "" : "hover:text-foreground transition-colors"}>Open all</button>
+                <span style={{ fontSize: "0.6rem", color: "var(--muted-foreground)", opacity: 0.3 }}>|</span>
+                <button type="button" onClick={() => toggleAllColumns(false)} disabled={allClosed}
+                  style={{ background: "none", border: "none", cursor: allClosed ? "default" : "pointer", fontSize: "0.6rem", color: "var(--muted-foreground)", opacity: allClosed ? 0.4 : 1, padding: "0.1rem 0.3rem" }}
+                  className={allClosed ? "" : "hover:text-foreground transition-colors"}>Close all</button>
+              </div>
+            )}
           </div>
           {/* Warning when layout change would remove columns with content */}
           {pendingLayout && (
