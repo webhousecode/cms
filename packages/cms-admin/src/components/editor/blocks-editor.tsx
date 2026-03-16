@@ -336,11 +336,12 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
                     className="hover:bg-accent"
                   >
                     <span style={{
-                      fontSize: "0.6rem",
+                      fontSize: "0.65rem",
                       fontWeight: 600,
                       textTransform: "uppercase",
-                      padding: "0.05rem 0.3rem",
-                      borderRadius: "3px",
+                      letterSpacing: "0.05em",
+                      padding: "0.1rem 0.4rem",
+                      borderRadius: "4px",
                       background: "var(--primary)",
                       color: "var(--primary-foreground)",
                     }}>
