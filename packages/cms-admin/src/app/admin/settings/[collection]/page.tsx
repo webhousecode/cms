@@ -39,8 +39,8 @@ export default async function EditCollectionPage({ params }: Props) {
   return (
     <>
       <PageHeader>
-        <Link href="/admin/settings" className="text-muted-foreground hover:text-foreground transition-colors"><ArrowLeft className="w-4 h-4" /></Link>
-        <span className="text-sm text-muted-foreground font-mono">settings / schema / {col.name}</span>
+        <Link href={`/admin/${col.name}`} className="text-muted-foreground hover:text-foreground transition-colors"><ArrowLeft className="w-4 h-4" /></Link>
+        <span className="text-sm text-muted-foreground font-mono">{col.label ?? col.name} / schema</span>
       </PageHeader>
       <div className="p-8 max-w-3xl">
         <CollectionSchemaEditor
