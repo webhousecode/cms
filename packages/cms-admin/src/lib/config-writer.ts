@@ -62,10 +62,24 @@ export function writeConfigCollections(
     }
   }
 
+  // Preserve blocks section from original file if present
+  let blocksSection = '';
+  const blocksMatch = original.match(/(  blocks:\s*\[[\s\S]*?\n  \]),?/);
+  if (blocksMatch) {
+    blocksSection = blocksMatch[1];
+  }
+
+  // Check if original uses defineBlock
+  const usesDefineBlock = original.includes('defineBlock');
+  const importLine = usesDefineBlock
+    ? `import { defineConfig, defineCollection, defineBlock } from '@webhouse/cms';`
+    : `import { defineConfig, defineCollection } from '@webhouse/cms';`;
+
   const content = [
-    `import { defineConfig, defineCollection } from '@webhouse/cms';`,
+    importLine,
     ``,
     `export default defineConfig({`,
+    ...(blocksSection ? [blocksSection] : []),
     ...(autolinksSection ? [autolinksSection.trimEnd()] : []),
     `  collections: [`,
     collections.map(serializeCollection).join(',\n'),
