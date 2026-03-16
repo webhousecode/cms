@@ -28,7 +28,8 @@ function getBlockLabel(block: Record<string, unknown>, config: BlockConfig | und
 
 export function BlocksEditor({ field, value, onChange, locked, blocksConfig = [] }: Props) {
   const blocks = Array.isArray(value) ? value : [];
-  const allowedBlockNames = field.blocks ?? blocksConfig.map((b) => b.name);
+  const baseNames = field.blocks ?? blocksConfig.map((b) => b.name);
+  const allowedBlockNames = baseNames.includes("columns") ? baseNames : [...baseNames, "columns"];
   const [expanded, setExpanded] = useState<Record<number, boolean>>({});
   const [showPicker, setShowPicker] = useState(false);
   const [confirmRemoveIdx, setConfirmRemoveIdx] = useState<number | null>(null);
