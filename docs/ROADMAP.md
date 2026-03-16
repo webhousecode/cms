@@ -30,7 +30,7 @@
 | 22 | **Supabase storage adapter** — full StorageAdapter impl with dynamic import | 2026-03-15 |
 | 23 | **Screenshot agent** — Playwright, 24 surfaces, dynamic collections, JWT auth | 2026-03-15 |
 | 24 | **Framework adapters** — `@webhouse/cms/adapters` with getCollection/getDocument | 2026-03-15 |
-| F41 | **Content push revalidation** — HMAC webhook, content push to disk, LiveRefresh SSE | 2026-03-16 |
+| 25 | **Content push revalidation** — HMAC webhook, content push to disk, LiveRefresh SSE (F41) | 2026-03-16 |
 
 ---
 
@@ -94,8 +94,9 @@ _Unique selling points and advanced features._
 
 | Priority | Feature | Size | Category |
 |----------|---------|------|----------|
-| 32 | **F34 Multi-Tenancy** | Large | In progress. Full isolation, billing, quotas. |
-| 33 | **F19 Enterprise** | Large | RBAC, audit log, SSO, A/B testing, approval workflows |
+| 32 | **F50 Sign In Providers** | Medium | Google, Discord, Apple, Azure AD OAuth. Account linking. |
+| 33 | **F34 Multi-Tenancy** | Large | In progress. Full isolation, billing, quotas. |
+| 34 | **F19 Enterprise** | Large | RBAC, audit log, SSO, A/B testing, approval workflows |
 | 34 | **F10 AI Learning Loop** | Medium | AI improves from editor feedback |
 | 35 | **F11 Multi-Model AI** | Small | Use different models for different tasks |
 | 36 | **F33 PWA Support** | Small | Offline CMS admin |
