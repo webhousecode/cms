@@ -1016,10 +1016,16 @@ function InteractiveNodeView({ node, deleteNode, updateAttributes, selected }: N
   };
 
   const effectiveWidth = width || "100%";
+  const currentAlign = align || "center";
+  const wrapperStyle: React.CSSProperties = currentAlign === "left"
+    ? { float: "left", width: effectiveWidth, margin: "0.75rem 1.5rem 0.75rem 0" }
+    : currentAlign === "right"
+    ? { float: "right", width: effectiveWidth, margin: "0.75rem 0 0.75rem 1.5rem" }
+    : { display: "flex", justifyContent: "center", margin: "0.75rem 0", clear: "both" };
 
   if (!interactiveId) {
     return (
-      <NodeViewWrapper draggable contentEditable={false} style={{ display: "flex", justifyContent: "center", margin: "0.75rem 0", position: "relative" }}>
+      <NodeViewWrapper draggable contentEditable={false} style={{ ...wrapperStyle, position: "relative" }}>
         <DragHandle />
         <div style={{
           width: "100%", maxWidth: "700px", padding: "2rem", textAlign: "center",
@@ -1033,10 +1039,10 @@ function InteractiveNodeView({ node, deleteNode, updateAttributes, selected }: N
   }
 
   return (
-    <NodeViewWrapper draggable contentEditable={false} style={{ display: "flex", justifyContent: "center", margin: "0.75rem 0", position: "relative" }}>
+    <NodeViewWrapper draggable contentEditable={false} style={{ ...wrapperStyle, position: "relative" }}>
       <DragHandle />
       <div ref={containerRef} style={{
-        width: effectiveWidth, maxWidth: "700px", borderRadius: "8px",
+        width: (currentAlign === "left" || currentAlign === "right") ? "100%" : effectiveWidth, maxWidth: "700px", borderRadius: "8px",
         border: selected ? "2px solid #F7BB2E" : "1px solid #F7BB2E55",
         backgroundColor: "var(--card)", overflow: "hidden", position: "relative",
         transition: "border-color 150ms",
@@ -1144,10 +1150,13 @@ const InteractiveEmbed = TipTapNode.create({
         parse: {
           updateDOM(dom: Element) {
             // Convert <p>!!INTERACTIVE[id|title|width:x|height:y]</p> → <div data-interactive-embed>
+            console.log("[INT updateDOM] called, dom paragraphs:", dom.querySelectorAll("p").length);
             dom.querySelectorAll("p").forEach((p) => {
               const text = (p.textContent ?? "").trim();
+              if (text.startsWith("!!INTERACTIVE")) console.log("[INT updateDOM] found p:", JSON.stringify(text));
               const m = text.match(/^!!INTERACTIVE\[([^\]]+)\]$/);
               if (!m) return;
+              console.log("[INT updateDOM] MATCHED:", m[1]);
               const parts = m[1].split("|");
               const id = parts[0];
               let title = "";
@@ -1438,42 +1447,49 @@ function FileNodeView({ node, updateAttributes, deleteNode, selected }: NodeView
     );
   }
 
-  const btnSm: React.CSSProperties = { fontSize: "0.7rem", padding: "0.15rem 0.4rem", borderRadius: "3px", border: "1px solid var(--border)", cursor: "pointer", background: "transparent", color: "var(--foreground)", lineHeight: 1 };
-
   return (
     <NodeViewWrapper draggable contentEditable={false} style={{ margin: "0.75rem 0", position: "relative" }}>
       <DragHandle />
       <div style={{
-        display: "inline-flex", alignItems: "center", gap: "0.75rem",
-        padding: "0.75rem 1rem", borderRadius: "8px",
-        border: del.confirming ? "2px solid var(--destructive)" : selected ? "2px solid var(--primary)" : "1px solid var(--border)",
-        backgroundColor: "var(--card)", maxWidth: "100%", position: "relative",
+        display: "inline-flex", flexDirection: "column", borderRadius: "8px",
+        border: selected ? "2px solid var(--primary)" : "1px solid var(--border)",
+        backgroundColor: "var(--card)", maxWidth: "100%", overflow: "hidden",
         transition: "border-color 150ms",
       }}>
-        {del.confirming ? (
-          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-            <span style={{ fontSize: "0.8rem", color: "var(--destructive)", fontWeight: 600 }}>Remove file?</span>
-            <button type="button" onMouseDown={(e) => { e.preventDefault(); del.confirm(); }} style={{ ...btnSm, background: "var(--destructive)", color: "#fff", border: "none" }}>Confirm</button>
-            <button type="button" onMouseDown={(e) => { e.preventDefault(); del.cancel(); }} style={btnSm}>Cancel</button>
+        {/* File info area */}
+        <div style={{
+          display: "flex", alignItems: "center", gap: "0.75rem",
+          padding: "0.625rem 0.875rem",
+        }}>
+          <span style={{ color: "var(--muted-foreground)", flexShrink: 0 }}><IconFile /></span>
+          <div style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
+            <p style={{ fontSize: "0.85rem", fontWeight: 500, color: "var(--foreground)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", margin: 0 }}>{filename}</p>
+            {size && <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: 0 }}>{size}</p>}
           </div>
-        ) : (
-          <>
-            <span style={{ color: "var(--muted-foreground)", flexShrink: 0 }}><IconFile /></span>
-            <div style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
-              <p style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--foreground)", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", margin: 0 }}>{filename}</p>
-              {size && <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", margin: 0 }}>{size}</p>}
-            </div>
-            <a href={src} download={filename} target="_blank" rel="noopener noreferrer"
-              onMouseDown={(e) => e.stopPropagation()}
-              style={{ color: "var(--muted-foreground)", flexShrink: 0, display: "flex", alignItems: "center" }}
-              title="Download">
-              <IconDownload />
-            </a>
+        </div>
+        {/* Footer bar — download + delete (matches Image/Video/Int pattern) */}
+        <div style={{ display: "flex", alignItems: "center", gap: "4px", padding: "0.15rem 0.375rem", borderTop: "1px solid var(--border)", backgroundColor: "var(--muted)" }}>
+          <span style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", padding: "0 4px", opacity: 0.6, flex: 1 }}>File</span>
+          <a href={src} download={filename} target="_blank" rel="noopener noreferrer"
+            onMouseDown={(e) => e.stopPropagation()}
+            style={{ width: "18px", height: "18px", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", flexShrink: 0 }}
+            title="Download">
+            <IconDownload />
+          </a>
+          {del.confirming ? (
+            <>
+              <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
+              <button type="button" onMouseDown={(e) => { e.preventDefault(); del.confirm(); }}
+                style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
+              <button type="button" onMouseDown={(e) => { e.preventDefault(); del.cancel(); }}
+                style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
+            </>
+          ) : (
             <button type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); del.request(); }}
               style={{ width: "18px", height: "18px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: "0.9rem", lineHeight: 1, flexShrink: 0 }}
               title="Remove file">×</button>
-          </>
-        )}
+          )}
+        </div>
       </div>
     </NodeViewWrapper>
   );
@@ -1520,10 +1536,13 @@ const FileAttachment = TipTapNode.create({
         parse: {
           updateDOM(dom: Element) {
             // Convert <p>!!FILE[src|filename|size]</p> → <div data-file-attachment>
+            console.log("[FILE updateDOM] called, paragraphs:", dom.querySelectorAll("p").length);
             dom.querySelectorAll("p").forEach((p) => {
               const text = (p.textContent ?? "").trim();
+              if (text.startsWith("!!FILE")) console.log("[FILE updateDOM] found p:", JSON.stringify(text));
               const m = text.match(/^!!FILE\[([^|]+)\|([^|]*)\|?(.*?)\]$/);
               if (!m) return;
+              console.log("[FILE updateDOM] MATCHED:", m[1]);
               const div = document.createElement("div");
               div.setAttribute("data-file-attachment", m[1]);
               div.setAttribute("data-file-name", m[2] || "");
