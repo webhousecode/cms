@@ -5,7 +5,9 @@ import { getMediaAdapter } from "@/lib/media";
 export async function GET() {
   try {
     const adapter = await getMediaAdapter();
-    const meta = await adapter.listInteractives();
+    const all = await adapter.listInteractives();
+    // Exclude trashed interactives from the list
+    const meta = all.filter((i) => i.status !== "trashed");
     return NextResponse.json(meta);
   } catch (err) {
     console.error("[interactives] list error:", err);

@@ -942,10 +942,22 @@ const AudioEmbed = TipTapNode.create({
 });
 
 /* ─── Interactive embed node + NodeView ─────────────────────── */
-function InteractiveNodeView({ node, deleteNode, selected }: NodeViewProps) {
-  const { interactiveId, title } = node.attrs as { interactiveId: string; title: string };
+function InteractiveNodeView({ node, deleteNode, selected, updateAttributes }: NodeViewProps) {
+  const { interactiveId, title, align, width } = node.attrs as { interactiveId: string; title: string; align: string; width: string };
   const del = useConfirmDelete(deleteNode);
   const btnSm: React.CSSProperties = { fontSize: "0.7rem", padding: "0.15rem 0.4rem", borderRadius: "3px", border: "1px solid var(--border)", cursor: "pointer", background: "transparent", color: "var(--foreground)", lineHeight: 1 };
+  const alignBtn = (a: string): React.CSSProperties => ({
+    fontSize: "0.6rem", padding: "0.1rem 0.3rem", borderRadius: "3px", cursor: "pointer", lineHeight: 1,
+    background: align === a ? "var(--primary)" : "transparent",
+    color: align === a ? "var(--primary-foreground)" : "var(--muted-foreground)",
+    border: align === a ? "none" : "1px solid var(--border)",
+  });
+
+  const containerStyle: React.CSSProperties = align === "left"
+    ? { float: "left", width: width || "50%", margin: "0.5rem 1.25rem 0.5rem 0" }
+    : align === "right"
+    ? { float: "right", width: width || "50%", margin: "0.5rem 0 0.5rem 1.25rem" }
+    : { width: width || "100%", maxWidth: "700px", margin: "0 auto" };
 
   if (!interactiveId) {
     return (
@@ -963,10 +975,10 @@ function InteractiveNodeView({ node, deleteNode, selected }: NodeViewProps) {
   }
 
   return (
-    <NodeViewWrapper draggable contentEditable={false} style={{ display: "flex", justifyContent: "center", margin: "0.75rem 0", position: "relative" }}>
+    <NodeViewWrapper draggable contentEditable={false} style={{ display: "flex", justifyContent: align === "right" ? "flex-end" : align === "left" ? "flex-start" : "center", margin: "0.75rem 0", position: "relative" }}>
       <DragHandle />
       <div style={{
-        width: "100%", maxWidth: "700px", borderRadius: "8px",
+        ...containerStyle, borderRadius: "8px",
         border: del.confirming ? "2px solid var(--destructive)" : selected ? "2px solid #F7BB2E" : "1px solid #F7BB2E55",
         backgroundColor: "var(--card)", overflow: "hidden", position: "relative",
         transition: "border-color 150ms",
@@ -994,6 +1006,27 @@ function InteractiveNodeView({ node, deleteNode, selected }: NodeViewProps) {
           <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", padding: "0 4px", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {title || "Interactive"}
           </span>
+          {/* Alignment controls */}
+          <div style={{ display: "flex", gap: "2px", marginRight: "2px" }}>
+            <button type="button" onMouseDown={(e) => { e.preventDefault(); updateAttributes({ align: "left", width: width || "50%" }); }} style={alignBtn("left")} title="Float left">L</button>
+            <button type="button" onMouseDown={(e) => { e.preventDefault(); updateAttributes({ align: "", width: "" }); }} style={alignBtn("")} title="Center (full width)">C</button>
+            <button type="button" onMouseDown={(e) => { e.preventDefault(); updateAttributes({ align: "right", width: width || "50%" }); }} style={alignBtn("right")} title="Float right">R</button>
+          </div>
+          {/* Width control — only for float */}
+          {(align === "left" || align === "right") && (
+            <select
+              value={width || "50%"}
+              onChange={(e) => updateAttributes({ width: e.target.value })}
+              onMouseDown={(e) => e.stopPropagation()}
+              style={{ fontSize: "0.6rem", padding: "0.1rem 0.2rem", borderRadius: "3px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", cursor: "pointer" }}
+            >
+              <option value="30%">30%</option>
+              <option value="40%">40%</option>
+              <option value="50%">50%</option>
+              <option value="60%">60%</option>
+              <option value="70%">70%</option>
+            </select>
+          )}
           <button type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); del.request(); }}
             style={{ width: "18px", height: "18px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: "0.9rem", lineHeight: 1, flexShrink: 0 }}
             title="Remove interactive">×</button>
@@ -1013,6 +1046,8 @@ const InteractiveEmbed = TipTapNode.create({
     return {
       interactiveId: { default: "" },
       title: { default: "" },
+      align: { default: "" },
+      width: { default: "" },
     };
   },
 
@@ -1020,12 +1055,16 @@ const InteractiveEmbed = TipTapNode.create({
     return [{ tag: "div[data-interactive-embed]", getAttrs: (el) => ({
       interactiveId: (el as Element).getAttribute("data-interactive-embed") ?? "",
       title: (el as Element).getAttribute("data-interactive-title") ?? "",
+      align: (el as Element).getAttribute("data-interactive-align") ?? "",
+      width: (el as Element).getAttribute("data-interactive-width") ?? "",
     }) }];
   },
 
   renderHTML({ node }) {
     const attrs: Record<string, string> = { "data-interactive-embed": node.attrs.interactiveId };
     if (node.attrs.title) attrs["data-interactive-title"] = node.attrs.title;
+    if (node.attrs.align) attrs["data-interactive-align"] = node.attrs.align;
+    if (node.attrs.width) attrs["data-interactive-width"] = node.attrs.width;
     return ["div", attrs];
   },
 
@@ -1033,7 +1072,10 @@ const InteractiveEmbed = TipTapNode.create({
     return {
       markdown: {
         serialize(state: { write: (s: string) => void; closeBlock: (node: unknown) => void }, node: { attrs: Record<string, unknown> }) {
-          state.write(`!!INTERACTIVE[${node.attrs.interactiveId}|${node.attrs.title || ''}]`);
+          const parts = [node.attrs.interactiveId, node.attrs.title || ''];
+          if (node.attrs.align) parts.push(`align:${node.attrs.align}`);
+          if (node.attrs.width) parts.push(`width:${node.attrs.width}`);
+          state.write(`!!INTERACTIVE[${parts.join('|')}]`);
           state.closeBlock(node);
         },
         parse: {
@@ -1841,6 +1883,9 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
   const [mediaBrowserSearch, setMediaBrowserSearch] = useState("");
   const imagePickerRef = useRef<HTMLDivElement>(null);
   const audioPickerRef = useRef<HTMLDivElement>(null);
+  const [showMediaDropdown, setShowMediaDropdown] = useState(false);
+  const [mediaSubMenu, setMediaSubMenu] = useState<"image" | "audio" | null>(null);
+  const mediaDropdownRef = useRef<HTMLDivElement>(null);
   const [imgDelConfirming, setImgDelConfirming] = useState(false);
   const imgDelTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -1921,6 +1966,7 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
       if (linkRef.current && !linkRef.current.contains(e.target as Node)) setLinkOpen(false);
       if (imagePickerRef.current && !imagePickerRef.current.contains(e.target as Node)) setShowImagePicker(false);
       if (audioPickerRef.current && !audioPickerRef.current.contains(e.target as Node)) setShowAudioPicker(false);
+      if (mediaDropdownRef.current && !mediaDropdownRef.current.contains(e.target as Node)) { setShowMediaDropdown(false); setMediaSubMenu(null); }
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -2400,7 +2446,9 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
                 .then(r => r.json())
                 .then((data) => {
                   const items = Array.isArray(data) ? data : (data.interactives ?? []);
-                  setAvailableInteractives(items.map((i: Record<string, string>) => ({ id: i.id, title: i.name || i.title || i.id })));
+                  setAvailableInteractives(items
+                    .filter((i: Record<string, string>) => i.status !== "trashed")
+                    .map((i: Record<string, string>) => ({ id: i.id, title: i.name || i.title || i.id })));
                 })
                 .catch(() => setAvailableInteractives([]))
                 .finally(() => setInteractivesLoading(false));
