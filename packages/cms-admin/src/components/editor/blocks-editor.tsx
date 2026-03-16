@@ -19,11 +19,14 @@ interface Props {
 
 function getBlockLabel(block: Record<string, unknown>, config: BlockConfig | undefined): string {
   if (!config) return String(block._block ?? "Unknown");
-  // Use first text field value if available
+  // Use first text/textarea/richtext field value if available
   for (const f of config.fields) {
-    if ((f.type === "text" || f.type === "textarea") && block[f.name]) {
-      const val = String(block[f.name]);
-      return val.length > 40 ? val.slice(0, 40) + "…" : val;
+    if ((f.type === "text" || f.type === "textarea" || f.type === "richtext") && block[f.name]) {
+      const raw = String(block[f.name]);
+      // Strip markdown syntax for a clean preview
+      const clean = raw.replace(/[#*_`>\[\]!]/g, "").replace(/\n+/g, " ").trim();
+      if (!clean) continue;
+      return clean.length > 80 ? clean.slice(0, 80) + "…" : clean;
     }
   }
   return config.label ?? config.name;
