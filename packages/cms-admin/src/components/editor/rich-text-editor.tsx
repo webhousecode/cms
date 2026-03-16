@@ -29,7 +29,7 @@ import {
   IconHorizontalRule, IconVideo, IconAudio, IconAttachment, IconCallout,
   IconInteractive, IconFile, IconDownload,
 } from "./editor-icons";
-import { Image as LucideImage, Zap } from "lucide-react";
+import { Image as LucideImage, Zap, MessageSquareWarning } from "lucide-react";
 
 interface Props {
   value: string;
@@ -176,19 +176,21 @@ const TextDragDrop = Extension.create({
 });
 
 /* ─── Resizable Image NodeView ─────────────────────────────────── */
-function ImageNodeView({ node, updateAttributes, selected }: NodeViewProps) {
+function ImageNodeView({ node, updateAttributes, deleteNode, selected }: NodeViewProps) {
   const { src, alt, width, align } = node.attrs as {
     src: string; alt: string | null; width: string | null; align: "left" | "center" | "right" | null;
   };
   const imgRef = useRef<HTMLImageElement>(null);
   const startX = useRef(0);
   const startWidth = useRef(0);
+  const del = useConfirmDelete(deleteNode);
 
   const handleResizeMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     startX.current = e.clientX;
-    startWidth.current = imgRef.current?.offsetWidth ?? 300;
+    const origWidth = imgRef.current?.offsetWidth ?? 300;
+    startWidth.current = origWidth;
     const onMouseMove = (ev: MouseEvent) => {
       const newWidth = Math.max(80, startWidth.current + (ev.clientX - startX.current));
       updateAttributes({ width: `${Math.round(newWidth)}px` });
@@ -196,9 +198,17 @@ function ImageNodeView({ node, updateAttributes, selected }: NodeViewProps) {
     const onMouseUp = () => {
       document.removeEventListener("mousemove", onMouseMove);
       document.removeEventListener("mouseup", onMouseUp);
+      document.removeEventListener("keydown", onEsc);
+    };
+    const onEsc = (ev: KeyboardEvent) => {
+      if (ev.key === "Escape") {
+        updateAttributes({ width: origWidth ? `${origWidth}px` : null });
+        onMouseUp();
+      }
     };
     document.addEventListener("mousemove", onMouseMove);
     document.addEventListener("mouseup", onMouseUp);
+    document.addEventListener("keydown", onEsc);
   };
 
   const currentAlign = align ?? "center";
@@ -215,7 +225,7 @@ function ImageNodeView({ node, updateAttributes, selected }: NodeViewProps) {
   return (
     <NodeViewWrapper draggable style={{ ...wrapperStyle, position: "relative" }}>
       <DragHandle />
-      <div style={{ position: "relative", display: "inline-block", maxWidth: "100%" }}>
+      <div style={{ position: "relative", display: "inline-block", maxWidth: "100%", borderRadius: "8px", overflow: "hidden", border: selected ? "2px solid var(--primary)" : "1px solid transparent" }}>
         <img
           ref={imgRef}
           src={src}
@@ -225,17 +235,33 @@ function ImageNodeView({ node, updateAttributes, selected }: NodeViewProps) {
             width: effectiveWidth,
             maxWidth: "100%",
             display: "block",
-            borderRadius: "0.375rem",
-            outline: selected ? "2px solid var(--primary)" : "none",
-            outlineOffset: "2px",
           }}
         />
+        {/* Footer bar — delete (matches Video/Interactive pattern) */}
+        {selected && (
+          <div style={{ display: "flex", alignItems: "center", gap: "4px", padding: "0.15rem 0.375rem", backgroundColor: "var(--muted)", borderTop: "1px solid var(--border)" }}>
+            <span style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", padding: "0 4px", opacity: 0.6, flex: 1 }}>Image</span>
+            {del.confirming ? (
+              <>
+                <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
+                <button type="button" onMouseDown={(e) => { e.preventDefault(); del.confirm(); }}
+                  style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
+                <button type="button" onMouseDown={(e) => { e.preventDefault(); del.cancel(); }}
+                  style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
+              </>
+            ) : (
+              <button type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); del.request(); }}
+                style={{ width: "18px", height: "18px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: "0.9rem", lineHeight: 1, flexShrink: 0 }}
+                title="Remove image">×</button>
+            )}
+          </div>
+        )}
         {selected && (
           <div
-            title="Træk for at ændre størrelse"
+            title="Drag to resize"
             onMouseDown={handleResizeMouseDown}
             style={{
-              position: "absolute", bottom: "4px", right: "4px",
+              position: "absolute", bottom: selected ? "28px" : "4px", right: "4px",
               width: "16px", height: "16px", cursor: "se-resize", zIndex: 20,
               borderRadius: "3px", display: "flex", alignItems: "center", justifyContent: "center",
               backgroundColor: "var(--background)", border: "1px solid var(--border)",
@@ -504,6 +530,7 @@ function VideoNodeView({ node, updateAttributes, deleteNode, selected }: NodeVie
   const [nodeDragging, setNodeDragging] = useState(false);
   const [draft, setDraft] = useState(url);
   const [draftStart, setDraftStart] = useState(String(startAt || 0));
+  const del = useConfirmDelete(deleteNode);
   const containerRef = useRef<HTMLDivElement>(null);
   const urlInputRef = useRef<HTMLInputElement>(null);
   const startX = useRef(0);
@@ -525,19 +552,29 @@ function VideoNodeView({ node, updateAttributes, deleteNode, selected }: NodeVie
     e.preventDefault();
     e.stopPropagation();
     startX.current = e.clientX;
-    startW.current = containerRef.current?.offsetWidth ?? 600;
+    const origW = containerRef.current?.offsetWidth ?? 600;
+    startW.current = origW;
     setDragging(true);
+    const cleanup = () => {
+      setDragging(false);
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+      document.removeEventListener("keydown", onEsc);
+    };
     const onMove = (ev: MouseEvent) => {
       const newW = Math.max(200, startW.current + (ev.clientX - startX.current));
       updateAttributes({ width: `${Math.round(newW)}px` });
     };
-    const onUp = () => {
-      setDragging(false);
-      document.removeEventListener("mousemove", onMove);
-      document.removeEventListener("mouseup", onUp);
+    const onUp = () => cleanup();
+    const onEsc = (ev: KeyboardEvent) => {
+      if (ev.key === "Escape") {
+        updateAttributes({ width: origW ? `${origW}px` : null });
+        cleanup();
+      }
     };
     document.addEventListener("mousemove", onMove);
     document.addEventListener("mouseup", onUp);
+    document.addEventListener("keydown", onEsc);
   };
 
   const confirm = () => {
@@ -634,6 +671,19 @@ function VideoNodeView({ node, updateAttributes, deleteNode, selected }: NodeVie
               <span style={{ flex: 1 }} />
               <button type="button" onMouseDown={(e) => { e.preventDefault(); setDraft(url); setDraftStart(String(startAt || 0)); setEditing(true); }}
                 style={{ fontSize: "0.7rem", padding: "0.15rem 0.375rem", borderRadius: "3px", border: "1px solid var(--border)", cursor: "pointer", background: "transparent", color: "var(--foreground)" }}>Edit</button>
+              {del.confirming ? (
+                <>
+                  <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
+                  <button type="button" onMouseDown={(e) => { e.preventDefault(); del.confirm(); }}
+                    style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
+                  <button type="button" onMouseDown={(e) => { e.preventDefault(); del.cancel(); }}
+                    style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
+                </>
+              ) : (
+                <button type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); del.request(); }}
+                  style={{ width: "18px", height: "18px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: "0.9rem", lineHeight: 1, flexShrink: 0 }}
+                  title="Remove video">×</button>
+              )}
             </>
           )}
         </div>
@@ -925,6 +975,7 @@ const AudioEmbed = TipTapNode.create({
 /* ─── Interactive embed node + NodeView ─────────────────────── */
 function InteractiveNodeView({ node, deleteNode, updateAttributes, selected }: NodeViewProps) {
   const { interactiveId, title, align, width } = node.attrs as { interactiveId: string; title: string; align: string; width: string };
+  const del = useConfirmDelete(deleteNode);
   const containerRef = useRef<HTMLDivElement>(null);
   const startX = useRef(0);
   const startWidth = useRef(0);
@@ -932,25 +983,36 @@ function InteractiveNodeView({ node, deleteNode, updateAttributes, selected }: N
   const startY = useRef(0);
   const startHeight = useRef(0);
 
-  // Drag-to-resize width + height (same pattern as Image)
+  // Drag-to-resize width + height with ESC to cancel
   const handleResizeMouseDown = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     startX.current = e.clientX;
     startY.current = e.clientY;
-    startWidth.current = containerRef.current?.offsetWidth ?? 400;
-    startHeight.current = containerRef.current?.querySelector("iframe")?.parentElement?.offsetHeight ?? 300;
+    const origWidth = containerRef.current?.offsetWidth ?? 400;
+    const origHeight = containerRef.current?.querySelector("iframe")?.parentElement?.offsetHeight ?? 300;
+    startWidth.current = origWidth;
+    startHeight.current = origHeight;
+    const cleanup = () => {
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+      document.removeEventListener("keydown", onEsc);
+    };
     const onMouseMove = (ev: MouseEvent) => {
       const newWidth = Math.max(150, startWidth.current + (ev.clientX - startX.current));
       const newHeight = Math.max(100, startHeight.current + (ev.clientY - startY.current));
       updateAttributes({ width: `${Math.round(newWidth)}px`, height: `${Math.round(newHeight)}px` });
     };
-    const onMouseUp = () => {
-      document.removeEventListener("mousemove", onMouseMove);
-      document.removeEventListener("mouseup", onMouseUp);
+    const onMouseUp = () => cleanup();
+    const onEsc = (ev: KeyboardEvent) => {
+      if (ev.key === "Escape") {
+        updateAttributes({ width: `${origWidth}px`, height: `${origHeight}px` });
+        cleanup();
+      }
     };
     document.addEventListener("mousemove", onMouseMove);
     document.addEventListener("mouseup", onMouseUp);
+    document.addEventListener("keydown", onEsc);
   };
 
   const effectiveWidth = width || "100%";
@@ -986,12 +1048,25 @@ function InteractiveNodeView({ node, deleteNode, updateAttributes, selected }: N
             title={title || "Interactive preview"}
           />
         </div>
-        {/* Footer bar — title only (delete is in context toolbar) */}
+        {/* Footer bar — title + inline delete */}
         <div style={{ display: "flex", alignItems: "center", gap: "4px", padding: "0.2rem 0.375rem", borderTop: "1px solid var(--border)", backgroundColor: "var(--muted)", borderRadius: "0 0 6px 6px" }}>
           <span style={{ fontSize: "0.65rem", color: "#F7BB2E", fontWeight: 600, padding: "0 4px", flexShrink: 0 }}>⚡</span>
           <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", padding: "0 4px", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {title || "Interactive"}
           </span>
+          {del.confirming ? (
+            <>
+              <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
+              <button type="button" onMouseDown={(e) => { e.preventDefault(); del.confirm(); }}
+                style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
+              <button type="button" onMouseDown={(e) => { e.preventDefault(); del.cancel(); }}
+                style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
+            </>
+          ) : (
+            <button type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); del.request(); }}
+              style={{ width: "18px", height: "18px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: "0.9rem", lineHeight: 1, flexShrink: 0 }}
+              title="Remove interactive">×</button>
+          )}
         </div>
         {/* Resize knob (same as Image) */}
         {selected && (
@@ -1068,34 +1143,31 @@ const InteractiveEmbed = TipTapNode.create({
         },
         parse: {
           updateDOM(dom: Element) {
-            // Find !!INTERACTIVE[id|title|align:x|width:y] text nodes and convert to div elements
-            const walker = document.createTreeWalker(dom, NodeFilter.SHOW_TEXT);
-            const nodes: Text[] = [];
-            while (walker.nextNode()) nodes.push(walker.currentNode as Text);
-            for (const t of nodes) {
-              const m = t.textContent?.match(/^!!INTERACTIVE\[([^\]]+)\]$/);
-              if (m) {
-                const parts = m[1].split("|");
-                const id = parts[0];
-                let title = "";
-                let align = "";
-                let width = "";
-                let height = "";
-                for (let i = 1; i < parts.length; i++) {
-                  if (parts[i].startsWith("align:")) align = parts[i].slice(6);
-                  else if (parts[i].startsWith("width:")) width = parts[i].slice(6);
-                  else if (parts[i].startsWith("height:")) height = parts[i].slice(6);
-                  else if (!title) title = parts[i];
-                }
-                const div = document.createElement("div");
-                div.setAttribute("data-interactive-embed", id);
-                if (title) div.setAttribute("data-interactive-title", title);
-                if (align) div.setAttribute("data-interactive-align", align);
-                if (width) div.setAttribute("data-interactive-width", width);
-                if (height) div.setAttribute("data-interactive-height", height);
-                t.parentNode?.replaceChild(div, t);
+            // Convert <p>!!INTERACTIVE[id|title|width:x|height:y]</p> → <div data-interactive-embed>
+            dom.querySelectorAll("p").forEach((p) => {
+              const text = (p.textContent ?? "").trim();
+              const m = text.match(/^!!INTERACTIVE\[([^\]]+)\]$/);
+              if (!m) return;
+              const parts = m[1].split("|");
+              const id = parts[0];
+              let title = "";
+              let align = "";
+              let width = "";
+              let height = "";
+              for (let i = 1; i < parts.length; i++) {
+                if (parts[i].startsWith("align:")) align = parts[i].slice(6);
+                else if (parts[i].startsWith("width:")) width = parts[i].slice(6);
+                else if (parts[i].startsWith("height:")) height = parts[i].slice(7);
+                else if (!title) title = parts[i];
               }
-            }
+              const div = document.createElement("div");
+              div.setAttribute("data-interactive-embed", id);
+              if (title) div.setAttribute("data-interactive-title", title);
+              if (align) div.setAttribute("data-interactive-align", align);
+              if (width) div.setAttribute("data-interactive-width", width);
+              if (height) div.setAttribute("data-interactive-height", height);
+              p.parentNode?.replaceChild(div, p);
+            });
           },
         },
       },
@@ -1447,20 +1519,17 @@ const FileAttachment = TipTapNode.create({
         },
         parse: {
           updateDOM(dom: Element) {
-            // Find !!FILE[src|filename|size] text nodes and convert to div elements
-            const walker = document.createTreeWalker(dom, NodeFilter.SHOW_TEXT);
-            const textNodes: Text[] = [];
-            while (walker.nextNode()) textNodes.push(walker.currentNode as Text);
-            for (const t of textNodes) {
-              const m = t.textContent?.match(/^!!FILE\[([^|]+)\|([^|]*)\|?(.*?)\]$/);
-              if (m) {
-                const div = document.createElement("div");
-                div.setAttribute("data-file-attachment", m[1]);
-                div.setAttribute("data-file-name", m[2] || "");
-                div.setAttribute("data-file-size", m[3] || "0");
-                t.parentNode?.replaceChild(div, t);
-              }
-            }
+            // Convert <p>!!FILE[src|filename|size]</p> → <div data-file-attachment>
+            dom.querySelectorAll("p").forEach((p) => {
+              const text = (p.textContent ?? "").trim();
+              const m = text.match(/^!!FILE\[([^|]+)\|([^|]*)\|?(.*?)\]$/);
+              if (!m) return;
+              const div = document.createElement("div");
+              div.setAttribute("data-file-attachment", m[1]);
+              div.setAttribute("data-file-name", m[2] || "");
+              div.setAttribute("data-file-size", m[3] || "0");
+              p.parentNode?.replaceChild(div, p);
+            });
             // Also handle legacy <!-- file:... --> comments
             const cWalker = document.createTreeWalker(dom, NodeFilter.SHOW_COMMENT);
             const comments: Comment[] = [];
@@ -1889,12 +1958,6 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
   const [showMediaDropdown, setShowMediaDropdown] = useState(false);
   const [mediaSubMenu, setMediaSubMenu] = useState<"image" | "audio" | null>(null);
   const mediaDropdownRef = useRef<HTMLDivElement>(null);
-  const [imgDelConfirming, setImgDelConfirming] = useState(false);
-  const imgDelTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [vidDelConfirming, setVidDelConfirming] = useState(false);
-  const vidDelTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [intDelConfirming, setIntDelConfirming] = useState(false);
-  const intDelTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -2509,7 +2572,7 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
                 content: [{ type: "paragraph", content: [{ type: "text", text: "Type your note here…" }] }],
               }).run();
             }}>
-              <IconCallout />
+              <MessageSquareWarning className="w-[18px] h-[18px]" />
             </Btn>
 
             {/* Insert Interactive (separate from media — Zap icon, same as sidebar) */}
@@ -2562,26 +2625,6 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
               onClick={() => editor.chain().focus().updateAttributes("image", { width: null }).run()}>
               <IconMaximize />
             </CtxBtn>
-            <CtxSep />
-            {imgDelConfirming ? (
-              <>
-                <span style={{ fontSize: "0.7rem", color: "var(--destructive)", fontWeight: 500, padding: "0 4px" }}>Remove?</span>
-                <CtxBtn title="Confirm delete" danger onClick={() => {
-                  if (imgDelTimer.current) clearTimeout(imgDelTimer.current);
-                  setImgDelConfirming(false);
-                  editor.chain().focus().deleteSelection().run();
-                }}><IconTrash /></CtxBtn>
-                <CtxBtn title="Cancel" active={false} onClick={() => {
-                  if (imgDelTimer.current) clearTimeout(imgDelTimer.current);
-                  setImgDelConfirming(false);
-                }}>✕</CtxBtn>
-              </>
-            ) : (
-              <CtxBtn title="Delete image" danger onClick={() => {
-                setImgDelConfirming(true);
-                imgDelTimer.current = setTimeout(() => setImgDelConfirming(false), 3500);
-              }}><IconTrash /></CtxBtn>
-            )}
           </div>
         )}
 
@@ -2613,26 +2656,6 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
               onClick={() => editor.chain().focus().updateAttributes("videoEmbed", { width: null }).run()}>
               <IconMaximize />
             </CtxBtn>
-            <CtxSep />
-            {vidDelConfirming ? (
-              <>
-                <span style={{ fontSize: "0.7rem", color: "var(--destructive)", fontWeight: 500, padding: "0 4px" }}>Remove?</span>
-                <CtxBtn title="Confirm delete" danger onClick={() => {
-                  if (vidDelTimer.current) clearTimeout(vidDelTimer.current);
-                  setVidDelConfirming(false);
-                  editor.chain().focus().deleteSelection().run();
-                }}><IconTrash /></CtxBtn>
-                <CtxBtn title="Cancel" active={false} onClick={() => {
-                  if (vidDelTimer.current) clearTimeout(vidDelTimer.current);
-                  setVidDelConfirming(false);
-                }}>✕</CtxBtn>
-              </>
-            ) : (
-              <CtxBtn title="Delete video" danger onClick={() => {
-                setVidDelConfirming(true);
-                vidDelTimer.current = setTimeout(() => setVidDelConfirming(false), 3500);
-              }}><IconTrash /></CtxBtn>
-            )}
           </div>
         )}
 
@@ -2690,26 +2713,6 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
               onClick={() => editor.chain().focus().updateAttributes("interactiveEmbed", { width: null }).run()}>
               <IconMaximize />
             </CtxBtn>
-            <CtxSep />
-            {intDelConfirming ? (
-              <>
-                <span style={{ fontSize: "0.7rem", color: "var(--destructive)", fontWeight: 500, padding: "0 4px" }}>Remove?</span>
-                <CtxBtn title="Confirm delete" danger onClick={() => {
-                  if (intDelTimer.current) clearTimeout(intDelTimer.current);
-                  setIntDelConfirming(false);
-                  editor.chain().focus().deleteSelection().run();
-                }}><IconTrash /></CtxBtn>
-                <CtxBtn title="Cancel" active={false} onClick={() => {
-                  if (intDelTimer.current) clearTimeout(intDelTimer.current);
-                  setIntDelConfirming(false);
-                }}>✕</CtxBtn>
-              </>
-            ) : (
-              <CtxBtn title="Delete interactive" danger onClick={() => {
-                setIntDelConfirming(true);
-                intDelTimer.current = setTimeout(() => setIntDelConfirming(false), 3500);
-              }}><IconTrash /></CtxBtn>
-            )}
           </div>
         )}
 
