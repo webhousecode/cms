@@ -13,7 +13,7 @@ const MIME: Record<string, string> = {
 };
 
 /**
- * Serve static files from the site's public/ directory.
+ * Serve static files from the site's public/ directory or proxy from previewUrl.
  * Used for image previews in the admin when paths are relative to the site (e.g. /images/photo.png).
  */
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ path: string[] }> }) {
@@ -24,25 +24,39 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ pat
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const { projectDir } = await getActiveSitePaths();
-  const publicDir = path.join(projectDir, "public");
+  const sitePaths = await getActiveSitePaths();
+  const relPath = "/" + segments.join("/");
+  const ext = segments[segments.length - 1].split(".").pop()?.toLowerCase() ?? "";
+  const contentType = MIME[ext] ?? "application/octet-stream";
+
+  // Try local public/ directory first
+  const publicDir = path.join(sitePaths.projectDir, "public");
   const filePath = path.join(publicDir, ...segments);
-
-  // Ensure resolved path is within public/
-  if (!filePath.startsWith(publicDir)) {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (filePath.startsWith(publicDir)) {
+    try {
+      const data = await readFile(filePath);
+      return new NextResponse(data, {
+        headers: { "Content-Type": contentType, "Cache-Control": "public, max-age=60" },
+      });
+    } catch { /* fall through */ }
   }
 
-  try {
-    const data = await readFile(filePath);
-    const ext = segments[segments.length - 1].split(".").pop()?.toLowerCase() ?? "";
-    return new NextResponse(data, {
-      headers: {
-        "Content-Type": MIME[ext] ?? "application/octet-stream",
-        "Cache-Control": "public, max-age=60",
-      },
-    });
-  } catch {
-    return NextResponse.json({ error: "Not found" }, { status: 404 });
+  // Try previewUrl (for GitHub-backed sites where files aren't local)
+  if (sitePaths.previewUrl) {
+    try {
+      const upstream = new URL(relPath, sitePaths.previewUrl).href;
+      const res = await fetch(upstream, { next: { revalidate: 300 } });
+      if (res.ok) {
+        const data = await res.arrayBuffer();
+        return new NextResponse(data, {
+          headers: {
+            "Content-Type": res.headers.get("content-type") ?? contentType,
+            "Cache-Control": "public, max-age=300",
+          },
+        });
+      }
+    } catch { /* fall through */ }
   }
+
+  return NextResponse.json({ error: "Not found" }, { status: 404 });
 }
