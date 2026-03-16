@@ -83,7 +83,7 @@ export function CollectionSchemaEditor({ collection, isNew }: Props) {
     }
 
     startTransition(() => {
-      router.push("/admin/settings");
+      router.push(`/admin/${name.trim()}`);
       router.refresh();
     });
   }
