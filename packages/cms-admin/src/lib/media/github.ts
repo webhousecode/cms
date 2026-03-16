@@ -167,6 +167,51 @@ export class GitHubMediaAdapter implements MediaAdapter {
     return meta.filter((m) => m.status === "trashed");
   }
 
+  /* ─── Rename ───────────────────────────────────────────── */
+
+  async renameFile(folder: string, oldName: string, newName: string): Promise<{ url: string }> {
+    // GitHub API has no rename — read old file, create new, delete old
+    // Find the repo path for the old file
+    const allFiles = await Promise.all(MEDIA_DIRS.map((d) => this.client.listDirRecursive(d)));
+    const flat = allFiles.flat();
+    const oldKey = folder ? `${folder}/${oldName}` : oldName;
+    const match = flat.find((f) => {
+      const rel = f.path.replace(/^public\//, "");
+      return rel === oldKey;
+    });
+
+    if (!match) throw new Error(`File not found: ${oldKey}`);
+
+    // Read raw content
+    const raw = await this.client.getFileRaw(match.path);
+    if (!raw) throw new Error(`Could not read file: ${match.path}`);
+
+    // Compute new repo path
+    const newRepoPath = match.path.replace(/\/[^/]+$/, `/${newName}`);
+
+    // Upload with new name
+    await this.client.putFile(newRepoPath, raw.buffer, `cms: rename ${oldName} → ${newName}`);
+
+    // Delete old file
+    await this.client.deleteFile(match.path, raw.sha, `cms: rename ${oldName} → ${newName} (remove old)`);
+
+    // Update media-meta if entry exists
+    const { meta, sha: metaSha } = await this.loadMediaMeta();
+    const oldMetaKey = this.mediaKey(folder, oldName);
+    const entry = meta.find((m) => m.key === oldMetaKey);
+    if (entry) {
+      entry.key = this.mediaKey(folder, newName);
+      entry.name = newName;
+      await this.saveMediaMeta(meta, metaSha);
+    }
+
+    const relPath = newRepoPath.replace(/^public\//, "");
+    const url = this.previewUrl
+      ? `${this.previewUrl}/${relPath}`
+      : `/api/uploads/${relPath}`;
+    return { url };
+  }
+
   /* ─── File serving ──────────────────────────────────────── */
 
   async readFile(pathSegments: string[]): Promise<Buffer | null> {

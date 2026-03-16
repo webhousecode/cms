@@ -1,7 +1,7 @@
 /**
  * Filesystem Media Adapter — reads/writes media from local disk.
  */
-import { readdir, stat, readFile, writeFile, mkdir, unlink } from "fs/promises";
+import { readdir, stat, readFile, writeFile, mkdir, unlink, rename } from "fs/promises";
 import path from "path";
 import type { MediaAdapter, MediaFileInfo, MediaType, MediaMeta, InteractiveMeta } from "./types";
 
@@ -143,6 +143,28 @@ export class FilesystemMediaAdapter implements MediaAdapter {
       meta.splice(idx, 1);
       await this.saveMediaMeta(meta);
     }
+  }
+
+  /* ─── Rename ───────────────────────────────────────────── */
+
+  async renameFile(folder: string, oldName: string, newName: string): Promise<{ url: string }> {
+    const dir = folder ? path.join(this.uploadDir, folder) : this.uploadDir;
+    const oldPath = path.join(dir, oldName);
+    const newPath = path.join(dir, newName);
+    await rename(oldPath, newPath);
+
+    // Update media-meta if entry exists
+    const meta = await this.loadMediaMeta();
+    const oldKey = this.mediaKey(folder, oldName);
+    const entry = meta.find((m) => m.key === oldKey);
+    if (entry) {
+      entry.key = this.mediaKey(folder, newName);
+      entry.name = newName;
+      await this.saveMediaMeta(meta);
+    }
+
+    const urlPath = folder ? `/uploads/${folder}/${newName}` : `/uploads/${newName}`;
+    return { url: urlPath };
   }
 
   /* ─── File serving ──────────────────────────────────────── */

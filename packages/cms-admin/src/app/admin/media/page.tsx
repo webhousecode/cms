@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Trash2, Copy, Check, Upload, LayoutGrid, List, FolderOpen, Folder, ChevronLeft, ChevronRight, Search, X, ZoomIn, ExternalLink, FileWarning, Music, Video, FileText, Code, File } from "lucide-react";
+import { Trash2, Copy, Check, Upload, LayoutGrid, List, FolderOpen, Folder, ChevronLeft, ChevronRight, Search, X, ZoomIn, ExternalLink, FileWarning, Music, Video, FileText, Code, File, Pencil } from "lucide-react";
 import type { UsageRef } from "@/app/api/cms/media/usage/route";
 import { cn } from "@/lib/utils";
+import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 
 /* ─── Types ──────────────────────────────────────────────────── */
 type MediaType = "image" | "audio" | "video" | "document" | "interactive" | "other";
@@ -54,6 +55,7 @@ export default function MediaPage() {
   const [usageMap, setUsageMap] = useState<Record<string, UsageRef[]>>({});
   const [jobs, setJobs] = useState<UploadJob[]>([]);
   const [dragOver, setDragOver] = useState(false);
+  const [renaming, setRenaming] = useState<MediaFile | null>(null);
   const [newFolder, setNewFolder] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>(""); // "" = all
   const inputRef = useRef<HTMLInputElement>(null);
@@ -171,6 +173,24 @@ export default function MediaPage() {
     loadUsage();
   }
 
+  /* ── Rename ─────────────────────────────────────────────── */
+  async function handleRename(file: MediaFile, newName: string) {
+    if (!newName || newName === file.name) { setRenaming(null); return; }
+    const res = await fetch("/api/media/rename", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ folder: file.folder, oldName: file.name, newName }),
+    });
+    if (res.ok) {
+      const { url } = await res.json();
+      setAllFiles((prev) => prev.map((f) =>
+        f.url === file.url ? { ...f, name: newName, url } : f
+      ));
+      loadUsage();
+    }
+    setRenaming(null);
+  }
+
   /* ── Lightbox ─────────────────────────────────────────────── */
   const imageFiles = filtered.filter((f) => f.isImage);
   function openLightbox(file: MediaFile) {
@@ -195,6 +215,7 @@ export default function MediaPage() {
 
   /* ─── Render ─────────────────────────────────────────────── */
   return (
+    <TooltipProvider>
     <div
       ref={pageRef}
       className="flex flex-col min-h-screen relative"
@@ -416,9 +437,9 @@ export default function MediaPage() {
           ) : (
             <>
               {view === "grid" ? (
-                <GridView files={paginated} copied={copied} deleting={deleting} onCopy={copyUrl} onDelete={handleDelete} onOpen={openLightbox} usageMap={usageMap} />
+                <GridView files={paginated} copied={copied} deleting={deleting} onCopy={copyUrl} onDelete={handleDelete} onOpen={openLightbox} onRename={setRenaming} usageMap={usageMap} />
               ) : (
-                <ListView files={paginated} copied={copied} deleting={deleting} onCopy={copyUrl} onDelete={handleDelete} onOpen={openLightbox} usageMap={usageMap} />
+                <ListView files={paginated} copied={copied} deleting={deleting} onCopy={copyUrl} onDelete={handleDelete} onOpen={openLightbox} onRename={setRenaming} usageMap={usageMap} />
               )}
 
               {/* ── Pagination ── */}
@@ -462,6 +483,15 @@ export default function MediaPage() {
         />
       )}
 
+      {/* ── Rename dialog ── */}
+      {renaming && (
+        <RenameDialog
+          file={renaming}
+          onConfirm={(newName) => handleRename(renaming, newName)}
+          onCancel={() => setRenaming(null)}
+        />
+      )}
+
       {/* ── Delete confirm dialog ── */}
       {confirmDelete && (
         <DeleteConfirmDialog
@@ -472,6 +502,7 @@ export default function MediaPage() {
         />
       )}
     </div>
+    </TooltipProvider>
   );
 }
 
@@ -536,9 +567,10 @@ type ViewProps = {
   onCopy: (url: string) => void;
   onDelete: (file: MediaFile) => void;
   onOpen: (file: MediaFile) => void;
+  onRename: (file: MediaFile) => void;
 };
 
-function GridView({ files, copied, deleting, usageMap, onCopy, onDelete, onOpen }: ViewProps) {
+function GridView({ files, copied, deleting, usageMap, onCopy, onDelete, onOpen, onRename }: ViewProps) {
   return (
     <div style={{ padding: "1.25rem", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: "0.875rem" }}>
       {files.map((file) => {
@@ -592,6 +624,9 @@ function GridView({ files, copied, deleting, usageMap, onCopy, onDelete, onOpen 
                     <ZoomIn style={{ width: "0.875rem", height: "0.875rem" }} />
                   </ActionBtn>
                 )}
+                <ActionBtn title="Rename" onClick={() => onRename(file)}>
+                  <Pencil style={{ width: "0.875rem", height: "0.875rem" }} />
+                </ActionBtn>
                 <ActionBtn title="Copy URL" onClick={() => onCopy(file.url)}>
                   {copied === file.url ? <Check style={{ width: "0.875rem", height: "0.875rem", color: "#4ade80" }} /> : <Copy style={{ width: "0.875rem", height: "0.875rem" }} />}
                 </ActionBtn>
@@ -607,7 +642,7 @@ function GridView({ files, copied, deleting, usageMap, onCopy, onDelete, onOpen 
   );
 }
 
-function ListView({ files, copied, deleting, usageMap, onCopy, onDelete, onOpen }: ViewProps) {
+function ListView({ files, copied, deleting, usageMap, onCopy, onDelete, onOpen, onRename }: ViewProps) {
   return (
     <div style={{ overflow: "auto" }}>
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem" }}>
@@ -658,6 +693,9 @@ function ListView({ files, copied, deleting, usageMap, onCopy, onDelete, onOpen 
                         <ZoomIn style={{ width: "0.75rem", height: "0.75rem" }} />
                       </ActionBtn>
                     )}
+                    <ActionBtn title="Rename" onClick={() => onRename(file)} small>
+                      <Pencil style={{ width: "0.75rem", height: "0.75rem" }} />
+                    </ActionBtn>
                     <ActionBtn title="Copy URL" onClick={() => onCopy(file.url)} small>
                       {copied === file.url ? <Check style={{ width: "0.75rem", height: "0.75rem", color: "#4ade80" }} /> : <Copy style={{ width: "0.75rem", height: "0.75rem" }} />}
                     </ActionBtn>
@@ -860,30 +898,115 @@ function DeleteConfirmDialog({ file, usages, onConfirm, onCancel }: {
   );
 }
 
+/* ─── Rename dialog ──────────────────────────────────────── */
+function RenameDialog({ file, onConfirm, onCancel }: {
+  file: MediaFile;
+  onConfirm: (newName: string) => void;
+  onCancel: () => void;
+}) {
+  // Split into base name and extension
+  const lastDot = file.name.lastIndexOf(".");
+  const baseName = lastDot > 0 ? file.name.slice(0, lastDot) : file.name;
+  const ext = lastDot > 0 ? file.name.slice(lastDot) : "";
+  const [value, setValue] = useState(baseName);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    inputRef.current?.select();
+  }, []);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onCancel(); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onCancel]);
+
+  const sanitized = value.replace(/[^a-zA-Z0-9._-]/g, "-");
+  const newName = sanitized + ext;
+  const isValid = sanitized.length > 0 && newName !== file.name;
+
+  return (
+    <div style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
+      onClick={onCancel}
+    >
+      <div
+        style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "12px", padding: "1.5rem", maxWidth: "420px", width: "90%", display: "flex", flexDirection: "column", gap: "1rem" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+          <Pencil style={{ width: "1.25rem", height: "1.25rem", color: "var(--muted-foreground)", flexShrink: 0 }} />
+          <p style={{ fontWeight: 600, fontSize: "0.9rem" }}>Rename file</p>
+        </div>
+
+        <div>
+          <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", marginBottom: "0.375rem", fontFamily: "monospace" }}>
+            {file.folder ? `${file.folder}/` : ""}<span style={{ opacity: 0.5 }}>*{ext}</span>
+          </p>
+          <form onSubmit={(e) => { e.preventDefault(); if (isValid) onConfirm(newName); }}>
+            <input
+              ref={inputRef}
+              type="text"
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              autoFocus
+              style={{
+                width: "100%", padding: "0.5rem 0.625rem",
+                borderRadius: "6px", border: "1px solid var(--border)",
+                background: "var(--background)", color: "var(--foreground)",
+                fontSize: "0.85rem", fontFamily: "monospace",
+              }}
+            />
+          </form>
+          {value !== sanitized && (
+            <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", marginTop: "0.25rem" }}>
+              → {sanitized}{ext}
+            </p>
+          )}
+        </div>
+
+        <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
+          <button type="button" onClick={onCancel} style={{ padding: "0.4rem 1rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", cursor: "pointer", fontSize: "0.875rem" }}>
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={() => isValid && onConfirm(newName)}
+            disabled={!isValid}
+            style={{ padding: "0.4rem 1rem", borderRadius: "6px", border: "none", background: "var(--primary)", color: "var(--primary-foreground)", cursor: isValid ? "pointer" : "not-allowed", fontSize: "0.875rem", opacity: isValid ? 1 : 0.5 }}
+          >
+            Rename
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function ActionBtn({ title, onClick, disabled, destructive, small, children }: {
   title: string; onClick: () => void; disabled?: boolean;
   destructive?: boolean; small?: boolean; children: React.ReactNode;
 }) {
   return (
-    <button
-      type="button"
-      title={title}
-      onClick={onClick}
-      disabled={disabled}
-      style={{
-        width: small ? "1.75rem" : "2rem",
-        height: small ? "1.75rem" : "2rem",
-        borderRadius: "50%",
-        border: "1px solid rgba(255,255,255,0.15)",
-        background: "var(--background)",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        cursor: disabled ? "not-allowed" : "pointer",
-        color: destructive ? "var(--destructive)" : "var(--foreground)",
-        opacity: disabled ? 0.5 : 1,
-        transition: "background 150ms",
-      }}
-    >
-      {children}
-    </button>
+    <Tooltip>
+      <TooltipTrigger
+        onClick={onClick}
+        disabled={disabled}
+        style={{
+          width: small ? "1.75rem" : "2rem",
+          height: small ? "1.75rem" : "2rem",
+          borderRadius: "50%",
+          border: "1px solid rgba(255,255,255,0.15)",
+          background: "var(--background)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          cursor: disabled ? "not-allowed" : "pointer",
+          color: destructive ? "var(--destructive)" : "var(--foreground)",
+          opacity: disabled ? 0.5 : 1,
+          transition: "background 150ms",
+        }}
+      >
+        {children}
+      </TooltipTrigger>
+      <TooltipContent>{title}</TooltipContent>
+    </Tooltip>
   );
 }

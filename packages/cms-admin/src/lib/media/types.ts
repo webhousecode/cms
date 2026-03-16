@@ -71,6 +71,9 @@ export interface MediaAdapter {
   /** Permanently delete a media file */
   deleteFile(folder: string, name: string): Promise<void>;
 
+  /** Rename a media file. Returns the new browser-renderable URL. */
+  renameFile(folder: string, oldName: string, newName: string): Promise<{ url: string }>;
+
   /* ─── File serving (for adapters that need proxying) ───── */
 
   /** Read raw file bytes. Returns null if file doesn't exist. */
