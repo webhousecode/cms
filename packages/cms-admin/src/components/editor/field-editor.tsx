@@ -817,53 +817,51 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
               )}
             </div>
           )}
-          {/* URL input + Upload + Browse */}
-          <div style={{ display: "flex", gap: "0.4rem", alignItems: "center" }}>
-            <Input
-              type="text"
-              value={strVal}
-              onChange={(e) => onChange(e.target.value)}
-              disabled={locked}
-              placeholder="Audio URL"
-              className="font-mono text-xs"
-              style={{ flex: 1 }}
-            />
-            {!locked && (
-              <>
-                <label
-                  title="Upload audio"
-                  style={{
-                    display: "inline-flex", alignItems: "center", justifyContent: "center",
-                    gap: "0.3rem", padding: "0.4rem 0.6rem", borderRadius: "6px",
-                    border: "1px solid var(--border)", background: "var(--background)",
-                    cursor: audioUploading ? "wait" : "pointer", fontSize: "0.75rem",
-                    color: "var(--muted-foreground)", whiteSpace: "nowrap", flexShrink: 0,
-                  }}
-                  className="hover:border-primary hover:text-primary transition-colors"
-                >
-                  <input ref={audioInputRef} type="file" accept="audio/*" onChange={handleAudioUpload} disabled={locked || audioUploading} style={{ display: "none" }} />
-                  <Upload style={{ width: "14px", height: "14px" }} />
-                  {audioUploading ? "..." : "Upload"}
-                </label>
-                <button
-                  type="button"
-                  onClick={openAudioBrowser}
-                  title="Browse Media"
-                  style={{
-                    display: "inline-flex", alignItems: "center", gap: "0.3rem",
-                    padding: "0.4rem 0.6rem", borderRadius: "6px",
-                    border: "1px solid var(--border)", background: "var(--background)",
-                    cursor: "pointer", fontSize: "0.75rem", color: "var(--muted-foreground)",
-                    whiteSpace: "nowrap", flexShrink: 0,
-                  }}
-                  className="hover:border-primary hover:text-primary transition-colors"
-                >
-                  <FolderOpen style={{ width: "14px", height: "14px" }} />
-                  Browse
-                </button>
-              </>
-            )}
-          </div>
+          {/* URL input */}
+          <Input
+            type="text"
+            value={strVal}
+            onChange={(e) => onChange(e.target.value)}
+            disabled={locked}
+            placeholder="Audio URL"
+            className="font-mono text-xs"
+          />
+          {/* Upload + Browse buttons */}
+          {!locked && (
+            <div style={{ display: "flex", gap: "0.35rem" }}>
+              <label
+                title="Upload audio"
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: "0.3rem",
+                  padding: "0.25rem 0.6rem", borderRadius: "6px",
+                  border: "1px dashed var(--border)", background: "none",
+                  cursor: audioUploading ? "wait" : "pointer", fontSize: "0.7rem",
+                  color: "var(--muted-foreground)", whiteSpace: "nowrap",
+                }}
+                className="hover:border-primary hover:text-primary transition-colors"
+              >
+                <input ref={audioInputRef} type="file" accept="audio/*" onChange={handleAudioUpload} disabled={locked || audioUploading} style={{ display: "none" }} />
+                <Upload style={{ width: 12, height: 12 }} />
+                {audioUploading ? "..." : "Upload"}
+              </label>
+              <button
+                type="button"
+                onClick={openAudioBrowser}
+                title="Browse Media"
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: "0.3rem",
+                  padding: "0.25rem 0.6rem", borderRadius: "6px",
+                  border: "1px dashed var(--border)", background: "none",
+                  cursor: "pointer", fontSize: "0.7rem", color: "var(--muted-foreground)",
+                  whiteSpace: "nowrap",
+                }}
+                className="hover:border-primary hover:text-primary transition-colors"
+              >
+                <FolderOpen style={{ width: 12, height: 12 }} />
+                Browse
+              </button>
+            </div>
+          )}
 
           {/* Media browser modal — same as image field */}
           {audioBrowserOpen && (
@@ -952,54 +950,52 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
       }
 
       return (
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-          {/* URL input + Upload + Browse */}
-          <div style={{ display: "flex", gap: "0.4rem", alignItems: "center" }}>
-            <Input
-              type="text"
-              value={strVal}
-              onChange={(e) => onChange(e.target.value)}
-              disabled={locked}
-              placeholder="File URL"
-              className="font-mono text-xs"
-              style={{ flex: 1 }}
-            />
-            {!locked && (
-              <>
-                <label
-                  title="Upload file"
-                  style={{
-                    display: "inline-flex", alignItems: "center", justifyContent: "center",
-                    gap: "0.3rem", padding: "0.4rem 0.6rem", borderRadius: "6px",
-                    border: "1px solid var(--border)", background: "var(--background)",
-                    cursor: fileUploading ? "wait" : "pointer", fontSize: "0.75rem",
-                    color: "var(--muted-foreground)", whiteSpace: "nowrap", flexShrink: 0,
-                  }}
-                  className="hover:border-primary hover:text-primary transition-colors"
-                >
-                  <input ref={fileInputRef} type="file" onChange={handleFileUpload} disabled={locked || fileUploading} style={{ display: "none" }} />
-                  <Upload style={{ width: "14px", height: "14px" }} />
-                  {fileUploading ? "..." : "Upload"}
-                </label>
-                <button
-                  type="button"
-                  onClick={openFileBrowser}
-                  title="Browse Media"
-                  style={{
-                    display: "inline-flex", alignItems: "center", gap: "0.3rem",
-                    padding: "0.4rem 0.6rem", borderRadius: "6px",
-                    border: "1px solid var(--border)", background: "var(--background)",
-                    cursor: "pointer", fontSize: "0.75rem", color: "var(--muted-foreground)",
-                    whiteSpace: "nowrap", flexShrink: 0,
-                  }}
-                  className="hover:border-primary hover:text-primary transition-colors"
-                >
-                  <FolderOpen style={{ width: "14px", height: "14px" }} />
-                  Browse
-                </button>
-              </>
-            )}
-          </div>
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+          {/* URL input */}
+          <Input
+            type="text"
+            value={strVal}
+            onChange={(e) => onChange(e.target.value)}
+            disabled={locked}
+            placeholder="File URL"
+            className="font-mono text-xs"
+          />
+          {/* Upload + Browse buttons */}
+          {!locked && (
+            <div style={{ display: "flex", gap: "0.35rem" }}>
+              <label
+                title="Upload file"
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: "0.3rem",
+                  padding: "0.25rem 0.6rem", borderRadius: "6px",
+                  border: "1px dashed var(--border)", background: "none",
+                  cursor: fileUploading ? "wait" : "pointer", fontSize: "0.7rem",
+                  color: "var(--muted-foreground)", whiteSpace: "nowrap",
+                }}
+                className="hover:border-primary hover:text-primary transition-colors"
+              >
+                <input ref={fileInputRef} type="file" onChange={handleFileUpload} disabled={locked || fileUploading} style={{ display: "none" }} />
+                <Upload style={{ width: 12, height: 12 }} />
+                {fileUploading ? "..." : "Upload"}
+              </label>
+              <button
+                type="button"
+                onClick={openFileBrowser}
+                title="Browse Media"
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: "0.3rem",
+                  padding: "0.25rem 0.6rem", borderRadius: "6px",
+                  border: "1px dashed var(--border)", background: "none",
+                  cursor: "pointer", fontSize: "0.7rem", color: "var(--muted-foreground)",
+                  whiteSpace: "nowrap",
+                }}
+                className="hover:border-primary hover:text-primary transition-colors"
+              >
+                <FolderOpen style={{ width: 12, height: 12 }} />
+                Browse
+              </button>
+            </div>
+          )}
 
           {/* Media browser modal */}
           {fileBrowserOpen && (
