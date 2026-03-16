@@ -212,6 +212,6 @@ export class SqliteStorageAdapter implements StorageAdapter {
   }
 
   async close(): Promise<void> {
-    this.sqlite.close();
+    this.sqlite?.close();
   }
 }
