@@ -324,70 +324,17 @@ These embedded media nodes are **not** the same as CMS blocks defined in `cms.co
 - **Richtext embedded media** — built into the TipTap editor, available everywhere, no config needed. The content is stored as HTML within the richtext field value.
 - **CMS blocks** — defined per-site in `cms.config.ts`, used in `blocks`-type fields, stored as structured JSON with a `_block` discriminator.
 
-### Rendering richtext embedded media in Next.js
+### Rendering richtext content in Next.js
 
-Richtext field values contain HTML that may include tags like `<audio>`, `<video>`, `<a download>`, and `<div class="callout callout-info">`. To render these correctly in Next.js, use `dangerouslySetInnerHTML` or a sanitizer that preserves these tags:
+**Richtext fields store markdown.** Use `react-markdown` with custom components to render them — see the "Rendering richtext content" section below in Site Building Patterns for the full recommended pattern.
 
-```typescript
-// Simple approach: dangerouslySetInnerHTML (content is trusted, authored in your CMS)
-function RichtextContent({ html }: { html: string }) {
-  return <div className="prose" dangerouslySetInnerHTML={{ __html: html }} />;
-}
+**NEVER use `dangerouslySetInnerHTML` with a regex-based markdown parser** — it breaks images with sizing, tables, embedded media, and any non-trivial markdown.
 
-// Usage in a page
-export default async function PostPage({ params }: { params: Promise<{ slug: string }> }) {
-  const { slug } = await params;
-  const post = getDocument<{ title: string; content: string }>('posts', slug);
-  if (!post) notFound();
-
-  return (
-    <article>
-      <h1>{post.data.title}</h1>
-      <RichtextContent html={post.data.content} />
-    </article>
-  );
-}
-```
-
-Style the embedded elements with CSS to match your site design:
-
-```css
-/* Audio players */
-.prose audio {
-  width: 100%;
-  margin: 1.5rem 0;
-}
-
-/* File attachment cards */
-.prose a[download] {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.75rem 1rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 0.5rem;
-  text-decoration: none;
-}
-
-/* Callout boxes */
-.prose .callout {
-  padding: 1rem 1.25rem;
-  border-radius: 0.5rem;
-  margin: 1.5rem 0;
-}
-.prose .callout-info {
-  background: #eff6ff;
-  border-left: 4px solid #3b82f6;
-}
-.prose .callout-warning {
-  background: #fffbeb;
-  border-left: 4px solid #f59e0b;
-}
-.prose .callout-tip {
-  background: #f0fdf4;
-  border-left: 4px solid #22c55e;
-}
-```
+**For complex pages with mixed content (text + interactives + images + files):** Use `blocks`-type fields instead of a single richtext field. Each block type handles its own rendering:
+- `text` block → rendered with `react-markdown`
+- `interactive` block → rendered as iframe or React component
+- `image` block → rendered as `<img>` with caption
+- `file` block → rendered as download link
 
 ## Storage Adapters
 
@@ -980,7 +927,7 @@ When building a site, always inform the user about admin options. Example:
 
 5. **Missing status filter** — `getCollection()` defaults to published only. To include drafts, pass `{ status: 'all' }`. Raw `findMany()` returns all statuses.
 
-6. **Richtext HTML output** — Richtext content rendered on the site may contain embedded media tags: `<audio controls>`, `<a download>`, `<div class="callout callout-info">`. Render with `dangerouslySetInnerHTML` and add CSS for these elements.
+6. **Richtext rendering** — ALWAYS use `react-markdown` with `remark-gfm` and custom components. NEVER use regex-based markdown parsers or `dangerouslySetInnerHTML` — they break images with sizing/alignment, tables, and complex markdown. The `img` component MUST parse the `title` prop for TipTap's `float:left|width:300px` format.
 
 7. **Image references** — Image fields store URL strings (e.g. `/uploads/image.jpg`), not file objects. In Next.js, use `<img>` or `next/image` with the URL directly.
 
@@ -1047,31 +994,131 @@ export function generateStaticParams() {
 }
 ```
 
-### Rendering markdown content safely
+### Rendering richtext content (IMPORTANT)
 
+**ALWAYS use `react-markdown` with custom components.** Never use regex-based markdown renderers or `dangerouslySetInnerHTML` with a custom parser — they break images, tables, and embedded content.
+
+**Required packages:**
+```bash
+npm install react-markdown remark-gfm
+```
+
+**Standard article renderer pattern:**
 ```typescript
-// lib/markdown.ts — minimal markdown renderer
-export function renderMarkdown(md: string): string {
-  return md
-    .replace(/^### (.*$)/gm, '<h3>$1</h3>')
-    .replace(/^## (.*$)/gm, '<h2>$1</h2>')
-    .replace(/^# (.*$)/gm, '<h1>$1</h1>')
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    .replace(/`(.*?)`/g, '<code>$1</code>')
-    .replace(/^\- (.*$)/gm, '<li>$1</li>')
-    .replace(/(<li>.*<\/li>)/s, '<ul>$1</ul>')
-    .replace(/\n\n/g, '</p><p>')
-    .replace(/^(.+)$/gm, '<p>$1</p>')
-    .replace(/<p><h/g, '<h').replace(/<\/h(\d)><\/p>/g, '</h$1>')
-    .replace(/<p><ul>/g, '<ul>').replace(/<\/ul><\/p>/g, '</ul>')
-    .replace(/<p><\/p>/g, '');
+// components/article-body.tsx
+"use client";
+import ReactMarkdown, { type Components } from "react-markdown";
+import remarkGfm from "remark-gfm";
+
+const mdComponents: Components = {
+  // Headings
+  h1: ({ children }) => <h1 className="text-3xl font-bold mt-8 mb-4">{children}</h1>,
+  h2: ({ children }) => <h2 className="text-2xl font-bold mt-12 mb-4">{children}</h2>,
+  h3: ({ children }) => <h3 className="text-lg font-semibold mt-8 mb-3">{children}</h3>,
+
+  // Text
+  p: ({ children }) => <p className="text-muted-foreground mb-4 leading-relaxed">{children}</p>,
+  strong: ({ children }) => <strong className="font-bold text-foreground">{children}</strong>,
+
+  // Images — MUST handle TipTap's title field for sizing/alignment
+  // TipTap stores resize info as: ![alt](url "float:left|width:300px")
+  img: ({ src, alt, title }) => {
+    if (!src) return null;
+    const isLeft = title?.includes("float:left");
+    const isRight = title?.includes("float:right");
+    const widthMatch = title?.match(/width:([^|]+)/);
+    const imgWidth = widthMatch ? widthMatch[1] : undefined;
+
+    const style: React.CSSProperties = {
+      maxWidth: "100%",
+      borderRadius: "0.5rem",
+      display: "block",
+      ...(imgWidth && { width: imgWidth }),
+      ...(isLeft && { float: "left", marginRight: "1.5rem", marginBottom: "0.75rem" }),
+      ...(isRight && { float: "right", marginLeft: "1.5rem", marginBottom: "0.75rem" }),
+      ...(!isLeft && !isRight && { margin: "1.5rem 0" }),
+    };
+    return <img src={src} alt={alt ?? ""} style={style} />;
+  },
+
+  // Links
+  a: ({ href, children }) => {
+    const isExternal = href?.startsWith("http");
+    return (
+      <a href={href} className="underline hover:opacity-80"
+        {...(isExternal ? { target: "_blank", rel: "noopener noreferrer" } : {})}>
+        {children}
+      </a>
+    );
+  },
+
+  // Lists
+  ul: ({ children }) => <ul className="list-disc pl-6 space-y-1 mb-4">{children}</ul>,
+  ol: ({ children }) => <ol className="list-decimal pl-6 space-y-1 mb-4">{children}</ol>,
+  li: ({ children }) => <li className="text-muted-foreground">{children}</li>,
+
+  // Tables
+  table: ({ children }) => (
+    <div className="overflow-x-auto my-6">
+      <table className="w-full border-collapse text-sm">{children}</table>
+    </div>
+  ),
+  th: ({ children }) => <th className="text-left px-4 py-2 font-semibold border-b">{children}</th>,
+  td: ({ children }) => <td className="px-4 py-2 text-muted-foreground border-b border-border/40">{children}</td>,
+
+  // Code
+  code: ({ children }) => (
+    <code className="text-sm px-1.5 py-0.5 rounded bg-muted">{children}</code>
+  ),
+
+  // Blockquotes
+  blockquote: ({ children }) => (
+    <blockquote className="border-l-4 border-primary pl-6 py-2 my-6 italic text-muted-foreground">
+      {children}
+    </blockquote>
+  ),
+};
+
+interface ArticleBodyProps {
+  content: string;
 }
 
-// Or use a proper library:
-// import { marked } from 'marked';
-// const html = marked(content);
+export function ArticleBody({ content }: ArticleBodyProps) {
+  return (
+    <div style={{ clear: "both" }}>
+      <ReactMarkdown components={mdComponents} remarkPlugins={[remarkGfm]}>
+        {content}
+      </ReactMarkdown>
+    </div>
+  );
+}
 ```
+
+**Usage in a page:**
+```typescript
+// app/blog/[slug]/page.tsx
+import { ArticleBody } from "@/components/article-body";
+
+export default async function PostPage({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params;
+  const post = getDocument("posts", slug);
+  if (!post) notFound();
+
+  return (
+    <article>
+      <h1>{post.data.title}</h1>
+      <ArticleBody content={post.data.content as string} />
+    </article>
+  );
+}
+```
+
+**Key points:**
+- The `img` component MUST parse the `title` prop for `float:left|width:300px` — TipTap stores resize/alignment info there
+- Always use `remark-gfm` for table support
+- `"use client"` is required because react-markdown uses client-side rendering
+- The `clear: "both"` on the wrapper ensures floated images don't leak outside the article
+- This pattern handles ALL richtext features: images with sizing, tables, code blocks, blockquotes, lists, links
 
 ## After Building a Site
 
