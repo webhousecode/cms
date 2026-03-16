@@ -216,7 +216,7 @@ The existing Infographics collection with a `type: "interactive"` field pointing
 
 ### Phase 2: Editing
 - [x] Visual Edit mode (wysiwyg-inject from Pitch Vault, adapted for CMS admin)
-- [ ] AI Edit mode (reuse existing AI chat component)
+- [x] AI Edit mode — split view: preview + AI chat panel, Apply button extracts HTML from code fences
 - [x] Code View mode (Monaco editor with HTML syntax highlighting)
 - [x] Clone interactive
 - [x] Top bar matches document editor exactly (same Button components, icon sizes)
@@ -228,8 +228,9 @@ The existing Infographics collection with a `type: "interactive"` field pointing
 
 ### Phase 4: Embedding
 - [x] TipTap `interactiveEmbed` node (toolbar button, picker, preview in editor)
-- [ ] Block type `interactive` for blocks fields
+- [x] Block type `interactive` for blocks fields — works via `defineBlock({ name: 'interactive', fields: [{ name: 'interactiveId', type: 'text' }, ...] })` in cms.config.ts, BlocksEditor renders automatically
 - [ ] Standalone page rendering (collection with interactive field)
+- [ ] Interactive picker field type (browse + select from Interactives Manager instead of text input for interactiveId)
 
 ### Phase 5: AI Generation
 - [ ] "Create with AI" — prompt → AI generates Interactive HTML
