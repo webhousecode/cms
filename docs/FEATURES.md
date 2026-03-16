@@ -60,6 +60,12 @@
 | F41 | [GitHub Site Auto-Sync & Webhook Revalidation](#f41-github-site-sync) | Done | [docs/features/F41-github-site-sync.md](features/F41-github-site-sync.md) |
 | F42 | [Framework Boilerplates](#f42-framework-boilerplates) | Planned | [docs/features/F42-framework-boilerplates.md](features/F42-framework-boilerplates.md) |
 | F43 | [Persist User State](#f43-persist-user-state) | Planned | [docs/features/F43-persist-user-state.md](features/F43-persist-user-state.md) |
+| F44 | [Media Processing Pipeline](#f44-media-processing-pipeline) | Planned | [docs/features/F44-media-processing.md](features/F44-media-processing.md) |
+| F45 | [AI Image Generation](#f45-ai-image-generation) | Planned | [docs/features/F45-ai-image-generation.md](features/F45-ai-image-generation.md) |
+| F46 | [Plugin System](#f46-plugin-system) | Planned | [docs/features/F46-plugin-system.md](features/F46-plugin-system.md) |
+| F47 | [Content Scheduling](#f47-content-scheduling) | Planned | [docs/features/F47-content-scheduling.md](features/F47-content-scheduling.md) |
+| F48 | [Internationalization (i18n)](#f48-internationalization-i18n) | Planned | [docs/features/F48-i18n.md](features/F48-i18n.md) |
+| F49 | [Incremental Builds](#f49-incremental-builds) | Planned | [docs/features/F49-incremental-builds.md](features/F49-incremental-builds.md) |
 
 ---
 
@@ -191,3 +197,21 @@ Production-ready starter templates in `examples/` that AI site builders clone in
 
 ## F43 — Persist User State
 Server-side persistence of open tabs, UI preferences (zoom, sidebar state, content toggle), editor state, recent searches, and column sort preferences. Stored per-user in `_data/user-state/{userId}.json`. Survives browser clears, device switches, and cookie resets. Client uses localStorage as fast cache with debounced sync to server. Automatic migration from existing localStorage on first use.
+
+## F44 — Media Processing Pipeline
+Sharp-based image processing on upload: resize, optimize, convert to WebP/AVIF. Responsive image variants with srcset generation. SVG optimization via SVGO. Audio waveform generation for podcast/audio UIs. AI-generated alt text via vision models. Ships as the `@webhouse/cms-media` package, integrated into MediaAdapter on upload. Produces optimized variants stored alongside originals.
+
+## F45 — AI Image Generation
+Generate images from text prompts directly in the Media Manager and richtext editor toolbar. Multi-provider support (Flux, DALL-E, Stable Diffusion) via an ImageProviderRegistry matching the existing text provider pattern. Image-to-image for variations and style transfer. Generated images pass through F44 media pipeline for post-processing. Configurable in Site Settings.
+
+## F46 — Plugin System
+`cms.registerPlugin()` API with lifecycle management (install, activate, deactivate, uninstall). Hook points for content (existing ContentHooks), builds (beforeRender, afterRender, beforeOutput, afterBuild), and AI (beforeGenerate, afterGenerate). Custom field types and custom block types via plugins. Plugin manifest in package.json. Plugin state persisted in `_data/plugins.json`. No marketplace — that's F32 Template Registry.
+
+## F47 — Content Scheduling
+Publish and unpublish content at specific future dates. Extends existing `publishAt` with new `unpublishAt` field for content expiry. Scheduler daemon checks every minute via F15 Agent Scheduler infrastructure. Date/time pickers in the publish dialog. Calendar view of all scheduled content across collections. Scheduling indicators (clock icons) in collection lists.
+
+## F48 — Internationalization (i18n)
+Complete multi-language content management built on existing locale/translationOf fields. Side-by-side translation editor with per-field AI translation. Translation status panel in document editor sidebar. Stale translation detection (source updated after translation). Locale routing helpers for Next.js (`generateI18nStaticParams`, `getLocalizedDocument`, hreflang generation). Drop-in LanguageSwitcher component for sites.
+
+## F49 — Incremental Builds
+Checksum-based change detection for `cms build`. SHA-256 hashes of document content and dependencies (relations, globals). Dependency graph tracks which pages depend on which documents. Only rebuilds pages whose hash changed since last build. Build cache stored in `_data/build-cache.json`. `--force` flag bypasses cache. Config changes trigger full rebuild. Significant speedup for large sites (100+ pages).
