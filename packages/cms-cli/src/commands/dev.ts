@@ -1,5 +1,6 @@
 import { loadConfig } from '../utils/config-loader.js';
 import { logger } from '../utils/logger.js';
+import { GitSyncWatcher } from '../utils/git-sync.js';
 
 export async function devCommand(args: { port?: number; cwd?: string }) {
   const cwd = args.cwd ?? process.cwd();
@@ -27,6 +28,30 @@ export async function devCommand(args: { port?: number; cwd?: string }) {
     });
   } catch {
     // chokidar optional
+  }
+
+  // Git auto-sync — polls for new commits and auto-pulls (for GitHub-backed sites)
+  try {
+    const watcher = new GitSyncWatcher({
+      cwd,
+      intervalMs: 5000,
+      onPull: (files) => {
+        const contentFiles = files.filter((f) => f.startsWith('content/'));
+        const publicFiles = files.filter((f) => f.startsWith('public/'));
+        if (contentFiles.length > 0 || publicFiles.length > 0) {
+          logger.success(`Auto-pulled ${files.length} change(s) from GitHub`);
+          contentFiles.forEach((f) => logger.log(`  ${f}`));
+          publicFiles.forEach((f) => logger.log(`  ${f}`));
+        }
+      },
+      onError: (error) => {
+        logger.warn(`Git sync: ${error}`);
+      },
+    });
+    await watcher.start();
+    logger.info('Git auto-sync enabled (polling every 5s)');
+  } catch {
+    // Not a git repo or no remote — skip silently
   }
 
   serve({

@@ -233,9 +233,60 @@ Class-based dark mode with:
 - CSS variables in `globals.css` for light/dark color schemes
 - `suppressHydrationWarning` on `<html>` to avoid mismatch
 
-### 5. `app/api/revalidate/route.ts` — F41-Compatible Endpoint
+### 5. `app/api/revalidate/route.ts` — Revalidation Endpoint with HMAC-SHA256
 
-Identical to the spec in F41: HMAC-SHA256 signature verification, `revalidatePath()` for each path in the payload. Ready to connect to CMS admin's revalidation dispatcher.
+The boilerplate ships a fully working revalidation endpoint that:
+- Validates `X-CMS-Signature` header using HMAC-SHA256 with `REVALIDATE_SECRET`
+- Calls `revalidatePath()` for each path in the payload
+- Works safely when `REVALIDATE_SECRET` is not set (local/non-GitHub sites simply skip validation)
+- Returns 401 if secret is configured but signature is missing/invalid
+
+```typescript
+// app/api/revalidate/route.ts
+import { revalidatePath } from 'next/cache';
+import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'node:crypto';
+
+const SECRET = process.env.REVALIDATE_SECRET;
+
+export async function POST(request: NextRequest) {
+  const signature = request.headers.get('x-cms-signature');
+  const body = await request.text();
+
+  // Verify HMAC if secret is configured
+  if (SECRET) {
+    if (!signature) {
+      return NextResponse.json({ error: 'Missing signature' }, { status: 401 });
+    }
+    const expected = 'sha256=' + crypto
+      .createHmac('sha256', SECRET)
+      .update(body)
+      .digest('hex');
+    const sigBuf = Buffer.from(signature);
+    const expBuf = Buffer.from(expected);
+    if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+    }
+  }
+  // If no SECRET configured (local dev), accept all requests — safe for non-GitHub sites
+
+  const payload = JSON.parse(body);
+  const paths: string[] = payload.paths ?? ['/'];
+
+  for (const path of paths) {
+    revalidatePath(path);
+  }
+
+  return NextResponse.json({ revalidated: true, paths, timestamp: new Date().toISOString() });
+}
+```
+
+**Key design choice:** When `REVALIDATE_SECRET` is not set, the endpoint accepts all requests without signature validation. This means:
+- Local filesystem sites: endpoint exists but is harmless (no external caller, no secret needed)
+- GitHub-backed sites: MUST set `REVALIDATE_SECRET` in `.env` and in CMS admin site settings
+- The boilerplate `.env.example` includes `REVALIDATE_SECRET=` with instructions to generate via `openssl rand -hex 32`
+
+The `revalidateUrl` and `revalidateSecret` fields are configured in CMS admin → Site Settings → Revalidation section (see F41). The boilerplate CLAUDE.md includes full setup instructions for AI site builders.
 
 ### 6. `lib/content.ts` — Content Loader
 

@@ -2198,25 +2198,78 @@ These must be identical. If your collection is named `blogPosts` in config, the 
 
 **Fix options:**
 
-1. **On-demand revalidation via webhook:**
+1. **On-demand revalidation via webhouse.app webhook (recommended):**
+
+webhouse.app automatically sends a signed webhook to your site after every content save/publish/delete. Setup requires two sides:
+
+**Site side — create `/api/revalidate` endpoint:**
 ```typescript
 // app/api/revalidate/route.ts
 import { revalidatePath } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
+import crypto from 'node:crypto';
+
+const SECRET = process.env.REVALIDATE_SECRET;
 
 export async function POST(request: NextRequest) {
-  const secret = request.headers.get('x-revalidation-secret');
-  if (secret !== process.env.REVALIDATION_SECRET) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const signature = request.headers.get('x-cms-signature');
+  const body = await request.text();
+
+  if (SECRET) {
+    if (!signature) {
+      return NextResponse.json({ error: 'Missing signature' }, { status: 401 });
+    }
+    const expected = 'sha256=' + crypto
+      .createHmac('sha256', SECRET)
+      .update(body)
+      .digest('hex');
+    const sigBuf = Buffer.from(signature);
+    const expBuf = Buffer.from(expected);
+    if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
+    }
   }
 
-  const { path } = await request.json();
-  revalidatePath(path ?? '/');
-  return NextResponse.json({ revalidated: true });
+  const payload = JSON.parse(body);
+  const paths: string[] = payload.paths ?? ['/'];
+
+  for (const path of paths) {
+    revalidatePath(path);
+  }
+
+  return NextResponse.json({ revalidated: true, paths, timestamp: new Date().toISOString() });
 }
 ```
 
-2. **Time-based revalidation:**
+Add to `.env` (or `.env.local`):
+```env
+# Generate with: openssl rand -hex 32
+REVALIDATE_SECRET=your-64-char-hex-secret
+```
+
+**CMS admin side — configure in Site Settings → Revalidation:**
+- **Revalidation URL**: `https://your-site.com/api/revalidate` (click "Auto" to generate from Preview URL)
+- **Webhook Secret**: same value as `REVALIDATE_SECRET` in your site's `.env` (click "Generate" to create one, then copy to both places)
+- Use **Send test ping** to verify the connection
+
+The F42 Next.js boilerplate includes this endpoint pre-configured — no manual setup needed.
+
+**Webhook payload format:**
+```json
+{
+  "event": "content.revalidate",
+  "timestamp": "2026-03-16T10:00:00Z",
+  "site": "my-site",
+  "paths": ["/blog/hello-world", "/blog"],
+  "collection": "posts",
+  "slug": "hello-world",
+  "action": "updated"
+}
+```
+
+Header `X-CMS-Signature: sha256=<hmac>` is computed as HMAC-SHA256 of the JSON body using the shared secret.
+
+2. **Time-based revalidation (simpler, less precise):**
 ```typescript
 // In any page or layout
 export const revalidate = 60; // Revalidate every 60 seconds

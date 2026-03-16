@@ -1,6 +1,8 @@
-import { getAdminCms } from "@/lib/cms";
+import { getAdminCms, getAdminConfig } from "@/lib/cms";
 import { saveRevision } from "@/lib/revisions";
 import { removeQueueItemsBySlug } from "@/lib/curation";
+import { dispatchRevalidation } from "@/lib/revalidation";
+import { getActiveSiteEntry } from "@/lib/site-paths";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
@@ -22,6 +24,16 @@ export async function POST(req: NextRequest, { params }: Ctx) {
         data: restoredData,
       });
       const updated = await cms.content.findBySlug(collection, slug);
+
+      // Dispatch revalidation on restore
+      const site = await getActiveSiteEntry().catch(() => null);
+      if (site?.revalidateUrl) {
+        const config = await getAdminConfig();
+        const col = config.collections.find((c) => c.name === collection);
+        const urlPrefix = (col as { urlPrefix?: string })?.urlPrefix;
+        dispatchRevalidation(site, { collection, slug, action: "updated" }, urlPrefix).catch(() => {});
+      }
+
       return NextResponse.json(updated);
     }
 
@@ -92,6 +104,17 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
 
     const newSlug = body.slug ?? slug;
     const updated = await cms.content.findBySlug(collection, newSlug);
+
+    // Dispatch revalidation for sites with revalidateUrl configured
+    const site = await getActiveSiteEntry().catch(() => null);
+    if (site?.revalidateUrl) {
+      const config = await getAdminConfig();
+      const col = config.collections.find((c) => c.name === collection);
+      const urlPrefix = (col as { urlPrefix?: string })?.urlPrefix;
+      const action = nextStatus === "published" ? "published" : nextStatus === "trashed" ? "deleted" : "updated";
+      dispatchRevalidation(site, { collection, slug: newSlug, action }, urlPrefix).catch(() => {});
+    }
+
     return NextResponse.json(updated);
   } catch (err) {
     console.error(err);
@@ -118,6 +141,16 @@ export async function DELETE(req: NextRequest, { params }: Ctx) {
     }
     // Either way, clean up any pending curation queue entries
     await removeQueueItemsBySlug(collection, slug).catch(() => {});
+
+    // Dispatch revalidation
+    const site = await getActiveSiteEntry().catch(() => null);
+    if (site?.revalidateUrl) {
+      const config = await getAdminConfig();
+      const col = config.collections.find((c) => c.name === collection);
+      const urlPrefix = (col as { urlPrefix?: string })?.urlPrefix;
+      dispatchRevalidation(site, { collection, slug, action: "deleted" }, urlPrefix).catch(() => {});
+    }
+
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error(err);

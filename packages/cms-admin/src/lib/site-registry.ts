@@ -26,6 +26,8 @@ export interface SiteEntry {
   uploadDir?: string;       // absolute path (filesystem only)
   previewUrl?: string;
   github?: SiteGitHub;      // github adapter only
+  revalidateUrl?: string;   // e.g. "https://example.com/api/revalidate"
+  revalidateSecret?: string; // HMAC-SHA256 signing secret
 }
 
 export interface OrgEntry {

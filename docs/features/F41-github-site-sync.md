@@ -345,16 +345,19 @@ defineCollection({
 
 ## Implementation Steps
 
-1. **Create `packages/cms-cli/src/utils/git-sync.ts`** — GitSyncWatcher class with polling logic
-2. **Update `packages/cms-cli/src/commands/dev.ts`** — Start GitSyncWatcher when cwd is a git repo with GitHub remote
-3. **Add `revalidateUrl` and `revalidateSecret` fields to `SiteEntry`** in `packages/cms-admin/src/lib/site-registry.ts`
-4. **Create `packages/cms-admin/src/lib/revalidation.ts`** — dispatchRevalidation function
-5. **Wire revalidation into content save flow** — Call dispatchRevalidation after successful GitHub API commit
-6. **Add "Revalidation" section to Site Settings UI** — URL input, secret input with generate/copy buttons, test ping button
-7. **Update `packages/create-cms/src/index.ts`** — Generate `app/api/revalidate/route.ts` and `.env.example` entry
-8. **Update scaffolded CLAUDE.md** — Add revalidation section with setup instructions and AI builder notes
-9. **Add `urlPrefix` support to collection config** — Used for path mapping in revalidation payload
-10. **Add revalidation delivery log** — Store last 50 revalidation attempts in `_data/revalidation-log.json` for debugging
+1. [x] **Create `packages/cms-cli/src/utils/git-sync.ts`** — GitSyncWatcher class with polling logic
+2. [x] **Update `packages/cms-cli/src/commands/dev.ts`** — Start GitSyncWatcher when cwd is a git repo with GitHub remote
+3. [x] **Add `revalidateUrl` and `revalidateSecret` fields to `SiteEntry`** in `packages/cms-admin/src/lib/site-registry.ts`
+4. [x] **Create `packages/cms-admin/src/lib/revalidation.ts`** — dispatchRevalidation function with HMAC-SHA256 signing
+5. [x] **Wire revalidation into content save flow** — PATCH/DELETE/POST (restore) in `[collection]/[slug]/route.ts`
+6. [x] **Add "Revalidation" section to Site Settings UI** — URL input, secret with show/hide/generate/copy, test ping, delivery log
+7. [ ] **Update `packages/create-cms/src/index.ts`** — Generate `app/api/revalidate/route.ts` and `.env.example` entry (deferred to F42)
+8. [ ] **Update scaffolded CLAUDE.md** — Add revalidation section (deferred to F42)
+9. [x] **`urlPrefix` support in revalidation** — computePaths uses urlPrefix from collection config
+10. [x] **Add revalidation delivery log** — Last 50 entries in `_data/revalidation-log.json`, visible in Settings UI
+11. [x] **Fix cache path** — Changed from `~/.webhouse/` to `{cms-admin-dir}/.cache/sites/{siteId}/`
+12. [x] **API endpoint** — `GET/POST /api/cms/revalidation` for settings + test ping + log
+13. [x] **`getActiveSiteEntry()`** — New helper in site-paths.ts to get full SiteEntry from cookies
 
 ## Configuration Example
 

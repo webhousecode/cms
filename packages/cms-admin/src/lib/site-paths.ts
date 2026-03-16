@@ -9,7 +9,20 @@
  */
 import path from "node:path";
 import { cookies } from "next/headers";
-import { loadRegistry, findSite, getDefaultSite } from "./site-registry";
+import { loadRegistry, findSite, getDefaultSite, type SiteEntry } from "./site-registry";
+
+/**
+ * Cache directory for GitHub-backed sites.
+ * Uses {cms-admin-dir}/.cache/ so it works in Docker, Fly.io, etc.
+ * Falls back to ~/.webhouse/.cache if CMS_CONFIG_PATH is not set.
+ */
+function getCmsAdminCacheDir(): string {
+  const configPath = process.env.CMS_CONFIG_PATH;
+  if (configPath) {
+    return path.join(path.dirname(path.resolve(configPath)), ".cache");
+  }
+  return path.join(process.env.HOME ?? "/tmp", ".webhouse", ".cache");
+}
 
 export interface SitePaths {
   configPath: string;    // absolute path to cms.config.ts
@@ -68,10 +81,10 @@ export async function getActiveSitePaths(): Promise<SitePaths> {
 
 function siteToPaths(site: { id?: string; configPath: string; contentDir?: string; uploadDir?: string; previewUrl?: string; adapter?: string }): SitePaths {
   // GitHub sites don't have a local project directory — use a cache folder
+  // relative to the CMS admin install dir (works in Docker/Fly.io/etc.)
   if (site.adapter === "github" || site.configPath.startsWith("github://")) {
     const siteId = (site as { id?: string }).id ?? "github-site";
-    const homeDir = process.env.HOME ?? "/tmp";
-    const cacheDir = path.join(homeDir, ".webhouse", "sites", siteId);
+    const cacheDir = path.join(getCmsAdminCacheDir(), "sites", siteId);
     return {
       configPath: site.configPath,
       projectDir: cacheDir,
@@ -92,6 +105,32 @@ function siteToPaths(site: { id?: string; configPath: string; contentDir?: strin
     uploadDir: site.uploadDir ?? path.join(projectDir, "public", "uploads"),
     previewUrl: site.previewUrl ?? "",
   };
+}
+
+/**
+ * Get the full SiteEntry for the currently active site.
+ * Returns null in single-site mode (no registry).
+ */
+export async function getActiveSiteEntry(): Promise<SiteEntry | null> {
+  const registry = await loadRegistry();
+  if (!registry) return null;
+
+  let orgId: string;
+  let siteId: string;
+  try {
+    const cookieStore = await cookies();
+    orgId = cookieStore.get("cms-active-org")?.value ?? registry.defaultOrgId;
+    siteId = cookieStore.get("cms-active-site")?.value ?? registry.defaultSiteId;
+  } catch {
+    orgId = registry.defaultOrgId;
+    siteId = registry.defaultSiteId;
+  }
+
+  const site = findSite(registry, orgId, siteId);
+  if (site) return site;
+
+  const def = getDefaultSite(registry);
+  return def?.site ?? null;
 }
 
 /**
