@@ -19,6 +19,6 @@ export default async function Root() {
   if (await isAuthenticated()) {
     redirect("/admin");
   }
-  // Unauthenticated users go to login
-  redirect("/admin/login");
+  // Unauthenticated users see the landing page
+  redirect("/home");
 }

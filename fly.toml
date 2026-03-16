@@ -1,0 +1,48 @@
+app = "webhouse-app"
+primary_region = "arn"
+
+[build]
+  dockerfile = "deploy/webhouse-app/Dockerfile"
+
+[env]
+  DATA_DIR = "/data"
+  CMS_CONFIG_PATH = "/data/cms.config.ts"
+  UPLOAD_DIR = "/data/uploads"
+  NODE_ENV = "production"
+
+[mounts]
+  source = "cms_data"
+  destination = "/data"
+
+[[services]]
+  internal_port = 3010
+  protocol = "tcp"
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  [[services.ports]]
+    handlers = ["http"]
+    port = 80
+    force_https = true
+
+  [[services.ports]]
+    handlers = ["tls", "http"]
+    port = 443
+
+  [services.concurrency]
+    type = "connections"
+    hard_limit = 25
+    soft_limit = 20
+
+  [[services.http_checks]]
+    interval = 15000
+    grace_period = "10s"
+    method = "GET"
+    path = "/home"
+    protocol = "http"
+    timeout = 5000
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "1gb"

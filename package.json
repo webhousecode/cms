@@ -13,7 +13,13 @@
     "push-secrets:fly": "bash scripts/push-secrets.sh fly",
     "push-secrets:docker": "bash scripts/push-secrets.sh docker",
     "push-secrets:github": "bash scripts/push-secrets.sh github",
-    "screenshots": "pnpm dlx tsx scripts/screenshots.ts"
+    "screenshots": "pnpm dlx tsx scripts/screenshots.ts",
+    "ship": "bash scripts/ship.sh",
+    "ship:skip": "bash scripts/ship.sh --skip-local",
+    "ship:status": "gh run list --workflow=deploy.yml --repo webhousecode/cms --limit=5",
+    "ship:watch": "gh run watch --repo webhousecode/cms",
+    "e2e": "npx playwright test tests/",
+    "e2e:landing": "npx playwright test tests/landing-page.spec.ts"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.12",
