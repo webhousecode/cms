@@ -1116,22 +1116,33 @@ const InteractiveEmbed = TipTapNode.create({
   },
 
   parseHTML() {
-    return [{ tag: "div[data-interactive-embed]", getAttrs: (el) => ({
-      interactiveId: (el as Element).getAttribute("data-interactive-embed") ?? "",
-      title: (el as Element).getAttribute("data-interactive-title") ?? "",
-      align: (el as Element).getAttribute("data-interactive-align") ?? "",
-      width: (el as Element).getAttribute("data-interactive-width") ?? "",
-      height: (el as Element).getAttribute("data-interactive-height") ?? "",
-    }) }];
+    return [
+      { tag: "cms-interactive[data-id]", getAttrs: (el) => ({
+        interactiveId: (el as Element).getAttribute("data-id") ?? "",
+        title: (el as Element).getAttribute("data-title") ?? "",
+        align: (el as Element).getAttribute("data-align") ?? "",
+        width: (el as Element).getAttribute("data-width") ?? "",
+        height: (el as Element).getAttribute("data-height") ?? "",
+      }) },
+      // Legacy fallback for div-based format
+      { tag: "div[data-interactive-embed]", getAttrs: (el) => ({
+        interactiveId: (el as Element).getAttribute("data-interactive-embed") ?? "",
+        title: (el as Element).getAttribute("data-interactive-title") ?? "",
+        align: (el as Element).getAttribute("data-interactive-align") ?? "",
+        width: (el as Element).getAttribute("data-interactive-width") ?? "",
+        height: (el as Element).getAttribute("data-interactive-height") ?? "",
+      }) },
+    ];
   },
 
   renderHTML({ node }) {
-    const attrs: Record<string, string> = { "data-interactive-embed": node.attrs.interactiveId };
-    if (node.attrs.title) attrs["data-interactive-title"] = node.attrs.title;
-    if (node.attrs.align) attrs["data-interactive-align"] = node.attrs.align;
-    if (node.attrs.width) attrs["data-interactive-width"] = node.attrs.width;
-    if (node.attrs.height) attrs["data-interactive-height"] = node.attrs.height;
-    return ["div", attrs];
+    return ["cms-interactive", {
+      "data-id": node.attrs.interactiveId,
+      "data-title": node.attrs.title || undefined,
+      "data-align": node.attrs.align || undefined,
+      "data-width": node.attrs.width || undefined,
+      "data-height": node.attrs.height || undefined,
+    }];
   },
 
   addStorage() {
@@ -1149,7 +1160,8 @@ const InteractiveEmbed = TipTapNode.create({
         },
         parse: {
           updateDOM(dom: Element) {
-            // Convert <p>!!INTERACTIVE[id|title|width:x|height:y]</p> → <div data-interactive-embed>
+            // Convert <p>!!INTERACTIVE[id|title|width:x|height:y]</p> → <cms-interactive>
+            // Uses custom element to avoid ProseMirror treating <div> as generic container
             dom.querySelectorAll("p").forEach((p) => {
               const text = (p.textContent ?? "").trim();
               const m = text.match(/^!!INTERACTIVE\[([^\]]+)\]$/);
@@ -1166,13 +1178,13 @@ const InteractiveEmbed = TipTapNode.create({
                 else if (parts[i].startsWith("height:")) height = parts[i].slice(7);
                 else if (!title) title = parts[i];
               }
-              const div = document.createElement("div");
-              div.setAttribute("data-interactive-embed", id);
-              if (title) div.setAttribute("data-interactive-title", title);
-              if (align) div.setAttribute("data-interactive-align", align);
-              if (width) div.setAttribute("data-interactive-width", width);
-              if (height) div.setAttribute("data-interactive-height", height);
-              p.parentNode?.replaceChild(div, p);
+              const el = document.createElement("cms-interactive");
+              el.setAttribute("data-id", id);
+              if (title) el.setAttribute("data-title", title);
+              if (align) el.setAttribute("data-align", align);
+              if (width) el.setAttribute("data-width", width);
+              if (height) el.setAttribute("data-height", height);
+              p.parentNode?.replaceChild(el, p);
             });
           },
         },
@@ -1445,7 +1457,7 @@ function FileNodeView({ node, updateAttributes, deleteNode, selected }: NodeView
   }
 
   return (
-    <NodeViewWrapper draggable contentEditable={false} style={{ margin: "0.75rem 0", position: "relative" }}>
+    <NodeViewWrapper draggable contentEditable={false} style={{ margin: "0.25rem 0", position: "relative" }}>
       <DragHandle />
       <div style={{
         display: "inline-flex", flexDirection: "column", borderRadius: "8px",
@@ -1507,18 +1519,27 @@ const FileAttachment = TipTapNode.create({
   },
 
   parseHTML() {
-    return [{ tag: "div[data-file-attachment]", getAttrs: (el) => ({
-      src:      (el as Element).getAttribute("data-file-attachment") ?? "",
-      filename: (el as Element).getAttribute("data-file-name") ?? "",
-      size:     (el as Element).getAttribute("data-file-size") ?? "",
-    }) }];
+    return [
+      { tag: "cms-file[data-src]", getAttrs: (el) => ({
+        src:      (el as Element).getAttribute("data-src") ?? "",
+        filename: (el as Element).getAttribute("data-name") ?? "",
+        size:     (el as Element).getAttribute("data-size") ?? "",
+      }) },
+      // Legacy fallback
+      { tag: "div[data-file-attachment]", getAttrs: (el) => ({
+        src:      (el as Element).getAttribute("data-file-attachment") ?? "",
+        filename: (el as Element).getAttribute("data-file-name") ?? "",
+        size:     (el as Element).getAttribute("data-file-size") ?? "",
+      }) },
+    ];
   },
 
   renderHTML({ node }) {
-    const attrs: Record<string, string> = { "data-file-attachment": node.attrs.src };
-    if (node.attrs.filename) attrs["data-file-name"] = node.attrs.filename;
-    if (node.attrs.size)     attrs["data-file-size"] = node.attrs.size;
-    return ["div", attrs];
+    return ["cms-file", {
+      "data-src": node.attrs.src,
+      "data-name": node.attrs.filename || undefined,
+      "data-size": node.attrs.size || undefined,
+    }];
   },
 
   addStorage() {
@@ -1532,16 +1553,16 @@ const FileAttachment = TipTapNode.create({
         },
         parse: {
           updateDOM(dom: Element) {
-            // Convert <p>!!FILE[src|filename|size]</p> → <div data-file-attachment>
+            // Convert <p>!!FILE[src|filename|size]</p> → <cms-file>
             dom.querySelectorAll("p").forEach((p) => {
               const text = (p.textContent ?? "").trim();
               const m = text.match(/^!!FILE\[([^|]+)\|([^|]*)\|?(.*?)\]$/);
               if (!m) return;
-              const div = document.createElement("div");
-              div.setAttribute("data-file-attachment", m[1]);
-              div.setAttribute("data-file-name", m[2] || "");
-              div.setAttribute("data-file-size", m[3] || "0");
-              p.parentNode?.replaceChild(div, p);
+              const el = document.createElement("cms-file");
+              el.setAttribute("data-src", m[1]);
+              el.setAttribute("data-name", m[2] || "");
+              el.setAttribute("data-size", m[3] || "0");
+              p.parentNode?.replaceChild(el, p);
             });
             // Also handle legacy <!-- file:... --> comments
             const cWalker = document.createTreeWalker(dom, NodeFilter.SHOW_COMMENT);
@@ -1550,21 +1571,21 @@ const FileAttachment = TipTapNode.create({
             for (const c of comments) {
               const m = c.textContent?.trim().match(/^file:([^|]+)\|([^|]*)\|?(.*)$/);
               if (m) {
-                const div = document.createElement("div");
-                div.setAttribute("data-file-attachment", m[1]);
-                div.setAttribute("data-file-name", m[2] || "");
-                div.setAttribute("data-file-size", m[3] || "0");
-                c.parentNode?.replaceChild(div, c);
+                const el = document.createElement("cms-file");
+                el.setAttribute("data-src", m[1]);
+                el.setAttribute("data-name", m[2] || "");
+                el.setAttribute("data-size", m[3] || "0");
+                c.parentNode?.replaceChild(el, c);
               }
             }
             // Also handle legacy <a download> tags
             dom.querySelectorAll("a[download]").forEach((a) => {
               const src = a.getAttribute("href") ?? "";
               const filename = a.textContent ?? "";
-              const div = document.createElement("div");
-              div.setAttribute("data-file-attachment", src);
-              div.setAttribute("data-file-name", filename);
-              a.parentNode?.replaceChild(div, a);
+              const el = document.createElement("cms-file");
+              el.setAttribute("data-src", src);
+              el.setAttribute("data-name", filename);
+              a.parentNode?.replaceChild(el, a);
             });
           },
         },
@@ -1995,34 +2016,37 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
     content: value || "",
     editable: !disabled,
     onCreate: ({ editor }) => {
-      // Fallback: scan for any !!INTERACTIVE[...] or !!FILE[...] text nodes that
-      // survived markdown parsing and convert them to proper embed nodes.
-      // This handles cases where tiptap-markdown's updateDOM didn't successfully
-      // create the nodes that ProseMirror could parse.
-      const { doc, tr } = editor.state;
-      let modified = false;
+      // Fallback: scan for paragraphs containing !!INTERACTIVE[...] or !!FILE[...]
+      // text that survived markdown parsing, and convert them to proper embed nodes.
+      // Collect replacements from end to start to preserve positions.
+      const { doc } = editor.state;
+      const replacements: { pos: number; end: number; node: typeof doc }[] = [];
       doc.descendants((node, pos) => {
-        if (node.isText && node.text) {
-          const intMatch = node.text.match(/^!!INTERACTIVE\[([^\]]+)\]$/);
-          if (intMatch) {
-            const parts = intMatch[1].split("|");
-            const id = parts[0];
-            let title = "", alignVal = "", widthVal = "", heightVal = "";
-            for (let i = 1; i < parts.length; i++) {
-              if (parts[i].startsWith("align:")) alignVal = parts[i].slice(6);
-              else if (parts[i].startsWith("width:")) widthVal = parts[i].slice(6);
-              else if (parts[i].startsWith("height:")) heightVal = parts[i].slice(7);
-              else if (!title) title = parts[i];
-            }
-            const intNode = editor.schema.nodes.interactiveEmbed.create({ interactiveId: id, title, align: alignVal, width: widthVal, height: heightVal });
-            // Replace the paragraph containing this text node
-            const parentPos = editor.state.doc.resolve(pos).before(1);
-            tr.replaceWith(parentPos, parentPos + node.nodeSize + 2, intNode);
-            modified = true;
+        if (node.type.name !== "paragraph") return;
+        const text = node.textContent;
+        const intMatch = text.match(/^!!INTERACTIVE\[([^\]]+)\]$/);
+        if (intMatch) {
+          const parts = intMatch[1].split("|");
+          const id = parts[0];
+          let title = "", alignVal = "", widthVal = "", heightVal = "";
+          for (let i = 1; i < parts.length; i++) {
+            if (parts[i].startsWith("align:")) alignVal = parts[i].slice(6);
+            else if (parts[i].startsWith("width:")) widthVal = parts[i].slice(6);
+            else if (parts[i].startsWith("height:")) heightVal = parts[i].slice(7);
+            else if (!title) title = parts[i];
           }
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          replacements.push({ pos, end: pos + node.nodeSize, node: editor.schema.nodes.interactiveEmbed.create({ interactiveId: id, title, align: alignVal, width: widthVal, height: heightVal }) as any });
         }
       });
-      if (modified) editor.view.dispatch(tr);
+      if (replacements.length > 0) {
+        const tr = editor.state.tr;
+        // Apply from end to start so positions stay valid
+        for (const r of replacements.reverse()) {
+          tr.replaceWith(r.pos, r.end, r.node);
+        }
+        editor.view.dispatch(tr);
+      }
     },
     onUpdate: ({ editor }) => onChange(editor.storage.markdown.getMarkdown()),
     editorProps: {
