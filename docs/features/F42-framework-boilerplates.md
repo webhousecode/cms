@@ -342,32 +342,68 @@ When boilerplate mode is selected:
 3. Update `CLAUDE.md` with the project name
 4. Run `npm install`
 
+### Two Next.js Boilerplates
+
+The scaffolder offers two Next.js variants depending on the storage adapter:
+
+**`nextjs-boilerplate/`** — Filesystem adapter (CMS + site on same machine)
+- Content read directly from local JSON files — instant, zero latency
+- No webhook, no revalidation endpoint needed
+- Simplest setup, ideal for single-server deployments or Docker containers
+
+**`nextjs-github-boilerplate/`** — GitHub adapter (CMS and site separate)
+- Content pushed to site via signed webhook from webhouse.app
+- Includes `/api/revalidate` endpoint (HMAC-SHA256, content push, file write)
+- Includes `/api/content-stream` SSE endpoint for LiveRefresh
+- Includes `LiveRefresh` client component (instant browser updates on CMS changes)
+- Includes `lib/content-stream.ts` in-memory broadcast
+- `.env.example` includes `REVALIDATE_SECRET`
+- No git pull at runtime — CMS pushes documents directly
+
+```bash
+npm create @webhouse/cms my-site --boilerplate nextjs         # filesystem
+npm create @webhouse/cms my-site --boilerplate nextjs-github  # GitHub adapter
+```
+
 ### Future Boilerplates
 
 ```
 examples/
-  nextjs-boilerplate/     # F42 Phase 1 (this feature)
-  astro-boilerplate/      # F42 Phase 2 (future)
-  remix-boilerplate/      # F42 Phase 3 (future)
-  nuxt-boilerplate/       # F42 Phase 4 (future)
+  nextjs-boilerplate/          # Filesystem adapter (Phase 1)
+  nextjs-github-boilerplate/   # GitHub adapter (Phase 1)
+  astro-boilerplate/           # Phase 2 (future)
+  remix-boilerplate/           # Phase 3 (future)
+  nuxt-boilerplate/            # Phase 4 (future)
 ```
 
 ## Implementation Steps
 
-1. **Create `examples/nextjs-boilerplate/` directory structure** — all files listed in the file tree above
-2. **Implement `components/article-body.tsx`** — the canonical react-markdown renderer from CLAUDE.md
-3. **Implement `components/block-renderer.tsx`** — hero, features, cta, notice block components
-4. **Implement `components/theme-toggle.tsx` + `lib/theme-provider.tsx`** — light/dark mode
-5. **Implement `app/api/revalidate/route.ts`** — HMAC webhook endpoint
-6. **Create `cms.config.ts`** — global, pages (blocks), posts collections
-7. **Create sample content** — home page, 2 blog posts, global settings
-8. **Create `app/` routes** — layout, homepage, blog listing, blog post, dynamic page
-9. **Create `next.config.ts`, `tailwind.config.ts`, `tsconfig.json`, `package.json`**
-10. **Write `CLAUDE.md`** — AI builder instructions
-11. **Write `README.md`** — human setup instructions
-12. **Update `packages/create-cms/src/index.ts`** — add `--boilerplate` flag and interactive prompt
-13. **Test** — `cd examples/nextjs-boilerplate && npm install && npm run dev` must work
-14. **Update `examples/` in root `package.json` / turbo config** if needed
+### Shared (both boilerplates)
+1. **`components/article-body.tsx`** — canonical react-markdown renderer from CLAUDE.md
+2. **`components/block-renderer.tsx`** — hero, features, cta, notice block components
+3. **`components/theme-toggle.tsx` + `lib/theme-provider.tsx`** — light/dark mode
+4. **`cms.config.ts`** — global, pages (blocks), posts collections
+5. **Sample content** — home page, 2 blog posts, global settings
+6. **`app/` routes** — layout, homepage, blog listing, blog post, dynamic page
+7. **`next.config.ts`, `tailwind.config.ts`, `tsconfig.json`, `package.json`**
+8. **`CLAUDE.md`** — AI builder instructions
+9. **`README.md`** — human setup instructions
+
+### `nextjs-boilerplate/` (filesystem)
+10. **Create directory structure** — all shared files, no webhook infrastructure
+
+### `nextjs-github-boilerplate/` (GitHub adapter)
+11. **`app/api/revalidate/route.ts`** — HMAC + content push (write document to disk) + SSE notify
+12. **`app/api/content-stream/route.ts`** — SSE endpoint for LiveRefresh
+13. **`components/live-refresh.tsx`** — client component, `router.refresh()` on SSE event
+14. **`lib/content-stream.ts`** — in-memory broadcast for SSE
+15. **`.env.example`** — includes `REVALIDATE_SECRET`
+16. **Add `<LiveRefresh />` to root layout**
+
+### Scaffolder
+17. **Update `packages/create-cms/src/index.ts`** — add `--boilerplate nextjs` and `--boilerplate nextjs-github` flags
+18. **Test both** — `npm install && npm run dev` must work for both boilerplates
+19. **Update `examples/` in root `package.json` / turbo config** if needed
 
 ## Dependencies
 

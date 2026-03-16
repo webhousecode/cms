@@ -2198,39 +2198,44 @@ These must be identical. If your collection is named `blogPosts` in config, the 
 
 **Fix options:**
 
-1. **On-demand revalidation via webhouse.app webhook (recommended):**
+1. **On-demand revalidation via webhouse.app content push (recommended):**
 
-webhouse.app automatically sends a signed webhook to your site after every content save/publish/delete. Setup requires two sides:
+webhouse.app sends a signed webhook with the **full document JSON** after every content save/publish/delete. The site writes the document directly to disk and calls `revalidatePath()`. No git pull, no API latency, instant updates.
 
-**Site side — create `/api/revalidate` endpoint:**
+**This only applies to GitHub-backed sites.** Filesystem sites (CMS + site on same disk) update content files directly — no webhook needed.
+
+**Site side — three files needed:**
+
+**`app/api/revalidate/route.ts`** — receives content push, writes to disk:
 ```typescript
-// app/api/revalidate/route.ts
 import { revalidatePath } from 'next/cache';
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'node:crypto';
-import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
+import fs from 'node:fs/promises';
+import path from 'node:path';
+import { notifyContentChange } from '@/lib/content-stream';
 
-const exec = promisify(execFile);
 const SECRET = process.env.REVALIDATE_SECRET;
 
-/**
- * Pull latest content from GitHub before revalidating.
- * In dev mode this triggers HMR; in production it updates the local checkout.
- */
-async function gitPull(): Promise<string[]> {
-  try {
-    const cwd = process.cwd();
-    await exec('git', ['fetch', 'origin', '--quiet'], { cwd });
-    const { stdout: before } = await exec('git', ['rev-parse', 'HEAD'], { cwd });
-    const { stdout: remote } = await exec('git', ['rev-parse', 'origin/main'], { cwd });
-    if (before.trim() === remote.trim()) return [];
-    const { stdout: diff } = await exec('git', ['diff', '--name-only', before.trim(), remote.trim()], { cwd });
-    await exec('git', ['pull', '--ff-only', '--quiet'], { cwd });
-    return diff.trim().split('\n').filter(Boolean);
-  } catch {
-    return [];
+async function writeContent(
+  collection: string,
+  slug: string,
+  action: string,
+  document: Record<string, unknown> | null,
+): Promise<'written' | 'deleted' | 'skipped'> {
+  const contentDir = path.join(process.cwd(), 'content', collection);
+  const filePath = path.join(contentDir, `${slug}.json`);
+
+  if (action === 'deleted' || action === 'unpublished') {
+    try { await fs.unlink(filePath); return 'deleted'; }
+    catch { return 'skipped'; }
   }
+
+  if (!document) return 'skipped';
+
+  await fs.mkdir(contentDir, { recursive: true });
+  await fs.writeFile(filePath, JSON.stringify(document, null, 2));
+  return 'written';
 }
 
 export async function POST(request: NextRequest) {
@@ -2255,21 +2260,83 @@ export async function POST(request: NextRequest) {
   const payload = JSON.parse(body);
   const paths: string[] = payload.paths ?? ['/'];
 
-  // Pull latest from GitHub, then revalidate
-  const changedFiles = await gitPull();
-
-  for (const path of paths) {
-    revalidatePath(path);
+  // Content push: write document to disk (or delete it)
+  let contentResult: 'written' | 'deleted' | 'skipped' = 'skipped';
+  if (payload.collection && payload.slug && payload.collection !== '_test') {
+    contentResult = await writeContent(
+      payload.collection, payload.slug, payload.action, payload.document ?? null,
+    );
   }
 
-  return NextResponse.json({
-    revalidated: true,
-    paths,
-    pulled: changedFiles.length,
-    timestamp: new Date().toISOString(),
+  for (const p of paths) { revalidatePath(p); }
+
+  // Notify connected browsers (LiveRefresh)
+  notifyContentChange(paths);
+
+  return NextResponse.json({ revalidated: true, paths, contentResult, timestamp: new Date().toISOString() });
+}
+```
+
+**`lib/content-stream.ts`** — in-memory SSE broadcast:
+```typescript
+type Listener = (paths: string[]) => void;
+const listeners = new Set<Listener>();
+
+export function addListener(fn: Listener) {
+  listeners.add(fn);
+  return () => listeners.delete(fn);
+}
+
+export function notifyContentChange(paths: string[]) {
+  for (const fn of listeners) fn(paths);
+}
+```
+
+**`app/api/content-stream/route.ts`** — SSE endpoint for LiveRefresh:
+```typescript
+import { addListener } from '@/lib/content-stream';
+
+export async function GET() {
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream({
+    start(controller) {
+      controller.enqueue(encoder.encode(': connected\n\n'));
+      const remove = addListener((paths) => {
+        const data = JSON.stringify({ paths, timestamp: Date.now() });
+        controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+      });
+      const keepalive = setInterval(() => {
+        try { controller.enqueue(encoder.encode(': keepalive\n\n')); }
+        catch { clearInterval(keepalive); }
+      }, 30_000);
+    },
+  });
+  return new Response(stream, {
+    headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache, no-transform', Connection: 'keep-alive' },
   });
 }
 ```
+
+**`components/live-refresh.tsx`** — client component, add to root layout:
+```typescript
+'use client';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+
+export function LiveRefresh() {
+  const router = useRouter();
+  useEffect(() => {
+    const es = new EventSource('/api/content-stream');
+    es.onmessage = (event) => {
+      try { JSON.parse(event.data); router.refresh(); } catch {}
+    };
+    return () => es.close();
+  }, [router]);
+  return null;
+}
+```
+
+Add `<LiveRefresh />` to your root layout inside the body.
 
 Add to `.env` (or `.env.local`):
 ```env
@@ -2282,9 +2349,9 @@ REVALIDATE_SECRET=your-64-char-hex-secret
 - **Webhook Secret**: same value as `REVALIDATE_SECRET` in your site's `.env` (click "Generate" to create one, then copy to both places)
 - Use **Send test ping** to verify the connection
 
-The F42 Next.js boilerplate includes this endpoint pre-configured — no manual setup needed.
+The F42 Next.js GitHub boilerplate includes all of this pre-configured.
 
-**Webhook payload format:**
+**Webhook payload format (content push):**
 ```json
 {
   "event": "content.revalidate",
@@ -2293,7 +2360,8 @@ The F42 Next.js boilerplate includes this endpoint pre-configured — no manual 
   "paths": ["/blog/hello-world", "/blog"],
   "collection": "posts",
   "slug": "hello-world",
-  "action": "updated"
+  "action": "published",
+  "document": { "id": "...", "slug": "hello-world", "status": "published", "data": { "title": "Hello World", "content": "..." }, "createdAt": "...", "updatedAt": "..." }
 }
 ```
 
