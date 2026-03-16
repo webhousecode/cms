@@ -30,13 +30,28 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
   const blocks = Array.isArray(value) ? value : [];
   const baseNames = field.blocks ?? blocksConfig.map((b) => b.name);
   const allowedBlockNames = baseNames.includes("columns") ? baseNames : [...baseNames, "columns"];
-  const [expanded, setExpanded] = useState<Record<number, boolean>>({});
+  const storageKey = `cms-blocks-expanded:${field.name}`;
+  const [expanded, setExpanded] = useState<Record<number, boolean>>(() => {
+    if (typeof window === "undefined") return {};
+    try {
+      const stored = localStorage.getItem(storageKey);
+      return stored ? JSON.parse(stored) : {};
+    } catch { return {}; }
+  });
   const [showPicker, setShowPicker] = useState(false);
   const [confirmRemoveIdx, setConfirmRemoveIdx] = useState<number | null>(null);
   const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  function setExpandedPersist(updater: (prev: Record<number, boolean>) => Record<number, boolean>) {
+    setExpanded((prev) => {
+      const next = updater(prev);
+      try { localStorage.setItem(storageKey, JSON.stringify(next)); } catch {}
+      return next;
+    });
+  }
+
   function toggle(i: number) {
-    setExpanded((prev) => ({ ...prev, [i]: !prev[i] }));
+    setExpandedPersist((prev) => ({ ...prev, [i]: !prev[i] }));
   }
 
   function getConfig(blockType: string): BlockConfig | undefined {
@@ -59,7 +74,7 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
     if (target < 0 || target >= blocks.length) return;
     const next = [...blocks];
     [next[index], next[target]] = [next[target], next[index]];
-    setExpanded((prev) => {
+    setExpandedPersist((prev) => {
       const updated = { ...prev };
       const a = prev[index];
       const b = prev[target];
@@ -86,7 +101,7 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
       }
     }
     const newIndex = blocks.length;
-    setExpanded((prev) => ({ ...prev, [newIndex]: true }));
+    setExpandedPersist((prev) => ({ ...prev, [newIndex]: true }));
     onChange([...blocks, empty]);
     setShowPicker(false);
   }
