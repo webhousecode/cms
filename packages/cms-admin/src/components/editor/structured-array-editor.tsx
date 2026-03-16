@@ -184,7 +184,18 @@ export function StructuredArrayEditor({ field, value, onChange, locked, blocksCo
                           setConfirmRemoveIdx(i);
                           confirmTimer.current = setTimeout(() => setConfirmRemoveIdx(null), 3000);
                         }
-                      }} style={{ background: "none", border: "none", cursor: "pointer", color: confirmRemoveIdx === i ? "var(--destructive)" : "var(--muted-foreground)", padding: "2px", fontSize: confirmRemoveIdx === i ? "0.65rem" : undefined, fontWeight: confirmRemoveIdx === i ? 600 : undefined, whiteSpace: "nowrap" }} className={confirmRemoveIdx === i ? "" : "hover:text-destructive transition-colors"}>
+                      }} style={{
+                        background: confirmRemoveIdx === i ? "var(--destructive)" : "none",
+                        color: confirmRemoveIdx === i ? "white" : "var(--muted-foreground)",
+                        border: confirmRemoveIdx === i ? "1px solid var(--destructive)" : "none",
+                        borderRadius: confirmRemoveIdx === i ? "10px" : undefined,
+                        cursor: "pointer",
+                        padding: confirmRemoveIdx === i ? "0.1rem 0.5rem" : "2px",
+                        fontSize: "0.65rem",
+                        fontWeight: 600,
+                        whiteSpace: "nowrap",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                      }} className={confirmRemoveIdx === i ? "" : "hover:text-destructive transition-colors"}>
                         {confirmRemoveIdx === i ? "Sure?" : <Trash2 style={{ width: 14, height: 14 }} />}
                       </button>
                     </span>
