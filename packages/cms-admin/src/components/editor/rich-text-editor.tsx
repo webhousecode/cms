@@ -942,16 +942,10 @@ const AudioEmbed = TipTapNode.create({
 });
 
 /* ─── Interactive embed node + NodeView ─────────────────────── */
-function InteractiveNodeView({ node, deleteNode, selected, updateAttributes }: NodeViewProps) {
+function InteractiveNodeView({ node, deleteNode, selected }: NodeViewProps) {
   const { interactiveId, title, align, width } = node.attrs as { interactiveId: string; title: string; align: string; width: string };
   const del = useConfirmDelete(deleteNode);
   const btnSm: React.CSSProperties = { fontSize: "0.7rem", padding: "0.15rem 0.4rem", borderRadius: "3px", border: "1px solid var(--border)", cursor: "pointer", background: "transparent", color: "var(--foreground)", lineHeight: 1 };
-  const alignBtn = (a: string): React.CSSProperties => ({
-    fontSize: "0.6rem", padding: "0.1rem 0.3rem", borderRadius: "3px", cursor: "pointer", lineHeight: 1,
-    background: align === a ? "var(--primary)" : "transparent",
-    color: align === a ? "var(--primary-foreground)" : "var(--muted-foreground)",
-    border: align === a ? "none" : "1px solid var(--border)",
-  });
 
   const containerStyle: React.CSSProperties = align === "left"
     ? { float: "left", width: width || "50%", margin: "0.5rem 1.25rem 0.5rem 0" }
@@ -1006,27 +1000,6 @@ function InteractiveNodeView({ node, deleteNode, selected, updateAttributes }: N
           <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", padding: "0 4px", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {title || "Interactive"}
           </span>
-          {/* Alignment controls */}
-          <div style={{ display: "flex", gap: "2px", marginRight: "2px" }}>
-            <button type="button" onMouseDown={(e) => { e.preventDefault(); updateAttributes({ align: "left", width: width || "50%" }); }} style={alignBtn("left")} title="Float left">L</button>
-            <button type="button" onMouseDown={(e) => { e.preventDefault(); updateAttributes({ align: "", width: "" }); }} style={alignBtn("")} title="Center (full width)">C</button>
-            <button type="button" onMouseDown={(e) => { e.preventDefault(); updateAttributes({ align: "right", width: width || "50%" }); }} style={alignBtn("right")} title="Float right">R</button>
-          </div>
-          {/* Width control — only for float */}
-          {(align === "left" || align === "right") && (
-            <select
-              value={width || "50%"}
-              onChange={(e) => updateAttributes({ width: e.target.value })}
-              onMouseDown={(e) => e.stopPropagation()}
-              style={{ fontSize: "0.6rem", padding: "0.1rem 0.2rem", borderRadius: "3px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", cursor: "pointer" }}
-            >
-              <option value="30%">30%</option>
-              <option value="40%">40%</option>
-              <option value="50%">50%</option>
-              <option value="60%">60%</option>
-              <option value="70%">70%</option>
-            </select>
-          )}
           <button type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); del.request(); }}
             style={{ width: "18px", height: "18px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: "0.9rem", lineHeight: 1, flexShrink: 0 }}
             title="Remove interactive">×</button>
@@ -1941,6 +1914,10 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
       audioAlign: (ctx.editor?.isActive("audioEmbed")
         ? (ctx.editor?.getAttributes("audioEmbed").align as string | undefined) ?? "center"
         : null) as string | null,
+      isInteractive: ctx.editor?.isActive("interactiveEmbed") ?? false,
+      interactiveAlign: (ctx.editor?.isActive("interactiveEmbed")
+        ? (ctx.editor?.getAttributes("interactiveEmbed").align as string | undefined) ?? "center"
+        : null) as string | null,
       isFile: ctx.editor?.isActive("fileAttachment") ?? false,
       isCallout: ctx.editor?.isActive("callout") ?? false,
       calloutVariant: (ctx.editor?.isActive("callout")
@@ -2358,34 +2335,6 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
                     >
                       <IconAttachment />File attachment
                     </button>
-                    {/* Interactive */}
-                    <button type="button" style={{
-                      display: "flex", alignItems: "center", gap: "0.5rem",
-                      width: "100%", padding: "0.5rem 0.75rem", border: "none",
-                      background: "transparent", color: "var(--foreground)",
-                      fontSize: "0.8rem", cursor: "pointer", textAlign: "left",
-                    }}
-                      onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(255,255,255,0.07)"; }}
-                      onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
-                      onClick={() => {
-                        setShowMediaDropdown(false);
-                        setShowInteractivePicker(true);
-                        setIntSearch("");
-                        setInteractivesLoading(true);
-                        fetch("/api/interactives")
-                          .then(r => r.json())
-                          .then((data) => {
-                            const items = Array.isArray(data) ? data : (data.interactives ?? []);
-                            setAvailableInteractives(items
-                              .filter((i: Record<string, string>) => i.status !== "trashed")
-                              .map((i: Record<string, string>) => ({ id: i.id, title: i.name || i.title || i.id })));
-                          })
-                          .catch(() => setAvailableInteractives([]))
-                          .finally(() => setInteractivesLoading(false));
-                      }}
-                    >
-                      <IconInteractive />Interactive
-                    </button>
                   </>)}
 
                   {/* Image sub-menu */}
@@ -2529,6 +2478,25 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
               <IconCallout />
             </Btn>
 
+            {/* Insert Interactive (separate from media — Zap icon, same as sidebar) */}
+            <Btn tooltip="Insert interactive" onClick={() => {
+              setShowInteractivePicker(true);
+              setIntSearch("");
+              setInteractivesLoading(true);
+              fetch("/api/interactives")
+                .then(r => r.json())
+                .then((data) => {
+                  const items = Array.isArray(data) ? data : (data.interactives ?? []);
+                  setAvailableInteractives(items
+                    .filter((i: Record<string, string>) => i.status !== "trashed")
+                    .map((i: Record<string, string>) => ({ id: i.id, title: i.name || i.title || i.id })));
+                })
+                .catch(() => setAvailableInteractives([]))
+                .finally(() => setInteractivesLoading(false));
+            }}>
+              <IconInteractive />
+            </Btn>
+
           </div>
         )}
 
@@ -2632,6 +2600,41 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
               onClick={() => editor.chain().focus().updateAttributes("audioEmbed", { align: "right" }).run()}>
               <IconAlignRight />
             </CtxBtn>
+          </div>
+        )}
+
+        {/* ── Context toolbar — interactive controls (same pattern as Image) ── */}
+        {!disabled && editor && toolbarState?.isInteractive && (
+          <div style={{
+            display: "flex", alignItems: "center", gap: "2px",
+            padding: "0.25rem 0.75rem",
+            borderBottom: "1px solid var(--border)",
+            backgroundColor: "var(--background)",
+            position: "sticky", top: "calc(132px + 49px)", zIndex: 19,
+          }}>
+            <span style={{ fontSize: "0.7rem", color: "#F7BB2E", marginRight: "0.25rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.06em" }}>Interactive</span>
+            <CtxSep />
+            <CtxBtn title="Float left" active={toolbarState.interactiveAlign === "left"}
+              onClick={() => editor.chain().focus().updateAttributes("interactiveEmbed", { align: "left" }).run()}>
+              <IconAlignLeft />
+            </CtxBtn>
+            <CtxBtn title="Center (full width)" active={toolbarState.interactiveAlign === "center" || toolbarState.interactiveAlign === ""}
+              onClick={() => editor.chain().focus().updateAttributes("interactiveEmbed", { align: "center", width: null }).run()}>
+              <IconAlignCenter />
+            </CtxBtn>
+            <CtxBtn title="Float right" active={toolbarState.interactiveAlign === "right"}
+              onClick={() => editor.chain().focus().updateAttributes("interactiveEmbed", { align: "right" }).run()}>
+              <IconAlignRight />
+            </CtxBtn>
+            <CtxSep />
+            <CtxBtn title="Reset width to full" active={false}
+              onClick={() => editor.chain().focus().updateAttributes("interactiveEmbed", { width: null }).run()}>
+              <IconMaximize />
+            </CtxBtn>
+            <CtxSep />
+            <CtxBtn title="Delete interactive" danger onClick={() => {
+              editor.chain().focus().deleteSelection().run();
+            }}><IconTrash /></CtxBtn>
           </div>
         )}
 

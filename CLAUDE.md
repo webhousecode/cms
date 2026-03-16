@@ -65,6 +65,7 @@ bash scripts/code-audit.sh
 
 ## Key Conventions
 
+- **Follow instructions exactly** — when given a task description, implement EXACTLY what is described. "Same as X" means find X's implementation and replicate the pattern. Do not add creative interpretations, extra features, or alternative approaches not asked for. When in doubt, ask — don't assume.
 - **CustomSelect** — always use `CustomSelect` component, never native `<select>` in CMS admin
 - **Delete actions** — ALL delete/trash/remove actions must have confirmation dialog, no exceptions
 - **No native dialogs** — never use `window.prompt`, `window.confirm`, or `window.alert`
