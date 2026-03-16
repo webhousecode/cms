@@ -942,16 +942,38 @@ const AudioEmbed = TipTapNode.create({
 });
 
 /* ─── Interactive embed node + NodeView ─────────────────────── */
-function InteractiveNodeView({ node, deleteNode, selected }: NodeViewProps) {
+function InteractiveNodeView({ node, deleteNode, updateAttributes, selected }: NodeViewProps) {
   const { interactiveId, title, align, width } = node.attrs as { interactiveId: string; title: string; align: string; width: string };
   const del = useConfirmDelete(deleteNode);
-  const btnSm: React.CSSProperties = { fontSize: "0.7rem", padding: "0.15rem 0.4rem", borderRadius: "3px", border: "1px solid var(--border)", cursor: "pointer", background: "transparent", color: "var(--foreground)", lineHeight: 1 };
+  const containerRef = useRef<HTMLDivElement>(null);
+  const startX = useRef(0);
+  const startWidth = useRef(0);
 
-  const containerStyle: React.CSSProperties = align === "left"
-    ? { float: "left", width: width || "50%", margin: "0.5rem 1.25rem 0.5rem 0" }
-    : align === "right"
-    ? { float: "right", width: width || "50%", margin: "0.5rem 0 0.5rem 1.25rem" }
-    : { width: width || "100%", maxWidth: "700px", margin: "0 auto" };
+  const startY = useRef(0);
+  const startHeight = useRef(0);
+
+  // Drag-to-resize width + height (same pattern as Image)
+  const handleResizeMouseDown = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    startX.current = e.clientX;
+    startY.current = e.clientY;
+    startWidth.current = containerRef.current?.offsetWidth ?? 400;
+    startHeight.current = containerRef.current?.querySelector("iframe")?.parentElement?.offsetHeight ?? 300;
+    const onMouseMove = (ev: MouseEvent) => {
+      const newWidth = Math.max(150, startWidth.current + (ev.clientX - startX.current));
+      const newHeight = Math.max(100, startHeight.current + (ev.clientY - startY.current));
+      updateAttributes({ width: `${Math.round(newWidth)}px`, height: `${Math.round(newHeight)}px` });
+    };
+    const onMouseUp = () => {
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+    };
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+  };
+
+  const effectiveWidth = width || "100%";
 
   if (!interactiveId) {
     return (
@@ -969,41 +991,61 @@ function InteractiveNodeView({ node, deleteNode, selected }: NodeViewProps) {
   }
 
   return (
-    <NodeViewWrapper draggable contentEditable={false} style={{ display: "flex", justifyContent: align === "right" ? "flex-end" : align === "left" ? "flex-start" : "center", margin: "0.75rem 0", position: "relative" }}>
+    <NodeViewWrapper draggable contentEditable={false} style={{ display: "flex", justifyContent: "center", margin: "0.75rem 0", position: "relative" }}>
       <DragHandle />
-      <div style={{
-        ...containerStyle, borderRadius: "8px",
-        border: del.confirming ? "2px solid var(--destructive)" : selected ? "2px solid #F7BB2E" : "1px solid #F7BB2E55",
+      <div ref={containerRef} style={{
+        width: effectiveWidth, maxWidth: "700px", borderRadius: "8px",
+        border: selected ? "2px solid #F7BB2E" : "1px solid #F7BB2E55",
         backgroundColor: "var(--card)", overflow: "hidden", position: "relative",
         transition: "border-color 150ms",
       }}>
-        <div style={{ borderRadius: "6px 6px 0 0", overflow: "hidden", height: "300px" }}>
+        <div style={{ borderRadius: "6px 6px 0 0", overflow: "hidden", height: node.attrs.height || "300px" }}>
           <iframe
             src={`/api/interactives/${interactiveId}/preview`}
             style={{ width: "100%", height: "100%", border: "none" }}
             title={title || "Interactive preview"}
           />
         </div>
-        {del.confirming && (
-          <div style={{
-            position: "absolute", inset: 0, zIndex: 30, borderRadius: "6px",
-            backgroundColor: "rgba(0,0,0,0.55)",
-            display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem",
-          }}>
-            <span style={{ fontSize: "0.8rem", color: "var(--destructive)", fontWeight: 600 }}>Remove interactive?</span>
-            <button type="button" onMouseDown={(e) => { e.preventDefault(); del.confirm(); }} style={{ ...btnSm, background: "var(--destructive)", color: "#fff", border: "none" }}>Confirm</button>
-            <button type="button" onMouseDown={(e) => { e.preventDefault(); del.cancel(); }} style={btnSm}>Cancel</button>
-          </div>
-        )}
+        {/* Footer bar — title + inline delete (same pattern as image/video delete in context toolbar) */}
         <div style={{ display: "flex", alignItems: "center", gap: "4px", padding: "0.2rem 0.375rem", borderTop: "1px solid var(--border)", backgroundColor: "var(--muted)", borderRadius: "0 0 6px 6px" }}>
           <span style={{ fontSize: "0.65rem", color: "#F7BB2E", fontWeight: 600, padding: "0 4px", flexShrink: 0 }}>⚡</span>
           <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", padding: "0 4px", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {title || "Interactive"}
           </span>
-          <button type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); del.request(); }}
-            style={{ width: "18px", height: "18px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: "0.9rem", lineHeight: 1, flexShrink: 0 }}
-            title="Remove interactive">×</button>
+          {del.confirming ? (
+            <>
+              <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
+              <button type="button" onMouseDown={(e) => { e.preventDefault(); del.confirm(); }}
+                style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
+              <button type="button" onMouseDown={(e) => { e.preventDefault(); del.cancel(); }}
+                style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
+            </>
+          ) : (
+            <button type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); del.request(); }}
+              style={{ width: "18px", height: "18px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: "0.9rem", lineHeight: 1, flexShrink: 0 }}
+              title="Remove interactive">×</button>
+          )}
         </div>
+        {/* Resize knob (same as Image) */}
+        {selected && (
+          <div
+            title="Drag to resize"
+            onMouseDown={handleResizeMouseDown}
+            style={{
+              position: "absolute", bottom: "28px", right: "4px",
+              width: "16px", height: "16px", cursor: "se-resize", zIndex: 20,
+              borderRadius: "3px", display: "flex", alignItems: "center", justifyContent: "center",
+              backgroundColor: "var(--background)", border: "1px solid var(--border)",
+              boxShadow: "0 1px 4px rgba(0,0,0,0.3)",
+            }}
+          >
+            <svg width="8" height="8" viewBox="0 0 8 8">
+              <circle cx="6" cy="2" r="1" fill="currentColor" opacity="0.5" />
+              <circle cx="2" cy="6" r="1" fill="currentColor" opacity="0.5" />
+              <circle cx="6" cy="6" r="1" fill="currentColor" opacity="0.5" />
+            </svg>
+          </div>
+        )}
       </div>
     </NodeViewWrapper>
   );
@@ -1021,6 +1063,7 @@ const InteractiveEmbed = TipTapNode.create({
       title: { default: "" },
       align: { default: "" },
       width: { default: "" },
+      height: { default: "" },
     };
   },
 
@@ -1030,6 +1073,7 @@ const InteractiveEmbed = TipTapNode.create({
       title: (el as Element).getAttribute("data-interactive-title") ?? "",
       align: (el as Element).getAttribute("data-interactive-align") ?? "",
       width: (el as Element).getAttribute("data-interactive-width") ?? "",
+      height: (el as Element).getAttribute("data-interactive-height") ?? "",
     }) }];
   },
 
@@ -1038,6 +1082,7 @@ const InteractiveEmbed = TipTapNode.create({
     if (node.attrs.title) attrs["data-interactive-title"] = node.attrs.title;
     if (node.attrs.align) attrs["data-interactive-align"] = node.attrs.align;
     if (node.attrs.width) attrs["data-interactive-width"] = node.attrs.width;
+    if (node.attrs.height) attrs["data-interactive-height"] = node.attrs.height;
     return ["div", attrs];
   },
 
@@ -1050,6 +1095,7 @@ const InteractiveEmbed = TipTapNode.create({
           else parts.push('');
           if (node.attrs.align && node.attrs.align !== 'center') parts.push(`align:${node.attrs.align}`);
           if (node.attrs.width) parts.push(`width:${node.attrs.width}`);
+          if (node.attrs.height) parts.push(`height:${node.attrs.height}`);
           state.write(`!!INTERACTIVE[${parts.join('|')}]`);
           state.closeBlock(node);
         },
@@ -1067,9 +1113,11 @@ const InteractiveEmbed = TipTapNode.create({
                 let title = "";
                 let align = "";
                 let width = "";
+                let height = "";
                 for (let i = 1; i < parts.length; i++) {
                   if (parts[i].startsWith("align:")) align = parts[i].slice(6);
                   else if (parts[i].startsWith("width:")) width = parts[i].slice(6);
+                  else if (parts[i].startsWith("height:")) height = parts[i].slice(6);
                   else if (!title) title = parts[i];
                 }
                 const div = document.createElement("div");
@@ -1077,6 +1125,7 @@ const InteractiveEmbed = TipTapNode.create({
                 if (title) div.setAttribute("data-interactive-title", title);
                 if (align) div.setAttribute("data-interactive-align", align);
                 if (width) div.setAttribute("data-interactive-width", width);
+                if (height) div.setAttribute("data-interactive-height", height);
                 t.parentNode?.replaceChild(div, t);
               }
             }
