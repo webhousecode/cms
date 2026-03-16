@@ -54,8 +54,8 @@ function LoginForm() {
         setLoading(false);
         return;
       }
-      router.push(from);
-      router.refresh();
+      // Full page load — ensures all client components get fresh auth state
+      window.location.href = from;
     } catch {
       setError("Network error — try again");
       setLoading(false);
