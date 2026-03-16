@@ -34,6 +34,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Collection already exists" }, { status: 409 });
   }
 
-  writeConfigCollections(configPath, config, [...existing, body]);
+  await writeConfigCollections(configPath, config, [...existing, body]);
   return NextResponse.json({ ok: true }, { status: 201 });
 }

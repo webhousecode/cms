@@ -29,7 +29,7 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
       return col.name === collection ? { ...base, ...body } : base;
     });
 
-    writeConfigCollections(configPath, config, collections);
+    await writeConfigCollections(configPath, config, collections);
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("[schema PUT error]", err);
@@ -55,6 +55,6 @@ export async function DELETE(_req: NextRequest, { params }: Ctx) {
       fields: col.fields,
     }));
 
-  writeConfigCollections(configPath, config, collections);
+  await writeConfigCollections(configPath, config, collections);
   return NextResponse.json({ ok: true });
 }
