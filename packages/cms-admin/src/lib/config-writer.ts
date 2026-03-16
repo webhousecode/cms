@@ -57,7 +57,7 @@ function buildConfigContent(original: string, config: CmsConfig, collections: Co
   let blocksSection = '';
   const blocksMatch = original.match(/(  blocks:\s*\[[\s\S]*?\n  \]),?/);
   if (blocksMatch) {
-    blocksSection = blocksMatch[1];
+    blocksSection = blocksMatch[1].replace(/\],?\s*$/, '],');
   }
 
   const usesDefineBlock = original.includes('defineBlock');
