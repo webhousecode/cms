@@ -118,6 +118,8 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
                 cursor: "pointer",
                 userSelect: "none",
                 background: isOpen ? "var(--accent)" : "transparent",
+                borderRadius: isOpen ? undefined : "7px",
+                ...(isOpen ? { borderRadius: "7px 7px 0 0" } : {}),
               }}
             >
               {isOpen ? <ChevronDown style={{ width: 14, height: 14, flexShrink: 0 }} /> : <ChevronRight style={{ width: 14, height: 14, flexShrink: 0 }} />}
