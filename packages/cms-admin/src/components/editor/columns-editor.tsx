@@ -121,12 +121,45 @@ export function ColumnsEditor({ block, onChange, locked, blocksConfig = [] }: Co
   // Filter out "columns" from allowed nested blocks (no nesting)
   const nestedBlocksConfig = blocksConfig.filter((b) => b.name !== "columns");
 
+  // Total block count across all columns (for Open all / Close all)
+  const totalBlocks = normalizedColumns.reduce((sum, col) => sum + col.length, 0);
+  const allOpen = totalBlocks > 0 && normalizedColumns.every((col, ci) =>
+    col.every((_, bi) => (colExpanded[ci] ?? {})[bi])
+  );
+  const allClosed = totalBlocks > 0 && normalizedColumns.every((col, ci) =>
+    col.every((_, bi) => !(colExpanded[ci] ?? {})[bi])
+  );
+
+  function toggleAllColumns(open: boolean) {
+    setColExpandedPersist(() => {
+      const next: Record<number, Record<number, boolean>> = {};
+      normalizedColumns.forEach((col, ci) => {
+        const colState: Record<number, boolean> = {};
+        col.forEach((_, bi) => { colState[bi] = open; });
+        next[ci] = colState;
+      });
+      return next;
+    });
+  }
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", position: "relative" }}>
       {/* Layout selector */}
       {!locked && (
         <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-          <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap" }}>
+          <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap", alignItems: "center" }}>
+            {/* Open all / Close all for columns */}
+            {totalBlocks >= 2 && (
+              <div style={{ display: "flex", gap: "0.25rem", marginRight: "auto" }}>
+                <button type="button" onClick={() => toggleAllColumns(true)} disabled={allOpen}
+                  style={{ background: "none", border: "none", cursor: allOpen ? "default" : "pointer", fontSize: "0.6rem", color: "var(--muted-foreground)", opacity: allOpen ? 0.4 : 1, padding: "0.1rem 0.3rem" }}
+                  className={allOpen ? "" : "hover:text-foreground transition-colors"}>Open all</button>
+                <span style={{ fontSize: "0.6rem", color: "var(--muted-foreground)", opacity: 0.3 }}>|</span>
+                <button type="button" onClick={() => toggleAllColumns(false)} disabled={allClosed}
+                  style={{ background: "none", border: "none", cursor: allClosed ? "default" : "pointer", fontSize: "0.6rem", color: "var(--muted-foreground)", opacity: allClosed ? 0.4 : 1, padding: "0.1rem 0.3rem" }}
+                  className={allClosed ? "" : "hover:text-foreground transition-colors"}>Close all</button>
+              </div>
+            )}
             {LAYOUT_PRESETS.map((preset) => (
               <button
                 key={preset.value}
