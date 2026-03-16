@@ -745,6 +745,18 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
       const [audioUploading, setAudioUploading] = useState(false);
       const [audioConfirm, setAudioConfirm] = useState(false);
       const audioConfirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+      const audioInputRef = useRef<HTMLInputElement>(null);
+      const [audioBrowserOpen, setAudioBrowserOpen] = useState(false);
+      const [audioItems, setAudioItems] = useState<Array<{ name: string; url: string; isImage: boolean; mediaType?: string }>>([]);
+      const [audioLoading, setAudioLoading] = useState(false);
+      const [audioSearch, setAudioSearch] = useState("");
+
+      useEffect(() => {
+        if (!audioBrowserOpen) return;
+        const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setAudioBrowserOpen(false); };
+        document.addEventListener("keydown", onKey);
+        return () => document.removeEventListener("keydown", onKey);
+      }, [audioBrowserOpen]);
 
       async function handleAudioUpload(e: React.ChangeEvent<HTMLInputElement>) {
         const file = e.target.files?.[0];
@@ -761,70 +773,132 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
           }
         } finally {
           setAudioUploading(false);
+          if (audioInputRef.current) audioInputRef.current.value = "";
         }
+      }
+
+      function openAudioBrowser() {
+        setAudioBrowserOpen(true);
+        setAudioLoading(true);
+        setAudioSearch("");
+        fetch("/api/media")
+          .then((r) => r.json())
+          .then((items: Array<{ name: string; url: string; isImage: boolean; mediaType?: string }>) => {
+            setAudioItems(items.filter((item) => !item.isImage || item.mediaType?.startsWith("audio")));
+          })
+          .catch(() => setAudioItems([]))
+          .finally(() => setAudioLoading(false));
       }
 
       return (
         <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-          {strVal ? (
-            <>
-              <audio
-                controls
-                src={strVal}
-                style={{ width: "100%", borderRadius: "6px" }}
-                preload="metadata"
-              />
-              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <span style={{ fontSize: "0.7rem", fontFamily: "monospace", color: "var(--muted-foreground)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {strVal}
-                </span>
-                {!locked && (
-                  <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                    {audioConfirm ? (
-                      <>
-                        <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
-                        <button type="button" onClick={() => { if (audioConfirmTimer.current) clearTimeout(audioConfirmTimer.current); setAudioConfirm(false); onChange(""); }}
-                          style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
-                        <button type="button" onClick={() => { if (audioConfirmTimer.current) clearTimeout(audioConfirmTimer.current); setAudioConfirm(false); }}
-                          style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
-                      </>
-                    ) : (
-                      <button type="button" onClick={() => { setAudioConfirm(true); audioConfirmTimer.current = setTimeout(() => setAudioConfirm(false), 3000); }}
-                        style={{ width: "18px", height: "18px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: "0.9rem", lineHeight: 1 }} title="Remove audio">×</button>
-                    )}
+          {/* Player preview */}
+          {strVal && (
+            <div style={{ position: "relative" }}>
+              <audio controls src={strVal} style={{ width: "100%", borderRadius: "6px" }} preload="metadata" />
+              {!locked && (
+                <div style={{ display: "flex", alignItems: "center", gap: "4px", marginTop: "0.25rem" }}>
+                  <span style={{ fontSize: "0.7rem", fontFamily: "monospace", color: "var(--muted-foreground)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {strVal}
                   </span>
-                )}
-              </div>
-            </>
-          ) : (
-            <label style={{
-              display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem",
-              padding: "1.5rem", borderRadius: "8px", border: "1px dashed var(--border)",
-              cursor: locked ? "not-allowed" : "pointer", color: "var(--muted-foreground)",
-              fontSize: "0.85rem", transition: "border-color 150ms",
-            }}
-              className="hover:border-primary hover:text-primary"
-            >
-              <input
-                type="file"
-                accept="audio/*"
-                onChange={handleAudioUpload}
-                disabled={locked || audioUploading}
-                style={{ display: "none" }}
-              />
-              {audioUploading ? "Uploading..." : "Drop or click to upload audio file"}
-            </label>
+                  {audioConfirm ? (
+                    <>
+                      <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
+                      <button type="button" onClick={() => { if (audioConfirmTimer.current) clearTimeout(audioConfirmTimer.current); setAudioConfirm(false); onChange(""); }}
+                        style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
+                      <button type="button" onClick={() => { if (audioConfirmTimer.current) clearTimeout(audioConfirmTimer.current); setAudioConfirm(false); }}
+                        style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
+                    </>
+                  ) : (
+                    <button type="button" onClick={() => { setAudioConfirm(true); audioConfirmTimer.current = setTimeout(() => setAudioConfirm(false), 3000); }}
+                      style={{ width: "18px", height: "18px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: "0.9rem", lineHeight: 1 }} title="Remove audio">×</button>
+                  )}
+                </div>
+              )}
+            </div>
           )}
-          {!strVal && !locked && (
+          {/* URL input + Upload + Browse */}
+          <div style={{ display: "flex", gap: "0.4rem", alignItems: "center" }}>
             <Input
-              type="url"
-              value=""
-              onChange={(e) => { if (e.target.value) onChange(e.target.value); }}
+              type="text"
+              value={strVal}
+              onChange={(e) => onChange(e.target.value)}
               disabled={locked}
-              placeholder="Or paste audio URL"
+              placeholder="Audio URL"
               className="font-mono text-xs"
-              style={{ opacity: 0.6 }}
+              style={{ flex: 1 }}
             />
+            {!locked && (
+              <>
+                <label
+                  title="Upload audio"
+                  style={{
+                    display: "inline-flex", alignItems: "center", justifyContent: "center",
+                    gap: "0.3rem", padding: "0.4rem 0.6rem", borderRadius: "6px",
+                    border: "1px solid var(--border)", background: "var(--background)",
+                    cursor: audioUploading ? "wait" : "pointer", fontSize: "0.75rem",
+                    color: "var(--muted-foreground)", whiteSpace: "nowrap", flexShrink: 0,
+                  }}
+                  className="hover:border-primary hover:text-primary transition-colors"
+                >
+                  <input ref={audioInputRef} type="file" accept="audio/*" onChange={handleAudioUpload} disabled={locked || audioUploading} style={{ display: "none" }} />
+                  <Upload style={{ width: "14px", height: "14px" }} />
+                  {audioUploading ? "..." : "Upload"}
+                </label>
+                <button
+                  type="button"
+                  onClick={openAudioBrowser}
+                  title="Browse Media"
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: "0.3rem",
+                    padding: "0.4rem 0.6rem", borderRadius: "6px",
+                    border: "1px solid var(--border)", background: "var(--background)",
+                    cursor: "pointer", fontSize: "0.75rem", color: "var(--muted-foreground)",
+                    whiteSpace: "nowrap", flexShrink: 0,
+                  }}
+                  className="hover:border-primary hover:text-primary transition-colors"
+                >
+                  <FolderOpen style={{ width: "14px", height: "14px" }} />
+                  Browse
+                </button>
+              </>
+            )}
+          </div>
+
+          {/* Media browser modal — same as image field */}
+          {audioBrowserOpen && (
+            <div
+              style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.5)" }}
+              onClick={(e) => { if (e.target === e.currentTarget) setAudioBrowserOpen(false); }}
+            >
+              <div style={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: "12px", boxShadow: "0 8px 40px rgba(0,0,0,0.4)", width: "min(640px, 90vw)", maxHeight: "70vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.75rem 1rem", borderBottom: "1px solid var(--border)" }}>
+                  <span style={{ fontWeight: 500, fontSize: "0.9rem" }}>Media Library</span>
+                  <button type="button" onClick={() => setAudioBrowserOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.25rem" }}>
+                    <X style={{ width: "16px", height: "16px" }} />
+                  </button>
+                </div>
+                <div style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid var(--border)" }}>
+                  <input type="text" value={audioSearch} onChange={(e) => setAudioSearch(e.target.value)} placeholder="Search media…" autoFocus
+                    style={{ width: "100%", padding: "0.35rem 0.5rem", borderRadius: "6px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.8rem", outline: "none" }} />
+                </div>
+                <div style={{ overflowY: "auto", padding: "0.75rem" }}>
+                  {audioLoading && <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>Loading media...</div>}
+                  {!audioLoading && audioItems.length === 0 && <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>No media found</div>}
+                  {!audioLoading && audioItems.filter((item) => !audioSearch || item.name.toLowerCase().includes(audioSearch.toLowerCase())).map((item) => (
+                    <button key={item.url} type="button" onClick={() => {
+                      let storedUrl = item.url;
+                      try { storedUrl = new URL(item.url).pathname; } catch {}
+                      onChange(storedUrl);
+                      setAudioBrowserOpen(false);
+                    }} style={{ width: "100%", textAlign: "left", padding: "0.5rem 0.75rem", fontSize: "0.8rem", background: "transparent", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem", borderBottom: "1px solid var(--border)" }} className="hover:bg-accent">
+                      <span style={{ fontSize: "1.1rem" }}>🎵</span>
+                      <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
           )}
         </div>
       );
