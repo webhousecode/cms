@@ -112,7 +112,7 @@ export async function dispatchRevalidation(
     };
 
     // Log asynchronously — don't block the response
-    logRevalidation(site.revalidateUrl, paths, payload, result).catch(() => {});
+    logRevalidation(site.revalidateUrl, paths, payload, result).catch((e) => console.warn("[revalidation] log write failed:", e));
 
     return result;
   } catch (err) {
@@ -121,7 +121,7 @@ export async function dispatchRevalidation(
       error: String(err),
       durationMs: Date.now() - start,
     };
-    logRevalidation(site.revalidateUrl, paths, payload, result).catch(() => {});
+    logRevalidation(site.revalidateUrl, paths, payload, result).catch((e) => console.warn("[revalidation] log write failed:", e));
     return result;
   }
 }
