@@ -2,7 +2,7 @@
 
 import type { FieldConfig, BlockConfig } from "@webhouse/cms";
 import { FieldEditor } from "./field-editor";
-import { ChevronDown, ChevronRight, Trash2, ArrowUp, ArrowDown, Plus, Code, LayoutList } from "lucide-react";
+import { ChevronDown, ChevronRight, ArrowUp, ArrowDown, Plus, Code, LayoutList } from "lucide-react";
 import { useState, useRef } from "react";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -174,30 +174,18 @@ export function StructuredArrayEditor({ field, value, onChange, locked, blocksCo
                       <button type="button" disabled={i === items.length - 1} onClick={() => moveItem(i, 1)} style={{ background: "none", border: "none", cursor: i === items.length - 1 ? "not-allowed" : "pointer", color: "var(--muted-foreground)", padding: "2px", opacity: i === items.length - 1 ? 0.3 : 1 }}>
                         <ArrowDown style={{ width: 14, height: 14 }} />
                       </button>
-                      <button type="button" onClick={() => {
-                        if (confirmRemoveIdx === i) {
-                          if (confirmTimer.current) clearTimeout(confirmTimer.current);
-                          setConfirmRemoveIdx(null);
-                          removeItem(i);
-                        } else {
-                          if (confirmTimer.current) clearTimeout(confirmTimer.current);
-                          setConfirmRemoveIdx(i);
-                          confirmTimer.current = setTimeout(() => setConfirmRemoveIdx(null), 3000);
-                        }
-                      }} style={{
-                        background: confirmRemoveIdx === i ? "var(--destructive)" : "none",
-                        color: confirmRemoveIdx === i ? "white" : "var(--muted-foreground)",
-                        border: confirmRemoveIdx === i ? "1px solid var(--destructive)" : "none",
-                        borderRadius: confirmRemoveIdx === i ? "10px" : undefined,
-                        cursor: "pointer",
-                        padding: confirmRemoveIdx === i ? "0.1rem 0.5rem" : "2px",
-                        fontSize: "0.65rem",
-                        fontWeight: 600,
-                        whiteSpace: "nowrap",
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                      }} className={confirmRemoveIdx === i ? "" : "hover:text-destructive transition-colors"}>
-                        {confirmRemoveIdx === i ? "Sure?" : <Trash2 style={{ width: 14, height: 14 }} />}
-                      </button>
+                      {confirmRemoveIdx === i ? (
+                        <>
+                          <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
+                          <button type="button" onClick={(e) => { e.stopPropagation(); if (confirmTimer.current) clearTimeout(confirmTimer.current); setConfirmRemoveIdx(null); removeItem(i); }}
+                            style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
+                          <button type="button" onClick={(e) => { e.stopPropagation(); if (confirmTimer.current) clearTimeout(confirmTimer.current); setConfirmRemoveIdx(null); }}
+                            style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
+                        </>
+                      ) : (
+                        <button type="button" onClick={(e) => { e.stopPropagation(); if (confirmTimer.current) clearTimeout(confirmTimer.current); setConfirmRemoveIdx(i); confirmTimer.current = setTimeout(() => setConfirmRemoveIdx(null), 3000); }}
+                          style={{ width: "18px", height: "18px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: "0.9rem", lineHeight: 1, flexShrink: 0 }} title="Remove item" className="hover:text-destructive transition-colors">×</button>
+                      )}
                     </span>
                   )}
                 </div>

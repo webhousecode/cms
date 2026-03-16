@@ -3,7 +3,7 @@
 import type { FieldConfig, BlockConfig } from "@webhouse/cms";
 import { FieldEditor } from "./field-editor";
 import { ColumnsEditor } from "./columns-editor";
-import { ChevronDown, ChevronRight, Trash2, ArrowUp, ArrowDown, Plus } from "lucide-react";
+import { ChevronDown, ChevronRight, ArrowUp, ArrowDown, Plus } from "lucide-react";
 import { useState, useRef } from "react";
 
 interface Props {
@@ -228,30 +228,26 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
                   <button type="button" disabled={i === blocks.length - 1} onClick={() => moveBlock(i, 1)} style={{ background: "none", border: "none", cursor: i === blocks.length - 1 ? "not-allowed" : "pointer", color: "var(--muted-foreground)", padding: "2px", opacity: i === blocks.length - 1 ? 0.3 : 1 }}>
                     <ArrowDown style={{ width: 14, height: 14 }} />
                   </button>
-                  <button type="button" onClick={() => {
-                    if (confirmRemoveIdx === i) {
-                      if (confirmTimer.current) clearTimeout(confirmTimer.current);
-                      setConfirmRemoveIdx(null);
-                      removeBlock(i);
-                    } else {
+                  {confirmRemoveIdx === i ? (
+                    <>
+                      <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
+                      <button type="button" onClick={() => {
+                        if (confirmTimer.current) clearTimeout(confirmTimer.current);
+                        setConfirmRemoveIdx(null);
+                        removeBlock(i);
+                      }} style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
+                      <button type="button" onClick={() => {
+                        if (confirmTimer.current) clearTimeout(confirmTimer.current);
+                        setConfirmRemoveIdx(null);
+                      }} style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
+                    </>
+                  ) : (
+                    <button type="button" onClick={() => {
                       if (confirmTimer.current) clearTimeout(confirmTimer.current);
                       setConfirmRemoveIdx(i);
                       confirmTimer.current = setTimeout(() => setConfirmRemoveIdx(null), 3000);
-                    }
-                  }} style={{
-                    background: confirmRemoveIdx === i ? "var(--destructive)" : "none",
-                    color: confirmRemoveIdx === i ? "white" : "var(--muted-foreground)",
-                    border: confirmRemoveIdx === i ? "1px solid var(--destructive)" : "none",
-                    borderRadius: confirmRemoveIdx === i ? "10px" : undefined,
-                    cursor: "pointer",
-                    padding: confirmRemoveIdx === i ? "0.1rem 0.5rem" : "2px",
-                    fontSize: "0.65rem",
-                    fontWeight: 600,
-                    whiteSpace: "nowrap",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                  }} className={confirmRemoveIdx === i ? "" : "hover:text-destructive transition-colors"}>
-                    {confirmRemoveIdx === i ? "Sure?" : <Trash2 style={{ width: 14, height: 14 }} />}
-                  </button>
+                    }} style={{ width: "18px", height: "18px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: "0.9rem", lineHeight: 1, flexShrink: 0 }} title="Remove block" className="hover:text-destructive transition-colors">×</button>
+                  )}
                 </span>
               )}
             </div>

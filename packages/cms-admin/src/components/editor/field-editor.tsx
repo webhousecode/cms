@@ -483,41 +483,21 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
                 }}
               />
               {!locked && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (imgConfirm) {
-                      if (imgConfirmTimer.current) clearTimeout(imgConfirmTimer.current);
-                      setImgConfirm(false);
-                      onChange("");
-                    } else {
-                      setImgConfirm(true);
-                      imgConfirmTimer.current = setTimeout(() => setImgConfirm(false), 3000);
-                    }
-                  }}
-                  title="Remove image"
-                  style={{
-                    position: "absolute",
-                    top: "-6px",
-                    right: "-6px",
-                    minWidth: imgConfirm ? "auto" : "20px",
-                    height: "20px",
-                    borderRadius: imgConfirm ? "10px" : "50%",
-                    background: "var(--destructive)",
-                    color: "white",
-                    border: "none",
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    padding: imgConfirm ? "0 8px" : 0,
-                    fontSize: "0.65rem",
-                    fontWeight: 600,
-                    whiteSpace: "nowrap",
-                  }}
-                >
-                  {imgConfirm ? "Sure?" : <X style={{ width: "12px", height: "12px" }} />}
-                </button>
+                <div style={{ position: "absolute", top: "-6px", right: "-6px", display: "flex", alignItems: "center", gap: "2px" }}>
+                  {imgConfirm ? (
+                    <>
+                      <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px", background: "var(--card)", borderRadius: "3px" }}>Remove?</span>
+                      <button type="button" onClick={() => { if (imgConfirmTimer.current) clearTimeout(imgConfirmTimer.current); setImgConfirm(false); onChange(""); }}
+                        style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
+                      <button type="button" onClick={() => { if (imgConfirmTimer.current) clearTimeout(imgConfirmTimer.current); setImgConfirm(false); }}
+                        style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "var(--card)", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
+                    </>
+                  ) : (
+                    <button type="button" onClick={() => { setImgConfirm(true); imgConfirmTimer.current = setTimeout(() => setImgConfirm(false), 3000); }}
+                      title="Remove image"
+                      style={{ width: "18px", height: "18px", borderRadius: "50%", border: "none", background: "var(--destructive)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: "0.9rem", lineHeight: 1 }}>×</button>
+                  )}
+                </div>
               )}
             </div>
           )}
@@ -799,22 +779,20 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
                   {strVal}
                 </span>
                 {!locked && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (audioConfirm) {
-                        if (audioConfirmTimer.current) clearTimeout(audioConfirmTimer.current);
-                        setAudioConfirm(false);
-                        onChange("");
-                      } else {
-                        setAudioConfirm(true);
-                        audioConfirmTimer.current = setTimeout(() => setAudioConfirm(false), 3000);
-                      }
-                    }}
-                    style={{ background: "none", border: "none", cursor: "pointer", color: audioConfirm ? "var(--destructive)" : "var(--muted-foreground)", fontSize: "0.7rem", textDecoration: "underline", fontWeight: audioConfirm ? 600 : 400 }}
-                  >
-                    {audioConfirm ? "Sure?" : "Remove"}
-                  </button>
+                  <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+                    {audioConfirm ? (
+                      <>
+                        <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
+                        <button type="button" onClick={() => { if (audioConfirmTimer.current) clearTimeout(audioConfirmTimer.current); setAudioConfirm(false); onChange(""); }}
+                          style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
+                        <button type="button" onClick={() => { if (audioConfirmTimer.current) clearTimeout(audioConfirmTimer.current); setAudioConfirm(false); }}
+                          style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
+                      </>
+                    ) : (
+                      <button type="button" onClick={() => { setAudioConfirm(true); audioConfirmTimer.current = setTimeout(() => setAudioConfirm(false), 3000); }}
+                        style={{ width: "18px", height: "18px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: "0.9rem", lineHeight: 1 }} title="Remove audio">×</button>
+                    )}
+                  </span>
                 )}
               </div>
             </>
@@ -919,29 +897,24 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
                 style={{ flex: 1 }}
               />
               {!locked && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    // Empty items can be removed immediately
-                    if (!item.trim()) {
-                      onChange(strArr.filter((_, j) => j !== i));
-                      return;
-                    }
-                    if (arrConfirmIdx === i) {
-                      if (arrConfirmTimer.current) clearTimeout(arrConfirmTimer.current);
-                      setArrConfirmIdx(null);
-                      onChange(strArr.filter((_, j) => j !== i));
-                    } else {
+                <span style={{ display: "flex", alignItems: "center", gap: "4px", flexShrink: 0 }}>
+                  {arrConfirmIdx === i ? (
+                    <>
+                      <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
+                      <button type="button" onClick={() => { if (arrConfirmTimer.current) clearTimeout(arrConfirmTimer.current); setArrConfirmIdx(null); onChange(strArr.filter((_, j) => j !== i)); }}
+                        style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
+                      <button type="button" onClick={() => { if (arrConfirmTimer.current) clearTimeout(arrConfirmTimer.current); setArrConfirmIdx(null); }}
+                        style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
+                    </>
+                  ) : (
+                    <button type="button" onClick={() => {
+                      if (!item.trim()) { onChange(strArr.filter((_, j) => j !== i)); return; }
                       if (arrConfirmTimer.current) clearTimeout(arrConfirmTimer.current);
                       setArrConfirmIdx(i);
                       arrConfirmTimer.current = setTimeout(() => setArrConfirmIdx(null), 3000);
-                    }
-                  }}
-                  style={{ flexShrink: 0, background: "none", border: "none", cursor: "pointer", color: arrConfirmIdx === i ? "var(--destructive)" : "var(--muted-foreground)", padding: "0.25rem", fontSize: arrConfirmIdx === i ? "0.65rem" : undefined, fontWeight: arrConfirmIdx === i ? 600 : undefined, whiteSpace: "nowrap" }}
-                  className={arrConfirmIdx === i ? "" : "hover:text-destructive transition-colors"}
-                >
-                  {arrConfirmIdx === i ? "Sure?" : <X style={{ width: "14px", height: "14px" }} />}
-                </button>
+                    }} style={{ width: "18px", height: "18px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: "0.9rem", lineHeight: 1 }} title="Remove item" className="hover:text-destructive transition-colors">×</button>
+                  )}
+                </span>
               )}
             </div>
           ))}

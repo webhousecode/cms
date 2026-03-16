@@ -160,31 +160,18 @@ export function ImageGalleryEditor({ value = [], onChange, disabled }: Props) {
                     style={iconBtn}
                   >→</button>
                 )}
-                <button
-                  type="button"
-                  title="Remove"
-                  onClick={() => {
-                    if (confirmRemoveIdx === idx) {
-                      if (confirmTimer.current) clearTimeout(confirmTimer.current);
-                      setConfirmRemoveIdx(null);
-                      removeImage(idx);
-                    } else {
-                      if (confirmTimer.current) clearTimeout(confirmTimer.current);
-                      setConfirmRemoveIdx(idx);
-                      confirmTimer.current = setTimeout(() => setConfirmRemoveIdx(null), 3000);
-                    }
-                  }}
-                  style={{
-                    ...iconBtn,
-                    color: "var(--destructive)",
-                    width: confirmRemoveIdx === idx ? "auto" : "22px",
-                    minWidth: confirmRemoveIdx === idx ? "auto" : undefined,
-                    padding: confirmRemoveIdx === idx ? "0 6px" : undefined,
-                    fontSize: confirmRemoveIdx === idx ? "0.6rem" : "0.75rem",
-                    fontWeight: 700,
-                    whiteSpace: "nowrap",
-                  }}
-                >{confirmRemoveIdx === idx ? "Sure?" : "×"}</button>
+                {confirmRemoveIdx === idx ? (
+                  <>
+                    <span style={{ fontSize: "0.6rem", color: "var(--destructive)", fontWeight: 500, padding: "0 1px" }}>Remove?</span>
+                    <button type="button" onClick={() => { if (confirmTimer.current) clearTimeout(confirmTimer.current); setConfirmRemoveIdx(null); removeImage(idx); }}
+                      style={{ ...iconBtn, fontSize: "0.55rem", padding: "0 4px", width: "auto", background: "var(--destructive)", color: "#fff", borderRadius: "3px" }}>Yes</button>
+                    <button type="button" onClick={() => { if (confirmTimer.current) clearTimeout(confirmTimer.current); setConfirmRemoveIdx(null); }}
+                      style={{ ...iconBtn, fontSize: "0.55rem", padding: "0 4px", width: "auto", border: "1px solid var(--border)", borderRadius: "3px" }}>No</button>
+                  </>
+                ) : (
+                  <button type="button" title="Remove" onClick={() => { if (confirmTimer.current) clearTimeout(confirmTimer.current); setConfirmRemoveIdx(idx); confirmTimer.current = setTimeout(() => setConfirmRemoveIdx(null), 3000); }}
+                    style={{ ...iconBtn, color: "var(--destructive)", fontSize: "0.75rem", fontWeight: 700 }}>×</button>
+                )}
               </div>
 
               {/* Index badge */}
