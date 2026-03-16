@@ -112,6 +112,10 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
       const col = config.collections.find((c) => c.name === collection);
       const urlPrefix = (col as { urlPrefix?: string })?.urlPrefix;
       const action = nextStatus === "published" ? "published" : nextStatus === "trashed" ? "deleted" : "updated";
+      // If slug changed, delete the old file on the site first
+      if (newSlug !== slug) {
+        dispatchRevalidation(site, { collection, slug, action: "deleted" }, urlPrefix).catch(() => {});
+      }
       dispatchRevalidation(site, { collection, slug: newSlug, action, document: updated }, urlPrefix).catch(() => {});
     }
 
