@@ -2,7 +2,7 @@
 
 import type { BlockConfig } from "@webhouse/cms";
 import { BlocksEditor } from "./blocks-editor";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Maximize2, X } from "lucide-react";
 
 interface ColumnsEditorProps {
@@ -36,7 +36,6 @@ export function ColumnsEditor({ block, onChange, locked, blocksConfig = [] }: Co
 
   const colCount = getColumnCount(layout);
   const [focusedCol, setFocusedCol] = useState<number | null>(null);
-  const overlayRef = useRef<HTMLDivElement>(null);
 
   // Ensure columns array matches layout count
   const normalizedColumns: Record<string, unknown>[][] = [];
@@ -105,101 +104,17 @@ export function ColumnsEditor({ block, onChange, locked, blocksConfig = [] }: Co
         </div>
       )}
 
-      {/* Columns grid */}
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: getGridCols(layout),
-          gap: "0.75rem",
-        }}
-      >
-        {normalizedColumns.map((colBlocks, colIdx) => (
-          <div
-            key={colIdx}
-            style={{
-              border: `1px dashed ${focusedCol === colIdx ? "var(--primary)" : "var(--border)"}`,
-              borderRadius: "6px",
-              padding: "0.5rem",
-              minHeight: "80px",
-              background: "var(--background)",
-              opacity: focusedCol !== null && focusedCol !== colIdx ? 0.4 : 1,
-              transition: "opacity 150ms, border-color 150ms",
-            }}
-          >
-            {/* Column header */}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                marginBottom: "0.4rem",
-                paddingLeft: "0.25rem",
-              }}
-            >
-              <span
-                style={{
-                  fontSize: "0.6rem",
-                  fontWeight: 600,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.05em",
-                  color: "var(--muted-foreground)",
-                }}
-              >
-                Column {colIdx + 1}
-              </span>
-              {colBlocks.length > 0 && (
-                <button
-                  type="button"
-                  onClick={() => setFocusedCol(focusedCol === colIdx ? null : colIdx)}
-                  title="Expand column editor"
-                  style={{
-                    background: "none",
-                    border: "none",
-                    cursor: "pointer",
-                    color: focusedCol === colIdx ? "var(--primary)" : "var(--muted-foreground)",
-                    padding: "2px",
-                    display: "flex",
-                    alignItems: "center",
-                  }}
-                  className="hover:text-primary transition-colors"
-                >
-                  <Maximize2 style={{ width: 12, height: 12 }} />
-                </button>
-              )}
-            </div>
-            <BlocksEditor
-              field={{
-                name: `column-${colIdx}`,
-                type: "blocks",
-              }}
-              value={colBlocks}
-              onChange={(newBlocks) => updateColumn(colIdx, newBlocks as Record<string, unknown>[])}
-              locked={locked}
-              blocksConfig={nestedBlocksConfig}
-            />
-          </div>
-        ))}
-      </div>
-
-      {/* Focused column overlay */}
-      {focusedCol !== null && (
+      {/* Focused column — full-width editor replaces grid */}
+      {focusedCol !== null ? (
         <div
-          ref={overlayRef}
           style={{
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            zIndex: 20,
             background: "var(--card)",
             border: "1px solid var(--primary)",
             borderRadius: "8px",
-            boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
             padding: "0.75rem",
-            animation: "columnsOverlayIn 150ms ease-out",
           }}
         >
-          {/* Overlay header */}
+          {/* Header */}
           <div
             style={{
               display: "flex",
@@ -240,7 +155,7 @@ export function ColumnsEditor({ block, onChange, locked, blocksConfig = [] }: Co
               Close <X style={{ width: 14, height: 14 }} />
             </button>
           </div>
-          {/* Full-width blocks editor for the focused column */}
+          {/* Full-width blocks editor */}
           <BlocksEditor
             field={{
               name: `column-${focusedCol}`,
@@ -252,15 +167,79 @@ export function ColumnsEditor({ block, onChange, locked, blocksConfig = [] }: Co
             blocksConfig={nestedBlocksConfig}
           />
         </div>
+      ) : (
+        /* Columns grid — normal view */
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: getGridCols(layout),
+            gap: "0.75rem",
+          }}
+        >
+          {normalizedColumns.map((colBlocks, colIdx) => (
+            <div
+              key={colIdx}
+              style={{
+                border: "1px dashed var(--border)",
+                borderRadius: "6px",
+                padding: "0.5rem",
+                minHeight: "80px",
+                background: "var(--background)",
+              }}
+            >
+              {/* Column header */}
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  marginBottom: "0.4rem",
+                  paddingLeft: "0.25rem",
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: "0.6rem",
+                    fontWeight: 600,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.05em",
+                    color: "var(--muted-foreground)",
+                  }}
+                >
+                  Column {colIdx + 1}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setFocusedCol(colIdx)}
+                  title="Expand column editor"
+                  style={{
+                    background: "none",
+                    border: "none",
+                    cursor: "pointer",
+                    color: "var(--muted-foreground)",
+                    padding: "2px",
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                  className="hover:text-primary transition-colors"
+                >
+                  <Maximize2 style={{ width: 12, height: 12 }} />
+                </button>
+              </div>
+              <BlocksEditor
+                field={{
+                  name: `column-${colIdx}`,
+                  type: "blocks",
+                }}
+                value={colBlocks}
+                onChange={(newBlocks) => updateColumn(colIdx, newBlocks as Record<string, unknown>[])}
+                locked={locked}
+                blocksConfig={nestedBlocksConfig}
+              />
+            </div>
+          ))}
+        </div>
       )}
-
-      {/* Inline animation keyframes */}
-      <style>{`
-        @keyframes columnsOverlayIn {
-          from { opacity: 0; transform: translateY(-4px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
     </div>
   );
 }
