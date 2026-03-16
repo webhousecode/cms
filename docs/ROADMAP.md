@@ -1,13 +1,13 @@
 # @webhouse/cms — Roadmap
 
-**Last updated:** 2026-03-17
+**Last updated:** 2026-03-16
 
 ---
 
-## Done (22 tasks)
+## Done (24 milestones)
 
-| # | Task | Completed |
-|---|------|-----------|
+| # | Milestone | Completed |
+|---|-----------|-----------|
 | 01 | **Core engine** — schema, storage (filesystem + SQLite), REST API, build pipeline | 2026-01 |
 | 02 | **AI agents** — generate, rewrite, translate, SEO, orchestrator engine | 2026-02 |
 | 03 | **AI Lock** — field-level content protection, `_fieldMeta`, auto-lock on user edit | 2026-02 |
@@ -23,79 +23,108 @@
 | 13 | **README** — complete rewrite with screenshots, CLI, API docs, 4 admin options | 2026-03-15 |
 | 14 | **OpenAPI spec** — updated to v0.2.6 with i18n, scheduling, query params | 2026-03-15 |
 | 15 | **Landing page build pipeline** — CMS content → static HTML, 6 block renderers | 2026-03-15 |
-| 16 | **Analytics dashboard** — run history, cost tracking, agent leaderboard, AI acceptance rate | 2026-03-15 |
-| 17 | **Docker admin image** — standalone Dockerfile, built + tested (HTTP 200 in 403ms) | 2026-03-15 |
+| 16 | **Analytics dashboard** — run history, cost tracking, agent leaderboard | 2026-03-15 |
+| 17 | **Docker admin image** — standalone Dockerfile, HTTP 200 in 403ms | 2026-03-15 |
 | 18 | **Scaffolder test + bugfixes** — path refs, ESM, package name, CLAUDE.md fixes | 2026-03-15 |
 | 21 | **Plugin lifecycle hooks** — 6 hooks wired in ContentService | 2026-03-15 |
 | 22 | **Supabase storage adapter** — full StorageAdapter impl with dynamic import | 2026-03-15 |
 | 23 | **Screenshot agent** — Playwright, 24 surfaces, dynamic collections, JWT auth | 2026-03-15 |
 | 24 | **Framework adapters** — `@webhouse/cms/adapters` with getCollection/getDocument | 2026-03-15 |
+| F41 | **Content push revalidation** — HMAC webhook, content push to disk, LiveRefresh SSE | 2026-03-16 |
+| F39 | **Interactives Engine** — create/edit/preview interactive HTML content | 2026-03-16 |
 
 ---
 
-## Next up
+## Prioritized Roadmap
 
-| # | Task | Size | Notes |
-|---|------|------|-------|
-| 19 | **webhouse.app marketing site** | Medium | Dogfooding test — build with own CMS |
-| 20 | **webhouse.app cloud** — hosted admin with user auth, GitHub repos | Large | Multi-tenancy, billing |
+Features are grouped into tiers by mission-criticality. **Tier 1 must ship before we can sell the product.** Tier 2 makes it competitive. Tier 3+ is growth and differentiation.
+
+### Tier 1 — Ship Blockers (must have for v1.0)
+
+_Without these, we cannot build and deliver professional sites on the platform._
+
+| Priority | Feature | Size | Why it blocks |
+|----------|---------|------|---------------|
+| 1 | **F42 Framework Boilerplates** | Medium | Without a working starter template, every site starts from scratch. AI builders need a reference. Two variants: filesystem + GitHub. |
+| 2 | **F01 Invite Users** | Small | Can't run a team without editors. Role-based access (admin/editor/viewer). |
+| 3 | **F47 Content Scheduling** | Small | publishAt/unpublishAt — every professional CMS needs this. API partially exists. |
+| 4 | **F43 Persist User State** | Small | Tabs/preferences lost on cookie clear is unacceptable for daily-use tool. |
+| 5 | **F12 One-Click Publish** | Medium | Need to deploy sites. Vercel deploy hook, Fly.io redeploy, GitHub Pages. |
+| 6 | **F27 Backup & Restore** | Small | Content is the customer's most valuable asset. Export/import full site. |
+| 7 | **F44 Media Processing Pipeline** | Medium | Images must be optimized. No srcset = poor Lighthouse. Sharp, WebP/AVIF. |
+| 8 | **F31 Documentation Site** | Medium | Can't ship without docs. API reference, guides, tutorials. |
+
+### Tier 2 — Competitive Edge (v1.1-1.2)
+
+_Makes us stand out. Customers expect these from a modern CMS._
+
+| Priority | Feature | Size | Why it matters |
+|----------|---------|------|----------------|
+| 9 | **F48 i18n** | Medium | Multi-language is table stakes for European/global sites. Storage layer ready. |
+| 10 | **F38 Environment Manager** | Medium | Dev/Staging/Prod. Professional workflow for agencies. |
+| 11 | **F02 Import Engine** | Medium | Migrating FROM another CMS is the #1 adoption barrier. |
+| 12 | **F03 WordPress Migration** | Medium | WP is the biggest migration source. Built on F02. |
+| 13 | **F13 Notification Channels** | Small | Discord/Slack/webhook notifications on content changes. |
+| 14 | **F15 Agent Scheduler** | Small | Cron agents (link check, SEO audit, content refresh). Already in progress. |
+| 15 | **F35 Webhooks** | Small | Generic outbound events for integrations. F41 revalidation is a specific case. |
+| 16 | **F40 Drag and Drop Tabs** | Small | Polish. Expected UX in a tabbed interface. |
+| 17 | **F04 MCP Enhancements** | Small | Already in progress. More tools, better context. |
+| 18 | **F49 Incremental Builds** | Small | Performance. Only matters at scale (100+ pages). |
+
+### Tier 3 — Differentiation (v1.3+)
+
+_Unique selling points and advanced features._
+
+| Priority | Feature | Size | Category |
+|----------|---------|------|----------|
+| 19 | **F46 Plugin System** | Large | Extensibility — `registerPlugin()`, build/AI hooks, custom fields |
+| 20 | **F36 Framework Integrations** | Large | Astro, Remix, Nuxt, SvelteKit adapters |
+| 21 | **F45 AI Image Generation** | Medium | Flux/DALL-E in editor. Differentiator. |
+| 22 | **F30 Form Engine** | Medium | Contact forms, surveys, submissions |
+| 23 | **F29 Transactional Email** | Medium | Password reset, invites, notifications |
+| 24 | **F08 RAG Knowledge Base** | Large | AI grounded in site content |
+| 25 | **F09 Chat Plugin** | Medium | AI chat widget built on F08 |
+| 26 | **F37 HTML Document Field** | Medium | Visual editor for standalone HTML pages |
+| 27 | **F14 Newsletter Engine** | Medium | Email campaigns from CMS content |
+| 28 | **F32 Template Registry** | Large | Marketplace of themes built on F42 boilerplates |
+| 29 | **F17 AI Content Index** | Small | llms.txt, AI-friendly sitemaps |
+| 30 | **F25 Storage Buckets** | Medium | S3, R2, Supabase storage for large media |
+
+### Tier 4 — Growth & Enterprise (v2.0+)
+
+| Priority | Feature | Size | Category |
+|----------|---------|------|----------|
+| 31 | **F34 Multi-Tenancy** | Large | In progress. Full isolation, billing, quotas. |
+| 32 | **F19 Enterprise** | Large | RBAC, audit log, SSO, A/B testing, approval workflows |
+| 33 | **F10 AI Learning Loop** | Medium | AI improves from editor feedback |
+| 34 | **F11 Multi-Model AI** | Small | Use different models for different tasks |
+| 35 | **F33 PWA Support** | Small | Offline CMS admin |
+| 36 | **F05 Podcast Engine** | Medium | RSS, chapters, transcript |
+| 37 | **F06 Content Speaker (TTS)** | Medium | AI narration of articles |
+| 38 | **F07 CMS Mobile (COCpit)** | Large | Expo/React Native review app |
+| 39 | **F18 Design System** | Large | Generative themes, design tokens |
+| 40 | **F28 Vibe Coding Flow** | Medium | AI-assisted site building from admin |
 
 ---
 
-## Feature roadmap (48 features)
+## Product milestones
 
-Full feature list with individual plan docs in [FEATURES.md](FEATURES.md) and [docs/features/](features/).
+| Milestone | Target | Key deliverables |
+|-----------|--------|------------------|
+| **v1.0 — Launch** | — | Tier 1 complete. Boilerplates, user invites, scheduling, media processing, deploy, backup, docs. |
+| **v1.1 — Teams** | — | i18n, environments, import/migration, notifications. |
+| **v1.2 — Integrations** | — | Webhooks, MCP enhancements, incremental builds, tab DnD. |
+| **v1.3 — Platform** | — | Plugin system, framework adapters, AI image gen, forms, email. |
+| **v2.0 — Enterprise** | — | Multi-tenancy, RBAC, audit, SSO, approval workflows. |
 
-| # | Feature | Status |
-|---|---------|--------|
-| F01 | Invite Users | Planned |
-| F02 | Import Engine | Planned |
-| F03 | WordPress Migration | Planned |
-| F04 | MCP Server Enhancements | In progress |
-| F05 | Podcast Engine | Idea |
-| F06 | Content Speaker (TTS) | Idea |
-| F07 | CMS Mobile — COCpit | Idea |
-| F08 | RAG Knowledge Base | Planned |
-| F09 | Chat Plugin | Planned |
-| F10 | AI Learning Loop | Planned |
-| F11 | Multi-Model AI | Planned |
-| F12 | One-Click Publish | Planned |
-| F13 | Notification Channels | Planned |
-| F14 | Newsletter Engine | Planned |
-| F15 | Agent Scheduler & Notifications | In progress |
-| F16 | Link Checker Agent | Done |
-| F17 | AI-Friendly Content Index | Planned |
-| F18 | Design System & Themes | Idea |
-| F19 | Enterprise Features | Idea |
-| F20 | Visual Testing & Screenshots | Done |
-| F21 | Analytics Dashboard | Done |
-| F22 | Block Editor | Done |
-| F23 | New Site Wizard | Done |
-| F24 | AI Playbook / Site Builder Guide | Done |
-| F25 | Storage Buckets (S3, R2, Supabase) | Planned |
-| F26 | GitHub Login | Done |
-| F27 | Backup & Restore | Planned |
-| F28 | Vibe Coding Flow | Idea |
-| F29 | Transactional Email | Planned |
-| F30 | Form Engine | Planned |
-| F31 | Documentation Site | Planned |
-| F32 | Template Registry | Planned |
-| F33 | PWA Support | Planned |
-| F34 | Multi-Tenancy (Full) | In progress |
-| F35 | Webhooks | Planned |
-| F36 | Framework Integrations (Next.js, Astro, Remix, Nuxt, SvelteKit, Vite) | Planned |
-| F37 | HTML Document Field (`htmldoc`) — iframe preview, visual edit, AI edit, code view | Planned |
-| F38 | Environment Manager — Dev/Staging/Prod switcher, dev server spawning, port scanning | Planned |
-| F40 | Drag and Drop Tab Reordering — reorder open tabs via drag, @dnd-kit/sortable | Planned |
-| F41 | GitHub Site Auto-Sync & Webhook Revalidation — dev auto-pull, production revalidation, scaffolded endpoint | Done |
-| F42 | Framework Boilerplates — production-ready Next.js starter template, AI-cloneable, react-markdown, blocks, dark mode, revalidation | Planned |
-| F43 | Persist User State — open tabs, sidebar, zoom, searches stored per-user on server, survives browser clears | Planned |
-| F44 | Media Processing Pipeline — Sharp image processing, WebP/AVIF, srcset, SVG optimization, audio waveforms | Planned |
-| F45 | AI Image Generation — text-to-image in Media Manager and editor, Flux/DALL-E providers, img2img | Planned |
-| F46 | Plugin System — `cms.registerPlugin()`, lifecycle, content/build/AI hooks, custom fields and blocks | Planned |
-| F47 | Content Scheduling — publishAt/unpublishAt, scheduler daemon, date pickers, calendar view | Planned |
-| F48 | Internationalization (i18n) — side-by-side translation editor, AI translation, locale routing helpers | Planned |
-| F49 | Incremental Builds — checksum change detection, dependency graph, build cache, `--force` flag | Planned |
+---
+
+## Strategic projects (not feature-numbered)
+
+| Project | Size | Notes |
+|---------|------|-------|
+| **webhouse.app marketing site** | Medium | Dogfooding — build with own CMS |
+| **webhouse.app cloud** | Large | Hosted admin, GitHub repos, billing |
 
 ---
 
@@ -103,8 +132,12 @@ Full feature list with individual plan docs in [FEATURES.md](FEATURES.md) and [d
 
 | Doc | Purpose |
 |-----|---------|
-| CMS-ENGINE.md | Master technical blueprint |
-| PHASES.md | Original 7-phase roadmap |
+| CMS-ENGINE.md | Original master technical blueprint (outdated — features now tracked via F-numbers) |
+| PHASES.md | Original 7-phase roadmap (superseded by this file) |
 | AI-ORCHESTRATED-CMS.md | Orchestrator vision |
 | MULTI-SITE.md | Multi-site architecture |
 | EXTERNAL-DEPENDENCIES.md | Service catalog |
+
+---
+
+_All features have individual plan documents in [docs/features/](features/). Full list in [FEATURES.md](FEATURES.md)._
