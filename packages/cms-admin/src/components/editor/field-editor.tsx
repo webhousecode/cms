@@ -472,7 +472,7 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
             <div style={{ position: "relative", width: "fit-content" }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
-                src={strVal.startsWith("http") || strVal.startsWith("/uploads/") ? strVal : `/api/uploads${strVal.startsWith("/") ? "" : "/"}${strVal}`}
+                src={strVal.startsWith("http") ? strVal : strVal.startsWith("/uploads/") ? strVal : `/api/site-file${strVal.startsWith("/") ? "" : "/"}${strVal}`}
                 alt={strVal.split("/").pop() ?? "Preview"}
                 style={{
                   maxWidth: "200px",
