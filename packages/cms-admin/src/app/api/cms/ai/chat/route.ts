@@ -11,23 +11,32 @@ export async function POST(request: NextRequest) {
   const client = new Anthropic({ apiKey });
 
   try {
-    const { message, docData, collectionName, fields } = (await request.json()) as {
+    const { message, docData, collectionName, fields, systemPrompt: customSystem, context } = (await request.json()) as {
       message?: string;
       docData?: Record<string, unknown>;
       collectionName?: string;
       fields?: Array<{ name: string; type: string; label?: string }>;
+      systemPrompt?: string;
+      context?: string;
     };
     if (!message) {
       return NextResponse.json({ error: "message required" }, { status: 400 });
     }
 
-    const fieldDescriptions = fields
-      ?.map((f) => `- ${f.label ?? f.name} (${f.type})`)
-      .join("\n");
+    let systemPrompt: string;
 
-    const contentContext = await buildContentContext().catch(() => "");
+    if (customSystem) {
+      // Custom system prompt (e.g. from Interactive AI Edit)
+      systemPrompt = customSystem;
+    } else {
+      // Default content writer system prompt
+      const fieldDescriptions = fields
+        ?.map((f) => `- ${f.label ?? f.name} (${f.type})`)
+        .join("\n");
 
-    const systemPrompt = `You are a content writer inside a CMS. ${collectionName ? `Collection: ${collectionName}.` : ""}
+      const contentContext = await buildContentContext().catch(() => "");
+
+      systemPrompt = `You are a content writer inside a CMS. ${collectionName ? `Collection: ${collectionName}.` : ""}
 ${fieldDescriptions ? `Fields:\n${fieldDescriptions}` : ""}
 
 ABSOLUTE RULES — violating any of these makes your output useless:
@@ -39,10 +48,13 @@ ABSOLUTE RULES — violating any of these makes your output useless:
 6. Use Markdown for formatting. Use "- " for bullet lists. Never use ">" for lists.
 
 ${contentContext}`;
+    }
 
-    const contextMessage = docData
-      ? `Current document content:\n${JSON.stringify(docData, null, 2)}\n\n---\n\n${message}`
-      : message;
+    const contextMessage = context
+      ? `${context}\n\n---\n\n${message}`
+      : docData
+        ? `Current document content:\n${JSON.stringify(docData, null, 2)}\n\n---\n\n${message}`
+        : message;
 
     const stream = await client.messages.stream({
       model: "claude-haiku-4-5-20251001",

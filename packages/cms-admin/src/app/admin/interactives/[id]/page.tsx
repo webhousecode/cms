@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Eye, MousePointer2, Code, Save, Loader2, Copy, History, Settings2, Trash2, Globe, FileText, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Eye, MousePointer2, Code, Save, Loader2, Copy, History, Settings2, Trash2, Globe, FileText, AlertTriangle, Sparkles } from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useTabs } from "@/lib/tabs-context";
@@ -22,7 +22,9 @@ interface InteractiveDetail {
   content: string;
 }
 
-type EditMode = "preview" | "visual" | "code";
+type EditMode = "preview" | "visual" | "code" | "ai-edit";
+
+const InteractiveAIPanel = dynamic(() => import("@/components/editor/interactive-ai-panel").then(m => ({ default: m.InteractiveAIPanel })), { ssr: false });
 
 /* ─── WYSIWYG injection script (adapted from Pitch Vault) ────── */
 const WYSIWYG_SCRIPT = `
@@ -551,6 +553,18 @@ export default function InteractiveDetailPage() {
             Code
           </Button>
 
+          {/* AI Edit */}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setMode("ai-edit")}
+            className={`gap-1.5 ${mode === "ai-edit" ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}
+            title="AI Edit — chat to modify"
+          >
+            <Sparkles className="w-3.5 h-3.5" />
+            AI
+          </Button>
+
           {/* History */}
           <Button
             variant="ghost"
@@ -780,6 +794,28 @@ export default function InteractiveDetailPage() {
                   tabSize: 2,
                   padding: { top: 12 },
                 }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* AI Edit mode — split view: preview left, AI chat right */}
+        {mode === "ai-edit" && (
+          <div style={{ display: "flex", flex: 1, overflow: "hidden", gap: "1px", background: "var(--border)" }}>
+            <div style={{ flex: 1, background: "var(--background)", display: "flex", flexDirection: "column" }}>
+              <iframe
+                src={`/api/interactives/${id}/preview?t=${Date.now()}`}
+                title={detail.name}
+                sandbox="allow-scripts allow-same-origin"
+                style={{ width: "100%", flex: 1, border: "none", background: "white" }}
+              />
+            </div>
+            <div style={{ width: "380px", flexShrink: 0, background: "var(--background)" }}>
+              <InteractiveAIPanel
+                interactiveId={id}
+                title={detail.name}
+                content={codeValue}
+                onApply={(html) => setCodeValue(html)}
               />
             </div>
           </div>
