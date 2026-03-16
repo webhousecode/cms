@@ -16,6 +16,7 @@ export interface RevalidationPayload {
   collection: string;
   slug: string;
   action: "created" | "updated" | "deleted" | "published" | "unpublished";
+  document?: unknown | null; // Full document JSON for content push (any serializable shape)
 }
 
 export interface RevalidationResult {
@@ -79,6 +80,7 @@ export async function dispatchRevalidation(
     collection: payload.collection,
     slug: payload.slug,
     action: payload.action,
+    document: payload.document ?? null,
   });
 
   const headers: Record<string, string> = {

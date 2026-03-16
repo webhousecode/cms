@@ -31,7 +31,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
         const config = await getAdminConfig();
         const col = config.collections.find((c) => c.name === collection);
         const urlPrefix = (col as { urlPrefix?: string })?.urlPrefix;
-        dispatchRevalidation(site, { collection, slug, action: "updated" }, urlPrefix).catch(() => {});
+        dispatchRevalidation(site, { collection, slug, action: "updated", document: updated }, urlPrefix).catch(() => {});
       }
 
       return NextResponse.json(updated);
@@ -112,7 +112,7 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
       const col = config.collections.find((c) => c.name === collection);
       const urlPrefix = (col as { urlPrefix?: string })?.urlPrefix;
       const action = nextStatus === "published" ? "published" : nextStatus === "trashed" ? "deleted" : "updated";
-      dispatchRevalidation(site, { collection, slug: newSlug, action }, urlPrefix).catch(() => {});
+      dispatchRevalidation(site, { collection, slug: newSlug, action, document: updated }, urlPrefix).catch(() => {});
     }
 
     return NextResponse.json(updated);
