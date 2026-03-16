@@ -37,8 +37,22 @@ export function ColumnsEditor({ block, onChange, locked, blocksConfig = [] }: Co
   const colCount = getColumnCount(layout);
   const [focusedCol, setFocusedCol] = useState<number | null>(null);
   const [pendingLayout, setPendingLayout] = useState<string | null>(null);
-  // Shared expanded state per column so grid-view and focus-view stay in sync
-  const [colExpanded, setColExpanded] = useState<Record<number, Record<number, boolean>>>({});
+  // Shared expanded state per column — persisted to localStorage
+  const colExpandedKey = "cms-col-expanded";
+  const [colExpanded, setColExpanded] = useState<Record<number, Record<number, boolean>>>(() => {
+    if (typeof window === "undefined") return {};
+    try {
+      const stored = localStorage.getItem(colExpandedKey);
+      return stored ? JSON.parse(stored) : {};
+    } catch { return {}; }
+  });
+  function setColExpandedPersist(updater: (prev: Record<number, Record<number, boolean>>) => Record<number, Record<number, boolean>>) {
+    setColExpanded((prev) => {
+      const next = updater(prev);
+      try { localStorage.setItem(colExpandedKey, JSON.stringify(next)); } catch {}
+      return next;
+    });
+  }
 
   // Ensure columns array matches layout count
   const normalizedColumns: Record<string, unknown>[][] = [];
@@ -221,7 +235,7 @@ export function ColumnsEditor({ block, onChange, locked, blocksConfig = [] }: Co
             locked={locked}
             blocksConfig={nestedBlocksConfig}
             expandedState={colExpanded[focusedCol] ?? {}}
-            onExpandedChange={(exp) => setColExpanded((prev) => ({ ...prev, [focusedCol]: exp }))}
+            onExpandedChange={(exp) => setColExpandedPersist((prev) => ({ ...prev, [focusedCol]: exp }))}
           />
         </div>
       ) : (
@@ -293,7 +307,7 @@ export function ColumnsEditor({ block, onChange, locked, blocksConfig = [] }: Co
                 locked={locked}
                 blocksConfig={nestedBlocksConfig}
                 expandedState={colExpanded[colIdx] ?? {}}
-                onExpandedChange={(exp) => setColExpanded((prev) => ({ ...prev, [colIdx]: exp }))}
+                onExpandedChange={(exp) => setColExpandedPersist((prev) => ({ ...prev, [colIdx]: exp }))}
               />
             </div>
           ))}
