@@ -14,7 +14,7 @@ ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 ENV_FILE="$ROOT_DIR/packages/cms-admin/.env.local"
 DOCKER_SECRETS_FILE="$ROOT_DIR/.env.secrets"
 
-FLY_APP="webhouse-cms"
+FLY_APP="webhouse-app"
 GH_REPO="webhousecode/cms"
 
 # ── Secrets to push (picked from .env.local) ──────────────────────────────
