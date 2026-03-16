@@ -2286,47 +2286,195 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
               <IconTable />
             </Btn>
 
-            {/* Image */}
-            <div style={{ position: "relative" }} ref={imagePickerRef}>
-              <Btn tooltip={uploading ? "Uploading…" : "Insert image"} disabled={uploading}
-                onClick={() => setShowImagePicker((o) => !o)}>
+            {/* Insert Media (combined dropdown) */}
+            <div style={{ position: "relative" }} ref={mediaDropdownRef}>
+              <Btn tooltip={uploading ? "Uploading…" : "Insert media"} disabled={uploading}
+                onClick={() => { setShowMediaDropdown((o) => !o); setMediaSubMenu(null); }}>
                 <IconImage />
               </Btn>
-              {showImagePicker && (
+              {showMediaDropdown && (
                 <div style={{
                   position: "absolute", top: "100%", left: 0, zIndex: 50,
-                  marginTop: "4px", minWidth: "160px",
+                  marginTop: "4px", minWidth: "180px",
                   background: "var(--popover)", border: "1px solid var(--border)",
                   borderRadius: "8px", boxShadow: "0 4px 16px rgba(0,0,0,0.3)",
                   overflow: "hidden",
                 }}>
-                  <button type="button" style={{
-                    display: "flex", alignItems: "center", gap: "0.5rem",
-                    width: "100%", padding: "0.5rem 0.75rem", border: "none",
-                    background: "transparent", color: "var(--foreground)",
-                    fontSize: "0.8rem", cursor: "pointer", textAlign: "left",
-                  }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(255,255,255,0.07)"; }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
-                    onClick={() => { setShowImagePicker(false); imageInputRef.current?.click(); }}
-                  >
-                    Upload file
-                  </button>
-                  <button type="button" style={{
-                    display: "flex", alignItems: "center", gap: "0.5rem",
-                    width: "100%", padding: "0.5rem 0.75rem", border: "none",
-                    background: "transparent", color: "var(--foreground)",
-                    fontSize: "0.8rem", cursor: "pointer", textAlign: "left",
-                  }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(255,255,255,0.07)"; }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
-                    onClick={openImageMediaBrowser}
-                  >
-                    Browse Media
-                  </button>
+                  {mediaSubMenu === null && (<>
+                    {/* Image — has sub-options */}
+                    <button type="button" style={{
+                      display: "flex", alignItems: "center", justifyContent: "space-between",
+                      width: "100%", padding: "0.5rem 0.75rem", border: "none",
+                      background: "transparent", color: "var(--foreground)",
+                      fontSize: "0.8rem", cursor: "pointer", textAlign: "left",
+                    }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(255,255,255,0.07)"; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
+                      onClick={() => setMediaSubMenu("image")}
+                    >
+                      <span style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}><IconImage />Image</span>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                    </button>
+                    {/* Video */}
+                    <button type="button" style={{
+                      display: "flex", alignItems: "center", gap: "0.5rem",
+                      width: "100%", padding: "0.5rem 0.75rem", border: "none",
+                      background: "transparent", color: "var(--foreground)",
+                      fontSize: "0.8rem", cursor: "pointer", textAlign: "left",
+                    }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(255,255,255,0.07)"; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
+                      onClick={() => { setShowMediaDropdown(false); setShowVideoDialog(true); setVideoUrl(""); }}
+                    >
+                      <IconVideo />Video
+                    </button>
+                    {/* Audio — has sub-options */}
+                    <button type="button" style={{
+                      display: "flex", alignItems: "center", justifyContent: "space-between",
+                      width: "100%", padding: "0.5rem 0.75rem", border: "none",
+                      background: "transparent", color: "var(--foreground)",
+                      fontSize: "0.8rem", cursor: "pointer", textAlign: "left",
+                    }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(255,255,255,0.07)"; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
+                      onClick={() => setMediaSubMenu("audio")}
+                    >
+                      <span style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}><IconAudio />Audio</span>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                    </button>
+                    {/* File attachment */}
+                    <button type="button" style={{
+                      display: "flex", alignItems: "center", gap: "0.5rem",
+                      width: "100%", padding: "0.5rem 0.75rem", border: "none",
+                      background: "transparent", color: "var(--foreground)",
+                      fontSize: "0.8rem", cursor: "pointer", textAlign: "left",
+                    }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(255,255,255,0.07)"; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
+                      onClick={() => {
+                        setShowMediaDropdown(false);
+                        editor.chain().focus().insertContent({ type: "fileAttachment", attrs: { src: "", filename: "", size: "" } }).run();
+                      }}
+                    >
+                      <IconAttachment />File attachment
+                    </button>
+                    {/* Interactive */}
+                    <button type="button" style={{
+                      display: "flex", alignItems: "center", gap: "0.5rem",
+                      width: "100%", padding: "0.5rem 0.75rem", border: "none",
+                      background: "transparent", color: "var(--foreground)",
+                      fontSize: "0.8rem", cursor: "pointer", textAlign: "left",
+                    }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(255,255,255,0.07)"; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
+                      onClick={() => {
+                        setShowMediaDropdown(false);
+                        setShowInteractivePicker(true);
+                        setIntSearch("");
+                        setInteractivesLoading(true);
+                        fetch("/api/interactives")
+                          .then(r => r.json())
+                          .then((data) => {
+                            const items = Array.isArray(data) ? data : (data.interactives ?? []);
+                            setAvailableInteractives(items
+                              .filter((i: Record<string, string>) => i.status !== "trashed")
+                              .map((i: Record<string, string>) => ({ id: i.id, title: i.name || i.title || i.id })));
+                          })
+                          .catch(() => setAvailableInteractives([]))
+                          .finally(() => setInteractivesLoading(false));
+                      }}
+                    >
+                      <IconInteractive />Interactive
+                    </button>
+                  </>)}
+
+                  {/* Image sub-menu */}
+                  {mediaSubMenu === "image" && (<>
+                    <button type="button" style={{
+                      display: "flex", alignItems: "center", gap: "0.5rem",
+                      width: "100%", padding: "0.4rem 0.75rem", border: "none",
+                      background: "transparent", color: "var(--muted-foreground)",
+                      fontSize: "0.7rem", cursor: "pointer", textAlign: "left",
+                    }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(255,255,255,0.07)"; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
+                      onClick={() => setMediaSubMenu(null)}
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                      Image
+                    </button>
+                    <div style={{ height: "1px", background: "var(--border)", margin: "2px 0" }} />
+                    <button type="button" style={{
+                      display: "flex", alignItems: "center", gap: "0.5rem",
+                      width: "100%", padding: "0.5rem 0.75rem", border: "none",
+                      background: "transparent", color: "var(--foreground)",
+                      fontSize: "0.8rem", cursor: "pointer", textAlign: "left",
+                    }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(255,255,255,0.07)"; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
+                      onClick={() => { setShowMediaDropdown(false); setMediaSubMenu(null); imageInputRef.current?.click(); }}
+                    >
+                      Upload file
+                    </button>
+                    <button type="button" style={{
+                      display: "flex", alignItems: "center", gap: "0.5rem",
+                      width: "100%", padding: "0.5rem 0.75rem", border: "none",
+                      background: "transparent", color: "var(--foreground)",
+                      fontSize: "0.8rem", cursor: "pointer", textAlign: "left",
+                    }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(255,255,255,0.07)"; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
+                      onClick={() => { setShowMediaDropdown(false); setMediaSubMenu(null); openImageMediaBrowser(); }}
+                    >
+                      Browse Media
+                    </button>
+                  </>)}
+
+                  {/* Audio sub-menu */}
+                  {mediaSubMenu === "audio" && (<>
+                    <button type="button" style={{
+                      display: "flex", alignItems: "center", gap: "0.5rem",
+                      width: "100%", padding: "0.4rem 0.75rem", border: "none",
+                      background: "transparent", color: "var(--muted-foreground)",
+                      fontSize: "0.7rem", cursor: "pointer", textAlign: "left",
+                    }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(255,255,255,0.07)"; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
+                      onClick={() => setMediaSubMenu(null)}
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                      Audio
+                    </button>
+                    <div style={{ height: "1px", background: "var(--border)", margin: "2px 0" }} />
+                    <button type="button" style={{
+                      display: "flex", alignItems: "center", gap: "0.5rem",
+                      width: "100%", padding: "0.5rem 0.75rem", border: "none",
+                      background: "transparent", color: "var(--foreground)",
+                      fontSize: "0.8rem", cursor: "pointer", textAlign: "left",
+                    }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(255,255,255,0.07)"; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
+                      onClick={() => { setShowMediaDropdown(false); setMediaSubMenu(null); audioInputRef.current?.click(); }}
+                    >
+                      Upload file
+                    </button>
+                    <button type="button" style={{
+                      display: "flex", alignItems: "center", gap: "0.5rem",
+                      width: "100%", padding: "0.5rem 0.75rem", border: "none",
+                      background: "transparent", color: "var(--foreground)",
+                      fontSize: "0.8rem", cursor: "pointer", textAlign: "left",
+                    }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(255,255,255,0.07)"; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
+                      onClick={() => { setShowMediaDropdown(false); setMediaSubMenu(null); openAudioMediaBrowser(); }}
+                    >
+                      Browse Media
+                    </button>
+                  </>)}
                 </div>
               )}
             </div>
+            {/* Hidden file inputs for image and audio upload */}
             <input
               ref={imageInputRef}
               type="file"
@@ -2334,57 +2482,6 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
               style={{ display: "none" }}
               onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadImage(f); e.target.value = ""; }}
             />
-
-            {/* Insert Block */}
-            <Btn tooltip="Insert content block" onClick={openBlockPicker}>
-              <IconBlocks />
-            </Btn>
-
-            {/* Insert Video */}
-            <Btn tooltip="Insert video embed" onClick={() => { setShowVideoDialog(true); setVideoUrl(""); }}>
-              <IconVideo />
-            </Btn>
-
-            {/* Insert Audio */}
-            <div style={{ position: "relative" }} ref={audioPickerRef}>
-              <Btn tooltip="Insert audio" onClick={() => setShowAudioPicker((o) => !o)}>
-                <IconAudio />
-              </Btn>
-              {showAudioPicker && (
-                <div style={{
-                  position: "absolute", top: "100%", left: 0, zIndex: 50,
-                  marginTop: "4px", minWidth: "160px",
-                  background: "var(--popover)", border: "1px solid var(--border)",
-                  borderRadius: "8px", boxShadow: "0 4px 16px rgba(0,0,0,0.3)",
-                  overflow: "hidden",
-                }}>
-                  <button type="button" style={{
-                    display: "flex", alignItems: "center", gap: "0.5rem",
-                    width: "100%", padding: "0.5rem 0.75rem", border: "none",
-                    background: "transparent", color: "var(--foreground)",
-                    fontSize: "0.8rem", cursor: "pointer", textAlign: "left",
-                  }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(255,255,255,0.07)"; }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
-                    onClick={() => { setShowAudioPicker(false); audioInputRef.current?.click(); }}
-                  >
-                    Upload file
-                  </button>
-                  <button type="button" style={{
-                    display: "flex", alignItems: "center", gap: "0.5rem",
-                    width: "100%", padding: "0.5rem 0.75rem", border: "none",
-                    background: "transparent", color: "var(--foreground)",
-                    fontSize: "0.8rem", cursor: "pointer", textAlign: "left",
-                  }}
-                    onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(255,255,255,0.07)"; }}
-                    onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
-                    onClick={openAudioMediaBrowser}
-                  >
-                    Browse Media
-                  </button>
-                </div>
-              )}
-            </div>
             <input
               ref={audioInputRef}
               type="file"
@@ -2393,16 +2490,13 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
               onChange={(e) => {
                 const f = e.target.files?.[0];
                 if (f) {
-                  // Insert an empty audioEmbed node; the NodeView will handle the upload dropzone
                   editor.chain().focus().insertContent({ type: "audioEmbed", attrs: { src: "", title: f.name } }).run();
-                  // Upload immediately and update the most recent audioEmbed
                   (async () => {
                     const fd = new FormData();
                     fd.append("file", f);
                     fd.append("folder", "audio");
                     const res = await fetch("/api/upload", { method: "POST", body: fd });
                     const { url } = await res.json();
-                    // Find the audioEmbed we just inserted and update it
                     const { state } = editor;
                     state.doc.descendants((node, pos) => {
                       if (node.type.name === "audioEmbed" && !node.attrs.src && node.attrs.title === f.name) {
@@ -2410,7 +2504,7 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
                           tr.setNodeMarkup(pos, undefined, { ...node.attrs, src: url });
                           return true;
                         }).run();
-                        return false; // stop traversal
+                        return false;
                       }
                     });
                   })();
@@ -2419,11 +2513,9 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
               }}
             />
 
-            {/* Insert File */}
-            <Btn tooltip="Attach file" onClick={() => {
-              editor.chain().focus().insertContent({ type: "fileAttachment", attrs: { src: "", filename: "", size: "" } }).run();
-            }}>
-              <IconAttachment />
+            {/* Insert Block */}
+            <Btn tooltip="Insert content block" onClick={openBlockPicker}>
+              <IconBlocks />
             </Btn>
 
             {/* Insert Callout */}
@@ -2435,25 +2527,6 @@ function RichTextEditorInner({ value, onChange, disabled }: Props) {
               }).run();
             }}>
               <IconCallout />
-            </Btn>
-
-            {/* Insert Interactive */}
-            <Btn tooltip="Insert interactive" onClick={() => {
-              setShowInteractivePicker(true);
-              setIntSearch("");
-              setInteractivesLoading(true);
-              fetch("/api/interactives")
-                .then(r => r.json())
-                .then((data) => {
-                  const items = Array.isArray(data) ? data : (data.interactives ?? []);
-                  setAvailableInteractives(items
-                    .filter((i: Record<string, string>) => i.status !== "trashed")
-                    .map((i: Record<string, string>) => ({ id: i.id, title: i.name || i.title || i.id })));
-                })
-                .catch(() => setAvailableInteractives([]))
-                .finally(() => setInteractivesLoading(false));
-            }}>
-              <IconInteractive />
             </Btn>
 
           </div>
