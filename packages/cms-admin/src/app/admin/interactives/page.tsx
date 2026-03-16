@@ -121,8 +121,35 @@ export default function InteractivesPage() {
     ? items.filter((i) => i.name.toLowerCase().includes(query.toLowerCase()) || i.id.toLowerCase().includes(query.toLowerCase()))
     : items;
 
+  const [dragging, setDragging] = useState(false);
+
+  function handleDragOver(e: React.DragEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragging(true);
+  }
+
+  function handleDragLeave(e: React.DragEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragging(false);
+  }
+
+  function handleDrop(e: React.DragEvent) {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragging(false);
+    handleUpload(e.dataTransfer.files);
+  }
+
   return (
-    <div className="flex flex-col min-h-screen">
+    <div
+      className="flex flex-col min-h-screen"
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+      style={dragging ? { outline: "2px dashed var(--primary)", outlineOffset: "-4px" } : undefined}
+    >
       {/* Top bar — matches Media Manager */}
       <div
         className="sticky flex items-center gap-3 px-4 border-b border-border shrink-0"

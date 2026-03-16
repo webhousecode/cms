@@ -120,10 +120,19 @@ export function InteractiveAIPanel({ interactiveId, title, content, onApply }: P
     }
   }
 
-  /** Extract HTML from code fences in the message */
+  /** Extract HTML from code fences in the message — handles various fence formats */
   function extractHtml(text: string): string | null {
-    const match = text.match(/```html\s*\n([\s\S]*?)```/);
-    return match ? match[1].trim() : null;
+    // Try ```html ... ``` first
+    const fenced = text.match(/```(?:html)?\s*\n([\s\S]*?)```/);
+    if (fenced) return fenced[1].trim();
+
+    // If the entire response looks like HTML (starts with < or <!), use it directly
+    const trimmed = text.trim();
+    if (trimmed.startsWith("<!") || trimmed.startsWith("<html") || trimmed.startsWith("<div") || trimmed.startsWith("<style")) {
+      return trimmed;
+    }
+
+    return null;
   }
 
   async function copyMessage(text: string, idx: number) {
