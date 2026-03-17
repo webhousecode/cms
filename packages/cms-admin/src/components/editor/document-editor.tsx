@@ -283,18 +283,17 @@ function ScheduleButton({ publishAt, onSchedule, label = "Scheduled", defaultLab
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        title={isScheduled ? `${label}: ${publishAt}` : defaultLabel}
+        title={isScheduled ? `${label}: ${new Date(publishAt).toLocaleString()}` : defaultLabel}
         style={{
-          display: "flex", alignItems: "center", gap: "0.375rem",
-          padding: "0.25rem 0.625rem", borderRadius: "6px",
-          border: `1px solid ${isScheduled ? `color-mix(in srgb, ${color} 40%, transparent)` : "var(--border)"}`,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          width: "28px", height: "28px", borderRadius: "6px",
+          border: `1px solid ${isScheduled ? `color-mix(in srgb, ${color} 40%, transparent)` : "transparent"}`,
           background: isScheduled ? `color-mix(in srgb, ${color} 8%, transparent)` : "transparent",
           color: isScheduled ? color : "var(--muted-foreground)",
-          fontSize: "0.75rem", cursor: "pointer",
+          cursor: "pointer",
         }}
       >
-        <Clock style={{ width: "0.875rem", height: "0.875rem" }} />
-        {isScheduled ? label : defaultLabel}
+        <Clock style={{ width: "0.9rem", height: "0.9rem" }} />
       </button>
 
       {open && (
