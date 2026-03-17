@@ -147,7 +147,8 @@ function ProfileSection() {
 			if (!res.ok) { setError(d.error ?? "Save failed"); }
 			else { setSaved(true); setTimeout(() => setSaved(false), 2500); }
 		} catch (err) {
-			setError("Network error — could not save");
+			console.error("[saveProfile] error:", err);
+			setError(`Save failed: ${err instanceof Error ? err.message : String(err)}`);
 		} finally {
 			setSaving(false);
 		}
