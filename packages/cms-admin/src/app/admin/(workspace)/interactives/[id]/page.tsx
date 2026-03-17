@@ -492,7 +492,7 @@ export default function InteractiveDetailPage() {
   ];
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 84px)" }}>
+    <fieldset disabled={readOnly} style={{ border: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", height: "calc(100vh - 84px)" }}>
       {/* Top bar — matches document editor exactly */}
       <div className="sticky flex items-center justify-between px-4 border-b border-border shrink-0" style={{ top: 84, height: "48px", zIndex: 30, backgroundColor: "var(--card)" }}>
         <div className="flex items-center gap-2">
@@ -860,6 +860,6 @@ export default function InteractiveDetailPage() {
           </div>
         </div>
       )}
-    </div>
+    </fieldset>
   );
 }

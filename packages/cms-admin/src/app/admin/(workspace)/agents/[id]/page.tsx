@@ -293,6 +293,7 @@ export default function AgentDetailPage() {
       )}
     </div>
 
+    <fieldset disabled={readOnly} style={{ border: "none", padding: 0, margin: 0 }}>
     <div className="p-8 max-w-2xl">
       <TabTitle value={name || "Agent"} />
 
@@ -723,6 +724,7 @@ export default function AgentDetailPage() {
         </div>
       )}
     </div>
+    </fieldset>
     </>
   );
 }

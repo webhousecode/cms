@@ -160,6 +160,7 @@ export default function MediaPage() {
 
   /* ── Delete ───────────────────────────────────────────────── */
   async function handleDelete(file: MediaFile) {
+    if (readOnly) return;
     setConfirmDelete(file);
   }
 
@@ -178,6 +179,7 @@ export default function MediaPage() {
 
   /* ── Rename ─────────────────────────────────────────────── */
   async function handleRename(file: MediaFile, newName: string) {
+    if (readOnly) return;
     if (!newName || newName === file.name) { setRenaming(null); return; }
     const res = await fetch("/api/media/rename", {
       method: "POST",
@@ -218,6 +220,7 @@ export default function MediaPage() {
 
   /* ─── Render ─────────────────────────────────────────────── */
   return (
+    <fieldset disabled={readOnly} style={{ border: "none", padding: 0, margin: 0 }}>
     <TooltipProvider>
     <div
       ref={pageRef}
@@ -444,9 +447,9 @@ export default function MediaPage() {
           ) : (
             <>
               {view === "grid" ? (
-                <GridView files={paginated} copied={copied} deleting={deleting} onCopy={copyUrl} onDelete={handleDelete} onOpen={openLightbox} onRename={setRenaming} usageMap={usageMap} />
+                <GridView files={paginated} copied={copied} deleting={deleting} onCopy={copyUrl} onDelete={readOnly ? () => {} : handleDelete} onOpen={openLightbox} onRename={readOnly ? () => {} : setRenaming} usageMap={usageMap} />
               ) : (
-                <ListView files={paginated} copied={copied} deleting={deleting} onCopy={copyUrl} onDelete={handleDelete} onOpen={openLightbox} onRename={setRenaming} usageMap={usageMap} />
+                <ListView files={paginated} copied={copied} deleting={deleting} onCopy={copyUrl} onDelete={readOnly ? () => {} : handleDelete} onOpen={openLightbox} onRename={readOnly ? () => {} : setRenaming} usageMap={usageMap} />
               )}
 
               {/* ── Pagination ── */}
@@ -486,7 +489,7 @@ export default function MediaPage() {
           onClose={() => setLightboxIndex(null)}
           onCopy={copyUrl}
           copied={copied}
-          onDelete={handleDelete}
+          onDelete={readOnly ? () => {} : handleDelete}
         />
       )}
 
@@ -510,6 +513,7 @@ export default function MediaPage() {
       )}
     </div>
     </TooltipProvider>
+    </fieldset>
   );
 }
 
