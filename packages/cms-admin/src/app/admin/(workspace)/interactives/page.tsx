@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Upload, Sparkles, Trash2, Zap, MoreHorizontal, Pencil, Globe, Copy, FileText, LayoutGrid, List, Search, X, AlertTriangle } from "lucide-react";
+import { Upload, Sparkles, Trash2, Zap, MoreHorizontal, Pencil, Globe, Copy, FileText, LayoutGrid, List, Search, X, AlertTriangle, Loader2 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -121,6 +121,93 @@ export default function InteractivesPage() {
     ? items.filter((i) => i.name.toLowerCase().includes(query.toLowerCase()) || i.id.toLowerCase().includes(query.toLowerCase()))
     : items;
 
+  const [aiModalOpen, setAiModalOpen] = useState(false);
+  const [aiPrompt, setAiPrompt] = useState("");
+  const [aiGenerating, setAiGenerating] = useState(false);
+  const aiTextareaRef = useRef<HTMLTextAreaElement>(null);
+
+  useEffect(() => {
+    if (aiModalOpen) setTimeout(() => aiTextareaRef.current?.focus(), 50);
+  }, [aiModalOpen]);
+
+  /** Extract HTML from code fences */
+  function extractHtml(text: string): string | null {
+    const fenced = text.match(/```(?:html)?\s*\n([\s\S]*?)```/);
+    if (fenced) return fenced[1].trim();
+    const openFence = text.match(/```(?:html)?\s*\n([\s\S]+)$/);
+    if (openFence) {
+      const c = openFence[1].trim();
+      if (c.startsWith("<") || c.startsWith("<!")) return c;
+    }
+    const trimmed = text.trim();
+    if (trimmed.startsWith("<!") || trimmed.startsWith("<html")) return trimmed;
+    return null;
+  }
+
+  async function handleAiGenerate() {
+    const prompt = aiPrompt.trim();
+    if (!prompt || aiGenerating) return;
+    setAiGenerating(true);
+
+    try {
+      const res = await fetch("/api/cms/ai/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: prompt,
+          systemPrompt: [
+            "Generate a standalone HTML file with inline CSS and JavaScript.",
+            "The HTML should be a complete, self-contained interactive component.",
+            "Include <!DOCTYPE html>, <html>, <head>, <body> tags.",
+            "Use modern CSS (flexbox/grid), vanilla JS or Chart.js via CDN if charts are needed.",
+            "Make it visually polished with smooth animations and good UX.",
+            "Wrap your response in ```html code fences.",
+          ].join("\n"),
+        }),
+      });
+
+      if (!res.ok || !res.body) {
+        setAiGenerating(false);
+        return;
+      }
+
+      // Read streaming response
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let full = "";
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        full += decoder.decode(value, { stream: true });
+      }
+
+      const html = extractHtml(full);
+      if (!html) {
+        setAiGenerating(false);
+        return;
+      }
+
+      // Create interactive via POST
+      const blob = new Blob([html], { type: "text/html" });
+      // Derive filename from first few words of prompt
+      const safeName = prompt.replace(/[^a-zA-Z0-9 ]/g, "").trim().split(/\s+/).slice(0, 4).join("-").toLowerCase() || "ai-generated";
+      const file = new File([blob], `${safeName}.html`, { type: "text/html" });
+      const fd = new FormData();
+      fd.append("file", file);
+      const createRes = await fetch("/api/interactives", { method: "POST", body: fd });
+      if (createRes.ok) {
+        const created = await createRes.json();
+        setAiModalOpen(false);
+        setAiPrompt("");
+        router.push(`/admin/interactives/${created.id}`);
+      }
+    } catch {
+      /* ignore */
+    }
+
+    setAiGenerating(false);
+  }
+
   const [dragging, setDragging] = useState(false);
 
   function handleDragOver(e: React.DragEvent) {
@@ -200,6 +287,16 @@ export default function InteractivesPage() {
             </button>
           ))}
         </div>
+
+        {/* Create with AI button */}
+        <button
+          type="button"
+          onClick={() => setAiModalOpen(true)}
+          className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md border border-border bg-card text-foreground hover:bg-accent transition-colors"
+        >
+          <Sparkles style={{ width: "0.875rem", height: "0.875rem" }} />
+          Create with AI
+        </button>
 
         {/* Upload button */}
         <button
@@ -342,6 +439,75 @@ export default function InteractivesPage() {
             <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
               <Button variant="outline" size="sm" onClick={() => setConfirmTrash(null)}>Cancel</Button>
               <Button variant="destructive" size="sm" onClick={trashItem}>Move to trash</Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Create with AI modal */}
+      {aiModalOpen && (
+        <div
+          style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
+          onClick={(e) => { if (e.target === e.currentTarget && !aiGenerating) setAiModalOpen(false); }}
+        >
+          <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "12px", padding: "1.5rem", maxWidth: "520px", width: "90%", display: "flex", flexDirection: "column", gap: "1rem" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <Sparkles style={{ width: "1.125rem", height: "1.125rem", color: "var(--primary)" }} />
+              <span style={{ fontWeight: 600, fontSize: "0.95rem" }}>Create Interactive with AI</span>
+            </div>
+            <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", margin: 0 }}>
+              Describe the interactive component you want. AI will generate a complete standalone HTML file.
+            </p>
+            <textarea
+              ref={aiTextareaRef}
+              value={aiPrompt}
+              onChange={(e) => setAiPrompt(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) handleAiGenerate(); }}
+              placeholder="e.g. A bar chart showing monthly sales data with animated bars and hover tooltips..."
+              disabled={aiGenerating}
+              rows={4}
+              style={{
+                resize: "vertical", padding: "0.625rem 0.75rem", borderRadius: "8px",
+                border: "1px solid var(--border)", background: "var(--background)",
+                color: "var(--foreground)", fontSize: "0.8rem", outline: "none",
+                fontFamily: "inherit", lineHeight: 1.5,
+              }}
+            />
+            {/* Suggestion chips */}
+            {!aiGenerating && !aiPrompt && (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: "0.375rem" }}>
+                {[
+                  "Animated pie chart with 4 categories",
+                  "Interactive quiz with 5 questions",
+                  "Pricing calculator with sliders",
+                  "Timeline of events with scroll animation",
+                ].map((s) => (
+                  <button
+                    key={s}
+                    type="button"
+                    onClick={() => { setAiPrompt(s); aiTextareaRef.current?.focus(); }}
+                    style={{
+                      fontSize: "0.7rem", padding: "0.3rem 0.5rem", borderRadius: "6px",
+                      border: "1px solid var(--border)", background: "var(--background)",
+                      color: "var(--muted-foreground)", cursor: "pointer",
+                    }}
+                  >
+                    {s}
+                  </button>
+                ))}
+              </div>
+            )}
+            <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
+              <Button variant="outline" size="sm" onClick={() => { setAiModalOpen(false); setAiPrompt(""); }} disabled={aiGenerating}>
+                Cancel
+              </Button>
+              <Button size="sm" onClick={handleAiGenerate} disabled={!aiPrompt.trim() || aiGenerating}>
+                {aiGenerating ? (
+                  <><Loader2 style={{ width: "0.75rem", height: "0.75rem", marginRight: "0.375rem" }} className="animate-spin" /> Generating…</>
+                ) : (
+                  <><Sparkles style={{ width: "0.75rem", height: "0.75rem", marginRight: "0.375rem" }} /> Generate</>
+                )}
+              </Button>
             </div>
           </div>
         </div>
