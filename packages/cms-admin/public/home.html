@@ -125,6 +125,70 @@ nav.scrolled {
   transform: translateY(-1px);
 }
 
+/* Mobile hamburger */
+.nav-hamburger {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  color: var(--grey-400);
+  transition: color 0.2s;
+}
+.nav-hamburger:hover { color: var(--white); }
+.nav-hamburger svg { display: block; }
+
+.nav-mobile-menu {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999;
+  background: rgba(13,13,13,0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+}
+.nav-mobile-menu.open { display: flex; }
+.nav-mobile-menu a {
+  color: var(--grey-100);
+  text-decoration: none;
+  font-size: 20px;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+.nav-mobile-menu a:hover { color: var(--gold); }
+.nav-mobile-menu .mobile-cta {
+  background: var(--gold);
+  color: var(--dark);
+  padding: 12px 32px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 16px;
+  margin-top: 8px;
+}
+.nav-mobile-menu .mobile-cta:hover { background: var(--gold-deep); color: var(--dark); }
+.nav-mobile-close {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: none;
+  border: none;
+  color: var(--grey-400);
+  cursor: pointer;
+  padding: 8px;
+}
+.nav-mobile-close:hover { color: var(--white); }
+
+@media (max-width: 768px) {
+  .nav-hamburger { display: block; }
+}
+
 /* ===== HERO ===== */
 .hero {
   min-height: 100vh;
@@ -593,7 +657,23 @@ footer .footer-links a:hover { color: var(--gold); }
     <a href="/login">Log In</a>
     <a href="/signup" class="nav-cta">Sign Up</a>
   </div>
+  <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu">
+    <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+  </button>
 </nav>
+
+<!-- MOBILE MENU -->
+<div class="nav-mobile-menu" id="mobile-menu">
+  <button class="nav-mobile-close" id="mobile-close" aria-label="Close menu">
+    <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+  </button>
+  <a href="#features" class="mobile-nav-link">Features</a>
+  <a href="#architecture" class="mobile-nav-link">Architecture</a>
+  <a href="#mcp" class="mobile-nav-link">MCP</a>
+  <a href="https://github.com/webhousecode/cms" target="_blank">GitHub</a>
+  <a href="/login">Log In</a>
+  <a href="/signup" class="mobile-cta">Sign Up</a>
+</div>
 
 <!-- HERO -->
 <section class="hero">
@@ -819,6 +899,14 @@ document.querySelectorAll('a[href^="#"]').forEach(a => {
     const target = document.querySelector(a.getAttribute('href'));
     if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
+});
+
+// Mobile menu
+const mobileMenu = document.getElementById('mobile-menu');
+document.getElementById('nav-hamburger').addEventListener('click', () => mobileMenu.classList.add('open'));
+document.getElementById('mobile-close').addEventListener('click', () => mobileMenu.classList.remove('open'));
+mobileMenu.querySelectorAll('a').forEach(a => {
+  a.addEventListener('click', () => mobileMenu.classList.remove('open'));
 });
 </script>
 </body>
