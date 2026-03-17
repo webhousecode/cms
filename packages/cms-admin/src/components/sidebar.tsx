@@ -47,6 +47,10 @@ export function AppSidebar({ collections }: Props) {
   const wordmarkSrc = mounted && resolvedTheme === "light"
     ? "/webhouse-wordmark-light.svg"
     : "/webhouse-wordmark-dark.svg";
+  const [showLogoIcon, setShowLogoIcon] = useState(() => {
+    if (typeof window === "undefined") return true;
+    return localStorage.getItem("cms-show-logo-icon") !== "false";
+  });
   const [contentOpen, setContentOpen] = useState(() => {
     if (typeof window === "undefined") return true;
     const saved = localStorage.getItem("cms-sidebar-content-open");
@@ -55,6 +59,15 @@ export function AppSidebar({ collections }: Props) {
   const [readyCount, setReadyCount] = useState(0);
   const [budgetSpent, setBudgetSpent] = useState(0);
   const [budgetTotal, setBudgetTotal] = useState(50);
+
+  // Listen for logo icon preference changes
+  useEffect(() => {
+    function onLogoChange(e: Event) {
+      setShowLogoIcon((e as CustomEvent).detail as boolean);
+    }
+    window.addEventListener("cms:logo-icon-changed", onLogoChange);
+    return () => window.removeEventListener("cms:logo-icon-changed", onLogoChange);
+  }, []);
 
   // Fetch curation queue count and budget on mount
   useEffect(() => {
@@ -86,12 +99,14 @@ export function AppSidebar({ collections }: Props) {
     <Sidebar collapsible="offcanvas">
       {/* Header: stacked logo */}
       <SidebarHeader className="p-0">
-        <Link href="/admin" className="flex flex-col items-center gap-2 py-5 px-3" style={{ marginRight: "auto", marginLeft: "0.5rem" }}>
-          <img
-            src={mounted && resolvedTheme === "light" ? "/webhouse.app-light-icon.svg" : "/webhouse.app-dark-icon.svg"}
-            alt=""
-            className="w-14 h-14"
-          />
+        <Link href="/admin" className="flex flex-col items-center gap-2 px-3" style={{ marginRight: "auto", marginLeft: "0.5rem", paddingTop: showLogoIcon ? "1.25rem" : "0.75rem", paddingBottom: showLogoIcon ? "1.25rem" : "0.75rem" }}>
+          {showLogoIcon && (
+            <img
+              src={mounted && resolvedTheme === "light" ? "/webhouse.app-light-icon.svg" : "/webhouse.app-dark-icon.svg"}
+              alt=""
+              className="w-14 h-14"
+            />
+          )}
           <img
             src={mounted && resolvedTheme === "light" ? "/webhouse-wordmark-light.svg" : "/webhouse-wordmark-dark.svg"}
             alt="webhouse.app"
