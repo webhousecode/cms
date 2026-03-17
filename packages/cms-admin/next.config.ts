@@ -7,6 +7,11 @@ const nextConfig: NextConfig = {
   // Serve /uploads/* via the dynamic API route which reads from UPLOAD_DIR.
   // This means uploaded files can live anywhere (e.g. the site's public dir)
   // and admin thumbnails still work.
+  async redirects() {
+    return [
+      { source: "/login", destination: "/admin/login", permanent: false },
+    ];
+  },
   async rewrites() {
     return [
       { source: "/uploads/:path*", destination: "/api/uploads/:path*" },
