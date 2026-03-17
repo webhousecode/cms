@@ -58,7 +58,7 @@ function isSameDay(a: string, b: string): boolean {
 
 /* ─── Component ──────────────────────────────────────────────── */
 
-export function ScheduledCalendar({ events, calendarToken }: { events: ScheduledEvent[]; calendarToken: string }) {
+export function ScheduledCalendar({ events, calendarToken, orgId, siteId }: { events: ScheduledEvent[]; calendarToken: string; orgId: string; siteId: string }) {
   const [copied, setCopied] = useState(false);
   const today = new Date();
   const todayKey = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
@@ -139,7 +139,7 @@ export function ScheduledCalendar({ events, calendarToken }: { events: Scheduled
             </div>
             {(() => {
               const isLocal = typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
-              const feedPath = `/api/cms/scheduled/calendar.ics?token=${calendarToken}`;
+              const feedPath = `/api/cms/scheduled/calendar.ics?token=${calendarToken}&org=${orgId}&site=${siteId}`;
               if (isLocal) {
                 return (
                   <button

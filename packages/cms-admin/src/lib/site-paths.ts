@@ -134,6 +134,39 @@ export async function getActiveSiteEntry(): Promise<SiteEntry | null> {
 }
 
 /**
+ * Get SitePaths for a specific org+site without requiring cookies.
+ * Used by unauthenticated endpoints (e.g. calendar feed) that receive org/site as query params.
+ */
+export async function getSitePathsFor(orgId: string, siteId: string): Promise<SitePaths | null> {
+  const registry = await loadRegistry();
+  if (!registry) {
+    // Single-site mode — return default paths
+    const configPath = process.env.CMS_CONFIG_PATH;
+    if (!configPath) return null;
+    const abs = path.resolve(configPath);
+    const projectDir = path.dirname(abs);
+    return {
+      configPath: abs,
+      projectDir,
+      dataDir: path.join(projectDir, "_data"),
+      contentDir: path.join(projectDir, "content"),
+      uploadDir: process.env.UPLOAD_DIR ?? path.join(projectDir, "public", "uploads"),
+      previewUrl: process.env.NEXT_PUBLIC_PREVIEW_SITE_URL ?? "",
+    };
+  }
+
+  const site = findSite(registry, orgId, siteId);
+  if (!site) return null;
+  return siteToPaths(site);
+}
+
+/** Get the _data directory path for a specific site */
+export async function getSiteDataDir(orgId: string, siteId: string): Promise<string | null> {
+  const paths = await getSitePathsFor(orgId, siteId);
+  return paths?.dataDir ?? null;
+}
+
+/**
  * Synchronous fallback for cases where cookies() isn't available.
  * Only works in single-site mode. Returns null if CMS_CONFIG_PATH is unset.
  */

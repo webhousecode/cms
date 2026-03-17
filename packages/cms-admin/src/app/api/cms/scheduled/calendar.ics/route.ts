@@ -1,18 +1,21 @@
 import { getAdminCms, getAdminConfig } from "@/lib/cms";
-import { validateCalendarToken } from "@/lib/site-config";
+import { validateCalendarTokenForSite } from "@/lib/site-config";
 import { NextResponse } from "next/server";
 
 /**
- * GET /api/cms/scheduled/calendar.ics?token=<per-user-hmac>
+ * GET /api/cms/scheduled/calendar.ics?token=<hmac>&org=<orgId>&site=<siteId>
  * Returns an iCalendar feed of all scheduled publish/unpublish events.
  * Subscribe in Apple Calendar, Google Calendar, etc.
+ * Auth via per-user HMAC token — no session cookies required.
  */
 export async function GET(request: Request) {
-  // Validate per-user token
   const url = new URL(request.url);
   const token = url.searchParams.get("token");
-  if (!token || !(await validateCalendarToken(token))) {
-    return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+  const orgId = url.searchParams.get("org") ?? "";
+  const siteId = url.searchParams.get("site") ?? "";
+
+  if (!token || !(await validateCalendarTokenForSite(token, orgId, siteId))) {
+    return NextResponse.json({ error: "Access denied" }, { status: 401 });
   }
 
   try {

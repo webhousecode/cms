@@ -1,6 +1,7 @@
 import { getAdminCms, getAdminConfig } from "@/lib/cms";
 import { readSiteConfig, generateCalendarToken } from "@/lib/site-config";
 import { getSessionWithSiteRole } from "@/lib/require-role";
+import { cookies } from "next/headers";
 import { ScheduledCalendar } from "./calendar-client";
 
 function getExcerpt(data: Record<string, unknown>): string | undefined {
@@ -70,9 +71,11 @@ export default async function ScheduledPage() {
 
   events.sort((a, b) => a.date.localeCompare(b.date));
 
-  // Generate per-user calendar feed token
-  const [siteConfig, session] = await Promise.all([readSiteConfig(), getSessionWithSiteRole()]);
+  // Generate per-user calendar feed token with site context
+  const [siteConfig, session, cookieStore] = await Promise.all([readSiteConfig(), getSessionWithSiteRole(), cookies()]);
   const calendarToken = session ? generateCalendarToken(siteConfig.calendarSecret, session.userId) : "";
+  const orgId = cookieStore.get("cms-active-org")?.value ?? "";
+  const siteId = cookieStore.get("cms-active-site")?.value ?? "";
 
-  return <ScheduledCalendar events={events} calendarToken={calendarToken} />;
+  return <ScheduledCalendar events={events} calendarToken={calendarToken} orgId={orgId} siteId={siteId} />;
 }

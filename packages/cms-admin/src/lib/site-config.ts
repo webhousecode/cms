@@ -86,9 +86,37 @@ export async function validateCalendarToken(token: string): Promise<boolean> {
   try {
     const config = await readSiteConfig();
     if (!config.calendarSecret) return false;
-    // Import team dynamically to avoid circular deps
     const { getTeamMembers } = await import("./team");
     const members = await getTeamMembers();
+    return members.some((m) => generateCalendarToken(config.calendarSecret, m.userId) === token);
+  } catch (err) {
+    console.error("[calendar] token validation error:", err);
+    return false;
+  }
+}
+
+/** Read site config for a specific site (bypasses cookies) */
+export async function readSiteConfigForSite(orgId: string, siteId: string): Promise<SiteConfig | null> {
+  try {
+    const { getSiteDataDir } = await import("./site-paths");
+    const dataDir = await getSiteDataDir(orgId, siteId);
+    if (!dataDir) return null;
+    const filePath = path.join(dataDir, "site-config.json");
+    const raw = await fs.readFile(filePath, "utf-8");
+    const stored = JSON.parse(raw) as Partial<SiteConfig>;
+    return { ...(await defaults()), ...stored };
+  } catch {
+    return null;
+  }
+}
+
+/** Validate calendar token for a specific site (no cookies needed) */
+export async function validateCalendarTokenForSite(token: string, orgId: string, siteId: string): Promise<boolean> {
+  try {
+    const config = await readSiteConfigForSite(orgId, siteId);
+    if (!config?.calendarSecret) return false;
+    const { getTeamMembersForSite } = await import("./team");
+    const members = await getTeamMembersForSite(orgId, siteId);
     return members.some((m) => generateCalendarToken(config.calendarSecret, m.userId) === token);
   } catch (err) {
     console.error("[calendar] token validation error:", err);

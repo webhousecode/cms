@@ -8,7 +8,7 @@
 import fs from "fs/promises";
 import path from "path";
 import type { UserRole } from "./auth";
-import { getActiveSitePaths } from "./site-paths";
+import { getActiveSitePaths, getSiteDataDir } from "./site-paths";
 
 export interface TeamMember {
   userId: string;
@@ -36,6 +36,18 @@ export async function getTeamMembers(): Promise<TeamMember[]> {
 async function writeTeam(members: TeamMember[]): Promise<void> {
   const filePath = await getTeamFilePath();
   await fs.writeFile(filePath, JSON.stringify(members, null, 2));
+}
+
+/** Get team members for a specific site (no cookies needed) */
+export async function getTeamMembersForSite(orgId: string, siteId: string): Promise<TeamMember[]> {
+  const dataDir = await getSiteDataDir(orgId, siteId);
+  if (!dataDir) return [];
+  try {
+    const content = await fs.readFile(path.join(dataDir, "team.json"), "utf-8");
+    return JSON.parse(content) as TeamMember[];
+  } catch {
+    return [];
+  }
 }
 
 export async function addTeamMember(userId: string, role: UserRole, addedBy?: string, siteDataDir?: string): Promise<TeamMember> {
