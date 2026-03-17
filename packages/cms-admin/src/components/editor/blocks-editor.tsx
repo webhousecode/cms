@@ -44,14 +44,17 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
   ])];
   const storageKey = `cms-blocks-expanded:${field.name}`;
   const controlled = expandedState !== undefined;
-  const [internalExpanded, setInternalExpanded] = useState<Record<number, boolean>>(() => {
-    if (typeof window === "undefined") return {};
+  const [internalExpanded, setInternalExpanded] = useState<Record<number, boolean>>({});
+  const expanded = controlled ? expandedState : internalExpanded;
+
+  // Load expanded state from localStorage after hydration
+  useEffect(() => {
+    if (controlled) return;
     try {
       const stored = localStorage.getItem(storageKey);
-      return stored ? JSON.parse(stored) : {};
-    } catch { return {}; }
-  });
-  const expanded = controlled ? expandedState : internalExpanded;
+      if (stored) setInternalExpanded(JSON.parse(stored));
+    } catch {}
+  }, [storageKey, controlled]);
   const [showPicker, setShowPicker] = useState(false);
   const [confirmRemoveIdx, setConfirmRemoveIdx] = useState<number | null>(null);
   const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
