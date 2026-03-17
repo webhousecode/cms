@@ -52,9 +52,19 @@ export function ScheduledCalendar({ events }: { events: ScheduledEvent[] }) {
     <>
       <TabTitle value="Calendar" />
       <div className="p-8 max-w-4xl">
-        <div className="mb-8">
-          <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">Schedule</p>
-          <h1 className="text-2xl font-bold text-foreground">Calendar</h1>
+        <div className="mb-8 flex items-start justify-between">
+          <div>
+            <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">Schedule</p>
+            <h1 className="text-2xl font-bold text-foreground">Calendar</h1>
+          </div>
+          <a
+            href="/api/cms/scheduled/calendar.ics"
+            title="Subscribe in Apple Calendar, Google Calendar, etc."
+            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md border border-border hover:bg-secondary transition-colors text-muted-foreground"
+          >
+            <Calendar className="w-3.5 h-3.5" />
+            Subscribe
+          </a>
         </div>
 
         {/* Filter tabs */}
