@@ -18,6 +18,7 @@ import {
   Settings2,
   Zap,
   Boxes,
+  Calendar,
   ChevronDown,
   ChevronRight,
 } from "lucide-react";
@@ -190,6 +191,16 @@ export function AppSidebar({ collections }: Props) {
                     {readyCount}
                   </span>
                 )}
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                isActive={pathname === "/admin/scheduled"}
+                tooltip="Calendar"
+                render={<Link href="/admin/scheduled" />}
+              >
+                <Calendar className="!w-5 !h-5" />
+                <span>Calendar</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
