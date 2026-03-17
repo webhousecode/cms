@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Pricing Calculator</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: transparent; margin: 0; padding: 0; }
+        .container { background: white; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); max-width: 1000px; width: 100%; overflow: hidden; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px 30px; text-align: center; }
+        .header h1 { font-size: 32px; margin-bottom: 10px; font-weight: 700; }
+        .header p { font-size: 16px; opacity: 0.9; }
+        .content { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; padding: 40px; }
+        @media (max-width: 768px) { .content { grid-template-columns: 1fr; gap: 30px; padding: 30px 20px; } }
+        .section { display: flex; flex-direction: column; }
+        .section h2 { color: #333; font-size: 20px; margin-bottom: 25px; font-weight: 600; }
+        .slider-group { margin-bottom: 28px; }
+        .slider-label { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 14px; color: #555; font-weight: 500; }
+        .slider-value { font-size: 18px; font-weight: 700; color: #667eea; min-width: 90px; text-align: right; }
+        .range-wrapper { position: relative; width: 100%; }
+        input[type="range"] { width: 100%; height: 8px; border-radius: 5px; outline: none; -webkit-appearance: none; appearance: none; cursor: pointer; background: #e0e0e0; }
+        input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); cursor: pointer; box-shadow: 0 2px 8px rgba(102,126,234,0.4); transition: transform 0.15s ease, box-shadow 0.15s ease; }
+        input[type="range"]::-webkit-slider-thumb:hover { transform: scale(1.2); box-shadow: 0 4px 12px rgba(102,126,234,0.6); }
+        input[type="range"]::-moz-range-thumb { width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); cursor: pointer; border: none; box-shadow: 0 2px 8px rgba(102,126,234,0.4); transition: transform 0.15s ease, box-shadow 0.15s ease; }
+        input[type="range"]::-moz-range-thumb:hover { transform: scale(1.2); box-shadow: 0 4px 12px rgba(102,126,234,0.6); }
+        .pricing-summary { background: linear-gradient(135deg, #f5f7fa 0%, #f0f4ff 100%); border-radius: 15px; padding: 25px; border: 2px solid #e8ecf8; }
+        .price-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #e0e0e0; font-size: 14px; }
+        .price-item:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
+        .price-item-label { color: #666; font-weight: 500; display: flex; align-items: center; gap: 6px; }
+        .price-item-value { font-weight: 700; color: #667eea; font-size: 15px; transition: color 0.3s ease; }
+        .price-item-value.discount-value { color: #e74c3c; }
+        .total-price { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 12px; padding: 22px; text-align: center; margin-top: 22px; box-shadow: 0 10px 30px rgba(102,126,234,0.3); }
+        .total-price-label { font-size: 13px; opacity: 0.9; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
+        .total-price-value { font-size: 46px; font-weight: 700; transition: all 0.3s ease; }
+        .total-price-per { font-size: 13px; opacity: 0.8; margin-top: 4px; }
+        .chart-container { position: relative; height: 260px; margin-top: 28px; }
+        .features-list { display: flex; flex-direction: column; gap: 10px; margin-top: 20px; }
+        .feature-item { display: flex; align-items: center; font-size: 14px; color: #555; padding: 10px 12px; background: white; border-radius: 8px; border-left: 3px solid #667eea; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+        .feature-icon { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 50%; margin-right: 10px; font-weight: bold; font-size: 12px; flex-shrink: 0; }
+        .discount-badge { display: inline-block; background: #e74c3c; color: white; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+        .support-badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+        .support-badge.standard { background: #e8f5e9; color: #2e7d32; }
+        .support-badge.professional { background: #fff3e0; color: #e65100; }
+        .support-badge.enterprise { background: #ede7f6; color: #4527a0; }
+        @keyframes popIn { 0% { transform: scale(0.95); opacity: 0.5; } 60% { transform: scale(1.03); } 100% { transform: scale(1); opacity: 1; } }
+        .pop { animation: popIn 0.3s ease forwards; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>&#x1F4B0; Pricing Calculator</h1>
+            <p>Customize your plan and see the price in real-time</p>
+        </div>
+        <div class="content">
+            <div class="section">
+                <h2>&#x2699;&#xFE0F; Configuration</h2>
+                <div class="slider-group">
+                    <div class="slider-label"><span>&#x1F465; Number of Users</span><span class="slider-value" id="usersValue">5</span></div>
+                    <div class="range-wrapper"><input type="range" id="usersSlider" min="1" max="100" value="5" step="1"></div>
+                </div>
+                <div class="slider-group">
+                    <div class="slider-label"><span>&#x1F4BE; Storage (GB)</span><span class="slider-value" id="storageValue">50 GB</span></div>
+                    <div class="range-wrapper"><input type="range" id="storageSlider" min="10" max="500" value="50" step="10"></div>
+                </div>
+                <div class="slider-group">
+                    <div class="slider-label"><span>&#x1F4CA; API Calls (Monthly)</span><span class="slider-value" id="apiValue">10,000</span></div>
+                    <div class="range-wrapper"><input type="range" id="apiSlider" min="1000" max="100000" value="10000" step="1000"></div>
+                </div>
+                <div class="slider-group">
+                    <div class="slider-label"><span>&#x1F39B;&#xFE0F; Support Level</span><span class="slider-value" id="supportValue">Standard</span></div>
+                    <div class="range-wrapper"><input type="range" id="supportSlider" min="1" max="3" value="1" step="1"></div>
+                </div>
+                <div class="features-list">
+                    <div class="feature-item"><span class="feature-icon">&#x2713;</span> Advanced Analytics Dashboard</div>
+                    <div class="feature-item"><span class="feature-icon">&#x2713;</span> Real-time Usage Monitoring</div>
+                    <div class="feature-item"><span class="feature-icon">&#x2713;</span> Custom API Integrations</div>
+                    <div class="feature-item"><span class="feature-icon">&#x2713;</span> Automated Backups &amp; Recovery</div>
+                </div>
+            </div>
+            <div class="section">
+                <h2>&#x1F4CB; Pricing Breakdown</h2>
+                <div class="pricing-summary">
+                    <div class="price-item"><span class="price-item-label">&#x1F4E6; Base Plan</span><span class="price-item-value">&#x24;29.00</span></div>
+                    <div class="price-item"><span class="price-item-label">&#x1F465; Users (<span id="usersCount">5</span>)</span><span class="price-item-value" id="usersPrice">&#x24;10.00</span></div>
+                    <div class="price-item"><span class="price-item-label">&#x1F4BE; Storage (<span id="storageCount">50</span> GB)</span><span class="price-item-value" id="storagePrice">&#x24;5.00</span></div>
+                    <div class="price-item"><span class="price-item-label">&#x1F4CA; API Calls (<span id="apiCount">10,000</span>)</span><span class="price-item-value" id="apiPrice">&#x24;1.00</span></div>
+                    <div class="price-item"><span class="price-item-label">&#x1F39B;&#xFE0F; Support <span id="supportBadge" class="support-badge standard">Standard</span></span><span class="price-item-value" id="supportPrice">&#x24;0.00</span></div>
+                    <div class="price-item"><span class="price-item-label">&#x1F3F7;&#xFE0F; Discount <span id="discountBadge"></span></span><span class="price-item-value discount-value" id="discountPrice">-&#x24;0.00</span></div>
+                    <div class="total-price">
+                        <div class="total-price-label">Total Monthly Price</div>
+                        <div class="total-price-value" id="totalPrice">&#x24;45.00</div>
+                        <div class="total-price-per">per month, billed monthly</div>
+                    </div>
+                </div>
+                <div class="chart-container"><canvas id="priceChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+    <script>
+        var pricing = {
+            base: 29, userCost: 2, storageCost: 0.1, apiCost: 0.0001,
+            supportCosts: { 1: 0, 2: 50, 3: 150 },
+            discountThresholds: [
+                { threshold: 300, rate: 0.15, label: '15% off' },
+                { threshold: 200, rate: 0.10, label: '10% off' },
+                { threshold: 100, rate: 0.05, label: '5% off' }
+            ]
+        };
+        var supportLevels = { 1: 'Standard', 2: 'Professional', 3: 'Enterprise' };
+        var supportBadgeClasses = { 1: 'standard', 2: 'professional', 3: 'enterprise' };
+        var usersSlider = document.getElementById('usersSlider');
+        var storageSlider = document.getElementById('storageSlider');
+        var apiSlider = document.getElementById('apiSlider');
+        var supportSlider = document.getElementById('supportSlider');
+        var chartInstance = null;
+
+        function formatPrice(val) { return '\x24' + val.toFixed(2); }
+
+        function updateSliderBackground(slider) {
+            var min = parseFloat(slider.min), max = parseFloat(slider.max), val = parseFloat(slider.value);
+            var pct = ((val - min) / (max - min)) * 100;
+            slider.style.background = 'linear-gradient(to right, #667eea 0%, #764ba2 ' + pct + '%, #e0e0e0 ' + pct + '%, #e0e0e0 100%)';
+        }
+
+        function triggerPop(el) { el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop'); }
+
+        function updateValues() {
+            var users = parseInt(usersSlider.value), storage = parseInt(storageSlider.value);
+            var api = parseInt(apiSlider.value), support = parseInt(supportSlider.value);
+
+            updateSliderBackground(usersSlider); updateSliderBackground(storageSlider);
+            updateSliderBackground(apiSlider); updateSliderBackground(supportSlider);
+
+            document.getElementById('usersValue').textContent = users;
+            document.getElementById('storageValue').textContent = storage + ' GB';
+            document.getElementById('apiValue').textContent = api.toLocaleString();
+            document.getElementById('supportValue').textContent = supportLevels[support];
+            document.getElementById('usersCount').textContent = users;
+            document.getElementById('storageCount').textContent = storage;
+            document.getElementById('apiCount').textContent = api.toLocaleString();
+
+            var userPrice = users * pricing.userCost;
+            var storagePrice = storage * pricing.storageCost;
+            var apiPrice = api * pricing.apiCost;
+            var supportPrice = pricing.supportCosts[support];
+
+            document.getElementById('usersPrice').textContent = formatPrice(userPrice);
+            document.getElementById('storagePrice').textContent = formatPrice(storagePrice);
+            document.getElementById('apiPrice').textContent = formatPrice(apiPrice);
+            document.getElementById('supportPrice').textContent = formatPrice(supportPrice);
+
+            var supportBadgeEl = document.getElementById('supportBadge');
+            supportBadgeEl.textContent = supportLevels[support];
+            supportBadgeEl.className = 'support-badge ' + supportBadgeClasses[support];
+
+            var subtotal = pricing.base + userPrice + storagePrice + apiPrice + supportPrice;
+            var discountRate = 0, discountLabel = '';
+            for (var i = 0; i < pricing.discountThresholds.length; i++) {
+                var d = pricing.discountThresholds[i];
+                if (subtotal >= d.threshold) { discountRate = d.rate; discountLabel = d.label; break; }
+            }
+            var discountAmount = subtotal * discountRate;
+            var total = subtotal - discountAmount;
+
+            var discountBadgeEl = document.getElementById('discountBadge');
+            discountBadgeEl.innerHTML = discountRate > 0 ? '<span class="discount-badge">' + discountLabel + '</span>' : '';
+            document.getElementById('discountPrice').textContent = '-' + formatPrice(discountAmount);
+
+            var totalEl = document.getElementById('totalPrice');
+            totalEl.textContent = formatPrice(total);
+            triggerPop(totalEl);
+            updateChart(pricing.base, userPrice, storagePrice, apiPrice, supportPrice, discountAmount);
+        }
+
+        function updateChart(base, userPrice, storagePrice, apiPrice, supportPrice, discountAmount) {
+            var labels = ['Base Plan', 'Users', 'Storage', 'API Calls', 'Support', 'Discount'];
+            var data = [base, userPrice, storagePrice, apiPrice, supportPrice, -discountAmount];
+            var colors = ['rgba(102,126,234,0.85)','rgba(118,75,162,0.85)','rgba(72,209,204,0.85)','rgba(255,165,0,0.85)','rgba(60,179,113,0.85)','rgba(231,76,60,0.85)'];
+
+            if (chartInstance) { chartInstance.data.datasets[0].data = data; chartInstance.update('active'); return; }
+            var ctx = document.getElementById('priceChart').getContext('2d');
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: { labels: labels, datasets: [{ label: 'Cost', data: data, backgroundColor: colors, borderRadius: 8, borderSkipped: false }] },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    animation: { duration: 400, easing: 'easeOutQuart' },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { callbacks: { label: function(c) { var v = c.parsed.y; return v < 0 ? '-' + formatPrice(Math.abs(v)) : formatPrice(v); } } }
+                    },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { callback: function(v) { return '\x24' + v; } }, grid: { color: 'rgba(0,0,0,0.05)' } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        usersSlider.addEventListener('input', updateValues);
+        storageSlider.addEventListener('input', updateValues);
+        apiSlider.addEventListener('input', updateValues);
+        supportSlider.addEventListener('input', updateValues);
+        updateValues();
+    </script>
+</body>
+</html>
