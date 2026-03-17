@@ -422,8 +422,6 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
       const [mediaItems, setMediaItems] = useState<Array<{ name: string; url: string; isImage: boolean; mediaType?: string }>>([]);
       const [mediaLoading, setMediaLoading] = useState(false);
       const [mediaSearch, setMediaSearch] = useState("");
-      const [imgConfirm, setImgConfirm] = useState(false);
-      const imgConfirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
       const imgInputRef = useRef<HTMLInputElement>(null);
 
       useEffect(() => {
@@ -482,23 +480,6 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
                   objectFit: "cover",
                 }}
               />
-              {!locked && (
-                <div style={{ position: "absolute", top: "-6px", right: "-6px", display: "flex", alignItems: "center", gap: "2px" }}>
-                  {imgConfirm ? (
-                    <>
-                      <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px", background: "var(--card)", borderRadius: "3px" }}>Remove?</span>
-                      <button type="button" onClick={() => { if (imgConfirmTimer.current) clearTimeout(imgConfirmTimer.current); setImgConfirm(false); onChange(""); }}
-                        style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
-                      <button type="button" onClick={() => { if (imgConfirmTimer.current) clearTimeout(imgConfirmTimer.current); setImgConfirm(false); }}
-                        style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "var(--card)", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
-                    </>
-                  ) : (
-                    <button type="button" onClick={() => { setImgConfirm(true); imgConfirmTimer.current = setTimeout(() => setImgConfirm(false), 3000); }}
-                      title="Remove image"
-                      style={{ width: "18px", height: "18px", borderRadius: "50%", border: "none", background: "var(--destructive)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "white", fontSize: "0.9rem", lineHeight: 1 }}>×</button>
-                  )}
-                </div>
-              )}
             </div>
           )}
           {/* URL input */}
