@@ -14,7 +14,7 @@ import { readSiteConfig } from "@/lib/site-config";
 import { readBrandVoice } from "@/lib/brand-voice";
 import { cookies } from "next/headers";
 import { getSessionUser } from "@/lib/auth";
-import { getTeamMembers, addTeamMember } from "@/lib/team";
+import { getTeamMembers } from "@/lib/team";
 import { redirect } from "next/navigation";
 
 export default async function SettingsPage({
@@ -26,11 +26,7 @@ export default async function SettingsPage({
   const cookieStore = await cookies();
   const session = await getSessionUser(cookieStore);
   if (session) {
-    let members = await getTeamMembers();
-    if (members.length === 0) {
-      await addTeamMember(session.sub, "admin");
-      members = await getTeamMembers();
-    }
+    const members = await getTeamMembers();
     const membership = members.find((m) => m.userId === session.sub);
     if (!membership || membership.role !== "admin") {
       redirect("/admin");
