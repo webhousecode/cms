@@ -137,8 +137,8 @@ export function ScheduledCalendar({ events }: { events: ScheduledEvent[] }) {
               ))}
             </div>
             <a
-              href="/api/cms/scheduled/calendar.ics"
-              title="Subscribe in Apple Calendar, Google Calendar, etc."
+              href={typeof window !== "undefined" ? `webcal://${window.location.host}/api/cms/scheduled/calendar.ics` : "/api/cms/scheduled/calendar.ics"}
+              title="Subscribe in Apple Calendar"
               className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md border border-border hover:bg-secondary transition-colors text-muted-foreground"
             >
               <Calendar className="w-3.5 h-3.5" />
