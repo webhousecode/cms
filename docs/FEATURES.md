@@ -55,7 +55,7 @@
 | F36 | [Framework Integrations](#f36-framework-integrations) | Planned | [docs/features/F36-framework-integrations.md](features/F36-framework-integrations.md) |
 | F37 | [HTML Document Field](#f37-htmldoc-field) | Planned | [docs/features/F37-htmldoc-field.md](features/F37-htmldoc-field.md) |
 | F38 | [Environment Manager](#f38-environment-manager) | Planned | [docs/features/F38-environment-manager.md](features/F38-environment-manager.md) |
-| F39 | [Interactives Engine](#f39-interactives-engine) | In progress | [docs/features/F39-interactives-engine.md](features/F39-interactives-engine.md) |
+| F39 | [Interactives Engine](#f39-interactives-engine) | Done | [docs/features/F39-interactives-engine.md](features/F39-interactives-engine.md) |
 | F40 | [Drag and Drop Tab Reordering](#f40-drag-drop-tabs) | Planned | [docs/features/F40-drag-drop-tabs.md](features/F40-drag-drop-tabs.md) |
 | F41 | [GitHub Site Auto-Sync & Webhook Revalidation](#f41-github-site-sync) | Done | [docs/features/F41-github-site-sync.md](features/F41-github-site-sync.md) |
 | F42 | [Framework Boilerplates](#f42-framework-boilerplates) | Planned | [docs/features/F42-framework-boilerplates.md](features/F42-framework-boilerplates.md) |

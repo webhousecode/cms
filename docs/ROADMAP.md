@@ -1,10 +1,10 @@
 # @webhouse/cms — Roadmap
 
-**Last updated:** 2026-03-16
+**Last updated:** 2026-03-17
 
 ---
 
-## Done (24 milestones)
+## Done (27 milestones)
 
 | # | Milestone | Completed |
 |---|-----------|-----------|
@@ -31,6 +31,8 @@
 | 23 | **Screenshot agent** — Playwright, 24 surfaces, dynamic collections, JWT auth | 2026-03-15 |
 | 24 | **Framework adapters** — `@webhouse/cms/adapters` with getCollection/getDocument | 2026-03-15 |
 | 25 | **Content push revalidation** — HMAC webhook, content push to disk, LiveRefresh SSE (F41) | 2026-03-16 |
+| 26 | **Interactives Engine** — Manager, AI edit, code view, blocks integration, standalone (F39) | 2026-03-17 |
+| 27 | **Viewer RBAC enforcement** — hide all write UI for viewer role across entire admin | 2026-03-17 |
 
 ---
 
@@ -44,7 +46,7 @@ _Without these, we cannot build and deliver professional sites on the platform._
 
 | Priority | Feature | Size | Why it blocks |
 |----------|---------|------|---------------|
-| 1 | **F39 Interactives Engine** _(in progress, ~70%)_ | Small | Almost done. Unique differentiator — no other CMS has native interactive embeds. Remaining: AI Edit, blocks integration, standalone rendering. |
+| ~~1~~ | ~~**F39 Interactives Engine**~~ | ~~Done~~ | ~~Shipped 2026-03-17~~ |
 | 2 | **F01 Invite Users** | Small | Can't run a team without editors. Role-based access (admin/editor/viewer). |
 | 3 | **F47 Content Scheduling** | Small | publishAt/unpublishAt — every professional CMS needs this. API partially exists. |
 | 4 | **F43 Persist User State** | Small | Tabs/preferences lost on cookie clear is unacceptable for daily-use tool. |
