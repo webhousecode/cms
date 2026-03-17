@@ -62,11 +62,15 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
   const [pickerHighlight, setPickerHighlight] = useState(-1);
 
   // Track focus: click inside → focused, click outside → unfocused
+  // Uses closest() to find the nearest blocks-editor wrapper so nested
+  // instances (inside columns) don't also focus parent instances
   useEffect(() => {
     const onClick = (e: MouseEvent) => {
-      const inside = wrapperRef.current?.contains(e.target as Node);
-      setIsFocused(!!inside);
-      if (!inside && showPicker) { setShowPicker(false); setPickerHighlight(-1); }
+      const target = e.target as HTMLElement;
+      const closestWrapper = target.closest("[data-blocks-editor]");
+      const isThis = closestWrapper === wrapperRef.current;
+      setIsFocused(isThis);
+      if (!isThis && showPicker) { setShowPicker(false); setPickerHighlight(-1); }
     };
     document.addEventListener("mousedown", onClick);
     return () => document.removeEventListener("mousedown", onClick);
@@ -205,12 +209,13 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
   }
 
   return (
-    <div ref={wrapperRef} style={{
+    <div ref={wrapperRef} data-blocks-editor="" style={{
       display: "flex", flexDirection: "column", gap: "0.5rem",
       borderRadius: "6px",
-      outline: isFocused ? "1px dashed rgba(247, 187, 46, 0.4)" : "none",
-      outlineOffset: "4px",
-      transition: "outline 150ms",
+      outline: isFocused ? "1px dashed rgba(247, 187, 46, 0.5)" : "none",
+      outlineOffset: "3px",
+      boxShadow: isFocused ? "0 0 8px rgba(247, 187, 46, 0.15)" : "none",
+      transition: "outline 150ms, box-shadow 150ms",
     }}>
       {blocks.length >= 2 && (
         <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.25rem" }}>
