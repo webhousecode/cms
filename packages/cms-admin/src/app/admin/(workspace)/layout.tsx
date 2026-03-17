@@ -25,7 +25,41 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
 
   // Normal workspace layout (single-site mode or site selected)
-  const config = await getAdminConfig();
+  let config;
+  try {
+    config = await getAdminConfig();
+  } catch (err) {
+    // GitHub-backed site without token — show connect prompt
+    const message = err instanceof Error ? err.message : "Failed to load site config";
+    if (message.includes("GitHub not connected")) {
+      return (
+        <div style={{ minHeight: "100vh", background: "var(--background)" }}>
+          <AdminHeader />
+          <div style={{ maxWidth: 480, margin: "4rem auto", padding: "2rem", textAlign: "center" }}>
+            <p style={{ fontSize: "0.9rem", color: "var(--muted-foreground)", marginBottom: "1rem" }}>
+              This site requires GitHub access. Please connect your GitHub account to continue.
+            </p>
+            <a
+              href="/api/auth/github"
+              style={{
+                display: "inline-block",
+                padding: "0.6rem 1.5rem",
+                borderRadius: "8px",
+                background: "var(--primary)",
+                color: "var(--primary-foreground)",
+                fontWeight: 600,
+                fontSize: "0.875rem",
+                textDecoration: "none",
+              }}
+            >
+              Connect GitHub
+            </a>
+          </div>
+        </div>
+      );
+    }
+    throw err; // Re-throw other errors
+  }
 
   const allCollections = config.collections.map((c) => ({
     name: c.name,

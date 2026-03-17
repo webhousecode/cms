@@ -16,5 +16,7 @@ export async function GET(request: NextRequest) {
     email: invitation.email,
     role: invitation.role,
     expiresAt: invitation.expiresAt,
+    siteId: invitation.siteId ?? null,
+    orgId: invitation.orgId ?? null,
   });
 }

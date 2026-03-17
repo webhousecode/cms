@@ -8,6 +8,8 @@ export default function InviteAcceptPage() {
   const [status, setStatus] = useState<"loading" | "valid" | "invalid" | "accepted">("loading");
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("");
+  const [inviteSiteId, setInviteSiteId] = useState<string | null>(null);
+  const [inviteOrgId, setInviteOrgId] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -20,6 +22,8 @@ export default function InviteAcceptPage() {
         if (data.email) {
           setInviteEmail(data.email);
           setInviteRole(data.role);
+          setInviteSiteId(data.siteId ?? null);
+          setInviteOrgId(data.orgId ?? null);
           setStatus("valid");
         } else {
           setStatus("invalid");
@@ -45,6 +49,13 @@ export default function InviteAcceptPage() {
         return;
       }
       setStatus("accepted");
+      // Set site cookies so the user lands on the right site
+      if (inviteSiteId) {
+        document.cookie = `cms-active-site=${encodeURIComponent(inviteSiteId)};path=/;max-age=${60 * 60 * 24 * 365};samesite=lax`;
+      }
+      if (inviteOrgId) {
+        document.cookie = `cms-active-org=${encodeURIComponent(inviteOrgId)};path=/;max-age=${60 * 60 * 24 * 365};samesite=lax`;
+      }
       // Redirect to admin after short delay
       setTimeout(() => {
         window.location.href = "/admin";
