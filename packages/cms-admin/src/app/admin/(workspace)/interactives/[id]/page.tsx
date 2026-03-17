@@ -308,7 +308,7 @@ export default function InteractiveDetailPage() {
   const router = useRouter();
   const id = params.id as string;
   const siteRole = useSiteRole();
-  const readOnly = siteRole === "viewer";
+  const readOnly = siteRole === null || siteRole === "viewer";
 
   const [detail, setDetail] = useState<InteractiveDetail | null>(null);
   const [loading, setLoading] = useState(true);

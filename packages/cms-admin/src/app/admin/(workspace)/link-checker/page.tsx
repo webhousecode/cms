@@ -153,7 +153,7 @@ function FixButton({ link, onFixed }: { link: LinkResult; onFixed: (newUrl: stri
 
 export default function LinkCheckerPage() {
   const siteRole = useSiteRole();
-  const readOnly = siteRole === "viewer";
+  const readOnly = siteRole === null || siteRole === "viewer";
   const [state, setState] = useState<RunState>("idle");
   const [total, setTotal] = useState(0);
   const [checked, setChecked] = useState(0);

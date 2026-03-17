@@ -46,7 +46,7 @@ function formatDate(iso: string): string {
 export default function InteractivesPage() {
   const router = useRouter();
   const siteRole = useSiteRole();
-  const readOnly = siteRole === "viewer";
+  const readOnly = siteRole === null || siteRole === "viewer";
   const [items, setItems] = useState<InteractiveMeta[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);

@@ -46,7 +46,7 @@ const labelStyle: React.CSSProperties = {
 
 export default function CommandPage() {
   const siteRole = useSiteRole();
-  const readOnly = siteRole === "viewer";
+  const readOnly = siteRole === null || siteRole === "viewer";
   const [params, setParams] = useState<CockpitParams | null>(null);
   const [saving, setSaving] = useState(false);
   const [syncing, setSyncing] = useState(false);

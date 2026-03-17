@@ -44,7 +44,7 @@ type UploadJob = { name: string; done: boolean; error?: boolean };
 /* ─── Main component ─────────────────────────────────────────── */
 export default function MediaPage() {
   const siteRole = useSiteRole();
-  const readOnly = siteRole === "viewer";
+  const readOnly = siteRole === null || siteRole === "viewer";
   const [allFiles, setAllFiles] = useState<MediaFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<ViewMode>("grid");

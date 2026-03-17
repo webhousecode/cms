@@ -57,7 +57,7 @@ export default function CurationPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const siteRole = useSiteRole();
-  const readOnly = siteRole === "viewer";
+  const readOnly = siteRole === null || siteRole === "viewer";
   const [tab, setTab] = useState<TabId>(() => {
     // URL param wins (e.g. coming back from editor), otherwise localStorage
     const urlTab = searchParams.get("tab") as TabId | null;

@@ -58,7 +58,7 @@ export default function TrashPage() {
   const [working, setWorking] = useState<string | null>(null); // item id being acted on
   const { tabs, closeTab } = useTabs();
   const siteRole = useSiteRole();
-  const readOnly = siteRole === "viewer";
+  const readOnly = siteRole === null || siteRole === "viewer";
 
   function closeTabsForPaths(paths: string[]) {
     const pathSet = new Set(paths);
