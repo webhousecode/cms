@@ -46,6 +46,8 @@ export default function SitesDashboard() {
   const [activeOrgId, setActiveOrgId] = useState<string>("");
   const [stats, setStats] = useState<Record<string, { pages: number; collections: number }>>({});
 
+  const [loaded, setLoaded] = useState(false);
+
   useEffect(() => {
     fetch("/api/cms/registry")
       .then((r) => r.json())
@@ -67,7 +69,9 @@ export default function SitesDashboard() {
             }
           }
         }
-      });
+        setLoaded(true);
+      })
+      .catch(() => setLoaded(true));
   }, []);
 
   const activeOrg = registry?.orgs.find((o) => o.id === activeOrgId) ?? registry?.orgs[0];
@@ -88,10 +92,60 @@ export default function SitesDashboard() {
     router.refresh();
   }
 
-  if (!registry || !activeOrg) {
+  if (!loaded) {
     return (
       <div style={{ padding: "4rem 2rem", textAlign: "center" }}>
         <p style={{ color: "var(--muted-foreground)", fontSize: "0.875rem" }}>Loading sites...</p>
+      </div>
+    );
+  }
+
+  if (!registry || !activeOrg) {
+    return (
+      <div className="p-8 max-w-5xl">
+        <div className="mb-8 flex items-start justify-between">
+          <div>
+            <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">Sites</p>
+            <h1 className="text-2xl font-bold text-foreground">Sites</h1>
+          </div>
+          <button
+            type="button"
+            onClick={() => router.push("/admin/sites/new")}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: "0.5rem",
+              padding: "0.5rem 1rem", borderRadius: "8px", border: "none",
+              background: "var(--primary)", color: "var(--primary-foreground)",
+              fontSize: "0.8rem", fontWeight: 600, cursor: "pointer",
+            }}
+          >
+            <Plus style={{ width: "0.875rem", height: "0.875rem" }} />
+            New site
+          </button>
+        </div>
+        <div style={{
+          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+          padding: "4rem 2rem", border: "1px dashed var(--border)", borderRadius: "12px",
+          background: "var(--card)",
+        }}>
+          <Globe style={{ width: "2.5rem", height: "2.5rem", color: "var(--muted-foreground)", marginBottom: "1rem", opacity: 0.5 }} />
+          <p style={{ fontSize: "0.95rem", fontWeight: 600, margin: "0 0 0.35rem" }}>No sites yet</p>
+          <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", margin: "0 0 1.25rem", textAlign: "center", maxWidth: "320px" }}>
+            Add your first site to start managing content. Connect a GitHub repo or use a local filesystem.
+          </p>
+          <button
+            type="button"
+            onClick={() => router.push("/admin/sites/new")}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: "0.5rem",
+              padding: "0.5rem 1rem", borderRadius: "8px", border: "none",
+              background: "var(--primary)", color: "var(--primary-foreground)",
+              fontSize: "0.8rem", fontWeight: 600, cursor: "pointer",
+            }}
+          >
+            <Plus style={{ width: "0.875rem", height: "0.875rem" }} />
+            New site
+          </button>
+        </div>
       </div>
     );
   }
