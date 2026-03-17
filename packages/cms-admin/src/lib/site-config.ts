@@ -36,7 +36,7 @@ async function defaults(): Promise<SiteConfig> {
     schemaEditEnabled: process.env.SCHEMA_EDIT_ENABLED === "true",
     devInspector: process.env.DEV_INSPECTOR === "true",
     showCloseAllTabs: false,
-    aiInteractivesModel: "claude-sonnet-4-5-20250514",
+    aiInteractivesModel: "claude-sonnet-4-20250514",
     aiInteractivesMaxTokens: 16384,
     aiContentModel: "claude-haiku-4-5-20251001",
     aiContentMaxTokens: 4096,

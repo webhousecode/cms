@@ -13,7 +13,7 @@ interface AiDefaults {
 
 const MODEL_OPTIONS = [
   { value: "claude-haiku-4-5-20251001", label: "Claude Haiku 4.5 — fast, affordable" },
-  { value: "claude-sonnet-4-5-20250514", label: "Claude Sonnet 4.5 — best for code" },
+  { value: "claude-sonnet-4-20250514", label: "Claude Sonnet 4.5 — best for code" },
 ];
 
 const TOKEN_OPTIONS = [
@@ -37,7 +37,7 @@ const fieldStyle = {
 
 export function AIDefaultsPanel() {
   const [config, setConfig] = useState<AiDefaults>({
-    aiInteractivesModel: "claude-sonnet-4-5-20250514",
+    aiInteractivesModel: "claude-sonnet-4-20250514",
     aiInteractivesMaxTokens: 16384,
     aiContentModel: "claude-haiku-4-5-20251001",
     aiContentMaxTokens: 4096,
