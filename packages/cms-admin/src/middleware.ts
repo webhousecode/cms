@@ -10,6 +10,7 @@ function getJwtSecret(): Uint8Array {
 
 const PUBLIC_PATHS = [
   "/admin/login",
+  "/admin/signup",
   "/admin/setup",
 ];
 
