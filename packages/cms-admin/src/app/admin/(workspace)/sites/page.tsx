@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Globe, MoreVertical, Settings2, Plus, Copy } from "lucide-react";
+import { useSiteRole } from "@/hooks/use-site-role";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -45,13 +46,18 @@ export default function SitesDashboard() {
   const [registry, setRegistry] = useState<Registry | null>(null);
   const [activeOrgId, setActiveOrgId] = useState<string>("");
   const [stats, setStats] = useState<Record<string, { pages: number; collections: number }>>({});
+  const [allowedSiteIds, setAllowedSiteIds] = useState<string[] | null>(null);
+  const siteRole = useSiteRole();
+  const isAdmin = siteRole === "admin";
 
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    fetch("/api/cms/registry")
-      .then((r) => r.json())
-      .then((d: { mode: string; registry: Registry | null }) => {
+    Promise.all([
+      fetch("/api/cms/registry").then((r) => r.json()),
+      fetch("/api/admin/my-sites").then((r) => r.json()),
+    ]).then(([d, mySites]: [{ mode: string; registry: Registry | null }, { siteIds: string[] }]) => {
+        setAllowedSiteIds(mySites.siteIds);
         if (d.registry) {
           setRegistry(d.registry);
           const orgId = getCookie("cms-active-org") ?? d.registry.defaultOrgId;
@@ -75,6 +81,10 @@ export default function SitesDashboard() {
   }, []);
 
   const activeOrg = registry?.orgs.find((o) => o.id === activeOrgId) ?? registry?.orgs[0];
+  // Filter to only sites the user has team access to
+  const visibleSites = activeOrg?.sites.filter((s) =>
+    !allowedSiteIds || allowedSiteIds.includes(s.id)
+  ) ?? [];
 
   function enterSite(site: SiteEntry) {
     setCookie("cms-active-site", site.id);
@@ -158,27 +168,29 @@ export default function SitesDashboard() {
           <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">Sites</p>
           <h1 className="text-2xl font-bold text-foreground">Sites</h1>
         </div>
-        <button
-          type="button"
-          onClick={() => router.push("/admin/sites/new")}
-          style={{
-            display: "inline-flex", alignItems: "center", gap: "0.5rem",
-            padding: "0.5rem 1rem", borderRadius: "8px", border: "none",
-            background: "var(--primary)", color: "var(--primary-foreground)",
-            fontSize: "0.8rem", fontWeight: 600, cursor: "pointer",
-          }}
-        >
-          <Plus style={{ width: "0.875rem", height: "0.875rem" }} />
-          New site
-        </button>
+        {isAdmin && (
+          <button
+            type="button"
+            onClick={() => router.push("/admin/sites/new")}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: "0.5rem",
+              padding: "0.5rem 1rem", borderRadius: "8px", border: "none",
+              background: "var(--primary)", color: "var(--primary-foreground)",
+              fontSize: "0.8rem", fontWeight: 600, cursor: "pointer",
+            }}
+          >
+            <Plus style={{ width: "0.875rem", height: "0.875rem" }} />
+            New site
+          </button>
+        )}
       </div>
 
       {/* Filter tabs */}
       <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem" }}>
         {[
-          { label: `All (${activeOrg.sites.length})`, active: true },
-          { label: `Local (${activeOrg.sites.filter(s => s.adapter === "filesystem").length})`, active: false },
-          { label: `GitHub (${activeOrg.sites.filter(s => s.adapter === "github").length})`, active: false },
+          { label: `All (${visibleSites.length})`, active: true },
+          { label: `Local (${visibleSites.filter(s => s.adapter === "filesystem").length})`, active: false },
+          { label: `GitHub (${visibleSites.filter(s => s.adapter === "github").length})`, active: false },
         ].map((f) => (
           <span key={f.label} style={{
             padding: "0.3rem 0.75rem", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 500,
@@ -196,7 +208,7 @@ export default function SitesDashboard() {
         gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
         gap: "1rem",
       }}>
-        {activeOrg.sites.map((site) => (
+        {visibleSites.map((site) => (
           <div
             key={site.id}
             style={{
