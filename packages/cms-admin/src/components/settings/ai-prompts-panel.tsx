@@ -101,8 +101,8 @@ export function AIPromptsPanel() {
                 className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded border border-border"
                 title="Copy to clipboard"
               >
-                {copiedId === p.id ? <Check style={{ width: "0.65rem", height: "0.65rem" }} /> : <Copy style={{ width: "0.65rem", height: "0.65rem" }} />}
-                {copiedId === p.id ? "Copied" : "Copy"}
+                {copiedId === p.id ? <Check style={{ width: "0.65rem", height: "0.65rem", color: "#4ade80" }} /> : <Copy style={{ width: "0.65rem", height: "0.65rem" }} />}
+                {copiedId === p.id ? <span style={{ color: "#4ade80" }}>Copied</span> : "Copy"}
               </button>
               {confirmResetId === p.id ? (
                 <span className="flex items-center gap-1">
