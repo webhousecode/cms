@@ -376,7 +376,7 @@ function FieldRow({
         className={confirmRemove ? "text-destructive pt-1.5 shrink-0" : "text-muted-foreground hover:text-destructive transition-colors pt-1.5 shrink-0"}
         style={confirmRemove ? { fontSize: "0.65rem", fontWeight: 600, whiteSpace: "nowrap" } : undefined}
       >
-        {confirmRemove ? "Sure?" : <Trash2 className="w-3.5 h-3.5" />}
+        {confirmRemove ? "OK" : <Trash2 className="w-3.5 h-3.5" />}
       </button>
     </div>
   );

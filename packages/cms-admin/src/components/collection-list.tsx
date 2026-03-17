@@ -159,7 +159,7 @@ function RowMenu({ doc, collection, onClone, onToggle, onTrash, cloning }: {
             style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.4rem 0.6rem", borderRadius: "5px", fontSize: "0.8rem", color: "var(--destructive)", background: confirmTrash ? "color-mix(in srgb, var(--destructive) 10%, transparent)" : "none", border: "none", cursor: "pointer", width: "100%", fontWeight: confirmTrash ? 600 : 400 }}
             className="hover:bg-destructive/10"
           >
-            <FileX style={{ width: "0.8rem", height: "0.8rem" }} /> {confirmTrash ? "Sure? Click to confirm" : "Move to trash"}
+            <FileX style={{ width: "0.8rem", height: "0.8rem" }} /> {confirmTrash ? "OK — click to confirm" : "Move to trash"}
           </button>
         </div>
       )}

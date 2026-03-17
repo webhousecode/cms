@@ -361,7 +361,7 @@ export function TeamPanel() {
                               cursor: "pointer",
                             }}
                           >
-                            Sure?
+                            OK
                           </button>
                           <button
                             type="button"
@@ -470,7 +470,7 @@ export function TeamPanel() {
                           cursor: "pointer",
                         }}
                       >
-                        Sure?
+                        OK
                       </button>
                       <button
                         type="button"

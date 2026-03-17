@@ -266,7 +266,7 @@ export default function TrashPage() {
                       onMouseEnter={e => { if (confirmDeleteId !== item.doc.id) { (e.currentTarget as HTMLButtonElement).style.color = "var(--destructive)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "color-mix(in oklch, var(--destructive) 30%, transparent)"; } }}
                       onMouseLeave={e => { if (confirmDeleteId !== item.doc.id) { (e.currentTarget as HTMLButtonElement).style.color = "var(--muted-foreground)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "transparent"; } }}
                     >
-                      {confirmDeleteId === item.doc.id ? "Sure?" : <X style={{ width: "13px", height: "13px" }} />}
+                      {confirmDeleteId === item.doc.id ? "OK" : <X style={{ width: "13px", height: "13px" }} />}
                     </button>
                   </div>
                 </div>
