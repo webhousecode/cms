@@ -14,6 +14,8 @@ export interface Invitation {
   createdAt: string;
   acceptedAt?: string;
   siteDataDir?: string; // absolute path so cookie-less validation works
+  siteId?: string;      // for setting cookie on accept
+  orgId?: string;       // for setting cookie on accept
 }
 
 /** Get invitations file for the currently active site */
@@ -51,6 +53,16 @@ export async function createInvitation(email: string, role: UserRole, createdBy:
 
   const { dataDir } = await getActiveSitePaths();
 
+  // Capture site/org IDs for cookie-setting on accept
+  let siteId: string | undefined;
+  let orgId: string | undefined;
+  try {
+    const { cookies: getCookies } = await import("next/headers");
+    const cookieStore = await getCookies();
+    siteId = cookieStore.get("cms-active-site")?.value;
+    orgId = cookieStore.get("cms-active-org")?.value;
+  } catch { /* outside request context */ }
+
   const invitation: Invitation = {
     id: crypto.randomUUID(),
     email: email.toLowerCase().trim(),
@@ -60,6 +72,8 @@ export async function createInvitation(email: string, role: UserRole, createdBy:
     createdBy,
     createdAt: new Date().toISOString(),
     siteDataDir: dataDir,
+    siteId,
+    orgId,
   };
 
   invitations.push(invitation);

@@ -55,9 +55,7 @@ export async function GET() {
           accessibleSiteIds.push(site.id);
         }
       } catch {
-        // No team.json — check if this user is the oldest (auto-bootstrap candidate)
-        // For now, allow access to sites with no team.json (backward compat)
-        accessibleSiteIds.push(site.id);
+        // No team.json — no access (site has no team configured yet)
       }
     }
   }
