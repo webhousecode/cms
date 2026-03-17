@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getActiveSitePaths } from "@/lib/site-paths";
+import fs from "fs/promises";
+import path from "path";
 
 /**
  * GET /api/auth/github/callback — Exchange OAuth code for access token.
@@ -43,7 +46,17 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL(`/admin/sites?error=${tokenData.error ?? "no_token"}`, request.url));
   }
 
-  // Store token in httpOnly cookie
+  // Persist as site service token so editors without GitHub can use the site
+  try {
+    const { dataDir } = await getActiveSitePaths();
+    await fs.mkdir(dataDir, { recursive: true });
+    await fs.writeFile(
+      path.join(dataDir, "github-service-token.json"),
+      JSON.stringify({ token: tokenData.access_token, updatedAt: new Date().toISOString() }),
+    );
+  } catch { /* best effort — may fail if no active site yet */ }
+
+  // Store token in httpOnly cookie (for this admin's session)
   const response = NextResponse.redirect(new URL("/admin/sites/new?github=connected", request.url));
   response.cookies.set("github-token", tokenData.access_token, {
     httpOnly: true,

@@ -25,12 +25,26 @@ async function resolveToken(token: string): Promise<string> {
     return resolved;
   }
   if (token === "oauth") {
-    // Read from cookie via next/headers
-    const { cookies } = await import("next/headers");
-    const cookieStore = await cookies();
-    const oauthToken = cookieStore.get("github-token")?.value;
-    if (!oauthToken) throw new Error("GitHub not connected — please connect via Sites → New Site → Connect GitHub");
-    return oauthToken;
+    // 1. Try current user's OAuth cookie
+    try {
+      const { cookies } = await import("next/headers");
+      const cookieStore = await cookies();
+      const oauthToken = cookieStore.get("github-token")?.value;
+      if (oauthToken) return oauthToken;
+    } catch { /* outside request context */ }
+
+    // 2. Fall back to site service token (persisted by admin who connected GitHub)
+    try {
+      const { getActiveSitePaths } = await import("./site-paths");
+      const { dataDir } = await getActiveSitePaths();
+      const fs = await import("fs/promises");
+      const path = await import("path");
+      const raw = await fs.readFile(path.join(dataDir, "github-service-token.json"), "utf-8");
+      const stored = JSON.parse(raw) as { token?: string };
+      if (stored.token) return stored.token;
+    } catch { /* no service token */ }
+
+    throw new Error("GitHub not connected — please connect via Sites → New Site → Connect GitHub");
   }
   return token;
 }

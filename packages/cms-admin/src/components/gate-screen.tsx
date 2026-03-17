@@ -92,35 +92,36 @@ export function NoAccessGate() {
 }
 
 /** Gate: GitHub-backed site requires OAuth token */
-export function ConnectGitHubGate() {
+export function ConnectGitHubGate({ message, showButton = true }: { message?: string; showButton?: boolean } = {}) {
   return (
     <Shell>
       <div style={{ textAlign: "center" }}>
         <h1 style={{ margin: "0 0 12px", fontSize: "20px", fontWeight: 700, color: "#fafafa" }}>
-          Connect GitHub
+          {showButton ? "Connect GitHub" : "Waiting for setup"}
         </h1>
         <p style={{ margin: "0 0 24px", fontSize: "14px", color: "hsl(0 0% 50%)", lineHeight: 1.6 }}>
-          This site stores content on GitHub.<br />
-          Connect your account to continue.
+          {message ?? <>This site stores content on GitHub.<br />Connect your account to continue.</>}
         </p>
-        <a
-          href="/api/auth/github"
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: "0.5rem",
-            padding: "0.6rem 1.5rem",
-            borderRadius: "8px",
-            background: "hsl(38 92% 50%)",
-            color: "hsl(38 30% 10%)",
-            fontSize: "0.875rem",
-            fontWeight: 600,
-            textDecoration: "none",
-          }}
-        >
-          <Github style={{ width: 16, height: 16 }} />
-          Connect GitHub
-        </a>
+        {showButton && (
+          <a
+            href="/api/auth/github"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.5rem",
+              padding: "0.6rem 1.5rem",
+              borderRadius: "8px",
+              background: "hsl(38 92% 50%)",
+              color: "hsl(38 30% 10%)",
+              fontSize: "0.875rem",
+              fontWeight: 600,
+              textDecoration: "none",
+            }}
+          >
+            <Github style={{ width: 16, height: 16 }} />
+            Connect GitHub
+          </a>
+        )}
       </div>
     </Shell>
   );
