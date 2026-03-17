@@ -53,9 +53,14 @@ export async function middleware(request: NextRequest) {
   const token = request.cookies.get(COOKIE_NAME)?.value;
 
   if (!token) {
-    console.log(`[middleware] NO TOKEN for ${pathname} (${request.method})`);
     if (isCmsApi) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    // RSC prefetch requests (from sidebar links etc.) should not redirect
+    // to login — that causes a redirect loop on the login page itself.
+    const isRsc = request.headers.get("rsc") === "1" || request.nextUrl.searchParams.has("_rsc");
+    if (isRsc) {
+      return new NextResponse(null, { status: 204 });
     }
     const loginUrl = new URL("/admin/login", request.url);
     loginUrl.searchParams.set("from", pathname);
@@ -66,7 +71,11 @@ export async function middleware(request: NextRequest) {
     await jwtVerify(token, getJwtSecret());
     return NextResponse.next();
   } catch (err) {
-    console.log(`[middleware] JWT VERIFY FAILED for ${pathname}: ${err instanceof Error ? err.message : err}`);
+    // RSC prefetch with invalid token — don't redirect, just reject silently
+    const isRsc = request.headers.get("rsc") === "1" || request.nextUrl.searchParams.has("_rsc");
+    if (isRsc && isAdminPath) {
+      return new NextResponse(null, { status: 204 });
+    }
     const response = isCmsApi
       ? NextResponse.json({ error: "Unauthorized" }, { status: 401 })
       : NextResponse.redirect(new URL("/admin/login", request.url));
