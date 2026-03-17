@@ -73,6 +73,7 @@
 | F54 | [Local AI Tunnel](#f54-local-ai-tunnel) | Planned | [docs/features/F54-local-ai-tunnel.md](features/F54-local-ai-tunnel.md) |
 | F55 | [Enhance Prompt](#f55-enhance-prompt) | Planned | [docs/features/F55-enhance-prompt.md](features/F55-enhance-prompt.md) |
 | F56 | [GitHub Live Content](#f56-github-live-content) | Idea | [docs/features/F56-github-live-content.md](features/F56-github-live-content.md) |
+| F57 | [Extranet](#f57-extranet) | Planned | [docs/features/F57-extranet.md](features/F57-extranet.md) |
 
 ---
 
@@ -243,3 +244,6 @@ One-click prompt improvement button (magic wand) in all AI input fields. Takes v
 
 ## F56 — GitHub Live Content
 Bidirectional sync between a GitHub repo and the CMS. Mount any repo (or subdirectory) as a content source — HTML, JS, Markdown, CSS, SVG files. Pull remote changes into local cache for instant editing and preview. Edit in CMS admin with syntax highlighting and push back. External AI agents (Claude Code, Cursor, etc.) can push to the repo and the CMS picks up changes automatically via webhook or polling. Turns any GitHub repo into a collaborative content workspace. Integrates with Interactives (F39) — HTML files from live content appear in the Interactives Manager.
+
+## F57 — Extranet (Protected Site Pages)
+Site-facing authentication for website visitors — completely separate from CMS admin access. Extranet users (managed per-site in CMS admin) can access protected pages on the published site. Documents marked as `protected: true` require Extranet login. Access Groups control which users see which content. Lightweight site-side integration via Next.js middleware + JWT sessions. Use cases: client portals, member-only content, gated resources, internal company pages, course content. Self-registration with optional admin approval. Invite by email. Built on F01 invite pattern.
