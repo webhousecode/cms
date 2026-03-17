@@ -343,7 +343,7 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
               fontSize: "0.8rem",
               padding: "0.35rem 0.75rem",
             }}
-            className="hover:border-[#4ade80] hover:text-[#4ade80] hover:shadow-[0_0_12px_rgba(74,222,128,0.3)] transition-all"
+            className="hover:border-[#4ade80] hover:bg-[#4ade80] hover:text-white hover:shadow-[0_0_16px_rgba(74,222,128,0.4)] transition-all"
           >
             <Plus style={{ width: 14, height: 14 }} /> Add block
           </button>
