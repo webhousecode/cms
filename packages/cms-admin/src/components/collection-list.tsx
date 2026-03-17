@@ -36,7 +36,7 @@ interface Props {
 /* ─── Column definitions ─────────────────────────────────────── */
 
 // Fields that should appear as columns (skip title — it's always first, skip richtext/blocks — too large)
-const SKIP_COLUMN_TYPES = new Set(["richtext", "blocks", "image", "image-gallery", "video", "object"]);
+const SKIP_COLUMN_TYPES = new Set(["richtext", "blocks", "image", "image-gallery", "video", "object", "htmldoc", "column-slots"]);
 // Max extra columns beyond title + status + updated
 const MAX_EXTRA_COLUMNS = 4;
 

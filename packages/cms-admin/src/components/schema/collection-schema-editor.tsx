@@ -12,9 +12,10 @@ import type { CollectionDef } from "@/lib/config-writer";
 import { cn } from "@/lib/utils";
 
 const FIELD_TYPES = [
-  "text", "textarea", "richtext", "number", "boolean",
+  "text", "textarea", "richtext", "htmldoc", "number", "boolean",
   "date", "select", "tags", "array", "object", "relation",
-  "image", "blocks",
+  "image", "image-gallery", "video", "audio", "file", "blocks",
+  "interactive", "column-slots",
 ] as const;
 
 function newField(): FieldConfig {
