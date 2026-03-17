@@ -53,6 +53,7 @@ export const builtinBlocks: BlockConfig[] = [
       { name: 'caption', type: 'text', label: 'Caption' },
       { name: 'scale', type: 'number', label: 'Scale (%)' },
       { name: 'allowFullscreen', type: 'boolean', label: 'Fullscreen button' },
+      { name: 'fullscreenLabel', type: 'text', label: 'Fullscreen button label' },
     ],
   },
 ];
