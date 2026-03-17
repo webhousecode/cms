@@ -31,6 +31,7 @@ interface Props {
   titleField: string;
   fields: FieldConfig[];
   initialDocs: Doc[];
+  readOnly?: boolean;
 }
 
 /* ─── Column definitions ─────────────────────────────────────── */
@@ -169,7 +170,7 @@ function RowMenu({ doc, collection, onClone, onToggle, onTrash, cloning }: {
 
 /* ─── Main component ──────────────────────────────────────────── */
 
-export function CollectionList({ collection, titleField, fields, initialDocs }: Props) {
+export function CollectionList({ collection, titleField, fields, initialDocs, readOnly }: Props) {
   const [docs, setDocs] = useState(initialDocs);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
@@ -383,7 +384,7 @@ export function CollectionList({ collection, titleField, fields, initialDocs }: 
 
                     {/* Status */}
                     <td style={{ padding: "0.625rem 0.75rem", whiteSpace: "nowrap" }}>
-                      <button type="button" onClick={(e) => toggleStatus(e, doc)} title={doc.status === "published" ? "Click to unpublish" : "Click to publish"} style={{ background: "none", border: "none", cursor: "pointer", padding: 0 }}>
+                      <button type="button" onClick={(e) => !readOnly && toggleStatus(e, doc)} title={readOnly ? doc.status : doc.status === "published" ? "Click to unpublish" : "Click to publish"} style={{ background: "none", border: "none", cursor: readOnly ? "default" : "pointer", padding: 0 }}>
                         {isScheduled ? (
                           <Badge variant="outline" className="bg-amber-500/10 text-amber-400 border-amber-500/20 gap-1">
                             <Clock style={{ width: "0.65rem", height: "0.65rem" }} /> scheduled
@@ -416,14 +417,16 @@ export function CollectionList({ collection, titleField, fields, initialDocs }: 
 
                     {/* Actions */}
                     <td style={{ padding: "0.625rem 0.5rem", textAlign: "right" }}>
-                      <RowMenu
-                        doc={doc}
-                        collection={collection}
-                        onClone={(e) => cloneDoc(e, doc)}
-                        onToggle={(e) => toggleStatus(e, doc)}
-                        onTrash={(e) => trashDoc(e, doc)}
-                        cloning={cloningSlug === doc.slug}
-                      />
+                      {!readOnly && (
+                        <RowMenu
+                          doc={doc}
+                          collection={collection}
+                          onClone={(e) => cloneDoc(e, doc)}
+                          onToggle={(e) => toggleStatus(e, doc)}
+                          onTrash={(e) => trashDoc(e, doc)}
+                          cloning={cloningSlug === doc.slug}
+                        />
+                      )}
                     </td>
                   </tr>
                 );
