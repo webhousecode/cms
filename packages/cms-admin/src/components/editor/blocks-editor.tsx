@@ -57,17 +57,46 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
   const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pickerContainerRef = useRef<HTMLDivElement>(null);
 
-  // Close picker on outside click or Escape
+  const [pickerHighlight, setPickerHighlight] = useState(-1);
+
+  // Close picker on outside click or Escape; arrow nav + enter in picker
   useEffect(() => {
     if (!showPicker) return;
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setShowPicker(false); };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") { setShowPicker(false); setPickerHighlight(-1); }
+      if (e.key === "ArrowDown") { e.preventDefault(); setPickerHighlight((h) => Math.min(h + 1, allowedBlockNames.length - 1)); }
+      if (e.key === "ArrowUp") { e.preventDefault(); setPickerHighlight((h) => Math.max(h - 1, 0)); }
+      if (e.key === "Enter" && pickerHighlight >= 0 && pickerHighlight < allowedBlockNames.length) {
+        e.preventDefault();
+        addBlock(allowedBlockNames[pickerHighlight]);
+        setPickerHighlight(-1);
+      }
+    };
     const onClick = (e: MouseEvent) => {
-      if (pickerContainerRef.current && !pickerContainerRef.current.contains(e.target as Node)) setShowPicker(false);
+      if (pickerContainerRef.current && !pickerContainerRef.current.contains(e.target as Node)) { setShowPicker(false); setPickerHighlight(-1); }
     };
     document.addEventListener("keydown", onKey);
     document.addEventListener("mousedown", onClick);
     return () => { document.removeEventListener("keydown", onKey); document.removeEventListener("mousedown", onClick); };
-  }, [showPicker]);
+  }, [showPicker, pickerHighlight, allowedBlockNames]);
+
+  // "A" key opens picker when not in an input
+  useEffect(() => {
+    if (locked) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (showPicker) return;
+      const tag = (e.target as HTMLElement)?.tagName;
+      const editable = (e.target as HTMLElement)?.isContentEditable;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || editable) return;
+      if (e.key === "a" && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        e.preventDefault();
+        setShowPicker(true);
+        setPickerHighlight(0);
+      }
+    };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [locked, showPicker]);
 
   function setExpandedPersist(updater: (prev: Record<number, boolean>) => Record<number, boolean>) {
     if (controlled) {
@@ -392,26 +421,28 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
               minWidth: "180px",
               overflow: "hidden",
             }}>
-              {allowedBlockNames.map((name) => {
+              {allowedBlockNames.map((name, idx) => {
                 const cfg = getConfig(name);
+                const highlighted = pickerHighlight === idx;
                 return (
                   <button
                     key={name}
                     type="button"
-                    onClick={() => addBlock(name)}
+                    onClick={() => { addBlock(name); setPickerHighlight(-1); }}
+                    onMouseEnter={() => setPickerHighlight(idx)}
                     style={{
                       width: "100%",
                       textAlign: "left",
                       padding: "0.5rem 0.75rem",
                       fontSize: "0.85rem",
-                      background: "transparent",
+                      background: highlighted ? "var(--accent)" : "transparent",
                       border: "none",
                       cursor: "pointer",
                       display: "flex",
                       alignItems: "center",
                       gap: "0.5rem",
                     }}
-                    className="hover:bg-accent"
+                    className={highlighted ? "" : "hover:bg-accent"}
                   >
                     <span style={{
                       fontSize: "0.65rem",
@@ -422,6 +453,8 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
                       borderRadius: "4px",
                       background: "var(--primary)",
                       color: "var(--primary-foreground)",
+                      transition: "box-shadow 150ms",
+                      boxShadow: highlighted ? "0 0 12px rgba(247, 187, 46, 0.5)" : "none",
                     }}>
                       {cfg?.label ?? name}
                     </span>
