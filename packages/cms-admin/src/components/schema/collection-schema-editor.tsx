@@ -218,8 +218,8 @@ export function CollectionSchemaEditor({ collection, isNew }: Props) {
             </div>
 
             <div style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-              <p>This will <strong style={{ color: "rgb(239 68 68)" }}>permanently delete</strong> the collection definition and remove it from your schema.</p>
-              <p>All documents in this collection may become orphaned and inaccessible through the admin interface.</p>
+              <p>This will <strong style={{ color: "rgb(239 68 68)" }}>permanently delete</strong> the collection definition, remove it from your schema, and delete all documents belonging to this collection.</p>
+              <p>This action cannot be undone.</p>
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem" }}>
