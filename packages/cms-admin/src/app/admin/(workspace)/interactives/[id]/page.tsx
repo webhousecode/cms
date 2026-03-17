@@ -806,7 +806,7 @@ export default function InteractiveDetailPage() {
                 style={{ width: "100%", flex: 1, border: "none", background: "white" }}
               />
             </div>
-            <div style={{ width: "380px", flexShrink: 0, background: "var(--background)" }}>
+            <div style={{ width: "430px", flexShrink: 0, background: "var(--background)" }}>
               <InteractiveAIPanel
                 interactiveId={id}
                 title={detail.name}

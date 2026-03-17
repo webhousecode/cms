@@ -278,14 +278,14 @@ CRITICAL: Dollar signs in JavaScript strings MUST be preserved literally. Write 
       </div>
 
       {/* Input */}
-      <div style={{ padding: "0.625rem 0.75rem", borderTop: "1px solid var(--border)", display: "flex", gap: "0.5rem", alignItems: "flex-end" }}>
+      <div style={{ padding: "0.625rem 0.75rem 2rem", borderTop: "1px solid var(--border)", display: "flex", gap: "0.5rem", alignItems: "flex-end" }}>
         <textarea
           ref={textareaRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           placeholder="Describe a change... (Enter to send)"
-          rows={2}
+          rows={4}
           style={{
             flex: 1, resize: "none", padding: "0.5rem 0.75rem", borderRadius: "7px",
             border: "1px solid var(--border)", background: "var(--background)",
