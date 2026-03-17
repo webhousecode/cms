@@ -58,13 +58,22 @@ async function defaults(): Promise<SiteConfig> {
 
 export async function readSiteConfig(): Promise<SiteConfig> {
   const filePath = await getConfigPath();
+  const defs = await defaults();
+  let stored: Partial<SiteConfig> = {};
   try {
-    const raw = await fs.readFile(filePath, "utf-8");
-    const stored = JSON.parse(raw) as Partial<SiteConfig>;
-    return { ...(await defaults()), ...stored };
-  } catch {
-    return defaults();
+    stored = JSON.parse(await fs.readFile(filePath, "utf-8")) as Partial<SiteConfig>;
+  } catch { /* first read */ }
+
+  // Auto-persist calendarSecret on first use so it stays stable across requests
+  if (!stored.calendarSecret) {
+    stored.calendarSecret = defs.calendarSecret;
+    try {
+      await fs.mkdir(path.dirname(filePath), { recursive: true });
+      await fs.writeFile(filePath, JSON.stringify(stored, null, 2));
+    } catch { /* non-fatal */ }
   }
+
+  return { ...defs, ...stored };
 }
 
 /** Generate a per-user calendar feed token: HMAC(calendarSecret, userId) */
