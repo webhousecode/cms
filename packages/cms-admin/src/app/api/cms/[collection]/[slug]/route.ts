@@ -3,19 +3,27 @@ import { saveRevision } from "@/lib/revisions";
 import { removeQueueItemsBySlug } from "@/lib/curation";
 import { dispatchRevalidation } from "@/lib/revalidation";
 import { getActiveSiteEntry } from "@/lib/site-paths";
-import { getSiteRole } from "@/lib/require-role";
+import { getSiteRole, getSessionWithSiteRole } from "@/lib/require-role";
+import { GitHubStorageAdapter } from "@webhouse/cms";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 type Ctx = { params: Promise<{ collection: string; slug: string }> };
 
 export async function POST(req: NextRequest, { params }: Ctx) {
-  const role = await getSiteRole();
-  if (!role || role === "viewer") return NextResponse.json({ error: "No write access" }, { status: 403 });
+  const postSession = await getSessionWithSiteRole();
+  if (!postSession || !postSession.siteRole || postSession.siteRole === "viewer") {
+    return NextResponse.json({ error: "No write access" }, { status: 403 });
+  }
   try {
     const { collection, slug } = await params;
     const body = await req.json() as { action?: string };
     const cms = await getAdminCms();
+
+    // Set Git commit author
+    if (cms.storage instanceof GitHubStorageAdapter) {
+      cms.storage.setCommitAuthor(postSession.name, postSession.email);
+    }
 
     if (body.action === "restore") {
       const doc = await cms.content.findBySlug(collection, slug);
@@ -70,12 +78,19 @@ export async function POST(req: NextRequest, { params }: Ctx) {
 }
 
 export async function PATCH(req: NextRequest, { params }: Ctx) {
-  const patchRole = await getSiteRole();
-  if (!patchRole || patchRole === "viewer") return NextResponse.json({ error: "No write access" }, { status: 403 });
+  const session = await getSessionWithSiteRole();
+  if (!session || !session.siteRole || session.siteRole === "viewer") {
+    return NextResponse.json({ error: "No write access" }, { status: 403 });
+  }
   try {
     const { collection, slug } = await params;
     const body = await req.json() as { data?: Record<string, unknown>; status?: string; locale?: string; translationOf?: string | null; publishAt?: string | null; slug?: string };
     const cms = await getAdminCms();
+
+    // Set Git commit author to the actual editor (not the service token owner)
+    if (cms.storage instanceof GitHubStorageAdapter) {
+      cms.storage.setCommitAuthor(session.name, session.email);
+    }
 
     const doc = await cms.content.findBySlug(collection, slug);
     if (!doc) return NextResponse.json({ error: "Not found" }, { status: 404 });
@@ -93,8 +108,14 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
     // Manually publishing clears any pending schedule
     const publishAt = nextStatus === "published" ? null : body.publishAt;
 
+    // Track who made this edit
+    const editedData = {
+      ...(body.data ?? doc.data),
+      _lastEditedBy: { userId: session.userId, name: session.name, email: session.email, at: new Date().toISOString() },
+    };
+
     await cms.content.update(collection, doc.id, {
-      data: body.data ?? doc.data,
+      data: editedData,
       status: nextStatus as "draft" | "published" | "archived",
       ...(body.slug !== undefined && { slug: body.slug }),
       ...(body.locale !== undefined && { locale: body.locale }),
@@ -132,8 +153,10 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
 }
 
 export async function DELETE(req: NextRequest, { params }: Ctx) {
-  const deleteRole = await getSiteRole();
-  if (!deleteRole || deleteRole === "viewer") return NextResponse.json({ error: "No write access" }, { status: 403 });
+  const delSession = await getSessionWithSiteRole();
+  if (!delSession || !delSession.siteRole || delSession.siteRole === "viewer") {
+    return NextResponse.json({ error: "No write access" }, { status: 403 });
+  }
   try {
     const { collection, slug } = await params;
     const permanent = req.nextUrl.searchParams.get("permanent") === "true";

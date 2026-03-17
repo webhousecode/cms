@@ -91,6 +91,12 @@ export class GitHubStorageAdapter implements StorageAdapter {
     return data;
   }
 
+  /** Set author info for subsequent commits */
+  setCommitAuthor(name: string, email: string): void {
+    this._commitAuthor = { name, email };
+  }
+  private _commitAuthor?: { name: string; email: string };
+
   private async putFile(path: string, content: string, message: string): Promise<void> {
     const sha = this.shaCache.get(path);
     const body: Record<string, unknown> = {
@@ -99,6 +105,10 @@ export class GitHubStorageAdapter implements StorageAdapter {
       branch: this.branch,
     };
     if (sha) body['sha'] = sha;
+    if (this._commitAuthor) {
+      body['committer'] = this._commitAuthor;
+      body['author'] = this._commitAuthor;
+    }
 
     const res = await fetch(this.repoUrl(path), {
       method: 'PUT',
@@ -124,10 +134,15 @@ export class GitHubStorageAdapter implements StorageAdapter {
       sha = file.sha;
     }
 
+    const deleteBody: Record<string, unknown> = { message, sha, branch: this.branch };
+    if (this._commitAuthor) {
+      deleteBody['committer'] = this._commitAuthor;
+      deleteBody['author'] = this._commitAuthor;
+    }
     const res = await fetch(this.repoUrl(path), {
       method: 'DELETE',
       headers: this.headers(),
-      body: JSON.stringify({ message, sha, branch: this.branch }),
+      body: JSON.stringify(deleteBody),
     });
 
     if (res.status === 404) throw new Error(`GitHub: file not found: ${path}`);
