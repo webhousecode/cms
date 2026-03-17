@@ -45,17 +45,25 @@ export function SiteSwitcher() {
   const [activeSiteId, setActiveSiteId] = useState<string>("");
   const [loaded, setLoaded] = useState(false);
   const [siteRole, setSiteRole] = useState<string | null>(null);
+  const [allowedSiteIds, setAllowedSiteIds] = useState<string[] | null>(null);
 
   const fetchRegistry = useCallback(async () => {
     try {
-      const res = await fetch("/api/cms/registry");
-      if (res.ok) {
-        const d = await res.json() as { mode: string; registry: Registry | null };
+      const [regRes, sitesRes] = await Promise.all([
+        fetch("/api/cms/registry"),
+        fetch("/api/admin/my-sites"),
+      ]);
+      if (regRes.ok) {
+        const d = await regRes.json() as { mode: string; registry: Registry | null };
         if (d.registry) {
           setRegistry(d.registry);
           setActiveOrgId(getCookie("cms-active-org") ?? d.registry.defaultOrgId);
           setActiveSiteId(getCookie("cms-active-site") ?? d.registry.defaultSiteId);
         }
+      }
+      if (sitesRes.ok) {
+        const d = await sitesRes.json() as { siteIds: string[] };
+        setAllowedSiteIds(d.siteIds);
       }
     } finally {
       setLoaded(true);
@@ -81,8 +89,12 @@ export function SiteSwitcher() {
   if (!loaded || !registry) return null;
 
   const activeOrg = registry.orgs.find((o) => o.id === activeOrgId) ?? registry.orgs[0];
-  const sites = activeOrg?.sites ?? [];
-  const activeSite = sites.find((s) => s.id === activeSiteId) ?? sites[0];
+  const allSites = activeOrg?.sites ?? [];
+  // Filter to only sites the user has team membership on
+  const sites = allowedSiteIds
+    ? allSites.filter((s) => allowedSiteIds.includes(s.id))
+    : allSites;
+  const activeSite = allSites.find((s) => s.id === activeSiteId) ?? sites[0];
   const isAdmin = siteRole === "admin";
 
   // Don't show if only one site (or none)
