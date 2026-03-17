@@ -341,8 +341,8 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
 
       {/* Table */}
       {filtered.length > 0 && (
-        <div style={{ border: "1px solid var(--border)", borderRadius: "10px" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+        <div style={{ border: "1px solid var(--border)", borderRadius: "10px", overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "700px" }}>
             <thead>
               <tr>
                 <SortTh label="Title" sk="title" />
