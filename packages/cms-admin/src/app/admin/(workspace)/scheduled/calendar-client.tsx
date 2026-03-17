@@ -20,7 +20,11 @@ interface ScheduledEvent {
 function groupByDate(events: ScheduledEvent[]): Map<string, ScheduledEvent[]> {
   const groups = new Map<string, ScheduledEvent[]>();
   for (const event of events) {
-    const key = new Date(event.date).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
+    // Use date part directly from stored string (no timezone conversion)
+    const datePart = event.date.slice(0, 10); // "2026-03-26"
+    const [y, m, d] = datePart.split("-");
+    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const key = `${parseInt(d)} ${months[parseInt(m) - 1]} ${y}`;
     const list = groups.get(key) ?? [];
     list.push(event);
     groups.set(key, list);
@@ -97,7 +101,7 @@ export function ScheduledCalendar({ events }: { events: ScheduledEvent[] }) {
                             <div className="flex items-center gap-2 mt-0.5">
                               <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{event.subtitle}</Badge>
                               <span className="text-[11px] text-muted-foreground font-mono">
-                                {new Date(event.date).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}
+                                {event.date.slice(11, 16)}
                               </span>
                             </div>
                           </div>

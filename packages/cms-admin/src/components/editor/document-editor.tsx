@@ -262,12 +262,8 @@ function ScheduleButton({ publishAt, onSchedule, label = "Scheduled", defaultLab
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState(() => {
     if (!publishAt) return "";
-    // datetime-local input expects "YYYY-MM-DDTHH:MM" in LOCAL time
-    try {
-      const d = new Date(publishAt);
-      const pad = (n: number) => String(n).padStart(2, "0");
-      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
-    } catch { return ""; }
+    // datetime-local expects "YYYY-MM-DDTHH:MM" — stored as-is, no timezone conversion
+    return publishAt.slice(0, 16);
   });
   const ref = useRef<HTMLDivElement>(null);
 
@@ -280,14 +276,20 @@ function ScheduleButton({ publishAt, onSchedule, label = "Scheduled", defaultLab
     return () => document.removeEventListener("mousedown", h);
   }, [open]);
 
-  const isScheduled = !!publishAt && new Date(publishAt) > new Date();
+  const isScheduled = (() => {
+    if (!publishAt) return false;
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const localNow = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+    return publishAt > localNow;
+  })();
 
   return (
     <div ref={ref} style={{ position: "relative" }}>
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        title={isScheduled ? `${label}: ${new Date(publishAt).toLocaleString()}` : defaultLabel}
+        title={isScheduled ? `${label}: ${publishAt!.replace("T", " ")}` : defaultLabel}
         style={{
           display: "flex", alignItems: "center", justifyContent: "center",
           width: "28px", height: "28px", borderRadius: "6px",
@@ -324,7 +326,7 @@ function ScheduleButton({ publishAt, onSchedule, label = "Scheduled", defaultLab
             <button
               type="button"
               onClick={() => {
-                onSchedule(value ? new Date(value).toISOString() : undefined);
+                onSchedule(value ? value + ":00" : undefined);
                 setOpen(false);
               }}
               style={{ flex: 1, padding: "0.35rem", borderRadius: "5px", border: "1px solid var(--border)", background: "var(--primary)", color: "var(--primary-foreground)", fontSize: "0.8rem", cursor: "pointer" }}
@@ -697,13 +699,13 @@ function PropertiesPanel({ doc, collection, onClose, onSaved }: {
         {doc.publishAt && (
           <div>
             <p style={labelStyle}>Scheduled publish</p>
-            <p style={valueStyle}>{new Date(doc.publishAt).toLocaleString()}</p>
+            <p style={valueStyle}>{doc.publishAt.replace("T", " ").slice(0, 16)}</p>
           </div>
         )}
         {doc.unpublishAt && (
           <div>
             <p style={labelStyle}>Scheduled expiry</p>
-            <p style={{ ...valueStyle, color: "rgb(239 68 68)" }}>{new Date(doc.unpublishAt).toLocaleString()}</p>
+            <p style={{ ...valueStyle, color: "rgb(239 68 68)" }}>{doc.unpublishAt.replace("T", " ").slice(0, 16)}</p>
           </div>
         )}
 
@@ -784,7 +786,10 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
 
   // Sync document status to active tab (for the colored dot)
   useEffect(() => {
-    const status = doc.publishAt && new Date(doc.publishAt) > new Date()
+    const now = new Date();
+    const pad = (n: number) => String(n).padStart(2, "0");
+    const localNow = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}T${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+    const status = doc.publishAt && doc.publishAt > localNow
       ? "scheduled"
       : doc.status;
     setTabStatus(status);
