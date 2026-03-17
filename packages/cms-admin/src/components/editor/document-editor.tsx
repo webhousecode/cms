@@ -733,9 +733,10 @@ interface Props {
   previewSiteUrl?: string;
   previewInIframe?: boolean;
   backHref?: string;
+  readOnly?: boolean;
 }
 
-export function DocumentEditor({ collection, colConfig, blocksConfig = [], locales = [], defaultLocale = "en", initialDoc, translations = [], previewSiteUrl, previewInIframe, backHref }: Props) {
+export function DocumentEditor({ collection, colConfig, blocksConfig = [], locales = [], defaultLocale = "en", initialDoc, translations = [], previewSiteUrl, previewInIframe, backHref, readOnly = false }: Props) {
   const PREVIEW_SITE_URL = previewSiteUrl ?? PREVIEW_SITE_URL_DEFAULT;
   const PREVIEW_IN_IFRAME = previewInIframe ?? PREVIEW_IN_IFRAME_DEFAULT;
   const [doc, setDoc] = useState(() => {
@@ -936,39 +937,45 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
             </div>
           )}
 
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={cloneDoc}
-            disabled={cloning}
-            className="text-muted-foreground hover:text-foreground gap-1.5"
-            title="Clone item"
-          >
-            <Copy className="w-3.5 h-3.5" />
-            {cloning ? "Cloning…" : "Clone"}
-          </Button>
+          {!readOnly && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={cloneDoc}
+              disabled={cloning}
+              className="text-muted-foreground hover:text-foreground gap-1.5"
+              title="Clone item"
+            >
+              <Copy className="w-3.5 h-3.5" />
+              {cloning ? "Cloning…" : "Clone"}
+            </Button>
+          )}
 
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setGenerateOpen(true)}
-            className="gap-1.5 text-muted-foreground hover:text-foreground"
-            title="Generate all fields with AI"
-          >
-            <Wand2 className="w-3.5 h-3.5" />
-            Generate
-          </Button>
+          {!readOnly && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setGenerateOpen(true)}
+              className="gap-1.5 text-muted-foreground hover:text-foreground"
+              title="Generate all fields with AI"
+            >
+              <Wand2 className="w-3.5 h-3.5" />
+              Generate
+            </Button>
+          )}
 
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => { setAiPanelOpen((o) => !o); if (historyOpen) setHistoryOpen(false); }}
-            className={aiPanelOpen ? "gap-1.5 text-primary" : "gap-1.5 text-muted-foreground hover:text-foreground"}
-            title="AI Assistant"
-          >
-            <Sparkles className="w-3.5 h-3.5" />
-            AI
-          </Button>
+          {!readOnly && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => { setAiPanelOpen((o) => !o); if (historyOpen) setHistoryOpen(false); }}
+              className={aiPanelOpen ? "gap-1.5 text-primary" : "gap-1.5 text-muted-foreground hover:text-foreground"}
+              title="AI Assistant"
+            >
+              <Sparkles className="w-3.5 h-3.5" />
+              AI
+            </Button>
+          )}
 
           <Button
             variant="ghost"
@@ -991,15 +998,17 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
             <Settings2 className="w-4 h-4" />
           </Button>
 
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setConfirmTrash(true)}
-            className="text-muted-foreground hover:text-destructive"
-            title="Move to trash"
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
+          {!readOnly && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setConfirmTrash(true)}
+              className="text-muted-foreground hover:text-destructive"
+              title="Move to trash"
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          )}
 
           {colConfig.urlPrefix && (
             <Button
@@ -1013,53 +1022,61 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
             </Button>
           )}
 
-          {isPublished ? (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => save("draft")}
-              disabled={saving}
-              className="gap-1.5"
-              title="Revert to draft (unpublish)"
-            >
-              <FileText className="w-3.5 h-3.5" />
-              Unpublish
-            </Button>
-          ) : (
+          {!readOnly && (
             <>
-              {/* Schedule button — only shown for drafts */}
-              <ScheduleButton
-                publishAt={doc.publishAt}
-                onSchedule={(iso) => {
-                  setDoc((prev) => ({ ...prev, publishAt: iso }));
-                  setDirty(true);
-                }}
-              />
+              {isPublished ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => save("draft")}
+                  disabled={saving}
+                  className="gap-1.5"
+                  title="Revert to draft (unpublish)"
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  Unpublish
+                </Button>
+              ) : (
+                <>
+                  <ScheduleButton
+                    publishAt={doc.publishAt}
+                    onSchedule={(iso) => {
+                      setDoc((prev) => ({ ...prev, publishAt: iso }));
+                      setDirty(true);
+                    }}
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => save("published")}
+                    disabled={saving}
+                    className="gap-1.5 border-green-500/30 text-green-400 hover:bg-green-500/10 hover:text-green-400"
+                    title="Save and publish immediately"
+                  >
+                    <Globe className="w-3.5 h-3.5" />
+                    Publish
+                  </Button>
+                </>
+              )}
+
               <Button
-                variant="outline"
+                variant="default"
                 size="sm"
-                onClick={() => save("published")}
-                disabled={saving}
-                className="gap-1.5 border-green-500/30 text-green-400 hover:bg-green-500/10 hover:text-green-400"
-                title="Save and publish immediately"
+                onClick={() => save()}
+                disabled={saving || !dirty}
+                className="gap-1.5"
+                title={dirty ? "Save changes (⌘S)" : "No unsaved changes"}
               >
-                <Globe className="w-3.5 h-3.5" />
-                Publish
+                <Save className="w-3.5 h-3.5" />
+                {saving ? "Saving…" : "Save"}
               </Button>
             </>
           )}
-
-          <Button
-            variant="default"
-            size="sm"
-            onClick={() => save()}
-            disabled={saving || !dirty}
-            className="gap-1.5"
-            title={dirty ? "Save changes (⌘S)" : "No unsaved changes"}
-          >
-            <Save className="w-3.5 h-3.5" />
-            {saving ? "Saving…" : "Save"}
-          </Button>
+          {readOnly && (
+            <span className="text-xs text-muted-foreground px-2 py-1 rounded-full bg-muted font-mono">
+              Read only
+            </span>
+          )}
         </div>
       </div>
 
@@ -1250,7 +1267,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
                   field={field}
                   value={doc.data[field.name]}
                   onChange={(val) => updateField(field.name, val)}
-                  locked={isLocked}
+                  locked={readOnly || isLocked}
                   blocksConfig={blocksConfig}
                 />
               </div>

@@ -10,13 +10,15 @@ import { TabTitle } from "@/lib/tabs-context";
 import { Button } from "@/components/ui/button";
 import { Edit2 } from "lucide-react";
 import { readSiteConfig } from "@/lib/site-config";
+import { getSiteRole } from "@/lib/require-role";
 
 type Props = { params: Promise<{ collection: string }> };
 
 export default async function CollectionPage({ params }: Props) {
   const { collection } = await params;
-  const [cms, config, siteConfig] = await Promise.all([getAdminCms(), getAdminConfig(), readSiteConfig()]);
+  const [cms, config, siteConfig, siteRole] = await Promise.all([getAdminCms(), getAdminConfig(), readSiteConfig(), getSiteRole()]);
   const schemaEnabled = siteConfig.schemaEditEnabled;
+  const canWrite = siteRole !== "viewer";
 
   const colConfig = config.collections.find((c) => c.name === collection);
   if (!colConfig) notFound();
@@ -37,7 +39,7 @@ export default async function CollectionPage({ params }: Props) {
           <h1 className="text-2xl font-bold text-foreground">{colConfig.label ?? collection}</h1>
         </div>
         <div className="flex items-center gap-2">
-          {schemaEnabled && (
+          {canWrite && schemaEnabled && (
             <Link href={`/admin/settings/${collection}`}>
               <button className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-md border border-border hover:border-primary/40 hover:bg-secondary transition-all text-muted-foreground">
                 <Edit2 className="w-3.5 h-3.5" />
@@ -45,8 +47,8 @@ export default async function CollectionPage({ params }: Props) {
               </button>
             </Link>
           )}
-          <GenerateDocumentButton collection={collection} collectionLabel={colConfig.label ?? collection} />
-          <NewDocumentButton collection={collection} titleField={colConfig.fields[0]?.name ?? "title"} defaultLocale={config.defaultLocale} />
+          {canWrite && <GenerateDocumentButton collection={collection} collectionLabel={colConfig.label ?? collection} />}
+          {canWrite && <NewDocumentButton collection={collection} titleField={colConfig.fields[0]?.name ?? "title"} defaultLocale={config.defaultLocale} />}
         </div>
       </div>
 
