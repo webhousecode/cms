@@ -28,7 +28,7 @@ export default async function AgentsPage() {
           )}
         </div>
 
-        <AgentsList agents={agents} />
+        <AgentsList agents={agents} readOnly={siteRole === "viewer"} />
       </div>
     </>
   );

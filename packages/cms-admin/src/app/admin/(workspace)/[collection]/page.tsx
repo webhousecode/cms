@@ -57,6 +57,7 @@ export default async function CollectionPage({ params }: Props) {
         titleField={colConfig.fields[0]?.name ?? "title"}
         fields={colConfig.fields}
         initialDocs={sorted}
+        readOnly={!canWrite}
       />
     </div>
     </>

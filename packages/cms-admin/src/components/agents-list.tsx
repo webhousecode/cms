@@ -27,7 +27,7 @@ const ROLE_LABELS: Record<string, string> = {
 type View = "grid" | "list";
 type Filter = "all" | "active" | "inactive";
 
-export function AgentsList({ agents }: { agents: Agent[] }) {
+export function AgentsList({ agents, readOnly }: { agents: Agent[]; readOnly?: boolean }) {
   const [view, setView] = useState<View>("grid");
   const [filter, setFilter] = useState<Filter>("all");
 
@@ -133,9 +133,11 @@ export function AgentsList({ agents }: { agents: Agent[] }) {
                     </p>
                   )}
                 </div>
-                <div className="flex justify-end mt-2">
-                  <CloneAgentButton id={agent.id} />
-                </div>
+                {!readOnly && (
+                  <div className="flex justify-end mt-2">
+                    <CloneAgentButton id={agent.id} />
+                  </div>
+                )}
               </Link>
             );
           })}
@@ -168,7 +170,7 @@ export function AgentsList({ agents }: { agents: Agent[] }) {
                     {agent.schedule.time}
                   </span>
                 )}
-                <CloneAgentButton id={agent.id} />
+                {!readOnly && <CloneAgentButton id={agent.id} />}
               </Link>
             );
           })}
