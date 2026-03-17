@@ -144,9 +144,23 @@ export function ColumnsEditor({ block, onChange, locked, blocksConfig = [] }: Co
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem", position: "relative" }}>
-      {/* Layout selector */}
+      {/* Label + Layout selector */}
       {!locked && (
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+          <input
+            type="text"
+            value={(block.label as string) ?? ""}
+            onChange={(e) => onChange({ ...block, label: e.target.value })}
+            placeholder="Label (optional — shown in block header)"
+            style={{
+              padding: "0.3rem 0.5rem", borderRadius: "5px",
+              border: "1px solid var(--border)", background: "var(--background)",
+              color: "var(--foreground)", fontSize: "0.75rem", outline: "none",
+              width: "100%",
+            }}
+            onFocus={(e) => { e.target.style.borderColor = "var(--primary)"; }}
+            onBlur={(e) => { e.target.style.borderColor = "var(--border)"; }}
+          />
           <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap", alignItems: "center" }}>
             {LAYOUT_PRESETS.map((preset) => (
               <button

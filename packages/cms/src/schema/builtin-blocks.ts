@@ -5,6 +5,7 @@ export const builtinBlocks: BlockConfig[] = [
     name: 'columns',
     label: 'Columns',
     fields: [
+      { name: 'label', type: 'text', label: 'Label (internal)' },
       {
         name: 'layout',
         type: 'select',
