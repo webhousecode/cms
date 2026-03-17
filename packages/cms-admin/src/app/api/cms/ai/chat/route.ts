@@ -4,6 +4,9 @@ import { getApiKey } from "@/lib/ai-config";
 import { buildContentContext } from "@/lib/content-context";
 import { readSiteConfig } from "@/lib/site-config";
 
+// Allow long-running streaming responses (Sonnet + large context can take 2+ minutes)
+export const maxDuration = 300;
+
 const ALLOWED_MODELS = ["claude-haiku-4-5-20251001", "claude-sonnet-4-5-20250514"] as const;
 
 export async function POST(request: NextRequest) {
@@ -38,7 +41,7 @@ export async function POST(request: NextRequest) {
 
     let systemPrompt: string;
 
-    if (customSystem) {
+    if (customSystem !== undefined && customSystem !== null && customSystem.length > 0) {
       systemPrompt = customSystem;
     } else {
       const fieldDescriptions = fields
