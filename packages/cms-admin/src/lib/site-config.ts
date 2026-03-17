@@ -10,6 +10,14 @@ export interface SiteConfig {
   schemaEditEnabled: boolean;
   devInspector: boolean;
   showCloseAllTabs: boolean;
+  /** Default AI model for interactive generation/editing */
+  aiInteractivesModel: string;
+  /** Default max tokens for interactive generation/editing */
+  aiInteractivesMaxTokens: number;
+  /** Default AI model for content writing */
+  aiContentModel: string;
+  /** Default max tokens for content writing */
+  aiContentMaxTokens: number;
 }
 
 async function getConfigPath(): Promise<string> {
@@ -28,6 +36,10 @@ async function defaults(): Promise<SiteConfig> {
     schemaEditEnabled: process.env.SCHEMA_EDIT_ENABLED === "true",
     devInspector: process.env.DEV_INSPECTOR === "true",
     showCloseAllTabs: false,
+    aiInteractivesModel: "claude-sonnet-4-5-20250514",
+    aiInteractivesMaxTokens: 16384,
+    aiContentModel: "claude-haiku-4-5-20251001",
+    aiContentMaxTokens: 4096,
   };
 }
 

@@ -124,11 +124,23 @@ export default function InteractivesPage() {
   const [aiModalOpen, setAiModalOpen] = useState(false);
   const [aiPrompt, setAiPrompt] = useState("");
   const [aiGenerating, setAiGenerating] = useState(false);
+  const [generateSystemPrompt, setGenerateSystemPrompt] = useState<string | null>(null);
   const aiTextareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (aiModalOpen) setTimeout(() => aiTextareaRef.current?.focus(), 50);
   }, [aiModalOpen]);
+
+  // Fetch editable system prompt
+  useEffect(() => {
+    fetch("/api/cms/ai/prompts")
+      .then((r) => r.json())
+      .then((data: { prompts: Array<{ id: string; value: string }> }) => {
+        const p = data.prompts.find((pp) => pp.id === "interactives.generate");
+        if (p) setGenerateSystemPrompt(p.value);
+      })
+      .catch(() => { /* use fallback */ });
+  }, []);
 
   /** Extract HTML from code fences */
   function extractHtml(text: string): string | null {
@@ -155,18 +167,8 @@ export default function InteractivesPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: prompt,
-          model: "claude-sonnet-4-5-20250514",
-          maxTokens: 16384,
-          systemPrompt: [
-            "Generate a standalone HTML file with inline CSS and JavaScript.",
-            "The HTML should be a complete, self-contained interactive component.",
-            "Include <!DOCTYPE html>, <html>, <head>, <body> tags.",
-            "Use modern CSS (flexbox/grid), vanilla JS or Chart.js via CDN if charts are needed.",
-            "Make it visually polished with smooth animations and good UX.",
-            "CRITICAL: All interactive elements MUST actually work. If there are sliders, they must update values. If there are buttons, they must do something. If there are calculations, they must compute correctly. Never create non-functional UI.",
-            "CRITICAL: Output the COMPLETE HTML document. Never truncate or abbreviate.",
-            "Wrap your response in ```html code fences.",
-          ].join("\n"),
+          purpose: "interactives",
+          systemPrompt: generateSystemPrompt ?? "",
         }),
       });
 

@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { getApiKey } from "@/lib/ai-config";
 import { buildContentContext } from "@/lib/content-context";
+import { readSiteConfig } from "@/lib/site-config";
+
+const ALLOWED_MODELS = ["claude-haiku-4-5-20251001", "claude-sonnet-4-5-20250514"] as const;
 
 export async function POST(request: NextRequest) {
   const apiKey = await getApiKey("anthropic");
@@ -11,7 +14,7 @@ export async function POST(request: NextRequest) {
   const client = new Anthropic({ apiKey });
 
   try {
-    const { message, docData, collectionName, fields, systemPrompt: customSystem, context, maxTokens, model: requestedModel } = (await request.json()) as {
+    const { message, docData, collectionName, fields, systemPrompt: customSystem, context, maxTokens, model: requestedModel, purpose } = (await request.json()) as {
       message?: string;
       docData?: Record<string, unknown>;
       collectionName?: string;
@@ -20,18 +23,24 @@ export async function POST(request: NextRequest) {
       context?: string;
       maxTokens?: number;
       model?: string;
+      /** "interactives" or "content" — determines which site config defaults to use */
+      purpose?: "interactives" | "content";
     };
     if (!message) {
       return NextResponse.json({ error: "message required" }, { status: 400 });
     }
 
+    // Read site config defaults
+    const siteConfig = await readSiteConfig();
+    const isInteractives = purpose === "interactives";
+    const defaultModel = isInteractives ? siteConfig.aiInteractivesModel : siteConfig.aiContentModel;
+    const defaultMaxTokens = isInteractives ? siteConfig.aiInteractivesMaxTokens : siteConfig.aiContentMaxTokens;
+
     let systemPrompt: string;
 
     if (customSystem) {
-      // Custom system prompt (e.g. from Interactive AI Edit)
       systemPrompt = customSystem;
     } else {
-      // Default content writer system prompt
       const fieldDescriptions = fields
         ?.map((f) => `- ${f.label ?? f.name} (${f.type})`)
         .join("\n");
@@ -58,13 +67,11 @@ ${contentContext}`;
         ? `Current document content:\n${JSON.stringify(docData, null, 2)}\n\n---\n\n${message}`
         : message;
 
-    // Allow callers to request higher token limits (e.g. interactive editing needs much more than content writing)
-    // and optionally a different model (sonnet for complex code generation)
-    const ALLOWED_MODELS = ["claude-haiku-4-5-20251001", "claude-sonnet-4-5-20250514"] as const;
-    const resolvedModel = requestedModel && ALLOWED_MODELS.includes(requestedModel as typeof ALLOWED_MODELS[number])
+    // Resolve model: caller override → site config default → hardcoded fallback
+    const resolvedModel = (requestedModel && ALLOWED_MODELS.includes(requestedModel as typeof ALLOWED_MODELS[number]))
       ? requestedModel
-      : "claude-haiku-4-5-20251001";
-    const resolvedMaxTokens = Math.min(Math.max(maxTokens ?? 4096, 256), 16384);
+      : (ALLOWED_MODELS.includes(defaultModel as typeof ALLOWED_MODELS[number]) ? defaultModel : "claude-haiku-4-5-20251001");
+    const resolvedMaxTokens = Math.min(Math.max(maxTokens ?? defaultMaxTokens, 256), 16384);
 
     const stream = await client.messages.stream({
       model: resolvedModel,

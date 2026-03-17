@@ -25,6 +25,7 @@ export function InteractiveAIPanel({ interactiveId, title, content, onApply }: P
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
+  const [systemPromptTemplate, setSystemPromptTemplate] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -35,6 +36,17 @@ export function InteractiveAIPanel({ interactiveId, title, content, onApply }: P
 
   useEffect(() => {
     textareaRef.current?.focus();
+  }, []);
+
+  // Fetch the editable system prompt from server
+  useEffect(() => {
+    fetch("/api/cms/ai/prompts")
+      .then((r) => r.json())
+      .then((data: { prompts: Array<{ id: string; value: string }> }) => {
+        const p = data.prompts.find((pp) => pp.id === "interactives.edit");
+        if (p) setSystemPromptTemplate(p.value);
+      })
+      .catch(() => { /* use fallback */ });
   }, []);
 
   async function send() {
@@ -58,19 +70,10 @@ export function InteractiveAIPanel({ interactiveId, title, content, onApply }: P
         signal: abortRef.current.signal,
         body: JSON.stringify({
           message: text,
-          model: "claude-sonnet-4-5-20250514",
-          maxTokens: 16384,
-          systemPrompt: [
-            "You are an expert web developer editing an interactive HTML component.",
-            `The component is called "${title}" (ID: ${interactiveId}).`,
-            "When the user asks you to modify the component, respond with the COMPLETE updated HTML.",
-            "CRITICAL: You MUST output the ENTIRE HTML document from <!DOCTYPE html> to </html>. Never truncate, abbreviate, or use comments like '... rest of code ...' or '/* same as before */'. Every single line must be included.",
-            "Wrap your HTML output in ```html code fences so it can be extracted.",
-            "If the user asks a question (not a modification), answer concisely without code.",
-            "The component is a standalone HTML document with inline <style> and <script> tags.",
-            "You may use any web technology: CSS animations, Canvas, SVG, Chart.js (via CDN), D3, GSAP, etc.",
-            "Always produce clean, well-structured, COMPLETE and WORKING HTML with good UX.",
-          ].join("\n"),
+          purpose: "interactives",
+          systemPrompt: (systemPromptTemplate ?? "")
+            .replace("{title}", title)
+            .replace("{interactiveId}", interactiveId),
           context: `Current HTML content of the interactive:\n\`\`\`html\n${content}\n\`\`\``,
         }),
       });
@@ -175,6 +178,14 @@ export function InteractiveAIPanel({ interactiveId, title, content, onApply }: P
           Chat with AI to modify this interactive
         </span>
       </div>
+
+      {/* Token size warning for large interactives */}
+      {content.length > 12000 && messages.length === 0 && (
+        <div style={{ padding: "0.5rem 0.75rem", display: "flex", alignItems: "center", gap: "0.375rem", background: "rgba(234,179,8,0.08)", borderBottom: "1px solid rgba(234,179,8,0.2)", fontSize: "0.7rem", color: "#eab308" }}>
+          <AlertTriangle style={{ width: "0.75rem", height: "0.75rem", flexShrink: 0 }} />
+          <span>This interactive is large ({Math.round(content.length / 1024)} KB). If AI output gets truncated, increase Max Tokens in Settings → AI.</span>
+        </div>
+      )}
 
       {/* Messages */}
       <div ref={scrollRef} style={{ flex: 1, overflow: "auto", padding: "0.75rem" }}>

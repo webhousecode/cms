@@ -7,6 +7,7 @@ import { AISettingsPanel } from "@/components/settings/ai-settings-panel";
 import { SiteGeneralSettingsPanel } from "@/components/settings/general-settings-panel";
 import { MCPSettingsPanel } from "@/components/settings/mcp-settings-panel";
 import { AIPromptsPanel } from "@/components/settings/ai-prompts-panel";
+import { AIDefaultsPanel } from "@/components/settings/ai-defaults-panel";
 import { readSiteConfig } from "@/lib/site-config";
 import { readBrandVoice } from "@/lib/brand-voice";
 
@@ -31,7 +32,7 @@ export default async function SettingsPage({
     { id: "mcp",         label: "MCP" },
     ...(globals.length > 0 ? [{ id: "globals", label: "Globals" }] : []),
     ...(siteConfig.schemaEditEnabled ? [{ id: "schema", label: "Schema" }] : []),
-    ...(process.env.CMS_DEV_MODE === "true" ? [{ id: "prompts", label: "AI Prompts" }] : []),
+    { id: "prompts", label: "AI Prompts" },
   ];
 
   return (
@@ -203,6 +204,16 @@ export default async function SettingsPage({
               </p>
             </div>
             <AISettingsPanel />
+
+            <div style={{ borderTop: "1px solid var(--border)", marginTop: "2rem", paddingTop: "2rem" }}>
+              <div className="mb-6">
+                <h2 className="text-base font-semibold text-foreground">AI Model Defaults</h2>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  Choose default models and token limits for different AI features.
+                </p>
+              </div>
+              <AIDefaultsPanel />
+            </div>
           </div>
         )}
 
@@ -219,8 +230,8 @@ export default async function SettingsPage({
           </div>
         )}
 
-        {/* AI Prompts tab (developer mode only) */}
-        {tab === "prompts" && process.env.CMS_DEV_MODE === "true" && (
+        {/* AI Prompts tab */}
+        {tab === "prompts" && (
           <div className="max-w-3xl">
             <AIPromptsPanel />
           </div>
