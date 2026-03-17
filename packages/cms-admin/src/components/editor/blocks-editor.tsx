@@ -142,6 +142,13 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
     setExpandedPersist((prev) => ({ ...prev, [newIndex]: true }));
     onChange([...blocks, empty]);
     setShowPicker(false);
+    setFlashIdx(newIndex);
+    setTimeout(() => setFlashIdx(null), 2000);
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        flashRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 50);
+    });
   }
 
   const allOpen = blocks.length > 0 && blocks.every((_, i) => expanded[i]);
