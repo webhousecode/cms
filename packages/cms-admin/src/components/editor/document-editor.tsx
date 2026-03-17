@@ -1039,9 +1039,20 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
                 <>
                   <ScheduleButton
                     publishAt={doc.unpublishAt}
-                    onSchedule={(iso) => {
+                    onSchedule={async (iso) => {
                       setDoc((prev) => ({ ...prev, unpublishAt: iso }));
-                      setDirty(true);
+                      setSaving(true);
+                      const res = await fetch(`/api/cms/${collection}/${doc.slug}`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ unpublishAt: iso ?? null }),
+                      });
+                      if (res.ok) {
+                        const updated = (await res.json()) as DocSnapshot;
+                        setDoc(updated);
+                        startTransition(() => router.refresh());
+                      }
+                      setSaving(false);
                     }}
                     label="Expires"
                     defaultLabel="Set expiry"
@@ -1064,9 +1075,21 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
                 <>
                   <ScheduleButton
                     publishAt={doc.publishAt}
-                    onSchedule={(iso) => {
+                    onSchedule={async (iso) => {
                       setDoc((prev) => ({ ...prev, publishAt: iso }));
-                      setDirty(true);
+                      // Auto-save schedule change immediately
+                      setSaving(true);
+                      const res = await fetch(`/api/cms/${collection}/${doc.slug}`, {
+                        method: "PATCH",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ publishAt: iso ?? null }),
+                      });
+                      if (res.ok) {
+                        const updated = (await res.json()) as DocSnapshot;
+                        setDoc(updated);
+                        startTransition(() => router.refresh());
+                      }
+                      setSaving(false);
                     }}
                   />
                   <Button
