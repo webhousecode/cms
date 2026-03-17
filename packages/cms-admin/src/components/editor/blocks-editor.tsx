@@ -308,7 +308,7 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
               }}>
                 {config?.label ?? blockType}
               </span>
-              <span style={{ flex: 1, fontSize: "0.85rem", color: "var(--muted-foreground)" }}>
+              <span style={{ flex: 1, fontSize: "0.85rem", color: "var(--muted-foreground)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", minWidth: 0 }}>
                 {getBlockLabel(block, config)}
               </span>
               {!locked && (
