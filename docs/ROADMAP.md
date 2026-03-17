@@ -94,6 +94,7 @@ _Unique selling points and advanced features._
 | 29 | **F32 Template Registry** | Large | Marketplace of themes built on F42 boilerplates |
 | 30 | **F17 AI Content Index** | Small | llms.txt, AI-friendly sitemaps |
 | 31 | **F25 Storage Buckets** | Medium | S3, R2, Supabase storage for large media |
+| 31b | **F56 GitHub Live Content** | Large | Bidirectional repo sync — external AI agents can push content to CMS |
 
 ### Tier 4 — Growth & Enterprise (v2.0+)
 

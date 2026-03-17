@@ -72,6 +72,7 @@
 | F53 | [Drag & Drop Blocks Between Columns](#f53-drag-drop-blocks) | Planned | [docs/features/F53-drag-drop-blocks.md](features/F53-drag-drop-blocks.md) |
 | F54 | [Local AI Tunnel](#f54-local-ai-tunnel) | Planned | [docs/features/F54-local-ai-tunnel.md](features/F54-local-ai-tunnel.md) |
 | F55 | [Enhance Prompt](#f55-enhance-prompt) | Planned | [docs/features/F55-enhance-prompt.md](features/F55-enhance-prompt.md) |
+| F56 | [GitHub Live Content](#f56-github-live-content) | Idea | [docs/features/F56-github-live-content.md](features/F56-github-live-content.md) |
 
 ---
 
@@ -239,3 +240,6 @@ Use a Claude Code Max/Pro subscription as the AI backend for CMS admin during de
 
 ## F55 — Enhance Prompt
 One-click prompt improvement button (magic wand) in all AI input fields. Takes vague user prompts like "make the sliders work" and rewrites them into detailed, context-aware AI instructions using Haiku. Shows enhanced prompt for review before sending. For Interactives, extracts HTML structure summary (IDs, functions, inputs) so enhanced prompts reference specific elements. Editable meta-prompt in Settings → AI Prompts. Cheap (Haiku + 512 tokens) and fast (1-2 seconds).
+
+## F56 — GitHub Live Content
+Bidirectional sync between a GitHub repo and the CMS. Mount any repo (or subdirectory) as a content source — HTML, JS, Markdown, CSS, SVG files. Pull remote changes into local cache for instant editing and preview. Edit in CMS admin with syntax highlighting and push back. External AI agents (Claude Code, Cursor, etc.) can push to the repo and the CMS picks up changes automatically via webhook or polling. Turns any GitHub repo into a collaborative content workspace. Integrates with Interactives (F39) — HTML files from live content appear in the Interactives Manager.
