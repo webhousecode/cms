@@ -13,56 +13,8 @@ import { ZoomApplier } from "@/components/zoom-applier";
 import { cookies } from "next/headers";
 import { getSessionUser } from "@/lib/auth";
 import { getTeamMembers } from "@/lib/team";
-import { loadRegistry, findSite } from "@/lib/site-registry";
-import { redirect } from "next/navigation";
-import fs from "fs/promises";
-import path from "path";
-
-/**
- * Find the first site the user has team membership on.
- * Returns { orgId, siteId } or null.
- */
-async function findAccessibleSite(userId: string): Promise<{ orgId: string; siteId: string } | null> {
-  const registry = await loadRegistry();
-  if (!registry) return null; // single-site mode
-
-  const configPath = process.env.CMS_CONFIG_PATH;
-
-  for (const org of registry.orgs) {
-    for (const site of org.sites) {
-      let dataDir: string;
-      if (site.adapter === "github" || site.configPath.startsWith("github://")) {
-        const cacheBase = configPath
-          ? path.join(path.dirname(path.resolve(configPath)), ".cache")
-          : path.join(process.env.HOME ?? "/tmp", ".webhouse", ".cache");
-        dataDir = path.join(cacheBase, "sites", site.id, "_data");
-      } else {
-        const abs = path.resolve(site.configPath);
-        const projDir = path.dirname(abs);
-        const contentDir = site.contentDir ?? path.join(projDir, "content");
-        dataDir = path.join(contentDir, "..", "_data");
-      }
-      try {
-        const content = await fs.readFile(path.join(dataDir, "team.json"), "utf-8");
-        const members = JSON.parse(content) as { userId: string }[];
-        if (members.some((m) => m.userId === userId)) {
-          return { orgId: org.id, siteId: site.id };
-        }
-      } catch { /* no team.json */ }
-    }
-  }
-  return null;
-}
-
-function SiteRedirect({ siteId, orgId }: { siteId: string; orgId: string }) {
-  // Client component that sets cookies and redirects — rendered as <script> for instant execution
-  const script = `
-    document.cookie = "cms-active-site=${siteId};path=/;max-age=31536000;samesite=lax";
-    document.cookie = "cms-active-org=${orgId};path=/;max-age=31536000;samesite=lax";
-    window.location.href = "/admin";
-  `;
-  return <script dangerouslySetInnerHTML={{ __html: script }} />;
-}
+import { findFirstAccessibleSite } from "@/lib/team-access";
+import { NoAccessGate, ConnectGitHubGate, SiteRedirectGate } from "@/components/gate-screen";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const siteInfo = await getActiveSiteInfo();
@@ -77,72 +29,36 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     );
   }
 
-  // Check team membership on active site — redirect if no access
+  // ── Team membership gate ─────────────────────────────────
+  // Ensure the authenticated user is a member of the active site.
+  // If not, redirect them to a site they DO have access to.
   const cookieStore = await cookies();
   const session = await getSessionUser(cookieStore);
   if (session) {
     const members = await getTeamMembers();
     const isMember = members.some((m) => m.userId === session.sub);
     if (!isMember) {
-      // Try to find a site the user DOES have access to
-      const accessible = await findAccessibleSite(session.sub);
+      const accessible = await findFirstAccessibleSite(session.sub);
       if (accessible) {
-        // Client-side redirect that sets cookies then reloads
-        return (
-          <div style={{ minHeight: "100vh", background: "var(--background)" }}>
-            <SiteRedirect siteId={accessible.siteId} orgId={accessible.orgId} />
-          </div>
-        );
+        return <SiteRedirectGate siteId={accessible.siteId} orgId={accessible.orgId} />;
       }
-      // No access to any site
-      return (
-        <div style={{ minHeight: "100vh", background: "var(--background)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <div style={{ maxWidth: 480, padding: "2rem", textAlign: "center" }}>
-            <p style={{ fontSize: "0.9rem", color: "var(--muted-foreground)" }}>
-              You don&apos;t have access to any sites yet. Ask an admin to invite you.
-            </p>
-          </div>
-        </div>
-      );
+      return <NoAccessGate />;
     }
   }
 
-  // Normal workspace layout (single-site mode or site selected)
+  // ── Load site config ─────────────────────────────────────
   let config;
   try {
     config = await getAdminConfig();
   } catch (err) {
-    // GitHub-backed site without token — show connect prompt
-    const message = err instanceof Error ? err.message : "Failed to load site config";
+    const message = err instanceof Error ? err.message : "";
     if (message.includes("GitHub not connected")) {
-      return (
-        <div style={{ minHeight: "100vh", background: "var(--background)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <div style={{ maxWidth: 480, padding: "2rem", textAlign: "center" }}>
-            <p style={{ fontSize: "0.9rem", color: "var(--muted-foreground)", marginBottom: "1rem" }}>
-              This site requires GitHub access. Please connect your GitHub account to continue.
-            </p>
-            <a
-              href="/api/auth/github"
-              style={{
-                display: "inline-block",
-                padding: "0.6rem 1.5rem",
-                borderRadius: "8px",
-                background: "var(--primary)",
-                color: "var(--primary-foreground)",
-                fontWeight: 600,
-                fontSize: "0.875rem",
-                textDecoration: "none",
-              }}
-            >
-              Connect GitHub
-            </a>
-          </div>
-        </div>
-      );
+      return <ConnectGitHubGate />;
     }
-    throw err; // Re-throw other errors
+    throw err;
   }
 
+  // ── Normal workspace layout ──────────────────────────────
   const allCollections = config.collections.map((c) => ({
     name: c.name,
     label: c.label ?? c.name,
