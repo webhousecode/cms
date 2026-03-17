@@ -2,11 +2,17 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Eye, MousePointer2, Code, Save, Loader2, Copy, History, Settings2, Trash2, Globe, FileText, AlertTriangle, Sparkles } from "lucide-react";
+import { ArrowLeft, Eye, MousePointer2, Code, Save, Loader2, Copy, History, Settings2, Trash2, Globe, FileText, AlertTriangle, Sparkles, Pencil, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useTabs } from "@/lib/tabs-context";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const MonacoEditor = dynamic(() => import("@monaco-editor/react").then(m => m.default), { ssr: false });
 
@@ -529,41 +535,31 @@ export default function InteractiveDetailPage() {
             {cloning ? "Cloning…" : "Clone"}
           </Button>
 
-          {/* Visual Edit */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setMode("visual")}
-            className={`gap-1.5 ${mode === "visual" ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}
-            title="Visual Edit"
-          >
-            <MousePointer2 className="w-3.5 h-3.5" />
-            Visual
-          </Button>
-
-          {/* Code */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setMode("code")}
-            className={`gap-1.5 ${mode === "code" ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}
-            title="Code Editor"
-          >
-            <Code className="w-3.5 h-3.5" />
-            Code
-          </Button>
-
-          {/* AI Edit */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setMode("ai-edit")}
-            className={`gap-1.5 ${mode === "ai-edit" ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}
-            title="AI Edit — chat to modify"
-          >
-            <Sparkles className="w-3.5 h-3.5" />
-            AI
-          </Button>
+          {/* Edit dropdown — Visual / Code / AI */}
+          <DropdownMenu>
+            <DropdownMenuTrigger className={`flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-md transition-colors cursor-pointer ${["visual", "code", "ai-edit"].includes(mode) ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+                {mode === "visual" ? <MousePointer2 className="w-3.5 h-3.5" /> :
+                 mode === "code" ? <Code className="w-3.5 h-3.5" /> :
+                 mode === "ai-edit" ? <Sparkles className="w-3.5 h-3.5" /> :
+                 <Pencil className="w-3.5 h-3.5" />}
+                {mode === "visual" ? "Visual" : mode === "code" ? "Code" : mode === "ai-edit" ? "AI" : "Edit"}
+                <ChevronDown className="w-3 h-3 opacity-50" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-40">
+              <DropdownMenuItem onClick={() => setMode("visual")} className={mode === "visual" ? "bg-accent" : ""}>
+                <MousePointer2 className="mr-2 h-4 w-4 text-muted-foreground" />
+                Visual
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setMode("code")} className={mode === "code" ? "bg-accent" : ""}>
+                <Code className="mr-2 h-4 w-4 text-muted-foreground" />
+                Code
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setMode("ai-edit")} className={mode === "ai-edit" ? "bg-accent" : ""}>
+                <Sparkles className="mr-2 h-4 w-4 text-muted-foreground" />
+                AI
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           {/* History */}
           <Button
