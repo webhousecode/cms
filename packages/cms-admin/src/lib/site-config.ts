@@ -1,5 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
+import crypto from "crypto";
 import { getActiveSitePaths } from "./site-paths";
 
 export interface SiteConfig {
@@ -24,6 +25,8 @@ export interface SiteConfig {
   emailFrom: string;
   /** Display name for outgoing emails */
   emailFromName: string;
+  /** Secret used to generate per-user calendar feed tokens */
+  calendarSecret: string;
 }
 
 async function getConfigPath(): Promise<string> {
@@ -49,6 +52,7 @@ async function defaults(): Promise<SiteConfig> {
     resendApiKey: "",
     emailFrom: "",
     emailFromName: "webhouse.app",
+    calendarSecret: crypto.randomBytes(32).toString("hex"),
   };
 }
 
@@ -61,6 +65,21 @@ export async function readSiteConfig(): Promise<SiteConfig> {
   } catch {
     return defaults();
   }
+}
+
+/** Generate a per-user calendar feed token: HMAC(calendarSecret, userId) */
+export function generateCalendarToken(secret: string, userId: string): string {
+  return crypto.createHmac("sha256", secret).update(userId).digest("hex");
+}
+
+/** Validate a calendar feed token against all team members */
+export async function validateCalendarToken(token: string): Promise<boolean> {
+  const config = await readSiteConfig();
+  if (!config.calendarSecret) return false;
+  // Import team dynamically to avoid circular deps
+  const { getTeamMembers } = await import("./team");
+  const members = await getTeamMembers();
+  return members.some((m) => generateCalendarToken(config.calendarSecret, m.userId) === token);
 }
 
 export async function writeSiteConfig(patch: Partial<SiteConfig>): Promise<SiteConfig> {

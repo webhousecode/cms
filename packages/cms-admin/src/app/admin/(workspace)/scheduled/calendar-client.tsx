@@ -58,7 +58,7 @@ function isSameDay(a: string, b: string): boolean {
 
 /* ─── Component ──────────────────────────────────────────────── */
 
-export function ScheduledCalendar({ events }: { events: ScheduledEvent[] }) {
+export function ScheduledCalendar({ events, calendarToken }: { events: ScheduledEvent[]; calendarToken: string }) {
   const today = new Date();
   const todayKey = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
 
@@ -138,7 +138,7 @@ export function ScheduledCalendar({ events }: { events: ScheduledEvent[] }) {
             </div>
             <button
               type="button"
-              onClick={() => { window.location.href = `webcal://${window.location.host}/api/cms/scheduled/calendar.ics`; }}
+              onClick={() => { window.location.href = `webcal://${window.location.host}/api/cms/scheduled/calendar.ics?token=${calendarToken}`; }}
               title="Subscribe in Apple Calendar"
               className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md border border-border hover:bg-secondary transition-colors text-muted-foreground"
             >

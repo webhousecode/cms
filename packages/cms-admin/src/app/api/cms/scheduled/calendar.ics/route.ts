@@ -1,12 +1,20 @@
 import { getAdminCms, getAdminConfig } from "@/lib/cms";
+import { validateCalendarToken } from "@/lib/site-config";
 import { NextResponse } from "next/server";
 
 /**
- * GET /api/cms/scheduled/calendar.ics
+ * GET /api/cms/scheduled/calendar.ics?token=<per-user-hmac>
  * Returns an iCalendar feed of all scheduled publish/unpublish events.
  * Subscribe in Apple Calendar, Google Calendar, etc.
  */
 export async function GET(request: Request) {
+  // Validate per-user token
+  const url = new URL(request.url);
+  const token = url.searchParams.get("token");
+  if (!token || !(await validateCalendarToken(token))) {
+    return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+  }
+
   try {
     const [cms, config] = await Promise.all([getAdminCms(), getAdminConfig()]);
     const baseUrl = new URL(request.url).origin;
