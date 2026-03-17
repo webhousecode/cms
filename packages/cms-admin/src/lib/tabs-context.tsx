@@ -48,9 +48,14 @@ function pathTitle(path: string): string {
 
 const STORE_KEY_BASE = "cms-admin-tabs-v1";
 
-/** Per-user store key — falls back to shared key until userId is known */
+/** Per-user-per-site store key */
 function storeKey(userId?: string | null): string {
-  return userId ? `${STORE_KEY_BASE}:${userId}` : STORE_KEY_BASE;
+  const siteId = typeof document !== "undefined"
+    ? (document.cookie.match(/(?:^|; )cms-active-site=([^;]*)/)?.[1] ?? "")
+    : "";
+  if (userId && siteId) return `${STORE_KEY_BASE}:${userId}:${siteId}`;
+  if (userId) return `${STORE_KEY_BASE}:${userId}`;
+  return STORE_KEY_BASE;
 }
 
 function load(userId?: string | null): { tabs: Tab[]; activeId: string | null } | null {
