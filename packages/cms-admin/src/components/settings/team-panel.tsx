@@ -107,6 +107,7 @@ export function TeamPanel() {
   const [inviting, setInviting] = useState(false);
   const [inviteError, setInviteError] = useState("");
   const [lastInviteLink, setLastInviteLink] = useState("");
+  const [emailStatus, setEmailStatus] = useState<{ sent: boolean; error?: string } | null>(null);
 
   // Delete confirmation
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
@@ -144,6 +145,7 @@ export function TeamPanel() {
     setInviting(true);
     setInviteError("");
     setLastInviteLink("");
+    setEmailStatus(null);
     try {
       const res = await fetch("/api/admin/invitations", {
         method: "POST",
@@ -158,6 +160,7 @@ export function TeamPanel() {
       // Build invite link
       const link = `${window.location.origin}/admin/invite/${data.invitation.token}`;
       setLastInviteLink(link);
+      setEmailStatus({ sent: data.emailSent ?? false, error: data.emailError });
       setInviteEmail("");
       load();
     } catch {
@@ -261,6 +264,18 @@ export function TeamPanel() {
             </code>
             <CopyButton text={lastInviteLink} />
           </div>
+        )}
+        {lastInviteLink && emailStatus && (
+          <p
+            className="text-xs mt-1.5"
+            style={{ color: emailStatus.sent ? "var(--chart-2, #22c55e)" : "var(--muted-foreground)" }}
+          >
+            {emailStatus.sent
+              ? "Invitation email sent!"
+              : emailStatus.error
+                ? `Email not sent: ${emailStatus.error}`
+                : "Email not configured — share the link manually. Set up Resend in Settings → Email."}
+          </p>
         )}
       </div>
 

@@ -18,6 +18,12 @@ export interface SiteConfig {
   aiContentModel: string;
   /** Default max tokens for content writing */
   aiContentMaxTokens: number;
+  /** Resend API key for transactional email */
+  resendApiKey: string;
+  /** Sender email for outgoing emails (must be verified in Resend) */
+  emailFrom: string;
+  /** Display name for outgoing emails */
+  emailFromName: string;
 }
 
 async function getConfigPath(): Promise<string> {
@@ -40,6 +46,9 @@ async function defaults(): Promise<SiteConfig> {
     aiInteractivesMaxTokens: 16384,
     aiContentModel: "claude-haiku-4-5-20251001",
     aiContentMaxTokens: 4096,
+    resendApiKey: "",
+    emailFrom: "",
+    emailFromName: "webhouse.app",
   };
 }
 

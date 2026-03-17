@@ -9,6 +9,7 @@ import { MCPSettingsPanel } from "@/components/settings/mcp-settings-panel";
 import { AIPromptsPanel } from "@/components/settings/ai-prompts-panel";
 import { AIDefaultsPanel } from "@/components/settings/ai-defaults-panel";
 import { TeamPanel } from "@/components/settings/team-panel";
+import { EmailSettingsPanel } from "@/components/settings/email-settings-panel";
 import { readSiteConfig } from "@/lib/site-config";
 import { readBrandVoice } from "@/lib/brand-voice";
 
@@ -29,6 +30,7 @@ export default async function SettingsPage({
   const tabs = [
     { id: "general",     label: "General" },
     { id: "team",        label: "Team" },
+    { id: "email",       label: "Email" },
     { id: "ai",          label: "AI" },
     { id: "brand-voice", label: "Brand Voice" },
     { id: "mcp",         label: "MCP" },
@@ -82,6 +84,19 @@ export default async function SettingsPage({
               </p>
             </div>
             <TeamPanel />
+          </div>
+        )}
+
+        {/* Email tab */}
+        {tab === "email" && (
+          <div className="max-w-lg">
+            <div className="mb-6">
+              <h2 className="text-base font-semibold text-foreground">Email</h2>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                Configure transactional email for invitations and notifications.
+              </p>
+            </div>
+            <EmailSettingsPanel />
           </div>
         )}
 
