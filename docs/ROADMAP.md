@@ -69,6 +69,7 @@ _Makes us stand out. Customers expect these from a modern CMS._
 | 16 | **F35 Webhooks** | Small | Generic outbound events for integrations. F41 revalidation is a specific case. |
 | 17 | **F40 Drag and Drop Tabs** | Small | Polish. Expected UX in a tabbed interface. |
 | 17b | **F52 Custom Column Presets** | Medium | Visual preset editor in Settings. Drag-resize columns. |
+| 17c | **F53 Drag & Drop Blocks** | Medium | Drag blocks between columns with @dnd-kit. |
 | 18 | **F04 MCP Enhancements** | Small | Already in progress. More tools, better context. |
 | 19 | **F49 Incremental Builds** | Small | Performance. Only matters at scale (100+ pages). |
 | 20 | **F51 Admin AI Assistant** | Medium | Persistent AI chat in admin. Executes MCP tools. Huge differentiator. |
