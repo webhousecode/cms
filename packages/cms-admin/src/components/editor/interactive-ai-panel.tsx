@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, KeyboardEvent } from "react";
-import { Sparkles, Send, Copy, Check, Replace } from "lucide-react";
+import { Sparkles, Send, Copy, Check, Replace, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface Message {
@@ -58,15 +58,18 @@ export function InteractiveAIPanel({ interactiveId, title, content, onApply }: P
         signal: abortRef.current.signal,
         body: JSON.stringify({
           message: text,
+          model: "claude-sonnet-4-5-20250514",
+          maxTokens: 16384,
           systemPrompt: [
             "You are an expert web developer editing an interactive HTML component.",
             `The component is called "${title}" (ID: ${interactiveId}).`,
             "When the user asks you to modify the component, respond with the COMPLETE updated HTML.",
+            "CRITICAL: You MUST output the ENTIRE HTML document from <!DOCTYPE html> to </html>. Never truncate, abbreviate, or use comments like '... rest of code ...' or '/* same as before */'. Every single line must be included.",
             "Wrap your HTML output in ```html code fences so it can be extracted.",
             "If the user asks a question (not a modification), answer concisely without code.",
             "The component is a standalone HTML document with inline <style> and <script> tags.",
             "You may use any web technology: CSS animations, Canvas, SVG, Chart.js (via CDN), D3, GSAP, etc.",
-            "Always produce clean, well-structured HTML with good UX.",
+            "Always produce clean, well-structured, COMPLETE and WORKING HTML with good UX.",
           ].join("\n"),
           context: `Current HTML content of the interactive:\n\`\`\`html\n${content}\n\`\`\``,
         }),
@@ -120,27 +123,31 @@ export function InteractiveAIPanel({ interactiveId, title, content, onApply }: P
     }
   }
 
-  /** Extract HTML from code fences in the message — handles various fence formats */
+  /** Extract HTML from code fences in the message — handles various fence formats.
+   *  Returns null if the HTML appears truncated (missing closing tags). */
   function extractHtml(text: string): string | null {
+    let html: string | null = null;
+
     // Try ```html ... ``` first (complete fences)
     const fenced = text.match(/```(?:html)?\s*\n([\s\S]*?)```/);
-    if (fenced) return fenced[1].trim();
-
-    // Handle incomplete fences (missing closing ```) — common during streaming or truncation
-    const openFence = text.match(/```(?:html)?\s*\n([\s\S]+)$/);
-    if (openFence) {
-      const content = openFence[1].trim();
-      // Only use if it looks like HTML
-      if (content.startsWith("<") || content.startsWith("<!")) return content;
+    if (fenced) {
+      html = fenced[1].trim();
+    } else {
+      // If the entire response looks like HTML (starts with < or <!), use it directly
+      const trimmed = text.trim();
+      if (trimmed.startsWith("<!") || trimmed.startsWith("<html") || trimmed.startsWith("<div") || trimmed.startsWith("<style") || trimmed.startsWith("<head") || trimmed.startsWith("<body")) {
+        html = trimmed;
+      }
     }
 
-    // If the entire response looks like HTML (starts with < or <!), use it directly
-    const trimmed = text.trim();
-    if (trimmed.startsWith("<!") || trimmed.startsWith("<html") || trimmed.startsWith("<div") || trimmed.startsWith("<style") || trimmed.startsWith("<head") || trimmed.startsWith("<body")) {
-      return trimmed;
-    }
+    if (!html) return null;
 
-    return null;
+    // Safety check: reject truncated HTML — must end with </html> or </script> or </body> or similar closing tag
+    // This prevents applying broken code that was cut off by token limits
+    if (html.includes("<html") && !html.includes("</html>")) return null;
+    if (html.includes("<body") && !html.includes("</body>")) return null;
+
+    return html;
   }
 
   async function copyMessage(text: string, idx: number) {
@@ -214,24 +221,37 @@ export function InteractiveAIPanel({ interactiveId, title, content, onApply }: P
             {msg.content || (streaming && i === messages.length - 1 ? "Thinking…" : "")}
 
             {/* Action buttons for assistant messages with HTML */}
-            {msg.role === "assistant" && msg.content && !streaming && (
-              <div style={{ display: "flex", gap: "0.375rem", marginTop: "0.5rem", justifyContent: "flex-end" }}>
-                <button
-                  onClick={() => copyMessage(msg.content, i)}
-                  style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", padding: "0.25rem 0.5rem", borderRadius: "5px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.65rem", cursor: "pointer" }}
-                >
-                  {copiedIdx === i ? <><Check style={{ width: "0.6rem", height: "0.6rem" }} /> Copied</> : <><Copy style={{ width: "0.6rem", height: "0.6rem" }} /> Copy</>}
-                </button>
-                {extractHtml(msg.content) && (
-                  <button
-                    onClick={() => applyHtml(msg.content)}
-                    style={{ display: "inline-flex", alignItems: "center", gap: "0.375rem", padding: "0.375rem 0.75rem", borderRadius: "6px", border: "none", background: "var(--primary)", color: "var(--primary-foreground)", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer" }}
-                  >
-                    <Replace style={{ width: "0.75rem", height: "0.75rem" }} /> Apply Changes
-                  </button>
-                )}
-              </div>
-            )}
+            {msg.role === "assistant" && msg.content && !streaming && (() => {
+              const html = extractHtml(msg.content);
+              const hasHtmlBlock = /```(?:html)?\s*\n/.test(msg.content) || msg.content.trim().startsWith("<!");
+              const isTruncated = hasHtmlBlock && !html;
+              return (
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem", marginTop: "0.5rem" }}>
+                  {isTruncated && (
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.375rem", padding: "0.5rem 0.625rem", borderRadius: "6px", background: "rgba(234,179,8,0.1)", border: "1px solid rgba(234,179,8,0.3)", fontSize: "0.7rem", color: "#eab308" }}>
+                      <AlertTriangle style={{ width: "0.75rem", height: "0.75rem", flexShrink: 0 }} />
+                      Output was truncated — the HTML is incomplete. Try asking AI to make only the specific change instead of rewriting everything.
+                    </div>
+                  )}
+                  <div style={{ display: "flex", gap: "0.375rem", justifyContent: "flex-end" }}>
+                    <button
+                      onClick={() => copyMessage(msg.content, i)}
+                      style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", padding: "0.25rem 0.5rem", borderRadius: "5px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.65rem", cursor: "pointer" }}
+                    >
+                      {copiedIdx === i ? <><Check style={{ width: "0.6rem", height: "0.6rem" }} /> Copied</> : <><Copy style={{ width: "0.6rem", height: "0.6rem" }} /> Copy</>}
+                    </button>
+                    {html && (
+                      <button
+                        onClick={() => applyHtml(msg.content)}
+                        style={{ display: "inline-flex", alignItems: "center", gap: "0.375rem", padding: "0.375rem 0.75rem", borderRadius: "6px", border: "none", background: "var(--primary)", color: "var(--primary-foreground)", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer" }}
+                      >
+                        <Replace style={{ width: "0.75rem", height: "0.75rem" }} /> Apply Changes
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         ))}
       </div>

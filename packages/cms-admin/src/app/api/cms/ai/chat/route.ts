@@ -11,13 +11,15 @@ export async function POST(request: NextRequest) {
   const client = new Anthropic({ apiKey });
 
   try {
-    const { message, docData, collectionName, fields, systemPrompt: customSystem, context } = (await request.json()) as {
+    const { message, docData, collectionName, fields, systemPrompt: customSystem, context, maxTokens, model: requestedModel } = (await request.json()) as {
       message?: string;
       docData?: Record<string, unknown>;
       collectionName?: string;
       fields?: Array<{ name: string; type: string; label?: string }>;
       systemPrompt?: string;
       context?: string;
+      maxTokens?: number;
+      model?: string;
     };
     if (!message) {
       return NextResponse.json({ error: "message required" }, { status: 400 });
@@ -56,9 +58,17 @@ ${contentContext}`;
         ? `Current document content:\n${JSON.stringify(docData, null, 2)}\n\n---\n\n${message}`
         : message;
 
+    // Allow callers to request higher token limits (e.g. interactive editing needs much more than content writing)
+    // and optionally a different model (sonnet for complex code generation)
+    const ALLOWED_MODELS = ["claude-haiku-4-5-20251001", "claude-sonnet-4-5-20250514"] as const;
+    const resolvedModel = requestedModel && ALLOWED_MODELS.includes(requestedModel as typeof ALLOWED_MODELS[number])
+      ? requestedModel
+      : "claude-haiku-4-5-20251001";
+    const resolvedMaxTokens = Math.min(Math.max(maxTokens ?? 4096, 256), 16384);
+
     const stream = await client.messages.stream({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 4096,
+      model: resolvedModel,
+      max_tokens: resolvedMaxTokens,
       system: systemPrompt,
       messages: [{ role: "user", content: contextMessage }],
     });

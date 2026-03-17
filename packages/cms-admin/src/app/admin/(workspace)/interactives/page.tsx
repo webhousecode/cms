@@ -155,12 +155,16 @@ export default function InteractivesPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: prompt,
+          model: "claude-sonnet-4-5-20250514",
+          maxTokens: 16384,
           systemPrompt: [
             "Generate a standalone HTML file with inline CSS and JavaScript.",
             "The HTML should be a complete, self-contained interactive component.",
             "Include <!DOCTYPE html>, <html>, <head>, <body> tags.",
             "Use modern CSS (flexbox/grid), vanilla JS or Chart.js via CDN if charts are needed.",
             "Make it visually polished with smooth animations and good UX.",
+            "CRITICAL: All interactive elements MUST actually work. If there are sliders, they must update values. If there are buttons, they must do something. If there are calculations, they must compute correctly. Never create non-functional UI.",
+            "CRITICAL: Output the COMPLETE HTML document. Never truncate or abbreviate.",
             "Wrap your response in ```html code fences.",
           ].join("\n"),
         }),
