@@ -80,23 +80,6 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
     return () => { document.removeEventListener("keydown", onKey); document.removeEventListener("mousedown", onClick); };
   }, [showPicker, pickerHighlight, allowedBlockNames]);
 
-  // "A" key opens picker when not in an input
-  useEffect(() => {
-    if (locked) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (showPicker) return;
-      const tag = (e.target as HTMLElement)?.tagName;
-      const editable = (e.target as HTMLElement)?.isContentEditable;
-      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || editable) return;
-      if (e.key === "a" && !e.metaKey && !e.ctrlKey && !e.altKey) {
-        e.preventDefault();
-        setShowPicker(true);
-        setPickerHighlight(0);
-      }
-    };
-    document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
-  }, [locked, showPicker]);
 
   function setExpandedPersist(updater: (prev: Record<number, boolean>) => Record<number, boolean>) {
     if (controlled) {
@@ -372,7 +355,7 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
         <div style={{ position: "relative" }} ref={pickerContainerRef}>
           <button
             type="button"
-            onClick={() => setShowPicker((p) => !p)}
+            onClick={() => { setShowPicker((p) => { if (!p) setPickerHighlight(0); return !p; }); }}
             style={{
               display: "flex",
               alignItems: "center",
