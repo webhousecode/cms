@@ -262,8 +262,12 @@ function ScheduleButton({ publishAt, onSchedule, label = "Scheduled", defaultLab
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState(() => {
     if (!publishAt) return "";
-    // datetime-local input expects "YYYY-MM-DDTHH:MM"
-    try { return new Date(publishAt).toISOString().slice(0, 16); } catch { return ""; }
+    // datetime-local input expects "YYYY-MM-DDTHH:MM" in LOCAL time
+    try {
+      const d = new Date(publishAt);
+      const pad = (n: number) => String(n).padStart(2, "0");
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    } catch { return ""; }
   });
   const ref = useRef<HTMLDivElement>(null);
 
