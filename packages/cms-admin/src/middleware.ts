@@ -20,6 +20,7 @@ const PUBLIC_PREFIXES_ADMIN = [
 
 const PUBLIC_PREFIXES = [
   "/api/auth/",
+  "/api/cms/scheduled/calendar.ics",
   "/_next/",
   "/favicon",
 ];
