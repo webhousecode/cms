@@ -76,6 +76,14 @@ function RichtextCollapsible({ field, value, onChange, locked, blocksConfig, def
 }) {
   const [open, setOpen] = useState(defaultOpen);
 
+  // Load persisted state after hydration
+  useEffect(() => {
+    try {
+      const s = localStorage.getItem(storageKey);
+      if (s !== null) setOpen(s === "1");
+    } catch {}
+  }, [storageKey]);
+
   function toggle() {
     const next = !open;
     setOpen(next);
@@ -1143,10 +1151,6 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
             // Richtext fields get a collapsible TEXT header (like blocks)
             if (field.type === "richtext") {
               const rtKey = `cms-rt-open:${collection}:${doc.slug}:${field.name}`;
-              const isRtOpen = (() => {
-                if (typeof window === "undefined") return true;
-                try { const s = localStorage.getItem(rtKey); return s === null ? true : s === "1"; } catch { return true; }
-              })();
               return (
                 <RichtextCollapsible
                   key={field.name}
@@ -1155,7 +1159,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
                   onChange={(val) => updateField(field.name, val)}
                   locked={isLocked}
                   blocksConfig={blocksConfig}
-                  defaultOpen={isRtOpen}
+                  defaultOpen={true}
                   storageKey={rtKey}
                   collection={collection}
                   slug={doc.slug}
