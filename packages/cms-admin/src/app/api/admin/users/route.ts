@@ -10,11 +10,15 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  // Auto-bootstrap: if team.json is empty, add current user as admin
+  // Auto-bootstrap: if team.json is empty, add the OLDEST CMS user as admin
   let members = await getTeamMembers();
   if (members.length === 0) {
-    await addTeamMember(session.sub, "admin");
-    members = await getTeamMembers();
+    const allUsers = await getUsers();
+    const oldest = [...allUsers].sort((a, b) => (a.createdAt ?? "").localeCompare(b.createdAt ?? ""))[0];
+    if (oldest) {
+      await addTeamMember(oldest.id, "admin");
+      members = await getTeamMembers();
+    }
   }
 
   const myMembership = members.find((m) => m.userId === session.sub);

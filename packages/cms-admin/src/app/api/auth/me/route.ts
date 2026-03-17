@@ -19,10 +19,14 @@ export async function GET(request: NextRequest) {
 
   // Get site-specific role from team membership
   let members = await getTeamMembers();
-  // Auto-bootstrap: if team.json is empty, first user becomes admin
-  if (members.length === 0) {
-    await addTeamMember(payload.sub, "admin");
-    members = await getTeamMembers();
+  // Auto-bootstrap: if team.json is empty, add the OLDEST CMS user as admin
+  // (the one who ran setup). Never auto-add a random user.
+  if (members.length === 0 && users.length > 0) {
+    const oldest = [...users].sort((a, b) => (a.createdAt ?? "").localeCompare(b.createdAt ?? ""))[0];
+    if (oldest) {
+      await addTeamMember(oldest.id, "admin");
+      members = await getTeamMembers();
+    }
   }
   const membership = members.find((m) => m.userId === payload.sub);
 
