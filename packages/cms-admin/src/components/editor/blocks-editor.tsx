@@ -55,6 +55,8 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
   const [showPicker, setShowPicker] = useState(false);
   const [confirmRemoveIdx, setConfirmRemoveIdx] = useState<number | null>(null);
   const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pickerContainerRef = useRef<HTMLDivElement>(null);
+  const [openUpward, setOpenUpward] = useState(false);
 
   function setExpandedPersist(updater: (prev: Record<number, boolean>) => Record<number, boolean>) {
     if (controlled) {
@@ -327,10 +329,17 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
       })}
       {/* Add block */}
       {!locked && (
-        <div style={{ position: "relative" }}>
+        <div style={{ position: "relative" }} ref={pickerContainerRef}>
           <button
             type="button"
-            onClick={() => setShowPicker((p) => !p)}
+            onClick={() => {
+              if (!showPicker && pickerContainerRef.current) {
+                const rect = pickerContainerRef.current.getBoundingClientRect();
+                const spaceBelow = window.innerHeight - rect.bottom;
+                setOpenUpward(spaceBelow < 250);
+              }
+              setShowPicker((p) => !p);
+            }}
             style={{
               display: "flex",
               alignItems: "center",
@@ -366,7 +375,7 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
           {showPicker && (
             <div style={{
               position: "absolute",
-              bottom: "calc(100% + 4px)",
+              ...(openUpward ? { bottom: "calc(100% + 4px)" } : { top: "calc(100% + 4px)" }),
               left: 0,
               zIndex: 50,
               background: "var(--popover)",
