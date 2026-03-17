@@ -31,16 +31,17 @@ export async function POST(request: NextRequest) {
     if (!user) {
       // Create CMS-wide user account
       user = await createUser(invitation.email, body.password, body.name, {
-        role: invitation.role, // default CMS-wide role
+        role: invitation.role,
         invitedBy: invitation.createdBy,
       });
     }
 
-    // Add as team member on this site
-    await addTeamMember(user.id, invitation.role, invitation.createdBy);
+    // Add as team member on the site where the invitation was created
+    // Uses siteDataDir from invitation so it works without cookies
+    await addTeamMember(user.id, invitation.role, invitation.createdBy, invitation.siteDataDir);
 
     // Mark invitation as accepted
-    await markAccepted(body.token);
+    await markAccepted(body.token, invitation.siteDataDir);
 
     // Create session token and set cookie
     const sessionToken = await createToken(user);

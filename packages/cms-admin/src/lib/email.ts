@@ -81,9 +81,11 @@ export function renderInviteEmail(opts: {
 
         <!-- Site name badge -->
         <div style="text-align:center;margin-bottom:28px;">
-          <span style="display:inline-block;padding:8px 20px;border-radius:8px;background:#1a1a1a;border:1px solid #333;font-size:16px;font-weight:600;color:#fafafa;letter-spacing:0.01em;">
-            ${siteName}
-          </span>
+          <span style="display:inline-block;padding:8px 20px;border-radius:8px;background:#1a1a1a;border:1px solid #333;font-size:16px;font-weight:700;letter-spacing:0.01em;">${
+            siteName.includes(".")
+              ? `<span style="color:#fafafa;">${siteName.slice(0, siteName.lastIndexOf("."))}</span><span style="color:#F7BB2E;">${siteName.slice(siteName.lastIndexOf("."))}</span>`
+              : `<span style="color:#fafafa;">${siteName}</span>`
+          }</span>
         </div>
 
         <!-- Role pill -->

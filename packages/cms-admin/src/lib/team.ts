@@ -38,13 +38,24 @@ async function writeTeam(members: TeamMember[]): Promise<void> {
   await fs.writeFile(filePath, JSON.stringify(members, null, 2));
 }
 
-export async function addTeamMember(userId: string, role: UserRole, addedBy?: string): Promise<TeamMember> {
-  const members = await getTeamMembers();
+export async function addTeamMember(userId: string, role: UserRole, addedBy?: string, siteDataDir?: string): Promise<TeamMember> {
+  const filePath = siteDataDir
+    ? path.join(siteDataDir, "team.json")
+    : await getTeamFilePath();
+
+  let members: TeamMember[];
+  try {
+    const content = await fs.readFile(filePath, "utf-8");
+    members = JSON.parse(content) as TeamMember[];
+  } catch {
+    members = [];
+  }
+
   const existing = members.find((m) => m.userId === userId);
   if (existing) {
-    // Update role if already member
     existing.role = role;
-    await writeTeam(members);
+    await fs.mkdir(path.dirname(filePath), { recursive: true });
+    await fs.writeFile(filePath, JSON.stringify(members, null, 2));
     return existing;
   }
 
@@ -55,7 +66,8 @@ export async function addTeamMember(userId: string, role: UserRole, addedBy?: st
     ...(addedBy ? { addedBy } : {}),
   };
   members.push(member);
-  await writeTeam(members);
+  await fs.mkdir(path.dirname(filePath), { recursive: true });
+  await fs.writeFile(filePath, JSON.stringify(members, null, 2));
   return member;
 }
 
