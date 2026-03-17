@@ -59,6 +59,7 @@ export function AppSidebar({ collections }: Props) {
   const [readyCount, setReadyCount] = useState(0);
   const [budgetSpent, setBudgetSpent] = useState(0);
   const [budgetTotal, setBudgetTotal] = useState(50);
+  const [siteRole, setSiteRole] = useState<string | null>(null);
 
   // Listen for logo icon preference changes
   useEffect(() => {
@@ -75,6 +76,13 @@ export function AppSidebar({ collections }: Props) {
       .then((r) => r.json())
       .then((stats: Record<string, number>) => {
         setReadyCount(stats.ready ?? 0);
+      })
+      .catch(() => {});
+
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((data: { user?: { siteRole?: string } }) => {
+        setSiteRole(data.user?.siteRole ?? null);
       })
       .catch(() => {});
 
@@ -337,29 +345,33 @@ export function AppSidebar({ collections }: Props) {
       </SidebarContent>
 
       <SidebarFooter style={{ paddingBottom: "3rem" }}>
-        {/* Site Settings + Trash */}
+        {/* Site Settings + Trash — role-gated */}
         <SidebarGroup style={{ padding: "0.25rem 0.5rem 0" }}>
           <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                isActive={pathname.startsWith("/admin/settings")}
-                tooltip="Site Settings"
-                render={<Link href="/admin/settings" />}
-              >
-                <Settings2 className="!w-5 !h-5" />
-                <span>Site Settings</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                isActive={pathname === "/admin/trash"}
-                tooltip="Trash"
-                render={<Link href="/admin/trash" />}
-              >
-                <Trash2 className="!w-5 !h-5" />
-                <span>Trash</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+            {siteRole === "admin" && (
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={pathname.startsWith("/admin/settings")}
+                  tooltip="Site Settings"
+                  render={<Link href="/admin/settings" />}
+                >
+                  <Settings2 className="!w-5 !h-5" />
+                  <span>Site Settings</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
+            {siteRole !== "viewer" && (
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={pathname === "/admin/trash"}
+                  tooltip="Trash"
+                  render={<Link href="/admin/trash" />}
+                >
+                  <Trash2 className="!w-5 !h-5" />
+                  <span>Trash</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
           </SidebarMenu>
         </SidebarGroup>
 

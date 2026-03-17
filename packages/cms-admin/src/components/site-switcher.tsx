@@ -44,6 +44,7 @@ export function SiteSwitcher() {
   const [activeOrgId, setActiveOrgId] = useState<string>("");
   const [activeSiteId, setActiveSiteId] = useState<string>("");
   const [loaded, setLoaded] = useState(false);
+  const [siteRole, setSiteRole] = useState<string | null>(null);
 
   const fetchRegistry = useCallback(async () => {
     try {
@@ -63,6 +64,14 @@ export function SiteSwitcher() {
 
   useEffect(() => { fetchRegistry(); }, [fetchRegistry]);
 
+  // Fetch site role (re-fetch when active site changes)
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((d: { user?: { siteRole?: string } }) => setSiteRole(d.user?.siteRole ?? null))
+      .catch(() => {});
+  }, [activeSiteId]);
+
   useEffect(() => {
     function handleChange() { fetchRegistry(); }
     window.addEventListener("cms-registry-change", handleChange);
@@ -74,6 +83,7 @@ export function SiteSwitcher() {
   const activeOrg = registry.orgs.find((o) => o.id === activeOrgId) ?? registry.orgs[0];
   const sites = activeOrg?.sites ?? [];
   const activeSite = sites.find((s) => s.id === activeSiteId) ?? sites[0];
+  const isAdmin = siteRole === "admin";
 
   // Don't show if only one site (or none)
   if (sites.length <= 1) return null;
@@ -101,15 +111,19 @@ export function SiteSwitcher() {
             {site.id === activeSiteId && <Check className="ml-auto h-4 w-4" />}
           </DropdownMenuItem>
         ))}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem className="text-muted-foreground" onClick={() => { router.push("/admin/sites"); }}>
-          <LayoutGrid className="mr-2 h-4 w-4" />
-          All sites
-        </DropdownMenuItem>
-        <DropdownMenuItem className="text-muted-foreground" onClick={() => { router.push("/admin/sites/new"); }}>
-          <Plus className="mr-2 h-4 w-4" />
-          New site
-        </DropdownMenuItem>
+        {isAdmin && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem className="text-muted-foreground" onClick={() => { router.push("/admin/sites"); }}>
+              <LayoutGrid className="mr-2 h-4 w-4" />
+              All sites
+            </DropdownMenuItem>
+            <DropdownMenuItem className="text-muted-foreground" onClick={() => { router.push("/admin/sites/new"); }}>
+              <Plus className="mr-2 h-4 w-4" />
+              New site
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
