@@ -366,7 +366,7 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
           {showPicker && (
             <div style={{
               position: "absolute",
-              top: "calc(100% + 4px)",
+              bottom: "calc(100% + 4px)",
               left: 0,
               zIndex: 50,
               background: "var(--popover)",
