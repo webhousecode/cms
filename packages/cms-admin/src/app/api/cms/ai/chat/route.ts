@@ -7,7 +7,13 @@ import { readSiteConfig } from "@/lib/site-config";
 // Allow long-running streaming responses (Sonnet + large context can take 2+ minutes)
 export const maxDuration = 300;
 
-const ALLOWED_MODELS = ["claude-haiku-4-5-20251001", "claude-sonnet-4-20250514"] as const;
+const ALLOWED_MODELS = [
+  "claude-haiku-4-5-20251001",
+  "claude-sonnet-4-20250514",
+  "claude-sonnet-4-6",
+  "claude-opus-4-20250514",
+  "claude-opus-4-6",
+] as const;
 
 export async function POST(request: NextRequest) {
   const apiKey = await getApiKey("anthropic");
