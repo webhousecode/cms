@@ -136,14 +136,15 @@ export function ScheduledCalendar({ events }: { events: ScheduledEvent[] }) {
                 </button>
               ))}
             </div>
-            <a
-              href={typeof window !== "undefined" ? `webcal://${window.location.host}/api/cms/scheduled/calendar.ics` : "/api/cms/scheduled/calendar.ics"}
+            <button
+              type="button"
+              onClick={() => { window.location.href = `webcal://${window.location.host}/api/cms/scheduled/calendar.ics`; }}
               title="Subscribe in Apple Calendar"
               className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md border border-border hover:bg-secondary transition-colors text-muted-foreground"
             >
               <Calendar className="w-3.5 h-3.5" />
               Subscribe
-            </a>
+            </button>
           </div>
         </div>
 
