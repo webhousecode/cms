@@ -6,9 +6,10 @@ import { NextResponse } from "next/server";
  * Returns an iCalendar feed of all scheduled publish/unpublish events.
  * Subscribe in Apple Calendar, Google Calendar, etc.
  */
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const [cms, config] = await Promise.all([getAdminCms(), getAdminConfig()]);
+    const baseUrl = new URL(request.url).origin;
 
     const events: string[] = [];
 
@@ -19,6 +20,7 @@ export async function GET() {
           const publishAt = (doc as any).publishAt as string | undefined;
           const unpublishAt = (doc as any).unpublishAt as string | undefined;
           const title = String(doc.data?.title ?? doc.data?.name ?? doc.slug);
+          const docUrl = `${baseUrl}/admin/${col.name}/${doc.slug}`;
 
           if (publishAt) {
             events.push(formatEvent({
@@ -27,6 +29,7 @@ export async function GET() {
               description: `${col.label ?? col.name} — ${doc.slug}`,
               dtstart: toIcsDate(publishAt),
               dtend: toIcsDate(publishAt, 15),
+              url: docUrl,
             }));
           }
           if (unpublishAt) {
@@ -36,6 +39,7 @@ export async function GET() {
               description: `${col.label ?? col.name} — ${doc.slug}`,
               dtstart: toIcsDate(unpublishAt),
               dtend: toIcsDate(unpublishAt, 15),
+              url: docUrl,
             }));
           }
         }
@@ -80,8 +84,8 @@ function toIcsDate(iso: string, addMinutes = 0): string {
   return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}T${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
 }
 
-function formatEvent({ uid, summary, description, dtstart, dtend }: {
-  uid: string; summary: string; description: string; dtstart: string; dtend: string;
+function formatEvent({ uid, summary, description, dtstart, dtend, url }: {
+  uid: string; summary: string; description: string; dtstart: string; dtend: string; url?: string;
 }): string {
   return [
     "BEGIN:VEVENT",
@@ -91,6 +95,7 @@ function formatEvent({ uid, summary, description, dtstart, dtend }: {
     `DTEND:${dtend}`,
     `SUMMARY:${escapeIcs(summary)}`,
     `DESCRIPTION:${escapeIcs(description)}`,
+    ...(url ? [`URL:${url}`] : []),
     "END:VEVENT",
   ].join("\r\n");
 }
