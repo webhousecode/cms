@@ -68,6 +68,7 @@
 | F49 | [Incremental Builds](#f49-incremental-builds) | Planned | [docs/features/F49-incremental-builds.md](features/F49-incremental-builds.md) |
 | F50 | [Sign In Providers](#f50-sign-in-providers) | Planned | [docs/features/F50-sign-in-providers.md](features/F50-sign-in-providers.md) |
 | F51 | [Admin AI Assistant](#f51-admin-ai-assistant) | Planned | [docs/features/F51-admin-ai-assistant.md](features/F51-admin-ai-assistant.md) |
+| F52 | [Custom Column Presets](#f52-custom-column-presets) | Planned | [docs/features/F52-custom-column-presets.md](features/F52-custom-column-presets.md) |
 
 ---
 
@@ -223,3 +224,6 @@ Multiple OAuth authentication providers with account linking. Extends F26 (GitHu
 
 ## F51 — Admin AI Assistant
 Persistent AI chat panel in the CMS admin — like Supabase's AI assistant. Accessible from every page via sidebar toggle or Cmd+I. Full context of site, collections, documents, and current page. Executes actions via existing MCP tools (create/update/publish content, search, generate). Streaming responses with tool execution audit trail. Context-aware suggestions adapt to current page. Conversation history per user. Confirmation required for destructive actions.
+
+## F52 — Custom Column Presets
+Visual preset editor in Site Settings for creating custom column layouts beyond the 5 built-in presets. Drag-resize column bars with live percentage display. Custom presets stored per-site in `_data/column-presets.json`. Presets appear alongside builtins in the columns block layout picker. Stores resolved `gridCols` CSS in document data for zero-config site rendering.
