@@ -46,6 +46,8 @@ export interface Document {
   translationOf?: string;
   /** ISO timestamp for scheduled auto-publish. Cleared after the cron job publishes the document. */
   publishAt?: string;
+  /** ISO timestamp for scheduled auto-unpublish (content expiry). Cleared after the cron job archives the document. */
+  unpublishAt?: string;
 }
 
 export interface DocumentInput {
@@ -60,6 +62,8 @@ export interface DocumentInput {
   translationOf?: string;
   /** ISO timestamp for scheduled auto-publish. Pass null to clear. */
   publishAt?: string | null;
+  /** ISO timestamp for scheduled auto-unpublish (content expiry). Pass null to clear. */
+  unpublishAt?: string | null;
 }
 
 export interface QueryOptions {

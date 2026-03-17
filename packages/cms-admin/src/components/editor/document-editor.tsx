@@ -251,9 +251,13 @@ function CreateTranslationDialog({
 }
 
 /* ─── Schedule button ──────────────────────────────────────── */
-function ScheduleButton({ publishAt, onSchedule }: {
+function ScheduleButton({ publishAt, onSchedule, label = "Scheduled", defaultLabel = "Schedule", popoverLabel = "Auto-publish at", color = "rgb(234 179 8)" }: {
   publishAt?: string;
   onSchedule: (iso: string | undefined) => void;
+  label?: string;
+  defaultLabel?: string;
+  popoverLabel?: string;
+  color?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [value, setValue] = useState(() => {
@@ -279,18 +283,18 @@ function ScheduleButton({ publishAt, onSchedule }: {
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        title={isScheduled ? `Scheduled: ${publishAt}` : "Schedule publish"}
+        title={isScheduled ? `${label}: ${publishAt}` : defaultLabel}
         style={{
           display: "flex", alignItems: "center", gap: "0.375rem",
           padding: "0.25rem 0.625rem", borderRadius: "6px",
-          border: `1px solid ${isScheduled ? "rgb(234 179 8 / 0.4)" : "var(--border)"}`,
-          background: isScheduled ? "rgb(234 179 8 / 0.08)" : "transparent",
-          color: isScheduled ? "rgb(234 179 8)" : "var(--muted-foreground)",
+          border: `1px solid ${isScheduled ? `color-mix(in srgb, ${color} 40%, transparent)` : "var(--border)"}`,
+          background: isScheduled ? `color-mix(in srgb, ${color} 8%, transparent)` : "transparent",
+          color: isScheduled ? color : "var(--muted-foreground)",
           fontSize: "0.75rem", cursor: "pointer",
         }}
       >
         <Clock style={{ width: "0.875rem", height: "0.875rem" }} />
-        {isScheduled ? "Scheduled" : "Schedule"}
+        {isScheduled ? label : defaultLabel}
       </button>
 
       {open && (
@@ -301,7 +305,7 @@ function ScheduleButton({ publishAt, onSchedule }: {
           padding: "0.75rem", minWidth: "220px", display: "flex", flexDirection: "column", gap: "0.5rem",
         }}>
           <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-            Auto-publish at
+            {popoverLabel}
           </p>
           <input
             type="datetime-local"
@@ -693,6 +697,12 @@ function PropertiesPanel({ doc, collection, onClose, onSaved }: {
             <p style={valueStyle}>{new Date(doc.publishAt).toLocaleString()}</p>
           </div>
         )}
+        {doc.unpublishAt && (
+          <div>
+            <p style={labelStyle}>Scheduled expiry</p>
+            <p style={{ ...valueStyle, color: "rgb(239 68 68)" }}>{new Date(doc.unpublishAt).toLocaleString()}</p>
+          </div>
+        )}
 
         {/* Dates */}
         <div style={{ borderTop: "1px solid var(--border)", paddingTop: "1rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
@@ -717,6 +727,7 @@ interface DocSnapshot {
   locale?: string;
   translationOf?: string;
   publishAt?: string;
+  unpublishAt?: string;
   data: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
@@ -804,6 +815,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
         ...(translationOf && { translationOf }),
         // Always send publishAt so PATCH route can manage it; null clears it
         publishAt: nextStatus === "published" ? null : (doc.publishAt ?? null),
+        unpublishAt: doc.unpublishAt ?? null,
       }),
     });
     if (res.ok) {
@@ -1025,17 +1037,30 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
           {!readOnly && (
             <>
               {isPublished ? (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => save("draft")}
-                  disabled={saving}
-                  className="gap-1.5"
-                  title="Revert to draft (unpublish)"
-                >
-                  <FileText className="w-3.5 h-3.5" />
-                  Unpublish
-                </Button>
+                <>
+                  <ScheduleButton
+                    publishAt={doc.unpublishAt}
+                    onSchedule={(iso) => {
+                      setDoc((prev) => ({ ...prev, unpublishAt: iso }));
+                      setDirty(true);
+                    }}
+                    label="Expires"
+                    defaultLabel="Set expiry"
+                    popoverLabel="Auto-unpublish at"
+                    color="rgb(239 68 68)"
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => save("draft")}
+                    disabled={saving}
+                    className="gap-1.5"
+                    title="Revert to draft (unpublish)"
+                  >
+                    <FileText className="w-3.5 h-3.5" />
+                    Unpublish
+                  </Button>
+                </>
               ) : (
                 <>
                   <ScheduleButton

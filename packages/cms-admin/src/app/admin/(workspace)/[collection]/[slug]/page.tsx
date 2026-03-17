@@ -50,6 +50,8 @@ export default async function DocumentPage({ params, searchParams }: Props) {
           status: doc.status,
           locale: (doc as any).locale,
           translationOf: (doc as any).translationOf,
+          publishAt: (doc as any).publishAt,
+          unpublishAt: (doc as any).unpublishAt,
           data: doc.data,
           createdAt: doc.createdAt,
           updatedAt: doc.updatedAt,
