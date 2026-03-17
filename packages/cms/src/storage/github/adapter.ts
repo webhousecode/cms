@@ -208,6 +208,10 @@ export class GitHubStorageAdapter implements StorageAdapter {
       _fieldMeta: input._fieldMeta ?? {},
       createdAt: timestamp,
       updatedAt: timestamp,
+      ...(input.locale !== undefined && { locale: input.locale }),
+      ...(input.translationOf !== undefined && { translationOf: input.translationOf }),
+      ...(input.publishAt != null && { publishAt: input.publishAt }),
+      ...(input.unpublishAt != null && { unpublishAt: input.unpublishAt }),
     };
 
     const path = this.filePath(collection, slug);
@@ -294,6 +298,16 @@ export class GitHubStorageAdapter implements StorageAdapter {
       data: input.data ? { ...existing.data, ...input.data } : existing.data,
       _fieldMeta: input._fieldMeta ?? existing._fieldMeta ?? {},
       updatedAt: now(),
+      ...(((input.locale !== undefined ? input.locale : existing.locale) !== undefined) && { locale: input.locale !== undefined ? input.locale : existing.locale }),
+      ...(((input.translationOf !== undefined ? input.translationOf : existing.translationOf) !== undefined) && { translationOf: input.translationOf !== undefined ? input.translationOf : existing.translationOf }),
+      ...(() => {
+        const pa = input.publishAt === null ? undefined : (input.publishAt !== undefined ? input.publishAt : (existing as any).publishAt);
+        return pa !== undefined ? { publishAt: pa } : {};
+      })(),
+      ...(() => {
+        const ua = input.unpublishAt === null ? undefined : (input.unpublishAt !== undefined ? input.unpublishAt : (existing as any).unpublishAt);
+        return ua !== undefined ? { unpublishAt: ua } : {};
+      })(),
     };
 
     if (input.slug && input.slug !== existing.slug) {
