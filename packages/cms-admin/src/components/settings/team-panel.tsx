@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { UserPlus, Trash2, Copy, Check, Mail, Shield, Pencil, Eye, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CustomSelect } from "@/components/ui/custom-select";
@@ -21,6 +21,12 @@ interface Invitation {
   token: string;
   expiresAt: string;
   createdAt: string;
+}
+
+interface AvailableUser {
+  id: string;
+  email: string;
+  name: string;
 }
 
 const ROLE_OPTIONS = [
@@ -109,16 +115,23 @@ export function TeamPanel() {
   const [lastInviteLink, setLastInviteLink] = useState("");
   const [emailStatus, setEmailStatus] = useState<{ sent: boolean; error?: string } | null>(null);
 
+  // Autocomplete
+  const [availableUsers, setAvailableUsers] = useState<AvailableUser[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const suggestionsRef = useRef<HTMLDivElement>(null);
+
   // Delete confirmation
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [confirmRevokeId, setConfirmRevokeId] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
-      const [usersRes, invRes, meRes] = await Promise.all([
+      const [usersRes, invRes, meRes, availRes] = await Promise.all([
         fetch("/api/admin/users"),
         fetch("/api/admin/invitations"),
         fetch("/api/auth/me"),
+        fetch("/api/admin/users/available"),
       ]);
       if (usersRes.ok) {
         const data = await usersRes.json();
@@ -131,6 +144,10 @@ export function TeamPanel() {
       if (meRes.ok) {
         const data = await meRes.json();
         if (data.user) setCurrentUserId(data.user.id);
+      }
+      if (availRes.ok) {
+        const data = await availRes.json();
+        setAvailableUsers(data.users);
       }
     } finally {
       setLoading(false);
@@ -191,6 +208,13 @@ export function TeamPanel() {
     load();
   }
 
+  function filteredSuggestions(query: string): AvailableUser[] {
+    const q = query.toLowerCase();
+    return availableUsers.filter(
+      (u) => u.email.toLowerCase().includes(q) || u.name.toLowerCase().includes(q),
+    );
+  }
+
   if (loading) {
     return <p className="text-sm text-muted-foreground">Loading team...</p>;
   }
@@ -201,26 +225,98 @@ export function TeamPanel() {
       <div>
         <h2 className="text-base font-semibold text-foreground mb-1">Invite a team member</h2>
         <p className="text-sm text-muted-foreground mb-4">
-          Send an invite link. The recipient creates their own account.
+          Invite an existing user or a new email address to this site.
         </p>
         <form onSubmit={handleInvite} style={{ display: "flex", gap: "0.5rem", alignItems: "flex-start" }}>
-          <input
-            type="email"
-            placeholder="email@example.com"
-            value={inviteEmail}
-            onChange={(e) => setInviteEmail(e.target.value)}
-            required
-            style={{
-              flex: 1,
-              padding: "0.5rem 0.75rem",
-              fontSize: "0.875rem",
-              borderRadius: "6px",
-              border: "1px solid var(--border)",
-              background: "var(--input)",
-              color: "var(--foreground)",
-              outline: "none",
-            }}
-          />
+          <div style={{ flex: 1, position: "relative" }}>
+            <input
+              ref={inputRef}
+              type="email"
+              placeholder="email@example.com"
+              value={inviteEmail}
+              onChange={(e) => {
+                setInviteEmail(e.target.value);
+                setShowSuggestions(e.target.value.length > 0 && filteredSuggestions(e.target.value).length > 0);
+              }}
+              onFocus={() => {
+                if (inviteEmail.length > 0 && filteredSuggestions(inviteEmail).length > 0) {
+                  setShowSuggestions(true);
+                } else if (availableUsers.length > 0 && inviteEmail.length === 0) {
+                  setShowSuggestions(true);
+                }
+              }}
+              onBlur={() => {
+                // Delay to allow click on suggestion
+                setTimeout(() => setShowSuggestions(false), 200);
+              }}
+              required
+              autoComplete="off"
+              style={{
+                width: "100%",
+                padding: "0.5rem 0.75rem",
+                fontSize: "0.875rem",
+                borderRadius: "6px",
+                border: "1px solid var(--border)",
+                background: "var(--input)",
+                color: "var(--foreground)",
+                outline: "none",
+                boxSizing: "border-box",
+              }}
+            />
+            {/* Autocomplete dropdown */}
+            {showSuggestions && (
+              <div
+                ref={suggestionsRef}
+                style={{
+                  position: "absolute",
+                  top: "100%",
+                  left: 0,
+                  right: 0,
+                  marginTop: "4px",
+                  borderRadius: "8px",
+                  border: "1px solid var(--border)",
+                  background: "var(--popover)",
+                  boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
+                  zIndex: 50,
+                  maxHeight: "200px",
+                  overflowY: "auto",
+                }}
+              >
+                {(inviteEmail.length === 0 ? availableUsers : filteredSuggestions(inviteEmail)).map((u) => (
+                  <button
+                    key={u.id}
+                    type="button"
+                    onClick={() => {
+                      setInviteEmail(u.email);
+                      setShowSuggestions(false);
+                      inputRef.current?.focus();
+                    }}
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "0.1rem",
+                      width: "100%",
+                      padding: "0.5rem 0.75rem",
+                      border: "none",
+                      background: "transparent",
+                      cursor: "pointer",
+                      textAlign: "left",
+                      borderBottom: "1px solid var(--border)",
+                    }}
+                    className="hover:bg-accent transition-colors"
+                  >
+                    <span style={{ fontSize: "0.8rem", fontWeight: 500, color: "var(--foreground)" }}>{u.name}</span>
+                    <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)" }}>{u.email}</span>
+                  </button>
+                ))}
+                {inviteEmail.length > 0 && filteredSuggestions(inviteEmail).length === 0 && availableUsers.length > 0 && (
+                  <div style={{ padding: "0.5rem 0.75rem", fontSize: "0.75rem", color: "var(--muted-foreground)" }}>
+                    New email — will create invitation for new user
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
           <div style={{ width: 120 }}>
             <CustomSelect
               options={ROLE_OPTIONS}
