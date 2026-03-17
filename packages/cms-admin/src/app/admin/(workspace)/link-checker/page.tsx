@@ -6,6 +6,7 @@ import type { LinkResult, ProgressEvent } from "@/app/api/check-links/route";
 import type { LinkCheckRecord } from "@/lib/link-check-store";
 import { cn } from "@/lib/utils";
 import { useTabs } from "@/lib/tabs-context";
+import { useSiteRole } from "@/hooks/use-site-role";
 
 type RunState = "idle" | "running" | "done" | "error";
 type FixState = { loading: boolean; suggestion?: string | null; reason?: string; confidence?: string; applied?: boolean; error?: string };
@@ -151,6 +152,8 @@ function FixButton({ link, onFixed }: { link: LinkResult; onFixed: (newUrl: stri
 }
 
 export default function LinkCheckerPage() {
+  const siteRole = useSiteRole();
+  const readOnly = siteRole === "viewer";
   const [state, setState] = useState<RunState>("idle");
   const [total, setTotal] = useState(0);
   const [checked, setChecked] = useState(0);
@@ -238,6 +241,7 @@ export default function LinkCheckerPage() {
   const progress = total > 0 ? Math.round((checked / total) * 100) : 0;
 
   return (
+    <fieldset disabled={readOnly} style={{ border: "none", padding: 0, margin: 0 }}>
     <div className="flex flex-col min-h-screen">
       {/* Top bar */}
       <div className="sticky flex items-center gap-3 px-4 border-b border-border shrink-0"
@@ -425,5 +429,6 @@ export default function LinkCheckerPage() {
         )}
       </div>
     </div>
+    </fieldset>
   );
 }

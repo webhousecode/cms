@@ -102,6 +102,7 @@ export default function CommandPage() {
         <h1 className="text-2xl font-bold text-foreground">Cockpit</h1>
       </div>
 
+      <fieldset disabled={readOnly} style={{ border: "none", padding: 0, margin: 0, opacity: readOnly ? 0.7 : 1 }}>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left column (2/3) */}
         <div className="lg:col-span-2 space-y-6">
@@ -351,6 +352,7 @@ export default function CommandPage() {
           )}
         </div>
       </div>
+      </fieldset>
     </div>
   );
 }
