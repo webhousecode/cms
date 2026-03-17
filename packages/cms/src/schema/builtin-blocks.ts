@@ -45,4 +45,12 @@ export const builtinBlocks: BlockConfig[] = [
       { name: 'filename', type: 'text', label: 'Display Name' },
     ],
   },
+  {
+    name: 'interactive',
+    label: 'Interactive',
+    fields: [
+      { name: 'interactiveId', type: 'interactive' as const, label: 'Interactive', required: true },
+      { name: 'caption', type: 'text', label: 'Caption' },
+    ],
+  },
 ];

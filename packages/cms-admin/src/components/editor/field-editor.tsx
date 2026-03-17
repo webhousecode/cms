@@ -902,6 +902,139 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
       );
     }
 
+    case "interactive": {
+      const [intUploading, setIntUploading] = useState(false);
+      const intInputRef = useRef<HTMLInputElement>(null);
+      const [intBrowserOpen, setIntBrowserOpen] = useState(false);
+      const [intItems, setIntItems] = useState<Array<{ id: string; title: string }>>([]);
+      const [intLoading, setIntLoading] = useState(false);
+      const [intSearch, setIntSearch] = useState("");
+
+      useEffect(() => {
+        if (!intBrowserOpen) return;
+        const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setIntBrowserOpen(false); };
+        document.addEventListener("keydown", onKey);
+        return () => document.removeEventListener("keydown", onKey);
+      }, [intBrowserOpen]);
+
+      async function handleIntUpload(e: React.ChangeEvent<HTMLInputElement>) {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        setIntUploading(true);
+        const formData = new FormData();
+        formData.append("file", file);
+        try {
+          const res = await fetch("/api/interactives", { method: "POST", body: formData });
+          if (res.ok) {
+            const data = await res.json() as { id: string };
+            onChange(data.id);
+          }
+        } finally {
+          setIntUploading(false);
+          if (intInputRef.current) intInputRef.current.value = "";
+        }
+      }
+
+      function openIntBrowser() {
+        setIntBrowserOpen(true);
+        setIntLoading(true);
+        setIntSearch("");
+        fetch("/api/interactives")
+          .then((r) => r.json())
+          .then((data) => {
+            const items = Array.isArray(data) ? data : (data.interactives ?? []);
+            setIntItems(items
+              .filter((i: Record<string, string>) => i.status !== "trashed")
+              .map((i: Record<string, string>) => ({ id: i.id, title: i.name || i.title || i.id })));
+          })
+          .catch(() => setIntItems([]))
+          .finally(() => setIntLoading(false));
+      }
+
+      return (
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+          {/* ID input */}
+          <Input
+            type="text"
+            value={strVal}
+            onChange={(e) => onChange(e.target.value)}
+            disabled={locked}
+            placeholder="Interactive ID"
+            className="font-mono text-xs"
+          />
+          {/* Upload + Browse buttons */}
+          {!locked && (
+            <div style={{ display: "flex", gap: "0.35rem" }}>
+              <label
+                title="Upload interactive (.html)"
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: "0.3rem",
+                  padding: "0.25rem 0.6rem", borderRadius: "6px",
+                  border: "1px dashed var(--border)", background: "none",
+                  cursor: intUploading ? "wait" : "pointer", fontSize: "0.7rem",
+                  color: "var(--muted-foreground)", whiteSpace: "nowrap",
+                }}
+                className="hover:border-primary hover:text-primary transition-colors"
+              >
+                <input ref={intInputRef} type="file" accept=".html,.htm,.zip" onChange={handleIntUpload} disabled={locked || intUploading} style={{ display: "none" }} />
+                <Upload style={{ width: 12, height: 12 }} />
+                {intUploading ? "..." : "Upload"}
+              </label>
+              <button
+                type="button"
+                onClick={openIntBrowser}
+                title="Browse Interactives"
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: "0.3rem",
+                  padding: "0.25rem 0.6rem", borderRadius: "6px",
+                  border: "1px dashed var(--border)", background: "none",
+                  cursor: "pointer", fontSize: "0.7rem", color: "var(--muted-foreground)",
+                  whiteSpace: "nowrap",
+                }}
+                className="hover:border-primary hover:text-primary transition-colors"
+              >
+                <FolderOpen style={{ width: 12, height: 12 }} />
+                Browse
+              </button>
+            </div>
+          )}
+
+          {/* Interactive browser modal */}
+          {intBrowserOpen && (
+            <div
+              style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.5)" }}
+              onClick={(e) => { if (e.target === e.currentTarget) setIntBrowserOpen(false); }}
+            >
+              <div style={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: "12px", boxShadow: "0 8px 40px rgba(0,0,0,0.4)", width: "min(480px, 90vw)", maxHeight: "70vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.75rem 1rem", borderBottom: "1px solid var(--border)" }}>
+                  <span style={{ fontWeight: 500, fontSize: "0.9rem" }}>Interactives</span>
+                  <button type="button" onClick={() => setIntBrowserOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.25rem" }}>
+                    <X style={{ width: "16px", height: "16px" }} />
+                  </button>
+                </div>
+                <div style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid var(--border)" }}>
+                  <input type="text" value={intSearch} onChange={(e) => setIntSearch(e.target.value)} placeholder="Search interactives…" autoFocus
+                    style={{ width: "100%", padding: "0.35rem 0.5rem", borderRadius: "6px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.8rem", outline: "none" }} />
+                </div>
+                <div style={{ overflowY: "auto", padding: "0.5rem" }}>
+                  {intLoading && <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>Loading...</div>}
+                  {!intLoading && intItems.length === 0 && <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>No interactives found</div>}
+                  {!intLoading && intItems.filter((i) => !intSearch || i.title.toLowerCase().includes(intSearch.toLowerCase()) || i.id.toLowerCase().includes(intSearch.toLowerCase())).map((item) => (
+                    <button key={item.id} type="button" onClick={() => { onChange(item.id); setIntBrowserOpen(false); }}
+                      style={{ width: "100%", textAlign: "left", padding: "0.5rem 0.75rem", fontSize: "0.8rem", background: item.id === strVal ? "var(--accent)" : "transparent", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: "0.5rem", borderRadius: "4px", marginBottom: "2px" }} className="hover:bg-accent">
+                      <span style={{ fontSize: "1rem", color: "#F7BB2E" }}>⚡</span>
+                      <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{item.title}</span>
+                      <span style={{ fontSize: "0.65rem", fontFamily: "monospace", color: "var(--muted-foreground)" }}>{item.id}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
     case "file": {
       const [fileUploading, setFileUploading] = useState(false);
       const fileInputRef = useRef<HTMLInputElement>(null);
