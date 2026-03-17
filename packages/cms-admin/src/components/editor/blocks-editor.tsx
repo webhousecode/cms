@@ -35,13 +35,13 @@ function getBlockLabel(block: Record<string, unknown>, config: BlockConfig | und
 export function BlocksEditor({ field, value, onChange, locked, blocksConfig = [], expandedState, onExpandedChange }: Props) {
   const blocks = Array.isArray(value) ? value : [];
   const baseNames = field.blocks ?? blocksConfig.map((b) => b.name);
-  // Add builtin blocks that exist in blocksConfig but aren't in the field's explicit list
+  // Add builtin blocks that exist in blocksConfig but aren't already in baseNames
   const builtinNames = ["columns", "video", "audio", "file", "interactive"];
   const configNames = blocksConfig.map((b) => b.name);
   const allowedBlockNames = [
-    ...baseNames,
+    ...new Set([...baseNames,
     ...builtinNames.filter((n) => !baseNames.includes(n) && configNames.includes(n)),
-  ];
+  ])];
   const storageKey = `cms-blocks-expanded:${field.name}`;
   const controlled = expandedState !== undefined;
   const [internalExpanded, setInternalExpanded] = useState<Record<number, boolean>>(() => {
