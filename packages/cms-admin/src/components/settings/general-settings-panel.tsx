@@ -137,29 +137,20 @@ function ProfileSection() {
 	async function saveProfile(e: FormEvent) {
 		e.preventDefault();
 		setSaving(true); setError(""); setSaved(false);
-		const res = await fetch("/api/admin/profile", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ name, email, zoom }),
-		});
-		const d = (await res.json()) as { error?: string };
-		if (!res.ok) { setError(d.error ?? "Save failed"); }
-		else { setSaved(true); setTimeout(() => setSaved(false), 2500); }
-		setSaving(false);
-	}
-
-	async function savePassword(e: FormEvent) {
-		e.preventDefault();
-		setPwSaving(true); setPwError(""); setPwSaved(false);
-		const res = await fetch("/api/admin/profile", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ currentPassword: curPw, newPassword: newPw }),
-		});
-		const d = (await res.json()) as { error?: string };
-		if (!res.ok) { setPwError(d.error ?? "Failed"); }
-		else { setPwSaved(true); setCurPw(""); setNewPw(""); setTimeout(() => setPwSaved(false), 2500); }
-		setPwSaving(false);
+		try {
+			const res = await fetch("/api/admin/profile", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ name, email, zoom }),
+			});
+			const d = (await res.json()) as { error?: string };
+			if (!res.ok) { setError(d.error ?? "Save failed"); }
+			else { setSaved(true); setTimeout(() => setSaved(false), 2500); }
+		} catch (err) {
+			setError("Network error — could not save");
+		} finally {
+			setSaving(false);
+		}
 	}
 
 	return (
@@ -257,35 +248,40 @@ function SiteSection() {
 	async function handleSave(e: FormEvent) {
 		e.preventDefault();
 		setSaving(true); setError(""); setSaved(false);
-		const res = await fetch("/api/admin/site-config", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify(cfg),
-		});
-		const d = await res.json();
-		if (!res.ok) { setError((d as { error?: string }).error ?? "Save failed"); }
-		else {
-			setCfg(d);
-			// Update site name in registry if changed
-			if (siteName.trim() && siteName !== siteNameOriginal) {
-				const orgId = document.cookie.match(/(?:^|; )cms-active-org=([^;]*)/)?.[1];
-				const siteId = document.cookie.match(/(?:^|; )cms-active-site=([^;]*)/)?.[1];
-				if (orgId && siteId) {
-					await fetch("/api/cms/registry/rename", {
-						method: "POST",
-						headers: { "Content-Type": "application/json" },
-						body: JSON.stringify({ orgId: decodeURIComponent(orgId), siteId: decodeURIComponent(siteId), name: siteName.trim() }),
-					});
-					setSiteNameOriginal(siteName.trim());
-					window.dispatchEvent(new CustomEvent("cms-registry-change"));
+		try {
+			const res = await fetch("/api/admin/site-config", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(cfg),
+			});
+			const d = await res.json();
+			if (!res.ok) { setError((d as { error?: string }).error ?? "Save failed"); }
+			else {
+				setCfg(d);
+				// Update site name in registry if changed
+				if (siteName.trim() && siteName !== siteNameOriginal) {
+					const orgId = document.cookie.match(/(?:^|; )cms-active-org=([^;]*)/)?.[1];
+					const siteId = document.cookie.match(/(?:^|; )cms-active-site=([^;]*)/)?.[1];
+					if (orgId && siteId) {
+						await fetch("/api/cms/registry/rename", {
+							method: "POST",
+							headers: { "Content-Type": "application/json" },
+							body: JSON.stringify({ orgId: decodeURIComponent(orgId), siteId: decodeURIComponent(siteId), name: siteName.trim() }),
+						});
+						setSiteNameOriginal(siteName.trim());
+						window.dispatchEvent(new CustomEvent("cms-registry-change"));
+					}
 				}
+				setSaved(true);
+				setTimeout(() => setSaved(false), 2500);
+				window.dispatchEvent(new CustomEvent("cms:site-config-updated", { detail: d }));
+				router.refresh();
 			}
-			setSaved(true);
-			setTimeout(() => setSaved(false), 2500);
-			window.dispatchEvent(new CustomEvent("cms:site-config-updated", { detail: d }));
-			router.refresh();
+		} catch {
+			setError("Network error — could not save");
+		} finally {
+			setSaving(false);
 		}
-		setSaving(false);
 	}
 
 	return (
@@ -461,19 +457,24 @@ function RevalidationSection() {
 	async function handleSave(e: FormEvent) {
 		e.preventDefault();
 		setSaving(true); setError(""); setSaved(false);
-		const res = await fetch("/api/cms/revalidation", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ action: "save", revalidateUrl: url, revalidateSecret: secret }),
-		});
-		if (!res.ok) {
-			const d = await res.json();
-			setError(d.error ?? "Save failed");
-		} else {
-			setSaved(true);
-			setTimeout(() => setSaved(false), 2500);
+		try {
+			const res = await fetch("/api/cms/revalidation", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ action: "save", revalidateUrl: url, revalidateSecret: secret }),
+			});
+			if (!res.ok) {
+				const d = await res.json();
+				setError(d.error ?? "Save failed");
+			} else {
+				setSaved(true);
+				setTimeout(() => setSaved(false), 2500);
+			}
+		} catch {
+			setError("Network error — could not save");
+		} finally {
+			setSaving(false);
 		}
-		setSaving(false);
 	}
 
 	function generateSecret() {
@@ -784,15 +785,20 @@ export function PasswordChangePanel() {
 	async function savePassword(e: FormEvent) {
 		e.preventDefault();
 		setPwSaving(true); setPwError(""); setPwSaved(false);
-		const res = await fetch("/api/admin/profile", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ currentPassword: curPw, newPassword: newPw }),
-		});
-		const d = (await res.json()) as { error?: string };
-		if (!res.ok) { setPwError(d.error ?? "Failed"); }
-		else { setPwSaved(true); setCurPw(""); setNewPw(""); setTimeout(() => setPwSaved(false), 2500); }
-		setPwSaving(false);
+		try {
+			const res = await fetch("/api/admin/profile", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ currentPassword: curPw, newPassword: newPw }),
+			});
+			const d = (await res.json()) as { error?: string };
+			if (!res.ok) { setPwError(d.error ?? "Failed"); }
+			else { setPwSaved(true); setCurPw(""); setNewPw(""); setTimeout(() => setPwSaved(false), 2500); }
+		} catch {
+			setPwError("Network error — could not save");
+		} finally {
+			setPwSaving(false);
+		}
 	}
 
 	return (
