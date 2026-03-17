@@ -4,6 +4,7 @@ export const builtinBlocks: BlockConfig[] = [
   {
     name: 'columns',
     label: 'Columns',
+    propertyFields: ['label'],
     fields: [
       { name: 'label', type: 'text', label: 'Label (internal)' },
       {
@@ -49,6 +50,7 @@ export const builtinBlocks: BlockConfig[] = [
   {
     name: 'interactive',
     label: 'Interactive',
+    propertyFields: ['scale', 'allowFullscreen', 'fullscreenLabel'],
     fields: [
       { name: 'interactiveId', type: 'interactive' as const, label: 'Interactive', required: true },
       { name: 'caption', type: 'text', label: 'Caption' },

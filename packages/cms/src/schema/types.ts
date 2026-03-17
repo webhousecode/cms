@@ -59,6 +59,8 @@ export interface BlockConfig {
   name: string;
   label?: string;
   fields: FieldConfig[];
+  /** Field names shown in a Properties panel instead of inline in the block body */
+  propertyFields?: string[];
 }
 
 export interface CollectionConfig {

@@ -3,7 +3,7 @@
 import type { FieldConfig, BlockConfig } from "@webhouse/cms";
 import { FieldEditor } from "./field-editor";
 import { ColumnsEditor } from "./columns-editor";
-import { ChevronDown, ChevronRight, ArrowUp, ArrowDown, Plus, Copy } from "lucide-react";
+import { ChevronDown, ChevronRight, ArrowUp, ArrowDown, Plus, Copy, Settings2 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 
 interface Props {
@@ -57,6 +57,7 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
   }, [storageKey, controlled]);
   const [showPicker, setShowPicker] = useState(false);
   const [confirmRemoveIdx, setConfirmRemoveIdx] = useState<number | null>(null);
+  const [propsOpenIdx, setPropsOpenIdx] = useState<number | null>(null);
   const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pickerContainerRef = useRef<HTMLDivElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -260,7 +261,9 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
         const blockType = String(block._block ?? "");
         const config = getConfig(blockType);
         const isOpen = expanded[i] ?? false;
-        const fields = config?.fields ?? [];
+        const propSet = new Set(config?.propertyFields ?? []);
+        const fields = (config?.fields ?? []).filter(f => !propSet.has(f.name));
+        const propFields = (config?.fields ?? []).filter(f => propSet.has(f.name));
 
         return (
           <div
@@ -325,6 +328,11 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
                     </>
                   ) : (
                     <>
+                    {config?.propertyFields && config.propertyFields.length > 0 && (
+                      <button type="button" onClick={() => setPropsOpenIdx(propsOpenIdx === i ? null : i)} title="Properties" style={{ background: "none", border: "none", cursor: "pointer", color: propsOpenIdx === i ? "var(--primary)" : "var(--muted-foreground)", padding: "2px" }} className="hover:text-primary transition-colors">
+                        <Settings2 style={{ width: 14, height: 14 }} />
+                      </button>
+                    )}
                     <button type="button" disabled={i === 0} onClick={() => moveBlock(i, -1)} style={{ background: "none", border: "none", cursor: i === 0 ? "not-allowed" : "pointer", color: "var(--muted-foreground)", padding: "2px", opacity: i === 0 ? 0.3 : 1 }}>
                       <ArrowUp style={{ width: 14, height: 14 }} />
                     </button>
@@ -344,6 +352,28 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
                 </span>
               )}
             </div>
+            {/* Properties panel */}
+            {propsOpenIdx === i && propFields.length > 0 && (
+              <div style={{ padding: "0.75rem", borderTop: "1px solid var(--border)", background: "color-mix(in srgb, var(--muted) 30%, transparent)" }}>
+                <p style={{ fontSize: "0.65rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--muted-foreground)", marginBottom: "0.5rem" }}>Properties</p>
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+                  {propFields.map((f) => (
+                    <div key={f.name}>
+                      <label style={{ display: "block", fontSize: "0.7rem", fontWeight: 500, marginBottom: "0.2rem", color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                        {f.label ?? f.name}
+                      </label>
+                      <FieldEditor
+                        field={f}
+                        value={block[f.name]}
+                        onChange={(val) => updateBlockField(i, f.name, val)}
+                        locked={locked}
+                        blocksConfig={blocksConfig}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             {/* Fields */}
             {isOpen && (
               <div style={{ padding: "0.75rem", display: "flex", flexDirection: "column", gap: "0.75rem", borderTop: "1px solid var(--border)" }}>
