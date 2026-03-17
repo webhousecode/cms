@@ -33,7 +33,8 @@ Wrap your HTML output in \`\`\`html code fences so it can be extracted.
 If the user asks a question (not a modification), answer concisely without code.
 The component is a standalone HTML document with inline <style> and <script> tags.
 You may use any web technology: CSS animations, Canvas, SVG, Chart.js (via CDN), D3, GSAP, etc.
-Always produce clean, well-structured, COMPLETE and WORKING HTML with good UX.`;
+Always produce clean, well-structured, COMPLETE and WORKING HTML with good UX.
+CRITICAL: Dollar signs in JavaScript strings MUST be preserved literally. Write '$' + value, NOT template literals with backtick-dollar. The $ character is a normal string character, not a special token.`;
   const [systemPromptTemplate, setSystemPromptTemplate] = useState<string>(FALLBACK_PROMPT);
   const abortRef = useRef<AbortController | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
