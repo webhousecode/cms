@@ -138,8 +138,18 @@ export function ScheduledCalendar({ events, calendarToken }: { events: Scheduled
             </div>
             <button
               type="button"
-              onClick={() => { window.location.href = `webcal://${window.location.host}/api/cms/scheduled/calendar.ics?token=${calendarToken}`; }}
-              title="Subscribe in Apple Calendar"
+              onClick={() => {
+                const host = window.location.host;
+                const path = `/api/cms/scheduled/calendar.ics?token=${calendarToken}`;
+                if (host.includes("localhost") || host.includes("127.0.0.1")) {
+                  // Localhost: download .ics file (webcal:// doesn't work locally)
+                  window.location.href = path;
+                } else {
+                  // Production: open calendar app subscription
+                  window.location.href = `webcal://${host}${path}`;
+                }
+              }}
+              title="Subscribe in your calendar app"
               className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md border border-border hover:bg-secondary transition-colors text-muted-foreground"
             >
               <Calendar className="w-3.5 h-3.5" />

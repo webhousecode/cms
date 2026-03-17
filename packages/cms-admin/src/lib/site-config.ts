@@ -74,12 +74,17 @@ export function generateCalendarToken(secret: string, userId: string): string {
 
 /** Validate a calendar feed token against all team members */
 export async function validateCalendarToken(token: string): Promise<boolean> {
-  const config = await readSiteConfig();
-  if (!config.calendarSecret) return false;
-  // Import team dynamically to avoid circular deps
-  const { getTeamMembers } = await import("./team");
-  const members = await getTeamMembers();
-  return members.some((m) => generateCalendarToken(config.calendarSecret, m.userId) === token);
+  try {
+    const config = await readSiteConfig();
+    if (!config.calendarSecret) return false;
+    // Import team dynamically to avoid circular deps
+    const { getTeamMembers } = await import("./team");
+    const members = await getTeamMembers();
+    return members.some((m) => generateCalendarToken(config.calendarSecret, m.userId) === token);
+  } catch (err) {
+    console.error("[calendar] token validation error:", err);
+    return false;
+  }
 }
 
 export async function writeSiteConfig(patch: Partial<SiteConfig>): Promise<SiteConfig> {
