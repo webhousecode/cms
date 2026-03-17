@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Calendar, ChevronLeft, ChevronRight, Globe, FileText } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, Globe, FileText, Check, Copy } from "lucide-react";
 import { TabTitle } from "@/lib/tabs-context";
 
 /* ─── Types ──────────────────────────────────────────────────── */
@@ -59,6 +59,7 @@ function isSameDay(a: string, b: string): boolean {
 /* ─── Component ──────────────────────────────────────────────── */
 
 export function ScheduledCalendar({ events, calendarToken }: { events: ScheduledEvent[]; calendarToken: string }) {
+  const [copied, setCopied] = useState(false);
   const today = new Date();
   const todayKey = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
 
@@ -136,25 +137,40 @@ export function ScheduledCalendar({ events, calendarToken }: { events: Scheduled
                 </button>
               ))}
             </div>
-            <button
-              type="button"
-              onClick={() => {
-                const host = window.location.host;
-                const path = `/api/cms/scheduled/calendar.ics?token=${calendarToken}`;
-                if (host.includes("localhost") || host.includes("127.0.0.1")) {
-                  // Localhost: download .ics file (webcal:// doesn't work locally)
-                  window.location.href = path;
-                } else {
-                  // Production: open calendar app subscription
-                  window.location.href = `webcal://${host}${path}`;
-                }
-              }}
-              title="Subscribe in your calendar app"
-              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md border border-border hover:bg-secondary transition-colors text-muted-foreground"
-            >
-              <Calendar className="w-3.5 h-3.5" />
-              Subscribe
-            </button>
+            {(() => {
+              const isLocal = typeof window !== "undefined" && (window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1");
+              const feedPath = `/api/cms/scheduled/calendar.ics?token=${calendarToken}`;
+              if (isLocal) {
+                return (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const url = `${window.location.origin}${feedPath}`;
+                      navigator.clipboard.writeText(url).then(() => {
+                        setCopied(true);
+                        setTimeout(() => setCopied(false), 3000);
+                      });
+                    }}
+                    title="Copy feed URL — paste in Calendar → File → New Calendar Subscription"
+                    className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md border border-border hover:bg-secondary transition-colors text-muted-foreground"
+                  >
+                    {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
+                    {copied ? "Copied — paste in Calendar app" : "Copy feed URL"}
+                  </button>
+                );
+              }
+              return (
+                <button
+                  type="button"
+                  onClick={() => { window.location.href = `webcal://${window.location.host}${feedPath}`; }}
+                  title="Subscribe in your calendar app"
+                  className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md border border-border hover:bg-secondary transition-colors text-muted-foreground"
+                >
+                  <Calendar className="w-3.5 h-3.5" />
+                  Subscribe
+                </button>
+              );
+            })()}
           </div>
         </div>
 

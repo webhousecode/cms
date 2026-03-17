@@ -69,7 +69,7 @@ export async function GET(request: Request) {
     return new NextResponse(ics, {
       headers: {
         "Content-Type": "text/calendar; charset=utf-8",
-        "Content-Disposition": "inline; filename=cms-schedule.ics",
+        "Content-Disposition": "inline; filename=\"cms-schedule.ics\"",
         "Cache-Control": "no-cache, no-store",
       },
     });
