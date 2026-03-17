@@ -538,7 +538,7 @@ function RevalidationSection() {
 									style={{ padding: "0.4rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", cursor: "pointer", color: "var(--muted-foreground)", display: "flex", alignItems: "center" }}
 									title="Copy URL"
 								>
-									{copied === "url" ? <Check style={{ width: "0.85rem", height: "0.85rem", color: "var(--primary)" }} /> : <Copy style={{ width: "0.85rem", height: "0.85rem" }} />}
+									{copied === "url" ? <Check style={{ width: "0.85rem", height: "0.85rem", color: "#4ade80" }} /> : <Copy style={{ width: "0.85rem", height: "0.85rem" }} />}
 								</button>
 							)}
 						</div>
@@ -592,7 +592,7 @@ function RevalidationSection() {
 									style={{ padding: "0.4rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", cursor: "pointer", color: "var(--muted-foreground)", display: "flex", alignItems: "center" }}
 									title="Copy secret"
 								>
-									{copied === "secret" ? <Check style={{ width: "0.85rem", height: "0.85rem", color: "var(--primary)" }} /> : <Copy style={{ width: "0.85rem", height: "0.85rem" }} />}
+									{copied === "secret" ? <Check style={{ width: "0.85rem", height: "0.85rem", color: "#4ade80" }} /> : <Copy style={{ width: "0.85rem", height: "0.85rem" }} />}
 								</button>
 							)}
 						</div>
