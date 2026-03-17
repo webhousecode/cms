@@ -340,8 +340,8 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
               borderRadius: "6px",
               cursor: "pointer",
               color: "var(--muted-foreground)",
-              fontSize: "0.8rem",
-              padding: "0.35rem 0.75rem",
+              fontSize: "0.7rem",
+              padding: "0.25rem 0.6rem",
               transition: "all 150ms",
             }}
             onMouseEnter={(e) => {
