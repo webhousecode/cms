@@ -109,6 +109,11 @@ function ProfileSection() {
 	const [saved, setSaved] = useState(false);
 	const [error, setError] = useState("");
 
+	const [showLogoIcon, setShowLogoIcon] = useState(() => {
+		if (typeof window === "undefined") return true;
+		return localStorage.getItem("cms-show-logo-icon") !== "false";
+	});
+
 	const [curPw, setCurPw] = useState("");
 	const [newPw, setNewPw] = useState("");
 	const [showCur, setShowCur] = useState(false);
@@ -192,6 +197,18 @@ function ProfileSection() {
 							</button>
 						)}
 					</div>
+
+					<div style={{ height: "1px", background: "var(--border)" }} />
+					<Toggle
+						label="Show logo icon"
+						description="Show the webhouse.app icon above the wordmark in the sidebar."
+						checked={showLogoIcon}
+						onChange={(v) => {
+							setShowLogoIcon(v);
+							localStorage.setItem("cms-show-logo-icon", String(v));
+							window.dispatchEvent(new CustomEvent("cms:logo-icon-changed", { detail: v }));
+						}}
+					/>
 
 					<ErrorMsg msg={error} />
 					<div><SaveButton saving={saving} saved={saved} /></div>
