@@ -46,17 +46,23 @@ function pathTitle(path: string): string {
   return decodeURIComponent(parts[parts.length - 1]);
 }
 
-const STORE_KEY = "cms-admin-tabs-v1";
+const STORE_KEY_BASE = "cms-admin-tabs-v1";
 
-function load(): { tabs: Tab[]; activeId: string | null } | null {
+/** Per-user store key — falls back to shared key until userId is known */
+function storeKey(userId?: string | null): string {
+  return userId ? `${STORE_KEY_BASE}:${userId}` : STORE_KEY_BASE;
+}
+
+function load(userId?: string | null): { tabs: Tab[]; activeId: string | null } | null {
   try {
-    const raw = typeof window !== "undefined" ? localStorage.getItem(STORE_KEY) : null;
+    const key = storeKey(userId);
+    const raw = typeof window !== "undefined" ? localStorage.getItem(key) : null;
     return raw ? JSON.parse(raw) : null;
   } catch { return null; }
 }
 
-function save(tabs: Tab[], activeId: string | null) {
-  try { localStorage.setItem(STORE_KEY, JSON.stringify({ tabs, activeId })); } catch { /* noop */ }
+function save(tabs: Tab[], activeId: string | null, userId?: string | null) {
+  try { localStorage.setItem(storeKey(userId), JSON.stringify({ tabs, activeId })); } catch { /* noop */ }
 }
 
 /* ─── Context ────────────────────────────────────────────────── */
@@ -74,10 +80,12 @@ export function TabsProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [tabs, setTabs] = useState<Tab[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
 
   // Refs for synchronous read in callbacks (avoids stale closures + setState-in-render)
   const tabsRef = useRef<Tab[]>(tabs);
   const activeIdRef = useRef<string | null>(activeId);
+  const userIdRef = useRef<string | null>(null);
   const skipNextPathChange = useRef(false);
 
   function applyTabs(next: Tab[], nextActiveId: string | null) {
@@ -85,12 +93,25 @@ export function TabsProvider({ children }: { children: ReactNode }) {
     activeIdRef.current = nextActiveId;
     setTabs(next);
     setActiveId(nextActiveId);
-    save(next, nextActiveId);
+    save(next, nextActiveId, userIdRef.current);
   }
 
-  /* ── Init from localStorage on mount ─────────────────────── */
+  /* ── Fetch userId for per-user tab storage ────────────────── */
   useEffect(() => {
-    const saved = load();
+    fetch("/api/auth/me")
+      .then((r) => r.json())
+      .then((d: { user?: { id?: string } }) => {
+        const id = d.user?.id ?? null;
+        setUserId(id);
+        userIdRef.current = id;
+      })
+      .catch(() => {});
+  }, []);
+
+  /* ── Init from localStorage on mount (after userId is known) */
+  useEffect(() => {
+    if (userId === null) return; // wait for userId
+    const saved = load(userId);
     if (saved && saved.tabs.length > 0) {
       // Migrate stale tab titles from before PATH_TITLES was introduced
       const migrated = saved.tabs.map((t) => ({
@@ -118,7 +139,7 @@ export function TabsProvider({ children }: { children: ReactNode }) {
       applyTabs([{ id, path: pathname, title: pathTitle(pathname) }], id);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [userId]);
 
   /* ── Track normal navigation — update active tab's path ──── */
   useEffect(() => {
