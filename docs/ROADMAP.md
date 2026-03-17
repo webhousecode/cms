@@ -74,6 +74,7 @@ _Makes us stand out. Customers expect these from a modern CMS._
 | 18b | **F54 Local AI Tunnel** | Small | Zero-cost AI during dev via Claude Code subscription. Huge DX win. |
 | 19 | **F49 Incremental Builds** | Small | Performance. Only matters at scale (100+ pages). |
 | 20 | **F51 Admin AI Assistant** | Medium | Persistent AI chat in admin. Executes MCP tools. Huge differentiator. |
+| 20b | **F55 Enhance Prompt** | Small | Magic wand that rewrites vague prompts into effective ones. Better AI output for everyone. |
 
 ### Tier 3 — Differentiation (v1.3+)
 

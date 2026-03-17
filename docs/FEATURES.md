@@ -71,6 +71,7 @@
 | F52 | [Custom Column Presets](#f52-custom-column-presets) | Planned | [docs/features/F52-custom-column-presets.md](features/F52-custom-column-presets.md) |
 | F53 | [Drag & Drop Blocks Between Columns](#f53-drag-drop-blocks) | Planned | [docs/features/F53-drag-drop-blocks.md](features/F53-drag-drop-blocks.md) |
 | F54 | [Local AI Tunnel](#f54-local-ai-tunnel) | Planned | [docs/features/F54-local-ai-tunnel.md](features/F54-local-ai-tunnel.md) |
+| F55 | [Enhance Prompt](#f55-enhance-prompt) | Planned | [docs/features/F55-enhance-prompt.md](features/F55-enhance-prompt.md) |
 
 ---
 
@@ -235,3 +236,6 @@ Drag blocks between columns and reorder within columns using `@dnd-kit/core` + `
 
 ## F54 — Local AI Tunnel
 Use a Claude Code Max/Pro subscription as the AI backend for CMS admin during development — zero API cost for dev and testing. Extracts OAuth token from macOS Keychain or `~/.claude/.credentials.json` and uses it as the Anthropic API key. Toggle in Settings → AI. Auto-renewal when token approaches expiry. CLI auto-detect suggests tunnel when no API key configured. Development-only by design — token expires ~29h, requires local Claude Code installation. Based on proven patterns from cc-docker-demo and CPM v4 runner.
+
+## F55 — Enhance Prompt
+One-click prompt improvement button (magic wand) in all AI input fields. Takes vague user prompts like "make the sliders work" and rewrites them into detailed, context-aware AI instructions using Haiku. Shows enhanced prompt for review before sending. For Interactives, extracts HTML structure summary (IDs, functions, inputs) so enhanced prompts reference specific elements. Editable meta-prompt in Settings → AI Prompts. Cheap (Haiku + 512 tokens) and fast (1-2 seconds).
