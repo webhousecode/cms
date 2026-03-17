@@ -13,6 +13,10 @@ const PUBLIC_PATHS = [
   "/admin/setup",
 ];
 
+const PUBLIC_PREFIXES_ADMIN = [
+  "/admin/invite/", // Public invite accept pages
+];
+
 const PUBLIC_PREFIXES = [
   "/api/auth/",
   "/_next/",
@@ -37,6 +41,7 @@ export async function middleware(request: NextRequest) {
   // Allow public paths
   if (PUBLIC_PATHS.includes(pathname)) return NextResponse.next();
   if (PUBLIC_PREFIXES.some((p) => pathname.startsWith(p))) return NextResponse.next();
+  if (PUBLIC_PREFIXES_ADMIN.some((p) => pathname.startsWith(p))) return NextResponse.next();
 
   // Only protect admin pages and CMS API routes
   const isAdminPath = pathname.startsWith("/admin");
