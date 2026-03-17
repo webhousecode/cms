@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Loader2, RotateCcw, Save } from "lucide-react";
+import { Loader2, RotateCcw, Save, Copy, Check } from "lucide-react";
 
 interface PromptDef {
   id: string;
@@ -14,6 +14,7 @@ export function AIPromptsPanel() {
   const [prompts, setPrompts] = useState<PromptDef[]>([]);
   const [defaults, setDefaults] = useState<Record<string, string>>({});
   const [confirmResetId, setConfirmResetId] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -93,25 +94,36 @@ export function AIPromptsPanel() {
               <p className="text-sm font-semibold text-foreground">{p.label}</p>
               <p className="text-xs text-muted-foreground mt-0.5">{p.description}</p>
             </div>
-            {confirmResetId === p.id ? (
-              <span className="flex items-center gap-1">
-                <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Reset?</span>
-                <button type="button" onClick={() => { setConfirmResetId(null); resetPrompt(p.id); }}
-                  style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
-                <button type="button" onClick={() => setConfirmResetId(null)}
-                  style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
-              </span>
-            ) : (
+            <span className="flex items-center gap-1.5">
               <button
                 type="button"
-                onClick={() => setConfirmResetId(p.id)}
+                onClick={() => { navigator.clipboard.writeText(p.value); setCopiedId(p.id); setTimeout(() => setCopiedId(null), 2000); }}
                 className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded border border-border"
-                title="Reset to default"
+                title="Copy to clipboard"
               >
-                <RotateCcw style={{ width: "0.65rem", height: "0.65rem" }} />
-                Reset
+                {copiedId === p.id ? <Check style={{ width: "0.65rem", height: "0.65rem" }} /> : <Copy style={{ width: "0.65rem", height: "0.65rem" }} />}
+                {copiedId === p.id ? "Copied" : "Copy"}
               </button>
-            )}
+              {confirmResetId === p.id ? (
+                <span className="flex items-center gap-1">
+                  <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Reset?</span>
+                  <button type="button" onClick={() => { setConfirmResetId(null); resetPrompt(p.id); }}
+                    style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
+                  <button type="button" onClick={() => setConfirmResetId(null)}
+                    style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setConfirmResetId(p.id)}
+                  className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded border border-border"
+                  title="Reset to default"
+                >
+                  <RotateCcw style={{ width: "0.65rem", height: "0.65rem" }} />
+                  Reset
+                </button>
+              )}
+            </span>
           </div>
           <textarea
             value={p.value}
