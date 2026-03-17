@@ -12,12 +12,31 @@ import { TeamPanel } from "@/components/settings/team-panel";
 import { EmailSettingsPanel } from "@/components/settings/email-settings-panel";
 import { readSiteConfig } from "@/lib/site-config";
 import { readBrandVoice } from "@/lib/brand-voice";
+import { cookies } from "next/headers";
+import { getSessionUser } from "@/lib/auth";
+import { getTeamMembers, addTeamMember } from "@/lib/team";
+import { redirect } from "next/navigation";
 
 export default async function SettingsPage({
   searchParams,
 }: {
   searchParams: Promise<{ tab?: string }>;
 }) {
+  // Only admins can access Settings
+  const cookieStore = await cookies();
+  const session = await getSessionUser(cookieStore);
+  if (session) {
+    let members = await getTeamMembers();
+    if (members.length === 0) {
+      await addTeamMember(session.sub, "admin");
+      members = await getTeamMembers();
+    }
+    const membership = members.find((m) => m.userId === session.sub);
+    if (!membership || membership.role !== "admin") {
+      redirect("/admin");
+    }
+  }
+
   const [config, siteConfig, brandVoice] = await Promise.all([
     getAdminConfig(),
     readSiteConfig(),
