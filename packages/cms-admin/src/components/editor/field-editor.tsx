@@ -501,75 +501,51 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
               )}
             </div>
           )}
-          {/* URL input + action buttons */}
-          <div style={{ display: "flex", gap: "0.4rem", alignItems: "center" }}>
-            <Input
-              type="text"
-              value={strVal}
-              onChange={(e) => onChange(e.target.value)}
-              disabled={locked}
-              placeholder="Image URL"
-              className="font-mono text-xs"
-              style={{ flex: 1 }}
-            />
-            {!locked && (
-              <>
-                <label
-                  title="Upload image"
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    gap: "0.3rem",
-                    padding: "0.4rem 0.6rem",
-                    borderRadius: "6px",
-                    border: "1px solid var(--border)",
-                    background: "var(--background)",
-                    cursor: imgUploading ? "wait" : "pointer",
-                    fontSize: "0.75rem",
-                    color: "var(--muted-foreground)",
-                    whiteSpace: "nowrap",
-                    flexShrink: 0,
-                  }}
-                  className="hover:border-primary hover:text-primary transition-colors"
-                >
-                  <input
-                    ref={imgInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageUpload}
-                    disabled={locked || imgUploading}
-                    style={{ display: "none" }}
-                  />
-                  <Upload style={{ width: "14px", height: "14px" }} />
-                  {imgUploading ? "..." : "Upload"}
-                </label>
-                <button
-                  type="button"
-                  onClick={openMediaBrowser}
-                  title="Browse Media"
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "0.3rem",
-                    padding: "0.4rem 0.6rem",
-                    borderRadius: "6px",
-                    border: "1px solid var(--border)",
-                    background: "var(--background)",
-                    cursor: "pointer",
-                    fontSize: "0.75rem",
-                    color: "var(--muted-foreground)",
-                    whiteSpace: "nowrap",
-                    flexShrink: 0,
-                  }}
-                  className="hover:border-primary hover:text-primary transition-colors"
-                >
-                  <FolderOpen style={{ width: "14px", height: "14px" }} />
-                  Browse
-                </button>
-              </>
-            )}
-          </div>
+          {/* URL input */}
+          <Input
+            type="text"
+            value={strVal}
+            onChange={(e) => onChange(e.target.value)}
+            disabled={locked}
+            placeholder="Image URL"
+            className="font-mono text-xs"
+          />
+          {/* Upload + Browse buttons */}
+          {!locked && (
+            <div style={{ display: "flex", gap: "0.35rem" }}>
+              <label
+                title="Upload image"
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: "0.3rem",
+                  padding: "0.25rem 0.6rem", borderRadius: "6px",
+                  border: "1px dashed var(--border)", background: "none",
+                  cursor: imgUploading ? "wait" : "pointer", fontSize: "0.7rem",
+                  color: "var(--muted-foreground)", whiteSpace: "nowrap",
+                }}
+                className="hover:border-primary hover:text-primary transition-colors"
+              >
+                <input ref={imgInputRef} type="file" accept="image/*" onChange={handleImageUpload} disabled={locked || imgUploading} style={{ display: "none" }} />
+                <Upload style={{ width: 12, height: 12 }} />
+                {imgUploading ? "..." : "Upload"}
+              </label>
+              <button
+                type="button"
+                onClick={openMediaBrowser}
+                title="Browse Media"
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: "0.3rem",
+                  padding: "0.25rem 0.6rem", borderRadius: "6px",
+                  border: "1px dashed var(--border)", background: "none",
+                  cursor: "pointer", fontSize: "0.7rem", color: "var(--muted-foreground)",
+                  whiteSpace: "nowrap",
+                }}
+                className="hover:border-primary hover:text-primary transition-colors"
+              >
+                <FolderOpen style={{ width: 12, height: 12 }} />
+                Browse
+              </button>
+            </div>
+          )}
 
           {/* Media browser modal */}
           {mediaBrowserOpen && (
