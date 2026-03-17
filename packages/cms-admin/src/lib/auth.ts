@@ -4,12 +4,16 @@ import fs from "fs/promises";
 import path from "path";
 import { getActiveSitePaths } from "./site-paths";
 
+export type UserRole = "admin" | "editor" | "viewer";
+
 export interface User {
   id: string;
   email: string;
   passwordHash: string;
   name: string;
+  role: UserRole;
   createdAt: string;
+  invitedBy?: string; // user ID of inviter
   zoom?: number; // UI zoom level in percent, e.g. 110
 }
 
@@ -17,6 +21,7 @@ export interface SessionPayload {
   sub: string;
   email: string;
   name: string;
+  role: UserRole;
 }
 
 export const COOKIE_NAME = "cms-session";
@@ -54,18 +59,27 @@ export async function getUsers(): Promise<User[]> {
   }
 }
 
-export async function createUser(email: string, password: string, name: string): Promise<User> {
+export async function createUser(
+  email: string,
+  password: string,
+  name: string,
+  opts?: { role?: UserRole; invitedBy?: string },
+): Promise<User> {
   const users = await getUsers();
   if (users.find((u) => u.email.toLowerCase() === email.toLowerCase())) {
     throw new Error("User already exists");
   }
   const passwordHash = await bcrypt.hash(password, 12);
+  // First user is always admin; invited users get the specified role
+  const role = opts?.role ?? (users.length === 0 ? "admin" : "editor");
   const user: User = {
     id: crypto.randomUUID(),
     email: email.toLowerCase().trim(),
     passwordHash,
     name: name.trim(),
+    role,
     createdAt: new Date().toISOString(),
+    ...(opts?.invitedBy ? { invitedBy: opts.invitedBy } : {}),
   };
   users.push(user);
   const filePath = await getUsersFilePath();
@@ -82,7 +96,7 @@ export async function verifyPassword(email: string, password: string): Promise<U
 }
 
 export async function createToken(user: User): Promise<string> {
-  return new SignJWT({ sub: user.id, email: user.email, name: user.name })
+  return new SignJWT({ sub: user.id, email: user.email, name: user.name, role: user.role ?? "admin" })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
     .setExpirationTime("7d")
@@ -91,7 +105,7 @@ export async function createToken(user: User): Promise<string> {
 
 export async function updateUser(
   id: string,
-  patch: { name?: string; email?: string; password?: string; zoom?: number },
+  patch: { name?: string; email?: string; password?: string; zoom?: number; role?: UserRole },
   /** Fallback email for lookup if id doesn't match (stale JWT) */
   fallbackEmail?: string,
 ): Promise<User> {
@@ -108,6 +122,7 @@ export async function updateUser(
   if (patch.email) user.email = patch.email.toLowerCase().trim();
   if (patch.password) user.passwordHash = await bcrypt.hash(patch.password, 12);
   if (patch.zoom !== undefined) user.zoom = patch.zoom;
+  if (patch.role) user.role = patch.role;
 
   users[idx] = user;
   const filePath = await getUsersFilePath();
@@ -122,4 +137,27 @@ export async function verifyToken(token: string): Promise<SessionPayload | null>
   } catch {
     return null;
   }
+}
+
+export async function deleteUser(id: string): Promise<void> {
+  const users = await getUsers();
+  const idx = users.findIndex((u) => u.id === id);
+  if (idx === -1) throw new Error("User not found");
+  // Prevent deleting the last admin
+  const remainingAdmins = users.filter((u, i) => i !== idx && (u.role ?? "admin") === "admin");
+  if ((users[idx]!.role ?? "admin") === "admin" && remainingAdmins.length === 0) {
+    throw new Error("Cannot delete the last admin");
+  }
+  users.splice(idx, 1);
+  const filePath = await getUsersFilePath();
+  await fs.writeFile(filePath, JSON.stringify(users, null, 2));
+}
+
+/** Get current session from cookies (server-side). Returns null if not authenticated. */
+export async function getSessionUser(cookieStore: { get: (name: string) => { value: string } | undefined }): Promise<(SessionPayload & { id: string }) | null> {
+  const token = cookieStore.get(COOKIE_NAME)?.value;
+  if (!token) return null;
+  const payload = await verifyToken(token);
+  if (!payload) return null;
+  return { ...payload, id: payload.sub };
 }

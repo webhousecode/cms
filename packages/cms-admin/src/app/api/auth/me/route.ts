@@ -20,6 +20,7 @@ export async function GET(request: NextRequest) {
       id: payload.sub,
       email: payload.email,
       name: payload.name,
+      role: user?.role ?? payload.role ?? "admin",
       gravatarUrl: gravatarUrl(payload.email),
       zoom: user?.zoom ?? 100,
     },
