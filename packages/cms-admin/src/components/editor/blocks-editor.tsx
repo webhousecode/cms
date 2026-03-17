@@ -4,7 +4,7 @@ import type { FieldConfig, BlockConfig } from "@webhouse/cms";
 import { FieldEditor } from "./field-editor";
 import { ColumnsEditor } from "./columns-editor";
 import { ChevronDown, ChevronRight, ArrowUp, ArrowDown, Plus, Copy } from "lucide-react";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 
 interface Props {
   field: FieldConfig;
@@ -57,6 +57,18 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
   const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pickerContainerRef = useRef<HTMLDivElement>(null);
   const [openUpward, setOpenUpward] = useState(false);
+
+  // Close picker on outside click or Escape
+  useEffect(() => {
+    if (!showPicker) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setShowPicker(false); };
+    const onClick = (e: MouseEvent) => {
+      if (pickerContainerRef.current && !pickerContainerRef.current.contains(e.target as Node)) setShowPicker(false);
+    };
+    document.addEventListener("keydown", onKey);
+    document.addEventListener("mousedown", onClick);
+    return () => { document.removeEventListener("keydown", onKey); document.removeEventListener("mousedown", onClick); };
+  }, [showPicker]);
 
   function setExpandedPersist(updater: (prev: Record<number, boolean>) => Record<number, boolean>) {
     if (controlled) {
