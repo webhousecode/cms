@@ -17,7 +17,7 @@
 
 | # | Feature | Status | Plan |
 |---|---------|--------|------|
-| F01 | [Invite Users](#f01-invite-users) | Planned | [docs/features/F01-invite-users.md](features/F01-invite-users.md) |
+| F01 | [Invite Users](#f01-invite-users) | Done | [docs/features/F01-invite-users.md](features/F01-invite-users.md) |
 | F02 | [Import Engine](#f02-import-engine) | Planned | [docs/features/F02-import-engine.md](features/F02-import-engine.md) |
 | F03 | [WordPress Migration](#f03-wordpress-migration) | Planned | [docs/features/F03-wordpress-migration.md](features/F03-wordpress-migration.md) |
 | F04 | [MCP Server Enhancements](#f04-mcp-server-enhancements) | In progress | [docs/features/F04-mcp-server.md](features/F04-mcp-server.md) |
