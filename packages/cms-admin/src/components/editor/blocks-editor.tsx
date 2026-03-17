@@ -3,7 +3,7 @@
 import type { FieldConfig, BlockConfig } from "@webhouse/cms";
 import { FieldEditor } from "./field-editor";
 import { ColumnsEditor } from "./columns-editor";
-import { ChevronDown, ChevronRight, ArrowUp, ArrowDown, Plus } from "lucide-react";
+import { ChevronDown, ChevronRight, ArrowUp, ArrowDown, Plus, Copy } from "lucide-react";
 import { useState, useRef } from "react";
 
 interface Props {
@@ -36,7 +36,7 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
   const blocks = Array.isArray(value) ? value : [];
   const baseNames = field.blocks ?? blocksConfig.map((b) => b.name);
   // Add builtin blocks that exist in blocksConfig but aren't in the field's explicit list
-  const builtinNames = ["columns", "video", "audio", "file"];
+  const builtinNames = ["columns", "video", "audio", "file", "interactive"];
   const configNames = blocksConfig.map((b) => b.name);
   const allowedBlockNames = [
     ...baseNames,
@@ -84,8 +84,19 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
     onChange(next);
   }
 
+  const [flashIdx, setFlashIdx] = useState<number | null>(null);
+
   function removeBlock(index: number) {
     onChange(blocks.filter((_, i) => i !== index));
+  }
+
+  function cloneBlock(index: number) {
+    const clone = JSON.parse(JSON.stringify(blocks[index]));
+    const newIndex = blocks.length;
+    setExpandedPersist((prev) => ({ ...prev, [newIndex]: true }));
+    onChange([...blocks, clone]);
+    setFlashIdx(newIndex);
+    setTimeout(() => setFlashIdx(null), 1200);
   }
 
   function moveBlock(index: number, dir: -1 | 1) {
@@ -182,9 +193,11 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
           <div
             key={i}
             style={{
-              border: "1px solid var(--border)",
+              border: flashIdx === i ? "1px solid var(--primary)" : "1px solid var(--border)",
               borderRadius: "8px",
               background: "var(--card)",
+              transition: "border-color 300ms, box-shadow 300ms",
+              boxShadow: flashIdx === i ? "0 0 12px rgba(247, 187, 46, 0.3)" : "none",
             }}
           >
             {/* Header */}
@@ -227,6 +240,9 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
                   </button>
                   <button type="button" disabled={i === blocks.length - 1} onClick={() => moveBlock(i, 1)} style={{ background: "none", border: "none", cursor: i === blocks.length - 1 ? "not-allowed" : "pointer", color: "var(--muted-foreground)", padding: "2px", opacity: i === blocks.length - 1 ? 0.3 : 1 }}>
                     <ArrowDown style={{ width: 14, height: 14 }} />
+                  </button>
+                  <button type="button" onClick={() => cloneBlock(i)} title="Clone block" style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "2px" }} className="hover:text-primary transition-colors">
+                    <Copy style={{ width: 14, height: 14 }} />
                   </button>
                   {confirmRemoveIdx === i ? (
                     <>
