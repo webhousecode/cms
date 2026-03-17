@@ -74,6 +74,7 @@
 | F55 | [Enhance Prompt](#f55-enhance-prompt) | Planned | [docs/features/F55-enhance-prompt.md](features/F55-enhance-prompt.md) |
 | F56 | [GitHub Live Content](#f56-github-live-content) | Idea | [docs/features/F56-github-live-content.md](features/F56-github-live-content.md) |
 | F57 | [Extranet](#f57-extranet) | Planned | [docs/features/F57-extranet.md](features/F57-extranet.md) |
+| F58 | [Interactive Islands](#f58-interactive-islands) | Planned | [docs/features/F58-interactive-islands.md](features/F58-interactive-islands.md) |
 
 ---
 
@@ -247,3 +248,6 @@ Bidirectional sync between a GitHub repo and the CMS. Mount any repo (or subdire
 
 ## F57 — Extranet (Protected Site Pages)
 Site-facing authentication for website visitors — completely separate from CMS admin access. Extranet users (managed per-site in CMS admin) can access protected pages on the published site. Documents marked as `protected: true` require Extranet login. Access Groups control which users see which content. Lightweight site-side integration via Next.js middleware + JWT sessions. Use cases: client portals, member-only content, gated resources, internal company pages, course content. Self-registration with optional admin approval. Invite by email. Built on F01 invite pattern.
+
+## F58 — Interactive Islands
+Preact micro-apps (~2-5KB) that hydrate inline in static pages — no iframes. Managed as Interactives (F39) with a new `type: "island"` rendering mode. Build pipeline bundles `.tsx` source via esbuild into self-contained `.island.js` files. Lightweight loader (~1.5KB) finds `<cms-island>` elements and hydrates lazily (IntersectionObserver) or eagerly. CMS data passed as JSON props. Primary consumer: shop plugin (CartIsland, GateIsland, CheckoutBtn). Inherits page CSS, full DOM access, SEO-friendly fallback content. Based on CMS-ENGINE.md §6.4 vision.

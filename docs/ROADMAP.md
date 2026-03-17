@@ -94,6 +94,7 @@ _Unique selling points and advanced features._
 | 25 | **F08 RAG Knowledge Base** | Large | AI grounded in site content |
 | 26 | **F09 Chat Plugin** | Medium | AI chat widget built on F08 |
 | 27 | **F37 HTML Document Field** | Medium | Visual editor for standalone HTML pages |
+| 27b | **F58 Interactive Islands** | Medium | Preact micro-apps hydrating inline — shop plugin foundation |
 | 28 | **F14 Newsletter Engine** | Medium | Email campaigns from CMS content |
 | 29 | **F32 Template Registry** | Large | Marketplace of themes built on F42 boilerplates |
 | 30 | **F17 AI Content Index** | Small | llms.txt, AI-friendly sitemaps |
