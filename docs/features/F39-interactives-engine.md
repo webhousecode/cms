@@ -231,7 +231,7 @@ The existing Infographics collection with a `type: "interactive"` field pointing
 - [x] TipTap `interactiveEmbed` node (toolbar button, picker, preview in editor)
 - [x] Block type `interactive` for blocks fields — works via `defineBlock({ name: 'interactive', fields: [{ name: 'interactiveId', type: 'text' }, ...] })` in cms.config.ts, BlocksEditor renders automatically
 - [x] Standalone page rendering — SproutLake infographics reads `interactiveFile` field from CMS collection
-- [ ] Interactive picker field type (browse + select from Interactives Manager instead of text input for interactiveId)
+- [x] Interactive picker field type — `type: "interactive"` renders text input + Upload + Browse modal with search
 - **Note:** TipTap richtext embed roundtrip is a known unsolved issue (parkeret) — blocks field works fine as alternative
 
 ### Phase 5: AI Generation
