@@ -161,13 +161,41 @@ New page at `/admin/live-content` (sidebar item under Media):
 4. **Sync controls** — Pull, Push, Sync buttons with diff preview before push
 5. **Activity log** — recent sync operations, who changed what
 
-### Webhook Listener (optional fast path)
+### External Trigger: Webhook + Pull API
+
+Two ways for an external agent to tell the CMS "I've pushed, come get it":
+
+**1. GitHub Webhook (automatic)**
 
 ```
 POST /api/live-content/webhook
 ```
 
-Receives GitHub `push` events. Verifies HMAC signature. Triggers auto-pull for the matching source. Faster than polling for real-time collaboration with external AI agents.
+Receives GitHub `push` events. Verifies HMAC signature. Triggers auto-pull for the matching source. Set up once in GitHub repo → Settings → Webhooks, and every push triggers a pull. Zero effort for the external AI.
+
+**2. Direct Pull API (explicit)**
+
+```
+POST /api/live-content/[sourceId]/pull
+Authorization: Bearer <cms-service-token>
+```
+
+An external AI agent (Claude Code, Cursor, etc.) calls this endpoint directly after pushing to the repo. No GitHub webhook setup needed — the agent just does `git push && curl -X POST https://cms.example/api/live-content/my-source/pull -H "Authorization: Bearer $TOKEN"`. Returns `{ pulled: 3, files: [...] }`.
+
+The service token is the same `CMS_JWT_SECRET` used by other internal APIs (passed as `X-CMS-Service-Token` header or Bearer token). Configurable per source in Site Settings.
+
+**Recommended flow for external AI agents:**
+
+```bash
+# 1. AI makes changes and pushes
+git add . && git commit -m "add interactive chart" && git push
+
+# 2. AI tells CMS to pull (one curl call)
+curl -X POST https://cms-admin.example/api/live-content/interactives/pull \
+  -H "X-CMS-Service-Token: $CMS_SECRET"
+```
+
+This makes the CMS a "pull on demand" system — the external AI is in control of when content arrives.
 
 ### Integration with Interactives (F39)
 
