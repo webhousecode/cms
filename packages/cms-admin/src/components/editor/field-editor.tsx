@@ -116,7 +116,7 @@ function MultiRelationPicker({ collection, value, onChange, disabled }: {
           display: "flex", flexWrap: "wrap", gap: "0.4rem", alignItems: "center",
           padding: "0.4rem 0.6rem", minHeight: "38px",
           borderRadius: "6px", border: `1px solid ${open ? "var(--ring)" : "var(--border)"}`,
-          background: "var(--background)", cursor: disabled ? "not-allowed" : "pointer",
+          background: "color-mix(in srgb, var(--input) 30%, var(--background))", cursor: disabled ? "not-allowed" : "pointer",
         }}
       >
         {value.map((slug) => (
@@ -164,7 +164,7 @@ function MultiRelationPicker({ collection, value, onChange, disabled }: {
               style={{
                 width: "100%", padding: "0.35rem 0.6rem",
                 borderRadius: "5px", border: "1px solid var(--border)",
-                background: "var(--background)", color: "var(--foreground)",
+                background: "color-mix(in srgb, var(--input) 30%, var(--background))", color: "var(--foreground)",
                 fontSize: "0.8rem",
               }}
             />
@@ -233,7 +233,7 @@ function RelationPicker({ collection, value, onChange, disabled }: {
         style={{
           width: "100%", textAlign: "left", padding: "0.4rem 0.75rem",
           borderRadius: "6px", border: "1px solid var(--border)",
-          background: "var(--background)", color: value ? "var(--foreground)" : "var(--muted-foreground)",
+          background: "color-mix(in srgb, var(--input) 30%, var(--background))", color: value ? "var(--foreground)" : "var(--muted-foreground)",
           fontSize: "0.875rem", cursor: disabled ? "not-allowed" : "pointer",
           display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.5rem",
         }}
@@ -261,7 +261,7 @@ function RelationPicker({ collection, value, onChange, disabled }: {
               style={{
                 width: "100%", padding: "0.35rem 0.6rem",
                 borderRadius: "5px", border: "1px solid var(--border)",
-                background: "var(--background)", color: "var(--foreground)",
+                background: "color-mix(in srgb, var(--input) 30%, var(--background))", color: "var(--foreground)",
                 fontSize: "0.8rem",
               }}
             />
@@ -586,7 +586,7 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
                     style={{
                       width: "100%", padding: "0.35rem 0.5rem",
                       borderRadius: "6px", border: "1px solid var(--border)",
-                      background: "var(--background)", color: "var(--foreground)",
+                      background: "color-mix(in srgb, var(--input) 30%, var(--background))", color: "var(--foreground)",
                       fontSize: "0.8rem", outline: "none",
                     }}
                   />
@@ -835,7 +835,7 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
                 </div>
                 <div style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid var(--border)" }}>
                   <input type="text" value={audioSearch} onChange={(e) => setAudioSearch(e.target.value)} placeholder="Search media…" autoFocus
-                    style={{ width: "100%", padding: "0.35rem 0.5rem", borderRadius: "6px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.8rem", outline: "none" }} />
+                    style={{ width: "100%", padding: "0.35rem 0.5rem", borderRadius: "6px", border: "1px solid var(--border)", background: "color-mix(in srgb, var(--input) 30%, var(--background))", color: "var(--foreground)", fontSize: "0.8rem", outline: "none" }} />
                 </div>
                 <div style={{ overflowY: "auto", padding: "0.75rem" }}>
                   {audioLoading && <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>Loading media...</div>}
@@ -971,7 +971,7 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
                 </div>
                 <div style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid var(--border)" }}>
                   <input type="text" value={intSearch} onChange={(e) => setIntSearch(e.target.value)} placeholder="Search interactives…" autoFocus
-                    style={{ width: "100%", padding: "0.35rem 0.5rem", borderRadius: "6px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.8rem", outline: "none" }} />
+                    style={{ width: "100%", padding: "0.35rem 0.5rem", borderRadius: "6px", border: "1px solid var(--border)", background: "color-mix(in srgb, var(--input) 30%, var(--background))", color: "var(--foreground)", fontSize: "0.8rem", outline: "none" }} />
                 </div>
                 <div style={{ overflowY: "auto", padding: "0.5rem" }}>
                   {intLoading && <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>Loading...</div>}
@@ -1102,7 +1102,7 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
                 </div>
                 <div style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid var(--border)" }}>
                   <input type="text" value={fileSearch} onChange={(e) => setFileSearch(e.target.value)} placeholder="Search media…" autoFocus
-                    style={{ width: "100%", padding: "0.35rem 0.5rem", borderRadius: "6px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.8rem", outline: "none" }} />
+                    style={{ width: "100%", padding: "0.35rem 0.5rem", borderRadius: "6px", border: "1px solid var(--border)", background: "color-mix(in srgb, var(--input) 30%, var(--background))", color: "var(--foreground)", fontSize: "0.8rem", outline: "none" }} />
                 </div>
                 <div style={{ overflowY: "auto", padding: "0.75rem" }}>
                   {fileLoading && <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>Loading media...</div>}
