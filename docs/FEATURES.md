@@ -70,6 +70,7 @@
 | F51 | [Admin AI Assistant](#f51-admin-ai-assistant) | Planned | [docs/features/F51-admin-ai-assistant.md](features/F51-admin-ai-assistant.md) |
 | F52 | [Custom Column Presets](#f52-custom-column-presets) | Planned | [docs/features/F52-custom-column-presets.md](features/F52-custom-column-presets.md) |
 | F53 | [Drag & Drop Blocks Between Columns](#f53-drag-drop-blocks) | Planned | [docs/features/F53-drag-drop-blocks.md](features/F53-drag-drop-blocks.md) |
+| F54 | [Local AI Tunnel](#f54-local-ai-tunnel) | Planned | [docs/features/F54-local-ai-tunnel.md](features/F54-local-ai-tunnel.md) |
 
 ---
 
@@ -231,3 +232,6 @@ Visual preset editor in Site Settings for creating custom column layouts beyond 
 
 ## F53 — Drag & Drop Blocks Between Columns
 Drag blocks between columns and reorder within columns using `@dnd-kit/core` + `@dnd-kit/sortable`. Each block gets a grip drag handle. Gold glow drop targets show where blocks will land. Touch and keyboard support included. Scoped to within a single columns block — no cross-block dragging.
+
+## F54 — Local AI Tunnel
+Use a Claude Code Max/Pro subscription as the AI backend for CMS admin during development — zero API cost for dev and testing. Extracts OAuth token from macOS Keychain or `~/.claude/.credentials.json` and uses it as the Anthropic API key. Toggle in Settings → AI. Auto-renewal when token approaches expiry. CLI auto-detect suggests tunnel when no API key configured. Development-only by design — token expires ~29h, requires local Claude Code installation. Based on proven patterns from cc-docker-demo and CPM v4 runner.
