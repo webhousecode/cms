@@ -56,7 +56,6 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
   const [confirmRemoveIdx, setConfirmRemoveIdx] = useState<number | null>(null);
   const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pickerContainerRef = useRef<HTMLDivElement>(null);
-  const [openUpward, setOpenUpward] = useState(false);
 
   // Close picker on outside click or Escape
   useEffect(() => {
@@ -344,14 +343,7 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
         <div style={{ position: "relative" }} ref={pickerContainerRef}>
           <button
             type="button"
-            onClick={() => {
-              if (!showPicker && pickerContainerRef.current) {
-                const rect = pickerContainerRef.current.getBoundingClientRect();
-                const spaceBelow = window.innerHeight - rect.bottom;
-                setOpenUpward(spaceBelow < 250);
-              }
-              setShowPicker((p) => !p);
-            }}
+            onClick={() => setShowPicker((p) => !p)}
             style={{
               display: "flex",
               alignItems: "center",
@@ -384,12 +376,15 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
           >
             <Plus style={{ width: 14, height: 14 }} /> Add block
           </button>
-          {showPicker && (
+          {showPicker && pickerContainerRef.current && (() => {
+            const rect = pickerContainerRef.current!.getBoundingClientRect();
+            const goUp = window.innerHeight - rect.bottom < 250;
+            return (
             <div style={{
-              position: "absolute",
-              ...(openUpward ? { bottom: "calc(100% + 4px)" } : { top: "calc(100% + 4px)" }),
-              left: 0,
-              zIndex: 50,
+              position: "fixed",
+              left: rect.left,
+              ...(goUp ? { bottom: window.innerHeight - rect.top + 4 } : { top: rect.bottom + 4 }),
+              zIndex: 9999,
               background: "var(--popover)",
               border: "1px solid var(--border)",
               borderRadius: "8px",
@@ -439,7 +434,8 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
                 </div>
               )}
             </div>
-          )}
+          );
+          })()}
         </div>
       )}
       {/* Clone flash animation */}
