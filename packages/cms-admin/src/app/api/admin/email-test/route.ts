@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
       </div>
     </div>
     <p style="text-align:center;margin:20px 0 0;font-size:11px;color:#404040;">
-      Sent by <a href="https://webhouse.app" style="color:#F7BB2E;text-decoration:none;">webhouse.app</a>
+      Sent by <a href="https://webhouse.app" style="text-decoration:none;"><strong style="color:#fafafa;">webhouse</strong><strong style="color:#F7BB2E;">.app</strong></a>
     </p>
   </div>
 </body>

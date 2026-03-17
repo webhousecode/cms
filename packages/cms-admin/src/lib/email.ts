@@ -111,8 +111,8 @@ export function renderInviteEmail(opts: {
     <!-- Footer -->
     <div style="text-align:center;padding:24px 0 0;">
       <p style="margin:0 0 6px;font-size:11px;color:#404040;">
-        Powered by
-        <a href="https://webhouse.app" style="color:#F7BB2E;text-decoration:none;font-weight:500;">webhouse.app</a>
+        Sent by
+        <a href="https://webhouse.app" style="text-decoration:none;"><strong style="color:#fafafa;">webhouse</strong><strong style="color:#F7BB2E;">.app</strong></a>
       </p>
       <p style="margin:0;font-size:10px;color:#333;">
         If you didn't expect this invitation, you can safely ignore this email.
