@@ -218,24 +218,39 @@ export class ContentService {
    * Publish all draft documents whose publishAt timestamp is in the past.
    * Called by the cron job every minute. Returns slugs of published documents.
    */
-  async publishDue(collections?: string[]): Promise<{ collection: string; slug: string }[]> {
+  async publishDue(collections?: string[]): Promise<{ collection: string; slug: string; action: 'published' | 'unpublished' }[]> {
     const targets = collections ?? this.config.collections.map(c => c.name);
     const now = new Date();
-    const published: { collection: string; slug: string }[] = [];
+    const actions: { collection: string; slug: string; action: 'published' | 'unpublished' }[] = [];
 
     for (const col of targets) {
-      const { documents } = await this.storage.findMany(col, { status: 'draft' }).catch(() => ({ documents: [] }));
+      const { documents } = await this.storage.findMany(col).catch(() => ({ documents: [] }));
       for (const doc of documents) {
-        if (!doc.publishAt) continue;
-        if (new Date(doc.publishAt) > now) continue;
-        await this.storage.update(col, doc.id, {
-          status: 'published',
-          publishAt: null, // clear the schedule
-        });
-        published.push({ collection: col, slug: doc.slug });
+        // Scheduled publish: draft with publishAt in the past → published
+        if (doc.status === 'draft' && doc.publishAt) {
+          if (new Date(doc.publishAt) <= now) {
+            await this.storage.update(col, doc.id, {
+              status: 'published',
+              publishAt: null,
+            });
+            actions.push({ collection: col, slug: doc.slug, action: 'published' });
+          }
+        }
+
+        // Scheduled unpublish: published with unpublishAt in the past → draft
+        if (doc.status === 'published' && (doc as any).unpublishAt) {
+          const unpublishAt = new Date((doc as any).unpublishAt);
+          if (unpublishAt <= now) {
+            await this.storage.update(col, doc.id, {
+              status: 'draft',
+              unpublishAt: null,
+            });
+            actions.push({ collection: col, slug: doc.slug, action: 'unpublished' });
+          }
+        }
       }
     }
-    return published;
+    return actions;
   }
 
   /**

@@ -84,7 +84,7 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
   }
   try {
     const { collection, slug } = await params;
-    const body = await req.json() as { data?: Record<string, unknown>; status?: string; locale?: string; translationOf?: string | null; publishAt?: string | null; slug?: string };
+    const body = await req.json() as { data?: Record<string, unknown>; status?: string; locale?: string; translationOf?: string | null; publishAt?: string | null; unpublishAt?: string | null; slug?: string };
     const cms = await getAdminCms();
 
     // Set Git commit author to the actual editor (not the service token owner)
@@ -121,6 +121,7 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
       ...(body.locale !== undefined && { locale: body.locale }),
       ...(body.translationOf !== undefined && { translationOf: body.translationOf ?? undefined }),
       ...("publishAt" in body || nextStatus === "published" ? { publishAt } : {}),
+      ...("unpublishAt" in body ? { unpublishAt: body.unpublishAt } : {}),
     });
 
     // If trashing, clean up any pending curation queue entries for this doc

@@ -13,12 +13,12 @@ export async function register() {
       const { getAdminCms, getAdminConfig } = await import("./lib/cms");
       const [cms, config] = await Promise.all([getAdminCms(), getAdminConfig()]);
       const collections = config.collections.map((c) => c.name);
-      const published = await cms.content.publishDue(collections);
-      if (published.length > 0) {
-        console.log(
-          `[cron] auto-published ${published.length} document(s):`,
-          published.map((p) => `${p.collection}/${p.slug}`).join(", "),
-        );
+      const actions = await cms.content.publishDue(collections);
+      if (actions.length > 0) {
+        const pub = actions.filter((a) => a.action === "published");
+        const unpub = actions.filter((a) => a.action === "unpublished");
+        if (pub.length > 0) console.log(`[cron] auto-published ${pub.length} document(s):`, pub.map((p) => `${p.collection}/${p.slug}`).join(", "));
+        if (unpub.length > 0) console.log(`[cron] auto-unpublished ${unpub.length} document(s):`, unpub.map((p) => `${p.collection}/${p.slug}`).join(", "));
       }
     } catch (err) {
       console.error("[cron] publishDue error:", err);
