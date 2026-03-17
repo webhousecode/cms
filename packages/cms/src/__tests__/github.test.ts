@@ -24,13 +24,13 @@ function makeDoc(overrides: Record<string, unknown> = {}) {
 function makeFetchMock(responses: Array<{ status: number; body: unknown }>) {
   let call = 0;
   return vi.fn(async () => {
-    const r = responses[call] ?? responses[responses.length - 1];
+    const r = responses[call] ?? responses[responses.length - 1]!;
     call++;
     return {
-      ok: r.status >= 200 && r.status < 300,
-      status: r.status,
-      statusText: String(r.status),
-      json: async () => r.body,
+      ok: r!.status >= 200 && r!.status < 300,
+      status: r!.status,
+      statusText: String(r!.status),
+      json: async () => r!.body,
     };
   });
 }
@@ -61,7 +61,7 @@ describe('GitHubStorageAdapter', () => {
     const adapter = makeAdapter();
     await expect(adapter.initialize()).resolves.toBeUndefined();
     expect(fetchMock).toHaveBeenCalledOnce();
-    expect(fetchMock.mock.calls[0][0]).toContain('/repos/acme/site');
+    expect((fetchMock.mock.calls[0] as unknown[])[0]).toContain('/repos/acme/site');
   });
 
   it('initialize: throws on 401', async () => {
@@ -139,7 +139,7 @@ describe('GitHubStorageAdapter', () => {
     expect(result?.slug).toBe('hello-world');
     expect(result?.data['title']).toBe('Hello World');
 
-    const url = fetchMock.mock.calls[0][0] as string;
+    const url = (fetchMock.mock.calls[0] as unknown[])[0] as string;
     expect(url).toContain('content/posts/hello-world.json');
     expect(url).toContain('ref=main');
   });
@@ -234,7 +234,7 @@ describe('GitHubStorageAdapter', () => {
 
     const result = await makeAdapter().findMany('posts', { status: 'published' });
     expect(result.total).toBe(1);
-    expect(result.documents[0].status).toBe('published');
+    expect(result.documents[0]!.status).toBe('published');
   });
 
   it('findMany: tags filter (AND logic)', async () => {
@@ -263,7 +263,7 @@ describe('GitHubStorageAdapter', () => {
 
     const result = await makeAdapter().findMany('posts', { tags: ['cms', 'ai'] });
     expect(result.total).toBe(1);
-    expect(result.documents[0].slug).toBe('both');
+    expect(result.documents[0]!.slug).toBe('both');
   });
 
   it('findMany: orderBy data field (numeric)', async () => {

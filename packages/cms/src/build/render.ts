@@ -222,9 +222,9 @@ export async function renderSite(context: SiteContext): Promise<RenderedPage[]> 
             slug: doc.slug,
             description: String(seoData?.['metaDescription'] ?? description ?? ''),
             canonicalUrl,
-            jsonLd: seoData?.['jsonLd'] as Record<string, unknown> | undefined,
-            lang: docLang,
-            alternates: Object.keys(alternates).length > 0 ? alternates : undefined,
+            ...(seoData?.['jsonLd'] ? { jsonLd: seoData['jsonLd'] as Record<string, unknown> } : {}),
+            ...(docLang ? { lang: docLang } : {}),
+            ...(Object.keys(alternates).length > 0 ? { alternates } : {}),
           },
         }),
       });

@@ -19,7 +19,11 @@ export function createContentRoutes(content: ContentService) {
     const offset = c.req.query('offset') ? Number(c.req.query('offset')) : undefined;
 
     try {
-      const result = await content.findMany(collection, { status, limit, offset });
+      const opts: import('../../storage/types.js').QueryOptions = {};
+      if (status) opts.status = status;
+      if (limit !== undefined) opts.limit = limit;
+      if (offset !== undefined) opts.offset = offset;
+      const result = await content.findMany(collection, opts);
       return c.json({
         documents: result.documents.map(stripFieldMeta),
         total: result.total,
@@ -60,7 +64,7 @@ export function createContentRoutes(content: ContentService) {
           ...(doc._fieldMeta?.[fieldPath] ?? {}),
           lockedBy: 'user',
           lockedAt: new Date().toISOString(),
-          userId: body.userId,
+          ...(body.userId ? { userId: body.userId } : {}),
           reason: body.reason ?? 'manual-lock',
         },
       };
@@ -82,15 +86,10 @@ export function createContentRoutes(content: ContentService) {
       if (!doc) return c.json({ error: 'Not found' }, 404);
 
       const existing = doc._fieldMeta?.[fieldPath] ?? {};
+      const { lockedBy: _lb, lockedAt: _la, userId: _uid, reason: _r, ...rest } = existing;
       const updatedMeta: DocumentFieldMeta = {
         ...doc._fieldMeta,
-        [fieldPath]: {
-          ...existing,
-          lockedBy: undefined,
-          lockedAt: undefined,
-          userId: undefined,
-          reason: undefined,
-        },
+        [fieldPath]: rest,
       };
 
       await content.update(collection, doc.id, { _fieldMeta: updatedMeta });
@@ -114,7 +113,7 @@ export function createContentRoutes(content: ContentService) {
 
       for (const [field, meta] of Object.entries(doc._fieldMeta ?? {})) {
         updatedMeta[field] = meta?.aiGenerated
-          ? { ...meta, lockedBy: 'user', lockedAt: timestamp, userId: body.userId, reason: 'manual-lock-all' }
+          ? { ...meta, lockedBy: 'user' as const, lockedAt: timestamp, ...(body.userId ? { userId: body.userId } : {}), reason: 'manual-lock-all' }
           : meta;
       }
 
@@ -135,13 +134,8 @@ export function createContentRoutes(content: ContentService) {
 
       const updatedMeta: DocumentFieldMeta = {};
       for (const [field, meta] of Object.entries(doc._fieldMeta ?? {})) {
-        updatedMeta[field] = {
-          ...meta,
-          lockedBy: undefined,
-          lockedAt: undefined,
-          userId: undefined,
-          reason: undefined,
-        };
+        const { lockedBy: _lb, lockedAt: _la, userId: _uid, reason: _r, ...rest } = meta ?? {};
+        updatedMeta[field] = rest;
       }
 
       await content.update(collection, doc.id, { _fieldMeta: updatedMeta });
@@ -170,11 +164,10 @@ export function createContentRoutes(content: ContentService) {
     const collection = c.req.param('collection');
     try {
       const body = await c.req.json() as { slug?: string; status?: 'draft' | 'published' | 'archived'; data: Record<string, unknown> };
-      const doc = await content.create(collection, {
-        slug: body.slug,
-        status: body.status,
-        data: body.data,
-      }, { actor: 'user' });
+      const input: import('../../storage/types.js').DocumentInput = { data: body.data };
+      if (body.slug) input.slug = body.slug;
+      if (body.status) input.status = body.status;
+      const doc = await content.create(collection, input, { actor: 'user' });
       return c.json(stripFieldMeta(doc), 201);
     } catch (e) {
       return c.json({ error: String(e) }, 400);
@@ -191,11 +184,11 @@ export function createContentRoutes(content: ContentService) {
       if (!existing) return c.json({ error: 'Not found' }, 404);
 
       const body = await c.req.json() as { slug?: string; status?: 'draft' | 'published' | 'archived'; data?: Record<string, unknown> };
-      const doc = await content.update(collection, existing.id, {
-        slug: body.slug,
-        status: body.status,
-        data: body.data,
-      }, { actor: 'user' });
+      const partial: Partial<import('../../storage/types.js').DocumentInput> = {};
+      if (body.slug) partial.slug = body.slug;
+      if (body.status) partial.status = body.status;
+      if (body.data) partial.data = body.data;
+      const doc = await content.update(collection, existing.id, partial, { actor: 'user' });
       return c.json(stripFieldMeta(doc));
     } catch (e) {
       return c.json({ error: String(e) }, 400);

@@ -63,7 +63,7 @@ describe('SqliteStorageAdapter', () => {
 
     const posts = await adapter.findMany('posts', { status: 'published' });
     expect(posts.total).toBe(1);
-    expect(posts.documents[0].data['title']).toBe('Post');
+    expect(posts.documents[0]!.data['title']).toBe('Post');
   });
 
   it('updates a document', async () => {
@@ -108,7 +108,7 @@ describe('SqliteStorageAdapter', () => {
 
     const both = await adapter.findMany('posts', { tags: ['cms', 'ai'] });
     expect(both.total).toBe(1);
-    expect(both.documents[0].data['title']).toBe('Both');
+    expect(both.documents[0]!.data['title']).toBe('Both');
   });
 
   it('returns empty when no documents match tag', async () => {

@@ -1,0 +1,12 @@
+{
+  "files": [],
+  "references": [
+    { "path": "packages/cms" },
+    { "path": "packages/cms-ai" },
+    { "path": "packages/cms-cli" },
+    { "path": "packages/cms-admin" },
+    { "path": "packages/cms-mcp-client" },
+    { "path": "packages/cms-mcp-server" },
+    { "path": "packages/create-cms" }
+  ]
+}

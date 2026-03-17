@@ -49,7 +49,7 @@ export function applyAutolinks(html: string, autolinks: AutolinkConfig[]): strin
 
     // Track tag context
     const isClosing = tagMatch[1] === '/';
-    const tagName = tagMatch[2].toLowerCase();
+    const tagName = tagMatch[2]!.toLowerCase();
 
     if (tagName === 'a') {
       inAnchor += isClosing ? -1 : 1;

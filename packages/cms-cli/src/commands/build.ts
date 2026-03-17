@@ -11,7 +11,7 @@ export async function buildCommand(args: { outDir?: string; cwd?: string }) {
   const cms = await createCms(config);
 
   logger.info('Building site...');
-  const result = await cms.build({ outDir: args.outDir });
+  const result = await cms.build(args.outDir ? { outDir: args.outDir } : {});
 
   logger.success(`Build complete in ${result.duration}ms`);
   logger.log(`  Pages: ${result.pages}`);
