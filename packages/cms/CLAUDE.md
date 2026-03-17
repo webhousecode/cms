@@ -332,7 +332,7 @@ These embedded media nodes are **not** the same as CMS blocks defined in `cms.co
 
 **For complex pages with mixed content (text + interactives + images + files):** Use `blocks`-type fields instead of a single richtext field. Each block type handles its own rendering:
 - `text` block → rendered with `react-markdown`
-- `interactive` block → rendered as iframe or React component
+- `interactive` block → rendered as scaled iframe (supports `viewportWidth`, `viewportHeight`, `scale` fields)
 - `image` block → rendered as `<img>` with caption
 - `file` block → rendered as download link
 
@@ -2593,3 +2593,44 @@ For simpler cases, the CMS also supports standalone HTML interactives managed vi
 - The interactive is a one-off visualization
 
 For data-driven interactives that need CMS-managed content, always prefer the React component pattern above.
+
+### Scaled Interactive Rendering (Blocks)
+
+The built-in `interactive` block supports viewport scaling — render a full-size interactive as a miniature without scrollbars:
+
+```tsx
+case "interactive": {
+  const intId = block.interactiveId as string;
+  if (!intId) return null;
+  const vw = (block.viewportWidth as number) || 1000;  // Internal viewport width
+  const vh = (block.viewportHeight as number) || 800;   // Internal viewport height
+  const sc = ((block.scale as number) || 100) / 100;    // Scale factor (50 = half size)
+  const isScaled = sc < 1;
+  return (
+    <div key={index} className="my-8">
+      {isScaled ? (
+        <div style={{ width: vw * sc, height: vh * sc, overflow: "hidden", borderRadius: "0.75rem" }}>
+          <iframe
+            src={`/interactives/${intId}.html`}
+            title={block.caption as string || "Interactive"}
+            style={{ width: vw, height: vh, border: "none", transform: `scale(${sc})`, transformOrigin: "top left" }}
+            sandbox="allow-scripts allow-same-origin"
+          />
+        </div>
+      ) : (
+        <iframe
+          src={`/interactives/${intId}.html`}
+          title={block.caption as string || "Interactive"}
+          style={{ width: "100%", minHeight: `${vh}px`, border: "none", borderRadius: "0.75rem" }}
+          sandbox="allow-scripts allow-same-origin"
+        />
+      )}
+      {block.caption && (
+        <p className="text-sm text-gray-500 mt-2 text-center">{block.caption as string}</p>
+      )}
+    </div>
+  );
+}
+```
+
+**Example:** `viewportWidth: 1000`, `viewportHeight: 800`, `scale: 50` → renders a 500x400px miniature of the full 1000x800 interactive. All sliders, buttons, and charts remain functional.

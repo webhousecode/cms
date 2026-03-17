@@ -51,6 +51,9 @@ export const builtinBlocks: BlockConfig[] = [
     fields: [
       { name: 'interactiveId', type: 'interactive' as const, label: 'Interactive', required: true },
       { name: 'caption', type: 'text', label: 'Caption' },
+      { name: 'viewportWidth', type: 'number', label: 'Viewport Width (px)' },
+      { name: 'viewportHeight', type: 'number', label: 'Viewport Height (px)' },
+      { name: 'scale', type: 'number', label: 'Scale (%)' },
     ],
   },
 ];
