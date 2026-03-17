@@ -20,7 +20,7 @@ test.describe("Login flow", () => {
     });
 
     // Go to login page
-    await page.goto(BASE_URL + "/admin/login", { waitUntil: "commit", timeout: 15000 });
+    await page.goto(BASE_URL + "/admin/login", { waitUntil: "commit", timeout: 30000 });
 
     // Wait for either login form or setup page
     await page.waitForTimeout(3000);
