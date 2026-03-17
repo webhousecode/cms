@@ -90,13 +90,21 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
     onChange(blocks.filter((_, i) => i !== index));
   }
 
+  const flashRef = useRef<HTMLDivElement>(null);
+
   function cloneBlock(index: number) {
     const clone = JSON.parse(JSON.stringify(blocks[index]));
     const newIndex = blocks.length;
     setExpandedPersist((prev) => ({ ...prev, [newIndex]: true }));
     onChange([...blocks, clone]);
     setFlashIdx(newIndex);
-    setTimeout(() => setFlashIdx(null), 1200);
+    setTimeout(() => setFlashIdx(null), 2000);
+    // Scroll into view after React renders
+    requestAnimationFrame(() => {
+      setTimeout(() => {
+        flashRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 50);
+    });
   }
 
   function moveBlock(index: number, dir: -1 | 1) {
@@ -192,12 +200,14 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
         return (
           <div
             key={i}
+            ref={flashIdx === i ? flashRef : undefined}
             style={{
               border: flashIdx === i ? "1px solid var(--primary)" : "1px solid var(--border)",
               borderRadius: "8px",
               background: "var(--card)",
-              transition: "border-color 300ms, box-shadow 300ms",
-              boxShadow: flashIdx === i ? "0 0 12px rgba(247, 187, 46, 0.3)" : "none",
+              transition: "border-color 600ms, box-shadow 600ms",
+              boxShadow: flashIdx === i ? "0 0 20px rgba(247, 187, 46, 0.5), inset 0 0 30px rgba(247, 187, 46, 0.06)" : "none",
+              animation: flashIdx === i ? "cloneFlash 2s ease-out" : undefined,
             }}
           >
             {/* Header */}
@@ -388,6 +398,14 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
           )}
         </div>
       )}
+      {/* Clone flash animation */}
+      <style>{`
+        @keyframes cloneFlash {
+          0% { box-shadow: 0 0 30px rgba(247, 187, 46, 0.7), inset 0 0 40px rgba(247, 187, 46, 0.12); }
+          50% { box-shadow: 0 0 20px rgba(247, 187, 46, 0.4), inset 0 0 20px rgba(247, 187, 46, 0.05); }
+          100% { box-shadow: none; }
+        }
+      `}</style>
     </div>
   );
 }
