@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { useSiteRole } from "@/hooks/use-site-role";
 
 /* ─── Types ──────────────────────────────────────────────────── */
 interface InteractiveMeta {
@@ -44,6 +45,8 @@ function formatDate(iso: string): string {
 /* ─── Page ───────────────────────────────────────────────────── */
 export default function InteractivesPage() {
   const router = useRouter();
+  const siteRole = useSiteRole();
+  const readOnly = siteRole === "viewer";
   const [items, setItems] = useState<InteractiveMeta[]>([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -295,29 +298,33 @@ export default function InteractivesPage() {
         </div>
 
         {/* Create with AI button */}
-        <button
-          type="button"
-          onClick={() => setAiModalOpen(true)}
-          className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md border border-border bg-card text-foreground hover:bg-accent transition-colors"
-        >
-          <Sparkles style={{ width: "0.875rem", height: "0.875rem" }} />
-          Create with AI
-        </button>
+        {!readOnly && (
+          <button
+            type="button"
+            onClick={() => setAiModalOpen(true)}
+            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md border border-border bg-card text-foreground hover:bg-accent transition-colors"
+          >
+            <Sparkles style={{ width: "0.875rem", height: "0.875rem" }} />
+            Create with AI
+          </button>
+        )}
 
         {/* Upload button */}
-        <button
-          type="button"
-          onClick={() => inputRef.current?.click()}
-          disabled={uploading}
-          className={cn(
-            "flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md",
-            "bg-primary text-primary-foreground hover:opacity-90 transition-opacity",
-            uploading && "opacity-70 cursor-wait"
-          )}
-        >
-          <Upload style={{ width: "0.875rem", height: "0.875rem" }} />
-          {uploading ? "Uploading…" : "Upload"}
-        </button>
+        {!readOnly && (
+          <button
+            type="button"
+            onClick={() => inputRef.current?.click()}
+            disabled={uploading}
+            className={cn(
+              "flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md",
+              "bg-primary text-primary-foreground hover:opacity-90 transition-opacity",
+              uploading && "opacity-70 cursor-wait"
+            )}
+          >
+            <Upload style={{ width: "0.875rem", height: "0.875rem" }} />
+            {uploading ? "Uploading…" : "Upload"}
+          </button>
+        )}
       </div>
 
       <input

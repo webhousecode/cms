@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { TabTitle } from "@/lib/tabs-context";
+import { useSiteRole } from "@/hooks/use-site-role";
 
 interface QueueItem {
   id: string;
@@ -55,6 +56,8 @@ function getSavedTab(): TabId {
 export default function CurationPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const siteRole = useSiteRole();
+  const readOnly = siteRole === "viewer";
   const [tab, setTab] = useState<TabId>(() => {
     // URL param wins (e.g. coming back from editor), otherwise localStorage
     const urlTab = searchParams.get("tab") as TabId | null;
@@ -276,7 +279,7 @@ export default function CurationPage() {
                   >
                     {speakingId === item.id ? <StopCircle className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
                   </button>
-                  {(tab === "ready" || tab === "in_review") && (
+                  {!readOnly && (tab === "ready" || tab === "in_review") && (
                     <>
                       <button
                         type="button"

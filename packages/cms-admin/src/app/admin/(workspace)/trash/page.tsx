@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { Trash2, RotateCcw, X, Search, AlertTriangle } from "lucide-react";
 import { useTabs } from "@/lib/tabs-context";
+import { useSiteRole } from "@/hooks/use-site-role";
 
 const RETENTION_DAYS = parseInt(process.env.NEXT_PUBLIC_TRASH_RETENTION_DAYS ?? "30");
 
@@ -56,6 +57,8 @@ export default function TrashPage() {
   const confirmDeleteTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [working, setWorking] = useState<string | null>(null); // item id being acted on
   const { tabs, closeTab } = useTabs();
+  const siteRole = useSiteRole();
+  const readOnly = siteRole === "viewer";
 
   function closeTabsForPaths(paths: string[]) {
     const pathSet = new Set(paths);
@@ -153,7 +156,7 @@ export default function TrashPage() {
           <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", fontFamily: "monospace" }}>
             Auto-deleted after {RETENTION_DAYS} days
           </span>
-          {items.length > 0 && (
+          {!readOnly && items.length > 0 && (
             <button
               type="button"
               onClick={() => setConfirmEmpty(true)}
@@ -224,51 +227,53 @@ export default function TrashPage() {
                       {trashedAt.toLocaleDateString()}
                     </span>
                   )}
-                  <div style={{ display: "flex", gap: "0.375rem", flexShrink: 0 }}>
-                    <button
-                      type="button"
-                      disabled={isWorking}
-                      onClick={() => restore(item)}
-                      title="Restore"
-                      style={{ display: "flex", alignItems: "center", gap: "0.3rem", padding: "0.3rem 0.625rem", borderRadius: "5px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", fontSize: "0.75rem", cursor: isWorking ? "wait" : "pointer" }}
-                    >
-                      <RotateCcw style={{ width: "11px", height: "11px" }} />
-                      Restore
-                    </button>
-                    <button
-                      type="button"
-                      disabled={isWorking}
-                      onClick={() => {
-                        if (confirmDeleteId === item.doc.id) {
-                          if (confirmDeleteTimer.current) clearTimeout(confirmDeleteTimer.current);
-                          setConfirmDeleteId(null);
-                          deletePermanently(item);
-                        } else {
-                          if (confirmDeleteTimer.current) clearTimeout(confirmDeleteTimer.current);
-                          setConfirmDeleteId(item.doc.id);
-                          confirmDeleteTimer.current = setTimeout(() => setConfirmDeleteId(null), 3000);
-                        }
-                      }}
-                      title="Delete permanently"
-                      style={{
-                        display: "flex", alignItems: "center", justifyContent: "center",
-                        minWidth: confirmDeleteId === item.doc.id ? "auto" : "28px",
-                        height: "28px", borderRadius: "5px",
-                        border: confirmDeleteId === item.doc.id ? "1px solid color-mix(in oklch, var(--destructive) 30%, transparent)" : "1px solid transparent",
-                        background: "transparent",
-                        color: confirmDeleteId === item.doc.id ? "var(--destructive)" : "var(--muted-foreground)",
-                        cursor: isWorking ? "wait" : "pointer",
-                        fontSize: confirmDeleteId === item.doc.id ? "0.65rem" : undefined,
-                        fontWeight: confirmDeleteId === item.doc.id ? 600 : undefined,
-                        padding: confirmDeleteId === item.doc.id ? "0 8px" : undefined,
-                        whiteSpace: "nowrap",
-                      }}
-                      onMouseEnter={e => { if (confirmDeleteId !== item.doc.id) { (e.currentTarget as HTMLButtonElement).style.color = "var(--destructive)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "color-mix(in oklch, var(--destructive) 30%, transparent)"; } }}
-                      onMouseLeave={e => { if (confirmDeleteId !== item.doc.id) { (e.currentTarget as HTMLButtonElement).style.color = "var(--muted-foreground)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "transparent"; } }}
-                    >
-                      {confirmDeleteId === item.doc.id ? "OK" : <X style={{ width: "13px", height: "13px" }} />}
-                    </button>
-                  </div>
+                  {!readOnly && (
+                    <div style={{ display: "flex", gap: "0.375rem", flexShrink: 0 }}>
+                      <button
+                        type="button"
+                        disabled={isWorking}
+                        onClick={() => restore(item)}
+                        title="Restore"
+                        style={{ display: "flex", alignItems: "center", gap: "0.3rem", padding: "0.3rem 0.625rem", borderRadius: "5px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", fontSize: "0.75rem", cursor: isWorking ? "wait" : "pointer" }}
+                      >
+                        <RotateCcw style={{ width: "11px", height: "11px" }} />
+                        Restore
+                      </button>
+                      <button
+                        type="button"
+                        disabled={isWorking}
+                        onClick={() => {
+                          if (confirmDeleteId === item.doc.id) {
+                            if (confirmDeleteTimer.current) clearTimeout(confirmDeleteTimer.current);
+                            setConfirmDeleteId(null);
+                            deletePermanently(item);
+                          } else {
+                            if (confirmDeleteTimer.current) clearTimeout(confirmDeleteTimer.current);
+                            setConfirmDeleteId(item.doc.id);
+                            confirmDeleteTimer.current = setTimeout(() => setConfirmDeleteId(null), 3000);
+                          }
+                        }}
+                        title="Delete permanently"
+                        style={{
+                          display: "flex", alignItems: "center", justifyContent: "center",
+                          minWidth: confirmDeleteId === item.doc.id ? "auto" : "28px",
+                          height: "28px", borderRadius: "5px",
+                          border: confirmDeleteId === item.doc.id ? "1px solid color-mix(in oklch, var(--destructive) 30%, transparent)" : "1px solid transparent",
+                          background: "transparent",
+                          color: confirmDeleteId === item.doc.id ? "var(--destructive)" : "var(--muted-foreground)",
+                          cursor: isWorking ? "wait" : "pointer",
+                          fontSize: confirmDeleteId === item.doc.id ? "0.65rem" : undefined,
+                          fontWeight: confirmDeleteId === item.doc.id ? 600 : undefined,
+                          padding: confirmDeleteId === item.doc.id ? "0 8px" : undefined,
+                          whiteSpace: "nowrap",
+                        }}
+                        onMouseEnter={e => { if (confirmDeleteId !== item.doc.id) { (e.currentTarget as HTMLButtonElement).style.color = "var(--destructive)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "color-mix(in oklch, var(--destructive) 30%, transparent)"; } }}
+                        onMouseLeave={e => { if (confirmDeleteId !== item.doc.id) { (e.currentTarget as HTMLButtonElement).style.color = "var(--muted-foreground)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "transparent"; } }}
+                      >
+                        {confirmDeleteId === item.doc.id ? "OK" : <X style={{ width: "13px", height: "13px" }} />}
+                      </button>
+                    </div>
+                  )}
                 </div>
               );
             })}

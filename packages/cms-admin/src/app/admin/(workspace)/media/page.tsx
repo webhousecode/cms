@@ -5,6 +5,7 @@ import { Trash2, Copy, Check, Upload, LayoutGrid, List, FolderOpen, Folder, Chev
 import type { UsageRef } from "@/app/api/cms/media/usage/route";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
+import { useSiteRole } from "@/hooks/use-site-role";
 
 /* ─── Types ──────────────────────────────────────────────────── */
 type MediaType = "image" | "audio" | "video" | "document" | "interactive" | "other";
@@ -42,6 +43,8 @@ type UploadJob = { name: string; done: boolean; error?: boolean };
 
 /* ─── Main component ─────────────────────────────────────────── */
 export default function MediaPage() {
+  const siteRole = useSiteRole();
+  const readOnly = siteRole === "viewer";
   const [allFiles, setAllFiles] = useState<MediaFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<ViewMode>("grid");
@@ -219,10 +222,10 @@ export default function MediaPage() {
     <div
       ref={pageRef}
       className="flex flex-col min-h-screen relative"
-      onDragEnter={onDragEnter}
-      onDragLeave={onDragLeave}
-      onDragOver={onDragOver}
-      onDrop={onDrop}
+      onDragEnter={!readOnly ? onDragEnter : undefined}
+      onDragLeave={!readOnly ? onDragLeave : undefined}
+      onDragOver={!readOnly ? onDragOver : undefined}
+      onDrop={!readOnly ? onDrop : undefined}
     >
       {/* ── Drag overlay ── */}
       {dragOver && (
@@ -294,27 +297,31 @@ export default function MediaPage() {
         </div>
 
         {/* Upload button */}
-        <button
-          type="button"
-          onClick={() => inputRef.current?.click()}
-          disabled={pendingJobs > 0}
-          className={cn(
-            "flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md",
-            "bg-primary text-primary-foreground hover:opacity-90 transition-opacity",
-            pendingJobs > 0 && "opacity-70 cursor-wait"
-          )}
-        >
-          <Upload style={{ width: "0.875rem", height: "0.875rem" }} />
-          {uploadLabel}
-        </button>
-        <input
-          ref={inputRef}
-          type="file"
-          multiple
-          accept="*/*"
-          style={{ display: "none" }}
-          onChange={(e) => uploadFiles(e.target.files)}
-        />
+        {!readOnly && (
+          <>
+            <button
+              type="button"
+              onClick={() => inputRef.current?.click()}
+              disabled={pendingJobs > 0}
+              className={cn(
+                "flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md",
+                "bg-primary text-primary-foreground hover:opacity-90 transition-opacity",
+                pendingJobs > 0 && "opacity-70 cursor-wait"
+              )}
+            >
+              <Upload style={{ width: "0.875rem", height: "0.875rem" }} />
+              {uploadLabel}
+            </button>
+            <input
+              ref={inputRef}
+              type="file"
+              multiple
+              accept="*/*"
+              style={{ display: "none" }}
+              onChange={(e) => uploadFiles(e.target.files)}
+            />
+          </>
+        )}
       </div>
 
       {/* ── Body: sidebar + content ── */}

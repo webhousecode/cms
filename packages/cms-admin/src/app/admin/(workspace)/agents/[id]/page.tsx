@@ -7,6 +7,7 @@ import Link from "next/link";
 import { CustomSelect } from "@/components/ui/custom-select";
 import type { AgentConfig } from "@/lib/agents";
 import { TabTitle } from "@/lib/tabs-context";
+import { useSiteRole } from "@/hooks/use-site-role";
 
 const ROLES = [
   { value: "copywriter", label: "Content Writer" },
@@ -39,6 +40,8 @@ const inputStyle: React.CSSProperties = {
 export default function AgentDetailPage() {
   const router = useRouter();
   const { id } = useParams<{ id: string }>();
+  const siteRole = useSiteRole();
+  const readOnly = siteRole === "viewer";
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -276,16 +279,18 @@ export default function AgentDetailPage() {
         <span className="text-muted-foreground">/</span>
         <span className="text-sm font-mono text-foreground">{name || id}</span>
       </div>
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          onClick={handleClone}
-          disabled={cloning}
-          className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-md border border-border hover:bg-secondary transition-colors text-muted-foreground disabled:opacity-60"
-        >
-          <Copy style={{ width: "0.8rem", height: "0.8rem" }} /> Clone
-        </button>
-      </div>
+      {!readOnly && (
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={handleClone}
+            disabled={cloning}
+            className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-md border border-border hover:bg-secondary transition-colors text-muted-foreground disabled:opacity-60"
+          >
+            <Copy style={{ width: "0.8rem", height: "0.8rem" }} /> Clone
+          </button>
+        </div>
+      )}
     </div>
 
     <div className="p-8 max-w-2xl">
@@ -608,59 +613,65 @@ export default function AgentDetailPage() {
 
         {error && <p className="text-sm text-destructive">{error}</p>}
 
-        <button
-          type="submit"
-          disabled={saving}
-          className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity disabled:opacity-60"
-        >
-          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-          {saving ? "Saving..." : "Save Changes"}
-        </button>
+        {!readOnly && (
+          <button
+            type="submit"
+            disabled={saving}
+            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity disabled:opacity-60"
+          >
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+            {saving ? "Saving..." : "Save Changes"}
+          </button>
+        )}
       </form>
 
       {/* Run now */}
-      <div className="mt-8 pt-6 border-t border-border space-y-3">
-        <p style={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--muted-foreground)", margin: 0 }}>
-          Run agent now
-        </p>
-        <textarea
-          value={runPrompt}
-          onChange={(e) => setRunPrompt(e.target.value)}
-          rows={2}
-          placeholder="Describe what to generate, e.g. &quot;Write an article about rotator cuff injuries for athletes&quot;"
-          style={{ width: "100%", padding: "0.5rem 0.75rem", borderRadius: "7px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.875rem", outline: "none", resize: "vertical", boxSizing: "border-box" }}
-        />
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-          <button
-            type="button"
-            onClick={handleRun}
-            disabled={running || !runPrompt.trim()}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-60"
-          >
-            {running ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-            {running ? "Running…" : "Run now"}
-          </button>
-          {runResult && (
-            <span style={{ display: "flex", alignItems: "center", gap: "0.35rem", fontSize: "0.8rem", color: "hsl(142 71% 45%)" }}>
-              <CheckCircle style={{ width: "14px", height: "14px" }} />
-              &ldquo;{runResult.title}&rdquo; added to Curation Queue
-            </span>
-          )}
-          {runError && <span style={{ fontSize: "0.8rem", color: "var(--destructive)" }}>{runError}</span>}
+      {!readOnly && (
+        <div className="mt-8 pt-6 border-t border-border space-y-3">
+          <p style={{ fontSize: "0.75rem", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--muted-foreground)", margin: 0 }}>
+            Run agent now
+          </p>
+          <textarea
+            value={runPrompt}
+            onChange={(e) => setRunPrompt(e.target.value)}
+            rows={2}
+            placeholder="Describe what to generate, e.g. &quot;Write an article about rotator cuff injuries for athletes&quot;"
+            style={{ width: "100%", padding: "0.5rem 0.75rem", borderRadius: "7px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.875rem", outline: "none", resize: "vertical", boxSizing: "border-box" }}
+          />
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+            <button
+              type="button"
+              onClick={handleRun}
+              disabled={running || !runPrompt.trim()}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity disabled:opacity-60"
+            >
+              {running ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+              {running ? "Running…" : "Run now"}
+            </button>
+            {runResult && (
+              <span style={{ display: "flex", alignItems: "center", gap: "0.35rem", fontSize: "0.8rem", color: "hsl(142 71% 45%)" }}>
+                <CheckCircle style={{ width: "14px", height: "14px" }} />
+                &ldquo;{runResult.title}&rdquo; added to Curation Queue
+              </span>
+            )}
+            {runError && <span style={{ fontSize: "0.8rem", color: "var(--destructive)" }}>{runError}</span>}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Delete section */}
-      <div className="mt-6 pt-6 border-t border-border">
-        <button
-          type="button"
-          onClick={() => setShowDelete(true)}
-          className="flex items-center gap-1.5 text-sm text-destructive hover:opacity-80 transition-opacity"
-        >
-          <Trash2 className="w-4 h-4" />
-          Delete agent
-        </button>
-      </div>
+      {!readOnly && (
+        <div className="mt-6 pt-6 border-t border-border">
+          <button
+            type="button"
+            onClick={() => setShowDelete(true)}
+            className="flex items-center gap-1.5 text-sm text-destructive hover:opacity-80 transition-opacity"
+          >
+            <Trash2 className="w-4 h-4" />
+            Delete agent
+          </button>
+        </div>
+      )}
 
       {/* Delete confirmation dialog */}
       {showDelete && (

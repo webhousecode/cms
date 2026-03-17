@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Loader2, RefreshCw } from "lucide-react";
 import { CustomSelect } from "@/components/ui/custom-select";
+import { useSiteRole } from "@/hooks/use-site-role";
 
 interface CockpitParams {
   temperature: number;
@@ -44,6 +45,8 @@ const labelStyle: React.CSSProperties = {
 };
 
 export default function CommandPage() {
+  const siteRole = useSiteRole();
+  const readOnly = siteRole === "viewer";
   const [params, setParams] = useState<CockpitParams | null>(null);
   const [saving, setSaving] = useState(false);
   const [syncing, setSyncing] = useState(false);
@@ -256,15 +259,17 @@ export default function CommandPage() {
           </div>
 
           {/* Save */}
-          <button
-            type="button"
-            onClick={handleSave}
-            disabled={saving}
-            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity disabled:opacity-60"
-          >
-            {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-            {saving ? "Saving..." : "Save Settings"}
-          </button>
+          {!readOnly && (
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={saving}
+              className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity disabled:opacity-60"
+            >
+              {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+              {saving ? "Saving..." : "Save Settings"}
+            </button>
+          )}
         </div>
 
         {/* Right column (1/3) */}
@@ -331,17 +336,19 @@ export default function CommandPage() {
           </div>
 
           {/* Sync */}
-          <button
-            type="button"
-            onClick={handleSync}
-            disabled={syncing}
-            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg border border-border text-sm hover:bg-secondary transition-colors disabled:opacity-60"
-          >
-            <RefreshCw
-              className={`w-4 h-4 ${syncing ? "animate-spin" : ""}`}
-            />
-            {syncing ? "Syncing..." : "Re-Sync Orchestrator"}
-          </button>
+          {!readOnly && (
+            <button
+              type="button"
+              onClick={handleSync}
+              disabled={syncing}
+              className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg border border-border text-sm hover:bg-secondary transition-colors disabled:opacity-60"
+            >
+              <RefreshCw
+                className={`w-4 h-4 ${syncing ? "animate-spin" : ""}`}
+              />
+              {syncing ? "Syncing..." : "Re-Sync Orchestrator"}
+            </button>
+          )}
         </div>
       </div>
     </div>

@@ -13,6 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useSiteRole } from "@/hooks/use-site-role";
 
 const MonacoEditor = dynamic(() => import("@monaco-editor/react").then(m => m.default), { ssr: false });
 
@@ -306,6 +307,8 @@ export default function InteractiveDetailPage() {
   const params = useParams();
   const router = useRouter();
   const id = params.id as string;
+  const siteRole = useSiteRole();
+  const readOnly = siteRole === "viewer";
 
   const [detail, setDetail] = useState<InteractiveDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -523,43 +526,47 @@ export default function InteractiveDetailPage() {
           </span>
 
           {/* Clone */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={cloneInteractive}
-            disabled={cloning}
-            className="text-muted-foreground hover:text-foreground gap-1.5"
-            title="Clone interactive"
-          >
-            <Copy className="w-3.5 h-3.5" />
-            {cloning ? "Cloning…" : "Clone"}
-          </Button>
+          {!readOnly && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={cloneInteractive}
+              disabled={cloning}
+              className="text-muted-foreground hover:text-foreground gap-1.5"
+              title="Clone interactive"
+            >
+              <Copy className="w-3.5 h-3.5" />
+              {cloning ? "Cloning…" : "Clone"}
+            </Button>
+          )}
 
           {/* Edit dropdown — Visual / Code / AI */}
-          <DropdownMenu>
-            <DropdownMenuTrigger className={`flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-md transition-colors cursor-pointer ${["visual", "code", "ai-edit"].includes(mode) ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
-                {mode === "visual" ? <MousePointer2 className="w-3.5 h-3.5" /> :
-                 mode === "code" ? <Code className="w-3.5 h-3.5" /> :
-                 mode === "ai-edit" ? <Sparkles className="w-3.5 h-3.5" /> :
-                 <Pencil className="w-3.5 h-3.5" />}
-                {mode === "visual" ? "Visual" : mode === "code" ? "Code" : mode === "ai-edit" ? "AI" : "Edit"}
-                <ChevronDown className="w-3 h-3 opacity-50" />
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="w-40">
-              <DropdownMenuItem onClick={() => setMode("visual")} className={mode === "visual" ? "bg-accent" : ""}>
-                <MousePointer2 className="mr-2 h-4 w-4 text-muted-foreground" />
-                Visual
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setMode("code")} className={mode === "code" ? "bg-accent" : ""}>
-                <Code className="mr-2 h-4 w-4 text-muted-foreground" />
-                Code
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setMode("ai-edit")} className={mode === "ai-edit" ? "bg-accent" : ""}>
-                <Sparkles className="mr-2 h-4 w-4 text-muted-foreground" />
-                AI
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {!readOnly && (
+            <DropdownMenu>
+              <DropdownMenuTrigger className={`flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-md transition-colors cursor-pointer ${["visual", "code", "ai-edit"].includes(mode) ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+                  {mode === "visual" ? <MousePointer2 className="w-3.5 h-3.5" /> :
+                   mode === "code" ? <Code className="w-3.5 h-3.5" /> :
+                   mode === "ai-edit" ? <Sparkles className="w-3.5 h-3.5" /> :
+                   <Pencil className="w-3.5 h-3.5" />}
+                  {mode === "visual" ? "Visual" : mode === "code" ? "Code" : mode === "ai-edit" ? "AI" : "Edit"}
+                  <ChevronDown className="w-3 h-3 opacity-50" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-40">
+                <DropdownMenuItem onClick={() => setMode("visual")} className={mode === "visual" ? "bg-accent" : ""}>
+                  <MousePointer2 className="mr-2 h-4 w-4 text-muted-foreground" />
+                  Visual
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setMode("code")} className={mode === "code" ? "bg-accent" : ""}>
+                  <Code className="mr-2 h-4 w-4 text-muted-foreground" />
+                  Code
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setMode("ai-edit")} className={mode === "ai-edit" ? "bg-accent" : ""}>
+                  <Sparkles className="mr-2 h-4 w-4 text-muted-foreground" />
+                  AI
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
 
           {/* History */}
           <Button
@@ -585,15 +592,17 @@ export default function InteractiveDetailPage() {
           </Button>
 
           {/* Trash */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setConfirmTrash(true)}
-            className="text-muted-foreground hover:text-destructive"
-            title="Move to trash"
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
+          {!readOnly && (
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setConfirmTrash(true)}
+              className="text-muted-foreground hover:text-destructive"
+              title="Move to trash"
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+          )}
 
           {/* Preview — icon only */}
           <Button
@@ -607,46 +616,50 @@ export default function InteractiveDetailPage() {
           </Button>
 
           {/* Publish / Unpublish — same as editor */}
-          {detail.status === "published" ? (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setStatus("draft")}
-              disabled={saving}
-              className="gap-1.5"
-              title="Revert to draft (unpublish)"
-            >
-              <FileText className="w-3.5 h-3.5" />
-              Unpublish
-            </Button>
-          ) : (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setStatus("published")}
-              disabled={saving}
-              className="gap-1.5 border-green-500/30 text-green-400 hover:bg-green-500/10 hover:text-green-400"
-              title="Publish"
-            >
-              <Globe className="w-3.5 h-3.5" />
-              Publish
-            </Button>
+          {!readOnly && (
+            detail.status === "published" ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setStatus("draft")}
+                disabled={saving}
+                className="gap-1.5"
+                title="Revert to draft (unpublish)"
+              >
+                <FileText className="w-3.5 h-3.5" />
+                Unpublish
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setStatus("published")}
+                disabled={saving}
+                className="gap-1.5 border-green-500/30 text-green-400 hover:bg-green-500/10 hover:text-green-400"
+                title="Publish"
+              >
+                <Globe className="w-3.5 h-3.5" />
+                Publish
+              </Button>
+            )
           )}
 
           {/* Save */}
-          <Button
-            size="sm"
-            onClick={mode === "visual" ? handleVisualSave : handleCodeSave}
-            disabled={saving || (mode === "code" && codeValue === originalContent)}
-            className="gap-1.5"
-          >
-            {saving ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <Save className="w-3.5 h-3.5" />
-            )}
-            {saved ? "Saved!" : "Save"}
-          </Button>
+          {!readOnly && (
+            <Button
+              size="sm"
+              onClick={mode === "visual" ? handleVisualSave : handleCodeSave}
+              disabled={saving || (mode === "code" && codeValue === originalContent)}
+              className="gap-1.5"
+            >
+              {saving ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Save className="w-3.5 h-3.5" />
+              )}
+              {saved ? "Saved!" : "Save"}
+            </Button>
+          )}
         </div>
       </div>
 
