@@ -33,6 +33,9 @@ export function CollectionSchemaEditor({ collection, isNew }: Props) {
   const [urlPrefix, setUrlPrefix] = useState(collection?.urlPrefix ?? "");
   const [fields, setFields] = useState<FieldConfig[]>(collection?.fields ?? []);
   const [saving, setSaving] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteConfirmInput, setDeleteConfirmInput] = useState("");
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [, startTransition] = useTransition();
   const router = useRouter();
@@ -90,7 +93,8 @@ export function CollectionSchemaEditor({ collection, isNew }: Props) {
   }
 
   async function deleteCollection() {
-    if (!confirm(`Delete collection "${name}"? This cannot be undone.`)) return;
+    if (deleteConfirmInput !== collection!.name) return;
+    setDeleting(true);
     await fetch(`/api/schema/${collection!.name}`, { method: "DELETE" });
     router.push("/admin/settings");
     router.refresh();
@@ -184,7 +188,7 @@ export function CollectionSchemaEditor({ collection, isNew }: Props) {
           <Button
             variant="ghost"
             size="sm"
-            onClick={deleteCollection}
+            onClick={() => { setDeleteOpen(true); setDeleteConfirmInput(""); }}
             className="text-muted-foreground hover:text-destructive gap-1.5"
           >
             <Trash2 className="w-3.5 h-3.5" />
@@ -197,6 +201,58 @@ export function CollectionSchemaEditor({ collection, isNew }: Props) {
           {saving ? "Saving…" : "Save changes"}
         </Button>
       </div>
+
+      {/* Delete collection confirmation dialog */}
+      {deleteOpen && (
+        <div
+          style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
+          onClick={(e) => { if (e.target === e.currentTarget && !deleting) setDeleteOpen(false); }}
+        >
+          <div style={{ background: "var(--card)", border: "1px solid rgb(239 68 68 / 0.3)", borderRadius: "12px", padding: "1.5rem", maxWidth: "480px", width: "90%", display: "flex", flexDirection: "column", gap: "1rem" }}>
+            <div style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem" }}>
+              <AlertTriangle style={{ width: "1.25rem", height: "1.25rem", color: "rgb(239 68 68)", flexShrink: 0, marginTop: "1px" }} />
+              <div>
+                <p style={{ fontWeight: 600, fontSize: "0.95rem" }}>Delete collection?</p>
+                <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", fontFamily: "monospace", marginTop: "0.2rem" }}>{collection!.name}</p>
+              </div>
+            </div>
+
+            <div style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+              <p>This will <strong style={{ color: "rgb(239 68 68)" }}>permanently delete</strong> the collection definition and remove it from your schema.</p>
+              <p>All documents in this collection may become orphaned and inaccessible through the admin interface.</p>
+            </div>
+
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem" }}>
+              <label style={{ fontSize: "0.75rem", color: "var(--muted-foreground)" }}>
+                To confirm, type <strong style={{ color: "var(--foreground)", fontFamily: "monospace" }}>{collection!.name}</strong> below:
+              </label>
+              <Input
+                autoFocus
+                value={deleteConfirmInput}
+                onChange={(e) => setDeleteConfirmInput(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter" && deleteConfirmInput === collection!.name) deleteCollection(); }}
+                placeholder={collection!.name}
+                style={{ fontFamily: "monospace", fontSize: "0.85rem" }}
+                disabled={deleting}
+              />
+            </div>
+
+            <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
+              <Button variant="outline" size="sm" onClick={() => setDeleteOpen(false)} disabled={deleting}>
+                Cancel
+              </Button>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={deleteCollection}
+                disabled={deleteConfirmInput !== collection!.name || deleting}
+              >
+                {deleting ? "Deleting…" : "Delete this collection"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
