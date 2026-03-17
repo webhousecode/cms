@@ -2475,3 +2475,121 @@ images: {
 ```
 2. If images are served from a different origin than the site, set the `UPLOAD_BASE` environment variable so uploaded image URLs include the full origin.
 3. For local development, ensure the `public/uploads/` directory exists or the admin dev server is running to serve uploads.
+
+## Data-Driven Interactives
+
+When building interactive content (charts, animations, calculators, demos), **ALL natural text and data MUST be stored in CMS collections — never hardcoded in the Interactive component.** The Interactive reads data from CMS via props passed from a server component.
+
+### The Separation Principle
+
+| What | Where | Editable by |
+|------|-------|-------------|
+| Text labels, headings | CMS text fields | Editor in admin |
+| Data points, numbers | CMS array/object fields | Editor in admin |
+| Thresholds, config values | CMS number/select fields | Editor in admin |
+| Visualization, animation | Interactive component | Visual/AI/Code editor |
+| Styling, colors | Interactive CSS | Visual/AI editor |
+
+**Rule:** Be wildly creative with visualization — Chart.js, D3, GSAP, CSS animations, Canvas, WebGL — but data is always CMS-managed.
+
+### Pattern: CMS Collection → Page → Interactive Component
+
+**Step 1: Define a data collection in `cms.config.ts`**
+
+```typescript
+defineCollection({
+  name: "chart-data",
+  label: "Chart Data",
+  fields: [
+    { name: "title", type: "text", required: true },
+    { name: "chartType", type: "select", options: [
+      { label: "Line", value: "line" },
+      { label: "Bar", value: "bar" },
+      { label: "Pie", value: "pie" },
+    ]},
+    { name: "yAxisLabel", type: "text" },
+    { name: "xAxisLabel", type: "text" },
+    { name: "dataPoints", type: "array", label: "Data Points" },
+    { name: "thresholds", type: "object", label: "Thresholds" },
+  ],
+})
+```
+
+**Step 2: Create the Interactive component (client component)**
+
+```tsx
+"use client";
+import { useEffect, useRef } from "react";
+import Chart from "chart.js/auto";
+
+interface WaterChartProps {
+  title: string;
+  readings: Array<{ hour: string; value: number; anomaly?: string }>;
+  yAxisLabel: string;
+  thresholds: { criticalLow: number; warningHigh: number };
+}
+
+export function WaterConsumptionChart({ title, readings, yAxisLabel, thresholds }: WaterChartProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    if (!canvasRef.current) return;
+    const chart = new Chart(canvasRef.current, {
+      type: "line",
+      data: {
+        labels: readings.map(r => r.hour),
+        datasets: [{
+          label: yAxisLabel,
+          data: readings.map(r => r.value),
+          borderColor: "#22c55e",
+          pointBackgroundColor: readings.map(r =>
+            r.anomaly === "critical" ? "#ef4444" :
+            r.anomaly === "warning" ? "#eab308" : "#22c55e"
+          ),
+        }]
+      },
+    });
+    return () => chart.destroy();
+  }, [readings, yAxisLabel]);
+
+  return (
+    <div>
+      <h3>{title}</h3>
+      <canvas ref={canvasRef} />
+    </div>
+  );
+}
+```
+
+**Step 3: Use in a page (server component reads CMS, passes props)**
+
+```tsx
+import { getDocument } from "@/lib/content";
+import { WaterConsumptionChart } from "@/components/interactives/water-chart";
+
+export default function InfographicPage() {
+  const chartData = getDocument("chart-data", "sow-7b-water-24h");
+  if (!chartData) return null;
+
+  return (
+    <article>
+      <WaterConsumptionChart
+        title={chartData.data.title}
+        readings={chartData.data.dataPoints}
+        yAxisLabel={chartData.data.yAxisLabel}
+        thresholds={chartData.data.thresholds}
+      />
+    </article>
+  );
+}
+```
+
+### Standalone HTML Interactives
+
+For simpler cases, the CMS also supports standalone HTML interactives managed via the Interactives Manager in admin. These are complete HTML files with inline CSS/JS that render in iframes. Use these when:
+
+- The interactive is self-contained and doesn't need CMS data
+- You want quick prototyping with AI generation ("Create with AI" in admin)
+- The interactive is a one-off visualization
+
+For data-driven interactives that need CMS-managed content, always prefer the React component pattern above.
