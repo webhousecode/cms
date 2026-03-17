@@ -342,8 +342,24 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
               color: "var(--muted-foreground)",
               fontSize: "0.8rem",
               padding: "0.35rem 0.75rem",
+              transition: "all 150ms",
             }}
-            className="hover:border-[#4ade80] hover:bg-[#4ade80] hover:text-white hover:shadow-[0_0_16px_rgba(74,222,128,0.4)] transition-all"
+            onMouseEnter={(e) => {
+              const btn = e.currentTarget;
+              btn.style.background = "#4ade80";
+              btn.style.borderColor = "#4ade80";
+              btn.style.borderStyle = "solid";
+              btn.style.color = "white";
+              btn.style.boxShadow = "0 0 16px rgba(74, 222, 128, 0.4)";
+            }}
+            onMouseLeave={(e) => {
+              const btn = e.currentTarget;
+              btn.style.background = "none";
+              btn.style.borderColor = "var(--border)";
+              btn.style.borderStyle = "dashed";
+              btn.style.color = "var(--muted-foreground)";
+              btn.style.boxShadow = "none";
+            }}
           >
             <Plus style={{ width: 14, height: 14 }} /> Add block
           </button>
