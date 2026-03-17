@@ -346,11 +346,11 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
             }}
             onMouseEnter={(e) => {
               const btn = e.currentTarget;
-              btn.style.background = "#4ade80";
+              btn.style.background = "#1F3024";
               btn.style.borderColor = "#4ade80";
               btn.style.borderStyle = "solid";
-              btn.style.color = "white";
-              btn.style.boxShadow = "0 0 16px rgba(74, 222, 128, 0.4)";
+              btn.style.color = "#4ade80";
+              btn.style.boxShadow = "0 0 24px rgba(74, 222, 128, 0.35), 0 0 8px rgba(74, 222, 128, 0.2)";
             }}
             onMouseLeave={(e) => {
               const btn = e.currentTarget;
