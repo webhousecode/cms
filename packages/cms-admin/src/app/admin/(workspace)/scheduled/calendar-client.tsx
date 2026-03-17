@@ -17,6 +17,7 @@ interface ScheduledEvent {
   title: string;
   subtitle: string;
   href: string;
+  excerpt?: string;
 }
 
 const EVENT_COLORS: Record<EventType, string> = {
@@ -242,6 +243,7 @@ function MonthView({ year, month, todayKey, selectedDate, eventsMap, onSelectDat
                     <div
                       key={evt.id}
                       className="truncate rounded px-1 py-px"
+                      title={`${evt.type === "publish" ? "Publish" : "Unpublish"}: ${evt.title}\n${evt.subtitle} · ${evt.date.slice(11, 16)}${evt.excerpt ? `\n${evt.excerpt}` : ""}`}
                       style={{
                         fontSize: "0.6rem",
                         lineHeight: "1.1rem",
@@ -316,6 +318,7 @@ function WeekView({ selectedDate, todayKey, eventsMap, onSelectDate }: {
                 <div
                   key={evt.id}
                   className="truncate rounded px-1.5 py-0.5"
+                  title={`${evt.type === "publish" ? "Publish" : "Unpublish"}: ${evt.title}\n${evt.subtitle} · ${evt.date.slice(11, 16)}${evt.excerpt ? `\n${evt.excerpt}` : ""}`}
                   style={{
                     fontSize: "0.65rem",
                     lineHeight: "1.2rem",
