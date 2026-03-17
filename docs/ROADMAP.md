@@ -106,6 +106,7 @@ _Unique selling points and advanced features._
 | Priority | Feature | Size | Category |
 |----------|---------|------|----------|
 | 32 | **F50 Sign In Providers** | Medium | Google, Discord, Apple, Azure AD OAuth. Account linking. |
+| 32b | **F59 Passwordless Auth** | Large | Passkeys (WebAuthn) + QR Code login via Pocket CMS mobile app (Capacitor). |
 | 33 | **F34 Multi-Tenancy** | Large | In progress. Full isolation, billing, quotas. |
 | 34 | **F19 Enterprise** | Large | RBAC, audit log, SSO, A/B testing, approval workflows |
 | 34 | **F10 AI Learning Loop** | Medium | AI improves from editor feedback |
