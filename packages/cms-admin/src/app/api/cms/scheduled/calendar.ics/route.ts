@@ -1,12 +1,15 @@
-import { getAdminCms, getAdminConfig } from "@/lib/cms";
 import { validateCalendarTokenForSite } from "@/lib/site-config";
+import { getSitePathsFor } from "@/lib/site-paths";
 import { NextResponse } from "next/server";
+import fs from "fs";
+import path from "path";
 
 /**
  * GET /api/cms/scheduled/calendar.ics?token=<hmac>&org=<orgId>&site=<siteId>
+ *
  * Returns an iCalendar feed of all scheduled publish/unpublish events.
- * Subscribe in Apple Calendar, Google Calendar, etc.
- * Auth via per-user HMAC token — no session cookies required.
+ * Reads from a pre-built snapshot (scheduled-events.json) written by the
+ * Calendar page on each load. No CMS instance or GitHub API needed.
  */
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -19,43 +22,32 @@ export async function GET(request: Request) {
   }
 
   try {
-    const [cms, config] = await Promise.all([getAdminCms(), getAdminConfig()]);
-    const baseUrl = new URL(request.url).origin;
+    const sitePaths = await getSitePathsFor(orgId, siteId);
+    if (!sitePaths) {
+      return NextResponse.json({ error: "Site not found" }, { status: 404 });
+    }
 
+    const baseUrl = new URL(request.url).origin;
+    const snapshotPath = path.join(sitePaths.dataDir, "scheduled-events.json");
     const events: string[] = [];
 
-    await Promise.all(
-      config.collections.map(async (col) => {
-        const { documents } = await cms.content.findMany(col.name, {});
-        for (const doc of documents) {
-          const publishAt = (doc as any).publishAt as string | undefined;
-          const unpublishAt = (doc as any).unpublishAt as string | undefined;
-          const title = String(doc.data?.title ?? doc.data?.name ?? doc.slug);
-          const docUrl = `${baseUrl}/admin/${col.name}/${doc.slug}`;
+    if (fs.existsSync(snapshotPath)) {
+      const items = JSON.parse(fs.readFileSync(snapshotPath, "utf-8")) as {
+        id: string; type: string; date: string; title: string; subtitle: string; href: string;
+      }[];
 
-          if (publishAt) {
-            events.push(formatEvent({
-              uid: `pub-${col.name}-${doc.slug}`,
-              summary: `📗 Publish: ${title}`,
-              description: `${col.label ?? col.name} — ${doc.slug}`,
-              dtstart: toIcsDate(publishAt),
-              dtend: toIcsDate(publishAt, 15),
-              url: docUrl,
-            }));
-          }
-          if (unpublishAt) {
-            events.push(formatEvent({
-              uid: `unpub-${col.name}-${doc.slug}`,
-              summary: `📕 Unpublish: ${title}`,
-              description: `${col.label ?? col.name} — ${doc.slug}`,
-              dtstart: toIcsDate(unpublishAt),
-              dtend: toIcsDate(unpublishAt, 15),
-              url: docUrl,
-            }));
-          }
-        }
-      }),
-    );
+      for (const item of items) {
+        const docUrl = `${baseUrl}${item.href}`;
+        events.push(formatEvent({
+          uid: `${item.id}@webhouse-cms`,
+          summary: item.type === "publish" ? `📗 Publish: ${item.title}` : `📕 Unpublish: ${item.title}`,
+          description: `${item.subtitle} — ${item.href.split("/").pop()}`,
+          dtstart: toIcsDate(item.date),
+          dtend: toIcsDate(item.date, 15),
+          url: docUrl,
+        }));
+      }
+    }
 
     const ics = [
       "BEGIN:VCALENDAR",
@@ -77,18 +69,15 @@ export async function GET(request: Request) {
       },
     });
   } catch (err) {
-    console.error(err);
+    console.error("[calendar.ics]", err);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
 }
 
 /** Convert "2026-03-26T21:59:00" to iCal format "20260326T215900" */
 function toIcsDate(iso: string, addMinutes = 0): string {
-  // Strip non-digits, keep only date+time
-  const clean = iso.replace(/[-:]/g, "").slice(0, 15); // "20260326T215900"
+  const clean = iso.replace(/[-:]/g, "").slice(0, 15);
   if (addMinutes === 0) return clean;
-
-  // Parse and add minutes
   const d = new Date(iso);
   d.setMinutes(d.getMinutes() + addMinutes);
   const pad = (n: number) => String(n).padStart(2, "0");
@@ -100,7 +89,7 @@ function formatEvent({ uid, summary, description, dtstart, dtend, url }: {
 }): string {
   return [
     "BEGIN:VEVENT",
-    `UID:${uid}@webhouse-cms`,
+    `UID:${uid}`,
     `DTSTAMP:${toIcsDate(new Date().toISOString())}Z`,
     `DTSTART:${dtstart}`,
     `DTEND:${dtend}`,

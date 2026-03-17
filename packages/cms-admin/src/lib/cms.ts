@@ -95,6 +95,32 @@ export async function getAdminConfig(): Promise<CmsConfig> {
   return instance.config;
 }
 
+/** Get CMS instance for a specific site (no cookies needed) */
+export async function getAdminCmsForSite(orgId: string, siteId: string) {
+  const registry = await loadRegistry();
+  if (!registry) {
+    const { cms } = await getSingleSiteCms();
+    return cms;
+  }
+  const site = findSite(registry, orgId, siteId);
+  if (!site) return null;
+  const instance = await getOrCreateInstance(orgId, site);
+  return instance.cms;
+}
+
+/** Get CMS config for a specific site (no cookies needed) */
+export async function getAdminConfigForSite(orgId: string, siteId: string) {
+  const registry = await loadRegistry();
+  if (!registry) {
+    const { config } = await getSingleSiteCms();
+    return config;
+  }
+  const site = findSite(registry, orgId, siteId);
+  if (!site) return null;
+  const instance = await getOrCreateInstance(orgId, site);
+  return instance.config;
+}
+
 /**
  * Get info about the currently active site (for UI display).
  * Returns null in single-site mode.
