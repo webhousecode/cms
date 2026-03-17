@@ -25,7 +25,16 @@ export function InteractiveAIPanel({ interactiveId, title, content, onApply }: P
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
   const [copiedIdx, setCopiedIdx] = useState<number | null>(null);
-  const [systemPromptTemplate, setSystemPromptTemplate] = useState<string | null>(null);
+  const FALLBACK_PROMPT = `You are an expert web developer editing an interactive HTML component.
+The component is called "{title}" (ID: {interactiveId}).
+When the user asks you to modify the component, respond with the COMPLETE updated HTML.
+CRITICAL: You MUST output the ENTIRE HTML document from <!DOCTYPE html> to </html>. Never truncate, abbreviate, or use comments like '... rest of code ...' or '/* same as before */'. Every single line must be included.
+Wrap your HTML output in \`\`\`html code fences so it can be extracted.
+If the user asks a question (not a modification), answer concisely without code.
+The component is a standalone HTML document with inline <style> and <script> tags.
+You may use any web technology: CSS animations, Canvas, SVG, Chart.js (via CDN), D3, GSAP, etc.
+Always produce clean, well-structured, COMPLETE and WORKING HTML with good UX.`;
+  const [systemPromptTemplate, setSystemPromptTemplate] = useState<string>(FALLBACK_PROMPT);
   const abortRef = useRef<AbortController | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -71,7 +80,7 @@ export function InteractiveAIPanel({ interactiveId, title, content, onApply }: P
         body: JSON.stringify({
           message: text,
           purpose: "interactives",
-          systemPrompt: (systemPromptTemplate ?? "")
+          systemPrompt: systemPromptTemplate
             .replace("{title}", title)
             .replace("{interactiveId}", interactiveId),
           context: `Current HTML content of the interactive:\n\`\`\`html\n${content}\n\`\`\``,
