@@ -15,24 +15,68 @@ export default function InviteAcceptPage() {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  // Detect if user is already logged in
+  const [loggedInUser, setLoggedInUser] = useState<{ name: string; email: string } | null>(null);
+
   useEffect(() => {
-    fetch(`/api/admin/invitations/validate?token=${token}`)
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.email) {
-          setInviteEmail(data.email);
-          setInviteRole(data.role);
-          setInviteSiteId(data.siteId ?? null);
-          setInviteOrgId(data.orgId ?? null);
-          setStatus("valid");
-        } else {
-          setStatus("invalid");
-        }
-      })
-      .catch(() => setStatus("invalid"));
+    Promise.all([
+      fetch(`/api/admin/invitations/validate?token=${token}`).then((r) => r.json()),
+      fetch("/api/auth/me").then((r) => r.json()),
+    ]).then(([invData, meData]) => {
+      if (invData.email) {
+        setInviteEmail(invData.email);
+        setInviteRole(invData.role);
+        setInviteSiteId(invData.siteId ?? null);
+        setInviteOrgId(invData.orgId ?? null);
+        setStatus("valid");
+      } else {
+        setStatus("invalid");
+      }
+      if (meData.user) {
+        setLoggedInUser({ name: meData.user.name, email: meData.user.email });
+      }
+    }).catch(() => setStatus("invalid"));
   }, [token]);
 
-  async function handleSubmit(e: FormEvent) {
+  // Whether the logged-in user matches the invite email
+  const isLoggedInAsInvitee = loggedInUser && loggedInUser.email.toLowerCase() === inviteEmail.toLowerCase();
+
+  function setSiteCookiesAndRedirect() {
+    if (inviteSiteId) {
+      document.cookie = `cms-active-site=${encodeURIComponent(inviteSiteId)};path=/;max-age=${60 * 60 * 24 * 365};samesite=lax`;
+    }
+    if (inviteOrgId) {
+      document.cookie = `cms-active-org=${encodeURIComponent(inviteOrgId)};path=/;max-age=${60 * 60 * 24 * 365};samesite=lax`;
+    }
+    setTimeout(() => {
+      window.location.href = "/admin";
+    }, 1200);
+  }
+
+  async function handleAcceptExisting() {
+    setError("");
+    setSubmitting(true);
+    try {
+      const res = await fetch("/api/admin/invitations/accept", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, name: loggedInUser!.name, password: "__existing__" }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Failed to accept invitation");
+        setSubmitting(false);
+        return;
+      }
+      setStatus("accepted");
+      setSiteCookiesAndRedirect();
+    } catch {
+      setError("Network error");
+      setSubmitting(false);
+    }
+  }
+
+  async function handleSubmitNew(e: FormEvent) {
     e.preventDefault();
     setError("");
     setSubmitting(true);
@@ -49,17 +93,7 @@ export default function InviteAcceptPage() {
         return;
       }
       setStatus("accepted");
-      // Set site cookies so the user lands on the right site
-      if (inviteSiteId) {
-        document.cookie = `cms-active-site=${encodeURIComponent(inviteSiteId)};path=/;max-age=${60 * 60 * 24 * 365};samesite=lax`;
-      }
-      if (inviteOrgId) {
-        document.cookie = `cms-active-org=${encodeURIComponent(inviteOrgId)};path=/;max-age=${60 * 60 * 24 * 365};samesite=lax`;
-      }
-      // Redirect to admin after short delay
-      setTimeout(() => {
-        window.location.href = "/admin";
-      }, 1500);
+      setSiteCookiesAndRedirect();
     } catch {
       setError("Network error");
       setSubmitting(false);
@@ -149,7 +183,7 @@ export default function InviteAcceptPage() {
           {status === "accepted" && (
             <div style={{ textAlign: "center" }}>
               <p style={{ fontSize: "0.875rem", color: "hsl(140 60% 50%)" }}>
-                Account created! Redirecting...
+                {isLoggedInAsInvitee ? "Access granted! Redirecting..." : "Account created! Redirecting..."}
               </p>
             </div>
           )}
@@ -179,67 +213,118 @@ export default function InviteAcceptPage() {
                 </p>
               </div>
 
-              <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-                  <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "hsl(0 0% 70%)" }}>Your name</label>
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
-                    autoFocus
-                    placeholder="Jane Smith"
-                    style={inputStyle}
-                    onFocus={(e) => { e.target.style.borderColor = "hsl(38 92% 50%)"; }}
-                    onBlur={(e) => { e.target.style.borderColor = "hsl(0 0% 20%)"; }}
-                  />
+              {isLoggedInAsInvitee ? (
+                /* ── Existing user: one-click accept ── */
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
+                  <div style={{
+                    padding: "0.75rem",
+                    borderRadius: "8px",
+                    background: "hsl(0 0% 12%)",
+                    border: "1px solid hsl(0 0% 20%)",
+                    textAlign: "center",
+                  }}>
+                    <p style={{ fontSize: "0.8rem", color: "hsl(0 0% 60%)", margin: 0 }}>
+                      Signed in as
+                    </p>
+                    <p style={{ fontSize: "0.9rem", fontWeight: 600, color: "#fafafa", margin: "0.25rem 0 0" }}>
+                      {loggedInUser.name}
+                    </p>
+                  </div>
+
+                  {error && (
+                    <p style={{
+                      fontSize: "0.8rem",
+                      color: "hsl(0 70% 60%)",
+                      background: "hsl(0 50% 15% / 0.5)",
+                      padding: "0.5rem 0.75rem",
+                      borderRadius: "6px",
+                      margin: 0,
+                    }}>{error}</p>
+                  )}
+
+                  <button
+                    type="button"
+                    onClick={handleAcceptExisting}
+                    disabled={submitting}
+                    style={{
+                      padding: "0.6rem",
+                      borderRadius: "7px",
+                      border: "none",
+                      background: submitting ? "hsl(0 0% 25%)" : "hsl(38 92% 50%)",
+                      color: submitting ? "hsl(0 0% 50%)" : "hsl(38 30% 10%)",
+                      fontSize: "0.875rem",
+                      fontWeight: 600,
+                      cursor: submitting ? "wait" : "pointer",
+                      transition: "opacity 150ms",
+                    }}
+                  >
+                    {submitting ? "Accepting..." : "Accept invitation"}
+                  </button>
                 </div>
+              ) : (
+                /* ── New user: name + password form ── */
+                <form onSubmit={handleSubmitNew} style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+                    <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "hsl(0 0% 70%)" }}>Your name</label>
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      required
+                      autoFocus
+                      placeholder="Jane Smith"
+                      style={inputStyle}
+                      onFocus={(e) => { e.target.style.borderColor = "hsl(38 92% 50%)"; }}
+                      onBlur={(e) => { e.target.style.borderColor = "hsl(0 0% 20%)"; }}
+                    />
+                  </div>
 
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-                  <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "hsl(0 0% 70%)" }}>Choose a password</label>
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    minLength={8}
-                    placeholder="Min. 8 characters"
-                    style={inputStyle}
-                    onFocus={(e) => { e.target.style.borderColor = "hsl(38 92% 50%)"; }}
-                    onBlur={(e) => { e.target.style.borderColor = "hsl(0 0% 20%)"; }}
-                  />
-                </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+                    <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "hsl(0 0% 70%)" }}>Choose a password</label>
+                    <input
+                      type="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      minLength={8}
+                      placeholder="Min. 8 characters"
+                      style={inputStyle}
+                      onFocus={(e) => { e.target.style.borderColor = "hsl(38 92% 50%)"; }}
+                      onBlur={(e) => { e.target.style.borderColor = "hsl(0 0% 20%)"; }}
+                    />
+                  </div>
 
-                {error && (
-                  <p style={{
-                    fontSize: "0.8rem",
-                    color: "hsl(0 70% 60%)",
-                    background: "hsl(0 50% 15% / 0.5)",
-                    padding: "0.5rem 0.75rem",
-                    borderRadius: "6px",
-                    margin: 0,
-                  }}>{error}</p>
-                )}
+                  {error && (
+                    <p style={{
+                      fontSize: "0.8rem",
+                      color: "hsl(0 70% 60%)",
+                      background: "hsl(0 50% 15% / 0.5)",
+                      padding: "0.5rem 0.75rem",
+                      borderRadius: "6px",
+                      margin: 0,
+                    }}>{error}</p>
+                  )}
 
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  style={{
-                    padding: "0.6rem",
-                    borderRadius: "7px",
-                    border: "none",
-                    background: submitting ? "hsl(0 0% 25%)" : "hsl(38 92% 50%)",
-                    color: submitting ? "hsl(0 0% 50%)" : "hsl(38 30% 10%)",
-                    fontSize: "0.875rem",
-                    fontWeight: 600,
-                    cursor: submitting ? "wait" : "pointer",
-                    marginTop: "0.25rem",
-                    transition: "opacity 150ms",
-                  }}
-                >
-                  {submitting ? "Creating account..." : "Create account"}
-                </button>
-              </form>
+                  <button
+                    type="submit"
+                    disabled={submitting}
+                    style={{
+                      padding: "0.6rem",
+                      borderRadius: "7px",
+                      border: "none",
+                      background: submitting ? "hsl(0 0% 25%)" : "hsl(38 92% 50%)",
+                      color: submitting ? "hsl(0 0% 50%)" : "hsl(38 30% 10%)",
+                      fontSize: "0.875rem",
+                      fontWeight: 600,
+                      cursor: submitting ? "wait" : "pointer",
+                      marginTop: "0.25rem",
+                      transition: "opacity 150ms",
+                    }}
+                  >
+                    {submitting ? "Creating account..." : "Create account"}
+                  </button>
+                </form>
+              )}
             </>
           )}
         </div>
