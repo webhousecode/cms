@@ -56,30 +56,49 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
   const [confirmRemoveIdx, setConfirmRemoveIdx] = useState<number | null>(null);
   const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pickerContainerRef = useRef<HTMLDivElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const [isFocused, setIsFocused] = useState(false);
 
   const [pickerHighlight, setPickerHighlight] = useState(-1);
 
-  // Close picker on outside click or Escape; arrow nav + enter in picker
+  // Track focus: click inside → focused, click outside → unfocused
   useEffect(() => {
-    if (!showPicker) return;
+    const onClick = (e: MouseEvent) => {
+      const inside = wrapperRef.current?.contains(e.target as Node);
+      setIsFocused(!!inside);
+      if (!inside && showPicker) { setShowPicker(false); setPickerHighlight(-1); }
+    };
+    document.addEventListener("mousedown", onClick);
+    return () => document.removeEventListener("mousedown", onClick);
+  }, [showPicker]);
+
+  // Picker keyboard nav + "A" shortcut (only when focused)
+  useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") { setShowPicker(false); setPickerHighlight(-1); }
-      if (e.key === "ArrowDown") { e.preventDefault(); setPickerHighlight((h) => Math.min(h + 1, allowedBlockNames.length - 1)); }
-      if (e.key === "ArrowUp") { e.preventDefault(); setPickerHighlight((h) => Math.max(h - 1, 0)); }
-      if (e.key === "Enter" && pickerHighlight >= 0 && pickerHighlight < allowedBlockNames.length) {
+      // Picker open: arrow nav, Enter, Escape
+      if (showPicker) {
+        if (e.key === "Escape") { setShowPicker(false); setPickerHighlight(-1); return; }
+        if (e.key === "ArrowDown") { e.preventDefault(); setPickerHighlight((h) => Math.min(h + 1, allowedBlockNames.length - 1)); return; }
+        if (e.key === "ArrowUp") { e.preventDefault(); setPickerHighlight((h) => Math.max(h - 1, 0)); return; }
+        if (e.key === "Enter" && pickerHighlight >= 0 && pickerHighlight < allowedBlockNames.length) {
+          e.preventDefault(); addBlock(allowedBlockNames[pickerHighlight]); setPickerHighlight(-1); return;
+        }
+        return;
+      }
+      // "A" opens picker — only when this instance is focused and not in an input
+      if (!isFocused || locked) return;
+      const tag = (e.target as HTMLElement)?.tagName;
+      const editable = (e.target as HTMLElement)?.isContentEditable;
+      if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || editable) return;
+      if (e.key === "a" && !e.metaKey && !e.ctrlKey && !e.altKey) {
         e.preventDefault();
-        addBlock(allowedBlockNames[pickerHighlight]);
-        setPickerHighlight(-1);
+        setShowPicker(true);
+        setPickerHighlight(0);
       }
     };
-    const onClick = (e: MouseEvent) => {
-      if (pickerContainerRef.current && !pickerContainerRef.current.contains(e.target as Node)) { setShowPicker(false); setPickerHighlight(-1); }
-    };
     document.addEventListener("keydown", onKey);
-    document.addEventListener("mousedown", onClick);
-    return () => { document.removeEventListener("keydown", onKey); document.removeEventListener("mousedown", onClick); };
-  }, [showPicker, pickerHighlight, allowedBlockNames]);
-
+    return () => document.removeEventListener("keydown", onKey);
+  }, [showPicker, pickerHighlight, allowedBlockNames, isFocused, locked]);
 
   function setExpandedPersist(updater: (prev: Record<number, boolean>) => Record<number, boolean>) {
     if (controlled) {
@@ -186,7 +205,13 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+    <div ref={wrapperRef} style={{
+      display: "flex", flexDirection: "column", gap: "0.5rem",
+      borderRadius: "6px",
+      outline: isFocused ? "1px dashed rgba(247, 187, 46, 0.4)" : "none",
+      outlineOffset: "4px",
+      transition: "outline 150ms",
+    }}>
       {blocks.length >= 2 && (
         <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.25rem" }}>
           <button
