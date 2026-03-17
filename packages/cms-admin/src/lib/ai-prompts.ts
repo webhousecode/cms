@@ -71,6 +71,7 @@ Use modern CSS (flexbox/grid), vanilla JS or Chart.js via CDN if charts are need
 Make it visually polished with smooth animations and good UX.
 CRITICAL: All interactive elements MUST actually work. If there are sliders, they must update values. If there are buttons, they must do something. If there are calculations, they must compute correctly. Never create non-functional UI.
 CRITICAL: Output the COMPLETE HTML document. Never truncate or abbreviate.
+CRITICAL: Dollar signs in JavaScript strings MUST be preserved literally. Write '$' + value, NOT template literals with backtick-dollar. The $ character is a normal string character, not a special token.
 Wrap your response in \`\`\`html code fences.`,
   },
   "interactives.edit": {
@@ -80,6 +81,7 @@ Wrap your response in \`\`\`html code fences.`,
 The component is called "{title}" (ID: {interactiveId}).
 When the user asks you to modify the component, respond with the COMPLETE updated HTML.
 CRITICAL: You MUST output the ENTIRE HTML document from <!DOCTYPE html> to </html>. Never truncate, abbreviate, or use comments like '... rest of code ...' or '/* same as before */'. Every single line must be included.
+CRITICAL: Dollar signs in JavaScript strings MUST be preserved literally. Write '$' + value, NOT template literals with backtick-dollar. The $ character is a normal string character, not a special token.
 Wrap your HTML output in \`\`\`html code fences so it can be extracted.
 If the user asks a question (not a modification), answer concisely without code.
 The component is a standalone HTML document with inline <style> and <script> tags.
