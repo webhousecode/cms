@@ -10,12 +10,8 @@ export async function POST(request: NextRequest) {
     password?: string;
   };
 
-  if (!body.token || !body.name || !body.password) {
-    return NextResponse.json({ error: "Token, name, and password are required" }, { status: 400 });
-  }
-
-  if (body.password.length < 8) {
-    return NextResponse.json({ error: "Password must be at least 8 characters" }, { status: 400 });
+  if (!body.token || !body.name) {
+    return NextResponse.json({ error: "Token and name are required" }, { status: 400 });
   }
 
   const invitation = await validateToken(body.token);
@@ -24,12 +20,20 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    // Check if CMS-wide user already exists (invited to another site before)
+    // Check if CMS-wide user already exists
     const users = await getUsers();
     let user = users.find((u) => u.email.toLowerCase() === invitation.email.toLowerCase());
 
-    if (!user) {
-      // Create CMS-wide user account
+    if (user) {
+      // Existing user — just add site access, no password needed
+    } else {
+      // New user — requires password
+      if (!body.password || body.password === "__existing__") {
+        return NextResponse.json({ error: "Password is required for new accounts" }, { status: 400 });
+      }
+      if (body.password.length < 8) {
+        return NextResponse.json({ error: "Password must be at least 8 characters" }, { status: 400 });
+      }
       user = await createUser(invitation.email, body.password, body.name, {
         role: invitation.role,
         invitedBy: invitation.createdBy,
