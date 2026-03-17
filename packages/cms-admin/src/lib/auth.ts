@@ -83,9 +83,15 @@ export async function createToken(user: User): Promise<string> {
 export async function updateUser(
   id: string,
   patch: { name?: string; email?: string; password?: string; zoom?: number },
+  /** Fallback email for lookup if id doesn't match (stale JWT) */
+  fallbackEmail?: string,
 ): Promise<User> {
   const users = await getUsers();
-  const idx = users.findIndex((u) => u.id === id);
+  let idx = users.findIndex((u) => u.id === id);
+  // Fallback: match by email if ID doesn't match (e.g. stale JWT after data migration)
+  if (idx === -1 && fallbackEmail) {
+    idx = users.findIndex((u) => u.email.toLowerCase() === fallbackEmail.toLowerCase());
+  }
   if (idx === -1) throw new Error("User not found");
 
   const user = { ...users[idx]! };
