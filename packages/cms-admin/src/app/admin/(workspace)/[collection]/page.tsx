@@ -39,10 +39,10 @@ export default async function CollectionPage({ params }: Props) {
         <div className="flex items-center gap-2">
           {schemaEnabled && (
             <Link href={`/admin/settings/${collection}`}>
-              <Button variant="outline" size="sm" className="gap-1.5 text-muted-foreground">
+              <button className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-md border border-border hover:border-primary/40 hover:bg-secondary transition-all text-muted-foreground">
                 <Edit2 className="w-3.5 h-3.5" />
                 Edit schema
-              </Button>
+              </button>
             </Link>
           )}
           <GenerateDocumentButton collection={collection} collectionLabel={colConfig.label ?? collection} />
