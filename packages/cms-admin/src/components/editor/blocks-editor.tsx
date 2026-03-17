@@ -4,6 +4,7 @@ import type { FieldConfig, BlockConfig } from "@webhouse/cms";
 import { FieldEditor } from "./field-editor";
 import { ColumnsEditor } from "./columns-editor";
 import { ChevronDown, ChevronRight, ArrowUp, ArrowDown, Plus, Copy, Settings2 } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useState, useRef, useEffect } from "react";
 
 interface Props {
@@ -352,27 +353,33 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
                 </span>
               )}
             </div>
-            {/* Properties panel */}
-            {propsOpenIdx === i && propFields.length > 0 && (
-              <div style={{ padding: "0.75rem", borderTop: "1px solid var(--border)", background: "color-mix(in srgb, var(--muted) 30%, transparent)" }}>
-                <p style={{ fontSize: "0.65rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--muted-foreground)", marginBottom: "0.5rem" }}>Properties</p>
-                <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-                  {propFields.map((f) => (
-                    <div key={f.name}>
-                      <label style={{ display: "block", fontSize: "0.7rem", fontWeight: 500, marginBottom: "0.2rem", color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                        {f.label ?? f.name}
-                      </label>
-                      <FieldEditor
-                        field={f}
-                        value={block[f.name]}
-                        onChange={(val) => updateBlockField(i, f.name, val)}
-                        locked={locked}
-                        blocksConfig={blocksConfig}
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
+            {/* Properties sheet */}
+            {propFields.length > 0 && (
+              <Sheet open={propsOpenIdx === i} onOpenChange={(open) => setPropsOpenIdx(open ? i : null)}>
+                <SheetContent side="right" className="w-80 sm:max-w-xs">
+                  <SheetHeader>
+                    <SheetTitle className="text-sm font-mono uppercase tracking-widest text-muted-foreground">
+                      {config?.label ?? blockType} Properties
+                    </SheetTitle>
+                  </SheetHeader>
+                  <div style={{ padding: "0 1rem 1rem", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                    {propFields.map((f) => (
+                      <div key={f.name}>
+                        <label style={{ display: "block", fontSize: "0.7rem", fontWeight: 500, marginBottom: "0.25rem", color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                          {f.label ?? f.name}
+                        </label>
+                        <FieldEditor
+                          field={f}
+                          value={block[f.name]}
+                          onChange={(val) => updateBlockField(i, f.name, val)}
+                          locked={locked}
+                          blocksConfig={blocksConfig}
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </SheetContent>
+              </Sheet>
             )}
             {/* Fields */}
             {isOpen && (
