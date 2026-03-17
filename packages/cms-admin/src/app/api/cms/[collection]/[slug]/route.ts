@@ -3,12 +3,15 @@ import { saveRevision } from "@/lib/revisions";
 import { removeQueueItemsBySlug } from "@/lib/curation";
 import { dispatchRevalidation } from "@/lib/revalidation";
 import { getActiveSiteEntry } from "@/lib/site-paths";
+import { getSiteRole } from "@/lib/require-role";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 type Ctx = { params: Promise<{ collection: string; slug: string }> };
 
 export async function POST(req: NextRequest, { params }: Ctx) {
+  const role = await getSiteRole();
+  if (!role || role === "viewer") return NextResponse.json({ error: "No write access" }, { status: 403 });
   try {
     const { collection, slug } = await params;
     const body = await req.json() as { action?: string };
@@ -67,6 +70,8 @@ export async function POST(req: NextRequest, { params }: Ctx) {
 }
 
 export async function PATCH(req: NextRequest, { params }: Ctx) {
+  const patchRole = await getSiteRole();
+  if (!patchRole || patchRole === "viewer") return NextResponse.json({ error: "No write access" }, { status: 403 });
   try {
     const { collection, slug } = await params;
     const body = await req.json() as { data?: Record<string, unknown>; status?: string; locale?: string; translationOf?: string | null; publishAt?: string | null; slug?: string };
@@ -127,6 +132,8 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
 }
 
 export async function DELETE(req: NextRequest, { params }: Ctx) {
+  const deleteRole = await getSiteRole();
+  if (!deleteRole || deleteRole === "viewer") return NextResponse.json({ error: "No write access" }, { status: 403 });
   try {
     const { collection, slug } = await params;
     const permanent = req.nextUrl.searchParams.get("permanent") === "true";

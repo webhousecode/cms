@@ -1,10 +1,14 @@
 import { getAdminCms, getAdminConfig } from "@/lib/cms";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { getSiteRole } from "@/lib/require-role";
 
 type Ctx = { params: Promise<{ collection: string }> };
 
 export async function GET(_req: NextRequest, { params }: Ctx) {
+  // Viewers can read, but check team membership exists
+  const role = await getSiteRole();
+  if (!role) return NextResponse.json({ error: "No access to this site" }, { status: 403 });
   try {
     const { collection } = await params;
     const [cms, config] = await Promise.all([getAdminCms(), getAdminConfig()]);
@@ -19,6 +23,10 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
 }
 
 export async function POST(req: NextRequest, { params }: Ctx) {
+  // Only admins and editors can create documents
+  const role = await getSiteRole();
+  if (!role || role === "viewer") return NextResponse.json({ error: "Editors only" }, { status: 403 });
+
   try {
     const { collection } = await params;
     const body = await req.json() as { slug: string; data?: Record<string, unknown>; locale?: string };
