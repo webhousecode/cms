@@ -51,7 +51,8 @@ export const builtinBlocks: BlockConfig[] = [
     fields: [
       { name: 'interactiveId', type: 'interactive' as const, label: 'Interactive', required: true },
       { name: 'caption', type: 'text', label: 'Caption' },
-      { name: 'scale', type: 'number', label: 'Scale (%) — leave empty for full size' },
+      { name: 'scale', type: 'number', label: 'Scale (%)' },
+      { name: 'allowFullscreen', type: 'boolean', label: 'Fullscreen button' },
     ],
   },
 ];

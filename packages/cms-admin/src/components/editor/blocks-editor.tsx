@@ -364,20 +364,56 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
                         No block definition found for &ldquo;{blockType}&rdquo;
                       </div>
                     )}
-                    {fields.map((f) => (
-                      <div key={f.name}>
-                        <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 500, marginBottom: "0.25rem", color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
-                          {f.label ?? f.name}
-                        </label>
-                        <FieldEditor
-                          field={f}
-                          value={block[f.name]}
-                          onChange={(val) => updateBlockField(i, f.name, val)}
-                          locked={locked}
-                          blocksConfig={blocksConfig}
-                        />
-                      </div>
-                    ))}
+                    {(() => {
+                      const rendered: React.ReactNode[] = [];
+                      let j = 0;
+                      while (j < fields.length) {
+                        const f = fields[j];
+                        // Group consecutive compact fields (number, boolean) on one row
+                        const isCompact = (t: string) => t === "number" || t === "boolean";
+                        if (isCompact(f.type)) {
+                          const group = [f];
+                          while (j + 1 < fields.length && isCompact(fields[j + 1].type)) {
+                            group.push(fields[++j]);
+                          }
+                          rendered.push(
+                            <div key={f.name} style={{ display: "flex", gap: "1rem" }}>
+                              {group.map((gf) => (
+                                <div key={gf.name} style={{ flex: gf.type === "boolean" ? "0 0 auto" : 1 }}>
+                                  <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 500, marginBottom: "0.25rem", color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                                    {gf.label ?? gf.name}
+                                  </label>
+                                  <FieldEditor
+                                    field={gf}
+                                    value={block[gf.name]}
+                                    onChange={(val) => updateBlockField(i, gf.name, val)}
+                                    locked={locked}
+                                    blocksConfig={blocksConfig}
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          );
+                        } else {
+                          rendered.push(
+                            <div key={f.name}>
+                              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 500, marginBottom: "0.25rem", color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: "0.05em" }}>
+                                {f.label ?? f.name}
+                              </label>
+                              <FieldEditor
+                                field={f}
+                                value={block[f.name]}
+                                onChange={(val) => updateBlockField(i, f.name, val)}
+                                locked={locked}
+                                blocksConfig={blocksConfig}
+                              />
+                            </div>
+                          );
+                        }
+                        j++;
+                      }
+                      return rendered;
+                    })()}
                   </>
                 )}
               </div>
