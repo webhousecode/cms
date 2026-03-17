@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
       ...(email ? { email } : {}),
       ...(newPassword ? { password: newPassword } : {}),
       ...(zoom !== undefined ? { zoom } : {}),
-    });
+    }, payload.email);
 
     // Re-issue JWT with updated name/email
     const newToken = await createToken(updated);

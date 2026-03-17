@@ -109,10 +109,10 @@ function ProfileSection() {
 	const [saved, setSaved] = useState(false);
 	const [error, setError] = useState("");
 
-	const [showLogoIcon, setShowLogoIcon] = useState(() => {
-		if (typeof window === "undefined") return true;
-		return localStorage.getItem("cms-show-logo-icon") !== "false";
-	});
+	const [showLogoIcon, setShowLogoIcon] = useState(true);
+	useEffect(() => {
+		setShowLogoIcon(localStorage.getItem("cms-show-logo-icon") !== "false");
+	}, []);
 
 	const [curPw, setCurPw] = useState("");
 	const [newPw, setNewPw] = useState("");
