@@ -39,7 +39,7 @@ export const builtinBlocks: BlockConfig[] = [
   },
   {
     name: 'file',
-    label: 'File Attachment',
+    label: 'File',
     fields: [
       { name: 'src', type: 'file' as const, label: 'File', required: true },
       { name: 'filename', type: 'text', label: 'Display Name' },
