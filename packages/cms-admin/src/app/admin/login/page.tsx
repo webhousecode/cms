@@ -45,12 +45,21 @@ function LoginForm() {
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
+        credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
       const data = (await res.json()) as { error?: string };
       if (!res.ok) {
         setError(data.error ?? "Login failed");
+        setLoading(false);
+        return;
+      }
+      // Verify cookie was stored before navigating
+      const me = await fetch("/api/auth/me", { credentials: "same-origin" });
+      const meData = (await me.json()) as { user?: { id: string } | null };
+      if (!meData.user) {
+        setError("Cookie was not stored — try a different browser or check privacy settings");
         setLoading(false);
         return;
       }
