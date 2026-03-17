@@ -96,9 +96,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       }
       // No access to any site
       return (
-        <div style={{ minHeight: "100vh", background: "var(--background)" }}>
-          <AdminHeader />
-          <div style={{ maxWidth: 480, margin: "4rem auto", padding: "2rem", textAlign: "center" }}>
+        <div style={{ minHeight: "100vh", background: "var(--background)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ maxWidth: 480, padding: "2rem", textAlign: "center" }}>
             <p style={{ fontSize: "0.9rem", color: "var(--muted-foreground)" }}>
               You don&apos;t have access to any sites yet. Ask an admin to invite you.
             </p>
@@ -117,9 +116,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     const message = err instanceof Error ? err.message : "Failed to load site config";
     if (message.includes("GitHub not connected")) {
       return (
-        <div style={{ minHeight: "100vh", background: "var(--background)" }}>
-          <AdminHeader />
-          <div style={{ maxWidth: 480, margin: "4rem auto", padding: "2rem", textAlign: "center" }}>
+        <div style={{ minHeight: "100vh", background: "var(--background)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <div style={{ maxWidth: 480, padding: "2rem", textAlign: "center" }}>
             <p style={{ fontSize: "0.9rem", color: "var(--muted-foreground)", marginBottom: "1rem" }}>
               This site requires GitHub access. Please connect your GitHub account to continue.
             </p>
