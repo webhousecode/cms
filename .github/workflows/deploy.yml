@@ -25,11 +25,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Typecheck
-        run: pnpm lint
-
       - name: Build packages
         run: pnpm build --filter='!@webhouse/cms-admin'
+
+      - name: Typecheck
+        run: pnpm lint
 
       - name: Run tests
         run: pnpm test:run || echo "⚠️ Tests with native modules skipped on CI"
