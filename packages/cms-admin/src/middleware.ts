@@ -53,6 +53,7 @@ export async function middleware(request: NextRequest) {
   const token = request.cookies.get(COOKIE_NAME)?.value;
 
   if (!token) {
+    console.log(`[middleware] NO TOKEN for ${pathname} (${request.method})`);
     if (isCmsApi) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -64,7 +65,8 @@ export async function middleware(request: NextRequest) {
   try {
     await jwtVerify(token, getJwtSecret());
     return NextResponse.next();
-  } catch {
+  } catch (err) {
+    console.log(`[middleware] JWT VERIFY FAILED for ${pathname}: ${err instanceof Error ? err.message : err}`);
     const response = isCmsApi
       ? NextResponse.json({ error: "Unauthorized" }, { status: 401 })
       : NextResponse.redirect(new URL("/admin/login", request.url));
