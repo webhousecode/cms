@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import {
   HelpCircle, X, BookOpen, Wrench, Activity, Mail,
   MessageCircle, Keyboard, ExternalLink,
@@ -74,9 +75,9 @@ export function HelpDrawer({ open, onClose, initialPage = "help" }: { open: bool
 
   if (!open) return null;
 
-  return (
+  return createPortal(
     <div style={{
-      position: "fixed", top: 0, right: 0, bottom: 0, width: "340px", zIndex: 150,
+      position: "fixed", top: 0, right: 0, bottom: 0, width: "340px", zIndex: 9999,
       background: "var(--card)", borderLeft: "1px solid var(--border)",
       boxShadow: "-4px 0 20px rgba(0,0,0,0.3)",
       display: "flex", flexDirection: "column",
@@ -139,7 +140,8 @@ export function HelpDrawer({ open, onClose, initialPage = "help" }: { open: bool
         }}>
           <span style={{ color: "#fff", fontWeight: 600 }}>webhouse</span><span style={{ color: "var(--primary)" }}>.app</span> · v0.2.10
         </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
