@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Globe, MoreVertical, Settings2, Plus, Copy, Eye } from "lucide-react";
 import { useSiteRole } from "@/hooks/use-site-role";
+import { useTabs } from "@/lib/tabs-context";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -48,6 +49,7 @@ export default function SitesDashboard() {
   const [stats, setStats] = useState<Record<string, { pages: number; collections: number }>>({});
   const [allowedSiteIds, setAllowedSiteIds] = useState<string[] | null>(null);
   const siteRole = useSiteRole();
+  const { openTab } = useTabs();
   const isAdmin = siteRole === "admin";
 
   const [loaded, setLoaded] = useState(false);
@@ -291,12 +293,12 @@ export default function SitesDashboard() {
                   e.stopPropagation();
                   persistSiteChoice(site.id);
                   if (site.previewUrl) {
-                    router.push(`/admin/preview?url=${encodeURIComponent(site.previewUrl)}`);
+                    openTab(`/admin/preview?url=${encodeURIComponent(site.previewUrl)}`, `Preview: ${site.name}`);
                   } else {
                     const res = await fetch("/api/preview-serve", { method: "POST" });
                     if (res.ok) {
                       const { url } = await res.json() as { url: string };
-                      router.push(`/admin/preview?url=${encodeURIComponent(url)}`);
+                      openTab(`/admin/preview?url=${encodeURIComponent(url)}`, `Preview: ${site.name}`);
                     }
                   }
                 }}
