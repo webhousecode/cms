@@ -742,9 +742,10 @@ function YearView({ year, todayKey, eventsMap, onSelectMonth }: {
 /* ─── Sidebar Legend ─────────────────────────────────────────── */
 
 function CalendarSidebar({ events, todayKey }: { events: ScheduledEvent[]; todayKey: string }) {
-  // Collection counts
+  // Collection counts — only future events (not already published/expired)
+  const futureEvents = events.filter((e) => e.date >= todayKey);
   const collectionCounts = new Map<string, number>();
-  for (const e of events) {
+  for (const e of futureEvents) {
     collectionCounts.set(e.subtitle, (collectionCounts.get(e.subtitle) ?? 0) + 1);
   }
 
@@ -772,8 +773,8 @@ function CalendarSidebar({ events, todayKey }: { events: ScheduledEvent[]; today
         {colEntries.map(([name, count], i) => (
           <div key={name} style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
             <span style={{ width: "0.5rem", height: "0.5rem", borderRadius: "9999px", background: COLLECTION_COLORS[i % COLLECTION_COLORS.length], flexShrink: 0 }} />
-            <span style={{ fontSize: "0.75rem", fontWeight: 500 }}>{name}</span>
-            <span style={{ fontSize: "0.7rem", fontFamily: "monospace", color: "var(--muted-foreground)" }}>{count}</span>
+            <span style={{ fontSize: "0.75rem", fontWeight: 500, lineHeight: 1 }}>{name}</span>
+            <span style={{ fontSize: "0.65rem", fontFamily: "monospace", color: "var(--muted-foreground)", lineHeight: 1 }}>{count}</span>
           </div>
         ))}
         {colEntries.length === 0 && (
@@ -797,7 +798,7 @@ function CalendarSidebar({ events, todayKey }: { events: ScheduledEvent[]; today
       {/* Stats */}
       <div style={{ borderTop: "1px solid var(--border)", paddingTop: "1rem" }}>
         <p style={{ fontSize: "0.6rem", color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700 }}>Upcoming</p>
-        <p style={{ fontSize: "1.75rem", fontWeight: 700, lineHeight: 1.1 }}>{events.length}</p>
+        <p style={{ fontSize: "1.75rem", fontWeight: 700, lineHeight: 1.1 }}>{futureEvents.length}</p>
         <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", marginBottom: "1rem" }}>items pending</p>
 
         <p style={{ fontSize: "0.6rem", color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700 }}>Today</p>
