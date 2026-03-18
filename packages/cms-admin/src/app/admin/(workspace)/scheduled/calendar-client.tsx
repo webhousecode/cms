@@ -384,11 +384,45 @@ function WeekView({ selectedDate, todayKey, eventsMap, onSelectDate, scrollToNow
   // Account for sticky header height in scroll
   const headerHeight = 36;
 
+  // Pill position relative to scroll — need to track scrollTop for external pill
+  const [scrollTop, setScrollTop] = useState(0);
+  const pillY = nowY - scrollTop + headerHeight - 10;
+  const pillVisible = hasToday && pillY > -5 && pillY < viewportHeight + headerHeight;
+
   return (
+    <div style={{ position: "relative", marginLeft: "13px" }}>
+      {/* NOW pill — outside scroll container so it's never clipped */}
+      {pillVisible && (
+        <div
+          style={{
+            position: "absolute",
+            top: pillY,
+            left: "-13px",
+            width: "calc(3rem + 11px)",
+            height: "1.25rem",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "flex-end",
+            paddingRight: "0.35rem",
+            paddingLeft: "0.35rem",
+            fontSize: "0.65rem",
+            fontWeight: 700,
+            color: "#fff",
+            background: "rgb(239 68 68)",
+            fontFamily: "monospace",
+            zIndex: 50,
+            borderRadius: "9999px",
+            pointerEvents: "none",
+          }}
+        >
+          {String(Math.floor(nowMinutes / 60)).padStart(2, "0")}.{String(nowMinutes % 60).padStart(2, "0")}
+        </div>
+      )}
     <div
       ref={scrollRef}
       className="calendar-scroll"
-      style={{ height: `${viewportHeight + headerHeight}px`, overflowY: "auto", position: "relative", borderRadius: "8px", border: "1px solid var(--border)", marginLeft: "13px" }}
+      onScroll={(e) => setScrollTop((e.target as HTMLDivElement).scrollTop)}
+      style={{ height: `${viewportHeight + headerHeight}px`, overflowY: "auto", position: "relative", borderRadius: "8px", border: "1px solid var(--border)" }}
     >
       {/* Header: week number + day columns — sticky */}
       <div style={{ display: "grid", gridTemplateColumns: "3rem repeat(7, 1fr)", position: "sticky", top: 0, zIndex: 30, background: "var(--card)", borderBottom: "1px solid var(--border)" }}>
@@ -523,62 +557,34 @@ function WeekView({ selectedDate, todayKey, eventsMap, onSelectDate, scrollToNow
             </div>
           ))}
 
-          {/* NOW marker — red line across today's column */}
+          {/* NOW line + dot (pill is rendered outside scroll container) */}
           {hasToday && (
-            <>
-              {/* Time label — solid bg covers hour labels like Apple Calendar */}
-              <div
-                style={{
-                  position: "absolute",
-                  top: nowY - 10,
-                  left: "-13px",
-                  width: "calc(3rem + 11px)",
-                  height: "1.25rem",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "flex-end",
-                  paddingRight: "0.35rem",
-                  fontSize: "0.65rem",
-                  fontWeight: 700,
-                  color: "rgb(239 68 68)",
-                  background: "rgb(239 68 68)",
-                  color: "#fff",
-                  fontFamily: "monospace",
-                  zIndex: 50,
-                  borderRadius: "9999px",
-                  paddingLeft: "0.35rem",
-                }}
-              >
-                {String(Math.floor(nowMinutes / 60)).padStart(2, "0")}.{String(nowMinutes % 60).padStart(2, "0")}
-              </div>
-              {/* Red line + dot */}
-              <div
-                style={{
-                  position: "absolute",
-                  top: nowY,
-                  left: "3rem",
-                  right: 0,
-                  height: "2px",
-                  background: "rgb(239 68 68)",
-                  zIndex: 20,
-                  pointerEvents: "none",
-                }}
-              >
-                {/* Dot on the left edge */}
-                <div style={{
-                  position: "absolute",
-                  left: `calc(${days.findIndex((d) => d.key === todayKey)} * (100% / 7))`,
-                  top: "-4px",
-                  width: "10px",
-                  height: "10px",
-                  borderRadius: "9999px",
-                  background: "rgb(239 68 68)",
-                }} />
-              </div>
-            </>
+            <div
+              style={{
+                position: "absolute",
+                top: nowY,
+                left: "3rem",
+                right: 0,
+                height: "2px",
+                background: "rgb(239 68 68)",
+                zIndex: 20,
+                pointerEvents: "none",
+              }}
+            >
+              <div style={{
+                position: "absolute",
+                left: `calc(${days.findIndex((d) => d.key === todayKey)} * (100% / 7))`,
+                top: "-4px",
+                width: "10px",
+                height: "10px",
+                borderRadius: "9999px",
+                background: "rgb(239 68 68)",
+              }} />
+            </div>
           )}
-        </div>
-      </div>
+        </div>{/* end time grid */}
+      </div>{/* end scroll container */}
+    </div>{/* end outer wrapper */}
   );
 }
 
