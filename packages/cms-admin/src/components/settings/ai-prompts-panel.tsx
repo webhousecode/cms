@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Loader2, RotateCcw, Save, Copy, Check } from "lucide-react";
+import { SectionHeading } from "@/components/ui/section-heading";
 
 interface PromptDef {
   id: string;
@@ -81,8 +82,8 @@ export function AIPromptsPanel() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-base font-semibold text-foreground">AI Prompts</h2>
-        <p className="text-sm text-muted-foreground mt-0.5">
+        <SectionHeading>AI Prompts</SectionHeading>
+        <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "-0.5rem", marginBottom: "0.5rem" }}>
           Edit the system prompts used by all AI features. Variables in {"{braces}"} are replaced at runtime.
         </p>
       </div>

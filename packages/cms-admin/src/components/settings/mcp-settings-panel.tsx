@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Check, Copy, Plus, Trash2, Key, RefreshCw, Server, Power, PowerOff, X, Pencil } from "lucide-react";
+import { SectionHeading } from "@/components/ui/section-heading";
 
 interface McpApiKeyMasked {
   id: string;
@@ -144,7 +145,7 @@ export function MCPSettingsPanel() {
 
       {/* Endpoints */}
       <section>
-        <h3 style={{ fontSize: "0.85rem", fontWeight: 600, marginBottom: "0.75rem" }}>Endpoints</h3>
+        <SectionHeading>Endpoints</SectionHeading>
         <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
           {[
             { label: "Public (read-only, rate-limited)", url: publicEndpoint },
@@ -168,7 +169,7 @@ export function MCPSettingsPanel() {
       {/* API Keys */}
       <section>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.75rem" }}>
-          <h3 style={{ fontSize: "0.85rem", fontWeight: 600 }}>API Keys</h3>
+          <h2 style={{ fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--muted-foreground)", margin: 0 }}>API Keys</h2>
           <button
             type="button"
             onClick={() => { setShowAddForm(true); setNewKey(generateKey()); }}
@@ -478,7 +479,7 @@ function ExternalMcpServers() {
     <section style={{ borderTop: "1px solid var(--border)", paddingTop: "1.5rem" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.5rem" }}>
         <div>
-          <h3 style={{ fontSize: "0.85rem", fontWeight: 600 }}>External MCP Servers</h3>
+          <h2 style={{ fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--muted-foreground)", margin: 0 }}>External MCP Servers</h2>
           <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "0.2rem" }}>
             Connect external tools that AI agents can use during content generation.
           </p>

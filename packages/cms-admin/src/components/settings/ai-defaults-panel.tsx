@@ -3,6 +3,7 @@
 import { useState, useEffect, FormEvent } from "react";
 import { Check, Sparkles, AlertTriangle } from "lucide-react";
 import { CustomSelect } from "@/components/ui/custom-select";
+import { SectionHeading } from "@/components/ui/section-heading";
 
 interface AiDefaults {
   aiInteractivesModel: string;
@@ -86,9 +87,7 @@ export function AIDefaultsPanel() {
     <form onSubmit={handleSave}>
       {/* Interactives section */}
       <div style={{ marginBottom: "2rem" }}>
-        <h3 style={{ fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--muted-foreground)", marginBottom: "0.5rem" }}>
-          Interactives (Generate &amp; Edit with AI)
-        </h3>
+        <SectionHeading>Interactives (Generate &amp; Edit with AI)</SectionHeading>
         <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginBottom: "1rem" }}>
           Used when creating or editing HTML interactives. Sonnet is recommended for complex code generation. Higher token limits prevent truncated output on large files.
         </p>
@@ -119,9 +118,7 @@ export function AIDefaultsPanel() {
 
       {/* Content writing section */}
       <div style={{ marginBottom: "1.5rem" }}>
-        <h3 style={{ fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--muted-foreground)", marginBottom: "0.5rem" }}>
-          Content Writing (Chat, Generate, Rewrite)
-        </h3>
+        <SectionHeading>Content Writing (Chat, Generate, Rewrite)</SectionHeading>
         <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginBottom: "1rem" }}>
           Used for in-editor AI chat, article generation, and text rewriting. Haiku is usually sufficient for text content.
         </p>

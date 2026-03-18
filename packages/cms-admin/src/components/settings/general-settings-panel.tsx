@@ -4,6 +4,7 @@ import { useState, useEffect, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Eye, EyeOff, AlertTriangle, Copy, RefreshCw, Zap, Send } from "lucide-react";
 import { CustomSelect } from "@/components/ui/custom-select";
+import { SectionHeading } from "@/components/ui/section-heading";
 
 /* ─── Helpers ─────────────────────────────────────────────────── */
 
@@ -78,13 +79,6 @@ function InputRow({ label, description, ...inputProps }: {
 	);
 }
 
-function SectionHeading({ children }: { children: React.ReactNode }) {
-	return (
-		<h2 style={{ fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--muted-foreground)", margin: "0 0 0.875rem" }}>
-			{children}
-		</h2>
-	);
-}
 
 function Card({ children }: { children: React.ReactNode }) {
 	return (

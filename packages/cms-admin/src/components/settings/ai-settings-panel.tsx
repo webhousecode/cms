@@ -2,6 +2,7 @@
 
 import { useState, useEffect, FormEvent } from "react";
 import { Sparkles, Check, ExternalLink } from "lucide-react";
+import { SectionHeading } from "@/components/ui/section-heading";
 
 interface AiConfigMasked {
   defaultProvider: "anthropic" | "openai" | "gemini";
@@ -198,9 +199,7 @@ export function AISettingsPanel() {
 
       {/* Web Search */}
       <div style={{ borderTop: "1px solid var(--border)", paddingTop: "1.25rem", marginBottom: "1.5rem" }}>
-        <h3 style={{ fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--muted-foreground)", marginBottom: "0.75rem" }}>
-          Web Search (for AI agents)
-        </h3>
+        <SectionHeading>Web Search (for AI agents)</SectionHeading>
         <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginBottom: "0.75rem" }}>
           Enables the <code style={{ fontSize: "0.7rem" }}>web_search</code> tool for agents with &ldquo;Web search&rdquo; enabled.
         </p>
