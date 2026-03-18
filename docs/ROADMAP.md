@@ -72,6 +72,7 @@ _Makes us stand out. Customers expect these from a modern CMS._
 | 14 | **F13 Notification Channels** | Small | Discord/Slack/webhook notifications on content changes. |
 | 15 | **F15 Agent Scheduler** | Small | Cron agents (link check, SEO audit, content refresh). Already in progress. |
 | 16 | **F35 Webhooks** | Small | Generic outbound events for integrations. F41 revalidation is a specific case. |
+| 16b | **F61 Activity Log** | Medium | Audit trail — who did what when. Compliance, debugging, team accountability. |
 | 17 | **F40 Drag and Drop Tabs** | Small | Polish. Expected UX in a tabbed interface. |
 | 17b | **F52 Custom Column Presets** | Medium | Visual preset editor in Settings. Drag-resize columns. |
 | 17c | **F53 Drag & Drop Blocks** | Medium | Drag blocks between columns with @dnd-kit. |
