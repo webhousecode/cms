@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Inbox, Check, X, Pencil, Volume2, StopCircle, SlidersHorizontal } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox-styled";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { TabTitle } from "@/lib/tabs-context";
@@ -417,10 +418,9 @@ export default function CurationPage() {
                             style={{ flex: 1, padding: "0.25rem 0.5rem", borderRadius: "5px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.8rem" }}
                           />
                         ) : field.type === "boolean" ? (
-                          <input
-                            type="checkbox"
+                          <Checkbox
                             checked={Boolean(editDraft[field.name])}
-                            onChange={(e) => setEditDraft((prev) => ({ ...prev, [field.name]: e.target.checked }))}
+                            onChange={(v) => setEditDraft((prev) => ({ ...prev, [field.name]: v }))}
                           />
                         ) : (
                           <input
