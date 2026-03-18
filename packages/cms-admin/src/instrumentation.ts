@@ -11,19 +11,44 @@ export async function register() {
   // ── 1. Scheduled document publishing (every 60s) ──────────────
   async function publishTick() {
     try {
-      const { getAdminCms, getAdminConfig } = await import("./lib/cms");
-      const [cms, config] = await Promise.all([getAdminCms(), getAdminConfig()]);
-      const collections = config.collections.map((c) => c.name);
-      const actions = await cms.content.publishDue(collections);
-      if (actions.length > 0) {
-        const pub = actions.filter((a) => a.action === "published");
-        const unpub = actions.filter((a) => a.action === "unpublished");
-        if (pub.length > 0) console.log(`[cron] auto-published ${pub.length} document(s):`, pub.map((p) => `${p.collection}/${p.slug}`).join(", "));
-        if (unpub.length > 0) console.log(`[cron] auto-unpublished ${unpub.length} document(s):`, unpub.map((p) => `${p.collection}/${p.slug}`).join(", "));
+      const { getAdminCms, getAdminConfig, getAdminCmsForSite, getAdminConfigForSite } = await import("./lib/cms");
+      const { loadRegistry } = await import("./lib/site-registry");
+      const registry = await loadRegistry();
 
-        // Send webhook notifications
-        const { notifySchedulerEvents } = await import("./lib/scheduler-notify");
-        notifySchedulerEvents(actions).catch(() => {});
+      // Collect all site instances to check (default + all registered)
+      const sites: { cms: any; config: any; label: string }[] = [];
+
+      if (!registry) {
+        // Single-site mode
+        const [cms, config] = await Promise.all([getAdminCms(), getAdminConfig()]);
+        sites.push({ cms, config, label: "default" });
+      } else {
+        for (const org of registry.orgs) {
+          for (const site of org.sites) {
+            try {
+              const [cms, config] = await Promise.all([
+                getAdminCmsForSite(org.id, site.id),
+                getAdminConfigForSite(org.id, site.id),
+              ]);
+              if (cms && config) sites.push({ cms, config, label: `${org.id}/${site.id}` });
+            } catch { /* skip sites that fail to init (e.g. missing GitHub token) */ }
+          }
+        }
+      }
+
+      for (const { cms, config, label } of sites) {
+        const collections = config.collections.map((c: any) => c.name);
+        const actions = await cms.content.publishDue(collections);
+        if (actions.length > 0) {
+          const pub = actions.filter((a: any) => a.action === "published");
+          const unpub = actions.filter((a: any) => a.action === "unpublished");
+          if (pub.length > 0) console.log(`[cron:${label}] auto-published ${pub.length} document(s):`, pub.map((p: any) => `${p.collection}/${p.slug}`).join(", "));
+          if (unpub.length > 0) console.log(`[cron:${label}] auto-unpublished ${unpub.length} document(s):`, unpub.map((p: any) => `${p.collection}/${p.slug}`).join(", "));
+
+          // Send webhook notifications
+          const { notifySchedulerEvents } = await import("./lib/scheduler-notify");
+          notifySchedulerEvents(actions).catch(() => {});
+        }
       }
     } catch (err) {
       console.error("[cron] publishDue error:", err);
