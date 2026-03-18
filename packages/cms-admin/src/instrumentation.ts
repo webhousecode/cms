@@ -38,6 +38,8 @@ export async function register() {
 
       const { notifySchedulerEvents } = await import("./lib/scheduler-notify");
       const { readSiteConfigForSite } = await import("./lib/site-config");
+      const { appendSchedulerEvents } = await import("./lib/scheduler-log");
+      const { getSiteDataDir } = await import("./lib/site-paths");
 
       for (const { cms, config, orgId, siteId } of sites) {
         const collections = config.collections.map((c: any) => c.name);
@@ -47,6 +49,17 @@ export async function register() {
           const unpub = actions.filter((a: any) => a.action === "unpublished");
           if (pub.length > 0) console.log(`[cron:${orgId}/${siteId}] auto-published ${pub.length}:`, pub.map((p: any) => `${p.collection}/${p.slug}`).join(", "));
           if (unpub.length > 0) console.log(`[cron:${orgId}/${siteId}] auto-unpublished ${unpub.length}:`, unpub.map((p: any) => `${p.collection}/${p.slug}`).join(", "));
+
+          // Write to scheduler log for live UI notifications
+          try {
+            const dataDir = await getSiteDataDir(orgId, siteId);
+            if (dataDir) {
+              await appendSchedulerEvents(
+                actions.map((a: any) => ({ collection: a.collection, slug: a.slug, action: a.action, title: a.title ?? a.slug })),
+                dataDir,
+              );
+            }
+          } catch { /* non-critical */ }
 
           // Send webhook with site-specific config
           const siteConfig = orgId ? await readSiteConfigForSite(orgId, siteId).catch(() => null) : null;

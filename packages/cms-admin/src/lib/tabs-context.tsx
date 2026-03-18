@@ -52,6 +52,7 @@ type TabsCtx = {
   switchTab: (id: string) => void;
   setTabTitle: (title: string) => void;
   setTabStatus: (status: string) => void;
+  updateTabStatusByPath: (path: string, status: string) => void;
 };
 
 /* ─── Helpers ────────────────────────────────────────────────── */
@@ -340,8 +341,15 @@ export function TabsProvider({ children }: { children: ReactNode }) {
     applyTabs(updated, id);
   }, []);
 
+  const updateTabStatusByPath = useCallback((path: string, status: string) => {
+    const updated = tabsRef.current.map((t) => t.path === path ? { ...t, status } : t);
+    if (updated.some((t, i) => t !== tabsRef.current[i])) {
+      applyTabs(updated, activeIdRef.current);
+    }
+  }, []);
+
   return (
-    <Ctx.Provider value={{ tabs, activeId, openTab, closeTab, closeAllTabs, switchTab, setTabTitle, setTabStatus }}>
+    <Ctx.Provider value={{ tabs, activeId, openTab, closeTab, closeAllTabs, switchTab, setTabTitle, setTabStatus, updateTabStatusByPath }}>
       {children}
     </Ctx.Provider>
   );
