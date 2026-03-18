@@ -153,7 +153,7 @@ export function HelpDrawer({ open, onClose, initialPage = "help" }: { open: bool
           color: "var(--muted-foreground)",
           fontFamily: "monospace",
         }}>
-          webhouse.app · v0.2.10
+          <span style={{ color: "var(--primary)", fontWeight: 600 }}>webhouse</span><span>.app</span> · v0.2.10
         </div>
       </div>
 
