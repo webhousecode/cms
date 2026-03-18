@@ -27,6 +27,10 @@ export interface SiteConfig {
   emailFromName: string;
   /** Secret used to generate per-user calendar feed tokens */
   calendarSecret: string;
+  /** Webhook URL for scheduled task notifications (Discord, Slack, etc.) */
+  schedulerWebhookUrl: string;
+  /** Enable scheduler notifications */
+  schedulerNotifications: boolean;
 }
 
 async function getConfigPath(): Promise<string> {
@@ -53,6 +57,8 @@ async function defaults(): Promise<SiteConfig> {
     emailFrom: "",
     emailFromName: "webhouse.app",
     calendarSecret: crypto.randomBytes(32).toString("hex"),
+    schedulerWebhookUrl: "",
+    schedulerNotifications: false,
   };
 }
 
