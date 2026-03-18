@@ -28,15 +28,8 @@ const PUBLIC_PREFIXES = [
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  // Root path: authenticated → /admin, unauthenticated → landing page
+  // Root path: always show landing page (login is at /admin/login)
   if (pathname === "/") {
-    const token = request.cookies.get(COOKIE_NAME)?.value;
-    if (token) {
-      try {
-        await jwtVerify(token, getJwtSecret());
-        return NextResponse.redirect(new URL("/admin", request.url));
-      } catch { /* fall through to landing */ }
-    }
     return NextResponse.rewrite(new URL("/home.html", request.url));
   }
 
