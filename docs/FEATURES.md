@@ -88,6 +88,7 @@
 | F69 | [Social Media Plugin](#f69-social-media-plugin) | Planned | [docs/features/F69-social-media-plugin.md](features/F69-social-media-plugin.md) |
 | F70 | [Managed SaaS Hub App](#f70-managed-saas) | Planned | [docs/features/F70-managed-saas.md](features/F70-managed-saas.md) |
 | F71 | [Multi-Player Editing](#f71-multiplayer-editing) | Planned | [docs/features/F71-multiplayer-editing.md](features/F71-multiplayer-editing.md) |
+| F72 | [Website Screenshots](#f72-website-screenshots) | Planned | [docs/features/F72-website-screenshots.md](features/F72-website-screenshots.md) |
 
 ---
 
@@ -303,3 +304,6 @@ The commercial offering: webhouse.app managed CMS-as-a-Service. Hub app (Next.js
 
 ## F71 — Multi-Player Editing
 Prevent data loss from concurrent edits. v1 (optimistic locking): when user A opens a document, lock is set in `_locks/`. User B sees "Being edited by [name]" banner + read-only fields. Lock released on save/close or after 10 min timeout. 30s keepalive ping. Force-unlock for admins. v2 (future): real-time collaboration with PartyKit + Yjs CRDT, live cursors, conflict-free merge — Google Docs-style. Based on CMS-ADMIN-PLAN.md Fase A.3.
+
+## F72 — Website Screenshots
+Playwright-based screenshot tool for capturing all routable pages on the published site. Builds route index from CMS collections with urlPrefix. Headless Playwright captures each page, Sharp generates thumbnails. Introduces new **Tools** sidebar group — Link Checker (F16) moves there as a tab, Screenshots gets its own tab. Thumbnail grid with last-captured date, click for full-size lightbox. Re-capture individual or all pages. SSE-driven progress bar during capture. Stale badges for pages changed since last capture. Useful for visual QA, client presentations, documentation.
