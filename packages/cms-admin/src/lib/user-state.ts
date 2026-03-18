@@ -34,6 +34,8 @@ export interface UserState {
   mediaView: "grid" | "list";
   /** Default interactives view */
   intsView: "grid" | "list";
+  /** Show Close All button in tab bar */
+  showCloseAllTabs: boolean;
   /** Last update */
   updatedAt: string;
 }
@@ -48,6 +50,7 @@ const DEFAULTS: UserState = {
   calendarView: "week",
   mediaView: "grid",
   intsView: "grid",
+  showCloseAllTabs: false,
   updatedAt: new Date().toISOString(),
 };
 

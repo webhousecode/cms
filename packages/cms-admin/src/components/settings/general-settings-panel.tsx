@@ -363,18 +363,6 @@ function SiteSection() {
 			</div>
 
 			<div>
-				<SectionHeading>Interface</SectionHeading>
-				<Card>
-					<Toggle
-						label="Show Close All in tab bar"
-						description="Adds a 'Close all' pill next to the new-tab button."
-						checked={cfg.showCloseAllTabs}
-						onChange={(v) => setCfg((c) => ({ ...c, showCloseAllTabs: v }))}
-					/>
-				</Card>
-			</div>
-
-			<div>
 				<SectionHeading>Developer</SectionHeading>
 				<Card>
 					<Toggle
@@ -781,6 +769,7 @@ function UserPreferencesSection() {
 	const [agentsView, setAgentsView] = useState("grid");
 	const [mediaView, setMediaView] = useState("grid");
 	const [intsView, setIntsView] = useState("grid");
+	const [showCloseAll, setShowCloseAll] = useState(false);
 
 	useEffect(() => {
 		fetch("/api/admin/user-state").then((r) => r.ok ? r.json() : null).then((state) => {
@@ -788,44 +777,61 @@ function UserPreferencesSection() {
 			if (state?.agentsView) setAgentsView(state.agentsView);
 			if (state?.mediaView) setMediaView(state.mediaView);
 			if (state?.intsView) setIntsView(state.intsView);
+			if (state?.showCloseAllTabs !== undefined) setShowCloseAll(state.showCloseAllTabs);
 		}).catch(() => {});
 	}, []);
 
-	function savePref(patch: Record<string, string>) {
-		fetch("/api/admin/user-state", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(patch) }).catch(() => {});
+	function savePref(patch: Record<string, unknown>) {
+		fetch("/api/admin/user-state", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(patch) })
+			.then(() => window.dispatchEvent(new CustomEvent("cms:user-state-updated", { detail: patch })))
+			.catch(() => {});
 	}
 
 	const fieldLabel: React.CSSProperties = { fontSize: "0.7rem", fontWeight: 600, display: "block", marginBottom: "0.25rem" };
 	const gridList = [{ value: "grid", label: "Grid" }, { value: "list", label: "List" }];
 
 	return (
-		<div>
-			<SectionHeading>Default Views</SectionHeading>
-			<Card>
-				<div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.25rem" }}>
-					<div>
-						<label style={fieldLabel}>Calendar</label>
-						<CustomSelect
-							options={[{ value: "day", label: "Day" }, { value: "week", label: "Week" }, { value: "month", label: "Month" }, { value: "year", label: "Year" }]}
-							value={calendarView}
-							onChange={(v) => { setCalendarView(v); savePref({ calendarView: v }); }}
-						/>
+		<>
+			<div>
+				<SectionHeading>Default Views</SectionHeading>
+				<Card>
+					<div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1.25rem" }}>
+						<div>
+							<label style={fieldLabel}>Calendar</label>
+							<CustomSelect
+								options={[{ value: "day", label: "Day" }, { value: "week", label: "Week" }, { value: "month", label: "Month" }, { value: "year", label: "Year" }]}
+								value={calendarView}
+								onChange={(v) => { setCalendarView(v); savePref({ calendarView: v }); }}
+							/>
+						</div>
+						<div>
+							<label style={fieldLabel}>Agents</label>
+							<CustomSelect options={gridList} value={agentsView} onChange={(v) => { setAgentsView(v); savePref({ agentsView: v }); }} />
+						</div>
+						<div>
+							<label style={fieldLabel}>Media</label>
+							<CustomSelect options={gridList} value={mediaView} onChange={(v) => { setMediaView(v); savePref({ mediaView: v }); }} />
+						</div>
+						<div>
+							<label style={fieldLabel}>Interactives</label>
+							<CustomSelect options={gridList} value={intsView} onChange={(v) => { setIntsView(v); savePref({ intsView: v }); }} />
+						</div>
 					</div>
-					<div>
-						<label style={fieldLabel}>Agents</label>
-						<CustomSelect options={gridList} value={agentsView} onChange={(v) => { setAgentsView(v); savePref({ agentsView: v }); }} />
-					</div>
-					<div>
-						<label style={fieldLabel}>Media</label>
-						<CustomSelect options={gridList} value={mediaView} onChange={(v) => { setMediaView(v); savePref({ mediaView: v }); }} />
-					</div>
-					<div>
-						<label style={fieldLabel}>Interactives</label>
-						<CustomSelect options={gridList} value={intsView} onChange={(v) => { setIntsView(v); savePref({ intsView: v }); }} />
-					</div>
-				</div>
-			</Card>
-		</div>
+				</Card>
+			</div>
+
+			<div>
+				<SectionHeading>Interface</SectionHeading>
+				<Card>
+					<Toggle
+						label="Show Close All in tab bar"
+						description="Adds a 'Close all' pill next to the new-tab button."
+						checked={showCloseAll}
+						onChange={(v) => { setShowCloseAll(v); savePref({ showCloseAllTabs: v }); }}
+					/>
+				</Card>
+			</div>
+		</>
 	);
 }
 

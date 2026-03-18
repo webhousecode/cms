@@ -21,17 +21,17 @@ export function TabBar() {
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   useEffect(() => {
-    fetch("/api/admin/site-config")
+    fetch("/api/admin/user-state")
       .then((r) => r.json())
       .then((d: { showCloseAllTabs?: boolean }) => setShowCloseAll(d.showCloseAllTabs ?? false))
       .catch(() => {});
 
-    function onCfgUpdate(e: Event) {
+    function onUserStateUpdate(e: Event) {
       const detail = (e as CustomEvent<{ showCloseAllTabs?: boolean }>).detail;
-      setShowCloseAll(detail.showCloseAllTabs ?? false);
+      if (detail.showCloseAllTabs !== undefined) setShowCloseAll(detail.showCloseAllTabs);
     }
-    window.addEventListener("cms:site-config-updated", onCfgUpdate);
-    return () => window.removeEventListener("cms:site-config-updated", onCfgUpdate);
+    window.addEventListener("cms:user-state-updated", onUserStateUpdate);
+    return () => window.removeEventListener("cms:user-state-updated", onUserStateUpdate);
   }, []);
 
   useEffect(() => {
