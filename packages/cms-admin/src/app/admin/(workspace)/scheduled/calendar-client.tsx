@@ -770,11 +770,9 @@ function CalendarSidebar({ events, todayKey }: { events: ScheduledEvent[]; today
       <p style={sectionLabel}>Collections</p>
       <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem", marginBottom: "1.25rem" }}>
         {colEntries.map(([name, count], i) => (
-          <div key={name} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-              <span style={{ width: "0.5rem", height: "0.5rem", borderRadius: "9999px", background: COLLECTION_COLORS[i % COLLECTION_COLORS.length] }} />
-              <span style={{ fontSize: "0.75rem", fontWeight: 500 }}>{name}</span>
-            </div>
+          <div key={name} style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+            <span style={{ width: "0.5rem", height: "0.5rem", borderRadius: "9999px", background: COLLECTION_COLORS[i % COLLECTION_COLORS.length], flexShrink: 0 }} />
+            <span style={{ fontSize: "0.75rem", fontWeight: 500 }}>{name}</span>
             <span style={{ fontSize: "0.7rem", fontFamily: "monospace", color: "var(--muted-foreground)" }}>{count}</span>
           </div>
         ))}
