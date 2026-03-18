@@ -112,7 +112,7 @@ export function HelpDrawer({ open, onClose, initialPage = "help" }: { open: bool
               <X style={{ width: "1rem", height: "1rem" }} />
             </button>
           </div>
-          <div style={{ display: "flex", gap: "0", padding: "0 1.25rem", marginTop: "0.5rem" }}>
+          <div style={{ display: "flex", padding: "0 1.25rem", marginTop: "0.5rem" }}>
             {([
               { id: "help" as const, label: "Help", icon: <HelpCircle style={{ width: "0.8rem", height: "0.8rem" }} /> },
               { id: "shortcuts" as const, label: "Shortcuts", icon: <Keyboard style={{ width: "0.8rem", height: "0.8rem" }} /> },
@@ -126,8 +126,9 @@ export function HelpDrawer({ open, onClose, initialPage = "help" }: { open: bool
                   padding: "0.5rem 0.75rem",
                   fontSize: "0.8rem", fontWeight: 500,
                   color: page === tab.id ? "var(--primary)" : "var(--muted-foreground)",
+                  background: "none",
+                  border: "none",
                   borderBottom: page === tab.id ? "2px solid var(--primary)" : "2px solid transparent",
-                  background: "none", border: "none", borderBottomStyle: "solid",
                   cursor: "pointer", transition: "all 150ms",
                   marginBottom: "-1px",
                 }}
@@ -153,7 +154,7 @@ export function HelpDrawer({ open, onClose, initialPage = "help" }: { open: bool
           color: "var(--muted-foreground)",
           fontFamily: "monospace",
         }}>
-          <span style={{ color: "var(--primary)", fontWeight: 600 }}>webhouse</span><span>.app</span> · v0.2.10
+          <span style={{ color: "#fff", fontWeight: 600 }}>webhouse</span><span style={{ color: "var(--primary)" }}>.app</span> · v0.2.10
         </div>
       </div>
 
