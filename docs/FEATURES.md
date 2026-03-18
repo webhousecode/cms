@@ -77,6 +77,7 @@
 | F58 | [Interactive Islands](#f58-interactive-islands) | Planned | [docs/features/F58-interactive-islands.md](features/F58-interactive-islands.md) |
 | F59 | [Passwordless Auth](#f59-passwordless-auth) | Idea | [docs/features/F59-passwordless-auth.md](features/F59-passwordless-auth.md) |
 | F60 | [Reliable Scheduled Tasks](#f60-reliable-scheduled-tasks) | Planned | [docs/features/F60-reliable-scheduler.md](features/F60-reliable-scheduler.md) |
+| F61 | [Activity Log](#f61-activity-log) | Planned | [docs/features/F61-activity-log.md](features/F61-activity-log.md) |
 
 ---
 
@@ -259,3 +260,6 @@ Ensure scheduled publishing, AI agents, calendar snapshots, and link checks run 
 
 ## F59 — Passwordless Auth (Passkeys + QR Code Login)
 Discord-style passwordless login. Passkeys (WebAuthn) for biometric login via FaceID/TouchID/Windows Hello — register in Account → Security, use on login page. QR Code login: desktop shows QR, scan with the webhouse.app Pocket CMS mobile app (Capacitor-based, iOS + Android), confirm with FaceID, desktop is instantly logged in via SSE. Mobile app doubles as F07 COCpit with native push notifications, curation queue, and biometric auth. Updates F07 vision from Expo/RN to Capacitor based on proven App Store deployment experience.
+
+## F61 — Activity Log
+Audit trail for all CMS admin actions. Logs document CRUD, publish/unpublish, media uploads, agent runs, team changes, login, settings updates, and scheduler events. Stored as append-only JSONL per site (`_data/activity-log.jsonl`). Admin UI with filterable activity feed page. Each entry records who (user/agent/scheduler), what (action), when (timestamp), and which target (document/media/settings). Integrates with Calendar for historical publish visibility and Dashboard for recent activity widget. Auto-rotates at 10K lines.
