@@ -1,0 +1,9 @@
+{
+  "slug": "home",
+  "status": "published",
+  "data": {
+    "title": "Home",
+    "metaDescription": "Digital strategy consultant helping ambitious businesses scale with clarity and data-driven frameworks.",
+    "content": "<section class=\"hero\">\n<h1>Sarah Mitchell</h1>\n<p class=\"hero-title\">Digital Strategy Consultant</p>\n<p class=\"hero-tagline\">I help ambitious businesses cut through the noise, find their growth levers, and scale with confidence. Data-driven strategy, real results.</p>\n<a href=\"/contact/\">Book a Call</a>\n<a href=\"/services/\">View Services</a>\n</section>\n\n<section class=\"trust-bar\">\n<p>Trusted by 50+ companies worldwide</p>\n<ul>\n<li>Meridian</li>\n<li>Luma</li>\n<li>Atlas</li>\n<li>Bloom &amp; Grow</li>\n<li>NovaTech</li>\n</ul>\n</section>\n\n<section class=\"services\">\n<h2>Packages designed for every stage of growth</h2>\n<p>Whether you're just getting started or scaling to new heights, there's a plan that fits your needs and ambitions.</p>\n</section>\n\n<section class=\"testimonials\">\n<h2>What my clients say</h2>\n<p>Real results from real partnerships. Here's what working together looks like.</p>\n</section>\n\n<section class=\"blog\">\n<h2>Latest from the blog</h2>\n<p>Strategies, frameworks, and lessons from a decade of helping businesses grow.</p>\n</section>\n\n<section class=\"cta\">\n<h2>Ready to grow your business?</h2>\n<p>Let's talk about where you are, where you want to be, and how to get there — faster.</p>\n<a href=\"/contact/\">Book a Free Strategy Call</a>\n</section>"
+  }
+}

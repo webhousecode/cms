@@ -1,0 +1,9 @@
+{
+  "slug": "contact",
+  "status": "published",
+  "data": {
+    "title": "Contact",
+    "metaDescription": "Get in touch with Sarah Mitchell. Book a free strategy call or send a message to discuss how strategic consulting can help your business.",
+    "content": "<section class=\"contact\">\n<h2>Let's start a conversation</h2>\n<p>Whether you have a specific challenge or just want to explore how strategic consulting could help your business, I'd love to hear from you.</p>\n\n<h3>Email</h3>\n<p>hello@sarahmitchell.co</p>\n\n<h3>Phone</h3>\n<p>+1 (415) 555-0182</p>\n\n<h3>Location</h3>\n<p>San Francisco, CA</p>\n</section>"
+  }
+}

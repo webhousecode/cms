@@ -3,6 +3,15 @@ import { defineConfig, defineCollection } from '@webhouse/cms';
 export default defineConfig({
   collections: [
     defineCollection({
+      name: 'pages',
+      label: 'Pages',
+      fields: [
+        { name: 'title', type: 'text', required: true },
+        { name: 'metaDescription', type: 'textarea', label: 'Meta Description' },
+        { name: 'content', type: 'richtext' },
+      ],
+    }),
+    defineCollection({
       name: 'projects',
       label: 'Projects',
       fields: [

@@ -26,6 +26,7 @@ export default defineConfig({
       fields: [
         { name: 'title', type: 'text', label: 'Page Title', required: true },
         { name: 'content', type: 'richtext', label: 'Content' },
+        { name: 'metaDescription', type: 'textarea', label: 'Meta Description' },
         { name: 'heroImage', type: 'image', label: 'Hero Image' },
       ],
     }),

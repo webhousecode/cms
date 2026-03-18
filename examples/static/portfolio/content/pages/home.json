@@ -1,0 +1,9 @@
+{
+  "slug": "home",
+  "status": "published",
+  "data": {
+    "title": "Work",
+    "content": "Portfolio grid showcasing selected photography projects by Elena Vasquez. Each project is presented as a full-bleed image card with title and category overlay on hover, linking to a dedicated project page with hero image, description, and gallery.",
+    "metaDescription": "Elena Vasquez — visual storyteller based in Copenhagen, working across architecture, landscape, and fine art photography."
+  }
+}

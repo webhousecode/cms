@@ -44,6 +44,7 @@ export default defineConfig({
       label: 'Pages',
       fields: [
         { name: 'title', type: 'text', required: true },
+        { name: 'metaDescription', type: 'textarea' },
         { name: 'content', type: 'richtext' },
       ],
     }),

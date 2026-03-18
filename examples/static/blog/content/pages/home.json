@@ -1,0 +1,8 @@
+{
+  "slug": "home",
+  "status": "published",
+  "data": {
+    "title": "Thinking in Pixels",
+    "content": "<p>Notes on design, typography, and building things for the web.</p>"
+  }
+}
