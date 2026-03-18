@@ -73,6 +73,7 @@ export default function AgentDetailPage() {
   const [targetCollections, setTargetCollections] = useState<string[]>([]);
   const [fieldDefaults, setFieldDefaults] = useState<{ key: string; value: string }[]>([]);
   const [cloning, setCloning] = useState(false);
+  const [confirmDeleteDefault, setConfirmDeleteDefault] = useState<number | null>(null);
   const [schemaFields, setSchemaFields] = useState<{ name: string; type: string; label?: string; options?: { value: string; label?: string }[] }[]>([]);
   const [availableCollections, setAvailableCollections] = useState<{ name: string; label: string }[]>([]);
   const [stats, setStats] = useState<AgentConfig["stats"]>({
@@ -485,14 +486,23 @@ export default function AgentDetailPage() {
                       style={{ ...inputStyle, flex: 1, fontSize: "0.8rem" }}
                     />
                   )}
-                  <button
-                    type="button"
-                    onClick={() => setFieldDefaults((prev) => prev.filter((_, j) => j !== i))}
-                    style={{ padding: "0.3rem", color: "var(--destructive)", background: "none", border: "none", cursor: "pointer", borderRadius: "4px" }}
-                    className="hover:bg-destructive/10"
-                  >
-                    <X style={{ width: "0.8rem", height: "0.8rem" }} />
-                  </button>
+                  {confirmDeleteDefault === i ? (
+                    <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                      <button type="button" onClick={() => { setFieldDefaults((prev) => prev.filter((_, j) => j !== i)); setConfirmDeleteDefault(null); }}
+                        style={{ fontSize: "0.6rem", padding: "0.15rem 0.4rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer" }}>Sure?</button>
+                      <button type="button" onClick={() => setConfirmDeleteDefault(null)}
+                        style={{ fontSize: "0.6rem", padding: "0.15rem 0.4rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer" }}>No</button>
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setConfirmDeleteDefault(i)}
+                      style={{ padding: "0.3rem", color: "var(--destructive)", background: "none", border: "none", cursor: "pointer", borderRadius: "4px" }}
+                      className="hover:bg-destructive/10"
+                    >
+                      <X style={{ width: "0.8rem", height: "0.8rem" }} />
+                    </button>
+                  )}
                 </div>
               );
             })}

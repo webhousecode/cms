@@ -6,6 +6,7 @@ import { Check, Eye, EyeOff, AlertTriangle, Copy, RefreshCw, Zap, Send } from "l
 import { toast } from "sonner";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { SectionHeading } from "@/components/ui/section-heading";
+import { Checkbox } from "@/components/ui/checkbox-styled";
 
 /* ─── Helpers ─────────────────────────────────────────────────── */
 
@@ -989,14 +990,11 @@ function SchedulerNotificationsSection() {
 					Get notified when the scheduler auto-publishes or unpublishes content. Works with Discord, Slack, or any webhook.
 				</p>
 
-				<label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.85rem" }}>
-					<input
-						type="checkbox"
-						checked={enabled}
-						onChange={(e) => setEnabled(e.target.checked)}
-					/>
-					Enable scheduler notifications
-				</label>
+				<Checkbox
+					checked={enabled}
+					onChange={(v) => setEnabled(v)}
+					label="Enable scheduler notifications"
+				/>
 
 				{enabled && (
 					<>
