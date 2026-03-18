@@ -39,10 +39,31 @@ async function resolveToken(token: string): Promise<string> {
       const { dataDir } = await getActiveSitePaths();
       const fs = await import("fs/promises");
       const path = await import("path");
-      const raw = await fs.readFile(path.join(dataDir, "github-service-token.json"), "utf-8");
+      const tokenPath = path.join(dataDir, "github-service-token.json");
+      const raw = await fs.readFile(tokenPath, "utf-8");
       const stored = JSON.parse(raw) as { token?: string };
       if (stored.token) return stored.token;
-    } catch { /* no service token */ }
+    } catch { /* try site-specific path next */ }
+
+    // 3. Scan all site cache dirs for a service token (survives cookie clear)
+    try {
+      const fs = await import("fs/promises");
+      const pathMod = await import("path");
+      const configPath = process.env.CMS_CONFIG_PATH;
+      if (configPath) {
+        const cacheBase = pathMod.join(pathMod.dirname(pathMod.resolve(configPath)), ".cache", "sites");
+        const dirs = await fs.readdir(cacheBase, { withFileTypes: true }).catch(() => []);
+        for (const dir of dirs) {
+          if (!dir.isDirectory()) continue;
+          const tokenPath = pathMod.join(cacheBase, dir.name, "_data", "github-service-token.json");
+          try {
+            const raw = await fs.readFile(tokenPath, "utf-8");
+            const stored = JSON.parse(raw) as { token?: string };
+            if (stored.token) return stored.token;
+          } catch { continue; }
+        }
+      }
+    } catch { /* exhausted */ }
 
     throw new Error("GitHub not connected — please connect via Sites → New Site → Connect GitHub");
   }
