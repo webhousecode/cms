@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Plus, X } from "lucide-react";
 import { slugify } from "@/lib/utils";
@@ -9,6 +9,20 @@ import { Input } from "@/components/ui/input";
 
 export function NewDocumentButton({ collection, titleField = "title", defaultLocale }: { collection: string; titleField?: string; defaultLocale?: string }) {
   const [open, setOpen] = useState(false);
+
+  /* ── "n" key shortcut → open new item form ──────────────── */
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key !== "n" || e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return;
+      const tag = (document.activeElement?.tagName ?? "").toLowerCase();
+      if (tag === "input" || tag === "textarea" || tag === "select") return;
+      if ((document.activeElement as HTMLElement)?.isContentEditable) return;
+      e.preventDefault();
+      setOpen(true);
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, []);
   const [title, setTitle] = useState("");
   const [saving, setSaving] = useState(false);
   const router = useRouter();

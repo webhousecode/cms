@@ -796,6 +796,19 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
     setTabStatus(status);
   }, [doc.status, doc.publishAt, setTabStatus]);
 
+  /* ── Cmd+S → save document ────────────────────────────────── */
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key === "s") {
+        e.preventDefault();
+        if (!saving) save();
+      }
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [saving]);
+
   // Close locale dropdown on outside click
   useEffect(() => {
     if (!localeOpen) return;

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Sparkles } from "lucide-react";
 import { GenerateDocumentDialog } from "./generate-document-dialog";
 
@@ -11,6 +11,20 @@ interface Props {
 
 export function GenerateDocumentButton({ collection, collectionLabel }: Props) {
   const [open, setOpen] = useState(false);
+
+  /* ── "g" key shortcut → open generate dialog ────────────── */
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key !== "g" || e.metaKey || e.ctrlKey || e.altKey || e.shiftKey) return;
+      const tag = (document.activeElement?.tagName ?? "").toLowerCase();
+      if (tag === "input" || tag === "textarea" || tag === "select") return;
+      if ((document.activeElement as HTMLElement)?.isContentEditable) return;
+      e.preventDefault();
+      setOpen(true);
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   return (
     <>

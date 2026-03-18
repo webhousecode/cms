@@ -238,6 +238,37 @@ export function TabsProvider({ children }: { children: ReactNode }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  /* ── Global ⌘⇧←/→ — switch between tabs ───────────────── */
+  useEffect(() => {
+    function handleKey(e: KeyboardEvent) {
+      if (!(e.metaKey || e.ctrlKey) || !e.shiftKey) return;
+      if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+
+      const prev = tabsRef.current;
+      const currentId = activeIdRef.current;
+      if (prev.length < 2 || !currentId) return;
+
+      const idx = prev.findIndex((t) => t.id === currentId);
+      if (idx === -1) return;
+
+      let nextIdx: number;
+      if (e.key === "ArrowLeft") {
+        nextIdx = idx > 0 ? idx - 1 : prev.length - 1;
+      } else {
+        nextIdx = idx < prev.length - 1 ? idx + 1 : 0;
+      }
+
+      e.preventDefault();
+      const target = prev[nextIdx];
+      applyTabs(prev, target.id);
+      skipNextPathChange.current = true;
+      router.push(target.path);
+    }
+    document.addEventListener("keydown", handleKey);
+    return () => document.removeEventListener("keydown", handleKey);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [router]);
+
   /* ── Global cmd+click / middle-click interceptor ─────────── */
   useEffect(() => {
     function handle(e: MouseEvent) {
