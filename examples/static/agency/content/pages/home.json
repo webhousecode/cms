@@ -4,32 +4,22 @@
   "data": {
     "title": "Home",
     "metaDescription": "Meridian Studio is a creative agency specialising in brand strategy, digital design, and web development for ambitious brands.",
-    "hero": {
-      "label": "Creative Agency",
-      "heading": "We craft <span class=\"gradient-text\">digital experiences</span> that matter",
-      "subtitle": "Meridian Studio is a creative agency specialising in brand strategy, digital design, and web development for ambitious brands.",
-      "ctaText": "View Our Work",
-      "ctaUrl": "/work/index.html"
-    },
-    "services": {
-      "label": "What We Do",
-      "heading": "Services"
-    },
-    "featuredWork": {
-      "label": "Selected Projects",
-      "heading": "Featured Work",
-      "viewAllText": "View all"
-    },
-    "team": {
-      "label": "The People",
-      "heading": "Our Team"
-    },
-    "cta": {
-      "heading": "Ready to start your next project?",
-      "subtitle": "Let\u2019s create something extraordinary together.",
-      "buttonText": "Get in Touch",
-      "buttonUrl": "mailto:hello@meridianstudio.co"
-    }
+    "heroLabel": "Creative Agency",
+    "heroHeading": "We craft <span class=\"gradient-text\">digital experiences</span> that matter",
+    "heroSubtitle": "Meridian Studio is a creative agency specialising in brand strategy, digital design, and web development for ambitious brands.",
+    "heroCta": "View Our Work",
+    "heroCtaUrl": "/work/index.html",
+    "servicesLabel": "What We Do",
+    "servicesHeading": "Services",
+    "featuredWorkLabel": "Selected Projects",
+    "featuredWorkHeading": "Featured Work",
+    "featuredWorkViewAllText": "View all",
+    "teamLabel": "The People",
+    "teamHeading": "Our Team",
+    "ctaHeading": "Ready to start your next project?",
+    "ctaSubtitle": "Let\u2019s create something extraordinary together.",
+    "ctaButtonText": "Get in Touch",
+    "ctaButtonUrl": "mailto:hello@meridianstudio.co"
   },
   "id": "page-home",
   "_fieldMeta": {}

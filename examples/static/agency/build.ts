@@ -37,26 +37,44 @@ interface Document<T> {
 interface HomePageData {
   title: string;
   metaDescription: string;
-  hero: { label: string; heading: string; subtitle: string; ctaText: string; ctaUrl: string };
-  services: { label: string; heading: string };
-  featuredWork: { label: string; heading: string; viewAllText: string };
-  team: { label: string; heading: string };
-  cta: { heading: string; subtitle: string; buttonText: string; buttonUrl: string };
+  heroLabel: string;
+  heroHeading: string;
+  heroSubtitle: string;
+  heroCta: string;
+  heroCtaUrl: string;
+  servicesLabel: string;
+  servicesHeading: string;
+  featuredWorkLabel: string;
+  featuredWorkHeading: string;
+  featuredWorkViewAllText: string;
+  teamLabel: string;
+  teamHeading: string;
+  ctaHeading: string;
+  ctaSubtitle: string;
+  ctaButtonText: string;
+  ctaButtonUrl: string;
 }
 
 interface AboutPageData {
   title: string;
   metaDescription: string;
-  hero: { label: string; heading: string; intro: string };
+  heroLabel: string;
+  heroHeading: string;
+  heroIntro: string;
   values: { title: string; description: string }[];
-  teamSection: { label: string; heading: string };
-  cta: { heading: string; subtitle: string; buttonText: string; buttonUrl: string };
+  teamSectionLabel: string;
+  teamSectionHeading: string;
+  ctaHeading: string;
+  ctaSubtitle: string;
+  ctaButtonText: string;
+  ctaButtonUrl: string;
 }
 
 interface WorkPageData {
   title: string;
   metaDescription: string;
-  hero: { label: string; heading: string };
+  heroLabel: string;
+  heroHeading: string;
 }
 
 interface SiteData {
@@ -366,15 +384,15 @@ function buildHomePage(
   <!-- Hero -->
   <section class="pt-32 pb-20 lg:pt-44 lg:pb-32 px-6 lg:px-8">
     <div class="max-w-5xl mx-auto text-center">
-      <p class="fade-up font-heading font-600 text-xs tracking-[0.2em] uppercase text-[#999] mb-6" style="font-weight:600;">${hp.hero.label}</p>
+      <p class="fade-up font-heading font-600 text-xs tracking-[0.2em] uppercase text-[#999] mb-6" style="font-weight:600;">${hp.heroLabel}</p>
       <h1 class="fade-up fade-up-d1 font-heading hero-title leading-[1.08] tracking-tight mb-8" style="font-size: clamp(2.5rem, 6vw, 4.5rem); font-weight: 800;">
-        ${hp.hero.heading}
+        ${hp.heroHeading}
       </h1>
       <p class="fade-up fade-up-d2 text-[#666] text-lg lg:text-xl max-w-2xl mx-auto leading-relaxed mb-10">
-        ${hp.hero.subtitle}
+        ${hp.heroSubtitle}
       </p>
       <div class="fade-up fade-up-d3">
-        <a href="${hp.hero.ctaUrl}" class="btn-gradient">${hp.hero.ctaText}</a>
+        <a href="${hp.heroCtaUrl}" class="btn-gradient">${hp.heroCta}</a>
       </div>
     </div>
   </section>
@@ -383,8 +401,8 @@ function buildHomePage(
   <section class="py-20 lg:py-28 px-6 lg:px-8" style="background: #fafafa;">
     <div class="max-w-7xl mx-auto">
       <div class="text-center mb-16">
-        <p class="font-heading font-600 text-xs tracking-[0.2em] uppercase text-[#999] mb-4" style="font-weight:600;">${hp.services.label}</p>
-        <h2 class="font-heading section-title tracking-tight" style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 800;">${hp.services.heading}</h2>
+        <p class="font-heading font-600 text-xs tracking-[0.2em] uppercase text-[#999] mb-4" style="font-weight:600;">${hp.servicesLabel}</p>
+        <h2 class="font-heading section-title tracking-tight" style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 800;">${hp.servicesHeading}</h2>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         ${serviceCards}
@@ -397,11 +415,11 @@ function buildHomePage(
     <div class="max-w-7xl mx-auto">
       <div class="flex items-end justify-between mb-16">
         <div>
-          <p class="font-heading font-600 text-xs tracking-[0.2em] uppercase text-[#999] mb-4" style="font-weight:600;">${hp.featuredWork.label}</p>
-          <h2 class="font-heading section-title tracking-tight" style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 800;">${hp.featuredWork.heading}</h2>
+          <p class="font-heading font-600 text-xs tracking-[0.2em] uppercase text-[#999] mb-4" style="font-weight:600;">${hp.featuredWorkLabel}</p>
+          <h2 class="font-heading section-title tracking-tight" style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 800;">${hp.featuredWorkHeading}</h2>
         </div>
         <a href="/work/index.html" class="hidden md:inline-block text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors">
-          ${hp.featuredWork.viewAllText} &rarr;
+          ${hp.featuredWorkViewAllText} &rarr;
         </a>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -414,8 +432,8 @@ function buildHomePage(
   <section class="py-20 lg:py-28 px-6 lg:px-8" style="background: #fafafa;">
     <div class="max-w-7xl mx-auto">
       <div class="text-center mb-16">
-        <p class="font-heading font-600 text-xs tracking-[0.2em] uppercase text-[#999] mb-4" style="font-weight:600;">${hp.team.label}</p>
-        <h2 class="font-heading section-title tracking-tight" style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 800;">${hp.team.heading}</h2>
+        <p class="font-heading font-600 text-xs tracking-[0.2em] uppercase text-[#999] mb-4" style="font-weight:600;">${hp.teamLabel}</p>
+        <h2 class="font-heading section-title tracking-tight" style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 800;">${hp.teamHeading}</h2>
       </div>
       <div class="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto">
         ${teamCards}
@@ -426,9 +444,9 @@ function buildHomePage(
   <!-- CTA -->
   <section class="py-24 lg:py-32 px-6 lg:px-8 text-center" style="background: linear-gradient(135deg, #6366f1, #a855f7);">
     <div class="max-w-3xl mx-auto">
-      <h2 class="font-heading text-white tracking-tight mb-6" style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 800;">${hp.cta.heading}</h2>
-      <p class="text-white/80 text-lg mb-10">${hp.cta.subtitle}</p>
-      <a href="${hp.cta.buttonUrl}" class="inline-block px-8 py-4 bg-white text-[#111] font-heading font-700 text-sm rounded-full hover:shadow-xl transition-shadow" style="font-weight:700;">${hp.cta.buttonText}</a>
+      <h2 class="font-heading text-white tracking-tight mb-6" style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 800;">${hp.ctaHeading}</h2>
+      <p class="text-white/80 text-lg mb-10">${hp.ctaSubtitle}</p>
+      <a href="${hp.ctaButtonUrl}" class="inline-block px-8 py-4 bg-white text-[#111] font-heading font-700 text-sm rounded-full hover:shadow-xl transition-shadow" style="font-weight:700;">${hp.ctaButtonText}</a>
     </div>
   </section>
 
@@ -470,8 +488,8 @@ function buildWorkListingPage(
 
   <section class="pt-32 pb-12 lg:pt-40 lg:pb-16 px-6 lg:px-8">
     <div class="max-w-7xl mx-auto">
-      <p class="fade-up font-heading font-600 text-xs tracking-[0.2em] uppercase text-[#999] mb-4" style="font-weight:600;">${wp.hero.label}</p>
-      <h1 class="fade-up fade-up-d1 font-heading tracking-tight" style="font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 800;">${wp.hero.heading}</h1>
+      <p class="fade-up font-heading font-600 text-xs tracking-[0.2em] uppercase text-[#999] mb-4" style="font-weight:600;">${wp.heroLabel}</p>
+      <h1 class="fade-up fade-up-d1 font-heading tracking-tight" style="font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 800;">${wp.heroHeading}</h1>
     </div>
   </section>
 
@@ -590,12 +608,12 @@ function buildAboutPage(
   <!-- Hero -->
   <section class="pt-32 pb-16 lg:pt-44 lg:pb-24 px-6 lg:px-8">
     <div class="max-w-4xl mx-auto text-center">
-      <p class="fade-up font-heading font-600 text-xs tracking-[0.2em] uppercase text-[#999] mb-6" style="font-weight:600;">${ap.hero.label}</p>
+      <p class="fade-up font-heading font-600 text-xs tracking-[0.2em] uppercase text-[#999] mb-6" style="font-weight:600;">${ap.heroLabel}</p>
       <h1 class="fade-up fade-up-d1 font-heading tracking-tight mb-8" style="font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 800;">
-        ${ap.hero.heading}
+        ${ap.heroHeading}
       </h1>
       <p class="fade-up fade-up-d2 text-[#666] text-lg leading-relaxed max-w-2xl mx-auto">
-        ${ap.hero.intro}
+        ${ap.heroIntro}
       </p>
     </div>
   </section>
@@ -613,8 +631,8 @@ function buildAboutPage(
   <section class="py-20 lg:py-28 px-6 lg:px-8">
     <div class="max-w-7xl mx-auto">
       <div class="text-center mb-16">
-        <p class="font-heading font-600 text-xs tracking-[0.2em] uppercase text-[#999] mb-4" style="font-weight:600;">${ap.teamSection.label}</p>
-        <h2 class="font-heading section-title tracking-tight" style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 800;">${ap.teamSection.heading}</h2>
+        <p class="font-heading font-600 text-xs tracking-[0.2em] uppercase text-[#999] mb-4" style="font-weight:600;">${ap.teamSectionLabel}</p>
+        <h2 class="font-heading section-title tracking-tight" style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 800;">${ap.teamSectionHeading}</h2>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
         ${teamCards}
@@ -625,9 +643,9 @@ function buildAboutPage(
   <!-- CTA -->
   <section class="py-24 lg:py-32 px-6 lg:px-8 text-center" style="background: linear-gradient(135deg, #6366f1, #a855f7);">
     <div class="max-w-3xl mx-auto">
-      <h2 class="font-heading text-white tracking-tight mb-6" style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 800;">${ap.cta.heading}</h2>
-      <p class="text-white/80 text-lg mb-10">${ap.cta.subtitle}</p>
-      <a href="${ap.cta.buttonUrl}" class="inline-block px-8 py-4 bg-white text-[#111] font-heading font-700 text-sm rounded-full hover:shadow-xl transition-shadow" style="font-weight:700;">${ap.cta.buttonText}</a>
+      <h2 class="font-heading text-white tracking-tight mb-6" style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 800;">${ap.ctaHeading}</h2>
+      <p class="text-white/80 text-lg mb-10">${ap.ctaSubtitle}</p>
+      <a href="${ap.ctaButtonUrl}" class="inline-block px-8 py-4 bg-white text-[#111] font-heading font-700 text-sm rounded-full hover:shadow-xl transition-shadow" style="font-weight:700;">${ap.ctaButtonText}</a>
     </div>
   </section>
 
