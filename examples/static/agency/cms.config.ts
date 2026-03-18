@@ -9,7 +9,7 @@ export default defineConfig({
         { name: 'title', type: 'text', required: true },
         { name: 'client', type: 'text', required: true },
         { name: 'category', type: 'text' },
-        { name: 'heroImage', type: 'text' },
+        { name: 'heroImage', type: 'image' },
         { name: 'excerpt', type: 'textarea' },
         { name: 'description', type: 'textarea' },
         { name: 'year', type: 'text' },
@@ -21,7 +21,7 @@ export default defineConfig({
       fields: [
         { name: 'name', type: 'text', required: true },
         { name: 'role', type: 'text' },
-        { name: 'photo', type: 'text' },
+        { name: 'photo', type: 'image' },
         { name: 'bio', type: 'textarea' },
       ],
     }),
@@ -40,13 +40,36 @@ export default defineConfig({
       fields: [
         { name: 'title', type: 'text', required: true },
         { name: 'metaDescription', type: 'textarea' },
-        { name: 'hero', type: 'textarea', label: 'Hero Section (JSON)' },
-        { name: 'services', type: 'textarea', label: 'Services Section (JSON)' },
-        { name: 'featuredWork', type: 'textarea', label: 'Featured Work Section (JSON)' },
-        { name: 'team', type: 'textarea', label: 'Team Section (JSON)' },
-        { name: 'teamSection', type: 'textarea', label: 'Team Heading (JSON)' },
-        { name: 'cta', type: 'textarea', label: 'CTA Section (JSON)' },
-        { name: 'values', type: 'textarea', label: 'Values (JSON)' },
+        // Hero section
+        { name: 'heroLabel', type: 'text', label: 'Hero Label' },
+        { name: 'heroHeading', type: 'text', label: 'Hero Heading' },
+        { name: 'heroSubtitle', type: 'textarea', label: 'Hero Subtitle' },
+        { name: 'heroIntro', type: 'textarea', label: 'Hero Intro' },
+        { name: 'heroCta', type: 'text', label: 'Hero CTA Text' },
+        { name: 'heroCtaUrl', type: 'text', label: 'Hero CTA URL' },
+        // Services section
+        { name: 'servicesLabel', type: 'text', label: 'Services Label' },
+        { name: 'servicesHeading', type: 'text', label: 'Services Heading' },
+        // Featured work section
+        { name: 'featuredWorkLabel', type: 'text', label: 'Featured Work Label' },
+        { name: 'featuredWorkHeading', type: 'text', label: 'Featured Work Heading' },
+        { name: 'featuredWorkViewAllText', type: 'text', label: 'Featured Work View All Text' },
+        // Team section
+        { name: 'teamLabel', type: 'text', label: 'Team Label' },
+        { name: 'teamHeading', type: 'text', label: 'Team Heading' },
+        // Team section (about page)
+        { name: 'teamSectionLabel', type: 'text', label: 'Team Section Label' },
+        { name: 'teamSectionHeading', type: 'text', label: 'Team Section Heading' },
+        // CTA section
+        { name: 'ctaHeading', type: 'text', label: 'CTA Heading' },
+        { name: 'ctaSubtitle', type: 'textarea', label: 'CTA Subtitle' },
+        { name: 'ctaButtonText', type: 'text', label: 'CTA Button Text' },
+        { name: 'ctaButtonUrl', type: 'text', label: 'CTA Button URL' },
+        // Values (about page)
+        { name: 'values', type: 'array', label: 'Values', fields: [
+          { name: 'title', type: 'text' },
+          { name: 'description', type: 'textarea' },
+        ]},
       ],
     }),
   ],
