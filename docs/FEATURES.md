@@ -92,6 +92,7 @@
 | F73 | [Troubleshooting Guide](#f73-troubleshooting-guide) | Planned | [docs/features/F73-troubleshooting-guide.md](features/F73-troubleshooting-guide.md) |
 | F74 | [System Status Page](#f74-system-status-page) | Planned | [docs/features/F74-system-status-page.md](features/F74-system-status-page.md) |
 | F75 | [AI Site Builder Guide](#f75-ai-site-builder-guide) | Planned | [docs/features/F75-ai-site-builder-guide.md](features/F75-ai-site-builder-guide.md) |
+| F76 | [Create New Organization](#f76-create-organization) | Planned | [docs/features/F76-create-organization.md](features/F76-create-organization.md) |
 
 ---
 
@@ -319,3 +320,6 @@ Public status page at status.webhouse.app showing health of CMS services. Heartb
 
 ## F75 — AI Site Builder Guide (Modular Docs)
 Split the 2421-line monolithic `packages/cms/CLAUDE.md` into 20 focused module files hosted on GitHub (raw.githubusercontent.com). Slim index document (~180 lines) replaces the monolith — describes each module with a one-line summary and fetch URL. AI sessions read the index, identify relevant modules, and fetch only what's needed. Modules: getting-started, config-reference, field-types, blocks, richtext, storage-adapters, nextjs-patterns, seo, images, i18n, deployment, troubleshooting, interactives, relationships, api-reference, etc. "Quick decisions" section maps common tasks to module combos ("add a blog" → fetch 01, 02, 08, 13). Evolves F24 (AI Playbook). Works with Claude Code, Cursor, Windsurf, and any AI tool with URL fetch.
+
+## F76 — Create New Organization
+Wire up the non-functional "+ New organization" button in the org switcher dropdown. Backend API already exists (`POST /api/cms/registry` with `action: "add-org"`). Frontend needs: inline dialog in dropdown (org name input + Create/Cancel), API call, set `cms-active-org` cookie, dispatch `cms-registry-change` event, navigate to `/admin/sites/new`. Fix New Site page to handle fresh org with no sites gracefully. Critical for agencies managing multiple client orgs.
