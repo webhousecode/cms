@@ -13,30 +13,25 @@ interface SchedulerEvent {
   timestamp: string;
 }
 
-const POLL_INTERVAL = 10_000; // 10 seconds
-
 export function useSchedulerEvents() {
-  const lastCheckedRef = useRef(new Date().toISOString());
-  const seenIdsRef = useRef(new Set<string>());
   const { updateTabStatusByPath } = useTabs();
+  const updateRef = useRef(updateTabStatusByPath);
+  updateRef.current = updateTabStatusByPath;
 
   useEffect(() => {
-    let timer: ReturnType<typeof setInterval>;
+    let es: EventSource | null = null;
+    let retryTimer: ReturnType<typeof setTimeout>;
 
-    async function poll() {
-      if (document.hidden) return;
-      try {
-        const res = await fetch(`/api/admin/scheduler-events?since=${encodeURIComponent(lastCheckedRef.current)}`);
-        if (!res.ok) return;
-        const { events } = (await res.json()) as { events: SchedulerEvent[] };
+    function connect() {
+      es = new EventSource("/api/admin/scheduler-stream");
 
-        for (const evt of events) {
-          if (seenIdsRef.current.has(evt.id)) continue;
-          seenIdsRef.current.add(evt.id);
+      es.onmessage = (e) => {
+        try {
+          const evt = JSON.parse(e.data) as SchedulerEvent;
 
           // Update tab status dot
           const tabPath = `/admin/${evt.collection}/${evt.slug}`;
-          updateTabStatusByPath(tabPath, evt.action === "published" ? "published" : "draft");
+          updateRef.current(tabPath, evt.action === "published" ? "published" : "draft");
 
           // Show toast
           if (evt.action === "published") {
@@ -50,25 +45,21 @@ export function useSchedulerEvents() {
               duration: 6000,
             });
           }
-        }
+        } catch { /* ignore malformed */ }
+      };
 
-        if (events.length > 0) {
-          lastCheckedRef.current = events[events.length - 1].timestamp;
-        }
-      } catch { /* network error, retry next interval */ }
+      es.onerror = () => {
+        es?.close();
+        // Reconnect after 5s
+        retryTimer = setTimeout(connect, 5000);
+      };
     }
 
-    timer = setInterval(poll, POLL_INTERVAL);
-
-    // Also poll on visibility change (tab becomes visible)
-    function onVisibility() {
-      if (!document.hidden) poll();
-    }
-    document.addEventListener("visibilitychange", onVisibility);
+    connect();
 
     return () => {
-      clearInterval(timer);
-      document.removeEventListener("visibilitychange", onVisibility);
+      clearTimeout(retryTimer);
+      es?.close();
     };
-  }, [updateTabStatusByPath]);
+  }, []);
 }
