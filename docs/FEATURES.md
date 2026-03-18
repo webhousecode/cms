@@ -98,6 +98,7 @@
 | F79 | [Site Config Validator](#f79-site-config-validator) | Planned | [docs/features/F79-site-config-validator.md](features/F79-site-config-validator.md) |
 | F80 | [Admin Selector Map](#f80-admin-selector-map) | Planned | [docs/features/F80-admin-selector-map.md](features/F80-admin-selector-map.md) |
 | F81 | [Homepage Designation](#f81-homepage-designation) | Planned | [docs/features/F81-homepage-designation.md](features/F81-homepage-designation.md) |
+| F82 | [Loaders & Spinners](#f82-loaders--spinners) | Planned | [docs/features/F82-loaders-and-spinners.md](features/F82-loaders-and-spinners.md) |
 
 ---
 
@@ -343,3 +344,6 @@ Auto-generated map of stable `data-testid` selectors for every CMS admin UI elem
 
 ## F81 — Homepage Designation
 Explicit "Set as homepage" setting in Site Settings so the CMS knows which page maps to "/". WordPress-style dropdown populated from the pages collection. Replaces fragile slug conventions (`home`, `index`) scattered across preview, build, revalidation, and proxy code. Single source of truth via `homepageSlug` in the site registry. Includes homepage badge in document editor and home icon in collection list.
+
+## F82 — Loaders & Spinners
+Polished, branded loading animations throughout CMS admin. Four tiers: shimmer skeleton screens for route/page loading, inline spinners for button actions, progress bars for multi-step operations, and a thin gold top-loader bar for route transitions. Replaces blank screens, "Loading..." text, and inconsistent Loader2 icons with a unified system using webhouse gold (#F7BB2E) accent.
