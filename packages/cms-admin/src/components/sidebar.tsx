@@ -57,6 +57,18 @@ export function AppSidebar({ collections }: Props) {
     const saved = localStorage.getItem("cms-sidebar-content-open");
     return saved !== null ? saved === "true" : true;
   });
+
+  // Load sidebar prefs from server (overrides localStorage)
+  useEffect(() => {
+    fetch("/api/admin/user-state")
+      .then((r) => r.ok ? r.json() : null)
+      .then((state) => {
+        if (!state) return;
+        if (typeof state.sidebarContentOpen === "boolean") setContentOpen(state.sidebarContentOpen);
+        if (typeof state.showLogoIcon === "boolean") setShowLogoIcon(state.showLogoIcon);
+      })
+      .catch(() => {});
+  }, []);
   const [readyCount, setReadyCount] = useState(0);
   const [budgetSpent, setBudgetSpent] = useState(0);
   const [budgetTotal, setBudgetTotal] = useState(50);
@@ -215,7 +227,7 @@ export function AppSidebar({ collections }: Props) {
             <SidebarMenuItem>
               <SidebarMenuButton
                 tooltip="Content"
-                onClick={() => setContentOpen((o) => { const next = !o; localStorage.setItem("cms-sidebar-content-open", String(next)); return next; })}
+                onClick={() => setContentOpen((o) => { const next = !o; localStorage.setItem("cms-sidebar-content-open", String(next)); fetch("/api/admin/user-state", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sidebarContentOpen: next }) }).catch(() => {}); return next; })}
                 render={<button type="button" />}
               >
                 <FolderOpen className="!w-5 !h-5" />

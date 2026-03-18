@@ -6,6 +6,20 @@ import {
 } from "react";
 import { useRouter, usePathname } from "next/navigation";
 
+/* ─── Server sync (debounced) ────────────────────────────────── */
+let syncTimer: ReturnType<typeof setTimeout> | null = null;
+
+function syncToServer(tabs: Tab[], activeId: string | null) {
+  if (syncTimer) clearTimeout(syncTimer);
+  syncTimer = setTimeout(() => {
+    fetch("/api/admin/user-state", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tabs, activeTabId: activeId }),
+    }).catch(() => {});
+  }, 500);
+}
+
 /* ─── Types ──────────────────────────────────────────────────── */
 export type Tab = { id: string; path: string; title: string; status?: string };
 
@@ -68,6 +82,7 @@ function load(userId?: string | null): { tabs: Tab[]; activeId: string | null } 
 
 function save(tabs: Tab[], activeId: string | null, userId?: string | null) {
   try { localStorage.setItem(storeKey(userId), JSON.stringify({ tabs, activeId })); } catch { /* noop */ }
+  syncToServer(tabs, activeId);
 }
 
 /* ─── Context ────────────────────────────────────────────────── */
@@ -113,36 +128,55 @@ export function TabsProvider({ children }: { children: ReactNode }) {
       .catch(() => {});
   }, []);
 
-  /* ── Init from localStorage on mount (after userId is known) */
+  /* ── Init: try server state → localStorage fallback → fresh start */
   useEffect(() => {
     if (userId === null) return; // wait for userId
-    const saved = load(userId);
-    if (saved && saved.tabs.length > 0) {
-      // Migrate stale tab titles from before PATH_TITLES was introduced
-      const migrated = saved.tabs.map((t) => ({
-        ...t,
-        title: PATH_TITLES[t.path.split("?")[0]] ?? t.title,
-      }));
-      const match = migrated.find((t) => t.path === pathname);
-      if (match) {
-        applyTabs(migrated, match.id);
-      } else if (saved.activeId) {
-        // Restore saved tabs as-is and navigate to the active tab's saved path.
-        // Do NOT overwrite the saved path with the current pathname — that
-        // corrupts tabs when the browser loads at /admin (e.g. after restart).
-        const activeTab = migrated.find((t) => t.id === saved.activeId);
-        applyTabs(migrated, saved.activeId);
-        if (activeTab && activeTab.path !== pathname) {
-          skipNextPathChange.current = true;
-          router.push(activeTab.path);
+
+    function restoreTabs(saved: { tabs: Tab[]; activeId: string | null } | null) {
+      if (saved && saved.tabs.length > 0) {
+        const migrated = saved.tabs.map((t) => ({
+          ...t,
+          title: PATH_TITLES[t.path.split("?")[0]] ?? t.title,
+        }));
+        const match = migrated.find((t) => t.path === pathname);
+        if (match) {
+          applyTabs(migrated, match.id);
+        } else if (saved.activeId) {
+          const activeTab = migrated.find((t) => t.id === saved.activeId);
+          applyTabs(migrated, saved.activeId);
+          if (activeTab && activeTab.path !== pathname) {
+            skipNextPathChange.current = true;
+            router.push(activeTab.path);
+          }
+        } else {
+          applyTabs(migrated, saved.activeId);
         }
       } else {
-        applyTabs(migrated, saved.activeId);
+        const id = uid();
+        applyTabs([{ id, path: pathname, title: pathTitle(pathname) }], id);
       }
-    } else {
-      const id = uid();
-      applyTabs([{ id, path: pathname, title: pathTitle(pathname) }], id);
     }
+
+    // Try server state first (survives cookie/localStorage clear)
+    fetch("/api/admin/user-state")
+      .then((r) => r.ok ? r.json() : null)
+      .then((serverState) => {
+        if (serverState?.tabs?.length > 0) {
+          restoreTabs({ tabs: serverState.tabs, activeId: serverState.activeTabId });
+        } else {
+          // Fall back to localStorage (migration: seed server from localStorage)
+          const local = load(userId);
+          restoreTabs(local);
+          if (local && local.tabs.length > 0) {
+            // Seed server with localStorage data
+            syncToServer(local.tabs, local.activeId);
+          }
+        }
+      })
+      .catch(() => {
+        // Server unreachable — use localStorage
+        restoreTabs(load(userId));
+      });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
