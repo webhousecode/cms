@@ -1,6 +1,6 @@
 # @webhouse/cms — Feature Roadmap
 
-**Last updated:** 2026-03-17
+**Last updated:** 2026-03-18
 
 ---
 
@@ -89,6 +89,8 @@
 | F70 | [Managed SaaS Hub App](#f70-managed-saas) | Planned | [docs/features/F70-managed-saas.md](features/F70-managed-saas.md) |
 | F71 | [Multi-Player Editing](#f71-multiplayer-editing) | Planned | [docs/features/F71-multiplayer-editing.md](features/F71-multiplayer-editing.md) |
 | F72 | [Website Screenshots](#f72-website-screenshots) | Planned | [docs/features/F72-website-screenshots.md](features/F72-website-screenshots.md) |
+| F73 | [Troubleshooting Guide](#f73-troubleshooting-guide) | Planned | [docs/features/F73-troubleshooting-guide.md](features/F73-troubleshooting-guide.md) |
+| F74 | [System Status Page](#f74-system-status-page) | Planned | [docs/features/F74-system-status-page.md](features/F74-system-status-page.md) |
 
 ---
 
@@ -307,3 +309,9 @@ Prevent data loss from concurrent edits. v1 (optimistic locking): when user A op
 
 ## F72 — Website Screenshots
 Playwright-based screenshot tool for capturing all routable pages on the published site. Builds route index from CMS collections with urlPrefix. Headless Playwright captures each page, Sharp generates thumbnails. Introduces new **Tools** sidebar group — Link Checker (F16) moves there as a tab, Screenshots gets its own tab. Thumbnail grid with last-captured date, click for full-size lightbox. Re-capture individual or all pages. SSE-driven progress bar during capture. Stale badges for pages changed since last capture. Useful for visual QA, client presentations, documentation.
+
+## F73 — Troubleshooting Guide
+In-app troubleshooting section accessible from the Help drawer. Searchable, categorized common issues with step-by-step solutions. Categories: GitHub, Media, AI, Scheduling, Auth, General. Content stored as a data file in the admin package — easy to update. Accordion-style entries with search and category filter. Links to relevant Settings pages. Eventually part of F31 Documentation Site but ships as embedded help first.
+
+## F74 — System Status Page
+Public status page at status.webhouse.app showing health of CMS services. Heartbeat checks against `/api/cms/health` endpoint monitoring API, GitHub adapter, AI providers, MCP servers, and scheduler daemon. Color-coded status badges (operational/degraded/down). Auto-refreshes every 60s. SVG status badge endpoint for embedding in README and docs. Starts as a simple page on the landing site with client-side polling — no backend database needed.
