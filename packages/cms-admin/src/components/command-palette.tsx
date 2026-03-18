@@ -215,11 +215,11 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
 
   /* Navigate to item */
   const navigateItem = useCallback((item: PaletteItem) => {
-    if (item.action) { item.action(); return; }
+    onClose();
+    if (item.action) { setTimeout(() => item.action!(), 50); return; }
     if (item.href) {
       if (item.newTab) { window.open(item.href, "_blank"); }
       else { router.push(item.href); }
-      onClose();
     }
   }, [router, onClose]);
 
