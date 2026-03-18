@@ -168,15 +168,20 @@ export class FilesystemStorageAdapter implements StorageAdapter {
       ...(((input.locale !== undefined ? input.locale : existing.locale) !== undefined) && { locale: input.locale !== undefined ? input.locale : existing.locale }),
       ...(((input.translationOf !== undefined ? input.translationOf : existing.translationOf) !== undefined) && { translationOf: input.translationOf !== undefined ? input.translationOf : existing.translationOf }),
       ...(() => {
-        // null = clear, string = set, undefined = keep existing
-        const pa = input.publishAt === null ? undefined : (input.publishAt !== undefined ? input.publishAt : existing.publishAt);
+        if (input.publishAt === null) return {};
+        const pa = input.publishAt !== undefined ? input.publishAt : existing.publishAt;
         return pa !== undefined ? { publishAt: pa } : {};
       })(),
       ...(() => {
-        const ua = input.unpublishAt === null ? undefined : (input.unpublishAt !== undefined ? input.unpublishAt : (existing as any).unpublishAt);
+        if (input.unpublishAt === null) return {};
+        const ua = input.unpublishAt !== undefined ? input.unpublishAt : (existing as any).unpublishAt;
         return ua !== undefined ? { unpublishAt: ua } : {};
       })(),
     };
+
+    // Explicitly delete schedule fields when set to null
+    if (input.publishAt === null) delete (updated as any).publishAt;
+    if (input.unpublishAt === null) delete (updated as any).unpublishAt;
 
     if (input.slug && input.slug !== existing.slug) {
       unlinkSync(this.documentPath(collection, existing.slug));
