@@ -127,7 +127,7 @@ const NAV = (active?: 'blog' | 'about') => `
 const FOOTER = `
 <footer class="border-t border-gray-200 mt-20">
   <div class="max-w-4xl mx-auto px-6 py-10 text-center text-sm text-muted">
-    <p>&copy; ${new Date().getFullYear()} Thinking in Pixels. Built with <a href="https://github.com/webhousecode/cms" class="text-accent hover:underline">@webhouse/cms</a>.</p>
+    <p>&copy; ${new Date().getFullYear()} Thinking in Pixels. Built with <a href="https://webhouse.app" class="text-accent hover:underline">@webhouse/cms</a>.</p>
   </div>
 </footer>`;
 
