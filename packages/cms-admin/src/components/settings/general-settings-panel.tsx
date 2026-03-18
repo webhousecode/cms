@@ -967,7 +967,7 @@ function SchedulerNotificationsSection() {
 
 	return (
 		<div>
-			<p style={{ fontSize: "0.75rem", fontWeight: 600, marginBottom: "0.25rem" }}>Scheduler Notifications</p>
+			<SectionHeading>Scheduler Notifications</SectionHeading>
 			<p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", marginBottom: "1rem" }}>
 				Get notified when the scheduler auto-publishes or unpublishes content. Works with Discord, Slack, or any webhook.
 			</p>
