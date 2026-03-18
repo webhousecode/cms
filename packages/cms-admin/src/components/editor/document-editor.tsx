@@ -866,7 +866,8 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
 
   async function openPreview() {
     if (!colConfig.urlPrefix) return;
-    const pagePath = `${colConfig.urlPrefix}/${doc.slug}`;
+    const prefix = colConfig.urlPrefix.replace(/\/$/, "");
+    const pagePath = `${prefix}/${doc.slug}`;
 
     if (PREVIEW_SITE_URL) {
       const url = `${PREVIEW_SITE_URL}${pagePath}`;
