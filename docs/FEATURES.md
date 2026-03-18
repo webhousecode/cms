@@ -80,6 +80,7 @@
 | F61 | [Activity Log](#f61-activity-log) | Planned | [docs/features/F61-activity-log.md](features/F61-activity-log.md) |
 | F62 | [Directory Sync](#f62-directory-sync) | Planned | [docs/features/F62-directory-sync.md](features/F62-directory-sync.md) |
 | F63 | [Shared Component Library](#f63-shared-components) | Planned | [docs/features/F63-shared-components.md](features/F63-shared-components.md) |
+| F64 | [Toast Notifications System](#f64-toast-notifications-system) | In progress | [docs/features/F64-toast-notifications.md](features/F64-toast-notifications.md) |
 
 ---
 
@@ -271,3 +272,6 @@ Connect CMS users to external identity directories. Three tiers: (1) JIT provisi
 
 ## F63 — Shared Component Library & Design Tokens
 Consolidate ~1,965 inline style objects and 5 local-only components into a shared library. Export Card, SettingsToggle, InputRow, SaveButton, ErrorMsg, CopyButton from `components/ui/`. Create `useSaveState` hook (replaces pattern in 17 components). Standardize API responses with `apiOk`/`apiError` helpers (82 routes). Add CSS design tokens for `--success`, `--warning`, `--radius-card`, `--radius-input`. Replace 33 hardcoded `#4ade80` with `var(--success)`. Document all shared components in CLAUDE.md so Claude Code always uses them. Incremental migration — no big-bang rewrite.
+
+## F64 — Toast Notifications System
+Comprehensive toast notification system with event-driven feedback across all CMS admin actions. Phase 1 (complete): Sonner with dark theme, SSE push from scheduler daemon, custom Web Audio notification sounds, toasts on document CRUD, media upload, interactives upload, settings saves, team invitations. Phase 2 (planned): AI generation/rewrite toasts, link checker result summary, undo-trash button, error toasts (network/conflict/auth), agent run complete, brand voice interview complete, notification preferences per user (stored in user-state), Browser Notification API for background tabs.
