@@ -41,7 +41,7 @@ export default function NewSitePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [adapter, setAdapter] = useState<"github" | "filesystem">("github");
+  const [adapter, setAdapter] = useState<"github" | "filesystem">("filesystem");
   const [name, setName] = useState("");
   // GitHub OAuth state
   const [ghConnected, setGhConnected] = useState(false);
@@ -234,8 +234,8 @@ export default function NewSitePage() {
           {/* Adapter picker */}
           <div style={{ display: "flex", gap: "0.5rem" }}>
             {([
-              { value: "github" as const, label: "GitHub", icon: Github },
               { value: "filesystem" as const, label: "Filesystem", icon: HardDrive },
+              { value: "github" as const, label: "GitHub", icon: Github },
             ]).map(({ value, label, icon: Icon }) => (
               <button
                 key={value}
