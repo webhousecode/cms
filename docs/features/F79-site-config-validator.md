@@ -101,16 +101,97 @@ if (!result.success) {
 }
 ```
 
+### CMS Knowledge Rules
+
+The validator must encode ALL implicit CMS rules that are not obvious from the schema alone. These are the "quirks" that cause sites to appear broken even when the config is technically valid:
+
+| Rule | What to check | Error message |
+|------|---------------|---------------|
+| **Pages need urlPrefix** | Collections named "pages" (or with page-like content) should have `urlPrefix: '/'` | "Collection 'pages' has no urlPrefix. Add `urlPrefix: '/'` so pages appear in the admin page count." |
+| **Homepage convention** | At least one page with slug `home` or `index` should exist | "No homepage found. Create a page with slug 'home' in content/pages/." |
+| **Richtext = markdown** | Richtext field values in JSON must contain markdown, not HTML | "Field 'content' in pages/about.json contains HTML tags. Richtext fields expect markdown." |
+| **No hardcoded content** | build.ts should read from JSON, not have inline strings (heuristic check) | "Warning: build.ts contains hardcoded content strings. Content should be read from JSON files." |
+| **Image fields = URLs** | Image field values should be URL strings, not objects | "Field 'heroImage' contains an object. Image fields store URL strings." |
+| **Array fields need sub-fields** | `type: "array"` must have `fields` array | "Array field 'items' is missing 'fields' definition." |
+| **Valid field types only** | All field types must be in the allowed enum | "Invalid field type 'json'. Valid types: text, textarea, richtext, ... Did you mean 'object'?" |
+| **Collection dirs exist** | Every collection must have a content directory with JSON files | "Collection 'pages' has no JSON files in content/pages/." |
+| **Document format** | JSON files must have slug, status, data | "File content/pages/home.json is missing required field 'status'." |
+
+### Repair Wizard
+
+When validation finds errors, the admin should not just report them — it should offer to **fix them** via an interactive wizard. The wizard walks the user through each issue and asks what they intended:
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ 🔧 Site Repair Wizard — Meridian Studio                    │
+│                                                             │
+│ Found 3 issues:                                             │
+│                                                             │
+│ 1/3 ──────────────────────────────────────────────────────  │
+│                                                             │
+│ ⚠ Collection "pages" has no urlPrefix                      │
+│                                                             │
+│ This means pages won't be counted in the dashboard and      │
+│ preview won't work. Should this collection represent        │
+│ top-level pages on your site?                               │
+│                                                             │
+│  [Yes, add urlPrefix: '/']     [No, skip]                  │
+│                                                             │
+│ 2/3 ──────────────────────────────────────────────────────  │
+│                                                             │
+│ ✗ Field "hero" has invalid type "json"                     │
+│                                                             │
+│ The type "json" doesn't exist. Looking at the data, this    │
+│ field contains an object with keys: title, subtitle, image. │
+│                                                             │
+│ What should this field be?                                  │
+│                                                             │
+│  [Object with sub-fields]  [Textarea (raw text)]  [Skip]   │
+│                                                             │
+│ 3/3 ──────────────────────────────────────────────────────  │
+│                                                             │
+│ ⚠ content/pages/ has no JSON files                         │
+│                                                             │
+│ Your build.ts generates 3 pages (Home, About, Contact).     │
+│ Should I create starter JSON files for these?               │
+│                                                             │
+│  [Yes, create pages]     [No, I'll add them manually]      │
+│                                                             │
+│                              [Apply 2 fixes]    [Cancel]   │
+└─────────────────────────────────────────────────────────────┘
+```
+
+The wizard:
+- Groups related issues (e.g. all invalid field types together)
+- Inspects actual data in JSON files to suggest the right fix
+- Shows what will change before applying
+- Can auto-fix config file issues (urlPrefix, field types) and create missing files
+- Never applies changes without explicit user confirmation
+- Logs all changes for audit trail
+
+### Integration with Import flow
+
+When importing a site via the "New site" form, validation runs automatically after scanning the folder. If errors are found:
+1. Show a summary: "Found 3 issues that should be fixed"
+2. Offer "Fix now" (opens repair wizard) or "Import anyway" (imports with warnings)
+3. After wizard fixes, re-validate and proceed to import
+
+This ensures AI-built sites are corrected at import time, before they can crash the admin.
+
 ## Implementation Steps
 
 1. Create `packages/cms/src/schema/site-validator.ts` with config validation (field types, structure)
 2. Add content structure validation (directories, JSON format, schema match)
-3. Add suggestion engine for common mistakes (typos in field types)
-4. Create `/api/cms/registry/validate` endpoint
-5. Add pre-validation to "New site" form — validate before allowing creation
-6. Update `site-pool.ts` to use `safeValidateConfig()` and return friendly errors
-7. Add "Validate site" button to site settings panel
-8. Add health indicator to site cards on `/admin/sites`
+3. Encode all CMS knowledge rules (urlPrefix, homepage, richtext format, etc.)
+4. Add suggestion engine for common mistakes (typos in field types, Levenshtein distance)
+5. Create `/api/cms/registry/validate` endpoint
+6. Add pre-validation to "New site" form — validate before allowing creation
+7. Build Repair Wizard UI component with step-by-step issue resolution
+8. Add auto-fix capabilities (modify config, create missing files) with confirmation
+9. Update `site-pool.ts` to use `safeValidateConfig()` and return friendly errors
+10. Add "Validate site" button to site settings panel
+11. Add health indicator to site cards on `/admin/sites`
+12. Integrate wizard into import flow (validate on scan, offer fixes before import)
 
 ## Dependencies
 
@@ -118,4 +199,4 @@ if (!result.success) {
 
 ## Effort Estimate
 
-**Medium** — 3-4 days. Core validator is straightforward (mostly Zod + filesystem checks), bulk of work is the UI integration and error message formatting.
+**Large** — 5-7 days. Core validator + knowledge rules is 2 days. Repair wizard UI with auto-fix capabilities is 3-4 days. Import flow integration is 1 day.
