@@ -146,12 +146,12 @@
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: oklch(1 0 0 / 12%); border-radius: 3px; }
 
-/* Calendar: macOS-style overlay scrollbar — hidden until hover/scroll */
-.calendar-scroll { overflow-y: overlay; }
-.calendar-scroll::-webkit-scrollbar { width: 6px; }
+/* Calendar: macOS-style scrollbar — visible only while scrolling */
+.calendar-scroll::-webkit-scrollbar { width: 8px; }
 .calendar-scroll::-webkit-scrollbar-track { background: transparent; }
-.calendar-scroll::-webkit-scrollbar-thumb { background: transparent; border-radius: 3px; }
-.calendar-scroll:hover::-webkit-scrollbar-thumb { background: oklch(1 0 0 / 15%); }
+.calendar-scroll::-webkit-scrollbar-thumb { background: transparent; border-radius: 4px; transition: background 0.3s; }
+.calendar-scroll:hover::-webkit-scrollbar-thumb,
+.calendar-scroll:active::-webkit-scrollbar-thumb { background: oklch(1 0 0 / 20%); }
 
 /* Tailwind v4 does not always compile position utilities — force them */
 .sticky { position: sticky; }

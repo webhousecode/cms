@@ -531,8 +531,8 @@ function WeekView({ selectedDate, todayKey, eventsMap, onSelectDate, scrollToNow
                 style={{
                   position: "absolute",
                   top: nowY - 10,
-                  left: "-0.35rem",
-                  width: "3.35rem",
+                  left: "2px",
+                  width: "calc(3rem - 4px)",
                   height: "1.25rem",
                   display: "flex",
                   alignItems: "center",
