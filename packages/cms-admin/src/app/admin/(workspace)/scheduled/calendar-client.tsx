@@ -742,8 +742,9 @@ function YearView({ year, todayKey, eventsMap, onSelectMonth }: {
 /* ─── Sidebar Legend ─────────────────────────────────────────── */
 
 function CalendarSidebar({ events, todayKey }: { events: ScheduledEvent[]; todayKey: string }) {
-  // Collection counts — only future events, count unique documents (not events)
-  const futureEvents = events.filter((e) => e.date >= todayKey);
+  // Collection counts — only future events (compare with current time, not just date)
+  const now = new Date().toISOString().slice(0, 19);
+  const futureEvents = events.filter((e) => e.date > now);
   const collectionDocs = new Map<string, Set<string>>();
   for (const e of futureEvents) {
     if (!collectionDocs.has(e.subtitle)) collectionDocs.set(e.subtitle, new Set());
