@@ -121,7 +121,7 @@ export function ScheduledCalendar({ events, calendarToken, orgId, siteId }: { ev
       <TabTitle value="Calendar" />
 <div className="p-8" style={{ maxWidth: "1200px" }}>
         {/* Title + controls in one row */}
-        <div className="mb-2 flex items-start justify-between">
+        <div className="mb-5 flex items-start justify-between">
           <div>
             <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">Schedule</p>
             <h1 className="text-2xl font-bold text-foreground">Calendar</h1>
