@@ -65,6 +65,7 @@ _Makes us stand out. Customers expect these from a modern CMS._
 
 | Priority | Feature | Size | Why it matters |
 |----------|---------|------|----------------|
+| 9b | **F63 Shared Components** | Medium | Design tokens, shared UI components, API helpers. Makes all future features faster + consistent. |
 | 10 | **F48 i18n** | Medium | Multi-language is table stakes for European/global sites. Storage layer ready. |
 | 11 | **F38 Environment Manager** | Medium | Dev/Staging/Prod. Professional workflow for agencies. |
 | 12 | **F02 Import Engine** | Medium | Migrating FROM another CMS is the #1 adoption barrier. |

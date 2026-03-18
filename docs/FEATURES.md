@@ -79,6 +79,7 @@
 | F60 | [Reliable Scheduled Tasks](#f60-reliable-scheduled-tasks) | Planned | [docs/features/F60-reliable-scheduler.md](features/F60-reliable-scheduler.md) |
 | F61 | [Activity Log](#f61-activity-log) | Planned | [docs/features/F61-activity-log.md](features/F61-activity-log.md) |
 | F62 | [Directory Sync](#f62-directory-sync) | Planned | [docs/features/F62-directory-sync.md](features/F62-directory-sync.md) |
+| F63 | [Shared Component Library](#f63-shared-components) | Planned | [docs/features/F63-shared-components.md](features/F63-shared-components.md) |
 
 ---
 
@@ -267,3 +268,6 @@ Audit trail for all CMS admin actions. Logs document CRUD, publish/unpublish, me
 
 ## F62 — Directory Sync (AD / SCIM / External User Sources)
 Connect CMS users to external identity directories. Three tiers: (1) JIT provisioning — auto-create users on first SSO login from SAML/OIDC assertion attributes, (2) SCIM 2.0 server — identity providers (Azure AD/Entra ID, Okta, Google Workspace, OneLogin, JumpCloud) push user/group changes to the CMS in near real-time via standardized REST API, enabling automatic provisioning/deprovisioning and group-to-role mapping, (3) Directory API sync — periodic pull from Microsoft Graph or Google Directory API for enriched data (department, manager, org structure). SCIM is the enterprise standard used by Notion, Slack, Figma, Linear. Settings UI with SCIM endpoint/token, group→role mapping, and provisioning log.
+
+## F63 — Shared Component Library & Design Tokens
+Consolidate ~1,965 inline style objects and 5 local-only components into a shared library. Export Card, SettingsToggle, InputRow, SaveButton, ErrorMsg, CopyButton from `components/ui/`. Create `useSaveState` hook (replaces pattern in 17 components). Standardize API responses with `apiOk`/`apiError` helpers (82 routes). Add CSS design tokens for `--success`, `--warning`, `--radius-card`, `--radius-input`. Replace 33 hardcoded `#4ade80` with `var(--success)`. Document all shared components in CLAUDE.md so Claude Code always uses them. Incremental migration — no big-bang rewrite.
