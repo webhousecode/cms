@@ -37,6 +37,7 @@ export default defineConfig({
     defineCollection({
       name: 'pages',
       label: 'Pages',
+      urlPrefix: '/',
       fields: [
         { name: 'title', type: 'text', required: true },
         { name: 'metaDescription', type: 'textarea' },

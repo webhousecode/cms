@@ -5,15 +5,31 @@
     "title": "Enterprise",
     "description": "A fully embedded strategic partnership for organizations navigating complex digital transformation at scale.",
     "features": [
-      { "text": "Everything in Growth" },
-      { "text": "Dedicated strategy team" },
-      { "text": "Custom market research" },
-      { "text": "Board-ready reporting" },
-      { "text": "Weekly strategy sessions" },
-      { "text": "Team workshops & training" },
-      { "text": "24/7 priority support" }
+      {
+        "text": "Everything in Growth"
+      },
+      {
+        "text": "Dedicated strategy team"
+      },
+      {
+        "text": "Custom market research"
+      },
+      {
+        "text": "Board-ready reporting"
+      },
+      {
+        "text": "Weekly strategy sessions"
+      },
+      {
+        "text": "Team workshops & training"
+      },
+      {
+        "text": "24/7 priority support"
+      }
     ],
     "price": "$10,000/mo",
     "popular": false
-  }
+  },
+  "id": "w8Y0k1dopFmoSW6uOX7iF",
+  "_fieldMeta": {}
 }

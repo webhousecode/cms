@@ -8,16 +8,52 @@
     "heading": "Let's start a conversation",
     "description": "Whether you have a specific challenge or just want to explore how strategic consulting could help your business, I'd love to hear from you.",
     "contactDetails": [
-      { "label": "Email", "value": "hello@sarahmitchell.co", "icon": "Email" },
-      { "label": "Phone", "value": "+1 (415) 555-0182", "icon": "Phone" },
-      { "label": "Location", "value": "San Francisco, CA", "icon": "Location" }
+      {
+        "label": "Email",
+        "value": "hello@sarahmitchell.co",
+        "icon": "Email"
+      },
+      {
+        "label": "Phone",
+        "value": "+1 (415) 555-0182",
+        "icon": "Phone"
+      },
+      {
+        "label": "Location",
+        "value": "San Francisco, CA",
+        "icon": "Location"
+      }
     ],
     "formFields": [
-      { "id": "name", "label": "Full Name", "type": "text", "placeholder": "John Doe", "row": 1 },
-      { "id": "email", "label": "Email", "type": "email", "placeholder": "john@company.com", "row": 1 },
-      { "id": "company", "label": "Company", "type": "text", "placeholder": "Acme Inc." },
-      { "id": "message", "label": "How can I help?", "type": "textarea", "placeholder": "Tell me about your business and what you're looking to achieve..." }
+      {
+        "id": "name",
+        "label": "Full Name",
+        "type": "text",
+        "placeholder": "John Doe",
+        "row": 1
+      },
+      {
+        "id": "email",
+        "label": "Email",
+        "type": "email",
+        "placeholder": "john@company.com",
+        "row": 1
+      },
+      {
+        "id": "company",
+        "label": "Company",
+        "type": "text",
+        "placeholder": "Acme Inc."
+      },
+      {
+        "id": "message",
+        "label": "How can I help?",
+        "type": "textarea",
+        "placeholder": "Tell me about your business and what you're looking to achieve..."
+      }
     ],
     "submitButton": "Send Message"
-  }
+  },
+  "id": "r40_E_ZOAGXaRksQQu0sB",
+  "_fieldMeta": {}
 }
