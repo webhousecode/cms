@@ -5,13 +5,25 @@
     "title": "Starter",
     "description": "Perfect for solopreneurs and small teams looking to build a strong digital foundation and start growing strategically.",
     "features": [
-      { "text": "Digital strategy audit" },
-      { "text": "Competitive landscape analysis" },
-      { "text": "90-day growth roadmap" },
-      { "text": "Monthly strategy call" },
-      { "text": "Email support (48h response)" }
+      {
+        "text": "Digital strategy audit"
+      },
+      {
+        "text": "Competitive landscape analysis"
+      },
+      {
+        "text": "90-day growth roadmap"
+      },
+      {
+        "text": "Monthly strategy call"
+      },
+      {
+        "text": "Email support (48h response)"
+      }
     ],
     "price": "$2,500/mo",
     "popular": false
-  }
+  },
+  "id": "ZTD9iIjqltHi7Jy0mjyd1",
+  "_fieldMeta": {}
 }

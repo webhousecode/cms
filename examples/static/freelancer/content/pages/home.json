@@ -10,7 +10,13 @@
     "heroCta1": "Book a Call",
     "heroCta2": "View Services",
     "trustLabel": "Trusted by 50+ companies worldwide",
-    "trustCompanies": ["Meridian", "Luma", "Atlas", "Bloom & Grow", "NovaTech"],
+    "trustCompanies": [
+      "Meridian",
+      "Luma",
+      "Atlas",
+      "Bloom & Grow",
+      "NovaTech"
+    ],
     "servicesLabel": "Services",
     "servicesTitle": "Packages designed for every stage of growth",
     "servicesDesc": "Whether you're just getting started or scaling to new heights, there's a plan that fits your needs and ambitions.",
@@ -28,38 +34,85 @@
       {
         "heading": "Quick Links",
         "links": [
-          { "label": "Services", "href": "/services/" },
-          { "label": "Blog", "href": "/blog/" },
-          { "label": "Contact", "href": "/contact/" }
+          {
+            "label": "Services",
+            "href": "/services/"
+          },
+          {
+            "label": "Blog",
+            "href": "/blog/"
+          },
+          {
+            "label": "Contact",
+            "href": "/contact/"
+          }
         ]
       },
       {
         "heading": "Services",
         "links": [
-          { "label": "Starter Package", "href": "/services/" },
-          { "label": "Growth Package", "href": "/services/" },
-          { "label": "Enterprise", "href": "/services/" }
+          {
+            "label": "Starter Package",
+            "href": "/services/"
+          },
+          {
+            "label": "Growth Package",
+            "href": "/services/"
+          },
+          {
+            "label": "Enterprise",
+            "href": "/services/"
+          }
         ]
       },
       {
         "heading": "Connect",
         "links": [
-          { "label": "LinkedIn", "href": "#" },
-          { "label": "Twitter / X", "href": "#" },
-          { "label": "Newsletter", "href": "#" }
+          {
+            "label": "LinkedIn",
+            "href": "#"
+          },
+          {
+            "label": "Twitter / X",
+            "href": "#"
+          },
+          {
+            "label": "Newsletter",
+            "href": "#"
+          }
         ]
       }
     ],
     "navCta": "Book a Call",
     "navLinks": [
-      { "label": "Services", "href": "/services/", "key": "services" },
-      { "label": "Blog", "href": "/blog/", "key": "blog" },
-      { "label": "Contact", "href": "/contact/", "key": "contact" }
+      {
+        "label": "Services",
+        "href": "/services/",
+        "key": "services"
+      },
+      {
+        "label": "Blog",
+        "href": "/blog/",
+        "key": "blog"
+      },
+      {
+        "label": "Contact",
+        "href": "/contact/",
+        "key": "contact"
+      }
     ],
     "socialLinks": [
-      { "label": "LinkedIn", "href": "#" },
-      { "label": "Twitter", "href": "#" }
+      {
+        "label": "LinkedIn",
+        "href": "#"
+      },
+      {
+        "label": "Twitter",
+        "href": "#"
+      }
     ],
     "copyrightSuffix": "All rights reserved."
-  }
+  },
+  "id": "pkAJaqg27zCvwwOLBRume",
+  "_fieldMeta": {}
 }

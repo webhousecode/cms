@@ -21,6 +21,7 @@ export default defineConfig({
       name: 'pages',
       label: 'Pages',
       slug: 'pages',
+      urlPrefix: '/',
       fields: [
         { name: 'title', type: 'text', label: 'Title', required: true },
         { name: 'siteTitle', type: 'text', label: 'Site Title' },
