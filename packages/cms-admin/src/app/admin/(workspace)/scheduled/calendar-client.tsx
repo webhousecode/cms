@@ -582,9 +582,9 @@ function WeekView({ selectedDate, todayKey, eventsMap, onSelectDate, scrollToNow
               }} />
             </div>
           )}
-        </div>{/* end time grid */}
-      </div>{/* end scroll container */}
-    </div>{/* end outer wrapper */}
+        </div>
+      </div>
+    </div>
   );
 }
 
