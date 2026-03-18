@@ -869,6 +869,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
   }
 
   const isPublished = doc.status === "published";
+  const isExpired = doc.status === "expired";
 
   return (
     <div className="flex flex-col">
@@ -904,6 +905,8 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
               "flex items-center gap-1.5 text-xs font-mono px-2.5 py-1 rounded-full",
               isPublished
                 ? "bg-green-500/10 text-green-400"
+                : isExpired
+                ? "bg-red-500/10 text-red-400"
                 : "bg-yellow-500/10 text-yellow-400"
             )}
           >
