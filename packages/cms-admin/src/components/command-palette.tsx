@@ -7,7 +7,7 @@ import {
   Search, FileText, Globe, X, LayoutDashboard, Image, Bot, Calendar,
   ListChecks, Terminal, Settings2, Sparkles, UserCircle, LogOut, Lock,
   Database, Link2, BarChart3, Trash2, Plus, Zap, Puzzle, ArrowRightLeft,
-  Building2,
+  Building2, HelpCircle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -48,6 +48,7 @@ function buildQuickActions(logout: () => void): QuickAction[] {
     { id: "act-switch-site", label: "Switch site…", sublabel: "Change active site", category: "action", icon: <ArrowRightLeft style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/sites", keywords: ["switch", "site", "skift", "change"], featured: true },
     { id: "act-switch-org", label: "Switch organization…", sublabel: "Change active organization", category: "action", icon: <Building2 style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/sites", keywords: ["switch", "org", "organization", "organisation", "skift"], featured: true },
     { id: "act-view-landing", label: "View landing page", sublabel: "Open in new tab", category: "action", icon: <Globe style={{ ...ICON_SIZE, color: MUTED }} />, href: "/home", keywords: ["landing", "homepage", "forside", "public", "view"], newTab: true },
+    { id: "act-help", label: "Help & Support", sublabel: "Docs, shortcuts, community", category: "action", icon: <HelpCircle style={{ ...ICON_SIZE, color: MUTED }} />, keywords: ["help", "hjælp", "support", "docs", "shortcuts"], action: () => { window.dispatchEvent(new CustomEvent("cms:open-help")); }, featured: true },
 
     // Settings
     { id: "set-general", label: "Site Settings", sublabel: "General site configuration", category: "settings", icon: <Settings2 style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings", keywords: ["settings", "indstillinger", "config"], featured: true },

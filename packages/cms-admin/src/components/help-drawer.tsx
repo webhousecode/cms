@@ -96,7 +96,7 @@ export function HelpDrawer({ open, onClose, initialPage = "help" }: { open: bool
               <X style={{ width: "1rem", height: "1rem" }} />
             </button>
           </div>
-          <div style={{ display: "flex", padding: "0 1.25rem", marginTop: "0.5rem" }}>
+          <div style={{ display: "flex", gap: "0.25rem", padding: "0.5rem 1rem" }}>
             {([
               { id: "help" as const, label: "Help", icon: <HelpCircle style={{ width: "0.8rem", height: "0.8rem" }} /> },
               { id: "shortcuts" as const, label: "Shortcuts", icon: <Keyboard style={{ width: "0.8rem", height: "0.8rem" }} /> },
@@ -107,14 +107,13 @@ export function HelpDrawer({ open, onClose, initialPage = "help" }: { open: bool
                 onClick={() => setPage(tab.id)}
                 style={{
                   display: "flex", alignItems: "center", gap: "0.35rem",
-                  padding: "0.5rem 0.75rem",
+                  padding: "0.4rem 0.75rem",
                   fontSize: "0.8rem", fontWeight: 500,
-                  color: page === tab.id ? "var(--primary)" : "var(--muted-foreground)",
-                  background: "none",
+                  color: page === tab.id ? "var(--foreground)" : "var(--muted-foreground)",
+                  background: page === tab.id ? "var(--accent)" : "transparent",
                   border: "none",
-                  borderBottom: page === tab.id ? "2px solid var(--primary)" : "2px solid transparent",
+                  borderRadius: "6px",
                   cursor: "pointer", transition: "all 150ms",
-                  marginBottom: "-1px",
                 }}
               >
                 {tab.icon}
@@ -257,7 +256,7 @@ export function HelpButton() {
   const [open, setOpen] = useState(false);
   const [page, setPage] = useState<DrawerPage>("help");
 
-  // "?" shortcut → toggle help drawer
+  // "h" or "?" shortcut → toggle help drawer
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if ((e.key !== "?" && e.key !== "h") || e.metaKey || e.ctrlKey || e.altKey) return;
@@ -267,8 +266,13 @@ export function HelpButton() {
       setPage("help");
       setOpen((o) => !o);
     }
+    function onOpenHelp() { setPage("help"); setOpen(true); }
     document.addEventListener("keydown", onKey);
-    return () => document.removeEventListener("keydown", onKey);
+    window.addEventListener("cms:open-help", onOpenHelp);
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      window.removeEventListener("cms:open-help", onOpenHelp);
+    };
   }, []);
 
   return (
