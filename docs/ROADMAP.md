@@ -56,6 +56,7 @@ _Without these, we cannot build and deliver professional sites on the platform._
 | 4b | **F65 Agent Pipeline E2E Tests** | Medium | If agents/curation breaks silently, AI stops. Mock LLM, full roundtrip, budget, approve/reject. Ship blocker. |
 | 4c | **F67 Security Gate** | Medium | Semgrep + Gitleaks + custom rules. Pre-commit hook, CI, weekly Discord scan. Can't ship with 82 unaudited API routes. |
 | 4d | **F76 Create New Organization** | Small | Wire up org switcher "New organization" button. Backend API exists, just needs frontend dialog. |
+| 4e | **F77 Middleware→Proxy** | Small | Fix Next.js 16 deprecation. Rename middleware.ts→proxy.ts + fix RSC header stripping gotcha. |
 | 5 | **F12 One-Click Publish** | Medium | Need to deploy sites. Vercel deploy hook, Fly.io redeploy, GitHub Pages. |
 | 6 | **F27 Backup & Restore** | Small | Content is the customer's most valuable asset. Export/import full site. |
 | 7 | **F44 Media Processing Pipeline** | Medium | Images must be optimized. No srcset = poor Lighthouse. Sharp, WebP/AVIF. |

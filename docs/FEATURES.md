@@ -93,6 +93,7 @@
 | F74 | [System Status Page](#f74-system-status-page) | Planned | [docs/features/F74-system-status-page.md](features/F74-system-status-page.md) |
 | F75 | [AI Site Builder Guide](#f75-ai-site-builder-guide) | Planned | [docs/features/F75-ai-site-builder-guide.md](features/F75-ai-site-builder-guide.md) |
 | F76 | [Create New Organization](#f76-create-organization) | Planned | [docs/features/F76-create-organization.md](features/F76-create-organization.md) |
+| F77 | [Middleware to Proxy Migration](#f77-middleware-to-proxy) | Planned | [docs/features/F77-middleware-to-proxy.md](features/F77-middleware-to-proxy.md) |
 
 ---
 
@@ -323,3 +324,6 @@ Split the 2421-line monolithic `packages/cms/CLAUDE.md` into 20 focused module f
 
 ## F76 — Create New Organization
 Wire up the non-functional "+ New organization" button in the org switcher dropdown. Backend API already exists (`POST /api/cms/registry` with `action: "add-org"`). Frontend needs: inline dialog in dropdown (org name input + Create/Cancel), API call, set `cms-active-org` cookie, dispatch `cms-registry-change` event, navigate to `/admin/sites/new`. Fix New Site page to handle fresh org with no sites gracefully. Critical for agencies managing multiple client orgs.
+
+## F77 — Middleware to Proxy Migration
+Fix the Next.js 16 deprecation warning: rename `src/middleware.ts` → `src/proxy.ts`, rename export `middleware()` → `proxy()`. **Critical gotcha:** RSC Flight headers (`rsc: "1"`) are stripped from the request in proxy.ts — the RSC prefetch detection that prevents redirect loops must switch from header check to `_rsc` query param check. This is what broke the previous attempt. Everything else (JWT verification, cookies, redirects, rewrites, service token bypass) works identically. Node.js runtime instead of Edge (actually better — full crypto).
