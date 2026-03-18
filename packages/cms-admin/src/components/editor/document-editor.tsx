@@ -864,17 +864,27 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
     router.refresh();
   }
 
-  function openPreview() {
+  async function openPreview() {
     if (!colConfig.urlPrefix) return;
     const pagePath = `${colConfig.urlPrefix}/${doc.slug}`;
-    // Use previewUrl if set, otherwise fall back to built-in static preview
-    const url = PREVIEW_SITE_URL
-      ? `${PREVIEW_SITE_URL}${pagePath}`
-      : `/api/preview-site/${pagePath.replace(/^\//, "")}`;
-    if (PREVIEW_IN_IFRAME || !PREVIEW_SITE_URL) {
-      openTab(`/admin/preview?url=${encodeURIComponent(url)}`, `Preview: ${doc.slug}`, true);
+
+    if (PREVIEW_SITE_URL) {
+      const url = `${PREVIEW_SITE_URL}${pagePath}`;
+      if (PREVIEW_IN_IFRAME) {
+        openTab(`/admin/preview?url=${encodeURIComponent(url)}`, `Preview: ${doc.slug}`, true);
+      } else {
+        window.open(url, "_blank", "noopener,noreferrer");
+      }
     } else {
-      window.open(url, "_blank", "noopener,noreferrer");
+      // Start preview server for static sites and open in iframe
+      try {
+        const res = await fetch("/api/preview-serve", { method: "POST" });
+        if (res.ok) {
+          const { url: baseUrl } = await res.json() as { url: string };
+          const url = `${baseUrl}${pagePath}`;
+          openTab(`/admin/preview?url=${encodeURIComponent(url)}`, `Preview: ${doc.slug}`, true);
+        }
+      } catch { /* ignore */ }
     }
   }
 

@@ -245,13 +245,19 @@ export default function SitesDashboard() {
                   <MoreVertical style={{ width: "0.875rem", height: "0.875rem", color: "var(--muted-foreground)" }} />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-44">
-                  <DropdownMenuItem onClick={(e) => {
+                  <DropdownMenuItem onClick={async (e) => {
                     e.stopPropagation();
                     persistSiteChoice(site.id);
-                    const url = site.previewUrl
-                      ? site.previewUrl
-                      : `/api/preview-site-root`;
-                    router.push(`/admin/preview?url=${encodeURIComponent(url)}`);
+                    if (site.previewUrl) {
+                      router.push(`/admin/preview?url=${encodeURIComponent(site.previewUrl)}`);
+                    } else {
+                      // Start preview server for static sites
+                      const res = await fetch("/api/preview-serve", { method: "POST" });
+                      if (res.ok) {
+                        const { url } = await res.json() as { url: string };
+                        router.push(`/admin/preview?url=${encodeURIComponent(url)}`);
+                      }
+                    }
                   }}>
                     <Eye className="mr-2 h-4 w-4 text-muted-foreground" />
                     Preview
