@@ -7,6 +7,7 @@ const STATUS_DOT: Record<string, { color: string; title: string }> = {
   published: { color: "rgb(74 222 128)",  title: "Published" },
   draft:     { color: "rgb(234 179 8)",   title: "Draft" },
   scheduled: { color: "rgb(139 92 246)",  title: "Scheduled" },
+  expired:   { color: "rgb(239 68 68)",   title: "Expired" },
   trashed:   { color: "rgb(248 113 113)", title: "Trashed" },
 };
 import { useTabs } from "@/lib/tabs-context";

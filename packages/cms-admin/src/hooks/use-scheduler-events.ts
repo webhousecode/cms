@@ -31,7 +31,7 @@ export function useSchedulerEvents() {
 
           // Update tab status dot
           const tabPath = `/admin/${evt.collection}/${evt.slug}`;
-          updateRef.current(tabPath, evt.action === "published" ? "published" : "draft");
+          updateRef.current(tabPath, evt.action === "published" ? "published" : "expired");
 
           // Show toast
           if (evt.action === "published") {
