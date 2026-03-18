@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Github, HardDrive } from "lucide-react";
+import { Github, HardDrive, FolderOpen } from "lucide-react";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { Checkbox } from "@/components/ui/checkbox-styled";
 
@@ -59,6 +59,10 @@ export default function NewSitePage() {
   // Filesystem state
   const [configPath, setConfigPath] = useState("");
   const [fsContentDir, setFsContentDir] = useState("");
+  // Import state
+  const [importPath, setImportPath] = useState("");
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<{ collections: string[]; hasDist: boolean } | null>(null);
   // Shared state
   const [previewUrl, setPreviewUrl] = useState("");
   const [saving, setSaving] = useState(false);
@@ -116,6 +120,34 @@ export default function NewSitePage() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ghSelectedRepo, ghRepos]);
+
+  async function handleImport() {
+    setError("");
+    setImportResult(null);
+    if (!importPath.trim()) { setError("Enter a folder path"); return; }
+    setImporting(true);
+    try {
+      const res = await fetch("/api/cms/registry/import", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ folderPath: importPath.trim() }),
+      });
+      const data = await res.json() as { error?: string; siteName?: string; configPath?: string; contentDir?: string; collections?: string[]; hasDist?: boolean };
+      if (!res.ok) {
+        setError(data.error ?? "Import failed");
+        return;
+      }
+      // Auto-fill form fields
+      if (data.siteName) setName(data.siteName);
+      if (data.configPath) setConfigPath(data.configPath);
+      if (data.contentDir) setFsContentDir(data.contentDir);
+      setImportResult({ collections: data.collections ?? [], hasDist: data.hasDist ?? false });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Import failed");
+    } finally {
+      setImporting(false);
+    }
+  }
 
   function siteId(): string {
     return name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "new-site";
@@ -404,6 +436,56 @@ export default function NewSitePage() {
             </>
           ) : (
             <>
+              {/* Import from folder */}
+              <div style={{
+                padding: "1rem", borderRadius: "8px",
+                border: "1px solid var(--border)", background: "var(--card)",
+              }}>
+                <label style={{ ...labelStyle, marginBottom: "0.5rem" }}>
+                  <FolderOpen style={{ width: 12, height: 12, display: "inline", verticalAlign: "middle", marginRight: "0.3rem" }} />
+                  Import from folder
+                </label>
+                <div style={{ display: "flex", gap: "0.5rem" }}>
+                  <input
+                    type="text"
+                    value={importPath}
+                    onChange={(e) => setImportPath(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") handleImport(); }}
+                    placeholder="/Users/.../my-site"
+                    style={{ ...inputStyle, flex: 1, fontFamily: "monospace", fontSize: "0.8rem" }}
+                  />
+                  <button
+                    type="button"
+                    onClick={handleImport}
+                    disabled={importing}
+                    style={{
+                      padding: "0.5rem 1rem", borderRadius: "6px", border: "1px solid var(--border)",
+                      background: "var(--accent)", color: "var(--foreground)",
+                      fontSize: "0.8rem", fontWeight: 500, cursor: importing ? "not-allowed" : "pointer",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {importing ? "Scanning..." : "Import"}
+                  </button>
+                </div>
+                <p style={{ margin: "0.35rem 0 0", fontSize: "0.7rem", color: "var(--muted-foreground)" }}>
+                  Paste a folder path containing cms.config.ts
+                </p>
+                {importResult && (
+                  <div style={{ marginTop: "0.5rem", fontSize: "0.75rem", color: "var(--muted-foreground)" }}>
+                    Found {importResult.collections.length} collection{importResult.collections.length !== 1 ? "s" : ""}: {importResult.collections.join(", ")}
+                    {importResult.hasDist && " · dist/ ready"}
+                  </div>
+                )}
+              </div>
+
+              {/* Divider */}
+              <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+                <div style={{ flex: 1, height: "1px", background: "var(--border)" }} />
+                <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: "0.05em" }}>or fill manually</span>
+                <div style={{ flex: 1, height: "1px", background: "var(--border)" }} />
+              </div>
+
               <div>
                 <label style={labelStyle}>Site Name</label>
                 <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="My Site" style={inputStyle} />
