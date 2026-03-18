@@ -20,7 +20,7 @@ const SHORTCUT_GROUPS = [
     label: "General",
     shortcuts: [
       { keys: "⌘ K", label: "Command palette" },
-      { keys: "?", label: "Help & Support" },
+      { keys: "h", label: "Help & Support" },
       { keys: "t", label: "New tab" },
       { keys: "⌘ ⇧ ←", label: "Previous tab" },
       { keys: "⌘ ⇧ →", label: "Next tab" },
@@ -283,7 +283,7 @@ export function HelpButton() {
   // "?" shortcut → toggle help drawer
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (e.key !== "?" || e.metaKey || e.ctrlKey || e.altKey) return;
+      if ((e.key !== "?" && e.key !== "h") || e.metaKey || e.ctrlKey || e.altKey) return;
       const tag = (document.activeElement?.tagName ?? "").toLowerCase();
       if (tag === "input" || tag === "textarea" || tag === "select" || (document.activeElement as HTMLElement)?.isContentEditable) return;
       e.preventDefault();
