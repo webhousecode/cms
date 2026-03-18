@@ -1,10 +1,79 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import type { SearchResult } from "@/app/api/search/route";
-import { Search, FileText, Globe, X } from "lucide-react";
+import {
+  Search, FileText, Globe, X, LayoutDashboard, Image, Bot, Calendar,
+  ListChecks, Terminal, Settings2, Sparkles, UserCircle, LogOut, Lock,
+  Database, Link2, BarChart3, Trash2, Plus, Zap, Puzzle, Music,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
+
+/* ─── Quick actions (Spotlight-style) ────────────────────────── */
+
+interface QuickAction {
+  id: string;
+  label: string;
+  sublabel: string;
+  category: "navigation" | "action" | "settings" | "account";
+  icon: React.ReactNode;
+  href?: string;
+  action?: () => void;
+  keywords: string[]; // extra terms for fuzzy matching
+}
+
+const ICON_SIZE = { width: "0.9rem", height: "0.9rem" };
+const MUTED = "var(--muted-foreground)";
+
+function buildQuickActions(logout: () => void): QuickAction[] {
+  return [
+    // Navigation
+    { id: "nav-dashboard", label: "Dashboard", sublabel: "Overview", category: "navigation", icon: <LayoutDashboard style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin", keywords: ["home", "oversigt"] },
+    { id: "nav-sites", label: "Sites", sublabel: "Manage sites", category: "navigation", icon: <Globe style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/sites", keywords: ["site", "sider"] },
+    { id: "nav-agents", label: "AI Agents", sublabel: "Automated content generation", category: "navigation", icon: <Bot style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/agents", keywords: ["agent", "ai", "bot", "automation"] },
+    { id: "nav-media", label: "Media", sublabel: "Images and files", category: "navigation", icon: <Image style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/media", keywords: ["billeder", "images", "files", "upload"] },
+    { id: "nav-ints", label: "Interactives", sublabel: "HTML interactives", category: "navigation", icon: <Puzzle style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/interactives", keywords: ["ints", "interactive", "html"] },
+    { id: "nav-calendar", label: "Calendar", sublabel: "Scheduled content", category: "navigation", icon: <Calendar style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/scheduled", keywords: ["kalender", "schedule", "planned"] },
+    { id: "nav-curation", label: "Curation Queue", sublabel: "Review AI-generated content", category: "navigation", icon: <ListChecks style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/curation", keywords: ["queue", "review", "approve"] },
+    { id: "nav-cockpit", label: "AI Cockpit", sublabel: "Chat with AI", category: "navigation", icon: <Terminal style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/command", keywords: ["chat", "cockpit", "command", "ai"] },
+    { id: "nav-performance", label: "Performance", sublabel: "Site analytics", category: "navigation", icon: <BarChart3 style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/performance", keywords: ["analytics", "stats", "speed"] },
+    { id: "nav-linkchecker", label: "Link Checker", sublabel: "Find broken links", category: "navigation", icon: <Link2 style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/link-checker", keywords: ["links", "broken", "check"] },
+    { id: "nav-trash", label: "Trash", sublabel: "Deleted items", category: "navigation", icon: <Trash2 style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/trash", keywords: ["slettet", "deleted", "papirkurv"] },
+
+    // Settings
+    { id: "set-general", label: "Site Settings", sublabel: "General site configuration", category: "settings", icon: <Settings2 style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings", keywords: ["settings", "indstillinger", "config"] },
+    { id: "set-team", label: "Team", sublabel: "Manage team members", category: "settings", icon: <UserCircle style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings?tab=team", keywords: ["team", "invite", "members", "brugere"] },
+    { id: "set-email", label: "Email Settings", sublabel: "Configure email delivery", category: "settings", icon: <Zap style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings?tab=email", keywords: ["email", "resend", "smtp"] },
+    { id: "set-ai", label: "AI Settings", sublabel: "API keys and providers", category: "settings", icon: <Sparkles style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings?tab=ai", keywords: ["ai", "api", "keys", "anthropic", "openai"] },
+    { id: "set-mcp", label: "MCP Settings", sublabel: "Model Context Protocol", category: "settings", icon: <Database style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings?tab=mcp", keywords: ["mcp", "protocol", "claude", "cursor"] },
+
+    // Account
+    { id: "acc-prefs", label: "Account Preferences", sublabel: "Profile and preferences", category: "account", icon: <UserCircle style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/account", keywords: ["account", "profil", "preferences", "konto"] },
+    { id: "acc-security", label: "Security", sublabel: "Password and authentication", category: "account", icon: <Lock style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/account?tab=security", keywords: ["password", "security", "2fa", "adgangskode"] },
+    { id: "acc-logout", label: "Log out", sublabel: "Sign out of your account", category: "account", icon: <LogOut style={{ ...ICON_SIZE, color: "rgb(239 68 68)" }} />, action: logout, keywords: ["logout", "sign out", "log ud", "afslut"] },
+  ];
+}
+
+const CATEGORY_LABELS: Record<string, string> = {
+  content: "Content",
+  navigation: "Navigation",
+  action: "Actions",
+  settings: "Settings",
+  account: "Account",
+};
+
+/* ─── Unified result type ────────────────────────────────────── */
+
+interface PaletteItem {
+  id: string;
+  label: string;
+  sublabel: string;
+  category: string;
+  icon: React.ReactNode;
+  href?: string;
+  action?: () => void;
+}
 
 /* ─── Provider: mounts the palette and registers ⌘K ─────────── */
 export function CommandPaletteProvider({ children }: { children: React.ReactNode }) {
@@ -32,7 +101,7 @@ export function CommandPaletteProvider({ children }: { children: React.ReactNode
 /* ─── Palette ────────────────────────────────────────────────── */
 function CommandPalette({ onClose }: { onClose: () => void }) {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<SearchResult[]>([]);
+  const [contentResults, setContentResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -40,59 +109,126 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
   const router = useRouter();
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const logout = useCallback(() => {
+    fetch("/api/auth/logout", { method: "POST" }).then(() => {
+      router.push("/admin/login");
+      onClose();
+    });
+  }, [router, onClose]);
+
+  const quickActions = useMemo(() => buildQuickActions(logout), [logout]);
+
   /* Auto-focus input */
   useEffect(() => { inputRef.current?.focus(); }, []);
 
-  /* Search with debounce */
+  /* Search content with debounce */
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    if (!query.trim()) { setResults([]); setLoading(false); return; }
+    if (!query.trim()) { setContentResults([]); setLoading(false); return; }
     setLoading(true);
     debounceRef.current = setTimeout(async () => {
       try {
         const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
         const data = await res.json();
-        setResults(Array.isArray(data) ? data : []);
-        setSelected(0);
-      } catch { setResults([]); }
+        setContentResults(Array.isArray(data) ? data : []);
+      } catch { setContentResults([]); }
       finally { setLoading(false); }
     }, 180);
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, [query]);
 
-  /* Keyboard navigation */
-  const navigate = useCallback((result: SearchResult) => {
-    router.push(`/admin/${result.collection}/${result.slug}`);
-    onClose();
+  /* Build unified results: quick actions (filtered) + content results */
+  const items: PaletteItem[] = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    const result: PaletteItem[] = [];
+
+    // Filter quick actions by query
+    const matchedActions = q
+      ? quickActions.filter((a) => {
+          const haystack = `${a.label} ${a.sublabel} ${a.keywords.join(" ")}`.toLowerCase();
+          return haystack.includes(q);
+        })
+      : quickActions;
+
+    // Group: navigation first, then settings, then account
+    const grouped = ["navigation", "settings", "account"];
+    for (const cat of grouped) {
+      const items = matchedActions.filter((a) => a.category === cat);
+      result.push(...items);
+    }
+
+    // Add content results
+    for (const r of contentResults) {
+      result.push({
+        id: `content-${r.collection}-${r.slug}`,
+        label: r.title,
+        sublabel: `${r.collectionLabel} · ${r.slug}`,
+        category: "content",
+        icon: r.status === "published"
+          ? <Globe style={{ ...ICON_SIZE, color: "#4ade80" }} />
+          : r.status === "expired"
+          ? <FileText style={{ ...ICON_SIZE, color: "rgb(239 68 68)" }} />
+          : <FileText style={{ ...ICON_SIZE, color: MUTED }} />,
+        href: `/admin/${r.collection}/${r.slug}`,
+      });
+    }
+
+    return result;
+  }, [query, quickActions, contentResults]);
+
+  /* Reset selection when results change */
+  useEffect(() => { setSelected(0); }, [items.length]);
+
+  /* Navigate to item */
+  const navigateItem = useCallback((item: PaletteItem) => {
+    if (item.action) { item.action(); return; }
+    if (item.href) { router.push(item.href); onClose(); }
   }, [router, onClose]);
 
+  /* Keyboard navigation */
   const onKeyDown = useCallback((e: React.KeyboardEvent) => {
     if (e.key === "Escape") { onClose(); return; }
     if (e.key === "ArrowDown") {
       e.preventDefault();
-      setSelected((s) => Math.min(s + 1, results.length - 1));
+      setSelected((s) => Math.min(s + 1, items.length - 1));
     }
     if (e.key === "ArrowUp") {
       e.preventDefault();
       setSelected((s) => Math.max(s - 1, 0));
     }
-    if (e.key === "Enter" && results[selected]) {
-      navigate(results[selected]);
+    if (e.key === "Enter" && items[selected]) {
+      navigateItem(items[selected]);
     }
-  }, [results, selected, navigate, onClose]);
+  }, [items, selected, navigateItem, onClose]);
 
   /* Scroll selected item into view */
   useEffect(() => {
     const list = listRef.current;
     if (!list) return;
-    const item = list.children[selected] as HTMLElement | undefined;
-    item?.scrollIntoView({ block: "nearest" });
+    const el = list.querySelector(`[data-idx="${selected}"]`) as HTMLElement | null;
+    el?.scrollIntoView({ block: "nearest" });
   }, [selected]);
 
   /* Close on backdrop click */
   const onBackdropClick = (e: React.MouseEvent) => {
     if (e.target === e.currentTarget) onClose();
   };
+
+  /* Group items by category for section headers */
+  const groupedItems: { category: string; startIdx: number; items: PaletteItem[] }[] = useMemo(() => {
+    const groups: { category: string; startIdx: number; items: PaletteItem[] }[] = [];
+    let currentCat = "";
+    let globalIdx = 0;
+    for (const item of items) {
+      if (item.category !== currentCat) {
+        currentCat = item.category;
+        groups.push({ category: currentCat, startIdx: globalIdx, items: [] });
+      }
+      groups[groups.length - 1].items.push(item);
+      globalIdx++;
+    }
+    return groups;
+  }, [items]);
 
   return (
     <div
@@ -126,7 +262,7 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={onKeyDown}
-            placeholder="Search items…"
+            placeholder="Search content, navigate, or run actions…"
             style={{
               flex: 1, background: "transparent", border: "none", outline: "none",
               fontSize: "1rem", color: "var(--foreground)",
@@ -149,44 +285,67 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
           {loading && (
             <div style={{ padding: "1.25rem 1rem", fontSize: "0.875rem", color: "var(--muted-foreground)" }}>Searching…</div>
           )}
-          {!loading && query && results.length === 0 && (
+          {!loading && query && items.length === 0 && (
             <div style={{ padding: "1.25rem 1rem", fontSize: "0.875rem", color: "var(--muted-foreground)" }}>
               No results for <strong style={{ color: "var(--foreground)" }}>"{query}"</strong>
             </div>
           )}
-          {!loading && !query && (
+          {!loading && !query && items.length === 0 && (
             <div style={{ padding: "1.25rem 1rem", fontSize: "0.875rem", color: "var(--muted-foreground)" }}>
               Type to search across all collections…
             </div>
           )}
-          {results.map((r, i) => (
-            <button
-              key={`${r.collection}/${r.slug}`}
-              type="button"
-              onClick={() => navigate(r)}
-              onMouseEnter={() => setSelected(i)}
-              className={cn(
-                "w-full text-left flex items-center gap-3 px-4 py-3 transition-colors",
-                i === selected ? "bg-accent" : "hover:bg-accent/50"
-              )}
-              style={{ border: "none", cursor: "pointer" }}
-            >
-              {r.status === "published"
-                ? <Globe style={{ width: "0.875rem", height: "0.875rem", color: "#4ade80", flexShrink: 0 }} />
-                : <FileText style={{ width: "0.875rem", height: "0.875rem", color: "var(--muted-foreground)", flexShrink: 0 }} />
-              }
-              <span style={{ flex: 1, minWidth: 0 }}>
-                <span style={{ display: "block", fontSize: "0.9rem", color: "var(--foreground)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  <Highlight text={r.title} query={query} />
-                </span>
-                <span style={{ display: "block", fontSize: "0.7rem", fontFamily: "monospace", color: "var(--muted-foreground)", marginTop: "0.1rem" }}>
-                  {r.collectionLabel} · {r.slug}
-                </span>
-              </span>
-              <kbd style={{ fontSize: "0.65rem", padding: "0.15rem 0.4rem", borderRadius: "4px", border: "1px solid var(--border)", color: "var(--muted-foreground)", fontFamily: "monospace", flexShrink: 0, opacity: i === selected ? 1 : 0 }}>
-                ↵
-              </kbd>
-            </button>
+
+          {groupedItems.map((group) => (
+            <div key={group.category}>
+              {/* Category header */}
+              <div style={{
+                padding: "0.5rem 1rem 0.25rem",
+                fontSize: "0.6rem",
+                fontWeight: 700,
+                textTransform: "uppercase",
+                letterSpacing: "0.08em",
+                color: "var(--muted-foreground)",
+              }}>
+                {CATEGORY_LABELS[group.category] ?? group.category}
+              </div>
+
+              {group.items.map((item, localIdx) => {
+                const globalIdx = group.startIdx + localIdx;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    data-idx={globalIdx}
+                    onClick={() => navigateItem(item)}
+                    onMouseEnter={() => setSelected(globalIdx)}
+                    className={cn(
+                      "w-full text-left flex items-center gap-3 px-4 py-2.5 transition-colors",
+                      globalIdx === selected ? "bg-accent" : "hover:bg-accent/50"
+                    )}
+                    style={{ border: "none", cursor: "pointer" }}
+                  >
+                    {item.icon}
+                    <span style={{ flex: 1, minWidth: 0 }}>
+                      <span style={{ display: "block", fontSize: "0.875rem", color: "var(--foreground)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {query ? <Highlight text={item.label} query={query} /> : item.label}
+                      </span>
+                      <span style={{ display: "block", fontSize: "0.65rem", fontFamily: "monospace", color: "var(--muted-foreground)", marginTop: "0.05rem" }}>
+                        {item.sublabel}
+                      </span>
+                    </span>
+                    <kbd style={{
+                      fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "4px",
+                      border: "1px solid var(--border)", color: "var(--muted-foreground)",
+                      fontFamily: "monospace", flexShrink: 0,
+                      opacity: globalIdx === selected ? 1 : 0,
+                    }}>
+                      ↵
+                    </kbd>
+                  </button>
+                );
+              })}
+            </div>
           ))}
         </div>
 
