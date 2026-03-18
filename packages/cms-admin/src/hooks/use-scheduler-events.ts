@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { useTabs } from "@/lib/tabs-context";
+import { playPublishSound, playExpireSound } from "@/lib/notification-sound";
 
 interface SchedulerEvent {
   id: string;
@@ -33,16 +34,25 @@ export function useSchedulerEvents() {
           const tabPath = `/admin/${evt.collection}/${evt.slug}`;
           updateRef.current(tabPath, evt.action === "published" ? "published" : "expired");
 
-          // Show toast
+          // Play notification sound
           if (evt.action === "published") {
-            toast.success(`Published: ${evt.title}`, {
-              description: `${evt.collection}/${evt.slug}`,
-              duration: 6000,
+            playPublishSound();
+          } else {
+            playExpireSound();
+          }
+
+          // Show toast
+          const time = new Date(evt.timestamp).toLocaleTimeString("da-DK", { hour: "2-digit", minute: "2-digit" });
+
+          if (evt.action === "published") {
+            toast.success(`${evt.title}`, {
+              description: `Published · ${evt.collection} · ${time}`,
+              duration: 8000,
             });
           } else {
-            toast.info(`Unpublished: ${evt.title}`, {
-              description: `${evt.collection}/${evt.slug}`,
-              duration: 6000,
+            toast.error(`${evt.title}`, {
+              description: `Expired · ${evt.collection} · ${time}`,
+              duration: 8000,
             });
           }
         } catch { /* ignore malformed */ }
@@ -50,7 +60,6 @@ export function useSchedulerEvents() {
 
       es.onerror = () => {
         es?.close();
-        // Reconnect after 5s
         retryTimer = setTimeout(connect, 5000);
       };
     }
