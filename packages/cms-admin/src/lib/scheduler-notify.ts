@@ -8,7 +8,7 @@
  *
  * We detect Discord/Slack URLs and format accordingly, otherwise send generic JSON.
  */
-import { readSiteConfig } from "./site-config";
+import { readSiteConfig, type SiteConfig } from "./site-config";
 
 interface SchedulerEvent {
   action: "published" | "unpublished";
@@ -16,11 +16,15 @@ interface SchedulerEvent {
   slug: string;
 }
 
-export async function notifySchedulerEvents(events: SchedulerEvent[]): Promise<void> {
+/**
+ * Send webhook notifications. Accepts optional siteConfig to avoid
+ * reading from default site when called from multi-site scheduler.
+ */
+export async function notifySchedulerEvents(events: SchedulerEvent[], siteConfig?: SiteConfig): Promise<void> {
   if (events.length === 0) return;
 
   try {
-    const config = await readSiteConfig();
+    const config = siteConfig ?? await readSiteConfig();
     if (!config.schedulerNotifications || !config.schedulerWebhookUrl) return;
 
     const url = config.schedulerWebhookUrl;

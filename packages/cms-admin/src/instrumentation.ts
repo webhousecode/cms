@@ -16,12 +16,12 @@ export async function register() {
       const registry = await loadRegistry();
 
       // Collect all site instances to check (default + all registered)
-      const sites: { cms: any; config: any; label: string }[] = [];
+      const sites: { cms: any; config: any; orgId: string; siteId: string }[] = [];
 
       if (!registry) {
         // Single-site mode
         const [cms, config] = await Promise.all([getAdminCms(), getAdminConfig()]);
-        sites.push({ cms, config, label: "default" });
+        sites.push({ cms, config, orgId: "", siteId: "default" });
       } else {
         for (const org of registry.orgs) {
           for (const site of org.sites) {
@@ -30,24 +30,27 @@ export async function register() {
                 getAdminCmsForSite(org.id, site.id),
                 getAdminConfigForSite(org.id, site.id),
               ]);
-              if (cms && config) sites.push({ cms, config, label: `${org.id}/${site.id}` });
-            } catch { /* skip sites that fail to init (e.g. missing GitHub token) */ }
+              if (cms && config) sites.push({ cms, config, orgId: org.id, siteId: site.id });
+            } catch { /* skip sites that fail to init */ }
           }
         }
       }
 
-      for (const { cms, config, label } of sites) {
+      const { notifySchedulerEvents } = await import("./lib/scheduler-notify");
+      const { readSiteConfigForSite } = await import("./lib/site-config");
+
+      for (const { cms, config, orgId, siteId } of sites) {
         const collections = config.collections.map((c: any) => c.name);
         const actions = await cms.content.publishDue(collections);
         if (actions.length > 0) {
           const pub = actions.filter((a: any) => a.action === "published");
           const unpub = actions.filter((a: any) => a.action === "unpublished");
-          if (pub.length > 0) console.log(`[cron:${label}] auto-published ${pub.length} document(s):`, pub.map((p: any) => `${p.collection}/${p.slug}`).join(", "));
-          if (unpub.length > 0) console.log(`[cron:${label}] auto-unpublished ${unpub.length} document(s):`, unpub.map((p: any) => `${p.collection}/${p.slug}`).join(", "));
+          if (pub.length > 0) console.log(`[cron:${orgId}/${siteId}] auto-published ${pub.length}:`, pub.map((p: any) => `${p.collection}/${p.slug}`).join(", "));
+          if (unpub.length > 0) console.log(`[cron:${orgId}/${siteId}] auto-unpublished ${unpub.length}:`, unpub.map((p: any) => `${p.collection}/${p.slug}`).join(", "));
 
-          // Send webhook notifications
-          const { notifySchedulerEvents } = await import("./lib/scheduler-notify");
-          notifySchedulerEvents(actions).catch(() => {});
+          // Send webhook with site-specific config
+          const siteConfig = orgId ? await readSiteConfigForSite(orgId, siteId).catch(() => null) : null;
+          notifySchedulerEvents(actions, siteConfig ?? undefined).catch(() => {});
         }
       }
     } catch (err) {
