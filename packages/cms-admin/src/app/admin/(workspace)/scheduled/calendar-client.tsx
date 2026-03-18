@@ -119,10 +119,13 @@ export function ScheduledCalendar({ events, calendarToken, orgId, siteId }: { ev
   return (
     <>
       <TabTitle value="Calendar" />
-      <PageHeader>
-        <span className="text-sm text-muted-foreground font-mono">Calendar</span>
-      </PageHeader>
-      <div className="p-8" style={{ maxWidth: "1200px" }}>
+<div className="p-8" style={{ maxWidth: "1200px" }}>
+        {/* Title section — matches Curation Queue, Agents, etc. */}
+        <div className="mb-8">
+          <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">Schedule</p>
+          <h1 className="text-2xl font-bold text-foreground">Calendar</h1>
+        </div>
+
         {/* Top bar: view tabs centered */}
         <div className="flex items-center justify-between mb-4">
           <div style={{ width: "160px" }} />
