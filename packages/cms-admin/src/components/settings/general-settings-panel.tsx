@@ -968,11 +968,11 @@ function SchedulerNotificationsSection() {
 	return (
 		<div>
 			<SectionHeading>Scheduler Notifications</SectionHeading>
-			<p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", marginBottom: "1rem" }}>
-				Get notified when the scheduler auto-publishes or unpublishes content. Works with Discord, Slack, or any webhook.
-			</p>
+			<Card>
+				<p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", margin: 0 }}>
+					Get notified when the scheduler auto-publishes or unpublishes content. Works with Discord, Slack, or any webhook.
+				</p>
 
-			<div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
 				<label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.85rem" }}>
 					<input
 						type="checkbox"
@@ -1035,7 +1035,7 @@ function SchedulerNotificationsSection() {
 						</div>
 					</>
 				)}
-			</div>
+			</Card>
 		</div>
 	);
 }

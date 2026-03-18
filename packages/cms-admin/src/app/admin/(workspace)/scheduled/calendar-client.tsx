@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
 import { Calendar, ChevronLeft, ChevronRight, Globe, FileText, Check } from "lucide-react";
 import { TabTitle } from "@/lib/tabs-context";
@@ -25,6 +25,9 @@ const EVENT_COLORS: Record<EventType, string> = {
   publish: "rgb(74 222 128)",
   unpublish: "rgb(239 68 68)",
 };
+
+const COLLECTION_COLORS = ["rgb(251 146 60)", "rgb(74 222 128)", "rgb(244 114 182)", "rgb(96 165 250)", "rgb(168 85 247)", "rgb(234 179 8)", "rgb(45 212 191)"];
+
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -83,6 +86,14 @@ export function ScheduledCalendar({ events, calendarToken, orgId, siteId }: { ev
   const [selectedDate, setSelectedDate] = useState(todayKey);
 
   const eventsMap = eventsByDateKey(events);
+
+  // Build collection → color map (deterministic, sorted)
+  const colColorMap = useMemo(() => {
+    const names = [...new Set(events.map((e) => e.subtitle))].sort();
+    const map = new Map<string, string>();
+    names.forEach((n, i) => map.set(n, COLLECTION_COLORS[i % COLLECTION_COLORS.length]));
+    return map;
+  }, [events]);
 
   function navigate(dir: -1 | 1) {
     if (view === "year") {
@@ -193,7 +204,7 @@ export function ScheduledCalendar({ events, calendarToken, orgId, siteId }: { ev
         {/* Main layout: sidebar + calendar */}
         <div style={{ display: "flex", gap: "1.5rem" }}>
           {/* Sidebar legend */}
-          <CalendarSidebar events={events} todayKey={todayKey} />
+          <CalendarSidebar events={events} todayKey={todayKey} colColorMap={colColorMap} />
 
           {/* Calendar grid */}
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -204,6 +215,7 @@ export function ScheduledCalendar({ events, calendarToken, orgId, siteId }: { ev
             todayKey={todayKey}
             selectedDate={selectedDate}
             eventsMap={eventsMap}
+            colColorMap={colColorMap}
             onSelectDate={(key) => { setSelectedDate(key); setView("day"); }}
           />
         )}
@@ -212,6 +224,7 @@ export function ScheduledCalendar({ events, calendarToken, orgId, siteId }: { ev
             selectedDate={selectedDate}
             todayKey={todayKey}
             eventsMap={eventsMap}
+            colColorMap={colColorMap}
             onSelectDate={(key) => { setSelectedDate(key); setView("day"); }}
             scrollToNow={scrollToNow}
           />
@@ -220,6 +233,7 @@ export function ScheduledCalendar({ events, calendarToken, orgId, siteId }: { ev
           <DayView
             selectedDate={selectedDate}
             eventsMap={eventsMap}
+            colColorMap={colColorMap}
           />
         )}
         {view === "year" && (
@@ -239,9 +253,9 @@ export function ScheduledCalendar({ events, calendarToken, orgId, siteId }: { ev
 
 /* ─── Month View ─────────────────────────────────────────────── */
 
-function MonthView({ year, month, todayKey, selectedDate, eventsMap, onSelectDate }: {
+function MonthView({ year, month, todayKey, selectedDate, eventsMap, colColorMap, onSelectDate }: {
   year: number; month: number; todayKey: string; selectedDate: string;
-  eventsMap: Map<string, ScheduledEvent[]>; onSelectDate: (key: string) => void;
+  eventsMap: Map<string, ScheduledEvent[]>; colColorMap: Map<string, string>; onSelectDate: (key: string) => void;
 }) {
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
@@ -307,9 +321,9 @@ function MonthView({ year, month, todayKey, selectedDate, eventsMap, onSelectDat
                       style={{
                         fontSize: "0.6rem",
                         lineHeight: "1.1rem",
-                        background: `color-mix(in srgb, ${EVENT_COLORS[evt.type]} 15%, transparent)`,
-                        color: EVENT_COLORS[evt.type],
-                        borderLeft: `2px solid ${EVENT_COLORS[evt.type]}`,
+                        background: `color-mix(in srgb, ${colColorMap.get(evt.subtitle) ?? EVENT_COLORS[evt.type]} 15%, transparent)`,
+                        color: colColorMap.get(evt.subtitle) ?? EVENT_COLORS[evt.type],
+                        borderLeft: `2px solid ${colColorMap.get(evt.subtitle) ?? EVENT_COLORS[evt.type]}`,
                       }}
                     >
                       {evt.date.slice(11, 16)} {evt.title}
@@ -336,9 +350,9 @@ const TOTAL_HOURS = 24; // full day 00:00-24:00
 const VIEW_HOURS = 11;  // visible window (07:00-18:00 default)
 const WEEKEND_BG = "#262627";
 
-function WeekView({ selectedDate, todayKey, eventsMap, onSelectDate, scrollToNow = 0 }: {
+function WeekView({ selectedDate, todayKey, eventsMap, colColorMap, onSelectDate, scrollToNow = 0 }: {
   selectedDate: string; todayKey: string;
-  eventsMap: Map<string, ScheduledEvent[]>; onSelectDate: (key: string) => void;
+  eventsMap: Map<string, ScheduledEvent[]>; colColorMap: Map<string, string>; onSelectDate: (key: string) => void;
   scrollToNow?: number;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -543,7 +557,7 @@ function WeekView({ selectedDate, todayKey, eventsMap, onSelectDate, scrollToNow
                 const hour = parseInt(evt.date.slice(11, 13)) || 0;
                 const minute = parseInt(evt.date.slice(14, 16)) || 0;
                 const topPx = (hour + minute / 60) * HOUR_HEIGHT;
-                const color = EVENT_COLORS[evt.type];
+                const color = colColorMap.get(evt.subtitle) ?? EVENT_COLORS[evt.type];
                 return (
                   <Link
                     key={evt.id}
@@ -610,8 +624,8 @@ function WeekView({ selectedDate, todayKey, eventsMap, onSelectDate, scrollToNow
 
 /* ─── Day View ───────────────────────────────────────────────── */
 
-function DayView({ selectedDate, eventsMap }: {
-  selectedDate: string; eventsMap: Map<string, ScheduledEvent[]>;
+function DayView({ selectedDate, eventsMap, colColorMap }: {
+  selectedDate: string; eventsMap: Map<string, ScheduledEvent[]>; colColorMap: Map<string, string>;
 }) {
   const dayEvents = eventsMap.get(selectedDate) ?? [];
 
@@ -628,7 +642,7 @@ function DayView({ selectedDate, eventsMap }: {
     <div className="space-y-2">
       {dayEvents.map((evt) => {
         const Icon = evt.type === "publish" ? Globe : FileText;
-        const color = EVENT_COLORS[evt.type];
+        const color = colColorMap.get(evt.subtitle) ?? EVENT_COLORS[evt.type];
         return (
           <Link key={evt.id} href={evt.href} className="block">
             <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card hover:border-primary/30 hover:bg-secondary/50 transition-all">
@@ -741,7 +755,7 @@ function YearView({ year, todayKey, eventsMap, onSelectMonth }: {
 
 /* ─── Sidebar Legend ─────────────────────────────────────────── */
 
-function CalendarSidebar({ events, todayKey }: { events: ScheduledEvent[]; todayKey: string }) {
+function CalendarSidebar({ events, todayKey, colColorMap }: { events: ScheduledEvent[]; todayKey: string; colColorMap: Map<string, string> }) {
   // Collection counts — only future events (compare with current time, not just date)
   const now = new Date().toISOString().slice(0, 19);
   const futureEvents = events.filter((e) => e.date > now);
@@ -759,9 +773,7 @@ function CalendarSidebar({ events, todayKey }: { events: ScheduledEvent[]; today
   const futureDocIds = new Set(futureEvents.map((e) => e.id));
   const todayDocIds = new Set(events.filter((e) => e.date.slice(0, 10) === todayKey).map((e) => e.id));
 
-  // Collection colors (deterministic per name)
-  const COLLECTION_COLORS = ["rgb(251 146 60)", "rgb(74 222 128)", "rgb(244 114 182)", "rgb(96 165 250)", "rgb(168 85 247)", "rgb(234 179 8)", "rgb(45 212 191)"];
-  const colEntries = Array.from(collectionCounts.entries());
+  const colEntries = Array.from(collectionCounts.entries()).sort((a, b) => a[0].localeCompare(b[0]));
 
   const sectionLabel: React.CSSProperties = {
     fontSize: "0.6rem",
@@ -777,9 +789,9 @@ function CalendarSidebar({ events, todayKey }: { events: ScheduledEvent[]; today
       {/* Collections */}
       <p style={sectionLabel}>Collections</p>
       <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem", marginBottom: "1.25rem" }}>
-        {colEntries.map(([name, count], i) => (
+        {colEntries.map(([name, count]) => (
           <div key={name} style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-            <span style={{ width: "0.5rem", height: "0.5rem", borderRadius: "9999px", background: COLLECTION_COLORS[i % COLLECTION_COLORS.length], flexShrink: 0 }} />
+            <span style={{ width: "0.5rem", height: "0.5rem", borderRadius: "9999px", background: colColorMap.get(name) ?? "var(--muted-foreground)", flexShrink: 0 }} />
             <span style={{ fontSize: "0.75rem", fontWeight: 500, lineHeight: 1 }}>{name}</span>
             <span style={{ fontSize: "0.65rem", fontFamily: "monospace", color: "var(--muted-foreground)", lineHeight: 1 }}>{count}</span>
           </div>
