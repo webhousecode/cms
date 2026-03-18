@@ -63,10 +63,20 @@ export default function NewSitePage() {
   const [importPath, setImportPath] = useState("");
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<{ collections: string[]; hasDist: boolean } | null>(null);
+  const [isMac, setIsMac] = useState(false);
+  const [dragging, setDragging] = useState(false);
   // Shared state
   const [previewUrl, setPreviewUrl] = useState("");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  // Detect macOS for native folder picker
+  useEffect(() => {
+    fetch("/api/cms/folder-picker")
+      .then((r) => r.json())
+      .then((d: { platform: string }) => { if (d.platform === "darwin") setIsMac(true); })
+      .catch(() => {});
+  }, []);
 
   // Restore adapter from query params (survives OAuth redirect)
   useEffect(() => {
@@ -120,6 +130,37 @@ export default function NewSitePage() {
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ghSelectedRepo, ghRepos]);
+
+  async function handleBrowse() {
+    try {
+      const res = await fetch("/api/cms/folder-picker", { method: "POST" });
+      const data = await res.json() as { path?: string; cancelled?: boolean };
+      if (data.path) {
+        setImportPath(data.path);
+        // Auto-trigger import
+        setError("");
+        setImportResult(null);
+        setImporting(true);
+        try {
+          const scanRes = await fetch("/api/cms/registry/import", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ folderPath: data.path }),
+          });
+          const scanData = await scanRes.json() as { error?: string; siteName?: string; configPath?: string; contentDir?: string; collections?: string[]; hasDist?: boolean };
+          if (!scanRes.ok) { setError(scanData.error ?? "Import failed"); return; }
+          if (scanData.siteName) setName(scanData.siteName);
+          if (scanData.configPath) setConfigPath(scanData.configPath);
+          if (scanData.contentDir) setFsContentDir(scanData.contentDir);
+          setImportResult({ collections: scanData.collections ?? [], hasDist: scanData.hasDist ?? false });
+        } catch (err) {
+          setError(err instanceof Error ? err.message : "Import failed");
+        } finally {
+          setImporting(false);
+        }
+      }
+    } catch { /* cancelled or error */ }
+  }
 
   async function handleImport() {
     setError("");
@@ -437,10 +478,47 @@ export default function NewSitePage() {
           ) : (
             <>
               {/* Import from folder */}
-              <div style={{
-                padding: "1rem", borderRadius: "8px",
-                border: "1px solid var(--border)", background: "var(--card)",
-              }}>
+              <div
+                onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
+                onDragLeave={() => setDragging(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  setDragging(false);
+                  // Try to get folder path from drag
+                  const items = e.dataTransfer.items;
+                  if (items.length > 0) {
+                    const item = items[0];
+                    // webkitGetAsEntry gives us the full path for local files
+                    const entry = item.webkitGetAsEntry?.();
+                    if (entry?.isDirectory) {
+                      // For directories, fullPath gives us the name but not the absolute path
+                      // We need to use the file's path property
+                      const files = e.dataTransfer.files;
+                      if (files.length > 0) {
+                        // File.path is an Electron-only property; in browsers we get the name
+                        const filePath = (files[0] as File & { path?: string }).path;
+                        if (filePath) {
+                          setImportPath(filePath);
+                          // Auto-trigger import
+                          setTimeout(() => handleImport(), 100);
+                        }
+                      }
+                    }
+                  }
+                  // Fallback: check for text/plain (e.g. dragged from terminal)
+                  const text = e.dataTransfer.getData("text/plain")?.trim();
+                  if (text && text.startsWith("/")) {
+                    setImportPath(text);
+                    setTimeout(() => handleImport(), 100);
+                  }
+                }}
+                style={{
+                  padding: "1rem", borderRadius: "8px",
+                  border: dragging ? "2px dashed var(--primary)" : "1px solid var(--border)",
+                  background: dragging ? "color-mix(in srgb, var(--primary) 5%, var(--card))" : "var(--card)",
+                  transition: "all 0.2s",
+                }}
+              >
                 <label style={{ ...labelStyle, marginBottom: "0.5rem" }}>
                   <FolderOpen style={{ width: 12, height: 12, display: "inline", verticalAlign: "middle", marginRight: "0.3rem" }} />
                   Import from folder
@@ -451,17 +529,33 @@ export default function NewSitePage() {
                     value={importPath}
                     onChange={(e) => setImportPath(e.target.value)}
                     onKeyDown={(e) => { if (e.key === "Enter") handleImport(); }}
-                    placeholder="/Users/.../my-site"
+                    placeholder="Drag folder here or paste path"
                     style={{ ...inputStyle, flex: 1, fontFamily: "monospace", fontSize: "0.8rem" }}
                   />
+                  {isMac && (
+                    <button
+                      type="button"
+                      onClick={handleBrowse}
+                      style={{
+                        padding: "0.5rem 0.75rem", borderRadius: "6px", border: "1px solid var(--border)",
+                        background: "transparent", color: "var(--foreground)",
+                        fontSize: "0.8rem", fontWeight: 500, cursor: "pointer",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      Browse
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={handleImport}
-                    disabled={importing}
+                    disabled={importing || !importPath.trim()}
                     style={{
                       padding: "0.5rem 1rem", borderRadius: "6px", border: "1px solid var(--border)",
                       background: "var(--accent)", color: "var(--foreground)",
-                      fontSize: "0.8rem", fontWeight: 500, cursor: importing ? "not-allowed" : "pointer",
+                      fontSize: "0.8rem", fontWeight: 500,
+                      cursor: importing || !importPath.trim() ? "not-allowed" : "pointer",
+                      opacity: importing || !importPath.trim() ? 0.5 : 1,
                       whiteSpace: "nowrap",
                     }}
                   >
@@ -469,7 +563,7 @@ export default function NewSitePage() {
                   </button>
                 </div>
                 <p style={{ margin: "0.35rem 0 0", fontSize: "0.7rem", color: "var(--muted-foreground)" }}>
-                  Paste a folder path containing cms.config.ts
+                  {dragging ? "Drop folder here" : "Drag a folder from Finder, browse, or paste a path"}
                 </p>
                 {importResult && (
                   <div style={{ marginTop: "0.5rem", fontSize: "0.75rem", color: "var(--muted-foreground)" }}>
