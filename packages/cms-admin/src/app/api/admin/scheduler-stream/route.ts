@@ -11,29 +11,24 @@ export async function GET() {
   }
 
   const encoder = new TextEncoder();
+  let keepalive: ReturnType<typeof setInterval>;
+  let unsub: (() => void) | undefined;
+
   const stream = new ReadableStream({
     start(controller) {
-      // Send keepalive comment every 30s to prevent connection timeout
-      const keepalive = setInterval(() => {
-        try { controller.enqueue(encoder.encode(": keepalive\n\n")); } catch { clearInterval(keepalive); }
+      keepalive = setInterval(() => {
+        try { controller.enqueue(encoder.encode(": keepalive\n\n")); } catch { /* closed */ }
       }, 30_000);
 
-      const unsub = onSchedulerEvent((evt) => {
+      unsub = onSchedulerEvent((evt) => {
         try {
           controller.enqueue(encoder.encode(`data: ${JSON.stringify(evt)}\n\n`));
         } catch { /* client disconnected */ }
       });
-
-      // Cleanup on close
-      const originalCancel = stream.cancel?.bind(stream);
-      stream.cancel = async (reason) => {
-        clearInterval(keepalive);
-        unsub();
-        if (originalCancel) return originalCancel(reason);
-      };
     },
     cancel() {
-      // Additional cleanup handled above
+      clearInterval(keepalive);
+      unsub?.();
     },
   });
 
