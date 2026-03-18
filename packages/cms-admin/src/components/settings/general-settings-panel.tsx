@@ -771,7 +771,56 @@ function DangerZone() {
 
 /** Account Preferences → General tab — profile, zoom */
 export function GeneralSettingsPanel() {
-	return <ProfileSection />;
+	return (
+		<div className="space-y-8">
+			<ProfileSection />
+			<div style={{ height: "1px", background: "var(--border)" }} />
+			<UserPreferencesSection />
+		</div>
+	);
+}
+
+function UserPreferencesSection() {
+	const [calendarView, setCalendarView] = useState("week");
+	const [agentsView, setAgentsView] = useState("grid");
+
+	useEffect(() => {
+		fetch("/api/admin/user-state").then((r) => r.ok ? r.json() : null).then((state) => {
+			if (state?.calendarView) setCalendarView(state.calendarView);
+			if (state?.agentsView) setAgentsView(state.agentsView);
+		}).catch(() => {});
+	}, []);
+
+	function savePref(patch: Record<string, string>) {
+		fetch("/api/admin/user-state", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(patch) }).catch(() => {});
+	}
+
+	return (
+		<div>
+			<p style={{ fontSize: "0.75rem", fontWeight: 600, marginBottom: "0.25rem" }}>Preferences</p>
+			<p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", marginBottom: "1rem" }}>Default views and display settings.</p>
+			<div style={{ display: "flex", gap: "1.5rem" }}>
+				<div>
+					<label style={{ fontSize: "0.7rem", fontWeight: 600, display: "block", marginBottom: "0.25rem" }}>Default calendar view</label>
+					<CustomSelect
+						options={[{ value: "day", label: "Day" }, { value: "week", label: "Week" }, { value: "month", label: "Month" }, { value: "year", label: "Year" }]}
+						value={calendarView}
+						onChange={(v) => { setCalendarView(v); savePref({ calendarView: v }); }}
+						style={{ width: "140px" }}
+					/>
+				</div>
+				<div>
+					<label style={{ fontSize: "0.7rem", fontWeight: 600, display: "block", marginBottom: "0.25rem" }}>Agents list view</label>
+					<CustomSelect
+						options={[{ value: "grid", label: "Grid" }, { value: "list", label: "List" }]}
+						value={agentsView}
+						onChange={(v) => { setAgentsView(v); savePref({ agentsView: v }); }}
+						style={{ width: "140px" }}
+					/>
+				</div>
+			</div>
+		</div>
+	);
 }
 
 /** Account Preferences → Security tab — change password */

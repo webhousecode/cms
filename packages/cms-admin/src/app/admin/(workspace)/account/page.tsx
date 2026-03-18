@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { PageHeader } from "@/components/page-header";
 import { GeneralSettingsPanel, PasswordChangePanel } from "@/components/settings/general-settings-panel";
-import { PreferencesPanel } from "@/components/settings/preferences-panel";
 
 export default async function AccountPage({
   searchParams,
@@ -12,7 +11,6 @@ export default async function AccountPage({
 
   const tabs = [
     { id: "general", label: "General" },
-    { id: "preferences", label: "Preferences" },
     { id: "security", label: "Security" },
     { id: "tokens", label: "Access Tokens" },
   ];
@@ -49,13 +47,6 @@ export default async function AccountPage({
         {tab === "general" && (
           <div className="max-w-lg">
             <GeneralSettingsPanel />
-          </div>
-        )}
-
-        {/* Preferences tab */}
-        {tab === "preferences" && (
-          <div className="max-w-lg">
-            <PreferencesPanel />
           </div>
         )}
 
