@@ -12,11 +12,12 @@ let syncTimer: ReturnType<typeof setTimeout> | null = null;
 function syncToServer(tabs: Tab[], activeId: string | null) {
   if (syncTimer) clearTimeout(syncTimer);
   syncTimer = setTimeout(() => {
+    console.log(`[user-state] syncing ${tabs.length} tabs to server`);
     fetch("/api/admin/user-state", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ tabs, activeTabId: activeId }),
-    }).catch(() => {});
+    }).catch((err) => console.error("[user-state] sync error:", err));
   }, 500);
 }
 
@@ -161,7 +162,9 @@ export function TabsProvider({ children }: { children: ReactNode }) {
     fetch("/api/admin/user-state")
       .then((r) => r.ok ? r.json() : null)
       .then((serverState) => {
+        console.log("[user-state] server state:", serverState?.tabs?.length ?? 0, "tabs");
         if (serverState?.tabs?.length > 0) {
+          console.log("[user-state] restoring from server");
           restoreTabs({ tabs: serverState.tabs, activeId: serverState.activeTabId });
         } else {
           // Fall back to localStorage (migration: seed server from localStorage)
