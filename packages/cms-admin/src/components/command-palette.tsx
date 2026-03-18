@@ -23,6 +23,7 @@ interface QuickAction {
   action?: () => void;
   keywords: string[]; // extra terms for fuzzy matching
   featured?: boolean; // show in default view (no query)
+  newTab?: boolean; // open in new browser tab
 }
 
 const ICON_SIZE = { width: "0.9rem", height: "0.9rem" };
@@ -46,6 +47,7 @@ function buildQuickActions(logout: () => void): QuickAction[] {
     // Actions
     { id: "act-switch-site", label: "Switch site…", sublabel: "Change active site", category: "action", icon: <ArrowRightLeft style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/sites", keywords: ["switch", "site", "skift", "change"], featured: true },
     { id: "act-switch-org", label: "Switch organization…", sublabel: "Change active organization", category: "action", icon: <Building2 style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/sites", keywords: ["switch", "org", "organization", "organisation", "skift"], featured: true },
+    { id: "act-view-landing", label: "View landing page", sublabel: "Open in new tab", category: "action", icon: <Globe style={{ ...ICON_SIZE, color: MUTED }} />, href: "/home", keywords: ["landing", "homepage", "forside", "public", "view"], newTab: true },
 
     // Settings
     { id: "set-general", label: "Site Settings", sublabel: "General site configuration", category: "settings", icon: <Settings2 style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings", keywords: ["settings", "indstillinger", "config"], featured: true },
@@ -79,6 +81,7 @@ interface PaletteItem {
   icon: React.ReactNode;
   href?: string;
   action?: () => void;
+  newTab?: boolean;
 }
 
 /* ─── Provider: mounts the palette and registers ⌘K ─────────── */
@@ -212,7 +215,11 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
   /* Navigate to item */
   const navigateItem = useCallback((item: PaletteItem) => {
     if (item.action) { item.action(); return; }
-    if (item.href) { router.push(item.href); onClose(); }
+    if (item.href) {
+      if (item.newTab) { window.open(item.href, "_blank"); }
+      else { router.push(item.href); }
+      onClose();
+    }
   }, [router, onClose]);
 
   /* Keyboard navigation */
