@@ -300,15 +300,19 @@ export function HelpButton() {
         type="button"
         onClick={() => { setPage("help"); setOpen(true); }}
         style={{
-          background: "none", border: "none", cursor: "pointer",
-          color: "var(--muted-foreground)", padding: "0.25rem",
+          background: "none",
+          border: "1.5px solid var(--border)",
+          cursor: "pointer",
+          color: "var(--muted-foreground)",
           display: "flex", alignItems: "center", justifyContent: "center",
-          borderRadius: "50%", width: "2rem", height: "2rem",
+          borderRadius: "50%",
+          width: "2rem", height: "2rem",
+          padding: 0,
         }}
-        className="hover:bg-accent/50 hover:text-foreground transition-colors"
+        className="hover:border-foreground hover:text-foreground transition-colors"
         title="Help & Support (?)"
       >
-        <HelpCircle style={{ width: "1.1rem", height: "1.1rem" }} />
+        <HelpCircle style={{ width: "0.95rem", height: "0.95rem" }} />
       </button>
       <HelpDrawer open={open} onClose={() => setOpen(false)} initialPage={page} />
     </>
