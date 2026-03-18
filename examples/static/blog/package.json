@@ -1,5 +1,5 @@
 {
-  "name": "@webhouse/cms-example-blog",
+  "name": "@webhouse/cms-example-static-blog",
   "version": "0.1.0",
   "private": true,
   "type": "module",
