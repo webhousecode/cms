@@ -103,6 +103,12 @@ export function SiteSwitcher() {
   function handleSelect(site: SiteEntry) {
     setActiveSiteId(site.id);
     setCookie("cms-active-site", site.id);
+    // Persist last active site on user record (survives cookie clear / device switch)
+    fetch("/api/admin/profile", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ lastActiveOrg: activeOrgId, lastActiveSite: site.id }),
+    }).catch(() => {});
     window.dispatchEvent(new CustomEvent("cms-registry-change"));
     router.push("/admin");
     router.refresh();

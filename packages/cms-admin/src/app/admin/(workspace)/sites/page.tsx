@@ -86,18 +86,26 @@ export default function SitesDashboard() {
     !allowedSiteIds || allowedSiteIds.includes(s.id)
   ) ?? [];
 
-  function enterSite(site: SiteEntry) {
-    setCookie("cms-active-site", site.id);
+  function persistSiteChoice(siteId: string) {
+    setCookie("cms-active-site", siteId);
     setCookie("cms-active-org", activeOrgId);
+    // Persist on user record (survives cookie clear / device switch)
+    fetch("/api/admin/profile", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ lastActiveOrg: activeOrgId, lastActiveSite: siteId }),
+    }).catch(() => {});
     window.dispatchEvent(new CustomEvent("cms-registry-change"));
+  }
+
+  function enterSite(site: SiteEntry) {
+    persistSiteChoice(site.id);
     router.push("/admin");
     router.refresh();
   }
 
   function goToSiteSettings(site: SiteEntry) {
-    setCookie("cms-active-site", site.id);
-    setCookie("cms-active-org", activeOrgId);
-    window.dispatchEvent(new CustomEvent("cms-registry-change"));
+    persistSiteChoice(site.id);
     router.push("/admin/settings");
     router.refresh();
   }

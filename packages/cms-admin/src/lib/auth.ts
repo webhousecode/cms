@@ -15,6 +15,8 @@ export interface User {
   createdAt: string;
   invitedBy?: string; // user ID of inviter
   zoom?: number; // UI zoom level in percent, e.g. 110
+  lastActiveOrg?: string; // last active org ID (persists across devices)
+  lastActiveSite?: string; // last active site ID (persists across devices)
 }
 
 export interface SessionPayload {
@@ -105,7 +107,7 @@ export async function createToken(user: User): Promise<string> {
 
 export async function updateUser(
   id: string,
-  patch: { name?: string; email?: string; password?: string; zoom?: number; role?: UserRole },
+  patch: { name?: string; email?: string; password?: string; zoom?: number; role?: UserRole; lastActiveOrg?: string; lastActiveSite?: string },
   /** Fallback email for lookup if id doesn't match (stale JWT) */
   fallbackEmail?: string,
 ): Promise<User> {
@@ -123,6 +125,8 @@ export async function updateUser(
   if (patch.password) user.passwordHash = await bcrypt.hash(patch.password, 12);
   if (patch.zoom !== undefined) user.zoom = patch.zoom;
   if (patch.role) user.role = patch.role;
+  if (patch.lastActiveOrg !== undefined) user.lastActiveOrg = patch.lastActiveOrg;
+  if (patch.lastActiveSite !== undefined) user.lastActiveSite = patch.lastActiveSite;
 
   users[idx] = user;
   const filePath = await getUsersFilePath();

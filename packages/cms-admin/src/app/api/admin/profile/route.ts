@@ -9,12 +9,14 @@ export async function POST(request: NextRequest) {
     const payload = await verifyToken(token);
     if (!payload) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const { name, email, currentPassword, newPassword, zoom } = (await request.json()) as {
+    const { name, email, currentPassword, newPassword, zoom, lastActiveOrg, lastActiveSite } = (await request.json()) as {
       name?: string;
       email?: string;
       currentPassword?: string;
       newPassword?: string;
       zoom?: number;
+      lastActiveOrg?: string;
+      lastActiveSite?: string;
     };
 
     // Password change requires current password verification
@@ -36,6 +38,8 @@ export async function POST(request: NextRequest) {
       ...(email ? { email } : {}),
       ...(newPassword ? { password: newPassword } : {}),
       ...(zoom !== undefined ? { zoom } : {}),
+      ...(lastActiveOrg !== undefined ? { lastActiveOrg } : {}),
+      ...(lastActiveSite !== undefined ? { lastActiveSite } : {}),
     }, payload.email);
 
     // Re-issue JWT with updated name/email

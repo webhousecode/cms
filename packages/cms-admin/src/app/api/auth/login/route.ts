@@ -23,6 +23,15 @@ export async function POST(request: NextRequest) {
       maxAge: 60 * 60 * 24 * 7, // 7 days
       path: "/",
     });
+
+    // Restore last active site (survives cookie clear / device switch)
+    if (user.lastActiveOrg) {
+      response.cookies.set("cms-active-org", user.lastActiveOrg, { path: "/", maxAge: 60 * 60 * 24 * 365 });
+    }
+    if (user.lastActiveSite) {
+      response.cookies.set("cms-active-site", user.lastActiveSite, { path: "/", maxAge: 60 * 60 * 24 * 365 });
+    }
+
     return response;
   } catch {
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
