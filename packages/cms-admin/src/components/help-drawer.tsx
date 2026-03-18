@@ -76,7 +76,7 @@ export function HelpDrawer({ open, onClose, initialPage = "help" }: { open: bool
 
   return (
     <div style={{
-      position: "fixed", top: 0, right: 0, bottom: 0, width: "340px", zIndex: 100,
+      position: "fixed", top: 0, right: 0, bottom: 0, width: "340px", zIndex: 150,
       background: "var(--card)", borderLeft: "1px solid var(--border)",
       boxShadow: "-4px 0 20px rgba(0,0,0,0.3)",
       display: "flex", flexDirection: "column",
