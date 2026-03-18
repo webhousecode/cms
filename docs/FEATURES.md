@@ -76,6 +76,7 @@
 | F57 | [Extranet](#f57-extranet) | Planned | [docs/features/F57-extranet.md](features/F57-extranet.md) |
 | F58 | [Interactive Islands](#f58-interactive-islands) | Planned | [docs/features/F58-interactive-islands.md](features/F58-interactive-islands.md) |
 | F59 | [Passwordless Auth](#f59-passwordless-auth) | Idea | [docs/features/F59-passwordless-auth.md](features/F59-passwordless-auth.md) |
+| F60 | [Reliable Scheduled Tasks](#f60-reliable-scheduled-tasks) | Planned | [docs/features/F60-reliable-scheduler.md](features/F60-reliable-scheduler.md) |
 
 ---
 
@@ -252,6 +253,9 @@ Site-facing authentication for website visitors — completely separate from CMS
 
 ## F58 — Interactive Islands
 Preact micro-apps (~2-5KB) that hydrate inline in static pages — no iframes. Managed as Interactives (F39) with a new `type: "island"` rendering mode. Build pipeline bundles `.tsx` source via esbuild into self-contained `.island.js` files. Lightweight loader (~1.5KB) finds `<cms-island>` elements and hydrates lazily (IntersectionObserver) or eagerly. CMS data passed as JSON props. Primary consumer: shop plugin (CartIsland, GateIsland, CheckoutBtn). Inherits page CSS, full DOM access, SEO-friendly fallback content. Based on CMS-ENGINE.md §6.4 vision.
+
+## F60 — Reliable Scheduled Tasks
+Ensure scheduled publishing, AI agents, calendar snapshots, and link checks run on time regardless of Fly.io auto-stop. Background tasks in `instrumentation.ts` use `setInterval()` which dies when the machine stops. Three tiers: always-on machine ($3/mo), external heartbeat endpoint (zero-cost via GitHub Actions cron), or dedicated scheduler service ($0.50/mo). Admin UI shows scheduler health and pending tasks. Heartbeat endpoint at `/api/cms/heartbeat` runs all pending tasks immediately when called.
 
 ## F59 — Passwordless Auth (Passkeys + QR Code Login)
 Discord-style passwordless login. Passkeys (WebAuthn) for biometric login via FaceID/TouchID/Windows Hello — register in Account → Security, use on login page. QR Code login: desktop shows QR, scan with the webhouse.app Pocket CMS mobile app (Capacitor-based, iOS + Android), confirm with FaceID, desktop is instantly logged in via SSE. Mobile app doubles as F07 COCpit with native push notifications, curation queue, and biometric auth. Updates F07 vision from Expo/RN to Capacitor based on proven App Store deployment experience.
