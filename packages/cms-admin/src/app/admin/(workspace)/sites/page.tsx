@@ -266,7 +266,25 @@ export default function SitesDashboard() {
               </p>
             )}
 
-            <div style={{ display: "flex", gap: "0.375rem", alignItems: "center" }}>
+            <div style={{ display: "flex", gap: "0.375rem", alignItems: "center", justifyContent: "space-between" }}>
+              <div style={{ display: "flex", gap: "0.375rem" }}>
+                <span style={{
+                  fontSize: "0.65rem", fontWeight: 600, letterSpacing: "0.03em",
+                  padding: "0.2rem 0.5rem", borderRadius: "4px",
+                  background: "color-mix(in srgb, #22c55e 15%, transparent)",
+                  color: "#22c55e", textTransform: "uppercase",
+                }}>
+                  Active
+                </span>
+                <span style={{
+                  fontSize: "0.65rem", fontWeight: 600, letterSpacing: "0.03em",
+                  padding: "0.2rem 0.5rem", borderRadius: "4px",
+                  background: "var(--muted)",
+                  color: "var(--muted-foreground)", textTransform: "uppercase",
+                }}>
+                  {site.adapter === "github" ? "GitHub" : "Local"}
+                </span>
+              </div>
               <button
                 type="button"
                 onClick={async (e) => {
@@ -283,33 +301,20 @@ export default function SitesDashboard() {
                   }
                 }}
                 style={{
-                  display: "inline-flex", alignItems: "center", gap: "0.3rem",
-                  fontSize: "0.65rem", fontWeight: 600, letterSpacing: "0.03em",
-                  padding: "0.2rem 0.5rem", borderRadius: "4px",
-                  background: "color-mix(in srgb, var(--primary) 15%, transparent)",
-                  color: "var(--primary)", textTransform: "uppercase",
-                  border: "none", cursor: "pointer", transition: "background 0.2s",
+                  display: "inline-flex", alignItems: "center", gap: "0.375rem",
+                  fontSize: "0.75rem", fontWeight: 500,
+                  padding: "0.3rem 0.75rem", borderRadius: "6px",
+                  background: "transparent",
+                  color: "var(--muted-foreground)",
+                  border: "1px solid var(--border)", cursor: "pointer",
+                  transition: "all 0.2s",
                 }}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--primary)"; e.currentTarget.style.color = "var(--primary)"; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--muted-foreground)"; }}
               >
-                <Eye style={{ width: "0.7rem", height: "0.7rem" }} />
+                <Eye style={{ width: "0.8rem", height: "0.8rem" }} />
                 Preview
               </button>
-              <span style={{
-                fontSize: "0.65rem", fontWeight: 600, letterSpacing: "0.03em",
-                padding: "0.2rem 0.5rem", borderRadius: "4px",
-                background: "color-mix(in srgb, #22c55e 15%, transparent)",
-                color: "#22c55e", textTransform: "uppercase",
-              }}>
-                Active
-              </span>
-              <span style={{
-                fontSize: "0.65rem", fontWeight: 600, letterSpacing: "0.03em",
-                padding: "0.2rem 0.5rem", borderRadius: "4px",
-                background: "var(--muted)",
-                color: "var(--muted-foreground)", textTransform: "uppercase",
-              }}>
-                {site.adapter === "github" ? "GitHub" : "Local"}
-              </span>
             </div>
           </div>
         ))}
