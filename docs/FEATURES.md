@@ -96,6 +96,7 @@
 | F77 | [Middleware to Proxy Migration](#f77-middleware-to-proxy) | Planned | [docs/features/F77-middleware-to-proxy.md](features/F77-middleware-to-proxy.md) |
 | F78 | [Bundled Preview Server](#f78-bundled-preview-server) | Planned | [docs/features/F78-bundled-preview-server.md](features/F78-bundled-preview-server.md) |
 | F79 | [Site Config Validator](#f79-site-config-validator) | Planned | [docs/features/F79-site-config-validator.md](features/F79-site-config-validator.md) |
+| F80 | [Admin Selector Map](#f80-admin-selector-map) | Planned | [docs/features/F80-admin-selector-map.md](features/F80-admin-selector-map.md) |
 
 ---
 
@@ -335,3 +336,6 @@ Ship `sirv` (148 KB, used by Vite) as a dependency of `@webhouse/cms` so `cms se
 
 ## F79 — Site Config Validator
 Robust validation of cms.config.ts and content/ structure when adding or loading a site in CMS admin. Validates field types against allowed enum, content JSON structure (slug, status, data), collection directories match config, required fields present. Shows clear error messages instead of crashing with raw ZodError stacktraces. Runs at "Create site" time, on first site load, and on-demand via "Validate site" button. Includes suggestion engine for common mistakes (e.g. "Did you mean 'object'?" for unknown field type 'json').
+
+## F80 — Admin Selector Map
+Auto-generated map of stable `data-testid` selectors for every CMS admin UI element (fields, buttons, nav, dialogs). Enables reliable Playwright tests for content editing, site creation, and roundtrip verification. Includes CLI command (`cms selector-map`) to generate the map from cms.config.ts, Playwright test helpers, and example test fixtures for common workflows (create document, edit field, save, verify persistence). Foundation for all E2E testing (F65, F20).
