@@ -1,8 +1,8 @@
 /**
  * Portfolio² — Quinn-inspired photography portfolio
  *
- * Reads CMS content JSON and generates a fully static site.
- * Dark, minimalist design with large images and clean typography.
+ * Reads ALL content from CMS JSON files and generates a fully static site.
+ * Zero hardcoded content — everything is editable via the CMS admin.
  *
  * Usage:  npx tsx build.ts
  */
@@ -17,6 +17,14 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 // Types
 // ---------------------------------------------------------------------------
 
+interface SiteSettings {
+  siteName: string;
+  email: string;
+  footerText: string;
+  socialLinks: { label: string; url: string }[];
+  navLinks: { label: string; href: string; key: string }[];
+}
+
 interface ProjectData {
   title: string;
   category: string;
@@ -28,7 +36,9 @@ interface ProjectData {
 
 interface PageData {
   title: string;
-  content: string;
+  heading?: string;
+  subtitle?: string;
+  content?: string;
   heroImage?: string;
 }
 
@@ -52,12 +62,13 @@ function loadCollection<T>(name: string): Document<T>[] {
     .filter((d: Document<T>) => d.status === 'published');
 }
 
-// ---------------------------------------------------------------------------
-// Shared HTML
-// ---------------------------------------------------------------------------
+function loadDocument<T>(collection: string, slug: string): Document<T> | undefined {
+  return loadCollection<T>(collection).find((d) => d.slug === slug);
+}
 
-const SITE_NAME = 'Elina Voss';
-const SITE_EMAIL = 'hello@elinavoss.com';
+// ---------------------------------------------------------------------------
+// Shared HTML helpers
+// ---------------------------------------------------------------------------
 
 function esc(s: string): string {
   return s
@@ -265,13 +276,17 @@ body {
 }
 `;
 
-function htmlHead(title: string): string {
+// ---------------------------------------------------------------------------
+// Template functions (read site settings for every shared element)
+// ---------------------------------------------------------------------------
+
+function htmlHead(title: string, site: SiteSettings): string {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${esc(title)} — ${SITE_NAME}</title>
+  <title>${esc(title)} — ${esc(site.siteName)}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
@@ -279,19 +294,14 @@ function htmlHead(title: string): string {
 </head>`;
 }
 
-function nav(active: 'work' | 'about' | 'contact' | '' = ''): string {
-  const links = [
-    { href: '/', label: 'Select Works', key: 'work' },
-    { href: '/about/', label: 'Info', key: 'about' },
-    { href: '/contact/', label: 'Contact', key: 'contact' },
-  ];
-  const linkHtml = links
-    .map((l) => `<li><a href="${l.href}"${l.key === active ? ' class="active"' : ''}>${l.label}</a></li>`)
+function nav(site: SiteSettings, active: string = ''): string {
+  const linkHtml = site.navLinks
+    .map((l) => `<li><a href="${esc(l.href)}"${l.key === active ? ' class="active"' : ''}>${esc(l.label)}</a></li>`)
     .join('\n          ');
   return `
   <nav class="nav">
     <div class="nav-inner">
-      <a href="/" class="nav-logo">${SITE_NAME}</a>
+      <a href="/" class="nav-logo">${esc(site.siteName)}</a>
       <ul class="nav-links">
         ${linkHtml}
       </ul>
@@ -299,10 +309,11 @@ function nav(active: 'work' | 'about' | 'contact' | '' = ''): string {
   </nav>`;
 }
 
-function footer(): string {
+function footer(site: SiteSettings): string {
   return `
   <footer class="footer">
-    <p>&copy; ${new Date().getFullYear()} ${SITE_NAME} &middot; Built with <a href="https://www.npmjs.com/package/@webhouse/cms" target="_blank" rel="noopener">@webhouse/cms</a></p>
+    <p>&copy; ${new Date().getFullYear()} ${esc(site.siteName)} &middot; ${esc(site.footerText)}</p>
+    <p style="margin-top: 0.5rem;">Built with <a href="https://www.npmjs.com/package/@webhouse/cms" target="_blank" rel="noopener">@webhouse/cms</a></p>
   </footer>`;
 }
 
@@ -310,7 +321,7 @@ function footer(): string {
 // Page builders
 // ---------------------------------------------------------------------------
 
-function buildHome(projects: Document<ProjectData>[]): string {
+function buildHome(site: SiteSettings, homePage: Document<PageData>, projects: Document<ProjectData>[]): string {
   const cards = projects
     .map(
       (p) => `
@@ -324,27 +335,27 @@ function buildHome(projects: Document<ProjectData>[]): string {
     )
     .join('\n');
 
-  return `${htmlHead('Select Works')}
+  return `${htmlHead(homePage.data.title, site)}
 <body>
-  ${nav('work')}
+  ${nav(site, 'work')}
   <main class="grid">
     ${cards}
   </main>
-  ${footer()}
+  ${footer(site)}
 </body>
 </html>`;
 }
 
-function buildProject(project: Document<ProjectData>): string {
+function buildProject(site: SiteSettings, project: Document<ProjectData>): string {
   const { title, category, year, description, coverImage, images } = project.data;
 
   const galleryHtml = images
     .map((url) => `    <img src="${esc(url)}" alt="${esc(title)}" loading="lazy">`)
     .join('\n');
 
-  return `${htmlHead(title)}
+  return `${htmlHead(title, site)}
 <body>
-  ${nav()}
+  ${nav(site)}
   <main style="padding-top: 73px;">
     <img src="${esc(coverImage)}" alt="${esc(title)}" class="hero-img fade">
 
@@ -360,55 +371,57 @@ ${galleryHtml}
 
     <a href="/" class="back-link">&larr; Back to Works</a>
   </main>
-  ${footer()}
+  ${footer(site)}
 </body>
 </html>`;
 }
 
-function buildAbout(page: Document<PageData>): string {
-  return `${htmlHead('About')}
+function buildAbout(site: SiteSettings, page: Document<PageData>): string {
+  return `${htmlHead(page.data.title, site)}
 <body>
-  ${nav('about')}
+  ${nav(site, 'about')}
   <main style="padding-top: 73px;">
     <div class="about-grid">
       <div class="fade">
-        <img src="${esc(page.data.heroImage || '')}" alt="${esc(SITE_NAME)}" class="about-img">
+        <img src="${esc(page.data.heroImage || '')}" alt="${esc(site.siteName)}" class="about-img">
       </div>
       <div class="about-text">
-        <p class="label fade">About</p>
-        <h1 class="fade fade-d1">${esc(SITE_NAME)}</h1>
-        <div class="bio fade fade-d2">${page.data.content}</div>
-        <a href="mailto:${SITE_EMAIL}" class="about-email fade fade-d2">${SITE_EMAIL}</a>
+        <p class="label fade">${esc(page.data.heading || page.data.title)}</p>
+        <h1 class="fade fade-d1">${esc(site.siteName)}</h1>
+        <div class="bio fade fade-d2">${page.data.content || ''}</div>
+        <a href="mailto:${esc(site.email)}" class="about-email fade fade-d2">${esc(site.email)}</a>
       </div>
     </div>
   </main>
-  ${footer()}
+  ${footer(site)}
 </body>
 </html>`;
 }
 
-function buildContact(): string {
-  return `${htmlHead('Contact')}
+function buildContact(site: SiteSettings, page: Document<PageData>): string {
+  const socialHtml = site.socialLinks
+    .map((link) => `<a href="${esc(link.url)}">${esc(link.label)}</a>`)
+    .join('\n          ');
+
+  return `${htmlHead(page.data.title, site)}
 <body>
-  ${nav('contact')}
+  ${nav(site, 'contact')}
   <main style="padding-top: 73px;">
     <div class="contact-wrap">
       <div>
-        <p class="label fade">Get in Touch</p>
-        <h1 class="fade fade-d1">Let&rsquo;s Work Together</h1>
-        <p class="sub fade fade-d2">Available for commissions, collaborations, and editorial projects. Based in Copenhagen, working worldwide.</p>
+        <p class="label fade">${esc(page.data.heading || page.data.title)}</p>
+        <h1 class="fade fade-d1">${esc(page.data.heading || page.data.title)}</h1>
+        <p class="sub fade fade-d2">${esc(page.data.subtitle || '')}</p>
         <div class="fade fade-d2">
-          <a href="mailto:${SITE_EMAIL}" class="contact-btn">${SITE_EMAIL}</a>
+          <a href="mailto:${esc(site.email)}" class="contact-btn">${esc(site.email)}</a>
         </div>
         <div class="social-links fade fade-d2">
-          <a href="#">Instagram</a>
-          <a href="#">LinkedIn</a>
-          <a href="#">Behance</a>
+          ${socialHtml}
         </div>
       </div>
     </div>
   </main>
-  ${footer()}
+  ${footer(site)}
 </body>
 </html>`;
 }
@@ -420,36 +433,51 @@ function buildContact(): string {
 function build() {
   const DIST = join(__dirname, 'dist');
 
+  // Load site settings
+  const siteDoc = loadDocument<SiteSettings>('settings', 'site');
+  if (!siteDoc) {
+    console.error('ERROR: content/settings/site.json not found. Cannot build without site settings.');
+    process.exit(1);
+  }
+  const site = siteDoc.data;
+
+  // Load content
   const projects = loadCollection<ProjectData>('projects');
   const pages = loadCollection<PageData>('pages');
+  const homePage = pages.find((p) => p.slug === 'home');
   const aboutPage = pages.find((p) => p.slug === 'about');
+  const contactPage = pages.find((p) => p.slug === 'contact');
 
-  console.log(`Building portfolio² — ${projects.length} projects found`);
+  console.log(`Building ${site.siteName} — ${projects.length} projects found`);
 
   // Home
   mkdirSync(DIST, { recursive: true });
-  writeFileSync(join(DIST, 'index.html'), buildHome(projects));
-  console.log('  -> dist/index.html');
+  if (homePage) {
+    writeFileSync(join(DIST, 'index.html'), buildHome(site, homePage, projects));
+    console.log('  -> dist/index.html');
+  }
 
   // Project pages
   for (const project of projects) {
     const dir = join(DIST, 'projects', project.slug);
     mkdirSync(dir, { recursive: true });
-    writeFileSync(join(dir, 'index.html'), buildProject(project));
+    writeFileSync(join(dir, 'index.html'), buildProject(site, project));
     console.log(`  -> dist/projects/${project.slug}/index.html`);
   }
 
   // About
   if (aboutPage) {
     mkdirSync(join(DIST, 'about'), { recursive: true });
-    writeFileSync(join(DIST, 'about', 'index.html'), buildAbout(aboutPage));
+    writeFileSync(join(DIST, 'about', 'index.html'), buildAbout(site, aboutPage));
     console.log('  -> dist/about/index.html');
   }
 
   // Contact
-  mkdirSync(join(DIST, 'contact'), { recursive: true });
-  writeFileSync(join(DIST, 'contact', 'index.html'), buildContact());
-  console.log('  -> dist/contact/index.html');
+  if (contactPage) {
+    mkdirSync(join(DIST, 'contact'), { recursive: true });
+    writeFileSync(join(DIST, 'contact', 'index.html'), buildContact(site, contactPage));
+    console.log('  -> dist/contact/index.html');
+  }
 
   console.log('\nBuild complete!');
 }

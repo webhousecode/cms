@@ -95,6 +95,7 @@
 | F76 | [Create New Organization](#f76-create-organization) | Planned | [docs/features/F76-create-organization.md](features/F76-create-organization.md) |
 | F77 | [Middleware to Proxy Migration](#f77-middleware-to-proxy) | Planned | [docs/features/F77-middleware-to-proxy.md](features/F77-middleware-to-proxy.md) |
 | F78 | [Bundled Preview Server](#f78-bundled-preview-server) | Planned | [docs/features/F78-bundled-preview-server.md](features/F78-bundled-preview-server.md) |
+| F79 | [Site Config Validator](#f79-site-config-validator) | Planned | [docs/features/F79-site-config-validator.md](features/F79-site-config-validator.md) |
 
 ---
 
@@ -331,3 +332,6 @@ Fix the Next.js 16 deprecation warning: rename `src/middleware.ts` → `src/prox
 
 ## F78 — Bundled Preview Server
 Ship `sirv` (148 KB, used by Vite) as a dependency of `@webhouse/cms` so `cms serve` works out of the box after `cms build`. Clean URLs (`/about` → `about.html`), gzip/brotli, ETags, SPA fallback mode, Code Launcher port integration. Comes down automatically with `npm create @webhouse/cms` — zero extra installs. Scaffolded projects get `npm run preview` script. 15 lines of code wrapping sirv with Node.js `http.createServer()`.
+
+## F79 — Site Config Validator
+Robust validation of cms.config.ts and content/ structure when adding or loading a site in CMS admin. Validates field types against allowed enum, content JSON structure (slug, status, data), collection directories match config, required fields present. Shows clear error messages instead of crashing with raw ZodError stacktraces. Runs at "Create site" time, on first site load, and on-demand via "Validate site" button. Includes suggestion engine for common mistakes (e.g. "Did you mean 'object'?" for unknown field type 'json').
