@@ -180,7 +180,7 @@ function HelpPage() {
       <div>
         <p style={{ fontSize: "0.875rem", fontWeight: 600, marginBottom: "0.25rem" }}>Community</p>
         <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", marginBottom: "1rem" }}>
-          Our Discord community can help with technical questions. Many questions are answered in minutes.
+          Join our Discord to get support, report bugs, or discuss features. Many questions are answered in minutes.
         </p>
         <a
           href="https://discord.gg/jtjnEkVX8D"
