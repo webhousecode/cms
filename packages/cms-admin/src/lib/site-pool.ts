@@ -141,6 +141,10 @@ export interface CmsInstance {
 }
 
 const pool = new Map<string, CmsInstance>();
+const poolTimestamps = new Map<string, number>();
+
+/** GitHub config cache TTL — avoid re-fetching cms.config.ts on every request */
+const GITHUB_CACHE_TTL_MS = 120_000; // 2 minutes
 
 function poolKey(orgId: string, siteId: string): string {
   return `${orgId}:${siteId}`;
@@ -152,9 +156,15 @@ export async function getOrCreateInstance(
 ): Promise<CmsInstance> {
   const key = poolKey(orgId, site.id);
 
-  // In dev, always reload config (file may have changed)
-  if (pool.has(key) && process.env.NODE_ENV === "production") {
-    return pool.get(key)!;
+  if (pool.has(key)) {
+    // Production: always use cache
+    if (process.env.NODE_ENV === "production") return pool.get(key)!;
+    // Dev + GitHub adapter: cache for TTL to avoid rate limiting
+    if (site.adapter === "github") {
+      const ts = poolTimestamps.get(key) ?? 0;
+      if (Date.now() - ts < GITHUB_CACHE_TTL_MS) return pool.get(key)!;
+    }
+    // Dev + filesystem: always reload (file may have changed)
   }
 
   if (site.adapter === "github") {
@@ -162,6 +172,7 @@ export async function getOrCreateInstance(
     const cms = await createCms(config);
     const instance: CmsInstance = { cms, config, site };
     pool.set(key, instance);
+    poolTimestamps.set(key, Date.now());
     return instance;
   }
 
