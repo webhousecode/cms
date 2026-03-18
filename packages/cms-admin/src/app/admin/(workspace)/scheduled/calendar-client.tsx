@@ -8,7 +8,7 @@ import { TabTitle } from "@/lib/tabs-context";
 /* ─── Types ──────────────────────────────────────────────────── */
 
 type EventType = "publish" | "unpublish";
-type ViewMode = "month" | "week" | "day";
+type ViewMode = "day" | "week" | "month" | "year";
 
 interface ScheduledEvent {
   id: string;
@@ -71,7 +71,9 @@ export function ScheduledCalendar({ events, calendarToken, orgId, siteId }: { ev
   const eventsMap = eventsByDateKey(events);
 
   function navigate(dir: -1 | 1) {
-    if (view === "month") {
+    if (view === "year") {
+      setYear((y) => y + dir);
+    } else if (view === "month") {
       let m = month + dir;
       let y = year;
       if (m < 0) { m = 11; y--; }
@@ -103,40 +105,22 @@ export function ScheduledCalendar({ events, calendarToken, orgId, siteId }: { ev
     <>
       <TabTitle value="Calendar" />
       <div className="p-8" style={{ maxWidth: "1200px" }}>
-        {/* Header */}
-        <div className="mb-6 flex items-center justify-between flex-wrap gap-3">
-          <div className="flex items-center gap-3">
-            <h1 className="text-xl font-bold text-foreground">
-              {view === "day"
-                ? new Date(selectedDate).toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric" })
-                : `${MONTHS[month]} ${year}`}
-            </h1>
-            <div className="flex items-center gap-0.5">
-              <button type="button" onClick={() => navigate(-1)} className="p-1.5 rounded-md hover:bg-secondary transition-colors text-muted-foreground">
-                <ChevronLeft className="w-4 h-4" />
+        {/* Top bar: view tabs centered */}
+        <div className="flex items-center justify-between mb-4">
+          <div style={{ width: "160px" }} />
+          <div className="flex items-center gap-0.5 rounded-lg border border-border p-0.5">
+            {(["day", "week", "month", "year"] as ViewMode[]).map((v) => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => setView(v)}
+                className={`px-3 py-1 text-xs rounded-md transition-colors capitalize ${view === v ? "bg-secondary text-foreground font-medium" : "text-muted-foreground hover:text-foreground"}`}
+              >
+                {v}
               </button>
-              <button type="button" onClick={goToday} className="px-2 py-1 rounded-md text-xs font-medium hover:bg-secondary transition-colors text-muted-foreground">
-                Today
-              </button>
-              <button type="button" onClick={() => navigate(1)} className="p-1.5 rounded-md hover:bg-secondary transition-colors text-muted-foreground">
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
+            ))}
           </div>
-          <div className="flex items-center gap-2">
-            {/* View toggle */}
-            <div className="flex items-center gap-0.5 rounded-lg border border-border p-0.5">
-              {(["day", "week", "month"] as ViewMode[]).map((v) => (
-                <button
-                  key={v}
-                  type="button"
-                  onClick={() => setView(v)}
-                  className={`px-2.5 py-1 text-xs rounded-md transition-colors capitalize ${view === v ? "bg-secondary text-foreground font-medium" : "text-muted-foreground hover:text-foreground"}`}
-                >
-                  {v}
-                </button>
-              ))}
-            </div>
+          <div className="flex items-center gap-1">
             <button
               type="button"
               onClick={() => {
@@ -154,10 +138,32 @@ export function ScheduledCalendar({ events, calendarToken, orgId, siteId }: { ev
                 }
               }}
               title="Subscribe to calendar feed"
-              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md border border-border hover:bg-secondary transition-colors text-muted-foreground"
+              className="flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-md border border-border hover:bg-secondary transition-colors text-muted-foreground"
             >
               {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Calendar className="w-3.5 h-3.5" />}
-              {copied ? "Copied — paste in Calendar app" : "Subscribe"}
+              {copied ? "Copied" : "Subscribe"}
+            </button>
+          </div>
+        </div>
+
+        {/* Title row: title left, < Today > right */}
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-xl font-bold text-foreground" style={{ minWidth: "220px" }}>
+            {view === "day"
+              ? (() => { const d = new Date(selectedDate); return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`; })()
+              : view === "year"
+                ? `${year}`
+                : `${MONTHS[month]} ${year}`}
+          </h1>
+          <div className="flex items-center gap-0.5">
+            <button type="button" onClick={() => navigate(-1)} className="p-1.5 rounded-md hover:bg-secondary transition-colors text-muted-foreground">
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button type="button" onClick={goToday} className="px-3 py-1 rounded-md text-xs font-medium border border-border hover:bg-secondary transition-colors text-muted-foreground">
+              Today
+            </button>
+            <button type="button" onClick={() => navigate(1)} className="p-1.5 rounded-md hover:bg-secondary transition-colors text-muted-foreground">
+              <ChevronRight className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -191,6 +197,14 @@ export function ScheduledCalendar({ events, calendarToken, orgId, siteId }: { ev
           <DayView
             selectedDate={selectedDate}
             eventsMap={eventsMap}
+          />
+        )}
+        {view === "year" && (
+          <YearView
+            year={year}
+            todayKey={todayKey}
+            eventsMap={eventsMap}
+            onSelectMonth={(m) => { setMonth(m); setView("month"); }}
           />
         )}
           </div>{/* end calendar grid */}
@@ -406,6 +420,86 @@ function DayView({ selectedDate, eventsMap }: {
               </span>
             </div>
           </Link>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ─── Year View ──────────────────────────────────────────────── */
+
+function YearView({ year, todayKey, eventsMap, onSelectMonth }: {
+  year: number; todayKey: string;
+  eventsMap: Map<string, ScheduledEvent[]>;
+  onSelectMonth: (month: number) => void;
+}) {
+  return (
+    <div className="grid grid-cols-3 gap-4">
+      {MONTHS.map((monthName, m) => {
+        const firstDay = new Date(year, m, 1);
+        const lastDay = new Date(year, m + 1, 0);
+        const startOffset = (firstDay.getDay() + 6) % 7;
+
+        // Count events in this month
+        let monthEventCount = 0;
+        for (let d = 1; d <= lastDay.getDate(); d++) {
+          const key = dateKey(year, m, d);
+          monthEventCount += (eventsMap.get(key) ?? []).length;
+        }
+
+        const cells: { day: number; key: string; inMonth: boolean }[] = [];
+        for (let i = startOffset - 1; i >= 0; i--) {
+          const d = new Date(year, m, -i);
+          cells.push({ day: d.getDate(), key: dateKey(d.getFullYear(), d.getMonth(), d.getDate()), inMonth: false });
+        }
+        for (let d = 1; d <= lastDay.getDate(); d++) {
+          cells.push({ day: d, key: dateKey(year, m, d), inMonth: true });
+        }
+        while (cells.length % 7 !== 0) {
+          const d = cells.length - startOffset - lastDay.getDate() + 1;
+          const next = new Date(year, m + 1, d);
+          cells.push({ day: next.getDate(), key: dateKey(next.getFullYear(), next.getMonth(), next.getDate()), inMonth: false });
+        }
+
+        return (
+          <button
+            key={m}
+            type="button"
+            onClick={() => onSelectMonth(m)}
+            className="text-left p-3 rounded-lg border border-border hover:border-primary/30 hover:bg-secondary/30 transition-all"
+          >
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm font-semibold">{monthName}</span>
+              {monthEventCount > 0 && (
+                <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-full bg-primary/10 text-primary">{monthEventCount}</span>
+              )}
+            </div>
+            <div className="grid grid-cols-7 gap-px">
+              {["M","T","W","T","F","S","S"].map((d, i) => (
+                <span key={i} className="text-center text-[8px] text-muted-foreground">{d}</span>
+              ))}
+              {cells.map((cell, i) => {
+                const hasEvents = (eventsMap.get(cell.key) ?? []).length > 0;
+                const isToday = cell.key === todayKey;
+                return (
+                  <span
+                    key={i}
+                    className="text-center"
+                    style={{
+                      fontSize: "0.55rem",
+                      lineHeight: "1.1rem",
+                      opacity: cell.inMonth ? 1 : 0.25,
+                      borderRadius: "9999px",
+                      ...(isToday ? { background: "var(--primary)", color: "var(--primary-foreground)", fontWeight: 700 } : {}),
+                      ...(hasEvents && !isToday ? { background: "color-mix(in srgb, rgb(74 222 128) 20%, transparent)", fontWeight: 600 } : {}),
+                    }}
+                  >
+                    {cell.day}
+                  </span>
+                );
+              })}
+            </div>
+          </button>
         );
       })}
     </div>
