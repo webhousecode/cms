@@ -127,7 +127,8 @@ function ProfileSection() {
 	}, []);
 
 	function applyZoomPreview(value: number) {
-		document.body.style.zoom = value === 100 ? "" : `${value}%`;
+		document.documentElement.style.zoom = value === 100 ? "" : `${value / 100}`;
+		window.dispatchEvent(new CustomEvent("cms:zoom-changed", { detail: value }));
 	}
 
 	async function saveProfile(e: FormEvent) {
