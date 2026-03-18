@@ -229,19 +229,13 @@ export async function getGitHubMediaClient(): Promise<{
   const gh = resolvedSite.github;
   if (!gh) return null;
 
-  // Resolve token
+  // Resolve token (reuse resolveToken from site-pool for service-token fallback)
   let token: string;
-  if (gh.token === "oauth") {
-    const cookieStore = await cookies();
-    const t = cookieStore.get("github-token")?.value;
-    if (!t) throw new Error("GitHub not connected — connect via Sites → Settings");
-    token = t;
-  } else if (gh.token.startsWith("env:")) {
-    const envVar = gh.token.slice(4);
-    token = process.env[envVar] ?? "";
-    if (!token) throw new Error(`Environment variable "${envVar}" not set`);
-  } else {
-    token = gh.token;
+  try {
+    const { resolveToken } = await import("./site-pool");
+    token = await resolveToken(gh.token);
+  } catch {
+    throw new Error("GitHub not connected — connect via Sites → Settings");
   }
 
   const client = new GitHubMediaClient(

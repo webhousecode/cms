@@ -17,7 +17,7 @@ import type { SiteEntry } from "./site-registry";
  * - "oauth" → read from github-token cookie (OAuth flow)
  * - raw string → return as-is
  */
-async function resolveToken(token: string): Promise<string> {
+export async function resolveToken(token: string): Promise<string> {
   if (token.startsWith("env:")) {
     const envVar = token.slice(4);
     const resolved = process.env[envVar];
