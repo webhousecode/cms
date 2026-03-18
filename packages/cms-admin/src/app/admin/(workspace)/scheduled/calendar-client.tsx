@@ -397,8 +397,8 @@ function WeekView({ selectedDate, todayKey, eventsMap, onSelectDate, scrollToNow
           style={{
             position: "absolute",
             top: pillY,
-            left: "-13px",
-            width: "calc(3rem + 11px)",
+            left: "-8px",
+            width: "calc(3rem + 8px)",
             height: "1.25rem",
             display: "flex",
             alignItems: "center",
@@ -563,9 +563,9 @@ function WeekView({ selectedDate, todayKey, eventsMap, onSelectDate, scrollToNow
               style={{
                 position: "absolute",
                 top: nowY,
-                left: "3rem",
+                left: "calc(3rem + 2px)",
                 right: 0,
-                height: "2px",
+                height: "1px",
                 background: "rgb(239 68 68)",
                 zIndex: 20,
                 pointerEvents: "none",
