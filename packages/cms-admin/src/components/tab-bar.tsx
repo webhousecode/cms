@@ -1,6 +1,42 @@
 "use client";
 
-import { X, Plus, LayoutDashboard, AlertTriangle } from "lucide-react";
+import {
+  X, Plus, LayoutDashboard, AlertTriangle, Image, Bot, Calendar,
+  ListChecks, Terminal, Settings2, BarChart3, Link2, Trash2,
+  FileText, Globe, Puzzle, Search, UserCircle,
+} from "lucide-react";
+
+const TAB_ICONS: Record<string, typeof LayoutDashboard> = {
+  "/admin": LayoutDashboard,
+  "/admin/media": Image,
+  "/admin/agents": Bot,
+  "/admin/scheduled": Calendar,
+  "/admin/curation": ListChecks,
+  "/admin/command": Terminal,
+  "/admin/settings": Settings2,
+  "/admin/performance": BarChart3,
+  "/admin/link-checker": Link2,
+  "/admin/trash": Trash2,
+  "/admin/interactives": Puzzle,
+  "/admin/sites": Globe,
+  "/admin/account": UserCircle,
+};
+
+function getTabIcon(path: string) {
+  // Exact match first
+  const bare = path.split("?")[0];
+  if (TAB_ICONS[bare]) return TAB_ICONS[bare];
+  // Check prefixes (e.g. /admin/agents/xxx → Bot)
+  for (const [prefix, icon] of Object.entries(TAB_ICONS)) {
+    if (prefix !== "/admin" && bare.startsWith(prefix)) return icon;
+  }
+  const parts = bare.replace(/^\/admin\/?/, "").split("/").filter(Boolean);
+  // Document pages (/admin/collection/slug) → FileText (page icon)
+  if (parts.length >= 2) return FileText;
+  // Collection list pages (/admin/posts) → LayoutDashboard
+  if (parts.length === 1) return LayoutDashboard;
+  return LayoutDashboard;
+}
 import { useState, useEffect } from "react";
 
 const STATUS_DOT: Record<string, { color: string; title: string }> = {
@@ -98,18 +134,13 @@ export function TabBar() {
             )}
           >
             {/* Tab icon */}
-            <LayoutDashboard
-              style={{
-                width: "0.75rem",
-                height: "0.75rem",
-                flexShrink: 0,
-                color: isActive ? "var(--primary)" : "var(--muted-foreground)",
-                opacity: 0.7,
-              }}
-            />
+            {(() => {
+              const Icon = getTabIcon(tab.path);
+              return <Icon style={{ width: "0.75rem", height: "0.75rem", flexShrink: 0, color: isActive ? "var(--primary)" : "var(--muted-foreground)", opacity: 0.7 }} />;
+            })()}
 
-            {/* Status dot */}
-            {tab.status && STATUS_DOT[tab.status] && (
+            {/* Status dot — only for document tabs (collection/slug paths) */}
+            {tab.status && STATUS_DOT[tab.status] && tab.path.replace(/^\/admin\/?/, "").split("/").length >= 2 && (
               <span
                 title={STATUS_DOT[tab.status]!.title}
                 style={{
