@@ -13,7 +13,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Settings, Fingerprint, Check, Moon, Sun, Monitor, LogOut } from "lucide-react";
+import { Settings, Fingerprint, Check, Moon, Sun, Monitor, LogOut, Search } from "lucide-react";
+import { HelpButton } from "@/components/help-drawer";
 import { useTheme } from "next-themes";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -144,9 +145,10 @@ export function AdminHeader() {
           </>
         )}
       </div>
-      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0 1rem" }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0 1rem" }}>
         <OrgSwitcher />
         <SiteSwitcher />
+        <HelpButton />
         <UserNav user={user} />
       </div>
     </header>
