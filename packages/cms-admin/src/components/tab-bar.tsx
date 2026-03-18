@@ -3,7 +3,7 @@
 import {
   X, Plus, LayoutDashboard, AlertTriangle, Image, Bot, Calendar,
   ListChecks, Terminal, Settings2, BarChart3, Link2, Trash2,
-  FileText, Globe, Puzzle, Search, UserCircle,
+  FileText, Globe, Puzzle, UserCircle, FolderOpen,
 } from "lucide-react";
 
 const TAB_ICONS: Record<string, typeof LayoutDashboard> = {
@@ -31,10 +31,10 @@ function getTabIcon(path: string) {
     if (prefix !== "/admin" && bare.startsWith(prefix)) return icon;
   }
   const parts = bare.replace(/^\/admin\/?/, "").split("/").filter(Boolean);
-  // Document pages (/admin/collection/slug) → FileText (page icon)
+  // Document pages (/admin/collection/slug) → FileText (document icon)
   if (parts.length >= 2) return FileText;
-  // Collection list pages (/admin/posts) → LayoutDashboard
-  if (parts.length === 1) return LayoutDashboard;
+  // Collection list pages (/admin/posts) → FolderOpen (folder icon)
+  if (parts.length === 1) return FolderOpen;
   return LayoutDashboard;
 }
 import { useState, useEffect } from "react";
