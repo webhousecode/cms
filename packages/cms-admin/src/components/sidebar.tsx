@@ -48,10 +48,7 @@ export function AppSidebar({ collections }: Props) {
   const wordmarkSrc = mounted && resolvedTheme === "light"
     ? "/webhouse-wordmark-light.svg"
     : "/webhouse-wordmark-dark.svg";
-  const [showLogoIcon, setShowLogoIcon] = useState(() => {
-    if (typeof window === "undefined") return true;
-    return localStorage.getItem("cms-show-logo-icon") !== "false";
-  });
+  const [showLogoIcon, setShowLogoIcon] = useState(true);
   const [contentOpen, setContentOpen] = useState(() => {
     if (typeof window === "undefined") return true;
     const saved = localStorage.getItem("cms-sidebar-content-open");
