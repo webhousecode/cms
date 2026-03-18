@@ -1,0 +1,19 @@
+{
+  "slug": "growth-package",
+  "status": "published",
+  "data": {
+    "title": "Growth",
+    "description": "For scaling businesses that need hands-on strategic guidance, analytics-driven insights, and a dedicated partner in growth.",
+    "features": [
+      { "text": "Everything in Starter" },
+      { "text": "Full funnel optimization" },
+      { "text": "Custom analytics dashboard" },
+      { "text": "Bi-weekly strategy sessions" },
+      { "text": "Content strategy & calendar" },
+      { "text": "Priority email & Slack support" },
+      { "text": "Quarterly business review" }
+    ],
+    "price": "$5,000/mo",
+    "popular": true
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "slug": "terra-nova",
+  "status": "published",
+  "data": {
+    "title": "TERRA NOVA",
+    "category": "Campaign",
+    "heroImage": "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1600&q=80",
+    "year": "2024",
+    "description": "A multi-platform environmental campaign for the Scandinavian Conservation Alliance. The brief was stark: make people feel the urgency of biodiversity loss without resorting to guilt or despair. We chose awe.\n\nThe campaign centres on large-format photography of Nordic ecosystems, printed at architectural scale and installed in urban environments \u2014 a 40-metre forest canopy unfurling across the facade of Oslo Central Station, tidal pools projected onto the floor of a Copenhagen shopping centre.\n\nThe visual language pairs raw, untouched nature photography with razor-sharp typography and data visualisations. The campaign reached 12 million impressions in its first week and drove a 340% increase in donation sign-ups.",
+    "images": [
+      { "url": "https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=1200&q=80", "alt": "Dense forest canopy shot from below" },
+      { "url": "https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=1200&q=80", "alt": "Misty mountain valley at dawn" },
+      { "url": "https://images.unsplash.com/photo-1497366216548-37526070297c?w=1200&q=80", "alt": "Campaign installation at Oslo Central Station" }
+    ]
+  }
+}

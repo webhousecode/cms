@@ -1,0 +1,17 @@
+{
+  "slug": "portrait-series",
+  "status": "published",
+  "data": {
+    "title": "Faces of Light",
+    "category": "Portrait",
+    "year": "2024",
+    "description": "An intimate portrait series using only natural window light. Each subject was photographed in their own home, creating an atmosphere of trust and vulnerability that reveals character beyond the surface.",
+    "coverImage": "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=1200&q=80",
+    "images": [
+      "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=1600&q=80",
+      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1600&q=80",
+      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=1600&q=80",
+      "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=1600&q=80"
+    ]
+  }
+}

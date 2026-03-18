@@ -1,0 +1,16 @@
+{
+  "slug": "echo-chamber",
+  "status": "published",
+  "data": {
+    "title": "ECHO CHAMBER",
+    "category": "Digital",
+    "heroImage": "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1600&q=80",
+    "year": "2024",
+    "description": "An interactive digital experience that visualises the architecture of online discourse. Users speak into their device and watch as their words fragment, multiply, and distort across a three-dimensional space \u2014 a visceral metaphor for how information mutates in digital echo chambers.\n\nBuilt with WebGL and the Web Audio API, the piece renders real-time audio analysis as particle systems that collide, merge, and fracture. Each word spoken generates a unique visual signature that interacts with the traces left by previous visitors, creating a collective tapestry of accumulated voice.\n\nThe project was awarded a Webby Award for Best Net Art and featured at Ars Electronica 2024.",
+    "images": [
+      { "url": "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=1200&q=80", "alt": "Digital interface showing particle visualisation" },
+      { "url": "https://images.unsplash.com/photo-1563089145-599997674d42?w=1200&q=80", "alt": "Close-up of generative visual patterns" },
+      { "url": "https://images.unsplash.com/photo-1557672172-298e090bd0f1?w=1200&q=80", "alt": "Exhibition view of the interactive display" }
+    ]
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "slug": "void-installation",
+  "status": "published",
+  "data": {
+    "title": "VOID",
+    "category": "Installation",
+    "heroImage": "https://images.unsplash.com/photo-1549490349-8643362247b5?w=1600&q=80",
+    "year": "2024",
+    "description": "An immersive art installation exploring the liminal space between presence and absence. Visitors enter a 12-meter corridor of shifting light and reactive soundscapes that respond to their movement and proximity.\n\nThe installation uses 48 individually addressable LED panels and spatial audio to create an environment that breathes with its audience. As visitors move deeper into the space, the walls dissolve into pure frequency and colour, erasing the boundary between observer and observed.\n\nCommissioned by the Nordic Arts Council for the 2024 Reykjavik Biennale. The piece ran for 14 weeks and drew over 30,000 visitors.",
+    "images": [
+      { "url": "https://images.unsplash.com/photo-1549490349-8643362247b5?w=1200&q=80", "alt": "Immersive light corridor with purple and blue hues" },
+      { "url": "https://images.unsplash.com/photo-1557672172-298e090bd0f1?w=1200&q=80", "alt": "Abstract colour field detail from the installation" },
+      { "url": "https://images.unsplash.com/photo-1558591710-4b4a1ae0f04d?w=1200&q=80", "alt": "Visitors silhouetted against reactive light wall" }
+    ]
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "slug": "metamorphosis-brand",
+  "status": "published",
+  "data": {
+    "title": "METAMORPHOSIS",
+    "category": "Branding",
+    "heroImage": "https://images.unsplash.com/photo-1509631179647-0177331693ae?w=1600&q=80",
+    "year": "2024",
+    "description": "A complete brand identity for METAMORPHOSIS, an avant-garde fashion house that rejects seasonal collections in favour of continuous evolution. The identity system is built to mutate \u2014 no two applications look the same, yet they are unmistakably from the same origin.\n\nWe developed a generative logo system driven by a custom algorithm that responds to time, location, and context. The wordmark shifts its letterforms with every render, creating a living identity that mirrors the brand's philosophy of perpetual transformation.\n\nThe system spans packaging, digital presence, spatial design for their Copenhagen flagship, and a bespoke typeface \u2014 Morphe Sans \u2014 with 12 optical axes.",
+    "images": [
+      { "url": "https://images.unsplash.com/photo-1509631179647-0177331693ae?w=1200&q=80", "alt": "Fashion editorial showcasing Metamorphosis collection" },
+      { "url": "https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=1200&q=80", "alt": "Brand identity system in use across print materials" },
+      { "url": "https://images.unsplash.com/photo-1515405295579-ba7b45403062?w=1200&q=80", "alt": "Flagship store interior with generative brand elements" }
+    ]
+  }
+}
