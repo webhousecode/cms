@@ -116,10 +116,33 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
     });
   }, [router, onClose]);
 
-  const quickActions = useMemo(() => buildQuickActions(logout), [logout]);
+  const [collections, setCollections] = useState<{ name: string; label: string }[]>([]);
 
-  /* Auto-focus input */
-  useEffect(() => { inputRef.current?.focus(); }, []);
+  const quickActions = useMemo(() => {
+    const actions = buildQuickActions(logout);
+    // Add dynamic collection navigation
+    for (const col of collections) {
+      actions.push({
+        id: `col-${col.name}`,
+        label: col.label,
+        sublabel: `Collection · ${col.name}`,
+        category: "navigation",
+        icon: <Database style={{ ...ICON_SIZE, color: MUTED }} />,
+        href: `/admin/${col.name}`,
+        keywords: [col.name, col.label.toLowerCase()],
+      });
+    }
+    return actions;
+  }, [logout, collections]);
+
+  /* Auto-focus input + fetch collections */
+  useEffect(() => {
+    inputRef.current?.focus();
+    fetch("/api/cms/collections")
+      .then((r) => r.ok ? r.json() : { collections: [] })
+      .then((d: { collections: { name: string; label: string }[] }) => setCollections(d.collections ?? []))
+      .catch(() => {});
+  }, []);
 
   /* Search content with debounce */
   useEffect(() => {
