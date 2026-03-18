@@ -72,6 +72,104 @@ jobs:
       - run: curl -s -H "X-CMS-Service-Token: ${{ secrets.CMS_JWT_SECRET }}" https://webhouse-app.fly.dev/api/cms/heartbeat
 ```
 
+### Tier 2b: webhouse.app Cron Service (zero-config for hosted users)
+
+For CMS instances hosted on webhouse.app, the platform provides a built-in cron service at `cron.webhouse.net` that keeps the scheduler alive — no GitHub Actions or external setup needed.
+
+**How it works:**
+
+1. CMS admin has a one-click "Enable Scheduler Keepalive" toggle in Settings → Scheduler
+2. Toggle calls `POST https://cron.webhouse.net/api/jobs` to register a heartbeat job
+3. The cron service pings `GET /api/cms/heartbeat` every 5 minutes
+4. The CMS machine wakes, runs pending tasks, responds with status
+
+**cron.webhouse.net API integration:**
+
+```typescript
+// packages/cms-admin/src/lib/cron-service.ts
+
+const CRON_API = "https://cron.webhouse.net/api";
+
+interface CronJob {
+  id: string;
+  url: string;
+  schedule: string;        // cron expression, e.g. "*/5 * * * *"
+  headers?: Record<string, string>;
+  enabled: boolean;
+  lastRunAt?: string;
+  lastStatus?: number;
+}
+
+/** Register a heartbeat job for this CMS instance */
+export async function registerHeartbeatJob(cmsUrl: string, serviceToken: string): Promise<CronJob> {
+  const res = await fetch(`${CRON_API}/jobs`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${process.env.CRON_API_KEY}`,
+    },
+    body: JSON.stringify({
+      name: `cms-heartbeat-${new URL(cmsUrl).hostname}`,
+      url: `${cmsUrl}/api/cms/heartbeat`,
+      schedule: "*/5 * * * *",
+      headers: { "X-CMS-Service-Token": serviceToken },
+      enabled: true,
+    }),
+  });
+  return res.json();
+}
+
+/** Remove the heartbeat job */
+export async function removeHeartbeatJob(jobId: string): Promise<void> {
+  await fetch(`${CRON_API}/jobs/${jobId}`, {
+    method: "DELETE",
+    headers: { "Authorization": `Bearer ${process.env.CRON_API_KEY}` },
+  });
+}
+
+/** Check heartbeat job status */
+export async function getHeartbeatJobStatus(jobId: string): Promise<CronJob | null> {
+  const res = await fetch(`${CRON_API}/jobs/${jobId}`, {
+    headers: { "Authorization": `Bearer ${process.env.CRON_API_KEY}` },
+  });
+  if (!res.ok) return null;
+  return res.json();
+}
+```
+
+**SiteConfig additions:**
+
+```typescript
+interface SiteConfig {
+  // ... existing fields ...
+  schedulerMode: "manual" | "heartbeat" | "always-on";
+  cronJobId?: string;        // ID from cron.webhouse.net
+  cronServiceUrl?: string;   // Custom cron service URL (self-hosted)
+}
+```
+
+**Settings UI flow:**
+
+1. User opens Settings → Scheduler
+2. Sees three radio options:
+   - **Manual** — scheduler runs only when admin is open (default)
+   - **Heartbeat** — webhouse.app cron service pings every 5 min (free)
+   - **Always-on** — machine never stops ($3/mo, requires `min_machines_running=1`)
+3. Selecting "Heartbeat" → auto-registers job at cron.webhouse.net
+4. Shows job status: last ping, last status, next run
+
+**Cost comparison:**
+
+| Tier | Cost | Reliability | Max delay |
+|------|------|-------------|-----------|
+| Manual | Free | Low — depends on admin traffic | Hours |
+| Heartbeat (cron.webhouse.net) | Free | High — 5-min precision | 5 min |
+| Heartbeat (GitHub Actions) | Free | High — 5-min precision | 5 min |
+| Always-on | ~$3/mo | Maximum — 60s precision | 60s |
+| Dedicated scheduler | ~$0.50/mo | Maximum — 60s precision | 60s |
+
+**Alternative: self-hosted cron service.** Users running their own infrastructure can point `cronServiceUrl` to any cron.webhouse.net-compatible API (same endpoints, same auth). The admin UI at `https://cronjobs.webhouse.net/jobs` provides a visual job manager.
+
 ### Tier 3: Dedicated Scheduler Service (maximum reliability)
 
 For sites where scheduled publishing is business-critical. A tiny Fly.io machine (~256MB) that does nothing but call the heartbeat endpoint on a precise schedule. Lives as `deploy/scheduler/` in the monorepo.
