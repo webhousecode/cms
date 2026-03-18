@@ -387,6 +387,7 @@ function WeekView({ selectedDate, todayKey, eventsMap, onSelectDate, scrollToNow
   return (
     <div
       ref={scrollRef}
+      className="calendar-scroll"
       style={{ height: `${viewportHeight + headerHeight}px`, overflowY: "auto", position: "relative", borderRadius: "8px", border: "1px solid var(--border)" }}
     >
       {/* Header: week number + day columns — sticky */}
@@ -544,7 +545,8 @@ function WeekView({ selectedDate, todayKey, eventsMap, onSelectDate, scrollToNow
                   color: "#fff",
                   fontFamily: "monospace",
                   zIndex: 20,
-                  borderRadius: "4px",
+                  borderRadius: "9999px",
+                  paddingLeft: "0.35rem",
                 }}
               >
                 {String(Math.floor(nowMinutes / 60)).padStart(2, "0")}.{String(nowMinutes % 60).padStart(2, "0")}
