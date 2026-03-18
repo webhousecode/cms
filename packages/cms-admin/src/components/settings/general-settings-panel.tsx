@@ -199,6 +199,7 @@ function ProfileSection() {
 							setShowLogoIcon(v);
 							localStorage.setItem("cms-show-logo-icon", String(v));
 							window.dispatchEvent(new CustomEvent("cms:logo-icon-changed", { detail: v }));
+							fetch("/api/admin/user-state", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ showLogoIcon: v }) }).catch(() => {});
 						}}
 					/>
 
