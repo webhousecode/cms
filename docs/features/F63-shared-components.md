@@ -38,7 +38,28 @@ Three deliverables:
 
 ### 1. Shared UI Components to Export
 
-All go in `packages/cms-admin/src/components/ui/`:
+All go in `packages/cms-admin/src/components/ui/`.
+
+**Already done — reference example:**
+
+`section-heading.tsx` was the first component extracted to shared:
+
+```typescript
+// packages/cms-admin/src/components/ui/section-heading.tsx
+// Canonical style: CAPS, 0.8rem, 700 weight, muted color, 0.07em tracking
+export function SectionHeading({ children }: { children: React.ReactNode }) {
+  return (
+    <h2 style={{ fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.07em",
+      textTransform: "uppercase", color: "var(--muted-foreground)", margin: "0 0 0.875rem" }}>
+      {children}
+    </h2>
+  );
+}
+```
+
+Used in 23+ places. This is the pattern to follow for all remaining extractions:
+
+**Remaining components to extract:**
 
 ```typescript
 // ── card.tsx ──────────────────────────────────────
