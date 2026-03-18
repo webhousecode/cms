@@ -388,7 +388,7 @@ function WeekView({ selectedDate, todayKey, eventsMap, onSelectDate, scrollToNow
     <div
       ref={scrollRef}
       className="calendar-scroll"
-      style={{ height: `${viewportHeight + headerHeight}px`, overflowY: "auto", position: "relative", borderRadius: "8px", border: "1px solid var(--border)" }}
+      style={{ height: `${viewportHeight + headerHeight}px`, overflowY: "auto", position: "relative", borderRadius: "8px", border: "1px solid var(--border)", marginLeft: "13px" }}
     >
       {/* Header: week number + day columns — sticky */}
       <div style={{ display: "grid", gridTemplateColumns: "3rem repeat(7, 1fr)", position: "sticky", top: 0, zIndex: 30, background: "var(--card)", borderBottom: "1px solid var(--border)" }}>
@@ -531,8 +531,8 @@ function WeekView({ selectedDate, todayKey, eventsMap, onSelectDate, scrollToNow
                 style={{
                   position: "absolute",
                   top: nowY - 10,
-                  left: "2px",
-                  width: "calc(3rem - 4px)",
+                  left: "-13px",
+                  width: "calc(3rem + 11px)",
                   height: "1.25rem",
                   display: "flex",
                   alignItems: "center",
