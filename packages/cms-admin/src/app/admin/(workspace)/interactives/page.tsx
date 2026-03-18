@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useSiteRole } from "@/hooks/use-site-role";
+import { toast } from "sonner";
 
 /* ─── Types ──────────────────────────────────────────────────── */
 interface InteractiveMeta {
@@ -82,7 +83,12 @@ export default function InteractivesPage() {
     for (const file of Array.from(fileList)) {
       const fd = new FormData();
       fd.append("file", file);
-      try { await fetch("/api/interactives", { method: "POST", body: fd }); } catch { /* */ }
+      try {
+        await fetch("/api/interactives", { method: "POST", body: fd });
+        toast.success("Interactive uploaded", { description: file.name });
+      } catch {
+        toast.error("Upload failed");
+      }
     }
     await loadItems();
     setUploading(false);

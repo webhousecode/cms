@@ -6,6 +6,7 @@ import type { UsageRef } from "@/app/api/cms/media/usage/route";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import { useSiteRole } from "@/hooks/use-site-role";
+import { toast } from "sonner";
 
 /* ─── Types ──────────────────────────────────────────────────── */
 type MediaType = "image" | "audio" | "video" | "document" | "interactive" | "other";
@@ -122,8 +123,10 @@ export default function MediaPage() {
         try {
           await fetch("/api/upload", { method: "POST", body: fd });
           setJobs((prev) => prev.map((j, idx) => idx === i ? { ...j, done: true } : j));
+          toast.success("Media uploaded", { description: file.name });
         } catch {
           setJobs((prev) => prev.map((j, idx) => idx === i ? { ...j, done: true, error: true } : j));
+          toast.error("Upload failed");
         }
       })
     );

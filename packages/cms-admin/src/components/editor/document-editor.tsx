@@ -8,6 +8,7 @@ import { FieldEditor } from "./field-editor";
 import { Save, Globe, FileText, Trash2, ArrowLeft, Lock, LockOpen, Copy, Clock, History, Eye, Languages, Sparkles, Settings2, Wand2, ChevronDown, ChevronRight } from "lucide-react";
 import Link from "next/link";
 import { formatDate, cn } from "@/lib/utils";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useTabs } from "@/lib/tabs-context";
@@ -832,12 +833,20 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
       setDirty(false);
       setSavedAt(new Date());
       startTransition(() => router.refresh());
+      if (nextStatus === "published" && doc.status !== "published") {
+        toast.success("Published", { description: doc.slug });
+      } else if (nextStatus === "draft" && doc.status === "published") {
+        toast.info("Unpublished", { description: doc.slug });
+      } else {
+        toast.success("Document saved");
+      }
     }
     setSaving(false);
   }
 
   async function deleteDoc() {
     await fetch(`/api/cms/${collection}/${doc.slug}`, { method: "DELETE" });
+    toast("Moved to trash", { description: doc.slug });
     router.push(`/admin/${collection}`);
     router.refresh();
   }
@@ -862,6 +871,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
     });
     if (res.ok) {
       const cloned = (await res.json()) as { slug: string };
+      toast.success("Document cloned", { description: cloned.slug });
       router.push(`/admin/${collection}/${cloned.slug}`);
       router.refresh();
     }

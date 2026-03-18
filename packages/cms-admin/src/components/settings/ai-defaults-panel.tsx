@@ -2,6 +2,7 @@
 
 import { useState, useEffect, FormEvent } from "react";
 import { Check, Sparkles, AlertTriangle } from "lucide-react";
+import { toast } from "sonner";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { SectionHeading } from "@/components/ui/section-heading";
 
@@ -76,6 +77,7 @@ export function AIDefaultsPanel() {
     });
     setSaving(false);
     setSaved(true);
+    toast.success("AI defaults saved");
     setTimeout(() => setSaved(false), 2500);
   }
 

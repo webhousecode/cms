@@ -2,6 +2,7 @@
 
 import { useState, useEffect, FormEvent } from "react";
 import { Check, Send, AlertCircle, ExternalLink, Mail } from "lucide-react";
+import { toast } from "sonner";
 
 interface EmailConfig {
   resendApiKey: string;
@@ -79,6 +80,7 @@ export function EmailSettingsPanel() {
       });
       setEditing({});
       setSaved(true);
+      toast.success("Email settings saved");
       setTimeout(() => setSaved(false), 2500);
     }
     setSaving(false);
@@ -99,8 +101,14 @@ export function EmailSettingsPanel() {
         ok: res.ok,
         message: res.ok ? "Test email sent!" : data.error ?? "Failed to send",
       });
+      if (res.ok) {
+        toast.success("Test email sent");
+      } else {
+        toast.error("Failed to send test email");
+      }
     } catch {
       setTestResult({ ok: false, message: "Network error" });
+      toast.error("Failed to send test email");
     } finally {
       setTesting(false);
     }

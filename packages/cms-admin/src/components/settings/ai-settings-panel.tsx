@@ -2,6 +2,7 @@
 
 import { useState, useEffect, FormEvent } from "react";
 import { Sparkles, Check, ExternalLink } from "lucide-react";
+import { toast } from "sonner";
 import { SectionHeading } from "@/components/ui/section-heading";
 
 interface AiConfigMasked {
@@ -77,6 +78,7 @@ export function AISettingsPanel() {
       setConfig(data);
       setEditing({});
       setSaved(true);
+      toast.success("AI settings saved");
       setTimeout(() => setSaved(false), 2500);
     }
     setSaving(false);

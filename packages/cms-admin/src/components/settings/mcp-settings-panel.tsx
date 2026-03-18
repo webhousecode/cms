@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Check, Copy, Plus, Trash2, Key, RefreshCw, Server, Power, PowerOff, X, Pencil } from "lucide-react";
+import { toast } from "sonner";
 import { SectionHeading } from "@/components/ui/section-heading";
 
 interface McpApiKeyMasked {
@@ -102,6 +103,7 @@ export function MCPSettingsPanel() {
       setNewLabel("");
       setNewKey("");
       setNewScopes([...ALL_SCOPES]);
+      toast.success("API key created");
     }
     setAdding(false);
   }
@@ -119,6 +121,7 @@ export function MCPSettingsPanel() {
       setError(data.error ?? "Failed to remove key");
     } else {
       setConfig(data);
+      toast.success("API key removed");
     }
     setRemoving(null);
   }

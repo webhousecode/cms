@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { UserPlus, Trash2, Copy, Check, Mail, Shield, Pencil, Eye, Clock } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { SectionHeading } from "@/components/ui/section-heading";
@@ -179,6 +180,7 @@ export function TeamPanel() {
       const link = `${window.location.origin}/admin/invite/${data.invitation.token}`;
       setLastInviteLink(link);
       setEmailStatus({ sent: data.emailSent ?? false, error: data.emailError });
+      toast.success("Invitation sent", { description: inviteEmail.trim() });
       setInviteEmail("");
       load();
     } catch {
@@ -200,12 +202,14 @@ export function TeamPanel() {
   async function handleDeleteUser(userId: string) {
     await fetch(`/api/admin/users/${userId}`, { method: "DELETE" });
     setConfirmDeleteId(null);
+    toast.success("User removed");
     load();
   }
 
   async function handleRevokeInvite(invId: string) {
     await fetch(`/api/admin/invitations/${invId}`, { method: "DELETE" });
     setConfirmRevokeId(null);
+    toast.success("Invitation revoked");
     load();
   }
 

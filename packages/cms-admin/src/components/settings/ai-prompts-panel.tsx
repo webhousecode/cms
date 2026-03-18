@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Loader2, RotateCcw, Save, Copy, Check } from "lucide-react";
+import { toast } from "sonner";
 import { SectionHeading } from "@/components/ui/section-heading";
 
 interface PromptDef {
@@ -49,6 +50,7 @@ export function AIPromptsPanel() {
         const data = (await res.json()) as { prompts: PromptDef[] };
         setPrompts(data.prompts);
         setSaved(true);
+        toast.success("Prompts saved");
         setTimeout(() => setSaved(false), 2000);
       }
     } catch {

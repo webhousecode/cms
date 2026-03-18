@@ -3,6 +3,7 @@
 import { useState, useEffect, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Eye, EyeOff, AlertTriangle, Copy, RefreshCw, Zap, Send } from "lucide-react";
+import { toast } from "sonner";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { SectionHeading } from "@/components/ui/section-heading";
 
@@ -139,7 +140,7 @@ function ProfileSection() {
 			});
 			const d = (await res.json()) as { error?: string };
 			if (!res.ok) { setError(d.error ?? "Save failed"); }
-			else { setSaved(true); setTimeout(() => setSaved(false), 2500); }
+			else { setSaved(true); toast.success("Profile saved"); setTimeout(() => setSaved(false), 2500); }
 		} catch (err) {
 			console.error("[saveProfile] error:", err);
 			setError(`Save failed: ${err instanceof Error ? err.message : String(err)}`);
@@ -269,6 +270,7 @@ function SiteSection() {
 					}
 				}
 				setSaved(true);
+				toast.success("Site settings saved");
 				setTimeout(() => setSaved(false), 2500);
 				window.dispatchEvent(new CustomEvent("cms:site-config-updated", { detail: d }));
 				router.refresh();
@@ -847,8 +849,8 @@ export function PasswordChangePanel() {
 				body: JSON.stringify({ currentPassword: curPw, newPassword: newPw }),
 			});
 			const d = (await res.json()) as { error?: string };
-			if (!res.ok) { setPwError(d.error ?? "Failed"); }
-			else { setPwSaved(true); setCurPw(""); setNewPw(""); setTimeout(() => setPwSaved(false), 2500); }
+			if (!res.ok) { setPwError(d.error ?? "Failed"); toast.error("Failed to change password"); }
+			else { setPwSaved(true); setCurPw(""); setNewPw(""); toast.success("Password changed"); setTimeout(() => setPwSaved(false), 2500); }
 		} catch {
 			setPwError("Network error — could not save");
 		} finally {
@@ -925,6 +927,7 @@ function SchedulerNotificationsSection() {
 		});
 		setSaving(false);
 		setSaved(true);
+		toast.success("Notification settings saved");
 		setTimeout(() => setSaved(false), 2000);
 	}
 
@@ -946,9 +949,16 @@ function SchedulerNotificationsSection() {
 				headers: { "Content-Type": "application/json" },
 				body: JSON.stringify(body),
 			});
-			setTestResult(res.ok ? "sent" : `failed (${res.status})`);
+			if (res.ok) {
+				setTestResult("sent");
+				toast.success("Test notification sent");
+			} else {
+				setTestResult(`failed (${res.status})`);
+				toast.error("Webhook test failed");
+			}
 		} catch (err) {
 			setTestResult(`error: ${err}`);
+			toast.error("Webhook test failed");
 		}
 		setTesting(false);
 	}
