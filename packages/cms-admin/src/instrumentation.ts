@@ -40,6 +40,7 @@ export async function register() {
       const { readSiteConfigForSite } = await import("./lib/site-config");
       const { appendSchedulerEvents } = await import("./lib/scheduler-log");
       const { getSiteDataDir } = await import("./lib/site-paths");
+      const { emitSchedulerEvents } = await import("./lib/scheduler-bus");
 
       for (const { cms, config, orgId, siteId } of sites) {
         const collections = config.collections.map((c: any) => c.name);
@@ -50,14 +51,21 @@ export async function register() {
           if (pub.length > 0) console.log(`[cron:${orgId}/${siteId}] auto-published ${pub.length}:`, pub.map((p: any) => `${p.collection}/${p.slug}`).join(", "));
           if (unpub.length > 0) console.log(`[cron:${orgId}/${siteId}] auto-unpublished ${unpub.length}:`, unpub.map((p: any) => `${p.collection}/${p.slug}`).join(", "));
 
-          // Write to scheduler log for live UI notifications
+          // Push to SSE bus for instant UI updates + write to log file for history
+          const now = new Date().toISOString();
+          const logEvents = actions.map((a: any, i: number) => ({
+            id: `evt-${Date.now()}-${i}`,
+            collection: a.collection,
+            slug: a.slug,
+            action: a.action as "published" | "unpublished",
+            title: a.title ?? a.slug,
+            timestamp: now,
+          }));
+          emitSchedulerEvents(logEvents);
           try {
             const dataDir = await getSiteDataDir(orgId, siteId);
             if (dataDir) {
-              await appendSchedulerEvents(
-                actions.map((a: any) => ({ collection: a.collection, slug: a.slug, action: a.action, title: a.title ?? a.slug })),
-                dataDir,
-              );
+              await appendSchedulerEvents(logEvents, dataDir);
             }
           } catch { /* non-critical */ }
 
