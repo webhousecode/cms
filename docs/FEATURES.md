@@ -78,6 +78,7 @@
 | F59 | [Passwordless Auth](#f59-passwordless-auth) | Idea | [docs/features/F59-passwordless-auth.md](features/F59-passwordless-auth.md) |
 | F60 | [Reliable Scheduled Tasks](#f60-reliable-scheduled-tasks) | Planned | [docs/features/F60-reliable-scheduler.md](features/F60-reliable-scheduler.md) |
 | F61 | [Activity Log](#f61-activity-log) | Planned | [docs/features/F61-activity-log.md](features/F61-activity-log.md) |
+| F62 | [Directory Sync](#f62-directory-sync) | Planned | [docs/features/F62-directory-sync.md](features/F62-directory-sync.md) |
 
 ---
 
@@ -263,3 +264,6 @@ Discord-style passwordless login. Passkeys (WebAuthn) for biometric login via Fa
 
 ## F61 — Activity Log
 Audit trail for all CMS admin actions. Logs document CRUD, publish/unpublish, media uploads, agent runs, team changes, login, settings updates, and scheduler events. Stored as append-only JSONL per site (`_data/activity-log.jsonl`). Admin UI with filterable activity feed page. Each entry records who (user/agent/scheduler), what (action), when (timestamp), and which target (document/media/settings). Integrates with Calendar for historical publish visibility and Dashboard for recent activity widget. Auto-rotates at 10K lines.
+
+## F62 — Directory Sync (AD / SCIM / External User Sources)
+Connect CMS users to external identity directories. Three tiers: (1) JIT provisioning — auto-create users on first SSO login from SAML/OIDC assertion attributes, (2) SCIM 2.0 server — identity providers (Azure AD/Entra ID, Okta, Google Workspace, OneLogin, JumpCloud) push user/group changes to the CMS in near real-time via standardized REST API, enabling automatic provisioning/deprovisioning and group-to-role mapping, (3) Directory API sync — periodic pull from Microsoft Graph or Google Directory API for enriched data (department, manager, org structure). SCIM is the enterprise standard used by Notion, Slack, Figma, Linear. Settings UI with SCIM endpoint/token, group→role mapping, and provisioning log.
