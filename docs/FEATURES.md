@@ -81,6 +81,7 @@
 | F62 | [Directory Sync](#f62-directory-sync) | Planned | [docs/features/F62-directory-sync.md](features/F62-directory-sync.md) |
 | F63 | [Shared Component Library](#f63-shared-components) | Planned | [docs/features/F63-shared-components.md](features/F63-shared-components.md) |
 | F64 | [Toast Notifications System](#f64-toast-notifications-system) | In progress | [docs/features/F64-toast-notifications.md](features/F64-toast-notifications.md) |
+| F65 | [Agent Pipeline E2E Tests](#f65-agent-pipeline-tests) | Planned | [docs/features/F65-agent-pipeline-tests.md](features/F65-agent-pipeline-tests.md) |
 
 ---
 
@@ -275,3 +276,6 @@ Consolidate ~1,965 inline style objects and 5 local-only components into a share
 
 ## F64 — Toast Notifications System
 Comprehensive toast notification system with event-driven feedback across all CMS admin actions. Phase 1 (complete): Sonner with dark theme, SSE push from scheduler daemon, custom Web Audio notification sounds, toasts on document CRUD, media upload, interactives upload, settings saves, team invitations. Phase 2 (planned): AI generation/rewrite toasts, link checker result summary, undo-trash button, error toasts (network/conflict/auth), agent run complete, brand voice interview complete, notification preferences per user (stored in user-state), Browser Notification API for background tabs.
+
+## F65 — Agent Pipeline E2E Tests
+Playwright end-to-end tests covering the full AI agent lifecycle: cockpit settings → agent config → schedule/run now → mocked LLM call → curation queue → approve/reject/edit → published document. Mock LLM fixture intercepts Anthropic/OpenAI API calls for $0 test cost. 17 test files across 4 suites: agents (CRUD, run now, scheduled, budget, autonomy), curation (queue, approve, reject, edit, alternatives, purge), cockpit (settings, budget bar, status monitor), pipeline (full roundtrip, scheduled roundtrip). Ship blocker — if this pipeline breaks silently, AI content stops flowing.
