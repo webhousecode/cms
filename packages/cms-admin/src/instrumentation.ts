@@ -2,7 +2,8 @@
  * Next.js instrumentation hook — runs once on server startup.
  * 1. Auto-publishes scheduled documents every minute.
  * 2. Runs due AI agents based on their schedules every 5 minutes.
- * 3. Runs link checker on a configurable schedule (LINK_CHECK_SCHEDULE=daily|weekly).
+ * 3. Updates calendar snapshot every 5 minutes.
+ * 4. Runs link checker on a configurable schedule (LINK_CHECK_SCHEDULE=daily|weekly).
  */
 export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
@@ -48,7 +49,20 @@ export async function register() {
   setTimeout(agentTick, 2 * 60_000);
   setInterval(agentTick, 5 * 60_000);
 
-  // ── 3. Link checker (daily or weekly, opt-in via env) ─────────
+  // ── 3. Calendar snapshot (every 5 minutes) ──────────────────
+  async function snapshotTick() {
+    try {
+      const { updateScheduledSnapshot } = await import("./lib/scheduled-snapshot");
+      await updateScheduledSnapshot();
+    } catch (err) {
+      console.error("[snapshot] error:", err);
+    }
+  }
+
+  setTimeout(snapshotTick, 15_000); // First snapshot 15s after startup
+  setInterval(snapshotTick, 5 * 60_000);
+
+  // ── 4. Link checker (daily or weekly, opt-in via env) ─────────
   const linkCheckSchedule = process.env.LINK_CHECK_SCHEDULE; // "daily" | "weekly"
   if (linkCheckSchedule === "daily" || linkCheckSchedule === "weekly") {
     async function linkCheckTick() {
