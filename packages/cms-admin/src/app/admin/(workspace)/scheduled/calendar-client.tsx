@@ -309,16 +309,15 @@ function MonthView({ year, month, todayKey, selectedDate, eventsMap, onSelectDat
 
 /* ─── Week View (time grid) ───────────────────────────────────── */
 
-const VIEW_START = 7;   // visible range start
-const VIEW_END = 18;    // visible range end
-const VIEW_HOURS = VIEW_END - VIEW_START; // 11 hours visible
+const TOTAL_HOURS = 24; // full day 00:00-24:00
+const VIEW_HOURS = 11;  // visible window (07:00-18:00 default)
 const WEEKEND_BG = "#262627";
 
 function WeekView({ selectedDate, todayKey, eventsMap, onSelectDate }: {
   selectedDate: string; todayKey: string;
   eventsMap: Map<string, ScheduledEvent[]>; onSelectDate: (key: string) => void;
 }) {
-  const scrollRef = useRef<HTMLDivElement>(null); // kept for future scroll if needed
+  const scrollRef = useRef<HTMLDivElement>(null);
   const [nowMinutes, setNowMinutes] = useState(() => {
     const n = new Date();
     return n.getHours() * 60 + n.getMinutes();
@@ -349,6 +348,16 @@ function WeekView({ selectedDate, todayKey, eventsMap, onSelectDate }: {
 
   const HOUR_HEIGHT = 52;
 
+  // Auto-scroll to center NOW in viewport (or 07:00 if outside business hours)
+  useEffect(() => {
+    if (!scrollRef.current) return;
+    const nowHour = nowMinutes / 60;
+    const centerHour = nowHour >= 7 && nowHour <= 18 ? nowHour : 7;
+    const scrollTarget = (centerHour - VIEW_HOURS / 2) * HOUR_HEIGHT;
+    scrollRef.current.scrollTop = Math.max(0, scrollTarget);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Update NOW marker every minute
   useEffect(() => {
     const timer = setInterval(() => {
@@ -358,8 +367,9 @@ function WeekView({ selectedDate, todayKey, eventsMap, onSelectDate }: {
     return () => clearInterval(timer);
   }, []);
 
-  const totalHeight = VIEW_HOURS * HOUR_HEIGHT;
-  const nowY = (nowMinutes / 60 - VIEW_START) * HOUR_HEIGHT;
+  const totalHeight = TOTAL_HOURS * HOUR_HEIGHT;
+  const viewportHeight = VIEW_HOURS * HOUR_HEIGHT;
+  const nowY = (nowMinutes / 60) * HOUR_HEIGHT;
   const hasToday = days.some((d) => d.key === todayKey);
 
   // Find all-day events (events without a specific time or recurring)
@@ -407,12 +417,12 @@ function WeekView({ selectedDate, todayKey, eventsMap, onSelectDate }: {
       {/* Time grid — scrollable */}
       <div
         ref={scrollRef}
-        style={{ position: "relative" }}
+        style={{ height: `${viewportHeight}px`, overflowY: "auto", position: "relative" }}
       >
         <div style={{ display: "grid", gridTemplateColumns: "3rem repeat(7, 1fr)", position: "relative", height: `${totalHeight}px` }}>
           {/* Hour labels */}
-          {Array.from({ length: VIEW_HOURS }, (_, i) => {
-            const hour = VIEW_START + i;
+          {Array.from({ length: TOTAL_HOURS }, (_, i) => {
+            const hour = i;
             return (
               <div
                 key={`h${hour}`}
@@ -451,7 +461,7 @@ function WeekView({ selectedDate, todayKey, eventsMap, onSelectDate }: {
               }}
             >
               {/* Hour grid lines */}
-              {Array.from({ length: VIEW_HOURS }, (_, i) => (
+              {Array.from({ length: TOTAL_HOURS }, (_, i) => (
                 <div
                   key={i}
                   style={{
@@ -469,7 +479,7 @@ function WeekView({ selectedDate, todayKey, eventsMap, onSelectDate }: {
               {(eventsMap.get(day.key) ?? []).map((evt) => {
                 const hour = parseInt(evt.date.slice(11, 13)) || 0;
                 const minute = parseInt(evt.date.slice(14, 16)) || 0;
-                const topPx = (hour + minute / 60 - VIEW_START) * HOUR_HEIGHT;
+                const topPx = (hour + minute / 60) * HOUR_HEIGHT;
                 const color = EVENT_COLORS[evt.type];
                 return (
                   <Link
