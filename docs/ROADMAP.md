@@ -1,6 +1,6 @@
 # @webhouse/cms — Roadmap
 
-**Last updated:** 2026-03-17
+**Last updated:** 2026-03-18
 
 ---
 
@@ -113,6 +113,8 @@ _Unique selling points and advanced features._
 | 31c | **F68 Shop Plugin** | XL | Stripe e-commerce — products, cart, checkout, subscriptions, gated content, AI chat integration |
 | 31d | **F69 Social Media Plugin** | Large | AI social media bank — FB/IG/LinkedIn drafts, GBP auto-posting, hashtag bank, seasonal calendar |
 | 31e | **F71 Multi-Player Editing** | Small (v1) | Optimistic document locking — prevents concurrent edit data loss. v2 (real-time CRDT) is Large. |
+| 31f | **F73 Troubleshooting Guide** | Small | In-app searchable help — common issues with solutions, reduces support burden |
+| 31g | **F74 System Status Page** | Small | Public status page with health checks, status badges, builds trust |
 
 ### Tier 4 — Growth & Enterprise (v2.0+)
 
