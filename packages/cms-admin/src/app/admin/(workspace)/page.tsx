@@ -1,7 +1,8 @@
 import { getAdminCms, getAdminConfig, getActiveSiteInfo } from "@/lib/cms";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Clock, Calendar } from "lucide-react";
+import { Clock, Calendar, Image, Zap } from "lucide-react";
+import { getMediaAdapter } from "@/lib/media";
 
 export default async function AdminDashboard() {
   // Multi-site with no site selected → go to sites dashboard
@@ -43,6 +44,15 @@ export default async function AdminDashboard() {
       }
     }
   }
+  // Media + Interactives counts (parallel, non-blocking)
+  const mediaAdapter = await getMediaAdapter();
+  const [mediaFiles, intsList] = await Promise.all([
+    mediaAdapter.listMedia().catch(() => []),
+    mediaAdapter.listInteractives().catch(() => []),
+  ]);
+  const mediaCount = mediaFiles.filter((m) => (m as any).status !== "trashed").length;
+  const intsCount = intsList.filter((m) => m.status !== "trashed").length;
+
   // Sort upcoming by date
   upcomingItems.sort((a, b) => {
     const aDate = a.publishAt ?? a.unpublishAt ?? "";
@@ -118,6 +128,38 @@ export default async function AdminDashboard() {
           ) : (
             <p className="text-xs text-muted-foreground">No upcoming scheduled content</p>
           )}
+        </Link>
+
+        {/* Media card */}
+        <Link
+          href="/admin/media"
+          className="group block p-5 rounded-xl border border-border bg-card hover:border-primary/40 hover:bg-secondary transition-all duration-200"
+        >
+          <div className="flex items-start justify-between mb-4">
+            <p className="font-mono text-xs text-muted-foreground tracking-widest uppercase">media</p>
+            <span className="text-2xl font-bold text-primary">{mediaCount}</span>
+          </div>
+          <p className="font-semibold text-foreground mb-3 group-hover:text-primary transition-colors flex items-center gap-2">
+            <Image className="w-4 h-4" />
+            Media Library
+          </p>
+          <p className="text-xs text-muted-foreground">Images, videos, audio, files</p>
+        </Link>
+
+        {/* Interactives card */}
+        <Link
+          href="/admin/interactives"
+          className="group block p-5 rounded-xl border border-border bg-card hover:border-primary/40 hover:bg-secondary transition-all duration-200"
+        >
+          <div className="flex items-start justify-between mb-4">
+            <p className="font-mono text-xs text-muted-foreground tracking-widest uppercase">interactives</p>
+            <span className="text-2xl font-bold text-primary">{intsCount}</span>
+          </div>
+          <p className="font-semibold text-foreground mb-3 group-hover:text-primary transition-colors flex items-center gap-2">
+            <Zap className="w-4 h-4" />
+            Interactives
+          </p>
+          <p className="text-xs text-muted-foreground">Charts, demos, calculators</p>
         </Link>
       </div>
     </div>
