@@ -245,23 +245,6 @@ export default function SitesDashboard() {
                   <MoreVertical style={{ width: "0.875rem", height: "0.875rem", color: "var(--muted-foreground)" }} />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-44">
-                  <DropdownMenuItem onClick={async (e) => {
-                    e.stopPropagation();
-                    persistSiteChoice(site.id);
-                    if (site.previewUrl) {
-                      router.push(`/admin/preview?url=${encodeURIComponent(site.previewUrl)}`);
-                    } else {
-                      // Start preview server for static sites
-                      const res = await fetch("/api/preview-serve", { method: "POST" });
-                      if (res.ok) {
-                        const { url } = await res.json() as { url: string };
-                        router.push(`/admin/preview?url=${encodeURIComponent(url)}`);
-                      }
-                    }
-                  }}>
-                    <Eye className="mr-2 h-4 w-4 text-muted-foreground" />
-                    Preview
-                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(site.id); }}>
                     <Copy className="mr-2 h-4 w-4 text-muted-foreground" />
                     Copy site ID
@@ -283,7 +266,34 @@ export default function SitesDashboard() {
               </p>
             )}
 
-            <div style={{ display: "flex", gap: "0.375rem" }}>
+            <div style={{ display: "flex", gap: "0.375rem", alignItems: "center" }}>
+              <button
+                type="button"
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  persistSiteChoice(site.id);
+                  if (site.previewUrl) {
+                    router.push(`/admin/preview?url=${encodeURIComponent(site.previewUrl)}`);
+                  } else {
+                    const res = await fetch("/api/preview-serve", { method: "POST" });
+                    if (res.ok) {
+                      const { url } = await res.json() as { url: string };
+                      router.push(`/admin/preview?url=${encodeURIComponent(url)}`);
+                    }
+                  }
+                }}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: "0.3rem",
+                  fontSize: "0.65rem", fontWeight: 600, letterSpacing: "0.03em",
+                  padding: "0.2rem 0.5rem", borderRadius: "4px",
+                  background: "color-mix(in srgb, var(--primary) 15%, transparent)",
+                  color: "var(--primary)", textTransform: "uppercase",
+                  border: "none", cursor: "pointer", transition: "background 0.2s",
+                }}
+              >
+                <Eye style={{ width: "0.7rem", height: "0.7rem" }} />
+                Preview
+              </button>
               <span style={{
                 fontSize: "0.65rem", fontWeight: 600, letterSpacing: "0.03em",
                 padding: "0.2rem 0.5rem", borderRadius: "4px",
