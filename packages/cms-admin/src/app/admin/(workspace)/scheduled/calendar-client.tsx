@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Calendar, ChevronLeft, ChevronRight, Globe, FileText, Check } from "lucide-react";
 import { TabTitle } from "@/lib/tabs-context";
@@ -307,14 +307,25 @@ function MonthView({ year, month, todayKey, selectedDate, eventsMap, onSelectDat
   );
 }
 
-/* ─── Week View ──────────────────────────────────────────────── */
+/* ─── Week View (time grid) ───────────────────────────────────── */
+
+const HOUR_HEIGHT = 60; // px per hour
+const START_HOUR = 0;
+const END_HOUR = 24;
+const WEEKEND_BG = "#262627";
 
 function WeekView({ selectedDate, todayKey, eventsMap, onSelectDate }: {
   selectedDate: string; todayKey: string;
   eventsMap: Map<string, ScheduledEvent[]>; onSelectDate: (key: string) => void;
 }) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [nowMinutes, setNowMinutes] = useState(() => {
+    const n = new Date();
+    return n.getHours() * 60 + n.getMinutes();
+  });
+
   const monday = getMonday(new Date(selectedDate));
-  const days: { key: string; label: string; dayNum: number }[] = [];
+  const days: { key: string; label: string; dayNum: number; monthName: string; isWeekend: boolean }[] = [];
   for (let i = 0; i < 7; i++) {
     const d = new Date(monday);
     d.setDate(monday.getDate() + i);
@@ -322,55 +333,232 @@ function WeekView({ selectedDate, todayKey, eventsMap, onSelectDate }: {
       key: dateKey(d.getFullYear(), d.getMonth(), d.getDate()),
       label: WEEKDAYS[i],
       dayNum: d.getDate(),
+      monthName: MONTHS[d.getMonth()].slice(0, 3),
+      isWeekend: i >= 5,
     });
   }
 
+  // Get week number
+  const weekNum = (() => {
+    const d = new Date(monday);
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() + 3 - ((d.getDay() + 6) % 7));
+    const yearStart = new Date(d.getFullYear(), 0, 4);
+    return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + yearStart.getDay() + 1) / 7);
+  })();
+
+  // Auto-scroll to NOW on mount
+  useEffect(() => {
+    if (!scrollRef.current) return;
+    const scrollTarget = (nowMinutes / 60 - 3) * HOUR_HEIGHT; // NOW centered ~3h from top
+    scrollRef.current.scrollTop = Math.max(0, scrollTarget);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Update NOW marker every minute
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const n = new Date();
+      setNowMinutes(n.getHours() * 60 + n.getMinutes());
+    }, 60_000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const totalHeight = (END_HOUR - START_HOUR) * HOUR_HEIGHT;
+  const nowY = (nowMinutes / 60 - START_HOUR) * HOUR_HEIGHT;
+  const hasToday = days.some((d) => d.key === todayKey);
+
+  // Find all-day events (events without a specific time or recurring)
+  // For now, all events have times so this section is empty — prepared for agents/recurring
+
   return (
-    <div className="grid grid-cols-7 border-t border-l border-border">
-      {days.map((day) => {
-        const dayEvents = eventsMap.get(day.key) ?? [];
-        const isToday = day.key === todayKey;
-        return (
-          <button
-            key={day.key}
-            type="button"
-            onClick={() => onSelectDate(day.key)}
-            className="border-r border-b border-border text-left transition-colors hover:bg-secondary/50"
-            style={{ minHeight: "16rem", padding: "0.5rem" }}
-          >
-            <div className="flex items-center gap-1 mb-2">
-              <span className="text-[10px] text-muted-foreground font-medium uppercase">{day.label}</span>
+    <div>
+      {/* Header: week number + day columns */}
+      <div style={{ display: "grid", gridTemplateColumns: "3rem repeat(7, 1fr)", borderBottom: "1px solid var(--border)" }}>
+        <div style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", padding: "0.5rem 0", textAlign: "center", fontFamily: "monospace" }}>
+          W{weekNum}
+        </div>
+        {days.map((day) => {
+          const isToday = day.key === todayKey;
+          return (
+            <button
+              key={day.key}
+              type="button"
+              onClick={() => onSelectDate(day.key)}
+              style={{
+                padding: "0.4rem 0",
+                textAlign: "center",
+                borderLeft: "1px solid var(--border)",
+                background: day.isWeekend ? WEEKEND_BG : "transparent",
+              }}
+              className="hover:bg-secondary/50 transition-colors"
+            >
+              <span style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textTransform: "uppercase" }}>{day.label} </span>
               <span
-                className="text-xs font-medium inline-flex items-center justify-center"
                 style={{
-                  width: "1.5rem", height: "1.5rem", borderRadius: "9999px",
-                  ...(isToday ? { background: "var(--primary)", color: "var(--primary-foreground)" } : { color: "var(--foreground)" }),
+                  fontSize: "0.8rem",
+                  fontWeight: 600,
+                  ...(isToday
+                    ? { background: "var(--primary)", color: "var(--primary-foreground)", borderRadius: "9999px", padding: "0.15rem 0.4rem" }
+                    : { color: "var(--foreground)" }),
                 }}
               >
                 {day.dayNum}
               </span>
-            </div>
-            <div className="space-y-1">
-              {dayEvents.map((evt) => (
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Time grid — scrollable */}
+      <div
+        ref={scrollRef}
+        style={{ height: `${6 * HOUR_HEIGHT}px`, overflowY: "auto", position: "relative" }}
+      >
+        <div style={{ display: "grid", gridTemplateColumns: "3rem repeat(7, 1fr)", position: "relative", height: `${totalHeight}px` }}>
+          {/* Hour labels */}
+          {Array.from({ length: END_HOUR - START_HOUR }, (_, i) => {
+            const hour = START_HOUR + i;
+            return (
+              <div
+                key={`h${hour}`}
+                style={{
+                  position: "absolute",
+                  top: i * HOUR_HEIGHT,
+                  left: 0,
+                  width: "3rem",
+                  height: HOUR_HEIGHT,
+                  borderTop: "1px solid var(--border)",
+                  fontSize: "0.6rem",
+                  color: "var(--muted-foreground)",
+                  textAlign: "right",
+                  paddingRight: "0.4rem",
+                  paddingTop: "0.15rem",
+                  fontFamily: "monospace",
+                }}
+              >
+                {String(hour).padStart(2, "0")}.00
+              </div>
+            );
+          })}
+
+          {/* Day columns */}
+          {days.map((day, colIdx) => (
+            <div
+              key={day.key}
+              style={{
+                position: "absolute",
+                top: 0,
+                left: `calc(3rem + ${colIdx} * ((100% - 3rem) / 7))`,
+                width: `calc((100% - 3rem) / 7)`,
+                height: totalHeight,
+                borderLeft: "1px solid var(--border)",
+                background: day.isWeekend ? WEEKEND_BG : "transparent",
+              }}
+            >
+              {/* Hour grid lines */}
+              {Array.from({ length: END_HOUR - START_HOUR }, (_, i) => (
                 <div
-                  key={evt.id}
-                  className="truncate rounded px-1.5 py-0.5"
-                  title={`${evt.type === "publish" ? "Publish" : "Unpublish"}: ${evt.title}\n${evt.subtitle} · ${evt.date.slice(11, 16)}${evt.excerpt ? `\n${evt.excerpt}` : ""}`}
+                  key={i}
                   style={{
-                    fontSize: "0.65rem",
-                    lineHeight: "1.2rem",
-                    background: `color-mix(in srgb, ${EVENT_COLORS[evt.type]} 15%, transparent)`,
-                    color: EVENT_COLORS[evt.type],
-                    borderLeft: `2px solid ${EVENT_COLORS[evt.type]}`,
+                    position: "absolute",
+                    top: i * HOUR_HEIGHT,
+                    left: 0,
+                    right: 0,
+                    borderTop: "1px solid var(--border)",
+                    height: HOUR_HEIGHT,
                   }}
-                >
-                  {evt.date.slice(11, 16)} {evt.title}
-                </div>
+                />
               ))}
+
+              {/* Events */}
+              {(eventsMap.get(day.key) ?? []).map((evt) => {
+                const hour = parseInt(evt.date.slice(11, 13)) || 0;
+                const minute = parseInt(evt.date.slice(14, 16)) || 0;
+                const topPx = (hour + minute / 60 - START_HOUR) * HOUR_HEIGHT;
+                const color = EVENT_COLORS[evt.type];
+                return (
+                  <Link
+                    key={evt.id}
+                    href={evt.href}
+                    style={{
+                      position: "absolute",
+                      top: topPx,
+                      left: "2px",
+                      right: "2px",
+                      height: `${HOUR_HEIGHT * 0.25}px`,
+                      minHeight: "18px",
+                      borderRadius: "4px",
+                      padding: "1px 4px",
+                      fontSize: "0.6rem",
+                      lineHeight: "1rem",
+                      overflow: "hidden",
+                      whiteSpace: "nowrap",
+                      textOverflow: "ellipsis",
+                      background: `color-mix(in srgb, ${color} 20%, transparent)`,
+                      borderLeft: `3px solid ${color}`,
+                      color: color,
+                      textDecoration: "none",
+                      zIndex: 10,
+                    }}
+                    title={`${evt.type === "publish" ? "Publish" : "Unpublish"}: ${evt.title}\n${evt.date.slice(11, 16)}${evt.excerpt ? `\n${evt.excerpt}` : ""}`}
+                  >
+                    {evt.date.slice(11, 16)} {evt.title}
+                  </Link>
+                );
+              })}
             </div>
-          </button>
-        );
-      })}
+          ))}
+
+          {/* NOW marker — red line across today's column */}
+          {hasToday && (
+            <>
+              {/* Time label */}
+              <div
+                style={{
+                  position: "absolute",
+                  top: nowY - 8,
+                  left: 0,
+                  width: "3rem",
+                  fontSize: "0.6rem",
+                  fontWeight: 700,
+                  color: "rgb(239 68 68)",
+                  textAlign: "right",
+                  paddingRight: "0.4rem",
+                  fontFamily: "monospace",
+                  zIndex: 20,
+                }}
+              >
+                {String(Math.floor(nowMinutes / 60)).padStart(2, "0")}.{String(nowMinutes % 60).padStart(2, "0")}
+              </div>
+              {/* Red line + dot */}
+              <div
+                style={{
+                  position: "absolute",
+                  top: nowY,
+                  left: "3rem",
+                  right: 0,
+                  height: "2px",
+                  background: "rgb(239 68 68)",
+                  zIndex: 20,
+                  pointerEvents: "none",
+                }}
+              >
+                {/* Dot on the left edge */}
+                <div style={{
+                  position: "absolute",
+                  left: `calc(${days.findIndex((d) => d.key === todayKey)} * (100% / 7))`,
+                  top: "-4px",
+                  width: "10px",
+                  height: "10px",
+                  borderRadius: "9999px",
+                  background: "rgb(239 68 68)",
+                }} />
+              </div>
+            </>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
