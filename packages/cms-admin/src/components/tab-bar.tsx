@@ -2,7 +2,7 @@
 
 import {
   X, Plus, LayoutDashboard, AlertTriangle, Image, Bot, Calendar,
-  ListChecks, Terminal, Settings2, BarChart3, Link2, Trash2,
+  ListChecks, Cpu, Settings2, BarChart3, Link2, Trash2,
   FileText, Globe, Puzzle, UserCircle, FolderOpen,
 } from "lucide-react";
 
@@ -12,7 +12,7 @@ const TAB_ICONS: Record<string, typeof LayoutDashboard> = {
   "/admin/agents": Bot,
   "/admin/scheduled": Calendar,
   "/admin/curation": ListChecks,
-  "/admin/command": Terminal,
+  "/admin/command": Cpu,
   "/admin/settings": Settings2,
   "/admin/performance": BarChart3,
   "/admin/link-checker": Link2,
