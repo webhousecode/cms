@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { Github } from "lucide-react";
+import { Github, AlertTriangle } from "lucide-react";
 
 /**
  * Full-page branded gate screen — same visual style as login/invite pages.
@@ -128,6 +128,58 @@ export function ConnectGitHubGate({ message, showButton = true }: { message?: st
 }
 
 /** Gate: Redirect user to a site they have access to (sets cookies client-side) */
+export function GitHubErrorGate({ message }: { message: string }) {
+  const isRateLimit = message.includes("403");
+  const isBadToken = message.includes("401") || message.includes("bad token");
+
+  function switchSite(siteId: string) {
+    document.cookie = `cms-active-site=${encodeURIComponent(siteId)};path=/;max-age=31536000;samesite=lax`;
+    window.location.href = "/admin";
+  }
+
+  return (
+    <Shell>
+      <div style={{ textAlign: "center", maxWidth: "420px" }}>
+        <AlertTriangle style={{ width: "2.5rem", height: "2.5rem", color: "rgb(234 179 8)", margin: "0 auto 1rem" }} />
+        <h1 style={{ fontSize: "1.25rem", fontWeight: 700, marginBottom: "0.5rem" }}>
+          {isRateLimit ? "GitHub API Rate Limited" : isBadToken ? "GitHub Token Expired" : "GitHub Connection Error"}
+        </h1>
+        <p style={{ fontSize: "0.85rem", color: "hsl(0 0% 55%)", lineHeight: 1.6, marginBottom: "1.5rem" }}>
+          {isRateLimit
+            ? "Too many requests to GitHub API. This resets automatically within a few minutes. You can switch to a local site in the meantime."
+            : isBadToken
+            ? "The GitHub access token has expired or been revoked. Reconnect GitHub in Site Settings, or switch to another site."
+            : message}
+        </p>
+        <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center" }}>
+          <button
+            type="button"
+            onClick={() => switchSite("default")}
+            style={{
+              padding: "0.6rem 1.25rem", borderRadius: "8px",
+              background: "var(--primary)", color: "var(--primary-foreground)",
+              border: "none", fontSize: "0.85rem", fontWeight: 600, cursor: "pointer",
+            }}
+          >
+            Switch to local site
+          </button>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            style={{
+              padding: "0.6rem 1.25rem", borderRadius: "8px",
+              background: "transparent", color: "hsl(0 0% 70%)",
+              border: "1px solid hsl(0 0% 25%)", fontSize: "0.85rem", cursor: "pointer",
+            }}
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    </Shell>
+  );
+}
+
 export function SiteRedirectGate({ siteId, orgId }: { siteId: string; orgId: string }) {
   useEffect(() => {
     document.cookie = `cms-active-site=${encodeURIComponent(siteId)};path=/;max-age=31536000;samesite=lax`;

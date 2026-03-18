@@ -14,7 +14,7 @@ import { cookies } from "next/headers";
 import { getSessionUser } from "@/lib/auth";
 import { getTeamMembers } from "@/lib/team";
 import { findFirstAccessibleSite } from "@/lib/team-access";
-import { NoAccessGate, ConnectGitHubGate, SiteRedirectGate } from "@/components/gate-screen";
+import { NoAccessGate, ConnectGitHubGate, SiteRedirectGate, GitHubErrorGate } from "@/components/gate-screen";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const siteInfo = await getActiveSiteInfo();
@@ -53,16 +53,16 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   } catch (err) {
     const message = err instanceof Error ? err.message : "";
     if (message.includes("GitHub not connected")) {
-      // Only admins see "Connect GitHub" — editors should never reach this
-      // because the service token (saved by admin) should work for them.
-      // If they DO reach this, it means no admin has connected GitHub yet.
       const members = await getTeamMembers();
       const membership = session ? members.find((m) => m.userId === session.sub) : null;
       if (membership?.role === "admin") {
         return <ConnectGitHubGate />;
       }
-      // Editor/viewer without service token — admin needs to connect first
       return <ConnectGitHubGate message="An administrator needs to connect GitHub for this site before you can access it." showButton={false} />;
+    }
+    // GitHub API error (rate limit, bad token, etc.) — show recoverable error
+    if (message.includes("GitHub:")) {
+      return <GitHubErrorGate message={message} />;
     }
     throw err;
   }
