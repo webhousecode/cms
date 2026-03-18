@@ -91,6 +91,7 @@
 | F72 | [Website Screenshots](#f72-website-screenshots) | Planned | [docs/features/F72-website-screenshots.md](features/F72-website-screenshots.md) |
 | F73 | [Troubleshooting Guide](#f73-troubleshooting-guide) | Planned | [docs/features/F73-troubleshooting-guide.md](features/F73-troubleshooting-guide.md) |
 | F74 | [System Status Page](#f74-system-status-page) | Planned | [docs/features/F74-system-status-page.md](features/F74-system-status-page.md) |
+| F75 | [AI Site Builder Guide](#f75-ai-site-builder-guide) | Planned | [docs/features/F75-ai-site-builder-guide.md](features/F75-ai-site-builder-guide.md) |
 
 ---
 
@@ -315,3 +316,6 @@ In-app troubleshooting section accessible from the Help drawer. Searchable, cate
 
 ## F74 — System Status Page
 Public status page at status.webhouse.app showing health of CMS services. Heartbeat checks against `/api/cms/health` endpoint monitoring API, GitHub adapter, AI providers, MCP servers, and scheduler daemon. Color-coded status badges (operational/degraded/down). Auto-refreshes every 60s. SVG status badge endpoint for embedding in README and docs. Starts as a simple page on the landing site with client-side polling — no backend database needed.
+
+## F75 — AI Site Builder Guide (Modular Docs)
+Split the 2421-line monolithic `packages/cms/CLAUDE.md` into 20 focused module files hosted on GitHub (raw.githubusercontent.com). Slim index document (~180 lines) replaces the monolith — describes each module with a one-line summary and fetch URL. AI sessions read the index, identify relevant modules, and fetch only what's needed. Modules: getting-started, config-reference, field-types, blocks, richtext, storage-adapters, nextjs-patterns, seo, images, i18n, deployment, troubleshooting, interactives, relationships, api-reference, etc. "Quick decisions" section maps common tasks to module combos ("add a blog" → fetch 01, 02, 08, 13). Evolves F24 (AI Playbook). Works with Claude Code, Cursor, Windsurf, and any AI tool with URL fetch.
