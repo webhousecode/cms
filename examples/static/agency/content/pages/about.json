@@ -5,7 +5,9 @@
     "title": "About",
     "metaDescription": "Meridian Studio was founded in 2019 with a simple conviction: great brands deserve great craft. We are a tight-knit team of strategists, designers, and developers.",
     "heroLabel": "About Us",
-    "heroHeading": "We believe in the power of <span class=\"gradient-text\">thoughtful design</span>",
+    "heroHeadingBefore": "We believe in the power of ",
+    "heroHeadingHighlight": "thoughtful design",
+    "heroHeadingAfter": "",
     "heroIntro": "Meridian Studio was founded in 2019 with a simple conviction: great brands deserve great craft. We are a tight-knit team of strategists, designers, and developers who obsess over every detail \u2014 from the first brand brief to the final pixel.",
     "values": [
       {

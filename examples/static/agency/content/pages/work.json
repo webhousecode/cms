@@ -5,7 +5,9 @@
     "title": "Work",
     "metaDescription": "Explore our portfolio of case studies across branding, web, and app design.",
     "heroLabel": "Case Studies",
-    "heroHeading": "Our Work"
+    "heroHeadingBefore": "Our Work",
+    "heroHeadingHighlight": "",
+    "heroHeadingAfter": ""
   },
   "id": "page-work",
   "_fieldMeta": {}

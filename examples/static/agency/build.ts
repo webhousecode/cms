@@ -38,7 +38,9 @@ interface HomePageData {
   title: string;
   metaDescription: string;
   heroLabel: string;
-  heroHeading: string;
+  heroHeadingBefore: string;
+  heroHeadingHighlight: string;
+  heroHeadingAfter: string;
   heroSubtitle: string;
   heroCta: string;
   heroCtaUrl: string;
@@ -59,7 +61,9 @@ interface AboutPageData {
   title: string;
   metaDescription: string;
   heroLabel: string;
-  heroHeading: string;
+  heroHeadingBefore: string;
+  heroHeadingHighlight: string;
+  heroHeadingAfter: string;
   heroIntro: string;
   values: { title: string; description: string }[];
   teamSectionLabel: string;
@@ -74,7 +78,9 @@ interface WorkPageData {
   title: string;
   metaDescription: string;
   heroLabel: string;
-  heroHeading: string;
+  heroHeadingBefore: string;
+  heroHeadingHighlight: string;
+  heroHeadingAfter: string;
 }
 
 interface SiteData {
@@ -84,6 +90,12 @@ interface SiteData {
     email: string;
     socialLinks: { label: string; url: string }[];
   };
+}
+
+/** Assemble a heading with an optional gradient-highlighted word */
+function gradientHeading(before: string, highlight: string, after: string): string {
+  if (!highlight) return before;
+  return `${before}<span class="gradient-text">${highlight}</span>${after}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -386,7 +398,7 @@ function buildHomePage(
     <div class="max-w-5xl mx-auto text-center">
       <p class="fade-up font-heading font-600 text-xs tracking-[0.2em] uppercase text-[#999] mb-6" style="font-weight:600;">${hp.heroLabel}</p>
       <h1 class="fade-up fade-up-d1 font-heading hero-title leading-[1.08] tracking-tight mb-8" style="font-size: clamp(2.5rem, 6vw, 4.5rem); font-weight: 800;">
-        ${hp.heroHeading}
+        ${gradientHeading(hp.heroHeadingBefore, hp.heroHeadingHighlight, hp.heroHeadingAfter)}
       </h1>
       <p class="fade-up fade-up-d2 text-[#666] text-lg lg:text-xl max-w-2xl mx-auto leading-relaxed mb-10">
         ${hp.heroSubtitle}
@@ -489,7 +501,7 @@ function buildWorkListingPage(
   <section class="pt-32 pb-12 lg:pt-40 lg:pb-16 px-6 lg:px-8">
     <div class="max-w-7xl mx-auto">
       <p class="fade-up font-heading font-600 text-xs tracking-[0.2em] uppercase text-[#999] mb-4" style="font-weight:600;">${wp.heroLabel}</p>
-      <h1 class="fade-up fade-up-d1 font-heading tracking-tight" style="font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 800;">${wp.heroHeading}</h1>
+      <h1 class="fade-up fade-up-d1 font-heading tracking-tight" style="font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 800;">${gradientHeading(wp.heroHeadingBefore, wp.heroHeadingHighlight, wp.heroHeadingAfter)}</h1>
     </div>
   </section>
 
@@ -610,7 +622,7 @@ function buildAboutPage(
     <div class="max-w-4xl mx-auto text-center">
       <p class="fade-up font-heading font-600 text-xs tracking-[0.2em] uppercase text-[#999] mb-6" style="font-weight:600;">${ap.heroLabel}</p>
       <h1 class="fade-up fade-up-d1 font-heading tracking-tight mb-8" style="font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 800;">
-        ${ap.heroHeading}
+        ${gradientHeading(ap.heroHeadingBefore, ap.heroHeadingHighlight, ap.heroHeadingAfter)}
       </h1>
       <p class="fade-up fade-up-d2 text-[#666] text-lg leading-relaxed max-w-2xl mx-auto">
         ${ap.heroIntro}

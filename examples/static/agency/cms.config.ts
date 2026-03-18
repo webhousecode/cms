@@ -42,7 +42,9 @@ export default defineConfig({
         { name: 'metaDescription', type: 'textarea' },
         // Hero section
         { name: 'heroLabel', type: 'text', label: 'Hero Label' },
-        { name: 'heroHeading', type: 'text', label: 'Hero Heading' },
+        { name: 'heroHeadingBefore', type: 'text', label: 'Hero Heading (before highlight)' },
+        { name: 'heroHeadingHighlight', type: 'text', label: 'Hero Heading (highlighted text)' },
+        { name: 'heroHeadingAfter', type: 'text', label: 'Hero Heading (after highlight)' },
         { name: 'heroSubtitle', type: 'textarea', label: 'Hero Subtitle' },
         { name: 'heroIntro', type: 'textarea', label: 'Hero Intro' },
         { name: 'heroCta', type: 'text', label: 'Hero CTA Text' },
