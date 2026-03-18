@@ -386,7 +386,7 @@ function WeekView({ selectedDate, todayKey, eventsMap, onSelectDate, scrollToNow
 
   // Pill position relative to scroll — need to track scrollTop for external pill
   const [scrollTop, setScrollTop] = useState(0);
-  const pillY = nowY - scrollTop + headerHeight - 10;
+  const pillY = nowY - scrollTop + headerHeight - 7;
   const pillVisible = hasToday && pillY > -5 && pillY < viewportHeight + headerHeight;
 
   return (
