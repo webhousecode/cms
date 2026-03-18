@@ -120,15 +120,13 @@ export function ScheduledCalendar({ events, calendarToken, orgId, siteId }: { ev
     <>
       <TabTitle value="Calendar" />
 <div className="p-8" style={{ maxWidth: "1200px" }}>
-        {/* Title section — matches Curation Queue, Agents, etc. */}
-        <div className="mb-8">
-          <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">Schedule</p>
-          <h1 className="text-2xl font-bold text-foreground">Calendar</h1>
-        </div>
-
-        {/* Top bar: view tabs centered */}
-        <div className="flex items-center justify-between mb-4">
-          <div style={{ width: "160px" }} />
+        {/* Title + controls in one row */}
+        <div className="mb-6 flex items-start justify-between">
+          <div>
+            <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">Schedule</p>
+            <h1 className="text-2xl font-bold text-foreground">Calendar</h1>
+          </div>
+          <div className="flex items-center gap-2 mt-2">
           <div className="flex items-center gap-0.5 rounded-lg border border-border p-0.5">
             {(["day", "week", "month", "year"] as ViewMode[]).map((v) => (
               <button
@@ -165,17 +163,18 @@ export function ScheduledCalendar({ events, calendarToken, orgId, siteId }: { ev
               {copied ? "Copied" : "Subscribe"}
             </button>
           </div>
+          </div>
         </div>
 
-        {/* Title row: title left, < Today > right */}
+        {/* Month/date label + navigation */}
         <div className="flex items-center justify-between mb-4">
-          <h1 className="text-xl font-bold text-foreground" style={{ minWidth: "220px" }}>
+          <h2 className="text-lg font-semibold text-foreground" style={{ minWidth: "220px" }}>
             {view === "day"
               ? (() => { const d = new Date(selectedDate); return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`; })()
               : view === "year"
                 ? `${year}`
                 : `${MONTHS[month]} ${year}`}
-          </h1>
+          </h2>
           <div className="flex items-center gap-0.5">
             <button type="button" onClick={() => navigate(-1)} className="p-1.5 rounded-md hover:bg-secondary transition-colors text-muted-foreground">
               <ChevronLeft className="w-4 h-4" />
@@ -229,8 +228,8 @@ export function ScheduledCalendar({ events, calendarToken, orgId, siteId }: { ev
             onSelectMonth={(m) => { setMonth(m); setView("month"); }}
           />
         )}
-          </div>{/* end calendar grid */}
-        </div>{/* end flex layout */}
+          </div>
+        </div>
       </div>
     </>
   );
