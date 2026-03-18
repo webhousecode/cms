@@ -525,20 +525,24 @@ function WeekView({ selectedDate, todayKey, eventsMap, onSelectDate, scrollToNow
           {/* NOW marker — red line across today's column */}
           {hasToday && (
             <>
-              {/* Time label */}
+              {/* Time label — covers the hour label beneath */}
               <div
                 style={{
                   position: "absolute",
-                  top: nowY - 8,
+                  top: nowY - 9,
                   left: 0,
                   width: "3rem",
-                  fontSize: "0.6rem",
+                  fontSize: "0.65rem",
                   fontWeight: 700,
                   color: "rgb(239 68 68)",
+                  background: "var(--card)",
                   textAlign: "right",
-                  paddingRight: "0.4rem",
+                  paddingRight: "0.35rem",
+                  paddingTop: "1px",
+                  paddingBottom: "1px",
                   fontFamily: "monospace",
                   zIndex: 20,
+                  borderRadius: "3px",
                 }}
               >
                 {String(Math.floor(nowMinutes / 60)).padStart(2, "0")}.{String(nowMinutes % 60).padStart(2, "0")}
