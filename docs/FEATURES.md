@@ -94,6 +94,7 @@
 | F75 | [AI Site Builder Guide](#f75-ai-site-builder-guide) | Planned | [docs/features/F75-ai-site-builder-guide.md](features/F75-ai-site-builder-guide.md) |
 | F76 | [Create New Organization](#f76-create-organization) | Planned | [docs/features/F76-create-organization.md](features/F76-create-organization.md) |
 | F77 | [Middleware to Proxy Migration](#f77-middleware-to-proxy) | Planned | [docs/features/F77-middleware-to-proxy.md](features/F77-middleware-to-proxy.md) |
+| F78 | [Bundled Preview Server](#f78-bundled-preview-server) | Planned | [docs/features/F78-bundled-preview-server.md](features/F78-bundled-preview-server.md) |
 
 ---
 
@@ -327,3 +328,6 @@ Wire up the non-functional "+ New organization" button in the org switcher dropd
 
 ## F77 — Middleware to Proxy Migration
 Fix the Next.js 16 deprecation warning: rename `src/middleware.ts` → `src/proxy.ts`, rename export `middleware()` → `proxy()`. **Critical gotcha:** RSC Flight headers (`rsc: "1"`) are stripped from the request in proxy.ts — the RSC prefetch detection that prevents redirect loops must switch from header check to `_rsc` query param check. This is what broke the previous attempt. Everything else (JWT verification, cookies, redirects, rewrites, service token bypass) works identically. Node.js runtime instead of Edge (actually better — full crypto).
+
+## F78 — Bundled Preview Server
+Ship `sirv` (148 KB, used by Vite) as a dependency of `@webhouse/cms` so `cms serve` works out of the box after `cms build`. Clean URLs (`/about` → `about.html`), gzip/brotli, ETags, SPA fallback mode, Code Launcher port integration. Comes down automatically with `npm create @webhouse/cms` — zero extra installs. Scaffolded projects get `npm run preview` script. 15 lines of code wrapping sirv with Node.js `http.createServer()`.

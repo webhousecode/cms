@@ -62,6 +62,7 @@ _Without these, we cannot build and deliver professional sites on the platform._
 | 7 | **F44 Media Processing Pipeline** | Medium | Images must be optimized. No srcset = poor Lighthouse. Sharp, WebP/AVIF. |
 | 8 | **F42 Framework Boilerplates** | Medium | Starter templates + Claude Code skills/hooks/agents. Last in Tier 1 because best practices evolve as we build earlier features. Includes `/.claude/` with skills, hooks, and agent configs for AI site builders. |
 | 8b | **F75 AI Site Builder Guide** | Small | Split 2421-line CLAUDE.md into 20 modular on-demand docs. AI fetches only what's needed. Core DX improvement. |
+| 8c | **F78 Bundled Preview Server** | Small | `cms serve` via sirv (148 KB). Clean URLs, gzip, SPA fallback. Zero extra installs. |
 | 9 | **F31 Documentation Site** | Medium | Can't ship without docs. Last because it documents everything above. |
 
 ### Tier 2 — Competitive Edge (v1.1-1.2)
