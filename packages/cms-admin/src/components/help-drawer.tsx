@@ -228,17 +228,18 @@ function ShortcutsPage() {
                   borderTop: i > 0 ? "1px solid var(--border)" : "none",
                 }}
               >
-                <span style={{ fontSize: "0.8rem" }}>{s.label}</span>
-                <div style={{ display: "flex", gap: "0.25rem" }}>
+                <span style={{ fontSize: "0.85rem" }}>{s.label}</span>
+                <div style={{ display: "flex", gap: "0.3rem" }}>
                   {s.keys.split(" ").map((k, j) => (
                     <kbd key={j} style={{
-                      fontSize: "0.65rem", fontFamily: "monospace",
-                      padding: "0.2rem 0.45rem", borderRadius: "5px",
+                      fontSize: "0.8rem", fontFamily: "monospace",
+                      padding: "0.3rem 0.6rem", borderRadius: "6px",
                       border: "1px solid var(--border)",
                       background: "var(--secondary)",
                       color: "var(--foreground)",
-                      minWidth: "1.5rem", textAlign: "center",
-                      boxShadow: "0 1px 0 var(--border)",
+                      minWidth: "1.75rem", textAlign: "center",
+                      boxShadow: "0 2px 0 var(--border)",
+                      lineHeight: 1,
                     }}>{k}</kbd>
                   ))}
                 </div>
