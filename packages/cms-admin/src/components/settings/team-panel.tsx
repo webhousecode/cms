@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { UserPlus, Trash2, Copy, Check, Mail, Shield, Pencil, Eye, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CustomSelect } from "@/components/ui/custom-select";
+import { SectionHeading } from "@/components/ui/section-heading";
 
 interface TeamUser {
   id: string;
@@ -223,8 +224,8 @@ export function TeamPanel() {
     <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
       {/* Invite form */}
       <div>
-        <h2 className="text-base font-semibold text-foreground mb-1">Invite a team member</h2>
-        <p className="text-sm text-muted-foreground mb-4">
+        <SectionHeading>Invite a team member</SectionHeading>
+        <p className="text-xs text-muted-foreground" style={{ marginTop: "-0.5rem", marginBottom: "1rem" }}>
           Invite an existing user or a new email address to this site.
         </p>
         <form onSubmit={handleInvite} style={{ display: "flex", gap: "0.5rem", alignItems: "flex-start" }}>
@@ -377,7 +378,7 @@ export function TeamPanel() {
 
       {/* Team members */}
       <div>
-        <h2 className="text-base font-semibold text-foreground mb-3">Team members</h2>
+        <SectionHeading>Team members</SectionHeading>
         <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
           {users.map((user) => {
             const Icon = ROLE_ICONS[user.role] ?? Eye;
@@ -506,7 +507,7 @@ export function TeamPanel() {
       {/* Pending invitations */}
       {invitations.length > 0 && (
         <div>
-          <h2 className="text-base font-semibold text-foreground mb-3">Pending invitations</h2>
+          <SectionHeading>Pending invitations</SectionHeading>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
             {invitations.map((inv) => {
               const expired = new Date(inv.expiresAt) < new Date();

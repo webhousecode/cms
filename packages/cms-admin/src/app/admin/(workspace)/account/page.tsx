@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { PageHeader } from "@/components/page-header";
 import { GeneralSettingsPanel, PasswordChangePanel } from "@/components/settings/general-settings-panel";
+import { SectionHeading } from "@/components/ui/section-heading";
 
 export default async function AccountPage({
   searchParams,
@@ -54,8 +55,8 @@ export default async function AccountPage({
         {tab === "security" && (
           <div className="max-w-lg space-y-6">
             <div>
-              <h2 className="text-base font-semibold text-foreground">Security</h2>
-              <p className="text-sm text-muted-foreground mt-0.5">
+              <SectionHeading>Security</SectionHeading>
+              <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "-0.5rem", marginBottom: "0.5rem" }}>
                 Manage your account security settings and authentication methods.
               </p>
             </div>
@@ -67,7 +68,7 @@ export default async function AccountPage({
             <div className="rounded-lg border border-border bg-card p-5 space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 className="text-sm font-semibold">Authenticator app</h3>
+                  <h3 style={{ fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--muted-foreground)", margin: 0 }}>Authenticator app</h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     Generate one-time passwords via authenticator apps like 1Password, Authy, etc. as a second factor to verify your identity on sign-in.
                   </p>
@@ -88,8 +89,8 @@ export default async function AccountPage({
         {tab === "tokens" && (
           <div className="max-w-2xl space-y-6">
             <div>
-              <h2 className="text-base font-semibold text-foreground">Access Tokens</h2>
-              <p className="text-sm text-muted-foreground mt-0.5">
+              <SectionHeading>Access Tokens</SectionHeading>
+              <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "-0.5rem", marginBottom: "0.5rem" }}>
                 Create and manage access tokens for API authentication.
               </p>
             </div>

@@ -10,6 +10,7 @@ import { AIPromptsPanel } from "@/components/settings/ai-prompts-panel";
 import { AIDefaultsPanel } from "@/components/settings/ai-defaults-panel";
 import { TeamPanel } from "@/components/settings/team-panel";
 import { EmailSettingsPanel } from "@/components/settings/email-settings-panel";
+import { SectionHeading } from "@/components/ui/section-heading";
 import { readSiteConfig } from "@/lib/site-config";
 import { readBrandVoice } from "@/lib/brand-voice";
 import { cookies } from "next/headers";
@@ -92,12 +93,6 @@ export default async function SettingsPage({
         {/* Team tab */}
         {tab === "team" && (
           <div className="max-w-2xl">
-            <div className="mb-6">
-              <h2 className="text-base font-semibold text-foreground">Team</h2>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                Manage who has access to this site. Invite editors and collaborators.
-              </p>
-            </div>
             <TeamPanel />
           </div>
         )}
@@ -105,12 +100,10 @@ export default async function SettingsPage({
         {/* Email tab */}
         {tab === "email" && (
           <div className="max-w-lg">
-            <div className="mb-6">
-              <h2 className="text-base font-semibold text-foreground">Email</h2>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                Configure transactional email for invitations and notifications.
-              </p>
-            </div>
+            <SectionHeading>Email</SectionHeading>
+            <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "-0.5rem", marginBottom: "1.25rem" }}>
+              Configure transactional email for invitations and notifications.
+            </p>
             <EmailSettingsPanel />
           </div>
         )}
@@ -120,8 +113,8 @@ export default async function SettingsPage({
           <div className="space-y-2">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h2 className="text-base font-semibold text-foreground">Collections</h2>
-                <p className="text-sm text-muted-foreground mt-0.5">
+                <SectionHeading>Collections</SectionHeading>
+                <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "-0.5rem" }}>
                   Edit collection names, labels, and field definitions.
                 </p>
               </div>
@@ -164,7 +157,7 @@ export default async function SettingsPage({
               <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <div>
-                    <h2 className="text-base font-semibold text-foreground">{brandVoice.name}</h2>
+                    <h2 style={{ fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--muted-foreground)", margin: 0 }}>{brandVoice.name}</h2>
                     <p className="text-sm text-muted-foreground mt-0.5">{brandVoice.industry} · {brandVoice.language}</p>
                   </div>
                   <Link href="/admin/settings/brand-voice">
@@ -241,22 +234,18 @@ export default async function SettingsPage({
         {/* AI tab */}
         {tab === "ai" && (
           <div className="max-w-lg">
-            <div className="mb-6">
-              <h2 className="text-base font-semibold text-foreground">AI Providers</h2>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                Configure API keys for AI-powered content generation and rewriting.
-                Keys are stored per project — not shared across sites.
-              </p>
-            </div>
+            <SectionHeading>AI Providers</SectionHeading>
+            <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "-0.5rem", marginBottom: "1.25rem" }}>
+              Configure API keys for AI-powered content generation and rewriting.
+              Keys are stored per project — not shared across sites.
+            </p>
             <AISettingsPanel />
 
             <div style={{ borderTop: "1px solid var(--border)", marginTop: "2rem", paddingTop: "2rem" }}>
-              <div className="mb-6">
-                <h2 className="text-base font-semibold text-foreground">AI Model Defaults</h2>
-                <p className="text-sm text-muted-foreground mt-0.5">
-                  Choose default models and token limits for different AI features.
-                </p>
-              </div>
+              <SectionHeading>AI Model Defaults</SectionHeading>
+              <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "-0.5rem", marginBottom: "1.25rem" }}>
+                Choose default models and token limits for different AI features.
+              </p>
               <AIDefaultsPanel />
             </div>
           </div>
@@ -265,12 +254,10 @@ export default async function SettingsPage({
         {/* MCP tab */}
         {tab === "mcp" && (
           <div className="max-w-lg">
-            <div className="mb-6">
-              <h2 className="text-base font-semibold text-foreground">Model Context Protocol</h2>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                Connect Claude iOS, Cursor, or any MCP-compatible AI client to read and manage content on this site.
-              </p>
-            </div>
+            <SectionHeading>Model Context Protocol</SectionHeading>
+            <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "-0.5rem", marginBottom: "1.25rem" }}>
+              Connect Claude iOS, Cursor, or any MCP-compatible AI client to read and manage content on this site.
+            </p>
             <MCPSettingsPanel />
           </div>
         )}
