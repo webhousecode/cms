@@ -1,0 +1,13 @@
+{
+  "slug": "website-greenleaf",
+  "status": "published",
+  "data": {
+    "title": "Greenleaf Digital Platform",
+    "client": "Greenleaf Organics",
+    "category": "Web Design",
+    "heroImage": "https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1600&q=80",
+    "excerpt": "A ground-up website redesign for a sustainable food brand, combining editorial storytelling with a seamless e-commerce experience.",
+    "description": "Greenleaf Organics had outgrown their Shopify template. Their product line had expanded from 12 to 80+ SKUs, they'd launched a subscription box, and their content team was publishing weekly recipes and farm stories. They needed a digital home that could do justice to all of it.\n\nWe designed and built a custom platform on Next.js with a headless CMS, giving their editorial and e-commerce teams independent workflows that converge on the frontend. The design language draws from organic forms — soft curves, earthy tones, generous whitespace — but with the precision and speed users expect from modern e-commerce. Every product page tells a story: where the ingredients are sourced, who grows them, and why it matters.\n\nPage load times dropped from 4.8s to 1.2s. Conversion rate improved 34% in the first quarter post-launch. But the metric Greenleaf cares about most: average time on the \"Our Farms\" story pages jumped to 6.1 minutes, proving their customers genuinely engage with the brand's mission, not just the products.",
+    "year": "2024"
+  }
+}
