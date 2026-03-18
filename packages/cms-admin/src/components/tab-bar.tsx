@@ -41,6 +41,19 @@ export function TabBar() {
     return () => document.removeEventListener("keydown", onKey);
   }, [confirmOpen]);
 
+  // "t" shortcut → new tab (only when not in an input field)
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key !== "t" || e.metaKey || e.ctrlKey || e.altKey) return;
+      const tag = (document.activeElement?.tagName ?? "").toLowerCase();
+      if (tag === "input" || tag === "textarea" || tag === "select" || (document.activeElement as HTMLElement)?.isContentEditable) return;
+      e.preventDefault();
+      openTab("/admin", "Dashboard", true);
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [openTab]);
+
   if (tabs.length === 0) return null;
 
   return (
