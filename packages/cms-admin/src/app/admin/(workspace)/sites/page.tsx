@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Globe, MoreVertical, Settings2, Plus, Copy } from "lucide-react";
+import { Globe, MoreVertical, Settings2, Plus, Copy, Eye } from "lucide-react";
 import { useSiteRole } from "@/hooks/use-site-role";
 import {
   DropdownMenu,
@@ -245,6 +245,17 @@ export default function SitesDashboard() {
                   <MoreVertical style={{ width: "0.875rem", height: "0.875rem", color: "var(--muted-foreground)" }} />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-44">
+                  <DropdownMenuItem onClick={(e) => {
+                    e.stopPropagation();
+                    persistSiteChoice(site.id);
+                    const url = site.previewUrl
+                      ? site.previewUrl
+                      : `/api/preview-site-root`;
+                    router.push(`/admin/preview?url=${encodeURIComponent(url)}`);
+                  }}>
+                    <Eye className="mr-2 h-4 w-4 text-muted-foreground" />
+                    Preview
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(site.id); }}>
                     <Copy className="mr-2 h-4 w-4 text-muted-foreground" />
                     Copy site ID

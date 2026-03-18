@@ -866,9 +866,12 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
 
   function openPreview() {
     if (!colConfig.urlPrefix) return;
-    const path = `${colConfig.urlPrefix}/${doc.slug}`;
-    const url = `${PREVIEW_SITE_URL}${path}`;
-    if (PREVIEW_IN_IFRAME) {
+    const pagePath = `${colConfig.urlPrefix}/${doc.slug}`;
+    // Use previewUrl if set, otherwise fall back to built-in static preview
+    const url = PREVIEW_SITE_URL
+      ? `${PREVIEW_SITE_URL}${pagePath}`
+      : `/api/preview-site/${pagePath.replace(/^\//, "")}`;
+    if (PREVIEW_IN_IFRAME || !PREVIEW_SITE_URL) {
       openTab(`/admin/preview?url=${encodeURIComponent(url)}`, `Preview: ${doc.slug}`, true);
     } else {
       window.open(url, "_blank", "noopener,noreferrer");
