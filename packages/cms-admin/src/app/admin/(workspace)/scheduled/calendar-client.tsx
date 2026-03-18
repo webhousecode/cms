@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { Calendar, ChevronLeft, ChevronRight, Globe, FileText, Check } from "lucide-react";
 import { TabTitle } from "@/lib/tabs-context";
+import { PageHeader } from "@/components/page-header";
 
 /* ─── Types ──────────────────────────────────────────────────── */
 
@@ -64,7 +65,19 @@ export function ScheduledCalendar({ events, calendarToken, orgId, siteId }: { ev
   const today = new Date();
   const todayKey = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
 
-  const [view, setView] = useState<ViewMode>("month");
+  const [view, setViewState] = useState<ViewMode>("week");
+
+  // Load + persist calendar view preference
+  useEffect(() => {
+    fetch("/api/admin/user-state").then((r) => r.ok ? r.json() : null).then((state) => {
+      if (state?.calendarView) setViewState(state.calendarView);
+    }).catch(() => {});
+  }, []);
+
+  function setView(v: ViewMode) {
+    setViewState(v);
+    fetch("/api/admin/user-state", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ calendarView: v }) }).catch(() => {});
+  }
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth());
   const [selectedDate, setSelectedDate] = useState(todayKey);
@@ -106,6 +119,9 @@ export function ScheduledCalendar({ events, calendarToken, orgId, siteId }: { ev
   return (
     <>
       <TabTitle value="Calendar" />
+      <PageHeader>
+        <span className="text-sm text-muted-foreground font-mono">Calendar</span>
+      </PageHeader>
       <div className="p-8" style={{ maxWidth: "1200px" }}>
         {/* Top bar: view tabs centered */}
         <div className="flex items-center justify-between mb-4">
