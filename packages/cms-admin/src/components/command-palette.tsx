@@ -6,7 +6,8 @@ import type { SearchResult } from "@/app/api/search/route";
 import {
   Search, FileText, Globe, X, LayoutDashboard, Image, Bot, Calendar,
   ListChecks, Terminal, Settings2, Sparkles, UserCircle, LogOut, Lock,
-  Database, Link2, BarChart3, Trash2, Plus, Zap, Puzzle, Music,
+  Database, Link2, BarChart3, Trash2, Plus, Zap, Puzzle, ArrowRightLeft,
+  Building2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -21,6 +22,7 @@ interface QuickAction {
   href?: string;
   action?: () => void;
   keywords: string[]; // extra terms for fuzzy matching
+  featured?: boolean; // show in default view (no query)
 }
 
 const ICON_SIZE = { width: "0.9rem", height: "0.9rem" };
@@ -29,29 +31,33 @@ const MUTED = "var(--muted-foreground)";
 function buildQuickActions(logout: () => void): QuickAction[] {
   return [
     // Navigation
-    { id: "nav-dashboard", label: "Dashboard", sublabel: "Overview", category: "navigation", icon: <LayoutDashboard style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin", keywords: ["home", "oversigt"] },
+    { id: "nav-dashboard", label: "Dashboard", sublabel: "Overview", category: "navigation", icon: <LayoutDashboard style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin", keywords: ["home", "oversigt"], featured: true },
     { id: "nav-sites", label: "Sites", sublabel: "Manage sites", category: "navigation", icon: <Globe style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/sites", keywords: ["site", "sider"] },
-    { id: "nav-agents", label: "AI Agents", sublabel: "Automated content generation", category: "navigation", icon: <Bot style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/agents", keywords: ["agent", "ai", "bot", "automation"] },
-    { id: "nav-media", label: "Media", sublabel: "Images and files", category: "navigation", icon: <Image style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/media", keywords: ["billeder", "images", "files", "upload"] },
+    { id: "nav-agents", label: "AI Agents", sublabel: "Automated content generation", category: "navigation", icon: <Bot style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/agents", keywords: ["agent", "ai", "bot", "automation"], featured: true },
+    { id: "nav-media", label: "Media", sublabel: "Images and files", category: "navigation", icon: <Image style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/media", keywords: ["billeder", "images", "files", "upload"], featured: true },
     { id: "nav-ints", label: "Interactives", sublabel: "HTML interactives", category: "navigation", icon: <Puzzle style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/interactives", keywords: ["ints", "interactive", "html"] },
-    { id: "nav-calendar", label: "Calendar", sublabel: "Scheduled content", category: "navigation", icon: <Calendar style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/scheduled", keywords: ["kalender", "schedule", "planned"] },
+    { id: "nav-calendar", label: "Calendar", sublabel: "Scheduled content", category: "navigation", icon: <Calendar style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/scheduled", keywords: ["kalender", "schedule", "planned"], featured: true },
     { id: "nav-curation", label: "Curation Queue", sublabel: "Review AI-generated content", category: "navigation", icon: <ListChecks style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/curation", keywords: ["queue", "review", "approve"] },
-    { id: "nav-cockpit", label: "AI Cockpit", sublabel: "Chat with AI", category: "navigation", icon: <Terminal style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/command", keywords: ["chat", "cockpit", "command", "ai"] },
+    { id: "nav-cockpit", label: "AI Cockpit", sublabel: "Chat with AI", category: "navigation", icon: <Terminal style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/command", keywords: ["chat", "cockpit", "command", "ai"], featured: true },
     { id: "nav-performance", label: "Performance", sublabel: "Site analytics", category: "navigation", icon: <BarChart3 style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/performance", keywords: ["analytics", "stats", "speed"] },
     { id: "nav-linkchecker", label: "Link Checker", sublabel: "Find broken links", category: "navigation", icon: <Link2 style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/link-checker", keywords: ["links", "broken", "check"] },
     { id: "nav-trash", label: "Trash", sublabel: "Deleted items", category: "navigation", icon: <Trash2 style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/trash", keywords: ["slettet", "deleted", "papirkurv"] },
 
+    // Actions
+    { id: "act-switch-site", label: "Switch site…", sublabel: "Change active site", category: "action", icon: <ArrowRightLeft style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/sites", keywords: ["switch", "site", "skift", "change"], featured: true },
+    { id: "act-switch-org", label: "Switch organization…", sublabel: "Change active organization", category: "action", icon: <Building2 style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/sites", keywords: ["switch", "org", "organization", "organisation", "skift"], featured: true },
+
     // Settings
-    { id: "set-general", label: "Site Settings", sublabel: "General site configuration", category: "settings", icon: <Settings2 style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings", keywords: ["settings", "indstillinger", "config"] },
+    { id: "set-general", label: "Site Settings", sublabel: "General site configuration", category: "settings", icon: <Settings2 style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings", keywords: ["settings", "indstillinger", "config"], featured: true },
     { id: "set-team", label: "Team", sublabel: "Manage team members", category: "settings", icon: <UserCircle style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings?tab=team", keywords: ["team", "invite", "members", "brugere"] },
     { id: "set-email", label: "Email Settings", sublabel: "Configure email delivery", category: "settings", icon: <Zap style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings?tab=email", keywords: ["email", "resend", "smtp"] },
     { id: "set-ai", label: "AI Settings", sublabel: "API keys and providers", category: "settings", icon: <Sparkles style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings?tab=ai", keywords: ["ai", "api", "keys", "anthropic", "openai"] },
     { id: "set-mcp", label: "MCP Settings", sublabel: "Model Context Protocol", category: "settings", icon: <Database style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings?tab=mcp", keywords: ["mcp", "protocol", "claude", "cursor"] },
 
     // Account
-    { id: "acc-prefs", label: "Account Preferences", sublabel: "Profile and preferences", category: "account", icon: <UserCircle style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/account", keywords: ["account", "profil", "preferences", "konto"] },
+    { id: "acc-prefs", label: "Account Preferences", sublabel: "Profile and preferences", category: "account", icon: <UserCircle style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/account", keywords: ["account", "profil", "preferences", "konto"], featured: true },
     { id: "acc-security", label: "Security", sublabel: "Password and authentication", category: "account", icon: <Lock style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/account?tab=security", keywords: ["password", "security", "2fa", "adgangskode"] },
-    { id: "acc-logout", label: "Log out", sublabel: "Sign out of your account", category: "account", icon: <LogOut style={{ ...ICON_SIZE, color: "rgb(239 68 68)" }} />, action: logout, keywords: ["logout", "sign out", "log ud", "afslut"] },
+    { id: "acc-logout", label: "Log out", sublabel: "Sign out of your account", category: "account", icon: <LogOut style={{ ...ICON_SIZE, color: "rgb(239 68 68)" }} />, action: logout, keywords: ["logout", "sign out", "log ud", "afslut"], featured: true },
   ];
 }
 
@@ -165,19 +171,20 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
     const q = query.trim().toLowerCase();
     const result: PaletteItem[] = [];
 
-    // Filter quick actions by query
+    // No query → show featured actions only (curated default view)
+    // With query → filter all actions by search term
     const matchedActions = q
       ? quickActions.filter((a) => {
           const haystack = `${a.label} ${a.sublabel} ${a.keywords.join(" ")}`.toLowerCase();
           return haystack.includes(q);
         })
-      : quickActions;
+      : quickActions.filter((a) => a.featured);
 
-    // Group: navigation first, then settings, then account
-    const grouped = ["navigation", "settings", "account"];
+    // Group: actions first (switch site/org), then navigation, settings, account
+    const grouped = ["action", "navigation", "settings", "account"];
     for (const cat of grouped) {
-      const items = matchedActions.filter((a) => a.category === cat);
-      result.push(...items);
+      const catItems = matchedActions.filter((a) => a.category === cat);
+      result.push(...catItems);
     }
 
     // Add content results
@@ -311,11 +318,6 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
           {!loading && query && items.length === 0 && (
             <div style={{ padding: "1.25rem 1rem", fontSize: "0.875rem", color: "var(--muted-foreground)" }}>
               No results for <strong style={{ color: "var(--foreground)" }}>"{query}"</strong>
-            </div>
-          )}
-          {!loading && !query && items.length === 0 && (
-            <div style={{ padding: "1.25rem 1rem", fontSize: "0.875rem", color: "var(--muted-foreground)" }}>
-              Type to search across all collections…
             </div>
           )}
 
