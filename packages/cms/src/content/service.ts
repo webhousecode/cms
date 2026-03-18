@@ -234,16 +234,19 @@ export class ContentService {
               publishAt: null,
             });
             actions.push({ collection: col, slug: doc.slug, action: 'published' });
+            continue; // Don't also check unpublish on same tick
           }
         }
 
         // Scheduled unpublish: published with unpublishAt in the past → draft
+        // Also clear publishAt to prevent re-publish loop
         if (doc.status === 'published' && (doc as any).unpublishAt) {
           const unpublishAt = new Date((doc as any).unpublishAt);
           if (unpublishAt <= now) {
             await this.storage.update(col, doc.id, {
               status: 'draft',
               unpublishAt: null,
+              publishAt: null,
             });
             actions.push({ collection: col, slug: doc.slug, action: 'unpublished' });
           }
