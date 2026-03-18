@@ -32,13 +32,21 @@ export function AgentsList({ agents, readOnly }: { agents: Agent[]; readOnly?: b
   const [filter, setFilter] = useState<Filter>("all");
 
   useEffect(() => {
-    const saved = localStorage.getItem("agents-view");
-    if (saved === "list" || saved === "grid") setView(saved);
+    // Try server state first, then localStorage
+    fetch("/api/admin/user-state").then((r) => r.ok ? r.json() : null).then((state) => {
+      if (state?.agentsView === "list" || state?.agentsView === "grid") { setView(state.agentsView); return; }
+      const saved = localStorage.getItem("agents-view");
+      if (saved === "list" || saved === "grid") setView(saved);
+    }).catch(() => {
+      const saved = localStorage.getItem("agents-view");
+      if (saved === "list" || saved === "grid") setView(saved);
+    });
   }, []);
 
   function toggleView(v: View) {
     setView(v);
     localStorage.setItem("agents-view", v);
+    fetch("/api/admin/user-state", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ agentsView: v }) }).catch(() => {});
   }
 
   const filtered = filter === "all" ? agents

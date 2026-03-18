@@ -65,9 +65,20 @@ export default function CurationPage() {
     return getSavedTab();
   });
 
+  // Load curation tab from server on mount
+  useEffect(() => {
+    fetch("/api/admin/user-state").then((r) => r.ok ? r.json() : null).then((state) => {
+      if (state?.curationTab && VALID_TABS.includes(state.curationTab) && !searchParams.get("tab")) {
+        setTab(state.curationTab as TabId);
+      }
+    }).catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   function switchTab(t: TabId) {
     setTab(t);
     try { localStorage.setItem(STORAGE_KEY, t); } catch {}
+    fetch("/api/admin/user-state", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ curationTab: t }) }).catch(() => {});
     router.replace(`/admin/curation?tab=${t}`, { scroll: false });
   }
   const [items, setItems] = useState<QueueItem[]>([]);
