@@ -867,7 +867,9 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
   async function openPreview() {
     if (!colConfig.urlPrefix) return;
     const prefix = colConfig.urlPrefix.replace(/\/$/, "");
-    const pagePath = `${prefix}/${doc.slug}`;
+    // Homepage: slug "home" or "index" with urlPrefix "/" maps to root
+    const isHomepage = (prefix === "" || prefix === "/") && (doc.slug === "home" || doc.slug === "index");
+    const pagePath = isHomepage ? "/" : `${prefix}/${doc.slug}`;
 
     if (PREVIEW_SITE_URL) {
       const url = `${PREVIEW_SITE_URL}${pagePath}`;
