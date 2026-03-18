@@ -5,6 +5,7 @@ import { useRouter, useParams } from "next/navigation";
 import { Loader2, Sparkles, Trash2, Play, CheckCircle, X, Plus, Copy, ChevronDown, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { CustomSelect } from "@/components/ui/custom-select";
+import { Checkbox, Radio } from "@/components/ui/checkbox-styled";
 import type { AgentConfig } from "@/lib/agents";
 import { TabTitle } from "@/lib/tabs-context";
 import { useSiteRole } from "@/hooks/use-site-role";
@@ -397,22 +398,8 @@ export default function AgentDetailPage() {
         <div>
           <p style={labelStyle}>Tools</p>
           <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={webSearch}
-                onChange={(e) => setWebSearch(e.target.checked)}
-              />
-              Web search
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={internalDatabase}
-                onChange={(e) => setInternalDatabase(e.target.checked)}
-              />
-              Internal database
-            </label>
+            <Checkbox checked={webSearch} onChange={(v) => setWebSearch(v)} label="Web search" />
+            <Checkbox checked={internalDatabase} onChange={(v) => setInternalDatabase(v)} label="Internal database" />
           </div>
         </div>
 
@@ -523,47 +510,14 @@ export default function AgentDetailPage() {
         <div>
           <p style={labelStyle}>Autonomy</p>
           <div className="space-y-2">
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="radio"
-                name="autonomy"
-                checked={autonomy === "draft"}
-                onChange={() => setAutonomy("draft")}
-              />
-              <span>
-                <strong>Draft &amp; Review</strong>
-                <span className="text-muted-foreground ml-1">
-                  — goes to curation queue
-                </span>
-              </span>
-            </label>
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="radio"
-                name="autonomy"
-                checked={autonomy === "full"}
-                onChange={() => setAutonomy("full")}
-              />
-              <span>
-                <strong>Full Autonomy</strong>
-                <span className="text-muted-foreground ml-1">
-                  — publishes directly
-                </span>
-              </span>
-            </label>
+            <Radio checked={autonomy === "draft"} onChange={() => setAutonomy("draft")} label="Draft & Review" description="— goes to curation queue" />
+            <Radio checked={autonomy === "full"} onChange={() => setAutonomy("full")} label="Full Autonomy" description="— publishes directly" />
           </div>
         </div>
 
         {/* Schedule */}
         <div className="rounded-lg border border-border p-4 space-y-3">
-          <label className="flex items-center gap-2 text-sm font-medium">
-            <input
-              type="checkbox"
-              checked={scheduleEnabled}
-              onChange={(e) => setScheduleEnabled(e.target.checked)}
-            />
-            Enable schedule
-          </label>
+          <Checkbox checked={scheduleEnabled} onChange={(v) => setScheduleEnabled(v)} label="Enable schedule" />
           {scheduleEnabled && (
             <div className="grid grid-cols-3 gap-3">
               <div>
@@ -603,14 +557,7 @@ export default function AgentDetailPage() {
         </div>
 
         {/* Active toggle */}
-        <label className="flex items-center gap-2 text-sm">
-          <input
-            type="checkbox"
-            checked={active}
-            onChange={(e) => setActive(e.target.checked)}
-          />
-          Agent is active
-        </label>
+        <Checkbox checked={active} onChange={(v) => setActive(v)} label="Agent is active" />
 
         {error && <p className="text-sm text-destructive">{error}</p>}
 

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Loader2, RefreshCw } from "lucide-react";
 import { CustomSelect } from "@/components/ui/custom-select";
+import { Checkbox } from "@/components/ui/checkbox-styled";
 import { useSiteRole } from "@/hooks/use-site-role";
 
 interface CockpitParams {
@@ -214,19 +215,16 @@ export default function CommandPage() {
               />
             </div>
 
-            <label className="flex items-center gap-2 text-sm">
-              <input
-                type="checkbox"
-                checked={params.multiModelEnabled}
-                onChange={(e) =>
-                  setParams({
-                    ...params,
-                    multiModelEnabled: e.target.checked,
-                  })
-                }
-              />
-              Multi-model comparison
-            </label>
+            <Checkbox
+              checked={params.multiModelEnabled}
+              onChange={(v) =>
+                setParams({
+                  ...params,
+                  multiModelEnabled: v,
+                })
+              }
+              label="Multi-model comparison"
+            />
 
             {params.multiModelEnabled && (
               <div>
@@ -234,24 +232,19 @@ export default function CommandPage() {
                 <div className="space-y-1.5">
                   {MODELS.filter((m) => m.value !== params.primaryModel).map(
                     (m) => (
-                      <label
+                      <Checkbox
                         key={m.value}
-                        className="flex items-center gap-2 text-sm"
-                      >
-                        <input
-                          type="checkbox"
-                          checked={params.compareModels.includes(m.value)}
-                          onChange={(e) => {
-                            const next = e.target.checked
-                              ? [...params.compareModels, m.value]
-                              : params.compareModels.filter(
-                                  (v) => v !== m.value
-                                );
-                            setParams({ ...params, compareModels: next });
-                          }}
-                        />
-                        {m.label}
-                      </label>
+                        checked={params.compareModels.includes(m.value)}
+                        onChange={(v) => {
+                          const next = v
+                            ? [...params.compareModels, m.value]
+                            : params.compareModels.filter(
+                                (val) => val !== m.value
+                              );
+                          setParams({ ...params, compareModels: next });
+                        }}
+                        label={m.label}
+                      />
                     )
                   )}
                 </div>

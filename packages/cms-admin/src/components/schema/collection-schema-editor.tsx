@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useRef } from "react";
 import { CustomSelect } from "@/components/ui/custom-select";
+import { Checkbox } from "@/components/ui/checkbox-styled";
 import { useRouter } from "next/navigation";
 import { Plus, Trash2, GripVertical, Save, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -344,19 +345,12 @@ function FieldRow({
           placeholder="Label (optional)"
           className="text-xs h-8"
         />
-        <div className="flex items-center gap-1.5">
-          <label
-            className="flex items-center gap-1.5 text-xs text-muted-foreground cursor-pointer select-none"
-            title="Required — this field must have a value before the document can be saved"
-          >
-            <input
-              type="checkbox"
-              checked={field.required ?? false}
-              onChange={(e) => onChange({ required: e.target.checked || undefined })}
-              className="w-4 h-4 accent-primary cursor-pointer"
-            />
-            req
-          </label>
+        <div className="flex items-center gap-1.5" title="Required — this field must have a value before the document can be saved">
+          <Checkbox
+            checked={field.required ?? false}
+            onChange={(v) => onChange({ required: v || undefined })}
+            label="req"
+          />
         </div>
       </div>
 

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Github, HardDrive } from "lucide-react";
 import { CustomSelect } from "@/components/ui/custom-select";
+import { Checkbox } from "@/components/ui/checkbox-styled";
 
 /* ─── Types ───────────────────────────────────────────────── */
 
@@ -343,15 +344,11 @@ export default function NewSitePage() {
                           onChange={(v) => setGhSelectedAccount(v)}
                         />
                       </div>
-                      <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.8rem", color: "var(--muted-foreground)", cursor: "pointer" }}>
-                        <input
-                          type="checkbox"
-                          checked={ghNewRepoPrivate}
-                          onChange={(e) => setGhNewRepoPrivate(e.target.checked)}
-                          style={{ accentColor: "var(--primary)" }}
-                        />
-                        Private
-                      </label>
+                      <Checkbox
+                        checked={ghNewRepoPrivate}
+                        onChange={(v) => setGhNewRepoPrivate(v)}
+                        label="Private"
+                      />
                     </>
                   ) : (
                     <>

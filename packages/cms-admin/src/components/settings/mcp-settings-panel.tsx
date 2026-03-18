@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Check, Copy, Plus, Trash2, Key, RefreshCw, Server, Power, PowerOff, X, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { SectionHeading } from "@/components/ui/section-heading";
+import { Checkbox } from "@/components/ui/checkbox-styled";
 
 interface McpApiKeyMasked {
   id: string;
@@ -294,22 +295,17 @@ export function MCPSettingsPanel() {
               <label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: "0.35rem" }}>Scopes</label>
               <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
                 {ALL_SCOPES.map((scope) => (
-                  <label key={scope} style={{ display: "flex", alignItems: "flex-start", gap: "0.5rem", cursor: "pointer" }}>
-                    <input
-                      type="checkbox"
-                      checked={newScopes.includes(scope)}
-                      onChange={(e) => {
-                        setNewScopes((prev) =>
-                          e.target.checked ? [...prev, scope] : prev.filter((s) => s !== scope)
-                        );
-                      }}
-                      style={{ marginTop: "0.1rem" }}
-                    />
-                    <span>
-                      <span style={{ fontSize: "0.8rem", fontFamily: "monospace", fontWeight: 500 }}>{scope}</span>
-                      <span style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", marginLeft: "0.35rem" }}>— {SCOPE_DESCRIPTIONS[scope]}</span>
-                    </span>
-                  </label>
+                  <Checkbox
+                    key={scope}
+                    checked={newScopes.includes(scope)}
+                    onChange={(v) => {
+                      setNewScopes((prev) =>
+                        v ? [...prev, scope] : prev.filter((s) => s !== scope)
+                      );
+                    }}
+                    label={scope}
+                    description={SCOPE_DESCRIPTIONS[scope]}
+                  />
                 ))}
               </div>
             </div>
