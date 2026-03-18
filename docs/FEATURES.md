@@ -82,6 +82,7 @@
 | F63 | [Shared Component Library](#f63-shared-components) | Planned | [docs/features/F63-shared-components.md](features/F63-shared-components.md) |
 | F64 | [Toast Notifications System](#f64-toast-notifications-system) | In progress | [docs/features/F64-toast-notifications.md](features/F64-toast-notifications.md) |
 | F65 | [Agent Pipeline E2E Tests](#f65-agent-pipeline-tests) | Planned | [docs/features/F65-agent-pipeline-tests.md](features/F65-agent-pipeline-tests.md) |
+| F66 | [Search Index](#f66-search-index) | Planned | [docs/features/F66-search-index.md](features/F66-search-index.md) |
 
 ---
 
@@ -279,3 +280,6 @@ Comprehensive toast notification system with event-driven feedback across all CM
 
 ## F65 — Agent Pipeline E2E Tests
 Playwright end-to-end tests covering the full AI agent lifecycle: cockpit settings → agent config → schedule/run now → mocked LLM call → curation queue → approve/reject/edit → published document. Mock LLM fixture intercepts Anthropic/OpenAI API calls for $0 test cost. 17 test files across 4 suites: agents (CRUD, run now, scheduled, budget, autonomy), curation (queue, approve, reject, edit, alternatives, purge), cockpit (settings, budget bar, status monitor), pipeline (full roundtrip, scheduled roundtrip). Ship blocker — if this pipeline breaks silently, AI content stops flowing.
+
+## F66 — Search Index
+Persistent SQLite FTS5 search index for instant full-text search across all documents. Current search scans all documents via storage adapter on every query — O(n) per collection. SQLite FTS5 database stored in `_data/search-index.db`. Built incrementally on document create/update/delete via storage hooks. Cold-start builder syncs all content on first request. Field-weighted ranking (title 10x > excerpt 3x > content 1x). Works with all storage adapters. Uses `better-sqlite3`.
