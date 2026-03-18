@@ -9,16 +9,35 @@ import { useRouter, usePathname } from "next/navigation";
 /* ─── Server sync (debounced) ────────────────────────────────── */
 let syncTimer: ReturnType<typeof setTimeout> | null = null;
 
+let pendingSync: { tabs: Tab[]; activeId: string | null } | null = null;
+
+function flushSync() {
+  if (!pendingSync) return;
+  const { tabs, activeId } = pendingSync;
+  pendingSync = null;
+  const blob = new Blob([JSON.stringify({ tabs, activeTabId: activeId })], { type: "application/json" });
+  navigator.sendBeacon("/api/admin/user-state", blob);
+}
+
 function syncToServer(tabs: Tab[], activeId: string | null) {
+  pendingSync = { tabs, activeId };
   if (syncTimer) clearTimeout(syncTimer);
   syncTimer = setTimeout(() => {
-    console.log(`[user-state] syncing ${tabs.length} tabs to server`);
+    pendingSync = null;
     fetch("/api/admin/user-state", {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ tabs, activeTabId: activeId }),
-    }).catch((err) => console.error("[user-state] sync error:", err));
+    }).catch(() => {});
   }, 500);
+}
+
+// Flush pending sync on page unload
+if (typeof window !== "undefined") {
+  window.addEventListener("beforeunload", flushSync);
+  window.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") flushSync();
+  });
 }
 
 /* ─── Types ──────────────────────────────────────────────────── */
@@ -162,9 +181,7 @@ export function TabsProvider({ children }: { children: ReactNode }) {
     fetch("/api/admin/user-state")
       .then((r) => r.ok ? r.json() : null)
       .then((serverState) => {
-        console.log("[user-state] server state:", serverState?.tabs?.length ?? 0, "tabs");
         if (serverState?.tabs?.length > 0) {
-          console.log("[user-state] restoring from server");
           restoreTabs({ tabs: serverState.tabs, activeId: serverState.activeTabId });
         } else {
           // Fall back to localStorage (migration: seed server from localStorage)
