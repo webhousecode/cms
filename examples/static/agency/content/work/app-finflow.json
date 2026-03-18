@@ -9,5 +9,7 @@
     "excerpt": "A mobile-first banking app designed to make personal finance feel intuitive, approachable, and even enjoyable for a younger generation.",
     "description": "FinFlow is a challenger bank targeting 22-to-35-year-olds who find traditional banking apps overwhelming and impersonal. Their founding team had built solid backend infrastructure, but the existing UI was essentially a spreadsheet with rounded corners. They needed a design partner who could turn financial data into something people actually want to open every day.\n\nWe conducted two weeks of user research — shadowing real users, running card-sorting exercises, and benchmarking 14 competing apps. The core insight: young adults don't want less information, they want better-structured information. Our design introduces \"Financial Moments\" — contextual cards that surface the right data at the right time. Monday morning shows your weekly budget outlook. Friday evening highlights social spending. End of month presents a visual savings recap.\n\nThe UI uses a restrained colour system — predominantly dark with accent colours that shift based on your financial health (green for on-track, amber for caution). Micro-animations celebrate positive actions like hitting a savings goal. Since launch, FinFlow has onboarded 140,000 users with a 4.8-star App Store rating and a 72% weekly active user retention rate — nearly double the fintech industry average.",
     "year": "2024"
-  }
+  },
+  "id": "CmXvHsCEk5xXd_Pf-gWmc",
+  "_fieldMeta": {}
 }

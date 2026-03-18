@@ -160,7 +160,12 @@ export function OrgSwitcher() {
         const d = await res.json() as { mode: string; registry: Registry | null };
         if (d.registry) {
           setRegistry(d.registry);
-          setActiveOrgId(getCookie("cms-active-org") ?? d.registry.defaultOrgId);
+          const cookieOrg = getCookie("cms-active-org");
+          const orgId = cookieOrg || d.registry.defaultOrgId;
+          setActiveOrgId(orgId);
+          if (!cookieOrg && orgId) {
+            setCookie("cms-active-org", orgId);
+          }
         }
       }
     } finally {

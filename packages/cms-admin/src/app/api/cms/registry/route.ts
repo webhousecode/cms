@@ -1,4 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
+import { mkdir, writeFile } from "node:fs/promises";
+import { join, dirname, resolve } from "node:path";
+import { getSessionUser } from "@/lib/auth";
 import {
   loadRegistry,
   saveRegistry,
@@ -52,6 +56,30 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "orgId and site required" }, { status: 400 });
     }
     await addSite(body.orgId, body.site);
+
+    // Auto-add the creating user as admin team member
+    const cookieStore = await cookies();
+    const session = await getSessionUser(cookieStore);
+    if (session) {
+      const site = body.site;
+      let dataDir: string;
+      if (site.adapter === "github" || site.configPath.startsWith("github://")) {
+        const configPath = process.env.CMS_CONFIG_PATH;
+        const cacheBase = configPath
+          ? join(dirname(resolve(configPath)), ".cache")
+          : join(process.env.HOME ?? "/tmp", ".webhouse", ".cache");
+        dataDir = join(cacheBase, "sites", site.id, "_data");
+      } else {
+        const projDir = dirname(resolve(site.configPath));
+        const contentDir = site.contentDir ?? join(projDir, "content");
+        dataDir = join(contentDir, "..", "_data");
+      }
+      const teamFile = join(dataDir, "team.json");
+      const team = [{ userId: session.sub, role: "admin", addedAt: new Date().toISOString() }];
+      await mkdir(dataDir, { recursive: true });
+      await writeFile(teamFile, JSON.stringify(team, null, 2));
+    }
+
     return NextResponse.json({ ok: true });
   }
 

@@ -104,6 +104,16 @@ importers:
         specifier: ^4.0.0
         version: 4.21.0
 
+  examples/static/portfolio-squared:
+    dependencies:
+      '@webhouse/cms':
+        specifier: workspace:*
+        version: link:../../../packages/cms
+    devDependencies:
+      tsx:
+        specifier: ^4.0.0
+        version: 4.21.0
+
   examples/static/studio:
     dependencies:
       '@webhouse/cms':
