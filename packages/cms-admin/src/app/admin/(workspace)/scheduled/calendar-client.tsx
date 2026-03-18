@@ -121,7 +121,7 @@ export function ScheduledCalendar({ events, calendarToken, orgId, siteId }: { ev
       <TabTitle value="Calendar" />
 <div className="p-8" style={{ maxWidth: "1200px" }}>
         {/* Title */}
-        <div className="-mb-3">
+        <div style={{ marginBottom: "-17px" }}>
           <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">Schedule</p>
           <h1 className="text-2xl font-bold text-foreground">Calendar</h1>
         </div>
