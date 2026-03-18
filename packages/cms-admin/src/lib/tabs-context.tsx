@@ -69,6 +69,10 @@ const PATH_TITLES: Record<string, string> = {
   "/admin/command": "AI Cockpit",
   "/admin/performance": "Performance",
   "/admin/settings": "Settings",
+  "/admin/sites": "Sites",
+  "/admin/scheduled": "Calendar",
+  "/admin/interactives": "Interactives",
+  "/admin/account": "Account",
   "/admin/trash": "Trash",
 };
 
