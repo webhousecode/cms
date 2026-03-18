@@ -109,6 +109,9 @@ _Unique selling points and advanced features._
 | 30 | **F17 AI Content Index** | Small | llms.txt, AI-friendly sitemaps |
 | 31 | **F25 Storage Buckets** | Medium | S3, R2, Supabase storage for large media |
 | 31b | **F56 GitHub Live Content** | Large | Bidirectional repo sync — external AI agents can push content to CMS |
+| 31c | **F68 Shop Plugin** | XL | Stripe e-commerce — products, cart, checkout, subscriptions, gated content, AI chat integration |
+| 31d | **F69 Social Media Plugin** | Large | AI social media bank — FB/IG/LinkedIn drafts, GBP auto-posting, hashtag bank, seasonal calendar |
+| 31e | **F71 Multi-Player Editing** | Small (v1) | Optimistic document locking — prevents concurrent edit data loss. v2 (real-time CRDT) is Large. |
 
 ### Tier 4 — Growth & Enterprise (v2.0+)
 
@@ -117,6 +120,7 @@ _Unique selling points and advanced features._
 | 32 | **F50 Sign In Providers** | Medium | Google, Discord, Apple, Azure AD OAuth. Account linking. |
 | 32b | **F59 Passwordless Auth** | Large | Passkeys (WebAuthn) + QR Code login via Pocket CMS mobile app (Capacitor). |
 | 32c | **F62 Directory Sync** | Large | SCIM 2.0 server + JIT provisioning + directory API sync. Enterprise-grade user lifecycle. |
+| 32d | **F70 Managed SaaS Hub App** | XL | webhouse.app commercial offering — Stripe billing, per-customer Fly machines, customer dashboard. |
 | 33 | **F34 Multi-Tenancy** | Large | In progress. Full isolation, billing, quotas. |
 | 34 | **F19 Enterprise** | Large | RBAC, audit log, SSO, A/B testing, approval workflows |
 | 34 | **F10 AI Learning Loop** | Medium | AI improves from editor feedback |

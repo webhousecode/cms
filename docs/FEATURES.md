@@ -84,6 +84,10 @@
 | F65 | [Agent Pipeline E2E Tests](#f65-agent-pipeline-tests) | Planned | [docs/features/F65-agent-pipeline-tests.md](features/F65-agent-pipeline-tests.md) |
 | F66 | [Search Index](#f66-search-index) | Planned | [docs/features/F66-search-index.md](features/F66-search-index.md) |
 | F67 | [Security Gate](#f67-security-gate) | Planned | [docs/features/F67-security-gate.md](features/F67-security-gate.md) |
+| F68 | [Shop Plugin](#f68-shop-plugin) | Planned | [docs/features/F68-shop-plugin.md](features/F68-shop-plugin.md) |
+| F69 | [Social Media Plugin](#f69-social-media-plugin) | Planned | [docs/features/F69-social-media-plugin.md](features/F69-social-media-plugin.md) |
+| F70 | [Managed SaaS Hub App](#f70-managed-saas) | Planned | [docs/features/F70-managed-saas.md](features/F70-managed-saas.md) |
+| F71 | [Multi-Player Editing](#f71-multiplayer-editing) | Planned | [docs/features/F71-multiplayer-editing.md](features/F71-multiplayer-editing.md) |
 
 ---
 
@@ -287,3 +291,15 @@ Persistent SQLite FTS5 search index for instant full-text search across all docu
 
 ## F67 — Security Gate
 Automated security scanning pipeline for the CMS monorepo. Three phases: (1) Local toolchain — Semgrep (SAST), Gitleaks (secrets), Trivy (dependencies) with pre-commit hook that blocks commits with secrets or OWASP Top 10 violations. (2) CLAUDE.md security rules — explicit rules Claude Code must follow (never hardcode secrets, always auth API routes, validate input server-side). (3) `@webhouse/security-gate` CLI package — wraps all scanners + adds CMS-specific custom rules (unauthed API routes, missing HMAC on webhooks, SCIM token verification, env/gitignore consistency). Reports to console, Discord, and markdown. CI integration via GitHub Actions. Weekly scheduled scan with Discord notification. Addresses the "vibe coding crisis" — AI generates code fast but security review doesn't keep up.
+
+## F68 — Shop Plugin (E-Commerce)
+Full e-commerce plugin (`@webhouse/cms-plugin-shop`) with Stripe as payment brain. Static-first: product pages pre-rendered, Interactive Islands (F58) for cart/checkout/gated content. AI-native commerce: product descriptions and SEO via existing CMS AI agents. Product types: physical, digital, booking, subscription, gated courses. Collections: products, categories, orders, customers. Stripe Checkout for payments (no custom checkout form). AI chat integration: `shop_search` and `shop_add_to_cart` tools, mini product cards in chat, add_to_cart_token JWT for security. Based on CMS-PLUGIN-SHOP.md and CMS-PLUGIN-SHOP-PATCH.md.
+
+## F69 — Social Media Plugin
+AI-powered social media content bank (`@webhouse/cms-plugin-some`). Generates platform-specific post drafts from existing CMS content for Facebook (storytelling, 150-300 words), Instagram (emoji-friendly + 20-28 hashtags), and LinkedIn (professional, 100-200 words). Human-in-the-loop by default — AI generates, humans approve, copy, post. Google Business Profile fully automated (the one exception — direct SEO impact, simple API). Hashtag bank with rotation tracking. Seasonal content calendar with rolling 2-week queue. RAG agent integration for trending topic suggestions. Based on CMS-PLUGIN-SOME.md.
+
+## F70 — Managed SaaS Hub App
+The commercial offering: webhouse.app managed CMS-as-a-Service. Hub app (Next.js + Stripe + Supabase) at webhouse.app. Silo model: each customer gets their own Fly.io machine + persistent volume (sleeps when idle, ~$3-5/mo). Customer flow: sign up → Stripe → auto-provision Fly machine → connect GitHub repo. Pricing: Starter $9/mo, Pro $29/mo, Agency $99/mo. Custom domains (customer-a.cms.webhouse.app). Usage metering, customer dashboard, self-service plan management. Based on CMS-ADMIN-PLAN.md Fase D.
+
+## F71 — Multi-Player Editing
+Prevent data loss from concurrent edits. v1 (optimistic locking): when user A opens a document, lock is set in `_locks/`. User B sees "Being edited by [name]" banner + read-only fields. Lock released on save/close or after 10 min timeout. 30s keepalive ping. Force-unlock for admins. v2 (future): real-time collaboration with PartyKit + Yjs CRDT, live cursors, conflict-free merge — Google Docs-style. Based on CMS-ADMIN-PLAN.md Fase A.3.
