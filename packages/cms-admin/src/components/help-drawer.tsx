@@ -75,28 +75,12 @@ export function HelpDrawer({ open, onClose, initialPage = "help" }: { open: bool
   if (!open) return null;
 
   return (
-    <>
-      {/* Backdrop */}
-      <div
-        onClick={onClose}
-        style={{
-          position: "fixed", inset: 0, zIndex: 199,
-          background: "rgba(0,0,0,0.3)",
-        }}
-      />
-
-      {/* Drawer */}
-      <div
-        style={{
-          position: "fixed", top: 0, right: 0, bottom: 0,
-          width: "360px", zIndex: 200,
-          background: "var(--card)",
-          borderLeft: "1px solid var(--border)",
-          boxShadow: "-8px 0 32px rgba(0,0,0,0.3)",
-          display: "flex", flexDirection: "column",
-          animation: "slideInRight 200ms ease-out",
-        }}
-      >
+    <div style={{
+      position: "fixed", top: 0, right: 0, bottom: 0, width: "340px", zIndex: 100,
+      background: "var(--card)", borderLeft: "1px solid var(--border)",
+      boxShadow: "-4px 0 20px rgba(0,0,0,0.3)",
+      display: "flex", flexDirection: "column",
+    }}>
         {/* Header with tabs */}
         <div style={{ borderBottom: "1px solid var(--border)" }}>
           <div style={{
@@ -156,15 +140,7 @@ export function HelpDrawer({ open, onClose, initialPage = "help" }: { open: bool
         }}>
           <span style={{ color: "#fff", fontWeight: 600 }}>webhouse</span><span style={{ color: "var(--primary)" }}>.app</span> · v0.2.10
         </div>
-      </div>
-
-      <style>{`
-        @keyframes slideInRight {
-          from { transform: translateX(100%); }
-          to { transform: translateX(0); }
-        }
-      `}</style>
-    </>
+    </div>
   );
 }
 
