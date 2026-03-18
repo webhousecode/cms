@@ -757,16 +757,17 @@ function CalendarSidebar({ events, todayKey, colColorMap }: { events: ScheduledE
   const collectionDocs = new Map<string, Set<string>>();
   for (const e of futureEvents) {
     if (!collectionDocs.has(e.subtitle)) collectionDocs.set(e.subtitle, new Set());
-    collectionDocs.get(e.subtitle)!.add(e.id);
+    collectionDocs.get(e.subtitle)!.add(e.id.replace(/^(pub|unpub)-/, ""));
   }
   const collectionCounts = new Map<string, number>();
   for (const [name, docs] of collectionDocs) {
     collectionCounts.set(name, docs.size);
   }
 
-  // Unique doc counts
-  const futureDocIds = new Set(futureEvents.map((e) => e.id));
-  const todayDocIds = new Set(events.filter((e) => e.date.slice(0, 10) === todayKey).map((e) => e.id));
+  // Unique doc counts (strip pub-/unpub- prefix to deduplicate same document)
+  const docKey = (e: ScheduledEvent) => e.id.replace(/^(pub|unpub)-/, "");
+  const futureDocIds = new Set(futureEvents.map(docKey));
+  const todayDocIds = new Set(events.filter((e) => e.date.slice(0, 10) === todayKey).map(docKey));
 
   const colEntries = Array.from(collectionCounts.entries()).sort((a, b) => a[0].localeCompare(b[0]));
 
