@@ -98,7 +98,7 @@ export default async function AdminDashboard() {
           </p>
           {upcomingItems.length > 0 ? (
             <div className="space-y-1.5">
-              {upcomingItems.slice(0, 3).map((item) => {
+              {upcomingItems.slice(0, 2).map((item) => {
                 const date = item.publishAt ?? item.unpublishAt ?? "";
                 const isExpiry = !!item.unpublishAt;
                 return (
@@ -111,8 +111,8 @@ export default async function AdminDashboard() {
                   </div>
                 );
               })}
-              {upcomingItems.length > 3 && (
-                <p className="text-[10px] text-muted-foreground">+{upcomingItems.length - 3} more</p>
+              {upcomingItems.length > 2 && (
+                <p className="text-[10px] text-muted-foreground">+{upcomingItems.length - 2} more</p>
               )}
             </div>
           ) : (
