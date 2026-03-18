@@ -28,6 +28,8 @@ export interface UserState {
   agentsView: "grid" | "list";
   /** Curation queue active tab */
   curationTab: string;
+  /** Default calendar view */
+  calendarView: "day" | "week" | "month" | "year";
   /** Last update */
   updatedAt: string;
 }
@@ -39,6 +41,7 @@ const DEFAULTS: UserState = {
   showLogoIcon: true,
   agentsView: "grid",
   curationTab: "ready",
+  calendarView: "week",
   updatedAt: new Date().toISOString(),
 };
 
