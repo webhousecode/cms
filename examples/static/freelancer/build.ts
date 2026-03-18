@@ -53,6 +53,115 @@ interface Post {
   };
 }
 
+interface FooterLink {
+  label: string;
+  href: string;
+}
+
+interface FooterColumn {
+  heading: string;
+  links: FooterLink[];
+}
+
+interface NavLink {
+  label: string;
+  href: string;
+  key: string;
+}
+
+interface SocialLink {
+  label: string;
+  href: string;
+}
+
+interface HomePage {
+  slug: string;
+  data: {
+    title: string;
+    metaDescription: string;
+    name: string;
+    jobTitle: string;
+    heroTagline: string;
+    heroCta1: string;
+    heroCta2: string;
+    trustLabel: string;
+    trustCompanies: string[];
+    servicesLabel: string;
+    servicesTitle: string;
+    servicesDesc: string;
+    testimonialsLabel: string;
+    testimonialsTitle: string;
+    testimonialsDesc: string;
+    blogLabel: string;
+    blogTitle: string;
+    blogDesc: string;
+    ctaTitle: string;
+    ctaDesc: string;
+    ctaButton: string;
+    footerDesc: string;
+    footerColumns: FooterColumn[];
+    navCta: string;
+    navLinks: NavLink[];
+    socialLinks: SocialLink[];
+    copyrightSuffix: string;
+  };
+}
+
+interface ServicesPage {
+  slug: string;
+  data: {
+    title: string;
+    metaDescription: string;
+    pricingLabel: string;
+    pricingTitle: string;
+    pricingDesc: string;
+    ctaTitle: string;
+    ctaDesc: string;
+    ctaButton: string;
+    popularBadge: string;
+    cardButton: string;
+  };
+}
+
+interface ContactPage {
+  slug: string;
+  data: {
+    title: string;
+    metaDescription: string;
+    sectionLabel: string;
+    heading: string;
+    description: string;
+    contactDetails: {
+      label: string;
+      value: string;
+      icon: string;
+    }[];
+    formFields: {
+      id: string;
+      label: string;
+      type: string;
+      placeholder: string;
+      row?: number;
+    }[];
+    submitButton: string;
+  };
+}
+
+interface BlogPage {
+  slug: string;
+  data: {
+    title: string;
+    metaDescription: string;
+    listingLabel: string;
+    listingTitle: string;
+    listingDesc: string;
+    postCtaTitle: string;
+    postCtaDesc: string;
+    postCtaButton: string;
+    backToList: string;
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Load content
 // ---------------------------------------------------------------------------
@@ -63,11 +172,21 @@ function loadCollection<T>(name: string): T[] {
     .map((f) => JSON.parse(readFileSync(join(dir, f), 'utf-8')) as T);
 }
 
+function loadPage<T>(name: string): T {
+  const filePath = join(__dirname, 'content', 'pages', `${name}.json`);
+  return JSON.parse(readFileSync(filePath, 'utf-8')) as T;
+}
+
 const services: Service[] = loadCollection<Service>('services');
 const testimonials: Testimonial[] = loadCollection<Testimonial>('testimonials');
 const posts: Post[] = loadCollection<Post>('posts').sort(
   (a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime()
 );
+
+const homePage = loadPage<HomePage>('home');
+const servicesPage = loadPage<ServicesPage>('services');
+const contactPage = loadPage<ContactPage>('contact');
+const blogPage = loadPage<BlogPage>('blog');
 
 // Sort services: starter, growth (popular), enterprise by price
 services.sort((a, b) => {
@@ -833,66 +952,82 @@ a:hover { text-decoration: underline; }
 }
 `;
 
+// SVG icons for social links
+const socialSvg: Record<string, string> = {
+  LinkedIn: '<svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>',
+  Twitter: '<svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>',
+};
+
+// SVG icons for contact items
+const contactSvg: Record<string, string> = {
+  Email: '<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>',
+  Phone: '<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z"/></svg>',
+  Location: '<svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>',
+};
+
 // ---------------------------------------------------------------------------
 // Shared components
 // ---------------------------------------------------------------------------
 function nav(activePage: string = ''): string {
+  const h = homePage.data;
+  const navLinksHtml = h.navLinks
+    .map(
+      (link) =>
+        `<li><a href="${esc(link.href)}"${activePage === link.key ? ' style="color: var(--dark); font-weight: 600;"' : ''}>${esc(link.label)}</a></li>`
+    )
+    .join('\n      ');
+
   return `
 <nav class="nav">
   <div class="nav-inner">
-    <a href="/" class="nav-brand">Sarah Mitchell</a>
+    <a href="/" class="nav-brand">${esc(h.name)}</a>
     <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="Toggle menu">
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
     </button>
     <ul class="nav-links">
-      <li><a href="/services/"${activePage === 'services' ? ' style="color: var(--dark); font-weight: 600;"' : ''}>Services</a></li>
-      <li><a href="/blog/"${activePage === 'blog' ? ' style="color: var(--dark); font-weight: 600;"' : ''}>Blog</a></li>
-      <li><a href="/contact/"${activePage === 'contact' ? ' style="color: var(--dark); font-weight: 600;"' : ''}>Contact</a></li>
-      <li><a href="/contact/" class="nav-cta">Book a Call</a></li>
+      ${navLinksHtml}
+      <li><a href="/contact/" class="nav-cta">${esc(h.navCta)}</a></li>
     </ul>
   </div>
 </nav>`;
 }
 
 function footer(): string {
+  const h = homePage.data;
+
+  const columnsHtml = h.footerColumns
+    .map(
+      (col) => `
+      <div>
+        <h4>${esc(col.heading)}</h4>
+        <ul class="footer-links">
+          ${col.links.map((link) => `<li><a href="${esc(link.href)}">${esc(link.label)}</a></li>`).join('\n          ')}
+        </ul>
+      </div>`
+    )
+    .join('\n');
+
+  const socialHtml = h.socialLinks
+    .map(
+      (link) =>
+        `<a href="${esc(link.href)}" aria-label="${esc(link.label)}">${socialSvg[link.label] || ''}</a>`
+    )
+    .join('\n        ');
+
   return `
 <footer class="footer">
   <div class="container">
     <div class="footer-grid">
       <div>
-        <div class="footer-brand">Sarah Mitchell</div>
-        <p class="footer-desc">Digital strategy consultant helping ambitious businesses scale with clarity, data, and proven frameworks.</p>
+        <div class="footer-brand">${esc(h.name)}</div>
+        <p class="footer-desc">${esc(h.footerDesc)}</p>
       </div>
-      <div>
-        <h4>Quick Links</h4>
-        <ul class="footer-links">
-          <li><a href="/services/">Services</a></li>
-          <li><a href="/blog/">Blog</a></li>
-          <li><a href="/contact/">Contact</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4>Services</h4>
-        <ul class="footer-links">
-          <li><a href="/services/">Starter Package</a></li>
-          <li><a href="/services/">Growth Package</a></li>
-          <li><a href="/services/">Enterprise</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4>Connect</h4>
-        <ul class="footer-links">
-          <li><a href="#">LinkedIn</a></li>
-          <li><a href="#">Twitter / X</a></li>
-          <li><a href="#">Newsletter</a></li>
-        </ul>
-      </div>
+      ${columnsHtml}
     </div>
     <div class="footer-bottom">
-      <span>&copy; ${new Date().getFullYear()} Sarah Mitchell. All rights reserved. Built with <a href="https://webhouse.app">@webhouse/cms</a>.</span>
+      <span>&copy; ${new Date().getFullYear()} ${esc(h.name)}. ${esc(h.copyrightSuffix)} Built with <a href="https://webhouse.app">@webhouse/cms</a>.</span>
       <div class="footer-social">
-        <a href="#" aria-label="LinkedIn"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg></a>
-        <a href="#" aria-label="Twitter"><svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg></a>
+        ${socialHtml}
       </div>
     </div>
   </div>
@@ -900,13 +1035,14 @@ function footer(): string {
 }
 
 function page(title: string, body: string, activePage: string = ''): string {
+  const h = homePage.data;
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${esc(title)} — Sarah Mitchell</title>
-  <meta name="description" content="Digital strategy consultant helping ambitious businesses scale with clarity and data-driven frameworks.">
+  <title>${esc(title)} — ${esc(h.name)}</title>
+  <meta name="description" content="${esc(h.metaDescription)}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
@@ -924,19 +1060,21 @@ ${footer()}
 // Page: Home
 // ---------------------------------------------------------------------------
 function buildHome(): string {
+  const h = homePage.data;
+
   // Services preview
   const servicesHtml = services
     .map(
       (s) => `
       <div class="pricing-card${s.data.popular ? ' popular' : ''}">
-        ${s.data.popular ? '<div class="popular-badge">Most Popular</div>' : ''}
+        ${s.data.popular ? `<div class="popular-badge">${esc(servicesPage.data.popularBadge)}</div>` : ''}
         <h3>${esc(s.data.title)}</h3>
         <div class="pricing-price">${esc(s.data.price)}</div>
         <p class="pricing-desc">${esc(s.data.description)}</p>
         <ul class="pricing-features">
           ${s.data.features.map((f) => `<li>${esc(f.text)}</li>`).join('\n          ')}
         </ul>
-        <a href="/services/" class="btn ${s.data.popular ? 'btn-primary' : 'btn-outline'}">Get Started</a>
+        <a href="/services/" class="btn ${s.data.popular ? 'btn-primary' : 'btn-outline'}">${esc(servicesPage.data.cardButton)}</a>
       </div>`
     )
     .join('\n');
@@ -979,12 +1117,12 @@ function buildHome(): string {
 <section class="hero">
   <div class="hero-bg"></div>
   <div class="hero-content">
-    <h1 class="hero-name">Sarah Mitchell</h1>
-    <p class="hero-title">Digital Strategy Consultant</p>
-    <p class="hero-tagline">I help ambitious businesses cut through the noise, find their growth levers, and scale with confidence. Data-driven strategy, real results.</p>
+    <h1 class="hero-name">${esc(h.name)}</h1>
+    <p class="hero-title">${esc(h.jobTitle)}</p>
+    <p class="hero-tagline">${esc(h.heroTagline)}</p>
     <div class="hero-ctas">
-      <a href="/contact/" class="btn btn-primary">Book a Call</a>
-      <a href="/services/" class="btn btn-outline" style="color: var(--white); border-color: rgba(255,255,255,0.3);">View Services</a>
+      <a href="/contact/" class="btn btn-primary">${esc(h.heroCta1)}</a>
+      <a href="/services/" class="btn btn-outline" style="color: var(--white); border-color: rgba(255,255,255,0.3);">${esc(h.heroCta2)}</a>
     </div>
   </div>
 </section>
@@ -992,13 +1130,9 @@ function buildHome(): string {
 <!-- Trust bar -->
 <section class="trust-bar">
   <div class="container">
-    <div class="trust-label">Trusted by 50+ companies worldwide</div>
+    <div class="trust-label">${esc(h.trustLabel)}</div>
     <div class="trust-logos">
-      <div class="trust-logo">Meridian</div>
-      <div class="trust-logo">Luma</div>
-      <div class="trust-logo">Atlas</div>
-      <div class="trust-logo">Bloom &amp; Grow</div>
-      <div class="trust-logo">NovaTech</div>
+      ${h.trustCompanies.map((c) => `<div class="trust-logo">${esc(c)}</div>`).join('\n      ')}
     </div>
   </div>
 </section>
@@ -1007,9 +1141,9 @@ function buildHome(): string {
 <section class="pricing-section">
   <div class="container">
     <div class="text-center">
-      <span class="section-label">Services</span>
-      <h2 class="section-title">Packages designed for every stage of growth</h2>
-      <p class="section-desc mx-auto">Whether you're just getting started or scaling to new heights, there's a plan that fits your needs and ambitions.</p>
+      <span class="section-label">${esc(h.servicesLabel)}</span>
+      <h2 class="section-title">${esc(h.servicesTitle)}</h2>
+      <p class="section-desc mx-auto">${esc(h.servicesDesc)}</p>
     </div>
     <div class="pricing-grid">
       ${servicesHtml}
@@ -1021,9 +1155,9 @@ function buildHome(): string {
 <section class="testimonials-section">
   <div class="container">
     <div class="text-center">
-      <span class="section-label">Testimonials</span>
-      <h2 class="section-title">What my clients say</h2>
-      <p class="section-desc mx-auto">Real results from real partnerships. Here's what working together looks like.</p>
+      <span class="section-label">${esc(h.testimonialsLabel)}</span>
+      <h2 class="section-title">${esc(h.testimonialsTitle)}</h2>
+      <p class="section-desc mx-auto">${esc(h.testimonialsDesc)}</p>
     </div>
     <div class="testimonials-grid">
       ${testimonialsHtml}
@@ -1035,9 +1169,9 @@ function buildHome(): string {
 <section class="blog-section">
   <div class="container">
     <div class="text-center">
-      <span class="section-label">Insights</span>
-      <h2 class="section-title">Latest from the blog</h2>
-      <p class="section-desc mx-auto">Strategies, frameworks, and lessons from a decade of helping businesses grow.</p>
+      <span class="section-label">${esc(h.blogLabel)}</span>
+      <h2 class="section-title">${esc(h.blogTitle)}</h2>
+      <p class="section-desc mx-auto">${esc(h.blogDesc)}</p>
     </div>
     <div class="blog-grid">
       ${blogHtml}
@@ -1048,31 +1182,33 @@ function buildHome(): string {
 <!-- CTA -->
 <section class="cta-section">
   <div class="container">
-    <h2>Ready to grow your business?</h2>
-    <p>Let's talk about where you are, where you want to be, and how to get there — faster.</p>
-    <a href="/contact/" class="btn btn-white">Book a Free Strategy Call</a>
+    <h2>${esc(h.ctaTitle)}</h2>
+    <p>${esc(h.ctaDesc)}</p>
+    <a href="/contact/" class="btn btn-white">${esc(h.ctaButton)}</a>
   </div>
 </section>`;
 
-  return page('Home', body);
+  return page(h.title, body);
 }
 
 // ---------------------------------------------------------------------------
 // Page: Services
 // ---------------------------------------------------------------------------
 function buildServices(): string {
+  const s = servicesPage.data;
+
   const servicesHtml = services
     .map(
-      (s) => `
-      <div class="pricing-card${s.data.popular ? ' popular' : ''}">
-        ${s.data.popular ? '<div class="popular-badge">Most Popular</div>' : ''}
-        <h3>${esc(s.data.title)}</h3>
-        <div class="pricing-price">${esc(s.data.price)}</div>
-        <p class="pricing-desc">${esc(s.data.description)}</p>
+      (svc) => `
+      <div class="pricing-card${svc.data.popular ? ' popular' : ''}">
+        ${svc.data.popular ? `<div class="popular-badge">${esc(s.popularBadge)}</div>` : ''}
+        <h3>${esc(svc.data.title)}</h3>
+        <div class="pricing-price">${esc(svc.data.price)}</div>
+        <p class="pricing-desc">${esc(svc.data.description)}</p>
         <ul class="pricing-features">
-          ${s.data.features.map((f) => `<li>${esc(f.text)}</li>`).join('\n          ')}
+          ${svc.data.features.map((f) => `<li>${esc(f.text)}</li>`).join('\n          ')}
         </ul>
-        <a href="/contact/" class="btn ${s.data.popular ? 'btn-primary' : 'btn-outline'}">Get Started</a>
+        <a href="/contact/" class="btn ${svc.data.popular ? 'btn-primary' : 'btn-outline'}">${esc(s.cardButton)}</a>
       </div>`
     )
     .join('\n');
@@ -1081,9 +1217,9 @@ function buildServices(): string {
 <section class="pricing-section" style="padding-top: clamp(3rem, 6vw, 5rem);">
   <div class="container">
     <div class="text-center">
-      <span class="section-label">Pricing</span>
-      <h2 class="section-title">Simple, transparent pricing</h2>
-      <p class="section-desc mx-auto">No hidden fees. No long-term contracts. Just clear value at every tier. All packages include a 30-day satisfaction guarantee.</p>
+      <span class="section-label">${esc(s.pricingLabel)}</span>
+      <h2 class="section-title">${esc(s.pricingTitle)}</h2>
+      <p class="section-desc mx-auto">${esc(s.pricingDesc)}</p>
     </div>
     <div class="pricing-grid">
       ${servicesHtml}
@@ -1093,19 +1229,21 @@ function buildServices(): string {
 
 <section class="cta-section">
   <div class="container">
-    <h2>Not sure which package is right?</h2>
-    <p>Book a free 30-minute strategy call. We'll figure out the best path forward together.</p>
-    <a href="/contact/" class="btn btn-white">Book a Free Call</a>
+    <h2>${esc(s.ctaTitle)}</h2>
+    <p>${esc(s.ctaDesc)}</p>
+    <a href="/contact/" class="btn btn-white">${esc(s.ctaButton)}</a>
   </div>
 </section>`;
 
-  return page('Services', body, 'services');
+  return page(s.title, body, 'services');
 }
 
 // ---------------------------------------------------------------------------
 // Page: Blog listing
 // ---------------------------------------------------------------------------
 function buildBlogIndex(): string {
+  const b = blogPage.data;
+
   const blogHtml = posts
     .map(
       (p) => `
@@ -1124,9 +1262,9 @@ function buildBlogIndex(): string {
 <section class="blog-section" style="padding-top: clamp(3rem, 6vw, 5rem);">
   <div class="container">
     <div class="text-center">
-      <span class="section-label">Blog</span>
-      <h2 class="section-title">Insights & strategies</h2>
-      <p class="section-desc mx-auto">Practical frameworks, lessons, and strategic thinking to help you grow smarter.</p>
+      <span class="section-label">${esc(b.listingLabel)}</span>
+      <h2 class="section-title">${esc(b.listingTitle)}</h2>
+      <p class="section-desc mx-auto">${esc(b.listingDesc)}</p>
     </div>
     <div class="blog-grid">
       ${blogHtml}
@@ -1134,19 +1272,22 @@ function buildBlogIndex(): string {
   </div>
 </section>`;
 
-  return page('Blog', body, 'blog');
+  return page(b.title, body, 'blog');
 }
 
 // ---------------------------------------------------------------------------
 // Page: Blog post
 // ---------------------------------------------------------------------------
 function buildBlogPost(post: Post): string {
+  const h = homePage.data;
+  const b = blogPage.data;
+
   const body = `
 <section class="post-header">
   <div class="container">
-    <a href="/blog/" class="post-back">&larr; Back to Blog</a>
+    <a href="/blog/" class="post-back">&larr; ${esc(b.backToList)}</a>
     <h1>${esc(post.data.title)}</h1>
-    <div class="post-meta">${formatDate(post.data.date)} &middot; Sarah Mitchell</div>
+    <div class="post-meta">${formatDate(post.data.date)} &middot; ${esc(h.name)}</div>
   </div>
 </section>
 <img src="${esc(post.data.coverImage)}" alt="" class="post-cover" loading="lazy">
@@ -1156,9 +1297,9 @@ function buildBlogPost(post: Post): string {
 
 <section class="cta-section">
   <div class="container">
-    <h2>Want strategies like these for your business?</h2>
-    <p>Let's talk about how to turn insights into action for your specific situation.</p>
-    <a href="/contact/" class="btn btn-white">Book a Strategy Call</a>
+    <h2>${esc(b.postCtaTitle)}</h2>
+    <p>${esc(b.postCtaDesc)}</p>
+    <a href="/contact/" class="btn btn-white">${esc(b.postCtaButton)}</a>
   </div>
 </section>`;
 
@@ -1169,74 +1310,89 @@ function buildBlogPost(post: Post): string {
 // Page: Contact
 // ---------------------------------------------------------------------------
 function buildContact(): string {
+  const c = contactPage.data;
+
+  // Build form fields
+  const rowFields = c.formFields.filter((f) => f.row);
+  const standaloneFields = c.formFields.filter((f) => !f.row);
+
+  // Group row fields by row number
+  const rows = new Map<number, typeof c.formFields>();
+  for (const field of rowFields) {
+    const row = field.row!;
+    if (!rows.has(row)) rows.set(row, []);
+    rows.get(row)!.push(field);
+  }
+
+  let formHtml = '';
+
+  // Render row fields
+  for (const [, fields] of rows) {
+    formHtml += `
+          <div class="form-row">
+            ${fields
+              .map(
+                (f) => `<div class="form-group">
+              <label class="form-label" for="${esc(f.id)}">${esc(f.label)}</label>
+              <input type="${esc(f.type)}" id="${esc(f.id)}" class="form-input" placeholder="${esc(f.placeholder)}">
+            </div>`
+              )
+              .join('\n            ')}
+          </div>`;
+  }
+
+  // Render standalone fields
+  for (const f of standaloneFields) {
+    if (f.type === 'textarea') {
+      formHtml += `
+          <div class="form-group">
+            <label class="form-label" for="${esc(f.id)}">${esc(f.label)}</label>
+            <textarea id="${esc(f.id)}" class="form-textarea" placeholder="${esc(f.placeholder)}"></textarea>
+          </div>`;
+    } else {
+      formHtml += `
+          <div class="form-group">
+            <label class="form-label" for="${esc(f.id)}">${esc(f.label)}</label>
+            <input type="${esc(f.type)}" id="${esc(f.id)}" class="form-input" placeholder="${esc(f.placeholder)}">
+          </div>`;
+    }
+  }
+
   const body = `
 <section class="contact-section">
   <div class="container">
     <div class="contact-grid">
       <div class="contact-info">
-        <span class="section-label">Get in Touch</span>
-        <h2>Let's start a conversation</h2>
-        <p>Whether you have a specific challenge or just want to explore how strategic consulting could help your business, I'd love to hear from you.</p>
+        <span class="section-label">${esc(c.sectionLabel)}</span>
+        <h2>${esc(c.heading)}</h2>
+        <p>${esc(c.description)}</p>
 
-        <div class="contact-item">
+        ${c.contactDetails
+          .map(
+            (item) => `<div class="contact-item">
           <div class="contact-icon">
-            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"/></svg>
+            ${contactSvg[item.icon] || ''}
           </div>
           <div>
-            <div class="contact-item-label">Email</div>
-            <div class="contact-item-value">hello@sarahmitchell.co</div>
+            <div class="contact-item-label">${esc(item.label)}</div>
+            <div class="contact-item-value">${esc(item.value)}</div>
           </div>
-        </div>
-
-        <div class="contact-item">
-          <div class="contact-icon">
-            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z"/></svg>
-          </div>
-          <div>
-            <div class="contact-item-label">Phone</div>
-            <div class="contact-item-value">+1 (415) 555-0182</div>
-          </div>
-        </div>
-
-        <div class="contact-item">
-          <div class="contact-icon">
-            <svg fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"/></svg>
-          </div>
-          <div>
-            <div class="contact-item-label">Location</div>
-            <div class="contact-item-value">San Francisco, CA</div>
-          </div>
-        </div>
+        </div>`
+          )
+          .join('\n\n        ')}
       </div>
 
       <div class="contact-form">
         <form>
-          <div class="form-row">
-            <div class="form-group">
-              <label class="form-label" for="name">Full Name</label>
-              <input type="text" id="name" class="form-input" placeholder="John Doe">
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="email">Email</label>
-              <input type="email" id="email" class="form-input" placeholder="john@company.com">
-            </div>
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="company">Company</label>
-            <input type="text" id="company" class="form-input" placeholder="Acme Inc.">
-          </div>
-          <div class="form-group">
-            <label class="form-label" for="message">How can I help?</label>
-            <textarea id="message" class="form-textarea" placeholder="Tell me about your business and what you're looking to achieve..."></textarea>
-          </div>
-          <button type="submit" class="btn btn-primary" style="width: 100%;">Send Message</button>
+          ${formHtml}
+          <button type="submit" class="btn btn-primary" style="width: 100%;">${esc(c.submitButton)}</button>
         </form>
       </div>
     </div>
   </div>
 </section>`;
 
-  return page('Contact', body, 'contact');
+  return page(c.title, body, 'contact');
 }
 
 // ---------------------------------------------------------------------------

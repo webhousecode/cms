@@ -4,6 +4,13 @@
   "data": {
     "title": "Services",
     "metaDescription": "Simple, transparent pricing for digital strategy consulting. No hidden fees, no long-term contracts — just clear value at every tier.",
-    "content": "<section class=\"pricing\">\n<h2>Simple, transparent pricing</h2>\n<p>No hidden fees. No long-term contracts. Just clear value at every tier. All packages include a 30-day satisfaction guarantee.</p>\n</section>\n\n<section class=\"cta\">\n<h2>Not sure which package is right?</h2>\n<p>Book a free 30-minute strategy call. We'll figure out the best path forward together.</p>\n<a href=\"/contact/\">Book a Free Call</a>\n</section>"
+    "pricingLabel": "Pricing",
+    "pricingTitle": "Simple, transparent pricing",
+    "pricingDesc": "No hidden fees. No long-term contracts. Just clear value at every tier. All packages include a 30-day satisfaction guarantee.",
+    "ctaTitle": "Not sure which package is right?",
+    "ctaDesc": "Book a free 30-minute strategy call. We'll figure out the best path forward together.",
+    "ctaButton": "Book a Free Call",
+    "popularBadge": "Most Popular",
+    "cardButton": "Get Started"
   }
 }

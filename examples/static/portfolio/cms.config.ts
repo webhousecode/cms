@@ -25,9 +25,19 @@ export default defineConfig({
       urlPrefix: '/',
       fields: [
         { name: 'title', type: 'text', label: 'Page Title', required: true },
+        { name: 'label', type: 'text', label: 'Section Label' },
         { name: 'content', type: 'richtext', label: 'Content' },
         { name: 'metaDescription', type: 'textarea', label: 'Meta Description' },
         { name: 'heroImage', type: 'image', label: 'Hero Image' },
+        {
+          name: 'socialLinks',
+          type: 'list',
+          label: 'Social Links',
+          fields: [
+            { name: 'label', type: 'text', label: 'Label' },
+            { name: 'url', type: 'text', label: 'URL' },
+          ],
+        },
       ],
     }),
   ],

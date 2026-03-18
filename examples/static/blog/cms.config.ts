@@ -23,6 +23,9 @@ export default defineConfig({
       slug: 'pages',
       fields: [
         { name: 'title', type: 'text', label: 'Title', required: true },
+        { name: 'siteTitle', type: 'text', label: 'Site Title' },
+        { name: 'tagline', type: 'text', label: 'Tagline' },
+        { name: 'metaDescription', type: 'text', label: 'Meta Description' },
         { name: 'content', type: 'richtext', label: 'Content' },
       ],
     }),

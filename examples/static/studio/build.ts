@@ -1,7 +1,7 @@
 /**
  * OBSIDIAN Studio — Static site build pipeline
  *
- * Reads project and news content from JSON files and generates
+ * Reads ALL content from JSON files in content/ and generates
  * a complete static site into dist/.
  *
  * Usage:  npx tsx build.ts
@@ -40,6 +40,28 @@ interface NewsData {
   };
 }
 
+interface SiteSettings {
+  slug: string;
+  status: string;
+  data: {
+    studioName: string;
+    footerLocation: string;
+    footerEmail: string;
+    copyright: string;
+    instagramLabel: string;
+    instagramUrl: string;
+    builtWithLabel: string;
+    builtWithUrl: string;
+    builtWithName: string;
+  };
+}
+
+interface PageData {
+  slug: string;
+  status: string;
+  data: Record<string, string>;
+}
+
 // ---------------------------------------------------------------------------
 // Load content
 // ---------------------------------------------------------------------------
@@ -50,6 +72,15 @@ function loadCollection<T>(dir: string): T[] {
     .map((f) => JSON.parse(readFileSync(join(fullDir, f), 'utf-8')) as T)
     .filter((item: any) => item.status === 'published');
 }
+
+function loadSingle<T>(path: string): T {
+  return JSON.parse(readFileSync(join(__dirname, path), 'utf-8')) as T;
+}
+
+const site = loadSingle<SiteSettings>('content/settings/site.json');
+const homePage = loadSingle<PageData>('content/pages/home.json');
+const projectsPage = loadSingle<PageData>('content/pages/projects.json');
+const newsPage = loadSingle<PageData>('content/pages/news.json');
 
 const projects = loadCollection<ProjectData>('content/projects');
 const news = loadCollection<NewsData>('content/news').sort(
@@ -214,7 +245,7 @@ function head(title: string, description: string): string {
 function nav(basePath: string = ''): string {
   return `
 <nav class="nav">
-  <a href="${basePath || '/'}" class="nav-logo">OBSIDIAN</a>
+  <a href="${basePath || '/'}" class="nav-logo">${esc(site.data.studioName)}</a>
   <ul class="nav-links">
     <li><a href="${basePath ? basePath + 'projects/' : '/projects/'}">Work</a></li>
     <li><a href="${basePath ? basePath + 'news/' : '/news/'}">News</a></li>
@@ -225,13 +256,13 @@ function nav(basePath: string = ''): string {
 function footer(): string {
   return `
 <footer class="footer">
-  <div class="footer-name">OBSIDIAN</div>
+  <div class="footer-name">${esc(site.data.studioName)}</div>
   <div class="footer-info">
-    <span>Nordhavn, Copenhagen</span>
-    <span>hello@obsidian.studio</span>
-    <span>&copy; 2024 Obsidian Studio</span>
-    <span>Built with <a href="https://webhouse.app">@webhouse/cms</a></span>
-    <a href="#">Instagram</a>
+    <span>${esc(site.data.footerLocation)}</span>
+    <span>${esc(site.data.footerEmail)}</span>
+    <span>&copy; ${esc(site.data.copyright)}</span>
+    <span>${esc(site.data.builtWithLabel)} <a href="${esc(site.data.builtWithUrl)}">${esc(site.data.builtWithName)}</a></span>
+    <a href="${esc(site.data.instagramUrl)}">${esc(site.data.instagramLabel)}</a>
   </div>
 </footer>`;
 }
@@ -265,7 +296,7 @@ function buildHome(): string {
     })
     .join('\n');
 
-  return `${head('OBSIDIAN — Creative Studio', 'Bold, experimental creative studio in Copenhagen. Installation, branding, digital, campaign.')}
+  return `${head(homePage.data.title, homePage.data.metaDescription)}
 
     /* ---- Home Hero ---- */
     .home-hero {
@@ -331,16 +362,16 @@ function buildHome(): string {
 ${nav()}
 
 <section class="home-hero">
-  <h1>OBSIDIAN<span class="accent-dot">.</span></h1>
-  <p class="tagline">We make things that refuse to be ignored. Installation, identity, digital experience, campaign.</p>
+  <h1>${esc(homePage.data.heroHeading)}<span class="accent-dot">.</span></h1>
+  <p class="tagline">${esc(homePage.data.tagline)}</p>
 </section>
 
 <hr class="divider">
 
 <section class="projects-section">
   <div class="section-header">
-    <h2>Selected Work</h2>
-    <a href="/projects/">View all &rarr;</a>
+    <h2>${esc(homePage.data.selectedWorkLabel)}</h2>
+    <a href="/projects/">${esc(homePage.data.viewAllLabel)} &rarr;</a>
   </div>
   ${projectsHtml}
 </section>
@@ -375,7 +406,7 @@ function buildProjectsIndex(): string {
     )
     .join('\n');
 
-  return `${head('Work — OBSIDIAN', 'Selected projects from OBSIDIAN creative studio.')}
+  return `${head(projectsPage.data.title, projectsPage.data.metaDescription)}
 
     .page-title-section {
       padding: clamp(8rem, 15vw, 12rem) clamp(1.5rem, 4vw, 3rem) clamp(3rem, 6vw, 5rem);
@@ -405,7 +436,7 @@ function buildProjectsIndex(): string {
 ${nav('../')}
 
 <section class="page-title-section">
-  <h1>WORK</h1>
+  <h1>${esc(projectsPage.data.heading)}</h1>
 </section>
 
 <hr class="divider">
@@ -439,7 +470,7 @@ function buildProjectDetail(project: ProjectData): string {
     )
     .join('\n');
 
-  return `${head(`${data.title} — OBSIDIAN`, data.description.slice(0, 160))}
+  return `${head(`${data.title} — ${site.data.studioName}`, data.description.slice(0, 160))}
 
     .project-hero {
       position: relative;
@@ -564,7 +595,7 @@ function buildNewsIndex(): string {
     )
     .join('\n');
 
-  return `${head('News — OBSIDIAN', 'Latest news, awards, and exhibitions from OBSIDIAN creative studio.')}
+  return `${head(newsPage.data.title, newsPage.data.metaDescription)}
 
     .page-title-section {
       padding: clamp(8rem, 15vw, 12rem) clamp(1.5rem, 4vw, 3rem) clamp(3rem, 6vw, 5rem);
@@ -612,7 +643,7 @@ function buildNewsIndex(): string {
 ${nav('../')}
 
 <section class="page-title-section">
-  <h1>NEWS</h1>
+  <h1>${esc(newsPage.data.heading)}</h1>
 </section>
 
 <hr class="divider">

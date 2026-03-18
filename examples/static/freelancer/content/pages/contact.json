@@ -4,6 +4,20 @@
   "data": {
     "title": "Contact",
     "metaDescription": "Get in touch with Sarah Mitchell. Book a free strategy call or send a message to discuss how strategic consulting can help your business.",
-    "content": "<section class=\"contact\">\n<h2>Let's start a conversation</h2>\n<p>Whether you have a specific challenge or just want to explore how strategic consulting could help your business, I'd love to hear from you.</p>\n\n<h3>Email</h3>\n<p>hello@sarahmitchell.co</p>\n\n<h3>Phone</h3>\n<p>+1 (415) 555-0182</p>\n\n<h3>Location</h3>\n<p>San Francisco, CA</p>\n</section>"
+    "sectionLabel": "Get in Touch",
+    "heading": "Let's start a conversation",
+    "description": "Whether you have a specific challenge or just want to explore how strategic consulting could help your business, I'd love to hear from you.",
+    "contactDetails": [
+      { "label": "Email", "value": "hello@sarahmitchell.co", "icon": "Email" },
+      { "label": "Phone", "value": "+1 (415) 555-0182", "icon": "Phone" },
+      { "label": "Location", "value": "San Francisco, CA", "icon": "Location" }
+    ],
+    "formFields": [
+      { "id": "name", "label": "Full Name", "type": "text", "placeholder": "John Doe", "row": 1 },
+      { "id": "email", "label": "Email", "type": "email", "placeholder": "john@company.com", "row": 1 },
+      { "id": "company", "label": "Company", "type": "text", "placeholder": "Acme Inc." },
+      { "id": "message", "label": "How can I help?", "type": "textarea", "placeholder": "Tell me about your business and what you're looking to achieve..." }
+    ],
+    "submitButton": "Send Message"
   }
 }

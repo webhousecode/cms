@@ -1,0 +1,19 @@
+{
+  "slug": "site",
+  "status": "published",
+  "data": {
+    "siteName": "Elina Voss",
+    "email": "hello@elinavoss.com",
+    "footerText": "All rights reserved.",
+    "socialLinks": [
+      { "label": "Instagram", "url": "https://instagram.com/elinavoss" },
+      { "label": "LinkedIn", "url": "https://linkedin.com/in/elinavoss" },
+      { "label": "Behance", "url": "https://behance.net/elinavoss" }
+    ],
+    "navLinks": [
+      { "label": "Select Works", "href": "/", "key": "work" },
+      { "label": "Info", "href": "/about/", "key": "about" },
+      { "label": "Contact", "href": "/contact/", "key": "contact" }
+    ]
+  }
+}

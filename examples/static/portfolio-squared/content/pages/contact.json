@@ -3,6 +3,8 @@
   "status": "published",
   "data": {
     "title": "Contact",
-    "content": "<p>For commissions, collaborations, or general inquiries:</p><p><a href=\"mailto:hello@elinavoss.com\">hello@elinavoss.com</a></p><p>Based in Copenhagen, available worldwide.</p>"
+    "heading": "Let\u2019s Work Together",
+    "subtitle": "Available for commissions, collaborations, and editorial projects. Based in Copenhagen, working worldwide.",
+    "content": "<p>For commissions, collaborations, or general inquiries.</p>"
   }
 }

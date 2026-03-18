@@ -1,0 +1,15 @@
+{
+  "slug": "site",
+  "status": "published",
+  "data": {
+    "studioName": "OBSIDIAN",
+    "footerLocation": "Nordhavn, Copenhagen",
+    "footerEmail": "hello@obsidian.studio",
+    "copyright": "2024 Obsidian Studio",
+    "instagramLabel": "Instagram",
+    "instagramUrl": "#",
+    "builtWithLabel": "Built with",
+    "builtWithUrl": "https://webhouse.app",
+    "builtWithName": "@webhouse/cms"
+  }
+}

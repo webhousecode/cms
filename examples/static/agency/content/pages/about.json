@@ -4,7 +4,35 @@
   "data": {
     "title": "About",
     "metaDescription": "Meridian Studio was founded in 2019 with a simple conviction: great brands deserve great craft. We are a tight-knit team of strategists, designers, and developers.",
-    "content": "<h1>We believe in the power of <em>thoughtful design</em></h1>\n<p>Meridian Studio was founded in 2019 with a simple conviction: great brands deserve great craft. We are a tight-knit team of strategists, designers, and developers who obsess over every detail — from the first brand brief to the final pixel.</p>\n\n<h2>Our Values</h2>\n\n<h3>Craft Over Convention</h3>\n<p>We don't follow templates. Every project starts from a blank canvas, shaped by strategy and refined through meticulous craft.</p>\n\n<h3>Collaboration First</h3>\n<p>We work alongside our clients, not in isolation. The best results come from honest dialogue and shared ambition.</p>\n\n<h3>Impact, Not Output</h3>\n<p>We measure success by business outcomes, not deliverable lists. Every design decision connects back to your goals.</p>\n\n<h2>Meet the people behind the work</h2>\n<p>The Team — Our talented crew of strategists, designers, and developers.</p>\n\n<h2>Want to work together?</h2>\n<p>We're always looking for interesting projects and ambitious clients.</p>\n<p><a href=\"mailto:hello@meridianstudio.co\">Start a Conversation</a></p>"
+    "hero": {
+      "label": "About Us",
+      "heading": "We believe in the power of <span class=\"gradient-text\">thoughtful design</span>",
+      "intro": "Meridian Studio was founded in 2019 with a simple conviction: great brands deserve great craft. We are a tight-knit team of strategists, designers, and developers who obsess over every detail \u2014 from the first brand brief to the final pixel."
+    },
+    "values": [
+      {
+        "title": "Craft Over Convention",
+        "description": "We don\u2019t follow templates. Every project starts from a blank canvas, shaped by strategy and refined through meticulous craft."
+      },
+      {
+        "title": "Collaboration First",
+        "description": "We work alongside our clients, not in isolation. The best results come from honest dialogue and shared ambition."
+      },
+      {
+        "title": "Impact, Not Output",
+        "description": "We measure success by business outcomes, not deliverable lists. Every design decision connects back to your goals."
+      }
+    ],
+    "teamSection": {
+      "label": "The Team",
+      "heading": "Meet the people behind the work"
+    },
+    "cta": {
+      "heading": "Want to work together?",
+      "subtitle": "We\u2019re always looking for interesting projects and ambitious clients.",
+      "buttonText": "Start a Conversation",
+      "buttonUrl": "mailto:hello@meridianstudio.co"
+    }
   },
   "id": "page-about",
   "_fieldMeta": {}

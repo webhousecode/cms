@@ -29,7 +29,15 @@ interface Page {
   data: {
     title: string;
     content: string;
+    siteTitle?: string;
+    tagline?: string;
+    metaDescription?: string;
   };
+}
+
+function readJson<T>(filePath: string): T | null {
+  if (!fs.existsSync(filePath)) return null;
+  return JSON.parse(fs.readFileSync(filePath, 'utf-8')) as T;
 }
 
 function readJsonDir<T>(dir: string): T[] {
@@ -61,12 +69,12 @@ function escapeHtml(s: string): string {
 // Shared HTML fragments
 // ---------------------------------------------------------------------------
 
-const HEAD = (title: string, description?: string) => `<!DOCTYPE html>
+const HEAD = (title: string, siteTitle: string, description?: string) => `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>${escapeHtml(title)} — Thinking in Pixels</title>
+  <title>${escapeHtml(title)} — ${escapeHtml(siteTitle)}</title>
   ${description ? `<meta name="description" content="${escapeHtml(description)}" />` : ''}
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -113,10 +121,10 @@ const HEAD = (title: string, description?: string) => `<!DOCTYPE html>
   </style>
 </head>`;
 
-const NAV = (active?: 'blog' | 'about') => `
+const NAV = (siteTitle: string, active?: 'blog' | 'about') => `
 <nav class="border-b border-gray-200 bg-warm">
   <div class="max-w-4xl mx-auto px-6 py-5 flex items-center justify-between">
-    <a href="/" class="font-display text-xl font-bold text-ink hover:text-accent transition-colors">Thinking in Pixels</a>
+    <a href="/" class="font-display text-xl font-bold text-ink hover:text-accent transition-colors">${escapeHtml(siteTitle)}</a>
     <div class="flex gap-6 text-sm font-semibold tracking-wide uppercase">
       <a href="/" class="${active === 'blog' ? 'text-accent' : 'text-muted hover:text-ink'} transition-colors">Blog</a>
       <a href="/about/" class="${active === 'about' ? 'text-accent' : 'text-muted hover:text-ink'} transition-colors">About</a>
@@ -124,10 +132,10 @@ const NAV = (active?: 'blog' | 'about') => `
   </div>
 </nav>`;
 
-const FOOTER = `
+const FOOTER = (siteTitle: string) => `
 <footer class="border-t border-gray-200 mt-20">
   <div class="max-w-4xl mx-auto px-6 py-10 text-center text-sm text-muted">
-    <p>&copy; ${new Date().getFullYear()} Thinking in Pixels. Built with <a href="https://webhouse.app" class="text-accent hover:underline">@webhouse/cms</a>.</p>
+    <p>&copy; ${new Date().getFullYear()} ${escapeHtml(siteTitle)}. Built with <a href="https://webhouse.app" class="text-accent hover:underline">@webhouse/cms</a>.</p>
   </div>
 </footer>`;
 
@@ -138,7 +146,9 @@ const TAG_PILL = (tag: string) =>
 // Page builders
 // ---------------------------------------------------------------------------
 
-function buildHome(posts: Post[]): string {
+function buildHome(posts: Post[], homePage: Page): string {
+  const siteTitle = homePage.data.siteTitle!;
+  const tagline = homePage.data.tagline!;
   const sorted = [...posts].sort((a, b) => b.data.date.localeCompare(a.data.date));
 
   const postCards = sorted.map(post => `
@@ -160,28 +170,28 @@ function buildHome(posts: Post[]): string {
       </div>
     </article>`).join('\n');
 
-  return `${HEAD('Blog')}
+  return `${HEAD('Blog', siteTitle, homePage.data.metaDescription)}
 <body class="bg-warm text-ink font-body antialiased">
-  ${NAV('blog')}
+  ${NAV(siteTitle, 'blog')}
 
   <header class="max-w-4xl mx-auto px-6 pt-16 pb-8">
-    <h1 class="font-display text-5xl sm:text-6xl font-extrabold tracking-tight leading-tight">Thinking in Pixels</h1>
-    <p class="mt-4 text-lg text-muted max-w-xl">Notes on design, typography, and building things for the web.</p>
+    <h1 class="font-display text-5xl sm:text-6xl font-extrabold tracking-tight leading-tight">${escapeHtml(siteTitle)}</h1>
+    <p class="mt-4 text-lg text-muted max-w-xl">${escapeHtml(tagline)}</p>
   </header>
 
   <main class="max-w-4xl mx-auto px-6">
     ${postCards}
   </main>
 
-  ${FOOTER}
+  ${FOOTER(siteTitle)}
 </body>
 </html>`;
 }
 
-function buildPost(post: Post, allPosts: Post[]): string {
-  return `${HEAD(post.data.title, post.data.excerpt)}
+function buildPost(post: Post, siteTitle: string): string {
+  return `${HEAD(post.data.title, siteTitle, post.data.excerpt)}
 <body class="bg-warm text-ink font-body antialiased">
-  ${NAV('blog')}
+  ${NAV(siteTitle, 'blog')}
 
   <article>
     <div class="w-full max-h-[420px] overflow-hidden">
@@ -205,15 +215,15 @@ function buildPost(post: Post, allPosts: Post[]): string {
     </div>
   </article>
 
-  ${FOOTER}
+  ${FOOTER(siteTitle)}
 </body>
 </html>`;
 }
 
-function buildAbout(page: Page): string {
-  return `${HEAD(page.data.title)}
+function buildAbout(page: Page, siteTitle: string): string {
+  return `${HEAD(page.data.title, siteTitle)}
 <body class="bg-warm text-ink font-body antialiased">
-  ${NAV('about')}
+  ${NAV(siteTitle, 'about')}
 
   <header class="max-w-3xl mx-auto px-6 pt-16 pb-8 text-center">
     <h1 class="font-display text-4xl sm:text-5xl font-extrabold tracking-tight">${escapeHtml(page.data.title)}</h1>
@@ -223,12 +233,12 @@ function buildAbout(page: Page): string {
     ${page.data.content}
   </div>
 
-  ${FOOTER}
+  ${FOOTER(siteTitle)}
 </body>
 </html>`;
 }
 
-function buildTagsIndex(posts: Post[]): string {
+function buildTagsIndex(posts: Post[], tagsPage: Page, siteTitle: string): string {
   const tagMap = new Map<string, Post[]>();
   for (const post of posts) {
     for (const tag of post.data.tags) {
@@ -260,20 +270,20 @@ function buildTagsIndex(posts: Post[]): string {
       </section>`;
   }).join('\n');
 
-  return `${HEAD('Tags')}
+  return `${HEAD(tagsPage.data.title, siteTitle)}
 <body class="bg-warm text-ink font-body antialiased">
-  ${NAV()}
+  ${NAV(siteTitle)}
 
   <header class="max-w-3xl mx-auto px-6 pt-16 pb-8">
-    <h1 class="font-display text-4xl sm:text-5xl font-extrabold tracking-tight">Tags</h1>
-    <p class="mt-4 text-lg text-muted">Browse posts by topic.</p>
+    <h1 class="font-display text-4xl sm:text-5xl font-extrabold tracking-tight">${escapeHtml(tagsPage.data.title)}</h1>
+    <p class="mt-4 text-lg text-muted">${escapeHtml(tagsPage.data.content)}</p>
   </header>
 
   <main class="max-w-3xl mx-auto px-6 pb-16">
     ${tagSections}
   </main>
 
-  ${FOOTER}
+  ${FOOTER(siteTitle)}
 </body>
 </html>`;
 }
@@ -293,25 +303,40 @@ function build() {
   const posts = readJsonDir<Post>(path.join(CONTENT, 'posts')).filter(p => p.status === 'published');
   const pages = readJsonDir<Page>(path.join(CONTENT, 'pages')).filter(p => p.status === 'published');
 
+  // Load site-wide data from home.json
+  const homePage = pages.find(p => p.slug === 'home');
+  if (!homePage) {
+    console.error('ERROR: content/pages/home.json is missing or not published.');
+    process.exit(1);
+  }
+  const siteTitle = homePage.data.siteTitle!;
+
+  // Load tags page data
+  const tagsPage = pages.find(p => p.slug === 'tags');
+  if (!tagsPage) {
+    console.error('ERROR: content/pages/tags.json is missing or not published.');
+    process.exit(1);
+  }
+
   // Home page
-  writeFile(path.join(DIST, 'index.html'), buildHome(posts));
+  writeFile(path.join(DIST, 'index.html'), buildHome(posts, homePage));
   console.log(`  index.html (${posts.length} posts)`);
 
   // Post pages
   for (const post of posts) {
-    writeFile(path.join(DIST, 'posts', post.slug, 'index.html'), buildPost(post, posts));
+    writeFile(path.join(DIST, 'posts', post.slug, 'index.html'), buildPost(post, siteTitle));
     console.log(`  posts/${post.slug}/index.html`);
   }
 
   // About page
   const about = pages.find(p => p.slug === 'about');
   if (about) {
-    writeFile(path.join(DIST, 'about', 'index.html'), buildAbout(about));
+    writeFile(path.join(DIST, 'about', 'index.html'), buildAbout(about, siteTitle));
     console.log('  about/index.html');
   }
 
   // Tags page
-  writeFile(path.join(DIST, 'tags', 'index.html'), buildTagsIndex(posts));
+  writeFile(path.join(DIST, 'tags', 'index.html'), buildTagsIndex(posts, tagsPage, siteTitle));
   console.log('  tags/index.html');
 
   console.log(`\nDone! ${posts.length} posts, ${pages.length} pages → dist/`);

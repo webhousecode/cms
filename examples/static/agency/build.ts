@@ -34,6 +34,40 @@ interface Document<T> {
   data: T;
 }
 
+interface HomePageData {
+  title: string;
+  metaDescription: string;
+  hero: { label: string; heading: string; subtitle: string; ctaText: string; ctaUrl: string };
+  services: { label: string; heading: string };
+  featuredWork: { label: string; heading: string; viewAllText: string };
+  team: { label: string; heading: string };
+  cta: { heading: string; subtitle: string; buttonText: string; buttonUrl: string };
+}
+
+interface AboutPageData {
+  title: string;
+  metaDescription: string;
+  hero: { label: string; heading: string; intro: string };
+  values: { title: string; description: string }[];
+  teamSection: { label: string; heading: string };
+  cta: { heading: string; subtitle: string; buttonText: string; buttonUrl: string };
+}
+
+interface WorkPageData {
+  title: string;
+  metaDescription: string;
+  hero: { label: string; heading: string };
+}
+
+interface SiteData {
+  siteName: string;
+  footer: {
+    description: string;
+    email: string;
+    socialLinks: { label: string; url: string }[];
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Content loaders
 // ---------------------------------------------------------------------------
@@ -46,6 +80,15 @@ function loadCollection<T>(name: string): Document<T>[] {
     .filter((f) => f.endsWith('.json'))
     .map((f) => JSON.parse(readFileSync(join(dir, f), 'utf-8')))
     .filter((d: Document<T>) => d.status === 'published');
+}
+
+function loadPage<T>(slug: string): Document<T> {
+  const file = join(CONTENT_DIR, 'pages', `${slug}.json`);
+  return JSON.parse(readFileSync(file, 'utf-8'));
+}
+
+function loadSiteData(): SiteData {
+  return JSON.parse(readFileSync(join(CONTENT_DIR, 'site.json'), 'utf-8'));
 }
 
 // ---------------------------------------------------------------------------
@@ -63,15 +106,13 @@ const ICONS: Record<string, string> = {
 // Shared HTML helpers
 // ---------------------------------------------------------------------------
 
-const SITE_NAME = 'Meridian Studio';
-
-function head(title: string) {
+function head(title: string, site: SiteData) {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>${title} — ${SITE_NAME}</title>
+  <title>${title} — ${site.siteName}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
@@ -194,7 +235,7 @@ function head(title: string) {
 </head>`;
 }
 
-function nav(active: 'home' | 'work' | 'about' = 'home') {
+function nav(active: 'home' | 'work' | 'about', site: SiteData) {
   const links = [
     { href: '/index.html', label: 'Home', key: 'home' },
     { href: '/work/index.html', label: 'Work', key: 'work' },
@@ -209,7 +250,7 @@ function nav(active: 'home' | 'work' | 'about' = 'home') {
   return `
   <nav class="nav-fixed">
     <div class="max-w-7xl mx-auto flex items-center justify-between px-6 lg:px-8 py-5">
-      <a href="/index.html" class="font-heading font-800 text-lg tracking-tight" style="font-weight:800;">${SITE_NAME}</a>
+      <a href="/index.html" class="font-heading font-800 text-lg tracking-tight" style="font-weight:800;">${site.siteName}</a>
       <div class="flex items-center gap-8">
         ${linkHtml}
       </div>
@@ -217,17 +258,20 @@ function nav(active: 'home' | 'work' | 'about' = 'home') {
   </nav>`;
 }
 
-function footer() {
+function footer(site: SiteData) {
   const year = new Date().getFullYear();
+  const socialLinksHtml = site.footer.socialLinks
+    .map((s) => `<a href="${s.url}" class="footer-link">${s.label}</a>`)
+    .join('\n            ');
   return `
   <footer class="border-t border-gray-100" style="background: #fafafa;">
     <div class="max-w-7xl mx-auto px-6 lg:px-8 py-16">
       <div class="grid grid-cols-1 md:grid-cols-4 gap-10">
         <!-- Brand -->
         <div class="md:col-span-2">
-          <p class="font-heading font-800 text-lg tracking-tight mb-3" style="font-weight:800;">${SITE_NAME}</p>
+          <p class="font-heading font-800 text-lg tracking-tight mb-3" style="font-weight:800;">${site.siteName}</p>
           <p class="text-[#666] text-sm leading-relaxed max-w-md">
-            A creative agency crafting bold digital experiences for ambitious brands. Based in Copenhagen, working worldwide.
+            ${site.footer.description}
           </p>
         </div>
 
@@ -245,16 +289,14 @@ function footer() {
         <div>
           <p class="font-heading font-700 text-xs tracking-widest uppercase text-[#999] mb-4" style="font-weight:700;">Contact</p>
           <div class="flex flex-col gap-2">
-            <a href="mailto:hello@meridianstudio.co" class="footer-link">hello@meridianstudio.co</a>
-            <a href="#" class="footer-link">Instagram</a>
-            <a href="#" class="footer-link">LinkedIn</a>
-            <a href="#" class="footer-link">Dribbble</a>
+            <a href="mailto:${site.footer.email}" class="footer-link">${site.footer.email}</a>
+            ${socialLinksHtml}
           </div>
         </div>
       </div>
 
       <div class="border-t border-gray-200 mt-12 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-        <p class="text-[#999] text-xs">&copy; ${year} ${SITE_NAME}. All rights reserved.</p>
+        <p class="text-[#999] text-xs">&copy; ${year} ${site.siteName}. All rights reserved.</p>
         <p class="text-[#999] text-xs">Built with <a href="https://webhouse.app" target="_blank" rel="noopener" class="hover:text-[#111] transition-colors">@webhouse/cms</a></p>
       </div>
     </div>
@@ -266,10 +308,14 @@ function footer() {
 // ---------------------------------------------------------------------------
 
 function buildHomePage(
+  homePage: Document<HomePageData>,
   work: Document<WorkData>[],
   services: Document<ServiceData>[],
   team: Document<TeamData>[],
+  site: SiteData,
 ) {
+  const hp = homePage.data;
+
   const serviceCards = services
     .map(
       (s) => `
@@ -313,22 +359,22 @@ function buildHomePage(
     )
     .join('\n');
 
-  return `${head('Home')}
+  return `${head(hp.title, site)}
 <body>
-  ${nav('home')}
+  ${nav('home', site)}
 
   <!-- Hero -->
   <section class="pt-32 pb-20 lg:pt-44 lg:pb-32 px-6 lg:px-8">
     <div class="max-w-5xl mx-auto text-center">
-      <p class="fade-up font-heading font-600 text-xs tracking-[0.2em] uppercase text-[#999] mb-6" style="font-weight:600;">Creative Agency</p>
+      <p class="fade-up font-heading font-600 text-xs tracking-[0.2em] uppercase text-[#999] mb-6" style="font-weight:600;">${hp.hero.label}</p>
       <h1 class="fade-up fade-up-d1 font-heading hero-title leading-[1.08] tracking-tight mb-8" style="font-size: clamp(2.5rem, 6vw, 4.5rem); font-weight: 800;">
-        We craft <span class="gradient-text">digital experiences</span> that matter
+        ${hp.hero.heading}
       </h1>
       <p class="fade-up fade-up-d2 text-[#666] text-lg lg:text-xl max-w-2xl mx-auto leading-relaxed mb-10">
-        Meridian Studio is a creative agency specialising in brand strategy, digital design, and web development for ambitious brands.
+        ${hp.hero.subtitle}
       </p>
       <div class="fade-up fade-up-d3">
-        <a href="/work/index.html" class="btn-gradient">View Our Work</a>
+        <a href="${hp.hero.ctaUrl}" class="btn-gradient">${hp.hero.ctaText}</a>
       </div>
     </div>
   </section>
@@ -337,8 +383,8 @@ function buildHomePage(
   <section class="py-20 lg:py-28 px-6 lg:px-8" style="background: #fafafa;">
     <div class="max-w-7xl mx-auto">
       <div class="text-center mb-16">
-        <p class="font-heading font-600 text-xs tracking-[0.2em] uppercase text-[#999] mb-4" style="font-weight:600;">What We Do</p>
-        <h2 class="font-heading section-title tracking-tight" style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 800;">Services</h2>
+        <p class="font-heading font-600 text-xs tracking-[0.2em] uppercase text-[#999] mb-4" style="font-weight:600;">${hp.services.label}</p>
+        <h2 class="font-heading section-title tracking-tight" style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 800;">${hp.services.heading}</h2>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         ${serviceCards}
@@ -351,11 +397,11 @@ function buildHomePage(
     <div class="max-w-7xl mx-auto">
       <div class="flex items-end justify-between mb-16">
         <div>
-          <p class="font-heading font-600 text-xs tracking-[0.2em] uppercase text-[#999] mb-4" style="font-weight:600;">Selected Projects</p>
-          <h2 class="font-heading section-title tracking-tight" style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 800;">Featured Work</h2>
+          <p class="font-heading font-600 text-xs tracking-[0.2em] uppercase text-[#999] mb-4" style="font-weight:600;">${hp.featuredWork.label}</p>
+          <h2 class="font-heading section-title tracking-tight" style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 800;">${hp.featuredWork.heading}</h2>
         </div>
         <a href="/work/index.html" class="hidden md:inline-block text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors">
-          View all &rarr;
+          ${hp.featuredWork.viewAllText} &rarr;
         </a>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -368,8 +414,8 @@ function buildHomePage(
   <section class="py-20 lg:py-28 px-6 lg:px-8" style="background: #fafafa;">
     <div class="max-w-7xl mx-auto">
       <div class="text-center mb-16">
-        <p class="font-heading font-600 text-xs tracking-[0.2em] uppercase text-[#999] mb-4" style="font-weight:600;">The People</p>
-        <h2 class="font-heading section-title tracking-tight" style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 800;">Our Team</h2>
+        <p class="font-heading font-600 text-xs tracking-[0.2em] uppercase text-[#999] mb-4" style="font-weight:600;">${hp.team.label}</p>
+        <h2 class="font-heading section-title tracking-tight" style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 800;">${hp.team.heading}</h2>
       </div>
       <div class="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto">
         ${teamCards}
@@ -380,18 +426,24 @@ function buildHomePage(
   <!-- CTA -->
   <section class="py-24 lg:py-32 px-6 lg:px-8 text-center" style="background: linear-gradient(135deg, #6366f1, #a855f7);">
     <div class="max-w-3xl mx-auto">
-      <h2 class="font-heading text-white tracking-tight mb-6" style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 800;">Ready to start your next project?</h2>
-      <p class="text-white/80 text-lg mb-10">Let's create something extraordinary together.</p>
-      <a href="mailto:hello@meridianstudio.co" class="inline-block px-8 py-4 bg-white text-[#111] font-heading font-700 text-sm rounded-full hover:shadow-xl transition-shadow" style="font-weight:700;">Get in Touch</a>
+      <h2 class="font-heading text-white tracking-tight mb-6" style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 800;">${hp.cta.heading}</h2>
+      <p class="text-white/80 text-lg mb-10">${hp.cta.subtitle}</p>
+      <a href="${hp.cta.buttonUrl}" class="inline-block px-8 py-4 bg-white text-[#111] font-heading font-700 text-sm rounded-full hover:shadow-xl transition-shadow" style="font-weight:700;">${hp.cta.buttonText}</a>
     </div>
   </section>
 
-  ${footer()}
+  ${footer(site)}
 </body>
 </html>`;
 }
 
-function buildWorkListingPage(work: Document<WorkData>[]) {
+function buildWorkListingPage(
+  workPage: Document<WorkPageData>,
+  work: Document<WorkData>[],
+  site: SiteData,
+) {
+  const wp = workPage.data;
+
   const workCards = work
     .map(
       (w) => `
@@ -412,14 +464,14 @@ function buildWorkListingPage(work: Document<WorkData>[]) {
     )
     .join('\n');
 
-  return `${head('Work')}
+  return `${head(wp.title, site)}
 <body>
-  ${nav('work')}
+  ${nav('work', site)}
 
   <section class="pt-32 pb-12 lg:pt-40 lg:pb-16 px-6 lg:px-8">
     <div class="max-w-7xl mx-auto">
-      <p class="fade-up font-heading font-600 text-xs tracking-[0.2em] uppercase text-[#999] mb-4" style="font-weight:600;">Case Studies</p>
-      <h1 class="fade-up fade-up-d1 font-heading tracking-tight" style="font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 800;">Our Work</h1>
+      <p class="fade-up font-heading font-600 text-xs tracking-[0.2em] uppercase text-[#999] mb-4" style="font-weight:600;">${wp.hero.label}</p>
+      <h1 class="fade-up fade-up-d1 font-heading tracking-tight" style="font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 800;">${wp.hero.heading}</h1>
     </div>
   </section>
 
@@ -431,21 +483,21 @@ function buildWorkListingPage(work: Document<WorkData>[]) {
     </div>
   </section>
 
-  ${footer()}
+  ${footer(site)}
 </body>
 </html>`;
 }
 
-function buildWorkDetailPage(project: Document<WorkData>) {
+function buildWorkDetailPage(project: Document<WorkData>, site: SiteData) {
   const { title, client, category, heroImage, description, year, excerpt } = project.data;
   const paragraphs = description
     .split('\n\n')
     .map((p) => `<p class="text-[#555] text-base lg:text-lg leading-relaxed mb-6">${p.trim()}</p>`)
     .join('\n          ');
 
-  return `${head(title)}
+  return `${head(title, site)}
 <body>
-  ${nav('work')}
+  ${nav('work', site)}
 
   <!-- Hero Image -->
   <div class="pt-[73px]">
@@ -493,12 +545,18 @@ function buildWorkDetailPage(project: Document<WorkData>) {
     <a href="/work/index.html" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium transition-colors">&larr; Back to Work</a>
   </div>
 
-  ${footer()}
+  ${footer(site)}
 </body>
 </html>`;
 }
 
-function buildAboutPage(team: Document<TeamData>[]) {
+function buildAboutPage(
+  aboutPage: Document<AboutPageData>,
+  team: Document<TeamData>[],
+  site: SiteData,
+) {
+  const ap = aboutPage.data;
+
   const teamCards = team
     .map(
       (t) => `
@@ -515,19 +573,29 @@ function buildAboutPage(team: Document<TeamData>[]) {
     )
     .join('\n');
 
-  return `${head('About')}
+  const valuesHtml = ap.values
+    .map(
+      (v) => `
+        <div class="text-center px-6">
+          <h3 class="font-heading font-700 text-lg mb-3" style="font-weight:700;">${v.title}</h3>
+          <p class="text-[#666] text-sm leading-relaxed">${v.description}</p>
+        </div>`,
+    )
+    .join('\n');
+
+  return `${head(ap.title, site)}
 <body>
-  ${nav('about')}
+  ${nav('about', site)}
 
   <!-- Hero -->
   <section class="pt-32 pb-16 lg:pt-44 lg:pb-24 px-6 lg:px-8">
     <div class="max-w-4xl mx-auto text-center">
-      <p class="fade-up font-heading font-600 text-xs tracking-[0.2em] uppercase text-[#999] mb-6" style="font-weight:600;">About Us</p>
+      <p class="fade-up font-heading font-600 text-xs tracking-[0.2em] uppercase text-[#999] mb-6" style="font-weight:600;">${ap.hero.label}</p>
       <h1 class="fade-up fade-up-d1 font-heading tracking-tight mb-8" style="font-size: clamp(2.5rem, 5vw, 4rem); font-weight: 800;">
-        We believe in the power of <span class="gradient-text">thoughtful design</span>
+        ${ap.hero.heading}
       </h1>
       <p class="fade-up fade-up-d2 text-[#666] text-lg leading-relaxed max-w-2xl mx-auto">
-        Meridian Studio was founded in 2019 with a simple conviction: great brands deserve great craft. We are a tight-knit team of strategists, designers, and developers who obsess over every detail — from the first brand brief to the final pixel.
+        ${ap.hero.intro}
       </p>
     </div>
   </section>
@@ -536,18 +604,7 @@ function buildAboutPage(team: Document<TeamData>[]) {
   <section class="py-16 lg:py-24 px-6 lg:px-8" style="background: #fafafa;">
     <div class="max-w-7xl mx-auto">
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <div class="text-center px-6">
-          <h3 class="font-heading font-700 text-lg mb-3" style="font-weight:700;">Craft Over Convention</h3>
-          <p class="text-[#666] text-sm leading-relaxed">We don't follow templates. Every project starts from a blank canvas, shaped by strategy and refined through meticulous craft.</p>
-        </div>
-        <div class="text-center px-6">
-          <h3 class="font-heading font-700 text-lg mb-3" style="font-weight:700;">Collaboration First</h3>
-          <p class="text-[#666] text-sm leading-relaxed">We work alongside our clients, not in isolation. The best results come from honest dialogue and shared ambition.</p>
-        </div>
-        <div class="text-center px-6">
-          <h3 class="font-heading font-700 text-lg mb-3" style="font-weight:700;">Impact, Not Output</h3>
-          <p class="text-[#666] text-sm leading-relaxed">We measure success by business outcomes, not deliverable lists. Every design decision connects back to your goals.</p>
-        </div>
+        ${valuesHtml}
       </div>
     </div>
   </section>
@@ -556,8 +613,8 @@ function buildAboutPage(team: Document<TeamData>[]) {
   <section class="py-20 lg:py-28 px-6 lg:px-8">
     <div class="max-w-7xl mx-auto">
       <div class="text-center mb-16">
-        <p class="font-heading font-600 text-xs tracking-[0.2em] uppercase text-[#999] mb-4" style="font-weight:600;">The Team</p>
-        <h2 class="font-heading section-title tracking-tight" style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 800;">Meet the people behind the work</h2>
+        <p class="font-heading font-600 text-xs tracking-[0.2em] uppercase text-[#999] mb-4" style="font-weight:600;">${ap.teamSection.label}</p>
+        <h2 class="font-heading section-title tracking-tight" style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 800;">${ap.teamSection.heading}</h2>
       </div>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
         ${teamCards}
@@ -568,13 +625,13 @@ function buildAboutPage(team: Document<TeamData>[]) {
   <!-- CTA -->
   <section class="py-24 lg:py-32 px-6 lg:px-8 text-center" style="background: linear-gradient(135deg, #6366f1, #a855f7);">
     <div class="max-w-3xl mx-auto">
-      <h2 class="font-heading text-white tracking-tight mb-6" style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 800;">Want to work together?</h2>
-      <p class="text-white/80 text-lg mb-10">We're always looking for interesting projects and ambitious clients.</p>
-      <a href="mailto:hello@meridianstudio.co" class="inline-block px-8 py-4 bg-white text-[#111] font-heading font-700 text-sm rounded-full hover:shadow-xl transition-shadow" style="font-weight:700;">Start a Conversation</a>
+      <h2 class="font-heading text-white tracking-tight mb-6" style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 800;">${ap.cta.heading}</h2>
+      <p class="text-white/80 text-lg mb-10">${ap.cta.subtitle}</p>
+      <a href="${ap.cta.buttonUrl}" class="inline-block px-8 py-4 bg-white text-[#111] font-heading font-700 text-sm rounded-full hover:shadow-xl transition-shadow" style="font-weight:700;">${ap.cta.buttonText}</a>
     </div>
   </section>
 
-  ${footer()}
+  ${footer(site)}
 </body>
 </html>`;
 }
@@ -586,34 +643,38 @@ function buildAboutPage(team: Document<TeamData>[]) {
 function build() {
   const DIST = join(import.meta.dirname, 'dist');
 
+  const site = loadSiteData();
   const work = loadCollection<WorkData>('work');
   const team = loadCollection<TeamData>('team');
   const services = loadCollection<ServiceData>('services');
+  const homePage = loadPage<HomePageData>('home');
+  const aboutPage = loadPage<AboutPageData>('about');
+  const workPage = loadPage<WorkPageData>('work');
 
   console.log(`Building agency site — ${work.length} case studies, ${team.length} team members, ${services.length} services`);
 
   mkdirSync(DIST, { recursive: true });
 
   // Home
-  writeFileSync(join(DIST, 'index.html'), buildHomePage(work, services, team));
+  writeFileSync(join(DIST, 'index.html'), buildHomePage(homePage, work, services, team, site));
   console.log('  -> dist/index.html');
 
   // Work listing
   mkdirSync(join(DIST, 'work'), { recursive: true });
-  writeFileSync(join(DIST, 'work', 'index.html'), buildWorkListingPage(work));
+  writeFileSync(join(DIST, 'work', 'index.html'), buildWorkListingPage(workPage, work, site));
   console.log('  -> dist/work/index.html');
 
   // Work detail pages
   for (const project of work) {
     const dir = join(DIST, 'work', project.slug);
     mkdirSync(dir, { recursive: true });
-    writeFileSync(join(dir, 'index.html'), buildWorkDetailPage(project));
+    writeFileSync(join(dir, 'index.html'), buildWorkDetailPage(project, site));
     console.log(`  -> dist/work/${project.slug}/index.html`);
   }
 
   // About
   mkdirSync(join(DIST, 'about'), { recursive: true });
-  writeFileSync(join(DIST, 'about', 'index.html'), buildAboutPage(team));
+  writeFileSync(join(DIST, 'about', 'index.html'), buildAboutPage(aboutPage, team, site));
   console.log('  -> dist/about/index.html');
 
   console.log('\nBuild complete!');

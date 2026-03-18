@@ -1,0 +1,15 @@
+{
+  "slug": "blog",
+  "status": "published",
+  "data": {
+    "title": "Blog",
+    "metaDescription": "Insights, strategies, and frameworks from a decade of helping businesses grow smarter.",
+    "listingLabel": "Blog",
+    "listingTitle": "Insights & strategies",
+    "listingDesc": "Practical frameworks, lessons, and strategic thinking to help you grow smarter.",
+    "postCtaTitle": "Want strategies like these for your business?",
+    "postCtaDesc": "Let's talk about how to turn insights into action for your specific situation.",
+    "postCtaButton": "Book a Strategy Call",
+    "backToList": "Back to Blog"
+  }
+}

@@ -45,7 +45,109 @@ export default defineConfig({
       fields: [
         { name: 'title', type: 'text', required: true },
         { name: 'metaDescription', type: 'textarea' },
-        { name: 'content', type: 'richtext' },
+        // Site identity (home page)
+        { name: 'name', type: 'text' },
+        { name: 'jobTitle', type: 'text' },
+        // Hero section (home page)
+        { name: 'heroTagline', type: 'textarea' },
+        { name: 'heroCta1', type: 'text' },
+        { name: 'heroCta2', type: 'text' },
+        // Trust bar (home page)
+        { name: 'trustLabel', type: 'text' },
+        {
+          name: 'trustCompanies',
+          type: 'array',
+          fields: [{ name: 'value', type: 'text' }],
+        },
+        // Home section headings
+        { name: 'servicesLabel', type: 'text' },
+        { name: 'servicesTitle', type: 'text' },
+        { name: 'servicesDesc', type: 'textarea' },
+        { name: 'testimonialsLabel', type: 'text' },
+        { name: 'testimonialsTitle', type: 'text' },
+        { name: 'testimonialsDesc', type: 'textarea' },
+        { name: 'blogLabel', type: 'text' },
+        { name: 'blogTitle', type: 'text' },
+        { name: 'blogDesc', type: 'textarea' },
+        // CTA sections
+        { name: 'ctaTitle', type: 'text' },
+        { name: 'ctaDesc', type: 'textarea' },
+        { name: 'ctaButton', type: 'text' },
+        // Footer (home page)
+        { name: 'footerDesc', type: 'textarea' },
+        {
+          name: 'footerColumns',
+          type: 'array',
+          fields: [
+            { name: 'heading', type: 'text' },
+            {
+              name: 'links',
+              type: 'array',
+              fields: [
+                { name: 'label', type: 'text' },
+                { name: 'href', type: 'text' },
+              ],
+            },
+          ],
+        },
+        { name: 'navCta', type: 'text' },
+        {
+          name: 'navLinks',
+          type: 'array',
+          fields: [
+            { name: 'label', type: 'text' },
+            { name: 'href', type: 'text' },
+            { name: 'key', type: 'text' },
+          ],
+        },
+        {
+          name: 'socialLinks',
+          type: 'array',
+          fields: [
+            { name: 'label', type: 'text' },
+            { name: 'href', type: 'text' },
+          ],
+        },
+        { name: 'copyrightSuffix', type: 'text' },
+        // Services page
+        { name: 'pricingLabel', type: 'text' },
+        { name: 'pricingTitle', type: 'text' },
+        { name: 'pricingDesc', type: 'textarea' },
+        { name: 'popularBadge', type: 'text' },
+        { name: 'cardButton', type: 'text' },
+        // Contact page
+        { name: 'sectionLabel', type: 'text' },
+        { name: 'heading', type: 'text' },
+        { name: 'description', type: 'textarea' },
+        {
+          name: 'contactDetails',
+          type: 'array',
+          fields: [
+            { name: 'label', type: 'text' },
+            { name: 'value', type: 'text' },
+            { name: 'icon', type: 'text' },
+          ],
+        },
+        {
+          name: 'formFields',
+          type: 'array',
+          fields: [
+            { name: 'id', type: 'text' },
+            { name: 'label', type: 'text' },
+            { name: 'type', type: 'text' },
+            { name: 'placeholder', type: 'text' },
+            { name: 'row', type: 'number' },
+          ],
+        },
+        { name: 'submitButton', type: 'text' },
+        // Blog page
+        { name: 'listingLabel', type: 'text' },
+        { name: 'listingTitle', type: 'text' },
+        { name: 'listingDesc', type: 'textarea' },
+        { name: 'postCtaTitle', type: 'text' },
+        { name: 'postCtaDesc', type: 'textarea' },
+        { name: 'postCtaButton', type: 'text' },
+        { name: 'backToList', type: 'text' },
       ],
     }),
   ],

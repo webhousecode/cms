@@ -20,6 +20,27 @@ interface AboutData {
   email: string;
 }
 
+interface HomePageData {
+  title: string;
+  content: string;
+  metaDescription: string;
+}
+
+interface AboutPageData {
+  title: string;
+  label: string;
+  content: string;
+  metaDescription: string;
+}
+
+interface ContactPageData {
+  title: string;
+  label: string;
+  content: string;
+  metaDescription: string;
+  socialLinks: { label: string; url: string }[];
+}
+
 interface Document<T> {
   slug: string;
   status: string;
@@ -47,13 +68,18 @@ function loadAbout(): AboutData {
   return doc.data;
 }
 
+function loadPage<T>(slug: string): T {
+  const doc: Document<T> = JSON.parse(
+    readFileSync(join(CONTENT_DIR, 'pages', `${slug}.json`), 'utf-8'),
+  );
+  return doc.data;
+}
+
 // ---------------------------------------------------------------------------
 // Shared HTML helpers
 // ---------------------------------------------------------------------------
 
-const SITE_NAME = 'Elena Vasquez';
-
-function head(title: string, path: string = '') {
+function head(title: string, siteName: string, path: string = '') {
   const depth = path.split('/').filter(Boolean).length;
   const base = depth === 0 ? '.' : Array(depth).fill('..').join('/');
   return `<!DOCTYPE html>
@@ -61,7 +87,7 @@ function head(title: string, path: string = '') {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>${title} — ${SITE_NAME}</title>
+  <title>${title} — ${siteName}</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet" />
@@ -178,7 +204,7 @@ function head(title: string, path: string = '') {
 </head>`;
 }
 
-function nav(active: 'work' | 'about' | 'contact' | '' = '') {
+function nav(siteName: string, active: 'work' | 'about' | 'contact' | '' = '') {
   const links = [
     { href: '/index.html', label: 'Work', key: 'work' },
     { href: '/about/index.html', label: 'About', key: 'about' },
@@ -193,7 +219,7 @@ function nav(active: 'work' | 'about' | 'contact' | '' = '') {
   return `
   <nav class="nav-fixed">
     <div class="nav-inner">
-      <a href="/index.html" class="nav-logo">${SITE_NAME}</a>
+      <a href="/index.html" class="nav-logo">${siteName}</a>
       <ul class="nav-links">
         ${linkHtml}
       </ul>
@@ -201,11 +227,11 @@ function nav(active: 'work' | 'about' | 'contact' | '' = '') {
   </nav>`;
 }
 
-function footer() {
+function footer(siteName: string) {
   const year = new Date().getFullYear();
   return `
   <footer class="site-footer">
-    <p>&copy; ${year} ${SITE_NAME}. All rights reserved.</p>
+    <p>&copy; ${year} ${siteName}. All rights reserved.</p>
     <p style="margin-top: 0.5rem;">Built with <a href="https://webhouse.app" target="_blank" rel="noopener">@webhouse/cms</a></p>
   </footer>`;
 }
@@ -214,7 +240,7 @@ function footer() {
 // Page builders
 // ---------------------------------------------------------------------------
 
-function buildHomePage(projects: Document<ProjectData>[]) {
+function buildHomePage(projects: Document<ProjectData>[], homePage: HomePageData, siteName: string) {
   const cards = projects
     .map(
       (p) => `
@@ -228,9 +254,9 @@ function buildHomePage(projects: Document<ProjectData>[]) {
     )
     .join('\n');
 
-  return `${head('Work')}
+  return `${head(homePage.title, siteName)}
 <body>
-  ${nav('work')}
+  ${nav(siteName, 'work')}
 
   <main style="padding-top: 73px;">
     <div class="project-grid">
@@ -238,12 +264,12 @@ function buildHomePage(projects: Document<ProjectData>[]) {
     </div>
   </main>
 
-  ${footer()}
+  ${footer(siteName)}
 </body>
 </html>`;
 }
 
-function buildProjectPage(project: Document<ProjectData>) {
+function buildProjectPage(project: Document<ProjectData>, siteName: string) {
   const { title, category, description, heroImage, images } = project.data;
 
   const galleryHtml = images
@@ -253,9 +279,9 @@ function buildProjectPage(project: Document<ProjectData>) {
     )
     .join('\n        ');
 
-  return `${head(title, `projects/${project.slug}`)}
+  return `${head(title, siteName, `projects/${project.slug}`)}
 <body>
-  ${nav()}
+  ${nav(siteName)}
 
   <main style="padding-top: 73px;">
     <!-- Hero -->
@@ -287,15 +313,15 @@ function buildProjectPage(project: Document<ProjectData>) {
     </div>
   </main>
 
-  ${footer()}
+  ${footer(siteName)}
 </body>
 </html>`;
 }
 
-function buildAboutPage(about: AboutData) {
-  return `${head('About', 'about')}
+function buildAboutPage(about: AboutData, aboutPage: AboutPageData, siteName: string) {
+  return `${head(aboutPage.title, siteName, 'about')}
 <body>
-  ${nav('about')}
+  ${nav(siteName, 'about')}
 
   <main style="padding-top: 73px;">
     <section style="max-width: 1200px; margin: 0 auto; padding: 6rem 2rem; display: grid; grid-template-columns: 1fr 1fr; gap: 4rem; align-items: center;">
@@ -311,7 +337,7 @@ function buildAboutPage(about: AboutData) {
       <!-- Bio -->
       <div>
         <p class="fade-up" style="font-size: 0.75rem; font-weight: 400; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 1rem;">
-          About
+          ${aboutPage.label}
         </p>
         <h1 class="fade-up fade-up-delay" style="font-size: 2.5rem; font-weight: 300; letter-spacing: 0.02em; line-height: 1.2; margin-bottom: 2rem;">
           ${about.name}
@@ -334,26 +360,35 @@ function buildAboutPage(about: AboutData) {
     </style>
   </main>
 
-  ${footer()}
+  ${footer(siteName)}
 </body>
 </html>`;
 }
 
-function buildContactPage(about: AboutData) {
-  return `${head('Contact', 'contact')}
+function buildContactPage(about: AboutData, contactPage: ContactPageData, siteName: string) {
+  const socialLinksHtml = contactPage.socialLinks
+    .map(
+      (link) =>
+        `<a href="${link.url}" style="color: var(--text-muted); text-decoration: none; font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; transition: color 0.3s;"
+           onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-muted)'"
+        >${link.label}</a>`,
+    )
+    .join('\n        ');
+
+  return `${head(contactPage.title, siteName, 'contact')}
 <body>
-  ${nav('contact')}
+  ${nav(siteName, 'contact')}
 
   <main style="padding-top: 73px; min-height: 80vh; display: flex; align-items: center; justify-content: center;">
     <section style="text-align: center; padding: 4rem 2rem; max-width: 600px;">
       <p class="fade-up" style="font-size: 0.75rem; font-weight: 400; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 1rem;">
-        Get in Touch
+        ${contactPage.label}
       </p>
       <h1 class="fade-up fade-up-delay" style="font-size: 2.5rem; font-weight: 300; letter-spacing: 0.02em; line-height: 1.2; margin-bottom: 1.5rem;">
-        Let&rsquo;s Work Together
+        ${contactPage.title}
       </h1>
       <p class="fade-up fade-up-delay-2" style="font-size: 1.0625rem; font-weight: 300; line-height: 1.8; color: var(--text-muted); margin-bottom: 3rem;">
-        Available for commissions, collaborations, and editorial projects. Based in Copenhagen, working worldwide.
+        ${contactPage.content}
       </p>
 
       <div class="fade-up fade-up-delay-2">
@@ -365,20 +400,12 @@ function buildContactPage(about: AboutData) {
 
       <!-- Social links -->
       <div style="display: flex; gap: 2rem; justify-content: center; margin-top: 3rem;">
-        <a href="#" style="color: var(--text-muted); text-decoration: none; font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; transition: color 0.3s;"
-           onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-muted)'"
-        >Instagram</a>
-        <a href="#" style="color: var(--text-muted); text-decoration: none; font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; transition: color 0.3s;"
-           onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-muted)'"
-        >Behance</a>
-        <a href="#" style="color: var(--text-muted); text-decoration: none; font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; transition: color 0.3s;"
-           onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-muted)'"
-        >LinkedIn</a>
+        ${socialLinksHtml}
       </div>
     </section>
   </main>
 
-  ${footer()}
+  ${footer(siteName)}
 </body>
 </html>`;
 }
@@ -392,6 +419,12 @@ function build() {
 
   const projects = loadProjects();
   const about = loadAbout();
+  const homePage = loadPage<HomePageData>('home');
+  const aboutPage = loadPage<AboutPageData>('about');
+  const contactPage = loadPage<ContactPageData>('contact');
+
+  // Site name derived from content
+  const siteName = about.name;
 
   console.log(`Building portfolio — ${projects.length} projects found`);
 
@@ -399,25 +432,25 @@ function build() {
   mkdirSync(DIST, { recursive: true });
 
   // Home
-  writeFileSync(join(DIST, 'index.html'), buildHomePage(projects));
+  writeFileSync(join(DIST, 'index.html'), buildHomePage(projects, homePage, siteName));
   console.log('  -> dist/index.html');
 
   // Project pages
   for (const project of projects) {
     const dir = join(DIST, 'projects', project.slug);
     mkdirSync(dir, { recursive: true });
-    writeFileSync(join(dir, 'index.html'), buildProjectPage(project));
+    writeFileSync(join(dir, 'index.html'), buildProjectPage(project, siteName));
     console.log(`  -> dist/projects/${project.slug}/index.html`);
   }
 
   // About
   mkdirSync(join(DIST, 'about'), { recursive: true });
-  writeFileSync(join(DIST, 'about', 'index.html'), buildAboutPage(about));
+  writeFileSync(join(DIST, 'about', 'index.html'), buildAboutPage(about, aboutPage, siteName));
   console.log('  -> dist/about/index.html');
 
   // Contact
   mkdirSync(join(DIST, 'contact'), { recursive: true });
-  writeFileSync(join(DIST, 'contact', 'index.html'), buildContactPage(about));
+  writeFileSync(join(DIST, 'contact', 'index.html'), buildContactPage(about, contactPage, siteName));
   console.log('  -> dist/contact/index.html');
 
   console.log('\nBuild complete!');

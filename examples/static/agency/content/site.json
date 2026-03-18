@@ -1,0 +1,12 @@
+{
+  "siteName": "Meridian Studio",
+  "footer": {
+    "description": "A creative agency crafting bold digital experiences for ambitious brands. Based in Copenhagen, working worldwide.",
+    "email": "hello@meridianstudio.co",
+    "socialLinks": [
+      { "label": "Instagram", "url": "#" },
+      { "label": "LinkedIn", "url": "#" },
+      { "label": "Dribbble", "url": "#" }
+    ]
+  }
+}
