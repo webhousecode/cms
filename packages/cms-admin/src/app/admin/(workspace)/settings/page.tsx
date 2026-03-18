@@ -157,7 +157,7 @@ export default async function SettingsPage({
               <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                   <div>
-                    <h2 style={{ fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--muted-foreground)", margin: 0 }}>{brandVoice.name}</h2>
+                    <h2 className="text-muted-foreground dark:text-white" style={{ fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", margin: 0 }}>{brandVoice.name}</h2>
                     <p className="text-sm text-muted-foreground mt-0.5">{brandVoice.industry} · {brandVoice.language}</p>
                   </div>
                   <Link href="/admin/settings/brand-voice">

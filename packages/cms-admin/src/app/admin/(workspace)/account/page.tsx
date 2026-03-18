@@ -68,7 +68,7 @@ export default async function AccountPage({
             <div className="rounded-lg border border-border bg-card p-5 space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <h3 style={{ fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--muted-foreground)", margin: 0 }}>Authenticator app</h3>
+                  <h3 className="text-muted-foreground dark:text-white" style={{ fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", margin: 0 }}>Authenticator app</h3>
                   <p className="text-xs text-muted-foreground mt-0.5">
                     Generate one-time passwords via authenticator apps like 1Password, Authy, etc. as a second factor to verify your identity on sign-in.
                   </p>

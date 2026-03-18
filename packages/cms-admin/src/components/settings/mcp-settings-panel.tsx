@@ -169,7 +169,7 @@ export function MCPSettingsPanel() {
       {/* API Keys */}
       <section>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.75rem" }}>
-          <h2 style={{ fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--muted-foreground)", margin: 0 }}>API Keys</h2>
+          <h2 className="text-muted-foreground dark:text-white" style={{ fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", margin: 0 }}>API Keys</h2>
           <button
             type="button"
             onClick={() => { setShowAddForm(true); setNewKey(generateKey()); }}
@@ -479,7 +479,7 @@ function ExternalMcpServers() {
     <section style={{ borderTop: "1px solid var(--border)", paddingTop: "1.5rem" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.5rem" }}>
         <div>
-          <h2 style={{ fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", color: "var(--muted-foreground)", margin: 0 }}>External MCP Servers</h2>
+          <h2 className="text-muted-foreground dark:text-white" style={{ fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", margin: 0 }}>External MCP Servers</h2>
           <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "0.2rem" }}>
             Connect external tools that AI agents can use during content generation.
           </p>
