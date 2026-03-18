@@ -38,7 +38,7 @@ test.describe("Login flow", () => {
 
     // Fill in credentials
     await page.fill('input[type="email"]', "cb@webhouse.dk");
-    await page.fill('input[type="password"]', "webhouse2026");
+    await page.fill('input[type="password"]', "NewAmaliesbh2711!");
 
     // Submit
     await page.click('button[type="submit"]');

@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "node ../../packages/cms-cli/dist/index.js dev",
+    "dev": "echo 'landing: no dev server'",
     "build": "node ../../packages/cms-cli/dist/index.js build",
     "build:landing": "tsx build.ts"
   },
