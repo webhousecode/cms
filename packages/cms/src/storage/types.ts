@@ -1,4 +1,4 @@
-export type DocumentStatus = 'draft' | 'published' | 'archived';
+export type DocumentStatus = 'draft' | 'published' | 'archived' | 'expired';
 
 export interface FieldMeta {
   /** Who locked this field */

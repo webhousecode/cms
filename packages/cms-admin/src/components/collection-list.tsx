@@ -7,7 +7,7 @@ import { Search, Copy, Clock, MoreHorizontal, Pencil, Globe, FileX, ArrowUpDown 
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
 
-type StatusFilter = "all" | "published" | "draft" | "scheduled" | "trashed";
+type StatusFilter = "all" | "published" | "draft" | "scheduled" | "expired" | "trashed";
 type SortKey = string;
 type SortDir = "asc" | "desc";
 
@@ -89,7 +89,8 @@ function renderCellValue(field: FieldConfig, value: unknown): React.ReactNode {
 function StatusDot({ status, publishAt }: { status: string; publishAt?: string }) {
   const isScheduled = status === "draft" && !!publishAt && new Date(publishAt) > new Date();
   if (status === "published") return <span style={{ width: "0.45rem", height: "0.45rem", borderRadius: "9999px", background: "rgb(74 222 128)", display: "inline-block", flexShrink: 0 }} />;
-  if (isScheduled) return <span style={{ width: "0.45rem", height: "0.45rem", borderRadius: "9999px", background: "rgb(251 146 60)", display: "inline-block", flexShrink: 0 }} />;
+  if (isScheduled) return <span style={{ width: "0.45rem", height: "0.45rem", borderRadius: "9999px", background: "rgb(139 92 246)", display: "inline-block", flexShrink: 0 }} />;
+  if (status === "expired") return <span style={{ width: "0.45rem", height: "0.45rem", borderRadius: "9999px", background: "rgb(239 68 68)", display: "inline-block", flexShrink: 0 }} />;
   if (status === "trashed") return <span style={{ width: "0.45rem", height: "0.45rem", borderRadius: "9999px", background: "rgb(239 68 68)", display: "inline-block", flexShrink: 0 }} />;
   return <span style={{ width: "0.45rem", height: "0.45rem", borderRadius: "9999px", background: "rgb(234 179 8)", display: "inline-block", flexShrink: 0 }} />;
 }
@@ -187,6 +188,7 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
     published: docs.filter((d) => d.status === "published").length,
     draft: docs.filter((d) => d.status === "draft" && !d.publishAt).length,
     scheduled: docs.filter((d) => d.status === "draft" && !!d.publishAt && new Date(d.publishAt) > new Date()).length,
+    expired: docs.filter((d) => d.status === "expired").length,
     trashed: docs.filter((d) => d.status === "trashed").length,
   };
 
@@ -194,7 +196,8 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
     { value: "all",       label: "All",       count: docs.filter((d) => d.status !== "trashed").length, color: "var(--muted-foreground)" },
     { value: "published", label: "Published", count: counts.published, color: "rgb(74 222 128)" },
     { value: "draft",     label: "Draft",     count: counts.draft,     color: "rgb(234 179 8)" },
-    { value: "scheduled", label: "Scheduled", count: counts.scheduled, color: "rgb(251 146 60)" },
+    { value: "scheduled", label: "Scheduled", count: counts.scheduled, color: "rgb(139 92 246)" },
+    { value: "expired",   label: "Expired",   count: counts.expired,   color: "rgb(239 68 68)" },
     { value: "trashed",   label: "Trashed",   count: counts.trashed,   color: "rgb(239 68 68)" },
   ];
   const filterOptions = allFilterOptions.filter((f) => f.value === "all" || f.count > 0);
@@ -204,8 +207,9 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
       if (statusFilter === "published" && doc.status !== "published") return false;
       if (statusFilter === "draft" && !(doc.status === "draft" && !doc.publishAt)) return false;
       if (statusFilter === "scheduled" && !(doc.status === "draft" && !!doc.publishAt && new Date(doc.publishAt) > new Date())) return false;
+      if (statusFilter === "expired" && doc.status !== "expired") return false;
       if (statusFilter === "trashed" && doc.status !== "trashed") return false;
-      if (statusFilter === "all" && doc.status === "trashed") return false;
+      if (statusFilter === "all" && (doc.status === "trashed")) return false;
       if (search.trim()) {
         const q = search.toLowerCase();
         const title = String(doc.data[titleField] ?? doc.data["title"] ?? doc.slug).toLowerCase();
@@ -389,13 +393,15 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
                       <button type="button" onClick={(e) => !readOnly && toggleStatus(e, doc)} title={readOnly ? doc.status : doc.status === "published" ? "Click to unpublish" : "Click to publish"} style={{ background: "none", border: "none", cursor: readOnly ? "default" : "pointer", padding: 0 }}>
                         <span style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}>
                           {isScheduled ? (
-                            <Badge variant="outline" className="bg-amber-500/10 text-amber-400 border-amber-500/20 gap-1">
+                            <Badge variant="outline" className="bg-violet-500/10 text-violet-400 border-violet-500/20 gap-1">
                               <Clock style={{ width: "0.65rem", height: "0.65rem" }} /> scheduled
                             </Badge>
                           ) : (
                             <Badge variant="outline" className={
                               doc.status === "published"
                                 ? "bg-green-500/10 text-green-400 border-green-500/20 hover:bg-green-500/20"
+                                : doc.status === "expired"
+                                ? "bg-red-500/10 text-red-400 border-red-500/20"
                                 : doc.status === "trashed"
                                 ? "bg-red-500/10 text-red-400 border-red-500/20"
                                 : "bg-yellow-500/10 text-yellow-400 border-yellow-500/20 hover:bg-yellow-500/20"

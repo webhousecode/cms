@@ -238,13 +238,13 @@ export class ContentService {
           }
         }
 
-        // Scheduled unpublish: published with unpublishAt in the past → draft
+        // Scheduled unpublish: published with unpublishAt in the past → expired
         // Also clear publishAt to prevent re-publish loop
         if (doc.status === 'published' && (doc as any).unpublishAt) {
           const unpublishAt = new Date((doc as any).unpublishAt);
           if (unpublishAt <= now) {
             await this.storage.update(col, doc.id, {
-              status: 'draft',
+              status: 'expired',
               unpublishAt: null,
               publishAt: null,
             });
