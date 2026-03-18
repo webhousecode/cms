@@ -52,7 +52,6 @@ const SHORTCUT_GROUPS = [
       { keys: "⌘ ⇧ 8", label: "Bullet list" },
       { keys: "⌘ ⇧ B", label: "Blockquote" },
       { keys: "⌘ ⇧ E", label: "Code block" },
-      { keys: "⌘ K", label: "Insert link" },
     ],
   },
 ];
