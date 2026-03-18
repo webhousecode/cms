@@ -237,7 +237,8 @@ function ShortcutsPage() {
                       border: "1px solid var(--border)",
                       background: "var(--secondary)",
                       color: "var(--foreground)",
-                      minWidth: "1.75rem", textAlign: "center",
+                      minWidth: "1.75rem", minHeight: "1.75rem",
+                      display: "inline-flex", alignItems: "center", justifyContent: "center",
                       boxShadow: "0 2px 0 var(--border)",
                       lineHeight: 1,
                     }}>{k}</kbd>
