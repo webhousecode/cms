@@ -844,11 +844,155 @@ export function PasswordChangePanel() {
 }
 
 /** Site Settings → General tab — site-specific (preview, retention, dev) */
+function SchedulerNotificationsSection() {
+	const [webhookUrl, setWebhookUrl] = useState("");
+	const [enabled, setEnabled] = useState(false);
+	const [saving, setSaving] = useState(false);
+	const [saved, setSaved] = useState(false);
+	const [testing, setTesting] = useState(false);
+	const [testResult, setTestResult] = useState<string | null>(null);
+
+	useEffect(() => {
+		fetch("/api/admin/site-config")
+			.then((r) => r.json())
+			.then((config) => {
+				setWebhookUrl(config.schedulerWebhookUrl ?? "");
+				setEnabled(config.schedulerNotifications ?? false);
+			})
+			.catch(() => {});
+	}, []);
+
+	async function save() {
+		setSaving(true);
+		await fetch("/api/admin/site-config", {
+			method: "PATCH",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ schedulerWebhookUrl: webhookUrl, schedulerNotifications: enabled }),
+		});
+		setSaving(false);
+		setSaved(true);
+		setTimeout(() => setSaved(false), 2000);
+	}
+
+	async function testWebhook() {
+		if (!webhookUrl) return;
+		setTesting(true);
+		setTestResult(null);
+		try {
+			const isDiscord = webhookUrl.includes("discord.com/api/webhooks");
+			const isSlack = webhookUrl.includes("hooks.slack.com");
+			const body = isDiscord
+				? { content: "Test notification from CMS Scheduler", embeds: [{ title: "Test Event", description: "This is a test notification.", color: 0xF7BB2E, footer: { text: "CMS Scheduler" } }] }
+				: isSlack
+					? { text: "*CMS Scheduler Test* — This is a test notification." }
+					: { event: "scheduler.test", timestamp: new Date().toISOString() };
+
+			const res = await fetch(webhookUrl, {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify(body),
+			});
+			setTestResult(res.ok ? "sent" : `failed (${res.status})`);
+		} catch (err) {
+			setTestResult(`error: ${err}`);
+		}
+		setTesting(false);
+	}
+
+	const inputStyle: React.CSSProperties = {
+		width: "100%",
+		padding: "0.5rem 0.75rem",
+		borderRadius: "7px",
+		border: "1px solid var(--border)",
+		background: "var(--background)",
+		color: "var(--foreground)",
+		fontSize: "0.85rem",
+		outline: "none",
+		boxSizing: "border-box",
+	};
+
+	return (
+		<div>
+			<p style={{ fontSize: "0.75rem", fontWeight: 600, marginBottom: "0.25rem" }}>Scheduler Notifications</p>
+			<p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", marginBottom: "1rem" }}>
+				Get notified when the scheduler auto-publishes or unpublishes content. Works with Discord, Slack, or any webhook.
+			</p>
+
+			<div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+				<label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.85rem" }}>
+					<input
+						type="checkbox"
+						checked={enabled}
+						onChange={(e) => setEnabled(e.target.checked)}
+					/>
+					Enable scheduler notifications
+				</label>
+
+				{enabled && (
+					<>
+						<div>
+							<label style={{ fontSize: "0.7rem", fontWeight: 600, display: "block", marginBottom: "0.25rem" }}>
+								Webhook URL
+							</label>
+							<input
+								type="url"
+								value={webhookUrl}
+								onChange={(e) => setWebhookUrl(e.target.value)}
+								placeholder="https://discord.com/api/webhooks/..."
+								style={inputStyle}
+							/>
+							<p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", marginTop: "0.25rem" }}>
+								Discord, Slack, or any URL that accepts JSON POST
+							</p>
+						</div>
+
+						<div style={{ display: "flex", gap: "0.5rem" }}>
+							<button
+								type="button"
+								onClick={save}
+								disabled={saving}
+								style={{
+									padding: "0.4rem 1rem", borderRadius: "6px",
+									background: "var(--primary)", color: "var(--primary-foreground)",
+									border: "none", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer",
+								}}
+							>
+								{saving ? "Saving..." : saved ? "Saved" : "Save"}
+							</button>
+							{webhookUrl && (
+								<button
+									type="button"
+									onClick={testWebhook}
+									disabled={testing}
+									style={{
+										padding: "0.4rem 1rem", borderRadius: "6px",
+										background: "transparent", color: "var(--foreground)",
+										border: "1px solid var(--border)", fontSize: "0.8rem", cursor: "pointer",
+									}}
+								>
+									{testing ? "Sending..." : "Send test"}
+								</button>
+							)}
+							{testResult && (
+								<span style={{ fontSize: "0.75rem", color: testResult === "sent" ? "rgb(74 222 128)" : "var(--destructive)", alignSelf: "center" }}>
+									{testResult === "sent" ? "Test sent" : testResult}
+								</span>
+							)}
+						</div>
+					</>
+				)}
+			</div>
+		</div>
+	);
+}
+
 export function SiteGeneralSettingsPanel() {
 	return (
 		<div style={{ display: "flex", flexDirection: "column", gap: "2.5rem" }}>
 			<SiteSection />
 			<RevalidationSection />
+			<div style={{ height: "1px", background: "var(--border)" }} />
+			<SchedulerNotificationsSection />
 			<div style={{ height: "1px", background: "var(--border)" }} />
 			<DangerZone />
 		</div>

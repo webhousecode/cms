@@ -20,6 +20,10 @@ export async function register() {
         const unpub = actions.filter((a) => a.action === "unpublished");
         if (pub.length > 0) console.log(`[cron] auto-published ${pub.length} document(s):`, pub.map((p) => `${p.collection}/${p.slug}`).join(", "));
         if (unpub.length > 0) console.log(`[cron] auto-unpublished ${unpub.length} document(s):`, unpub.map((p) => `${p.collection}/${p.slug}`).join(", "));
+
+        // Send webhook notifications
+        const { notifySchedulerEvents } = await import("./lib/scheduler-notify");
+        notifySchedulerEvents(actions).catch(() => {});
       }
     } catch (err) {
       console.error("[cron] publishDue error:", err);
