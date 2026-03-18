@@ -215,7 +215,6 @@ export function ScheduledCalendar({ events, calendarToken, orgId, siteId }: { ev
             todayKey={todayKey}
             selectedDate={selectedDate}
             eventsMap={eventsMap}
-            colColorMap={colColorMap}
             onSelectDate={(key) => { setSelectedDate(key); setView("day"); }}
           />
         )}
@@ -224,7 +223,6 @@ export function ScheduledCalendar({ events, calendarToken, orgId, siteId }: { ev
             selectedDate={selectedDate}
             todayKey={todayKey}
             eventsMap={eventsMap}
-            colColorMap={colColorMap}
             onSelectDate={(key) => { setSelectedDate(key); setView("day"); }}
             scrollToNow={scrollToNow}
           />
@@ -233,7 +231,6 @@ export function ScheduledCalendar({ events, calendarToken, orgId, siteId }: { ev
           <DayView
             selectedDate={selectedDate}
             eventsMap={eventsMap}
-            colColorMap={colColorMap}
           />
         )}
         {view === "year" && (
@@ -253,9 +250,9 @@ export function ScheduledCalendar({ events, calendarToken, orgId, siteId }: { ev
 
 /* ─── Month View ─────────────────────────────────────────────── */
 
-function MonthView({ year, month, todayKey, selectedDate, eventsMap, colColorMap, onSelectDate }: {
+function MonthView({ year, month, todayKey, selectedDate, eventsMap, onSelectDate }: {
   year: number; month: number; todayKey: string; selectedDate: string;
-  eventsMap: Map<string, ScheduledEvent[]>; colColorMap: Map<string, string>; onSelectDate: (key: string) => void;
+  eventsMap: Map<string, ScheduledEvent[]>; onSelectDate: (key: string) => void;
 }) {
   const firstDay = new Date(year, month, 1);
   const lastDay = new Date(year, month + 1, 0);
@@ -321,9 +318,9 @@ function MonthView({ year, month, todayKey, selectedDate, eventsMap, colColorMap
                       style={{
                         fontSize: "0.6rem",
                         lineHeight: "1.1rem",
-                        background: `color-mix(in srgb, ${colColorMap.get(evt.subtitle) ?? EVENT_COLORS[evt.type]} 15%, transparent)`,
-                        color: colColorMap.get(evt.subtitle) ?? EVENT_COLORS[evt.type],
-                        borderLeft: `2px solid ${colColorMap.get(evt.subtitle) ?? EVENT_COLORS[evt.type]}`,
+                        background: `color-mix(in srgb, ${EVENT_COLORS[evt.type]} 15%, transparent)`,
+                        color: EVENT_COLORS[evt.type],
+                        borderLeft: `2px solid ${EVENT_COLORS[evt.type]}`,
                       }}
                     >
                       {evt.date.slice(11, 16)} {evt.title}
@@ -350,9 +347,9 @@ const TOTAL_HOURS = 24; // full day 00:00-24:00
 const VIEW_HOURS = 11;  // visible window (07:00-18:00 default)
 const WEEKEND_BG = "#262627";
 
-function WeekView({ selectedDate, todayKey, eventsMap, colColorMap, onSelectDate, scrollToNow = 0 }: {
+function WeekView({ selectedDate, todayKey, eventsMap, onSelectDate, scrollToNow = 0 }: {
   selectedDate: string; todayKey: string;
-  eventsMap: Map<string, ScheduledEvent[]>; colColorMap: Map<string, string>; onSelectDate: (key: string) => void;
+  eventsMap: Map<string, ScheduledEvent[]>; onSelectDate: (key: string) => void;
   scrollToNow?: number;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -557,7 +554,7 @@ function WeekView({ selectedDate, todayKey, eventsMap, colColorMap, onSelectDate
                 const hour = parseInt(evt.date.slice(11, 13)) || 0;
                 const minute = parseInt(evt.date.slice(14, 16)) || 0;
                 const topPx = (hour + minute / 60) * HOUR_HEIGHT;
-                const color = colColorMap.get(evt.subtitle) ?? EVENT_COLORS[evt.type];
+                const color = EVENT_COLORS[evt.type];
                 return (
                   <Link
                     key={evt.id}
@@ -624,8 +621,8 @@ function WeekView({ selectedDate, todayKey, eventsMap, colColorMap, onSelectDate
 
 /* ─── Day View ───────────────────────────────────────────────── */
 
-function DayView({ selectedDate, eventsMap, colColorMap }: {
-  selectedDate: string; eventsMap: Map<string, ScheduledEvent[]>; colColorMap: Map<string, string>;
+function DayView({ selectedDate, eventsMap }: {
+  selectedDate: string; eventsMap: Map<string, ScheduledEvent[]>;
 }) {
   const dayEvents = eventsMap.get(selectedDate) ?? [];
 
@@ -642,7 +639,7 @@ function DayView({ selectedDate, eventsMap, colColorMap }: {
     <div className="space-y-2">
       {dayEvents.map((evt) => {
         const Icon = evt.type === "publish" ? Globe : FileText;
-        const color = colColorMap.get(evt.subtitle) ?? EVENT_COLORS[evt.type];
+        const color = EVENT_COLORS[evt.type];
         return (
           <Link key={evt.id} href={evt.href} className="block">
             <div className="flex items-center gap-3 p-3 rounded-lg border border-border bg-card hover:border-primary/30 hover:bg-secondary/50 transition-all">
