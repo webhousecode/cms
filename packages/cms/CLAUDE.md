@@ -157,6 +157,30 @@ Audio reference. Accepts a URL input or file upload in the admin UI. Stores the 
 { name: 'podcast', type: 'audio', label: 'Episode Audio' }
 ```
 
+#### htmldoc
+Full HTML document editor (visual WYSIWYG). Stores complete HTML as a string. Used for standalone HTML pages, email templates, or landing page sections.
+```typescript
+{ name: 'template', type: 'htmldoc', label: 'Email Template' }
+```
+
+#### file
+File attachment. Stores a URL string to the uploaded file.
+```typescript
+{ name: 'download', type: 'file', label: 'Downloadable PDF' }
+```
+
+#### interactive
+Reference to an Interactive (standalone HTML component managed in the Interactives library). Stores an interactive ID string.
+```typescript
+{ name: 'chart', type: 'interactive', label: 'Interactive Chart' }
+```
+
+#### column-slots
+Multi-column layout with configurable slot count. Each slot contains nested fields.
+```typescript
+{ name: 'layout', type: 'column-slots', label: 'Two Column Layout' }
+```
+
 #### select
 Dropdown selection from predefined options. Requires `options` array.
 ```typescript
@@ -383,7 +407,8 @@ interface Document {
   id: string;                    // Unique ID (generated, e.g. "a1b2c3d4")
   slug: string;                  // URL-safe identifier, used as filename
   collection: string;            // Collection name
-  status: 'draft' | 'published' | 'archived';
+  // Status: 'draft' (not live), 'published' (live), 'expired' (scheduler unpublished), 'archived'
+  status: 'draft' | 'published' | 'archived' | 'expired';
   data: Record<string, unknown>; // All field values live here
   _fieldMeta: Record<string, {   // Per-field metadata (AI provenance, locks)
     lockedBy?: 'user' | 'ai' | 'import';
@@ -396,6 +421,7 @@ interface Document {
   locale?: string;               // BCP 47 locale tag, e.g. "en", "da"
   translationOf?: string;        // Slug of source document (for translations)
   publishAt?: string;            // ISO timestamp for scheduled publishing
+  unpublishAt?: string;          // ISO timestamp for scheduled expiry
 }
 ```
 
@@ -602,21 +628,6 @@ npx cms ai rewrite posts/hello-world "Make it more concise and add code examples
 # SEO optimization across all published content
 npx cms ai seo
 ```
-
-## CMS Admin UI
-
-The visual admin interface is available at [webhouse.app](https://webhouse.app) (hosted) or runs locally on port 3010 during development. It provides:
-
-- Visual document editor for all collections
-- Block editor with drag-and-drop for `blocks` fields
-- Rich text editor for `richtext` fields
-- Image upload and gallery management
-- Relation picker for cross-collection references
-- Field-level AI lock indicators
-- Draft/published/archived status management
-- AI content generation and rewriting from the UI
-
-Connect your project by pointing the admin UI at your CMS API endpoint.
 
 ## Complete cms.config.ts Example
 
@@ -850,59 +861,9 @@ await cms.storage.close();
 
 ## CMS Admin UI
 
-The visual admin interface for managing content. Four ways to run it:
+The visual admin runs at [webhouse.app](https://webhouse.app) or locally via `npx @webhouse/cms-admin-cli`. After building a site, inform users:
 
-| Method | Command | Best for |
-|--------|---------|----------|
-| **Hosted** | Open [webhouse.app](https://webhouse.app) | Quick access, no install |
-| **npx** | `npx @webhouse/cms-admin-cli` | Local dev, auto-detects cms.config.ts |
-| **Docker** | `docker run -p 3010:3010 -v $(pwd):/site ghcr.io/webhousecode/cms-admin` | Isolated, reproducible |
-| **Git clone** | `git clone https://github.com/webhousecode/cms && pnpm install && pnpm dev` | Full source access |
-
-### npx usage
-
-```bash
-npx @webhouse/cms-admin-cli                        # auto-detect cms.config.ts in cwd
-npx @webhouse/cms-admin-cli --config ./cms.config.ts  # explicit config path
-npx @webhouse/cms-admin-cli -p 4000                 # custom port (default: 3010)
-```
-
-First run clones and builds the admin (~2 min). Subsequent starts are instant (cached at `~/.webhouse/cms-admin/`).
-
-### Docker usage
-
-```bash
-# Run admin pointing at current directory
-docker run -p 3010:3010 -v $(pwd):/site ghcr.io/webhousecode/cms-admin
-
-# With custom config path inside container
-docker run -p 3010:3010 -v $(pwd):/site -e CMS_CONFIG_PATH=/site/cms.config.ts ghcr.io/webhousecode/cms-admin
-```
-
-### What the admin provides
-
-- Visual document editor for all collections
-- Block editor with drag-and-drop for `blocks` fields
-- Structured array and object editors with JSON/UI toggle
-- Rich text editor for `richtext` fields
-- Image upload and gallery management
-- Relation picker for cross-collection references
-- Field-level AI lock indicators
-- Draft/published status management with scheduled publishing
-- AI content generation and rewriting
-- Multi-site management (multiple sites from one admin)
-- GitHub OAuth integration for GitHub-backed sites
-
-### Suggesting admin to users
-
-When building a site, always inform the user about admin options. Example:
-
-> Your site is ready! To manage content visually, run:
-> ```
-> npx @webhouse/cms-admin-cli
-> ```
-> Then open http://localhost:3010 — your site's collections will appear automatically.
-> You can also use the hosted version at webhouse.app.
+> To manage content visually, run `npx @webhouse/cms-admin-cli` and open http://localhost:3010.
 
 ## Key Architecture Notes
 
@@ -912,7 +873,7 @@ When building a site, always inform the user about admin options. Example:
 - **Blocks use `_block` discriminator** — when iterating over a blocks field, check `item._block` to determine the block type
 - **Relations store slugs or IDs** — relation fields store references to other documents, not embedded data
 - **`_fieldMeta` tracks AI provenance** — when AI writes a field, metadata records which model, when, and whether the field is locked against future AI overwrites
-- **Status workflow** — documents are `draft`, `published`, or `archived`. Use `publishAt` for scheduled publishing
+- **Status workflow** — documents are `draft`, `published`, `expired`, or `archived`. Use `publishAt` for scheduled publishing and `unpublishAt` for scheduled expiry. `expired` is set automatically by the scheduler when `unpublishAt` passes
 - **Richtext fields store markdown** — when importing or seeding content, always convert HTML to markdown first. TipTap's editor expects markdown input, not raw HTML. If you feed HTML directly, it will display as escaped text instead of rendered content.
 
 ## Common Mistakes (avoid these)
@@ -1674,98 +1635,6 @@ export function CmsImage({
 }
 ```
 
-### Image Gallery Field
-
-The `image-gallery` field stores an array of URL strings:
-
-```typescript
-// components/gallery.tsx
-import { CmsImage } from './cms-image';
-
-interface GalleryProps {
-  images: string[];
-  alt?: string;
-}
-
-export function Gallery({ images, alt = '' }: GalleryProps) {
-  if (!images || images.length === 0) return null;
-
-  return (
-    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-      {images.map((src, i) => (
-        <figure key={i} className="overflow-hidden rounded-lg">
-          <CmsImage
-            src={src}
-            alt={`${alt} ${i + 1}`}
-            width={600}
-            height={400}
-            sizes="(max-width: 768px) 50vw, 33vw"
-            className="object-cover w-full h-full"
-          />
-        </figure>
-      ))}
-    </div>
-  );
-}
-```
-
-### SVG Handling (Logos, Icons)
-
-SVGs uploaded via the media library are stored as regular URL strings. Since next/image rasterizes SVGs by default, render them differently:
-
-```typescript
-// components/svg-or-image.tsx
-interface LogoProps {
-  src: string;
-  alt: string;
-  className?: string;
-}
-
-export function Logo({ src, alt, className }: LogoProps) {
-  if (src.endsWith('.svg')) {
-    // Render SVG as an img tag to preserve vector quality
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img src={src} alt={alt} className={className} />;
-  }
-  return <CmsImage src={src} alt={alt} width={200} height={60} className={className} />;
-}
-```
-
-### Pattern: Hero Image with Fallback
-
-```typescript
-// components/hero.tsx
-import { CmsImage } from './cms-image';
-
-interface HeroProps {
-  title: string;
-  description?: string;
-  image?: string;
-}
-
-const FALLBACK_IMAGE = '/images/default-hero.jpg';
-
-export function Hero({ title, description, image }: HeroProps) {
-  return (
-    <section className="relative h-[60vh] flex items-center justify-center">
-      <CmsImage
-        src={image ?? FALLBACK_IMAGE}
-        alt={title}
-        width={1920}
-        height={1080}
-        priority
-        className="absolute inset-0 w-full h-full object-cover"
-        sizes="100vw"
-      />
-      <div className="relative z-10 text-center text-white">
-        <h1 className="text-5xl font-bold">{title}</h1>
-        {description && <p className="mt-4 text-xl">{description}</p>}
-      </div>
-    </section>
-  );
-}
-```
-
 ### Image Optimization Best Practices
 
 1. **Always provide `sizes`** — Without it, next/image generates srcsets for all viewport widths, wasting bandwidth.
@@ -1851,79 +1720,9 @@ npx cms ai rewrite posts/hello-world "Translate all text content to Danish (da).
 
 ### Next.js i18n Routing Pattern
 
-Use a `[locale]` route segment with middleware to handle locale detection:
+Use a `[locale]` route segment with Next.js middleware for locale detection. The middleware checks for a locale prefix in the URL, detects the preferred locale from the `Accept-Language` header, and redirects. See Next.js i18n docs for the standard pattern.
 
-```typescript
-// middleware.ts
-import { NextRequest, NextResponse } from 'next/server';
-
-const LOCALES = ['en', 'da'];
-const DEFAULT_LOCALE = 'en';
-
-export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
-
-  // Check if path already has a locale prefix
-  const hasLocale = LOCALES.some(
-    locale => pathname.startsWith(`/${locale}/`) || pathname === `/${locale}`,
-  );
-  if (hasLocale) return NextResponse.next();
-
-  // Detect locale from Accept-Language header
-  const acceptLang = request.headers.get('accept-language') ?? '';
-  const preferred = LOCALES.find(l => acceptLang.includes(l)) ?? DEFAULT_LOCALE;
-
-  // Redirect to locale-prefixed path
-  return NextResponse.redirect(new URL(`/${preferred}${pathname}`, request.url));
-}
-
-export const config = {
-  matcher: ['/((?!api|_next|uploads|images|favicon).*)'],
-};
-```
-
-```typescript
-// app/[locale]/blog/[slug]/page.tsx
-import { getCollection, getDocument } from '@webhouse/cms/adapters';
-import { notFound } from 'next/navigation';
-
-interface Post { title: string; content: string }
-
-const LOCALES = ['en', 'da'];
-
-export function generateStaticParams() {
-  const params: { locale: string; slug: string }[] = [];
-  for (const locale of LOCALES) {
-    const posts = getCollection<Post>('posts')
-      .filter(p => p.locale === locale || (!p.locale && locale === 'en'));
-    for (const post of posts) {
-      params.push({ locale, slug: post.slug });
-    }
-  }
-  return params;
-}
-
-export default async function PostPage({
-  params,
-}: {
-  params: Promise<{ locale: string; slug: string }>;
-}) {
-  const { locale, slug } = await params;
-
-  // Try locale-specific document first, then fall back to source
-  const post =
-    getDocument<Post>('posts', `${slug}-${locale}`) ??
-    getDocument<Post>('posts', slug);
-
-  if (!post) notFound();
-
-  return (
-    <article>
-      <h1>{post.data.title}</h1>
-      <div dangerouslySetInnerHTML={{ __html: post.data.content }} />
-    </article>
-  );
-}
+For pages, use `generateStaticParams()` to generate paths for each locale, and try the locale-specific document first (e.g., `hello-world-da`) then fall back to the source document.
 ```
 
 ### Hreflang Tags Generation
@@ -1971,47 +1770,7 @@ export async function generateMetadata({
 
 ### Pattern: Language Switcher Component
 
-```typescript
-// components/language-switcher.tsx
-'use client';
-
-import { usePathname } from 'next/navigation';
-import Link from 'next/link';
-
-const LOCALE_LABELS: Record<string, string> = {
-  en: 'English',
-  da: 'Dansk',
-};
-
-export function LanguageSwitcher({ locales = ['en', 'da'] }: { locales?: string[] }) {
-  const pathname = usePathname();
-
-  // Replace the locale segment in the current path
-  function getLocalePath(targetLocale: string) {
-    const segments = pathname.split('/');
-    if (locales.includes(segments[1])) {
-      segments[1] = targetLocale;
-    } else {
-      segments.splice(1, 0, targetLocale);
-    }
-    return segments.join('/');
-  }
-
-  return (
-    <div className="flex gap-2">
-      {locales.map(locale => (
-        <Link
-          key={locale}
-          href={getLocalePath(locale)}
-          className="text-sm underline-offset-4 hover:underline"
-        >
-          {LOCALE_LABELS[locale] ?? locale}
-        </Link>
-      ))}
-    </div>
-  );
-}
-```
+A client component that reads the current pathname via `usePathname()`, replaces or inserts the locale segment, and renders `<Link>` elements for each locale. Map locale codes to display labels (e.g., `{ en: 'English', da: 'Dansk' }`).
 
 ### Pattern: Fallback to Default Locale for Missing Translations
 
@@ -2144,30 +1903,6 @@ CMD ["npm", "start"]
 ## 8. Troubleshooting
 
 Common issues and their fixes.
-
-### TipTap Shows Raw HTML Tags Instead of Formatted Text
-
-**Cause:** HTML was stored in the richtext field instead of markdown. TipTap expects markdown input.
-
-**Symptoms:** The editor displays `<h2>Title</h2>` as literal text instead of a heading.
-
-**Fix:** Convert HTML to markdown before saving. Common conversions:
-```
-<h1>Title</h1>      → # Title
-<h2>Title</h2>      → ## Title
-<strong>bold</strong> → **bold**
-<em>italic</em>      → *italic*
-<a href="url">text</a> → [text](url)
-<ul><li>item</li></ul> → - item
-<p>text</p>          → text\n\n
-```
-
-If you have existing HTML content, use a library like `turndown` to batch-convert:
-```typescript
-import TurndownService from 'turndown';
-const turndown = new TurndownService();
-const markdown = turndown.turndown(htmlContent);
-```
 
 ### GitHub Adapter Throws "Bad Token"
 
@@ -2399,66 +2134,6 @@ kill $(lsof -ti:3000)
 # Or use a different port
 npx cms dev --port 3001
 ```
-
-### Blocks Field Shows "No Sections Added"
-
-**Cause:** The `blocks` field references block names that aren't defined in `config.blocks`, or no block types are defined at all.
-
-**Fix:** Ensure your config defines blocks at the top level AND references them in the field:
-```typescript
-export default defineConfig({
-  blocks: [
-    defineBlock({ name: 'hero', fields: [ /* ... */ ] }),    // 1. Define blocks
-    defineBlock({ name: 'features', fields: [ /* ... */ ] }),
-  ],
-  collections: [
-    defineCollection({
-      name: 'pages',
-      fields: [
-        { name: 'sections', type: 'blocks', blocks: ['hero', 'features'] },  // 2. Reference by name
-      ],
-    }),
-  ],
-});
-```
-
-### Upload Fails with "No File"
-
-**Cause:** The FormData key must be `"file"` (singular).
-
-**Fix:**
-```typescript
-// Correct
-const formData = new FormData();
-formData.append('file', file);   // "file" — singular
-
-// Wrong
-formData.append('files', file);  // Will return 400 "No file"
-formData.append('upload', file); // Will return 400 "No file"
-```
-
-### AI Agents Return Empty Content
-
-**Cause:** No AI provider API key is configured.
-
-**Fix:**
-1. Create a `.env` file in your project root:
-```env
-ANTHROPIC_API_KEY=sk-ant-...
-# or
-OPENAI_API_KEY=sk-...
-```
-2. Or configure via the admin UI: Admin, Settings, AI.
-3. Verify the key works: `npx cms ai generate posts "Write a test post"`
-
-### Relation Picker Shows Empty List
-
-**Cause:** The referenced collection has no published documents.
-
-**Fix:**
-1. Check that the collection referenced in the relation field exists: `{ collection: 'team' }` requires a `team` collection.
-2. Ensure at least one document in that collection has `status: "published"`.
-3. Verify the collection name matches exactly (case-sensitive).
 
 ### Images Not Loading in Production
 
