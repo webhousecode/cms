@@ -65,6 +65,54 @@ function escapeHtml(s: string): string {
   return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
+/** Convert basic markdown to HTML (for richtext content stored as markdown) */
+function markdownToHtml(md: string): string {
+  let html = md;
+
+  // Blockquotes (must come before paragraph handling)
+  html = html.replace(/^> (.+)$/gm, '<blockquote><p>$1</p></blockquote>');
+  // Merge consecutive blockquote tags
+  html = html.replace(/<\/blockquote>\n<blockquote>/g, '\n');
+
+  // Headings
+  html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+  html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+
+  // Unordered lists
+  html = html.replace(/(?:^- .+\n?)+/gm, (match) => {
+    const items = match.trim().split('\n').map(line => `<li>${line.replace(/^- /, '')}</li>`).join('\n');
+    return `<ul>\n${items}\n</ul>\n`;
+  });
+
+  // Ordered lists
+  html = html.replace(/(?:^\d+\. .+\n?)+/gm, (match) => {
+    const items = match.trim().split('\n').map(line => `<li>${line.replace(/^\d+\. /, '')}</li>`).join('\n');
+    return `<ol>\n${items}\n</ol>\n`;
+  });
+
+  // Inline formatting
+  html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/\*(.+?)\*/g, '<em>$1</em>');
+  html = html.replace(/`(.+?)`/g, '<code>$1</code>');
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+
+  // Paragraphs: wrap standalone lines (not already wrapped in block elements)
+  const lines = html.split('\n');
+  const result: string[] = [];
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) {
+      result.push('');
+    } else if (/^<(h[23]|ul|ol|li|blockquote|\/ul|\/ol|\/blockquote)/.test(trimmed)) {
+      result.push(trimmed);
+    } else {
+      result.push(`<p>${trimmed}</p>`);
+    }
+  }
+
+  return result.filter((line, i, arr) => !(line === '' && (i === 0 || i === arr.length - 1 || arr[i - 1] === ''))).join('\n');
+}
+
 // ---------------------------------------------------------------------------
 // Shared HTML fragments
 // ---------------------------------------------------------------------------
@@ -211,7 +259,7 @@ function buildPost(post: Post, siteTitle: string): string {
     </header>
 
     <div class="prose px-6 pb-16">
-      ${post.data.content}
+      ${markdownToHtml(post.data.content)}
     </div>
   </article>
 
@@ -230,7 +278,7 @@ function buildAbout(page: Page, siteTitle: string): string {
   </header>
 
   <div class="prose px-6 pb-16">
-    ${page.data.content}
+    ${markdownToHtml(page.data.content)}
   </div>
 
   ${FOOTER(siteTitle)}

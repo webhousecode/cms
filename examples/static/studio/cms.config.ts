@@ -37,7 +37,7 @@ export default defineConfig({
       fields: [
         { name: 'title', type: 'text', required: true },
         { name: 'category', type: 'text' },
-        { name: 'heroImage', type: 'text' },
+        { name: 'heroImage', type: 'image' },
         { name: 'year', type: 'text' },
         { name: 'description', type: 'textarea' },
         {

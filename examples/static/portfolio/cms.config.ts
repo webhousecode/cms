@@ -31,7 +31,7 @@ export default defineConfig({
         { name: 'heroImage', type: 'image', label: 'Hero Image' },
         {
           name: 'socialLinks',
-          type: 'list',
+          type: 'array',
           label: 'Social Links',
           fields: [
             { name: 'label', type: 'text', label: 'Label' },
