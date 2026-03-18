@@ -6,7 +6,6 @@
  */
 import fs from "fs/promises";
 import path from "path";
-import { getActiveSitePaths } from "./site-paths";
 
 export interface UserTab {
   id: string;
@@ -42,11 +41,18 @@ const DEFAULTS: UserState = {
   updatedAt: new Date().toISOString(),
 };
 
+/**
+ * Global user-state directory — shared across all sites on this CMS installation.
+ * Uses the admin registry dir if multi-site, or CMS_CONFIG_PATH parent for single-site.
+ */
 async function getStatePath(userId: string): Promise<string> {
-  const { dataDir } = await getActiveSitePaths();
-  const dir = path.join(dataDir, "user-state");
-  await fs.mkdir(dir, { recursive: true });
-  return path.join(dir, `${userId}.json`);
+  // Try admin registry location first (multi-site)
+  const registryDir = process.env.CMS_CONFIG_PATH
+    ? path.join(path.dirname(path.resolve(process.env.CMS_CONFIG_PATH)), "_admin", "user-state")
+    : path.join(process.env.HOME ?? "/tmp", ".webhouse", "user-state");
+
+  await fs.mkdir(registryDir, { recursive: true });
+  return path.join(registryDir, `${userId}.json`);
 }
 
 export async function readUserState(userId: string): Promise<UserState> {
