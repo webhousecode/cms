@@ -573,10 +573,10 @@ function WeekView({ selectedDate, todayKey, eventsMap, onSelectDate, scrollToNow
             >
               <div style={{
                 position: "absolute",
-                left: `calc(${days.findIndex((d) => d.key === todayKey)} * (100% / 7) - 5px)`,
-                top: "-4px",
-                width: "10px",
-                height: "10px",
+                left: `calc(${days.findIndex((d) => d.key === todayKey)} * (100% / 7) - 4px)`,
+                top: "-3px",
+                width: "8px",
+                height: "8px",
                 borderRadius: "9999px",
                 background: "rgb(239 68 68)",
               }} />
