@@ -87,6 +87,7 @@ _Makes us stand out. Customers expect these from a modern CMS._
 | 20c | **F57 Extranet** | Large | Protected site pages for visitors. Client portals, member content, gated resources. |
 | 20d | **F60 Reliable Scheduled Tasks** | Small | Heartbeat endpoint + external cron ensures publishing/agents run on time despite Fly auto-stop. |
 | 20e | **F64 Toast Notifications System** | Small | Event-driven toasts for all actions. Phase 1 done (Sonner + SSE + scheduler). Phase 2: AI toasts, undo-trash, error feedback, notification prefs. |
+| 20f | **F72 Website Screenshots** | Medium | Playwright captures all site pages. New Tools sidebar group (Link Checker + Screenshots tabs). Visual QA. |
 | 20f | **F66 Search Index** | Medium | SQLite FTS5 full-text search. Incremental indexing via storage hooks. Field-weighted ranking. Replaces O(n) scan. |
 
 ### Tier 3 — Differentiation (v1.3+)
