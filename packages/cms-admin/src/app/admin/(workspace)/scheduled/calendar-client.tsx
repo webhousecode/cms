@@ -102,7 +102,7 @@ export function ScheduledCalendar({ events, calendarToken, orgId, siteId }: { ev
   return (
     <>
       <TabTitle value="Calendar" />
-      <div className="p-8" style={{ maxWidth: "1100px" }}>
+      <div className="p-8" style={{ maxWidth: "1200px" }}>
         {/* Header */}
         <div className="mb-6 flex items-center justify-between flex-wrap gap-3">
           <div className="flex items-center gap-3">
@@ -162,7 +162,13 @@ export function ScheduledCalendar({ events, calendarToken, orgId, siteId }: { ev
           </div>
         </div>
 
-        {/* Calendar views */}
+        {/* Main layout: sidebar + calendar */}
+        <div style={{ display: "flex", gap: "1.5rem" }}>
+          {/* Sidebar legend */}
+          <CalendarSidebar events={events} todayKey={todayKey} />
+
+          {/* Calendar grid */}
+          <div style={{ flex: 1, minWidth: 0 }}>
         {view === "month" && (
           <MonthView
             year={year}
@@ -187,6 +193,8 @@ export function ScheduledCalendar({ events, calendarToken, orgId, siteId }: { ev
             eventsMap={eventsMap}
           />
         )}
+          </div>{/* end calendar grid */}
+        </div>{/* end flex layout */}
       </div>
     </>
   );
@@ -400,6 +408,77 @@ function DayView({ selectedDate, eventsMap }: {
           </Link>
         );
       })}
+    </div>
+  );
+}
+
+/* ─── Sidebar Legend ─────────────────────────────────────────── */
+
+function CalendarSidebar({ events, todayKey }: { events: ScheduledEvent[]; todayKey: string }) {
+  // Collection counts
+  const collectionCounts = new Map<string, number>();
+  for (const e of events) {
+    collectionCounts.set(e.subtitle, (collectionCounts.get(e.subtitle) ?? 0) + 1);
+  }
+
+  // Today count
+  const todayCount = events.filter((e) => e.date.slice(0, 10) === todayKey).length;
+
+  // Collection colors (deterministic per name)
+  const COLLECTION_COLORS = ["rgb(251 146 60)", "rgb(74 222 128)", "rgb(244 114 182)", "rgb(96 165 250)", "rgb(168 85 247)", "rgb(234 179 8)", "rgb(45 212 191)"];
+  const colEntries = Array.from(collectionCounts.entries());
+
+  const sectionLabel: React.CSSProperties = {
+    fontSize: "0.6rem",
+    fontWeight: 700,
+    textTransform: "uppercase",
+    letterSpacing: "0.08em",
+    color: "var(--muted-foreground)",
+    marginBottom: "0.5rem",
+  };
+
+  return (
+    <div style={{ width: "140px", flexShrink: 0, paddingTop: "0.25rem" }}>
+      {/* Collections */}
+      <p style={sectionLabel}>Collections</p>
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem", marginBottom: "1.25rem" }}>
+        {colEntries.map(([name, count], i) => (
+          <div key={name} style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+              <span style={{ width: "0.5rem", height: "0.5rem", borderRadius: "9999px", background: COLLECTION_COLORS[i % COLLECTION_COLORS.length] }} />
+              <span style={{ fontSize: "0.75rem", fontWeight: 500 }}>{name}</span>
+            </div>
+            <span style={{ fontSize: "0.7rem", fontFamily: "monospace", color: "var(--muted-foreground)" }}>{count}</span>
+          </div>
+        ))}
+        {colEntries.length === 0 && (
+          <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)" }}>No events</span>
+        )}
+      </div>
+
+      {/* Event types */}
+      <p style={sectionLabel}>Event Types</p>
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem", marginBottom: "1.25rem" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+          <span style={{ width: "0.5rem", height: "0.5rem", borderRadius: "9999px", background: EVENT_COLORS.publish }} />
+          <span style={{ fontSize: "0.75rem" }}>Publish</span>
+        </div>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+          <span style={{ width: "0.5rem", height: "0.5rem", borderRadius: "9999px", background: EVENT_COLORS.unpublish }} />
+          <span style={{ fontSize: "0.75rem" }}>Expiry</span>
+        </div>
+      </div>
+
+      {/* Stats */}
+      <div style={{ borderTop: "1px solid var(--border)", paddingTop: "1rem" }}>
+        <p style={{ fontSize: "0.6rem", color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700 }}>Upcoming</p>
+        <p style={{ fontSize: "1.75rem", fontWeight: 700, lineHeight: 1.1 }}>{events.length}</p>
+        <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", marginBottom: "1rem" }}>items pending</p>
+
+        <p style={{ fontSize: "0.6rem", color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700 }}>Today</p>
+        <p style={{ fontSize: "1.75rem", fontWeight: 700, lineHeight: 1.1 }}>{todayCount}</p>
+        <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)" }}>items scheduled</p>
+      </div>
     </div>
   );
 }

@@ -22,6 +22,7 @@ interface Doc {
   slug: string;
   status: string;
   publishAt?: string;
+  unpublishAt?: string;
   updatedAt: string;
   data: Record<string, unknown>;
 }
@@ -358,6 +359,7 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
               {filtered.map((doc, i) => {
                 const title = String(doc.data[titleField] ?? doc.data["title"] ?? doc.slug);
                 const isScheduled = doc.status === "draft" && !!doc.publishAt && new Date(doc.publishAt) > new Date();
+                const hasExpiry = doc.status === "published" && !!doc.unpublishAt && new Date(doc.unpublishAt) > new Date();
 
                 return (
                   <tr
@@ -385,21 +387,28 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
                     {/* Status */}
                     <td style={{ padding: "0.625rem 0.75rem", whiteSpace: "nowrap" }}>
                       <button type="button" onClick={(e) => !readOnly && toggleStatus(e, doc)} title={readOnly ? doc.status : doc.status === "published" ? "Click to unpublish" : "Click to publish"} style={{ background: "none", border: "none", cursor: readOnly ? "default" : "pointer", padding: 0 }}>
-                        {isScheduled ? (
-                          <Badge variant="outline" className="bg-amber-500/10 text-amber-400 border-amber-500/20 gap-1">
-                            <Clock style={{ width: "0.65rem", height: "0.65rem" }} /> scheduled
-                          </Badge>
-                        ) : (
-                          <Badge variant="outline" className={
-                            doc.status === "published"
-                              ? "bg-green-500/10 text-green-400 border-green-500/20 hover:bg-green-500/20"
-                              : doc.status === "trashed"
-                              ? "bg-red-500/10 text-red-400 border-red-500/20"
-                              : "bg-yellow-500/10 text-yellow-400 border-yellow-500/20 hover:bg-yellow-500/20"
-                          }>
-                            {doc.status}
-                          </Badge>
-                        )}
+                        <span style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}>
+                          {isScheduled ? (
+                            <Badge variant="outline" className="bg-amber-500/10 text-amber-400 border-amber-500/20 gap-1">
+                              <Clock style={{ width: "0.65rem", height: "0.65rem" }} /> scheduled
+                            </Badge>
+                          ) : (
+                            <Badge variant="outline" className={
+                              doc.status === "published"
+                                ? "bg-green-500/10 text-green-400 border-green-500/20 hover:bg-green-500/20"
+                                : doc.status === "trashed"
+                                ? "bg-red-500/10 text-red-400 border-red-500/20"
+                                : "bg-yellow-500/10 text-yellow-400 border-yellow-500/20 hover:bg-yellow-500/20"
+                            }>
+                              {doc.status}
+                            </Badge>
+                          )}
+                          {hasExpiry && (
+                            <span title={`Expires: ${doc.unpublishAt!.replace("T", " ").slice(0, 16)}`}>
+                              <Clock style={{ width: "0.7rem", height: "0.7rem", color: "rgb(239 68 68)" }} />
+                            </span>
+                          )}
+                        </span>
                       </button>
                     </td>
 

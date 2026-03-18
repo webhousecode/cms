@@ -71,13 +71,8 @@ export default async function ScheduledPage() {
 
   events.sort((a, b) => a.date.localeCompare(b.date));
 
-  // Persist scheduled events snapshot for the calendar.ics feed (which runs without cookies/GitHub)
-  const { getActiveSitePaths } = await import("@/lib/site-paths");
-  const { dataDir } = await getActiveSitePaths();
-  const fsP = await import("fs/promises");
-  const pathM = await import("path");
-  await fsP.mkdir(dataDir, { recursive: true });
-  await fsP.writeFile(pathM.join(dataDir, "scheduled-events.json"), JSON.stringify(events, null, 2)).catch(() => {});
+  // Update snapshot for the calendar.ics feed (also runs on a 5-min cron)
+  import("@/lib/scheduled-snapshot").then((m) => m.updateScheduledSnapshot()).catch(() => {});
 
   // Generate per-user calendar feed token with site context
   const [siteConfig, session, cookieStore] = await Promise.all([readSiteConfig(), getSessionWithSiteRole(), cookies()]);
