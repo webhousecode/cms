@@ -183,7 +183,7 @@ function HelpPage() {
           Our Discord community can help with technical questions. Many questions are answered in minutes.
         </p>
         <a
-          href="https://discord.gg/webhouse"
+          href="https://discord.gg/jtjnEkVX8D"
           target="_blank"
           rel="noopener noreferrer"
           style={{
