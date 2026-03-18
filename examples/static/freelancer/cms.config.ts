@@ -25,7 +25,7 @@ export default defineConfig({
         { name: 'role', type: 'text' },
         { name: 'company', type: 'text' },
         { name: 'quote', type: 'textarea' },
-        { name: 'photo', type: 'text' },
+        { name: 'photo', type: 'image' },
       ],
     }),
     defineCollection({
@@ -36,7 +36,7 @@ export default defineConfig({
         { name: 'excerpt', type: 'textarea' },
         { name: 'content', type: 'richtext' },
         { name: 'date', type: 'date' },
-        { name: 'coverImage', type: 'text' },
+        { name: 'coverImage', type: 'image' },
       ],
     }),
     defineCollection({
