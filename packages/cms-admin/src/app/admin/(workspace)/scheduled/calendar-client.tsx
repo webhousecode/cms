@@ -742,15 +742,21 @@ function YearView({ year, todayKey, eventsMap, onSelectMonth }: {
 /* ─── Sidebar Legend ─────────────────────────────────────────── */
 
 function CalendarSidebar({ events, todayKey }: { events: ScheduledEvent[]; todayKey: string }) {
-  // Collection counts — only future events (not already published/expired)
+  // Collection counts — only future events, count unique documents (not events)
   const futureEvents = events.filter((e) => e.date >= todayKey);
-  const collectionCounts = new Map<string, number>();
+  const collectionDocs = new Map<string, Set<string>>();
   for (const e of futureEvents) {
-    collectionCounts.set(e.subtitle, (collectionCounts.get(e.subtitle) ?? 0) + 1);
+    if (!collectionDocs.has(e.subtitle)) collectionDocs.set(e.subtitle, new Set());
+    collectionDocs.get(e.subtitle)!.add(e.id);
+  }
+  const collectionCounts = new Map<string, number>();
+  for (const [name, docs] of collectionDocs) {
+    collectionCounts.set(name, docs.size);
   }
 
-  // Today count
-  const todayCount = events.filter((e) => e.date.slice(0, 10) === todayKey).length;
+  // Unique doc counts
+  const futureDocIds = new Set(futureEvents.map((e) => e.id));
+  const todayDocIds = new Set(events.filter((e) => e.date.slice(0, 10) === todayKey).map((e) => e.id));
 
   // Collection colors (deterministic per name)
   const COLLECTION_COLORS = ["rgb(251 146 60)", "rgb(74 222 128)", "rgb(244 114 182)", "rgb(96 165 250)", "rgb(168 85 247)", "rgb(234 179 8)", "rgb(45 212 191)"];
@@ -798,11 +804,11 @@ function CalendarSidebar({ events, todayKey }: { events: ScheduledEvent[]; today
       {/* Stats */}
       <div style={{ borderTop: "1px solid var(--border)", paddingTop: "1rem" }}>
         <p style={{ fontSize: "0.6rem", color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700 }}>Upcoming</p>
-        <p style={{ fontSize: "1.75rem", fontWeight: 700, lineHeight: 1.1 }}>{futureEvents.length}</p>
+        <p style={{ fontSize: "1.75rem", fontWeight: 700, lineHeight: 1.1 }}>{futureDocIds.size}</p>
         <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", marginBottom: "1rem" }}>items pending</p>
 
         <p style={{ fontSize: "0.6rem", color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: "0.08em", fontWeight: 700 }}>Today</p>
-        <p style={{ fontSize: "1.75rem", fontWeight: 700, lineHeight: 1.1 }}>{todayCount}</p>
+        <p style={{ fontSize: "1.75rem", fontWeight: 700, lineHeight: 1.1 }}>{todayDocIds.size}</p>
         <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)" }}>items scheduled</p>
       </div>
     </div>
