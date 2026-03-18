@@ -894,6 +894,44 @@ The visual admin runs at [webhouse.app](https://webhouse.app) or locally via `np
 
 8. **Relation values** — Relations store slugs as strings (single) or string arrays (multiple), not full document objects. To get the related document, do a separate `getDocument()` lookup.
 
+## MANDATORY: Content File Requirements
+
+**CRITICAL — READ THIS BEFORE BUILDING ANY SITE.**
+
+The CMS discovers content by scanning `content/<collectionName>/` for `.json` files. If a collection defined in `cms.config.ts` has no JSON files in its content directory, it will appear **empty** in the admin UI — no documents to view, edit, or manage. This makes the site useless as a CMS-managed site.
+
+### Rules (non-negotiable)
+
+1. **Every collection in `cms.config.ts` MUST have at least one JSON file** in `content/<collectionName>/`. No exceptions. If you define a `pages` collection, there MUST be files like `content/pages/home.json`, `content/pages/about.json`, etc.
+
+2. **Every JSON file MUST use the full document format:**
+   ```json
+   {
+     "slug": "home",
+     "status": "published",
+     "data": {
+       "title": "Home",
+       "content": "Welcome to our site."
+     }
+   }
+   ```
+   The `slug`, `status`, and `data` fields are required. All user-defined field values go inside `data`, matching the field names in `cms.config.ts`.
+
+3. **`build.ts` MUST read content from JSON files, not hardcode it.** The entire point of the CMS is that content is editable through the admin UI. If your build script has content strings baked into the code instead of reading from `content/` JSON files, the site is broken — editing content in the admin will have no effect on the built output.
+
+4. **Static sites MUST have a `pages` collection** with at least `home.json`. This is the minimum for the site to show meaningful content in the admin UI. Other typical pages: `about.json`, `contact.json`.
+
+5. **Collection name = directory name.** If your collection is named `work` in the config, the directory must be `content/work/`. If it's named `blogPosts`, the directory must be `content/blogPosts/`.
+
+### Verification checklist
+
+Before considering a site complete, verify:
+- [ ] Every collection in `cms.config.ts` has JSON files in `content/<name>/`
+- [ ] Every JSON file has `slug`, `status: "published"`, and `data` with the correct fields
+- [ ] `build.ts` reads all content from JSON files (no hardcoded content strings)
+- [ ] Running `npx tsx build.ts` produces output that reflects the JSON content
+- [ ] Changing a value in a JSON file and rebuilding changes the output
+
 ## Site Building Patterns
 
 ### Recommended Next.js App Router structure
