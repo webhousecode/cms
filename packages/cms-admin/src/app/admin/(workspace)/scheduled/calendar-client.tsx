@@ -60,6 +60,7 @@ function isSameDay(a: string, b: string): boolean {
 
 export function ScheduledCalendar({ events, calendarToken, orgId, siteId }: { events: ScheduledEvent[]; calendarToken: string; orgId: string; siteId: string }) {
   const [copied, setCopied] = useState(false);
+  const [scrollToNow, setScrollToNow] = useState(0); // increment to trigger scroll
   const today = new Date();
   const todayKey = dateKey(today.getFullYear(), today.getMonth(), today.getDate());
 
@@ -99,6 +100,7 @@ export function ScheduledCalendar({ events, calendarToken, orgId, siteId }: { ev
     setYear(today.getFullYear());
     setMonth(today.getMonth());
     setSelectedDate(todayKey);
+    setScrollToNow((n) => n + 1);
   }
 
   return (
@@ -191,6 +193,7 @@ export function ScheduledCalendar({ events, calendarToken, orgId, siteId }: { ev
             todayKey={todayKey}
             eventsMap={eventsMap}
             onSelectDate={(key) => { setSelectedDate(key); setView("day"); }}
+            scrollToNow={scrollToNow}
           />
         )}
         {view === "day" && (
@@ -313,9 +316,10 @@ const TOTAL_HOURS = 24; // full day 00:00-24:00
 const VIEW_HOURS = 11;  // visible window (07:00-18:00 default)
 const WEEKEND_BG = "#262627";
 
-function WeekView({ selectedDate, todayKey, eventsMap, onSelectDate }: {
+function WeekView({ selectedDate, todayKey, eventsMap, onSelectDate, scrollToNow = 0 }: {
   selectedDate: string; todayKey: string;
   eventsMap: Map<string, ScheduledEvent[]>; onSelectDate: (key: string) => void;
+  scrollToNow?: number;
 }) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [nowMinutes, setNowMinutes] = useState(() => {
@@ -348,15 +352,17 @@ function WeekView({ selectedDate, todayKey, eventsMap, onSelectDate }: {
 
   const HOUR_HEIGHT = 52;
 
-  // Auto-scroll to center NOW in viewport (or 07:00 if outside business hours)
+  // Auto-scroll to center NOW in viewport (on mount + when Today is clicked)
   useEffect(() => {
     if (!scrollRef.current) return;
-    const nowHour = nowMinutes / 60;
+    const n = new Date();
+    const currentMinutes = n.getHours() * 60 + n.getMinutes();
+    const nowHour = currentMinutes / 60;
     const centerHour = nowHour >= 7 && nowHour <= 18 ? nowHour : 7;
     const scrollTarget = (centerHour - VIEW_HOURS / 2) * HOUR_HEIGHT;
     scrollRef.current.scrollTop = Math.max(0, scrollTarget);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [scrollToNow]);
 
   // Update NOW marker every minute
   useEffect(() => {
