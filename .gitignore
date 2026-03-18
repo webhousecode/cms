@@ -145,3 +145,13 @@ vite.config.ts.timestamp-*
 # CMS per-site data (AI keys, user data — never committed)
 _data/
 .mcp.json
+
+# Playwright test results
+test-results/
+packages/cms-admin/test-results/
+
+# Build artifacts
+*.bundled_*.mjs
+
+# Next.js auto-generated
+next-env.d.ts
