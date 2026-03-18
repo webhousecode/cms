@@ -59,11 +59,11 @@
 | F40 | [Drag and Drop Tab Reordering](#f40-drag-drop-tabs) | Planned | [docs/features/F40-drag-drop-tabs.md](features/F40-drag-drop-tabs.md) |
 | F41 | [GitHub Site Auto-Sync & Webhook Revalidation](#f41-github-site-sync) | Done | [docs/features/F41-github-site-sync.md](features/F41-github-site-sync.md) |
 | F42 | [Framework Boilerplates](#f42-framework-boilerplates) | Planned | [docs/features/F42-framework-boilerplates.md](features/F42-framework-boilerplates.md) |
-| F43 | [Persist User State](#f43-persist-user-state) | Planned | [docs/features/F43-persist-user-state.md](features/F43-persist-user-state.md) |
+| F43 | [Persist User State](#f43-persist-user-state) | Done | [docs/features/F43-persist-user-state.md](features/F43-persist-user-state.md) |
 | F44 | [Media Processing Pipeline](#f44-media-processing-pipeline) | Planned | [docs/features/F44-media-processing.md](features/F44-media-processing.md) |
 | F45 | [AI Image Generation](#f45-ai-image-generation) | Planned | [docs/features/F45-ai-image-generation.md](features/F45-ai-image-generation.md) |
 | F46 | [Plugin System](#f46-plugin-system) | Planned | [docs/features/F46-plugin-system.md](features/F46-plugin-system.md) |
-| F47 | [Content Scheduling](#f47-content-scheduling) | Planned | [docs/features/F47-content-scheduling.md](features/F47-content-scheduling.md) |
+| F47 | [Content Scheduling](#f47-content-scheduling) | Done | [docs/features/F47-content-scheduling.md](features/F47-content-scheduling.md) |
 | F48 | [Internationalization (i18n)](#f48-internationalization-i18n) | Planned | [docs/features/F48-i18n.md](features/F48-i18n.md) |
 | F49 | [Incremental Builds](#f49-incremental-builds) | Planned | [docs/features/F49-incremental-builds.md](features/F49-incremental-builds.md) |
 | F50 | [Sign In Providers](#f50-sign-in-providers) | Planned | [docs/features/F50-sign-in-providers.md](features/F50-sign-in-providers.md) |

@@ -4,7 +4,7 @@
 
 ---
 
-## Done (28 milestones)
+## Done (30 milestones)
 
 | # | Milestone | Completed |
 |---|-----------|-----------|
@@ -34,6 +34,8 @@
 | 26 | **Interactives Engine** — Manager, AI edit, code view, blocks integration, standalone (F39) | 2026-03-17 |
 | 27 | **Viewer RBAC enforcement** — hide all write UI for viewer role across entire admin | 2026-03-17 |
 | 28 | **Invite Users** — email invitations, token flow, team panel, role management (F01) | 2026-03-17 |
+| 29 | **Content Scheduling** — publishAt/unpublishAt, calendar page, iCal feed, webhook notifications (F47) | 2026-03-18 |
+| 30 | **Persist User State** — tabs, sidebar, preferences synced server-side per user (F43) | 2026-03-18 |
 
 ---
 
@@ -49,8 +51,8 @@ _Without these, we cannot build and deliver professional sites on the platform._
 |----------|---------|------|---------------|
 | ~~1~~ | ~~**F39 Interactives Engine**~~ | ~~Done~~ | ~~Shipped 2026-03-17~~ |
 | ~~2~~ | ~~**F01 Invite Users**~~ | ~~Done~~ | ~~Shipped 2026-03-17~~ |
-| 3 | **F47 Content Scheduling** | Small | publishAt/unpublishAt — every professional CMS needs this. API partially exists. |
-| 4 | **F43 Persist User State** | Small | Tabs/preferences lost on cookie clear is unacceptable for daily-use tool. |
+| ~~3~~ | ~~**F47 Content Scheduling**~~ | ~~Done~~ | ~~Shipped 2026-03-18~~ |
+| ~~4~~ | ~~**F43 Persist User State**~~ | ~~Done~~ | ~~Shipped 2026-03-18~~ |
 | 5 | **F12 One-Click Publish** | Medium | Need to deploy sites. Vercel deploy hook, Fly.io redeploy, GitHub Pages. |
 | 6 | **F27 Backup & Restore** | Small | Content is the customer's most valuable asset. Export/import full site. |
 | 7 | **F44 Media Processing Pipeline** | Medium | Images must be optimized. No srcset = poor Lighthouse. Sharp, WebP/AVIF. |
