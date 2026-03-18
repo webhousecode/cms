@@ -9,7 +9,6 @@ import { TabsProvider } from "@/lib/tabs-context";
 import { TabBar } from "@/components/tab-bar";
 import { AdminHeader } from "@/components/admin-header";
 import { DevInspector } from "@/components/dev-inspector";
-import { ZoomApplier } from "@/components/zoom-applier";
 import { SchedulerNotifier } from "@/components/scheduler-notifier";
 import { cookies } from "next/headers";
 import { getSessionUser } from "@/lib/auth";
@@ -89,7 +88,6 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             {children}
           </CommandPaletteProvider>
           <DevInspector />
-          <ZoomApplier />
           <SchedulerNotifier />
         </TabsProvider>
       </SidebarInset>

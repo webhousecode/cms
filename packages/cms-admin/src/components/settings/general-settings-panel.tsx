@@ -94,20 +94,19 @@ function ErrorMsg({ msg }: { msg: string }) {
 	return msg ? <p style={{ fontSize: "0.75rem", color: "var(--destructive)", margin: 0 }}>{msg}</p> : null;
 }
 
-const ZOOM_OPTIONS = [80, 85, 90, 95, 100, 105, 110, 115, 120, 125, 130, 140, 150];
-
 /* ─── Profile section ─────────────────────────────────────────── */
 function ProfileSection() {
 	const [name, setName] = useState("");
 	const [email, setEmail] = useState("");
-	const [zoom, setZoom] = useState(100);
 	const [saving, setSaving] = useState(false);
 	const [saved, setSaved] = useState(false);
 	const [error, setError] = useState("");
 
 	const [showLogoIcon, setShowLogoIcon] = useState(true);
 	useEffect(() => {
-		setShowLogoIcon(localStorage.getItem("cms-show-logo-icon") !== "false");
+		fetch("/api/admin/user-state").then((r) => r.ok ? r.json() : null).then((state) => {
+			if (state?.showLogoIcon !== undefined) setShowLogoIcon(state.showLogoIcon);
+		}).catch(() => {});
 	}, []);
 
 	const [curPw, setCurPw] = useState("");
@@ -121,15 +120,10 @@ function ProfileSection() {
 	useEffect(() => {
 		fetch("/api/auth/me")
 			.then((r) => r.json())
-			.then((d: { user?: { name: string; email: string; zoom?: number } | null }) => {
-				if (d.user) { setName(d.user.name); setEmail(d.user.email); setZoom(d.user.zoom ?? 100); }
+			.then((d: { user?: { name: string; email: string } | null }) => {
+				if (d.user) { setName(d.user.name); setEmail(d.user.email); }
 			});
 	}, []);
-
-	function applyZoomPreview(value: number) {
-		document.documentElement.style.zoom = value === 100 ? "" : `${value / 100}`;
-		window.dispatchEvent(new CustomEvent("cms:zoom-changed", { detail: value }));
-	}
 
 	async function saveProfile(e: FormEvent) {
 		e.preventDefault();
@@ -138,7 +132,7 @@ function ProfileSection() {
 			const res = await fetch("/api/admin/profile", {
 				method: "POST",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ name, email, zoom }),
+				body: JSON.stringify({ name, email }),
 			});
 			const d = (await res.json()) as { error?: string };
 			if (!res.ok) { setError(d.error ?? "Save failed"); }
@@ -158,43 +152,12 @@ function ProfileSection() {
 				<form onSubmit={saveProfile} style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
 					<InputRow label="Name" value={name} onChange={(e) => setName(e.target.value)} required />
 					<InputRow label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-
-					{/* Zoom select */}
-					<div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
-						<label style={{ fontSize: "0.75rem", fontWeight: 500, flexShrink: 0 }}>UI zoom</label>
-						<CustomSelect
-							options={ZOOM_OPTIONS.map((z) => ({ value: String(z), label: z === 100 ? "100% (default)" : `${z}%` }))}
-							value={String(zoom)}
-							onChange={(v) => { const n = parseInt(v); setZoom(n); applyZoomPreview(n); }}
-							style={{ width: "190px" }}
-						/>
-						{zoom !== 100 && (
-							<button
-								type="button"
-								onClick={() => { setZoom(100); applyZoomPreview(100); }}
-								style={{
-									fontSize: "0.75rem",
-									padding: "0.35rem 0.65rem",
-									borderRadius: "6px",
-									border: "1px solid var(--border)",
-									background: "transparent",
-									color: "var(--muted-foreground)",
-									cursor: "pointer",
-								}}
-							>
-								Reset
-							</button>
-						)}
-					</div>
-
-					<div style={{ height: "1px", background: "var(--border)" }} />
 					<Toggle
 						label="Show logo icon"
 						description="Show the webhouse.app icon above the wordmark in the sidebar."
 						checked={showLogoIcon}
 						onChange={(v) => {
 							setShowLogoIcon(v);
-							localStorage.setItem("cms-show-logo-icon", String(v));
 							window.dispatchEvent(new CustomEvent("cms:logo-icon-changed", { detail: v }));
 							fetch("/api/admin/user-state", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ showLogoIcon: v }) }).catch(() => {});
 						}}
