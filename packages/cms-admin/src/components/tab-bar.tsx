@@ -2,23 +2,23 @@
 
 import {
   X, Plus, LayoutDashboard, AlertTriangle, Image, Bot, Calendar,
-  ListChecks, Cpu, Settings2, BarChart3, Link2, Trash2,
-  FileText, Globe, Zap, UserCircle, FolderOpen,
+  Inbox, Cpu, Settings2, BarChart2, Link2, Trash2,
+  FileText, Zap, UserCircle, FolderOpen, Boxes, Search,
 } from "lucide-react";
 
 const TAB_ICONS: Record<string, typeof LayoutDashboard> = {
   "/admin": LayoutDashboard,
+  "/admin/sites": Boxes,
   "/admin/media": Image,
   "/admin/agents": Bot,
   "/admin/scheduled": Calendar,
-  "/admin/curation": ListChecks,
+  "/admin/curation": Inbox,
   "/admin/command": Cpu,
   "/admin/settings": Settings2,
-  "/admin/performance": BarChart3,
+  "/admin/performance": BarChart2,
   "/admin/link-checker": Link2,
   "/admin/trash": Trash2,
   "/admin/interactives": Zap,
-  "/admin/sites": Globe,
   "/admin/account": UserCircle,
 };
 
