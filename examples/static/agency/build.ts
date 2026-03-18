@@ -255,7 +255,7 @@ function footer() {
 
       <div class="border-t border-gray-200 mt-12 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
         <p class="text-[#999] text-xs">&copy; ${year} ${SITE_NAME}. All rights reserved.</p>
-        <p class="text-[#999] text-xs">Built with <a href="https://www.npmjs.com/package/@webhouse/cms" target="_blank" rel="noopener" class="hover:text-[#111] transition-colors">@webhouse/cms</a></p>
+        <p class="text-[#999] text-xs">Built with <a href="https://webhouse.app" target="_blank" rel="noopener" class="hover:text-[#111] transition-colors">@webhouse/cms</a></p>
       </div>
     </div>
   </footer>`;

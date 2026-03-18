@@ -230,6 +230,7 @@ function footer(): string {
     <span>Nordhavn, Copenhagen</span>
     <span>hello@obsidian.studio</span>
     <span>&copy; 2024 Obsidian Studio</span>
+    <span>Built with <a href="https://webhouse.app">@webhouse/cms</a></span>
     <a href="#">Instagram</a>
   </div>
 </footer>`;

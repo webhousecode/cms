@@ -206,7 +206,7 @@ function footer() {
   return `
   <footer class="site-footer">
     <p>&copy; ${year} ${SITE_NAME}. All rights reserved.</p>
-    <p style="margin-top: 0.5rem;">Built with <a href="https://www.npmjs.com/package/@webhouse/cms" target="_blank" rel="noopener">@webhouse/cms</a></p>
+    <p style="margin-top: 0.5rem;">Built with <a href="https://webhouse.app" target="_blank" rel="noopener">@webhouse/cms</a></p>
   </footer>`;
 }
 
