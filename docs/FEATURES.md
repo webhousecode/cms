@@ -97,6 +97,7 @@
 | F78 | [Bundled Preview Server](#f78-bundled-preview-server) | Planned | [docs/features/F78-bundled-preview-server.md](features/F78-bundled-preview-server.md) |
 | F79 | [Site Config Validator](#f79-site-config-validator) | Planned | [docs/features/F79-site-config-validator.md](features/F79-site-config-validator.md) |
 | F80 | [Admin Selector Map](#f80-admin-selector-map) | Planned | [docs/features/F80-admin-selector-map.md](features/F80-admin-selector-map.md) |
+| F81 | [Homepage Designation](#f81-homepage-designation) | Planned | [docs/features/F81-homepage-designation.md](features/F81-homepage-designation.md) |
 
 ---
 
@@ -339,3 +340,6 @@ Robust validation of cms.config.ts and content/ structure when adding or loading
 
 ## F80 — Admin Selector Map
 Auto-generated map of stable `data-testid` selectors for every CMS admin UI element (fields, buttons, nav, dialogs). Enables reliable Playwright tests for content editing, site creation, and roundtrip verification. Includes CLI command (`cms selector-map`) to generate the map from cms.config.ts, Playwright test helpers, and example test fixtures for common workflows (create document, edit field, save, verify persistence). Foundation for all E2E testing (F65, F20).
+
+## F81 — Homepage Designation
+Explicit "Set as homepage" setting in Site Settings so the CMS knows which page maps to "/". WordPress-style dropdown populated from the pages collection. Replaces fragile slug conventions (`home`, `index`) scattered across preview, build, revalidation, and proxy code. Single source of truth via `homepageSlug` in the site registry. Includes homepage badge in document editor and home icon in collection list.
