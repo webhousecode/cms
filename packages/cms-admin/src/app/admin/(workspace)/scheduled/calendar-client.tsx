@@ -375,10 +375,16 @@ function WeekView({ selectedDate, todayKey, eventsMap, onSelectDate }: {
   // Find all-day events (events without a specific time or recurring)
   // For now, all events have times so this section is empty — prepared for agents/recurring
 
+  // Account for sticky header height in scroll
+  const headerHeight = 36;
+
   return (
-    <div>
-      {/* Header: week number + day columns */}
-      <div style={{ display: "grid", gridTemplateColumns: "3rem repeat(7, 1fr)", borderBottom: "1px solid var(--border)" }}>
+    <div
+      ref={scrollRef}
+      style={{ height: `${viewportHeight + headerHeight}px`, overflowY: "auto", position: "relative", borderRadius: "8px", border: "1px solid var(--border)" }}
+    >
+      {/* Header: week number + day columns — sticky */}
+      <div style={{ display: "grid", gridTemplateColumns: "3rem repeat(7, 1fr)", position: "sticky", top: 0, zIndex: 30, background: "var(--card)", borderBottom: "1px solid var(--border)" }}>
         <div style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", padding: "0.5rem 0", textAlign: "center", fontFamily: "monospace" }}>
           W{weekNum}
         </div>
@@ -393,7 +399,7 @@ function WeekView({ selectedDate, todayKey, eventsMap, onSelectDate }: {
                 padding: "0.4rem 0",
                 textAlign: "center",
                 borderLeft: "1px solid var(--border)",
-                background: day.isWeekend ? WEEKEND_BG : "transparent",
+                background: day.isWeekend ? WEEKEND_BG : "var(--card)",
               }}
               className="hover:bg-secondary/50 transition-colors"
             >
@@ -414,11 +420,7 @@ function WeekView({ selectedDate, todayKey, eventsMap, onSelectDate }: {
         })}
       </div>
 
-      {/* Time grid — scrollable */}
-      <div
-        ref={scrollRef}
-        style={{ height: `${viewportHeight}px`, overflowY: "auto", position: "relative" }}
-      >
+      {/* Time grid */}
         <div style={{ display: "grid", gridTemplateColumns: "3rem repeat(7, 1fr)", position: "relative", height: `${totalHeight}px` }}>
           {/* Hour labels */}
           {Array.from({ length: TOTAL_HOURS }, (_, i) => {
@@ -563,7 +565,6 @@ function WeekView({ selectedDate, todayKey, eventsMap, onSelectDate }: {
           )}
         </div>
       </div>
-    </div>
   );
 }
 
