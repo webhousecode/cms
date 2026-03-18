@@ -169,7 +169,7 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
                 "w-full text-left flex items-center gap-3 px-4 py-3 transition-colors",
                 i === selected ? "bg-accent" : "hover:bg-accent/50"
               )}
-              style={{ background: "none", border: "none", cursor: "pointer" }}
+              style={{ border: "none", cursor: "pointer" }}
             >
               {r.status === "published"
                 ? <Globe style={{ width: "0.875rem", height: "0.875rem", color: "#4ade80", flexShrink: 0 }} />
