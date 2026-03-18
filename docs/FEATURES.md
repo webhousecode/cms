@@ -83,6 +83,7 @@
 | F64 | [Toast Notifications System](#f64-toast-notifications-system) | In progress | [docs/features/F64-toast-notifications.md](features/F64-toast-notifications.md) |
 | F65 | [Agent Pipeline E2E Tests](#f65-agent-pipeline-tests) | Planned | [docs/features/F65-agent-pipeline-tests.md](features/F65-agent-pipeline-tests.md) |
 | F66 | [Search Index](#f66-search-index) | Planned | [docs/features/F66-search-index.md](features/F66-search-index.md) |
+| F67 | [Security Gate](#f67-security-gate) | Planned | [docs/features/F67-security-gate.md](features/F67-security-gate.md) |
 
 ---
 
@@ -283,3 +284,6 @@ Playwright end-to-end tests covering the full AI agent lifecycle: cockpit settin
 
 ## F66 — Search Index
 Persistent SQLite FTS5 search index for instant full-text search across all documents. Current search scans all documents via storage adapter on every query — O(n) per collection. SQLite FTS5 database stored in `_data/search-index.db`. Built incrementally on document create/update/delete via storage hooks. Cold-start builder syncs all content on first request. Field-weighted ranking (title 10x > excerpt 3x > content 1x). Works with all storage adapters. Uses `better-sqlite3`.
+
+## F67 — Security Gate
+Automated security scanning pipeline for the CMS monorepo. Three phases: (1) Local toolchain — Semgrep (SAST), Gitleaks (secrets), Trivy (dependencies) with pre-commit hook that blocks commits with secrets or OWASP Top 10 violations. (2) CLAUDE.md security rules — explicit rules Claude Code must follow (never hardcode secrets, always auth API routes, validate input server-side). (3) `@webhouse/security-gate` CLI package — wraps all scanners + adds CMS-specific custom rules (unauthed API routes, missing HMAC on webhooks, SCIM token verification, env/gitignore consistency). Reports to console, Discord, and markdown. CI integration via GitHub Actions. Weekly scheduled scan with Discord notification. Addresses the "vibe coding crisis" — AI generates code fast but security review doesn't keep up.
