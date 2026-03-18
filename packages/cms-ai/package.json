@@ -1,6 +1,6 @@
 {
   "name": "@webhouse/cms-ai",
-  "version": "0.2.9",
+  "version": "0.2.10",
   "description": "AI agents for @webhouse/cms — content generation with Anthropic Claude and OpenAI",
   "type": "module",
   "license": "MIT",
