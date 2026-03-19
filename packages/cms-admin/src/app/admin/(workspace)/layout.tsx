@@ -17,6 +17,21 @@ import { findFirstAccessibleSite } from "@/lib/team-access";
 import { NoAccessGate, ConnectGitHubGate, SiteRedirectGate, GitHubErrorGate } from "@/components/gate-screen";
 import { OrgSidebar } from "@/components/org-sidebar";
 import { redirect } from "next/navigation";
+import { loadRegistry, findSite } from "@/lib/site-registry";
+import type { Metadata } from "next";
+
+export async function generateMetadata(): Promise<Metadata> {
+  try {
+    const registry = await loadRegistry();
+    if (!registry) return { title: "webhouse.app" };
+    const cookieStore = await cookies();
+    const orgId = cookieStore.get("cms-active-org")?.value ?? registry.defaultOrgId;
+    const siteId = cookieStore.get("cms-active-site")?.value ?? registry.defaultSiteId;
+    const site = findSite(registry, orgId, siteId);
+    if (site?.name) return { title: `webhouse.app: ${site.name}` };
+  } catch { /* fall through */ }
+  return { title: "webhouse.app" };
+}
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const siteInfo = await getActiveSiteInfo();

@@ -61,10 +61,6 @@ export function SiteSwitcher() {
           const sId = getCookie("cms-active-site") ?? d.registry.defaultSiteId;
           setActiveOrgId(orgId);
           setActiveSiteId(sId);
-          // Update browser tab title
-          const org = d.registry.orgs.find((o) => o.id === orgId) ?? d.registry.orgs[0];
-          const site = org?.sites.find((s) => s.id === sId);
-          if (site?.name) document.title = `webhouse.app: ${site.name}`;
         }
       }
       if (sitesRes.ok) {
@@ -109,7 +105,6 @@ export function SiteSwitcher() {
   function handleSelect(site: SiteEntry) {
     setActiveSiteId(site.id);
     setCookie("cms-active-site", site.id);
-    document.title = `webhouse.app: ${site.name}`;
     // Persist last active site on user record (survives cookie clear / device switch)
     fetch("/api/admin/profile", {
       method: "POST",
@@ -201,7 +196,6 @@ export function OrgSwitcher() {
     const newSiteId = newSite?.id ?? null;
     if (newSiteId) {
       setCookie("cms-active-site", newSiteId);
-      if (newSite?.name) document.title = `webhouse.app: ${newSite.name}`;
     } else {
       document.cookie = "cms-active-site=;path=/;max-age=0";
     }
