@@ -110,7 +110,7 @@ export function AISettingsPanel() {
   }
 
   return (
-    <form ref={aiFormRef} onSubmit={handleSave}>
+    <form ref={aiFormRef} onSubmit={handleSave} onChange={() => window.dispatchEvent(new CustomEvent("cms:settings-dirty"))}>
       {/* Default provider */}
       <div style={{ marginBottom: "1.5rem" }}>
         <label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: "0.5rem" }}>

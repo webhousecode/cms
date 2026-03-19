@@ -165,7 +165,7 @@ export function EmailSettingsPanel() {
   ] as const;
 
   return (
-    <form ref={emailFormRef} onSubmit={handleSave}>
+    <form ref={emailFormRef} onSubmit={handleSave} onChange={() => window.dispatchEvent(new CustomEvent("cms:settings-dirty"))}>
       <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "1.5rem" }}>
         {FIELDS.map((f) => {
           const currentValue = config[f.id as keyof EmailConfig];

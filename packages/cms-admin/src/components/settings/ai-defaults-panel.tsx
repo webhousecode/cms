@@ -94,7 +94,7 @@ export function AIDefaultsPanel() {
   }
 
   return (
-    <form ref={defaultsFormRef} onSubmit={handleSave}>
+    <form ref={defaultsFormRef} onSubmit={handleSave} onChange={() => window.dispatchEvent(new CustomEvent("cms:settings-dirty"))}>
       {/* Interactives section */}
       <div style={{ marginBottom: "2rem" }}>
         <SectionHeading>Interactives (Generate &amp; Edit with AI)</SectionHeading>

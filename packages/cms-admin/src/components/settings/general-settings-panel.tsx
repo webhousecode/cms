@@ -288,7 +288,7 @@ function SiteSection() {
 	}, []);
 
 	return (
-		<form ref={formRef} onSubmit={handleSave} style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+		<form ref={formRef} onSubmit={handleSave} onChange={() => window.dispatchEvent(new CustomEvent("cms:settings-dirty"))} style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
 			<div>
 				<SectionHeading>Site</SectionHeading>
 				<Card>
@@ -527,7 +527,7 @@ function RevalidationSection() {
 	return (
 		<SectionWrapper><div>
 			<SectionHeading>Revalidation</SectionHeading>
-			<form ref={revalFormRef} onSubmit={handleSave} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+			<form ref={revalFormRef} onSubmit={handleSave} onChange={() => window.dispatchEvent(new CustomEvent("cms:settings-dirty"))} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
 				<Card>
 					<div style={{ display: "flex", alignItems: "flex-start", gap: "0.5rem" }}>
 						<Zap style={{ width: "1rem", height: "1rem", color: "var(--primary)", flexShrink: 0, marginTop: "0.15rem" }} />
