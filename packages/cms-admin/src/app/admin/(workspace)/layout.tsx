@@ -28,7 +28,7 @@ export async function generateMetadata(): Promise<Metadata> {
     const orgId = cookieStore.get("cms-active-org")?.value ?? registry.defaultOrgId;
     const siteId = cookieStore.get("cms-active-site")?.value ?? registry.defaultSiteId;
     const site = findSite(registry, orgId, siteId);
-    if (site?.name) return { title: `webhouse.app: ${site.name}` };
+    if (site?.name) return { title: site.name };
   } catch { /* fall through */ }
   return { title: "webhouse.app" };
 }
