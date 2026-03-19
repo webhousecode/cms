@@ -22,6 +22,7 @@ const SHORTCUT_GROUPS = [
     shortcuts: [
       { keys: "⌘ K", label: "Command palette" },
       { keys: "h", label: "Help & Support" },
+      { keys: "p", label: "Preview site" },
       { keys: "t", label: "New tab" },
       { keys: "⌘ ⇧ ←", label: "Previous tab" },
       { keys: "⌘ ⇧ →", label: "Next tab" },

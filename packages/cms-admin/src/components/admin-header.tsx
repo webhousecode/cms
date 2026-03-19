@@ -13,10 +13,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Settings, Fingerprint, Check, Moon, Sun, Monitor, LogOut, Search } from "lucide-react";
+import { Settings, Fingerprint, Check, Moon, Sun, Monitor, LogOut, Search, ExternalLink } from "lucide-react";
 import { HelpButton } from "@/components/help-drawer";
 import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 
 interface SessionUser {
@@ -108,6 +108,61 @@ function UserNav({ user }: { user: SessionUser | null }) {
   );
 }
 
+function PreviewButton() {
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/admin/site-config")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data?.previewSiteUrl) setPreviewUrl(data.previewSiteUrl);
+      })
+      .catch(() => {});
+  }, []);
+
+  const openPreview = useCallback(() => {
+    if (previewUrl) {
+      window.open(previewUrl, "_blank", "noopener,noreferrer");
+    }
+  }, [previewUrl]);
+
+  // "p" shortcut → open preview in new browser tab
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key !== "p" || e.metaKey || e.ctrlKey || e.altKey) return;
+      const tag = (document.activeElement?.tagName ?? "").toLowerCase();
+      if (tag === "input" || tag === "textarea" || tag === "select" || (document.activeElement as HTMLElement)?.isContentEditable) return;
+      e.preventDefault();
+      openPreview();
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [openPreview]);
+
+  if (!previewUrl) return null;
+
+  return (
+    <button
+      type="button"
+      onClick={openPreview}
+      style={{
+        background: "none",
+        border: "1.5px solid var(--border)",
+        cursor: "pointer",
+        color: "var(--muted-foreground)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        borderRadius: "50%",
+        width: "2rem", height: "2rem",
+        padding: 0,
+      }}
+      className="hover:border-foreground hover:text-foreground transition-colors"
+      title="Preview site (p)"
+    >
+      <ExternalLink style={{ width: "0.9rem", height: "0.9rem" }} />
+    </button>
+  );
+}
+
 export function AdminHeader() {
   const { tabs, activeId } = useTabs();
   const activeTab = tabs.find((t) => t.id === activeId);
@@ -148,6 +203,7 @@ export function AdminHeader() {
       <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0 1rem" }}>
         <OrgSwitcher />
         <SiteSwitcher />
+        <PreviewButton />
         <HelpButton />
         <UserNav user={user} />
       </div>
