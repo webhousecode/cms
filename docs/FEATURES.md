@@ -103,6 +103,7 @@
 | F84 | [Move Site to Org](#f84-move-site-to-org) | Planned | [docs/features/F84-move-site-to-org.md](features/F84-move-site-to-org.md) |
 | F85 | [CC Hooks & Quality Gates](#f85-cc-hooks-quality-gates) | Planned | [docs/features/F85-cc-hooks-quality-gates.md](features/F85-cc-hooks-quality-gates.md) |
 | F86 | [Action Bar](#f86-action-bar) | Planned | [docs/features/F86-action-bar.md](features/F86-action-bar.md) |
+| F87 | [Org-Level Global Settings](#f87-org-level-global-settings) | Planned | [docs/features/F87-org-level-settings.md](features/F87-org-level-settings.md) |
 
 ---
 
@@ -365,3 +366,7 @@ Automated quality enforcement using Claude Code hooks. Post-edit TypeScript comp
 ## F86 — Action Bar
 
 Standardized sticky action bar below tabs across all admin pages. Fixed 40px height, breadcrumbs left, action buttons right. Replaces scattered Save buttons with one per-tab Save in the bar. Consistent 28px button height. Three-phase rollout: new pages, existing pages, settings refactor.
+
+## F87 — Org-Level Global Settings
+
+Shared settings inherited by all sites in an organization. Covers MCP servers, email, AI keys, budget, webhooks. Inheritance chain: site → org → env vars. Per-site override with "Inherited from org" badges. Reduces repetitive configuration across multi-site orgs.

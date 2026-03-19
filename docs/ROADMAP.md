@@ -103,6 +103,7 @@ _Makes us stand out. Customers expect these from a modern CMS._
 | 20f | **F72 Website Screenshots** | Medium | Playwright captures all site pages. New Tools sidebar group (Link Checker + Screenshots tabs). Visual QA. |
 | 20f | **F66 Search Index** | Medium | SQLite FTS5 full-text search. Incremental indexing via storage hooks. Field-weighted ranking. Replaces O(n) scan. |
 | 20g | **F85 CC Hooks & Quality Gates** | Small | Auto type-check, destructive command guards, post-commit audit. Catches errors before user sees them. |
+| 9d | **F87 Org-Level Global Settings** | Medium | Shared org settings inherited by all sites. MCP, email, AI keys, webhooks. Per-site override. |
 
 ### Tier 3 — Differentiation (v1.3+)
 
