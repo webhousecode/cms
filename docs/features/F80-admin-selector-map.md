@@ -142,6 +142,41 @@ npx cms selector-map [--site <siteId>] [--output selector-map.json]
 
 Reads `cms.config.ts` for the active site and generates the field selector map without requiring a running server.
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-admin/src/components/editor/field-editor.tsx` — add `data-testid` based on field name/type
+- `packages/cms-admin/src/components/editor/document-editor.tsx` — add `data-testid` to save/publish/delete buttons
+- `packages/cms-admin/src/components/editor/rich-text-editor.tsx` — add `data-testid` to richtext container
+- `packages/cms-admin/src/components/editor/blocks-editor.tsx` — add `data-testid` to block containers
+- `packages/cms-admin/src/components/editor/structured-array-editor.tsx` — add `data-testid` to array field items
+- `packages/cms-admin/src/components/editor/structured-object-editor.tsx` — add `data-testid` to object field container
+- `packages/cms-admin/src/components/editor/image-gallery-editor.tsx` — add `data-testid` to image picker
+- `packages/cms-admin/src/components/sidebar-client.tsx` — add `data-testid` to navigation links
+- `packages/cms-admin/src/components/site-switcher.tsx` — add `data-testid` to site/org switcher
+- `packages/cms-admin/src/components/collection-list.tsx` — add `data-testid` to document rows
+- `packages/cms-admin/src/components/new-document-button.tsx` — add `data-testid` to create button
+- `packages/cms-admin/src/components/ui/button.tsx` — no change (testid added at call sites)
+- `packages/cms-admin/src/app/admin/(workspace)/sites/page.tsx` — add `data-testid` to site cards
+- `packages/cms-cli/src/commands/build.ts` — add `selector-map` CLI subcommand (or new file)
+- `packages/cms-admin/tests/helpers/selectors.ts` — new file: Playwright selector helpers
+- `packages/cms-admin/tests/helpers/workflows.ts` — new file: Playwright workflow helpers
+
+### Blast radius
+- All interactive UI components receive new `data-testid` attributes — no functional change, but DOM output changes
+- Any existing snapshot tests or DOM-based assertions would need updating
+
+### Breaking changes
+- None — `data-testid` attributes are invisible to end users and do not affect behavior or styling.
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] All field types render correct `data-testid` (e.g. `field-text-title`, `field-richtext-content`)
+- [ ] Navigation links, buttons, dialogs, and site cards all have `data-testid` attributes
+- [ ] `selector-map.json` generator produces valid JSON matching actual DOM attributes
+- [ ] Playwright helper functions correctly locate elements via the selector map
+- [ ] Example test fixture (edit + save + verify roundtrip) passes against a running admin
+
 ## Implementation Steps
 
 1. Define `data-testid` naming convention (this document)

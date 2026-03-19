@@ -160,6 +160,37 @@ The 🏠 badge is not an emoji in the actual UI — it's a small styled tag like
 
 In the pages collection list, the homepage document gets a subtle home icon next to its title, so users can see at a glance which page is the homepage without opening Site Settings.
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-admin/src/lib/site-registry.ts` — add `homepageSlug` and `homepageCollection` to `SiteEntry` interface
+- `packages/cms-admin/src/lib/homepage.ts` — new file: `getHomepage()` and `isHomepage()` helpers
+- `packages/cms-admin/src/components/settings/general-settings-panel.tsx` — add Homepage section with collection + page dropdowns
+- `packages/cms-admin/src/components/editor/document-editor.tsx` — replace hardcoded `slug === "home"` preview check with `isHomepage()`; add Homepage badge
+- `packages/cms-admin/src/components/collection-list.tsx` — add home icon indicator for the homepage document
+- `packages/cms-admin/src/lib/revalidation.ts` — replace slug convention check with `isHomepage()` for path computation
+- `packages/cms-admin/src/app/api/cms/registry/route.ts` — persist `homepageSlug`/`homepageCollection` in registry read/write
+- `packages/cms/CLAUDE.md` — document `homepageSlug` setting for AI builders
+
+### Blast radius
+- Preview URL computation in `document-editor.tsx` — incorrect `isHomepage()` logic would break preview for all pages
+- Revalidation path logic — homepage revalidation would fail to revalidate `/` if the helper returns wrong results
+- Sites relying on slug convention (`home`, `index`) continue to work via fallback, but behavior changes if `homepageSlug` is explicitly set to a different slug
+
+### Breaking changes
+- None — `homepageSlug` is optional with backward-compatible fallback to slug convention. Existing sites work without changes.
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] `isHomepage()` returns true for explicitly set `homepageSlug`
+- [ ] `isHomepage()` falls back to slug convention when `homepageSlug` is unset
+- [ ] Site Settings Homepage dropdown lists only collections with `urlPrefix: "/"`
+- [ ] Saving homepage setting persists to registry and survives admin restart
+- [ ] Preview URL shows `/` for the designated homepage, `/{slug}` for other pages
+- [ ] Homepage badge appears in document editor header for the designated page
+- [ ] Collection list shows home icon on the correct document
+- [ ] Revalidation sends `/` path for homepage documents
+
 ## Implementation Steps
 
 1. Add `homepageSlug` and `homepageCollection` to `SiteEntry` interface

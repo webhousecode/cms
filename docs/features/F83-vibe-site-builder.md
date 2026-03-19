@@ -233,6 +233,45 @@ Extend beyond static sites to full SaaS applications:
 
 This is where we truly differentiate: Lovable generates Supabase apps but with no CMS. We generate Supabase apps WITH a CMS for all content, meaning the marketing site, docs, and blog update without re-deploying.
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-ai/src/vibe-builder/pipeline.ts` — new file: main generation pipeline (analyze → generate → validate)
+- `packages/cms-ai/src/vibe-builder/knowledge.ts` — new file: RAG knowledge base from CLAUDE.md + boilerplate templates
+- `packages/cms-ai/src/vibe-builder/templates.ts` — new file: site type templates (SaaS, Portfolio, Blog, Agency, etc.)
+- `packages/cms-ai/src/vibe-builder/intent.ts` — new file: prompt analysis and intent extraction
+- `packages/cms-ai/src/index.ts` — export vibe builder module
+- `packages/cms-ai/src/agents/content.ts` — reuse content agent for populating generated site fields
+- `packages/cms-admin/src/app/admin/(workspace)/vibe-builder/page.tsx` — new file: builder UI (describe + review + create)
+- `packages/cms-admin/src/app/api/cms/vibe-builder/generate/route.ts` — new file: POST endpoint for site generation
+- `packages/cms-admin/src/app/api/cms/vibe-builder/refine/route.ts` — new file: POST endpoint for conversational refinement (Phase 2)
+- `packages/cms-admin/src/lib/site-registry.ts` — reuse for auto-registering generated sites
+- `packages/cms-admin/src/app/api/cms/registry/route.ts` — called to register generated site after creation
+- `packages/cms-admin/src/components/sidebar-client.tsx` — add Vibe Builder navigation link
+- `packages/cms/CLAUDE.md` — update AI builder docs with vibe builder conventions
+
+### Blast radius
+- `cms-ai` package gains a major new module — increases package size and AI provider usage
+- Site registry — auto-registration of generated sites must not corrupt existing site entries
+- AI provider budget — generation pipeline makes multiple LLM calls per site; could hit rate limits or budget caps
+- Boilerplate templates (F42) — if template structure changes, RAG knowledge becomes stale
+- F79 validator and F67 security gate are called as post-generation steps; bugs in those features block site creation
+
+### Breaking changes
+- None — entirely new feature with new routes and new files. No existing APIs or interfaces are modified.
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Generation pipeline produces valid `cms.config.ts` with only allowed field types
+- [ ] Generated content JSON files have correct format (slug, status, data) and markdown in richtext fields
+- [ ] Generated `build.ts` reads all content from JSON, no hardcoded strings
+- [ ] F79 validator passes on generated sites without errors
+- [ ] F67 security scan passes on generated code (no hardcoded secrets, no open endpoints)
+- [ ] Generated site auto-registers and loads correctly in CMS admin
+- [ ] All 6 site type templates (SaaS, Portfolio, Blog, Agency, E-commerce, Restaurant) generate successfully
+- [ ] Vibe Builder UI flow: describe -> review -> create completes end-to-end
+- [ ] Conversational refinement (Phase 2) correctly modifies existing generated site
+
 ## Implementation Steps
 
 ### Phase 1 (MVP) — 2-3 weeks

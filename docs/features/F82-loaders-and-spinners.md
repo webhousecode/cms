@@ -145,6 +145,44 @@ Current loading states to replace (audit):
 | Search | Nothing | Inline spinner in search field |
 | Media library | Images pop in | Skeleton grid + fade-in on load |
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-admin/src/components/ui/spinner.tsx` — new file: SVG spinner with size/color variants
+- `packages/cms-admin/src/components/ui/page-skeleton.tsx` — new file: shimmer-based skeleton screens per page variant
+- `packages/cms-admin/src/components/ui/progress-bar.tsx` — new file: determinate/indeterminate progress bar
+- `packages/cms-admin/src/components/ui/top-loader.tsx` — new file: route transition bar (gold, top of viewport)
+- `packages/cms-admin/src/components/ui/skeleton.tsx` — update existing skeleton with shimmer animation instead of pulse
+- `packages/cms-admin/src/components/editor/document-editor.tsx` — add spinner to Save/Publish buttons during operations
+- `packages/cms-admin/src/components/editor/ai-panel.tsx` — replace `Loader2 animate-spin` with `Spinner` + progress bar
+- `packages/cms-admin/src/components/collection-list.tsx` — add skeleton table rows for loading state
+- `packages/cms-admin/src/components/generate-document-dialog.tsx` — add spinner during AI generation
+- `packages/cms-admin/src/app/admin/(workspace)/page.tsx` — add skeleton stat cards for dashboard loading
+- `packages/cms-admin/src/app/admin/(workspace)/sites/page.tsx` — add skeleton site cards for loading state
+- `packages/cms-admin/src/app/admin/(workspace)/media/page.tsx` — add skeleton grid + fade-in for media library
+- `packages/cms-admin/src/app/admin/(workspace)/sites/new/page.tsx` — add spinner during import scan
+- `packages/cms-admin/src/app/admin/(workspace)/preview/page.tsx` — add spinner for preview server startup
+- Multiple `loading.tsx` files — new files in each route group for automatic Next.js skeleton screens
+
+### Blast radius
+- Visual appearance of every loading state across the admin changes — no functional impact but significant UI delta
+- Existing uses of `Loader2` from lucide-react need to be found and replaced consistently
+- `skeleton.tsx` animation change (pulse to shimmer) affects all current skeleton usages
+
+### Breaking changes
+- None — purely visual/UI changes with no API, interface, or data format modifications.
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] `Spinner` renders correctly at all four sizes (xs, sm, md, lg) and three colors (primary, muted, white)
+- [ ] `PageSkeleton` renders appropriate layout for each variant (collection-list, document-editor, dashboard, sites, settings, preview)
+- [ ] `ProgressBar` shows correct fill at 0%, 50%, 100% and animates in indeterminate mode
+- [ ] `TopLoader` animates during route transitions and disappears on completion
+- [ ] All `loading.tsx` files render correct skeleton for their route group
+- [ ] No remaining raw `Loader2 animate-spin` instances in the codebase
+- [ ] All action buttons (Save, Publish, Generate, Delete, Clone) show spinner during operation
+- [ ] Loading states feel consistent across the entire admin (timing, color, animation style)
+
 ## Implementation Steps
 
 1. Create `Spinner` component with size/color variants
