@@ -38,21 +38,20 @@ function CopyButton({ text }: { text: string }) {
   return (
     <button
       type="button"
+      title="Copy to clipboard"
       onClick={async () => {
         await navigator.clipboard.writeText(text);
         setCopied(true);
         setTimeout(() => setCopied(false), 1500);
       }}
       style={{
-        display: "inline-flex", alignItems: "center", gap: "0.2rem",
-        padding: "0.2rem 0.5rem", borderRadius: "5px",
+        width: "32px", height: "32px", borderRadius: "6px",
         border: "1px solid var(--border)", background: "transparent",
-        color: "var(--muted-foreground)", fontSize: "0.7rem", cursor: "pointer",
-        transition: "all 120ms",
+        cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+        color: copied ? "rgb(74 222 128)" : "var(--muted-foreground)", flexShrink: 0,
       }}
     >
-      {copied ? <Check style={{ width: "0.7rem", height: "0.7rem" }} /> : <Copy style={{ width: "0.7rem", height: "0.7rem" }} />}
-      {copied ? "Copied" : "Copy"}
+      {copied ? <Check style={{ width: "0.85rem", height: "0.85rem" }} /> : <Copy style={{ width: "0.85rem", height: "0.85rem" }} />}
     </button>
   );
 }
