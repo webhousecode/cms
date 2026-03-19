@@ -102,11 +102,21 @@ function ProfileSection() {
 	const [saved, setSaved] = useState(false);
 	const [error, setError] = useState("");
 
-	const [showLogoIcon, setShowLogoIcon] = useState(true);
+	const [showLogoIcon, setShowLogoIcon] = useState(() => {
+		if (typeof document === "undefined") return true;
+		const cookie = document.cookie.match(/(?:^|; )cms-logo-icon=([^;]*)/)?.[1];
+		return cookie !== undefined ? cookie === "true" : true;
+	});
 	useEffect(() => {
-		fetch("/api/admin/user-state").then((r) => r.ok ? r.json() : null).then((state) => {
-			if (state?.showLogoIcon !== undefined) setShowLogoIcon(state.showLogoIcon);
-		}).catch(() => {});
+		// Sync from cookie (global) first, then user-state (per-site) as fallback
+		const cookie = document.cookie.match(/(?:^|; )cms-logo-icon=([^;]*)/)?.[1];
+		if (cookie !== undefined) {
+			setShowLogoIcon(cookie === "true");
+		} else {
+			fetch("/api/admin/user-state").then((r) => r.ok ? r.json() : null).then((state) => {
+				if (state?.showLogoIcon !== undefined) setShowLogoIcon(state.showLogoIcon);
+			}).catch(() => {});
+		}
 	}, []);
 
 	const [curPw, setCurPw] = useState("");
@@ -165,6 +175,7 @@ function ProfileSection() {
 									type="button"
 									onClick={() => {
 										setShowLogoIcon(value);
+										document.cookie = `cms-logo-icon=${value};path=/;max-age=${60*60*24*365};samesite=lax`;
 										window.dispatchEvent(new CustomEvent("cms:logo-icon-changed", { detail: value }));
 										fetch("/api/admin/user-state", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ showLogoIcon: value }) }).catch(() => {});
 									}}
