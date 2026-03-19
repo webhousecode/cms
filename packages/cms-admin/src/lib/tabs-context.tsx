@@ -265,10 +265,19 @@ export function TabsProvider({ children, siteId }: { children: ReactNode; siteId
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pathname]);
 
-  /* ── Global ⌥W — close active tab ────────────────────────── */
+  /* ── Global ⌥W or "c" — close active tab ───────────────────── */
   useEffect(() => {
     function handleKey(e: KeyboardEvent) {
+      // ⌥W — always works
       if (e.altKey && e.code === "KeyW") {
+        const id = activeIdRef.current;
+        if (id) { e.preventDefault(); closeTab(id); }
+        return;
+      }
+      // "c" — only when not in an editable field
+      if (e.key === "c" && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        const tag = (document.activeElement?.tagName ?? "").toLowerCase();
+        if (tag === "input" || tag === "textarea" || tag === "select" || (document.activeElement as HTMLElement)?.isContentEditable) return;
         const id = activeIdRef.current;
         if (id) { e.preventDefault(); closeTab(id); }
       }
