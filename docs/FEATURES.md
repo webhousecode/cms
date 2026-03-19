@@ -102,6 +102,7 @@
 | F83 | [Vibe Site Builder](#f83-vibe-site-builder) | Planned | [docs/features/F83-vibe-site-builder.md](features/F83-vibe-site-builder.md) |
 | F84 | [Move Site to Org](#f84-move-site-to-org) | Planned | [docs/features/F84-move-site-to-org.md](features/F84-move-site-to-org.md) |
 | F85 | [CC Hooks & Quality Gates](#f85-cc-hooks-quality-gates) | Planned | [docs/features/F85-cc-hooks-quality-gates.md](features/F85-cc-hooks-quality-gates.md) |
+| F86 | [Action Bar](#f86-action-bar) | Planned | [docs/features/F86-action-bar.md](features/F86-action-bar.md) |
 
 ---
 
@@ -360,3 +361,7 @@ Move an existing site from one org to another via Site Settings → Danger Zone 
 ## F85 — CC Hooks & Quality Gates
 
 Automated quality enforcement using Claude Code hooks. Post-edit TypeScript compilation, pre-bash destructive command guards, post-commit audit. Catches errors before they reach the user.
+
+## F86 — Action Bar
+
+Standardized sticky action bar below tabs across all admin pages. Fixed 40px height, breadcrumbs left, action buttons right. Replaces scattered Save buttons with one per-tab Save in the bar. Consistent 28px button height. Three-phase rollout: new pages, existing pages, settings refactor.
