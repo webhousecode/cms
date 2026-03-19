@@ -505,9 +505,6 @@ function ExternalMcpServers() {
               <Server style={{ width: "1rem", height: "1rem", color: s.enabled ? "var(--primary)" : "var(--muted-foreground)", flexShrink: 0 }} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{ fontSize: "0.85rem", fontWeight: 500 }}>{s.name}</p>
-                <code style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", wordBreak: "break-all" }}>
-                  {s.command} {s.args.join(" ")}
-                </code>
                 {s.env && Object.keys(s.env).length > 0 && (
                   <div style={{ display: "flex", gap: "0.25rem", marginTop: "0.25rem", flexWrap: "wrap" }}>
                     {Object.entries(s.env).map(([k, v]) => (
