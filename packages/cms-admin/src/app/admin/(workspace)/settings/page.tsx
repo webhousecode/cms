@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Database, Plus, Edit2, Fingerprint, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ActionBar, ActionBarBreadcrumb } from "@/components/action-bar";
+import { SettingsSaveButton } from "@/components/settings/settings-save-button";
 import { AISettingsPanel } from "@/components/settings/ai-settings-panel";
 import { SiteGeneralSettingsPanel } from "@/components/settings/general-settings-panel";
 import { MCPSettingsPanel } from "@/components/settings/mcp-settings-panel";
@@ -59,7 +60,7 @@ export default async function SettingsPage({
 
   return (
     <>
-      <ActionBar>
+      <ActionBar actions={<SettingsSaveButton />}>
         <ActionBarBreadcrumb items={["Site Settings"]} />
       </ActionBar>
       <div className="p-8 max-w-4xl">

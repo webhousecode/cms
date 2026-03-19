@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { WebhookList, type WebhookEntry } from "./webhook-list";
@@ -54,7 +54,7 @@ export function ToolsSettingsPanel() {
       .catch(() => {});
   }, []);
 
-  async function handleSave() {
+  const handleSave = useCallback(async () => {
     setSaving(true);
     setSaved(false);
     try {
@@ -67,8 +67,16 @@ export function ToolsSettingsPanel() {
       setTimeout(() => setSaved(false), 2000);
     } finally {
       setSaving(false);
+      window.dispatchEvent(new CustomEvent("cms:settings-saved"));
     }
-  }
+  }, [config]);
+
+  // Listen for ActionBar save event
+  useEffect(() => {
+    function onSave() { handleSave(); }
+    window.addEventListener("cms:settings-save", onSave);
+    return () => window.removeEventListener("cms:settings-save", onSave);
+  }, [handleSave]);
 
   const scheduleOptions = [
     { value: "off", label: "Off" },
@@ -214,22 +222,6 @@ export function ToolsSettingsPanel() {
         onChange={(w) => setConfig((c) => ({ ...c, agentDefaultWebhooks: w }))}
       />
 
-      <div style={{ borderTop: "1px solid var(--border)", margin: "1.5rem 0" }} />
-
-      {/* ── Save ───────────────────────────────────────────── */}
-      <button
-        type="button"
-        onClick={handleSave}
-        disabled={saving}
-        style={{
-          padding: "0.5rem 1.25rem", borderRadius: "0.375rem",
-          background: "var(--primary)", color: "var(--primary-foreground)",
-          border: "none", cursor: saving ? "wait" : "pointer",
-          fontSize: "0.8125rem", fontWeight: 500,
-        }}
-      >
-        {saving ? "Saving..." : saved ? "Saved" : "Save"}
-      </button>
     </div>
   );
 }

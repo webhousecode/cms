@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, FormEvent } from "react";
+import { useState, useEffect, useRef, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Eye, EyeOff, AlertTriangle, Copy, RefreshCw, Zap, Send } from "lucide-react";
 import { toast } from "sonner";
@@ -275,11 +275,20 @@ function SiteSection() {
 			setError("Network error — could not save");
 		} finally {
 			setSaving(false);
+			window.dispatchEvent(new CustomEvent("cms:settings-saved"));
 		}
 	}
 
+	// Listen for ActionBar save event
+	const formRef = useRef<HTMLFormElement>(null);
+	useEffect(() => {
+		function onSave() { formRef.current?.requestSubmit(); }
+		window.addEventListener("cms:settings-save", onSave);
+		return () => window.removeEventListener("cms:settings-save", onSave);
+	}, []);
+
 	return (
-		<form onSubmit={handleSave} style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+		<form ref={formRef} onSubmit={handleSave} style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
 			<div>
 				<SectionHeading>Site</SectionHeading>
 				<Card>
@@ -394,7 +403,6 @@ function SiteSection() {
 			</div>
 
 			<ErrorMsg msg={error} />
-			<div><SaveButton saving={saving} saved={saved} /></div>
 		</form>
 	);
 }
@@ -452,6 +460,13 @@ function RevalidationSection() {
 		setUrl(`${base}/api/revalidate`);
 	}
 
+	const revalFormRef = useRef<HTMLFormElement>(null);
+	useEffect(() => {
+		function onSave() { revalFormRef.current?.requestSubmit(); }
+		window.addEventListener("cms:settings-save", onSave);
+		return () => window.removeEventListener("cms:settings-save", onSave);
+	}, []);
+
 	async function handleSave(e: FormEvent) {
 		e.preventDefault();
 		setSaving(true); setError(""); setSaved(false);
@@ -472,6 +487,7 @@ function RevalidationSection() {
 			setError("Network error — could not save");
 		} finally {
 			setSaving(false);
+			window.dispatchEvent(new CustomEvent("cms:settings-saved"));
 		}
 	}
 
@@ -510,7 +526,7 @@ function RevalidationSection() {
 	return (
 		<SectionWrapper><div>
 			<SectionHeading>Revalidation</SectionHeading>
-			<form onSubmit={handleSave} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+			<form ref={revalFormRef} onSubmit={handleSave} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
 				<Card>
 					<div style={{ display: "flex", alignItems: "flex-start", gap: "0.5rem" }}>
 						<Zap style={{ width: "1rem", height: "1rem", color: "var(--primary)", flexShrink: 0, marginTop: "0.15rem" }} />
@@ -620,7 +636,6 @@ function RevalidationSection() {
 					<div style={{ display: "flex", alignItems: "center", gap: "0.625rem" }}>
 						<ErrorMsg msg={error} />
 						<div style={{ display: "flex", gap: "0.5rem" }}>
-							<SaveButton saving={saving} saved={saved} />
 							{url && (
 								<button
 									type="button"
