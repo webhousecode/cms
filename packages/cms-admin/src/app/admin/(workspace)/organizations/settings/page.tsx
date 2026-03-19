@@ -30,6 +30,11 @@ export default function OrgSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [loaded, setLoaded] = useState(false);
+  // Delete org
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [deleteConfirm, setDeleteConfirm] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const [deleteCode] = useState(() => Math.random().toString(36).slice(2, 14));
 
   useEffect(() => {
     fetch("/api/cms/registry")
@@ -232,6 +237,7 @@ export default function OrgSettingsPage() {
           </p>
           <button
             type="button"
+            onClick={() => setShowDeleteDialog(true)}
             style={{
               padding: "0.4rem 0.75rem", borderRadius: "6px", border: "none",
               background: "var(--destructive)", color: "#fff",
@@ -242,6 +248,75 @@ export default function OrgSettingsPage() {
           </button>
         </div>
       </div>
+
+      {/* Delete confirmation dialog */}
+      {showDeleteDialog && (
+        <div
+          style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)" }}
+          onClick={(e) => { if (e.target === e.currentTarget) { setShowDeleteDialog(false); setDeleteConfirm(""); } }}
+        >
+          <div style={{
+            background: "var(--popover)", border: "1px solid var(--border)", borderRadius: "12px",
+            boxShadow: "0 8px 40px rgba(0,0,0,0.5)", width: "min(440px, 90vw)", padding: "1.5rem",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
+              <h3 style={{ fontSize: "1rem", fontWeight: 700 }}>Delete organization</h3>
+              <button type="button" onClick={() => { setShowDeleteDialog(false); setDeleteConfirm(""); }}
+                style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1.25rem" }}>×</button>
+            </div>
+
+            <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", marginBottom: "0.5rem", lineHeight: 1.5 }}>
+              This action <strong style={{ color: "var(--foreground)" }}>cannot</strong> be undone. This will permanently delete the <strong style={{ color: "var(--foreground)" }}>{activeOrg.name}</strong> organization and remove all of its sites.
+            </p>
+
+            <p style={{ fontSize: "0.8rem", marginBottom: "0.5rem", marginTop: "1rem" }}>
+              Type <code style={{ background: "var(--muted)", padding: "0.15rem 0.4rem", borderRadius: "4px", fontSize: "0.75rem", fontFamily: "monospace" }}>{deleteCode}</code> to confirm.
+            </p>
+            <input
+              type="text"
+              value={deleteConfirm}
+              onChange={(e) => setDeleteConfirm(e.target.value)}
+              placeholder="Enter the string above"
+              autoFocus
+              style={{
+                width: "100%", padding: "0.5rem 0.6rem", borderRadius: "6px",
+                border: "1px solid var(--border)", background: "var(--background)",
+                color: "var(--foreground)", fontSize: "0.8rem", outline: "none",
+                marginBottom: "1rem",
+              }}
+            />
+            <button
+              type="button"
+              disabled={deleteConfirm !== deleteCode || deleting}
+              onClick={async () => {
+                setDeleting(true);
+                try {
+                  const res = await fetch(`/api/cms/registry?orgId=${activeOrgId}`, { method: "DELETE" });
+                  if (res.ok) {
+                    // Switch to default org
+                    document.cookie = "cms-active-org=;path=/;max-age=0";
+                    document.cookie = "cms-active-site=;path=/;max-age=0";
+                    window.dispatchEvent(new CustomEvent("cms-registry-change"));
+                    router.push("/admin/organizations");
+                    router.refresh();
+                  }
+                } finally {
+                  setDeleting(false);
+                }
+              }}
+              style={{
+                width: "100%", padding: "0.6rem", borderRadius: "6px", border: "none",
+                background: deleteConfirm === deleteCode ? "var(--destructive)" : "var(--muted)",
+                color: deleteConfirm === deleteCode ? "#fff" : "var(--muted-foreground)",
+                fontSize: "0.8rem", fontWeight: 600,
+                cursor: deleteConfirm === deleteCode && !deleting ? "pointer" : "not-allowed",
+              }}
+            >
+              {deleting ? "Deleting..." : "I understand, delete this organization"}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
