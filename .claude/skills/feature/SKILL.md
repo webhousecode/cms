@@ -68,6 +68,20 @@ Create `docs/features/F{number}-{slug}.md` with this structure:
 ### Files affected
 {List every file that will be created, modified, or deleted. Use real paths.}
 
+### Downstream dependents
+{For EACH file listed in "Files affected" that already exists and will be MODIFIED, use Grep to find all files that import from it. List them with import count and a note on whether they need changes or are unaffected.}
+
+Example format:
+```
+`src/lib/site-registry.ts` is imported by 17 files (78 refs):
+- src/lib/cms.ts (6 refs) — unaffected, reads registry data
+- src/lib/site-paths.ts (6 refs) — unaffected, resolves paths
+- src/components/site-switcher.tsx (3 refs) — unaffected, renders dropdown
+...
+```
+
+If a modified file has 0 downstream dependents (e.g. a leaf component), note "No downstream dependents."
+
 ### Blast radius
 {What existing features/systems could break? Check:}
 - API routes that other components depend on
@@ -75,6 +89,7 @@ Create `docs/features/F{number}-{slug}.md` with this structure:
 - Type interfaces imported by other files
 - Storage/registry format changes (backwards compatibility?)
 - CSS/styling changes that affect other pages
+- Edge cases: stale cookies, concurrent users, cache invalidation
 
 ### Breaking changes
 {Will this change any existing API, interface, component prop, or data format? If yes, list migration steps.}
@@ -100,7 +115,11 @@ Create `docs/features/F{number}-{slug}.md` with this structure:
 
 The plan must be specific: real file paths in the monorepo, TypeScript interfaces that fit the existing architecture, actual npm packages to use. Think like a senior engineer writing a spec.
 
-**IMPORTANT:** The Impact Analysis section is mandatory. Before writing the plan, search the codebase (using Grep/Glob) to find all files that import from or depend on the files you plan to modify. List them explicitly. This prevents breaking changes that go unnoticed.
+**IMPORTANT:** The Impact Analysis section is mandatory. Before writing the plan:
+1. List every file that will be created, modified, or deleted
+2. For each **modified** file, use `Grep` to find all downstream dependents (files that import from it) — list them with ref counts
+3. For each dependent, note whether it needs changes or is unaffected and why
+This prevents breaking changes that go unnoticed. The downstream dependents list is the most valuable part of Impact Analysis.
 
 ## Step 5: Update FEATURES.md
 
