@@ -500,7 +500,7 @@ function ExternalMcpServers() {
       <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem", marginTop: "0.75rem" }}>
         {servers.map((s) => (
           <div key={s.id} style={{ borderRadius: "8px", border: "1px solid var(--border)", background: "var(--card)", opacity: s.enabled ? 1 : 0.6 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.75rem" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.75rem", minHeight: "3.5rem" }}>
               <span style={{ width: "8px", height: "8px", borderRadius: "50%", background: s.enabled ? "#22c55e" : "#6b7280", flexShrink: 0 }} />
               <Server style={{ width: "1rem", height: "1rem", color: s.enabled ? "var(--primary)" : "var(--muted-foreground)", flexShrink: 0 }} />
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -521,7 +521,7 @@ function ExternalMcpServers() {
                 )}
               </div>
               {confirmDeleteId === s.id ? (
-                <span style={{ display: "flex", alignItems: "center", gap: "0.375rem", flexShrink: 0 }}>
+                <span style={{ display: "flex", alignItems: "center", gap: "0.375rem", flexShrink: 0, minWidth: "12rem", justifyContent: "flex-end" }}>
                   <button type="button" onClick={() => setConfirmDeleteId(null)}
                     style={{ padding: "0.3rem 0.6rem", borderRadius: "6px",
                       border: "1px solid var(--border)", background: "transparent",
@@ -536,7 +536,7 @@ function ExternalMcpServers() {
                   </button>
                 </span>
               ) : (
-                <>
+                <span style={{ display: "flex", alignItems: "center", gap: "0.375rem", flexShrink: 0, minWidth: "12rem", justifyContent: "flex-end" }}>
                   <button type="button" onClick={() => startEdit(s)} title="Edit JSON config"
                     style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.25rem" }}>
                     <Pencil style={{ width: "0.8rem", height: "0.8rem" }} />
@@ -569,7 +569,7 @@ function ExternalMcpServers() {
                     <Trash2 style={{ width: "0.75rem", height: "0.75rem" }} />
                     Remove
                   </button>
-                </>
+                </span>
               )}
             </div>
 
