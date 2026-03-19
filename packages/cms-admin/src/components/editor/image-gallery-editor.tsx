@@ -8,12 +8,16 @@ export interface GalleryImage {
 }
 
 interface Props {
-  value: GalleryImage[];
+  value: (GalleryImage | string)[];
   onChange: (images: GalleryImage[]) => void;
   disabled?: boolean;
 }
 
-export function ImageGalleryEditor({ value = [], onChange, disabled }: Props) {
+export function ImageGalleryEditor({ value: rawValue = [], onChange, disabled }: Props) {
+  // Normalize: accept both { url, alt } objects and plain URL strings
+  const value: GalleryImage[] = rawValue.map((item: GalleryImage | string) =>
+    typeof item === "string" ? { url: item, alt: "" } : item
+  );
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
