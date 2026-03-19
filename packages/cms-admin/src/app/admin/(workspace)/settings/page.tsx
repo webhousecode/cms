@@ -12,6 +12,7 @@ import { AIDefaultsPanel } from "@/components/settings/ai-defaults-panel";
 import { TeamPanel } from "@/components/settings/team-panel";
 import { EmailSettingsPanel } from "@/components/settings/email-settings-panel";
 import { ToolsSettingsPanel } from "@/components/settings/tools-settings-panel";
+import { DeploySettingsPanel } from "@/components/settings/deploy-settings-panel";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { readSiteConfig } from "@/lib/site-config";
 import { readBrandVoice } from "@/lib/brand-voice";
@@ -51,6 +52,7 @@ export default async function SettingsPage({
     { id: "email",       label: "Email" },
     { id: "ai",          label: "AI" },
     { id: "brand-voice", label: "Brand Voice" },
+    { id: "deploy",      label: "Deploy" },
     { id: "tools",       label: "Automation" },
     { id: "mcp",         label: "MCP" },
     ...(globals.length > 0 ? [{ id: "globals", label: "Globals" }] : []),
@@ -247,6 +249,13 @@ export default async function SettingsPage({
               </p>
               <AIDefaultsPanel />
             </div>
+          </div>
+        )}
+
+        {/* Deploy tab */}
+        {tab === "deploy" && (
+          <div className="max-w-lg">
+            <DeploySettingsPanel />
           </div>
         )}
 
