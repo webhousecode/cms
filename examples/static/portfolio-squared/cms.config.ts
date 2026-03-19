@@ -3,8 +3,8 @@ import { defineConfig, defineCollection } from '@webhouse/cms';
 export default defineConfig({
   collections: [
     defineCollection({
-      name: 'settings',
-      label: 'Site Settings',
+      name: 'globals',
+      label: 'Site Content',
       fields: [
         { name: 'siteName', type: 'text', label: 'Site Name', required: true },
         { name: 'email', type: 'text', label: 'Email' },
