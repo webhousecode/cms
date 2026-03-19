@@ -86,7 +86,7 @@ function pathTitle(path: string): string {
   return decodeURIComponent(parts[parts.length - 1]);
 }
 
-const STORE_KEY_BASE = "cms-admin-tabs-v2";
+const STORE_KEY_BASE = "cms-admin-tabs-v3";
 
 /** Per-user-per-site store key */
 function storeKey(userId?: string | null, siteId?: string | null): string {
@@ -181,26 +181,24 @@ export function TabsProvider({ children, siteId }: { children: ReactNode; siteId
       }
     }
 
-    // Try server state first (survives cookie/localStorage clear)
-    fetch("/api/admin/user-state")
-      .then((r) => r.ok ? r.json() : null)
-      .then((serverState) => {
-        if (serverState?.tabs?.length > 0) {
-          restoreTabs({ tabs: serverState.tabs, activeId: serverState.activeTabId });
-        } else {
-          // Fall back to localStorage (migration: seed server from localStorage)
-          const local = load(userId, siteId);
-          restoreTabs(local);
-          if (local && local.tabs.length > 0) {
-            // Seed server with localStorage data
-            syncToServer(local.tabs, local.activeId);
+    // localStorage first — it uses explicit siteId in the key, so it's always correct.
+    // Server user-state uses cookies which can be stale/contaminated from site switches.
+    const local = load(userId, siteId);
+    if (local && local.tabs.length > 0) {
+      restoreTabs(local);
+    } else {
+      // No localStorage data — try server as fallback
+      fetch("/api/admin/user-state")
+        .then((r) => r.ok ? r.json() : null)
+        .then((serverState) => {
+          if (serverState?.tabs?.length > 0) {
+            restoreTabs({ tabs: serverState.tabs, activeId: serverState.activeTabId });
+          } else {
+            restoreTabs(null);
           }
-        }
-      })
-      .catch(() => {
-        // Server unreachable — use localStorage
-        restoreTabs(load(userId, siteId));
-      });
+        })
+        .catch(() => restoreTabs(null));
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
@@ -209,8 +207,17 @@ export function TabsProvider({ children, siteId }: { children: ReactNode; siteId
     function handleSiteChange(e: Event) {
       const newSiteId = (e as CustomEvent).detail?.siteId as string | null;
 
-      // 1. Save current site's tabs BEFORE switching (siteIdRef still points to old site)
-      save(tabsRef.current, activeIdRef.current, userIdRef.current, siteIdRef.current);
+      // 1. Save current site's tabs to localStorage ONLY.
+      //    Do NOT call save() — it syncs to server via cookie, but the cookie
+      //    is already set to the NEW site at this point (SiteSwitcher sets it
+      //    before dispatching the event). That would contaminate the new site's
+      //    server-side user-state with the old site's tabs.
+      try {
+        localStorage.setItem(
+          storeKey(userIdRef.current, siteIdRef.current),
+          JSON.stringify({ tabs: tabsRef.current, activeId: activeIdRef.current }),
+        );
+      } catch { /* noop */ }
 
       // 2. Now switch to new site
       siteIdRef.current = newSiteId ?? undefined;
