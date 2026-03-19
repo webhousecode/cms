@@ -42,6 +42,7 @@ function buildQuickActions(logout: () => void): QuickAction[] {
     { id: "nav-cockpit", label: "AI Cockpit", sublabel: "Chat with AI", category: "navigation", icon: <Terminal style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/command", keywords: ["chat", "cockpit", "command", "ai"], featured: true },
     { id: "nav-performance", label: "Performance", sublabel: "Site analytics", category: "navigation", icon: <BarChart3 style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/performance", keywords: ["analytics", "stats", "speed"] },
     { id: "nav-linkchecker", label: "Link Checker", sublabel: "Find broken links", category: "navigation", icon: <Link2 style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/link-checker", keywords: ["links", "broken", "check"] },
+    { id: "nav-backup", label: "Backup", sublabel: "Backup & restore content", category: "navigation", icon: <Database style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/backup", keywords: ["backup", "restore", "export", "sikkerhedskopi"] },
     { id: "nav-trash", label: "Trash", sublabel: "Deleted items", category: "navigation", icon: <Trash2 style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/trash", keywords: ["slettet", "deleted", "papirkurv"] },
 
     // Actions
