@@ -208,20 +208,25 @@ export function TabsProvider({ children, siteId }: { children: ReactNode; siteId
   useEffect(() => {
     function handleSiteChange(e: Event) {
       const newSiteId = (e as CustomEvent).detail?.siteId as string | null;
-      siteIdRef.current = newSiteId ?? undefined;
 
-      // Suppress pathname effect from the upcoming router.push("/admin")
+      // 1. Save current site's tabs BEFORE switching (siteIdRef still points to old site)
+      save(tabsRef.current, activeIdRef.current, userIdRef.current, siteIdRef.current);
+
+      // 2. Now switch to new site
+      siteIdRef.current = newSiteId ?? undefined;
       skipNextPathChange.current = true;
 
-      // Synchronous localStorage load — siteId is in the key, no race condition.
-      // No async fetch (that caused all the previous bugs).
+      // 3. Load new site's tabs from localStorage (synchronous, no race condition)
       const saved = load(userIdRef.current, newSiteId);
       if (saved && saved.tabs.length > 0) {
         const migrated = saved.tabs.map((t) => ({
           ...t,
           title: PATH_TITLES[t.path.split("?")[0]] ?? t.title,
         }));
-        applyTabs(migrated, saved.activeId);
+        tabsRef.current = migrated;
+        activeIdRef.current = saved.activeId;
+        setTabs(migrated);
+        setActiveId(saved.activeId);
         // Navigate to the saved active tab's path
         const activeTab = migrated.find((t) => t.id === saved.activeId);
         if (activeTab && activeTab.path !== "/admin") {
@@ -231,7 +236,13 @@ export function TabsProvider({ children, siteId }: { children: ReactNode; siteId
       } else {
         // No saved tabs for this site — fresh Dashboard
         const id = uid();
-        applyTabs([{ id, path: "/admin", title: "Dashboard" }], id);
+        const fresh: Tab[] = [{ id, path: "/admin", title: "Dashboard" }];
+        tabsRef.current = fresh;
+        activeIdRef.current = id;
+        setTabs(fresh);
+        setActiveId(id);
+        // Save fresh state for new site
+        save(fresh, id, userIdRef.current, newSiteId);
       }
     }
     window.addEventListener("cms-site-change", handleSiteChange);
