@@ -68,6 +68,7 @@ _Without these, we cannot build and deliver professional sites on the platform._
 | 8d | **F79 Site Config Validator** | Medium | Validate cms.config.ts + content/ on site creation and first load. Friendly errors instead of ZodError crashes. Critical for AI-built sites. |
 | 8e | **F80 Admin Selector Map** | Medium | `data-testid` on all admin UI elements + auto-generated selector map. Foundation for Playwright E2E tests of content editing and site roundtrips. |
 | 8f | **F83 Vibe Site Builder** | Large | THE differentiator. "Describe → Generate → Manage." AI site gen with CMS built in. Only platform with AI gen + CMS + code ownership. |
+| 8g | **F86 Action Bar** | Medium | Standardized sticky action bar below tabs. Consistent buttons, one Save per settings tab. |
 | 9 | **F31 Documentation Site** | Medium | Can't ship without docs. Last because it documents everything above. |
 
 ### Tier 2 — Competitive Edge (v1.1-1.2)
@@ -102,7 +103,6 @@ _Makes us stand out. Customers expect these from a modern CMS._
 | 20f | **F72 Website Screenshots** | Medium | Playwright captures all site pages. New Tools sidebar group (Link Checker + Screenshots tabs). Visual QA. |
 | 20f | **F66 Search Index** | Medium | SQLite FTS5 full-text search. Incremental indexing via storage hooks. Field-weighted ranking. Replaces O(n) scan. |
 | 20g | **F85 CC Hooks & Quality Gates** | Small | Auto type-check, destructive command guards, post-commit audit. Catches errors before user sees them. |
-| 18e | **F86 Action Bar** | Medium | Standardized sticky action bar below tabs. Consistent buttons, one Save per settings tab. |
 
 ### Tier 3 — Differentiation (v1.3+)
 
