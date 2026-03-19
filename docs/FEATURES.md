@@ -99,6 +99,7 @@
 | F80 | [Admin Selector Map](#f80-admin-selector-map) | Planned | [docs/features/F80-admin-selector-map.md](features/F80-admin-selector-map.md) |
 | F81 | [Homepage Designation](#f81-homepage-designation) | Planned | [docs/features/F81-homepage-designation.md](features/F81-homepage-designation.md) |
 | F82 | [Loaders & Spinners](#f82-loaders--spinners) | Planned | [docs/features/F82-loaders-and-spinners.md](features/F82-loaders-and-spinners.md) |
+| F83 | [Vibe Site Builder](#f83-vibe-site-builder) | Planned | [docs/features/F83-vibe-site-builder.md](features/F83-vibe-site-builder.md) |
 
 ---
 
@@ -347,3 +348,6 @@ Explicit "Set as homepage" setting in Site Settings so the CMS knows which page 
 
 ## F82 — Loaders & Spinners
 Polished, branded loading animations throughout CMS admin. Four tiers: shimmer skeleton screens for route/page loading, inline spinners for button actions, progress bars for multi-step operations, and a thin gold top-loader bar for route transitions. Replaces blank screens, "Loading..." text, and inconsistent Loader2 icons with a unified system using webhouse gold (#F7BB2E) accent.
+
+## F83 — Vibe Site Builder
+"Describe your site → get a complete, CMS-managed website." AI-native site generation with @webhouse/cms built in. The only platform combining AI generation + CMS + code ownership + open source. Three phases: guided builder (prompt → generate → manage), conversational refinement, and full SaaS app generation (Supabase + Stripe). Integrates F67 Security Gate for code scanning, F78 Preview Server for instant preview, F79 Validator for quality assurance. RAG knowledge base over CMS rules + boilerplate templates ensures correct generation from day one.

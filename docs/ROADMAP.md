@@ -65,6 +65,7 @@ _Without these, we cannot build and deliver professional sites on the platform._
 | 8c | **F78 Bundled Preview Server** | Small | `cms serve` via sirv (148 KB). Clean URLs, gzip, SPA fallback. Zero extra installs. |
 | 8d | **F79 Site Config Validator** | Medium | Validate cms.config.ts + content/ on site creation and first load. Friendly errors instead of ZodError crashes. Critical for AI-built sites. |
 | 8e | **F80 Admin Selector Map** | Medium | `data-testid` on all admin UI elements + auto-generated selector map. Foundation for Playwright E2E tests of content editing and site roundtrips. |
+| 8f | **F83 Vibe Site Builder** | Large | THE differentiator. "Describe → Generate → Manage." AI site gen with CMS built in. Only platform with AI gen + CMS + code ownership. |
 | 9 | **F31 Documentation Site** | Medium | Can't ship without docs. Last because it documents everything above. |
 
 ### Tier 2 — Competitive Edge (v1.1-1.2)
