@@ -5,8 +5,9 @@
  * Deploy history stored in _data/deploy-log.json.
  */
 import { readFile, writeFile, mkdir } from "node:fs/promises";
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync, statSync, readFileSync } from "node:fs";
 import path from "node:path";
+import { execSync } from "node:child_process";
 import { getActiveSitePaths, getActiveSiteEntry } from "./site-paths";
 import { readSiteConfig, writeSiteConfig } from "./site-config";
 import { resolveToken } from "./site-pool";
@@ -124,24 +125,21 @@ export async function triggerDeploy(): Promise<DeployEntry> {
         entry.status = "success";
         break;
 
-      case "github-pages":
-        if ((token || config.deployApiToken) && (appName || config.deployAppName)) {
-          const useToken = token || config.deployApiToken;
-          const useRepo = appName || config.deployAppName;
-          const pagesUrl = await githubPagesDispatch(useToken, useRepo);
-          if (pagesUrl) {
-            entry.url = pagesUrl;
-            // Auto-save production URL if not set
-            if (!config.deployProductionUrl) {
-              try { await writeSiteConfig({ deployProductionUrl: pagesUrl }); } catch { /* non-fatal */ }
-            }
-          }
-        } else if (config.deployHookUrl) {
-          await postHook(config.deployHookUrl);
-        } else {
+      case "github-pages": {
+        const useToken = token || config.deployApiToken;
+        const useRepo = appName || config.deployAppName;
+        if (!useToken || !useRepo) {
           throw new Error("GitHub Pages requires a GitHub token. Connect GitHub via OAuth or add a token in Settings → Automation.");
         }
+        const pagesUrl = await githubPagesBuildAndDeploy(useToken, useRepo);
+        if (pagesUrl) {
+          entry.url = pagesUrl;
+          if (!config.deployProductionUrl) {
+            try { await writeSiteConfig({ deployProductionUrl: pagesUrl }); } catch { /* non-fatal */ }
+          }
+        }
         entry.status = "success";
+      }
         break;
     }
   } catch (err) {
@@ -188,67 +186,194 @@ async function flyDeploy(token: string, appName: string): Promise<void> {
   }
 }
 
-async function githubPagesDispatch(token: string, repo: string): Promise<string | undefined> {
+/**
+ * Full GitHub Pages deploy pipeline:
+ * 1. Run build.ts → generates dist/
+ * 2. Push dist/ contents to gh-pages branch via GitHub API
+ * 3. Enable GitHub Pages if not already enabled
+ * 4. Return the Pages URL
+ */
+async function githubPagesBuildAndDeploy(token: string, repo: string): Promise<string | undefined> {
   const headers = {
     Authorization: `Bearer ${token}`,
     Accept: "application/vnd.github+json",
+    "Content-Type": "application/json",
   };
 
-  // 1. Check if Pages is enabled
+  // 1. Run build
+  const sitePaths = await getActiveSitePaths();
+  const buildFile = path.join(sitePaths.projectDir, "build.ts");
+  if (!existsSync(buildFile)) {
+    throw new Error("No build.ts found — this site doesn't support static builds.");
+  }
+
+  console.log(`[deploy] Running build.ts in ${sitePaths.projectDir}...`);
+  try {
+    execSync("npx tsx build.ts", {
+      cwd: sitePaths.projectDir,
+      timeout: 60000,
+      env: { ...process.env, NODE_ENV: "production" },
+      stdio: "pipe",
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? (err as Error & { stderr?: Buffer }).stderr?.toString().slice(0, 300) || err.message : "Build failed";
+    throw new Error(`Build failed: ${msg}`);
+  }
+
+  // 2. Collect dist/ files
+  const distDir = path.join(sitePaths.projectDir, "dist");
+  if (!existsSync(distDir)) {
+    throw new Error("Build completed but no dist/ directory was created.");
+  }
+
+  const files = collectFiles(distDir, distDir);
+  if (files.length === 0) {
+    throw new Error("Build completed but dist/ is empty.");
+  }
+  console.log(`[deploy] Collected ${files.length} files from dist/`);
+
+  // 3. Push to gh-pages branch via GitHub API
+  // Create a tree with all files, then create a commit, then update gh-pages ref
+  console.log(`[deploy] Pushing ${files.length} files to ${repo} gh-pages branch...`);
+
+  // Create blobs for each file
+  const blobs: { path: string; sha: string }[] = [];
+  for (const f of files) {
+    const content = readFileSync(f.fullPath);
+    const blobRes = await fetch(`https://api.github.com/repos/${repo}/git/blobs`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ content: content.toString("base64"), encoding: "base64" }),
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!blobRes.ok) throw new Error(`Failed to create blob for ${f.relativePath}: ${blobRes.status}`);
+    const blob = await blobRes.json() as { sha: string };
+    blobs.push({ path: f.relativePath, sha: blob.sha });
+  }
+
+  // Create tree
+  const treeRes = await fetch(`https://api.github.com/repos/${repo}/git/trees`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      tree: blobs.map((b) => ({
+        path: b.path,
+        mode: "100644",
+        type: "blob",
+        sha: b.sha,
+      })),
+    }),
+    signal: AbortSignal.timeout(15000),
+  });
+  if (!treeRes.ok) throw new Error(`Failed to create tree: ${treeRes.status}`);
+  const tree = await treeRes.json() as { sha: string };
+
+  // Get current gh-pages ref (might not exist)
+  let parentSha: string | undefined;
+  const refRes = await fetch(`https://api.github.com/repos/${repo}/git/refs/heads/gh-pages`, {
+    headers,
+    signal: AbortSignal.timeout(10000),
+  });
+  if (refRes.ok) {
+    const ref = await refRes.json() as { object: { sha: string } };
+    parentSha = ref.object.sha;
+  }
+
+  // Create commit
+  const commitBody: Record<string, unknown> = {
+    message: `Deploy from webhouse.app — ${new Date().toLocaleString("da-DK")}`,
+    tree: tree.sha,
+  };
+  if (parentSha) commitBody.parents = [parentSha];
+  const commitRes = await fetch(`https://api.github.com/repos/${repo}/git/commits`, {
+    method: "POST",
+    headers,
+    body: JSON.stringify(commitBody),
+    signal: AbortSignal.timeout(15000),
+  });
+  if (!commitRes.ok) throw new Error(`Failed to create commit: ${commitRes.status}`);
+  const commit = await commitRes.json() as { sha: string };
+
+  // Update or create gh-pages ref
+  if (parentSha) {
+    const updateRes = await fetch(`https://api.github.com/repos/${repo}/git/refs/heads/gh-pages`, {
+      method: "PATCH",
+      headers,
+      body: JSON.stringify({ sha: commit.sha, force: true }),
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!updateRes.ok) throw new Error(`Failed to update gh-pages ref: ${updateRes.status}`);
+  } else {
+    const createRes = await fetch(`https://api.github.com/repos/${repo}/git/refs`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ ref: "refs/heads/gh-pages", sha: commit.sha }),
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!createRes.ok) throw new Error(`Failed to create gh-pages ref: ${createRes.status}`);
+  }
+
+  console.log(`[deploy] Pushed ${files.length} files to gh-pages branch`);
+
+  // 4. Ensure GitHub Pages is enabled on gh-pages branch
   const checkRes = await fetch(`https://api.github.com/repos/${repo}/pages`, {
     headers,
     signal: AbortSignal.timeout(10000),
   });
 
+  let pagesUrl: string | undefined;
+
   if (checkRes.status === 404) {
-    // 2. Pages not enabled — enable it automatically
-    console.log(`[deploy] GitHub Pages not enabled on ${repo}, enabling...`);
+    console.log(`[deploy] Enabling GitHub Pages on gh-pages branch...`);
     const enableRes = await fetch(`https://api.github.com/repos/${repo}/pages`, {
       method: "POST",
-      headers: { ...headers, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        source: { branch: "main", path: "/" },
-        build_type: "workflow",
-      }),
+      headers,
+      body: JSON.stringify({ source: { branch: "gh-pages", path: "/" } }),
       signal: AbortSignal.timeout(10000),
     });
     if (!enableRes.ok) {
       const body = await enableRes.text().catch(() => "");
       if (enableRes.status === 422 && body.includes("plan does not support")) {
-        throw new Error("GitHub Pages is not available for private repos on the Free plan. Upgrade to GitHub Pro/Team, or make the repo public.");
+        throw new Error("GitHub Pages is not available for private repos on the Free plan. Make the repo public or upgrade your plan.");
       }
-      // 422 = already enabled (race), that's fine
       if (enableRes.status !== 422) {
-        throw new Error(`Failed to enable GitHub Pages: ${enableRes.status} ${body.slice(0, 200)}`);
+        throw new Error(`Failed to enable GitHub Pages: ${enableRes.status}`);
       }
     } else {
-      const pagesData = await enableRes.json() as { html_url?: string };
-      console.log(`[deploy] GitHub Pages enabled: ${pagesData.html_url}`);
-      // Wait a moment for Pages to initialize
-      await new Promise((r) => setTimeout(r, 2000));
-      return pagesData.html_url;
+      const data = await enableRes.json() as { html_url?: string };
+      pagesUrl = data.html_url;
+    }
+  } else if (checkRes.ok) {
+    const data = await checkRes.json() as { html_url?: string; source?: { branch?: string } };
+    pagesUrl = data.html_url;
+    // Ensure it's pointing at gh-pages, not main
+    if (data.source?.branch !== "gh-pages") {
+      await fetch(`https://api.github.com/repos/${repo}/pages`, {
+        method: "PUT",
+        headers,
+        body: JSON.stringify({ source: { branch: "gh-pages", path: "/" } }),
+        signal: AbortSignal.timeout(10000),
+      });
     }
   }
 
-  // 3. Pages is enabled — get current URL
-  let pagesUrl: string | undefined;
-  if (checkRes.ok) {
-    const pagesData = await checkRes.json() as { html_url?: string };
-    pagesUrl = pagesData.html_url;
-  }
-
-  // 4. Trigger a pages build
-  const buildRes = await fetch(`https://api.github.com/repos/${repo}/pages/builds`, {
-    method: "POST",
-    headers,
-    signal: AbortSignal.timeout(15000),
-  });
-  if (!buildRes.ok) {
-    const body = await buildRes.text().catch(() => "");
-    throw new Error(`GitHub Pages build trigger failed: ${buildRes.status} ${body.slice(0, 200)}`);
-  }
-
+  console.log(`[deploy] GitHub Pages URL: ${pagesUrl}`);
   return pagesUrl;
+}
+
+/** Recursively collect all files in a directory */
+function collectFiles(dir: string, baseDir: string): { fullPath: string; relativePath: string }[] {
+  const results: { fullPath: string; relativePath: string }[] = [];
+  for (const entry of readdirSync(dir)) {
+    const full = path.join(dir, entry);
+    const stat = statSync(full);
+    if (stat.isDirectory()) {
+      results.push(...collectFiles(full, baseDir));
+    } else {
+      results.push({ fullPath: full, relativePath: path.relative(baseDir, full) });
+    }
+  }
+  return results;
 }
 
 /** Check GitHub Pages status for a repo */
