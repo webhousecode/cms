@@ -1,15 +1,29 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { Suspense, useCallback, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { ExternalLink, RefreshCw, Hammer } from "lucide-react";
 
 function PreviewFrame() {
   const params = useSearchParams();
-  const url = params.get("url") ?? "";
+  const rawUrl = params.get("url") ?? "";
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const [building, setBuilding] = useState(false);
   const [buildResult, setBuildResult] = useState<{ ok?: boolean; error?: string; output?: string } | null>(null);
+  const [liveUrl, setLiveUrl] = useState(rawUrl);
+
+  // Auto-start preview server if URL points to localhost (server may have died on restart)
+  useEffect(() => {
+    if (!rawUrl || !/localhost:\d+/.test(rawUrl)) return;
+    fetch("/api/preview-serve", { method: "POST" })
+      .then((r) => r.ok ? r.json() as Promise<{ url: string }> : null)
+      .then((d) => {
+        if (d?.url && d.url !== rawUrl) setLiveUrl(d.url);
+      })
+      .catch(() => {});
+  }, [rawUrl]);
+
+  const url = liveUrl || rawUrl;
 
   const reload = useCallback(() => {
     if (iframeRef.current) {
