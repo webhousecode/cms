@@ -127,6 +127,8 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
   }, [router, onClose]);
 
   const [collections, setCollections] = useState<{ name: string; label: string }[]>([]);
+  const [sites, setSites] = useState<{ id: string; name: string; orgId: string }[]>([]);
+  const [activeSiteId, setActiveSiteId] = useState<string>("");
 
   const quickActions = useMemo(() => {
     const actions = buildQuickActions(logout);
@@ -142,15 +144,54 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
         keywords: [col.name, col.label.toLowerCase()],
       });
     }
+    // Add dynamic site switching
+    for (const site of sites) {
+      if (site.id === activeSiteId) continue; // skip current site
+      actions.push({
+        id: `site-${site.id}`,
+        label: site.name,
+        sublabel: "Switch to site",
+        category: "action",
+        icon: <Globe style={{ ...ICON_SIZE, color: MUTED }} />,
+        keywords: [site.name.toLowerCase(), "site", "switch", "skift"],
+        action: () => {
+          document.cookie = `cms-active-site=${encodeURIComponent(site.id)};path=/;max-age=${60 * 60 * 24 * 365};samesite=lax`;
+          fetch("/api/admin/profile", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ lastActiveOrg: site.orgId, lastActiveSite: site.id }),
+          }).catch(() => {});
+          window.dispatchEvent(new CustomEvent("cms-site-change", { detail: { siteId: site.id } }));
+          window.dispatchEvent(new CustomEvent("cms-registry-change"));
+          router.push("/admin");
+          router.refresh();
+        },
+      });
+    }
     return actions;
-  }, [logout, collections]);
+  }, [logout, collections, sites, activeSiteId, router]);
 
-  /* Auto-focus input + fetch collections */
+  /* Auto-focus input + fetch collections + sites */
   useEffect(() => {
     inputRef.current?.focus();
     fetch("/api/cms/collections")
       .then((r) => r.ok ? r.json() : { collections: [] })
       .then((d: { collections: { name: string; label: string }[] }) => setCollections(d.collections ?? []))
+      .catch(() => {});
+    fetch("/api/cms/registry")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d: any) => {
+        if (!d?.registry) return;
+        const currentSiteId = document.cookie.match(/(?:^|; )cms-active-site=([^;]*)/)?.[1] ?? "";
+        setActiveSiteId(currentSiteId);
+        const allSites: { id: string; name: string; orgId: string }[] = [];
+        for (const org of d.registry.orgs ?? []) {
+          for (const site of org.sites ?? []) {
+            allSites.push({ id: site.id, name: site.name, orgId: org.id });
+          }
+        }
+        setSites(allSites);
+      })
       .catch(() => {});
   }, []);
 
