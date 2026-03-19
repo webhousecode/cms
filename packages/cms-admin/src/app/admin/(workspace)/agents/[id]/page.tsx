@@ -575,10 +575,16 @@ export default function AgentDetailPage() {
           <button
             type="submit"
             disabled={saving}
-            className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity disabled:opacity-60"
+            style={{
+              display: "inline-flex", alignItems: "center", gap: "0.4rem",
+              padding: "0.45rem 1.25rem", borderRadius: "7px", border: "none",
+              background: "var(--primary)", color: "var(--primary-foreground)",
+              fontSize: "0.8rem", fontWeight: 600, cursor: saving ? "wait" : "pointer",
+              opacity: saving ? 0.6 : 1, transition: "all 200ms",
+            }}
           >
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
-            {saving ? "Saving..." : "Save Changes"}
+            {saving ? <Loader2 style={{ width: "0.8rem", height: "0.8rem" }} className="animate-spin" /> : null}
+            {saving ? "Saving…" : "Save changes"}
           </button>
         )}
       </form>
