@@ -1,15 +1,17 @@
 /**
  * Backup & Restore service.
  *
- * Per-site backup: zips content/ + _data/ into a timestamped archive.
+ * Per-site backup: fetches ALL content via CMS API (works for both
+ * filesystem and GitHub-backed sites), zips into a timestamped archive.
  * Backups stored in {dataDir}/backups/.
  * Manifest tracks all snapshots.
  */
 import { existsSync, readdirSync, statSync, createReadStream, createWriteStream, mkdirSync, rmSync } from "node:fs";
-import { readFile, writeFile } from "node:fs/promises";
+import { readFile, writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import archiver from "archiver";
 import { getActiveSitePaths, getActiveSiteEntry } from "./site-paths";
+import { getAdminCms, getAdminConfig } from "./cms";
 
 export interface BackupSnapshot {
   id: string;
@@ -51,28 +53,10 @@ async function saveManifest(manifest: BackupManifest): Promise<void> {
   await writeFile(await manifestPath(), JSON.stringify(manifest, null, 2));
 }
 
-// ── Count documents ──────────────────────────────────────────
-
-function countJsonFiles(dir: string): { total: number; collections: Record<string, number> } {
-  const collections: Record<string, number> = {};
-  let total = 0;
-  if (!existsSync(dir)) return { total, collections };
-
-  for (const entry of readdirSync(dir)) {
-    const full = path.join(dir, entry);
-    if (!statSync(full).isDirectory()) continue;
-    const name = entry;
-    const files = readdirSync(full).filter((f) => f.endsWith(".json"));
-    collections[name] = files.length;
-    total += files.length;
-  }
-  return { total, collections };
-}
-
 // ── Create Backup ────────────────────────────────────────────
 
 export async function createBackup(trigger: "manual" | "scheduled" = "manual"): Promise<BackupSnapshot> {
-  const { contentDir, dataDir } = await getActiveSitePaths();
+  const { dataDir } = await getActiveSitePaths();
   const siteEntry = await getActiveSiteEntry();
   const dir = await backupDir();
   const manifest = await loadManifest();
@@ -88,15 +72,13 @@ export async function createBackup(trigger: "manual" | "scheduled" = "manual"): 
   const fileName = `${id}.zip`;
   const zipPath = path.join(dir, fileName);
 
-  const { total, collections } = countJsonFiles(contentDir);
-
   const snapshot: BackupSnapshot = {
     id,
     timestamp: now.toISOString(),
     trigger,
     sizeBytes: 0,
-    documentCount: total,
-    collections,
+    documentCount: 0,
+    collections: {},
     fileName,
     status: "creating",
   };
@@ -105,6 +87,30 @@ export async function createBackup(trigger: "manual" | "scheduled" = "manual"): 
   await saveManifest(manifest);
 
   try {
+    // Fetch ALL content via CMS API (works for filesystem AND GitHub-backed sites)
+    const cms = await getAdminCms();
+    const config = await getAdminConfig();
+    const collectionNames = config.collections.map((c) => c.name);
+
+    const allContent: Record<string, unknown[]> = {};
+    let totalDocs = 0;
+
+    for (const colName of collectionNames) {
+      try {
+        const { documents } = await cms.content.findMany(colName, {});
+        allContent[colName] = documents;
+        snapshot.collections[colName] = documents.length;
+        totalDocs += documents.length;
+      } catch {
+        // Skip collections that fail (e.g. empty)
+        allContent[colName] = [];
+        snapshot.collections[colName] = 0;
+      }
+    }
+
+    snapshot.documentCount = totalDocs;
+
+    // Create zip
     await new Promise<void>((resolve, reject) => {
       const output = createWriteStream(zipPath);
       const archive = archiver("zip", { zlib: { level: 6 } });
@@ -113,12 +119,18 @@ export async function createBackup(trigger: "manual" | "scheduled" = "manual"): 
       archive.on("error", (err) => reject(err));
       archive.pipe(output);
 
-      // Add content/ directory
-      if (existsSync(contentDir)) {
-        archive.directory(contentDir, "content");
+      // Add each document as content/{collection}/{slug}.json
+      for (const [colName, docs] of Object.entries(allContent)) {
+        for (const doc of docs) {
+          const d = doc as { slug?: string; id?: string };
+          const slug = d.slug ?? d.id ?? "unknown";
+          archive.append(JSON.stringify(doc, null, 2), {
+            name: `content/${colName}/${slug}.json`,
+          });
+        }
       }
 
-      // Add _data/ directory (excluding backups/ itself and large caches)
+      // Add _data/ directory (local metadata — agents, settings, etc.)
       if (existsSync(dataDir)) {
         const dataEntries = readdirSync(dataDir);
         for (const entry of dataEntries) {
@@ -217,10 +229,17 @@ export async function restoreBackup(id: string): Promise<{ restored: number; err
     // Restore content/
     const extractedContent = path.join(tmpDir, "content");
     if (existsSync(extractedContent)) {
+      // Ensure content dir exists
+      if (!existsSync(contentDir)) mkdirSync(contentDir, { recursive: true });
       // Copy files recursively
       execSync(`cp -R "${extractedContent}/"* "${contentDir}/" 2>/dev/null || true`, { stdio: "pipe" });
-      const { total } = countJsonFiles(extractedContent);
-      restored = total;
+      // Count restored documents
+      for (const entry of readdirSync(extractedContent)) {
+        const full = path.join(extractedContent, entry);
+        if (statSync(full).isDirectory()) {
+          restored += readdirSync(full).filter((f) => f.endsWith(".json")).length;
+        }
+      }
     }
 
     // Restore _data/ (excluding backups)
