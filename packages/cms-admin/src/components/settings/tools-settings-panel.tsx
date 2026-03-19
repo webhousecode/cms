@@ -34,6 +34,11 @@ export function ToolsSettingsPanel() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
+  function updateConfig(fn: (c: AutomationConfig) => AutomationConfig) {
+    setConfig(fn);
+    window.dispatchEvent(new CustomEvent("cms:settings-dirty"));
+  }
+
   useEffect(() => {
     fetch("/api/admin/site-config")
       .then((r) => r.ok ? r.json() : null)
@@ -109,7 +114,7 @@ export function ToolsSettingsPanel() {
           <label style={labelStyle}>Frequency</label>
           <CustomSelect
             value={config.backupSchedule}
-            onChange={(v) => setConfig((c) => ({ ...c, backupSchedule: v as AutomationConfig["backupSchedule"] }))}
+            onChange={(v) => updateConfig((c) => ({ ...c, backupSchedule: v as AutomationConfig["backupSchedule"] }))}
             options={scheduleOptions}
           />
         </div>
@@ -121,7 +126,7 @@ export function ToolsSettingsPanel() {
               <input
                 type="time"
                 value={config.backupTime}
-                onChange={(e) => setConfig((c) => ({ ...c, backupTime: e.target.value }))}
+                onChange={(e) => updateConfig((c) => ({ ...c, backupTime: e.target.value }))}
                 style={{
                   padding: "0.4rem 0.6rem", borderRadius: "0.375rem",
                   border: "1px solid var(--border)", background: "var(--background)",
@@ -133,7 +138,7 @@ export function ToolsSettingsPanel() {
               <label style={labelStyle}>Retention</label>
               <CustomSelect
                 value={String(config.backupRetentionDays)}
-                onChange={(v) => setConfig((c) => ({ ...c, backupRetentionDays: parseInt(v, 10) }))}
+                onChange={(v) => updateConfig((c) => ({ ...c, backupRetentionDays: parseInt(v, 10) }))}
                 options={retentionOptions}
               />
             </div>
@@ -147,7 +152,7 @@ export function ToolsSettingsPanel() {
       </p>
       <WebhookList
         webhooks={config.backupWebhooks}
-        onChange={(w) => setConfig((c) => ({ ...c, backupWebhooks: w }))}
+        onChange={(w) => updateConfig((c) => ({ ...c, backupWebhooks: w }))}
       />
 
       <div style={{ borderTop: "1px solid var(--border)", margin: "1.5rem 0" }} />
@@ -163,7 +168,7 @@ export function ToolsSettingsPanel() {
           <label style={labelStyle}>Frequency</label>
           <CustomSelect
             value={config.linkCheckSchedule}
-            onChange={(v) => setConfig((c) => ({ ...c, linkCheckSchedule: v as AutomationConfig["linkCheckSchedule"] }))}
+            onChange={(v) => updateConfig((c) => ({ ...c, linkCheckSchedule: v as AutomationConfig["linkCheckSchedule"] }))}
             options={scheduleOptions}
           />
         </div>
@@ -174,7 +179,7 @@ export function ToolsSettingsPanel() {
             <input
               type="time"
               value={config.linkCheckTime}
-              onChange={(e) => setConfig((c) => ({ ...c, linkCheckTime: e.target.value }))}
+              onChange={(e) => updateConfig((c) => ({ ...c, linkCheckTime: e.target.value }))}
               style={{
                 padding: "0.4rem 0.6rem", borderRadius: "0.375rem",
                 border: "1px solid var(--border)", background: "var(--background)",
@@ -191,7 +196,7 @@ export function ToolsSettingsPanel() {
       </p>
       <WebhookList
         webhooks={config.linkCheckWebhooks}
-        onChange={(w) => setConfig((c) => ({ ...c, linkCheckWebhooks: w }))}
+        onChange={(w) => updateConfig((c) => ({ ...c, linkCheckWebhooks: w }))}
       />
 
       <div style={{ borderTop: "1px solid var(--border)", margin: "1.5rem 0" }} />
@@ -205,7 +210,7 @@ export function ToolsSettingsPanel() {
       <label style={webhookLabel}>Webhooks</label>
       <WebhookList
         webhooks={config.publishWebhooks}
-        onChange={(w) => setConfig((c) => ({ ...c, publishWebhooks: w }))}
+        onChange={(w) => updateConfig((c) => ({ ...c, publishWebhooks: w }))}
       />
 
       <div style={{ borderTop: "1px solid var(--border)", margin: "1.5rem 0" }} />
@@ -219,7 +224,7 @@ export function ToolsSettingsPanel() {
       <label style={webhookLabel}>Webhooks</label>
       <WebhookList
         webhooks={config.agentDefaultWebhooks}
-        onChange={(w) => setConfig((c) => ({ ...c, agentDefaultWebhooks: w }))}
+        onChange={(w) => updateConfig((c) => ({ ...c, agentDefaultWebhooks: w }))}
       />
 
     </div>

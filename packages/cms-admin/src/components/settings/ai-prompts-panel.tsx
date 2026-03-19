@@ -137,13 +137,14 @@ export function AIPromptsPanel() {
           </div>
           <textarea
             value={p.value}
-            onChange={(e) =>
+            onChange={(e) => {
               setPrompts((prev) =>
                 prev.map((pp) =>
                   pp.id === p.id ? { ...pp, value: e.target.value } : pp
                 )
-              )
-            }
+              );
+              window.dispatchEvent(new CustomEvent("cms:settings-dirty"));
+            }}
             rows={Math.max(4, p.value.split("\n").length + 1)}
             style={{
               width: "100%",
