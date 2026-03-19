@@ -545,18 +545,21 @@ function ExternalMcpServers() {
                 style={{ background: "none", border: "none", cursor: "pointer", color: s.enabled ? "var(--primary)" : "var(--muted-foreground)", padding: "0.25rem" }}>
                 {s.enabled ? <Power style={{ width: "0.9rem", height: "0.9rem" }} /> : <PowerOff style={{ width: "0.9rem", height: "0.9rem" }} />}
               </button>
-              <span style={{ display: "flex", alignItems: "center", gap: "0.25rem", minWidth: "5.5rem", justifyContent: "flex-end", flexShrink: 0 }}>
+              <span style={{ display: "flex", alignItems: "center", gap: "0.375rem", flexShrink: 0 }}>
                 {confirmDeleteId === s.id ? (
                   <>
-                    <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
-                    <button type="button" onClick={() => { removeServer(s.id); setConfirmDeleteId(null); }}
-                      style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
-                        border: "none", background: "var(--destructive)", color: "#fff",
-                        cursor: "pointer", lineHeight: 1 }}>Yes</button>
                     <button type="button" onClick={() => setConfirmDeleteId(null)}
-                      style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
+                      style={{ padding: "0.3rem 0.6rem", borderRadius: "6px",
                         border: "1px solid var(--border)", background: "transparent",
-                        color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
+                        color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: "pointer" }}>
+                      Cancel
+                    </button>
+                    <button type="button" onClick={() => { removeServer(s.id); setConfirmDeleteId(null); }}
+                      style={{ padding: "0.3rem 0.6rem", borderRadius: "6px",
+                        border: "none", background: "var(--destructive)", color: "#fff",
+                        fontSize: "0.75rem", fontWeight: 600, cursor: "pointer" }}>
+                      Confirm
+                    </button>
                   </>
                 ) : (
                   <button type="button" onClick={() => setConfirmDeleteId(s.id)} title="Remove server"
