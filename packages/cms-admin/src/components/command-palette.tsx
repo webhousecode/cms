@@ -56,7 +56,10 @@ function buildQuickActions(logout: () => void): QuickAction[] {
     { id: "set-team", label: "Team", sublabel: "Manage team members", category: "settings", icon: <UserCircle style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings?tab=team", keywords: ["team", "invite", "members", "brugere"] },
     { id: "set-email", label: "Email Settings", sublabel: "Configure email delivery", category: "settings", icon: <Zap style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings?tab=email", keywords: ["email", "resend", "smtp"] },
     { id: "set-ai", label: "AI Settings", sublabel: "API keys and providers", category: "settings", icon: <Sparkles style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings?tab=ai", keywords: ["ai", "api", "keys", "anthropic", "openai"] },
+    { id: "set-automation", label: "Automation", sublabel: "Backup, link checker, webhooks", category: "settings", icon: <Zap style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings?tab=tools", keywords: ["automation", "backup", "webhook", "schedule", "link checker", "notification"] },
+    { id: "set-brand", label: "Brand Voice", sublabel: "Tone and writing style", category: "settings", icon: <Sparkles style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings?tab=brand-voice", keywords: ["brand", "voice", "tone", "stil", "stemme"] },
     { id: "set-mcp", label: "MCP Settings", sublabel: "Model Context Protocol", category: "settings", icon: <Database style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings?tab=mcp", keywords: ["mcp", "protocol", "claude", "cursor"] },
+    { id: "set-prompts", label: "AI Prompts", sublabel: "Customize AI prompts", category: "settings", icon: <Sparkles style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings?tab=prompts", keywords: ["prompts", "ai", "custom", "skabelon"] },
 
     // Account
     { id: "acc-prefs", label: "Account Preferences", sublabel: "Profile and preferences", category: "account", icon: <UserCircle style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/account", keywords: ["account", "profil", "preferences", "konto"], featured: true },
