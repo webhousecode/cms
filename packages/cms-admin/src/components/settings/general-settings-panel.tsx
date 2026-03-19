@@ -218,22 +218,29 @@ function SiteSection() {
 	const [saving, setSaving] = useState(false);
 	const [saved, setSaved] = useState(false);
 	const [error, setError] = useState("");
+	const [configPath, setConfigPath] = useState("");
+	const [contentDir, setContentDir] = useState("");
 
 	useEffect(() => {
 		fetch("/api/admin/site-config")
 			.then((r) => r.json())
 			.then((d) => setCfg(d));
-		// Load site name from registry
+		// Load site name + paths from registry
 		fetch("/api/cms/registry")
 			.then((r) => r.json())
-			.then((d: { registry?: { orgs: Array<{ id: string; sites: Array<{ id: string; name: string }> }> } }) => {
+			.then((d: { registry?: { orgs: Array<{ id: string; sites: Array<{ id: string; name: string; configPath?: string; contentDir?: string }> }> } }) => {
 				if (!d.registry) return;
 				const orgId = document.cookie.match(/(?:^|; )cms-active-org=([^;]*)/)?.[1];
 				const siteId = document.cookie.match(/(?:^|; )cms-active-site=([^;]*)/)?.[1];
 				if (!orgId || !siteId) return;
 				const org = d.registry.orgs.find((o) => o.id === decodeURIComponent(orgId));
 				const site = org?.sites.find((s) => s.id === decodeURIComponent(siteId));
-				if (site) { setSiteName(site.name); setSiteNameOriginal(site.name); }
+				if (site) {
+					setSiteName(site.name);
+					setSiteNameOriginal(site.name);
+					setConfigPath(site.configPath ?? "");
+					setContentDir(site.contentDir ?? "");
+				}
 			});
 	}, []);
 
@@ -288,6 +295,22 @@ function SiteSection() {
 						value={siteName}
 						onChange={(e) => setSiteName(e.target.value)}
 						placeholder="My Site"
+					/>
+					<InputRow
+						label="Config path"
+						description="Absolute path to cms.config.ts on the filesystem."
+						value={configPath}
+						onChange={(e) => setConfigPath(e.target.value)}
+						placeholder="/Users/.../cms.config.ts"
+						style={{ fontFamily: "monospace", fontSize: "0.8rem" }}
+					/>
+					<InputRow
+						label="Content directory"
+						description="Absolute path to the content folder. Defaults to content/ next to config."
+						value={contentDir}
+						onChange={(e) => setContentDir(e.target.value)}
+						placeholder="/Users/.../content"
+						style={{ fontFamily: "monospace", fontSize: "0.8rem" }}
 					/>
 				</Card>
 			</div>

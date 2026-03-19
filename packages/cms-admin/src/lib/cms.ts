@@ -9,7 +9,7 @@ import { createCms } from "@webhouse/cms";
 import type { CmsConfig } from "@webhouse/cms";
 import { dirname, resolve } from "node:path";
 import { cookies } from "next/headers";
-import { loadRegistry, findSite, getDefaultSite } from "./site-registry";
+import { loadRegistry, findSite, findOrg, getDefaultSite } from "./site-registry";
 import { getOrCreateInstance } from "./site-pool";
 
 // ─── Single-site mode cache ──────────────────────────────
@@ -58,9 +58,20 @@ export async function getAdminCms() {
   const activeOrgId = cookieStore.get("cms-active-org")?.value ?? registry.defaultOrgId;
   const activeSiteId = cookieStore.get("cms-active-site")?.value ?? registry.defaultSiteId;
 
+  // Check if active org has ANY sites first
+  const activeOrg = findOrg(registry, activeOrgId);
+  if (activeOrg && activeOrg.sites.length === 0) {
+    throw new EmptyOrgError("No sites in active organization");
+  }
+
   const site = findSite(registry, activeOrgId, activeSiteId);
   if (!site) {
-    // Fallback to default
+    // Try first site in active org, then fall back to default
+    const firstInOrg = activeOrg?.sites[0];
+    if (firstInOrg) {
+      const instance = await getOrCreateInstance(activeOrgId, firstInOrg);
+      return instance.cms;
+    }
     const def = getDefaultSite(registry);
     if (!def) throw new EmptyOrgError("No sites in active organization");
     const instance = await getOrCreateInstance(def.org.id, def.site);
@@ -88,8 +99,19 @@ export async function getAdminConfig(): Promise<CmsConfig> {
   const activeOrgId = cookieStore.get("cms-active-org")?.value ?? registry.defaultOrgId;
   const activeSiteId = cookieStore.get("cms-active-site")?.value ?? registry.defaultSiteId;
 
+  // Check if active org has ANY sites first
+  const activeOrg = findOrg(registry, activeOrgId);
+  if (activeOrg && activeOrg.sites.length === 0) {
+    throw new EmptyOrgError("No sites in active organization");
+  }
+
   const site = findSite(registry, activeOrgId, activeSiteId);
   if (!site) {
+    const firstInOrg = activeOrg?.sites[0];
+    if (firstInOrg) {
+      const instance = await getOrCreateInstance(activeOrgId, firstInOrg);
+      return instance.config;
+    }
     const def = getDefaultSite(registry);
     if (!def) throw new EmptyOrgError("No sites in active organization");
     const instance = await getOrCreateInstance(def.org.id, def.site);
