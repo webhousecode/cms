@@ -70,7 +70,19 @@ export async function triggerDeploy(): Promise<DeployEntry> {
       if (match) {
         provider = "github-pages";
         appName = match[1];
-        try { token = await resolveToken("oauth"); } catch { /* no token */ }
+        // Read GitHub token: try service token first, then OAuth cookie
+        try {
+          token = await resolveToken("oauth");
+        } catch {
+          // Direct fallback: read service token file from site's data dir
+          try {
+            const { dataDir } = await getActiveSitePaths();
+            const tokenFile = path.join(dataDir, "github-service-token.json");
+            const raw = await readFile(tokenFile, "utf-8");
+            const stored = JSON.parse(raw) as { token?: string };
+            if (stored.token) token = stored.token;
+          } catch { /* no token available */ }
+        }
       }
     }
   }
