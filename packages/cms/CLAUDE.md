@@ -140,9 +140,23 @@ Single image reference (URL or path).
 ```
 
 #### image-gallery
-Multiple images.
+Multiple images. **CRITICAL: Values in JSON must be arrays of `{ url, alt }` objects, NOT plain URL strings.**
 ```typescript
 { name: 'photos', type: 'image-gallery', label: 'Photo Gallery' }
+```
+JSON data format — MUST use this exact structure:
+```json
+"photos": [
+  { "url": "https://images.unsplash.com/photo-123?w=800", "alt": "Description of image" },
+  { "url": "https://images.unsplash.com/photo-456?w=800", "alt": "Another image" }
+]
+```
+**WRONG** (will show empty black boxes in admin):
+```json
+"photos": [
+  "https://images.unsplash.com/photo-123?w=800",
+  "https://images.unsplash.com/photo-456?w=800"
+]
 ```
 
 #### video
