@@ -238,7 +238,7 @@ export function OrgSwitcher() {
           </DropdownMenuItem>
         ))}
         <DropdownMenuSeparator />
-        <DropdownMenuItem className="text-muted-foreground">
+        <DropdownMenuItem onClick={() => router.push("/admin/organizations")}>
           <LayoutGrid className="mr-2 h-4 w-4" />
           All organizations
         </DropdownMenuItem>
