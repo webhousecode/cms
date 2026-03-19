@@ -1,4 +1,4 @@
-import { getAdminCms, getAdminConfig, getActiveSiteInfo } from "@/lib/cms";
+import { getAdminCms, getAdminConfig, getActiveSiteInfo, EmptyOrgError } from "@/lib/cms";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Clock, Calendar, Image, Zap } from "lucide-react";
@@ -11,7 +11,14 @@ export default async function AdminDashboard() {
     redirect("/admin/sites");
   }
 
-  const [cms, config] = await Promise.all([getAdminCms(), getAdminConfig()]);
+  let cms, config;
+  try {
+    [cms, config] = await Promise.all([getAdminCms(), getAdminConfig()]);
+  } catch (err) {
+    if (err instanceof EmptyOrgError) redirect("/admin/sites");
+    throw err;
+  }
+  if (!cms || !config) redirect("/admin/sites");
 
   // Collection stats + scheduled count in parallel
   const allDocsPromises = config.collections.map(async (col) => {
