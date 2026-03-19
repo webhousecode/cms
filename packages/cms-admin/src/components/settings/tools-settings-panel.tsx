@@ -46,6 +46,7 @@ export function ToolsSettingsPanel() {
   const [config, setConfig] = useState<AutomationConfig>(DEFAULTS);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [isGitHubSite, setIsGitHubSite] = useState(false);
 
   function updateConfig(fn: (c: AutomationConfig) => AutomationConfig) {
     setConfig(fn);
@@ -73,6 +74,18 @@ export function ToolsSettingsPanel() {
           publishWebhooks: data.publishWebhooks ?? [],
           agentDefaultWebhooks: data.agentDefaultWebhooks ?? [],
         });
+      })
+      .catch(() => {});
+    // Detect if GitHub-backed site
+    fetch("/api/cms/registry")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d: any) => {
+        if (!d?.registry) return;
+        const orgId = document.cookie.match(/(?:^|; )cms-active-org=([^;]*)/)?.[1] ?? d.registry.defaultOrgId;
+        const siteId = document.cookie.match(/(?:^|; )cms-active-site=([^;]*)/)?.[1] ?? d.registry.defaultSiteId;
+        const org = d.registry.orgs?.find((o: any) => o.id === orgId);
+        const site = org?.sites?.find((s: any) => s.id === siteId);
+        if (site?.adapter === "github") setIsGitHubSite(true);
       })
       .catch(() => {});
   }, []);
@@ -130,8 +143,10 @@ export function ToolsSettingsPanel() {
   ];
 
   const needsHookUrl = ["vercel", "netlify", "cloudflare", "custom"].includes(config.deployProvider);
-  const needsToken = ["flyio", "github-pages"].includes(config.deployProvider);
-  const needsAppName = ["flyio", "github-pages"].includes(config.deployProvider);
+  // GitHub-backed sites already have a token from OAuth — no manual token needed
+  const ghPagesAutoConfigured = config.deployProvider === "github-pages" && isGitHubSite;
+  const needsToken = ["flyio"].includes(config.deployProvider) || (config.deployProvider === "github-pages" && !isGitHubSite);
+  const needsAppName = ["flyio"].includes(config.deployProvider) || (config.deployProvider === "github-pages" && !isGitHubSite);
 
   return (
     <div>
@@ -177,7 +192,8 @@ export function ToolsSettingsPanel() {
               {config.deployProvider === "netlify" && "Supports Next.js via adapter, static sites, and serverless functions."}
               {config.deployProvider === "flyio" && "Docker-based. Best for SSR apps (Next.js, Remix) and custom servers. Deploys to arn (Stockholm)."}
               {config.deployProvider === "cloudflare" && "Static sites and Workers. Limited SSR support — not recommended for full Next.js apps."}
-              {config.deployProvider === "github-pages" && "Static files only. Not compatible with Next.js SSR, API routes, or server-side features."}
+              {config.deployProvider === "github-pages" && ghPagesAutoConfigured && "Ready to deploy — using your existing GitHub connection. No additional configuration needed."}
+              {config.deployProvider === "github-pages" && !ghPagesAutoConfigured && "Static files only. Not compatible with Next.js SSR, API routes, or server-side features."}
               {config.deployProvider === "custom" && "Any service that accepts a POST request to trigger a build."}
             </p>
           )}
@@ -214,13 +230,13 @@ export function ToolsSettingsPanel() {
               {config.deployProvider === "flyio" && (
                 <a href="https://fly.io/dashboard/personal/tokens" target="_blank" rel="noopener noreferrer"
                   style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>
-                  Get token <span style={{ fontSize: "0.6rem" }}>↗</span>
+                  Get key ↗
                 </a>
               )}
               {config.deployProvider === "github-pages" && (
                 <a href="https://github.com/settings/tokens/new?scopes=repo&description=webhouse-deploy" target="_blank" rel="noopener noreferrer"
                   style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>
-                  Get token <span style={{ fontSize: "0.6rem" }}>↗</span>
+                  Get key ↗
                 </a>
               )}
             </div>
