@@ -104,6 +104,7 @@
 | F85 | [CC Hooks & Quality Gates](#f85-cc-hooks-quality-gates) | Planned | [docs/features/F85-cc-hooks-quality-gates.md](features/F85-cc-hooks-quality-gates.md) |
 | F86 | [Action Bar](#f86-action-bar) | Planned | [docs/features/F86-action-bar.md](features/F86-action-bar.md) |
 | F87 | [Org-Level Global Settings](#f87-org-level-global-settings) | Planned | [docs/features/F87-org-level-settings.md](features/F87-org-level-settings.md) |
+| F88 | [MCP Server Validation](#f88-mcp-server-validation) | Planned | [docs/features/F88-mcp-server-validation.md](features/F88-mcp-server-validation.md) |
 
 ---
 
@@ -370,3 +371,7 @@ Standardized sticky action bar below tabs across all admin pages. Fixed 40px hei
 ## F87 — Org-Level Global Settings
 
 Shared settings inherited by all sites in an organization. Covers MCP servers, email, AI keys, budget, webhooks. Inheritance chain: site → org → env vars. Per-site override with "Inherited from org" badges. Reduces repetitive configuration across multi-site orgs.
+
+## F88 — MCP Server Validation
+
+Validate button on MCP server cards that spawns the configured process, performs the MCP initialize handshake, requests tools/list, and displays results. Shows green (connected + tool count) or red (error message). Successful validation expands to show the list of tools the server offers with name and description. Catches wrong commands, missing env vars, and crash-on-startup before users discover failures during AI agent runs.
