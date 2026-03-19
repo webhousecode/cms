@@ -46,8 +46,6 @@ function buildQuickActions(logout: () => void): QuickAction[] {
     { id: "nav-trash", label: "Trash", sublabel: "Deleted items", category: "navigation", icon: <Trash2 style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/trash", keywords: ["slettet", "deleted", "papirkurv"] },
 
     // Actions
-    { id: "act-switch-site", label: "Switch site…", sublabel: "Change active site", category: "action", icon: <ArrowRightLeft style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/sites", keywords: ["switch", "site", "skift", "change"], featured: true },
-    { id: "act-switch-org", label: "Switch organization…", sublabel: "Change active organization", category: "action", icon: <Building2 style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/sites", keywords: ["switch", "org", "organization", "organisation", "skift"], featured: true },
     { id: "act-view-landing", label: "View landing page", sublabel: "Open in new tab", category: "action", icon: <Globe style={{ ...ICON_SIZE, color: MUTED }} />, href: "/home", keywords: ["landing", "homepage", "forside", "public", "view"], newTab: true },
     { id: "act-help", label: "Help & Support", sublabel: "Docs, shortcuts, community", category: "action", icon: <HelpCircle style={{ ...ICON_SIZE, color: MUTED }} />, keywords: ["help", "hjælp", "support", "docs", "shortcuts"], action: () => { window.dispatchEvent(new CustomEvent("cms:open-help")); }, featured: true },
 
@@ -132,7 +130,9 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
 
   const [collections, setCollections] = useState<{ name: string; label: string }[]>([]);
   const [sites, setSites] = useState<{ id: string; name: string; orgId: string }[]>([]);
+  const [orgs, setOrgs] = useState<{ id: string; name: string; firstSiteId: string | null }[]>([]);
   const [activeSiteId, setActiveSiteId] = useState<string>("");
+  const [activeOrgId, setActiveOrgId] = useState<string>("");
 
   const quickActions = useMemo(() => {
     const actions = buildQuickActions(logout);
@@ -172,8 +172,32 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
         },
       });
     }
+    // Add dynamic org switching
+    for (const org of orgs) {
+      if (org.id === activeOrgId) continue;
+      actions.push({
+        id: `org-${org.id}`,
+        label: org.name,
+        sublabel: "Switch to organization",
+        category: "action",
+        icon: <Building2 style={{ ...ICON_SIZE, color: MUTED }} />,
+        keywords: [org.name.toLowerCase(), "org", "organization", "organisation", "switch", "skift"],
+        action: () => {
+          document.cookie = `cms-active-org=${encodeURIComponent(org.id)};path=/;max-age=${60 * 60 * 24 * 365};samesite=lax`;
+          if (org.firstSiteId) {
+            document.cookie = `cms-active-site=${encodeURIComponent(org.firstSiteId)};path=/;max-age=${60 * 60 * 24 * 365};samesite=lax`;
+            window.dispatchEvent(new CustomEvent("cms-site-change", { detail: { siteId: org.firstSiteId } }));
+          } else {
+            document.cookie = "cms-active-site=;path=/;max-age=0";
+          }
+          window.dispatchEvent(new CustomEvent("cms-registry-change"));
+          router.push("/admin");
+          router.refresh();
+        },
+      });
+    }
     return actions;
-  }, [logout, collections, sites, activeSiteId, router]);
+  }, [logout, collections, sites, activeSiteId, orgs, activeOrgId, router]);
 
   /* Auto-focus input + fetch collections + sites */
   useEffect(() => {
@@ -189,7 +213,8 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
         const currentOrgId = document.cookie.match(/(?:^|; )cms-active-org=([^;]*)/)?.[1] ?? d.registry.defaultOrgId;
         const currentSiteId = document.cookie.match(/(?:^|; )cms-active-site=([^;]*)/)?.[1] ?? "";
         setActiveSiteId(currentSiteId);
-        // Only show sites from the active org
+        setActiveOrgId(currentOrgId);
+        // Sites: only from the active org
         const activeOrg = (d.registry.orgs ?? []).find((o: any) => o.id === currentOrgId) ?? d.registry.orgs?.[0];
         const orgSites: { id: string; name: string; orgId: string }[] = [];
         if (activeOrg) {
@@ -198,6 +223,12 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
           }
         }
         setSites(orgSites);
+        // Orgs: all orgs for switching
+        const allOrgs: { id: string; name: string; firstSiteId: string | null }[] = [];
+        for (const org of d.registry.orgs ?? []) {
+          allOrgs.push({ id: org.id, name: org.name, firstSiteId: org.sites?.[0]?.id ?? null });
+        }
+        setOrgs(allOrgs);
       })
       .catch(() => {});
   }, []);
