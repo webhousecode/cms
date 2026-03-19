@@ -129,16 +129,11 @@ function DeployButton() {
         if (data?.deployProvider && data.deployProvider !== "off") {
           setProvider(data.deployProvider);
         } else {
-          // Auto-detect: GitHub-backed sites can deploy to GitHub Pages
-          fetch("/api/cms/registry")
+          // Auto-detect: any site with build.ts or GitHub adapter can deploy
+          fetch("/api/admin/deploy/can-deploy")
             .then((r) => r.ok ? r.json() : null)
             .then((d: any) => {
-              if (!d?.registry) return;
-              const orgId = document.cookie.match(/(?:^|; )cms-active-org=([^;]*)/)?.[1] ?? d.registry.defaultOrgId;
-              const siteId = document.cookie.match(/(?:^|; )cms-active-site=([^;]*)/)?.[1] ?? d.registry.defaultSiteId;
-              const org = d.registry.orgs?.find((o: any) => o.id === orgId);
-              const site = org?.sites?.find((s: any) => s.id === siteId);
-              if (site?.adapter === "github") setProvider("github-pages");
+              if (d?.canDeploy) setProvider(d.provider ?? "github-pages");
             })
             .catch(() => {});
         }
