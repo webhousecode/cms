@@ -21,6 +21,8 @@ import {
   Calendar,
   ChevronDown,
   ChevronRight,
+  Wrench,
+  HardDrive,
 } from "lucide-react";
 import {
   Sidebar,
@@ -54,6 +56,11 @@ export function AppSidebar({ collections }: Props) {
     const saved = localStorage.getItem("cms-sidebar-content-open");
     return saved !== null ? saved === "true" : true;
   });
+  const [toolsOpen, setToolsOpen] = useState(() => {
+    if (typeof window === "undefined") return true;
+    const saved = localStorage.getItem("cms-sidebar-tools-open");
+    return saved !== null ? saved === "true" : true;
+  });
 
   // Load logo preference from user profile (global, not per-site)
   useEffect(() => {
@@ -71,6 +78,7 @@ export function AppSidebar({ collections }: Props) {
       .then((state) => {
         if (!state) return;
         if (typeof state.sidebarContentOpen === "boolean") setContentOpen(state.sidebarContentOpen);
+        if (typeof state.sidebarToolsOpen === "boolean") setToolsOpen(state.sidebarToolsOpen);
       })
       .catch(() => {});
   }, []);
@@ -266,7 +274,7 @@ export function AppSidebar({ collections }: Props) {
           )}
         </SidebarGroup>
 
-        {/* Interactives, Media & Links */}
+        {/* Interactives & Media */}
         <SidebarGroup style={{ padding: "0 0.5rem" }}>
           <SidebarMenu>
             <SidebarMenuItem>
@@ -289,36 +297,70 @@ export function AppSidebar({ collections }: Props) {
                 <span>Media</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                isActive={pathname === "/admin/link-checker"}
-                tooltip="Link checker"
-                render={<Link href="/admin/link-checker" />}
-              >
-                <Link2 className="!w-5 !h-5" />
-                <span>Link checker</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
 
         {/* Separator */}
         <div className="mx-3 my-1 border-t border-border" />
 
-        {/* Performance */}
+        {/* Tools (collapsible) */}
         <SidebarGroup style={{ padding: "0 0.5rem" }}>
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton
-                isActive={pathname === "/admin/performance"}
-                tooltip="Performance"
-                render={<Link href="/admin/performance" />}
+                tooltip="Tools"
+                onClick={() => setToolsOpen((o) => { const next = !o; localStorage.setItem("cms-sidebar-tools-open", String(next)); fetch("/api/admin/user-state", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sidebarToolsOpen: next }) }).catch(() => {}); return next; })}
+                render={<button type="button" />}
               >
-                <BarChart2 className="!w-5 !h-5" />
-                <span>Performance</span>
+                <Wrench className="!w-5 !h-5" />
+                <span className="flex-1 text-left">Tools</span>
+                {toolsOpen ? (
+                  <ChevronDown className="!w-4 !h-4 ml-auto" />
+                ) : (
+                  <ChevronRight className="!w-4 !h-4 ml-auto" />
+                )}
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
+          {toolsOpen && (
+            <SidebarGroupContent>
+              <SidebarMenu>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    isActive={pathname === "/admin/link-checker"}
+                    tooltip="Link Checker"
+                    render={<Link href="/admin/link-checker" />}
+                    style={{ paddingLeft: "1.75rem" }}
+                  >
+                    <Link2 className="!w-5 !h-5" />
+                    <span>Link Checker</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    isActive={pathname === "/admin/backup"}
+                    tooltip="Backup & Restore"
+                    render={<Link href="/admin/backup" />}
+                    style={{ paddingLeft: "1.75rem" }}
+                  >
+                    <HardDrive className="!w-5 !h-5" />
+                    <span>Backup</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    isActive={pathname === "/admin/performance"}
+                    tooltip="Performance"
+                    render={<Link href="/admin/performance" />}
+                    style={{ paddingLeft: "1.75rem" }}
+                  >
+                    <BarChart2 className="!w-5 !h-5" />
+                    <span>Performance</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              </SidebarMenu>
+            </SidebarGroupContent>
+          )}
         </SidebarGroup>
 
         {/* ⌘K Search trigger */}
