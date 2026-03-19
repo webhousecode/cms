@@ -293,11 +293,13 @@ async function githubPagesBuildAndDeploy(token: string, repo: string): Promise<s
     throw new Error("No build.ts found — this site doesn't support static builds.");
   }
 
-  // Compute BASE_PATH for GitHub Pages project sites: /repo-name
+  // Custom domain → root path; otherwise /repo-name
+  const config = await readSiteConfig();
+  const customDomain = config.deployCustomDomain || "";
   const repoName = repo.split("/")[1] ?? "";
-  const basePath = `/${repoName}`;
+  const basePath = customDomain ? "" : `/${repoName}`;
 
-  console.log(`[deploy] Running build.ts in ${sitePaths.projectDir} (BASE_PATH=${basePath})...`);
+  console.log(`[deploy] Running build.ts in ${sitePaths.projectDir} (BASE_PATH=${basePath || "(root)"})...`);
   try {
     execSync("npx tsx build.ts", {
       cwd: sitePaths.projectDir,
@@ -314,6 +316,13 @@ async function githubPagesBuildAndDeploy(token: string, repo: string): Promise<s
   const distDir = path.join(sitePaths.projectDir, "dist");
   if (!existsSync(distDir)) {
     throw new Error("Build completed but no dist/ directory was created.");
+  }
+
+  // Write CNAME file for custom domain
+  if (customDomain) {
+    const { writeFileSync: wfs } = await import("node:fs");
+    wfs(path.join(distDir, "CNAME"), customDomain);
+    console.log(`[deploy] Added CNAME: ${customDomain}`);
   }
 
   const files = collectFiles(distDir, distDir);
@@ -444,6 +453,26 @@ async function githubPagesBuildAndDeploy(token: string, repo: string): Promise<s
         body: JSON.stringify({ source: { branch: "gh-pages", path: "/" } }),
         signal: AbortSignal.timeout(10000),
       });
+    }
+  }
+
+  // 5. Configure custom domain if set
+  if (customDomain) {
+    console.log(`[deploy] Setting custom domain: ${customDomain}...`);
+    const domainRes = await fetch(`https://api.github.com/repos/${repo}/pages`, {
+      method: "PUT",
+      headers,
+      body: JSON.stringify({
+        source: { branch: "gh-pages", path: "/" },
+        cname: customDomain,
+      }),
+      signal: AbortSignal.timeout(10000),
+    });
+    if (domainRes.ok || domainRes.status === 204) {
+      pagesUrl = `https://${customDomain}`;
+      console.log(`[deploy] Custom domain configured: ${pagesUrl}`);
+    } else {
+      console.log(`[deploy] Custom domain config returned ${domainRes.status} (non-fatal)`);
     }
   }
 

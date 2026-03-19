@@ -21,6 +21,7 @@ interface DeployInfo {
   productionUrl?: string;
   deployOnSave?: boolean;
   deployAppName?: string;
+  deployCustomDomain?: string;
 }
 
 export function DeploySettingsPanel() {
@@ -42,6 +43,7 @@ export function DeploySettingsPanel() {
       productionUrl: cfgRes.deployProductionUrl as string | undefined,
       deployOnSave: cfgRes.deployOnSave as boolean | undefined,
       deployAppName: cfgRes.deployAppName as string | undefined,
+      deployCustomDomain: cfgRes.deployCustomDomain as string | undefined,
     });
     setDeploys(logRes.deploys ?? []);
     setLoading(false);
@@ -159,6 +161,19 @@ export function DeploySettingsPanel() {
         )}
       </SettingsCard>
 
+      {/* Custom domain */}
+      {info.provider === "github-pages" && (
+        <>
+          <SectionHeading>Custom Domain</SectionHeading>
+          <SettingsCard>
+            <CustomDomainField
+              value={info.deployCustomDomain ?? ""}
+              onChange={(domain) => setInfo((prev) => ({ ...prev, deployCustomDomain: domain }))}
+            />
+          </SettingsCard>
+        </>
+      )}
+
       {/* Deploy history */}
       <SectionHeading>Deploy History</SectionHeading>
       <SettingsCard>
@@ -237,6 +252,72 @@ export function DeploySettingsPanel() {
         )}
       </SettingsCard>
     </>
+  );
+}
+
+function CustomDomainField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [domain, setDomain] = useState(value);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const changed = domain !== value;
+
+  useEffect(() => { setDomain(value); }, [value]);
+
+  const handleSave = useCallback(async () => {
+    setSaving(true);
+    try {
+      await fetch("/api/admin/site-config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ deployCustomDomain: domain }),
+      });
+      onChange(domain);
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2000);
+    } finally {
+      setSaving(false);
+    }
+  }, [domain, onChange]);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+      <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>
+        Point a CNAME record to <code style={{ fontSize: "0.7rem" }}>cbroberg.github.io</code>, then enter the domain here.
+        With a custom domain, links use root paths instead of <code style={{ fontSize: "0.7rem" }}>/repo-name/</code>.
+      </p>
+      <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+        <input
+          type="text"
+          value={domain}
+          onChange={(e) => setDomain(e.target.value)}
+          placeholder="boutique.webhouse.app"
+          style={{
+            flex: 1, padding: "0.45rem 0.75rem", borderRadius: "7px",
+            border: "1px solid var(--border)", background: "var(--background)",
+            color: "var(--foreground)", fontSize: "0.8rem", fontFamily: "monospace",
+          }}
+        />
+        <button
+          type="button"
+          onClick={handleSave}
+          disabled={!changed || saving}
+          style={{
+            padding: "0.4rem 0.8rem", borderRadius: "7px",
+            border: "none", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer",
+            background: changed ? "var(--primary)" : "var(--muted)",
+            color: changed ? "#fff" : "var(--muted-foreground)",
+            opacity: saving ? 0.7 : 1,
+          }}
+        >
+          {saving ? "Saving..." : saved ? "Saved" : "Save"}
+        </button>
+      </div>
+      {domain && (
+        <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: 0 }}>
+          Next deploy will configure GitHub Pages to serve on <strong>{domain}</strong> and build with root paths.
+        </p>
+      )}
+    </div>
   );
 }
 
