@@ -31,7 +31,7 @@ interface ProjectData {
   year: string;
   description: string;
   coverImage: string;
-  images: string[];
+  images: { url: string; alt: string }[];
 }
 
 interface PageData {
@@ -350,7 +350,7 @@ function buildProject(site: SiteSettings, project: Document<ProjectData>): strin
   const { title, category, year, description, coverImage, images } = project.data;
 
   const galleryHtml = images
-    .map((url) => `    <img src="${esc(url)}" alt="${esc(title)}" loading="lazy">`)
+    .map((img) => `    <img src="${esc(img.url)}" alt="${esc(img.alt)}" loading="lazy">`)
     .join('\n');
 
   return `${htmlHead(title, site)}

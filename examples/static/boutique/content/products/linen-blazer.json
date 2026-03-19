@@ -8,10 +8,10 @@
     "category": "outerwear",
     "heroImage": "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=1200&q=85&auto=format",
     "images": [
-      "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&q=80&auto=format",
-      "https://images.unsplash.com/photo-1548624313-0396c75e4b1a?w=800&q=80&auto=format",
-      "https://images.unsplash.com/photo-1558171813-4c088753af8f?w=800&q=80&auto=format",
-      "https://images.unsplash.com/photo-1581044777550-4cfa60707998?w=800&q=80&auto=format"
+      { "url": "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&q=80&auto=format", "alt": "Sand-coloured oversized linen blazer on hanger" },
+      { "url": "https://images.unsplash.com/photo-1548624313-0396c75e4b1a?w=800&q=80&auto=format", "alt": "Model wearing oversized linen blazer with relaxed shoulders" },
+      { "url": "https://images.unsplash.com/photo-1558171813-4c088753af8f?w=800&q=80&auto=format", "alt": "Linen blazer styled over a silk dress for layered look" },
+      { "url": "https://images.unsplash.com/photo-1581044777550-4cfa60707998?w=800&q=80&auto=format", "alt": "Detail of washed European linen fabric and single-button closure" }
     ],
     "sizes": [
       "XS",

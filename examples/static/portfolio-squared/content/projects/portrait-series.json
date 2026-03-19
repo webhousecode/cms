@@ -8,10 +8,10 @@
     "description": "An intimate portrait series using only natural window light. Each subject was photographed in their own home, creating an atmosphere of trust and vulnerability that reveals character beyond the surface.",
     "coverImage": "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=1200&q=80",
     "images": [
-      "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=1600&q=80",
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1600&q=80",
-      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=1600&q=80",
-      "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=1600&q=80"
+      { "url": "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=1600&q=80", "alt": "Close-up portrait with soft window light on face" },
+      { "url": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1600&q=80", "alt": "Man photographed at home in natural daylight" },
+      { "url": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=1600&q=80", "alt": "Intimate portrait capturing vulnerability and character" },
+      { "url": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=1600&q=80", "alt": "Natural light portrait with moody atmosphere" }
     ]
   },
   "id": "4MJQGbsvMlmzuvLe-yyUU",

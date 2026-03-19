@@ -8,10 +8,10 @@
     "category": "accessories",
     "heroImage": "https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=1200&q=85&auto=format",
     "images": [
-      "https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=800&q=80&auto=format",
-      "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&q=80&auto=format",
-      "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&q=80&auto=format",
-      "https://images.unsplash.com/photo-1581044777550-4cfa60707998?w=800&q=80&auto=format"
+      { "url": "https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=800&q=80&auto=format", "alt": "Cognac leather tote bag with structured silhouette" },
+      { "url": "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=800&q=80&auto=format", "alt": "Interior view of leather tote showing zip pocket" },
+      { "url": "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&q=80&auto=format", "alt": "Leather tote displayed in boutique setting" },
+      { "url": "https://images.unsplash.com/photo-1581044777550-4cfa60707998?w=800&q=80&auto=format", "alt": "Close-up of hand-stitched edges on vegetable-tanned leather" }
     ],
     "sizes": [
       "One Size"
