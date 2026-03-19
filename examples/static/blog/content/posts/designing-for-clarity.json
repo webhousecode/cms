@@ -6,8 +6,14 @@
     "excerpt": "Good design is invisible. The best interfaces dissolve into the background, letting the content speak. Here's what I've learned about stripping away the unnecessary.",
     "content": "There's a moment in every design project where you realize you've been adding when you should have been subtracting. It usually comes late—after the third round of revisions, when the stakeholders have layered on their requests and the interface has grown heavy with features nobody asked for.\n\n## The Subtraction Principle\n\nThe most powerful design tool isn't a grid system or a color palette. It's the delete key. Every element on a page carries cognitive weight. Every button, every line of text, every decorative flourish demands a fraction of the user's attention. And attention, as we're constantly reminded, is finite.\n\nI think of it as the \"newspaper test.\" If you handed your interface to someone on the street, could they tell you what it does in under five seconds? If not, you haven't finished designing—you've only finished decorating.\n\n## Hierarchy Is Everything\n\nWhen everything is bold, nothing is bold. When everything screams for attention, the user hears only noise. The secret to clarity is establishing a ruthless visual hierarchy:\n\n- One primary action per screen\n- No more than three levels of typographic emphasis\n- Whitespace as a structural element, not empty space\n- Color used for meaning, not decoration\n\n> \"Perfection is achieved, not when there is nothing more to add, but when there is nothing left to take away.\" — Antoine de Saint-Exupery\n\n### Practical Steps\n\nStart every project with content, not layout. Write the words first. Understand what the user needs to read, tap, or decide—then build the container around that. The container should be invisible. The moment someone notices your layout, your grid, your clever animation, you've pulled them out of the experience.\n\nClarity isn't a style. It's a discipline. And like all disciplines, it requires saying no far more often than saying yes.",
     "date": "2024-11-15",
-    "tags": ["design", "ui", "minimalism"],
+    "tags": [
+      "design",
+      "ui",
+      "minimalism"
+    ],
     "coverImage": "https://images.unsplash.com/photo-1558655146-9f40138edfeb?w=1200&q=80",
     "author": "Marcus Chen"
-  }
+  },
+  "id": "P4BlOcptxD9pIzO5j3c3e",
+  "_fieldMeta": {}
 }

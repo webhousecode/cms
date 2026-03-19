@@ -6,8 +6,14 @@
     "excerpt": "Variable fonts, optical sizing, and fluid type scales are reshaping how we set text on the web. The gap between print and screen typography is finally closing.",
     "content": "For decades, web typography was an afterthought. Designers picked from a handful of system fonts, crossed their fingers that line-heights would render consistently, and accepted that the web would never match the precision of print. That era is over.\n\n## Variable Fonts Changed Everything\n\nThe introduction of variable fonts was the single biggest leap in web typography since @font-face. A single font file now contains an entire design space—weight, width, optical size, slant—all continuously adjustable. This isn't just a technical improvement. It changes how we think about typographic systems.\n\nInstead of choosing between Regular and Bold, you can set a heading at weight 680. Instead of picking between Condensed and Normal, you can find the exact width that makes your layout sing. Typography on the web has gone from a set of discrete choices to a continuous spectrum.\n\n## Fluid Type Scales\n\nResponsive typography used to mean setting breakpoints and hoping for the best. Now, with CSS `clamp()` and viewport-relative units, type can scale fluidly between any two sizes:\n\n> The best type scale is the one you never notice. It simply feels right at every viewport width, on every device, in every context.\n\n### Optical Sizing Matters\n\nSmall text and large text have different structural needs. At small sizes, letters need more spacing, thicker strokes, and open counters to remain legible. At display sizes, those same adjustments look clumsy. Optical sizing—built into many variable fonts—handles this automatically.\n\n- Body text (14-18px): optimized for readability with open letterforms\n- Subheadings (24-32px): balanced between readability and personality\n- Display text (48px+): tighter spacing, finer details, more character\n\nWe're entering an era where web typography can rival—and in some ways surpass—print. The tools are here. The fonts are here. The only thing missing is the widespread knowledge of how to use them well. That's what I'm most excited about: not the technology itself, but the generation of designers who will grow up thinking of the web as a first-class typographic medium.",
     "date": "2024-10-28",
-    "tags": ["typography", "css", "design"],
+    "tags": [
+      "typography",
+      "css",
+      "design"
+    ],
     "coverImage": "https://images.unsplash.com/photo-1455390582262-044cdead277a?w=1200&q=80",
     "author": "Marcus Chen"
-  }
+  },
+  "id": "LLuNqzSxGUX8cTzrJAEqs",
+  "_fieldMeta": {}
 }

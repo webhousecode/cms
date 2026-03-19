@@ -7,10 +7,24 @@
     "description": "Descending into the blue to reveal a hidden world. Shot across coral reefs in Southeast Asia and the open Atlantic, this series captures the otherworldly textures, colors, and creatures that exist just beneath the surface — a reminder of how much beauty lies unseen.",
     "heroImage": "https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=1600&q=80",
     "images": [
-      { "url": "https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=1200&q=80", "alt": "Sunlight filtering through crystal-clear ocean water" },
-      { "url": "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=1200&q=80", "alt": "Vibrant coral reef teeming with tropical fish" },
-      { "url": "https://images.unsplash.com/photo-1437622368342-7a3d73a34c8f?w=1200&q=80", "alt": "Sea turtle gliding through deep blue water" },
-      { "url": "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=1200&q=80", "alt": "Abstract patterns of light on the ocean floor" }
+      {
+        "url": "https://images.unsplash.com/photo-1518837695005-2083093ee35b?w=1200&q=80",
+        "alt": "Sunlight filtering through crystal-clear ocean water"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=1200&q=80",
+        "alt": "Vibrant coral reef teeming with tropical fish"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1437622368342-7a3d73a34c8f?w=1200&q=80",
+        "alt": "Sea turtle gliding through deep blue water"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=1200&q=80",
+        "alt": "Abstract patterns of light on the ocean floor"
+      }
     ]
-  }
+  },
+  "id": "TTbix-51Q_sbab8r1uLBR",
+  "_fieldMeta": {}
 }

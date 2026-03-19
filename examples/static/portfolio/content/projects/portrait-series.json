@@ -7,10 +7,24 @@
     "description": "An intimate portrait series using only natural window light. Each subject was photographed in their own home, creating an atmosphere of trust and vulnerability that reveals character beyond the surface.",
     "heroImage": "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=1600&q=80",
     "images": [
-      { "url": "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=1200&q=80", "alt": "Portrait bathed in soft window light" },
-      { "url": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1200&q=80", "alt": "Contemplative portrait with natural shadows" },
-      { "url": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=1200&q=80", "alt": "Close-up portrait with warm directional light" },
-      { "url": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=1200&q=80", "alt": "Intimate portrait in home setting" }
+      {
+        "url": "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=1200&q=80",
+        "alt": "Portrait bathed in soft window light"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=1200&q=80",
+        "alt": "Contemplative portrait with natural shadows"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=1200&q=80",
+        "alt": "Close-up portrait with warm directional light"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=1200&q=80",
+        "alt": "Intimate portrait in home setting"
+      }
     ]
-  }
+  },
+  "id": "wI2huxXkSVyQY1gum13gn",
+  "_fieldMeta": {}
 }

@@ -7,10 +7,24 @@
     "description": "Finding poetry in everyday objects. This ongoing series transforms ordinary items into contemplative compositions through careful arrangement, dramatic lighting, and a restrained color palette. Each image invites the viewer to pause and reconsider the beauty hidden in the mundane.",
     "heroImage": "https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?w=1600&q=80",
     "images": [
-      { "url": "https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?w=1200&q=80", "alt": "Minimalist arrangement of dried flowers and ceramic vessels" },
-      { "url": "https://images.unsplash.com/photo-1505236858219-8359eb29e329?w=1200&q=80", "alt": "Warm light falling across a stack of weathered books" },
-      { "url": "https://images.unsplash.com/photo-1490750967868-88aa4f44baee?w=1200&q=80", "alt": "Shadow play across a simple white tabletop arrangement" },
-      { "url": "https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?w=1200&q=80", "alt": "Close-up of textured fabric and natural materials" }
+      {
+        "url": "https://images.unsplash.com/photo-1513542789411-b6a5d4f31634?w=1200&q=80",
+        "alt": "Minimalist arrangement of dried flowers and ceramic vessels"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1505236858219-8359eb29e329?w=1200&q=80",
+        "alt": "Warm light falling across a stack of weathered books"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1490750967868-88aa4f44baee?w=1200&q=80",
+        "alt": "Shadow play across a simple white tabletop arrangement"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1506439773649-6e0eb8cfb237?w=1200&q=80",
+        "alt": "Close-up of textured fabric and natural materials"
+      }
     ]
-  }
+  },
+  "id": "e1o_qtG1IXSl7UB7FusdU",
+  "_fieldMeta": {}
 }

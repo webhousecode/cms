@@ -6,8 +6,14 @@
     "excerpt": "Side projects are where you learn the things no job will teach you. They're messy, unfinished, and often abandoned—but they're also where the real growth happens.",
     "content": "My graveyard of unfinished side projects is vast. There's a half-built recipe app from 2019, a weather dashboard that never got past the API integration, and at least three \"this will be my blog engine\" attempts. None of them shipped. All of them mattered.\n\n## The Permission to Fail\n\nThe most valuable thing about a side project is that nobody cares if it fails. There are no stakeholders, no deadlines, no quarterly reviews. This freedom changes how you approach problems. You take risks you'd never take at work. You try the weird solution. You pick the unfamiliar technology.\n\nAt my day job, I would never suggest rewriting a component library from scratch. But on a Saturday afternoon, with a cup of coffee and no consequences? That's exactly what I did. And I learned more about component architecture in that weekend than in a year of incremental production work.\n\n## What Side Projects Actually Teach You\n\n- **Scope management:** You learn what \"minimum viable\" really means when you're the only developer and your motivation has a half-life of about two weeks.\n- **Full-stack thinking:** When there's no backend team to hand things off to, you learn to think across the entire stack.\n- **Tool evaluation:** Side projects are the safest place to evaluate new tools, frameworks, and approaches.\n- **Taste development:** Without a design spec, you develop your own sense of what looks and feels right.\n\n> The goal of a side project isn't the project. It's who you become while building it.\n\n### Finishing Isn't the Point\n\nI used to feel guilty about my abandoned projects. Now I see them as completed experiments. Each one answered a question: Can I build an API in Rust? (Yes, slowly.) Do I enjoy working with WebGL? (No.) Is server-side rendering worth the complexity? (Depends.)\n\nThe projects that do ship are wonderful. But the ones that don't ship still leave deposits in your skill account. Every abandoned project makes the next real project a little bit better. That's the return on investment nobody talks about.",
     "date": "2024-09-12",
-    "tags": ["development", "career", "learning"],
+    "tags": [
+      "development",
+      "career",
+      "learning"
+    ],
     "coverImage": "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=1200&q=80",
     "author": "Marcus Chen"
-  }
+  },
+  "id": "sTV5zq2V5cXSgygBkHWj7",
+  "_fieldMeta": {}
 }

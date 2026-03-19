@@ -7,10 +7,24 @@
     "description": "A commissioned series for Kinfolk Magazine exploring the beauty of everyday objects. Each composition tells a story of texture, light, and the quiet luxury of simplicity.",
     "heroImage": "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=1600&q=80",
     "images": [
-      { "url": "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=1200&q=80", "alt": "Carefully arranged still life with natural textures" },
-      { "url": "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=1200&q=80", "alt": "Soft light falling on minimalist table arrangement" },
-      { "url": "https://images.unsplash.com/photo-1493606278519-11aa9f86e40a?w=1200&q=80", "alt": "Close-up of ceramic and linen composition" },
-      { "url": "https://images.unsplash.com/photo-1526827826797-7b05204a22ef?w=1200&q=80", "alt": "Overhead view of curated objects in warm light" }
+      {
+        "url": "https://images.unsplash.com/photo-1513364776144-60967b0f800f?w=1200&q=80",
+        "alt": "Carefully arranged still life with natural textures"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?w=1200&q=80",
+        "alt": "Soft light falling on minimalist table arrangement"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1493606278519-11aa9f86e40a?w=1200&q=80",
+        "alt": "Close-up of ceramic and linen composition"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1526827826797-7b05204a22ef?w=1200&q=80",
+        "alt": "Overhead view of curated objects in warm light"
+      }
     ]
-  }
+  },
+  "id": "NhpyZTJ9TU35dkkL6vnyq",
+  "_fieldMeta": {}
 }

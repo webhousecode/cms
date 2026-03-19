@@ -7,10 +7,24 @@
     "description": "Chasing the aurora across Scandinavian wilderness. Over three winters spent in northern Norway and Iceland, this collection documents the raw beauty of the Arctic — from the ethereal glow of the northern lights to the silent grandeur of snow-covered fjords.",
     "heroImage": "https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=1600&q=80",
     "images": [
-      { "url": "https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=1200&q=80", "alt": "Vivid green aurora borealis over a mountain lake" },
-      { "url": "https://images.unsplash.com/photo-1483347756197-71ef80e95f73?w=1200&q=80", "alt": "Northern lights dancing above a snow-covered forest" },
-      { "url": "https://images.unsplash.com/photo-1507400492013-162706c8c05e?w=1200&q=80", "alt": "Purple and green aurora reflected in still fjord waters" },
-      { "url": "https://images.unsplash.com/photo-1494243762909-b498c7e440a9?w=1200&q=80", "alt": "Lone cabin beneath a starry Arctic sky" }
+      {
+        "url": "https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=1200&q=80",
+        "alt": "Vivid green aurora borealis over a mountain lake"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1483347756197-71ef80e95f73?w=1200&q=80",
+        "alt": "Northern lights dancing above a snow-covered forest"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1507400492013-162706c8c05e?w=1200&q=80",
+        "alt": "Purple and green aurora reflected in still fjord waters"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1494243762909-b498c7e440a9?w=1200&q=80",
+        "alt": "Lone cabin beneath a starry Arctic sky"
+      }
     ]
-  }
+  },
+  "id": "ee96MD2YKPoP8dcZWDoN_",
+  "_fieldMeta": {}
 }

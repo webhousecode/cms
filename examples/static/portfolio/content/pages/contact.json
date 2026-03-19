@@ -2,14 +2,25 @@
   "slug": "contact",
   "status": "published",
   "data": {
-    "title": "Let\u2019s Work Together",
+    "title": "Let’s Work Together",
     "label": "Get in Touch",
     "content": "Available for commissions, collaborations, and editorial projects. Based in Copenhagen, working worldwide.",
     "metaDescription": "Get in touch with Elena Vasquez for commissions, collaborations, and editorial photography projects.",
     "socialLinks": [
-      { "label": "Instagram", "url": "#" },
-      { "label": "Behance", "url": "#" },
-      { "label": "LinkedIn", "url": "#" }
+      {
+        "label": "Instagram",
+        "url": "https://www.instagram.com/webhouse.app"
+      },
+      {
+        "label": "Behance",
+        "url": "#"
+      },
+      {
+        "label": "LinkedIn",
+        "url": "#"
+      }
     ]
-  }
+  },
+  "id": "6M-vvV3tGtjf1Wvb-YKbf",
+  "_fieldMeta": {}
 }

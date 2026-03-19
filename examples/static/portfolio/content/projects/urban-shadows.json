@@ -7,10 +7,24 @@
     "description": "A study of light and geometry in metropolitan landscapes. This series explores the interplay between modern architecture and the shifting quality of natural light throughout the day, capturing moments where steel and glass become canvases for shadow and reflection.",
     "heroImage": "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=1600&q=80",
     "images": [
-      { "url": "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=1200&q=80", "alt": "Geometric facade of a modern skyscraper at golden hour" },
-      { "url": "https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=1200&q=80", "alt": "Repeating arched windows casting long shadows" },
-      { "url": "https://images.unsplash.com/photo-1511818966892-d7d671e672a2?w=1200&q=80", "alt": "Abstract lines of a steel and glass building at dusk" },
-      { "url": "https://images.unsplash.com/photo-1448630360428-65456885c650?w=1200&q=80", "alt": "Concrete brutalist structure under overcast sky" }
+      {
+        "url": "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=1200&q=80",
+        "alt": "Geometric facade of a modern skyscraper at golden hour"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1487958449943-2429e8be8625?w=1200&q=80",
+        "alt": "Repeating arched windows casting long shadows"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1511818966892-d7d671e672a2?w=1200&q=80",
+        "alt": "Abstract lines of a steel and glass building at dusk"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1448630360428-65456885c650?w=1200&q=80",
+        "alt": "Concrete brutalist structure under overcast sky"
+      }
     ]
-  }
+  },
+  "id": "9UhoDPo9T5nksQrsRsBcI",
+  "_fieldMeta": {}
 }

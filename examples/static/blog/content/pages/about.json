@@ -4,5 +4,7 @@
   "data": {
     "title": "About",
     "content": "I'm Marcus Chen—a designer, writer, and occasional developer based in Copenhagen. I spend my days crafting digital products at a small studio, and my evenings thinking too much about typography, design systems, and the future of creative tools.\n\nThis blog is where I work through ideas. Some of them are about design. Some are about the creative process more broadly—how we think, how we work, and how we build things that matter. I write for the version of myself from two years ago: someone who was figuring things out and wished someone would just explain it plainly.\n\n## Background\n\nI studied visual communication in Amsterdam, spent five years at agencies in Berlin and London, and eventually settled into product design. Along the way, I picked up enough front-end development to be dangerous and enough typographic knowledge to be opinionated.\n\nI've led design systems at two companies, shipped more landing pages than I can count, and learned that the best design work usually happens in the unglamorous space between \"good enough\" and \"actually good.\"\n\n## This Site\n\nThinking in Pixels is built with [@webhouse/cms](https://github.com/webhousecode/cms), a file-based CMS engine for TypeScript projects. The site is statically generated—no JavaScript frameworks, no client-side rendering. Just HTML, CSS, and words. The way the web was meant to be read.\n\n## Get in Touch\n\nYou can find me on [Twitter](https://twitter.com) and [GitHub](https://github.com), or reach me by email at marcus@thinkingpixels.com. I read everything, though I'm slow to reply."
-  }
+  },
+  "id": "NtIjd8RtP2GHjOu9mz_Cr",
+  "_fieldMeta": {}
 }

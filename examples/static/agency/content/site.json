@@ -4,7 +4,7 @@
     "description": "A creative agency crafting bold digital experiences for ambitious brands. Based in Copenhagen, working worldwide.",
     "email": "hello@meridianstudio.co",
     "socialLinks": [
-      { "label": "Instagram", "url": "#" },
+      { "label": "Instagram", "url": "https://www.instagram.com/webhouse.app" },
       { "label": "LinkedIn", "url": "#" },
       { "label": "Dribbble", "url": "#" }
     ]

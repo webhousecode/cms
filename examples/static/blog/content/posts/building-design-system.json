@@ -6,8 +6,14 @@
     "excerpt": "A design system isn't a component library. It's a shared language between design and engineering. Here's how I approached building one from zero, and what I'd do differently next time.",
     "content": "The request sounded simple enough: \"We need a design system.\" Six words that kicked off eighteen months of work, three major pivots, and more cross-functional meetings than I care to remember. But at the end of it, we had something real—a living system that fundamentally changed how our team builds products.\n\n## Start with Principles, Not Components\n\nThe biggest mistake I see teams make is jumping straight to building a button component. Buttons are easy. Alignment is hard. Before writing a single line of code, we spent three weeks defining principles:\n\n- **Consistency over novelty:** Every new pattern must justify its existence against existing ones.\n- **Composition over configuration:** Small, composable pieces rather than monolithic components with dozens of props.\n- **Documentation is product:** If it isn't documented, it doesn't exist in the system.\n- **Adoption is earned:** The system must be easier to use than the alternative, or people won't use it.\n\nThese principles became our decision-making framework. Every component proposal, every API design choice, every documentation structure was evaluated against them.\n\n## The Token Layer\n\nDesign tokens are the foundation. Colors, spacing, typography, shadows, motion—all defined as semantic tokens that map to specific use cases rather than raw values:\n\n> Don't name your color \"blue-500.\" Name it \"interactive-primary.\" The moment you decouple the value from the intent, you've created a system that can evolve without breaking.\n\n### What I'd Do Differently\n\nIf I started over, I'd change three things. First, I'd build the documentation site on day one, not month six. Documentation that arrives late is documentation that's already outdated. Second, I'd involve engineering earlier. Our first components were pixel-perfect but impractical to implement. The best design systems emerge from genuine collaboration, not handoffs.\n\nThird, and most importantly, I'd set expectations about timelines. A design system is never \"done.\" It's a product that serves other products, and it needs ongoing investment. The teams that treat it as a one-time project end up with a beautiful artifact that nobody uses. The teams that treat it as a living product end up with something that genuinely changes how they work.",
     "date": "2024-07-20",
-    "tags": ["design-systems", "development", "design"],
+    "tags": [
+      "design-systems",
+      "development",
+      "design"
+    ],
     "coverImage": "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1200&q=80",
     "author": "Marcus Chen"
-  }
+  },
+  "id": "JjwjosrCNU4yXFNyjqckA",
+  "_fieldMeta": {}
 }

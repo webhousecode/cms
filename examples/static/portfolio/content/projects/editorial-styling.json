@@ -7,10 +7,24 @@
     "description": "A fashion editorial exploring the intersection of minimalism and bold textures. Shot on location in Copenhagen, this series captures the essence of Scandinavian design through the lens of contemporary streetwear.",
     "heroImage": "https://images.unsplash.com/photo-1509631179647-0177331693ae?w=1600&q=80",
     "images": [
-      { "url": "https://images.unsplash.com/photo-1509631179647-0177331693ae?w=1200&q=80", "alt": "Model in minimalist outfit against urban backdrop" },
-      { "url": "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=1200&q=80", "alt": "Fashion portrait with bold textures and clean lines" },
-      { "url": "https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=1200&q=80", "alt": "Scandinavian streetwear editorial shot" },
-      { "url": "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=1200&q=80", "alt": "Contemporary fashion against Copenhagen architecture" }
+      {
+        "url": "https://images.unsplash.com/photo-1509631179647-0177331693ae?w=1200&q=80",
+        "alt": "Model in minimalist outfit against urban backdrop"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=1200&q=80",
+        "alt": "Fashion portrait with bold textures and clean lines"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=1200&q=80",
+        "alt": "Scandinavian streetwear editorial shot"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1529139574466-a303027c1d8b?w=1200&q=80",
+        "alt": "Contemporary fashion against Copenhagen architecture"
+      }
     ]
-  }
+  },
+  "id": "IA5mUzW605wDP0i73SvOt",
+  "_fieldMeta": {}
 }

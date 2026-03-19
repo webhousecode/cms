@@ -7,10 +7,24 @@
     "description": "Candid moments captured in the streets of Tokyo and Berlin. This ongoing series documents the quiet poetry of everyday urban life — fleeting gestures, shadows, and the geometry of the city.",
     "heroImage": "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=1600&q=80",
     "images": [
-      { "url": "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=1200&q=80", "alt": "City skyline at dusk with warm light" },
-      { "url": "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=1200&q=80", "alt": "Urban street scene with long shadows" },
-      { "url": "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=1200&q=80", "alt": "Bustling city intersection from above" },
-      { "url": "https://images.unsplash.com/photo-1514565131-fce0801e5785?w=1200&q=80", "alt": "Quiet alley with geometric patterns of light" }
+      {
+        "url": "https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=1200&q=80",
+        "alt": "City skyline at dusk with warm light"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1480714378408-67cf0d13bc1b?w=1200&q=80",
+        "alt": "Urban street scene with long shadows"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=1200&q=80",
+        "alt": "Bustling city intersection from above"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1514565131-fce0801e5785?w=1200&q=80",
+        "alt": "Quiet alley with geometric patterns of light"
+      }
     ]
-  }
+  },
+  "id": "xzMBg9hjma0j2QRgd9Gs6",
+  "_fieldMeta": {}
 }
