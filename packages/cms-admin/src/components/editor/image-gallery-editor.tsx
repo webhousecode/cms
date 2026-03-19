@@ -1,6 +1,7 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { FolderOpen, Link2, X, Image as ImageIcon } from "lucide-react";
 
 export interface GalleryImage {
   url: string;
@@ -23,6 +24,29 @@ export function ImageGalleryEditor({ value: rawValue = [], onChange, disabled }:
   const [dragOver, setDragOver] = useState(false);
   const [confirmRemoveIdx, setConfirmRemoveIdx] = useState<number | null>(null);
   const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Media browser
+  const [mediaBrowserOpen, setMediaBrowserOpen] = useState(false);
+  const [mediaItems, setMediaItems] = useState<{ url: string; name: string }[]>([]);
+  const [mediaLoading, setMediaLoading] = useState(false);
+  const [mediaSearch, setMediaSearch] = useState("");
+  // URL input
+  const [showUrlInput, setShowUrlInput] = useState(false);
+  const [urlInputValue, setUrlInputValue] = useState("");
+
+  useEffect(() => {
+    if (!mediaBrowserOpen) return;
+    setMediaLoading(true);
+    fetch("/api/media")
+      .then((r) => r.json())
+      .then((d: { items?: { url: string; name: string }[] }) => {
+        setMediaItems((d.items ?? []).filter((i) => /\.(jpe?g|png|webp|gif|avif|svg)$/i.test(i.name)));
+      })
+      .catch(() => {})
+      .finally(() => setMediaLoading(false));
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setMediaBrowserOpen(false); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [mediaBrowserOpen]);
 
   const uploadFiles = useCallback(async (files: File[]) => {
     setUploading(true);
@@ -101,6 +125,119 @@ export function ImageGalleryEditor({ value: rawValue = [], onChange, disabled }:
           e.target.value = "";
         }}
       />
+
+      {/* Action buttons */}
+      {!disabled && (
+        <div style={{ display: "flex", gap: "0.35rem" }}>
+          <button
+            type="button"
+            onClick={() => setMediaBrowserOpen(true)}
+            style={actionBtnStyle}
+            className="hover:border-primary hover:text-primary transition-colors"
+          >
+            <FolderOpen style={{ width: 12, height: 12 }} />
+            Browse Media
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowUrlInput(!showUrlInput)}
+            style={actionBtnStyle}
+            className="hover:border-primary hover:text-primary transition-colors"
+          >
+            <Link2 style={{ width: 12, height: 12 }} />
+            Add URL
+          </button>
+        </div>
+      )}
+
+      {/* URL input */}
+      {showUrlInput && (
+        <div style={{ display: "flex", gap: "0.35rem" }}>
+          <input
+            type="url"
+            value={urlInputValue}
+            onChange={(e) => setUrlInputValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && urlInputValue.trim()) {
+                onChange([...value, { url: urlInputValue.trim(), alt: "" }]);
+                setUrlInputValue("");
+              }
+            }}
+            placeholder="https://images.unsplash.com/..."
+            autoFocus
+            style={{
+              flex: 1, padding: "0.35rem 0.5rem", borderRadius: "6px",
+              border: "1px solid var(--border)", background: "var(--background)",
+              color: "var(--foreground)", fontSize: "0.75rem", fontFamily: "monospace",
+              outline: "none",
+            }}
+          />
+          <button
+            type="button"
+            onClick={() => {
+              if (urlInputValue.trim()) {
+                onChange([...value, { url: urlInputValue.trim(), alt: "" }]);
+                setUrlInputValue("");
+              }
+            }}
+            style={{
+              padding: "0.35rem 0.75rem", borderRadius: "6px",
+              border: "none", background: "var(--primary)", color: "var(--primary-foreground)",
+              fontSize: "0.75rem", fontWeight: 500, cursor: "pointer",
+            }}
+          >Add</button>
+        </div>
+      )}
+
+      {/* Media browser modal */}
+      {mediaBrowserOpen && (
+        <div
+          style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.5)" }}
+          onClick={(e) => { if (e.target === e.currentTarget) setMediaBrowserOpen(false); }}
+        >
+          <div style={{
+            background: "var(--popover)", border: "1px solid var(--border)", borderRadius: "12px",
+            boxShadow: "0 8px 40px rgba(0,0,0,0.4)", width: "min(640px, 90vw)", maxHeight: "70vh",
+            display: "flex", flexDirection: "column", overflow: "hidden",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.75rem 1rem", borderBottom: "1px solid var(--border)" }}>
+              <span style={{ fontWeight: 500, fontSize: "0.9rem" }}>
+                <ImageIcon style={{ width: 16, height: 16, display: "inline", verticalAlign: "text-bottom", marginRight: "0.4rem" }} />
+                Media Library
+              </span>
+              <button type="button" onClick={() => setMediaBrowserOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.25rem" }}>
+                <X style={{ width: 16, height: 16 }} />
+              </button>
+            </div>
+            <div style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid var(--border)" }}>
+              <input type="text" value={mediaSearch} onChange={(e) => setMediaSearch(e.target.value)} placeholder="Search images…" autoFocus
+                style={{ width: "100%", padding: "0.35rem 0.5rem", borderRadius: "6px", border: "1px solid var(--border)", background: "color-mix(in srgb, var(--input) 30%, var(--background))", color: "var(--foreground)", fontSize: "0.8rem", outline: "none" }} />
+            </div>
+            <div style={{ overflowY: "auto", padding: "0.75rem" }}>
+              {mediaLoading && <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>Loading media...</div>}
+              {!mediaLoading && mediaItems.length === 0 && <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>No images found</div>}
+              {!mediaLoading && mediaItems.length > 0 && (
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))", gap: "0.5rem" }}>
+                  {mediaItems.filter((item) => !mediaSearch || item.name.toLowerCase().includes(mediaSearch.toLowerCase())).map((item) => (
+                    <button key={item.url} type="button" onClick={() => {
+                      let storedUrl = item.url;
+                      try { storedUrl = new URL(item.url).pathname; } catch { /* already relative */ }
+                      onChange([...value, { url: storedUrl, alt: item.name.replace(/\.[^.]+$/, "") }]);
+                      setMediaBrowserOpen(false);
+                    }}
+                      style={{ background: "none", border: "1px solid var(--border)", borderRadius: "6px", cursor: "pointer", padding: "0.25rem", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.25rem", overflow: "hidden" }}
+                      className="hover:border-primary transition-colors" title={item.name}
+                    >
+                      <img src={item.url} alt={item.name} style={{ width: "100%", aspectRatio: "1", objectFit: "cover", borderRadius: "4px" }} loading="lazy" />
+                      <span style={{ fontSize: "0.6rem", color: "var(--muted-foreground)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", width: "100%", textAlign: "center" }}>{item.name}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Image grid */}
       {value.length > 0 && (
@@ -194,6 +331,14 @@ export function ImageGalleryEditor({ value: rawValue = [], onChange, disabled }:
     </div>
   );
 }
+
+const actionBtnStyle: React.CSSProperties = {
+  display: "inline-flex", alignItems: "center", gap: "0.3rem",
+  padding: "0.25rem 0.6rem", borderRadius: "6px",
+  border: "1px dashed var(--border)", background: "none",
+  cursor: "pointer", fontSize: "0.7rem", color: "var(--muted-foreground)",
+  whiteSpace: "nowrap",
+};
 
 const iconBtn: React.CSSProperties = {
   width: "22px", height: "22px",
