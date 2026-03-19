@@ -523,45 +523,45 @@ function ExternalMcpServers() {
                   </div>
                 )}
               </div>
-              <button type="button" onClick={() => startEdit(s)} title="Edit JSON config"
-                style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.25rem" }}>
-                <Pencil style={{ width: "0.8rem", height: "0.8rem" }} />
-              </button>
-              <button type="button" onClick={() => {
-                  if (editingId === s.id) { setEditingId(null); } else { startEdit(s); }
-                }} title="Toggle JSON view"
-                style={{
-                  display: "inline-flex", alignItems: "center", gap: "0.2rem",
-                  padding: "0.15rem 0.4rem", borderRadius: "9999px",
-                  border: "1px solid var(--border)",
-                  background: editingId === s.id ? "color-mix(in srgb, var(--primary) 12%, transparent)" : "transparent",
-                  color: editingId === s.id ? "var(--primary)" : "var(--muted-foreground)",
-                  fontSize: "0.6rem", fontWeight: 500, cursor: "pointer",
-                }}>
-                <Braces style={{ width: "0.65rem", height: "0.65rem" }} />
-                JSON
-              </button>
-              <button type="button" onClick={() => toggleEnabled(s.id, !s.enabled)} title={s.enabled ? "Disable server" : "Enable server"}
-                style={{ background: "none", border: "none", cursor: "pointer", color: s.enabled ? "var(--primary)" : "var(--muted-foreground)", padding: "0.25rem" }}>
-                {s.enabled ? <Power style={{ width: "0.9rem", height: "0.9rem" }} /> : <PowerOff style={{ width: "0.9rem", height: "0.9rem" }} />}
-              </button>
-              <span style={{ display: "flex", alignItems: "center", gap: "0.375rem", flexShrink: 0, minWidth: "10.5rem", justifyContent: "flex-end" }}>
-                {confirmDeleteId === s.id ? (
-                  <>
-                    <button type="button" onClick={() => setConfirmDeleteId(null)}
-                      style={{ padding: "0.3rem 0.6rem", borderRadius: "6px",
-                        border: "1px solid var(--border)", background: "transparent",
-                        color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: "pointer" }}>
-                      Cancel
-                    </button>
-                    <button type="button" onClick={() => { removeServer(s.id); setConfirmDeleteId(null); }}
-                      style={{ padding: "0.3rem 0.6rem", borderRadius: "6px",
-                        border: "none", background: "var(--destructive)", color: "#fff",
-                        fontSize: "0.75rem", fontWeight: 600, cursor: "pointer" }}>
-                      Confirm
-                    </button>
-                  </>
-                ) : (
+              {confirmDeleteId === s.id ? (
+                <span style={{ display: "flex", alignItems: "center", gap: "0.375rem", flexShrink: 0 }}>
+                  <button type="button" onClick={() => setConfirmDeleteId(null)}
+                    style={{ padding: "0.3rem 0.6rem", borderRadius: "6px",
+                      border: "1px solid var(--border)", background: "transparent",
+                      color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: "pointer" }}>
+                    Cancel
+                  </button>
+                  <button type="button" onClick={() => { removeServer(s.id); setConfirmDeleteId(null); }}
+                    style={{ padding: "0.3rem 0.6rem", borderRadius: "6px",
+                      border: "none", background: "var(--destructive)", color: "#fff",
+                      fontSize: "0.75rem", fontWeight: 600, cursor: "pointer" }}>
+                    Confirm
+                  </button>
+                </span>
+              ) : (
+                <>
+                  <button type="button" onClick={() => startEdit(s)} title="Edit JSON config"
+                    style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.25rem" }}>
+                    <Pencil style={{ width: "0.8rem", height: "0.8rem" }} />
+                  </button>
+                  <button type="button" onClick={() => {
+                      if (editingId === s.id) { setEditingId(null); } else { startEdit(s); }
+                    }} title="Toggle JSON view"
+                    style={{
+                      display: "inline-flex", alignItems: "center", gap: "0.2rem",
+                      padding: "0.15rem 0.4rem", borderRadius: "9999px",
+                      border: "1px solid var(--border)",
+                      background: editingId === s.id ? "color-mix(in srgb, var(--primary) 12%, transparent)" : "transparent",
+                      color: editingId === s.id ? "var(--primary)" : "var(--muted-foreground)",
+                      fontSize: "0.6rem", fontWeight: 500, cursor: "pointer",
+                    }}>
+                    <Braces style={{ width: "0.65rem", height: "0.65rem" }} />
+                    JSON
+                  </button>
+                  <button type="button" onClick={() => toggleEnabled(s.id, !s.enabled)} title={s.enabled ? "Disable server" : "Enable server"}
+                    style={{ background: "none", border: "none", cursor: "pointer", color: s.enabled ? "var(--primary)" : "var(--muted-foreground)", padding: "0.25rem" }}>
+                    {s.enabled ? <Power style={{ width: "0.9rem", height: "0.9rem" }} /> : <PowerOff style={{ width: "0.9rem", height: "0.9rem" }} />}
+                  </button>
                   <button type="button" onClick={() => setConfirmDeleteId(s.id)} title="Remove server"
                     style={{
                       display: "flex", alignItems: "center", gap: "0.3rem",
@@ -572,8 +572,8 @@ function ExternalMcpServers() {
                     <Trash2 style={{ width: "0.75rem", height: "0.75rem" }} />
                     Remove
                   </button>
-                )}
-              </span>
+                </>
+              )}
             </div>
 
             {/* Inline JSON editor */}
