@@ -1,5 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyToken, verifyPassword, updateUser, createToken, COOKIE_NAME } from "@/lib/auth";
+import { verifyToken, verifyPassword, updateUser, createToken, COOKIE_NAME, getUsers } from "@/lib/auth";
+
+export async function GET(request: NextRequest) {
+  const token = request.cookies.get(COOKIE_NAME)?.value;
+  if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const payload = await verifyToken(token);
+  if (!payload) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  const users = await getUsers();
+  const user = users.find((u) => u.id === payload.sub);
+  if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
+  return NextResponse.json({
+    name: user.name,
+    email: user.email,
+    showLogoIcon: user.showLogoIcon ?? false, // default: wordmark
+  });
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -9,7 +24,7 @@ export async function POST(request: NextRequest) {
     const payload = await verifyToken(token);
     if (!payload) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const { name, email, currentPassword, newPassword, zoom, lastActiveOrg, lastActiveSite } = (await request.json()) as {
+    const { name, email, currentPassword, newPassword, zoom, lastActiveOrg, lastActiveSite, showLogoIcon } = (await request.json()) as {
       name?: string;
       email?: string;
       currentPassword?: string;
@@ -17,6 +32,7 @@ export async function POST(request: NextRequest) {
       zoom?: number;
       lastActiveOrg?: string;
       lastActiveSite?: string;
+      showLogoIcon?: boolean;
     };
 
     // Password change requires current password verification
@@ -40,6 +56,7 @@ export async function POST(request: NextRequest) {
       ...(zoom !== undefined ? { zoom } : {}),
       ...(lastActiveOrg !== undefined ? { lastActiveOrg } : {}),
       ...(lastActiveSite !== undefined ? { lastActiveSite } : {}),
+      ...(showLogoIcon !== undefined ? { showLogoIcon } : {}),
     }, payload.email);
 
     // Re-issue JWT with updated name/email

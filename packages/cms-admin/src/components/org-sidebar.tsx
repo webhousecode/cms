@@ -25,13 +25,17 @@ export function OrgSidebar() {
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
 
-  const [showLogoIcon, setShowLogoIcon] = useState(() => {
-    if (typeof document === "undefined") return false;
-    const cookie = document.cookie.match(/(?:^|; )cms-logo-icon=([^;]*)/)?.[1];
-    return cookie !== undefined ? cookie === "true" : false;
-  });
+  const [showLogoIcon, setShowLogoIcon] = useState(false); // default: wordmark
 
   useEffect(() => {
+    fetch("/api/admin/profile")
+      .then((r) => r.ok ? r.json() : null)
+      .then((profile: { showLogoIcon?: boolean } | null) => {
+        if (profile && typeof profile.showLogoIcon === "boolean") {
+          setShowLogoIcon(profile.showLogoIcon);
+        }
+      })
+      .catch(() => {});
     function onLogoChange(e: Event) {
       setShowLogoIcon((e as CustomEvent).detail as boolean);
     }

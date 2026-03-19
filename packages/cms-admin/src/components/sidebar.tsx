@@ -48,25 +48,24 @@ export function AppSidebar({ collections }: Props) {
   const wordmarkSrc = mounted && resolvedTheme === "light"
     ? "/webhouse-wordmark-light.svg"
     : "/webhouse-wordmark-dark.svg";
-  const [showLogoIcon, setShowLogoIcon] = useState(() => {
-    if (typeof document === "undefined") return false;
-    const cookie = document.cookie.match(/(?:^|; )cms-logo-icon=([^;]*)/)?.[1];
-    return cookie !== undefined ? cookie === "true" : false;
-  });
+  const [showLogoIcon, setShowLogoIcon] = useState(false); // default: wordmark
   const [contentOpen, setContentOpen] = useState(() => {
     if (typeof window === "undefined") return true;
     const saved = localStorage.getItem("cms-sidebar-content-open");
     return saved !== null ? saved === "true" : true;
   });
 
-  // Load sidebar prefs
+  // Load logo preference from user profile (global, not per-site)
   useEffect(() => {
-    // Logo icon: ONLY from cookie (global preference, never from per-site user-state)
-    const cookie = document.cookie.match(/(?:^|; )cms-logo-icon=([^;]*)/)?.[1];
-    if (cookie !== undefined) {
-      setShowLogoIcon(cookie === "true");
-    }
-    // Other prefs: from user-state (per-site)
+    fetch("/api/admin/profile")
+      .then((r) => r.ok ? r.json() : null)
+      .then((profile: { showLogoIcon?: boolean } | null) => {
+        if (profile && typeof profile.showLogoIcon === "boolean") {
+          setShowLogoIcon(profile.showLogoIcon);
+        }
+      })
+      .catch(() => {});
+    // Sidebar content open: from per-site user-state
     fetch("/api/admin/user-state")
       .then((r) => r.ok ? r.json() : null)
       .then((state) => {
