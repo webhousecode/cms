@@ -203,6 +203,51 @@ export function TabsProvider({ children, siteId }: { children: ReactNode; siteId
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
+  /* ── Reload tabs on site switch ───────────────────────────── */
+  useEffect(() => {
+    function handleSiteChange(e: Event) {
+      const newSiteId = (e as CustomEvent).detail?.siteId as string | null;
+      siteIdRef.current = newSiteId ?? undefined;
+
+      // Load tabs for the new site from server, then localStorage fallback
+      fetch("/api/admin/user-state")
+        .then((r) => r.ok ? r.json() : null)
+        .then((serverState) => {
+          if (serverState?.tabs?.length > 0) {
+            const migrated = serverState.tabs.map((t: Tab) => ({
+              ...t,
+              title: PATH_TITLES[t.path.split("?")[0]] ?? t.title,
+            }));
+            applyTabs(migrated, serverState.activeTabId);
+          } else {
+            const local = load(userIdRef.current, newSiteId);
+            if (local && local.tabs.length > 0) {
+              applyTabs(local.tabs, local.activeId);
+            } else {
+              // New site with no saved tabs — start fresh
+              const id = uid();
+              const freshTabs = [{ id, path: "/admin", title: "Dashboard" }];
+              applyTabs(freshTabs, id);
+            }
+          }
+        })
+        .catch(() => {
+          // Server unreachable — use localStorage
+          const local = load(userIdRef.current, newSiteId);
+          if (local && local.tabs.length > 0) {
+            applyTabs(local.tabs, local.activeId);
+          } else {
+            const id = uid();
+            const freshTabs = [{ id, path: "/admin", title: "Dashboard" }];
+            applyTabs(freshTabs, id);
+          }
+        });
+    }
+    window.addEventListener("cms-site-change", handleSiteChange);
+    return () => window.removeEventListener("cms-site-change", handleSiteChange);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   /* ── Track normal navigation — update active tab's path ──── */
   useEffect(() => {
     if (skipNextPathChange.current) {

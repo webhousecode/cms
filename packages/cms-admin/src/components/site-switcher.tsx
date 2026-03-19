@@ -109,6 +109,7 @@ export function SiteSwitcher() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ lastActiveOrg: activeOrgId, lastActiveSite: site.id }),
     }).catch(() => {});
+    window.dispatchEvent(new CustomEvent("cms-site-change", { detail: { siteId: site.id } }));
     window.dispatchEvent(new CustomEvent("cms-registry-change"));
     router.push("/admin");
     router.refresh();
@@ -189,11 +190,13 @@ export function OrgSwitcher() {
     setActiveOrgId(org.id);
     setCookie("cms-active-org", org.id);
     // Set site cookie to first site in new org (or clear if no sites)
-    if (org.sites.length > 0) {
-      setCookie("cms-active-site", org.sites[0].id);
+    const newSiteId = org.sites.length > 0 ? org.sites[0].id : null;
+    if (newSiteId) {
+      setCookie("cms-active-site", newSiteId);
     } else {
       document.cookie = "cms-active-site=;path=/;max-age=0";
     }
+    window.dispatchEvent(new CustomEvent("cms-site-change", { detail: { siteId: newSiteId } }));
     window.dispatchEvent(new CustomEvent("cms-registry-change"));
     router.push("/admin");
     router.refresh();
