@@ -92,9 +92,9 @@
 | F73 | [Troubleshooting Guide](#f73-troubleshooting-guide) | Planned | [docs/features/F73-troubleshooting-guide.md](features/F73-troubleshooting-guide.md) |
 | F74 | [System Status Page](#f74-system-status-page) | Planned | [docs/features/F74-system-status-page.md](features/F74-system-status-page.md) |
 | F75 | [AI Site Builder Guide](#f75-ai-site-builder-guide) | Planned | [docs/features/F75-ai-site-builder-guide.md](features/F75-ai-site-builder-guide.md) |
-| F76 | [Create New Organization](#f76-create-organization) | Planned | [docs/features/F76-create-organization.md](features/F76-create-organization.md) |
+| F76 | [Create New Organization](#f76-create-organization) | Done | [docs/features/F76-create-organization.md](features/F76-create-organization.md) |
 | F77 | [Middleware to Proxy Migration](#f77-middleware-to-proxy) | Planned | [docs/features/F77-middleware-to-proxy.md](features/F77-middleware-to-proxy.md) |
-| F78 | [Bundled Preview Server](#f78-bundled-preview-server) | Planned | [docs/features/F78-bundled-preview-server.md](features/F78-bundled-preview-server.md) |
+| F78 | [Bundled Preview Server](#f78-bundled-preview-server) | Done | [docs/features/F78-bundled-preview-server.md](features/F78-bundled-preview-server.md) |
 | F79 | [Site Config Validator](#f79-site-config-validator) | Planned | [docs/features/F79-site-config-validator.md](features/F79-site-config-validator.md) |
 | F80 | [Admin Selector Map](#f80-admin-selector-map) | Planned | [docs/features/F80-admin-selector-map.md](features/F80-admin-selector-map.md) |
 | F81 | [Homepage Designation](#f81-homepage-designation) | Planned | [docs/features/F81-homepage-designation.md](features/F81-homepage-designation.md) |

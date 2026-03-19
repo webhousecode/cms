@@ -1,10 +1,10 @@
 # @webhouse/cms — Roadmap
 
-**Last updated:** 2026-03-18
+**Last updated:** 2026-03-19
 
 ---
 
-## Done (30 milestones)
+## Done (32 milestones)
 
 | # | Milestone | Completed |
 |---|-----------|-----------|
@@ -36,6 +36,8 @@
 | 28 | **Invite Users** — email invitations, token flow, team panel, role management (F01) | 2026-03-17 |
 | 29 | **Content Scheduling** — publishAt/unpublishAt, calendar page, iCal feed, webhook notifications (F47) | 2026-03-18 |
 | 30 | **Persist User State** — tabs, sidebar, preferences synced server-side per user (F43) | 2026-03-18 |
+| 31 | **Create Organization** — full org CRUD, org sidebar, empty-org handling, org settings (F76) | 2026-03-19 |
+| 32 | **Bundled Preview Server** — sirv-based static preview, rebuild from editor, auto-restart (F78) | 2026-03-19 |
 
 ---
 
@@ -55,14 +57,14 @@ _Without these, we cannot build and deliver professional sites on the platform._
 | ~~4~~ | ~~**F43 Persist User State**~~ | ~~Done~~ | ~~Shipped 2026-03-18~~ |
 | 4b | **F65 Agent Pipeline E2E Tests** | Medium | If agents/curation breaks silently, AI stops. Mock LLM, full roundtrip, budget, approve/reject. Ship blocker. |
 | 4c | **F67 Security Gate** | Medium | Semgrep + Gitleaks + custom rules. Pre-commit hook, CI, weekly Discord scan. Can't ship with 82 unaudited API routes. |
-| 4d | **F76 Create New Organization** | Small | Wire up org switcher "New organization" button. Backend API exists, just needs frontend dialog. |
+| ~~4d~~ | ~~**F76 Create New Organization**~~ | ~~Done~~ | ~~Shipped 2026-03-19~~ |
 | 4e | **F77 Middleware→Proxy** | Small | Fix Next.js 16 deprecation. Rename middleware.ts→proxy.ts + fix RSC header stripping gotcha. |
 | 5 | **F12 One-Click Publish** | Medium | Need to deploy sites. Vercel deploy hook, Fly.io redeploy, GitHub Pages. |
 | 6 | **F27 Backup & Restore** | Small | Content is the customer's most valuable asset. Export/import full site. |
 | 7 | **F44 Media Processing Pipeline** | Medium | Images must be optimized. No srcset = poor Lighthouse. Sharp, WebP/AVIF. |
 | 8 | **F42 Framework Boilerplates** | Medium | Starter templates + Claude Code skills/hooks/agents. Last in Tier 1 because best practices evolve as we build earlier features. Includes `/.claude/` with skills, hooks, and agent configs for AI site builders. |
 | 8b | **F75 AI Site Builder Guide** | Small | Split 2421-line CLAUDE.md into 20 modular on-demand docs. AI fetches only what's needed. Core DX improvement. |
-| 8c | **F78 Bundled Preview Server** | Small | `cms serve` via sirv (148 KB). Clean URLs, gzip, SPA fallback. Zero extra installs. |
+| ~~8c~~ | ~~**F78 Bundled Preview Server**~~ | ~~Done~~ | ~~Shipped 2026-03-19~~ |
 | 8d | **F79 Site Config Validator** | Medium | Validate cms.config.ts + content/ on site creation and first load. Friendly errors instead of ZodError crashes. Critical for AI-built sites. |
 | 8e | **F80 Admin Selector Map** | Medium | `data-testid` on all admin UI elements + auto-generated selector map. Foundation for Playwright E2E tests of content editing and site roundtrips. |
 | 8f | **F83 Vibe Site Builder** | Large | THE differentiator. "Describe → Generate → Manage." AI site gen with CMS built in. Only platform with AI gen + CMS + code ownership. |
