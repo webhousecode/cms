@@ -120,12 +120,18 @@ function PreviewFrame() {
           <ExternalLink style={{ width: 13, height: 13 }} />
         </a>
       </div>
-      <iframe
-        ref={iframeRef}
-        src={url}
-        style={{ flex: 1, border: "none", width: "100%" }}
-        title="Preview"
-      />
+      {url ? (
+        <iframe
+          ref={iframeRef}
+          src={url}
+          style={{ flex: 1, border: "none", width: "100%" }}
+          title="Preview"
+        />
+      ) : (
+        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: "0.875rem" }}>
+          Starting preview server...
+        </div>
+      )}
     </div>
   );
 }

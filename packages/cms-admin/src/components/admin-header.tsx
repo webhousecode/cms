@@ -110,7 +110,8 @@ function UserNav({ user }: { user: SessionUser | null }) {
 
 function PreviewButton() {
   const [previewUrl, setPreviewUrl] = useState<string>("");
-  const router = useRouter();
+  const [siteName, setSiteName] = useState("Site");
+  const { openTab } = useTabs();
 
   useEffect(() => {
     fetch("/api/admin/site-config")
@@ -119,16 +120,34 @@ function PreviewButton() {
         if (data?.previewSiteUrl) setPreviewUrl(data.previewSiteUrl);
       })
       .catch(() => {});
+    // Get site name for tab title
+    fetch("/api/cms/registry")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d: any) => {
+        if (!d?.registry) return;
+        const orgId = document.cookie.match(/(?:^|; )cms-active-org=([^;]*)/)?.[1] ?? d.registry.defaultOrgId;
+        const siteId = document.cookie.match(/(?:^|; )cms-active-site=([^;]*)/)?.[1] ?? d.registry.defaultSiteId;
+        const org = d.registry.orgs?.find((o: any) => o.id === orgId);
+        const site = org?.sites?.find((s: any) => s.id === siteId);
+        if (site?.name) setSiteName(site.name);
+      })
+      .catch(() => {});
   }, []);
 
-  const openPreview = useCallback(() => {
+  const openPreview = useCallback(async () => {
     if (previewUrl) {
-      window.open(previewUrl, "_blank", "noopener,noreferrer");
+      openTab(`/admin/preview?url=${encodeURIComponent(previewUrl)}`, `Preview: ${siteName}`);
     } else {
-      // No external preview URL — open admin preview page
-      router.push("/admin/preview");
+      // No external URL — start built-in preview server
+      try {
+        const res = await fetch("/api/preview-serve", { method: "POST" });
+        if (res.ok) {
+          const { url } = await res.json() as { url: string };
+          openTab(`/admin/preview?url=${encodeURIComponent(url)}`, `Preview: ${siteName}`);
+        }
+      } catch { /* ignore */ }
     }
-  }, [previewUrl, router]);
+  }, [previewUrl, siteName, openTab]);
 
   // "p" shortcut → open preview
   useEffect(() => {
