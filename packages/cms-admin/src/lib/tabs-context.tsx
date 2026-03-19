@@ -223,16 +223,19 @@ export function TabsProvider({ children, siteId }: { children: ReactNode; siteId
           ...t,
           title: PATH_TITLES[t.path.split("?")[0]] ?? t.title,
         }));
-        tabsRef.current = migrated;
-        activeIdRef.current = saved.activeId;
-        setTabs(migrated);
-        setActiveId(saved.activeId);
-        // Navigate to the saved active tab's path
-        const activeTab = migrated.find((t) => t.id === saved.activeId);
-        if (activeTab && activeTab.path !== "/admin") {
-          skipNextPathChange.current = true;
-          router.push(activeTab.path);
+        // Ensure Dashboard tab exists
+        const hasDashboard = migrated.some((t) => t.path === "/admin");
+        if (!hasDashboard) {
+          migrated.unshift({ id: uid(), path: "/admin", title: "Dashboard" });
         }
+        const dashTab = migrated.find((t) => t.path === "/admin");
+        // Show restored tabs in bar, but activate Dashboard.
+        // Don't navigate to old paths — they belong to THIS site but
+        // OrgSwitcher already pushes to /admin. User clicks to navigate.
+        tabsRef.current = migrated;
+        activeIdRef.current = dashTab?.id ?? migrated[0].id;
+        setTabs(migrated);
+        setActiveId(dashTab?.id ?? migrated[0].id);
       } else {
         // No saved tabs for this site — fresh Dashboard
         const id = uid();
@@ -241,7 +244,6 @@ export function TabsProvider({ children, siteId }: { children: ReactNode; siteId
         activeIdRef.current = id;
         setTabs(fresh);
         setActiveId(id);
-        // Save fresh state for new site
         save(fresh, id, userIdRef.current, newSiteId);
       }
     }
