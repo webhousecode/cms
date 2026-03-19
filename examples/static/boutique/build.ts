@@ -78,7 +78,7 @@ function loadSingle<T>(path: string): T {
   return JSON.parse(readFileSync(join(__dirname, path), 'utf-8')) as T;
 }
 
-const site = loadSingle<SiteSettings>('content/settings/site.json');
+const site = loadSingle<SiteSettings>('content/globals/site.json');
 const homePage = loadSingle<PageData>('content/pages/home.json');
 const shopPage = loadSingle<PageData>('content/pages/shop.json');
 

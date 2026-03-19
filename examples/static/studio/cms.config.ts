@@ -3,8 +3,8 @@ import { defineConfig, defineCollection } from '@webhouse/cms';
 export default defineConfig({
   collections: [
     defineCollection({
-      name: 'settings',
-      label: 'Settings',
+      name: 'globals',
+      label: 'Site Content',
       fields: [
         { name: 'studioName', type: 'text', required: true, label: 'Studio Name' },
         { name: 'footerLocation', type: 'text', label: 'Footer Location' },
