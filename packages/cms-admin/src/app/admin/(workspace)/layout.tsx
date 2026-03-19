@@ -62,7 +62,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <SidebarProvider>
           <OrgSidebar />
           <SidebarInset>
-            <TabsProvider key={activeSiteId} siteId={activeSiteId}>
+            <TabsProvider siteId={activeSiteId}>
               <AdminHeader />
               {children}
             </TabsProvider>
@@ -100,7 +100,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     <SidebarProvider>
       <AppSidebarClient collections={collections} globals={globals} />
       <SidebarInset>
-        <TabsProvider key={activeSiteId} siteId={activeSiteId}>
+        <TabsProvider siteId={activeSiteId}>
           <AdminHeader />
           <TabBar />
           <CommandPaletteProvider>

@@ -209,7 +209,18 @@ export function TabsProvider({ children, siteId }: { children: ReactNode; siteId
       const newSiteId = (e as CustomEvent).detail?.siteId as string | null;
       siteIdRef.current = newSiteId ?? undefined;
 
-      // Load tabs for the new site from server, then localStorage fallback
+      // Suppress pathname effect from the upcoming router.push("/admin")
+      skipNextPathChange.current = true;
+
+      // Immediately show a fresh Dashboard tab while we load the real tabs
+      const tempId = uid();
+      const freshTabs: Tab[] = [{ id: tempId, path: "/admin", title: "Dashboard" }];
+      tabsRef.current = freshTabs;
+      activeIdRef.current = tempId;
+      setTabs(freshTabs);
+      setActiveId(tempId);
+
+      // Load tabs for the new site from server (user-state is per-site)
       fetch("/api/admin/user-state")
         .then((r) => r.ok ? r.json() : null)
         .then((serverState) => {
@@ -224,22 +235,17 @@ export function TabsProvider({ children, siteId }: { children: ReactNode; siteId
             if (local && local.tabs.length > 0) {
               applyTabs(local.tabs, local.activeId);
             } else {
-              // New site with no saved tabs — start fresh
-              const id = uid();
-              const freshTabs = [{ id, path: "/admin", title: "Dashboard" }];
-              applyTabs(freshTabs, id);
+              // No saved tabs — keep the fresh Dashboard
+              save(freshTabs, tempId, userIdRef.current, newSiteId);
             }
           }
         })
         .catch(() => {
-          // Server unreachable — use localStorage
           const local = load(userIdRef.current, newSiteId);
           if (local && local.tabs.length > 0) {
             applyTabs(local.tabs, local.activeId);
           } else {
-            const id = uid();
-            const freshTabs = [{ id, path: "/admin", title: "Dashboard" }];
-            applyTabs(freshTabs, id);
+            save(freshTabs, tempId, userIdRef.current, newSiteId);
           }
         });
     }
