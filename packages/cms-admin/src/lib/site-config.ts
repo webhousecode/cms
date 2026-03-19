@@ -95,8 +95,20 @@ export async function readSiteConfig(): Promise<SiteConfig> {
   } catch { /* first read */ }
 
   // Auto-persist calendarSecret on first use so it stays stable across requests
+  let needsWrite = false;
   if (!stored.calendarSecret) {
     stored.calendarSecret = defs.calendarSecret;
+    needsWrite = true;
+  }
+
+  // Migrate legacy schedulerWebhookUrl → publishWebhooks
+  if (stored.schedulerWebhookUrl && stored.schedulerNotifications &&
+      (!stored.publishWebhooks || stored.publishWebhooks.length === 0)) {
+    stored.publishWebhooks = [{ id: crypto.randomBytes(4).toString("hex"), url: stored.schedulerWebhookUrl }];
+    needsWrite = true;
+  }
+
+  if (needsWrite) {
     try {
       await fs.mkdir(path.dirname(filePath), { recursive: true });
       await fs.writeFile(filePath, JSON.stringify(stored, null, 2));
