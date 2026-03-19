@@ -51,7 +51,7 @@ export function NewDocumentButton({ collection, titleField = "title", defaultLoc
         className="gap-2"
       >
         <Plus className="w-4 h-4" />
-        New item
+        New document
       </Button>
     );
   }
