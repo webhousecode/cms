@@ -98,6 +98,10 @@ function esc(s: string | number): string {
     .replace(/"/g, '&quot;');
 }
 
+function cap(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
 function nl2p(s: string): string {
   return s
     .split('\n')
@@ -986,7 +990,7 @@ ${galleryHtml}
 
     <div class="product-info">
       <div class="product-breadcrumb">
-        <a href="/">Home</a> &mdash; <a href="/shop/">Shop</a> &mdash; ${esc(data.category)}
+        <a href="/">Home</a> &mdash; <a href="/shop/">Shop</a> &mdash; ${esc(cap(data.category))}
       </div>
       <h1>${esc(data.title)}</h1>
       <p class="product-price">${formatPrice(data.price)}</p>
@@ -1002,7 +1006,7 @@ ${galleryHtml}
       </div>
       <div class="product-meta-row" style="border-bottom: 1px solid var(--border);">
         <span class="product-meta-label">Category</span>
-        <span class="product-meta-value">${esc(data.category)}</span>
+        <span class="product-meta-value">${esc(cap(data.category))}</span>
       </div>
 
       <div class="product-sizes">

@@ -5,7 +5,7 @@
     "title": "Oversized Linen Blazer",
     "price": 340,
     "description": "An effortlessly oversized blazer in washed European linen. The relaxed shoulders and single-button closure create a modern silhouette that layers beautifully over everything from silk dresses to simple tees. Unlined for a soft, natural drape that improves with every wear.",
-    "category": "Outerwear",
+    "category": "outerwear",
     "heroImage": "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=1200&q=85&auto=format",
     "images": [
       "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&q=80&auto=format",
@@ -13,10 +13,17 @@
       "https://images.unsplash.com/photo-1558171813-4c088753af8f?w=800&q=80&auto=format",
       "https://images.unsplash.com/photo-1581044777550-4cfa60707998?w=800&q=80&auto=format"
     ],
-    "sizes": ["XS", "S", "M", "L"],
+    "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L"
+    ],
     "color": "Sand",
     "material": "100% European Linen",
     "featured": true,
     "sortOrder": 2
-  }
+  },
+  "id": "Tdv4n6ODDrkqcfr6ObB5p",
+  "_fieldMeta": {}
 }

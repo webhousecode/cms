@@ -5,7 +5,7 @@
     "title": "Relaxed Cotton Poplin Shirt",
     "price": 145,
     "description": "The definitive white shirt, reimagined with a relaxed contemporary fit. Cut from crisp organic cotton poplin with a subtle sheen. The slightly dropped shoulder and curved hem allow for versatile styling, worn open as a layer or buttoned for polish. Mother-of-pearl buttons throughout.",
-    "category": "Tops",
+    "category": "tops",
     "heroImage": "https://images.unsplash.com/photo-1598554747436-c9293d6a588f?w=1200&q=85&auto=format",
     "images": [
       "https://images.unsplash.com/photo-1598554747436-c9293d6a588f?w=800&q=80&auto=format",
@@ -13,10 +13,18 @@
       "https://images.unsplash.com/photo-1558171813-4c088753af8f?w=800&q=80&auto=format",
       "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=800&q=80&auto=format"
     ],
-    "sizes": ["XS", "S", "M", "L", "XL"],
+    "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
     "color": "White",
     "material": "100% Organic Cotton Poplin",
     "featured": false,
     "sortOrder": 6
-  }
+  },
+  "id": "sIMAsmqfZ7RWGFg1rNUqT",
+  "_fieldMeta": {}
 }

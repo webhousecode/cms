@@ -5,17 +5,25 @@
     "title": "Cashmere Crew Knit",
     "price": 195,
     "description": "The perfect everyday knit in Grade-A Mongolian cashmere. A relaxed crew neck with ribbed cuffs and hem, this piece is impossibly soft against the skin. The slightly boxy fit sits beautifully tucked or untucked. A wardrobe essential you will reach for season after season.",
-    "category": "Tops",
+    "category": "tops",
     "heroImage": "https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=1200&q=85&auto=format",
     "images": [
       "https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=800&q=80&auto=format",
       "https://images.unsplash.com/photo-1564859228273-274232fdb516?w=800&q=80&auto=format",
       "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=800&q=80&auto=format"
     ],
-    "sizes": ["XS", "S", "M", "L", "XL"],
+    "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
     "color": "Oatmeal",
     "material": "100% Grade-A Mongolian Cashmere",
     "featured": true,
     "sortOrder": 3
-  }
+  },
+  "id": "jT6p3sM-Pyxps4Q-BDFeJ",
+  "_fieldMeta": {}
 }

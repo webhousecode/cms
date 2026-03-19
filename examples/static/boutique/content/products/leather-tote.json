@@ -5,7 +5,7 @@
     "title": "Structured Leather Tote",
     "price": 420,
     "description": "A refined everyday tote in vegetable-tanned Italian leather that develops a rich patina over time. The structured silhouette holds its shape beautifully while the generous interior fits everything you need. Finished with hand-stitched edges, internal zip pocket, and magnetic closure. Comes with a removable shoulder strap.",
-    "category": "Accessories",
+    "category": "accessories",
     "heroImage": "https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=1200&q=85&auto=format",
     "images": [
       "https://images.unsplash.com/photo-1590874103328-eac38a683ce7?w=800&q=80&auto=format",
@@ -13,10 +13,14 @@
       "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&q=80&auto=format",
       "https://images.unsplash.com/photo-1581044777550-4cfa60707998?w=800&q=80&auto=format"
     ],
-    "sizes": ["One Size"],
+    "sizes": [
+      "One Size"
+    ],
     "color": "Cognac",
     "material": "Vegetable-Tanned Italian Leather",
     "featured": false,
     "sortOrder": 7
-  }
+  },
+  "id": "fh65LHckQq573KeBm_FqS",
+  "_fieldMeta": {}
 }

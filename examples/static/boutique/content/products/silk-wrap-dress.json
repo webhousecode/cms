@@ -5,7 +5,7 @@
     "title": "Silk Wrap Dress",
     "price": 285,
     "description": "A fluid silk wrap dress that drapes beautifully on every figure. Cut from pure mulberry silk with a subtle lustre, this piece moves with effortless grace. The adjustable wrap silhouette flatters the waist while the midi length offers timeless elegance. Finished with French seams throughout.",
-    "category": "Dresses",
+    "category": "dresses",
     "heroImage": "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=1200&q=85&auto=format",
     "images": [
       "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=800&q=80&auto=format",
@@ -13,10 +13,18 @@
       "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&q=80&auto=format",
       "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800&q=80&auto=format"
     ],
-    "sizes": ["XS", "S", "M", "L", "XL"],
+    "sizes": [
+      "XS",
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
     "color": "Cream / Ivory",
     "material": "100% Mulberry Silk",
     "featured": true,
     "sortOrder": 1
-  }
+  },
+  "id": "_33fHcDYdKSOsrkx55wps",
+  "_fieldMeta": {}
 }
