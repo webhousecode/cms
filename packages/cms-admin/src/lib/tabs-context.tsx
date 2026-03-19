@@ -220,6 +220,16 @@ export function TabsProvider({ children, siteId }: { children: ReactNode; siteId
       setTabs(freshTabs);
       setActiveId(tempId);
 
+      // Restore saved tabs and navigate to the active tab's path
+      function restoreAndNavigate(savedTabs: Tab[], savedActiveId: string | null) {
+        applyTabs(savedTabs, savedActiveId);
+        const activeTab = savedTabs.find((t) => t.id === savedActiveId);
+        if (activeTab && activeTab.path !== "/admin") {
+          skipNextPathChange.current = true;
+          router.push(activeTab.path);
+        }
+      }
+
       // Load tabs for the new site from server (user-state is per-site)
       fetch("/api/admin/user-state")
         .then((r) => r.ok ? r.json() : null)
@@ -229,11 +239,11 @@ export function TabsProvider({ children, siteId }: { children: ReactNode; siteId
               ...t,
               title: PATH_TITLES[t.path.split("?")[0]] ?? t.title,
             }));
-            applyTabs(migrated, serverState.activeTabId);
+            restoreAndNavigate(migrated, serverState.activeTabId);
           } else {
             const local = load(userIdRef.current, newSiteId);
             if (local && local.tabs.length > 0) {
-              applyTabs(local.tabs, local.activeId);
+              restoreAndNavigate(local.tabs, local.activeId);
             } else {
               // No saved tabs — keep the fresh Dashboard
               save(freshTabs, tempId, userIdRef.current, newSiteId);
@@ -243,7 +253,7 @@ export function TabsProvider({ children, siteId }: { children: ReactNode; siteId
         .catch(() => {
           const local = load(userIdRef.current, newSiteId);
           if (local && local.tabs.length > 0) {
-            applyTabs(local.tabs, local.activeId);
+            restoreAndNavigate(local.tabs, local.activeId);
           } else {
             save(freshTabs, tempId, userIdRef.current, newSiteId);
           }
