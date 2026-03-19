@@ -70,17 +70,17 @@ export default async function ScheduledPage() {
     }
   }
 
-  // Add completed backup events
+  // Add completed SCHEDULED backup events (not manual ones)
   try {
     const backups = await listBackups();
     for (const snap of backups) {
-      if (snap.status !== "complete") continue;
+      if (snap.status !== "complete" || snap.trigger !== "scheduled") continue;
       events.push({
         id: `bak-${snap.id}`,
         type: "backup",
         date: snap.timestamp,
         title: `Backup (${snap.documentCount} docs)`,
-        subtitle: snap.trigger === "scheduled" ? "Scheduled backup" : "Manual backup",
+        subtitle: "Scheduled backup",
         href: "/admin/backup",
       });
     }
