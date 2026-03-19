@@ -6,6 +6,10 @@ import path from 'node:path';
 // ---------------------------------------------------------------------------
 
 const ROOT = import.meta.dirname ?? path.dirname(new URL(import.meta.url).pathname);
+
+// Base path for GitHub Pages (e.g. "/boutique-site") or "" for root domain
+const BASE = (process.env.BASE_PATH ?? '').replace(/\/+$/, '');
+
 const DIST = path.join(ROOT, 'dist');
 const CONTENT = path.join(ROOT, 'content');
 
@@ -172,10 +176,10 @@ const HEAD = (title: string, siteTitle: string, description?: string) => `<!DOCT
 const NAV = (siteTitle: string, active?: 'blog' | 'about') => `
 <nav class="border-b border-gray-200 bg-warm">
   <div class="max-w-4xl mx-auto px-6 py-5 flex items-center justify-between">
-    <a href="/" class="font-display text-xl font-bold text-ink hover:text-accent transition-colors">${escapeHtml(siteTitle)}</a>
+    <a href="${BASE}/" class="font-display text-xl font-bold text-ink hover:text-accent transition-colors">${escapeHtml(siteTitle)}</a>
     <div class="flex gap-6 text-sm font-semibold tracking-wide uppercase">
-      <a href="/" class="${active === 'blog' ? 'text-accent' : 'text-muted hover:text-ink'} transition-colors">Blog</a>
-      <a href="/about/" class="${active === 'about' ? 'text-accent' : 'text-muted hover:text-ink'} transition-colors">About</a>
+      <a href="${BASE}/" class="${active === 'blog' ? 'text-accent' : 'text-muted hover:text-ink'} transition-colors">Blog</a>
+      <a href="${BASE}/about/" class="${active === 'about' ? 'text-accent' : 'text-muted hover:text-ink'} transition-colors">About</a>
     </div>
   </div>
 </nav>`;
@@ -201,11 +205,11 @@ function buildHome(posts: Post[], homePage: Page): string {
 
   const postCards = sorted.map(post => `
     <article class="group flex gap-6 items-start py-8 border-b border-gray-100 last:border-0">
-      <a href="/posts/${post.slug}/" class="shrink-0 hidden sm:block">
+      <a href="${BASE}/posts/${post.slug}/" class="shrink-0 hidden sm:block">
         <img src="${escapeHtml(post.data.coverImage)}" alt="" class="w-28 h-28 object-cover rounded-lg group-hover:shadow-md transition-shadow" loading="lazy" />
       </a>
       <div class="flex-1 min-w-0">
-        <a href="/posts/${post.slug}/" class="block">
+        <a href="${BASE}/posts/${post.slug}/" class="block">
           <h2 class="font-display text-2xl font-bold text-ink group-hover:text-accent transition-colors leading-tight">${escapeHtml(post.data.title)}</h2>
         </a>
         <div class="flex items-center gap-3 mt-2 text-sm text-muted">
@@ -301,7 +305,7 @@ function buildTagsIndex(posts: Post[], tagsPage: Page, siteTitle: string): strin
     const sorted = [...tagPosts].sort((a, b) => b.data.date.localeCompare(a.data.date));
     const postLinks = sorted.map(p =>
       `<li class="py-2 flex items-center justify-between">
-        <a href="/posts/${p.slug}/" class="text-ink hover:text-accent transition-colors">${escapeHtml(p.data.title)}</a>
+        <a href="${BASE}/posts/${p.slug}/" class="text-ink hover:text-accent transition-colors">${escapeHtml(p.data.title)}</a>
         <time datetime="${p.data.date}" class="text-sm text-muted shrink-0 ml-4">${formatDate(p.data.date)}</time>
       </li>`
     ).join('\n          ');

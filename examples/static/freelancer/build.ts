@@ -13,6 +13,9 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+// Base path for GitHub Pages (e.g. "/boutique-site") or "" for root domain
+const BASE = (process.env.BASE_PATH ?? '').replace(/\/+$/, '');
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -1020,20 +1023,20 @@ function nav(activePage: string = ''): string {
   const navLinksHtml = h.navLinks
     .map(
       (link) =>
-        `<li><a href="${esc(link.href)}"${activePage === link.key ? ' style="color: var(--dark); font-weight: 600;"' : ''}>${esc(link.label)}</a></li>`
+        `<li><a href="${BASE}${esc(link.href)}"${activePage === link.key ? ' style="color: var(--dark); font-weight: 600;"' : ''}>${esc(link.label)}</a></li>`
     )
     .join('\n      ');
 
   return `
 <nav class="nav">
   <div class="nav-inner">
-    <a href="/" class="nav-brand">${esc(h.name)}</a>
+    <a href="${BASE}/" class="nav-brand">${esc(h.name)}</a>
     <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')" aria-label="Toggle menu">
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/></svg>
     </button>
     <ul class="nav-links">
       ${navLinksHtml}
-      <li><a href="/contact/" class="nav-cta">${esc(h.navCta)}</a></li>
+      <li><a href="${BASE}/contact/" class="nav-cta">${esc(h.navCta)}</a></li>
     </ul>
   </div>
 </nav>`;
@@ -1048,7 +1051,7 @@ function footer(): string {
       <div>
         <h4>${esc(col.heading)}</h4>
         <ul class="footer-links">
-          ${col.links.map((link) => `<li><a href="${esc(link.href)}">${esc(link.label)}</a></li>`).join('\n          ')}
+          ${col.links.map((link) => `<li><a href="${BASE}${esc(link.href)}">${esc(link.label)}</a></li>`).join('\n          ')}
         </ul>
       </div>`
     )
@@ -1121,7 +1124,7 @@ function buildHome(): string {
         <ul class="pricing-features">
           ${s.data.features.map((f) => `<li>${esc(f.text)}</li>`).join('\n          ')}
         </ul>
-        <a href="/services/" class="btn ${s.data.popular ? 'btn-primary' : 'btn-outline'}">${esc(servicesPage.data.cardButton)}</a>
+        <a href="${BASE}/services/" class="btn ${s.data.popular ? 'btn-primary' : 'btn-outline'}">${esc(servicesPage.data.cardButton)}</a>
       </div>`
     )
     .join('\n');
@@ -1148,7 +1151,7 @@ function buildHome(): string {
     .slice(0, 3)
     .map(
       (p) => `
-      <a href="/blog/${esc(p.slug)}/" class="blog-card">
+      <a href="${BASE}/blog/${esc(p.slug)}/" class="blog-card">
         <img src="${esc(p.data.coverImage)}" alt="" class="blog-card-img" loading="lazy">
         <div class="blog-card-body">
           <div class="blog-card-date">${formatDate(p.data.date)}</div>
@@ -1168,8 +1171,8 @@ function buildHome(): string {
     <p class="hero-title">${esc(h.jobTitle)}</p>
     <p class="hero-tagline">${esc(h.heroTagline)}</p>
     <div class="hero-ctas">
-      <a href="/contact/" class="btn btn-primary">${esc(h.heroCta1)}</a>
-      <a href="/services/" class="btn btn-outline" style="color: var(--white); border-color: rgba(255,255,255,0.3);">${esc(h.heroCta2)}</a>
+      <a href="${BASE}/contact/" class="btn btn-primary">${esc(h.heroCta1)}</a>
+      <a href="${BASE}/services/" class="btn btn-outline" style="color: var(--white); border-color: rgba(255,255,255,0.3);">${esc(h.heroCta2)}</a>
     </div>
   </div>
 </section>
@@ -1231,7 +1234,7 @@ function buildHome(): string {
   <div class="container">
     <h2>${esc(h.ctaTitle)}</h2>
     <p>${esc(h.ctaDesc)}</p>
-    <a href="/contact/" class="btn btn-white">${esc(h.ctaButton)}</a>
+    <a href="${BASE}/contact/" class="btn btn-white">${esc(h.ctaButton)}</a>
   </div>
 </section>`;
 
@@ -1255,7 +1258,7 @@ function buildServices(): string {
         <ul class="pricing-features">
           ${svc.data.features.map((f) => `<li>${esc(f.text)}</li>`).join('\n          ')}
         </ul>
-        <a href="/contact/" class="btn ${svc.data.popular ? 'btn-primary' : 'btn-outline'}">${esc(s.cardButton)}</a>
+        <a href="${BASE}/contact/" class="btn ${svc.data.popular ? 'btn-primary' : 'btn-outline'}">${esc(s.cardButton)}</a>
       </div>`
     )
     .join('\n');
@@ -1278,7 +1281,7 @@ function buildServices(): string {
   <div class="container">
     <h2>${esc(s.ctaTitle)}</h2>
     <p>${esc(s.ctaDesc)}</p>
-    <a href="/contact/" class="btn btn-white">${esc(s.ctaButton)}</a>
+    <a href="${BASE}/contact/" class="btn btn-white">${esc(s.ctaButton)}</a>
   </div>
 </section>`;
 
@@ -1294,7 +1297,7 @@ function buildBlogIndex(): string {
   const blogHtml = posts
     .map(
       (p) => `
-      <a href="/blog/${esc(p.slug)}/" class="blog-card">
+      <a href="${BASE}/blog/${esc(p.slug)}/" class="blog-card">
         <img src="${esc(p.data.coverImage)}" alt="" class="blog-card-img" loading="lazy">
         <div class="blog-card-body">
           <div class="blog-card-date">${formatDate(p.data.date)}</div>
@@ -1332,7 +1335,7 @@ function buildBlogPost(post: Post): string {
   const body = `
 <section class="post-header">
   <div class="container">
-    <a href="/blog/" class="post-back">&larr; ${esc(b.backToList)}</a>
+    <a href="${BASE}/blog/" class="post-back">&larr; ${esc(b.backToList)}</a>
     <h1>${esc(post.data.title)}</h1>
     <div class="post-meta">${formatDate(post.data.date)} &middot; ${esc(h.name)}</div>
   </div>
@@ -1346,7 +1349,7 @@ function buildBlogPost(post: Post): string {
   <div class="container">
     <h2>${esc(b.postCtaTitle)}</h2>
     <p>${esc(b.postCtaDesc)}</p>
-    <a href="/contact/" class="btn btn-white">${esc(b.postCtaButton)}</a>
+    <a href="${BASE}/contact/" class="btn btn-white">${esc(b.postCtaButton)}</a>
   </div>
 </section>`;
 

@@ -13,6 +13,9 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+// Base path for GitHub Pages (e.g. "/boutique-site") or "" for root domain
+const BASE = (process.env.BASE_PATH ?? '').replace(/\/+$/, '');
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -242,13 +245,13 @@ function head(title: string, description: string): string {
   <style>${CSS}`;
 }
 
-function nav(basePath: string = ''): string {
+function nav(): string {
   return `
 <nav class="nav">
-  <a href="${basePath || '/'}" class="nav-logo">${esc(site.data.studioName)}</a>
+  <a href="${BASE}/" class="nav-logo">${esc(site.data.studioName)}</a>
   <ul class="nav-links">
-    <li><a href="${basePath ? basePath + 'projects/' : '/projects/'}">Work</a></li>
-    <li><a href="${basePath ? basePath + 'news/' : '/news/'}">News</a></li>
+    <li><a href="${BASE}/projects/">Work</a></li>
+    <li><a href="${BASE}/news/">News</a></li>
   </ul>
 </nav>`;
 }
@@ -279,7 +282,7 @@ function buildHome(): string {
       const align = isEven ? '' : 'md:ml-auto';
       const marginTop = i === 0 ? '' : 'mt-16 md:mt-24';
       return `
-      <a href="/projects/${p.slug}/" class="block group ${marginTop} ${width} ${align}">
+      <a href="${BASE}/projects/${p.slug}/" class="block group ${marginTop} ${width} ${align}">
         <div class="relative overflow-hidden">
           <img
             src="${esc(p.data.heroImage)}"
@@ -371,7 +374,7 @@ ${nav()}
 <section class="projects-section">
   <div class="section-header">
     <h2>${esc(homePage.data.selectedWorkLabel)}</h2>
-    <a href="/projects/">${esc(homePage.data.viewAllLabel)} &rarr;</a>
+    <a href="${BASE}/projects/">${esc(homePage.data.viewAllLabel)} &rarr;</a>
   </div>
   ${projectsHtml}
 </section>
@@ -388,7 +391,7 @@ function buildProjectsIndex(): string {
   const gridHtml = projects
     .map(
       (p, i) => `
-      <a href="/projects/${p.slug}/" class="block group ${i % 3 === 1 ? 'md:mt-16' : ''}">
+      <a href="${BASE}/projects/${p.slug}/" class="block group ${i % 3 === 1 ? 'md:mt-16' : ''}">
         <div class="overflow-hidden mb-4">
           <img
             src="${esc(p.data.heroImage)}"
@@ -433,7 +436,7 @@ function buildProjectsIndex(): string {
   </style>
 </head>
 <body>
-${nav('../')}
+${nav()}
 
 <section class="page-title-section">
   <h1>${esc(projectsPage.data.heading)}</h1>
@@ -548,7 +551,7 @@ function buildProjectDetail(project: ProjectData): string {
   </style>
 </head>
 <body>
-${nav('../../')}
+${nav()}
 
 <section class="project-hero">
   <img src="${esc(data.heroImage)}" alt="${esc(data.title)}">
@@ -572,7 +575,7 @@ ${nav('../../')}
   ${galleryHtml}
 </div>
 
-<a href="/projects/" class="back-link">&larr; All projects</a>
+<a href="${BASE}/projects/" class="back-link">&larr; All projects</a>
 
 ${footer()}
 </body>
@@ -640,7 +643,7 @@ function buildNewsIndex(): string {
   </style>
 </head>
 <body>
-${nav('../')}
+${nav()}
 
 <section class="page-title-section">
   <h1>${esc(newsPage.data.heading)}</h1>

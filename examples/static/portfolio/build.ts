@@ -53,6 +53,9 @@ interface Document<T> {
 
 const CONTENT_DIR = join(import.meta.dirname, 'content');
 
+// Base path for GitHub Pages (e.g. "/boutique-site") or "" for root domain
+const BASE = (process.env.BASE_PATH ?? '').replace(/\/+$/, '');
+
 function loadProjects(): Document<ProjectData>[] {
   const dir = join(CONTENT_DIR, 'projects');
   return readdirSync(dir)
@@ -206,9 +209,9 @@ function head(title: string, siteName: string, path: string = '') {
 
 function nav(siteName: string, active: 'work' | 'about' | 'contact' | '' = '') {
   const links = [
-    { href: '/index.html', label: 'Work', key: 'work' },
-    { href: '/about/index.html', label: 'About', key: 'about' },
-    { href: '/contact/index.html', label: 'Contact', key: 'contact' },
+    { href: `${BASE}/index.html`, label: 'Work', key: 'work' },
+    { href: `${BASE}/about/index.html`, label: 'About', key: 'about' },
+    { href: `${BASE}/contact/index.html`, label: 'Contact', key: 'contact' },
   ];
   const linkHtml = links
     .map(
@@ -219,7 +222,7 @@ function nav(siteName: string, active: 'work' | 'about' | 'contact' | '' = '') {
   return `
   <nav class="nav-fixed">
     <div class="nav-inner">
-      <a href="/index.html" class="nav-logo">${siteName}</a>
+      <a href="${BASE}/index.html" class="nav-logo">${siteName}</a>
       <ul class="nav-links">
         ${linkHtml}
       </ul>
@@ -244,7 +247,7 @@ function buildHomePage(projects: Document<ProjectData>[], homePage: HomePageData
   const cards = projects
     .map(
       (p) => `
-      <a href="/projects/${p.slug}/index.html" class="project-card">
+      <a href="${BASE}/projects/${p.slug}/index.html" class="project-card">
         <img src="${p.data.heroImage}" alt="${p.data.title}" loading="lazy" />
         <div class="overlay">
           <h2>${p.data.title}</h2>
@@ -307,7 +310,7 @@ function buildProjectPage(project: Document<ProjectData>, siteName: string) {
 
     <!-- Back link -->
     <div style="text-align: center; padding: 4rem 2rem;">
-      <a href="/index.html" style="color: var(--text-muted); text-decoration: none; font-size: 0.8125rem; letter-spacing: 0.08em; text-transform: uppercase; transition: color 0.3s;"
+      <a href="${BASE}/index.html" style="color: var(--text-muted); text-decoration: none; font-size: 0.8125rem; letter-spacing: 0.08em; text-transform: uppercase; transition: color 0.3s;"
          onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--text-muted)'"
       >&larr; Back to Work</a>
     </div>
