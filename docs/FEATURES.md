@@ -100,6 +100,7 @@
 | F81 | [Homepage Designation](#f81-homepage-designation) | Planned | [docs/features/F81-homepage-designation.md](features/F81-homepage-designation.md) |
 | F82 | [Loaders & Spinners](#f82-loaders--spinners) | Planned | [docs/features/F82-loaders-and-spinners.md](features/F82-loaders-and-spinners.md) |
 | F83 | [Vibe Site Builder](#f83-vibe-site-builder) | Planned | [docs/features/F83-vibe-site-builder.md](features/F83-vibe-site-builder.md) |
+| F84 | [Move Site to Org](#f84-move-site-to-org) | Planned | [docs/features/F84-move-site-to-org.md](features/F84-move-site-to-org.md) |
 
 ---
 
@@ -351,3 +352,6 @@ Polished, branded loading animations throughout CMS admin. Four tiers: shimmer s
 
 ## F83 — Vibe Site Builder
 "Describe your site → get a complete, CMS-managed website." AI-native site generation with @webhouse/cms built in. The only platform combining AI generation + CMS + code ownership + open source. Three phases: guided builder (prompt → generate → manage), conversational refinement, and full SaaS app generation (Supabase + Stripe). Integrates F67 Security Gate for code scanning, F78 Preview Server for instant preview, F79 Validator for quality assurance. RAG knowledge base over CMS rules + boilerplate templates ensures correct generation from day one.
+
+## F84 — Move Site to Organization
+Move an existing site from one org to another via Site Settings → Danger Zone or Sites dashboard context menu. Backend: atomic `removeSite(oldOrg) + addSite(newOrg)` in registry.json — all settings, team access, revalidation config preserved. UI: org dropdown + confirmation dialog. Handles default org/site update if the moved site was the default. Essential for agencies restructuring client orgs.
