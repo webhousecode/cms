@@ -853,6 +853,15 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
       } else {
         toast.success("Document saved");
       }
+      // Auto-rebuild static sites (no previewUrl = static site with build.ts)
+      if (!PREVIEW_SITE_URL) {
+        fetch("/api/preview-build", { method: "POST" })
+          .then((r) => r.json())
+          .then((d: { ok?: boolean }) => {
+            if (d.ok) toast.success("Site rebuilt", { description: "Preview updated" });
+          })
+          .catch(() => {});
+      }
     }
     setSaving(false);
   }
