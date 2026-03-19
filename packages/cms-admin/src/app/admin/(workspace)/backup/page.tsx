@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { HardDrive, Download, Trash2, RotateCcw, Plus, Clock, FileArchive } from "lucide-react";
 import { TabTitle } from "@/lib/tabs-context";
+import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
 
 interface Snapshot {
   id: string;
@@ -105,35 +106,24 @@ export default function BackupPage() {
   }
 
   return (
-    <div style={{ padding: "2rem 2.5rem", maxWidth: 900 }}>
+    <>
       <TabTitle value="Backup" />
+      <ActionBar
+        actions={
+          <ActionButton
+            variant="primary"
+            onClick={handleCreate}
+            disabled={creating}
+            icon={<Plus style={{ width: 14, height: 14 }} />}
+          >
+            {creating ? "Creating..." : "Create Backup"}
+          </ActionButton>
+        }
+      >
+        <ActionBarBreadcrumb items={["Tools", "Backup"]} />
+      </ActionBar>
 
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.25rem" }}>
-        <p style={{ fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--muted-foreground)", margin: 0 }}>
-          Tools
-        </p>
-      </div>
-
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "2rem" }}>
-        <h1 style={{ fontSize: "1.75rem", fontWeight: 700, margin: 0 }}>
-          Backup & Restore
-        </h1>
-        <button
-          type="button"
-          onClick={handleCreate}
-          disabled={creating}
-          style={{
-            display: "flex", alignItems: "center", gap: "0.5rem",
-            padding: "0.5rem 1rem", borderRadius: "0.375rem",
-            background: "var(--primary)", color: "var(--primary-foreground)",
-            border: "none", cursor: creating ? "wait" : "pointer",
-            fontSize: "0.8125rem", fontWeight: 500,
-          }}
-        >
-          <Plus style={{ width: 16, height: 16 }} />
-          {creating ? "Creating..." : "Create Backup"}
-        </button>
-      </div>
+      <div style={{ padding: "2rem 2.5rem", maxWidth: 900 }}>
 
       {loading ? (
         <p style={{ color: "var(--muted-foreground)", fontSize: "0.875rem" }}>Loading...</p>
@@ -281,5 +271,6 @@ export default function BackupPage() {
         </div>
       )}
     </div>
+    </>
   );
 }
