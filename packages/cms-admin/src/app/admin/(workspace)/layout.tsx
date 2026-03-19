@@ -55,13 +55,15 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     // Empty org (no sites) — render minimal layout so Sites/Organizations pages still work
     if (err instanceof EmptyOrgError) {
       return (
-        <TabsProvider>
-          <div style={{ minHeight: "100vh", background: "var(--background)" }}>
-            <AdminHeader />
-            <TabBar />
-            {children}
-          </div>
-        </TabsProvider>
+        <SidebarProvider>
+          <TabsProvider>
+            <div style={{ minHeight: "100vh", background: "var(--background)" }}>
+              <AdminHeader />
+              <TabBar />
+              <div style={{ padding: "0" }}>{children}</div>
+            </div>
+          </TabsProvider>
+        </SidebarProvider>
       );
     }
     const message = err instanceof Error ? err.message : "";
