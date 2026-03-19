@@ -71,7 +71,7 @@ export default async function SettingsPage({
             <Link
               key={t.id}
               href={`/admin/settings?tab=${t.id}`}
-              className={`px-4 py-2 text-sm font-medium -mb-px transition-colors ${
+              className={`px-4 py-2 text-sm font-medium -mb-px transition-colors whitespace-nowrap ${
                 tab === t.id
                   ? "border-b-2 border-primary text-primary"
                   : "text-muted-foreground hover:text-foreground"
