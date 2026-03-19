@@ -96,9 +96,9 @@ export async function triggerDeploy(): Promise<DeployEntry> {
         break;
 
       case "github-pages":
-        // Trigger GitHub Actions workflow_dispatch
         if (config.deployApiToken && config.deployAppName) {
-          await githubPagesDispatch(config.deployApiToken, config.deployAppName);
+          const pagesUrl = await githubPagesDispatch(config.deployApiToken, config.deployAppName);
+          if (pagesUrl) entry.url = pagesUrl;
         } else if (config.deployHookUrl) {
           await postHook(config.deployHookUrl);
         } else {
@@ -151,21 +151,90 @@ async function flyDeploy(token: string, appName: string): Promise<void> {
   }
 }
 
-async function githubPagesDispatch(token: string, repo: string): Promise<void> {
-  // repo format: "owner/repo"
-  // Trigger the pages build via workflow_dispatch on the default "pages" workflow
-  // or via the Pages API
-  const res = await fetch(`https://api.github.com/repos/${repo}/pages/builds`, {
+async function githubPagesDispatch(token: string, repo: string): Promise<string | undefined> {
+  const headers = {
+    Authorization: `Bearer ${token}`,
+    Accept: "application/vnd.github+json",
+  };
+
+  // 1. Check if Pages is enabled
+  const checkRes = await fetch(`https://api.github.com/repos/${repo}/pages`, {
+    headers,
+    signal: AbortSignal.timeout(10000),
+  });
+
+  if (checkRes.status === 404) {
+    // 2. Pages not enabled — enable it automatically
+    console.log(`[deploy] GitHub Pages not enabled on ${repo}, enabling...`);
+    const enableRes = await fetch(`https://api.github.com/repos/${repo}/pages`, {
+      method: "POST",
+      headers: { ...headers, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        source: { branch: "main", path: "/" },
+        build_type: "workflow",
+      }),
+      signal: AbortSignal.timeout(10000),
+    });
+    if (!enableRes.ok) {
+      const body = await enableRes.text().catch(() => "");
+      if (enableRes.status === 422 && body.includes("plan does not support")) {
+        throw new Error("GitHub Pages is not available for private repos on the Free plan. Upgrade to GitHub Pro/Team, or make the repo public.");
+      }
+      // 422 = already enabled (race), that's fine
+      if (enableRes.status !== 422) {
+        throw new Error(`Failed to enable GitHub Pages: ${enableRes.status} ${body.slice(0, 200)}`);
+      }
+    } else {
+      const pagesData = await enableRes.json() as { html_url?: string };
+      console.log(`[deploy] GitHub Pages enabled: ${pagesData.html_url}`);
+      // Wait a moment for Pages to initialize
+      await new Promise((r) => setTimeout(r, 2000));
+      return pagesData.html_url;
+    }
+  }
+
+  // 3. Pages is enabled — get current URL
+  let pagesUrl: string | undefined;
+  if (checkRes.ok) {
+    const pagesData = await checkRes.json() as { html_url?: string };
+    pagesUrl = pagesData.html_url;
+  }
+
+  // 4. Trigger a pages build
+  const buildRes = await fetch(`https://api.github.com/repos/${repo}/pages/builds`, {
     method: "POST",
-    headers: {
-      Authorization: `Bearer ${token}`,
-      Accept: "application/vnd.github+json",
-    },
+    headers,
     signal: AbortSignal.timeout(15000),
   });
-  if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    throw new Error(`GitHub Pages API error: ${res.status} ${body.slice(0, 200)}`);
+  if (!buildRes.ok) {
+    const body = await buildRes.text().catch(() => "");
+    throw new Error(`GitHub Pages build trigger failed: ${buildRes.status} ${body.slice(0, 200)}`);
+  }
+
+  return pagesUrl;
+}
+
+/** Check GitHub Pages status for a repo */
+export async function checkGitHubPagesStatus(token: string, repo: string): Promise<{
+  enabled: boolean;
+  url?: string;
+  status?: string;
+  error?: string;
+}> {
+  try {
+    const res = await fetch(`https://api.github.com/repos/${repo}/pages`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/vnd.github+json",
+      },
+      signal: AbortSignal.timeout(10000),
+    });
+    if (res.status === 404) return { enabled: false };
+    if (!res.ok) return { enabled: false, error: `API error: ${res.status}` };
+    const data = await res.json() as { html_url?: string; status?: string };
+    return { enabled: true, url: data.html_url, status: data.status };
+  } catch (err) {
+    return { enabled: false, error: err instanceof Error ? err.message : String(err) };
   }
 }
 
