@@ -15,7 +15,11 @@ interface Props {
 
 function uid() { return Math.random().toString(36).slice(2, 10); }
 
-export function WebhookList({ webhooks, onChange }: Props) {
+export function WebhookList({ webhooks, onChange: onChangeRaw }: Props) {
+  function onChange(w: WebhookEntry[]) {
+    onChangeRaw(w);
+    window.dispatchEvent(new CustomEvent("cms:settings-dirty"));
+  }
   const [newUrl, setNewUrl] = useState("");
   const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
