@@ -86,7 +86,7 @@ function pathTitle(path: string): string {
   return decodeURIComponent(parts[parts.length - 1]);
 }
 
-const STORE_KEY_BASE = "cms-admin-tabs-v1";
+const STORE_KEY_BASE = "cms-admin-tabs-v2";
 
 /** Per-user-per-site store key */
 function storeKey(userId?: string | null, siteId?: string | null): string {
