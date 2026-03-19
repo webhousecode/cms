@@ -86,7 +86,7 @@ function pathTitle(path: string): string {
   return decodeURIComponent(parts[parts.length - 1]);
 }
 
-const STORE_KEY_BASE = "cms-admin-tabs-v3";
+const STORE_KEY_BASE = "cms-admin-tabs-v4";
 
 /** Per-user-per-site store key */
 function storeKey(userId?: string | null, siteId?: string | null): string {
@@ -105,7 +105,9 @@ function load(userId?: string | null, siteId?: string | null): { tabs: Tab[]; ac
 
 function save(tabs: Tab[], activeId: string | null, userId?: string | null, siteId?: string | null) {
   try { localStorage.setItem(storeKey(userId, siteId), JSON.stringify({ tabs, activeId })); } catch { /* noop */ }
-  syncToServer(tabs, activeId);
+  // NOT syncing to server — server user-state uses cookies which get
+  // contaminated during site switches. localStorage with explicit siteId
+  // in the key is the only reliable source of truth for tabs.
 }
 
 /* ─── Context ────────────────────────────────────────────────── */
@@ -181,24 +183,9 @@ export function TabsProvider({ children, siteId }: { children: ReactNode; siteId
       }
     }
 
-    // localStorage first — it uses explicit siteId in the key, so it's always correct.
-    // Server user-state uses cookies which can be stale/contaminated from site switches.
-    const local = load(userId, siteId);
-    if (local && local.tabs.length > 0) {
-      restoreTabs(local);
-    } else {
-      // No localStorage data — try server as fallback
-      fetch("/api/admin/user-state")
-        .then((r) => r.ok ? r.json() : null)
-        .then((serverState) => {
-          if (serverState?.tabs?.length > 0) {
-            restoreTabs({ tabs: serverState.tabs, activeId: serverState.activeTabId });
-          } else {
-            restoreTabs(null);
-          }
-        })
-        .catch(() => restoreTabs(null));
-    }
+    // localStorage ONLY — uses explicit siteId in key, always correct.
+    // Server user-state is NOT used for tabs (cookie-based routing made it unreliable).
+    restoreTabs(load(userId, siteId));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
