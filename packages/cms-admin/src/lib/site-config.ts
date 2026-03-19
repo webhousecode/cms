@@ -41,6 +41,13 @@ export interface SiteConfig {
   linkCheckSchedule: "off" | "daily" | "weekly";
   /** Link checker scheduled time (HH:MM) */
   linkCheckTime: string;
+
+  /** Deploy configuration */
+  deployProvider: "off" | "vercel" | "netlify" | "flyio" | "cloudflare" | "github-pages" | "custom";
+  deployHookUrl: string;
+  deployApiToken: string;
+  deployAppName: string;  // Fly.io app name or GitHub repo
+
   /** Webhook URLs per automation (ordered, multiple per type) */
   backupWebhooks: { id: string; url: string }[];
   linkCheckWebhooks: { id: string; url: string }[];
@@ -74,6 +81,10 @@ async function defaults(): Promise<SiteConfig> {
     calendarSecret: crypto.randomBytes(32).toString("hex"),
     schedulerWebhookUrl: "",
     schedulerNotifications: false,
+    deployProvider: "off",
+    deployHookUrl: "",
+    deployApiToken: "",
+    deployAppName: "",
     backupSchedule: "off",
     backupTime: "03:00",
     backupRetentionDays: 30,

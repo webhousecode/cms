@@ -13,7 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Settings, Fingerprint, Check, Moon, Sun, Monitor, LogOut, Search, ExternalLink } from "lucide-react";
+import { Settings, Fingerprint, Check, Moon, Sun, Monitor, LogOut, Search, ExternalLink, Rocket, Loader2 } from "lucide-react";
 import { HelpButton } from "@/components/help-drawer";
 import { useTheme } from "next-themes";
 import { useEffect, useState, useCallback } from "react";
@@ -105,6 +105,83 @@ function UserNav({ user }: { user: SessionUser | null }) {
         </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
+  );
+}
+
+function DeployButton() {
+  const [provider, setProvider] = useState<string>("off");
+  const [deploying, setDeploying] = useState(false);
+  const [lastResult, setLastResult] = useState<{ ok: boolean; error?: string } | null>(null);
+  const [fetchKey, setFetchKey] = useState(0);
+
+  useEffect(() => {
+    function onSiteChange() { setFetchKey((k) => k + 1); }
+    window.addEventListener("cms-site-change", onSiteChange);
+    return () => window.removeEventListener("cms-site-change", onSiteChange);
+  }, []);
+
+  useEffect(() => {
+    setProvider("off");
+    fetch("/api/admin/site-config")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => { if (data?.deployProvider) setProvider(data.deployProvider); })
+      .catch(() => {});
+  }, [fetchKey]);
+
+  const handleDeploy = useCallback(async () => {
+    setDeploying(true);
+    setLastResult(null);
+    try {
+      const res = await fetch("/api/admin/deploy", { method: "POST" });
+      const data = await res.json() as { status: string; error?: string };
+      setLastResult({ ok: data.status === "success", error: data.error });
+      setTimeout(() => setLastResult(null), 5000);
+    } catch {
+      setLastResult({ ok: false, error: "Request failed" });
+    }
+    setDeploying(false);
+  }, []);
+
+  // "d" shortcut → deploy
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key !== "d" || e.metaKey || e.ctrlKey || e.altKey) return;
+      const tag = (document.activeElement?.tagName ?? "").toLowerCase();
+      if (tag === "input" || tag === "textarea" || tag === "select" || (document.activeElement as HTMLElement)?.isContentEditable) return;
+      if (provider === "off") return;
+      e.preventDefault();
+      handleDeploy();
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [provider, handleDeploy]);
+
+  if (provider === "off") return null;
+
+  return (
+    <button
+      type="button"
+      onClick={handleDeploy}
+      disabled={deploying}
+      title={deploying ? "Deploying..." : lastResult ? (lastResult.ok ? "Deployed!" : `Deploy failed: ${lastResult.error}`) : "Deploy site"}
+      style={{
+        background: "none",
+        border: "1.5px solid var(--border)",
+        cursor: deploying ? "wait" : "pointer",
+        color: lastResult ? (lastResult.ok ? "rgb(74 222 128)" : "var(--destructive)") : "var(--muted-foreground)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        borderRadius: "50%",
+        width: "2rem", height: "2rem",
+        padding: 0,
+      }}
+      className="hover:border-foreground hover:text-foreground transition-colors"
+    >
+      {deploying
+        ? <Loader2 style={{ width: "0.9rem", height: "0.9rem" }} className="animate-spin" />
+        : lastResult?.ok
+          ? <Check style={{ width: "0.9rem", height: "0.9rem" }} />
+          : <Rocket style={{ width: "0.9rem", height: "0.9rem" }} />}
+    </button>
   );
 }
 
@@ -232,6 +309,7 @@ export function AdminHeader() {
       <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0 1rem" }}>
         <OrgSwitcher />
         <SiteSwitcher />
+        <DeployButton />
         <PreviewButton />
         <HelpButton />
         <UserNav user={user} />

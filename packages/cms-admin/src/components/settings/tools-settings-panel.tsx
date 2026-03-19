@@ -6,7 +6,13 @@ import { CustomSelect } from "@/components/ui/custom-select";
 import { SettingsCard } from "./settings-card";
 import { WebhookList, type WebhookEntry } from "./webhook-list";
 
+type DeployProvider = "off" | "vercel" | "netlify" | "flyio" | "cloudflare" | "github-pages" | "custom";
+
 interface AutomationConfig {
+  deployProvider: DeployProvider;
+  deployHookUrl: string;
+  deployApiToken: string;
+  deployAppName: string;
   backupSchedule: "off" | "daily" | "weekly";
   backupTime: string;
   backupRetentionDays: number;
@@ -19,6 +25,10 @@ interface AutomationConfig {
 }
 
 const DEFAULTS: AutomationConfig = {
+  deployProvider: "off",
+  deployHookUrl: "",
+  deployApiToken: "",
+  deployAppName: "",
   backupSchedule: "off",
   backupTime: "03:00",
   backupRetentionDays: 30,
@@ -46,6 +56,10 @@ export function ToolsSettingsPanel() {
       .then((data) => {
         if (!data) return;
         setConfig({
+          deployProvider: data.deployProvider ?? "off",
+          deployHookUrl: data.deployHookUrl ?? "",
+          deployApiToken: data.deployApiToken ?? "",
+          deployAppName: data.deployAppName ?? "",
           backupSchedule: data.backupSchedule ?? "off",
           backupTime: data.backupTime ?? "03:00",
           backupRetentionDays: data.backupRetentionDays ?? 30,
@@ -102,10 +116,126 @@ export function ToolsSettingsPanel() {
   const descStyle = { fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "-0.5rem", marginBottom: "1.25rem" } as const;
   const webhookLabel = { display: "block", fontSize: "0.75rem", fontWeight: 500, marginBottom: "0.35rem", marginTop: "0.75rem" } as const;
 
+  const deployProviders = [
+    { value: "off", label: "Off" },
+    { value: "vercel", label: "Vercel" },
+    { value: "netlify", label: "Netlify" },
+    { value: "flyio", label: "Fly.io" },
+    { value: "cloudflare", label: "Cloudflare Pages" },
+    { value: "github-pages", label: "GitHub Pages" },
+    { value: "custom", label: "Custom webhook" },
+  ];
+
+  const needsHookUrl = ["vercel", "netlify", "cloudflare", "custom"].includes(config.deployProvider);
+  const needsToken = ["flyio", "github-pages"].includes(config.deployProvider);
+  const needsAppName = ["flyio", "github-pages"].includes(config.deployProvider);
+
   return (
     <div>
+      {/* ── Deploy ──────────────────────────────────────────── */}
+      <SectionHeading first>Deploy</SectionHeading>
+      <SettingsCard>
+        <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>
+          One-click deploy to your hosting provider. The Publish button appears in the header when configured.
+        </p>
+
+        <div>
+          <label style={labelStyle}>Provider</label>
+          <CustomSelect
+            value={config.deployProvider}
+            onChange={(v) => updateConfig((c) => ({ ...c, deployProvider: v as DeployProvider }))}
+            options={deployProviders}
+          />
+        </div>
+
+        {needsHookUrl && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+            <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Deploy hook URL</label>
+            <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: 0 }}>
+              {config.deployProvider === "vercel" && "Vercel → Project → Settings → Git → Deploy Hooks"}
+              {config.deployProvider === "netlify" && "Netlify → Site → Build & deploy → Build hooks"}
+              {config.deployProvider === "cloudflare" && "Cloudflare → Pages → Settings → Builds → Deploy hooks"}
+              {config.deployProvider === "custom" && "Any URL that accepts a POST request to trigger a build"}
+            </p>
+            <input
+              type="url"
+              value={config.deployHookUrl}
+              onChange={(e) => updateConfig((c) => ({ ...c, deployHookUrl: e.target.value }))}
+              placeholder="https://api.vercel.com/v1/integrations/deploy/..."
+              style={{
+                padding: "0.45rem 0.75rem", borderRadius: "7px",
+                border: "1px solid var(--border)", background: "var(--background)",
+                color: "var(--foreground)", fontSize: "0.8rem", fontFamily: "monospace",
+                width: "100%", boxSizing: "border-box",
+              }}
+            />
+          </div>
+        )}
+
+        {needsToken && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+            <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>API Token</label>
+            <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: 0 }}>
+              {config.deployProvider === "flyio" && "Fly.io → fly tokens create deploy"}
+              {config.deployProvider === "github-pages" && "GitHub → Settings → Developer settings → Personal access tokens"}
+            </p>
+            <input
+              type="password"
+              value={config.deployApiToken}
+              onChange={(e) => updateConfig((c) => ({ ...c, deployApiToken: e.target.value }))}
+              placeholder="Token..."
+              style={{
+                padding: "0.45rem 0.75rem", borderRadius: "7px",
+                border: "1px solid var(--border)", background: "var(--background)",
+                color: "var(--foreground)", fontSize: "0.8rem",
+                width: "100%", boxSizing: "border-box",
+              }}
+            />
+          </div>
+        )}
+
+        {needsAppName && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+            <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>
+              {config.deployProvider === "flyio" ? "App name" : "Repository (owner/repo)"}
+            </label>
+            <input
+              type="text"
+              value={config.deployAppName}
+              onChange={(e) => updateConfig((c) => ({ ...c, deployAppName: e.target.value }))}
+              placeholder={config.deployProvider === "flyio" ? "my-app" : "owner/repo"}
+              style={{
+                padding: "0.45rem 0.75rem", borderRadius: "7px",
+                border: "1px solid var(--border)", background: "var(--background)",
+                color: "var(--foreground)", fontSize: "0.8rem", fontFamily: "monospace",
+                width: "100%", boxSizing: "border-box",
+              }}
+            />
+          </div>
+        )}
+
+        {/* Fly.io also accepts hook URL as alternative */}
+        {config.deployProvider === "flyio" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+            <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Or: Deploy hook URL (alternative)</label>
+            <input
+              type="url"
+              value={config.deployHookUrl}
+              onChange={(e) => updateConfig((c) => ({ ...c, deployHookUrl: e.target.value }))}
+              placeholder="https://..."
+              style={{
+                padding: "0.45rem 0.75rem", borderRadius: "7px",
+                border: "1px solid var(--border)", background: "var(--background)",
+                color: "var(--foreground)", fontSize: "0.8rem", fontFamily: "monospace",
+                width: "100%", boxSizing: "border-box",
+              }}
+            />
+          </div>
+        )}
+      </SettingsCard>
+
       {/* ── Backup ─────────────────────────────────────────── */}
-      <SectionHeading first>Backup</SectionHeading>
+      <SectionHeading>Backup</SectionHeading>
       <SettingsCard>
         <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>
           Automatic backups of all content and site data. Scheduled backups appear in the Calendar.

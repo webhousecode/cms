@@ -23,6 +23,7 @@ const SHORTCUT_GROUPS = [
       { keys: "⌘ K", label: "Command palette" },
       { keys: "h", label: "Help & Support" },
       { keys: "p", label: "Preview site" },
+      { keys: "d", label: "Deploy site" },
       { keys: "t", label: "New tab" },
       { keys: "c", label: "Close tab" },
       { keys: "⌘ ⇧ ←", label: "Previous tab" },
