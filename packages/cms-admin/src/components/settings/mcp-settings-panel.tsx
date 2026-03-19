@@ -545,7 +545,7 @@ function ExternalMcpServers() {
                 style={{ background: "none", border: "none", cursor: "pointer", color: s.enabled ? "var(--primary)" : "var(--muted-foreground)", padding: "0.25rem" }}>
                 {s.enabled ? <Power style={{ width: "0.9rem", height: "0.9rem" }} /> : <PowerOff style={{ width: "0.9rem", height: "0.9rem" }} />}
               </button>
-              <span style={{ display: "flex", alignItems: "center", gap: "0.375rem", flexShrink: 0 }}>
+              <span style={{ display: "flex", alignItems: "center", gap: "0.375rem", flexShrink: 0, minWidth: "10.5rem", justifyContent: "flex-end" }}>
                 {confirmDeleteId === s.id ? (
                   <>
                     <button type="button" onClick={() => setConfirmDeleteId(null)}
