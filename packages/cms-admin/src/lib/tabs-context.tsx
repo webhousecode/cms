@@ -205,24 +205,27 @@ export function TabsProvider({ children }: { children: ReactNode }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
-  /* ── Clear tabs on org/site switch ─────────────────────────── */
+  /* ── Reload tabs on org/site switch ────────────────────────── */
   useEffect(() => {
     function handleRegistryChange() {
-      // Clear localStorage for ALL tab keys to prevent stale tabs on reload
-      try {
-        const keys = Object.keys(localStorage).filter((k) => k.startsWith(STORE_KEY_BASE));
-        // Don't delete — just mark current session as fresh
-      } catch { /* noop */ }
-      // Reset to a single Dashboard tab
-      const id = uid();
-      const freshTabs = [{ id, path: "/admin/sites", title: "Sites" }];
-      tabsRef.current = freshTabs;
-      activeIdRef.current = id;
-      setTabs(freshTabs);
-      setActiveId(id);
-      // Save to BOTH localStorage and server for the new site context
-      try { localStorage.setItem(storeKey(userIdRef.current), JSON.stringify({ tabs: freshTabs, activeId: id })); } catch { /* noop */ }
-      syncToServer(freshTabs, id);
+      // Site cookie has changed — load tabs for the new site from localStorage
+      // storeKey() now reads the NEW cms-active-site cookie
+      const saved = load(userIdRef.current);
+      if (saved && saved.tabs.length > 0) {
+        tabsRef.current = saved.tabs;
+        activeIdRef.current = saved.activeId;
+        setTabs(saved.tabs);
+        setActiveId(saved.activeId);
+      } else {
+        // New site with no saved tabs — start fresh
+        const id = uid();
+        const freshTabs = [{ id, path: "/admin", title: "Dashboard" }];
+        tabsRef.current = freshTabs;
+        activeIdRef.current = id;
+        setTabs(freshTabs);
+        setActiveId(id);
+        try { localStorage.setItem(storeKey(userIdRef.current), JSON.stringify({ tabs: freshTabs, activeId: id })); } catch { /* noop */ }
+      }
     }
     window.addEventListener("cms-registry-change", handleRegistryChange);
     return () => window.removeEventListener("cms-registry-change", handleRegistryChange);

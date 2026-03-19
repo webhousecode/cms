@@ -188,8 +188,12 @@ export function OrgSwitcher() {
   function handleSelect(org: OrgEntry) {
     setActiveOrgId(org.id);
     setCookie("cms-active-org", org.id);
-    // Clear site cookie when switching orgs
-    document.cookie = "cms-active-site=;path=/;max-age=0";
+    // Set site cookie to first site in new org (or clear if no sites)
+    if (org.sites.length > 0) {
+      setCookie("cms-active-site", org.sites[0].id);
+    } else {
+      document.cookie = "cms-active-site=;path=/;max-age=0";
+    }
     window.dispatchEvent(new CustomEvent("cms-registry-change"));
     router.push("/admin");
     router.refresh();
