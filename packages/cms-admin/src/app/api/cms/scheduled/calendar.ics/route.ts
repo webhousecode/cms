@@ -38,9 +38,15 @@ export async function GET(request: Request) {
 
       for (const item of items) {
         const docUrl = `${baseUrl}${item.href}`;
+        const summaryMap: Record<string, string> = {
+          publish: `📗 Publish: ${item.title}`,
+          unpublish: `📕 Unpublish: ${item.title}`,
+          backup: `💾 ${item.title}`,
+          "link-check": `🔗 ${item.title}`,
+        };
         events.push(formatEvent({
           uid: `${item.id}@webhouse-cms`,
-          summary: item.type === "publish" ? `📗 Publish: ${item.title}` : `📕 Unpublish: ${item.title}`,
+          summary: summaryMap[item.type] ?? item.title,
           description: `${item.subtitle} — ${item.href.split("/").pop()}`,
           dtstart: toIcsDate(item.date),
           dtend: toIcsDate(item.date, 15),
