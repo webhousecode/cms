@@ -53,7 +53,7 @@ export default function NewOrganizationPage() {
   };
 
   return (
-    <div className="p-8" style={{ display: "flex", justifyContent: "center", paddingTop: "3rem" }}>
+    <div className="p-8" style={{ paddingTop: "1rem" }}>
       <div style={{
         width: "100%", maxWidth: "560px",
         background: "var(--card)", border: "1px solid var(--border)",

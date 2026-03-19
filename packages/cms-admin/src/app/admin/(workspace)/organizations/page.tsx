@@ -157,9 +157,9 @@ export default function OrganizationsPage() {
                   <MoreVertical style={{ width: "0.875rem", height: "0.875rem", color: "var(--muted-foreground)" }} />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-44">
-                  <DropdownMenuItem onClick={(e) => { e.stopPropagation(); switchToOrg(org); router.push("/admin/settings"); }}>
+                  <DropdownMenuItem onClick={(e) => { e.stopPropagation(); switchToOrg(org); router.push("/admin/organizations/settings"); }}>
                     <Settings2 className="mr-2 h-4 w-4 text-muted-foreground" />
-                    Settings
+                    Organization settings
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
