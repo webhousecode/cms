@@ -59,24 +59,45 @@ function Toggle({ checked, onChange, label, description }: {
 	);
 }
 
-function InputRow({ label, description, ...inputProps }: {
-	label: string; description?: string;
+function InputRow({ label, description, copiable, ...inputProps }: {
+	label: string; description?: string; copiable?: boolean;
 } & React.InputHTMLAttributes<HTMLInputElement>) {
+	const [copied, setCopied] = useState(false);
+	function handleCopy() {
+		const v = String(inputProps.value ?? "");
+		if (!v) return;
+		navigator.clipboard.writeText(v).catch(() => {});
+		setCopied(true);
+		setTimeout(() => setCopied(false), 1500);
+	}
 	return (
 		<div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
 			<label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{label}</label>
 			{description && <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", margin: 0 }}>{description}</p>}
-			<input
-				{...inputProps}
-				style={{
-					padding: "0.45rem 0.75rem", borderRadius: "7px",
-					border: "1px solid var(--border)", background: "var(--background)",
-					color: "var(--foreground)", fontSize: "0.875rem", outline: "none",
-					width: "100%", boxSizing: "border-box",
-				}}
-				onFocus={(e) => { e.target.style.borderColor = "var(--primary)"; }}
-				onBlur={(e) => { e.target.style.borderColor = "var(--border)"; }}
-			/>
+			<div style={{ display: "flex", gap: "0.375rem", alignItems: "center" }}>
+				<input
+					{...inputProps}
+					style={{
+						flex: 1, padding: "0.45rem 0.75rem", borderRadius: "7px",
+						border: "1px solid var(--border)", background: "var(--background)",
+						color: "var(--foreground)", fontSize: "0.875rem", outline: "none",
+						width: "100%", boxSizing: "border-box",
+					}}
+					onFocus={(e) => { e.target.style.borderColor = "var(--primary)"; }}
+					onBlur={(e) => { e.target.style.borderColor = "var(--border)"; }}
+				/>
+				{copiable && inputProps.value && (
+					<button type="button" onClick={handleCopy} title="Copy to clipboard"
+						style={{
+							width: "32px", height: "32px", borderRadius: "6px",
+							border: "1px solid var(--border)", background: "transparent",
+							cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+							color: copied ? "rgb(74 222 128)" : "var(--muted-foreground)", flexShrink: 0,
+						}}>
+						{copied ? <Check style={{ width: "0.85rem", height: "0.85rem" }} /> : <Copy style={{ width: "0.85rem", height: "0.85rem" }} />}
+					</button>
+				)}
+			</div>
 		</div>
 	);
 }
@@ -156,7 +177,7 @@ function ProfileSection() {
 			<Card>
 				<form onSubmit={saveProfile} style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
 					<InputRow label="Name" value={name} onChange={(e) => setName(e.target.value)} required />
-					<InputRow label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+					<InputRow label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required copiable />
 					<div>
 						<label style={{ display: "block", fontSize: "0.85rem", fontWeight: 500, marginBottom: "0.25rem" }}>Sidebar logo</label>
 						<p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", marginBottom: "0.5rem" }}>Choose which logo to display in the sidebar.</p>
@@ -306,6 +327,7 @@ function SiteSection() {
 						onChange={(e) => setConfigPath(e.target.value)}
 						placeholder="/Users/.../cms.config.ts"
 						style={{ fontFamily: "monospace", fontSize: "0.8rem" }}
+						copiable
 					/>
 					<InputRow
 						label="Content directory"
@@ -314,6 +336,7 @@ function SiteSection() {
 						onChange={(e) => setContentDir(e.target.value)}
 						placeholder="/Users/.../content"
 						style={{ fontFamily: "monospace", fontSize: "0.8rem" }}
+						copiable
 					/>
 				</Card>
 			</div>
@@ -328,6 +351,7 @@ function SiteSection() {
 						value={cfg.previewSiteUrl}
 						onChange={(e) => setCfg((c) => ({ ...c, previewSiteUrl: e.target.value }))}
 						placeholder="http://localhost:3009"
+						copiable
 					/>
 					<Toggle
 						label="Preview in iframe"
