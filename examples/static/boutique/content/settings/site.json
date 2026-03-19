@@ -1,0 +1,33 @@
+{
+  "slug": "site",
+  "status": "published",
+  "data": {
+    "siteName": "AURA.",
+    "tagline": "Refined essentials for the modern woman. Timeless silhouettes, considered fabrics, quiet luxury.",
+    "heroHeading": "New Season",
+    "heroSubheading": "The Spring/Summer Collection",
+    "heroCta": "Shop the Collection",
+    "heroCtaUrl": "/shop/",
+    "heroImage": "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=1920&q=85&auto=format",
+    "brandStoryHeading": "Designed with Intention",
+    "brandStoryText": "AURA. was founded on the belief that great style begins with restraint. Every piece in our collection is designed to transcend seasons, crafted from the finest natural materials, and made to become a lasting part of your wardrobe.\n\nWe work with artisan ateliers across Europe, choosing quality over quantity. Our collections are deliberately small, each garment considered, refined, and released only when it meets our exacting standards.",
+    "newsletterHeading": "Stay in the World of AURA.",
+    "newsletterSubtext": "Be the first to discover new arrivals, exclusive edits, and stories from our atelier.",
+    "footerText": "AURA. is a luxury womenswear label dedicated to quiet elegance and timeless design.",
+    "instagramUrl": "https://instagram.com/aura",
+    "twitterUrl": "https://x.com/aura",
+    "email": "hello@aura-store.com",
+    "galleryImages": [
+      "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=800&q=80&auto=format",
+      "https://images.unsplash.com/photo-1558171813-4c088753af8f?w=800&q=80&auto=format",
+      "https://images.unsplash.com/photo-1581044777550-4cfa60707998?w=800&q=80&auto=format",
+      "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&q=80&auto=format",
+      "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&q=80&auto=format",
+      "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800&q=80&auto=format",
+      "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=800&q=80&auto=format",
+      "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=800&q=80&auto=format",
+      "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&q=80&auto=format",
+      "https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=800&q=80&auto=format"
+    ]
+  }
+}

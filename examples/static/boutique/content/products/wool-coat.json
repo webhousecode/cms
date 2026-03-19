@@ -1,0 +1,22 @@
+{
+  "slug": "wool-coat",
+  "status": "published",
+  "data": {
+    "title": "Belted Wool Coat",
+    "price": 520,
+    "description": "A timeless belted coat in double-faced Italian wool. The clean lines and minimal detailing let the quality of the fabric speak for itself. Notched lapels, welt pockets, and a detachable self-fabric belt create a silhouette that is both structured and fluid. Fully lined in silk-blend satin for an effortless slip-on feel.",
+    "category": "Outerwear",
+    "heroImage": "https://images.unsplash.com/photo-1539533018447-63fcce2678e3?w=1200&q=85&auto=format",
+    "images": [
+      "https://images.unsplash.com/photo-1539533018447-63fcce2678e3?w=800&q=80&auto=format",
+      "https://images.unsplash.com/photo-1544022613-e87ca75a784a?w=800&q=80&auto=format",
+      "https://images.unsplash.com/photo-1548624313-0396c75e4b1a?w=800&q=80&auto=format",
+      "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&q=80&auto=format"
+    ],
+    "sizes": ["XS", "S", "M", "L"],
+    "color": "Camel",
+    "material": "90% Virgin Wool, 10% Cashmere",
+    "featured": false,
+    "sortOrder": 8
+  }
+}
