@@ -62,27 +62,46 @@ export async function triggerDeploy(): Promise<DeployEntry> {
   let token = config.deployApiToken;
   let appName = config.deployAppName;
 
-  // Auto-detect: GitHub-backed sites can deploy to GitHub Pages without manual config
+  // Auto-detect: any site with build.ts can deploy to GitHub Pages
   if (provider === "off") {
     const siteEntry = await getActiveSiteEntry();
+
+    // Try to resolve a GitHub token (from OAuth, service token, or any connected site)
+    if (!token) {
+      try {
+        token = await resolveToken("oauth");
+      } catch {
+        try {
+          const { dataDir } = await getActiveSitePaths();
+          const tokenFile = path.join(dataDir, "github-service-token.json");
+          const raw = await readFile(tokenFile, "utf-8");
+          const stored = JSON.parse(raw) as { token?: string };
+          if (stored.token) token = stored.token;
+        } catch { /* no token available */ }
+      }
+    }
+
     if (siteEntry?.adapter === "github" && siteEntry.configPath?.startsWith("github://")) {
-      // Extract owner/repo from configPath: "github://owner/repo/..."
+      // GitHub-backed site → deploy to its own repo
       const match = siteEntry.configPath.match(/^github:\/\/([^/]+\/[^/]+)/);
       if (match) {
         provider = "github-pages";
         appName = match[1];
-        // Read GitHub token: try service token first, then OAuth cookie
-        try {
-          token = await resolveToken("oauth");
-        } catch {
-          // Direct fallback: read service token file from site's data dir
-          try {
-            const { dataDir } = await getActiveSitePaths();
-            const tokenFile = path.join(dataDir, "github-service-token.json");
-            const raw = await readFile(tokenFile, "utf-8");
-            const stored = JSON.parse(raw) as { token?: string };
-            if (stored.token) token = stored.token;
-          } catch { /* no token available */ }
+      }
+    } else if (siteEntry?.adapter === "filesystem" && token) {
+      // Filesystem site with build.ts → auto-create GitHub repo if needed
+      const sitePaths = await getActiveSitePaths();
+      const buildFile = path.join(sitePaths.projectDir, "build.ts");
+      if (existsSync(buildFile)) {
+        provider = "github-pages";
+        // Check if we already have a repo for this site
+        if (config.deployAppName) {
+          appName = config.deployAppName;
+        } else {
+          // Auto-create a repo based on the site name
+          appName = await autoCreateGitHubRepo(token, siteEntry.name, siteEntry.id);
+          // Persist the repo name so we don't re-create on next deploy
+          try { await writeSiteConfig({ deployAppName: appName }); } catch { /* non-fatal */ }
         }
       }
     }
@@ -155,6 +174,69 @@ export async function triggerDeploy(): Promise<DeployEntry> {
   await writeLog(log);
 
   return entry;
+}
+
+// ── Auto-create GitHub repo ─────────────────────────────────
+
+/**
+ * Create a public GitHub repo for a filesystem site.
+ * Returns "owner/repo" string.
+ */
+async function autoCreateGitHubRepo(token: string, siteName: string, siteId: string): Promise<string> {
+  const headers = {
+    Authorization: `Bearer ${token}`,
+    Accept: "application/vnd.github+json",
+    "Content-Type": "application/json",
+  };
+
+  // Slugify site name for repo name
+  const slug = siteName
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    || siteId;
+  const repoName = `${slug}-site`;
+
+  // Get authenticated user
+  const userRes = await fetch("https://api.github.com/user", {
+    headers,
+    signal: AbortSignal.timeout(10000),
+  });
+  if (!userRes.ok) throw new Error("Failed to get GitHub user — check your token.");
+  const user = await userRes.json() as { login: string };
+
+  const fullName = `${user.login}/${repoName}`;
+
+  // Check if repo already exists
+  const checkRes = await fetch(`https://api.github.com/repos/${fullName}`, {
+    headers,
+    signal: AbortSignal.timeout(10000),
+  });
+  if (checkRes.ok) {
+    console.log(`[deploy] Repo ${fullName} already exists`);
+    return fullName;
+  }
+
+  // Create public repo
+  console.log(`[deploy] Creating GitHub repo ${fullName}...`);
+  const createRes = await fetch("https://api.github.com/user/repos", {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      name: repoName,
+      description: `${siteName} — built with webhouse.app`,
+      private: false,
+      auto_init: true,
+    }),
+    signal: AbortSignal.timeout(15000),
+  });
+  if (!createRes.ok) {
+    const body = await createRes.text().catch(() => "");
+    throw new Error(`Failed to create repo: ${createRes.status} ${body.slice(0, 200)}`);
+  }
+
+  console.log(`[deploy] Created repo ${fullName}`);
+  return fullName;
 }
 
 // ── Provider implementations ─────────────────────────────────
