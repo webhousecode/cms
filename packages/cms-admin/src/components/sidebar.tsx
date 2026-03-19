@@ -117,7 +117,7 @@ export function AppSidebar({ collections }: Props) {
     <Sidebar collapsible="offcanvas">
       {/* Header: stacked logo */}
       <SidebarHeader className="p-0">
-        <Link href="/admin" className="flex flex-col gap-2" style={{ alignItems: showLogoIcon ? "center" : "flex-start", paddingLeft: showLogoIcon ? "0.75rem" : "1.25rem", paddingRight: "0.75rem", paddingTop: showLogoIcon ? "1.25rem" : "0.75rem", paddingBottom: showLogoIcon ? "1.25rem" : "0.75rem", textDecoration: "none" }}>
+        <Link href="/admin" className="flex flex-col gap-2" style={{ alignItems: showLogoIcon ? "center" : "flex-start", paddingLeft: showLogoIcon ? "0.75rem" : "1rem", paddingRight: "0.75rem", paddingTop: showLogoIcon ? "1.25rem" : "0.75rem", paddingBottom: showLogoIcon ? "1.25rem" : "0.75rem", textDecoration: "none" }}>
           {showLogoIcon ? (
             <img
               src={mounted && resolvedTheme === "light" ? "/webhouse.app-light-icon.svg" : "/webhouse.app-dark-icon.svg"}
