@@ -88,25 +88,22 @@ function pathTitle(path: string): string {
 const STORE_KEY_BASE = "cms-admin-tabs-v1";
 
 /** Per-user-per-site store key */
-function storeKey(userId?: string | null): string {
-  const siteId = typeof document !== "undefined"
-    ? (document.cookie.match(/(?:^|; )cms-active-site=([^;]*)/)?.[1] ?? "")
-    : "";
+function storeKey(userId?: string | null, siteId?: string | null): string {
   if (userId && siteId) return `${STORE_KEY_BASE}:${userId}:${siteId}`;
   if (userId) return `${STORE_KEY_BASE}:${userId}`;
   return STORE_KEY_BASE;
 }
 
-function load(userId?: string | null): { tabs: Tab[]; activeId: string | null } | null {
+function load(userId?: string | null, siteId?: string | null): { tabs: Tab[]; activeId: string | null } | null {
   try {
-    const key = storeKey(userId);
+    const key = storeKey(userId, siteId);
     const raw = typeof window !== "undefined" ? localStorage.getItem(key) : null;
     return raw ? JSON.parse(raw) : null;
   } catch { return null; }
 }
 
-function save(tabs: Tab[], activeId: string | null, userId?: string | null) {
-  try { localStorage.setItem(storeKey(userId), JSON.stringify({ tabs, activeId })); } catch { /* noop */ }
+function save(tabs: Tab[], activeId: string | null, userId?: string | null, siteId?: string | null) {
+  try { localStorage.setItem(storeKey(userId, siteId), JSON.stringify({ tabs, activeId })); } catch { /* noop */ }
   syncToServer(tabs, activeId);
 }
 
@@ -120,7 +117,7 @@ export function useTabs(): TabsCtx {
 }
 
 /* ─── Provider ───────────────────────────────────────────────── */
-export function TabsProvider({ children }: { children: ReactNode }) {
+export function TabsProvider({ children, siteId }: { children: ReactNode; siteId?: string }) {
   const router = useRouter();
   const pathname = usePathname();
   const [tabs, setTabs] = useState<Tab[]>([]);
@@ -131,6 +128,7 @@ export function TabsProvider({ children }: { children: ReactNode }) {
   const tabsRef = useRef<Tab[]>(tabs);
   const activeIdRef = useRef<string | null>(activeId);
   const userIdRef = useRef<string | null>(null);
+  const siteIdRef = useRef<string | undefined>(siteId);
   const skipNextPathChange = useRef(false);
 
   function applyTabs(next: Tab[], nextActiveId: string | null) {
@@ -138,7 +136,7 @@ export function TabsProvider({ children }: { children: ReactNode }) {
     activeIdRef.current = nextActiveId;
     setTabs(next);
     setActiveId(nextActiveId);
-    save(next, nextActiveId, userIdRef.current);
+    save(next, nextActiveId, userIdRef.current, siteIdRef.current);
   }
 
   /* ── Fetch userId for per-user tab storage ────────────────── */
@@ -190,7 +188,7 @@ export function TabsProvider({ children }: { children: ReactNode }) {
           restoreTabs({ tabs: serverState.tabs, activeId: serverState.activeTabId });
         } else {
           // Fall back to localStorage (migration: seed server from localStorage)
-          const local = load(userId);
+          const local = load(userId, siteId);
           restoreTabs(local);
           if (local && local.tabs.length > 0) {
             // Seed server with localStorage data
@@ -200,37 +198,10 @@ export function TabsProvider({ children }: { children: ReactNode }) {
       })
       .catch(() => {
         // Server unreachable — use localStorage
-        restoreTabs(load(userId));
+        restoreTabs(load(userId, siteId));
       });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
-
-  /* ── Reload tabs on org/site switch ────────────────────────── */
-  useEffect(() => {
-    function handleRegistryChange() {
-      // Site cookie has changed — load tabs for the new site from localStorage
-      // storeKey() now reads the NEW cms-active-site cookie
-      const saved = load(userIdRef.current);
-      if (saved && saved.tabs.length > 0) {
-        tabsRef.current = saved.tabs;
-        activeIdRef.current = saved.activeId;
-        setTabs(saved.tabs);
-        setActiveId(saved.activeId);
-      } else {
-        // New site with no saved tabs — start fresh
-        const id = uid();
-        const freshTabs = [{ id, path: "/admin", title: "Dashboard" }];
-        tabsRef.current = freshTabs;
-        activeIdRef.current = id;
-        setTabs(freshTabs);
-        setActiveId(id);
-        try { localStorage.setItem(storeKey(userIdRef.current), JSON.stringify({ tabs: freshTabs, activeId: id })); } catch { /* noop */ }
-      }
-    }
-    window.addEventListener("cms-registry-change", handleRegistryChange);
-    return () => window.removeEventListener("cms-registry-change", handleRegistryChange);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   /* ── Track normal navigation — update active tab's path ──── */
   useEffect(() => {

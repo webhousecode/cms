@@ -48,6 +48,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     }
   }
 
+  // Read active site ID for tab isolation (key forces React re-mount on site switch)
+  const activeSiteId = cookieStore.get("cms-active-site")?.value ?? "no-site";
+
   // ── Load site config ─────────────────────────────────────
   let config;
   try {
@@ -59,7 +62,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <SidebarProvider>
           <OrgSidebar />
           <SidebarInset>
-            <TabsProvider>
+            <TabsProvider key={activeSiteId} siteId={activeSiteId}>
               <AdminHeader />
               {children}
             </TabsProvider>
@@ -97,7 +100,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     <SidebarProvider>
       <AppSidebarClient collections={collections} globals={globals} />
       <SidebarInset>
-        <TabsProvider>
+        <TabsProvider key={activeSiteId} siteId={activeSiteId}>
           <AdminHeader />
           <TabBar />
           <CommandPaletteProvider>
