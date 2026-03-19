@@ -3,7 +3,7 @@ export const dynamic = "force-dynamic";
 
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebarClient } from "@/components/sidebar-client";
-import { getAdminConfig, getActiveSiteInfo } from "@/lib/cms";
+import { getAdminConfig, getActiveSiteInfo, EmptyOrgError } from "@/lib/cms";
 import { CommandPaletteProvider } from "@/components/command-palette";
 import { TabsProvider } from "@/lib/tabs-context";
 import { TabBar } from "@/components/tab-bar";
@@ -15,6 +15,7 @@ import { getSessionUser } from "@/lib/auth";
 import { getTeamMembers } from "@/lib/team";
 import { findFirstAccessibleSite } from "@/lib/team-access";
 import { NoAccessGate, ConnectGitHubGate, SiteRedirectGate, GitHubErrorGate } from "@/components/gate-screen";
+import { redirect } from "next/navigation";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const siteInfo = await getActiveSiteInfo();
@@ -51,6 +52,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   try {
     config = await getAdminConfig();
   } catch (err) {
+    // Empty org (no sites) — redirect to sites page
+    if (err instanceof EmptyOrgError) {
+      redirect("/admin/sites");
+    }
     const message = err instanceof Error ? err.message : "";
     if (message.includes("GitHub not connected")) {
       const members = await getTeamMembers();
