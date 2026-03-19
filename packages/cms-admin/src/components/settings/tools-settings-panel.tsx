@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { CustomSelect } from "@/components/ui/custom-select";
+import { SettingsCard } from "./settings-card";
 import { WebhookList, type WebhookEntry } from "./webhook-list";
 
 interface AutomationConfig {
@@ -105,11 +106,11 @@ export function ToolsSettingsPanel() {
     <div>
       {/* ── Backup ─────────────────────────────────────────── */}
       <SectionHeading>Backup</SectionHeading>
-      <p style={descStyle}>
-        Automatic backups of all content and site data. Scheduled backups appear in the Calendar.
-      </p>
+      <SettingsCard>
+        <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>
+          Automatic backups of all content and site data. Scheduled backups appear in the Calendar.
+        </p>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "0.5rem" }}>
         <div>
           <label style={labelStyle}>Frequency</label>
           <CustomSelect
@@ -144,26 +145,24 @@ export function ToolsSettingsPanel() {
             </div>
           </>
         )}
-      </div>
 
-      <label style={webhookLabel}>Webhooks</label>
-      <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", marginTop: "-0.25rem", marginBottom: "0.5rem" }}>
-        Called in order when a backup completes. Discord, Slack, or any URL that accepts JSON POST.
-      </p>
-      <WebhookList
-        webhooks={config.backupWebhooks}
-        onChange={(w) => updateConfig((c) => ({ ...c, backupWebhooks: w }))}
-      />
-
-      <div style={{ borderTop: "1px solid var(--border)", margin: "1.5rem 0" }} />
+        <label style={webhookLabel}>Webhooks</label>
+        <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: "-0.5rem 0 0" }}>
+          Called in order when a backup completes. Discord, Slack, or any URL that accepts JSON POST.
+        </p>
+        <WebhookList
+          webhooks={config.backupWebhooks}
+          onChange={(w) => updateConfig((c) => ({ ...c, backupWebhooks: w }))}
+        />
+      </SettingsCard>
 
       {/* ── Link Checker ───────────────────────────────────── */}
       <SectionHeading>Link Checker</SectionHeading>
-      <p style={descStyle}>
-        Automatic link checking across all content. Scheduled runs appear in the Calendar.
-      </p>
+      <SettingsCard>
+        <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>
+          Automatic link checking across all content. Scheduled runs appear in the Calendar.
+        </p>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "0.5rem" }}>
         <div>
           <label style={labelStyle}>Frequency</label>
           <CustomSelect
@@ -188,44 +187,40 @@ export function ToolsSettingsPanel() {
             />
           </div>
         )}
-      </div>
 
-      <label style={webhookLabel}>Webhooks</label>
-      <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", marginTop: "-0.25rem", marginBottom: "0.5rem" }}>
-        Called in order when a link check completes.
-      </p>
-      <WebhookList
-        webhooks={config.linkCheckWebhooks}
-        onChange={(w) => updateConfig((c) => ({ ...c, linkCheckWebhooks: w }))}
-      />
-
-      <div style={{ borderTop: "1px solid var(--border)", margin: "1.5rem 0" }} />
+        <label style={webhookLabel}>Webhooks</label>
+        <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: "-0.5rem 0 0" }}>
+          Called in order when a link check completes.
+        </p>
+        <WebhookList
+          webhooks={config.linkCheckWebhooks}
+          onChange={(w) => updateConfig((c) => ({ ...c, linkCheckWebhooks: w }))}
+        />
+      </SettingsCard>
 
       {/* ── Content Publishing ─────────────────────────────── */}
       <SectionHeading>Content Publishing</SectionHeading>
-      <p style={descStyle}>
-        Notified when content is auto-published or expired by the scheduler.
-      </p>
-
-      <label style={webhookLabel}>Webhooks</label>
-      <WebhookList
-        webhooks={config.publishWebhooks}
-        onChange={(w) => updateConfig((c) => ({ ...c, publishWebhooks: w }))}
-      />
-
-      <div style={{ borderTop: "1px solid var(--border)", margin: "1.5rem 0" }} />
+      <SettingsCard>
+        <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>
+          Notified when content is auto-published or expired by the scheduler.
+        </p>
+        <WebhookList
+          webhooks={config.publishWebhooks}
+          onChange={(w) => updateConfig((c) => ({ ...c, publishWebhooks: w }))}
+        />
+      </SettingsCard>
 
       {/* ── Default Agent Webhook ──────────────────────────── */}
       <SectionHeading>AI Agents (default)</SectionHeading>
-      <p style={descStyle}>
-        Default webhooks for all agents. Individual agents can override with their own webhooks.
-      </p>
-
-      <label style={webhookLabel}>Webhooks</label>
-      <WebhookList
-        webhooks={config.agentDefaultWebhooks}
-        onChange={(w) => updateConfig((c) => ({ ...c, agentDefaultWebhooks: w }))}
-      />
+      <SettingsCard>
+        <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>
+          Default webhooks for all agents. Individual agents can override with their own webhooks.
+        </p>
+        <WebhookList
+          webhooks={config.agentDefaultWebhooks}
+          onChange={(w) => updateConfig((c) => ({ ...c, agentDefaultWebhooks: w }))}
+        />
+      </SettingsCard>
 
     </div>
   );

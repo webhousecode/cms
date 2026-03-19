@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, FormEvent } from "react";
 import { Check, Send, AlertCircle, ExternalLink, Mail } from "lucide-react";
+import { SettingsCard } from "./settings-card";
 import { toast } from "sonner";
 
 interface EmailConfig {
@@ -166,7 +167,7 @@ export function EmailSettingsPanel() {
 
   return (
     <form ref={emailFormRef} onSubmit={handleSave} onChange={() => window.dispatchEvent(new CustomEvent("cms:settings-dirty"))}>
-      <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "1.5rem" }}>
+      <SettingsCard>
         {FIELDS.map((f) => {
           const currentValue = config[f.id as keyof EmailConfig];
           const isEditing = f.id in editing;
@@ -234,16 +235,15 @@ export function EmailSettingsPanel() {
             </div>
           );
         })}
-      </div>
-
       {error && (
         <p style={{ fontSize: "0.8rem", color: "var(--destructive)", marginBottom: "0.75rem" }}>{error}</p>
       )}
 
 
-      <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "0.75rem" }}>
+      <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>
         Keys are stored in <code style={{ fontSize: "0.7rem" }}>_data/site-config.json</code>. Falls back to <code style={{ fontSize: "0.7rem" }}>RESEND_API_KEY</code> env var.
       </p>
+      </SettingsCard>
 
       {/* Test email */}
       <div style={{ borderTop: "1px solid var(--border)", paddingTop: "1.25rem", marginTop: "1.5rem" }}>
