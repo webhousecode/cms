@@ -289,7 +289,7 @@ export function OrgSwitcher() {
             </div>
           </div>
         ) : (
-          <DropdownMenuItem onClick={(e) => { e.preventDefault(); setShowNewOrg(true); }}>
+          <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setShowNewOrg(true); }}>
             <Plus className="mr-2 h-4 w-4" />
             New organization
           </DropdownMenuItem>
