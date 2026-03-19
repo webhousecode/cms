@@ -186,15 +186,18 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
       .then((r) => r.ok ? r.json() : null)
       .then((d: any) => {
         if (!d?.registry) return;
+        const currentOrgId = document.cookie.match(/(?:^|; )cms-active-org=([^;]*)/)?.[1] ?? d.registry.defaultOrgId;
         const currentSiteId = document.cookie.match(/(?:^|; )cms-active-site=([^;]*)/)?.[1] ?? "";
         setActiveSiteId(currentSiteId);
-        const allSites: { id: string; name: string; orgId: string }[] = [];
-        for (const org of d.registry.orgs ?? []) {
-          for (const site of org.sites ?? []) {
-            allSites.push({ id: site.id, name: site.name, orgId: org.id });
+        // Only show sites from the active org
+        const activeOrg = (d.registry.orgs ?? []).find((o: any) => o.id === currentOrgId) ?? d.registry.orgs?.[0];
+        const orgSites: { id: string; name: string; orgId: string }[] = [];
+        if (activeOrg) {
+          for (const site of activeOrg.sites ?? []) {
+            orgSites.push({ id: site.id, name: site.name, orgId: activeOrg.id });
           }
         }
-        setSites(allSites);
+        setSites(orgSites);
       })
       .catch(() => {});
   }, []);
