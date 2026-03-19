@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Loader2, RefreshCw } from "lucide-react";
+import { Loader2, RefreshCw, Save } from "lucide-react";
+import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { Checkbox } from "@/components/ui/checkbox-styled";
 import { useSiteRole } from "@/hooks/use-site-role";
@@ -95,13 +96,18 @@ export default function CommandPage() {
     budgetPct > 90 ? "bg-red-500" : budgetPct > 70 ? "bg-yellow-500" : "bg-green-500";
 
   return (
+    <>
+    <ActionBar
+      actions={!readOnly ? (
+        <ActionButton variant="primary" onClick={handleSave} disabled={saving}
+          icon={saving ? <Loader2 style={{ width: 14, height: 14 }} className="animate-spin" /> : <Save style={{ width: 14, height: 14 }} />}>
+          {saving ? "Saving..." : "Save Settings"}
+        </ActionButton>
+      ) : undefined}
+    >
+      <ActionBarBreadcrumb items={["AI", "Cockpit"]} />
+    </ActionBar>
     <div className="p-8 max-w-5xl">
-      <div className="mb-8">
-        <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">
-          AI
-        </p>
-        <h1 className="text-2xl font-bold text-foreground">Cockpit</h1>
-      </div>
 
       <fieldset disabled={readOnly} style={{ border: "none", padding: 0, margin: 0, opacity: readOnly ? 0.7 : 1 }}>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -252,18 +258,6 @@ export default function CommandPage() {
             )}
           </div>
 
-          {/* Save */}
-          {!readOnly && (
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={saving}
-              className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity disabled:opacity-60"
-            >
-              {saving && <Loader2 className="w-4 h-4 animate-spin" />}
-              {saving ? "Saving..." : "Save Settings"}
-            </button>
-          )}
         </div>
 
         {/* Right column (1/3) */}
@@ -347,6 +341,7 @@ export default function CommandPage() {
       </div>
       </fieldset>
     </div>
+    </>
   );
 }
 

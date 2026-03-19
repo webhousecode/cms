@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, type FormEvent } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { Loader2, Sparkles, Trash2, Play, CheckCircle, X, Plus, Copy, ChevronDown, ArrowLeft } from "lucide-react";
+import { Loader2, Sparkles, Trash2, Play, CheckCircle, X, Plus, Copy, ChevronDown, ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { Checkbox, Radio } from "@/components/ui/checkbox-styled";
@@ -291,6 +291,20 @@ export default function AgentDetailPage() {
           >
             <Copy style={{ width: "0.8rem", height: "0.8rem" }} /> Clone
           </button>
+          <button
+            type="submit"
+            form="agent-form"
+            disabled={saving}
+            style={{
+              height: "28px", display: "inline-flex", alignItems: "center", gap: "0.35rem",
+              padding: "0 0.65rem", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 500,
+              background: "var(--primary)", color: "var(--primary-foreground)", border: "none",
+              cursor: saving ? "wait" : "pointer", opacity: saving ? 0.5 : 1,
+            }}
+          >
+            {saving ? <Loader2 style={{ width: 14, height: 14 }} className="animate-spin" /> : <Save style={{ width: 14, height: 14 }} />}
+            {saving ? "Saving..." : "Save"}
+          </button>
         </div>
       )}
     </div>
@@ -319,7 +333,7 @@ export default function AgentDetailPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form id="agent-form" onSubmit={handleSubmit} className="space-y-6">
         {/* Name */}
         <div>
           <label style={labelStyle}>Agent Name</label>
@@ -571,22 +585,6 @@ export default function AgentDetailPage() {
 
         {error && <p className="text-sm text-destructive">{error}</p>}
 
-        {!readOnly && (
-          <button
-            type="submit"
-            disabled={saving}
-            style={{
-              display: "inline-flex", alignItems: "center", gap: "0.4rem",
-              padding: "0.45rem 1.25rem", borderRadius: "7px", border: "none",
-              background: "var(--primary)", color: "var(--primary-foreground)",
-              fontSize: "0.8rem", fontWeight: 600, cursor: saving ? "wait" : "pointer",
-              opacity: saving ? 0.6 : 1, transition: "all 200ms",
-            }}
-          >
-            {saving ? <Loader2 style={{ width: "0.8rem", height: "0.8rem" }} className="animate-spin" /> : null}
-            {saving ? "Saving…" : "Save changes"}
-          </button>
-        )}
       </form>
 
       {/* Run now */}
