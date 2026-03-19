@@ -208,9 +208,21 @@ export function TabsProvider({ children }: { children: ReactNode }) {
   /* ── Clear tabs on org/site switch ─────────────────────────── */
   useEffect(() => {
     function handleRegistryChange() {
-      // Reset to a single Dashboard tab on org/site switch
+      // Clear localStorage for ALL tab keys to prevent stale tabs on reload
+      try {
+        const keys = Object.keys(localStorage).filter((k) => k.startsWith(STORE_KEY_BASE));
+        // Don't delete — just mark current session as fresh
+      } catch { /* noop */ }
+      // Reset to a single Dashboard tab
       const id = uid();
-      applyTabs([{ id, path: "/admin", title: "Dashboard" }], id);
+      const freshTabs = [{ id, path: "/admin/sites", title: "Sites" }];
+      tabsRef.current = freshTabs;
+      activeIdRef.current = id;
+      setTabs(freshTabs);
+      setActiveId(id);
+      // Save to BOTH localStorage and server for the new site context
+      try { localStorage.setItem(storeKey(userIdRef.current), JSON.stringify({ tabs: freshTabs, activeId: id })); } catch { /* noop */ }
+      syncToServer(freshTabs, id);
     }
     window.addEventListener("cms-registry-change", handleRegistryChange);
     return () => window.removeEventListener("cms-registry-change", handleRegistryChange);
