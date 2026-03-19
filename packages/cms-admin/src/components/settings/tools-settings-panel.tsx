@@ -13,6 +13,7 @@ interface AutomationConfig {
   deployHookUrl: string;
   deployApiToken: string;
   deployAppName: string;
+  deployProductionUrl: string;
   backupSchedule: "off" | "daily" | "weekly";
   backupTime: string;
   backupRetentionDays: number;
@@ -29,6 +30,7 @@ const DEFAULTS: AutomationConfig = {
   deployHookUrl: "",
   deployApiToken: "",
   deployAppName: "",
+  deployProductionUrl: "",
   backupSchedule: "off",
   backupTime: "03:00",
   backupRetentionDays: 30,
@@ -60,6 +62,7 @@ export function ToolsSettingsPanel() {
           deployHookUrl: data.deployHookUrl ?? "",
           deployApiToken: data.deployApiToken ?? "",
           deployAppName: data.deployAppName ?? "",
+          deployProductionUrl: data.deployProductionUrl ?? "",
           backupSchedule: data.backupSchedule ?? "off",
           backupTime: data.backupTime ?? "03:00",
           backupRetentionDays: data.backupRetentionDays ?? 30,
@@ -255,6 +258,27 @@ export function ToolsSettingsPanel() {
               value={config.deployHookUrl}
               onChange={(e) => updateConfig((c) => ({ ...c, deployHookUrl: e.target.value }))}
               placeholder="https://..."
+              style={{
+                padding: "0.45rem 0.75rem", borderRadius: "7px",
+                border: "1px solid var(--border)", background: "var(--background)",
+                color: "var(--foreground)", fontSize: "0.8rem", fontFamily: "monospace",
+                width: "100%", boxSizing: "border-box",
+              }}
+            />
+          </div>
+        )}
+
+        {config.deployProvider !== "off" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+            <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Production URL</label>
+            <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: 0 }}>
+              The live URL of your deployed site. Shown after successful deploys.
+            </p>
+            <input
+              type="url"
+              value={config.deployProductionUrl}
+              onChange={(e) => updateConfig((c) => ({ ...c, deployProductionUrl: e.target.value }))}
+              placeholder="https://mysite.com"
               style={{
                 padding: "0.45rem 0.75rem", borderRadius: "7px",
                 border: "1px solid var(--border)", background: "var(--background)",
