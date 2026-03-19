@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Check, Copy, Plus, Trash2, Key, RefreshCw, Server, Power, PowerOff, X, Pencil } from "lucide-react";
+import { Check, Copy, Plus, Trash2, Key, RefreshCw, Server, Power, PowerOff, X, Pencil, Braces } from "lucide-react";
 import { toast } from "sonner";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { Checkbox } from "@/components/ui/checkbox-styled";
@@ -527,21 +527,36 @@ function ExternalMcpServers() {
                 style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.25rem" }}>
                 <Pencil style={{ width: "0.8rem", height: "0.8rem" }} />
               </button>
+              <button type="button" onClick={() => {
+                  if (editingId === s.id) { setEditingId(null); } else { startEdit(s); }
+                }} title="Toggle JSON view"
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: "0.2rem",
+                  padding: "0.15rem 0.4rem", borderRadius: "9999px",
+                  border: "1px solid var(--border)",
+                  background: editingId === s.id ? "color-mix(in srgb, var(--primary) 12%, transparent)" : "transparent",
+                  color: editingId === s.id ? "var(--primary)" : "var(--muted-foreground)",
+                  fontSize: "0.6rem", fontWeight: 500, cursor: "pointer",
+                }}>
+                <Braces style={{ width: "0.65rem", height: "0.65rem" }} />
+                JSON
+              </button>
               <button type="button" onClick={() => toggleEnabled(s.id, !s.enabled)} title={s.enabled ? "Disable server" : "Enable server"}
                 style={{ background: "none", border: "none", cursor: "pointer", color: s.enabled ? "var(--primary)" : "var(--muted-foreground)", padding: "0.25rem" }}>
                 {s.enabled ? <Power style={{ width: "0.9rem", height: "0.9rem" }} /> : <PowerOff style={{ width: "0.9rem", height: "0.9rem" }} />}
               </button>
               {confirmDeleteId === s.id ? (
-                <div style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
-                  <button type="button" onClick={() => setConfirmDeleteId(null)}
-                    style={{ padding: "0.3rem 0.5rem", borderRadius: "5px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.7rem", cursor: "pointer" }}>
-                    Cancel
-                  </button>
+                <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                  <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
                   <button type="button" onClick={() => { removeServer(s.id); setConfirmDeleteId(null); }}
-                    style={{ padding: "0.3rem 0.5rem", borderRadius: "5px", border: "none", background: "var(--destructive)", color: "#fff", fontSize: "0.7rem", cursor: "pointer" }}>
-                    Confirm
-                  </button>
-                </div>
+                    style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
+                      border: "none", background: "var(--destructive)", color: "#fff",
+                      cursor: "pointer", lineHeight: 1 }}>Yes</button>
+                  <button type="button" onClick={() => setConfirmDeleteId(null)}
+                    style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
+                      border: "1px solid var(--border)", background: "transparent",
+                      color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
+                </span>
               ) : (
                 <button type="button" onClick={() => setConfirmDeleteId(s.id)} title="Remove server"
                   style={{
@@ -578,6 +593,7 @@ function ExternalMcpServers() {
                     style={{ padding: "0.35rem 0.75rem", borderRadius: "6px", border: "none", background: "var(--primary)", color: "var(--primary-foreground)", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer" }}>
                     Save
                   </button>
+                  <CopyButton text={editJson} />
                   <button type="button" onClick={() => setEditingId(null)}
                     style={{ padding: "0.35rem 0.75rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: "pointer" }}>
                     Cancel
