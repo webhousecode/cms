@@ -63,6 +63,30 @@ Create `docs/features/F{number}-{slug}.md` with this structure:
 ### {Key Component 2}
 {...}
 
+## Impact Analysis
+
+### Files affected
+{List every file that will be created, modified, or deleted. Use real paths.}
+
+### Blast radius
+{What existing features/systems could break? Check:}
+- API routes that other components depend on
+- Shared components used across multiple pages
+- Type interfaces imported by other files
+- Storage/registry format changes (backwards compatibility?)
+- CSS/styling changes that affect other pages
+
+### Breaking changes
+{Will this change any existing API, interface, component prop, or data format? If yes, list migration steps.}
+
+### Test plan
+{How to verify this feature works AND hasn't broken anything:}
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] {Feature-specific test 1}
+- [ ] {Feature-specific test 2}
+- [ ] {Regression: verify X still works}
+- [ ] {Regression: verify Y still works}
+
 ## Implementation Steps
 1. {Concrete, ordered tasks}
 2. {...}
@@ -75,6 +99,8 @@ Create `docs/features/F{number}-{slug}.md` with this structure:
 ```
 
 The plan must be specific: real file paths in the monorepo, TypeScript interfaces that fit the existing architecture, actual npm packages to use. Think like a senior engineer writing a spec.
+
+**IMPORTANT:** The Impact Analysis section is mandatory. Before writing the plan, search the codebase (using Grep/Glob) to find all files that import from or depend on the files you plan to modify. List them explicitly. This prevents breaking changes that go unnoticed.
 
 ## Step 5: Update FEATURES.md
 
