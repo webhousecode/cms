@@ -129,7 +129,7 @@ export function AppSidebar({ collections }: Props) {
               src={mounted && resolvedTheme === "light" ? "/webhouse-wordmark-light.svg" : "/webhouse-wordmark-dark.svg"}
               alt="webhouse.app"
               className="h-11 w-auto"
-              style={{ maxWidth: "100%", alignSelf: "flex-start", marginLeft: "-0.75rem" }}
+              style={{ maxWidth: "100%", alignSelf: "flex-start", marginLeft: "-1.5rem" }}
             />
           )}
           <span style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: "0.75rem", marginTop: "-0.25rem", letterSpacing: "0.08em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" }} className="text-muted-foreground">
