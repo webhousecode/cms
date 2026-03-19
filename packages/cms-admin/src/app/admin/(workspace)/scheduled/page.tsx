@@ -86,6 +86,12 @@ export default async function ScheduledPage() {
     }
   } catch { /* no backups yet */ }
 
+  /** Format Date as local ISO string (no UTC conversion) */
+  function localISO(d: Date): string {
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:00`;
+  }
+
   // Generate upcoming scheduled backup events (next 30 days)
   const siteConf = await readSiteConfig();
   if (siteConf.backupSchedule !== "off") {
@@ -94,11 +100,11 @@ export default async function ScheduledPage() {
     for (let i = 0; i < 30; i++) {
       const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i, hh, mm);
       if (d <= now) continue;
-      if (siteConf.backupSchedule === "weekly" && d.getDay() !== 1) continue; // Mondays only
+      if (siteConf.backupSchedule === "weekly" && d.getDay() !== 1) continue;
       events.push({
-        id: `bak-sched-${d.toISOString()}`,
+        id: `bak-sched-${localISO(d)}`,
         type: "backup",
-        date: d.toISOString(),
+        date: localISO(d),
         title: "Scheduled Backup",
         subtitle: siteConf.backupSchedule === "daily" ? "Daily backup" : "Weekly backup",
         href: "/admin/backup",
@@ -110,13 +116,13 @@ export default async function ScheduledPage() {
   if (siteConf.linkCheckSchedule !== "off") {
     const now = new Date();
     for (let i = 0; i < 30; i++) {
-      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i, 4, 0); // 04:00
+      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i, 4, 0);
       if (d <= now) continue;
       if (siteConf.linkCheckSchedule === "weekly" && d.getDay() !== 1) continue;
       events.push({
-        id: `lc-sched-${d.toISOString()}`,
+        id: `lc-sched-${localISO(d)}`,
         type: "link-check",
-        date: d.toISOString(),
+        date: localISO(d),
         title: "Scheduled Link Check",
         subtitle: siteConf.linkCheckSchedule === "daily" ? "Daily check" : "Weekly check",
         href: "/admin/link-checker",
