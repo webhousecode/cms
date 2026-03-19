@@ -215,30 +215,18 @@ export default function BackupPage() {
 
                   {/* Restore */}
                   {confirmRestore === snap.id ? (
-                    <span style={{ display: "flex", alignItems: "center", gap: "0.25rem", fontSize: "0.75rem" }}>
-                      <button
-                        type="button"
-                        onClick={() => handleRestore(snap.id)}
-                        disabled={restoring === snap.id}
-                        style={{
-                          background: "var(--destructive)", color: "white",
-                          border: "none", borderRadius: "4px", padding: "0.2rem 0.5rem",
-                          fontSize: "0.7rem", cursor: "pointer",
-                        }}
-                      >
-                        {restoring === snap.id ? "Restoring..." : "Sure?"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setConfirmRestore(null)}
-                        style={{
-                          background: "none", border: "1px solid var(--border)", borderRadius: "4px",
-                          padding: "0.2rem 0.5rem", fontSize: "0.7rem", cursor: "pointer",
-                          color: "var(--muted-foreground)",
-                        }}
-                      >
-                        Cancel
-                      </button>
+                    <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                      <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>
+                        {restoring === snap.id ? "Restoring..." : "Restore?"}
+                      </span>
+                      <button type="button" onClick={() => handleRestore(snap.id)} disabled={restoring === snap.id}
+                        style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
+                          border: "none", background: "var(--destructive)", color: "#fff",
+                          cursor: "pointer", lineHeight: 1 }}>Yes</button>
+                      <button type="button" onClick={() => setConfirmRestore(null)}
+                        style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
+                          border: "1px solid var(--border)", background: "transparent",
+                          color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
                     </span>
                   ) : (
                     <button
@@ -259,30 +247,16 @@ export default function BackupPage() {
 
                   {/* Delete */}
                   {confirmDelete === snap.id ? (
-                    <span style={{ display: "flex", alignItems: "center", gap: "0.25rem", fontSize: "0.75rem" }}>
-                      <button
-                        type="button"
-                        onClick={() => handleDelete(snap.id)}
-                        disabled={deleting === snap.id}
-                        style={{
-                          background: "var(--destructive)", color: "white",
-                          border: "none", borderRadius: "4px", padding: "0.2rem 0.5rem",
-                          fontSize: "0.7rem", cursor: "pointer",
-                        }}
-                      >
-                        {deleting === snap.id ? "..." : "Sure?"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setConfirmDelete(null)}
-                        style={{
-                          background: "none", border: "1px solid var(--border)", borderRadius: "4px",
-                          padding: "0.2rem 0.5rem", fontSize: "0.7rem", cursor: "pointer",
-                          color: "var(--muted-foreground)",
-                        }}
-                      >
-                        Cancel
-                      </button>
+                    <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                      <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
+                      <button type="button" onClick={() => handleDelete(snap.id)} disabled={deleting === snap.id}
+                        style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
+                          border: "none", background: "var(--destructive)", color: "#fff",
+                          cursor: "pointer", lineHeight: 1 }}>Yes</button>
+                      <button type="button" onClick={() => setConfirmDelete(null)}
+                        style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
+                          border: "1px solid var(--border)", background: "transparent",
+                          color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
                     </span>
                   ) : (
                     <button
