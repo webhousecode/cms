@@ -116,7 +116,8 @@ export default async function ScheduledPage() {
   if (siteConf.linkCheckSchedule !== "off") {
     const now = new Date();
     for (let i = 0; i < 30; i++) {
-      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i, 4, 0);
+      const [lcHH, lcMM] = (siteConf.linkCheckTime ?? "04:00").split(":").map(Number);
+      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i, lcHH, lcMM);
       if (d <= now) continue;
       if (siteConf.linkCheckSchedule === "weekly" && d.getDay() !== 1) continue;
       events.push({

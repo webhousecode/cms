@@ -3,21 +3,34 @@
 import { useEffect, useState } from "react";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { CustomSelect } from "@/components/ui/custom-select";
+import { WebhookList, type WebhookEntry } from "./webhook-list";
 
-interface ToolsConfig {
+interface AutomationConfig {
   backupSchedule: "off" | "daily" | "weekly";
   backupTime: string;
   backupRetentionDays: number;
+  backupWebhooks: WebhookEntry[];
   linkCheckSchedule: "off" | "daily" | "weekly";
+  linkCheckTime: string;
+  linkCheckWebhooks: WebhookEntry[];
+  publishWebhooks: WebhookEntry[];
+  agentDefaultWebhooks: WebhookEntry[];
 }
 
+const DEFAULTS: AutomationConfig = {
+  backupSchedule: "off",
+  backupTime: "03:00",
+  backupRetentionDays: 30,
+  backupWebhooks: [],
+  linkCheckSchedule: "off",
+  linkCheckTime: "04:00",
+  linkCheckWebhooks: [],
+  publishWebhooks: [],
+  agentDefaultWebhooks: [],
+};
+
 export function ToolsSettingsPanel() {
-  const [config, setConfig] = useState<ToolsConfig>({
-    backupSchedule: "off",
-    backupTime: "03:00",
-    backupRetentionDays: 30,
-    linkCheckSchedule: "off",
-  });
+  const [config, setConfig] = useState<AutomationConfig>(DEFAULTS);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -30,7 +43,12 @@ export function ToolsSettingsPanel() {
           backupSchedule: data.backupSchedule ?? "off",
           backupTime: data.backupTime ?? "03:00",
           backupRetentionDays: data.backupRetentionDays ?? 30,
+          backupWebhooks: data.backupWebhooks ?? [],
           linkCheckSchedule: data.linkCheckSchedule ?? "off",
+          linkCheckTime: data.linkCheckTime ?? "04:00",
+          linkCheckWebhooks: data.linkCheckWebhooks ?? [],
+          publishWebhooks: data.publishWebhooks ?? [],
+          agentDefaultWebhooks: data.agentDefaultWebhooks ?? [],
         });
       })
       .catch(() => {});
@@ -66,21 +84,24 @@ export function ToolsSettingsPanel() {
     { value: "90", label: "90 days" },
   ];
 
+  const labelStyle = { display: "block", fontSize: "0.75rem", fontWeight: 500, marginBottom: "0.35rem" } as const;
+  const descStyle = { fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "-0.5rem", marginBottom: "1.25rem" } as const;
+  const webhookLabel = { display: "block", fontSize: "0.75rem", fontWeight: 500, marginBottom: "0.35rem", marginTop: "0.75rem" } as const;
+
   return (
     <div>
-      <SectionHeading>Backup Schedule</SectionHeading>
-      <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "-0.5rem", marginBottom: "1.25rem" }}>
+      {/* ── Backup ─────────────────────────────────────────── */}
+      <SectionHeading>Backup</SectionHeading>
+      <p style={descStyle}>
         Automatic backups of all content and site data. Scheduled backups appear in the Calendar.
       </p>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "2rem" }}>
+      <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "0.5rem" }}>
         <div>
-          <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 500, marginBottom: "0.35rem" }}>
-            Frequency
-          </label>
+          <label style={labelStyle}>Frequency</label>
           <CustomSelect
             value={config.backupSchedule}
-            onChange={(v) => setConfig((c) => ({ ...c, backupSchedule: v as ToolsConfig["backupSchedule"] }))}
+            onChange={(v) => setConfig((c) => ({ ...c, backupSchedule: v as AutomationConfig["backupSchedule"] }))}
             options={scheduleOptions}
           />
         </div>
@@ -88,9 +109,7 @@ export function ToolsSettingsPanel() {
         {config.backupSchedule !== "off" && (
           <>
             <div>
-              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 500, marginBottom: "0.35rem" }}>
-                Time
-              </label>
+              <label style={labelStyle}>Time</label>
               <input
                 type="time"
                 value={config.backupTime}
@@ -103,9 +122,7 @@ export function ToolsSettingsPanel() {
               />
             </div>
             <div>
-              <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 500, marginBottom: "0.35rem" }}>
-                Retention
-              </label>
+              <label style={labelStyle}>Retention</label>
               <CustomSelect
                 value={String(config.backupRetentionDays)}
                 onChange={(v) => setConfig((c) => ({ ...c, backupRetentionDays: parseInt(v, 10) }))}
@@ -116,22 +133,90 @@ export function ToolsSettingsPanel() {
         )}
       </div>
 
-      <SectionHeading>Link Checker Schedule</SectionHeading>
-      <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "-0.5rem", marginBottom: "1.25rem" }}>
+      <label style={webhookLabel}>Webhooks</label>
+      <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", marginTop: "-0.25rem", marginBottom: "0.5rem" }}>
+        Called in order when a backup completes. Discord, Slack, or any URL that accepts JSON POST.
+      </p>
+      <WebhookList
+        webhooks={config.backupWebhooks}
+        onChange={(w) => setConfig((c) => ({ ...c, backupWebhooks: w }))}
+      />
+
+      <div style={{ borderTop: "1px solid var(--border)", margin: "1.5rem 0" }} />
+
+      {/* ── Link Checker ───────────────────────────────────── */}
+      <SectionHeading>Link Checker</SectionHeading>
+      <p style={descStyle}>
         Automatic link checking across all content. Scheduled runs appear in the Calendar.
       </p>
 
-      <div style={{ marginBottom: "2rem" }}>
-        <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 500, marginBottom: "0.35rem" }}>
-          Frequency
-        </label>
-        <CustomSelect
-          value={config.linkCheckSchedule}
-          onChange={(v) => setConfig((c) => ({ ...c, linkCheckSchedule: v as ToolsConfig["linkCheckSchedule"] }))}
-          options={scheduleOptions}
-        />
+      <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "0.5rem" }}>
+        <div>
+          <label style={labelStyle}>Frequency</label>
+          <CustomSelect
+            value={config.linkCheckSchedule}
+            onChange={(v) => setConfig((c) => ({ ...c, linkCheckSchedule: v as AutomationConfig["linkCheckSchedule"] }))}
+            options={scheduleOptions}
+          />
+        </div>
+
+        {config.linkCheckSchedule !== "off" && (
+          <div>
+            <label style={labelStyle}>Time</label>
+            <input
+              type="time"
+              value={config.linkCheckTime}
+              onChange={(e) => setConfig((c) => ({ ...c, linkCheckTime: e.target.value }))}
+              style={{
+                padding: "0.4rem 0.6rem", borderRadius: "0.375rem",
+                border: "1px solid var(--border)", background: "var(--background)",
+                color: "var(--foreground)", fontSize: "0.8125rem",
+              }}
+            />
+          </div>
+        )}
       </div>
 
+      <label style={webhookLabel}>Webhooks</label>
+      <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", marginTop: "-0.25rem", marginBottom: "0.5rem" }}>
+        Called in order when a link check completes.
+      </p>
+      <WebhookList
+        webhooks={config.linkCheckWebhooks}
+        onChange={(w) => setConfig((c) => ({ ...c, linkCheckWebhooks: w }))}
+      />
+
+      <div style={{ borderTop: "1px solid var(--border)", margin: "1.5rem 0" }} />
+
+      {/* ── Content Publishing ─────────────────────────────── */}
+      <SectionHeading>Content Publishing</SectionHeading>
+      <p style={descStyle}>
+        Notified when content is auto-published or expired by the scheduler.
+      </p>
+
+      <label style={webhookLabel}>Webhooks</label>
+      <WebhookList
+        webhooks={config.publishWebhooks}
+        onChange={(w) => setConfig((c) => ({ ...c, publishWebhooks: w }))}
+      />
+
+      <div style={{ borderTop: "1px solid var(--border)", margin: "1.5rem 0" }} />
+
+      {/* ── Default Agent Webhook ──────────────────────────── */}
+      <SectionHeading>AI Agents (default)</SectionHeading>
+      <p style={descStyle}>
+        Default webhooks for all agents. Individual agents can override with their own webhooks.
+      </p>
+
+      <label style={webhookLabel}>Webhooks</label>
+      <WebhookList
+        webhooks={config.agentDefaultWebhooks}
+        onChange={(w) => setConfig((c) => ({ ...c, agentDefaultWebhooks: w }))}
+      />
+
+      <div style={{ borderTop: "1px solid var(--border)", margin: "1.5rem 0" }} />
+
+      {/* ── Save ───────────────────────────────────────────── */}
       <button
         type="button"
         onClick={handleSave}
