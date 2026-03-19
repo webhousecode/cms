@@ -9,7 +9,7 @@ import { existsSync, readdirSync, statSync, createReadStream, createWriteStream,
 import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import archiver from "archiver";
-import { getActiveSitePaths } from "./site-paths";
+import { getActiveSitePaths, getActiveSiteEntry } from "./site-paths";
 
 export interface BackupSnapshot {
   id: string;
@@ -73,11 +73,18 @@ function countJsonFiles(dir: string): { total: number; collections: Record<strin
 
 export async function createBackup(trigger: "manual" | "scheduled" = "manual"): Promise<BackupSnapshot> {
   const { contentDir, dataDir } = await getActiveSitePaths();
+  const siteEntry = await getActiveSiteEntry();
   const dir = await backupDir();
   const manifest = await loadManifest();
 
   const now = new Date();
-  const id = `bak-${now.toISOString().replace(/[:.]/g, "-")}`;
+  const shortId = Math.random().toString(36).slice(2, 8);
+  const dateStr = now.toLocaleDateString("da-DK", { day: "2-digit", month: "2-digit", year: "numeric" })
+    .replace(/\//g, "-").replace(/\./g, "-");
+  const timeStr = now.toLocaleTimeString("da-DK", { hour: "2-digit", minute: "2-digit" })
+    .replace(/[:.]/g, "");
+  const siteName = (siteEntry?.name ?? "site").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/-+$/, "");
+  const id = `${siteName}_${dateStr}-${timeStr}_${shortId}`;
   const fileName = `${id}.zip`;
   const zipPath = path.join(dir, fileName);
 
