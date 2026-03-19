@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Copy, ChevronUp, ChevronDown, Check } from "lucide-react";
+import { Plus, Copy, ChevronUp, ChevronDown, Check, Send } from "lucide-react";
 
 export interface WebhookEntry {
   id: string;
@@ -19,6 +19,8 @@ export function WebhookList({ webhooks, onChange }: Props) {
   const [newUrl, setNewUrl] = useState("");
   const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
+  const [testing, setTesting] = useState<string | null>(null);
+  const [testResult, setTestResult] = useState<{ id: string; ok: boolean } | null>(null);
 
   function add() {
     const url = newUrl.trim();
@@ -52,6 +54,30 @@ export function WebhookList({ webhooks, onChange }: Props) {
     setTimeout(() => setCopied(null), 1500);
   }
 
+  async function sendTest(url: string, id: string) {
+    setTesting(id);
+    setTestResult(null);
+    try {
+      const isDiscord = url.includes("discord.com/api/webhooks");
+      const isSlack = url.includes("hooks.slack.com");
+      const body = isDiscord
+        ? { content: "Test from webhouse.app", embeds: [{ title: "Webhook Test", description: "This webhook is configured correctly.", color: 0xF7BB2E, footer: { text: "webhouse.app" } }] }
+        : isSlack
+          ? { text: "*webhouse.app* — Webhook test successful." }
+          : { event: "webhook.test", timestamp: new Date().toISOString(), source: "webhouse.app" };
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      setTestResult({ id, ok: res.ok });
+    } catch {
+      setTestResult({ id, ok: false });
+    }
+    setTesting(null);
+    setTimeout(() => setTestResult(null), 3000);
+  }
+
   return (
     <div>
       {/* Existing webhooks */}
@@ -76,6 +102,26 @@ export function WebhookList({ webhooks, onChange }: Props) {
               <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: "var(--foreground)" }}>
                 {wh.url}
               </span>
+
+              {/* Test */}
+              <button
+                type="button"
+                onClick={() => sendTest(wh.url, wh.id)}
+                disabled={testing === wh.id}
+                title="Send test"
+                style={{
+                  display: "flex", alignItems: "center", padding: "0.15rem",
+                  background: "none", border: "none", cursor: testing === wh.id ? "wait" : "pointer",
+                  color: testResult?.id === wh.id
+                    ? testResult.ok ? "rgb(74 222 128)" : "var(--destructive)"
+                    : "var(--muted-foreground)",
+                  flexShrink: 0,
+                }}
+              >
+                {testResult?.id === wh.id
+                  ? testResult.ok ? <Check style={{ width: 12, height: 12 }} /> : <span style={{ fontSize: "0.6rem" }}>fail</span>
+                  : <Send style={{ width: 12, height: 12 }} />}
+              </button>
 
               {/* Copy */}
               <button

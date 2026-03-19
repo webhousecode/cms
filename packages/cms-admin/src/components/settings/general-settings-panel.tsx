@@ -1071,8 +1071,6 @@ export function SiteGeneralSettingsPanel() {
 			<SiteSection />
 			<RevalidationSection />
 			<div style={{ height: "1px", background: "var(--border)" }} />
-			<SchedulerNotificationsSection />
-			<div style={{ height: "1px", background: "var(--border)" }} />
 			<DangerZone />
 		</div>
 	);
