@@ -26,9 +26,9 @@ export function OrgSidebar() {
   useEffect(() => setMounted(true), []);
 
   const [showLogoIcon, setShowLogoIcon] = useState(() => {
-    if (typeof document === "undefined") return true;
+    if (typeof document === "undefined") return false;
     const cookie = document.cookie.match(/(?:^|; )cms-logo-icon=([^;]*)/)?.[1];
-    return cookie !== undefined ? cookie === "true" : true;
+    return cookie !== undefined ? cookie === "true" : false;
   });
 
   useEffect(() => {
