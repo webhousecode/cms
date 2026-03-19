@@ -492,7 +492,7 @@ export default function InteractiveDetailPage() {
   ];
 
   return (
-    <fieldset disabled={readOnly} style={{ border: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", height: "calc(100vh - 84px)" }}>
+    <fieldset disabled={readOnly} style={{ border: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", height: "calc(100vh - 84px)", minHeight: 0 }}>
       {/* Top bar — matches document editor exactly */}
       <div className="sticky flex items-center justify-between px-4 border-b border-border shrink-0" style={{ top: 84, height: "48px", zIndex: 30, backgroundColor: "var(--card)" }}>
         <div className="flex items-center gap-2">
@@ -750,7 +750,7 @@ export default function InteractiveDetailPage() {
       )}
 
       {/* Content area — fills remaining space, same padding as document editor */}
-      <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", padding: "0 1rem" }}>
+      <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", padding: "0 1rem", minHeight: 0 }}>
         {/* Preview mode */}
         {mode === "preview" && (
           <iframe
