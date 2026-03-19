@@ -104,6 +104,9 @@ function gradientHeading(before: string, highlight: string, after: string): stri
 
 const CONTENT_DIR = join(import.meta.dirname, 'content');
 
+// Base path for GitHub Pages (e.g. "/boutique-site") or "" for root domain
+const BASE = (process.env.BASE_PATH ?? '').replace(/\/+$/, '');
+
 function loadCollection<T>(name: string): Document<T>[] {
   const dir = join(CONTENT_DIR, name);
   return readdirSync(dir)
@@ -267,9 +270,9 @@ function head(title: string, site: SiteData) {
 
 function nav(active: 'home' | 'work' | 'about', site: SiteData) {
   const links = [
-    { href: '/index.html', label: 'Home', key: 'home' },
-    { href: '/work/index.html', label: 'Work', key: 'work' },
-    { href: '/about/index.html', label: 'About', key: 'about' },
+    { href: `${BASE}/index.html`, label: 'Home', key: 'home' },
+    { href: `${BASE}/work/index.html`, label: 'Work', key: 'work' },
+    { href: `${BASE}/about/index.html`, label: 'About', key: 'about' },
   ];
   const linkHtml = links
     .map(
@@ -280,7 +283,7 @@ function nav(active: 'home' | 'work' | 'about', site: SiteData) {
   return `
   <nav class="nav-fixed">
     <div class="max-w-7xl mx-auto flex items-center justify-between px-6 lg:px-8 py-5">
-      <a href="/index.html" class="font-heading font-800 text-lg tracking-tight" style="font-weight:800;">${site.siteName}</a>
+      <a href="${BASE}/index.html" class="font-heading font-800 text-lg tracking-tight" style="font-weight:800;">${site.siteName}</a>
       <div class="flex items-center gap-8">
         ${linkHtml}
       </div>
@@ -309,9 +312,9 @@ function footer(site: SiteData) {
         <div>
           <p class="font-heading font-700 text-xs tracking-widest uppercase text-[#999] mb-4" style="font-weight:700;">Navigation</p>
           <div class="flex flex-col gap-2">
-            <a href="/index.html" class="footer-link">Home</a>
-            <a href="/work/index.html" class="footer-link">Work</a>
-            <a href="/about/index.html" class="footer-link">About</a>
+            <a href="${BASE}/index.html" class="footer-link">Home</a>
+            <a href="${BASE}/work/index.html" class="footer-link">Work</a>
+            <a href="${BASE}/about/index.html" class="footer-link">About</a>
           </div>
         </div>
 
@@ -360,7 +363,7 @@ function buildHomePage(
   const workCards = work
     .map(
       (w) => `
-        <a href="/work/${w.slug}/index.html" class="work-card group block card-hover rounded-2xl overflow-hidden bg-white border border-gray-100">
+        <a href="${BASE}/work/${w.slug}/index.html" class="work-card group block card-hover rounded-2xl overflow-hidden bg-white border border-gray-100">
           <div class="overflow-hidden aspect-[4/3]">
             <img src="${w.data.heroImage}" alt="${w.data.title}" loading="lazy" class="w-full h-full object-cover" />
           </div>
@@ -430,7 +433,7 @@ function buildHomePage(
           <p class="font-heading font-600 text-xs tracking-[0.2em] uppercase text-[#999] mb-4" style="font-weight:600;">${hp.featuredWorkLabel}</p>
           <h2 class="font-heading section-title tracking-tight" style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 800;">${hp.featuredWorkHeading}</h2>
         </div>
-        <a href="/work/index.html" class="hidden md:inline-block text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors">
+        <a href="${BASE}/work/index.html" class="hidden md:inline-block text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors">
           ${hp.featuredWorkViewAllText} &rarr;
         </a>
       </div>
@@ -477,7 +480,7 @@ function buildWorkListingPage(
   const workCards = work
     .map(
       (w) => `
-        <a href="/work/${w.slug}/index.html" class="work-card group block card-hover rounded-2xl overflow-hidden bg-white border border-gray-100">
+        <a href="${BASE}/work/${w.slug}/index.html" class="work-card group block card-hover rounded-2xl overflow-hidden bg-white border border-gray-100">
           <div class="overflow-hidden aspect-[4/3]">
             <img src="${w.data.heroImage}" alt="${w.data.title}" loading="lazy" class="w-full h-full object-cover" />
           </div>
@@ -572,7 +575,7 @@ function buildWorkDetailPage(project: Document<WorkData>, site: SiteData) {
 
   <!-- Back link -->
   <div class="text-center pb-20">
-    <a href="/work/index.html" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium transition-colors">&larr; Back to Work</a>
+    <a href="${BASE}/work/index.html" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium transition-colors">&larr; Back to Work</a>
   </div>
 
   ${footer(site)}

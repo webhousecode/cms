@@ -13,6 +13,9 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+// Base path for GitHub Pages (e.g. "/boutique-site") or "" for root domain
+const BASE = (process.env.BASE_PATH ?? '').replace(/\/+$/, '');
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -296,12 +299,12 @@ function htmlHead(title: string, site: SiteSettings): string {
 
 function nav(site: SiteSettings, active: string = ''): string {
   const linkHtml = site.navLinks
-    .map((l) => `<li><a href="${esc(l.href)}"${l.key === active ? ' class="active"' : ''}>${esc(l.label)}</a></li>`)
+    .map((l) => `<li><a href="${BASE}${esc(l.href)}"${l.key === active ? ' class="active"' : ''}>${esc(l.label)}</a></li>`)
     .join('\n          ');
   return `
   <nav class="nav">
     <div class="nav-inner">
-      <a href="/" class="nav-logo">${esc(site.siteName)}</a>
+      <a href="${BASE}/" class="nav-logo">${esc(site.siteName)}</a>
       <ul class="nav-links">
         ${linkHtml}
       </ul>
@@ -325,7 +328,7 @@ function buildHome(site: SiteSettings, homePage: Document<PageData>, projects: D
   const cards = projects
     .map(
       (p) => `
-      <a href="/projects/${p.slug}/" class="grid-item">
+      <a href="${BASE}/projects/${p.slug}/" class="grid-item">
         <img src="${esc(p.data.coverImage)}" alt="${esc(p.data.title)}" loading="lazy">
         <div class="grid-overlay">
           <h2>${esc(p.data.title)}</h2>
@@ -369,7 +372,7 @@ function buildProject(site: SiteSettings, project: Document<ProjectData>): strin
 ${galleryHtml}
     </div>
 
-    <a href="/" class="back-link">&larr; Back to Works</a>
+    <a href="${BASE}/" class="back-link">&larr; Back to Works</a>
   </main>
   ${footer(site)}
 </body>
