@@ -44,9 +44,6 @@ export default function OrganizationsPage() {
   const [search, setSearch] = useState("");
   const [loaded, setLoaded] = useState(false);
   // New org
-  const [showNewOrg, setShowNewOrg] = useState(false);
-  const [newOrgName, setNewOrgName] = useState("");
-  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     fetch("/api/cms/registry")
@@ -71,33 +68,6 @@ export default function OrganizationsPage() {
       router.push("/admin/sites/new");
     }
     router.refresh();
-  }
-
-  async function createOrg() {
-    if (!newOrgName.trim()) return;
-    setCreating(true);
-    try {
-      const res = await fetch("/api/cms/registry", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "add-org", orgName: newOrgName.trim() }),
-      });
-      if (res.ok) {
-        const { org } = await res.json() as { org: OrgEntry };
-        setCookie("cms-active-org", org.id);
-        document.cookie = "cms-active-site=;path=/;max-age=0";
-        // Refetch registry
-        const regRes = await fetch("/api/cms/registry");
-        const regData = await regRes.json() as { registry: Registry | null };
-        if (regData.registry) setRegistry(regData.registry);
-        setActiveOrgId(org.id);
-        window.dispatchEvent(new CustomEvent("cms-registry-change"));
-        setShowNewOrg(false);
-        setNewOrgName("");
-      }
-    } finally {
-      setCreating(false);
-    }
   }
 
   if (!loaded) {
@@ -140,7 +110,7 @@ export default function OrganizationsPage() {
         <div style={{ flex: 1 }} />
         <button
           type="button"
-          onClick={() => setShowNewOrg(true)}
+          onClick={() => router.push("/admin/organizations/new")}
           style={{
             display: "inline-flex", alignItems: "center", gap: "0.5rem",
             padding: "0.45rem 1rem", borderRadius: "8px", border: "none",
@@ -152,58 +122,6 @@ export default function OrganizationsPage() {
           New organization
         </button>
       </div>
-
-      {/* New org inline form */}
-      {showNewOrg && (
-        <div style={{
-          padding: "1rem", borderRadius: "10px", border: "1px solid var(--primary)",
-          background: "var(--card)", marginBottom: "1rem",
-          display: "flex", alignItems: "flex-end", gap: "0.75rem",
-        }}>
-          <div style={{ flex: 1 }}>
-            <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "var(--muted-foreground)", display: "block", marginBottom: "0.25rem" }}>
-              Organization name
-            </label>
-            <input
-              type="text"
-              value={newOrgName}
-              onChange={(e) => setNewOrgName(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") createOrg(); if (e.key === "Escape") { setShowNewOrg(false); setNewOrgName(""); } }}
-              placeholder="Client Name"
-              autoFocus
-              style={{
-                width: "100%", padding: "0.45rem 0.6rem", borderRadius: "6px",
-                border: "1px solid var(--border)", background: "var(--background)",
-                color: "var(--foreground)", fontSize: "0.85rem", outline: "none",
-              }}
-            />
-          </div>
-          <button
-            type="button"
-            onClick={createOrg}
-            disabled={creating || !newOrgName.trim()}
-            style={{
-              padding: "0.45rem 1rem", borderRadius: "6px", border: "none",
-              background: "var(--primary)", color: "var(--primary-foreground)",
-              fontSize: "0.8rem", fontWeight: 600, cursor: creating ? "wait" : "pointer",
-              opacity: !newOrgName.trim() ? 0.5 : 1,
-            }}
-          >
-            {creating ? "Creating..." : "Create"}
-          </button>
-          <button
-            type="button"
-            onClick={() => { setShowNewOrg(false); setNewOrgName(""); }}
-            style={{
-              padding: "0.45rem 0.75rem", borderRadius: "6px",
-              border: "1px solid var(--border)", background: "transparent",
-              color: "var(--muted-foreground)", fontSize: "0.8rem", cursor: "pointer",
-            }}
-          >
-            Cancel
-          </button>
-        </div>
-      )}
 
       {/* Org cards grid */}
       <div style={{

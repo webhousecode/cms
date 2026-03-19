@@ -152,9 +152,6 @@ export function OrgSwitcher() {
   const [registry, setRegistry] = useState<Registry | null>(null);
   const [activeOrgId, setActiveOrgId] = useState<string>("");
   const [loaded, setLoaded] = useState(false);
-  const [showNewOrg, setShowNewOrg] = useState(false);
-  const [newOrgName, setNewOrgName] = useState("");
-  const [creatingOrg, setCreatingOrg] = useState(false);
 
   const fetchRegistry = useCallback(async () => {
     try {
@@ -188,30 +185,6 @@ export function OrgSwitcher() {
 
   const activeOrg = registry.orgs.find((o) => o.id === activeOrgId) ?? registry.orgs[0];
 
-  async function createOrg() {
-    if (!newOrgName.trim()) return;
-    setCreatingOrg(true);
-    try {
-      const res = await fetch("/api/cms/registry", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "add-org", orgName: newOrgName.trim() }),
-      });
-      if (res.ok) {
-        const { org } = await res.json() as { org: OrgEntry };
-        setCookie("cms-active-org", org.id);
-        document.cookie = "cms-active-site=;path=/;max-age=0";
-        window.dispatchEvent(new CustomEvent("cms-registry-change"));
-        setShowNewOrg(false);
-        setNewOrgName("");
-        router.push("/admin/sites/new");
-        router.refresh();
-      }
-    } finally {
-      setCreatingOrg(false);
-    }
-  }
-
   function handleSelect(org: OrgEntry) {
     setActiveOrgId(org.id);
     setCookie("cms-active-org", org.id);
@@ -242,58 +215,10 @@ export function OrgSwitcher() {
           <LayoutGrid className="mr-2 h-4 w-4" />
           All organizations
         </DropdownMenuItem>
-        {showNewOrg ? (
-          <div style={{ padding: "0.5rem 0.5rem 0.25rem" }} onClick={(e) => e.stopPropagation()}>
-            <label style={{ fontSize: "0.7rem", fontWeight: 500, color: "var(--muted-foreground)", display: "block", marginBottom: "0.25rem" }}>
-              Organization name
-            </label>
-            <input
-              type="text"
-              value={newOrgName}
-              onChange={(e) => setNewOrgName(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") createOrg(); if (e.key === "Escape") { setShowNewOrg(false); setNewOrgName(""); } }}
-              placeholder="Client Name"
-              autoFocus
-              style={{
-                width: "100%", padding: "0.35rem 0.5rem", borderRadius: "6px",
-                border: "1px solid var(--border)", background: "var(--background)",
-                color: "var(--foreground)", fontSize: "0.8rem", outline: "none",
-                marginBottom: "0.35rem",
-              }}
-            />
-            <div style={{ display: "flex", gap: "0.35rem" }}>
-              <button
-                type="button"
-                onClick={createOrg}
-                disabled={creatingOrg || !newOrgName.trim()}
-                style={{
-                  flex: 1, padding: "0.3rem 0.5rem", borderRadius: "6px", border: "none",
-                  background: "var(--primary)", color: "var(--primary-foreground)",
-                  fontSize: "0.75rem", fontWeight: 500, cursor: creatingOrg ? "wait" : "pointer",
-                  opacity: !newOrgName.trim() ? 0.5 : 1,
-                }}
-              >
-                {creatingOrg ? "Creating..." : "Create"}
-              </button>
-              <button
-                type="button"
-                onClick={() => { setShowNewOrg(false); setNewOrgName(""); }}
-                style={{
-                  padding: "0.3rem 0.5rem", borderRadius: "6px",
-                  border: "1px solid var(--border)", background: "transparent",
-                  color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: "pointer",
-                }}
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        ) : (
-          <DropdownMenuItem onSelect={(e) => { e.preventDefault(); setShowNewOrg(true); }}>
-            <Plus className="mr-2 h-4 w-4" />
-            New organization
-          </DropdownMenuItem>
-        )}
+        <DropdownMenuItem onClick={() => router.push("/admin/organizations/new")}>
+          <Plus className="mr-2 h-4 w-4" />
+          New organization
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
