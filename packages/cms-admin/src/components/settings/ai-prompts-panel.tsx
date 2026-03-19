@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Loader2, RotateCcw, Save, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
+import { SettingsCard } from "./settings-card";
 import { SectionHeading } from "@/components/ui/section-heading";
 
 interface PromptDef {
@@ -90,12 +91,11 @@ export function AIPromptsPanel() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <SectionHeading>AI Prompts</SectionHeading>
-        <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "-0.5rem", marginBottom: "0.5rem" }}>
+      <SectionHeading>AI Prompts</SectionHeading>
+      <SettingsCard>
+        <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>
           Edit the system prompts used by all AI features. Variables in {"{braces}"} are replaced at runtime.
         </p>
-      </div>
 
       {prompts.map((p) => (
         <div key={p.id} className="rounded-lg border border-border p-4 space-y-2">
@@ -164,7 +164,7 @@ export function AIPromptsPanel() {
           <p className="text-[10px] font-mono text-muted-foreground">{p.id}</p>
         </div>
       ))}
-
+      </SettingsCard>
     </div>
   );
 }
