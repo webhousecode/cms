@@ -19,7 +19,7 @@ export function ActionBar({ children, actions }: ActionBarProps) {
       position: "sticky",
       top: 84, // header 48px + tab bar 36px
       zIndex: 29,
-      height: "40px",
+      height: "48px",
       display: "flex",
       alignItems: "center",
       justifyContent: "space-between",

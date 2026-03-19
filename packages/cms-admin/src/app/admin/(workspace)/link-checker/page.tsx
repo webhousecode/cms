@@ -7,6 +7,7 @@ import type { LinkCheckRecord } from "@/lib/link-check-store";
 import { cn } from "@/lib/utils";
 import { useTabs } from "@/lib/tabs-context";
 import { useSiteRole } from "@/hooks/use-site-role";
+import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
 
 type RunState = "idle" | "running" | "done" | "error";
 type FixState = { loading: boolean; suggestion?: string | null; reason?: string; confidence?: string; applied?: boolean; error?: string };
@@ -243,30 +244,26 @@ export default function LinkCheckerPage() {
   return (
     <fieldset disabled={readOnly} style={{ border: "none", padding: 0, margin: 0 }}>
     <div className="flex flex-col min-h-screen">
-      {/* Top bar */}
-      <div className="sticky flex items-center gap-3 px-4 border-b border-border shrink-0"
-        style={{ top: 84, height: "48px", zIndex: 30, backgroundColor: "var(--card)" }}>
-        <Link2 style={{ width: "0.875rem", height: "0.875rem", color: "var(--muted-foreground)" }} />
-        <span className="text-sm font-mono text-foreground">link-checker</span>
+      <ActionBar
+        actions={<>
+          {state === "running" ? (
+            <ActionButton variant="secondary" onClick={stop}>
+              Stop
+            </ActionButton>
+          ) : (
+            <ActionButton variant="primary" onClick={runCheck} icon={<Play style={{ width: 14, height: 14 }} />}>
+              Run Check
+            </ActionButton>
+          )}
+        </>}
+      >
+        <ActionBarBreadcrumb items={["Tools", "Link Checker"]} />
         {state === "done" && (
-          <span className="text-xs text-muted-foreground">
+          <span style={{ fontSize: "0.75rem", color: "var(--muted-foreground)" }}>
             · {results.length} links · {broken.length} broken · {redirects.length} redirects
           </span>
         )}
-        <div style={{ flex: 1 }} />
-        {state === "running" ? (
-          <button type="button" onClick={stop}
-            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md border border-border hover:bg-accent transition-colors">
-            Stop
-          </button>
-        ) : (
-          <button type="button" onClick={runCheck}
-            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-opacity">
-            <Play style={{ width: "0.75rem", height: "0.75rem" }} />
-            Run check
-          </button>
-        )}
-      </div>
+      </ActionBar>
 
       <div className="p-6 max-w-5xl">
 

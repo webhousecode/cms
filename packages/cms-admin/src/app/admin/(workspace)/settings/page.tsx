@@ -2,7 +2,7 @@ import { getAdminConfig } from "@/lib/cms";
 import Link from "next/link";
 import { Database, Plus, Edit2, Fingerprint, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { PageHeader } from "@/components/page-header";
+import { ActionBar, ActionBarBreadcrumb } from "@/components/action-bar";
 import { AISettingsPanel } from "@/components/settings/ai-settings-panel";
 import { SiteGeneralSettingsPanel } from "@/components/settings/general-settings-panel";
 import { MCPSettingsPanel } from "@/components/settings/mcp-settings-panel";
@@ -59,14 +59,10 @@ export default async function SettingsPage({
 
   return (
     <>
-      <PageHeader>
-        <span className="text-sm text-muted-foreground font-mono">Site Settings</span>
-      </PageHeader>
+      <ActionBar>
+        <ActionBarBreadcrumb items={["Site Settings"]} />
+      </ActionBar>
       <div className="p-8 max-w-4xl">
-        <div className="mb-8">
-          <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">Site Settings</p>
-          <h1 className="text-2xl font-bold text-foreground">Site Settings</h1>
-        </div>
 
         {/* Tab strip */}
         <div className="flex gap-1 mb-8 border-b border-border">

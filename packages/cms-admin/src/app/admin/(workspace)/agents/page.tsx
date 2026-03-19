@@ -4,6 +4,7 @@ import { Plus } from "lucide-react";
 import { TabTitle } from "@/lib/tabs-context";
 import { AgentsList } from "@/components/agents-list";
 import { getSiteRole } from "@/lib/require-role";
+import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
 
 export default async function AgentsPage() {
   const [agents, siteRole] = await Promise.all([listAgents(), getSiteRole()]);
@@ -11,23 +12,18 @@ export default async function AgentsPage() {
   return (
     <>
       <TabTitle value="Agents" />
-      <div className="p-8 max-w-5xl">
-        <div className="mb-8 flex items-start justify-between">
-          <div>
-            <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">AI</p>
-            <h1 className="text-2xl font-bold text-foreground">Agents</h1>
-          </div>
-          {siteRole !== "viewer" && (
-            <Link
-              href="/admin/agents/new"
-              className="flex items-center gap-1.5 text-sm px-4 py-2 rounded-lg bg-primary text-primary-foreground hover:opacity-90 transition-opacity font-medium"
-            >
-              <Plus className="w-4 h-4" />
+      <ActionBar
+        actions={siteRole !== "viewer" ? (
+          <Link href="/admin/agents/new">
+            <ActionButton variant="primary" icon={<Plus style={{ width: 14, height: 14 }} />}>
               New Agent
-            </Link>
-          )}
-        </div>
-
+            </ActionButton>
+          </Link>
+        ) : undefined}
+      >
+        <ActionBarBreadcrumb items={["AI", "Agents"]} />
+      </ActionBar>
+      <div className="p-8 max-w-5xl">
         <AgentsList agents={agents} readOnly={siteRole === "viewer"} />
       </div>
     </>

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Trash2, Copy, Check, Upload, LayoutGrid, List, FolderOpen, Folder, ChevronLeft, ChevronRight, Search, X, ZoomIn, ExternalLink, FileWarning, Music, Video, FileText, Code, File, Pencil } from "lucide-react";
+import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
 import type { UsageRef } from "@/app/api/cms/media/usage/route";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
@@ -250,85 +251,77 @@ export default function MediaPage() {
         </div>
       )}
 
-      {/* ── Top bar ── */}
-      <div
-        className="sticky flex items-center gap-3 px-4 border-b border-border shrink-0"
-        style={{ top: 84, height: "48px", zIndex: 30, backgroundColor: "var(--card)" }}
-      >
-        <span className="text-sm font-mono text-foreground">media</span>
-        <span className="text-xs text-muted-foreground">({filtered.length}/{allFiles.length})</span>
-
-        <div style={{ flex: 1 }} />
-
-        {/* Search */}
-        <div style={{ position: "relative" }}>
-          <Search style={{ position: "absolute", left: "0.5rem", top: "50%", transform: "translateY(-50%)", width: "0.875rem", height: "0.875rem", color: "var(--muted-foreground)" }} />
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search files…"
-            style={{
-              paddingLeft: "1.75rem", paddingRight: query ? "1.75rem" : "0.5rem",
-              paddingTop: "0.25rem", paddingBottom: "0.25rem",
-              borderRadius: "6px", border: "1px solid var(--border)",
-              background: "var(--background)", color: "var(--foreground)",
-              fontSize: "0.8rem", width: "180px",
-            }}
-          />
-          {query && (
-            <button type="button" onClick={() => setQuery("")} style={{ position: "absolute", right: "0.5rem", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)" }}>
-              <X style={{ width: "0.75rem", height: "0.75rem" }} />
-            </button>
-          )}
-        </div>
-
-        {/* View toggle */}
-        <div style={{ display: "flex", border: "1px solid var(--border)", borderRadius: "6px", overflow: "hidden" }}>
-          {(["grid", "list"] as ViewMode[]).map((v) => (
-            <button
-              key={v}
-              type="button"
-              onClick={() => setView(v)}
-              style={{
-                padding: "0.25rem 0.5rem", background: view === v ? "var(--accent)" : "transparent",
-                border: "none", cursor: "pointer", color: view === v ? "var(--foreground)" : "var(--muted-foreground)",
-                display: "flex", alignItems: "center",
-              }}
-              title={v === "grid" ? "Grid view" : "List view"}
-            >
-              {v === "grid" ? <LayoutGrid style={{ width: "0.875rem", height: "0.875rem" }} /> : <List style={{ width: "0.875rem", height: "0.875rem" }} />}
-            </button>
-          ))}
-        </div>
-
-        {/* Upload button */}
-        {!readOnly && (
-          <>
-            <button
-              type="button"
-              onClick={() => inputRef.current?.click()}
-              disabled={pendingJobs > 0}
-              className={cn(
-                "flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md",
-                "bg-primary text-primary-foreground hover:opacity-90 transition-opacity",
-                pendingJobs > 0 && "opacity-70 cursor-wait"
-              )}
-            >
-              <Upload style={{ width: "0.875rem", height: "0.875rem" }} />
-              {uploadLabel}
-            </button>
+      {/* ── Action bar ── */}
+      <ActionBar
+        actions={<>
+          {/* Search */}
+          <div style={{ position: "relative" }}>
+            <Search style={{ position: "absolute", left: "0.5rem", top: "50%", transform: "translateY(-50%)", width: "0.875rem", height: "0.875rem", color: "var(--muted-foreground)" }} />
             <input
-              ref={inputRef}
-              type="file"
-              multiple
-              accept="*/*"
-              style={{ display: "none" }}
-              onChange={(e) => uploadFiles(e.target.files)}
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search files…"
+              style={{
+                paddingLeft: "1.75rem", paddingRight: query ? "1.75rem" : "0.5rem",
+                paddingTop: "0.25rem", paddingBottom: "0.25rem",
+                borderRadius: "6px", border: "1px solid var(--border)",
+                background: "var(--background)", color: "var(--foreground)",
+                fontSize: "0.8rem", width: "180px",
+              }}
             />
-          </>
-        )}
-      </div>
+            {query && (
+              <button type="button" onClick={() => setQuery("")} style={{ position: "absolute", right: "0.5rem", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)" }}>
+                <X style={{ width: "0.75rem", height: "0.75rem" }} />
+              </button>
+            )}
+          </div>
+
+          {/* View toggle */}
+          <div style={{ display: "flex", border: "1px solid var(--border)", borderRadius: "6px", overflow: "hidden" }}>
+            {(["grid", "list"] as ViewMode[]).map((v) => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => setView(v)}
+                style={{
+                  padding: "0.25rem 0.5rem", background: view === v ? "var(--accent)" : "transparent",
+                  border: "none", cursor: "pointer", color: view === v ? "var(--foreground)" : "var(--muted-foreground)",
+                  display: "flex", alignItems: "center",
+                }}
+                title={v === "grid" ? "Grid view" : "List view"}
+              >
+                {v === "grid" ? <LayoutGrid style={{ width: "0.875rem", height: "0.875rem" }} /> : <List style={{ width: "0.875rem", height: "0.875rem" }} />}
+              </button>
+            ))}
+          </div>
+
+          {/* Upload button */}
+          {!readOnly && (
+            <>
+              <ActionButton
+                variant="primary"
+                onClick={() => inputRef.current?.click()}
+                disabled={pendingJobs > 0}
+                icon={<Upload style={{ width: 14, height: 14 }} />}
+              >
+                {uploadLabel}
+              </ActionButton>
+              <input
+                ref={inputRef}
+                type="file"
+                multiple
+                accept="*/*"
+                style={{ display: "none" }}
+                onChange={(e) => uploadFiles(e.target.files)}
+              />
+            </>
+          )}
+        </>}
+      >
+        <ActionBarBreadcrumb items={["Media"]} />
+        <span style={{ fontSize: "0.75rem", color: "var(--muted-foreground)" }}>({filtered.length}/{allFiles.length})</span>
+      </ActionBar>
 
       {/* ── Body: sidebar + content ── */}
       <div style={{ display: "flex", flex: 1 }}>

@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Globe, MoreVertical, Settings2, Plus, Copy, Eye } from "lucide-react";
 import { useSiteRole } from "@/hooks/use-site-role";
 import { useTabs } from "@/lib/tabs-context";
+import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -122,26 +123,17 @@ export default function SitesDashboard() {
 
   if (!registry || !activeOrg) {
     return (
-      <div className="p-8 max-w-5xl">
-        <div className="mb-8 flex items-start justify-between">
-          <div>
-            <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">Sites</p>
-            <h1 className="text-2xl font-bold text-foreground">Sites</h1>
-          </div>
-          <button
-            type="button"
-            onClick={() => router.push("/admin/sites/new")}
-            style={{
-              display: "inline-flex", alignItems: "center", gap: "0.5rem",
-              padding: "0.5rem 1rem", borderRadius: "8px", border: "none",
-              background: "var(--primary)", color: "var(--primary-foreground)",
-              fontSize: "0.8rem", fontWeight: 600, cursor: "pointer",
-            }}
-          >
-            <Plus style={{ width: "0.875rem", height: "0.875rem" }} />
+      <>
+      <ActionBar
+        actions={
+          <ActionButton variant="primary" onClick={() => router.push("/admin/sites/new")} icon={<Plus style={{ width: 14, height: 14 }} />}>
             New site
-          </button>
-        </div>
+          </ActionButton>
+        }
+      >
+        <ActionBarBreadcrumb items={["Sites"]} />
+      </ActionBar>
+      <div className="p-8 max-w-5xl">
         <div style={{
           display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
           padding: "4rem 2rem", border: "1px dashed var(--border)", borderRadius: "12px",
@@ -167,33 +159,22 @@ export default function SitesDashboard() {
           </button>
         </div>
       </div>
+      </>
     );
   }
 
   return (
+    <>
+    <ActionBar
+      actions={isAdmin ? (
+        <ActionButton variant="primary" onClick={() => router.push("/admin/sites/new")} icon={<Plus style={{ width: 14, height: 14 }} />}>
+          New site
+        </ActionButton>
+      ) : undefined}
+    >
+      <ActionBarBreadcrumb items={["Sites"]} />
+    </ActionBar>
     <div className="p-8 max-w-5xl">
-      {/* Header */}
-      <div className="mb-8 flex items-start justify-between">
-        <div>
-          <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">Sites</p>
-          <h1 className="text-2xl font-bold text-foreground">Sites</h1>
-        </div>
-        {isAdmin && (
-          <button
-            type="button"
-            onClick={() => router.push("/admin/sites/new")}
-            style={{
-              display: "inline-flex", alignItems: "center", gap: "0.5rem",
-              padding: "0.5rem 1rem", borderRadius: "8px", border: "none",
-              background: "var(--primary)", color: "var(--primary-foreground)",
-              fontSize: "0.8rem", fontWeight: 600, cursor: "pointer",
-            }}
-          >
-            <Plus style={{ width: "0.875rem", height: "0.875rem" }} />
-            New site
-          </button>
-        )}
-      </div>
 
       {/* Filter tabs */}
       <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem" }}>
@@ -322,5 +303,6 @@ export default function SitesDashboard() {
         ))}
       </div>
     </div>
+    </>
   );
 }
