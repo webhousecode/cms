@@ -67,7 +67,23 @@ bash scripts/code-audit.sh
 
 - **Follow instructions exactly** — when given a task description, implement EXACTLY what is described. "Same as X" means find X's implementation and replicate the pattern. Do not add creative interpretations, extra features, or alternative approaches not asked for. When in doubt, ask — don't assume.
 - **CustomSelect** — always use `CustomSelect` component, never native `<select>` in CMS admin
-- **Delete actions** — ALL delete/trash/remove actions must have confirmation dialog, no exceptions
+- **Delete actions** — ALL delete/trash/remove actions must use the EXACT inline confirm pattern below. No exceptions, no variations, no "Sure?", no "Cancel":
+  ```jsx
+  {/* Default: trigger button */}
+  <button onClick={() => setConfirm(true)}>×</button>
+
+  {/* Confirming: "Remove? [Yes] [No]" — ALWAYS this exact pattern */}
+  <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
+  <button onClick={handleDelete}
+    style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
+      border: "none", background: "var(--destructive)", color: "#fff",
+      cursor: "pointer", lineHeight: 1 }}>Yes</button>
+  <button onClick={() => setConfirm(false)}
+    style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
+      border: "1px solid var(--border)", background: "transparent",
+      color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
+  ```
+  The label can vary ("Remove?", "Delete?", "Restore?") but buttons are ALWAYS [Yes] and [No] with the exact styles above.
 - **No native dialogs** — never use `window.prompt`, `window.confirm`, or `window.alert`
 - **Interactives** — user calls them "Ints" for short
 - **Commit after work** — always commit + push after significant work blocks
