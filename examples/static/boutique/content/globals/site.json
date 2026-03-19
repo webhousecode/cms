@@ -18,18 +18,55 @@
     "twitterUrl": "https://x.com/aura",
     "email": "hello@aura-store.com",
     "galleryImages": [
-      "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=800&q=80&auto=format",
-      "https://images.unsplash.com/photo-1558171813-4c088753af8f?w=800&q=80&auto=format",
-      "https://images.unsplash.com/photo-1581044777550-4cfa60707998?w=800&q=80&auto=format",
-      "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&q=80&auto=format",
-      "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&q=80&auto=format",
-      "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800&q=80&auto=format",
-      "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=800&q=80&auto=format",
-      "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=800&q=80&auto=format",
-      "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&q=80&auto=format",
-      "https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=800&q=80&auto=format"
-    ]
+      {
+        "url": "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=800&q=80&auto=format",
+        "alt": "Fashion editorial — model in flowing dress against soft backdrop"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1558171813-4c088753af8f?w=800&q=80&auto=format",
+        "alt": "Behind the scenes at the AURA atelier"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1581044777550-4cfa60707998?w=800&q=80&auto=format",
+        "alt": "Minimalist fabric swatches and design sketches"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800&q=80&auto=format",
+        "alt": "Model walking in tailored look on clean white background"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=800&q=80&auto=format",
+        "alt": "AURA boutique interior with curated clothing display"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800&q=80&auto=format",
+        "alt": "Elegant dress in motion capturing fabric drape"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=800&q=80&auto=format",
+        "alt": "Silk garment detail showing lustre and texture"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=800&q=80&auto=format",
+        "alt": "Editorial portrait — effortless layered styling"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&q=80&auto=format",
+        "alt": "Linen and wool outerwear hung in natural light"
+      },
+      {
+        "url": "https://images.unsplash.com/photo-1576566588028-4147f3842f27?w=800&q=80&auto=format",
+        "alt": "Folded cashmere knits in warm neutral tones"
+      }
+    ],
+    "_lastEditedBy": {
+      "userId": "fb4eda6a-bc5c-4dec-8cb6-c77c9fb74cd9",
+      "name": "Christian Broberg",
+      "email": "cb@webhouse.dk",
+      "at": "2026-03-19T00:29:24.690Z"
+    }
   },
   "id": "Xl876mgoJW83lBgIdH5q6",
-  "_fieldMeta": {}
+  "_fieldMeta": {},
+  "updatedAt": "2026-03-19T00:29:24.691Z"
 }

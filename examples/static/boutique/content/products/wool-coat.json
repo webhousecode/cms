@@ -8,10 +8,10 @@
     "category": "outerwear",
     "heroImage": "https://images.unsplash.com/photo-1539533018447-63fcce2678e3?w=1200&q=85&auto=format",
     "images": [
-      "https://images.unsplash.com/photo-1539533018447-63fcce2678e3?w=800&q=80&auto=format",
-      "https://images.unsplash.com/photo-1544022613-e87ca75a784a?w=800&q=80&auto=format",
-      "https://images.unsplash.com/photo-1548624313-0396c75e4b1a?w=800&q=80&auto=format",
-      "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&q=80&auto=format"
+      { "url": "https://images.unsplash.com/photo-1539533018447-63fcce2678e3?w=800&q=80&auto=format", "alt": "Camel belted wool coat with notched lapels" },
+      { "url": "https://images.unsplash.com/photo-1544022613-e87ca75a784a?w=800&q=80&auto=format", "alt": "Back view of wool coat showing belt and structured fit" },
+      { "url": "https://images.unsplash.com/photo-1548624313-0396c75e4b1a?w=800&q=80&auto=format", "alt": "Model wearing belted wool coat outdoors in winter light" },
+      { "url": "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=800&q=80&auto=format", "alt": "Close-up of double-faced Italian wool fabric" }
     ],
     "sizes": [
       "XS",

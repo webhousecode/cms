@@ -25,7 +25,7 @@ interface ProductData {
     description: string;
     category: string;
     heroImage: string;
-    images: string[];
+    images: { url: string; alt: string }[];
     sizes: string[];
     color: string;
     material: string;
@@ -53,7 +53,7 @@ interface SiteSettings {
     instagramUrl: string;
     twitterUrl: string;
     email: string;
-    galleryImages: string[];
+    galleryImages: { url: string; alt: string }[];
   };
 }
 
@@ -860,7 +860,7 @@ function scrollScript(): string {
 // Product card (reused on home + shop)
 // ---------------------------------------------------------------------------
 function productCard(p: ProductData, showSizes: boolean = false): string {
-  const hoverImg = p.data.images && p.data.images.length > 1 ? p.data.images[1] : p.data.heroImage;
+  const hoverImg = p.data.images && p.data.images.length > 1 ? p.data.images[1].url : p.data.heroImage;
   return `
         <a href="/shop/${p.slug}/" class="product-card">
           <div class="product-card-image">
@@ -884,9 +884,9 @@ function buildHome(): string {
 
   const galleryHtml = site.data.galleryImages
     .map(
-      (url, i) => `
+      (img) => `
           <div class="gallery-item">
-            <img src="${esc(url)}" alt="Editorial image ${i + 1}" loading="lazy">
+            <img src="${esc(img.url)}" alt="${esc(img.alt)}" loading="lazy">
           </div>`
     )
     .join('\n');
@@ -970,8 +970,8 @@ function buildProductDetail(product: ProductData): string {
 
   const galleryHtml = data.images
     .map(
-      (url, i) => `
-          <img src="${esc(url)}" alt="${esc(data.title)} — image ${i + 1}" loading="${i === 0 ? 'eager' : 'lazy'}">`
+      (img, i) => `
+          <img src="${esc(img.url)}" alt="${esc(img.alt)}" loading="${i === 0 ? 'eager' : 'lazy'}">`
     )
     .join('\n');
 

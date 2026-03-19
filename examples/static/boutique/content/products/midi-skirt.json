@@ -8,9 +8,9 @@
     "category": "bottoms",
     "heroImage": "https://images.unsplash.com/photo-1583496661160-fb5886a0aaaa?w=1200&q=85&auto=format",
     "images": [
-      "https://images.unsplash.com/photo-1583496661160-fb5886a0aaaa?w=800&q=80&auto=format",
-      "https://images.unsplash.com/photo-1577900232427-18219b9dab20?w=800&q=80&auto=format",
-      "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800&q=80&auto=format"
+      { "url": "https://images.unsplash.com/photo-1583496661160-fb5886a0aaaa?w=800&q=80&auto=format", "alt": "Dusty rose pleated midi skirt with knife pleats" },
+      { "url": "https://images.unsplash.com/photo-1577900232427-18219b9dab20?w=800&q=80&auto=format", "alt": "Close-up of permanent knife pleat detailing" },
+      { "url": "https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=800&q=80&auto=format", "alt": "Pleated midi skirt in motion showing elegant drape" }
     ],
     "sizes": [
       "XS",
