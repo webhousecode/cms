@@ -74,6 +74,7 @@ const PATH_TITLES: Record<string, string> = {
   "/admin/interactives": "Interactives",
   "/admin/account": "Account",
   "/admin/trash": "Trash",
+  "/admin/backup": "Backup",
 };
 
 function pathTitle(path: string): string {
