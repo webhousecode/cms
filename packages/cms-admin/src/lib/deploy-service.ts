@@ -66,19 +66,11 @@ export async function triggerDeploy(): Promise<DeployEntry> {
   if (provider === "off") {
     const siteEntry = await getActiveSiteEntry();
 
-    // Try to resolve a GitHub token (from OAuth, service token, or any connected site)
+    // Try to resolve a GitHub token (OAuth cookie → site service token → scan all sites)
     if (!token) {
       try {
         token = await resolveToken("oauth");
-      } catch {
-        try {
-          const { dataDir } = await getActiveSitePaths();
-          const tokenFile = path.join(dataDir, "github-service-token.json");
-          const raw = await readFile(tokenFile, "utf-8");
-          const stored = JSON.parse(raw) as { token?: string };
-          if (stored.token) token = stored.token;
-        } catch { /* no token available */ }
-      }
+      } catch { /* no token available */ }
     }
 
     if (siteEntry?.adapter === "github" && siteEntry.configPath?.startsWith("github://")) {
@@ -145,8 +137,20 @@ export async function triggerDeploy(): Promise<DeployEntry> {
         break;
 
       case "github-pages": {
-        const useToken = token || config.deployApiToken;
-        const useRepo = appName || config.deployAppName;
+        // Resolve token: explicit config → OAuth cookie → service token → scan all sites
+        let useToken = token || config.deployApiToken;
+        if (!useToken) {
+          try { useToken = await resolveToken("oauth"); } catch { /* no token */ }
+        }
+        let useRepo = appName || config.deployAppName;
+        // Auto-create repo for filesystem sites if needed
+        if (useToken && !useRepo) {
+          const siteEntry = await getActiveSiteEntry();
+          if (siteEntry) {
+            useRepo = await autoCreateGitHubRepo(useToken, siteEntry.name, siteEntry.id);
+            try { await writeSiteConfig({ deployAppName: useRepo }); } catch { /* non-fatal */ }
+          }
+        }
         if (!useToken || !useRepo) {
           throw new Error("GitHub Pages requires a GitHub token. Connect GitHub via OAuth or add a token in Settings → Automation.");
         }

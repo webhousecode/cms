@@ -48,7 +48,7 @@ export function ToolsSettingsPanel() {
   const [config, setConfig] = useState<AutomationConfig>(DEFAULTS);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
-  const [isGitHubSite, setIsGitHubSite] = useState(false);
+  const [canAutoDeploy, setCanAutoDeploy] = useState(false);
 
   function updateConfig(fn: (c: AutomationConfig) => AutomationConfig) {
     setConfig(fn);
@@ -79,16 +79,11 @@ export function ToolsSettingsPanel() {
         });
       })
       .catch(() => {});
-    // Detect if GitHub-backed site
-    fetch("/api/cms/registry")
+    // Detect if site can auto-deploy (GitHub-backed or filesystem with build.ts)
+    fetch("/api/admin/deploy/can-deploy")
       .then((r) => r.ok ? r.json() : null)
       .then((d: any) => {
-        if (!d?.registry) return;
-        const orgId = document.cookie.match(/(?:^|; )cms-active-org=([^;]*)/)?.[1] ?? d.registry.defaultOrgId;
-        const siteId = document.cookie.match(/(?:^|; )cms-active-site=([^;]*)/)?.[1] ?? d.registry.defaultSiteId;
-        const org = d.registry.orgs?.find((o: any) => o.id === orgId);
-        const site = org?.sites?.find((s: any) => s.id === siteId);
-        if (site?.adapter === "github") setIsGitHubSite(true);
+        if (d?.canDeploy) setCanAutoDeploy(true);
       })
       .catch(() => {});
   }, []);
@@ -147,9 +142,9 @@ export function ToolsSettingsPanel() {
 
   const needsHookUrl = ["vercel", "netlify", "cloudflare", "custom"].includes(config.deployProvider);
   // GitHub-backed sites already have a token from OAuth — no manual token needed
-  const ghPagesAutoConfigured = config.deployProvider === "github-pages" && isGitHubSite;
-  const needsToken = ["flyio"].includes(config.deployProvider) || (config.deployProvider === "github-pages" && !isGitHubSite);
-  const needsAppName = ["flyio"].includes(config.deployProvider) || (config.deployProvider === "github-pages" && !isGitHubSite);
+  const ghPagesAutoConfigured = config.deployProvider === "github-pages" && canAutoDeploy;
+  const needsToken = ["flyio"].includes(config.deployProvider) || (config.deployProvider === "github-pages" && !canAutoDeploy);
+  const needsAppName = ["flyio"].includes(config.deployProvider) || (config.deployProvider === "github-pages" && !canAutoDeploy);
 
   return (
     <div>
