@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { PageHeader } from "@/components/page-header";
+import { ActionBar, ActionBarBreadcrumb } from "@/components/action-bar";
 import { GeneralSettingsPanel, PasswordChangePanel } from "@/components/settings/general-settings-panel";
 import { SectionHeading } from "@/components/ui/section-heading";
 
@@ -18,14 +18,10 @@ export default async function AccountPage({
 
   return (
     <>
-      <PageHeader>
-        <span className="text-sm text-muted-foreground font-mono">Account</span>
-      </PageHeader>
+      <ActionBar>
+        <ActionBarBreadcrumb items={["Account"]} />
+      </ActionBar>
       <div className="p-8 max-w-4xl">
-        <div className="mb-8">
-          <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">Account</p>
-          <h1 className="text-2xl font-bold text-foreground">Account Preferences</h1>
-        </div>
 
         {/* Tab strip */}
         <div className="flex gap-1 mb-8 border-b border-border">

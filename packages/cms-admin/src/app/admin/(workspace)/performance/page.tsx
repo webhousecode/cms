@@ -12,6 +12,7 @@ import {
   XCircle,
   Zap,
 } from "lucide-react";
+import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -129,23 +130,17 @@ export default function PerformancePage() {
   const hasData = runs.length > 0 || agents.length > 0;
 
   return (
-    <div className="p-8 max-w-6xl">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">
-            Analytics
-          </p>
-          <h1 className="text-2xl font-bold text-foreground">Performance</h1>
-        </div>
-        <button
-          onClick={fetchAll}
-          disabled={loading}
-          className="flex items-center gap-2 px-3 py-1.5 text-sm rounded-lg border border-border hover:bg-secondary transition-colors disabled:opacity-60"
-        >
-          <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+    <>
+    <ActionBar
+      actions={
+        <ActionButton variant="primary" onClick={fetchAll} disabled={loading} icon={<RefreshCw style={{ width: 14, height: 14 }} className={loading ? "animate-spin" : ""} />}>
           Refresh
-        </button>
-      </div>
+        </ActionButton>
+      }
+    >
+      <ActionBarBreadcrumb items={["Tools", "Performance"]} />
+    </ActionBar>
+    <div className="p-8 max-w-6xl">
 
       {!hasData && !loading ? (
         <div className="rounded-xl border border-border p-8 text-center text-muted-foreground">
@@ -426,6 +421,7 @@ export default function PerformancePage() {
         </div>
       )}
     </div>
+    </>
   );
 }
 

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Building2, Plus, Search, MoreVertical, Settings2, Trash2 } from "lucide-react";
+import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -84,14 +85,18 @@ export default function OrganizationsPage() {
     : orgs;
 
   return (
+    <>
+    <ActionBar
+      actions={
+        <ActionButton variant="primary" onClick={() => router.push("/admin/organizations/new")} icon={<Plus style={{ width: 14, height: 14 }} />}>
+          New organization
+        </ActionButton>
+      }
+    >
+      <ActionBarBreadcrumb items={["Organizations"]} />
+    </ActionBar>
     <div className="p-8 max-w-5xl">
-      {/* Header */}
-      <div className="mb-6">
-        <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">Organizations</p>
-        <h1 className="text-2xl font-bold text-foreground">Your Organizations</h1>
-      </div>
-
-      {/* Search + New org */}
+      {/* Search */}
       <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.5rem" }}>
         <div style={{ position: "relative", flex: 1, maxWidth: "280px" }}>
           <Search style={{ position: "absolute", left: "0.6rem", top: "50%", transform: "translateY(-50%)", width: "0.875rem", height: "0.875rem", color: "var(--muted-foreground)" }} />
@@ -107,20 +112,6 @@ export default function OrganizationsPage() {
             }}
           />
         </div>
-        <div style={{ flex: 1 }} />
-        <button
-          type="button"
-          onClick={() => router.push("/admin/organizations/new")}
-          style={{
-            display: "inline-flex", alignItems: "center", gap: "0.5rem",
-            padding: "0.45rem 1rem", borderRadius: "8px", border: "none",
-            background: "var(--primary)", color: "var(--primary-foreground)",
-            fontSize: "0.8rem", fontWeight: 600, cursor: "pointer",
-          }}
-        >
-          <Plus style={{ width: "0.875rem", height: "0.875rem" }} />
-          New organization
-        </button>
       </div>
 
       {/* Org cards grid */}
@@ -187,5 +178,6 @@ export default function OrganizationsPage() {
         </div>
       )}
     </div>
+    </>
   );
 }
