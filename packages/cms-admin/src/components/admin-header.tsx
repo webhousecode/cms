@@ -111,16 +111,24 @@ function UserNav({ user }: { user: SessionUser | null }) {
 function PreviewButton() {
   const [previewUrl, setPreviewUrl] = useState<string>("");
   const [siteName, setSiteName] = useState("Site");
+  const [fetchKey, setFetchKey] = useState(0);
   const { openTab } = useTabs();
 
+  // Re-fetch on site switch
   useEffect(() => {
+    function onSiteChange() { setFetchKey((k) => k + 1); }
+    window.addEventListener("cms-site-change", onSiteChange);
+    return () => window.removeEventListener("cms-site-change", onSiteChange);
+  }, []);
+
+  useEffect(() => {
+    setPreviewUrl(""); // reset while loading
     fetch("/api/admin/site-config")
       .then((r) => r.ok ? r.json() : null)
       .then((data) => {
-        if (data?.previewSiteUrl) setPreviewUrl(data.previewSiteUrl);
+        setPreviewUrl(data?.previewSiteUrl ?? "");
       })
       .catch(() => {});
-    // Get site name for tab title
     fetch("/api/cms/registry")
       .then((r) => r.ok ? r.json() : null)
       .then((d: any) => {
@@ -132,7 +140,7 @@ function PreviewButton() {
         if (site?.name) setSiteName(site.name);
       })
       .catch(() => {});
-  }, []);
+  }, [fetchKey]);
 
   const openPreview = useCallback(async () => {
     if (previewUrl) {
