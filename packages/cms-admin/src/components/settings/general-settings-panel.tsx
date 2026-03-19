@@ -290,7 +290,7 @@ function SiteSection() {
 	return (
 		<form ref={formRef} onSubmit={handleSave} onChange={() => window.dispatchEvent(new CustomEvent("cms:settings-dirty"))} style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
 			<div>
-				<SectionHeading>Site</SectionHeading>
+				<SectionHeading first>Site</SectionHeading>
 				<Card>
 					<InputRow
 						label="Site name"
@@ -1083,10 +1083,9 @@ function SchedulerNotificationsSection() {
 
 export function SiteGeneralSettingsPanel() {
 	return (
-		<div style={{ display: "flex", flexDirection: "column", gap: "2.5rem" }}>
+		<div>
 			<SiteSection />
 			<RevalidationSection />
-			<div style={{ height: "1px", background: "var(--border)" }} />
 			<DangerZone />
 		</div>
 	);
