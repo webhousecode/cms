@@ -109,7 +109,8 @@ function UserNav({ user }: { user: SessionUser | null }) {
 }
 
 function PreviewButton() {
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>("");
+  const router = useRouter();
 
   useEffect(() => {
     fetch("/api/admin/site-config")
@@ -123,10 +124,13 @@ function PreviewButton() {
   const openPreview = useCallback(() => {
     if (previewUrl) {
       window.open(previewUrl, "_blank", "noopener,noreferrer");
+    } else {
+      // No external preview URL — open admin preview page
+      router.push("/admin/preview");
     }
-  }, [previewUrl]);
+  }, [previewUrl, router]);
 
-  // "p" shortcut → open preview in new browser tab
+  // "p" shortcut → open preview
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key !== "p" || e.metaKey || e.ctrlKey || e.altKey) return;
@@ -138,8 +142,6 @@ function PreviewButton() {
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [openPreview]);
-
-  if (!previewUrl) return null;
 
   return (
     <button
