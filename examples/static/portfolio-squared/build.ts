@@ -434,9 +434,9 @@ function build() {
   const DIST = join(__dirname, 'dist');
 
   // Load site settings
-  const siteDoc = loadDocument<SiteSettings>('settings', 'site');
+  const siteDoc = loadDocument<SiteSettings>('globals', 'site');
   if (!siteDoc) {
-    console.error('ERROR: content/settings/site.json not found. Cannot build without site settings.');
+    console.error('ERROR: content/globals/site.json not found. Cannot build without site settings.');
     process.exit(1);
   }
   const site = siteDoc.data;
