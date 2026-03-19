@@ -50,7 +50,7 @@ export default async function SettingsPage({
     { id: "email",       label: "Email" },
     { id: "ai",          label: "AI" },
     { id: "brand-voice", label: "Brand Voice" },
-    { id: "tools",       label: "Tools" },
+    { id: "tools",       label: "Automation" },
     { id: "mcp",         label: "MCP" },
     ...(globals.length > 0 ? [{ id: "globals", label: "Globals" }] : []),
     ...(siteConfig.schemaEditEnabled ? [{ id: "schema", label: "Schema" }] : []),

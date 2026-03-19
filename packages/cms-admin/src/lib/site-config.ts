@@ -39,6 +39,13 @@ export interface SiteConfig {
   backupRetentionDays: number;
   /** Link checker schedule: "off" | "daily" | "weekly" */
   linkCheckSchedule: "off" | "daily" | "weekly";
+  /** Link checker scheduled time (HH:MM) */
+  linkCheckTime: string;
+  /** Webhook URLs per automation (ordered, multiple per type) */
+  backupWebhooks: { id: string; url: string }[];
+  linkCheckWebhooks: { id: string; url: string }[];
+  publishWebhooks: { id: string; url: string }[];
+  agentDefaultWebhooks: { id: string; url: string }[];
 }
 
 async function getConfigPath(): Promise<string> {
@@ -71,6 +78,11 @@ async function defaults(): Promise<SiteConfig> {
     backupTime: "03:00",
     backupRetentionDays: 30,
     linkCheckSchedule: "off",
+    linkCheckTime: "04:00",
+    backupWebhooks: [],
+    linkCheckWebhooks: [],
+    publishWebhooks: [],
+    agentDefaultWebhooks: [],
   };
 }
 

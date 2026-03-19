@@ -92,7 +92,7 @@ export async function runToolsScheduler(): Promise<{ backupRan: boolean; linkChe
     }
 
     // ── Scheduled Link Check ─────────────────────────────────
-    if (isDue(config.linkCheckSchedule, "04:00", state.lastLinkCheckRun)) {
+    if (isDue(config.linkCheckSchedule, config.linkCheckTime ?? "04:00", state.lastLinkCheckRun)) {
       try {
         console.log("[tools-scheduler] Running scheduled link check...");
         // Trigger the link check via internal HTTP call (reuses existing logic)
