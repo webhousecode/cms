@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, FormEvent } from "react";
+import { useState, useEffect, useRef, FormEvent } from "react";
 import { Check, Sparkles, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { CustomSelect } from "@/components/ui/custom-select";
@@ -79,14 +79,22 @@ export function AIDefaultsPanel() {
     setSaved(true);
     toast.success("AI defaults saved");
     setTimeout(() => setSaved(false), 2500);
+    window.dispatchEvent(new CustomEvent("cms:settings-saved"));
   }
+
+  const defaultsFormRef = useRef<HTMLFormElement>(null);
+  useEffect(() => {
+    function onSave() { defaultsFormRef.current?.requestSubmit(); }
+    window.addEventListener("cms:settings-save", onSave);
+    return () => window.removeEventListener("cms:settings-save", onSave);
+  }, []);
 
   if (loading) {
     return <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>Loading…</p>;
   }
 
   return (
-    <form onSubmit={handleSave}>
+    <form ref={defaultsFormRef} onSubmit={handleSave}>
       {/* Interactives section */}
       <div style={{ marginBottom: "2rem" }}>
         <SectionHeading>Interactives (Generate &amp; Edit with AI)</SectionHeading>
@@ -154,23 +162,6 @@ export function AIDefaultsPanel() {
         <span>Changing models affects AI quality and cost. Sonnet produces better code but costs more per request. These are defaults — the built-in values are recommended for most use cases.</span>
       </div>
 
-      <button
-        type="submit"
-        disabled={saving}
-        style={{
-          display: "flex", alignItems: "center", gap: "0.375rem",
-          padding: "0.5rem 1rem", borderRadius: "7px", border: "none",
-          background: saved ? "color-mix(in srgb, var(--primary) 15%, transparent)" : "var(--primary)",
-          color: saved ? "var(--primary)" : "var(--primary-foreground)",
-          fontSize: "0.875rem", fontWeight: 600, cursor: saving ? "wait" : "pointer",
-          transition: "all 200ms",
-        }}
-      >
-        {saved
-          ? <><Check style={{ width: "0.9rem", height: "0.9rem" }} /> Saved</>
-          : saving ? "Saving…" : <><Sparkles style={{ width: "0.9rem", height: "0.9rem" }} /> Save AI defaults</>
-        }
-      </button>
     </form>
   );
 }

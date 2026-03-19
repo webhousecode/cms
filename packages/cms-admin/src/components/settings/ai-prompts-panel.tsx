@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Loader2, RotateCcw, Save, Copy, Check } from "lucide-react";
 import { toast } from "sonner";
 import { SectionHeading } from "@/components/ui/section-heading";
@@ -35,7 +35,7 @@ export function AIPromptsPanel() {
       .catch(() => setLoading(false));
   }, []);
 
-  async function handleSave() {
+  const handleSave = useCallback(async () => {
     setSaving(true);
     setSaved(false);
     try {
@@ -57,7 +57,14 @@ export function AIPromptsPanel() {
       /* ignore */
     }
     setSaving(false);
-  }
+    window.dispatchEvent(new CustomEvent("cms:settings-saved"));
+  }, [prompts]);
+
+  useEffect(() => {
+    function onSave() { handleSave(); }
+    window.addEventListener("cms:settings-save", onSave);
+    return () => window.removeEventListener("cms:settings-save", onSave);
+  }, [handleSave]);
 
   function resetPrompt(id: string) {
     // Fetch default from server
@@ -157,19 +164,6 @@ export function AIPromptsPanel() {
         </div>
       ))}
 
-      <button
-        type="button"
-        onClick={handleSave}
-        disabled={saving}
-        className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity disabled:opacity-60"
-      >
-        {saving ? (
-          <Loader2 className="w-4 h-4 animate-spin" />
-        ) : (
-          <Save className="w-4 h-4" />
-        )}
-        {saved ? "Saved!" : saving ? "Saving…" : "Save prompts"}
-      </button>
     </div>
   );
 }

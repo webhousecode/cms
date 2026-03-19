@@ -423,6 +423,8 @@ function RevalidationSection() {
 	const [previewUrl, setPreviewUrl] = useState("");
 	const [logOpen, setLogOpen] = useState(false);
 
+	const revalFormRef = useRef<HTMLFormElement>(null);
+
 	useEffect(() => {
 		fetch("/api/cms/revalidation")
 			.then((r) => r.json())
@@ -442,6 +444,12 @@ function RevalidationSection() {
 			.catch(() => { });
 	}, []);
 
+	useEffect(() => {
+		function onSave() { revalFormRef.current?.requestSubmit(); }
+		window.addEventListener("cms:settings-save", onSave);
+		return () => window.removeEventListener("cms:settings-save", onSave);
+	}, []);
+
 	// Only show for GitHub-backed sites
 	if (adapter === null) return null; // Loading
 	if (adapter === "filesystem") return null;
@@ -459,13 +467,6 @@ function RevalidationSection() {
 		const base = previewUrl.replace(/\/+$/, "");
 		setUrl(`${base}/api/revalidate`);
 	}
-
-	const revalFormRef = useRef<HTMLFormElement>(null);
-	useEffect(() => {
-		function onSave() { revalFormRef.current?.requestSubmit(); }
-		window.addEventListener("cms:settings-save", onSave);
-		return () => window.removeEventListener("cms:settings-save", onSave);
-	}, []);
 
 	async function handleSave(e: FormEvent) {
 		e.preventDefault();
