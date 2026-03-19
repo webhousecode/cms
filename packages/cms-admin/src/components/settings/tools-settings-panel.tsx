@@ -209,11 +209,21 @@ export function ToolsSettingsPanel() {
 
         {needsToken && (
           <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
-            <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>API Token</label>
-            <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: 0 }}>
-              {config.deployProvider === "flyio" && "Fly.io → fly tokens create deploy"}
-              {config.deployProvider === "github-pages" && "GitHub → Settings → Developer settings → Personal access tokens"}
-            </p>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>API Token</label>
+              {config.deployProvider === "flyio" && (
+                <a href="https://fly.io/dashboard/personal/tokens" target="_blank" rel="noopener noreferrer"
+                  style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>
+                  Get token <span style={{ fontSize: "0.6rem" }}>↗</span>
+                </a>
+              )}
+              {config.deployProvider === "github-pages" && (
+                <a href="https://github.com/settings/tokens/new?scopes=repo&description=webhouse-deploy" target="_blank" rel="noopener noreferrer"
+                  style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>
+                  Get token <span style={{ fontSize: "0.6rem" }}>↗</span>
+                </a>
+              )}
+            </div>
             <input
               type="password"
               value={config.deployApiToken}

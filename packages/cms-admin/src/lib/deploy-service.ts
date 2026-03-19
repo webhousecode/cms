@@ -7,8 +7,9 @@
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
-import { getActiveSitePaths } from "./site-paths";
-import { readSiteConfig } from "./site-config";
+import { getActiveSitePaths, getActiveSiteEntry } from "./site-paths";
+import { readSiteConfig, writeSiteConfig } from "./site-config";
+import { resolveToken } from "./site-pool";
 
 export type DeployProvider = "off" | "vercel" | "netlify" | "flyio" | "cloudflare" | "github-pages" | "custom";
 
@@ -56,7 +57,23 @@ export async function listDeploys(): Promise<DeployEntry[]> {
 
 export async function triggerDeploy(): Promise<DeployEntry> {
   const config = await readSiteConfig();
-  const provider = config.deployProvider;
+  let provider = config.deployProvider;
+  let token = config.deployApiToken;
+  let appName = config.deployAppName;
+
+  // Auto-detect: GitHub-backed sites can deploy to GitHub Pages without manual config
+  if (provider === "off") {
+    const siteEntry = await getActiveSiteEntry();
+    if (siteEntry?.adapter === "github" && siteEntry.configPath?.startsWith("github://")) {
+      // Extract owner/repo from configPath: "github://owner/repo/..."
+      const match = siteEntry.configPath.match(/^github:\/\/([^/]+\/[^/]+)/);
+      if (match) {
+        provider = "github-pages";
+        appName = match[1];
+        try { token = await resolveToken("oauth"); } catch { /* no token */ }
+      }
+    }
+  }
 
   if (provider === "off") {
     return { id: uid(), provider, status: "error", timestamp: now(), error: "No deploy provider configured" };
@@ -96,13 +113,21 @@ export async function triggerDeploy(): Promise<DeployEntry> {
         break;
 
       case "github-pages":
-        if (config.deployApiToken && config.deployAppName) {
-          const pagesUrl = await githubPagesDispatch(config.deployApiToken, config.deployAppName);
-          if (pagesUrl) entry.url = pagesUrl;
+        if ((token || config.deployApiToken) && (appName || config.deployAppName)) {
+          const useToken = token || config.deployApiToken;
+          const useRepo = appName || config.deployAppName;
+          const pagesUrl = await githubPagesDispatch(useToken, useRepo);
+          if (pagesUrl) {
+            entry.url = pagesUrl;
+            // Auto-save production URL if not set
+            if (!config.deployProductionUrl) {
+              try { await writeSiteConfig({ deployProductionUrl: pagesUrl }); } catch { /* non-fatal */ }
+            }
+          }
         } else if (config.deployHookUrl) {
           await postHook(config.deployHookUrl);
         } else {
-          throw new Error("GitHub Pages requires API token + repo (owner/repo) or a deploy hook URL");
+          throw new Error("GitHub Pages requires a GitHub token. Connect GitHub via OAuth or add a token in Settings → Automation.");
         }
         entry.status = "success";
         break;
