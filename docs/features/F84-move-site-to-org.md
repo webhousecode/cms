@@ -122,12 +122,36 @@ Also add "Move to..." option in the site card's `⋯` menu on `/admin/sites`:
 - `packages/cms-admin/src/components/settings/general-settings-panel.tsx` — add move UI in DangerZone
 - `packages/cms-admin/src/app/admin/(workspace)/sites/page.tsx` — add "Move to..." context menu option
 
+### Downstream dependents of `site-registry.ts` (17 files, 78 import references)
+
+These files import from `site-registry.ts` but are **NOT modified** — they read registry data and will automatically see the moved site in its new org:
+
+- `src/lib/cms.ts` (6 refs) — loads config for active site
+- `src/lib/site-paths.ts` (6 refs) — resolves dataDir/contentDir/uploadDir
+- `src/lib/site-pool.ts` (4 refs) — site pool management
+- `src/lib/team-access.ts` (3 refs) — per-site team roles
+- `src/lib/github-media.ts` (4 refs) — GitHub media client factory
+- `src/lib/revalidation.ts` (3 refs) — webhook revalidation config
+- `src/lib/invitations.ts` (2 refs) — invitation token management
+- `src/components/site-switcher.tsx` (3 refs) — renders org/site dropdowns
+- `src/app/api/cms/registry/route.ts` (8 refs) — registry CRUD API
+- `src/app/api/cms/registry/rename/route.ts` (3 refs) — site rename
+- `src/app/api/cms/registry/stats/route.ts` (2 refs) — site stats
+- `src/app/api/cms/revalidation/route.ts` (4 refs) — revalidation settings
+- `src/app/api/cms/[collection]/[slug]/route.ts` (4 refs) — document CRUD
+- `src/app/admin/(workspace)/sites/page.tsx` (4 refs) — sites dashboard
+- `src/app/admin/(workspace)/sites/new/page.tsx` (2 refs) — new site form
+- `src/instrumentation.ts` (2 refs) — scheduler startup
+
+**Key insight:** Because `moveSite()` only moves the `SiteEntry` object between org arrays (same data, different parent), all downstream consumers work unchanged — they look up sites by `cms-active-org` + `cms-active-site` cookies, which get updated in the UI after the move.
+
 ### Blast radius
-- Registry write is atomic (single `saveRegistry()` call) — no partial state
+- Registry write is atomic (single `saveRegistry()` call) — no partial state possible
 - `defaultSiteId`/`defaultOrgId` may change if the moved site was the default — handled in `moveSite()`
 - Team access (`_data/team-access.json`) is per-site, not per-org — stays intact
 - Revalidation config is stored on the `SiteEntry` itself — moves with the site
 - Active cookies (`cms-active-org`, `cms-active-site`) need updating in the UI after move
+- **Risk area:** If a user has the moved site active and another user moves it, the first user's `cms-active-org` cookie becomes stale — next page load will fall back to default org/site. This is acceptable behavior (not a crash, just a redirect to the default site).
 
 ### Breaking changes
 - None — new function and API route, no existing interfaces changed
