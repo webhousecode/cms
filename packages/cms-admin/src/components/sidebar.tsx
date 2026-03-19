@@ -49,9 +49,9 @@ export function AppSidebar({ collections }: Props) {
     ? "/webhouse-wordmark-light.svg"
     : "/webhouse-wordmark-dark.svg";
   const [showLogoIcon, setShowLogoIcon] = useState(() => {
-    if (typeof document === "undefined") return true;
+    if (typeof document === "undefined") return false;
     const cookie = document.cookie.match(/(?:^|; )cms-logo-icon=([^;]*)/)?.[1];
-    return cookie !== undefined ? cookie === "true" : true;
+    return cookie !== undefined ? cookie === "true" : false;
   });
   const [contentOpen, setContentOpen] = useState(() => {
     if (typeof window === "undefined") return true;
@@ -59,21 +59,19 @@ export function AppSidebar({ collections }: Props) {
     return saved !== null ? saved === "true" : true;
   });
 
-  // Load sidebar prefs from server (overrides localStorage for non-cookie prefs)
+  // Load sidebar prefs
   useEffect(() => {
-    // Logo icon: read from cookie (global, survives site switch)
+    // Logo icon: ONLY from cookie (global preference, never from per-site user-state)
     const cookie = document.cookie.match(/(?:^|; )cms-logo-icon=([^;]*)/)?.[1];
     if (cookie !== undefined) {
       setShowLogoIcon(cookie === "true");
     }
-    // Other prefs: read from user-state (per-site)
+    // Other prefs: from user-state (per-site)
     fetch("/api/admin/user-state")
       .then((r) => r.ok ? r.json() : null)
       .then((state) => {
         if (!state) return;
         if (typeof state.sidebarContentOpen === "boolean") setContentOpen(state.sidebarContentOpen);
-        // Fallback: if no cookie, use user-state
-        if (cookie === undefined && typeof state.showLogoIcon === "boolean") setShowLogoIcon(state.showLogoIcon);
       })
       .catch(() => {});
   }, []);
