@@ -293,12 +293,16 @@ async function githubPagesBuildAndDeploy(token: string, repo: string): Promise<s
     throw new Error("No build.ts found — this site doesn't support static builds.");
   }
 
-  console.log(`[deploy] Running build.ts in ${sitePaths.projectDir}...`);
+  // Compute BASE_PATH for GitHub Pages project sites: /repo-name
+  const repoName = repo.split("/")[1] ?? "";
+  const basePath = `/${repoName}`;
+
+  console.log(`[deploy] Running build.ts in ${sitePaths.projectDir} (BASE_PATH=${basePath})...`);
   try {
     execSync("npx tsx build.ts", {
       cwd: sitePaths.projectDir,
       timeout: 60000,
-      env: { ...process.env, NODE_ENV: "production" },
+      env: { ...process.env, NODE_ENV: "production", BASE_PATH: basePath },
       stdio: "pipe",
     });
   } catch (err) {

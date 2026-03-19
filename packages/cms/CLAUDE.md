@@ -933,7 +933,19 @@ The CMS discovers content by scanning `content/<collectionName>/` for `.json` fi
 
 3. **`build.ts` MUST read content from JSON files, not hardcode it.** The entire point of the CMS is that content is editable through the admin UI. If your build script has content strings baked into the code instead of reading from `content/` JSON files, the site is broken — editing content in the admin will have no effect on the built output.
 
-4. **Static sites MUST have a `pages` collection** with at least `home.json`. This is the minimum for the site to show meaningful content in the admin UI. Other typical pages: `about.json`, `contact.json`.
+4. **`build.ts` MUST use `BASE_PATH` for all internal links.** The CMS deploys static sites to GitHub Pages project repos where the site lives under a subpath (e.g. `username.github.io/repo-name/`). All internal `href` attributes must be prefixed with `BASE`:
+   ```typescript
+   // Add near the top of build.ts, after __dirname
+   const BASE = (process.env.BASE_PATH ?? '').replace(/\/+$/, '');
+
+   // Then use BASE in all internal links:
+   `<a href="${BASE}/">Home</a>`
+   `<a href="${BASE}/blog/${post.slug}/">Read more</a>`
+   `<a href="${BASE}/about/">About</a>`
+   ```
+   When `BASE_PATH` is not set (local preview), links work as `/blog/...`. When deployed to GitHub Pages, the CMS passes `BASE_PATH=/repo-name` automatically. **Never hardcode absolute paths like `href="/blog/"` — always use `${BASE}/blog/`.**
+
+5. **Static sites MUST have a `pages` collection** with at least `home.json`. This is the minimum for the site to show meaningful content in the admin UI. Other typical pages: `about.json`, `contact.json`.
 
 5. **Collection name = directory name.** If your collection is named `work` in the config, the directory must be `content/work/`. If it's named `blogPosts`, the directory must be `content/blogPosts/`.
 
@@ -943,6 +955,7 @@ Before considering a site complete, verify:
 - [ ] Every collection in `cms.config.ts` has JSON files in `content/<name>/`
 - [ ] Every JSON file has `slug`, `status: "published"`, and `data` with the correct fields
 - [ ] `build.ts` reads all content from JSON files (no hardcoded content strings)
+- [ ] `build.ts` uses `BASE` variable for all internal links (never hardcoded `/path`)
 - [ ] Running `npx tsx build.ts` produces output that reflects the JSON content
 - [ ] Changing a value in a JSON file and rebuilding changes the output
 

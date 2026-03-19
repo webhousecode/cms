@@ -13,6 +13,9 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
+// Base path for GitHub Pages (e.g. "/boutique-site") or "" for root domain
+const BASE = (process.env.BASE_PATH ?? '').replace(/\/+$/, '');
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -96,6 +99,12 @@ function esc(s: string | number): string {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
+}
+
+/** Prefix internal paths with BASE (leaves external URLs untouched) */
+function url(path: string): string {
+  if (path.startsWith('/')) return `${BASE}${path}`;
+  return path;
 }
 
 function cap(s: string): string {
@@ -813,9 +822,9 @@ function head(title: string, description: string, extra: string = ''): string {
 function header(): string {
   return `
   <header class="site-header" id="site-header">
-    <a href="/" class="logo">${esc(site.data.siteName)}</a>
+    <a href="${BASE}/" class="logo">${esc(site.data.siteName)}</a>
     <div class="header-nav">
-      <a href="/shop/">Shop</a>
+      <a href="${BASE}/shop/">Shop</a>
       <div class="header-icons">
         <a href="${esc(site.data.instagramUrl)}" aria-label="Instagram" target="_blank" rel="noopener">${icons.instagram}</a>
         <a href="${esc(site.data.twitterUrl)}" aria-label="X / Twitter" target="_blank" rel="noopener">${icons.x}</a>
@@ -830,7 +839,7 @@ function footer(): string {
   <footer class="site-footer">
     <div class="footer-inner">
       <div class="footer-brand">
-        <a href="/" class="logo">${esc(site.data.siteName)}</a>
+        <a href="${BASE}/" class="logo">${esc(site.data.siteName)}</a>
         <p class="footer-tagline">${esc(site.data.footerText)}</p>
       </div>
       <div class="footer-links">
@@ -862,7 +871,7 @@ function scrollScript(): string {
 function productCard(p: ProductData, showSizes: boolean = false): string {
   const hoverImg = p.data.images && p.data.images.length > 1 ? p.data.images[1].url : p.data.heroImage;
   return `
-        <a href="/shop/${p.slug}/" class="product-card">
+        <a href="${BASE}/shop/${p.slug}/" class="product-card">
           <div class="product-card-image">
             <img src="${esc(p.data.heroImage)}" alt="${esc(p.data.title)}" class="product-img-main" loading="lazy">
             <img src="${esc(hoverImg)}" alt="${esc(p.data.title)}" class="product-img-hover" loading="lazy">
@@ -900,7 +909,7 @@ ${header()}
     <div class="hero-overlay">
       <h1 class="hero-heading">${esc(site.data.heroHeading)}</h1>
       <p class="hero-sub">${esc(site.data.heroSubheading)}</p>
-      <a href="${esc(site.data.heroCtaUrl)}" class="hero-cta">${esc(site.data.heroCta)}</a>
+      <a href="${esc(url(site.data.heroCtaUrl))}" class="hero-cta">${esc(site.data.heroCta)}</a>
     </div>
   </section>
 
@@ -990,7 +999,7 @@ ${galleryHtml}
 
     <div class="product-info">
       <div class="product-breadcrumb">
-        <a href="/">Home</a> &mdash; <a href="/shop/">Shop</a> &mdash; ${esc(cap(data.category))}
+        <a href="${BASE}/">Home</a> &mdash; <a href="${BASE}/shop/">Shop</a> &mdash; ${esc(cap(data.category))}
       </div>
       <h1>${esc(data.title)}</h1>
       <p class="product-price">${formatPrice(data.price)}</p>
