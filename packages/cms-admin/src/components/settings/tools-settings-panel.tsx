@@ -135,9 +135,24 @@ export function ToolsSettingsPanel() {
       {/* ── Deploy ──────────────────────────────────────────── */}
       <SectionHeading first>Deploy</SectionHeading>
       <SettingsCard>
-        <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>
-          One-click deploy to your hosting provider. The Publish button appears in the header when configured.
-        </p>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+          <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0, flex: 1 }}>
+            One-click deploy to your hosting provider. The deploy button appears in the header when configured.
+          </p>
+          <a
+            href="https://webhouse.app/docs/deploy"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              fontSize: "0.6rem", color: "var(--muted-foreground)", display: "flex",
+              alignItems: "center", gap: "0.2rem", flexShrink: 0, marginLeft: "0.5rem",
+              textDecoration: "none", padding: "0.15rem 0.4rem", borderRadius: "4px",
+              border: "1px solid var(--border)",
+            }}
+          >
+            Docs
+          </a>
+        </div>
 
         <div>
           <label style={labelStyle}>Provider</label>
@@ -146,6 +161,23 @@ export function ToolsSettingsPanel() {
             onChange={(v) => updateConfig((c) => ({ ...c, deployProvider: v as DeployProvider }))}
             options={deployProviders}
           />
+          {config.deployProvider !== "off" && (
+            <p style={{
+              fontSize: "0.65rem", margin: "0.35rem 0 0", padding: "0.3rem 0.5rem",
+              borderRadius: "4px", lineHeight: 1.4,
+              background: config.deployProvider === "github-pages"
+                ? "color-mix(in srgb, var(--destructive) 8%, transparent)"
+                : "color-mix(in srgb, var(--primary) 8%, transparent)",
+              color: config.deployProvider === "github-pages" ? "var(--destructive)" : "var(--muted-foreground)",
+            }}>
+              {config.deployProvider === "vercel" && "Recommended for Next.js and static sites. Supports SSR, API routes, and edge functions."}
+              {config.deployProvider === "netlify" && "Supports Next.js via adapter, static sites, and serverless functions."}
+              {config.deployProvider === "flyio" && "Docker-based. Best for SSR apps (Next.js, Remix) and custom servers. Deploys to arn (Stockholm)."}
+              {config.deployProvider === "cloudflare" && "Static sites and Workers. Limited SSR support — not recommended for full Next.js apps."}
+              {config.deployProvider === "github-pages" && "Static files only. Not compatible with Next.js SSR, API routes, or server-side features."}
+              {config.deployProvider === "custom" && "Any service that accepts a POST request to trigger a build."}
+            </p>
+          )}
         </div>
 
         {needsHookUrl && (
