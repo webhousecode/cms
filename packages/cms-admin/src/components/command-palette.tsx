@@ -7,7 +7,7 @@ import {
   Search, FileText, Globe, X, LayoutDashboard, Image, Bot, Calendar,
   ListChecks, Terminal, Settings2, Sparkles, UserCircle, LogOut, Lock,
   Database, Link2, BarChart3, Trash2, Plus, Zap, Puzzle, ArrowRightLeft,
-  Building2, HelpCircle,
+  Building2, HelpCircle, HardDrive, Play, ExternalLink, Moon, Sun, RefreshCw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -45,7 +45,18 @@ function buildQuickActions(logout: () => void): QuickAction[] {
     { id: "nav-backup", label: "Backup", sublabel: "Backup & restore content", category: "navigation", icon: <Database style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/backup", keywords: ["backup", "restore", "export", "sikkerhedskopi"] },
     { id: "nav-trash", label: "Trash", sublabel: "Deleted items", category: "navigation", icon: <Trash2 style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/trash", keywords: ["slettet", "deleted", "papirkurv"] },
 
-    // Actions
+    // Actions — create
+    { id: "act-new-agent", label: "New Agent", sublabel: "Create a new AI agent", category: "action", icon: <Plus style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/agents/new", keywords: ["new", "agent", "create", "ny", "opret"], featured: true },
+    { id: "act-new-site", label: "New site", sublabel: "Create a new site", category: "action", icon: <Plus style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/sites/new", keywords: ["new", "site", "create", "ny", "opret"] },
+    { id: "act-new-org", label: "New organization", sublabel: "Create a new organization", category: "action", icon: <Plus style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/organizations/new", keywords: ["new", "org", "organization", "create", "ny", "opret"] },
+
+    // Actions — run
+    { id: "act-backup", label: "Create Backup", sublabel: "Backup all content now", category: "action", icon: <HardDrive style={{ ...ICON_SIZE, color: MUTED }} />, keywords: ["backup", "sikkerhedskopi", "export"], action: () => { fetch("/api/admin/backups", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ trigger: "manual" }) }).then(() => { window.location.href = "/admin/backup"; }); } },
+    { id: "act-linkcheck", label: "Run Link Check", sublabel: "Scan all content for broken links", category: "action", icon: <Play style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/link-checker", keywords: ["link", "check", "scan", "broken", "links"] },
+    { id: "act-preview", label: "Preview site", sublabel: "Open site preview", category: "action", icon: <ExternalLink style={{ ...ICON_SIZE, color: MUTED }} />, keywords: ["preview", "site", "view", "se", "forhåndsvisning"], action: () => { window.dispatchEvent(new KeyboardEvent("keydown", { key: "p", bubbles: true })); } },
+    { id: "act-refresh", label: "Refresh data", sublabel: "Reload current page data", category: "action", icon: <RefreshCw style={{ ...ICON_SIZE, color: MUTED }} />, keywords: ["refresh", "reload", "genindlæs"], action: () => { window.location.reload(); } },
+
+    // Actions — misc
     { id: "act-view-landing", label: "View landing page", sublabel: "Open in new tab", category: "action", icon: <Globe style={{ ...ICON_SIZE, color: MUTED }} />, href: "/home", keywords: ["landing", "homepage", "forside", "public", "view"], newTab: true },
     { id: "act-help", label: "Help & Support", sublabel: "Docs, shortcuts, community", category: "action", icon: <HelpCircle style={{ ...ICON_SIZE, color: MUTED }} />, keywords: ["help", "hjælp", "support", "docs", "shortcuts"], action: () => { window.dispatchEvent(new CustomEvent("cms:open-help")); }, featured: true },
 
