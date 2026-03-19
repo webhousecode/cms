@@ -2,13 +2,13 @@
 
 import { useState, useEffect, useRef, useMemo } from "react";
 import Link from "next/link";
-import { Calendar, ChevronLeft, ChevronRight, Globe, FileText, Check } from "lucide-react";
+import { Calendar, ChevronLeft, ChevronRight, Globe, FileText, Check, HardDrive, Link2 } from "lucide-react";
 import { TabTitle } from "@/lib/tabs-context";
 import { PageHeader } from "@/components/page-header";
 
 /* ─── Types ──────────────────────────────────────────────────── */
 
-type EventType = "publish" | "unpublish";
+type EventType = "publish" | "unpublish" | "backup" | "link-check";
 type ViewMode = "day" | "week" | "month" | "year";
 
 interface ScheduledEvent {
@@ -24,6 +24,8 @@ interface ScheduledEvent {
 const EVENT_COLORS: Record<EventType, string> = {
   publish: "rgb(74 222 128)",
   unpublish: "rgb(239 68 68)",
+  backup: "rgb(96 165 250)",
+  "link-check": "rgb(168 85 247)",
 };
 
 const COLLECTION_COLORS = ["rgb(251 146 60)", "rgb(74 222 128)", "rgb(244 114 182)", "rgb(96 165 250)", "rgb(168 85 247)", "rgb(234 179 8)", "rgb(45 212 191)"];
@@ -636,7 +638,7 @@ function DayView({ selectedDate, eventsMap }: {
   return (
     <div className="space-y-2">
       {dayEvents.map((evt) => {
-        const Icon = evt.type === "publish" ? Globe : FileText;
+        const Icon = evt.type === "publish" ? Globe : evt.type === "backup" ? HardDrive : evt.type === "link-check" ? Link2 : FileText;
         const color = EVENT_COLORS[evt.type];
         return (
           <Link key={evt.id} href={evt.href} className="block">
@@ -800,14 +802,14 @@ function CalendarSidebar({ events, todayKey, colColorMap }: { events: ScheduledE
       {/* Event types */}
       <p style={sectionLabel}>Event Types</p>
       <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem", marginBottom: "1.25rem" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-          <span style={{ width: "0.5rem", height: "0.5rem", borderRadius: "9999px", background: EVENT_COLORS.publish }} />
-          <span style={{ fontSize: "0.75rem" }}>Publish</span>
-        </div>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-          <span style={{ width: "0.5rem", height: "0.5rem", borderRadius: "9999px", background: EVENT_COLORS.unpublish }} />
-          <span style={{ fontSize: "0.75rem" }}>Expiry</span>
-        </div>
+        {(Object.entries(EVENT_COLORS) as [EventType, string][]).map(([type, color]) => (
+          <div key={type} style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+            <span style={{ width: "0.5rem", height: "0.5rem", borderRadius: "9999px", background: color }} />
+            <span style={{ fontSize: "0.75rem" }}>
+              {type === "publish" ? "Publish" : type === "unpublish" ? "Expiry" : type === "backup" ? "Backup" : "Link Check"}
+            </span>
+          </div>
+        ))}
       </div>
 
       {/* Stats */}

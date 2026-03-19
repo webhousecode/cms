@@ -3,6 +3,7 @@ import { readSiteConfig, generateCalendarToken } from "@/lib/site-config";
 import { getSessionWithSiteRole } from "@/lib/require-role";
 import { cookies } from "next/headers";
 import { ScheduledCalendar } from "./calendar-client";
+import { listBackups } from "@/lib/backup-service";
 
 function getExcerpt(data: Record<string, unknown>): string | undefined {
   // Try excerpt, description, then first line of content/body
@@ -39,7 +40,7 @@ export default async function ScheduledPage() {
 
   type Event = {
     id: string;
-    type: "publish" | "unpublish";
+    type: "publish" | "unpublish" | "backup" | "link-check";
     date: string;
     title: string;
     subtitle: string;
@@ -69,14 +70,68 @@ export default async function ScheduledPage() {
     }
   }
 
+  // Add completed backup events
+  try {
+    const backups = await listBackups();
+    for (const snap of backups) {
+      if (snap.status !== "complete") continue;
+      events.push({
+        id: `bak-${snap.id}`,
+        type: "backup",
+        date: snap.timestamp,
+        title: `Backup (${snap.documentCount} docs)`,
+        subtitle: snap.trigger === "scheduled" ? "Scheduled backup" : "Manual backup",
+        href: "/admin/backup",
+      });
+    }
+  } catch { /* no backups yet */ }
+
+  // Generate upcoming scheduled backup events (next 30 days)
+  const siteConf = await readSiteConfig();
+  if (siteConf.backupSchedule !== "off") {
+    const [hh, mm] = siteConf.backupTime.split(":").map(Number);
+    const now = new Date();
+    for (let i = 0; i < 30; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i, hh, mm);
+      if (d <= now) continue;
+      if (siteConf.backupSchedule === "weekly" && d.getDay() !== 1) continue; // Mondays only
+      events.push({
+        id: `bak-sched-${d.toISOString()}`,
+        type: "backup",
+        date: d.toISOString(),
+        title: "Scheduled Backup",
+        subtitle: siteConf.backupSchedule === "daily" ? "Daily backup" : "Weekly backup",
+        href: "/admin/backup",
+      });
+    }
+  }
+
+  // Generate upcoming scheduled link-check events (next 30 days)
+  if (siteConf.linkCheckSchedule !== "off") {
+    const now = new Date();
+    for (let i = 0; i < 30; i++) {
+      const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i, 4, 0); // 04:00
+      if (d <= now) continue;
+      if (siteConf.linkCheckSchedule === "weekly" && d.getDay() !== 1) continue;
+      events.push({
+        id: `lc-sched-${d.toISOString()}`,
+        type: "link-check",
+        date: d.toISOString(),
+        title: "Scheduled Link Check",
+        subtitle: siteConf.linkCheckSchedule === "daily" ? "Daily check" : "Weekly check",
+        href: "/admin/link-checker",
+      });
+    }
+  }
+
   events.sort((a, b) => a.date.localeCompare(b.date));
 
   // Update snapshot for the calendar.ics feed (also runs on a 5-min cron)
   import("@/lib/scheduled-snapshot").then((m) => m.updateScheduledSnapshot()).catch(() => {});
 
   // Generate per-user calendar feed token with site context
-  const [siteConfig, session, cookieStore] = await Promise.all([readSiteConfig(), getSessionWithSiteRole(), cookies()]);
-  const calendarToken = session ? generateCalendarToken(siteConfig.calendarSecret, session.userId) : "";
+  const [session, cookieStore] = await Promise.all([getSessionWithSiteRole(), cookies()]);
+  const calendarToken = session ? generateCalendarToken(siteConf.calendarSecret, session.userId) : "";
   const orgId = cookieStore.get("cms-active-org")?.value ?? "";
   const siteId = cookieStore.get("cms-active-site")?.value ?? "";
 

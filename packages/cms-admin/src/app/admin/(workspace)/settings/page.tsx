@@ -10,6 +10,7 @@ import { AIPromptsPanel } from "@/components/settings/ai-prompts-panel";
 import { AIDefaultsPanel } from "@/components/settings/ai-defaults-panel";
 import { TeamPanel } from "@/components/settings/team-panel";
 import { EmailSettingsPanel } from "@/components/settings/email-settings-panel";
+import { ToolsSettingsPanel } from "@/components/settings/tools-settings-panel";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { readSiteConfig } from "@/lib/site-config";
 import { readBrandVoice } from "@/lib/brand-voice";
@@ -49,6 +50,7 @@ export default async function SettingsPage({
     { id: "email",       label: "Email" },
     { id: "ai",          label: "AI" },
     { id: "brand-voice", label: "Brand Voice" },
+    { id: "tools",       label: "Tools" },
     { id: "mcp",         label: "MCP" },
     ...(globals.length > 0 ? [{ id: "globals", label: "Globals" }] : []),
     ...(siteConfig.schemaEditEnabled ? [{ id: "schema", label: "Schema" }] : []),
@@ -248,6 +250,13 @@ export default async function SettingsPage({
               </p>
               <AIDefaultsPanel />
             </div>
+          </div>
+        )}
+
+        {/* Tools tab — backup & link checker scheduling */}
+        {tab === "tools" && (
+          <div className="max-w-lg">
+            <ToolsSettingsPanel />
           </div>
         )}
 

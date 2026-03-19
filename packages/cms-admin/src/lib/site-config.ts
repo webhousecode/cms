@@ -31,6 +31,14 @@ export interface SiteConfig {
   schedulerWebhookUrl: string;
   /** Enable scheduler notifications */
   schedulerNotifications: boolean;
+  /** Backup schedule: "off" | "daily" | "weekly" */
+  backupSchedule: "off" | "daily" | "weekly";
+  /** Time of day for scheduled backups (HH:MM, 24h format) */
+  backupTime: string;
+  /** Backup retention in days */
+  backupRetentionDays: number;
+  /** Link checker schedule: "off" | "daily" | "weekly" */
+  linkCheckSchedule: "off" | "daily" | "weekly";
 }
 
 async function getConfigPath(): Promise<string> {
@@ -59,6 +67,10 @@ async function defaults(): Promise<SiteConfig> {
     calendarSecret: crypto.randomBytes(32).toString("hex"),
     schedulerWebhookUrl: "",
     schedulerNotifications: false,
+    backupSchedule: "off",
+    backupTime: "03:00",
+    backupRetentionDays: 30,
+    linkCheckSchedule: "off",
   };
 }
 
