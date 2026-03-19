@@ -57,8 +57,14 @@ export function SiteSwitcher() {
         const d = await regRes.json() as { mode: string; registry: Registry | null };
         if (d.registry) {
           setRegistry(d.registry);
-          setActiveOrgId(getCookie("cms-active-org") ?? d.registry.defaultOrgId);
-          setActiveSiteId(getCookie("cms-active-site") ?? d.registry.defaultSiteId);
+          const orgId = getCookie("cms-active-org") ?? d.registry.defaultOrgId;
+          const sId = getCookie("cms-active-site") ?? d.registry.defaultSiteId;
+          setActiveOrgId(orgId);
+          setActiveSiteId(sId);
+          // Update browser tab title
+          const org = d.registry.orgs.find((o) => o.id === orgId) ?? d.registry.orgs[0];
+          const site = org?.sites.find((s) => s.id === sId);
+          if (site?.name) document.title = `webhouse.app: ${site.name}`;
         }
       }
       if (sitesRes.ok) {
@@ -86,16 +92,6 @@ export function SiteSwitcher() {
     return () => window.removeEventListener("cms-registry-change", handleChange);
   }, [fetchRegistry]);
 
-  // Update browser tab title with active site name
-  useEffect(() => {
-    if (!registry || !activeSiteId) return;
-    const org = registry.orgs.find((o) => o.id === activeOrgId) ?? registry.orgs[0];
-    const site = org?.sites.find((s) => s.id === activeSiteId);
-    if (site?.name) {
-      document.title = `webhouse.app: ${site.name}`;
-    }
-  }, [registry, activeOrgId, activeSiteId]);
-
   if (!loaded || !registry) return null;
 
   const activeOrg = registry.orgs.find((o) => o.id === activeOrgId) ?? registry.orgs[0];
@@ -113,6 +109,7 @@ export function SiteSwitcher() {
   function handleSelect(site: SiteEntry) {
     setActiveSiteId(site.id);
     setCookie("cms-active-site", site.id);
+    document.title = `webhouse.app: ${site.name}`;
     // Persist last active site on user record (survives cookie clear / device switch)
     fetch("/api/admin/profile", {
       method: "POST",
@@ -200,9 +197,11 @@ export function OrgSwitcher() {
     setActiveOrgId(org.id);
     setCookie("cms-active-org", org.id);
     // Set site cookie to first site in new org (or clear if no sites)
-    const newSiteId = org.sites.length > 0 ? org.sites[0].id : null;
+    const newSite = org.sites.length > 0 ? org.sites[0] : null;
+    const newSiteId = newSite?.id ?? null;
     if (newSiteId) {
       setCookie("cms-active-site", newSiteId);
+      if (newSite?.name) document.title = `webhouse.app: ${newSite.name}`;
     } else {
       document.cookie = "cms-active-site=;path=/;max-age=0";
     }

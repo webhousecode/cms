@@ -213,52 +213,13 @@ export function TabsProvider({ children, siteId }: { children: ReactNode; siteId
       // Suppress pathname effect from the upcoming router.push("/admin")
       skipNextPathChange.current = true;
 
-      // Immediately show a fresh Dashboard tab while we load the real tabs
-      const tempId = uid();
-      const freshTabs: Tab[] = [{ id: tempId, path: "/admin", title: "Dashboard" }];
-      tabsRef.current = freshTabs;
-      activeIdRef.current = tempId;
-      setTabs(freshTabs);
-      setActiveId(tempId);
-
-      // Restore saved tabs and navigate to the active tab's path
-      function restoreAndNavigate(savedTabs: Tab[], savedActiveId: string | null) {
-        applyTabs(savedTabs, savedActiveId);
-        const activeTab = savedTabs.find((t) => t.id === savedActiveId);
-        if (activeTab && activeTab.path !== "/admin") {
-          skipNextPathChange.current = true;
-          router.push(activeTab.path);
-        }
-      }
-
-      // Load tabs for the new site from server (user-state is per-site)
-      fetch("/api/admin/user-state")
-        .then((r) => r.ok ? r.json() : null)
-        .then((serverState) => {
-          if (serverState?.tabs?.length > 0) {
-            const migrated = serverState.tabs.map((t: Tab) => ({
-              ...t,
-              title: PATH_TITLES[t.path.split("?")[0]] ?? t.title,
-            }));
-            restoreAndNavigate(migrated, serverState.activeTabId);
-          } else {
-            const local = load(userIdRef.current, newSiteId);
-            if (local && local.tabs.length > 0) {
-              restoreAndNavigate(local.tabs, local.activeId);
-            } else {
-              // No saved tabs — keep the fresh Dashboard
-              save(freshTabs, tempId, userIdRef.current, newSiteId);
-            }
-          }
-        })
-        .catch(() => {
-          const local = load(userIdRef.current, newSiteId);
-          if (local && local.tabs.length > 0) {
-            restoreAndNavigate(local.tabs, local.activeId);
-          } else {
-            save(freshTabs, tempId, userIdRef.current, newSiteId);
-          }
-        });
+      // Clean slate: fresh Dashboard tab for the new site.
+      // No async loading — eliminates all race conditions.
+      // Previous tabs for this site will load on next full page refresh
+      // (via the init effect which reads from server/localStorage).
+      const id = uid();
+      const freshTabs: Tab[] = [{ id, path: "/admin", title: "Dashboard" }];
+      applyTabs(freshTabs, id);
     }
     window.addEventListener("cms-site-change", handleSiteChange);
     return () => window.removeEventListener("cms-site-change", handleSiteChange);
