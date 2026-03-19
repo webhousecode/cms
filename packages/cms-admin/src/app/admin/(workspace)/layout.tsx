@@ -52,9 +52,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   try {
     config = await getAdminConfig();
   } catch (err) {
-    // Empty org (no sites) — redirect to sites page
+    // Empty org (no sites) — render minimal layout so Sites/Organizations pages still work
     if (err instanceof EmptyOrgError) {
-      redirect("/admin/sites");
+      return (
+        <div style={{ minHeight: "100vh", background: "var(--background)" }}>
+          <AdminHeader />
+          {children}
+        </div>
+      );
     }
     const message = err instanceof Error ? err.message : "";
     if (message.includes("GitHub not connected")) {
