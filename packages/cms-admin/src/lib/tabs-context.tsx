@@ -213,18 +213,31 @@ export function TabsProvider({ children, siteId }: { children: ReactNode; siteId
       // Suppress pathname effect from the upcoming router.push("/admin")
       skipNextPathChange.current = true;
 
-      // Clean slate: fresh Dashboard tab for the new site.
-      // No async loading — eliminates all race conditions.
-      // Previous tabs for this site will load on next full page refresh
-      // (via the init effect which reads from server/localStorage).
-      const id = uid();
-      const freshTabs: Tab[] = [{ id, path: "/admin", title: "Dashboard" }];
-      applyTabs(freshTabs, id);
+      // Synchronous localStorage load — siteId is in the key, no race condition.
+      // No async fetch (that caused all the previous bugs).
+      const saved = load(userIdRef.current, newSiteId);
+      if (saved && saved.tabs.length > 0) {
+        const migrated = saved.tabs.map((t) => ({
+          ...t,
+          title: PATH_TITLES[t.path.split("?")[0]] ?? t.title,
+        }));
+        applyTabs(migrated, saved.activeId);
+        // Navigate to the saved active tab's path
+        const activeTab = migrated.find((t) => t.id === saved.activeId);
+        if (activeTab && activeTab.path !== "/admin") {
+          skipNextPathChange.current = true;
+          router.push(activeTab.path);
+        }
+      } else {
+        // No saved tabs for this site — fresh Dashboard
+        const id = uid();
+        applyTabs([{ id, path: "/admin", title: "Dashboard" }], id);
+      }
     }
     window.addEventListener("cms-site-change", handleSiteChange);
     return () => window.removeEventListener("cms-site-change", handleSiteChange);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [router]);
 
   /* ── Track normal navigation — update active tab's path ──── */
   useEffect(() => {
