@@ -105,7 +105,7 @@ export function ToolsSettingsPanel() {
   return (
     <div>
       {/* ── Backup ─────────────────────────────────────────── */}
-      <SectionHeading>Backup</SectionHeading>
+      <SectionHeading first>Backup</SectionHeading>
       <SettingsCard>
         <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>
           Automatic backups of all content and site data. Scheduled backups appear in the Calendar.
