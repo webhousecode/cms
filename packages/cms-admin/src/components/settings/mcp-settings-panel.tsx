@@ -545,30 +545,32 @@ function ExternalMcpServers() {
                 style={{ background: "none", border: "none", cursor: "pointer", color: s.enabled ? "var(--primary)" : "var(--muted-foreground)", padding: "0.25rem" }}>
                 {s.enabled ? <Power style={{ width: "0.9rem", height: "0.9rem" }} /> : <PowerOff style={{ width: "0.9rem", height: "0.9rem" }} />}
               </button>
-              {confirmDeleteId === s.id ? (
-                <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
-                  <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
-                  <button type="button" onClick={() => { removeServer(s.id); setConfirmDeleteId(null); }}
-                    style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
-                      border: "none", background: "var(--destructive)", color: "#fff",
-                      cursor: "pointer", lineHeight: 1 }}>Yes</button>
-                  <button type="button" onClick={() => setConfirmDeleteId(null)}
-                    style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
+              <span style={{ display: "flex", alignItems: "center", gap: "0.25rem", minWidth: "5.5rem", justifyContent: "flex-end", flexShrink: 0 }}>
+                {confirmDeleteId === s.id ? (
+                  <>
+                    <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
+                    <button type="button" onClick={() => { removeServer(s.id); setConfirmDeleteId(null); }}
+                      style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
+                        border: "none", background: "var(--destructive)", color: "#fff",
+                        cursor: "pointer", lineHeight: 1 }}>Yes</button>
+                    <button type="button" onClick={() => setConfirmDeleteId(null)}
+                      style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
+                        border: "1px solid var(--border)", background: "transparent",
+                        color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
+                  </>
+                ) : (
+                  <button type="button" onClick={() => setConfirmDeleteId(s.id)} title="Remove server"
+                    style={{
+                      display: "flex", alignItems: "center", gap: "0.3rem",
+                      padding: "0.35rem 0.6rem", borderRadius: "6px",
                       border: "1px solid var(--border)", background: "transparent",
-                      color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
-                </span>
-              ) : (
-                <button type="button" onClick={() => setConfirmDeleteId(s.id)} title="Remove server"
-                  style={{
-                    display: "flex", alignItems: "center", gap: "0.3rem",
-                    padding: "0.35rem 0.6rem", borderRadius: "6px",
-                    border: "1px solid var(--border)", background: "transparent",
-                    color: "var(--destructive)", fontSize: "0.75rem", cursor: "pointer",
-                  }}>
-                  <Trash2 style={{ width: "0.75rem", height: "0.75rem" }} />
-                  Remove
-                </button>
-              )}
+                      color: "var(--destructive)", fontSize: "0.75rem", cursor: "pointer",
+                    }}>
+                    <Trash2 style={{ width: "0.75rem", height: "0.75rem" }} />
+                    Remove
+                  </button>
+                )}
+              </span>
             </div>
 
             {/* Inline JSON editor */}
