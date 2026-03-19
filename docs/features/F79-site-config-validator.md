@@ -178,6 +178,38 @@ When importing a site via the "New site" form, validation runs automatically aft
 
 This ensures AI-built sites are corrected at import time, before they can crash the admin.
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms/src/schema/site-validator.ts` — new file: validation engine with config, content, and structure checks
+- `packages/cms/src/schema/validate.ts` — extend existing validation with site-level rules and suggestion engine
+- `packages/cms/src/schema/types.ts` — add `ValidationResult`, `ValidationError`, `ValidationWarning` interfaces
+- `packages/cms-admin/src/lib/site-pool.ts` — replace raw `validateConfig()` crash with `safeValidateConfig()` returning structured errors
+- `packages/cms-admin/src/app/api/cms/registry/validate/route.ts` — new file: POST endpoint for on-demand validation
+- `packages/cms-admin/src/app/admin/(workspace)/sites/new/page.tsx` — add pre-validation before site creation
+- `packages/cms-admin/src/app/admin/(workspace)/sites/page.tsx` — add health indicator (green/yellow/red dot) to site cards
+- `packages/cms-admin/src/components/settings/general-settings-panel.tsx` — add "Validate site" button and results panel
+- `packages/cms-admin/src/app/api/cms/registry/import/route.ts` — integrate validation into import flow
+
+### Blast radius
+- Site creation flow — validation gate could block imports if rules are too strict
+- Site loading in `site-pool.ts` — changing error handling affects every route that loads a site config
+- Existing sites with unconventional configs may suddenly show warnings/errors after upgrade
+
+### Breaking changes
+- None — validation is additive. Existing sites continue to load; errors are surfaced as UI feedback, not thrown exceptions.
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Validator catches all invalid field types and suggests closest match
+- [ ] Validator detects missing content directories, malformed JSON, missing system fields
+- [ ] CMS knowledge rules fire correctly (urlPrefix, homepage convention, richtext format)
+- [ ] API endpoint returns structured `ValidationResult` for valid and invalid configs
+- [ ] New site form blocks creation when errors are present, allows when only warnings
+- [ ] Repair wizard applies fixes correctly and re-validates after
+- [ ] Existing valid sites show green health indicator, no false positives
+- [ ] `site-pool.ts` returns friendly errors instead of ZodError stacktraces
+
 ## Implementation Steps
 
 1. Create `packages/cms/src/schema/site-validator.ts` with config validation (field types, structure)
