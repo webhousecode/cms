@@ -75,6 +75,12 @@ export function ImageGalleryEditor({ value: rawValue = [], onChange, disabled }:
     onChange(value.map((img, i) => i === idx ? { ...img, alt } : img));
   };
 
+  const updateUrl = (idx: number, url: string) => {
+    onChange(value.map((img, i) => i === idx ? { ...img, url } : img));
+  };
+
+  const [editingUrlIdx, setEditingUrlIdx] = useState<number | null>(null);
+
   const moveImage = (from: number, to: number) => {
     const next = [...value];
     const [item] = next.splice(from, 1);
@@ -254,13 +260,39 @@ export function ImageGalleryEditor({ value: rawValue = [], onChange, disabled }:
               }}
             >
               {/* Thumbnail */}
-              <div style={{ aspectRatio: "16/9", overflow: "hidden" }}>
+              <div
+                style={{ aspectRatio: "16/9", overflow: "hidden", cursor: disabled ? "default" : "pointer" }}
+                onClick={() => !disabled && setEditingUrlIdx(editingUrlIdx === idx ? null : idx)}
+                title="Click to edit URL"
+              >
                 <img
                   src={img.url}
                   alt={img.alt}
                   style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                  onError={(e) => { (e.target as HTMLImageElement).style.opacity = "0.3"; }}
                 />
               </div>
+
+              {/* URL editor (shown when thumbnail clicked) */}
+              {editingUrlIdx === idx && (
+                <input
+                  value={img.url}
+                  onChange={(e) => updateUrl(idx, e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Enter" || e.key === "Escape") setEditingUrlIdx(null); }}
+                  autoFocus
+                  style={{
+                    width: "100%",
+                    padding: "0.25rem 0.4rem",
+                    fontSize: "0.6rem",
+                    fontFamily: "monospace",
+                    border: "none",
+                    borderTop: "1px solid var(--primary)",
+                    backgroundColor: "var(--accent)",
+                    color: "var(--foreground)",
+                    outline: "none",
+                  }}
+                />
+              )}
 
               {/* Alt text */}
               <input
