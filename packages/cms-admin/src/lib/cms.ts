@@ -62,13 +62,18 @@ export async function getAdminCms() {
   if (!site) {
     // Fallback to default
     const def = getDefaultSite(registry);
-    if (!def) throw new Error("No sites configured in registry");
+    if (!def) throw new EmptyOrgError("No sites in active organization");
     const instance = await getOrCreateInstance(def.org.id, def.site);
     return instance.cms;
   }
 
   const instance = await getOrCreateInstance(activeOrgId, site);
   return instance.cms;
+}
+
+/** Thrown when the active org has no sites */
+export class EmptyOrgError extends Error {
+  constructor(message: string) { super(message); this.name = "EmptyOrgError"; }
 }
 
 export async function getAdminConfig(): Promise<CmsConfig> {
@@ -86,7 +91,7 @@ export async function getAdminConfig(): Promise<CmsConfig> {
   const site = findSite(registry, activeOrgId, activeSiteId);
   if (!site) {
     const def = getDefaultSite(registry);
-    if (!def) throw new Error("No sites configured in registry");
+    if (!def) throw new EmptyOrgError("No sites in active organization");
     const instance = await getOrCreateInstance(def.org.id, def.site);
     return instance.config;
   }

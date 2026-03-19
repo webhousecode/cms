@@ -1,35 +1,47 @@
 # F76 — Create New Organization
 
-> Wire up the "New organization" button in the org switcher to create orgs via the existing API.
+> Wire up the "New organization" button in the org switcher, with safe handling of empty orgs and proper state isolation.
 
 ## Problem
 
-The org switcher dropdown shows a "+ New organization" button ([screenshot](assets/org-switcher-new-org.png)), but it's a non-functional placeholder — no `onClick` handler, styled as `text-muted-foreground`. When navigating to New Site without an active org, the form shows "orgId and site required" error.
+The org switcher dropdown shows a "+ New organization" button, but it's a non-functional placeholder. The **backend API already exists** (`POST /api/cms/registry` with `action: "add-org"`), but the frontend is missing.
 
-The **backend API already exists**: `POST /api/cms/registry` with `action: "add-org"` creates the org in `registry.json` and returns the new org object. The only missing piece is the frontend: a dialog to enter the org name, call the API, switch to the new org, and navigate to create the first site.
-
-This is critical for agencies managing multiple clients — each client should be their own org with isolated sites.
+Critical safety issue: creating an empty org (no sites) crashes the admin — `getDefaultSite()` returns null → "No sites configured in registry" error. Tabs, user-state, and settings are all per-site, so switching to an empty org breaks everything.
 
 ## Solution
 
-Connect the existing "New organization" menu item to a small inline dialog (org name input + Create button). On submit, call the existing API, set the `cms-active-org` cookie, dispatch `cms-registry-change` event to refresh switchers, and navigate to `/admin/sites/new` to create the first site.
+1. Wire the "New organization" button to an inline dialog
+2. Add an **empty org gate** — when active org has 0 sites, redirect to `/admin/sites` instead of crashing
+3. Ensure clean state transitions when switching between orgs (cookies, tabs, user-state)
 
 ## Technical Design
 
-### Current State (what exists)
+### 1. Empty Org Safety Gate
 
-| Layer | Status | Location |
-|-------|--------|----------|
-| API endpoint | **Done** | `POST /api/cms/registry` with `action: "add-org"` |
-| Registry `addOrg()` function | **Done** | `packages/cms-admin/src/lib/site-registry.ts` |
-| Org switcher UI button | **Placeholder** (disabled, no onClick) | `components/user-org-bar.tsx` lines 76-79, `components/site-switcher.tsx` lines 218-221 |
+The admin crashes when navigating to `/admin` with an org that has no sites. Fix in two places:
 
-### Changes Required
+**`packages/cms-admin/src/lib/cms.ts`** — graceful fallback instead of throw:
+```typescript
+// Current (crashes):
+if (!def) throw new Error("No sites configured in registry");
 
-**1. Org switcher components** (`user-org-bar.tsx` + `site-switcher.tsx`):
+// Fixed (returns null, let layout handle redirect):
+if (!def) return null;
+```
+
+**`packages/cms-admin/src/app/admin/(workspace)/layout.tsx`** — redirect to sites page when no active site:
+```typescript
+const config = await getAdminConfig();
+if (!config) {
+  redirect("/admin/sites");
+}
+```
+
+### 2. Create Org Dialog (OrgSwitcher)
+
+In `packages/cms-admin/src/components/site-switcher.tsx`, replace the placeholder "New organization" menu item:
 
 ```typescript
-// Replace the disabled "New organization" menu item with:
 const [showNewOrg, setShowNewOrg] = useState(false);
 const [newOrgName, setNewOrgName] = useState("");
 const [creating, setCreating] = useState(false);
@@ -44,10 +56,8 @@ async function createOrg() {
   });
   if (res.ok) {
     const { org } = await res.json();
-    // Switch to new org
-    document.cookie = `cms-active-org=${encodeURIComponent(org.id)}; path=/; max-age=${60*60*24*365}`;
-    // Clear active site (new org has no sites yet)
-    document.cookie = `cms-active-site=; path=/; max-age=0`;
+    setCookie("cms-active-org", org.id);
+    document.cookie = "cms-active-site=;path=/;max-age=0";
     window.dispatchEvent(new CustomEvent("cms-registry-change"));
     router.push("/admin/sites/new");
   }
@@ -57,13 +67,10 @@ async function createOrg() {
 }
 ```
 
-**2. Inline dialog pattern** (in the dropdown menu):
-
-When "+ New organization" is clicked, the menu item expands to show:
+Inline dialog in dropdown:
 ```
 ┌─────────────────────────────┐
 │ ✓ WebHouse                  │
-│   All organizations          │
 │ ────────────────────────── │
 │   Organization name:         │
 │   [________________]         │
@@ -71,9 +78,20 @@ When "+ New organization" is clicked, the menu item expands to show:
 └─────────────────────────────┘
 ```
 
-This follows the same inline-expand pattern used elsewhere in the admin (no separate modal/dialog needed).
+### 3. State Isolation on Org Switch
 
-**3. New Site page fix** — Remove or handle the "orgId and site required" error gracefully when arriving from a fresh org (no sites yet). The page should pre-select the active org from the cookie.
+When switching orgs, these states must be handled:
+
+| State | Scope | What happens on org switch |
+|-------|-------|---------------------------|
+| `cms-active-org` cookie | Browser | Set to new org ID |
+| `cms-active-site` cookie | Browser | **Cleared** (new org may have different sites) |
+| Tabs (localStorage) | Per-user, per-site | Key changes → old tabs preserved in localStorage, new site's tabs loaded |
+| User-state (sidebar, prefs) | Per-user, per-site | Loaded from new site's `_data/user-state/{userId}.json` |
+| Site pool (memory) | Per-org+site | New `orgId:siteId` cache key → fresh CMS instance |
+| Settings | Per-site | Loaded from new site's config |
+
+All of this already works correctly by design — the per-site scoping ensures no cross-org data bleeding. The only gap is the empty org crash.
 
 ### API (already implemented)
 
@@ -83,38 +101,42 @@ Body: { "action": "add-org", "orgName": "Client Name" }
 Response: { "ok": true, "org": { "id": "client-name", "name": "Client Name", "sites": [] } }
 ```
 
-Org ID is auto-generated: lowercase, alphanumeric + hyphens, from the org name.
-
 ## Impact Analysis
 
 ### Files affected
-- `packages/cms-admin/src/components/user-org-bar.tsx` — add create org dialog
-- `packages/cms-admin/src/components/site-switcher.tsx` — add create org dialog
-- `packages/cms-admin/src/app/admin/sites/new/page.tsx` — handle no-active-site state
+- `packages/cms-admin/src/components/site-switcher.tsx` — add create org dialog to OrgSwitcher
+- `packages/cms-admin/src/lib/cms.ts` — return null instead of throwing when no sites exist
+- `packages/cms-admin/src/lib/site-paths.ts` — return null instead of throwing when no sites exist
+- `packages/cms-admin/src/app/admin/(workspace)/layout.tsx` — redirect to `/admin/sites` when config is null
 
 ### Blast radius
-- Org switcher dropdown is used globally — dialog must not break menu behavior
-- Cookie management (`cms-active-org`, `cms-active-site`) affects site routing
+- **`cms.ts` / `site-paths.ts`** — changing throw → null affects every server component that calls `getAdminCms()` or `getAdminConfig()`. All callers must handle null return. This is the highest-risk change.
+- **OrgSwitcher** — dropdown is rendered in admin header on every page. Dialog must not break menu behavior or layout.
+- **Cookie clearing** — clearing `cms-active-site` on org switch already happens. New org creation follows the same pattern.
 
 ### Breaking changes
-- None — uses existing backend API
+- `getAdminConfig()` return type changes from `CmsConfig` to `CmsConfig | null` — all callers must handle null. This is a **type-level breaking change** within the admin codebase (not external API).
 
 ### Test plan
 - [ ] TypeScript compiles: `npx tsc --noEmit`
-- [ ] Create org dialog opens from org switcher
-- [ ] API creates org and returns in response
-- [ ] Active org cookie set after creation
-- [ ] Navigation to /admin/sites/new works for new org
+- [ ] Create org dialog opens from org switcher dropdown
+- [ ] API creates org with correct ID (lowercase, hyphenated)
+- [ ] After creation: `cms-active-org` cookie set, `cms-active-site` cleared
+- [ ] User is redirected to `/admin/sites/new` for the new org
+- [ ] New org shows in org switcher dropdown
+- [ ] Navigating to `/admin` with empty org → redirects to `/admin/sites` (no crash)
+- [ ] Creating first site under new org: auto team.json with current user as admin
+- [ ] Switching back to original org: tabs, settings, state all intact
+- [ ] Switching to new org after adding a site: correct site loaded, clean state
+- [ ] Multiple org switches: no stale cookies, no wrong site loaded
 
 ## Implementation Steps
 
-1. Add `showNewOrg` state + `createOrg()` handler to `user-org-bar.tsx`
-2. Replace disabled "New organization" item with clickable button that expands inline form
-3. Add org name input + Create/Cancel buttons in the expanded state
-4. On Create: call API, set `cms-active-org` cookie, clear `cms-active-site`, dispatch registry change event, navigate to `/admin/sites/new`
-5. Apply same changes to `site-switcher.tsx` (both components show the org dropdown)
-6. Fix New Site page to handle "no active site" state gracefully (pre-select org from cookie)
-7. Test: create org → create site under it → switch between orgs
+1. Add empty org gate: `cms.ts` + `site-paths.ts` return null instead of throw
+2. Add redirect in `layout.tsx` when config is null
+3. Add create org dialog to `OrgSwitcher` in `site-switcher.tsx`
+4. Test full flow: create org → create site → switch orgs → verify state
+5. Verify existing org switch behavior isn't broken
 
 ## Dependencies
 
@@ -122,6 +144,4 @@ Org ID is auto-generated: lowercase, alphanumeric + hyphens, from the org name.
 
 ## Effort Estimate
 
-**Small** — 1 day
-
-This is essentially wiring up an existing API to an existing UI button. The backend is done, the UI placeholder exists, just needs the connection + inline dialog.
+**Medium** — 2-3 days. The dialog itself is small, but the empty org gate touches core CMS loading path and requires careful testing of all callers.
