@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, FormEvent } from "react";
+import { useState, useEffect, useRef, FormEvent } from "react";
 import { Check, Send, AlertCircle, ExternalLink, Mail } from "lucide-react";
 import { toast } from "sonner";
 
@@ -84,7 +84,15 @@ export function EmailSettingsPanel() {
       setTimeout(() => setSaved(false), 2500);
     }
     setSaving(false);
+    window.dispatchEvent(new CustomEvent("cms:settings-saved"));
   }
+
+  const emailFormRef = useRef<HTMLFormElement>(null);
+  useEffect(() => {
+    function onSave() { emailFormRef.current?.requestSubmit(); }
+    window.addEventListener("cms:settings-save", onSave);
+    return () => window.removeEventListener("cms:settings-save", onSave);
+  }, []);
 
   async function handleTest() {
     if (!testEmail.trim()) return;
@@ -157,7 +165,7 @@ export function EmailSettingsPanel() {
   ] as const;
 
   return (
-    <form onSubmit={handleSave}>
+    <form ref={emailFormRef} onSubmit={handleSave}>
       <div style={{ display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "1.5rem" }}>
         {FIELDS.map((f) => {
           const currentValue = config[f.id as keyof EmailConfig];
@@ -232,23 +240,6 @@ export function EmailSettingsPanel() {
         <p style={{ fontSize: "0.8rem", color: "var(--destructive)", marginBottom: "0.75rem" }}>{error}</p>
       )}
 
-      <button
-        type="submit"
-        disabled={saving}
-        style={{
-          display: "flex", alignItems: "center", gap: "0.375rem",
-          padding: "0.5rem 1rem", borderRadius: "7px", border: "none",
-          background: saved ? "color-mix(in srgb, var(--primary) 15%, transparent)" : "var(--primary)",
-          color: saved ? "var(--primary)" : "var(--primary-foreground)",
-          fontSize: "0.875rem", fontWeight: 600, cursor: saving ? "wait" : "pointer",
-          transition: "all 200ms",
-        }}
-      >
-        {saved
-          ? <><Check style={{ width: "0.9rem", height: "0.9rem" }} /> Saved</>
-          : saving ? "Saving…" : <><Mail style={{ width: "0.9rem", height: "0.9rem" }} /> Save email settings</>
-        }
-      </button>
 
       <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "0.75rem" }}>
         Keys are stored in <code style={{ fontSize: "0.7rem" }}>_data/site-config.json</code>. Falls back to <code style={{ fontSize: "0.7rem" }}>RESEND_API_KEY</code> env var.

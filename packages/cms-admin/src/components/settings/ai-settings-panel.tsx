@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, FormEvent } from "react";
+import { useState, useEffect, useRef, FormEvent } from "react";
 import { Sparkles, Check, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 import { SectionHeading } from "@/components/ui/section-heading";
@@ -82,7 +82,15 @@ export function AISettingsPanel() {
       setTimeout(() => setSaved(false), 2500);
     }
     setSaving(false);
+    window.dispatchEvent(new CustomEvent("cms:settings-saved"));
   }
+
+  const aiFormRef = useRef<HTMLFormElement>(null);
+  useEffect(() => {
+    function onSave() { aiFormRef.current?.requestSubmit(); }
+    window.addEventListener("cms:settings-save", onSave);
+    return () => window.removeEventListener("cms:settings-save", onSave);
+  }, []);
 
   const fieldStyle = {
     padding: "0.5rem 0.75rem",
@@ -102,7 +110,7 @@ export function AISettingsPanel() {
   }
 
   return (
-    <form onSubmit={handleSave}>
+    <form ref={aiFormRef} onSubmit={handleSave}>
       {/* Default provider */}
       <div style={{ marginBottom: "1.5rem" }}>
         <label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: "0.5rem" }}>
@@ -294,23 +302,6 @@ export function AISettingsPanel() {
         <p style={{ fontSize: "0.8rem", color: "var(--destructive)", marginBottom: "0.75rem" }}>{error}</p>
       )}
 
-      <button
-        type="submit"
-        disabled={saving}
-        style={{
-          display: "flex", alignItems: "center", gap: "0.375rem",
-          padding: "0.5rem 1rem", borderRadius: "7px", border: "none",
-          background: saved ? "color-mix(in srgb, var(--primary) 15%, transparent)" : "var(--primary)",
-          color: saved ? "var(--primary)" : "var(--primary-foreground)",
-          fontSize: "0.875rem", fontWeight: 600, cursor: saving ? "wait" : "pointer",
-          transition: "all 200ms",
-        }}
-      >
-        {saved
-          ? <><Check style={{ width: "0.9rem", height: "0.9rem" }} /> Saved</>
-          : saving ? "Saving…" : <><Sparkles style={{ width: "0.9rem", height: "0.9rem" }} /> Save AI settings</>
-        }
-      </button>
 
       <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "0.75rem" }}>
         Keys are stored in <code style={{ fontSize: "0.7rem" }}>_data/ai-config.json</code> in your project directory — not in environment variables.
