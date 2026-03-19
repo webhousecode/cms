@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, FormEvent } from "react";
 import { Check, Sparkles, AlertTriangle } from "lucide-react";
+import { SettingsCard } from "./settings-card";
 import { toast } from "sonner";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { SectionHeading } from "@/components/ui/section-heading";
@@ -95,6 +96,7 @@ export function AIDefaultsPanel() {
 
   return (
     <form ref={defaultsFormRef} onSubmit={handleSave} onChange={() => window.dispatchEvent(new CustomEvent("cms:settings-dirty"))}>
+      <SettingsCard>
       {/* Interactives section */}
       <div style={{ marginBottom: "2rem" }}>
         <SectionHeading>Interactives (Generate &amp; Edit with AI)</SectionHeading>
@@ -161,7 +163,7 @@ export function AIDefaultsPanel() {
         <AlertTriangle style={{ width: "0.875rem", height: "0.875rem", color: "#eab308", flexShrink: 0 }} />
         <span>Changing models affects AI quality and cost. Sonnet produces better code but costs more per request. These are defaults — the built-in values are recommended for most use cases.</span>
       </div>
-
+      </SettingsCard>
     </form>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, FormEvent } from "react";
 import { Sparkles, Check, ExternalLink } from "lucide-react";
+import { SettingsCard } from "./settings-card";
 import { toast } from "sonner";
 import { SectionHeading } from "@/components/ui/section-heading";
 
@@ -111,6 +112,7 @@ export function AISettingsPanel() {
 
   return (
     <form ref={aiFormRef} onSubmit={handleSave} onChange={() => window.dispatchEvent(new CustomEvent("cms:settings-dirty"))}>
+      <SettingsCard>
       {/* Default provider */}
       <div style={{ marginBottom: "1.5rem" }}>
         <label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: "0.5rem" }}>
@@ -303,9 +305,10 @@ export function AISettingsPanel() {
       )}
 
 
-      <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "0.75rem" }}>
+      <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>
         Keys are stored in <code style={{ fontSize: "0.7rem" }}>_data/ai-config.json</code> in your project directory — not in environment variables.
       </p>
+      </SettingsCard>
     </form>
   );
 }
