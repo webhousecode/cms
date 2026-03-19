@@ -117,20 +117,21 @@ export function AppSidebar({ collections }: Props) {
     <Sidebar collapsible="offcanvas">
       {/* Header: stacked logo */}
       <SidebarHeader className="p-0">
-        <Link href="/admin" className="flex flex-col items-center gap-2 px-3" style={{ marginRight: "auto", marginLeft: "0.5rem", paddingTop: showLogoIcon ? "1.25rem" : "0.75rem", paddingBottom: showLogoIcon ? "1.25rem" : "0.75rem" }}>
-          {showLogoIcon && (
+        <Link href="/admin" className="flex flex-col gap-2 px-3" style={{ alignItems: showLogoIcon ? "center" : "flex-start", marginRight: "auto", marginLeft: "0.5rem", paddingTop: showLogoIcon ? "1.25rem" : "0.75rem", paddingBottom: showLogoIcon ? "1.25rem" : "0.75rem" }}>
+          {showLogoIcon ? (
             <img
               src={mounted && resolvedTheme === "light" ? "/webhouse.app-light-icon.svg" : "/webhouse.app-dark-icon.svg"}
-              alt=""
+              alt="webhouse.app"
               className="w-14 h-14"
             />
+          ) : (
+            <img
+              src={mounted && resolvedTheme === "light" ? "/webhouse-wordmark-light.svg" : "/webhouse-wordmark-dark.svg"}
+              alt="webhouse.app"
+              className="h-11 w-auto"
+              style={{ maxWidth: "100%" }}
+            />
           )}
-          <img
-            src={mounted && resolvedTheme === "light" ? "/webhouse-wordmark-light.svg" : "/webhouse-wordmark-dark.svg"}
-            alt="webhouse.app"
-            className="h-11 w-auto"
-            style={{ maxWidth: "100%" }}
-          />
           <span style={{ fontFamily: "'Courier New', Courier, monospace", fontSize: "0.75rem", marginTop: "-0.25rem", letterSpacing: "0.08em", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: "100%" }} className="text-muted-foreground">
             AI-native content engine
           </span>

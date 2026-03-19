@@ -152,16 +152,35 @@ function ProfileSection() {
 				<form onSubmit={saveProfile} style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
 					<InputRow label="Name" value={name} onChange={(e) => setName(e.target.value)} required />
 					<InputRow label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-					<Toggle
-						label="Show logo icon"
-						description="Show the webhouse.app icon above the wordmark in the sidebar."
-						checked={showLogoIcon}
-						onChange={(v) => {
-							setShowLogoIcon(v);
-							window.dispatchEvent(new CustomEvent("cms:logo-icon-changed", { detail: v }));
-							fetch("/api/admin/user-state", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ showLogoIcon: v }) }).catch(() => {});
-						}}
-					/>
+					<div>
+						<label style={{ display: "block", fontSize: "0.85rem", fontWeight: 500, marginBottom: "0.25rem" }}>Sidebar logo</label>
+						<p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", marginBottom: "0.5rem" }}>Choose which logo to display in the sidebar.</p>
+						<div style={{ display: "flex", gap: "0.5rem" }}>
+							{([
+								{ value: true, label: "Icon (eye)" },
+								{ value: false, label: "Wordmark" },
+							] as const).map(({ value, label }) => (
+								<button
+									key={String(value)}
+									type="button"
+									onClick={() => {
+										setShowLogoIcon(value);
+										window.dispatchEvent(new CustomEvent("cms:logo-icon-changed", { detail: value }));
+										fetch("/api/admin/user-state", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ showLogoIcon: value }) }).catch(() => {});
+									}}
+									style={{
+										flex: 1, padding: "0.5rem 0.75rem", borderRadius: "6px", cursor: "pointer",
+										border: showLogoIcon === value ? "2px solid var(--primary)" : "1px solid var(--border)",
+										background: showLogoIcon === value ? "var(--accent)" : "transparent",
+										color: showLogoIcon === value ? "var(--foreground)" : "var(--muted-foreground)",
+										fontSize: "0.8rem", fontWeight: 500, textAlign: "center",
+									}}
+								>
+									{label}
+								</button>
+							))}
+						</div>
+					</div>
 
 					<ErrorMsg msg={error} />
 					<div><SaveButton saving={saving} saved={saved} /></div>
