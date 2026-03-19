@@ -205,6 +205,18 @@ export function TabsProvider({ children }: { children: ReactNode }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 
+  /* ── Clear tabs on org/site switch ─────────────────────────── */
+  useEffect(() => {
+    function handleRegistryChange() {
+      // Reset to a single Dashboard tab on org/site switch
+      const id = uid();
+      applyTabs([{ id, path: "/admin", title: "Dashboard" }], id);
+    }
+    window.addEventListener("cms-registry-change", handleRegistryChange);
+    return () => window.removeEventListener("cms-registry-change", handleRegistryChange);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   /* ── Track normal navigation — update active tab's path ──── */
   useEffect(() => {
     if (skipNextPathChange.current) {
