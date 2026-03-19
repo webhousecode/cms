@@ -189,6 +189,78 @@ Findings:
 Scanned: 284 files in 4.1s
 ```
 
+### Phase 4 — Dependency Graph & Blast Radius Analysis
+
+AI-assisted development (Claude Code sessions) frequently modifies files without understanding the full dependency chain. A change to `site-registry.ts` can break 14+ files that import from it. We need automated blast radius analysis.
+
+**Tool:** `madge` — generates import dependency graphs from TypeScript source.
+
+```bash
+pnpm add -D madge
+```
+
+**CLI integration:**
+
+```bash
+# Show what depends on a specific file
+npx @webhouse/security-gate deps packages/cms-admin/src/lib/site-registry.ts
+
+# Output:
+# site-registry.ts is imported by:
+#   ├── app/api/cms/registry/route.ts
+#   ├── app/api/cms/registry/import/route.ts
+#   ├── app/api/cms/folder-picker/route.ts
+#   ├── components/site-switcher.tsx
+#   ├── lib/team-access.ts
+#   ├── lib/site-paths.ts
+#   ├── lib/cms.ts
+#   └── ... (14 files total)
+
+# Check for circular dependencies
+npx @webhouse/security-gate deps --circular
+
+# Generate full dependency graph as JSON
+npx @webhouse/security-gate deps --graph --output deps.json
+
+# Pre-commit: analyze blast radius of changed files
+npx @webhouse/security-gate deps --changed
+# Output:
+# Changed files: 2
+#   site-registry.ts → 14 dependents (HIGH blast radius)
+#   image-gallery-editor.tsx → 1 dependent (LOW blast radius)
+# ⚠ Consider testing: site creation, site switching, team access
+```
+
+**Pre-commit integration:**
+
+Add to `scripts/security-gate-hook.sh`:
+```bash
+# 3. Blast radius check on staged files
+CHANGED=$(git diff --cached --name-only --diff-filter=ACM | grep -E '\.(ts|tsx)$')
+if [ -n "$CHANGED" ]; then
+  npx madge --warning --circular $CHANGED 2>/dev/null
+  if [ $? -ne 0 ]; then
+    echo "⚠️  Circular dependency detected in changed files!"
+    exit 1
+  fi
+fi
+```
+
+**Auto-generated test suggestions:**
+
+When a file with high blast radius is changed, the security gate suggests which tests to run:
+
+```typescript
+// rules/blast-radius.ts
+const TEST_SUGGESTIONS: Record<string, string[]> = {
+  'lib/site-registry.ts': ['site creation', 'site switching', 'team access', 'site settings'],
+  'lib/cms.ts': ['all collection CRUD', 'config loading', 'document editing'],
+  'lib/auth.ts': ['login', 'session', 'API auth', 'role checks'],
+  'components/editor/document-editor.tsx': ['save', 'publish', 'preview', 'field editing'],
+  'components/sidebar.tsx': ['navigation', 'collection list', 'site switcher'],
+};
+```
+
 ### CI Integration
 
 ```yaml
@@ -250,16 +322,25 @@ Runs full scan + sends Discord report to security channel.
 16. Add weekly scheduled scan with Discord notification
 17. Test against cms repo, fix discovered issues
 
+### Phase 4 — Dependency Graph & Blast Radius (day 5-6)
+18. Add `madge` as dev dependency
+19. Implement `deps` command in security-gate CLI
+20. Build blast radius analyzer (count dependents per file)
+21. Build test suggestion engine (map high-impact files → test areas)
+22. Add circular dependency check to pre-commit hook
+23. Add `--changed` mode for pre-commit blast radius report
+
 ## Dependencies
 
 - None — this is infrastructure that improves security of all existing features
 
 ## Effort Estimate
 
-**Medium** — 4-5 days
+**Medium-Large** — 6 days
 
 - Day 1: Local toolchain setup + initial scans + CLAUDE.md rules
 - Day 2: CLI skeleton + Semgrep/Gitleaks wrappers
 - Day 3: Custom rules engine (nextjs, env-check, cms-specific)
 - Day 4: Reporters (console, Discord, markdown) + CI workflow
-- Day 5: Test against repo, fix findings, scheduled scan setup
+- Day 5: Dependency graph + blast radius analyzer (madge integration)
+- Day 6: Test suggestions engine, pre-commit integration, test against repo
