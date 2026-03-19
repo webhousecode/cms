@@ -145,7 +145,7 @@ Single-button deployment from admin. Integrations: Vercel, Netlify, Fly.io, Clou
 Multi-channel notifications for CMS events. Discord, Slack, WhatsApp, Signal, Telegram. Configurable per event type (new content, publish, AI completion, errors). Webhook support for custom integrations. Notification preferences per user.
 
 ## F14 — Newsletter Engine
-AI-powered newsletter generation from published content. Select articles → AI composes newsletter. Template system with brand voice. ESP integration (Resend, SendGrid, AWS SES). Subscriber management. Schedule and send from admin.
+AI-powered newsletter from published CMS content. Auto-assembly: AI picks recent articles, writes intro + summaries, suggests 5 subject line variants, runs spam check. React Email rendering for cross-client compatibility (Gmail, Outlook, Apple Mail). Resend (3K/mo free) or AWS SES ($0.10/1K). GDPR-compliant subscriber management: double opt-in, one-click unsubscribe (RFC 8058), consent logging, data export/deletion. Click tracking with UTM auto-injection. Scheduled sends integrated with Calendar (F47). Newsletter archive = SEO pages at /newsletter/{id}. Embeddable signup form component. Templates: digest, spotlight, announcement, custom blocks. The killer CMS-native advantage: content already exists, newsletter is just a *view* — no copy-paste, no platform tax, no data lock-in.
 
 ## F15 — Agent Scheduler & Notifications
 Cron-based AI agent execution. Define schedules per agent (daily, weekly, custom cron). Notification on completion (email, Discord, webhook). Run history with output logs. Manual trigger from admin. Queue management.
