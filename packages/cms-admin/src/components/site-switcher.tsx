@@ -86,6 +86,16 @@ export function SiteSwitcher() {
     return () => window.removeEventListener("cms-registry-change", handleChange);
   }, [fetchRegistry]);
 
+  // Update browser tab title with active site name
+  useEffect(() => {
+    if (!registry || !activeSiteId) return;
+    const org = registry.orgs.find((o) => o.id === activeOrgId) ?? registry.orgs[0];
+    const site = org?.sites.find((s) => s.id === activeSiteId);
+    if (site?.name) {
+      document.title = `webhouse.app: ${site.name}`;
+    }
+  }, [registry, activeOrgId, activeSiteId]);
+
   if (!loaded || !registry) return null;
 
   const activeOrg = registry.orgs.find((o) => o.id === activeOrgId) ?? registry.orgs[0];

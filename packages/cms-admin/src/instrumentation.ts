@@ -102,7 +102,24 @@ export async function register() {
   setTimeout(agentTick, 2 * 60_000);
   setInterval(agentTick, 5 * 60_000);
 
-  // ── 3. Calendar snapshot (every 5 minutes) ──────────────────
+  // ── 3. Tools scheduler — backup + link check (every 5 minutes) ──
+  async function toolsTick() {
+    try {
+      const { runToolsScheduler } = await import("./lib/tools-scheduler");
+      const result = await runToolsScheduler();
+      if (result.backupRan) console.log("[tools-scheduler] Backup completed");
+      if (result.linkCheckRan) console.log("[tools-scheduler] Link check completed");
+      if (result.errors.length > 0) console.error(`[tools-scheduler] Errors: ${result.errors.join("; ")}`);
+    } catch (err) {
+      console.error("[tools-scheduler] fatal:", err);
+    }
+  }
+
+  // First tools check 3 minutes after startup, then every 5 minutes
+  setTimeout(toolsTick, 3 * 60_000);
+  setInterval(toolsTick, 5 * 60_000);
+
+  // ── 4. Calendar snapshot (every 5 minutes) ──────────────────
   async function snapshotTick() {
     try {
       const { updateScheduledSnapshot } = await import("./lib/scheduled-snapshot");
