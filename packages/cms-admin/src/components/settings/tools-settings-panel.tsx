@@ -14,6 +14,7 @@ interface AutomationConfig {
   deployApiToken: string;
   deployAppName: string;
   deployProductionUrl: string;
+  deployOnSave: boolean;
   backupSchedule: "off" | "daily" | "weekly";
   backupTime: string;
   backupRetentionDays: number;
@@ -31,6 +32,7 @@ const DEFAULTS: AutomationConfig = {
   deployApiToken: "",
   deployAppName: "",
   deployProductionUrl: "",
+  deployOnSave: false,
   backupSchedule: "off",
   backupTime: "03:00",
   backupRetentionDays: 30,
@@ -64,6 +66,7 @@ export function ToolsSettingsPanel() {
           deployApiToken: data.deployApiToken ?? "",
           deployAppName: data.deployAppName ?? "",
           deployProductionUrl: data.deployProductionUrl ?? "",
+          deployOnSave: data.deployOnSave ?? false,
           backupSchedule: data.backupSchedule ?? "off",
           backupTime: data.backupTime ?? "03:00",
           backupRetentionDays: data.backupRetentionDays ?? 30,
@@ -313,6 +316,18 @@ export function ToolsSettingsPanel() {
               }}
             />
           </div>
+        )}
+
+        {config.deployProvider !== "off" && (
+          <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer" }}>
+            <input
+              type="checkbox"
+              checked={config.deployOnSave}
+              onChange={(e) => updateConfig((c) => ({ ...c, deployOnSave: e.target.checked }))}
+              style={{ accentColor: "var(--primary)" }}
+            />
+            <span style={{ fontSize: "0.8rem" }}>Auto-deploy when content is saved</span>
+          </label>
         )}
       </SettingsCard>
 

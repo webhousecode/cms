@@ -48,6 +48,8 @@ export interface SiteConfig {
   deployApiToken: string;
   deployAppName: string;  // Fly.io app name or GitHub repo
   deployProductionUrl: string;  // Live site URL after deploy
+  /** Auto-deploy when content is saved */
+  deployOnSave: boolean;
 
   /** Webhook URLs per automation (ordered, multiple per type) */
   backupWebhooks: { id: string; url: string }[];
@@ -87,6 +89,7 @@ async function defaults(): Promise<SiteConfig> {
     deployApiToken: "",
     deployAppName: "",
     deployProductionUrl: "",
+    deployOnSave: false,
     backupSchedule: "off",
     backupTime: "03:00",
     backupRetentionDays: 30,

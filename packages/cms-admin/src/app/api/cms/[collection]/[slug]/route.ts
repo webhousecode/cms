@@ -8,6 +8,17 @@ import { GitHubStorageAdapter } from "@webhouse/cms";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+/** Fire-and-forget: trigger deploy if deployOnSave is enabled */
+async function dispatchAutoDeployOnSave() {
+  const { readSiteConfig } = await import("@/lib/site-config");
+  const config = await readSiteConfig();
+  if (!config.deployOnSave) return;
+  const { triggerDeploy } = await import("@/lib/deploy-service");
+  console.log("[auto-deploy] Triggering deploy on save...");
+  const result = await triggerDeploy();
+  console.log(`[auto-deploy] ${result.status}${result.error ? ` — ${result.error}` : ""}`);
+}
+
 type Ctx = { params: Promise<{ collection: string; slug: string }> };
 
 export async function POST(req: NextRequest, { params }: Ctx) {
@@ -145,6 +156,9 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
       }
       dispatchRevalidation(site, { collection, slug: newSlug, action, document: updated }, urlPrefix).catch(() => {});
     }
+
+    // Auto-deploy on save (fire-and-forget)
+    dispatchAutoDeployOnSave().catch(() => {});
 
     return NextResponse.json(updated);
   } catch (err) {
