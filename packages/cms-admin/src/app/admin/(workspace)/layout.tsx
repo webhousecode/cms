@@ -52,17 +52,20 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   try {
     config = await getAdminConfig();
   } catch (err) {
-    // Empty org (no sites) — render minimal layout so Sites/Organizations pages still work
+    // Empty org (no sites) — full layout but no collections
     if (err instanceof EmptyOrgError) {
       return (
         <SidebarProvider>
-          <TabsProvider>
-            <div style={{ minHeight: "100vh", background: "var(--background)" }}>
+          <AppSidebarClient collections={[]} globals={[]} />
+          <SidebarInset>
+            <TabsProvider>
               <AdminHeader />
               <TabBar />
-              <div style={{ padding: "0" }}>{children}</div>
-            </div>
-          </TabsProvider>
+              <CommandPaletteProvider>
+                {children}
+              </CommandPaletteProvider>
+            </TabsProvider>
+          </SidebarInset>
         </SidebarProvider>
       );
     }
