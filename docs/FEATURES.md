@@ -101,6 +101,7 @@
 | F82 | [Loaders & Spinners](#f82-loaders--spinners) | Planned | [docs/features/F82-loaders-and-spinners.md](features/F82-loaders-and-spinners.md) |
 | F83 | [Vibe Site Builder](#f83-vibe-site-builder) | Planned | [docs/features/F83-vibe-site-builder.md](features/F83-vibe-site-builder.md) |
 | F84 | [Move Site to Org](#f84-move-site-to-org) | Planned | [docs/features/F84-move-site-to-org.md](features/F84-move-site-to-org.md) |
+| F85 | [CC Hooks & Quality Gates](#f85-cc-hooks-quality-gates) | Planned | [docs/features/F85-cc-hooks-quality-gates.md](features/F85-cc-hooks-quality-gates.md) |
 
 ---
 
@@ -355,3 +356,7 @@ Polished, branded loading animations throughout CMS admin. Four tiers: shimmer s
 
 ## F84 — Move Site to Organization
 Move an existing site from one org to another via Site Settings → Danger Zone or Sites dashboard context menu. Backend: atomic `removeSite(oldOrg) + addSite(newOrg)` in registry.json — all settings, team access, revalidation config preserved. UI: org dropdown + confirmation dialog. Handles default org/site update if the moved site was the default. Essential for agencies restructuring client orgs.
+
+## F85 — CC Hooks & Quality Gates
+
+Automated quality enforcement using Claude Code hooks. Post-edit TypeScript compilation, pre-bash destructive command guards, post-commit audit. Catches errors before they reach the user.
