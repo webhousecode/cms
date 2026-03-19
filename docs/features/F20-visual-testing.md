@@ -92,6 +92,27 @@ export class ThumbnailGenerator {
 | `GET` | `/api/admin/screenshots/[collection]/[slug]` | Get document thumbnail |
 | `POST` | `/api/admin/screenshots/regenerate` | Regenerate all thumbnails |
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-admin/e2e/visual/` — new visual test specs
+- `packages/cms-admin/playwright.config.ts` — new Playwright config
+- `packages/cms-admin/src/lib/thumbnails.ts` — new thumbnail generator
+- `.github/workflows/visual-test.yml` — new CI workflow
+
+### Blast radius
+- Playwright dependency adds significant install time
+- Thumbnail generation on publish adds processing time
+
+### Breaking changes
+- None
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Visual test suite captures screenshots of all admin pages
+- [ ] Thumbnail generation creates OG image-sized screenshots
+- [ ] CI workflow runs and reports diffs as PR comments
+
 ## Implementation Steps
 
 1. Add Playwright as dev dependency to `packages/cms-admin`

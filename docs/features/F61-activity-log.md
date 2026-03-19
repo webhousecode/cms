@@ -208,6 +208,31 @@ The Calendar page can optionally show past published/unpublished events by readi
 
 A small "Recent Activity" section on the Dashboard showing the last 5 entries — gives editors an instant overview of what happened since they last logged in.
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-admin/src/lib/activity-log.ts` — new activity log module
+- `packages/cms-admin/src/app/api/admin/activity/route.ts` — new API endpoint
+- `packages/cms-admin/src/app/admin/activity/page.tsx` — new activity page
+- All API routes in `packages/cms-admin/src/app/api/` — add `logActivity()` calls
+- `packages/cms-admin/src/instrumentation.ts` — add scheduler logging
+
+### Blast radius
+- Every API route is modified to add logging — large number of files touched
+- JSONL append is non-blocking but adds I/O to every mutation
+- Sidebar navigation gains new item
+
+### Breaking changes
+- None
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Document create/update/delete logged
+- [ ] Media upload/delete logged
+- [ ] Scheduler publish/unpublish logged
+- [ ] Activity page shows filtered feed
+- [ ] Log rotation works at 10K lines
+
 ## Implementation Steps
 
 1. **Create `activity-log.ts`** — `logActivity()`, `readActivity()`, types

@@ -110,6 +110,29 @@ All files generated during `cms build`:
 - `/sitemap.xml` — Sitemap
 - Each page gets `<script type="application/ld+json">` injected
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms/src/build/llms-txt.ts` — new llms.txt generator
+- `packages/cms/src/build/rss.ts` — new RSS/Atom/JSON Feed generator
+- `packages/cms/src/build/structured-data.ts` — new JSON-LD generator
+- `packages/cms/src/build/sitemap.ts` — enhance existing sitemap
+- `packages/cms/src/build/pipeline.ts` — hook new generators into build
+
+### Blast radius
+- Build pipeline gains new output files — must not slow down builds for existing sites
+- Sitemap changes could affect SEO if `lastmod` timestamps are wrong
+
+### Breaking changes
+- None — new output files are additive
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] `llms.txt` follows the llms.txt spec format
+- [ ] RSS feed validates as RSS 2.0
+- [ ] JSON-LD uses correct schema.org types per collection
+- [ ] Sitemap includes `lastmod` from document `updatedAt`
+
 ## Implementation Steps
 
 1. Create `packages/cms/src/build/llms-txt.ts` with `generateLlmsTxt()` and `generateLlmsFullTxt()`

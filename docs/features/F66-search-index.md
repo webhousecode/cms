@@ -79,6 +79,29 @@ File: `packages/cms-admin/src/app/api/search/route.ts`
 
 Uses `better-sqlite3` (already a common Node.js SQLite package, zero config).
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms/src/search/index-service.ts` — new search index module
+- `packages/cms/src/content/service.ts` — add search index hooks on create/update/delete
+- `packages/cms-admin/src/app/api/search/route.ts` — update to use index service
+- `packages/cms/package.json` — add `better-sqlite3` dependency
+
+### Blast radius
+- Content service hooks modified — every create/update/delete gains index update overhead
+- Search API behavior changes — existing search consumers may see different result ordering
+- `better-sqlite3` is a native module — may cause install issues on some platforms
+
+### Breaking changes
+- Search results gain `score` and `highlights` fields — additive
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Full index rebuild indexes all documents
+- [ ] Incremental updates on document create/update/delete
+- [ ] Search returns ranked results with title weighting
+- [ ] Works with both filesystem and GitHub adapters
+
 ## Implementation Steps
 
 1. Add `better-sqlite3` dependency to `packages/cms`

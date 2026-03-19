@@ -206,6 +206,30 @@ interface AiImageSettings {
 }
 ```
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-ai/src/providers/image-types.ts` — new image provider interface
+- `packages/cms-ai/src/providers/image-dalle.ts` — new DALL-E provider
+- `packages/cms-ai/src/providers/image-flux.ts` — new Flux provider
+- `packages/cms-ai/src/providers/image-registry.ts` — new image registry
+- `packages/cms-admin/src/app/api/ai/generate-image/route.ts` — new API endpoint
+- `packages/cms-admin/src/components/media/generate-image-dialog.tsx` — new dialog component
+
+### Blast radius
+- Media Manager toolbar gets new button — test existing upload flow
+- Image generation costs real money — budget tracking important
+
+### Breaking changes
+- None
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] DALL-E generates image from prompt
+- [ ] Generated image uploaded to media library
+- [ ] Media Manager "Generate" button opens dialog
+- [ ] Richtext editor image toolbar includes generation option
+
 ## Implementation Steps
 
 1. **Define `ImageProvider` interface and types** in `packages/cms-ai/src/providers/image-types.ts`

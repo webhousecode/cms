@@ -253,6 +253,33 @@ User A browser  ──WebSocket──►  PartyKit Room (per document)  ◄─�
 // Persistence: snapshot to CMS Content API on idle + on last user disconnect
 ```
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms/src/types/field-meta.ts` — add `DocumentLock` type
+- `packages/cms/src/content/lock-manager.ts` — new lock manager
+- `packages/cms-admin/src/app/api/cms/[collection]/[slug]/lock/route.ts` — new lock API routes
+- `packages/cms-admin/src/hooks/use-document-lock.ts` — new client hook
+- `packages/cms-admin/src/components/editor/lock-banner.tsx` — new banner component
+- `packages/cms-admin/src/components/editor/lock-indicator.tsx` — new tab indicator
+- `packages/cms-admin/src/components/editor/document-editor.tsx` — integrate lock
+
+### Blast radius
+- Document editor integration is core — must not interfere with save flow
+- Lock files in `_locks/` directory — must be excluded from git commits and builds
+- `navigator.sendBeacon` for cleanup may not fire in all browsers
+
+### Breaking changes
+- None — locking is transparent to the document data model
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Lock acquired when user opens document
+- [ ] Second user sees read-only banner
+- [ ] Lock expires after 10 min inactivity
+- [ ] Force-unlock works for admin users
+- [ ] Lock released on save and navigation
+
 ## Implementation Steps
 
 ### v1 — Optimistic Locking (days 1-3)

@@ -96,6 +96,28 @@ export interface QualityMetrics {
 }
 ```
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-ai/src/learning/corrections.ts` — new correction tracking module
+- `packages/cms-ai/src/learning/pipeline.ts` — new learning pipeline
+- `packages/cms-ai/src/agents/content.ts` — inject few-shot examples from learning data
+- `packages/cms-admin/src/app/admin/settings/ai-learning/page.tsx` — new admin page
+
+### Blast radius
+- `ContentAgent.generate()` system prompt changes — AI output will evolve over time
+- Document publish hook adds processing overhead
+
+### Breaking changes
+- None
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Corrections recorded when AI-generated content is edited before publish
+- [ ] Pattern extraction identifies common corrections
+- [ ] Few-shot examples injected into generation prompts
+- [ ] Quality metrics display correctly
+
 ## Implementation Steps
 
 1. Create `packages/cms-ai/src/learning/corrections.ts` with diff tracking

@@ -304,6 +304,29 @@ test("budget bar shows correct percentage and color", async ({ page }) => {
     TEST_PASSWORD: ${{ secrets.TEST_PASSWORD }}
 ```
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-admin/e2e/fixtures/mock-llm.ts` — new mock LLM fixture
+- `packages/cms-admin/e2e/fixtures/test-helpers.ts` — new test helpers
+- `packages/cms-admin/e2e/pipeline/` — new pipeline test specs
+- `packages/cms-admin/e2e/agents/` — new agent test specs
+- `packages/cms-admin/e2e/curation/` — new curation test specs
+- `packages/cms-admin/e2e/cockpit/` — new cockpit test specs
+
+### Blast radius
+- None — test files only, no production code changes
+- Mock LLM intercepts could affect other parallel tests if not isolated
+
+### Breaking changes
+- None
+
+### Test plan
+- [ ] All new E2E tests pass with mocked LLM
+- [ ] Full roundtrip test: agent → curation → approve → document exists
+- [ ] Budget enforcement test blocks over-limit runs
+- [ ] Tests run in CI without flakiness
+
 ## Implementation Steps
 
 1. Create `e2e/fixtures/mock-llm.ts` — Anthropic + OpenAI route interceptors

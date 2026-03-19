@@ -90,6 +90,28 @@ throw new CmsError(
 );
 ```
 
+## Impact Analysis
+
+### Files affected
+- `packages/create-cms/template/start.sh` — new start script
+- `packages/cms/src/template/playbooks/` — new playbook recipe files
+- `packages/cms/src/utils/errors.ts` — add AI hints to error classes
+- `packages/create-cms/src/index.ts` — include start.sh and playbooks
+- `packages/cms-cli/src/commands/` — add `playbook list`/`show` commands
+
+### Blast radius
+- Error class changes affect all error handling — must be backwards-compatible
+- Scaffolded project structure changes — test with fresh `npm create`
+
+### Breaking changes
+- None — AI hints are additive to error classes
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] `start.sh` runs successfully on fresh scaffold
+- [ ] `cms playbook list` shows available recipes
+- [ ] Error AI hints render in console output
+
 ## Implementation Steps
 
 1. Create `start.sh` template in `packages/create-cms/template/`

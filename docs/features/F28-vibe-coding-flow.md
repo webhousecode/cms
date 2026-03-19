@@ -101,6 +101,29 @@ export interface VibeTemplate {
 - Template picker on start
 - "Deploy" button when satisfied
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-admin/src/lib/vibe/engine.ts` — new vibe engine
+- `packages/cms-admin/src/lib/vibe/templates.ts` — new starter templates
+- `packages/cms-admin/src/components/vibe/ChatPanel.tsx` — new chat UI
+- `packages/cms-admin/src/app/admin/vibe/page.tsx` — new full-screen vibe page
+- `packages/cms-admin/src/app/api/` — WebSocket server for real-time communication
+
+### Blast radius
+- WebSocket server in Next.js API requires special handling — may affect hosting
+- Vibe engine writes to CmsConfig and content — could conflict with concurrent admin edits
+
+### Breaking changes
+- None
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Chat messages trigger config/content generation
+- [ ] Live preview updates as AI generates
+- [ ] Template starters create valid initial state
+- [ ] Undo/redo via action history works
+
 ## Implementation Steps
 
 1. Create `packages/cms-admin/src/lib/vibe/engine.ts` with AI orchestrator

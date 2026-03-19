@@ -142,6 +142,30 @@ Add to `DEFAULT_PROMPTS` in `ai-prompts.ts`:
 
 Editable in Settings → AI Prompts like all other prompts.
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-admin/src/lib/html-summary.ts` — new HTML summary extractor
+- `packages/cms-admin/src/app/api/cms/ai/enhance-prompt/route.ts` — new API endpoint
+- `packages/cms-admin/src/components/ui/enhance-prompt-button.tsx` — new reusable button
+- `packages/cms-admin/src/lib/ai-prompts.ts` — add `enhance-prompt` to DEFAULT_PROMPTS
+- Interactive AI panel — add button next to Send
+- Create with AI modal — add button next to Generate
+
+### Blast radius
+- AI prompt modification affects output quality — enhanced prompts must be reviewed before send
+- New API endpoint adds Haiku cost (small but per-use)
+
+### Breaking changes
+- None
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Vague prompt enhanced to specific instruction
+- [ ] HTML summary extraction captures IDs, functions, inputs
+- [ ] Enhanced prompt replaces textarea content for review
+- [ ] Editable meta-prompt in Settings → AI Prompts
+
 ## Implementation Steps
 
 1. **`html-summary.ts`** — Extract compact structural summary from HTML (IDs, functions, inputs)

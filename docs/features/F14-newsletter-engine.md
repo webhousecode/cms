@@ -111,6 +111,30 @@ export interface EmailSender {
 - Newsletters: `<dataDir>/newsletters/`
 - Subscribers: `<dataDir>/subscribers.json`
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-admin/src/lib/newsletter/types.ts` — new newsletter types
+- `packages/cms-admin/src/lib/newsletter/senders/` — ESP adapters (Resend, SendGrid, SES)
+- `packages/cms-ai/src/agents/newsletter.ts` — new newsletter AI agent
+- `packages/cms-admin/src/app/api/admin/newsletters/` — new API routes
+- `packages/cms-admin/src/app/admin/newsletters/page.tsx` — new editor page
+- `packages/cms-admin/src/app/admin/subscribers/page.tsx` — new subscriber management
+
+### Blast radius
+- Email sending capability is new — test with actual ESPs to avoid deliverability issues
+- Subscriber data is PII — requires proper handling
+
+### Breaking changes
+- None
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Newsletter AI composition produces valid HTML email
+- [ ] Test email sends correctly via configured ESP
+- [ ] Subscriber import from CSV works
+- [ ] Unsubscribe endpoint removes subscriber
+
 ## Implementation Steps
 
 1. Create `packages/cms-admin/src/lib/newsletter/types.ts`

@@ -235,6 +235,31 @@ _data/directory-sync.json       # Directory API sync state (delta tokens, schedu
 _data/users.json                # Extended with source, externalId, directoryGroups
 ```
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-admin/src/lib/auth-jit.ts` — new JIT provisioning module
+- `packages/cms-admin/src/app/api/scim/v2/` — new SCIM 2.0 API routes
+- `packages/cms-admin/src/lib/auth.ts` — extend User with `source`, `externalId`, `directoryGroups`
+- `packages/cms-admin/src/lib/directory-sync/` — new directory sync modules
+- `packages/cms-admin/package.json` — add `scim2-parse-filter`
+- Site Settings — new Directory Sync tab
+
+### Blast radius
+- User model changes affect all auth-dependent code
+- SCIM endpoints are a new public API surface — security critical
+- Auto-provisioning could create unexpected users
+
+### Breaking changes
+- `User` interface extended with directory fields — optional, backwards-compatible
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] JIT provisioning creates user on first SSO login
+- [ ] SCIM create/update/deactivate user works
+- [ ] Group → role mapping assigns correct roles
+- [ ] Deprovisioned users cannot log in
+
 ## Implementation Steps
 
 ### Phase 1 — JIT Provisioning (with F50)

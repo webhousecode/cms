@@ -298,6 +298,29 @@ Hub checks against plan limits. Overage: soft limit (warning email at 80%), hard
 - **Billing**: invoices, payment method, plan change history
 - **Custom domain**: add/verify custom domain (Pro/Agency)
 
+## Impact Analysis
+
+### Files affected
+- `apps/hub/` — entirely new Next.js app (separate repo)
+- `packages/cms-admin/` — add license check + hub callback
+- Fly.io infrastructure — machine provisioning API integration
+- Supabase — new database schema for customers/subscriptions/machines
+
+### Blast radius
+- CMS admin gains license check — must not break self-hosted deployments
+- Fly.io API integration is infrastructure-critical
+- Stripe billing integration affects revenue
+
+### Breaking changes
+- CMS admin gains optional `CMS_LICENSE_KEY` env var — self-hosted ignores it
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Stripe payment → machine provisioning completes end-to-end
+- [ ] CMS instance accessible at subdomain after provisioning
+- [ ] Machine sleep/wake cycle works correctly
+- [ ] Grace period prevents immediate data loss on cancellation
+
 ## Implementation Steps
 
 ### Phase 1 — Hub App Scaffold + Stripe (days 1-4)

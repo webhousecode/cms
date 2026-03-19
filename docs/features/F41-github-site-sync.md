@@ -343,6 +343,32 @@ defineCollection({
 ```
 ```
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-cli/src/utils/git-sync.ts` — new GitSyncWatcher module
+- `packages/cms-cli/src/commands/dev.ts` — start watcher when git repo detected
+- `packages/cms-admin/src/lib/site-registry.ts` — add `revalidateUrl`/`revalidateSecret` to SiteEntry
+- `packages/cms-admin/src/lib/revalidation.ts` — new revalidation dispatch module
+- `packages/cms-admin/src/app/api/cms/revalidation/route.ts` — new API endpoint
+- Content save flow (PATCH/DELETE routes) — wire revalidation after GitHub commit
+
+### Blast radius
+- SiteEntry interface change affects all site registry consumers
+- Content save flow gains async revalidation step — must not block saves on revalidation failure
+- Git auto-pull in dev could cause unexpected file changes
+
+### Breaking changes
+- `SiteEntry` interface extended — existing entries lack revalidation fields (optional, so safe)
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Revalidation dispatched after GitHub content save
+- [ ] HMAC signature validates at receiving endpoint
+- [ ] Revalidation URL configurable in Site Settings
+- [ ] Test ping delivers successfully
+- [ ] Git auto-sync pulls changes in dev mode
+
 ## Implementation Steps
 
 1. [x] **Create `packages/cms-cli/src/utils/git-sync.ts`** — GitSyncWatcher class with polling logic

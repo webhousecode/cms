@@ -228,6 +228,28 @@ $ npx cms dev
 - **No token storage** — CMS never persists the token, resolves it fresh on each request (with short in-memory cache)
 - **Keychain access** — macOS will prompt for permission on first access
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-admin/src/lib/ai-tunnel.ts` — new token resolution module
+- `packages/cms-admin/src/lib/ai-config.ts` — extend `getApiKey()` with tunnel fallback
+- `packages/cms-admin/src/app/api/admin/ai-tunnel/route.ts` — new status endpoint
+- Site Settings → AI tab — new tunnel section
+
+### Blast radius
+- `getApiKey()` is called for every AI request — tunnel fallback adds token resolution overhead
+- Token expiry could cause intermittent AI failures
+
+### Breaking changes
+- None — tunnel is opt-in via `aiTunnelEnabled` flag
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Token resolved from macOS Keychain
+- [ ] AI requests succeed using tunnel token
+- [ ] Token freshness check prevents expired token use
+- [ ] Settings UI shows tunnel status and expiry
+
 ## Implementation Steps
 
 1. **`ai-tunnel.ts`** — Token resolution module (`resolveToken`, `isTokenFresh`, `autoRenewIfNeeded`, `findClaudeBinary`)

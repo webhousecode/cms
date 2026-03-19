@@ -124,6 +124,28 @@ Approach 1 is simpler and decoupled. The columns block data becomes:
 
 Site rendering just uses `block.gridCols` (falling back to the existing lookup for builtins).
 
+## Impact Analysis
+
+### Files affected
+- `_data/column-presets.json` — new storage file
+- `packages/cms-admin/src/app/api/cms/column-presets/route.ts` — new API routes
+- `packages/cms-admin/src/components/editor/columns-editor.tsx` — fetch and display custom presets
+- Site Settings UI — new column presets section
+
+### Blast radius
+- Columns editor changes affect all blocks-based pages using columns
+- Site rendering needs `gridCols` field in block data for custom presets
+
+### Breaking changes
+- Columns block data gains `gridCols` field — sites need to read it for custom presets
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Built-in presets display as read-only
+- [ ] Custom preset created via visual editor
+- [ ] Custom preset appears in columns layout picker
+- [ ] `gridCols` stored in block data for site rendering
+
 ## Implementation Steps
 
 1. **ColumnPreset type + storage** — `_data/column-presets.json` read/write helpers

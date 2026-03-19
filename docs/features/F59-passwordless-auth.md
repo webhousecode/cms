@@ -209,6 +209,32 @@ packages/cms-mobile/               # or separate repo
 <string>Pocket CMS bruger Face ID til at bekræfte din identitet, når du logger ind eller godkender login på en anden enhed. Du kan for eksempel bekræfte et QR-kode login med Face ID i stedet for adgangskode.</string>
 ```
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-admin/src/lib/webauthn.ts` — new WebAuthn module
+- `packages/cms-admin/src/lib/auth.ts` — extend User with `passkeys[]`
+- `packages/cms-admin/src/app/api/auth/passkey/` — new passkey API routes
+- `packages/cms-admin/src/app/api/auth/qr/` — new QR session routes
+- `packages/cms-admin/src/app/admin/login/page.tsx` — redesign with QR code
+- `packages/cms-admin/src/app/admin/account/page.tsx` — add Security tab
+- `packages/cms-admin/package.json` — add `@simplewebauthn/server`, `@simplewebauthn/browser`, `qrcode`
+
+### Blast radius
+- Login page redesign affects all users
+- User model extension affects auth system
+- QR session requires WebSocket/SSE for real-time updates
+
+### Breaking changes
+- `User` interface gains `passkeys[]` field — optional, backwards-compatible
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Passkey registration and login works with TouchID/FaceID
+- [ ] QR code displays on login page
+- [ ] Mobile scan + biometric approves desktop session
+- [ ] Existing email/password login unaffected
+
 ## Implementation Steps
 
 1. Install `@simplewebauthn/server` + `@simplewebauthn/browser` in `packages/cms-admin`

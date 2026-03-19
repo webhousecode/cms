@@ -75,6 +75,29 @@ Gutenberg blocks (`<!-- wp:paragraph -->`) are converted:
 - Step 3: Review content counts and start migration
 - Step 4: Progress display with redirect map download
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-admin/src/lib/wp-migration.ts` — new WordPress migration logic
+- `packages/cms-admin/src/lib/wp-block-transform.ts` — new Gutenberg block parser
+- `packages/cms-admin/src/app/api/admin/wp-migrate/` — new API routes (connect, analyze, start, status)
+- `packages/cms-admin/src/app/admin/settings/wp-migrate/page.tsx` — new migration wizard UI
+- `packages/cms-admin/package.json` — add `fast-xml-parser` dependency
+
+### Blast radius
+- Batch document creation — same concern as F02
+- Media download could fill disk on large WordPress sites
+
+### Breaking changes
+- None
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] WP REST API connection test succeeds against a test WP site
+- [ ] Gutenberg block transformation produces valid Markdown
+- [ ] Media files downloaded and URLs rewritten in content
+- [ ] Redirect map generated correctly
+
 ## Implementation Steps
 
 1. Create `packages/cms-admin/src/lib/wp-block-transform.ts` with Gutenberg block parser

@@ -190,6 +190,28 @@ export default function cmsPlugin(options?: {
 }): VitePlugin;
 ```
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms/src/adapters/next.ts` — enhance Next.js helpers (generateStaticParams, generateMetadata)
+- `packages/cms-astro/` — new Astro integration package
+- `packages/cms-nuxt/` — new Nuxt module
+- `packages/cms/CLAUDE.md` — add framework-specific examples
+
+### Blast radius
+- Adapter API is consumed by all site projects — changes must be backwards-compatible
+- CLAUDE.md changes affect all AI builder sessions
+
+### Breaking changes
+- None — new helpers are additive
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] `generateStaticParams` returns correct slugs
+- [ ] `generateMetadata` produces valid Next.js Metadata
+- [ ] Astro integration maps CMS collections correctly
+- [ ] Revalidation handler accepts webhook payloads
+
 ## Implementation Steps
 
 1. **Enhance `@webhouse/cms/adapters/next`** — add `generateStaticParams`, `generateMetadata`, `CmsContent`, `CmsImage` helpers

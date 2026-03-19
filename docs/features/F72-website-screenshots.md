@@ -230,6 +230,32 @@ The UI subscribes to this SSE endpoint when a capture is running, updating the p
 
 Naming: `{collection}-{slug}.png`. Overwrites on re-capture (no versioning — latest is what matters).
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-admin/src/lib/screenshots/route-index.ts` — new route index builder
+- `packages/cms-admin/src/lib/screenshots/capture.ts` — new Playwright capture engine
+- `packages/cms-admin/src/app/api/admin/screenshots/` — new API routes
+- `packages/cms-admin/src/app/admin/tools/page.tsx` — new Tools page with tabs
+- `packages/cms-admin/src/app/admin/link-checker/page.tsx` — relocated to Tools tab
+- `packages/cms-admin/src/components/sidebar.tsx` — replace Link Checker with Tools
+
+### Blast radius
+- Sidebar navigation change — "Link Checker" item moves to "Tools"
+- Playwright dependency (large) — should be lazy-loaded
+- Link Checker page relocation — existing bookmarks/links break
+
+### Breaking changes
+- `/admin/link-checker` URL changes to `/admin/tools?tab=links`
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Route index built correctly from all collections
+- [ ] Playwright captures screenshots at correct URLs
+- [ ] Thumbnail grid displays in admin
+- [ ] SSE progress updates during capture
+- [ ] Link Checker works as tab in Tools page
+
 ## Implementation Steps
 
 ### Phase 1 — Core Engine + API (day 1-2)

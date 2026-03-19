@@ -102,6 +102,27 @@ export async function scaffoldFromTemplate(
 | `landing` | Landing page with sections | pages (blocks), testimonials, features |
 | `business` | Business website with services | pages, services, team, blog, global |
 
+## Impact Analysis
+
+### Files affected
+- `packages/create-cms/src/templates.ts` — new template metadata handler
+- `packages/create-cms/src/index.ts` — add `--template` flag support
+- Template packages: `@webhouse/template-portfolio`, `@webhouse/template-blog`, etc.
+
+### Blast radius
+- Scaffolder changes affect all new project creation — test both with and without template
+- Template packages must stay in sync with @webhouse/cms versions
+
+### Breaking changes
+- None — `--template` flag is additive
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] `npm create @webhouse/cms --template portfolio` creates working project
+- [ ] Interactive picker shows all available templates
+- [ ] Template projects build and serve correctly
+- [ ] CLAUDE.md generated with template-specific context
+
 ## Implementation Steps
 
 1. Create template metadata schema in `packages/create-cms/src/templates.ts`

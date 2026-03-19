@@ -297,6 +297,30 @@ on:
 
 Runs full scan + sends Discord report to security channel.
 
+## Impact Analysis
+
+### Files affected
+- `scripts/security-gate-hook.sh` — new pre-commit hook
+- `packages/cms-admin/package.json` — add `eslint-plugin-security`, `eslint-plugin-no-secrets`
+- `CLAUDE.md` — add Security Requirements section
+- `packages/cms-cli/src/commands/security-gate.ts` — new CLI command (or separate package)
+- `.github/workflows/security-gate.yml` — new CI workflow
+
+### Blast radius
+- Pre-commit hook may block commits with false positives
+- ESLint plugins add new rules — existing code may have warnings
+- CI pipeline gains new job — increases build time
+
+### Breaking changes
+- None — security scanning is advisory/blocking at commit time only
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Semgrep scans detect known vulnerability patterns
+- [ ] Gitleaks detects intentionally planted test secret
+- [ ] Pre-commit hook blocks commit with secret
+- [ ] CI workflow runs without false-positive failures
+
 ## Implementation Steps
 
 ### Phase 1 — Local Toolchain (day 1)

@@ -190,6 +190,27 @@ Each module includes a version comment at the top:
 
 The index includes the version so the AI can check if it has an outdated cached version.
 
+## Impact Analysis
+
+### Files affected
+- `docs/ai-guide/` — new directory with 20 module files
+- `packages/cms/CLAUDE.md` — replace monolithic file with slim index (~180 lines)
+- `packages/create-cms/src/index.ts` — update scaffolder to reference module URLs
+
+### Blast radius
+- CLAUDE.md replacement affects all existing AI builder sessions
+- Module URLs must remain stable — changing paths breaks cached references
+- Scaffolder template changes affect new project creation
+
+### Breaking changes
+- `packages/cms/CLAUDE.md` shrinks from 2421 to ~180 lines — AI sessions must adapt to on-demand fetch
+
+### Test plan
+- [ ] All 20 module files are complete and accurate
+- [ ] Index covers all modules with correct URLs
+- [ ] Fresh Claude Code session can fetch modules via WebFetch
+- [ ] Scaffolded project CLAUDE.md references correct module URLs
+
 ## Implementation Steps
 
 1. Create `docs/ai-guide/` directory

@@ -115,6 +115,29 @@ export class ImageOptimizer {
 | `GET` | `/api/media` | List files |
 | `GET` | `/api/media/usage` | Storage usage stats |
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms/src/storage/bucket.ts` — new BucketAdapter interface
+- `packages/cms/src/storage/image-optimizer.ts` — new image optimizer
+- `packages/cms/src/schema/types.ts` — add `bucket` config to `CmsConfig`
+- `packages/cms-admin/src/app/api/upload/route.ts` — extend upload to use bucket adapter
+- `packages/cms-admin/package.json` — add `sharp`, `@aws-sdk/client-s3` dependencies
+
+### Blast radius
+- Upload API is used by media manager, editor, and interactives — changes affect all upload flows
+- `CmsConfig` type extension must be optional
+
+### Breaking changes
+- None — local filesystem remains the default
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Local bucket adapter wraps current upload logic
+- [ ] S3 adapter uploads and retrieves files
+- [ ] Image optimization produces WebP variants
+- [ ] Quota enforcement rejects oversized uploads
+
 ## Implementation Steps
 
 1. Create `packages/cms/src/storage/bucket.ts` with `BucketAdapter` interface

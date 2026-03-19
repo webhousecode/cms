@@ -162,6 +162,29 @@ Based on current page, show relevant quick actions:
 - All tool executions logged in conversation history
 - Rate limiting: 50 messages/hour per user
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-admin/src/components/admin-ai-assistant.tsx` — new chat panel component
+- `packages/cms-admin/src/app/api/cms/ai/assistant/route.ts` — new streaming endpoint
+- `packages/cms-admin/src/components/TopNav.tsx` — add assistant toggle button
+
+### Blast radius
+- Top navigation bar modified — affects all admin pages
+- AI assistant executes MCP tools server-side — security implications for destructive tools
+- Context builder reads current page state — URL routing dependency
+
+### Breaking changes
+- None
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Chat panel opens/closes via button and Cmd+I
+- [ ] Assistant can list documents and answer questions
+- [ ] Tool execution creates/updates documents correctly
+- [ ] Destructive actions require user confirmation
+- [ ] Conversation history persists per user
+
 ## Implementation Steps
 
 1. **Create `admin-ai-assistant.tsx`** — chat panel component with message list, input, suggestions

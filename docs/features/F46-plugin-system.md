@@ -265,6 +265,32 @@ writeOutput(renderedPages, { outDir });
 await buildHooks.afterBuild?.(result, buildContext);
 ```
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms/src/plugins/types.ts` — new plugin type definitions
+- `packages/cms/src/plugins/registry.ts` — new plugin registry
+- `packages/cms/src/schema/types.ts` — add `plugins` array to `CmsConfig`
+- `packages/cms/src/content/service.ts` — merge plugin content hooks
+- `packages/cms/src/build/pipeline.ts` — add build hook calls
+- `packages/cms-ai/src/agents/content.ts` — add AI hook calls
+
+### Blast radius
+- Content service, build pipeline, and AI agent all modified — core systems
+- Plugin hooks run in sequence — slow plugins affect all operations
+- CmsConfig schema change affects all config consumers
+
+### Breaking changes
+- `CmsConfig` gains `plugins` array — optional, so backwards-compatible
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Plugin activates and deactivates correctly
+- [ ] Content hooks fire on document create/update/delete
+- [ ] Build hooks modify rendered output
+- [ ] Custom field types render in admin editor
+- [ ] Example plugin works end-to-end
+
 ## Implementation Steps
 
 1. **Define plugin types** — `CmsPlugin`, `PluginContext`, `BuildHooks`, `AiHooks`, `CustomFieldType`, `CustomBlockType` in `packages/cms/src/plugins/types.ts`

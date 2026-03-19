@@ -111,6 +111,31 @@ export class SpamProtection {
 - New submission count badge in sidebar
 - Form config editor (visual field builder)
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms/src/schema/types.ts` — add `FormConfig` to `CmsConfig`
+- `packages/cms-admin/src/lib/forms/service.ts` — new form service
+- `packages/cms-admin/src/lib/forms/spam.ts` — new spam protection
+- `packages/cms-admin/src/app/api/forms/[name]/route.ts` — new public submission endpoint
+- `packages/cms-admin/src/app/admin/forms/page.tsx` — new forms list page
+- `packages/cms-admin/src/app/admin/forms/[name]/page.tsx` — new submission inbox
+- `packages/cms-form/` — new embeddable widget package
+
+### Blast radius
+- Public submission endpoint requires rate limiting and input validation
+- `CmsConfig` type extension must be optional
+
+### Breaking changes
+- None — `forms` config is optional
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Form submission creates entry in submissions store
+- [ ] Honeypot blocks bot submissions
+- [ ] Rate limiting works per IP
+- [ ] Email notification sent on submission (when configured)
+
 ## Implementation Steps
 
 1. Add `FormConfig` and `FormFieldConfig` to `packages/cms/src/schema/types.ts`

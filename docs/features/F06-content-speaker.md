@@ -89,6 +89,28 @@ export function AudioPlayer({ src, title }: { src: string; title: string }) {
 }
 ```
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-ai/src/agents/tts.ts` — new TTS agent
+- `packages/cms/src/schema/types.ts` — add `tts` config to `CmsConfig`
+- `packages/cms-admin/src/app/api/admin/tts/route.ts` — new API route
+- `packages/cms-admin/src/components/editor/document-editor.tsx` — add Generate Audio button
+
+### Blast radius
+- `CmsConfig` type change affects all config consumers — must be optional
+- Document editor gains new button — test existing layout
+
+### Breaking changes
+- None — `tts` config is optional
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Audio generated from document content via OpenAI TTS
+- [ ] Audio file stored at expected path
+- [ ] `_audio` metadata added to document
+- [ ] Generate Audio button only shows when TTS configured
+
 ## Implementation Steps
 
 1. Create `packages/cms-ai/src/agents/tts.ts` with OpenAI TTS and ElevenLabs support

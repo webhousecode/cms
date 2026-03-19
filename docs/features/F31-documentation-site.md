@@ -113,6 +113,27 @@ docs/
     CodeBlock.tsx            # Syntax highlighting with shiki
 ```
 
+## Impact Analysis
+
+### Files affected
+- `docs/` — new documentation site project at monorepo root
+- `scripts/generate-api-docs.ts` — new auto-generation script
+- No changes to existing CMS packages
+
+### Blast radius
+- None — entirely new standalone project
+- Dogfooding @webhouse/cms — any CMS bugs will surface
+
+### Breaking changes
+- None
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Docs site builds and serves correctly
+- [ ] Auto-generated API docs match actual API
+- [ ] Search works across all docs
+- [ ] Deploy to docs.webhouse.app succeeds
+
 ## Implementation Steps
 
 1. Create docs project at `docs/` in monorepo root

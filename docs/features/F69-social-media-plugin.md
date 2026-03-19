@@ -339,6 +339,27 @@ export default defineConfig({
 });
 ```
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-plugin-some/` — entirely new package
+- Depends on F46 (Plugin System) for registration
+- Depends on F15 (Agent Scheduler) for scheduled generation
+
+### Blast radius
+- None to existing code — standalone plugin package
+- GBP API integration requires Google Cloud service account
+
+### Breaking changes
+- None — plugin is opt-in
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] AI generates platform-specific post drafts
+- [ ] Hashtag rotation avoids repeated tags
+- [ ] GBP post publishes via API
+- [ ] Content hook triggers generation on new article publish
+
 ## Implementation Steps
 
 ### Phase 1 — Social Media Bank MVP (days 1-3)

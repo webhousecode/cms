@@ -108,6 +108,29 @@ export interface AgentConfig {
 - Cost dashboard at `/admin/settings/ai-costs` showing usage by model, agent, and time period
 - A/B comparison UI: generate same content with two models, show side-by-side
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-ai/src/providers/registry.ts` — new model registry with tiers
+- `packages/cms-ai/src/budget/cost-tracker.ts` — new cost tracking module
+- `packages/cms-admin/src/lib/agents.ts` — add `modelTier`/`modelOverride` to AgentConfig
+- `packages/cms-admin/src/app/admin/settings/ai-costs/page.tsx` — new cost dashboard
+- `packages/cms-ai/src/providers/` — update all providers for model selection
+
+### Blast radius
+- AI provider system is used by all agents — model selection changes affect every AI call
+- Cost tracking adds overhead to every AI request
+
+### Breaking changes
+- `AgentConfig` interface extended — existing agents default to `advanced` tier
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Per-agent model selection works
+- [ ] Fallback chain activates on primary model failure
+- [ ] Cost tracked per request
+- [ ] Cost dashboard shows accurate data
+
 ## Implementation Steps
 
 1. Create `packages/cms-ai/src/providers/registry.ts` with model definitions

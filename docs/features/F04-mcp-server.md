@@ -65,6 +65,31 @@ Existing endpoints stay the same. Write tools require `Authorization: Bearer <ap
 - `packages/cms-mcp-server/src/server.ts` — Register new tools
 - `packages/cms-cli/src/commands/mcp-serve.ts` — Stdio server command
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-mcp-server/src/tools.ts` — add write tool handlers (create, update, delete, publish)
+- `packages/cms-mcp-server/src/rate-limit.ts` — new rate limiter module
+- `packages/cms-mcp-server/src/server.ts` — register new tools
+- `packages/cms-mcp-server/src/auth.ts` — add `write` scope checking
+- `packages/cms-cli/src/commands/mcp-serve.ts` — new stdio transport command
+
+### Blast radius
+- MCP tool definitions affect all connected AI agents — tool schema changes could break existing integrations
+- Rate limiting affects all API key holders
+- Auth scope changes affect existing keys without `write` scope
+
+### Breaking changes
+- Existing API keys without `write` scope cannot use new write tools (by design)
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] `cms_create_document` creates valid documents
+- [ ] `cms_update_document` respects field locks
+- [ ] Rate limiter blocks excessive requests
+- [ ] Stdio transport works with Claude Code
+- [ ] Existing read tools unaffected
+
 ## Implementation Steps
 
 1. Add `cms_get_schema` tool that returns the full `CmsConfig` object as JSON

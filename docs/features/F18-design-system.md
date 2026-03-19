@@ -97,6 +97,28 @@ export class InfographicEngine {
 - "Generate Theme" button that uses AI to create complementary colors
 - Component gallery with copy-to-clipboard code snippets
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms/src/schema/types.ts` — add `ThemeConfig` to `CmsConfig`
+- `packages/cms-ai/src/agents/theme.ts` — new theme generation agent
+- `packages/cms/src/template/components/` — new component templates
+- `packages/cms-admin/src/app/admin/settings/brand-voice/` — extend brand voice page
+
+### Blast radius
+- `CmsConfig` type extension — must be optional to not break existing configs
+- Brand voice settings page modified — test existing brand voice functionality
+
+### Breaking changes
+- None — `theme` config is optional
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Theme generator produces valid CSS variables
+- [ ] Tailwind config generator outputs valid config
+- [ ] Component gallery renders with current theme
+- [ ] Existing brand voice settings unaffected
+
 ## Implementation Steps
 
 1. Add `ThemeConfig` to `CmsConfig` in `packages/cms/src/schema/types.ts`

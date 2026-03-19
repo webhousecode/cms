@@ -121,6 +121,30 @@ npx @next/codemod@canary middleware-to-proxy .
 
 This renames the file and function. However, it does **NOT** fix the RSC header issue — that requires manual intervention.
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-admin/src/middleware.ts` — deleted
+- `packages/cms-admin/src/proxy.ts` — new file (renamed + fixed)
+
+### Blast radius
+- Auth middleware affects every protected route — critical path
+- RSC header detection change could cause redirect loops if wrong
+- All admin pages and API routes depend on this file
+
+### Breaking changes
+- File renamed from `middleware.ts` to `proxy.ts` — Next.js handles this automatically
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] No deprecation warning on dev server start
+- [ ] Login page loads without redirect loop
+- [ ] Authenticated admin pages load normally
+- [ ] Sidebar link prefetches don't redirect (RSC)
+- [ ] API routes return 401 when unauthenticated
+- [ ] Service token bypass works
+- [ ] Root `/` rewrites to landing page
+
 ## Implementation Steps
 
 1. Read `src/middleware.ts` to confirm current state matches this plan

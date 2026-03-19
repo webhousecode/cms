@@ -125,6 +125,31 @@ export interface SendHistoryEntry {
 
 Stored at `<dataDir>/email-history.jsonl`.
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-admin/src/lib/email/service.ts` — new email service
+- `packages/cms-admin/src/lib/email/adapters/resend.ts` — new Resend adapter
+- `packages/cms-admin/src/lib/email/adapters/sendgrid.ts` — new SendGrid adapter
+- `packages/cms-admin/src/lib/email/adapters/ses.ts` — new SES adapter
+- `packages/cms-admin/src/lib/email/templates.ts` — new template system
+- `packages/cms-admin/src/app/api/admin/email/` — new API routes
+- `packages/cms-admin/src/app/admin/settings/email/page.tsx` — new settings page
+
+### Blast radius
+- Email service is a foundation for F01 (invites), F14 (newsletters), F30 (forms) — API must be stable
+- ESP credentials are sensitive — must be stored securely
+
+### Breaking changes
+- None
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Test email sends via each configured ESP
+- [ ] Template variable interpolation works
+- [ ] Send history logged correctly
+- [ ] Event triggers fire on configured events
+
 ## Implementation Steps
 
 1. Create `packages/cms-admin/src/lib/email/service.ts` with ESP abstraction

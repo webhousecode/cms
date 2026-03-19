@@ -106,6 +106,29 @@ Calculated from `_fieldMeta.aiGenerated` flags on documents.
 | `GET` | `/api/admin/analytics/agents` | Agent leaderboard |
 | `GET` | `/api/admin/analytics/autonomy` | Autonomy metrics |
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-admin/src/lib/analytics/types.ts` — new analytics types
+- `packages/cms/src/build/analytics-script.ts` — new tracking script
+- `packages/cms-admin/src/app/api/analytics/event/route.ts` — new beacon endpoint
+- `packages/cms-admin/src/lib/analytics/agent-metrics.ts` — new agent performance module
+- `packages/cms-admin/src/app/admin/analytics/page.tsx` — new dashboard page
+
+### Blast radius
+- Built-in tracking script injected into site HTML — must not break existing sites
+- Agent performance ties into `_fieldMeta` system — changes there would affect metrics
+
+### Breaking changes
+- None
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Tracking script sends beacons on page load
+- [ ] JSONL events stored correctly
+- [ ] Agent leaderboard calculates from `_fieldMeta` data
+- [ ] Autonomy percentage reflects actual AI vs human ratio
+
 ## Implementation Steps
 
 1. Create `packages/cms-admin/src/lib/analytics/types.ts`

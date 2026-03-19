@@ -81,6 +81,26 @@ Add a "Troubleshooting" tab or section to the existing Help drawer. Search input
 | Auth | Invitation email not received | Check spam folder, verify email address, resend from Team panel |
 | General | Admin shows blank page | Clear browser cache, check console for errors |
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-admin/src/lib/troubleshooting.ts` — new troubleshooting data
+- `packages/cms-admin/src/components/help/TroubleshootingPanel.tsx` — new panel component
+- `packages/cms-admin/src/components/help/HelpDrawer.tsx` — add Troubleshooting tab
+
+### Blast radius
+- Help drawer modification — test existing keyboard shortcuts display
+
+### Breaking changes
+- None
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Troubleshooting panel renders in Help drawer
+- [ ] Search filters entries by title and symptoms
+- [ ] Category pills filter correctly
+- [ ] Solution accordion expands/collapses
+
 ## Implementation Steps
 
 1. Create `troubleshootingEntries` data file with 15-20 entries

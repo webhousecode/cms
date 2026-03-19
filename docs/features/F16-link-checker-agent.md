@@ -28,6 +28,23 @@ Already implemented and shipped. Key files:
 - Scheduled via agent scheduler (daily/weekly)
 - Manual trigger from admin
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-admin/src/lib/link-check-runner.ts` — already implemented
+- `packages/cms-admin/src/lib/link-check-store.ts` — already implemented
+- `packages/cms-admin/src/app/admin/link-checker/page.tsx` — already implemented
+- `packages/cms-admin/src/app/api/check-links/route.ts` — already implemented
+
+### Blast radius
+- None — feature is already shipped and stable
+
+### Breaking changes
+- None
+
+### Test plan
+- [ ] Feature is complete — no additional testing needed
+
 ## Dependencies
 
 - None

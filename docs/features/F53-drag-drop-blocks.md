@@ -139,6 +139,26 @@ The existing `BlocksEditor` gets an optional `enableDragHandle` prop. When true,
 - **Touch support** — `@dnd-kit` includes touch sensors out of the box
 - **Keyboard support** — `@dnd-kit` includes keyboard sensor (Space to pick up, arrows to move, Space to drop)
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-admin/package.json` — add `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities` (if not already from F40)
+- `packages/cms-admin/src/components/editor/columns-editor.tsx` — wrap in DndContext, add SortableBlock
+
+### Blast radius
+- Columns editor is used for all block-based layouts with columns — drag bugs could corrupt block data
+- Block move between columns must correctly update the data structure
+
+### Breaking changes
+- None
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Drag block between columns moves it correctly
+- [ ] Reorder within column works
+- [ ] Keyboard drag accessible
+- [ ] Block data structure correct after moves
+
 ## Implementation Steps
 
 1. **Install @dnd-kit** — `pnpm add @dnd-kit/core @dnd-kit/sortable @dnd-kit/utilities`

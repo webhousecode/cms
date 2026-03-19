@@ -119,6 +119,28 @@ async function sendBrowserNotification(title: string, body: string) {
 
 Only fires when the tab is not focused (`document.hidden`). Permission prompt shown in Account Preferences when user enables browser notifications.
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-admin/src/lib/scheduler-bus.ts` — extend with new event types
+- `packages/cms-admin/src/components/` — add toasts to AI/agent/link-check completion
+- `packages/cms-admin/src/app/admin/account/` — notification preferences UI
+- `packages/cms-admin/src/lib/user-state.ts` — store notification preferences
+
+### Blast radius
+- SSE bus extension adds new event types — listeners must handle unknown types gracefully
+- Browser Notification API requires permission prompt — must not be intrusive
+
+### Breaking changes
+- None — new toast events are additive
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] AI generation toast appears on completion
+- [ ] Undo-trash restores document when clicked
+- [ ] Notification preferences toggle toasts on/off
+- [ ] Browser notification fires when tab is hidden
+
 ## Implementation Steps
 
 1. **Add AI/agent events to SSE bus** — extend `scheduler-bus.ts` with new event types

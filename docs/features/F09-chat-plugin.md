@@ -81,6 +81,28 @@ export interface ChatConfig {
 - `packages/cms-admin/src/app/admin/settings/chat/page.tsx` — Chat config UI
 - `packages/cms-admin/src/app/admin/conversations/page.tsx` — View chat sessions
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-chat/` — entirely new widget package
+- `packages/cms-admin/src/app/api/chat/route.ts` — new chat API endpoint
+- `packages/cms-admin/src/app/admin/settings/chat/page.tsx` — new chat config UI
+- `packages/cms-admin/src/app/admin/conversations/page.tsx` — new conversations view
+
+### Blast radius
+- New public API endpoint (`/api/chat`) requires rate limiting and CORS
+- Depends on F08 RAG pipeline for content-aware answers
+
+### Breaking changes
+- None
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Chat widget renders on external site via script tag
+- [ ] RAG-powered responses reference correct content
+- [ ] Chat sessions stored and viewable in admin
+- [ ] Rate limiting prevents abuse
+
 ## Implementation Steps
 
 1. Create `packages/cms-chat/` package with Preact-based widget

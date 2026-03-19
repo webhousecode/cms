@@ -119,6 +119,29 @@ export class WebPushService {
 | `POST` | `/api/push/subscribe` | Register push subscription |
 | `POST` | `/api/admin/push/send` | Send push notification |
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms/src/schema/types.ts` — add `PwaConfig` to `CmsConfig`
+- `packages/cms/src/build/manifest.ts` — new web manifest generator
+- `packages/cms/src/template/sw.ts` — new service worker template
+- `packages/cms-admin/src/lib/web-push.ts` — new push notification service
+- `packages/cms-admin/package.json` — add `@serwist/next`, `web-push` dependencies
+
+### Blast radius
+- Service worker registration affects all site pages — misconfiguration can break navigation
+- `CmsConfig` type extension must be optional
+
+### Breaking changes
+- None — `pwa` config is optional
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Web manifest generated with correct icons
+- [ ] Service worker registers and caches pages
+- [ ] Push notification subscription works
+- [ ] Offline fallback page renders
+
 ## Implementation Steps
 
 1. Add `PwaConfig` to `CmsConfig` in `packages/cms/src/schema/types.ts`

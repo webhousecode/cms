@@ -85,6 +85,27 @@ Response: { "ok": true, "org": { "id": "client-name", "name": "Client Name", "si
 
 Org ID is auto-generated: lowercase, alphanumeric + hyphens, from the org name.
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-admin/src/components/user-org-bar.tsx` — add create org dialog
+- `packages/cms-admin/src/components/site-switcher.tsx` — add create org dialog
+- `packages/cms-admin/src/app/admin/sites/new/page.tsx` — handle no-active-site state
+
+### Blast radius
+- Org switcher dropdown is used globally — dialog must not break menu behavior
+- Cookie management (`cms-active-org`, `cms-active-site`) affects site routing
+
+### Breaking changes
+- None — uses existing backend API
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Create org dialog opens from org switcher
+- [ ] API creates org and returns in response
+- [ ] Active org cookie set after creation
+- [ ] Navigation to /admin/sites/new works for new org
+
 ## Implementation Steps
 
 1. Add `showNewOrg` state + `createOrg()` handler to `user-org-bar.tsx`

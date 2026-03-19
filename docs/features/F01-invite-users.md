@@ -71,6 +71,32 @@ Stored at `<dataDir>/invitations.json`.
 | Invite users | Yes | No | No |
 | View content | Yes | Yes | Yes |
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-admin/src/lib/auth.ts` — add `role` field to User interface
+- `packages/cms-admin/src/lib/invitations.ts` — new file for invitation CRUD
+- `packages/cms-admin/src/app/api/admin/invitations/route.ts` — new API routes
+- `packages/cms-admin/src/app/admin/settings/team/page.tsx` — new team management UI
+- `packages/cms-admin/src/app/invite/[token]/page.tsx` — new public accept page
+- `packages/cms-admin/src/middleware.ts` — add role-based route guards
+
+### Blast radius
+- Auth system (`auth.ts`) is used by every protected route — role changes must be backwards-compatible
+- JWT claims (`SessionPayload`) affect all API authorization checks
+- Existing single-user setups must auto-migrate to `role: 'admin'`
+
+### Breaking changes
+- `User` interface gains required `role` field — existing `users.json` needs migration
+- `SessionPayload` gains `role` claim — existing JWTs will lack it until re-login
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Existing user auto-migrated to admin role
+- [ ] Invitation create/accept/revoke flow works
+- [ ] Role-based route guards block editor from settings
+- [ ] Public invite accept page renders without auth
+
 ## Implementation Steps
 
 1. Add `role` field to `User` interface in `packages/cms-admin/src/lib/auth.ts`, default existing users to `admin`

@@ -266,6 +266,30 @@ npx cms build --force
 | Block definition changes | Rebuild all pages using that block type |
 | `--force` flag | Rebuild everything, write fresh cache |
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms/src/build/hash.ts` — new content hashing module
+- `packages/cms/src/build/dependencies.ts` — new dependency resolver
+- `packages/cms/src/build/cache.ts` — new build cache I/O
+- `packages/cms/src/build/pipeline.ts` — modify for cache-aware builds
+- `packages/cms-cli/src/commands/build.ts` — add `--force` flag
+
+### Blast radius
+- Build pipeline is the core output mechanism — cache bugs could serve stale content
+- Dependency resolution must correctly identify relation changes
+
+### Breaking changes
+- `BuildResult` gains `cached`/`rebuilt` counts — additive
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] First build creates cache file
+- [ ] Second build skips unchanged pages
+- [ ] Changed document triggers rebuild of that page + dependents
+- [ ] `--force` flag rebuilds everything
+- [ ] Config change invalidates all cached pages
+
 ## Implementation Steps
 
 1. **Create `packages/cms/src/build/hash.ts`** — hashDocument(), hashConfig()

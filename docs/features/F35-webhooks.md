@@ -192,6 +192,32 @@ afterDelete: async (doc) => {
 | `POST` | `/api/admin/webhooks/:id/test` | Send test delivery |
 | `GET` | `/api/admin/webhooks/:id/deliveries` | Delivery log |
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms/src/webhooks/types.ts` — new webhook types
+- `packages/cms/src/webhooks/dispatcher.ts` — new webhook dispatcher
+- `packages/cms/src/content/service.ts` — wire dispatcher into lifecycle hooks
+- `packages/cms-admin/src/lib/webhooks.ts` — webhook storage helpers
+- `packages/cms-admin/src/lib/webhook-presets.ts` — new preset templates
+- `packages/cms-admin/src/app/api/admin/webhooks/` — new API routes
+- Site Settings UI — new Webhooks tab
+
+### Blast radius
+- Content service lifecycle hooks modified — affects all document create/update/delete operations
+- Webhook dispatch adds async processing to content saves
+
+### Breaking changes
+- None
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Webhook fires on content publish
+- [ ] HMAC signature validates correctly
+- [ ] Retry logic fires on delivery failure
+- [ ] Delivery log records all attempts
+- [ ] Vercel/Netlify presets work out of the box
+
 ## Implementation Steps
 
 1. Create `packages/cms/src/webhooks/types.ts` with interfaces

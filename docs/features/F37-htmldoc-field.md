@@ -186,6 +186,29 @@ When the field is empty, show a prominent upload area:
 
 Future evolution: htmldoc blocks in the block editor, allowing pages composed of static CMS content + embedded interactive islands.
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms/src/schema/types.ts` — add `htmldoc` to `FieldType` union + Zod validation
+- `packages/cms-admin/src/lib/wysiwyg-inject.ts` — new WYSIWYG injection module
+- `packages/cms-admin/src/components/editor/htmldoc-editor.tsx` — new editor component
+- `packages/cms-admin/src/components/editor/field-editor.tsx` — add `case 'htmldoc'` routing
+
+### Blast radius
+- `FieldType` union change affects all field type checks, Zod validation, and admin editor routing
+- `field-editor.tsx` is the central field routing component — must not break existing types
+
+### Breaking changes
+- `FieldType` gains `'htmldoc'` value — existing code using exhaustive switch must add case
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Preview mode renders HTML in sandboxed iframe
+- [ ] Visual edit injects WYSIWYG and saves via postMessage
+- [ ] AI edit mode modifies HTML via chat
+- [ ] Code view allows direct HTML editing
+- [ ] Upload dropzone accepts .html files
+
 ## Implementation Steps
 
 1. Add `'htmldoc'` to `FieldType` union in `types.ts` and Zod validation

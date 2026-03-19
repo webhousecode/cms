@@ -112,6 +112,32 @@ Channels stored at `<dataDir>/notification-channels.json`. Notification log at `
 | `DELETE` | `/api/admin/notifications/channels/[id]` | Delete channel |
 | `POST` | `/api/admin/notifications/channels/[id]/test` | Send test notification |
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-admin/src/lib/notifications/types.ts` — new notification types
+- `packages/cms-admin/src/lib/notifications/dispatcher.ts` — new dispatcher
+- `packages/cms-admin/src/lib/notifications/senders/discord.ts` — new Discord sender
+- `packages/cms-admin/src/lib/notifications/senders/slack.ts` — new Slack sender
+- `packages/cms-admin/src/lib/notifications/senders/telegram.ts` — new Telegram sender
+- `packages/cms-admin/src/lib/notifications/senders/webhook.ts` — new webhook sender
+- `packages/cms-admin/src/app/api/admin/notifications/` — new API routes
+- `packages/cms-admin/src/app/admin/settings/notifications/page.tsx` — new settings page
+
+### Blast radius
+- Event dispatch hooks need to be wired into existing content/agent lifecycle — could add latency
+- Webhook payloads are a public API contract
+
+### Breaking changes
+- None
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Discord webhook delivers notification
+- [ ] Event filtering works per channel
+- [ ] Test notification button sends sample message
+- [ ] Notification log records deliveries
+
 ## Implementation Steps
 
 1. Create `packages/cms-admin/src/lib/notifications/types.ts` with interfaces

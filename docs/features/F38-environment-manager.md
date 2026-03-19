@@ -167,6 +167,31 @@ When in Dev mode with a filesystem site, content saves are instant (file write).
 - **Dev**: saves instantly, green checkmark
 - **Staging/Prod**: "Syncing..." during GitHub API write, then checkmark
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-admin/src/lib/dev-server.ts` — new dev server manager
+- `packages/cms-admin/src/lib/port-scanner.ts` — new port scanner
+- `packages/cms-admin/src/app/api/admin/dev-server/route.ts` — new API routes
+- `packages/cms-admin/src/components/EnvironmentBadge.tsx` — new header component
+- Site Settings UI — new Environments tab
+- `_data/site-config.json` — extended with environment config
+
+### Blast radius
+- Admin header changes affect all pages
+- Site config schema extension — must be backwards-compatible
+- Dev server spawning could create orphan processes
+
+### Breaking changes
+- None — environments config is optional
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Environment badge shows correct mode in header
+- [ ] Dev server starts on vacant port for filesystem sites
+- [ ] Preview button uses active environment URL
+- [ ] Environment switching updates all related state
+
 ## Implementation Steps
 
 1. Add `environments` to site-config schema and read/write functions

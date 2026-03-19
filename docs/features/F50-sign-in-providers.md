@@ -196,6 +196,32 @@ _data/auth-providers.json     # Provider configs (encrypted secrets)
 _data/users.json              # Extended with providers[] array
 ```
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-admin/src/lib/auth-providers.ts` — new provider registry
+- `packages/cms-admin/src/lib/auth.ts` — extend User with `providers[]`, optional `passwordHash`
+- `packages/cms-admin/src/app/api/auth/oauth/[provider]/route.ts` — new generic OAuth routes
+- `packages/cms-admin/src/app/api/auth/oauth/[provider]/callback/route.ts` — new callback handler
+- `packages/cms-admin/src/app/admin/login/page.tsx` — add provider buttons
+- Site Settings — new Auth tab
+
+### Blast radius
+- User model change affects all auth-dependent code
+- Login page redesign affects first user experience
+- Existing GitHub OAuth needs refactoring to generic pattern
+
+### Breaking changes
+- `User.passwordHash` becomes optional — existing code must handle undefined
+- `User.providers` added — optional array
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Google OAuth flow completes successfully
+- [ ] Account linking merges providers by email
+- [ ] Login page shows enabled providers dynamically
+- [ ] Existing email/password login still works
+
 ## Implementation Steps
 
 1. **Create `auth-providers.ts`** — provider registry with builtin providers

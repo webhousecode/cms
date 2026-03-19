@@ -255,6 +255,32 @@ export default async function ResourcePage({ params }) {
 - **Password reset:** Admin can generate reset link from Extranet Users panel. Self-service reset via email requires F29 Transactional Email.
 - **Hashing:** bcrypt (same as CMS users)
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-admin/src/lib/extranet.ts` — new Extranet user management
+- `packages/cms-admin/src/app/api/admin/extranet/` — new admin API routes
+- `packages/cms/src/extranet/middleware.ts` — new site-side middleware
+- `packages/cms/src/extranet/components.tsx` — new React components for sites
+- `packages/cms/src/extranet/api-handlers.ts` — new route handlers for sites
+- Document editor sidebar — add protection toggle and access groups
+
+### Blast radius
+- Document editor modification affects editing workflow
+- Site-side middleware affects all protected page requests
+- JWT signing with per-site secret — must be generated securely
+
+### Breaking changes
+- Documents gain optional `protected` and `accessGroups` fields
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Extranet user creation and management works
+- [ ] Protected page redirects unauthenticated visitors to login
+- [ ] Access group filtering restricts content correctly
+- [ ] JWT session validates correctly
+- [ ] Self-registration with approval flow works
+
 ## Implementation Steps
 
 1. Create `packages/cms-admin/src/lib/extranet.ts` — ExtranetUser CRUD, ExtranetConfig read/write

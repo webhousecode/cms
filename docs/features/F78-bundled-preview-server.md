@@ -179,6 +179,28 @@ When `npm create @webhouse/cms` generates a new project, the `package.json` scri
 }
 ```
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms/package.json` — add `sirv` dependency
+- `packages/cms-cli/src/commands/serve.ts` — new serve command
+- `packages/cms-cli/src/index.ts` — register serve command
+- `packages/create-cms/` — add `preview` and `start` scripts to scaffolded package.json
+
+### Blast radius
+- New dependency adds 148KB to @webhouse/cms — minimal impact
+- Scaffolded package.json changes affect new projects only
+
+### Breaking changes
+- None
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] `cms serve` starts server on specified port
+- [ ] Clean URLs work (/about serves about.html)
+- [ ] Gzip compression active
+- [ ] SPA mode serves index.html for all routes
+
 ## Implementation Steps
 
 1. Add `sirv` as dependency to `packages/cms` (`pnpm add sirv`)

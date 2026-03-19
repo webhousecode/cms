@@ -22,6 +22,27 @@ Add drag-and-drop reordering to the `TabBar` component (`packages/cms-admin/src/
 
 `@dnd-kit` is the clear winner: actively maintained, lightweight, accessible, and designed for exactly this use case.
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-admin/package.json` — add `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities`
+- `packages/cms-admin/src/lib/tabs-context.tsx` — add `reorderTabs` to context
+- `packages/cms-admin/src/components/tab-bar.tsx` — wrap tabs in DndContext + SortableContext
+
+### Blast radius
+- Tab bar is visible on every admin page — drag must not interfere with click/close
+- localStorage persistence format unchanged — no migration needed
+
+### Breaking changes
+- None
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Tabs reorder via drag and drop
+- [ ] Close button still works (not intercepted by drag)
+- [ ] Keyboard reordering accessible
+- [ ] Tab order persists in localStorage after reload
+
 ## Implementation Plan
 
 ### Phase 1 — Context Layer (`tabs-context.tsx`)

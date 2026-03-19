@@ -104,6 +104,29 @@ backup-2026-03-15T10-00-00Z.zip
 - "Restore" button with collection selector and dry-run preview
 - "Download" button for zip export
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-admin/src/lib/backup/types.ts` — new backup types
+- `packages/cms-admin/src/lib/backup/service.ts` — new backup service
+- `packages/cms-admin/src/app/api/admin/backups/` — new API routes
+- `packages/cms-admin/src/app/admin/settings/backups/page.tsx` — new settings page
+- `packages/cms-admin/package.json` — add `archiver`, `unzipper` dependencies
+
+### Blast radius
+- Restore overwrites content files — destructive operation needs careful confirmation
+- Pre-destructive backup hooks into trash purge and bulk delete
+
+### Breaking changes
+- None
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Snapshot creates valid zip with all content
+- [ ] Restore from snapshot overwrites content correctly
+- [ ] Retention-based pruning deletes old snapshots
+- [ ] Pre-destructive backup triggers before trash purge
+
 ## Implementation Steps
 
 1. Create `packages/cms-admin/src/lib/backup/types.ts`

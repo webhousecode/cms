@@ -391,6 +391,29 @@ examples/
   nuxt-boilerplate/            # Phase 4 (future)
 ```
 
+## Impact Analysis
+
+### Files affected
+- `examples/nextjs-boilerplate/` — new complete Next.js project
+- `examples/nextjs-github-boilerplate/` — new GitHub adapter boilerplate
+- `packages/create-cms/src/index.ts` — add `--boilerplate` flag
+- `packages/create-cms/package.json` — update scaffolding logic
+
+### Blast radius
+- Scaffolder changes affect all new project creation — must not break minimal mode
+- Boilerplate depends on @webhouse/cms/adapters — must stay in sync
+
+### Breaking changes
+- None — `--boilerplate` flag is additive to existing scaffolder
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] `npm create @webhouse/cms --boilerplate nextjs` creates working project
+- [ ] Boilerplate `npm run dev` starts successfully
+- [ ] ArticleBody renders richtext with images/floats
+- [ ] BlockRenderer handles all 4 block types
+- [ ] Revalidation endpoint validates HMAC correctly
+
 ## Implementation Steps
 
 ### Shared (both boilerplates)

@@ -121,6 +121,28 @@ The session agent creates the subdomain using the DNS MCP server:
 status.webhouse.app → CNAME → status-webhouse.fly.dev
 ```
 
+## Impact Analysis
+
+### Files affected
+- `apps/status/` — entirely new Next.js app
+- `packages/cms-admin/src/app/api/cms/health/route.ts` — new health endpoint
+- Fly.io deployment config for status app
+- DNS record for `status.webhouse.app`
+
+### Blast radius
+- Health endpoint on CMS admin is publicly accessible — must not leak sensitive data
+- Status app is independent — no coupling to CMS code
+
+### Breaking changes
+- None
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Health endpoint returns correct service statuses
+- [ ] Status page renders all monitored services
+- [ ] Cron check stores results to JSON
+- [ ] Badge SVG renders correct status color
+
 ## Implementation Steps
 
 1. Create Next.js app in `apps/status/`

@@ -201,6 +201,32 @@ This makes the CMS a "pull on demand" system — the external AI is in control o
 
 Live Content sources can be mapped as Interactive sources — HTML files from the repo appear in the Interactives Manager automatically. This means an external AI can create/edit interactives by pushing to a repo, and they show up in the CMS instantly.
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-admin/src/lib/live-content/sync.ts` — new sync engine
+- `packages/cms-admin/src/lib/live-content/git-sync.ts` — new git-based sync implementation
+- `packages/cms-admin/src/lib/site-registry.ts` — extend SiteEntry with `liveContent` array
+- `packages/cms-admin/src/app/api/live-content/` — new API routes
+- `packages/cms-admin/src/app/admin/live-content/page.tsx` — new admin page
+- `packages/cms-admin/package.json` — add `simple-git` dependency
+
+### Blast radius
+- SiteEntry interface extension affects all site registry consumers
+- Git operations in Node.js require git binary on the system
+- Webhook endpoint is publicly accessible — needs HMAC verification
+
+### Breaking changes
+- `SiteEntry` gains `liveContent` array — optional, backwards-compatible
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Shallow clone works for initial sync
+- [ ] Pull detects and downloads remote changes
+- [ ] Push commits and pushes local changes
+- [ ] GitHub webhook triggers auto-pull
+- [ ] File browser lists content with correct types
+
 ## Implementation Steps
 
 1. Install `simple-git` dependency in `packages/cms-admin`

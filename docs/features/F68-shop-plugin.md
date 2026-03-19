@@ -294,6 +294,28 @@ export default defineConfig({
 });
 ```
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-plugin-shop/` — entirely new package
+- Depends on F46 (Plugin System) for registration
+- Depends on F58 (Interactive Islands) for cart/checkout widgets
+
+### Blast radius
+- None to existing code — standalone plugin package
+- Stripe webhook handling is security-critical
+
+### Breaking changes
+- None — plugin is opt-in
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Product collection schema creates valid documents
+- [ ] Stripe Checkout session created successfully
+- [ ] Stripe webhook handles checkout.session.completed
+- [ ] Cart island hydrates and tracks items
+- [ ] AI chat tools (shop_search, shop_add_to_cart) return correct data
+
 ## Implementation Steps
 
 ### Phase 1 — Product Catalog + Stripe Checkout (days 1-4)

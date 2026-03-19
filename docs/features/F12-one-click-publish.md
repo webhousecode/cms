@@ -89,6 +89,31 @@ For GitHub-backed sites, deploy = commit + push. The existing GitHub storage ada
 - Deploy history panel in settings
 - Rollback button on each deploy in history
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-admin/src/lib/deploy/types.ts` — new deploy interfaces
+- `packages/cms-admin/src/lib/deploy/vercel.ts` — new Vercel adapter
+- `packages/cms-admin/src/lib/deploy/netlify.ts` — new Netlify adapter
+- `packages/cms-admin/src/lib/deploy/github-pages.ts` — new GitHub Pages adapter
+- `packages/cms-admin/src/app/api/admin/deploy/` — new API routes
+- `packages/cms-admin/src/components/TopNav.tsx` — add deploy button
+- `packages/cms-admin/src/app/admin/settings/deploy/page.tsx` — new deploy settings
+
+### Blast radius
+- Top navigation bar changes — affects all admin pages
+- Deploy on publish could trigger unexpected builds for GitHub-backed sites
+
+### Breaking changes
+- None
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Deploy button triggers Vercel/Netlify build
+- [ ] Deploy status indicator updates correctly
+- [ ] Deploy history shows past deployments
+- [ ] Rollback triggers correctly
+
 ## Implementation Steps
 
 1. Create `packages/cms-admin/src/lib/deploy/types.ts` with interfaces

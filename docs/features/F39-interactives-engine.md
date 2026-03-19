@@ -200,6 +200,33 @@ defineBlock({
 **Standalone page (collection):**
 The existing Infographics collection with a `type: "interactive"` field pointing to an Interactive from the manager.
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-admin/src/lib/media/types.ts` — MediaAdapter interface extended
+- `packages/cms-admin/src/lib/media/filesystem.ts` — filesystem interactive support
+- `packages/cms-admin/src/lib/media/github.ts` — GitHub interactive support
+- `packages/cms-admin/src/app/admin/interactives/page.tsx` — new interactives manager page
+- `packages/cms-admin/src/components/editor/` — interactive editor modes
+- `packages/cms-admin/src/lib/wysiwyg-inject.ts` — WYSIWYG injection for visual edit
+- `packages/cms/CLAUDE.md` — data-driven interactive documentation
+
+### Blast radius
+- MediaAdapter interface changes affect all storage implementations
+- New sidebar menu item affects admin navigation
+- TipTap node for embedding affects richtext editor
+
+### Breaking changes
+- MediaAdapter interface extended — implementations must add interactive methods
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Upload HTML interactive and preview in admin
+- [ ] Visual edit mode with contentEditable works
+- [ ] AI edit modifies HTML correctly
+- [ ] Clone and trash operations work
+- [ ] GitHub adapter reads/writes interactives
+
 ## Implementation Steps
 
 ### Phase 1: Core Infrastructure

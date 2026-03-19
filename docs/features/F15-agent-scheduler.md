@@ -87,6 +87,29 @@ On run completion/failure, dispatch via F13 notification channels (if configured
 - Run detail page: step-by-step logs, errors, output documents
 - Manual trigger button with "Running..." spinner
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-admin/src/lib/scheduler.ts` — extend with cron expression support
+- `packages/cms-admin/src/lib/agent-queue.ts` — new queue module
+- `packages/cms-admin/src/app/api/admin/agents/runs/` — new run history endpoints
+- `packages/cms-admin/src/app/admin/agents/runs/page.tsx` — new run history UI
+- `packages/cms-admin/package.json` — add `cron-parser` dependency
+
+### Blast radius
+- Scheduler is central to all background tasks — changes must not break existing daily/weekly schedules
+- Agent runner integration affects all agent execution
+
+### Breaking changes
+- `ScheduleConfig` interface extended — existing configs need `frequency: 'daily'`/`'weekly'` mapping
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Cron expression parsing works for common patterns
+- [ ] Concurrent agent runs limited to 2
+- [ ] Run history logs stored and queryable
+- [ ] Manual trigger works alongside scheduled runs
+
 ## Implementation Steps
 
 1. Add cron expression parsing using `cron-parser` npm package

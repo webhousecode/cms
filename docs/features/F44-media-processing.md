@@ -212,6 +212,30 @@ export function buildSrcset(originalUrl: string, formats: string[] = ["webp"]): 
 }
 ```
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-media/` — entirely new package
+- `packages/cms-admin/src/lib/media/filesystem.ts` — hook pipeline into upload
+- `packages/cms-admin/src/lib/media/github.ts` — hook pipeline into upload
+- `packages/cms-admin/src/lib/media/types.ts` — extend upload result types
+- `packages/cms/src/schema/types.ts` — add `media` pipeline config
+
+### Blast radius
+- Media upload flow changes for all adapters — test both filesystem and GitHub
+- Sharp dependency may cause platform-specific install issues
+- Variant generation increases storage usage
+
+### Breaking changes
+- Upload API response gains `variants` and `altText` fields (additive)
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Image upload generates WebP variants at all sizes
+- [ ] SVG optimization reduces file size
+- [ ] AI alt-text generates descriptive text
+- [ ] Srcset helper produces correct format
+
 ## Implementation Steps
 
 1. **Create `packages/cms-media/` package** — types, package.json, tsconfig

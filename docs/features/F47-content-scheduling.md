@@ -208,6 +208,31 @@ In collection lists, show scheduling status:
 - Expiry icon for documents with `unpublishAt`
 - Tooltip: "Expires Apr 15, 2026 at 00:00"
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms/src/storage/types.ts` — add `unpublishAt` to Document type
+- `packages/cms/src/scheduler/content-scheduler.ts` — new scheduler class
+- `packages/cms-admin/src/app/api/publish-scheduled/route.ts` — extend with unpublish
+- `packages/cms-admin/src/components/editor/publish-dialog.tsx` — add date/time pickers
+- `packages/cms-admin/src/app/scheduled/page.tsx` — new calendar view page
+- `packages/cms-admin/src/app/api/cms/scheduled/route.ts` — new API endpoint
+
+### Blast radius
+- Document type change (`unpublishAt`) affects all storage adapters
+- Publish dialog modification affects document editing workflow
+- Scheduler daemon runs continuously — resource consumption concern
+
+### Breaking changes
+- `Document` type gains `unpublishAt` field — optional, backwards-compatible
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Scheduled publish triggers at correct time
+- [ ] Scheduled unpublish archives document at correct time
+- [ ] Calendar view shows all scheduled content
+- [ ] Date/time pickers work in publish dialog
+
 ## Implementation Steps
 
 1. **Add `unpublishAt` to Document type** in `packages/cms/src/storage/types.ts`

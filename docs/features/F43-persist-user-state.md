@@ -114,6 +114,30 @@ Update these components to use `useUserState()` instead of direct localStorage:
 | `collection-list.tsx` | sort preferences | `columnSort` |
 | `search.tsx` | recent searches | `recentSearches` |
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-admin/src/lib/user-state.ts` — new user state read/write module
+- `packages/cms-admin/src/hooks/use-user-state.ts` — new sync hook
+- `packages/cms-admin/src/app/api/admin/user-state/route.ts` — new API endpoints
+- `packages/cms-admin/src/components/tab-bar.tsx` — migrate from localStorage
+- `packages/cms-admin/src/components/sidebar.tsx` — migrate from localStorage
+- `packages/cms-admin/src/components/collection-list.tsx` — migrate sort preferences
+
+### Blast radius
+- All components reading from localStorage need migration — phased rollout recommended
+- Server-side state becomes source of truth — conflicts with localStorage during transition
+
+### Breaking changes
+- None — localStorage acts as fallback during migration
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] User state persists across browser clear + re-login
+- [ ] Initial seed from localStorage to server works
+- [ ] Debounced sync doesn't cause excessive API calls
+- [ ] Tab state restored after login on new device
+
 ## Implementation Steps
 
 1. **Create `UserState` interface and `user-state.ts` lib** — read/write per-user JSON files

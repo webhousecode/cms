@@ -100,6 +100,30 @@ const context = await this.rag.retrieve(prompt, { limit: 5 });
 const systemPrompt = `... Existing site content for context:\n${context}`;
 ```
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-ai/src/rag/vector-store.ts` — new vector store module
+- `packages/cms-ai/src/rag/embeddings.ts` — new embedding service
+- `packages/cms-ai/src/rag/pipeline.ts` — new RAG pipeline
+- `packages/cms-ai/src/agents/content.ts` — inject RAG context into generation
+- `packages/cms/src/schema/types.ts` — add `rag` config to `CmsConfig`
+- `packages/cms-admin/src/app/admin/settings/` — add reindex button
+
+### Blast radius
+- `ContentAgent.generate()` behavior changes — existing AI output may differ with RAG context
+- New `sqlite-vec` dependency could cause install issues on some platforms
+
+### Breaking changes
+- None — RAG is opt-in via config
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Documents indexed on publish
+- [ ] RAG query returns relevant chunks
+- [ ] Content agent uses RAG context when enabled
+- [ ] Reindex rebuilds full index
+
 ## Implementation Steps
 
 1. Install `sqlite-vec` (for local) or configure pgvector connection

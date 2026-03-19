@@ -229,6 +229,35 @@ When building new admin UI, always import from shared components:
 | Success green | `var(--success)` or `text-success` | `#4ade80` or `#22c55e` |
 ```
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-admin/src/components/ui/card.tsx` — extract from general-settings-panel
+- `packages/cms-admin/src/components/ui/settings-toggle.tsx` — extract from general-settings-panel
+- `packages/cms-admin/src/components/ui/input-row.tsx` — extract from general-settings-panel
+- `packages/cms-admin/src/components/ui/error-msg.tsx` — extract from general-settings-panel
+- `packages/cms-admin/src/components/ui/save-button.tsx` — extract from general-settings-panel
+- `packages/cms-admin/src/components/ui/copy-button.tsx` — merge from mcp-settings-panel + team-panel
+- `packages/cms-admin/src/hooks/use-save-state.ts` — new custom hook
+- `packages/cms-admin/src/lib/api-response.ts` — new API response helpers
+- `packages/cms-admin/src/app/globals.css` — add design token CSS variables
+- Multiple settings panels — update imports to shared components
+
+### Blast radius
+- Component extraction from general-settings-panel — must not break existing settings pages
+- CSS variable additions affect global styles — test dark mode too
+- 33 hardcoded color replacements across many files
+
+### Breaking changes
+- None — extraction preserves exact same rendering
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] General settings page renders identically after extraction
+- [ ] MCP settings page uses shared CopyButton
+- [ ] `var(--success)` renders correct green in light and dark modes
+- [ ] `useSaveState` hook works in settings panels
+
 ## Implementation Steps
 
 ### Phase 1 — Extract & Export (day 1-2)

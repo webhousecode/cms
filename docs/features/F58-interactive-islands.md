@@ -311,6 +311,29 @@ Compare: React runtime alone is ~45KB. A single iframe embed adds ~50-100KB per 
 5. Verify: does it hydrate? What's the bundle size? Does it inherit page CSS?
 6. Document findings → decide if architecture holds
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-admin/src/lib/media/types.ts` — add `type: "html" | "island"` to InteractiveMeta
+- `packages/cms/src/template/` — island loader script template
+- Site boilerplate — `scripts/build-islands.ts`, `CmsIsland` component
+- `packages/cms-admin/package.json` — `esbuild` + `preact` as dev dependencies
+
+### Blast radius
+- InteractiveMeta type change affects Interactives Manager
+- Island build pipeline runs before Next.js build — must complete reliably
+- Preact runtime adds ~3KB per island to page weight
+
+### Breaking changes
+- InteractiveMeta gains `type` field — existing interactives default to `"html"`
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] esbuild bundles island to <5KB gzipped
+- [ ] `<cms-island>` hydrates on scroll (lazy)
+- [ ] `eager` attribute triggers immediate hydration
+- [ ] Props passed correctly from CMS data
+
 ## Implementation Steps
 
 ### Phase 1: Build Pipeline

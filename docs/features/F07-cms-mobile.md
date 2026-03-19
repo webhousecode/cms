@@ -70,6 +70,27 @@ export class CmsApiClient {
 - Optimistic approve/reject, sync when online
 - Queue pending edits and replay on reconnect
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-mobile/` — entirely new Expo/React Native package
+- `packages/cms-admin/src/app/api/admin/push/route.ts` — new push notification endpoint
+- `packages/cms-admin/src/lib/curation.ts` — expose curation data for mobile API
+
+### Blast radius
+- New push notification endpoint adds a public-facing API surface
+- Curation data access must respect same auth as admin UI
+
+### Breaking changes
+- None
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Mobile app builds for iOS and Android
+- [ ] API client can fetch curation queue
+- [ ] Push notification delivery works
+- [ ] Offline queue syncs on reconnect
+
 ## Implementation Steps
 
 1. Scaffold Expo app: `npx create-expo-app packages/cms-mobile --template tabs`

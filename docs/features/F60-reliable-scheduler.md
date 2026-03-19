@@ -202,6 +202,30 @@ In Settings → General (or a new "Scheduler" tab), show:
 
 Instead of keeping the machine always running or relying on external pings, the CMS could use Fly.io's machine API to schedule a one-shot wake-up at the exact time the next scheduled item is due. This is the most cost-efficient approach but requires Fly API integration.
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-admin/src/app/api/cms/heartbeat/route.ts` — new heartbeat endpoint
+- `packages/cms-admin/src/lib/scheduler-tasks.ts` — extract tick functions from instrumentation.ts
+- `packages/cms-admin/src/instrumentation.ts` — refactor to use shared tasks
+- `packages/cms-admin/src/lib/cron-service.ts` — new cron.webhouse.net integration
+- `.github/workflows/heartbeat.yml` — new GitHub Actions workflow
+- Admin Settings — new scheduler health panel
+
+### Blast radius
+- `instrumentation.ts` refactoring affects all background tasks (publishing, agents, snapshots, link checks)
+- Heartbeat endpoint is a new entry point for scheduled task execution
+
+### Breaking changes
+- None — refactoring preserves existing behavior
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Heartbeat endpoint runs all pending tasks
+- [ ] Scheduled publishing works via heartbeat
+- [ ] Health indicator shows correct mode
+- [ ] GitHub Actions cron successfully pings heartbeat
+
 ## Implementation Steps
 
 1. Create `/api/cms/heartbeat` endpoint that runs all pending tasks immediately

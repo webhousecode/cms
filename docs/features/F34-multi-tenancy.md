@@ -167,6 +167,34 @@ The admin UI reads tenant branding config and applies:
 - Custom app name in title bar
 - Removal of "Webhouse" branding
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-admin/src/lib/tenancy/types.ts` — new tenant data models
+- `packages/cms-admin/src/lib/tenancy/provisioning.ts` — new tenant CRUD
+- `packages/cms-admin/src/lib/tenancy/metering.ts` — new usage tracking
+- `packages/cms-admin/src/middleware.ts` — add tenant resolution from hostname
+- `packages/cms-admin/src/lib/site-pool.ts` — extend for tenant isolation
+- `packages/cms-admin/src/lib/site-registry.ts` — extend for tenant data
+- `packages/cms-admin/src/app/admin/tenants/page.tsx` — new tenant management page
+
+### Blast radius
+- Middleware changes affect all request routing — critical to test thoroughly
+- Site pool and registry changes affect core site management
+- Tenant isolation must prevent data leakage between tenants
+
+### Breaking changes
+- `SiteEntry` interface extended with tenant fields
+- Middleware adds tenant resolution step to all requests
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Tenant creation provisions isolated storage
+- [ ] Custom domain routing resolves to correct tenant
+- [ ] Usage metering tracks per-tenant correctly
+- [ ] Limit enforcement blocks operations at quota
+- [ ] Existing single-tenant setups continue working
+
 ## Implementation Steps
 
 1. Create `packages/cms-admin/src/lib/tenancy/types.ts` with data models

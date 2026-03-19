@@ -132,6 +132,33 @@ export interface SsoConfig {
 | `GET` | `/api/auth/oidc/login` | OIDC login redirect |
 | `GET` | `/api/auth/oidc/callback` | OIDC callback |
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-admin/src/lib/permissions.ts` — new RBAC module
+- `packages/cms-admin/src/lib/workflow.ts` — new review request system
+- `packages/cms-admin/src/lib/audit-log.ts` — new audit logger
+- `packages/cms-admin/src/lib/sso.ts` — new SSO module
+- `packages/cms-admin/src/lib/auth.ts` — extend User with role and permissions
+- `packages/cms-admin/src/middleware.ts` — add permission checks
+- `packages/cms/src/storage/types.ts` — add `in-review`/`approved` to DocumentStatus
+
+### Blast radius
+- DocumentStatus type change affects all code reading/writing document status
+- Middleware permission checks affect all protected routes
+- Audit logging adds write overhead to every mutation
+
+### Breaking changes
+- `DocumentStatus` gains new values — existing status checks need updating
+- `User` interface gains `permissions` array
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] Role-based access controls block unauthorized actions
+- [ ] Review workflow: submit → approve/reject cycle works
+- [ ] Audit log records all mutations
+- [ ] OIDC login flow completes successfully
+
 ## Implementation Steps
 
 1. Create `packages/cms-admin/src/lib/permissions.ts` with role-based access control

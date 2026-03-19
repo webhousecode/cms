@@ -99,6 +99,29 @@ export class PodcastAgent {
 }
 ```
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms/src/template/podcast.ts` — new podcast collection templates
+- `packages/cms/src/build/podcast-rss.ts` — new RSS feed generator
+- `packages/cms-ai/src/agents/podcast.ts` — new podcast AI agent
+- `packages/cms-admin/src/app/admin/podcast/page.tsx` — new admin page
+- `packages/cms-admin/src/app/api/admin/` — audio upload and transcription endpoints
+
+### Blast radius
+- Build pipeline gains new RSS output — must not interfere with existing sitemap/llms.txt generation
+- Media upload API extended to accept audio files
+
+### Breaking changes
+- None
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] RSS feed validates against Apple Podcasts spec
+- [ ] Audio file upload accepts .mp3, .m4a, .wav
+- [ ] Whisper transcription returns text
+- [ ] Episode player renders in admin
+
 ## Implementation Steps
 
 1. Create `packages/cms/src/template/podcast.ts` with show and episode collection configs

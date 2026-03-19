@@ -74,6 +74,31 @@ export interface ImportPreviewRow {
 - Step 3: Dry-run preview table with validation errors highlighted
 - Step 4: Confirm and execute
 
+## Impact Analysis
+
+### Files affected
+- `packages/cms-admin/src/lib/import-engine.ts` — new import pipeline module
+- `packages/cms-admin/src/app/api/admin/import/upload/route.ts` — new upload endpoint
+- `packages/cms-admin/src/app/api/admin/import/preview/route.ts` — new preview endpoint
+- `packages/cms-admin/src/app/api/admin/import/execute/route.ts` — new execute endpoint
+- `packages/cms-admin/src/app/admin/[collection]/import/page.tsx` — new import wizard UI
+- `packages/cms-admin/src/app/admin/[collection]/page.tsx` — add Import button
+- `packages/cms-admin/package.json` — add `papaparse` and `gray-matter` dependencies
+
+### Blast radius
+- Collection list page gets a new button — could affect layout
+- Batch document creation via `StorageAdapter.create()` — high write volume, test with filesystem and GitHub adapters
+
+### Breaking changes
+- None
+
+### Test plan
+- [ ] TypeScript compiles: `npx tsc --noEmit`
+- [ ] CSV upload → field mapping → preview → import creates documents
+- [ ] JSON and Markdown imports work
+- [ ] Validation errors shown in preview step
+- [ ] Import history logged
+
 ## Implementation Steps
 
 1. Install `papaparse` and `gray-matter` in `packages/cms-admin`
