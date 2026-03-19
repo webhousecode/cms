@@ -15,6 +15,7 @@ import { getSessionUser } from "@/lib/auth";
 import { getTeamMembers } from "@/lib/team";
 import { findFirstAccessibleSite } from "@/lib/team-access";
 import { NoAccessGate, ConnectGitHubGate, SiteRedirectGate, GitHubErrorGate } from "@/components/gate-screen";
+import { OrgSidebar } from "@/components/org-sidebar";
 import { redirect } from "next/navigation";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -52,18 +53,15 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   try {
     config = await getAdminConfig();
   } catch (err) {
-    // Empty org (no sites) — full layout but no collections
+    // Empty org (no sites) — org-level layout: minimal sidebar, no tabs, no site-specific nav
     if (err instanceof EmptyOrgError) {
       return (
         <SidebarProvider>
-          <AppSidebarClient collections={[]} globals={[]} />
+          <OrgSidebar />
           <SidebarInset>
             <TabsProvider>
               <AdminHeader />
-              <TabBar />
-              <CommandPaletteProvider>
-                {children}
-              </CommandPaletteProvider>
+              {children}
             </TabsProvider>
           </SidebarInset>
         </SidebarProvider>
