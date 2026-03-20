@@ -58,9 +58,9 @@ _Without these, we cannot build and deliver professional sites on the platform._
 | 4b | **F65 Agent Pipeline E2E Tests** | Medium | If agents/curation breaks silently, AI stops. Mock LLM, full roundtrip, budget, approve/reject. Ship blocker. |
 | 4c | **F67 Security Gate** | Medium | Semgrep + Gitleaks + custom rules. Pre-commit hook, CI, weekly Discord scan. Can't ship with 82 unaudited API routes. |
 | ~~4d~~ | ~~**F76 Create New Organization**~~ | ~~Done~~ | ~~Shipped 2026-03-19~~ |
-| 4e | **F77 Middleware→Proxy** | Small | Fix Next.js 16 deprecation. Rename middleware.ts→proxy.ts + fix RSC header stripping gotcha. |
-| 5 | **F12 One-Click Publish** | Medium | Need to deploy sites. Vercel deploy hook, Fly.io redeploy, GitHub Pages. |
-| 6 | **F27 Backup & Restore** | Small | Content is the customer's most valuable asset. Export/import full site. |
+| ~~4e~~ | ~~**F77 Middleware→Proxy**~~ | ~~Done~~ | ~~Shipped 2026-03-20~~ |
+| 5 | **F12 One-Click Publish** | In progress | GitHub Pages pipeline working. Auto-create repo, custom domains, auto-deploy on save. Deploy hooks untested. |
+| 6 | **F27 Backup & Restore** | In progress | Backup working. GitHub restore not yet implemented. |
 | 7 | **F44 Media Processing Pipeline** | Medium | Images must be optimized. No srcset = poor Lighthouse. Sharp, WebP/AVIF. |
 | 8 | **F42 Framework Boilerplates** | Medium | Starter templates + Claude Code skills/hooks/agents. Last in Tier 1 because best practices evolve as we build earlier features. Includes `/.claude/` with skills, hooks, and agent configs for AI site builders. |
 | 8b | **F75 AI Site Builder Guide** | Small | Split 2421-line CLAUDE.md into 20 modular on-demand docs. AI fetches only what's needed. Core DX improvement. |
@@ -68,7 +68,7 @@ _Without these, we cannot build and deliver professional sites on the platform._
 | 8d | **F79 Site Config Validator** | Medium | Validate cms.config.ts + content/ on site creation and first load. Friendly errors instead of ZodError crashes. Critical for AI-built sites. |
 | 8e | **F80 Admin Selector Map** | Medium | `data-testid` on all admin UI elements + auto-generated selector map. Foundation for Playwright E2E tests of content editing and site roundtrips. |
 | 8f | **F83 Vibe Site Builder** | Large | THE differentiator. "Describe → Generate → Manage." AI site gen with CMS built in. Only platform with AI gen + CMS + code ownership. |
-| 8g | **F86 Action Bar** | Medium | Standardized sticky action bar below tabs. Consistent buttons, one Save per settings tab. |
+| 8g | **F86 Action Bar** | In progress | Phase 1+2 done. Settings, backup, document editor, interactives, agents all use ActionBar. |
 | 8h | **F89 Post-Build Enrichment** | Medium | Auto-inject SEO, OG tags, JSON-LD, favicon, manifest, sitemap, robots.txt, llms.txt into every deployed site. CMS ensures quality regardless of builder. |
 | 9 | **F31 Documentation Site** | Medium | Can't ship without docs. Last because it documents everything above. |
 
