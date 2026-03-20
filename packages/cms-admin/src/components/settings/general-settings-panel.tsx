@@ -237,29 +237,31 @@ function SiteSection() {
 	const [contentDir, setContentDir] = useState("");
 
 	useEffect(() => {
-		fetch("/api/admin/site-config")
-			.then((r) => r.json())
-			.then((d) => {
-				setCfg(d);
-				if (d.resolvedContentDir) setContentDir(d.resolvedContentDir);
-			});
-		// Load site name + paths from registry
-		fetch("/api/cms/registry")
-			.then((r) => r.json())
-			.then((d: { registry?: { orgs: Array<{ id: string; sites: Array<{ id: string; name: string; configPath?: string; contentDir?: string; github?: { contentDir?: string } }> }> } }) => {
-				if (!d.registry) return;
+		let resolvedDir = "";
+		// Fetch site-config first (has resolved paths), then registry (has names)
+		Promise.all([
+			fetch("/api/admin/site-config").then((r) => r.json()),
+			fetch("/api/cms/registry").then((r) => r.json()),
+		]).then(([cfg, reg]: [any, { registry?: { orgs: Array<{ id: string; sites: Array<{ id: string; name: string; configPath?: string; contentDir?: string; github?: { contentDir?: string } }> }> } }]) => {
+			setCfg(cfg);
+			resolvedDir = cfg.resolvedContentDir ?? "";
+
+			if (reg.registry) {
 				const orgId = document.cookie.match(/(?:^|; )cms-active-org=([^;]*)/)?.[1];
 				const siteId = document.cookie.match(/(?:^|; )cms-active-site=([^;]*)/)?.[1];
-				if (!orgId || !siteId) return;
-				const org = d.registry.orgs.find((o) => o.id === decodeURIComponent(orgId));
-				const site = org?.sites.find((s) => s.id === decodeURIComponent(siteId));
-				if (site) {
-					setSiteName(site.name);
-					setSiteNameOriginal(site.name);
-					setConfigPath(site.configPath ?? "");
-					setContentDir(site.contentDir ?? site.github?.contentDir ?? "");
+				if (orgId && siteId) {
+					const org = reg.registry.orgs.find((o) => o.id === decodeURIComponent(orgId));
+					const site = org?.sites.find((s) => s.id === decodeURIComponent(siteId));
+					if (site) {
+						setSiteName(site.name);
+						setSiteNameOriginal(site.name);
+						setConfigPath(site.configPath ?? "");
+					}
 				}
-			});
+			}
+			// Prefer resolved full path, fall back to registry value
+			setContentDir(resolvedDir || "");
+		});
 	}, []);
 
 	async function handleSave(e: FormEvent) {
