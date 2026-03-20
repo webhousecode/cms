@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Upload, Sparkles, Trash2, Zap, MoreHorizontal, Pencil, Globe, Copy, FileText, LayoutGrid, List, Search, X, AlertTriangle, Loader2 } from "lucide-react";
+import { ActionBar, ActionBarBreadcrumb } from "@/components/action-bar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -253,86 +254,82 @@ export default function InteractivesPage() {
       onDrop={handleDrop}
       style={dragging ? { outline: "2px dashed var(--primary)", outlineOffset: "-4px" } : undefined}
     >
-      {/* Top bar — matches Media Manager */}
-      <div
-        className="sticky flex items-center gap-3 px-4 border-b border-border shrink-0"
-        style={{ top: 84, height: "48px", zIndex: 30, backgroundColor: "var(--card)" }}
-      >
-        <span className="text-sm font-mono text-foreground">interactives</span>
-        <span className="text-xs text-muted-foreground">({filtered.length}/{items.length})</span>
+      <ActionBar
+        actions={<>
+          {/* Search */}
+          <div style={{ position: "relative" }}>
+            <Search style={{ position: "absolute", left: "0.5rem", top: "50%", transform: "translateY(-50%)", width: "0.875rem", height: "0.875rem", color: "var(--muted-foreground)" }} />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search interactives…"
+              style={{
+                paddingLeft: "1.75rem", paddingRight: query ? "1.75rem" : "0.5rem",
+                paddingTop: "0.25rem", paddingBottom: "0.25rem",
+                borderRadius: "6px", border: "1px solid var(--border)",
+                background: "var(--background)", color: "var(--foreground)",
+                fontSize: "0.8rem", width: "200px",
+              }}
+            />
+            {query && (
+              <button type="button" onClick={() => setQuery("")} style={{ position: "absolute", right: "0.5rem", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)" }}>
+                <X style={{ width: "0.75rem", height: "0.75rem" }} />
+              </button>
+            )}
+          </div>
 
-        <div style={{ flex: 1 }} />
+          {/* View toggle */}
+          <div style={{ display: "flex", border: "1px solid var(--border)", borderRadius: "6px", overflow: "hidden" }}>
+            {(["grid", "list"] as ViewMode[]).map((v) => (
+              <button
+                key={v}
+                type="button"
+                onClick={() => setView(v)}
+                style={{
+                  padding: "0.25rem 0.5rem", background: view === v ? "var(--accent)" : "transparent",
+                  border: "none", cursor: "pointer", color: view === v ? "var(--foreground)" : "var(--muted-foreground)",
+                  display: "flex", alignItems: "center",
+                }}
+              >
+                {v === "grid" ? <LayoutGrid style={{ width: "0.875rem", height: "0.875rem" }} /> : <List style={{ width: "0.875rem", height: "0.875rem" }} />}
+              </button>
+            ))}
+          </div>
 
-        {/* Search */}
-        <div style={{ position: "relative" }}>
-          <Search style={{ position: "absolute", left: "0.5rem", top: "50%", transform: "translateY(-50%)", width: "0.875rem", height: "0.875rem", color: "var(--muted-foreground)" }} />
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search interactives…"
-            style={{
-              paddingLeft: "1.75rem", paddingRight: query ? "1.75rem" : "0.5rem",
-              paddingTop: "0.25rem", paddingBottom: "0.25rem",
-              borderRadius: "6px", border: "1px solid var(--border)",
-              background: "var(--background)", color: "var(--foreground)",
-              fontSize: "0.8rem", width: "200px",
-            }}
-          />
-          {query && (
-            <button type="button" onClick={() => setQuery("")} style={{ position: "absolute", right: "0.5rem", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)" }}>
-              <X style={{ width: "0.75rem", height: "0.75rem" }} />
+          {/* Create with AI button */}
+          {!readOnly && (
+            <button
+              type="button"
+              onClick={() => setAiModalOpen(true)}
+              className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md border border-border bg-card text-foreground hover:bg-accent transition-colors"
+            >
+              <Sparkles style={{ width: "0.875rem", height: "0.875rem" }} />
+              Create with AI
             </button>
           )}
-        </div>
 
-        {/* View toggle */}
-        <div style={{ display: "flex", border: "1px solid var(--border)", borderRadius: "6px", overflow: "hidden" }}>
-          {(["grid", "list"] as ViewMode[]).map((v) => (
+          {/* Upload button */}
+          {!readOnly && (
             <button
-              key={v}
               type="button"
-              onClick={() => setView(v)}
-              style={{
-                padding: "0.25rem 0.5rem", background: view === v ? "var(--accent)" : "transparent",
-                border: "none", cursor: "pointer", color: view === v ? "var(--foreground)" : "var(--muted-foreground)",
-                display: "flex", alignItems: "center",
-              }}
+              onClick={() => inputRef.current?.click()}
+              disabled={uploading}
+              className={cn(
+                "flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md",
+                "bg-primary text-primary-foreground hover:opacity-90 transition-opacity",
+                uploading && "opacity-70 cursor-wait"
+              )}
             >
-              {v === "grid" ? <LayoutGrid style={{ width: "0.875rem", height: "0.875rem" }} /> : <List style={{ width: "0.875rem", height: "0.875rem" }} />}
+              <Upload style={{ width: "0.875rem", height: "0.875rem" }} />
+              {uploading ? "Uploading…" : "Upload"}
             </button>
-          ))}
-        </div>
-
-        {/* Create with AI button */}
-        {!readOnly && (
-          <button
-            type="button"
-            onClick={() => setAiModalOpen(true)}
-            className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md border border-border bg-card text-foreground hover:bg-accent transition-colors"
-          >
-            <Sparkles style={{ width: "0.875rem", height: "0.875rem" }} />
-            Create with AI
-          </button>
-        )}
-
-        {/* Upload button */}
-        {!readOnly && (
-          <button
-            type="button"
-            onClick={() => inputRef.current?.click()}
-            disabled={uploading}
-            className={cn(
-              "flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md",
-              "bg-primary text-primary-foreground hover:opacity-90 transition-opacity",
-              uploading && "opacity-70 cursor-wait"
-            )}
-          >
-            <Upload style={{ width: "0.875rem", height: "0.875rem" }} />
-            {uploading ? "Uploading…" : "Upload"}
-          </button>
-        )}
-      </div>
+          )}
+        </>}
+      >
+        <ActionBarBreadcrumb items={["Interactives"]} />
+        <span className="text-xs text-muted-foreground">({filtered.length}/{items.length})</span>
+      </ActionBar>
 
       <input
         ref={inputRef}
