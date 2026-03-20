@@ -1,6 +1,14 @@
-# Marketing Content Bank
+# F90 — Marketing Content Bank
 
-> Living document of messaging, value propositions, and talking points for the GitHub README, webhouse.app website, social media, and documentation. Add new entries as ideas come up — this is the source of truth for how we talk about the product.
+> Living document of messaging, value propositions, and talking points for the GitHub README, webhouse.app website, social media, and documentation.
+
+## Problem
+
+We have 89 features planned but no centralized place for marketing messaging. Every time we write README copy, landing page text, or tweets, we start from scratch. Talking points get lost in Slack/Discord/conversations.
+
+## Solution
+
+A single living document that grows with the product. Not code — content. Every team member (human or AI) adds entries as ideas come up. Entries cover: headlines, long copy, talking points, one-liners, honest limitations, migration guides, badges. This is the source of truth for how we talk about the product.
 
 ---
 

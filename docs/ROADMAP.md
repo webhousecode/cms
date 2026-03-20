@@ -55,7 +55,8 @@ _Without these, we cannot build and deliver professional sites on the platform._
 | ~~2~~ | ~~**F01 Invite Users**~~ | ~~Done~~ | ~~Shipped 2026-03-17~~ |
 | ~~3~~ | ~~**F47 Content Scheduling**~~ | ~~Done~~ | ~~Shipped 2026-03-18~~ |
 | ~~4~~ | ~~**F43 Persist User State**~~ | ~~Done~~ | ~~Shipped 2026-03-18~~ |
-| 4b | **F65 Agent Pipeline E2E Tests** | Medium | If agents/curation breaks silently, AI stops. Mock LLM, full roundtrip, budget, approve/reject. Ship blocker. |
+| 4b | **F91 Login with GitHub** | Small | Sign in with GitHub on login page. OAuth already built (F26). Auto-create user, issue JWT. No separate password. |
+| 4c | **F65 Agent Pipeline E2E Tests** | Medium | If agents/curation breaks silently, AI stops. Mock LLM, full roundtrip, budget, approve/reject. Ship blocker. |
 | 4c | **F67 Security Gate** | Medium | Semgrep + Gitleaks + custom rules. Pre-commit hook, CI, weekly Discord scan. Can't ship with 82 unaudited API routes. |
 | ~~4d~~ | ~~**F76 Create New Organization**~~ | ~~Done~~ | ~~Shipped 2026-03-19~~ |
 | ~~4e~~ | ~~**F77 Middleware→Proxy**~~ | ~~Done~~ | ~~Shipped 2026-03-20~~ |
@@ -71,6 +72,7 @@ _Without these, we cannot build and deliver professional sites on the platform._
 | 8g | **F86 Action Bar** | In progress | Phase 1+2 done. Settings, backup, document editor, interactives, agents all use ActionBar. |
 | 8h | **F89 Post-Build Enrichment** | Medium | Auto-inject SEO, OG tags, JSON-LD, favicon, manifest, sitemap, robots.txt, llms.txt into every deployed site. CMS ensures quality regardless of builder. |
 | 9 | **F31 Documentation Site** | Medium | Can't ship without docs. Last because it documents everything above. |
+| 9b | **F90 Marketing Content Bank** | Small | Living doc of messaging, talking points, README copy. Source of truth for product positioning. |
 
 ### Tier 2 — Competitive Edge (v1.1-1.2)
 

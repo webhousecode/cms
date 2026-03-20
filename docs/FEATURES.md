@@ -106,6 +106,8 @@
 | F87 | [Org-Level Global Settings](#f87-org-level-global-settings) | Planned | [docs/features/F87-org-level-settings.md](features/F87-org-level-settings.md) |
 | F88 | [MCP Server Validation](#f88-mcp-server-validation) | Planned | [docs/features/F88-mcp-server-validation.md](features/F88-mcp-server-validation.md) |
 | F89 | [Post-Build Enrichment](#f89-post-build-enrichment) | Planned | [docs/features/F89-post-build-enrichment.md](features/F89-post-build-enrichment.md) |
+| F90 | [Marketing Content Bank](#f90-marketing-content-bank) | In progress | [docs/features/F90-marketing-content-bank.md](features/F90-marketing-content-bank.md) |
+| F91 | [Login with GitHub](#f91-login-with-github) | Planned | [docs/features/F91-login-with-github.md](features/F91-login-with-github.md) |
 
 ---
 
@@ -380,3 +382,11 @@ Validate button on MCP server cards that spawns the configured process, performs
 ## F89 — Post-Build Enrichment
 
 CMS-level post-processing of dist/ that injects SEO, favicon, manifest, sitemap, robots.txt, llms.txt, structured data, and AI discoverability — regardless of what the site builder produced. Runs after build.ts but before push to GitHub Pages. Injects/upgrades OpenGraph tags, Twitter Card, JSON-LD (Organization, Product, Article), canonical URLs, favicon links, manifest.json link, theme-color, and generator meta. Generates robots.txt, sitemap.xml, llms.txt, ai-plugin.json, manifest.json. Never overwrites existing tags — only fills gaps. Uses site globals (siteName, tagline, heroImage) for metadata. Ensures every WebHouse site is SEO-optimized and AI-discoverable by default.
+
+## F90 — Marketing Content Bank
+
+Living document of messaging, value propositions, and talking points for the GitHub README, webhouse.app website, social media, and documentation. Entries: "Run Locally, Deploy Globally" (clone repo, CMS on localhost, deploy sites to Vercel/Fly.io/GitHub Pages), "AI-Native Not Bolted-On", "Content-First Commerce", "Open Source Own Your Data", deploy target matrix, badge ideas, migration guide local → hosted hub. Source of truth for how we talk about the product.
+
+## F91 — Login with GitHub
+
+"Sign in with GitHub" button on the login page, reusing the existing GitHub OAuth infrastructure (F26). On callback: fetch GitHub email/name, find or create CMS user (JIT provisioning), issue `cms-session` JWT. First login auto-creates account. Subsequent logins match by email. Passwordless — no separate CMS password needed. Both login methods work if user has both. Split from F50 (Sign In Providers) because GitHub OAuth is already built and the token is reused for repo access. F50 remains for Google/Discord/Apple/Azure AD.
