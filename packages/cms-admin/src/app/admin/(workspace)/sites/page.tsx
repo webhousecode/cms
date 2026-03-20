@@ -54,6 +54,7 @@ export default function SitesDashboard() {
   const isAdmin = siteRole === "admin";
 
   const [loaded, setLoaded] = useState(false);
+  const [healthMap, setHealthMap] = useState<Record<string, "up" | "down" | "no-preview">>({});
 
   useEffect(() => {
     Promise.all([
@@ -81,6 +82,11 @@ export default function SitesDashboard() {
         setLoaded(true);
       })
       .catch(() => setLoaded(true));
+    // Fetch health for all sites
+    fetch("/api/admin/site-health?all=true")
+      .then((r) => r.ok ? r.json() : { sites: {} })
+      .then((d: { sites: Record<string, "up" | "down" | "no-preview"> }) => setHealthMap(d.sites ?? {}))
+      .catch(() => {});
   }, []);
 
   const activeOrg = registry?.orgs.find((o) => o.id === activeOrgId) ?? registry?.orgs[0];
@@ -216,7 +222,10 @@ export default function SitesDashboard() {
           >
             <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: "0.5rem" }}>
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                <Globe style={{ width: "1rem", height: "1rem", color: "var(--muted-foreground)" }} />
+                <span style={{
+                  width: "0.5rem", height: "0.5rem", borderRadius: "50%", flexShrink: 0,
+                  background: healthMap[site.id] === "up" ? "rgb(74 222 128)" : healthMap[site.id] === "down" ? "var(--destructive)" : "var(--muted-foreground)",
+                }} title={healthMap[site.id] === "up" ? "Running" : healthMap[site.id] === "down" ? "Unreachable" : "No preview"} />
                 <h3 style={{ fontSize: "0.95rem", fontWeight: 600, margin: 0 }}>{site.name}</h3>
               </div>
 
