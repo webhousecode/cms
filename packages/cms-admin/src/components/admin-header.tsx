@@ -18,6 +18,7 @@ import { HelpButton } from "@/components/help-drawer";
 import { useTheme } from "next-themes";
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 interface SessionUser {
   email: string;
@@ -146,9 +147,18 @@ function DeployButton() {
     setLastResult(null);
     try {
       const res = await fetch("/api/admin/deploy", { method: "POST" });
-      const data = await res.json() as { status: string; error?: string };
+      const data = await res.json() as { status: string; error?: string; url?: string };
       setLastResult({ ok: data.status === "success", error: data.error });
       setTimeout(() => setLastResult(null), 5000);
+      if (data.status === "success" && data.url) {
+        toast.success("Deployed", {
+          description: data.url,
+          duration: 10000,
+          action: { label: "Open", onClick: () => window.open(data.url, "_blank") },
+        });
+      } else if (data.status === "error") {
+        toast.error("Deploy failed", { description: data.error, duration: 8000 });
+      }
     } catch {
       setLastResult({ ok: false, error: "Request failed" });
     }

@@ -27,23 +27,26 @@ export async function GET(req: NextRequest) {
     if (!org) return NextResponse.json({ sites: {} });
 
     const results: Record<string, "up" | "down" | "no-preview"> = {};
+    const urls: Record<string, string> = {};
     await Promise.all(
       org.sites.map(async (site) => {
-        // Try previewUrl first, then deployProductionUrl from site config
         let url = site.previewUrl;
+        let liveUrl = "";
         if (!url) {
           try {
             const cfg = await readSiteConfigForSite(activeOrgId, site.id);
-            url = cfg?.deployCustomDomain
+            liveUrl = cfg?.deployCustomDomain
               ? `https://${cfg.deployCustomDomain}`
               : cfg?.deployProductionUrl || "";
+            url = liveUrl;
           } catch { /* no config */ }
         }
+        if (liveUrl) urls[site.id] = liveUrl;
         if (!url) { results[site.id] = "no-preview"; return; }
         results[site.id] = await checkUrl(url);
       })
     );
-    return NextResponse.json({ sites: results });
+    return NextResponse.json({ sites: results, urls });
   }
 
   // Single site check (active site)

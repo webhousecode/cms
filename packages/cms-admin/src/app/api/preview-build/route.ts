@@ -29,7 +29,7 @@ export async function POST() {
     const { stdout, stderr } = await execAsync("npx tsx build.ts", {
       cwd: projectDir,
       timeout: 30000,
-      env: { ...process.env, NODE_ENV: "production" },
+      env: { ...process.env, NODE_ENV: "production", BASE_PATH: "" },
     });
 
     return NextResponse.json({

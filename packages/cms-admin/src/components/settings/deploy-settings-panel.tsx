@@ -349,7 +349,7 @@ export function DeploySettingsPanel() {
               type="text"
               value={config.deployCustomDomain}
               onChange={(e) => updateConfig((c) => ({ ...c, deployCustomDomain: e.target.value }))}
-              placeholder="boutique.webhouse.app"
+              placeholder={`${(config.deployAppName.split("/")[1] ?? "my-site").replace(/-site$/, "")}.webhouse.app`}
               style={inputStyle}
             />
             {config.deployCustomDomain && (
