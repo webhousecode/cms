@@ -221,7 +221,8 @@ export function OrgSwitcher() {
     }
     window.dispatchEvent(new CustomEvent("cms-site-change", { detail: { siteId: newSiteId } }));
     window.dispatchEvent(new CustomEvent("cms-registry-change"));
-    router.push("/admin");
+    // 1 site → jump straight in, 2+ sites → show Sites overview
+    router.push(org.sites.length <= 1 ? "/admin" : "/admin/sites");
     router.refresh();
   }
 

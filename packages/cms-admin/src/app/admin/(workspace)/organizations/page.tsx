@@ -62,11 +62,14 @@ export default function OrganizationsPage() {
     setCookie("cms-active-org", org.id);
     document.cookie = "cms-active-site=;path=/;max-age=0";
     window.dispatchEvent(new CustomEvent("cms-registry-change"));
-    if (org.sites.length > 0) {
+    if (org.sites.length === 0) {
+      router.push("/admin/sites/new");
+    } else if (org.sites.length === 1) {
       setCookie("cms-active-site", org.sites[0].id);
       router.push("/admin");
     } else {
-      router.push("/admin/sites/new");
+      setCookie("cms-active-site", org.sites[0].id);
+      router.push("/admin/sites");
     }
     router.refresh();
   }
