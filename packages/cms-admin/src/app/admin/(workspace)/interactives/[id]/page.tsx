@@ -7,6 +7,7 @@ import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useTabs } from "@/lib/tabs-context";
 import { Button } from "@/components/ui/button";
+import { ActionBar, ActionBarBreadcrumb } from "@/components/action-bar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -494,174 +495,172 @@ export default function InteractiveDetailPage() {
   return (
     <fieldset disabled={readOnly} style={{ border: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", height: "calc(100vh - 84px)", minHeight: 0 }}>
       {/* Top bar — matches document editor exactly */}
-      <div className="sticky flex items-center justify-between px-4 border-b border-border shrink-0" style={{ top: 84, height: "48px", zIndex: 30, backgroundColor: "var(--card)" }}>
-        <div className="flex items-center gap-2">
-          <div style={{ width: "1px", height: "1rem", backgroundColor: "var(--border)", alignSelf: "center" }} />
-          <Link
-            href="/admin/interactives"
-            className="text-muted-foreground hover:text-foreground transition-colors"
-            title="Back to Interactives"
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </Link>
-          <span className="text-muted-foreground text-sm font-mono">interactives</span>
-          <span className="text-muted-foreground">/</span>
-          <span className="text-sm font-mono text-foreground">{detail.name}</span>
-          <span className="text-xs text-muted-foreground font-mono">{formatSize(detail.size)}</span>
-        </div>
+      <ActionBar
+        actions={
+          <div className="flex items-center gap-2">
+            {saved && (
+              <span className="text-xs text-muted-foreground">Saved</span>
+            )}
 
-        <div className="flex items-center gap-2">
-          {saved && (
-            <span className="text-xs text-muted-foreground">Saved</span>
-          )}
+            {/* Status badge — same as editor */}
+            <span className={`flex items-center gap-1 text-xs font-mono px-2.5 py-1 rounded-full ${
+              detail.status === "published"
+                ? "bg-green-500/10 text-green-400"
+                : "bg-yellow-500/10 text-yellow-400"
+            }`}>
+              <Globe className="w-3 h-3" />
+              {detail.status ?? "draft"}
+            </span>
 
-          {/* Status badge — same as editor */}
-          <span className={`flex items-center gap-1 text-xs font-mono px-2.5 py-1 rounded-full ${
-            detail.status === "published"
-              ? "bg-green-500/10 text-green-400"
-              : "bg-yellow-500/10 text-yellow-400"
-          }`}>
-            <Globe className="w-3 h-3" />
-            {detail.status ?? "draft"}
-          </span>
+            {/* Clone */}
+            {!readOnly && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={cloneInteractive}
+                disabled={cloning}
+                className="text-muted-foreground hover:text-foreground gap-1.5"
+                title="Clone interactive"
+              >
+                <Copy className="w-3.5 h-3.5" />
+                {cloning ? "Cloning..." : "Clone"}
+              </Button>
+            )}
 
-          {/* Clone */}
-          {!readOnly && (
+            {/* Edit dropdown — Visual / Code / AI */}
+            {!readOnly && (
+              <DropdownMenu>
+                <DropdownMenuTrigger className={`flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-md transition-colors cursor-pointer ${["visual", "code", "ai-edit"].includes(mode) ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
+                    {mode === "visual" ? <MousePointer2 className="w-3.5 h-3.5" /> :
+                     mode === "code" ? <Code className="w-3.5 h-3.5" /> :
+                     mode === "ai-edit" ? <Sparkles className="w-3.5 h-3.5" /> :
+                     <Pencil className="w-3.5 h-3.5" />}
+                    {mode === "visual" ? "Visual" : mode === "code" ? "Code" : mode === "ai-edit" ? "AI" : "Edit"}
+                    <ChevronDown className="w-3 h-3 opacity-50" />
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-40">
+                  <DropdownMenuItem onClick={() => setMode("visual")} className={mode === "visual" ? "bg-accent" : ""}>
+                    <MousePointer2 className="mr-2 h-4 w-4 text-muted-foreground" />
+                    Visual
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setMode("code")} className={mode === "code" ? "bg-accent" : ""}>
+                    <Code className="mr-2 h-4 w-4 text-muted-foreground" />
+                    Code
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setMode("ai-edit")} className={mode === "ai-edit" ? "bg-accent" : ""}>
+                    <Sparkles className="mr-2 h-4 w-4 text-muted-foreground" />
+                    AI
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+
+            {/* History */}
             <Button
               variant="ghost"
               size="sm"
-              onClick={cloneInteractive}
-              disabled={cloning}
               className="text-muted-foreground hover:text-foreground gap-1.5"
-              title="Clone interactive"
+              title="Revision history"
+              disabled
             >
-              <Copy className="w-3.5 h-3.5" />
-              {cloning ? "Cloning…" : "Clone"}
+              <History className="w-3.5 h-3.5" />
+              History
             </Button>
-          )}
 
-          {/* Edit dropdown — Visual / Code / AI */}
-          {!readOnly && (
-            <DropdownMenu>
-              <DropdownMenuTrigger className={`flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-md transition-colors cursor-pointer ${["visual", "code", "ai-edit"].includes(mode) ? "text-foreground" : "text-muted-foreground hover:text-foreground"}`}>
-                  {mode === "visual" ? <MousePointer2 className="w-3.5 h-3.5" /> :
-                   mode === "code" ? <Code className="w-3.5 h-3.5" /> :
-                   mode === "ai-edit" ? <Sparkles className="w-3.5 h-3.5" /> :
-                   <Pencil className="w-3.5 h-3.5" />}
-                  {mode === "visual" ? "Visual" : mode === "code" ? "Code" : mode === "ai-edit" ? "AI" : "Edit"}
-                  <ChevronDown className="w-3 h-3 opacity-50" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="start" className="w-40">
-                <DropdownMenuItem onClick={() => setMode("visual")} className={mode === "visual" ? "bg-accent" : ""}>
-                  <MousePointer2 className="mr-2 h-4 w-4 text-muted-foreground" />
-                  Visual
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setMode("code")} className={mode === "code" ? "bg-accent" : ""}>
-                  <Code className="mr-2 h-4 w-4 text-muted-foreground" />
-                  Code
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setMode("ai-edit")} className={mode === "ai-edit" ? "bg-accent" : ""}>
-                  <Sparkles className="mr-2 h-4 w-4 text-muted-foreground" />
-                  AI
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          )}
-
-          {/* History */}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-muted-foreground hover:text-foreground gap-1.5"
-            title="Revision history"
-            disabled
-          >
-            <History className="w-3.5 h-3.5" />
-            History
-          </Button>
-
-          {/* Properties */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => { setPropertiesOpen((o) => !o); if (!propertiesOpen) setEditName(detail.name); }}
-            className={propertiesOpen ? "text-primary" : "text-muted-foreground hover:text-foreground"}
-            title="Properties (name, filename, dates)"
-          >
-            <Settings2 className="w-4 h-4" />
-          </Button>
-
-          {/* Trash */}
-          {!readOnly && (
+            {/* Properties */}
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => setConfirmTrash(true)}
-              className="text-muted-foreground hover:text-destructive"
-              title="Move to trash"
+              onClick={() => { setPropertiesOpen((o) => !o); if (!propertiesOpen) setEditName(detail.name); }}
+              className={propertiesOpen ? "text-primary" : "text-muted-foreground hover:text-foreground"}
+              title="Properties (name, filename, dates)"
             >
-              <Trash2 className="w-4 h-4" />
+              <Settings2 className="w-4 h-4" />
             </Button>
-          )}
 
-          {/* Preview — icon only */}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setMode("preview")}
-            className={mode === "preview" ? "text-foreground" : "text-muted-foreground hover:text-foreground"}
-            title="Preview"
-          >
-            <Eye className="w-4 h-4" />
-          </Button>
-
-          {/* Publish / Unpublish — same as editor */}
-          {!readOnly && (
-            detail.status === "published" ? (
+            {/* Trash */}
+            {!readOnly && (
               <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setStatus("draft")}
-                disabled={saving}
-                className="gap-1.5"
-                title="Revert to draft (unpublish)"
+                variant="ghost"
+                size="icon"
+                onClick={() => setConfirmTrash(true)}
+                className="text-muted-foreground hover:text-destructive"
+                title="Move to trash"
               >
-                <FileText className="w-3.5 h-3.5" />
-                Unpublish
+                <Trash2 className="w-4 h-4" />
               </Button>
-            ) : (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setStatus("published")}
-                disabled={saving}
-                className="gap-1.5 border-green-500/30 text-green-400 hover:bg-green-500/10 hover:text-green-400"
-                title="Publish"
-              >
-                <Globe className="w-3.5 h-3.5" />
-                Publish
-              </Button>
-            )
-          )}
+            )}
 
-          {/* Save */}
-          {!readOnly && (
+            {/* Preview — icon only */}
             <Button
-              size="sm"
-              onClick={mode === "visual" ? handleVisualSave : handleCodeSave}
-              disabled={saving || (mode === "code" && codeValue === originalContent)}
-              className="gap-1.5"
+              variant="ghost"
+              size="icon"
+              onClick={() => setMode("preview")}
+              className={mode === "preview" ? "text-foreground" : "text-muted-foreground hover:text-foreground"}
+              title="Preview"
             >
-              {saving ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <Save className="w-3.5 h-3.5" />
-              )}
-              {saved ? "Saved!" : "Save"}
+              <Eye className="w-4 h-4" />
             </Button>
-          )}
-        </div>
-      </div>
+
+            {/* Publish / Unpublish — same as editor */}
+            {!readOnly && (
+              detail.status === "published" ? (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setStatus("draft")}
+                  disabled={saving}
+                  className="gap-1.5"
+                  title="Revert to draft (unpublish)"
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  Unpublish
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setStatus("published")}
+                  disabled={saving}
+                  className="gap-1.5 border-green-500/30 text-green-400 hover:bg-green-500/10 hover:text-green-400"
+                  title="Publish"
+                >
+                  <Globe className="w-3.5 h-3.5" />
+                  Publish
+                </Button>
+              )
+            )}
+
+            {/* Save */}
+            {!readOnly && (
+              <Button
+                size="sm"
+                onClick={mode === "visual" ? handleVisualSave : handleCodeSave}
+                disabled={saving || (mode === "code" && codeValue === originalContent)}
+                className="gap-1.5"
+              >
+                {saving ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <Save className="w-3.5 h-3.5" />
+                )}
+                {saved ? "Saved!" : "Save"}
+              </Button>
+            )}
+          </div>
+        }
+      >
+        <div style={{ width: "1px", height: "1rem", backgroundColor: "var(--border)", alignSelf: "center" }} />
+        <Link
+          href="/admin/interactives"
+          className="text-muted-foreground hover:text-foreground transition-colors"
+          title="Back to Interactives"
+        >
+          <ArrowLeft className="w-4 h-4" />
+        </Link>
+        <ActionBarBreadcrumb items={["interactives", detail.name]} />
+        <span className="text-xs text-muted-foreground font-mono">{formatSize(detail.size)}</span>
+      </ActionBar>
 
       {/* Properties panel — right sidebar, same as document editor */}
       {propertiesOpen && (

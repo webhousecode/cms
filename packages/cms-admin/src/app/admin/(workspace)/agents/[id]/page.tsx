@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, type FormEvent } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Loader2, Sparkles, Trash2, Play, CheckCircle, X, Plus, Copy, ChevronDown, ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
+import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { Checkbox, Radio } from "@/components/ui/checkbox-styled";
 import type { AgentConfig } from "@/lib/agents";
@@ -271,43 +272,38 @@ export default function AgentDetailPage() {
   return (
     <>
     {/* Breadcrumb bar */}
-    <div className="sticky flex items-center justify-between px-4 border-b border-border shrink-0" style={{ top: 84, height: "48px", zIndex: 30, backgroundColor: "var(--card)" }}>
-      <div className="flex items-center gap-2">
-        <div style={{ width: "1px", height: "1rem", backgroundColor: "var(--border)", alignSelf: "center" }} />
-        <Link href="/admin/agents" className="text-muted-foreground hover:text-foreground transition-colors" title="Back to Agents">
-          <ArrowLeft className="w-4 h-4" />
-        </Link>
-        <span className="text-muted-foreground text-sm font-mono">agents</span>
-        <span className="text-muted-foreground">/</span>
-        <span className="text-sm font-mono text-foreground">{name || id}</span>
-      </div>
-      {!readOnly && (
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
+    <ActionBar
+      actions={!readOnly ? (
+        <>
+          <ActionButton
+            variant="secondary"
             onClick={handleClone}
             disabled={cloning}
-            className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-md border border-border hover:bg-secondary transition-colors text-muted-foreground disabled:opacity-60"
+            title="Clone agent"
+            icon={<Copy style={{ width: "0.8rem", height: "0.8rem" }} />}
           >
-            <Copy style={{ width: "0.8rem", height: "0.8rem" }} /> Clone
-          </button>
-          <button
-            type="submit"
-            form="agent-form"
-            disabled={saving}
-            style={{
-              height: "28px", display: "inline-flex", alignItems: "center", gap: "0.35rem",
-              padding: "0 0.65rem", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 500,
-              background: "var(--primary)", color: "var(--primary-foreground)", border: "none",
-              cursor: saving ? "wait" : "pointer", opacity: saving ? 0.5 : 1,
+            {cloning ? "Cloning..." : "Clone"}
+          </ActionButton>
+          <ActionButton
+            variant="primary"
+            onClick={() => {
+              const form = document.getElementById("agent-form") as HTMLFormElement | null;
+              form?.requestSubmit();
             }}
+            disabled={saving}
+            icon={saving ? <Loader2 style={{ width: 14, height: 14 }} className="animate-spin" /> : <Save style={{ width: 14, height: 14 }} />}
           >
-            {saving ? <Loader2 style={{ width: 14, height: 14 }} className="animate-spin" /> : <Save style={{ width: 14, height: 14 }} />}
             {saving ? "Saving..." : "Save"}
-          </button>
-        </div>
-      )}
-    </div>
+          </ActionButton>
+        </>
+      ) : undefined}
+    >
+      <div style={{ width: "1px", height: "1rem", backgroundColor: "var(--border)", alignSelf: "center" }} />
+      <Link href="/admin/agents" className="text-muted-foreground hover:text-foreground transition-colors" title="Back to Agents">
+        <ArrowLeft className="w-4 h-4" />
+      </Link>
+      <ActionBarBreadcrumb items={["agents", name || id]} />
+    </ActionBar>
 
     <fieldset disabled={readOnly} style={{ border: "none", padding: 0, margin: 0 }}>
     <div className="p-8 max-w-2xl">
