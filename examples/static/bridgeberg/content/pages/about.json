@@ -1,0 +1,29 @@
+{
+  "slug": "about",
+  "status": "published",
+  "data": {
+    "title": "About",
+    "metaDescription": "Full-stack developer, open source contributor, and cloud architect.",
+    "bio": "I am a full-stack developer with a deep focus on infrastructure, developer tooling, and open source. My work spans from designing type-safe APIs and building deployment pipelines to contributing to the Rust and TypeScript ecosystems. I believe great software is built on clear thinking, clean abstractions, and relentless iteration.",
+    "skillCategories": [
+      { "name": "Languages", "skills": ["TypeScript", "Go", "Rust", "Python", "SQL"] },
+      { "name": "Frontend", "skills": ["React", "Next.js", "Tailwind CSS", "Vue"] },
+      { "name": "Backend", "skills": ["Node.js", "Fastify", "PostgreSQL", "Redis", "gRPC"] },
+      { "name": "DevOps", "skills": ["Docker", "Kubernetes", "Terraform", "GitHub Actions", "AWS", "Fly.io"] }
+    ],
+    "timeline": [
+      { "year": "2026", "description": "Founded Bridgeberg Labs" },
+      { "year": "2025", "description": "Led cloud migration at ScaleForge" },
+      { "year": "2023", "description": "Joined CoreStack as Principal Engineer" },
+      { "year": "2021", "description": "Built real-time analytics platform at DataPulse" },
+      { "year": "2019", "description": "First open source project hit 1k stars" },
+      { "year": "2016", "description": "Started professional development career" }
+    ],
+    "aboutLinks": [
+      { "label": "Website", "href": "https://bridgeberg.dev" },
+      { "label": "GitHub", "href": "https://github.com/bridgeberg" },
+      { "label": "Twitter/X", "href": "https://x.com/bridgeberg" },
+      { "label": "LinkedIn", "href": "https://linkedin.com/in/bridgeberg" }
+    ]
+  }
+}

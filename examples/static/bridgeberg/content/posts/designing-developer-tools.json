@@ -1,0 +1,12 @@
+{
+  "slug": "designing-developer-tools",
+  "status": "published",
+  "data": {
+    "title": "Designing Developer Tools That People Actually Use",
+    "excerpt": "Lessons from building CLI tools, SDKs, and APIs that developers love (or at least tolerate).",
+    "date": "2026-01-20",
+    "category": "design",
+    "tags": ["design", "dx", "developer-tools"],
+    "content": "## The DX Hierarchy\n\nDeveloper experience is not a single metric — it is a hierarchy. At the base: does it work? Then: is it fast? Then: is it predictable? And finally: is it delightful? Most tools fail at level two or three. They work in demos but surprise you in production.\n\nThe tools that developers love — Git, curl, jq, ripgrep — share common traits. They are fast, predictable, composable, and honest about their limitations.\n\n## Defaults Matter More Than Features\n\nThe most impactful design decision is your defaults. Every flag a user must set is friction. Every configuration file they must create is a barrier. The zero-configuration experience should handle 80% of use cases.\n\nThis does not mean removing options — it means choosing sensible defaults and making the common case effortless. Prettier succeeded not because it formats code, but because it formats code with zero configuration.\n\n## Error Messages Are UI\n\nFor CLI tools and APIs, error messages are your primary user interface. A good error message tells the user: what happened, why it happened, and what to do about it. Rust's compiler is the gold standard here — every error includes context, suggestions, and often the exact fix.\n\nInvest as much time in your error messages as you do in your happy path. Users only read your documentation when something goes wrong.\n\n## Composability Over Completeness\n\nDo not try to be everything. The Unix philosophy works: do one thing well, accept stdin, produce stdout, exit with meaningful codes. Tools that try to be complete solutions end up being mediocre at everything. Tools that compose well become indispensable."
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "slug": "stackflow",
+  "status": "published",
+  "data": {
+    "title": "StackFlow",
+    "description": "Universal deployment toolkit powered by Rust & WebAssembly.",
+    "status": "featured",
+    "icon": "\u26a1",
+    "techTags": ["rust", "wasm", "deployment"],
+    "linkLabel": "GitHub \u2192",
+    "linkUrl": "#",
+    "sortOrder": 2
+  }
+}

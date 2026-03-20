@@ -1,0 +1,14 @@
+{
+  "slug": "kv-cache",
+  "status": "published",
+  "data": {
+    "title": "kv-cache",
+    "description": "Distributed key-value cache with consistent hashing.",
+    "status": "active",
+    "icon": "\ud83d\udce6",
+    "techTags": ["go", "cache", "distributed"],
+    "linkLabel": "GitHub \u2192",
+    "linkUrl": "#",
+    "sortOrder": 6
+  }
+}

@@ -1,0 +1,12 @@
+{
+  "slug": "ai-assisted-code-review",
+  "status": "published",
+  "data": {
+    "title": "AI-Assisted Code Review: What Works and What Doesn't",
+    "excerpt": "After six months of using AI tools in our code review process, here is an honest assessment.",
+    "date": "2025-11-15",
+    "category": "ai",
+    "tags": ["ai", "code-review", "automation"],
+    "content": "## The Promise\n\nAI-assisted code review promises to catch bugs, enforce style, and reduce review turnaround time. After integrating several tools into our workflow for six months, I can report that the reality is more nuanced than the marketing suggests.\n\n## What Works Well\n\nAI excels at catching patterns that humans miss through fatigue: unused imports, potential null dereferences, inconsistent error handling, and security anti-patterns. It is also excellent at explaining unfamiliar code — asking an AI to summarize a complex PR diff saves reviewers significant time.\n\nStyle enforcement is another win. AI can flag deviations from team conventions that linters miss: naming patterns, comment quality, test structure. This frees human reviewers to focus on architecture and logic.\n\n## What Does Not Work\n\nAI struggles with context. It cannot understand why a particular abstraction was chosen, whether a performance tradeoff is acceptable for this use case, or whether a feature meets the actual user need. These are the most valuable parts of code review, and they remain firmly in human territory.\n\nFalse positives are a real problem. When AI flags too many non-issues, developers start ignoring all AI feedback — the alert fatigue effect. Tuning the sensitivity is critical and ongoing.\n\n## The Hybrid Approach\n\nOur current workflow: AI runs first and leaves automated comments. Human reviewers see these alongside the diff. The AI catches the mechanical issues, the humans focus on design and intent. Review turnaround dropped by 30%, and the defect escape rate dropped by 15%. Not revolutionary, but a genuine improvement."
+  }
+}

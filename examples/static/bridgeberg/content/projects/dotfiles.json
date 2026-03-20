@@ -1,0 +1,14 @@
+{
+  "slug": "dotfiles",
+  "status": "published",
+  "data": {
+    "title": "dotfiles",
+    "description": "Personal dotfiles and system configuration.",
+    "status": "archived",
+    "icon": "\ud83d\udd27",
+    "techTags": ["shell", "config"],
+    "linkLabel": "GitHub \u2192",
+    "linkUrl": "#",
+    "sortOrder": 8
+  }
+}

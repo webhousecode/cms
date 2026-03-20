@@ -1,0 +1,12 @@
+{
+  "slug": "zero-trust-architecture",
+  "status": "published",
+  "data": {
+    "title": "Zero Trust Architecture for Small Teams",
+    "excerpt": "You do not need a massive security team to implement zero trust. Here is a pragmatic approach for startups.",
+    "date": "2025-12-05",
+    "category": "security",
+    "tags": ["security", "zero-trust", "infrastructure"],
+    "content": "## Zero Trust Is Not a Product\n\nVendors love selling zero trust as a product you can buy. It is not. Zero trust is an architecture principle: never trust, always verify. Every request is authenticated and authorized, regardless of where it originates. The network perimeter is not a trust boundary.\n\n## Start with Identity\n\nThe foundation of zero trust is strong identity. Every service, every user, every device must have a verifiable identity. For services, this means mutual TLS or signed JWTs. For users, this means SSO with MFA. For devices, this means device certificates or attestation.\n\nSmall teams should start with a single identity provider (Okta, Auth0, or even Keycloak self-hosted) and enforce SSO everywhere. No shared passwords, no local accounts, no exceptions.\n\n## Network Segmentation Without the Pain\n\nTraditional network segmentation requires complex firewall rules and VLANs. Modern zero trust uses service meshes (Istio, Linkerd) or simpler overlay networks (Tailscale, WireGuard) to create encrypted, authenticated channels between services.\n\nTailscale deserves special mention for small teams. It creates a WireGuard-based mesh network where access is controlled by identity, not IP address. Setup takes minutes, not weeks.\n\n## The Pragmatic Checklist\n\nFor a team of five to twenty engineers, focus on these fundamentals: SSO with MFA everywhere, service-to-service authentication (mTLS or JWTs), encrypted transport for all internal traffic, least-privilege RBAC, and audit logging for sensitive operations. This covers 90% of the zero trust value with 10% of the enterprise complexity."
+  }
+}

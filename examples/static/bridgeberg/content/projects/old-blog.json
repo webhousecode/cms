@@ -1,0 +1,14 @@
+{
+  "slug": "old-blog",
+  "status": "published",
+  "data": {
+    "title": "old-blog",
+    "description": "Previous personal blog built with Gatsby.",
+    "status": "archived",
+    "icon": "\ud83d\udcdd",
+    "techTags": ["typescript", "blog"],
+    "linkLabel": "GitHub \u2192",
+    "linkUrl": "#",
+    "sortOrder": 7
+  }
+}

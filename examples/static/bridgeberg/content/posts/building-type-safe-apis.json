@@ -1,0 +1,12 @@
+{
+  "slug": "building-type-safe-apis",
+  "status": "published",
+  "data": {
+    "title": "Building Type-Safe APIs with tRPC and Zod",
+    "excerpt": "How to leverage end-to-end type safety to eliminate an entire class of bugs from your API layer.",
+    "date": "2026-03-15",
+    "category": "development",
+    "tags": ["typescript", "trpc", "zod", "api"],
+    "content": "## The Problem with Traditional REST APIs\n\nEvery developer has been there: you change a field name on the backend, deploy, and watch the frontend silently break. The contract between client and server is implicit, living only in documentation that drifts out of date within days.\n\ntRPC eliminates this problem entirely by sharing types between your server and client at build time. Combined with Zod for runtime validation, you get a system where invalid API calls are caught before they ever reach production.\n\n## Setting Up the Stack\n\nThe core insight is that tRPC procedures are just functions with validated inputs. You define a router on the server, and the client gets a fully typed proxy that mirrors the router's shape. No code generation, no schema files, no OpenAPI specs to maintain.\n\nZod handles the runtime side — parsing incoming data and producing detailed error messages when validation fails. The beauty is that Zod schemas double as TypeScript types, so you write your validation logic once and get both compile-time and runtime safety.\n\n## Practical Patterns\n\nIn production, we structure our tRPC routers by domain: `user.getById`, `project.list`, `billing.createInvoice`. Each procedure declares its input schema with Zod, its authorization middleware, and its implementation. The result is a codebase where the API surface is entirely self-documenting.\n\nError handling deserves special attention. tRPC's error formatting lets you return structured errors that the client can pattern-match on. Combined with Zod's `.safeParse()`, you can give users actionable feedback without leaking implementation details.\n\n## The Verdict\n\nAfter two years of building with tRPC and Zod, I cannot imagine going back. The productivity gains from end-to-end type safety compound over time. Refactoring is fearless, onboarding is faster, and entire categories of bugs simply vanish."
+  }
+}

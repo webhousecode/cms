@@ -1,0 +1,14 @@
+{
+  "slug": "schema-drift",
+  "status": "published",
+  "data": {
+    "title": "schema-drift",
+    "description": "Database schema diff and migration tool with zero dependencies.",
+    "status": "active",
+    "icon": "\ud83d\uddc2\ufe0f",
+    "techTags": ["typescript", "database", "migration"],
+    "linkLabel": "GitHub \u2192",
+    "linkUrl": "#",
+    "sortOrder": 5
+  }
+}

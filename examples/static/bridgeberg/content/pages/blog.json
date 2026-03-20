@@ -1,0 +1,8 @@
+{
+  "slug": "blog",
+  "status": "published",
+  "data": {
+    "title": "Blog",
+    "metaDescription": "Articles about development, infrastructure, security, and the craft of building software."
+  }
+}

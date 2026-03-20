@@ -1,0 +1,12 @@
+{
+  "slug": "rust-for-node-developers",
+  "status": "published",
+  "data": {
+    "title": "Rust for Node.js Developers: A Practical Guide",
+    "excerpt": "What I learned transitioning from Node.js to Rust, and why the ownership model is worth the learning curve.",
+    "date": "2026-02-10",
+    "category": "development",
+    "tags": ["rust", "node", "performance"],
+    "content": "## Why Rust?\n\nAfter years of building Node.js services, I hit a ceiling. Not in what I could build, but in how confidently I could ship it. Memory leaks in long-running processes, race conditions in concurrent code, and the nagging feeling that my error handling was incomplete. Rust addresses all of these at compile time.\n\n## The Ownership Model\n\nThe ownership system is Rust's defining feature and the biggest mental shift for JavaScript developers. In Node, the garbage collector handles memory. In Rust, you explicitly manage ownership, borrowing, and lifetimes. The compiler enforces these rules, and once you internalize them, entire classes of bugs become impossible.\n\nThe key insight for Node developers: think of ownership as a stricter version of const. You are not just preventing reassignment — you are preventing shared mutable state entirely.\n\n## Error Handling\n\nRust's Result type replaces exceptions with explicit error handling. Every function that can fail returns `Result<T, E>`, and the compiler forces you to handle both cases. The `?` operator makes this ergonomic — it is like async/await but for errors.\n\nAfter working with this pattern, going back to try/catch feels reckless. In Rust, you can look at a function signature and know exactly what errors it can produce.\n\n## Performance in Practice\n\nThe performance gains are real but not always where you expect them. For I/O-bound services (most web APIs), Rust with Tokio is faster than Node, but not dramatically. Where Rust shines is CPU-bound work: parsing, transformation, serialization. A JSON parser I rewrote in Rust was 40x faster than the Node equivalent."
+  }
+}

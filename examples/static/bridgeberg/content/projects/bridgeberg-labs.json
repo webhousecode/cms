@@ -1,0 +1,14 @@
+{
+  "slug": "bridgeberg-labs",
+  "status": "published",
+  "data": {
+    "title": "Bridgeberg Labs",
+    "description": "Better infrastructure.",
+    "status": "featured",
+    "icon": "\ud83c\udfd7\ufe0f",
+    "techTags": ["cloud", "infrastructure", "rust"],
+    "linkLabel": "Visit \u2192",
+    "linkUrl": "https://bridgeberg.dev",
+    "sortOrder": 1
+  }
+}
