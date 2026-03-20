@@ -299,12 +299,12 @@ async function githubPagesBuildAndDeploy(token: string, repo: string): Promise<s
   const repoName = repo.split("/")[1] ?? "";
   const basePath = customDomain ? "" : `/${repoName}`;
 
-  console.log(`[deploy] Running build.ts in ${sitePaths.projectDir} (BASE_PATH=${basePath || "(root)"})...`);
+  console.log(`[deploy] Running build.ts in ${sitePaths.projectDir} (BASE_PATH=${basePath || "(root)"}, out=deploy/)...`);
   try {
     execSync("npx tsx build.ts", {
       cwd: sitePaths.projectDir,
       timeout: 60000,
-      env: { ...process.env, NODE_ENV: "production", BASE_PATH: basePath },
+      env: { ...process.env, NODE_ENV: "production", BASE_PATH: basePath, BUILD_OUT_DIR: "deploy" },
       stdio: "pipe",
     });
   } catch (err) {
@@ -312,8 +312,8 @@ async function githubPagesBuildAndDeploy(token: string, repo: string): Promise<s
     throw new Error(`Build failed: ${msg}`);
   }
 
-  // 2. Collect dist/ files
-  const distDir = path.join(sitePaths.projectDir, "dist");
+  // 2. Collect deploy/ files (separate from dist/ which stays preview-ready)
+  const distDir = path.join(sitePaths.projectDir, "deploy");
   if (!existsSync(distDir)) {
     throw new Error("Build completed but no dist/ directory was created.");
   }

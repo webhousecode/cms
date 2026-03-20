@@ -434,7 +434,7 @@ function buildContact(site: SiteSettings, page: Document<PageData>): string {
 // ---------------------------------------------------------------------------
 
 function build() {
-  const DIST = join(__dirname, 'dist');
+  const DIST = join(__dirname, process.env.BUILD_OUT_DIR ?? 'dist');
 
   // Load site settings
   const siteDoc = loadDocument<SiteSettings>('globals', 'site');

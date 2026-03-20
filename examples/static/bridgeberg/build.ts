@@ -1062,7 +1062,7 @@ function buildAboutPage(
 // ---------------------------------------------------------------------------
 
 function build() {
-  const DIST = join(import.meta.dirname, 'dist');
+  const DIST = join(import.meta.dirname, process.env.BUILD_OUT_DIR ?? 'dist');
 
   const globals = loadGlobals();
   const posts = loadPosts();

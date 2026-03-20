@@ -663,7 +663,7 @@ ${footer()}
 // ---------------------------------------------------------------------------
 // Write all pages
 // ---------------------------------------------------------------------------
-const dist = join(__dirname, 'dist');
+const dist = join(__dirname, process.env.BUILD_OUT_DIR ?? 'dist');
 
 // Home
 mkdirSync(dist, { recursive: true });
