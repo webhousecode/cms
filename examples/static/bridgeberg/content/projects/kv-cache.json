@@ -5,10 +5,16 @@
     "title": "kv-cache",
     "description": "Distributed key-value cache with consistent hashing.",
     "status": "active",
-    "icon": "\ud83d\udce6",
-    "techTags": ["go", "cache", "distributed"],
-    "linkLabel": "GitHub \u2192",
+    "icon": "📦",
+    "techTags": [
+      "go",
+      "cache",
+      "distributed"
+    ],
+    "linkLabel": "GitHub →",
     "linkUrl": "#",
     "sortOrder": 6
-  }
+  },
+  "id": "Xmg-JNFCzQw-bNOcK4SpW",
+  "_fieldMeta": {}
 }

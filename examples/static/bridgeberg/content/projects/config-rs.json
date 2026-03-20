@@ -5,10 +5,16 @@
     "title": "config-rs",
     "description": "Type-safe configuration management for Rust applications.",
     "status": "active",
-    "icon": "\u2699\ufe0f",
-    "techTags": ["rust", "config", "library"],
-    "linkLabel": "GitHub \u2192",
+    "icon": "⚙️",
+    "techTags": [
+      "rust",
+      "config",
+      "library"
+    ],
+    "linkLabel": "GitHub →",
     "linkUrl": "#",
     "sortOrder": 3
-  }
+  },
+  "id": "5nDTHgr0_hLspSA1dp2kB",
+  "_fieldMeta": {}
 }

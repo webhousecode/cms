@@ -5,10 +5,16 @@
     "title": "tunnel-proxy",
     "description": "Lightweight HTTP tunneling proxy for development environments.",
     "status": "active",
-    "icon": "\ud83d\udd73\ufe0f",
-    "techTags": ["rust", "networking", "proxy"],
-    "linkLabel": "GitHub \u2192",
+    "icon": "🕳️",
+    "techTags": [
+      "rust",
+      "networking",
+      "proxy"
+    ],
+    "linkLabel": "GitHub →",
     "linkUrl": "#",
     "sortOrder": 4
-  }
+  },
+  "id": "hTEWsMxC0xZ2sfXY3OH5J",
+  "_fieldMeta": {}
 }

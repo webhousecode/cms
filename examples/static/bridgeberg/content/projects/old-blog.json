@@ -5,10 +5,15 @@
     "title": "old-blog",
     "description": "Previous personal blog built with Gatsby.",
     "status": "archived",
-    "icon": "\ud83d\udcdd",
-    "techTags": ["typescript", "blog"],
-    "linkLabel": "GitHub \u2192",
+    "icon": "📝",
+    "techTags": [
+      "typescript",
+      "blog"
+    ],
+    "linkLabel": "GitHub →",
     "linkUrl": "#",
     "sortOrder": 7
-  }
+  },
+  "id": "J5LvS-3FzHB04V3Gplqr9",
+  "_fieldMeta": {}
 }
