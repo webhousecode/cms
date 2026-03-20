@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Globe, MoreVertical, Settings2, Plus, Copy, Eye, ExternalLink } from "lucide-react";
 import { useSiteRole } from "@/hooks/use-site-role";
@@ -57,7 +57,11 @@ export default function SitesDashboard() {
   const [healthMap, setHealthMap] = useState<Record<string, "up" | "down" | "no-preview">>({});
   const [liveUrls, setLiveUrls] = useState<Record<string, string>>({});
 
-  useEffect(() => {
+  const loadSites = useCallback(() => {
+    setLoaded(false);
+    setStats({});
+    setHealthMap({});
+    setLiveUrls({});
     Promise.all([
       fetch("/api/cms/registry").then((r) => r.json()),
       fetch("/api/admin/my-sites").then((r) => r.json()),
@@ -83,7 +87,6 @@ export default function SitesDashboard() {
         setLoaded(true);
       })
       .catch(() => setLoaded(true));
-    // Fetch health + live URLs for all sites
     fetch("/api/admin/site-health?all=true")
       .then((r) => r.ok ? r.json() : { sites: {} })
       .then((d: { sites: Record<string, "up" | "down" | "no-preview">; urls?: Record<string, string> }) => {
@@ -92,6 +95,15 @@ export default function SitesDashboard() {
       })
       .catch(() => {});
   }, []);
+
+  useEffect(() => { loadSites(); }, [loadSites]);
+
+  // Re-fetch when org/site changes
+  useEffect(() => {
+    function handleChange() { loadSites(); }
+    window.addEventListener("cms-registry-change", handleChange);
+    return () => window.removeEventListener("cms-registry-change", handleChange);
+  }, [loadSites]);
 
   const activeOrg = registry?.orgs.find((o) => o.id === activeOrgId) ?? registry?.orgs[0];
   // Filter to only sites the user has team access to
