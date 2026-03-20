@@ -1,14 +1,20 @@
 openapi: 3.1.0
 info:
   title: "@webhouse/cms API"
-  version: "0.2.6"
+  version: "0.2.9"
   description: |
-    Headless CMS REST API. Alle content-endpoints er under `/api/content`.
-    Schema-endpoints er under `/api/schema`. Manifest under `/api/manifest`.
+    Headless CMS REST API.
+
+    **Public endpoints** (content, schema, manifest) are unauthenticated.
+    **Admin endpoints** require a `cms-session` cookie (JWT) or `X-CMS-Service-Token` header.
+
+    ### Authentication
+    - **Session cookie:** Login via `POST /api/auth/login` → sets `cms-session` httpOnly cookie
+    - **Service token:** Set `X-CMS-Service-Token: {CMS_JWT_SECRET}` header for machine-to-machine calls (heartbeat, cron)
 
     ### Field-level AI lock
-    `_fieldMeta` eksponeres **ikke** i standard document-responses.
-    Brug de dedikerede `/_fieldMeta`-endpoints til at læse og manipulere lock-state.
+    `_fieldMeta` is not included in standard document responses.
+    Use the dedicated `/_fieldMeta` endpoints to read and manipulate lock state.
 
 servers:
   - url: http://localhost:3000
@@ -21,13 +27,25 @@ servers:
 
 tags:
   - name: Content
-    description: CRUD-operationer på dokumenter
+    description: CRUD operations on documents
   - name: FieldMeta
-    description: Field-level lock og AI-provenance metadata
+    description: Field-level lock and AI-provenance metadata
   - name: Schema
     description: Collection JSON Schemas (read-only)
   - name: Manifest
-    description: CMS-konfiguration og manifest
+    description: CMS configuration and manifest
+  - name: Auth
+    description: Authentication (login, logout, session)
+  - name: Admin
+    description: Admin operations (profile, team, config, deploy)
+  - name: Scheduler
+    description: Heartbeat, scheduled tasks, calendar feed
+  - name: Media
+    description: File upload, media library, serving
+  - name: AI
+    description: AI generation, rewriting, agents, curation
+  - name: MCP
+    description: Model Context Protocol servers (public + admin)
 
 # ---------------------------------------------------------------------------
 # Reusable components
@@ -631,10 +649,10 @@ paths:
 # ---------------------------------------------------------------------------
   /api/manifest:
     get:
-      summary: Hent CMS-manifest
+      summary: Get CMS manifest
       operationId: getManifest
       tags: [Manifest]
-      description: Returnerer fuld CMS-konfiguration (collections, build-config, storage-type osv.)
+      description: Returns full CMS configuration (collections, build config, storage type, etc.)
       responses:
         "200":
           description: CMS manifest
@@ -642,4 +660,422 @@ paths:
             application/json:
               schema:
                 type: object
-                description: Serialiseret CmsConfig
+                description: Serialized CmsConfig
+
+# ---------------------------------------------------------------------------
+# Auth
+# ---------------------------------------------------------------------------
+  /api/auth/login:
+    post:
+      summary: Log in
+      operationId: login
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, example: "admin@example.com" }
+                password: { type: string, example: "my-password" }
+      responses:
+        "200":
+          description: Login successful — sets cms-session cookie
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  email: { type: string }
+                  name: { type: string }
+        "401":
+          description: Invalid credentials
+
+  /api/auth/logout:
+    post:
+      summary: Log out
+      operationId: logout
+      tags: [Auth]
+      responses:
+        "200":
+          description: Session cookie cleared
+
+  /api/auth/me:
+    get:
+      summary: Get current user
+      operationId: getMe
+      tags: [Auth]
+      responses:
+        "200":
+          description: Authenticated user profile (or user: null)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  user:
+                    type: object
+                    nullable: true
+                    properties:
+                      id: { type: string }
+                      email: { type: string }
+                      name: { type: string }
+                      role: { type: string, enum: [admin, editor, viewer] }
+                      siteRole: { type: string, nullable: true }
+                      zoom: { type: integer }
+
+  /api/auth/setup:
+    get:
+      summary: Check if initial setup is needed
+      operationId: checkSetup
+      tags: [Auth]
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  hasUsers: { type: boolean }
+
+    post:
+      summary: Create first admin account
+      operationId: setupAdmin
+      tags: [Auth]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password, name]
+              properties:
+                email: { type: string }
+                password: { type: string, minLength: 8 }
+                name: { type: string }
+      responses:
+        "200":
+          description: Account created — sets cms-session cookie
+        "403":
+          description: Setup already complete
+
+# ---------------------------------------------------------------------------
+# Scheduler & Heartbeat
+# ---------------------------------------------------------------------------
+  /api/cms/heartbeat:
+    get:
+      summary: Run all pending scheduled tasks
+      operationId: heartbeat
+      tags: [Scheduler]
+      description: |
+        Executes all pending scheduled tasks immediately:
+        1. Publish/unpublish documents past their scheduled date
+        2. Run due AI agents
+        3. Run tools scheduler (backup, link check)
+        4. Update calendar snapshot
+
+        Designed to be called by an external cron (macOS crontab, GitHub Actions,
+        or any uptime monitor) to keep scheduled tasks running even when the
+        CMS admin has no interactive traffic.
+
+        **Auth:** Requires `X-CMS-Service-Token` header matching `CMS_JWT_SECRET`.
+      responses:
+        "200":
+          description: Tasks executed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  durationMs: { type: integer, example: 1234 }
+                  ran:
+                    type: array
+                    items: { type: string }
+                    example: ["published: 2 doc(s)", "backup: completed", "snapshot: updated"]
+                  errors:
+                    type: array
+                    items: { type: string }
+                  timestamp: { type: string, format: date-time }
+        "401":
+          description: Missing or invalid service token
+
+  /api/cms/scheduled/calendar.ics:
+    get:
+      summary: iCalendar feed of scheduled events
+      operationId: calendarFeed
+      tags: [Scheduler]
+      description: |
+        Returns an iCalendar (.ics) feed with all scheduled publish/unpublish events,
+        upcoming backups, and link checks. Subscribe from Apple Calendar, Google Calendar, etc.
+
+        **Auth:** Token-based via `?token=` query parameter (HMAC of user ID).
+      parameters:
+        - name: token
+          in: query
+          required: true
+          schema: { type: string }
+          description: HMAC token for calendar access
+        - name: org
+          in: query
+          schema: { type: string }
+          description: Organization ID
+        - name: site
+          in: query
+          schema: { type: string }
+          description: Site ID
+      responses:
+        "200":
+          description: iCalendar feed
+          content:
+            text/calendar:
+              schema:
+                type: string
+        "401":
+          description: Invalid token
+
+# ---------------------------------------------------------------------------
+# Media
+# ---------------------------------------------------------------------------
+  /api/upload:
+    post:
+      summary: Upload file
+      operationId: uploadFile
+      tags: [Media]
+      description: Upload a file to the media library. Supports images, audio, documents, SVG.
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                folder:
+                  type: string
+                  description: Target folder (e.g. "images", "audio")
+      responses:
+        "200":
+          description: Upload successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url: { type: string, example: "/uploads/images/photo.jpg" }
+                  filename: { type: string }
+                  size: { type: integer }
+
+  /api/media:
+    get:
+      summary: List media files
+      operationId: listMedia
+      tags: [Media]
+      responses:
+        "200":
+          description: All media files with metadata
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  files:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name: { type: string }
+                        url: { type: string }
+                        folder: { type: string }
+                        size: { type: integer }
+                        type: { type: string, enum: [image, audio, document, svg] }
+
+# ---------------------------------------------------------------------------
+# AI Agents
+# ---------------------------------------------------------------------------
+  /api/cms/agents:
+    get:
+      summary: List AI agents
+      operationId: listAgents
+      tags: [AI]
+      responses:
+        "200":
+          description: All agent configurations
+    post:
+      summary: Create AI agent
+      operationId: createAgent
+      tags: [AI]
+      responses:
+        "201":
+          description: Agent created
+
+  /api/cms/agents/{id}/run:
+    post:
+      summary: Run AI agent
+      operationId: runAgent
+      tags: [AI]
+      description: Execute an agent with a prompt. Results go to curation queue or publish directly based on autonomy setting.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                prompt: { type: string }
+                collection: { type: string }
+      responses:
+        "200":
+          description: Agent execution result
+
+# ---------------------------------------------------------------------------
+# Curation
+# ---------------------------------------------------------------------------
+  /api/cms/curation:
+    get:
+      summary: List curation queue
+      operationId: listCuration
+      tags: [AI]
+      description: AI-generated content waiting for human review.
+      parameters:
+        - name: stats
+          in: query
+          schema: { type: boolean }
+          description: Include queue statistics
+      responses:
+        "200":
+          description: Queue items
+
+  /api/cms/curation/{id}/approve:
+    post:
+      summary: Approve curation item
+      operationId: approveCuration
+      tags: [AI]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Item approved and published/drafted
+
+  /api/cms/curation/{id}/reject:
+    post:
+      summary: Reject curation item
+      operationId: rejectCuration
+      tags: [AI]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Item rejected
+
+# ---------------------------------------------------------------------------
+# Admin
+# ---------------------------------------------------------------------------
+  /api/admin/profile:
+    post:
+      summary: Update user profile
+      operationId: updateProfile
+      tags: [Admin]
+      description: Update name, email, password, zoom, or last active site.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string }
+                email: { type: string }
+                currentPassword: { type: string }
+                newPassword: { type: string, minLength: 8 }
+                zoom: { type: integer }
+                lastActiveOrg: { type: string }
+                lastActiveSite: { type: string }
+      responses:
+        "200":
+          description: Profile updated — new JWT cookie set
+        "400":
+          description: Validation error (wrong password, etc.)
+
+  /api/admin/site-config:
+    get:
+      summary: Get site configuration
+      operationId: getSiteConfig
+      tags: [Admin]
+      description: Returns site-specific settings (backup schedule, link check, revalidation, etc.) plus resolvedContentDir.
+      responses:
+        "200":
+          description: Site configuration
+
+    post:
+      summary: Update site configuration
+      operationId: updateSiteConfig
+      tags: [Admin]
+      responses:
+        "200":
+          description: Updated configuration
+        "403":
+          description: Admin role required
+
+  /api/admin/backups:
+    get:
+      summary: List backups
+      operationId: listBackups
+      tags: [Admin]
+      responses:
+        "200":
+          description: Backup manifest with snapshots
+
+    post:
+      summary: Create backup
+      operationId: createBackup
+      tags: [Admin]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                trigger: { type: string, enum: [manual, scheduled] }
+      responses:
+        "200":
+          description: Backup created
+
+  /api/admin/deploy:
+    post:
+      summary: Trigger deploy
+      operationId: triggerDeploy
+      tags: [Admin]
+      description: Trigger a site deployment via configured deploy hook (Vercel, Netlify, Fly.io, etc.)
+      responses:
+        "200":
+          description: Deploy triggered
+        "400":
+          description: No deploy hook configured
+
+# ---------------------------------------------------------------------------
+# MCP (Model Context Protocol)
+# ---------------------------------------------------------------------------
+  /api/mcp/info:
+    get:
+      summary: MCP server info
+      operationId: mcpInfo
+      tags: [MCP]
+      description: Returns available MCP tools, collections, auth status, and rate limit info.
+      responses:
+        "200":
+          description: MCP server metadata
