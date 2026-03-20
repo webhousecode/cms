@@ -28,7 +28,7 @@
 | F09 | [Chat Plugin](#f09-chat-plugin) | Planned | [docs/features/F09-chat-plugin.md](features/F09-chat-plugin.md) |
 | F10 | [AI Learning Loop](#f10-ai-learning-loop) | Planned | [docs/features/F10-ai-learning-loop.md](features/F10-ai-learning-loop.md) |
 | F11 | [Multi-Model AI](#f11-multi-model-ai) | Planned | [docs/features/F11-multi-model-ai.md](features/F11-multi-model-ai.md) |
-| F12 | [One-Click Publish](#f12-one-click-publish) | Planned | [docs/features/F12-one-click-publish.md](features/F12-one-click-publish.md) |
+| F12 | [One-Click Publish](#f12-one-click-publish) | In progress | [docs/features/F12-one-click-publish.md](features/F12-one-click-publish.md) |
 | F13 | [Notification Channels](#f13-notification-channels) | Planned | [docs/features/F13-notification-channels.md](features/F13-notification-channels.md) |
 | F14 | [Newsletter Engine](#f14-newsletter-engine) | Planned | [docs/features/F14-newsletter-engine.md](features/F14-newsletter-engine.md) |
 | F15 | [Agent Scheduler & Notifications](#f15-agent-scheduler) | In progress | [docs/features/F15-agent-scheduler.md](features/F15-agent-scheduler.md) |
@@ -43,7 +43,7 @@
 | F24 | [AI Playbook / Site Builder Guide](#f24-ai-playbook) | In progress | [docs/features/F24-ai-playbook.md](features/F24-ai-playbook.md) |
 | F25 | [Storage Buckets](#f25-storage-buckets) | Planned | [docs/features/F25-storage-buckets.md](features/F25-storage-buckets.md) |
 | F26 | [GitHub Login](#f26-github-login) | Done | — |
-| F27 | [Backup & Restore](#f27-backup-restore) | Planned | [docs/features/F27-backup-restore.md](features/F27-backup-restore.md) |
+| F27 | [Backup & Restore](#f27-backup-restore) | In progress | [docs/features/F27-backup-restore.md](features/F27-backup-restore.md) |
 | F28 | [Vibe Coding Flow](#f28-vibe-coding-flow) | Idea | [docs/features/F28-vibe-coding-flow.md](features/F28-vibe-coding-flow.md) |
 | F29 | [Transactional Email](#f29-transactional-email) | Planned | [docs/features/F29-transactional-email.md](features/F29-transactional-email.md) |
 | F30 | [Form Engine](#f30-form-engine) | Planned | [docs/features/F30-form-engine.md](features/F30-form-engine.md) |
@@ -93,7 +93,7 @@
 | F74 | [System Status Page](#f74-system-status-page) | Planned | [docs/features/F74-system-status-page.md](features/F74-system-status-page.md) |
 | F75 | [AI Site Builder Guide](#f75-ai-site-builder-guide) | Planned | [docs/features/F75-ai-site-builder-guide.md](features/F75-ai-site-builder-guide.md) |
 | F76 | [Create New Organization](#f76-create-organization) | Done | [docs/features/F76-create-organization.md](features/F76-create-organization.md) |
-| F77 | [Middleware to Proxy Migration](#f77-middleware-to-proxy) | Planned | [docs/features/F77-middleware-to-proxy.md](features/F77-middleware-to-proxy.md) |
+| F77 | [Middleware to Proxy Migration](#f77-middleware-to-proxy) | Done | [docs/features/F77-middleware-to-proxy.md](features/F77-middleware-to-proxy.md) |
 | F78 | [Bundled Preview Server](#f78-bundled-preview-server) | Done | [docs/features/F78-bundled-preview-server.md](features/F78-bundled-preview-server.md) |
 | F79 | [Site Config Validator](#f79-site-config-validator) | Planned | [docs/features/F79-site-config-validator.md](features/F79-site-config-validator.md) |
 | F80 | [Admin Selector Map](#f80-admin-selector-map) | Planned | [docs/features/F80-admin-selector-map.md](features/F80-admin-selector-map.md) |
@@ -102,7 +102,7 @@
 | F83 | [Vibe Site Builder](#f83-vibe-site-builder) | Planned | [docs/features/F83-vibe-site-builder.md](features/F83-vibe-site-builder.md) |
 | F84 | [Move Site to Org](#f84-move-site-to-org) | Planned | [docs/features/F84-move-site-to-org.md](features/F84-move-site-to-org.md) |
 | F85 | [CC Hooks & Quality Gates](#f85-cc-hooks-quality-gates) | Planned | [docs/features/F85-cc-hooks-quality-gates.md](features/F85-cc-hooks-quality-gates.md) |
-| F86 | [Action Bar](#f86-action-bar) | Planned | [docs/features/F86-action-bar.md](features/F86-action-bar.md) |
+| F86 | [Action Bar](#f86-action-bar) | Done | [docs/features/F86-action-bar.md](features/F86-action-bar.md) |
 | F87 | [Org-Level Global Settings](#f87-org-level-global-settings) | Planned | [docs/features/F87-org-level-settings.md](features/F87-org-level-settings.md) |
 | F88 | [MCP Server Validation](#f88-mcp-server-validation) | Planned | [docs/features/F88-mcp-server-validation.md](features/F88-mcp-server-validation.md) |
 | F89 | [Post-Build Enrichment](#f89-post-build-enrichment) | Planned | [docs/features/F89-post-build-enrichment.md](features/F89-post-build-enrichment.md) |
@@ -110,6 +110,7 @@
 | F91 | [Login with GitHub](#f91-login-with-github) | Planned | [docs/features/F91-login-with-github.md](features/F91-login-with-github.md) |
 | F92 | [Desktop PWA](#f92-desktop-pwa) | Planned | [docs/features/F92-desktop-pwa.md](features/F92-desktop-pwa.md) |
 | F93 | [Next.js App Deployment](#f93-nextjs-app-deployment) | Planned | [docs/features/F93-nextjs-deployment.md](features/F93-nextjs-deployment.md) |
+| F94 | [Favorites](#f94-favorites) | Planned | [docs/features/F94-favorites.md](features/F94-favorites.md) |
 
 ---
 
@@ -400,3 +401,6 @@ Install webhouse.app CMS admin as a desktop app on Mac/Windows/Linux via Chrome/
 ## F93 — Next.js App Deployment
 
 Deploy Next.js sites (SSR/RSC) to Vercel, Netlify, or Fly.io from the CMS admin with one click. Extends F12 One-Click Deploy beyond static sites. Deploy hooks already built in `deploy-service.ts` (Vercel, Netlify, Cloudflare, custom webhook POST + Fly.io Machines API restart) but untested with real endpoints. Adds deployment status polling (Vercel `/v6/deployments`, Netlify `/api/v1/sites/:id/deploys`, Fly.io machine state). Auto-deploy-on-save option triggers webhook on document publish — fire-and-forget, never blocks save. For Next.js sites with revalidation (F41), content changes push directly via webhook — deploy hooks only needed for layout/code changes. Custom domains managed by hosting provider, not CMS.
+
+## F94 — Favorites
+Heart-toggle (♡→♥) on any document, collection, interactive, admin page, or tool. Favorited items appear in a collapsible "Favorites" section at the top of the sidebar and as the first group in Command Palette (⌘K). Persisted per-user via `UserState` (F43) — survives browser clears. Heart icon lives in the ActionBar so every page gets it automatically. Supports documents, collections, settings pages, deploy, tools. localStorage for instant read, server sync for persistence.
