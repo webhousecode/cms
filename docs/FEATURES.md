@@ -108,6 +108,7 @@
 | F89 | [Post-Build Enrichment](#f89-post-build-enrichment) | Planned | [docs/features/F89-post-build-enrichment.md](features/F89-post-build-enrichment.md) |
 | F90 | [Marketing Content Bank](#f90-marketing-content-bank) | In progress | [docs/features/F90-marketing-content-bank.md](features/F90-marketing-content-bank.md) |
 | F91 | [Login with GitHub](#f91-login-with-github) | Planned | [docs/features/F91-login-with-github.md](features/F91-login-with-github.md) |
+| F92 | [Desktop PWA](#f92-desktop-pwa) | Planned | [docs/features/F92-desktop-pwa.md](features/F92-desktop-pwa.md) |
 
 ---
 
@@ -390,3 +391,7 @@ Living document of messaging, value propositions, and talking points for the Git
 ## F91 — Login with GitHub
 
 "Sign in with GitHub" button on the login page, reusing the existing GitHub OAuth infrastructure (F26). On callback: fetch GitHub email/name, find or create CMS user (JIT provisioning), issue `cms-session` JWT. First login auto-creates account. Subsequent logins match by email. Passwordless — no separate CMS password needed. Both login methods work if user has both. Split from F50 (Sign In Providers) because GitHub OAuth is already built and the token is reused for repo access. F50 remains for Google/Discord/Apple/Azure AD.
+
+## F92 — Desktop PWA
+
+Install webhouse.app CMS admin as a desktop app on Mac/Windows/Linux via Chrome/Edge "Install app". Standalone window without browser chrome, own app icon in dock/taskbar, dark background (#0D0D0D) on launch, Cmd+Tab shows "webhouse.app". Requires: web app manifest, PWA-sized icons (generated from existing SVG), minimal pass-through service worker (no offline caching — admin needs live API). Desktop-first, not mobile. Distinct from F33 (PWA for customer sites).
