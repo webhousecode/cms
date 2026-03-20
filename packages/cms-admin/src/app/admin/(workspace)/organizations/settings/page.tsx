@@ -7,6 +7,8 @@ import { CustomSelect } from "@/components/ui/custom-select";
 interface OrgEntry {
   id: string;
   name: string;
+  type?: string;
+  plan?: string;
   sites: { id: string; name: string }[];
 }
 
@@ -25,7 +27,7 @@ export default function OrgSettingsPage() {
   const [registry, setRegistry] = useState<Registry | null>(null);
   const [activeOrgId, setActiveOrgId] = useState("");
   const [orgName, setOrgName] = useState("");
-  const [orgType, setOrgType] = useState("agency");
+  const [orgType, setOrgType] = useState("personal");
   const [orgPlan, setOrgPlan] = useState("free");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -47,6 +49,8 @@ export default function OrgSettingsPage() {
           const org = d.registry.orgs.find((o) => o.id === orgId);
           if (org) {
             setOrgName(org.name);
+            setOrgType(org.type ?? "personal");
+            setOrgPlan(org.plan ?? "free");
           }
         }
       })
@@ -58,19 +62,24 @@ export default function OrgSettingsPage() {
   async function handleSave() {
     if (!registry || !activeOrg) return;
     setSaving(true);
-    // Update org name in registry
-    const updated = {
+    await fetch("/api/cms/registry", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "update-org",
+        orgId: activeOrgId,
+        orgName: orgName.trim() || activeOrg.name,
+        orgType,
+        orgPlan,
+      }),
+    });
+    // Update local state
+    setRegistry({
       ...registry,
       orgs: registry.orgs.map((o) =>
-        o.id === activeOrgId ? { ...o, name: orgName.trim() || o.name } : o
+        o.id === activeOrgId ? { ...o, name: orgName.trim() || o.name, type: orgType, plan: orgPlan } : o
       ),
-    };
-    await fetch("/api/cms/registry", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(updated),
     });
-    setRegistry(updated);
     window.dispatchEvent(new CustomEvent("cms-registry-change"));
     setSaving(false);
     setSaved(true);

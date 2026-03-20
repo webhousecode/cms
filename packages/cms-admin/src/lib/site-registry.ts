@@ -30,9 +30,14 @@ export interface SiteEntry {
   revalidateSecret?: string; // HMAC-SHA256 signing secret
 }
 
+export type OrgType = "personal" | "agency" | "company" | "nonprofit";
+export type OrgPlan = "free" | "starter" | "pro" | "agency" | "enterprise";
+
 export interface OrgEntry {
   id: string;
   name: string;
+  type?: OrgType;
+  plan?: OrgPlan;
   sites: SiteEntry[];
 }
 
@@ -104,12 +109,24 @@ export function getDefaultSite(registry: Registry): { org: OrgEntry; site: SiteE
 
 // ─── Mutations ────────────────────────────────────────────
 
-export async function addOrg(name: string): Promise<OrgEntry> {
+export async function addOrg(name: string, type?: OrgType, plan?: OrgPlan): Promise<OrgEntry> {
   const registry = await loadRegistry() ?? { orgs: [], defaultOrgId: "", defaultSiteId: "" };
   const id = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
-  const org: OrgEntry = { id, name, sites: [] };
+  const org: OrgEntry = { id, name, ...(type && { type }), ...(plan && { plan }), sites: [] };
   registry.orgs.push(org);
   if (!registry.defaultOrgId) registry.defaultOrgId = id;
+  await saveRegistry(registry);
+  return org;
+}
+
+export async function updateOrg(orgId: string, updates: { name?: string; type?: OrgType; plan?: OrgPlan }): Promise<OrgEntry | null> {
+  const registry = await loadRegistry();
+  if (!registry) return null;
+  const org = findOrg(registry, orgId);
+  if (!org) return null;
+  if (updates.name !== undefined) org.name = updates.name;
+  if (updates.type !== undefined) org.type = updates.type;
+  if (updates.plan !== undefined) org.plan = updates.plan;
   await saveRegistry(registry);
   return org;
 }
