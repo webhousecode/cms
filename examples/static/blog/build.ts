@@ -10,7 +10,7 @@ const ROOT = import.meta.dirname ?? path.dirname(new URL(import.meta.url).pathna
 // Base path for GitHub Pages (e.g. "/boutique-site") or "" for root domain
 const BASE = (process.env.BASE_PATH ?? '').replace(/\/+$/, '');
 
-const DIST = path.join(ROOT, 'dist');
+const DIST = path.join(ROOT, process.env.BUILD_OUT_DIR ?? 'dist');
 const CONTENT = path.join(ROOT, 'content');
 
 interface Post {

@@ -1035,7 +1035,7 @@ ${scrollScript()}
 // ---------------------------------------------------------------------------
 // Write all pages
 // ---------------------------------------------------------------------------
-const dist = join(__dirname, 'dist');
+const dist = join(__dirname, process.env.BUILD_OUT_DIR ?? 'dist');
 
 console.log('Building AURA. boutique...\n');
 

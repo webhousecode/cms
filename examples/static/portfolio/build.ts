@@ -418,7 +418,7 @@ function buildContactPage(about: AboutData, contactPage: ContactPageData, siteNa
 // ---------------------------------------------------------------------------
 
 function build() {
-  const DIST = join(import.meta.dirname, 'dist');
+  const DIST = join(import.meta.dirname, process.env.BUILD_OUT_DIR ?? 'dist');
 
   const projects = loadProjects();
   const about = loadAbout();

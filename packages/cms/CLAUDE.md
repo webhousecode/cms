@@ -945,7 +945,13 @@ The CMS discovers content by scanning `content/<collectionName>/` for `.json` fi
    ```
    When `BASE_PATH` is not set (local preview), links work as `/blog/...`. When deployed to GitHub Pages, the CMS passes `BASE_PATH=/repo-name` automatically. **Never hardcode absolute paths like `href="/blog/"` — always use `${BASE}/blog/`.**
 
-5. **Static sites MUST have a `pages` collection** with at least `home.json`. This is the minimum for the site to show meaningful content in the admin UI. Other typical pages: `about.json`, `contact.json`.
+5. **`build.ts` MUST use `BUILD_OUT_DIR` for the output directory.** The CMS uses `dist/` for preview and `deploy/` for deployment (which may have different `BASE_PATH`). The output directory must be configurable:
+   ```typescript
+   const DIST = join(__dirname, process.env.BUILD_OUT_DIR ?? 'dist');
+   ```
+   Default is `dist/` (preview-ready, root paths). The CMS deploy service passes `BUILD_OUT_DIR=deploy` when building for GitHub Pages. **Never hardcode `'dist'` as the output directory.**
+
+6. **Static sites MUST have a `pages` collection** with at least `home.json`. This is the minimum for the site to show meaningful content in the admin UI. Other typical pages: `about.json`, `contact.json`.
 
 5. **Collection name = directory name.** If your collection is named `work` in the config, the directory must be `content/work/`. If it's named `blogPosts`, the directory must be `content/blogPosts/`.
 
@@ -956,6 +962,7 @@ Before considering a site complete, verify:
 - [ ] Every JSON file has `slug`, `status: "published"`, and `data` with the correct fields
 - [ ] `build.ts` reads all content from JSON files (no hardcoded content strings)
 - [ ] `build.ts` uses `BASE` variable for all internal links (never hardcoded `/path`)
+- [ ] `build.ts` uses `BUILD_OUT_DIR` env var for output directory (never hardcoded `'dist'`)
 - [ ] Running `npx tsx build.ts` produces output that reflects the JSON content
 - [ ] Changing a value in a JSON file and rebuilding changes the output
 

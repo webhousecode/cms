@@ -1448,7 +1448,7 @@ function buildContact(): string {
 // ---------------------------------------------------------------------------
 // Write output
 // ---------------------------------------------------------------------------
-const distDir = join(__dirname, 'dist');
+const distDir = join(__dirname, process.env.BUILD_OUT_DIR ?? 'dist');
 
 function write(path: string, html: string): void {
   const fullPath = join(distDir, path);
