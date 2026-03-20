@@ -326,7 +326,7 @@ export default function SitesDashboard() {
                     border: "1px solid var(--border)", cursor: "pointer",
                     transition: "all 0.2s", textDecoration: "none",
                   }}
-                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--primary)"; e.currentTarget.style.color = "var(--primary)"; }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = "rgb(74 222 128)"; e.currentTarget.style.color = "rgb(74 222 128)"; }}
                   onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--muted-foreground)"; }}
                 >
                   <ExternalLink style={{ width: "0.8rem", height: "0.8rem" }} />
