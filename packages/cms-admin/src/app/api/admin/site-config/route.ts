@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readSiteConfig, writeSiteConfig, type SiteConfig } from "@/lib/site-config";
 import { getSiteRole } from "@/lib/require-role";
+import { getActiveSitePaths } from "@/lib/site-paths";
 
 export async function GET() {
-  const config = await readSiteConfig();
-  return NextResponse.json(config);
+  const [config, paths] = await Promise.all([readSiteConfig(), getActiveSitePaths()]);
+  return NextResponse.json({ ...config, resolvedContentDir: paths.contentDir });
 }
 
 export async function POST(request: NextRequest) {
