@@ -243,7 +243,7 @@ function SiteSection() {
 		// Load site name + paths from registry
 		fetch("/api/cms/registry")
 			.then((r) => r.json())
-			.then((d: { registry?: { orgs: Array<{ id: string; sites: Array<{ id: string; name: string; configPath?: string; contentDir?: string }> }> } }) => {
+			.then((d: { registry?: { orgs: Array<{ id: string; sites: Array<{ id: string; name: string; configPath?: string; contentDir?: string; github?: { contentDir?: string } }> }> } }) => {
 				if (!d.registry) return;
 				const orgId = document.cookie.match(/(?:^|; )cms-active-org=([^;]*)/)?.[1];
 				const siteId = document.cookie.match(/(?:^|; )cms-active-site=([^;]*)/)?.[1];
@@ -254,7 +254,7 @@ function SiteSection() {
 					setSiteName(site.name);
 					setSiteNameOriginal(site.name);
 					setConfigPath(site.configPath ?? "");
-					setContentDir(site.contentDir ?? "");
+					setContentDir(site.contentDir ?? site.github?.contentDir ?? "");
 				}
 			});
 	}, []);
