@@ -3,7 +3,10 @@
 import { useEffect, useState, useCallback } from "react";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { SettingsCard } from "./settings-card";
+import { CustomSelect } from "@/components/ui/custom-select";
 import { Rocket, ExternalLink, Check, X, Loader2, RefreshCw } from "lucide-react";
+
+type DeployProvider = "off" | "vercel" | "netlify" | "flyio" | "cloudflare" | "github-pages" | "custom";
 
 interface DeployEntry {
   id: string;
@@ -15,17 +18,29 @@ interface DeployEntry {
   duration?: number;
 }
 
-interface DeployInfo {
-  canDeploy: boolean;
-  provider?: string;
-  productionUrl?: string;
-  deployOnSave?: boolean;
-  deployAppName?: string;
-  deployCustomDomain?: string;
+interface DeployConfig {
+  deployProvider: DeployProvider;
+  deployHookUrl: string;
+  deployApiToken: string;
+  deployAppName: string;
+  deployProductionUrl: string;
+  deployCustomDomain: string;
+  deployOnSave: boolean;
 }
 
+const CONFIG_DEFAULTS: DeployConfig = {
+  deployProvider: "off",
+  deployHookUrl: "",
+  deployApiToken: "",
+  deployAppName: "",
+  deployProductionUrl: "",
+  deployCustomDomain: "",
+  deployOnSave: false,
+};
+
 export function DeploySettingsPanel() {
-  const [info, setInfo] = useState<DeployInfo>({ canDeploy: false });
+  const [config, setConfig] = useState<DeployConfig>(CONFIG_DEFAULTS);
+  const [canAutoDeploy, setCanAutoDeploy] = useState(false);
   const [deploys, setDeploys] = useState<DeployEntry[]>([]);
   const [deploying, setDeploying] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -37,13 +52,15 @@ export function DeploySettingsPanel() {
       fetch("/api/admin/deploy").then((r) => r.ok ? r.json() : { deploys: [] }),
       fetch("/api/admin/site-config").then((r) => r.ok ? r.json() : {}) as Promise<Record<string, unknown>>,
     ]);
-    setInfo({
-      canDeploy: canRes.canDeploy,
-      provider: canRes.provider,
-      productionUrl: cfgRes.deployProductionUrl as string | undefined,
-      deployOnSave: cfgRes.deployOnSave as boolean | undefined,
-      deployAppName: cfgRes.deployAppName as string | undefined,
-      deployCustomDomain: cfgRes.deployCustomDomain as string | undefined,
+    setCanAutoDeploy(canRes.canDeploy);
+    setConfig({
+      deployProvider: (cfgRes.deployProvider as DeployProvider) ?? "off",
+      deployHookUrl: (cfgRes.deployHookUrl as string) ?? "",
+      deployApiToken: (cfgRes.deployApiToken as string) ?? "",
+      deployAppName: (cfgRes.deployAppName as string) ?? "",
+      deployProductionUrl: (cfgRes.deployProductionUrl as string) ?? "",
+      deployCustomDomain: (cfgRes.deployCustomDomain as string) ?? "",
+      deployOnSave: (cfgRes.deployOnSave as boolean) ?? false,
     });
     setDeploys(logRes.deploys ?? []);
     setLoading(false);
@@ -51,18 +68,39 @@ export function DeploySettingsPanel() {
 
   useEffect(() => { loadData(); }, [loadData]);
 
+  // Save config via ActionBar save event
+  const handleSave = useCallback(async () => {
+    await fetch("/api/admin/site-config", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(config),
+    });
+    window.dispatchEvent(new CustomEvent("cms:settings-saved"));
+  }, [config]);
+
+  useEffect(() => {
+    function onSave() { handleSave(); }
+    window.addEventListener("cms:settings-save", onSave);
+    return () => window.removeEventListener("cms:settings-save", onSave);
+  }, [handleSave]);
+
+  function updateConfig(fn: (c: DeployConfig) => DeployConfig) {
+    setConfig(fn);
+    window.dispatchEvent(new CustomEvent("cms:settings-dirty"));
+  }
+
   const handleDeploy = useCallback(async () => {
     setDeploying(true);
     try {
       const res = await fetch("/api/admin/deploy", { method: "POST" });
       const data = await res.json() as DeployEntry;
       setDeploys((prev) => [data, ...prev]);
-      if (data.url && !info.productionUrl) {
-        setInfo((prev) => ({ ...prev, productionUrl: data.url }));
+      if (data.url && !config.deployProductionUrl) {
+        setConfig((prev) => ({ ...prev, deployProductionUrl: data.url! }));
       }
     } catch { /* handled by deploy log */ }
     setDeploying(false);
-  }, [info.productionUrl]);
+  }, [config.deployProductionUrl]);
 
   if (loading) {
     return (
@@ -73,24 +111,24 @@ export function DeploySettingsPanel() {
     );
   }
 
-  if (!info.canDeploy) {
-    return (
-      <>
-        <SectionHeading first>Deploy</SectionHeading>
-        <SettingsCard>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: "0.5rem", padding: "0.5rem 0" }}>
-            <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", margin: 0 }}>
-              This site does not have a deploy pipeline configured. Static sites with a <code style={{ fontSize: "0.75rem" }}>build.ts</code> file
-              can deploy to GitHub Pages automatically.
-            </p>
-            <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", margin: 0 }}>
-              Configure a deploy provider in <strong>Automation</strong> tab, or add a <code style={{ fontSize: "0.7rem" }}>build.ts</code> to your site.
-            </p>
-          </div>
-        </SettingsCard>
-      </>
-    );
-  }
+  const deployProviders = [
+    { value: "off", label: "Off" },
+    { value: "vercel", label: "Vercel" },
+    { value: "netlify", label: "Netlify" },
+    { value: "flyio", label: "Fly.io" },
+    { value: "cloudflare", label: "Cloudflare Pages" },
+    { value: "github-pages", label: "GitHub Pages" },
+    { value: "custom", label: "Custom webhook" },
+  ];
+
+  const effectiveProvider = config.deployProvider !== "off"
+    ? config.deployProvider
+    : canAutoDeploy ? "github-pages" : "off";
+
+  const isAutoConfigured = config.deployProvider === "off" && canAutoDeploy;
+  const needsHookUrl = ["vercel", "netlify", "cloudflare", "custom"].includes(config.deployProvider);
+  const needsToken = ["flyio"].includes(config.deployProvider) || (config.deployProvider === "github-pages" && !canAutoDeploy);
+  const needsAppName = ["flyio"].includes(config.deployProvider) || (config.deployProvider === "github-pages" && !canAutoDeploy);
 
   const providerLabel: Record<string, string> = {
     "github-pages": "GitHub Pages",
@@ -101,80 +139,193 @@ export function DeploySettingsPanel() {
     custom: "Custom webhook",
   };
 
+  const inputStyle = {
+    padding: "0.45rem 0.75rem", borderRadius: "7px",
+    border: "1px solid var(--border)", background: "var(--background)",
+    color: "var(--foreground)", fontSize: "0.8rem", fontFamily: "monospace" as const,
+    width: "100%", boxSizing: "border-box" as const,
+  };
+
   return (
     <>
-      <SectionHeading first>Deploy</SectionHeading>
+      {/* ── Provider config ─────────────────────────────── */}
+      <SectionHeading first>Provider</SectionHeading>
       <SettingsCard>
-        {/* Status bar */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem" }}>
-          <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              <span style={{ fontSize: "0.8rem", fontWeight: 600 }}>
-                {providerLabel[info.provider ?? ""] ?? info.provider}
-              </span>
-              {info.deployOnSave && (
-                <span style={{
-                  fontSize: "0.6rem", padding: "0.1rem 0.4rem", borderRadius: "9999px",
-                  background: "var(--primary)", color: "#fff", fontWeight: 600,
-                }}>AUTO</span>
-              )}
-            </div>
-            {info.deployAppName && (
-              <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", fontFamily: "monospace" }}>
-                {info.deployAppName}
-              </span>
-            )}
-          </div>
-          <button
-            type="button"
-            onClick={handleDeploy}
-            disabled={deploying}
-            style={{
-              display: "flex", alignItems: "center", gap: "0.4rem",
-              padding: "0.4rem 1rem", borderRadius: "7px",
-              border: "none", background: "var(--primary)", color: "#fff",
-              fontSize: "0.8rem", fontWeight: 600, cursor: deploying ? "wait" : "pointer",
-              opacity: deploying ? 0.7 : 1,
-            }}
-          >
-            {deploying
-              ? <><Loader2 className="animate-spin" style={{ width: "0.85rem", height: "0.85rem" }} /> Deploying...</>
-              : <><Rocket style={{ width: "0.85rem", height: "0.85rem" }} /> Deploy now</>}
-          </button>
+        <div>
+          <label style={{ display: "block", fontSize: "0.75rem", fontWeight: 500, marginBottom: "0.35rem" }}>Deploy provider</label>
+          <CustomSelect
+            value={config.deployProvider}
+            onChange={(v) => updateConfig((c) => ({ ...c, deployProvider: v as DeployProvider }))}
+            options={deployProviders}
+          />
+          {isAutoConfigured && (
+            <p style={{
+              fontSize: "0.65rem", margin: "0.35rem 0 0", padding: "0.3rem 0.5rem",
+              borderRadius: "4px", lineHeight: 1.4,
+              background: "color-mix(in srgb, var(--primary) 8%, transparent)",
+              color: "var(--muted-foreground)",
+            }}>
+              Auto-detected — this site has a build pipeline and will deploy to GitHub Pages automatically. No manual configuration needed.
+            </p>
+          )}
+          {config.deployProvider !== "off" && (
+            <p style={{
+              fontSize: "0.65rem", margin: "0.35rem 0 0", padding: "0.3rem 0.5rem",
+              borderRadius: "4px", lineHeight: 1.4,
+              background: "color-mix(in srgb, var(--primary) 8%, transparent)",
+              color: "var(--muted-foreground)",
+            }}>
+              {config.deployProvider === "vercel" && "Recommended for Next.js and static sites. Supports SSR, API routes, and edge functions."}
+              {config.deployProvider === "netlify" && "Supports Next.js via adapter, static sites, and serverless functions."}
+              {config.deployProvider === "flyio" && "Docker-based. Best for SSR apps (Next.js, Remix) and custom servers. Deploys to arn (Stockholm)."}
+              {config.deployProvider === "cloudflare" && "Static sites and Workers. Limited SSR support — not recommended for full Next.js apps."}
+              {config.deployProvider === "github-pages" && canAutoDeploy && "Ready to deploy — using your existing GitHub connection. No additional configuration needed."}
+              {config.deployProvider === "github-pages" && !canAutoDeploy && "Static files only. Requires a GitHub token and repository."}
+              {config.deployProvider === "custom" && "Any service that accepts a POST request to trigger a build."}
+            </p>
+          )}
         </div>
 
-        {/* Production URL */}
-        {info.productionUrl && (
-          <a
-            href={info.productionUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              display: "flex", alignItems: "center", gap: "0.35rem",
-              fontSize: "0.75rem", color: "var(--primary)",
-              textDecoration: "none",
-            }}
-          >
-            <ExternalLink style={{ width: "0.7rem", height: "0.7rem" }} />
-            {info.productionUrl}
-          </a>
+        {needsHookUrl && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+            <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Deploy hook URL</label>
+            <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: 0 }}>
+              {config.deployProvider === "vercel" && "Vercel → Project → Settings → Git → Deploy Hooks"}
+              {config.deployProvider === "netlify" && "Netlify → Site → Build & deploy → Build hooks"}
+              {config.deployProvider === "cloudflare" && "Cloudflare → Pages → Settings → Builds → Deploy hooks"}
+              {config.deployProvider === "custom" && "Any URL that accepts a POST request to trigger a build"}
+            </p>
+            <input type="url" value={config.deployHookUrl} onChange={(e) => updateConfig((c) => ({ ...c, deployHookUrl: e.target.value }))}
+              placeholder="https://api.vercel.com/v1/integrations/deploy/..." style={inputStyle} />
+          </div>
+        )}
+
+        {needsToken && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>API Token</label>
+              {config.deployProvider === "flyio" && (
+                <a href="https://fly.io/dashboard/personal/tokens" target="_blank" rel="noopener noreferrer"
+                  style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none" }}>Get key ↗</a>
+              )}
+              {config.deployProvider === "github-pages" && (
+                <a href="https://github.com/settings/tokens/new?scopes=repo&description=webhouse-deploy" target="_blank" rel="noopener noreferrer"
+                  style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none" }}>Get key ↗</a>
+              )}
+            </div>
+            <input type="password" value={config.deployApiToken} onChange={(e) => updateConfig((c) => ({ ...c, deployApiToken: e.target.value }))}
+              placeholder="Token..." style={{ ...inputStyle, fontFamily: "inherit" }} />
+          </div>
+        )}
+
+        {needsAppName && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+            <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>
+              {config.deployProvider === "flyio" ? "App name" : "Repository (owner/repo)"}
+            </label>
+            <input type="text" value={config.deployAppName} onChange={(e) => updateConfig((c) => ({ ...c, deployAppName: e.target.value }))}
+              placeholder={config.deployProvider === "flyio" ? "my-app" : "owner/repo"} style={inputStyle} />
+          </div>
+        )}
+
+        {config.deployProvider === "flyio" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+            <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Or: Deploy hook URL (alternative)</label>
+            <input type="url" value={config.deployHookUrl} onChange={(e) => updateConfig((c) => ({ ...c, deployHookUrl: e.target.value }))}
+              placeholder="https://..." style={inputStyle} />
+          </div>
         )}
       </SettingsCard>
 
-      {/* Custom domain */}
-      {info.provider === "github-pages" && (
+      {/* ── Deploy action ────────────────────────────────── */}
+      {effectiveProvider !== "off" && (
         <>
-          <SectionHeading>Custom Domain</SectionHeading>
+          <SectionHeading>Deploy</SectionHeading>
           <SettingsCard>
-            <CustomDomainField
-              value={info.deployCustomDomain ?? ""}
-              onChange={(domain) => setInfo((prev) => ({ ...prev, deployCustomDomain: domain }))}
-            />
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  <span style={{ fontSize: "0.8rem", fontWeight: 600 }}>
+                    {providerLabel[effectiveProvider] ?? effectiveProvider}
+                  </span>
+                  {config.deployOnSave && (
+                    <span style={{
+                      fontSize: "0.6rem", padding: "0.1rem 0.4rem", borderRadius: "9999px",
+                      background: "var(--primary)", color: "#fff", fontWeight: 600,
+                    }}>AUTO</span>
+                  )}
+                </div>
+                {config.deployAppName && (
+                  <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", fontFamily: "monospace" }}>
+                    {config.deployAppName}
+                  </span>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={handleDeploy}
+                disabled={deploying}
+                style={{
+                  display: "flex", alignItems: "center", gap: "0.4rem",
+                  padding: "0.4rem 1rem", borderRadius: "7px",
+                  border: "none", background: "var(--primary)", color: "#fff",
+                  fontSize: "0.8rem", fontWeight: 600, cursor: deploying ? "wait" : "pointer",
+                  opacity: deploying ? 0.7 : 1,
+                }}
+              >
+                {deploying
+                  ? <><Loader2 className="animate-spin" style={{ width: "0.85rem", height: "0.85rem" }} /> Deploying...</>
+                  : <><Rocket style={{ width: "0.85rem", height: "0.85rem" }} /> Deploy now</>}
+              </button>
+            </div>
+
+            {config.deployProductionUrl && (
+              <a href={config.deployProductionUrl} target="_blank" rel="noopener noreferrer"
+                style={{ display: "flex", alignItems: "center", gap: "0.35rem", fontSize: "0.75rem", color: "var(--primary)", textDecoration: "none" }}>
+                <ExternalLink style={{ width: "0.7rem", height: "0.7rem" }} />
+                {config.deployProductionUrl}
+              </a>
+            )}
+
+            <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer" }}>
+              <input
+                type="checkbox"
+                checked={config.deployOnSave}
+                onChange={(e) => updateConfig((c) => ({ ...c, deployOnSave: e.target.checked }))}
+                style={{ accentColor: "var(--primary)" }}
+              />
+              <span style={{ fontSize: "0.8rem" }}>Auto-deploy when content is saved</span>
+            </label>
           </SettingsCard>
         </>
       )}
 
-      {/* Deploy history */}
+      {/* ── Custom domain ────────────────────────────────── */}
+      {(effectiveProvider === "github-pages") && (
+        <>
+          <SectionHeading>Custom Domain</SectionHeading>
+          <SettingsCard>
+            <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>
+              Point a CNAME record to <code style={{ fontSize: "0.7rem" }}>your-username.github.io</code>, then enter the domain below.
+              With a custom domain, links use root paths instead of <code style={{ fontSize: "0.7rem" }}>/repo-name/</code>.
+            </p>
+            <input
+              type="text"
+              value={config.deployCustomDomain}
+              onChange={(e) => updateConfig((c) => ({ ...c, deployCustomDomain: e.target.value }))}
+              placeholder="boutique.webhouse.app"
+              style={inputStyle}
+            />
+            {config.deployCustomDomain && (
+              <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: 0 }}>
+                Next deploy will serve on <strong>{config.deployCustomDomain}</strong> with root paths.
+              </p>
+            )}
+          </SettingsCard>
+        </>
+      )}
+
+      {/* ── Deploy history ───────────────────────────────── */}
       <SectionHeading>Deploy History</SectionHeading>
       <SettingsCard>
         {deploys.length === 0 ? (
@@ -183,7 +334,6 @@ export function DeploySettingsPanel() {
           </p>
         ) : (
           <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
-            {/* Header */}
             <div style={{
               display: "grid", gridTemplateColumns: "auto 1fr auto auto",
               gap: "0.75rem", padding: "0.35rem 0",
@@ -197,23 +347,14 @@ export function DeploySettingsPanel() {
               <span>URL</span>
             </div>
             {deploys.slice(0, 20).map((d) => (
-              <div
-                key={d.id}
-                style={{
-                  display: "grid", gridTemplateColumns: "auto 1fr auto auto",
-                  gap: "0.75rem", padding: "0.5rem 0",
-                  fontSize: "0.75rem",
-                  borderBottom: "1px solid var(--border)",
-                  alignItems: "center",
-                }}
-              >
+              <div key={d.id} style={{
+                display: "grid", gridTemplateColumns: "auto 1fr auto auto",
+                gap: "0.75rem", padding: "0.5rem 0", fontSize: "0.75rem",
+                borderBottom: "1px solid var(--border)", alignItems: "center",
+              }}>
                 <span style={{ display: "flex", alignItems: "center" }}>
                   {d.status === "success" && <Check style={{ width: "0.8rem", height: "0.8rem", color: "rgb(74 222 128)" }} />}
-                  {d.status === "error" && (
-                    <span title={d.error} style={{ cursor: "help" }}>
-                      <X style={{ width: "0.8rem", height: "0.8rem", color: "var(--destructive)" }} />
-                    </span>
-                  )}
+                  {d.status === "error" && <span title={d.error} style={{ cursor: "help" }}><X style={{ width: "0.8rem", height: "0.8rem", color: "var(--destructive)" }} /></span>}
                   {d.status === "triggered" && <Loader2 className="animate-spin" style={{ width: "0.8rem", height: "0.8rem" }} />}
                 </span>
                 <span style={{ color: "var(--muted-foreground)", fontFamily: "monospace", fontSize: "0.7rem" }}>
@@ -228,9 +369,7 @@ export function DeploySettingsPanel() {
                       <ExternalLink style={{ width: "0.65rem", height: "0.65rem" }} />
                     </a>
                   ) : d.error ? (
-                    <span title={d.error} style={{ fontSize: "0.65rem", color: "var(--destructive)", cursor: "help" }}>
-                      {d.error.slice(0, 40)}
-                    </span>
+                    <span title={d.error} style={{ fontSize: "0.65rem", color: "var(--destructive)", cursor: "help" }}>{d.error.slice(0, 40)}</span>
                   ) : "—"}
                 </span>
               </div>
@@ -238,15 +377,8 @@ export function DeploySettingsPanel() {
           </div>
         )}
         {deploys.length > 0 && (
-          <button
-            type="button"
-            onClick={loadData}
-            style={{
-              display: "flex", alignItems: "center", gap: "0.3rem",
-              padding: "0.3rem 0", border: "none", background: "none",
-              color: "var(--muted-foreground)", fontSize: "0.7rem", cursor: "pointer",
-            }}
-          >
+          <button type="button" onClick={loadData}
+            style={{ display: "flex", alignItems: "center", gap: "0.3rem", padding: "0.3rem 0", border: "none", background: "none", color: "var(--muted-foreground)", fontSize: "0.7rem", cursor: "pointer" }}>
             <RefreshCw style={{ width: "0.65rem", height: "0.65rem" }} /> Refresh
           </button>
         )}
@@ -255,80 +387,11 @@ export function DeploySettingsPanel() {
   );
 }
 
-function CustomDomainField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
-  const [domain, setDomain] = useState(value);
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const changed = domain !== value;
-
-  useEffect(() => { setDomain(value); }, [value]);
-
-  const handleSave = useCallback(async () => {
-    setSaving(true);
-    try {
-      await fetch("/api/admin/site-config", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ deployCustomDomain: domain }),
-      });
-      onChange(domain);
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
-    } finally {
-      setSaving(false);
-    }
-  }, [domain, onChange]);
-
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-      <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>
-        Point a CNAME record to <code style={{ fontSize: "0.7rem" }}>cbroberg.github.io</code>, then enter the domain here.
-        With a custom domain, links use root paths instead of <code style={{ fontSize: "0.7rem" }}>/repo-name/</code>.
-      </p>
-      <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
-        <input
-          type="text"
-          value={domain}
-          onChange={(e) => setDomain(e.target.value)}
-          placeholder="boutique.webhouse.app"
-          style={{
-            flex: 1, padding: "0.45rem 0.75rem", borderRadius: "7px",
-            border: "1px solid var(--border)", background: "var(--background)",
-            color: "var(--foreground)", fontSize: "0.8rem", fontFamily: "monospace",
-          }}
-        />
-        <button
-          type="button"
-          onClick={handleSave}
-          disabled={!changed || saving}
-          style={{
-            padding: "0.4rem 0.8rem", borderRadius: "7px",
-            border: "none", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer",
-            background: changed ? "var(--primary)" : "var(--muted)",
-            color: changed ? "#fff" : "var(--muted-foreground)",
-            opacity: saving ? 0.7 : 1,
-          }}
-        >
-          {saving ? "Saving..." : saved ? "Saved" : "Save"}
-        </button>
-      </div>
-      {domain && (
-        <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: 0 }}>
-          Next deploy will configure GitHub Pages to serve on <strong>{domain}</strong> and build with root paths.
-        </p>
-      )}
-    </div>
-  );
-}
-
 function formatTime(iso: string): string {
   try {
-    const d = new Date(iso);
-    return d.toLocaleString("da-DK", {
+    return new Date(iso).toLocaleString("da-DK", {
       day: "2-digit", month: "2-digit", year: "numeric",
       hour: "2-digit", minute: "2-digit",
     });
-  } catch {
-    return iso;
-  }
+  } catch { return iso; }
 }
