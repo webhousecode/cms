@@ -239,7 +239,10 @@ function SiteSection() {
 	useEffect(() => {
 		fetch("/api/admin/site-config")
 			.then((r) => r.json())
-			.then((d) => setCfg(d));
+			.then((d) => {
+				setCfg(d);
+				if (d.resolvedContentDir) setContentDir(d.resolvedContentDir);
+			});
 		// Load site name + paths from registry
 		fetch("/api/cms/registry")
 			.then((r) => r.json())
