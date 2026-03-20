@@ -7,6 +7,7 @@ import type { CollectionConfig, BlockConfig } from "@webhouse/cms";
 import { FieldEditor } from "./field-editor";
 import { Save, Globe, FileText, Trash2, ArrowLeft, Lock, LockOpen, Copy, Clock, History, Eye, Languages, Sparkles, Settings2, Wand2, ChevronDown, ChevronRight } from "lucide-react";
 import Link from "next/link";
+import { ActionBar, ActionBarBreadcrumb } from "@/components/action-bar";
 import { formatDate, cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -922,27 +923,9 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
   return (
     <div className="flex flex-col">
       {/* Top bar — sticky */}
-      <div className="sticky flex items-center justify-between px-4 border-b border-border shrink-0" style={{ top: 84, height: "48px", zIndex: 30, backgroundColor: "var(--card)" }}>
-        <div className="flex items-center gap-2">
-          <div style={{ width: "1px", height: "1rem", backgroundColor: "var(--border)", alignSelf: "center" }} />
-          <Link
-            href={backHref ?? `/admin/${collection}`}
-            className="text-muted-foreground hover:text-foreground transition-colors"
-            title={`Back to ${backHref === "/admin/curation" ? "Curation Queue" : collection}`}
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </Link>
-          <span className="text-muted-foreground text-sm font-mono">{backHref === "/admin/curation" ? "curation" : collection}</span>
-          <span className="text-muted-foreground">/</span>
-          <span className="text-sm font-mono text-foreground">{doc.slug}</span>
-          {dirty && (
-            <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-400 font-mono">
-              unsaved
-            </span>
-          )}
-        </div>
-
-        <div className="flex items-center gap-2">
+      <ActionBar
+        actions={
+          <div className="flex items-center gap-2">
           {savedAt && !dirty && (
             <span className="text-xs text-muted-foreground">
               Saved {savedAt.toLocaleTimeString()}
@@ -1185,7 +1168,23 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
             </span>
           )}
         </div>
-      </div>
+        }
+      >
+        <div style={{ width: "1px", height: "1rem", backgroundColor: "var(--border)", alignSelf: "center" }} />
+        <Link
+          href={backHref ?? `/admin/${collection}`}
+          className="text-muted-foreground hover:text-foreground transition-colors"
+          title={`Back to ${backHref === "/admin/curation" ? "Curation Queue" : collection}`}
+        >
+          <ArrowLeft className="w-4 h-4" />
+        </Link>
+        <ActionBarBreadcrumb items={[backHref === "/admin/curation" ? "curation" : collection, doc.slug]} />
+        {dirty && (
+          <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-400 font-mono">
+            unsaved
+          </span>
+        )}
+      </ActionBar>
 
       {/* Translations bar — sticky below top bar */}
       {(translations.length > 0 || (locales && locales.length > 0)) && (
