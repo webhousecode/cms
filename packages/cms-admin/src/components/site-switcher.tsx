@@ -12,6 +12,14 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+function HealthDot({ status }: { status?: "up" | "down" | "no-preview" }) {
+  const color = status === "up" ? "rgb(74 222 128)" : status === "down" ? "var(--destructive)" : "var(--muted-foreground)";
+  const title = status === "up" ? "Running" : status === "down" ? "Unreachable" : status === "no-preview" ? "No preview URL" : "Checking...";
+  return (
+    <span style={{ width: "0.5rem", height: "0.5rem", borderRadius: "50%", flexShrink: 0, background: color, marginRight: "0.5rem" }} title={title} />
+  );
+}
+
 interface SiteEntry {
   id: string;
   name: string;
@@ -46,7 +54,7 @@ export function SiteSwitcher() {
   const [loaded, setLoaded] = useState(false);
   const [siteRole, setSiteRole] = useState<string | null>(null);
   const [allowedSiteIds, setAllowedSiteIds] = useState<string[] | null>(null);
-  const [healthStatus, setHealthStatus] = useState<"up" | "down" | "unknown">("unknown");
+  const [healthMap, setHealthMap] = useState<Record<string, "up" | "down" | "no-preview">>({});
 
   const fetchRegistry = useCallback(async () => {
     try {
@@ -89,15 +97,15 @@ export function SiteSwitcher() {
     return () => window.removeEventListener("cms-registry-change", handleChange);
   }, [fetchRegistry]);
 
-  // Check preview site health
+  // Check preview site health for all sites in org
   useEffect(() => {
-    setHealthStatus("unknown");
-    fetch("/api/admin/site-health")
-      .then((r) => r.ok ? r.json() : { status: "unknown" })
-      .then((d: { status: string }) => {
-        setHealthStatus(d.status === "up" ? "up" : d.status === "down" ? "down" : "unknown");
+    setHealthMap({});
+    fetch("/api/admin/site-health?all=true")
+      .then((r) => r.ok ? r.json() : { sites: {} })
+      .then((d: { sites: Record<string, "up" | "down" | "no-preview"> }) => {
+        setHealthMap(d.sites ?? {});
       })
-      .catch(() => setHealthStatus("unknown"));
+      .catch(() => {});
   }, [activeSiteId]);
 
   if (!loaded || !registry) return null;
@@ -132,17 +140,14 @@ export function SiteSwitcher() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-md hover:bg-accent transition-colors focus-visible:outline-none bg-transparent border-0 cursor-pointer">
-        <span style={{
-          width: "0.5rem", height: "0.5rem", borderRadius: "50%", flexShrink: 0,
-          background: healthStatus === "up" ? "rgb(74 222 128)" : healthStatus === "down" ? "var(--destructive)" : "var(--muted-foreground)",
-        }} title={healthStatus === "up" ? "Site is running" : healthStatus === "down" ? "Site is unreachable" : "Checking..."} />
+        <HealthDot status={healthMap[activeSiteId]} />
         <span className="max-w-[140px] truncate">{activeSite?.name ?? "Select site"}</span>
         <ChevronDown className="h-3 w-3 text-muted-foreground" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         {sites.map((site) => (
           <DropdownMenuItem key={site.id} onClick={() => handleSelect(site)}>
-            <Globe className="mr-2 h-4 w-4 text-muted-foreground" />
+            <HealthDot status={healthMap[site.id]} />
             <span className="truncate">{site.name}</span>
             {site.id === activeSiteId && <Check className="ml-auto h-4 w-4" />}
           </DropdownMenuItem>
