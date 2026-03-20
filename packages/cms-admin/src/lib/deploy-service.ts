@@ -459,21 +459,20 @@ async function githubPagesBuildAndDeploy(token: string, repo: string): Promise<s
   // 5. Configure custom domain if set
   if (customDomain) {
     console.log(`[deploy] Setting custom domain: ${customDomain}...`);
-    const domainRes = await fetch(`https://api.github.com/repos/${repo}/pages`, {
-      method: "PUT",
-      headers,
-      body: JSON.stringify({
-        source: { branch: "gh-pages", path: "/" },
-        cname: customDomain,
-      }),
-      signal: AbortSignal.timeout(10000),
-    });
-    if (domainRes.ok || domainRes.status === 204) {
-      pagesUrl = `https://${customDomain}`;
-      console.log(`[deploy] Custom domain configured: ${pagesUrl}`);
-    } else {
-      console.log(`[deploy] Custom domain config returned ${domainRes.status} (non-fatal)`);
-    }
+    // Always use custom domain URL regardless of API response
+    pagesUrl = `https://${customDomain}`;
+    try {
+      await fetch(`https://api.github.com/repos/${repo}/pages`, {
+        method: "PUT",
+        headers,
+        body: JSON.stringify({
+          source: { branch: "gh-pages", path: "/" },
+          cname: customDomain,
+        }),
+        signal: AbortSignal.timeout(10000),
+      });
+    } catch { /* non-fatal */ }
+    console.log(`[deploy] Custom domain: ${pagesUrl}`);
   }
 
   console.log(`[deploy] GitHub Pages URL: ${pagesUrl}`);
