@@ -46,6 +46,7 @@ export function SiteSwitcher() {
   const [loaded, setLoaded] = useState(false);
   const [siteRole, setSiteRole] = useState<string | null>(null);
   const [allowedSiteIds, setAllowedSiteIds] = useState<string[] | null>(null);
+  const [healthStatus, setHealthStatus] = useState<"up" | "down" | "unknown">("unknown");
 
   const fetchRegistry = useCallback(async () => {
     try {
@@ -88,18 +89,6 @@ export function SiteSwitcher() {
     return () => window.removeEventListener("cms-registry-change", handleChange);
   }, [fetchRegistry]);
 
-  if (!loaded || !registry) return null;
-
-  const activeOrg = registry.orgs.find((o) => o.id === activeOrgId) ?? registry.orgs[0];
-  const allSites = activeOrg?.sites ?? [];
-  // Filter to only sites the user has team membership on
-  const sites = allowedSiteIds
-    ? allSites.filter((s) => allowedSiteIds.includes(s.id))
-    : allSites;
-  const activeSite = allSites.find((s) => s.id === activeSiteId) ?? sites[0];
-  const isAdmin = siteRole === "admin";
-  const [healthStatus, setHealthStatus] = useState<"up" | "down" | "unknown">("unknown");
-
   // Check preview site health
   useEffect(() => {
     setHealthStatus("unknown");
@@ -110,6 +99,17 @@ export function SiteSwitcher() {
       })
       .catch(() => setHealthStatus("unknown"));
   }, [activeSiteId]);
+
+  if (!loaded || !registry) return null;
+
+  const activeOrg = registry.orgs.find((o) => o.id === activeOrgId) ?? registry.orgs[0];
+  const allSites = activeOrg?.sites ?? [];
+  // Filter to only sites the user has team membership on
+  const sites = allowedSiteIds
+    ? allSites.filter((s) => allowedSiteIds.includes(s.id))
+    : allSites;
+  const activeSite = allSites.find((s) => s.id === activeSiteId) ?? sites[0];
+  const isAdmin = siteRole === "admin";
 
   // Don't show if only one site (or none)
   if (sites.length <= 1) return null;
