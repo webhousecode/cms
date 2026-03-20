@@ -51,11 +51,8 @@ export class GitHubMediaAdapter implements MediaAdapter {
           const folder = relPath.includes("/")
             ? relPath.substring(0, relPath.lastIndexOf("/"))
             : "";
-          // Use preview site URL if available (serves with correct MIME type, no proxy needed)
-          // Fall back to CMS admin proxy (/api/uploads/) for GitHub API
-          const url = this.previewUrl
-            ? `${this.previewUrl}/${relPath}`
-            : `/api/uploads/${relPath}`;
+          // Always use CMS admin proxy — works even when preview site is down
+          const url = `/api/uploads/${relPath}`;
 
           return {
             name: f.name,
@@ -109,10 +106,7 @@ export class GitHubMediaAdapter implements MediaAdapter {
     const repoPath = `${repoDir}/${filename}`;
     await this.client.putFile(repoPath, content, `cms: upload ${filename}`);
     const relPath = repoPath.replace(/^public\//, "");
-    const url = this.previewUrl
-      ? `${this.previewUrl}/${relPath}`
-      : `/api/uploads/${relPath}`;
-    return { url };
+    return { url: `/api/uploads/${relPath}` };
   }
 
   async deleteFile(folder: string, name: string): Promise<void> {
@@ -206,23 +200,58 @@ export class GitHubMediaAdapter implements MediaAdapter {
     }
 
     const relPath = newRepoPath.replace(/^public\//, "");
-    const url = this.previewUrl
-      ? `${this.previewUrl}/${relPath}`
-      : `/api/uploads/${relPath}`;
-    return { url };
+    return { url: `/api/uploads/${relPath}` };
   }
 
   /* ─── File serving ──────────────────────────────────────── */
 
   async readFile(pathSegments: string[]): Promise<Buffer | null> {
-    // Try public/uploads/ first, then public/ directly
-    const uploadsPath = `public/uploads/${pathSegments.join("/")}`;
-    let file = await this.client.getFileRaw(uploadsPath);
+    const relPath = pathSegments.join("/");
+
+    // 1. Try local disk cache first
+    const cached = await this.readCache(relPath);
+    if (cached) return cached;
+
+    // 2. Fetch from GitHub — try public/ first (most common), then public/uploads/
+    const directPath = `public/${relPath}`;
+    let file = await this.client.getFileRaw(directPath);
     if (!file) {
-      const directPath = `public/${pathSegments.join("/")}`;
-      file = await this.client.getFileRaw(directPath);
+      const uploadsPath = `public/uploads/${relPath}`;
+      file = await this.client.getFileRaw(uploadsPath);
     }
-    return file?.buffer ?? null;
+    if (!file) return null;
+
+    // 3. Cache to disk for next time
+    this.writeCache(relPath, file.buffer).catch(() => {});
+    return file.buffer;
+  }
+
+  /* ─── Disk cache for media files ──────────────────────── */
+
+  private getCachePath(relPath: string): string {
+    const { join } = require("node:path") as typeof import("node:path");
+    const configPath = process.env.CMS_CONFIG_PATH;
+    if (!configPath) return "";
+    const { dirname, resolve } = require("node:path") as typeof import("node:path");
+    return join(dirname(resolve(configPath)), ".cache", "media", this.owner, this.repo, relPath);
+  }
+
+  private async readCache(relPath: string): Promise<Buffer | null> {
+    const cachePath = this.getCachePath(relPath);
+    if (!cachePath) return null;
+    try {
+      const { readFile } = require("node:fs/promises") as typeof import("node:fs/promises");
+      return await readFile(cachePath);
+    } catch { return null; }
+  }
+
+  private async writeCache(relPath: string, data: Buffer): Promise<void> {
+    const cachePath = this.getCachePath(relPath);
+    if (!cachePath) return;
+    const { mkdir, writeFile } = require("node:fs/promises") as typeof import("node:fs/promises");
+    const { dirname } = require("node:path") as typeof import("node:path");
+    await mkdir(dirname(cachePath), { recursive: true });
+    await writeFile(cachePath, data);
   }
 
   /* ─── Interactives ──────────────────────────────────────── */

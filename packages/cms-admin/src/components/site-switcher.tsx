@@ -98,6 +98,18 @@ export function SiteSwitcher() {
     : allSites;
   const activeSite = allSites.find((s) => s.id === activeSiteId) ?? sites[0];
   const isAdmin = siteRole === "admin";
+  const [healthStatus, setHealthStatus] = useState<"up" | "down" | "unknown">("unknown");
+
+  // Check preview site health
+  useEffect(() => {
+    setHealthStatus("unknown");
+    fetch("/api/admin/site-health")
+      .then((r) => r.ok ? r.json() : { status: "unknown" })
+      .then((d: { status: string }) => {
+        setHealthStatus(d.status === "up" ? "up" : d.status === "down" ? "down" : "unknown");
+      })
+      .catch(() => setHealthStatus("unknown"));
+  }, [activeSiteId]);
 
   // Don't show if only one site (or none)
   if (sites.length <= 1) return null;
@@ -120,7 +132,10 @@ export function SiteSwitcher() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-md hover:bg-accent transition-colors focus-visible:outline-none bg-transparent border-0 cursor-pointer">
-        <Globe className="h-4 w-4 text-muted-foreground" />
+        <span style={{
+          width: "0.5rem", height: "0.5rem", borderRadius: "50%", flexShrink: 0,
+          background: healthStatus === "up" ? "rgb(74 222 128)" : healthStatus === "down" ? "var(--destructive)" : "var(--muted-foreground)",
+        }} title={healthStatus === "up" ? "Site is running" : healthStatus === "down" ? "Site is unreachable" : "Checking..."} />
         <span className="max-w-[140px] truncate">{activeSite?.name ?? "Select site"}</span>
         <ChevronDown className="h-3 w-3 text-muted-foreground" />
       </DropdownMenuTrigger>
