@@ -330,8 +330,8 @@ export function AdminHeader() {
         )}
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0 1rem" }}>
-        <OrgSwitcher />
         <SiteSwitcher />
+        <OrgSwitcher />
         <DeployButton />
         <PreviewButton />
         <HelpButton />
