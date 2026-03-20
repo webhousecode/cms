@@ -222,13 +222,12 @@ export function OrgSwitcher() {
     window.dispatchEvent(new CustomEvent("cms-site-change", { detail: { siteId: newSiteId } }));
     window.dispatchEvent(new CustomEvent("cms-registry-change"));
     if (org.sites.length <= 1) {
+      window.dispatchEvent(new CustomEvent("cms-tabs-reset", { detail: { path: "/admin", title: "Dashboard" } }));
       router.push("/admin");
     } else {
-      // Multi-site: reset tabs to just "Sites" so old tabs don't leak
       window.dispatchEvent(new CustomEvent("cms-tabs-reset", { detail: { path: "/admin/sites", title: "Sites" } }));
       router.push("/admin/sites");
     }
-    router.refresh();
     router.refresh();
   }
 
