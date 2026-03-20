@@ -46,39 +46,43 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     );
   }
 
-  // ── Team membership gate ─────────────────────────────────
+  // ── Empty org gate (MUST be first — before any site-dependent code) ──
   const cookieStore = await cookies();
   const session = await getSessionUser(cookieStore);
   const activeSiteId = cookieStore.get("cms-active-site")?.value ?? "no-site";
+  const activeOrgCookie = cookieStore.get("cms-active-org")?.value;
 
-  // Helper: render empty-org layout (OrgSidebar, no collections)
-  const renderEmptyOrg = () => (
-    <SidebarProvider>
-      <OrgSidebar />
-      <SidebarInset>
-        <TabsProvider siteId={activeSiteId}>
-          <AdminHeader />
-          {children}
-        </TabsProvider>
-      </SidebarInset>
-    </SidebarProvider>
-  );
-
-  // Team check — skip for empty orgs (no team file exists)
-  if (session) {
-    try {
-      const members = await getTeamMembers();
-      const isMember = members.some((m) => m.userId === session.sub);
-      if (!isMember) {
-        const accessible = await findFirstAccessibleSite(session.sub);
-        if (accessible) {
-          return <SiteRedirectGate siteId={accessible.siteId} orgId={accessible.orgId} />;
-        }
-        return <NoAccessGate />;
+  if (activeOrgCookie) {
+    const { loadRegistry, findOrg } = await import("@/lib/site-registry");
+    const reg = await loadRegistry();
+    if (reg) {
+      const org = findOrg(reg, activeOrgCookie);
+      if (org && org.sites.length === 0) {
+        return (
+          <SidebarProvider>
+            <OrgSidebar />
+            <SidebarInset>
+              <TabsProvider siteId="no-site">
+                <AdminHeader />
+                {children}
+              </TabsProvider>
+            </SidebarInset>
+          </SidebarProvider>
+        );
       }
-    } catch (err) {
-      if (err instanceof EmptyOrgError) return renderEmptyOrg();
-      throw err;
+    }
+  }
+
+  // ── Team membership gate ─────────────────────────────────
+  if (session) {
+    const members = await getTeamMembers();
+    const isMember = members.some((m) => m.userId === session.sub);
+    if (!isMember) {
+      const accessible = await findFirstAccessibleSite(session.sub);
+      if (accessible) {
+        return <SiteRedirectGate siteId={accessible.siteId} orgId={accessible.orgId} />;
+      }
+      return <NoAccessGate />;
     }
   }
 
@@ -87,7 +91,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   try {
     config = await getAdminConfig();
   } catch (err) {
-    if (err instanceof EmptyOrgError) return renderEmptyOrg();
+    if (err instanceof Error && err.name === "EmptyOrgError") {
+      // Already handled above, but catch any stragglers
+      return (
+        <SidebarProvider><OrgSidebar /><SidebarInset><TabsProvider siteId="no-site"><AdminHeader />{children}</TabsProvider></SidebarInset></SidebarProvider>
+      );
+    }
     const message = err instanceof Error ? err.message : "";
     if (message.includes("GitHub not connected")) {
       const members = await getTeamMembers();
