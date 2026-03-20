@@ -163,19 +163,13 @@ const YEAR_COLORS = ['#2d7a4a', '#2d5a8a', '#a68b2d', '#6a3d8a', '#5a6a7a', '#4a
 
 function pixelStrip(): string {
   const colors = [
-    '#e74c3c', '#e67e22', '#f1c40f', '#2ecc71', '#1abc9c',
-    '#3498db', '#9b59b6', '#e74c3c', '#e67e22', '#f1c40f',
-    '#2ecc71', '#1abc9c', '#3498db', '#9b59b6', '#e74c3c',
-    '#e67e22', '#f1c40f', '#2ecc71', '#1abc9c', '#3498db',
-    '#9b59b6', '#e74c3c', '#e67e22', '#f1c40f', '#2ecc71',
-    '#1abc9c', '#3498db', '#9b59b6', '#e74c3c', '#e67e22',
-    '#f1c40f', '#2ecc71', '#1abc9c', '#3498db', '#9b59b6',
-    '#e74c3c', '#e67e22', '#f1c40f', '#2ecc71', '#1abc9c',
+    '#c41e3a', '#e85d04', '#1e4d8c', '#2563eb', '#06b6d4',
+    '#d4a72c', '#a855f7', '#1e1e1e', '#e5e5e5', '#d4d4d4',
+    '#c4c4c4', '#b4b4b4', '#a4a4a4', '#949494', '#1e1e1e',
+    '#177a45', '#2563eb', '#7c3aed', '#c41e3a', '#e85d04',
   ];
-  const blocks = colors
-    .map((c) => `<span style="display:inline-block;width:16px;height:4px;background:${c};"></span>`)
-    .join('');
-  return `<div style="display:flex;gap:0;overflow:hidden;margin:0.75rem 0;">${blocks}</div>`;
+  const spans = colors.map((c) => `<span style="background-color:${c}"></span>`).join('');
+  return `<div class="pixel-strip">${spans}</div>`;
 }
 
 // ---------------------------------------------------------------------------
@@ -184,164 +178,262 @@ function pixelStrip(): string {
 
 function css(): string {
   return `
-    @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap');
-
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      font-family: 'JetBrains Mono', monospace;
-      background: #fff;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      background: #e8e8e8;
       color: #1a1a1a;
       font-size: 14px;
       line-height: 1.7;
       -webkit-font-smoothing: antialiased;
+      min-height: 100dvh;
     }
 
     a { color: #1a1a1a; text-decoration: none; }
     a:hover { text-decoration: underline; }
 
-    .container {
-      max-width: 640px;
+    .outer {
+      max-width: 56rem;
       margin: 0 auto;
-      padding: 0 1.5rem;
+      padding: 0.75rem 0.5rem;
+    }
+    @media (min-width: 768px) {
+      .outer { padding: 1.5rem; }
+    }
+
+    .main-content {
+      margin-top: 0.75rem;
+      background: #fff;
+      padding: 0.75rem;
+      border: 1px solid #000;
+      box-shadow: 4px 4px 0px 0px rgba(0,0,0,0.2);
+    }
+    @media (min-width: 768px) {
+      .main-content { margin-top: 1.5rem; padding: 1.5rem; }
     }
 
     /* Header */
     .site-header {
-      padding: 2.5rem 0 0;
+      width: 100%;
+    }
+    .header-top {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.75rem 0;
     }
     .site-name {
-      font-size: 1.25rem;
+      font-size: 1rem;
       font-weight: 700;
       letter-spacing: -0.02em;
+      white-space: nowrap;
     }
-    .site-name a { text-decoration: none; }
+    .site-name a { text-decoration: none; color: #000; }
+
+    /* Pixel strip */
+    .pixel-strip {
+      display: flex;
+      height: 0.75rem;
+      flex: 1;
+    }
+    .pixel-strip span { flex: 1; }
+
     .nav-tabs {
       display: flex;
-      gap: 0;
-      margin-top: 0.75rem;
-      border: 1px solid #e5e5e5;
-      border-radius: 4px;
-      overflow: hidden;
-      width: fit-content;
+      gap: 0.25rem;
+      width: 100%;
     }
+    @media (min-width: 768px) { .nav-tabs { gap: 0.25rem; } }
     .nav-tabs a {
+      position: relative;
+      flex: 1;
       display: block;
-      padding: 0.4rem 1rem;
-      font-size: 0.8125rem;
-      font-weight: 400;
-      color: #666;
+      padding: 0.375rem 0.375rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: #000;
       text-decoration: none;
-      border-right: 1px solid #e5e5e5;
-      transition: background 0.15s, color 0.15s;
+      text-align: center;
+      border: 1px solid #000;
+      background: #fff;
+      box-shadow: 2px 2px 0px 0px rgba(0,0,0,0.2);
+      transition: all 0.1s;
     }
-    .nav-tabs a:last-child { border-right: none; }
-    .nav-tabs a:hover { background: #f5f5f5; color: #1a1a1a; }
-    .nav-tabs a.active { color: #1a1a1a; font-weight: 500; }
+    @media (min-width: 768px) {
+      .nav-tabs a { padding: 0.375rem 1rem; font-size: 0.875rem; }
+    }
+    .nav-tabs a:hover {
+      box-shadow: 1px 1px 0px 0px rgba(0,0,0,0.2);
+      transform: translate(1px, 1px);
+      text-decoration: none;
+    }
+    .nav-tabs a:active {
+      box-shadow: none;
+      transform: translate(2px, 2px);
+    }
+    .nav-tabs a.active::before {
+      content: '';
+      position: absolute;
+      left: 0.25rem;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 0.375rem;
+      height: 0.375rem;
+      border-radius: 50%;
+      background: #177a45;
+    }
+    @media (min-width: 768px) {
+      .nav-tabs a.active::before { left: 0.5rem; width: 0.5rem; height: 0.5rem; }
+    }
 
     /* Section */
-    .section { margin-top: 2.5rem; }
+    .section { margin-top: 1.5rem; }
     .section-heading {
-      font-size: 0.875rem;
+      font-size: 1.125rem;
       font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      margin-bottom: 0.75rem;
+      margin-bottom: 0.5rem;
     }
     .section hr {
       border: none;
-      border-top: 1px solid #e5e5e5;
+      border-top: 1px dotted #9ca3af;
       margin-bottom: 1rem;
+    }
+    .section-divider {
+      border: none;
+      border-top: 1px dotted #9ca3af;
+      margin: 1rem 0;
+      width: 100%;
+    }
+
+    /* Home grid layout */
+    .home-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+    @media (min-width: 768px) {
+      .home-grid { grid-template-columns: 2fr 1fr; }
     }
 
     /* Blockquote */
     blockquote {
-      border-left: 3px solid #1a1a1a;
-      padding-left: 1rem;
+      border-left: 4px solid #000;
+      padding: 0.5rem 1rem;
       font-style: italic;
-      color: #444;
+      background: #f9fafb;
       margin: 1rem 0;
     }
 
     /* Button */
     .btn {
-      display: inline-block;
-      padding: 0.4rem 1rem;
-      border: 1px solid #e5e5e5;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.8125rem;
-      color: #1a1a1a;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 0.25rem 0.75rem;
+      border: 1px solid #000;
+      font-family: inherit;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #000;
       text-decoration: none;
-      transition: background 0.15s, border-color 0.15s;
+      background: #fff;
+      cursor: pointer;
+      white-space: nowrap;
+      box-shadow: 2px 2px 0px 0px rgba(0,0,0,0.2);
+      transition: all 0.1s;
     }
     .btn:hover {
-      background: #f5f5f5;
-      border-color: #ccc;
+      box-shadow: 1px 1px 0px 0px rgba(0,0,0,0.2);
+      transform: translate(1px, 1px);
       text-decoration: none;
     }
+    .btn:active {
+      box-shadow: none;
+      transform: translate(2px, 2px);
+    }
+    .btn-green { background: #177a45; color: #fff; }
+    .btn-orange { background: #f2572b; color: #fff; }
+    .btn-gold { background: #d4a72c; color: #000; }
 
     /* Contact table */
     .contact-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 0.8125rem;
+      font-size: 0.875rem;
+      box-shadow: 3px 3px 0px 0px rgba(0,0,0,0.2);
+    }
+    .contact-table tr {
+      border: 1px solid #000;
+      border-top: none;
+      border-left: 4px solid #3498db;
     }
     .contact-table td {
-      padding: 0.4rem 0;
-      border-bottom: 1px solid #f0f0f0;
+      padding: 0.5rem 0.75rem;
+      background: #fff;
     }
     .contact-table td:first-child {
-      color: #666;
+      font-weight: 700;
       width: 100px;
+      border-right: 1px solid #000;
     }
-    .contact-table a { text-decoration: underline; }
+    .contact-table a:hover { text-decoration: underline; }
 
     /* Philosophy sidebar */
     .philosophy-box {
-      border: 1px solid #e5e5e5;
-      padding: 1rem;
-      margin-top: 1rem;
-      font-size: 0.75rem;
-      color: #666;
+      border: 1px solid #000;
+      background: #fff;
+      box-shadow: 3px 3px 0px 0px rgba(0,0,0,0.2);
     }
-    .philosophy-box p {
-      margin-bottom: 0.5rem;
+    .philosophy-box-header {
+      padding: 0.5rem 1rem;
+      border-bottom: 1px solid #000;
+      font-weight: 700;
+      font-size: 0.875rem;
     }
-    .philosophy-box p:last-child { margin-bottom: 0; }
+    .philosophy-box-item {
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+      border-left: 4px solid #6b7280;
+    }
+    .philosophy-box-item + .philosophy-box-item {
+      border-top: 1px solid #000;
+    }
 
     /* Blog table */
     .blog-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 0.8125rem;
+      font-size: 0.875rem;
     }
     .blog-table th {
       text-align: left;
-      font-weight: 500;
-      color: #666;
-      font-size: 0.6875rem;
+      font-weight: 700;
+      color: #1a1a1a;
+      font-size: 0.75rem;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
-      padding: 0.5rem 0.5rem 0.5rem 0;
-      border-bottom: 1px solid #e5e5e5;
+      letter-spacing: 0.05em;
+      padding: 0.5rem 0.5rem;
+      border-bottom: 1px solid #000;
     }
     .blog-table td {
-      padding: 0.6rem 0.5rem 0.6rem 0;
-      border-bottom: 1px solid #f0f0f0;
-      vertical-align: middle;
+      padding: 0.75rem 0.5rem;
+      border-bottom: 1px solid #e5e5e5;
+      vertical-align: top;
     }
     .blog-table .date-col {
       color: #999;
       white-space: nowrap;
-      width: 90px;
+      width: 80px;
+      font-size: 0.8125rem;
     }
     .blog-table .title-col a {
       font-weight: 500;
       color: #1a1a1a;
     }
     .blog-table .tags-col {
-      color: #999;
-      font-size: 0.75rem;
+      color: #666;
+      font-size: 0.8125rem;
     }
 
     /* Category filter pills */
@@ -354,10 +446,9 @@ function css(): string {
     .filter-pill {
       display: inline-block;
       padding: 0.25rem 0.75rem;
-      border: 1px solid #e5e5e5;
+      border: 1px solid #000;
       font-size: 0.75rem;
-      color: #666;
-      border-radius: 2px;
+      color: #1a1a1a;
       text-decoration: none;
     }
     .filter-pill:hover { background: #f5f5f5; text-decoration: none; }
@@ -367,10 +458,9 @@ function css(): string {
     .tag-pill {
       display: inline-block;
       padding: 0.15rem 0.5rem;
-      border: 1px solid #e5e5e5;
-      font-size: 0.6875rem;
-      color: #666;
-      border-radius: 2px;
+      border: 1px solid #000;
+      font-size: 0.75rem;
+      color: #1a1a1a;
       margin: 0.15rem 0.15rem 0.15rem 0;
       text-decoration: none;
     }
@@ -404,9 +494,16 @@ function css(): string {
       .projects-grid-2, .projects-grid-3 { grid-template-columns: 1fr; }
     }
     .project-card {
-      border: 1px solid #e5e5e5;
+      border: 1px solid #000;
       display: flex;
       flex-direction: column;
+      background: #fff;
+      box-shadow: 2px 2px 0px 0px rgba(0,0,0,0.2);
+      transition: all 0.1s;
+    }
+    .project-card:hover {
+      transform: translate(1px, 1px);
+      box-shadow: 1px 1px 0px 0px rgba(0,0,0,0.2);
     }
     .project-card-body {
       padding: 1rem;
@@ -433,9 +530,9 @@ function css(): string {
       border-radius: 2px;
       margin-left: auto;
     }
-    .status-featured { background: #2d7a4a; color: #fff; }
-    .status-active { background: #2d5a8a; color: #fff; }
-    .status-archived { background: #ccc; color: #666; }
+    .status-featured { background: #177a45; color: #fff; }
+    .status-active { background: #177a45; color: #fff; }
+    .status-archived { background: #9ca3af; color: #fff; }
     .project-card-desc {
       font-size: 0.75rem;
       color: #666;
@@ -450,8 +547,8 @@ function css(): string {
       display: block;
       text-align: center;
       padding: 0.5rem;
-      border-top: 1px solid #e5e5e5;
-      font-size: 0.75rem;
+      border-top: 1px solid #000;
+      font-size: 0.8125rem;
       font-weight: 500;
       color: #1a1a1a;
       text-decoration: none;
@@ -472,8 +569,9 @@ function css(): string {
       .skills-grid { grid-template-columns: 1fr; }
     }
     .skill-box {
-      border: 1px solid #e5e5e5;
+      border: 1px solid #000;
       padding: 1rem;
+      background: #fff;
     }
     .skill-box-name {
       font-weight: 700;
@@ -481,7 +579,7 @@ function css(): string {
       text-transform: uppercase;
       letter-spacing: 0.06em;
       margin-bottom: 0.75rem;
-      color: #666;
+      color: #1a1a1a;
     }
     .skill-box-tags {
       display: flex;
@@ -498,7 +596,7 @@ function css(): string {
     }
     .timeline-year {
       display: inline-block;
-      background: #2d7a4a;
+      background: #177a45;
       color: #fff;
       font-size: 0.6875rem;
       font-weight: 700;
@@ -567,13 +665,13 @@ function css(): string {
 
     /* Footer */
     .site-footer {
-      margin-top: 4rem;
-      padding: 2rem 0;
-      border-top: 1px solid #e5e5e5;
-      font-size: 0.6875rem;
-      color: #999;
+      margin-top: 1.5rem;
+      padding: 1rem 0;
+      border-top: 1px solid #000;
+      font-size: 0.625rem;
+      color: #1a1a1a;
       text-transform: uppercase;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.05em;
     }
     .footer-inner {
       display: flex;
@@ -649,21 +747,20 @@ function nav(globals: GlobalsData, activePage: string): string {
   ];
   const links = items
     .map((item) => {
-      const dot = item.key === activePage ? '<span style="color:#2d7a4a;">&#9679;</span> ' : '';
       const cls = item.key === activePage ? ' class="active"' : '';
-      return `<a href="${item.href}"${cls}>${dot}${item.label}</a>`;
+      return `<a href="${item.href}"${cls}>${item.label}</a>`;
     })
     .join('\n      ');
 
   return `
   <header class="site-header">
-    <div class="container">
-      <div class="site-name"><a href="${BASE}/">${globals.siteName}</a></div>
+    <div class="header-top">
+      <span class="site-name"><a href="${BASE}/">${globals.siteName}</a></span>
       ${pixelStrip()}
-      <nav class="nav-tabs">
-      ${links}
-      </nav>
     </div>
+    <nav class="nav-tabs">
+    ${links}
+    </nav>
   </header>`;
 }
 
@@ -726,9 +823,10 @@ function buildHomePage(
 
   return `${head(page.title, globals)}
 <body>
+<div class="outer">
   ${nav(globals, 'home')}
 
-  <main class="container" style="padding-top:1.5rem;padding-bottom:2rem;">
+  <main class="main-content">
 
     <!-- Hello section with sidebar -->
     <div class="home-layout">
@@ -788,6 +886,7 @@ function buildHomePage(
   </main>
 
   ${footer(globals)}
+</div>
 </body>
 </html>`;
 }
@@ -827,9 +926,10 @@ function buildBlogListing(
 
   return `${head(page.title, globals)}
 <body>
+<div class="outer">
   ${nav(globals, 'blog')}
 
-  <main class="container" style="padding-top:1.5rem;padding-bottom:2rem;">
+  <main class="main-content">
 
     <div class="section">
       <div class="section-heading">${page.title}</div>
@@ -865,6 +965,7 @@ function buildBlogListing(
   </main>
 
   ${footer(globals)}
+</div>
 </body>
 </html>`;
 }
@@ -877,9 +978,10 @@ function buildBlogPost(
 
   return `${head(post.data.title, globals)}
 <body>
+<div class="outer">
   ${nav(globals, 'blog')}
 
-  <main class="container" style="padding-top:1.5rem;padding-bottom:2rem;">
+  <main class="main-content">
 
     <a href="${BASE}/blog/" class="back-link">&larr; Back to Blog</a>
 
@@ -897,6 +999,7 @@ function buildBlogPost(
   </main>
 
   ${footer(globals)}
+</div>
 </body>
 </html>`;
 }
@@ -937,9 +1040,10 @@ function buildProjectsListing(
 
   return `${head(page.title, globals)}
 <body>
+<div class="outer">
   ${nav(globals, 'projects')}
 
-  <main class="container" style="padding-top:1.5rem;padding-bottom:2rem;">
+  <main class="main-content">
 
     <div class="section">
       <div class="section-heading">${page.title}</div>
@@ -977,6 +1081,7 @@ function buildProjectsListing(
   </main>
 
   ${footer(globals)}
+</div>
 </body>
 </html>`;
 }
@@ -1015,9 +1120,10 @@ function buildAboutPage(
 
   return `${head(page.title, globals)}
 <body>
+<div class="outer">
   ${nav(globals, 'about')}
 
-  <main class="container" style="padding-top:1.5rem;padding-bottom:2rem;">
+  <main class="main-content">
 
     <div class="section">
       <div class="section-heading">${page.title}</div>
@@ -1053,6 +1159,7 @@ function buildAboutPage(
   </main>
 
   ${footer(globals)}
+</div>
 </body>
 </html>`;
 }

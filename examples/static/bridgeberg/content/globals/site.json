@@ -9,9 +9,15 @@
     "contactCta": "Contact →",
     "contactNote": "(Open for collaboration)",
     "philosophyItems": [
-      { "text": "Less is more." },
-      { "text": "Ship it, then iterate." },
-      { "text": "Automation over repetition." }
+      {
+        "text": "Less is more."
+      },
+      {
+        "text": "Ship it, then iterate."
+      },
+      {
+        "text": "Automation over repetition."
+      }
     ],
     "blogHeading": "Blog",
     "blogDescription": "Writing about development, infrastructure, and everything in between.",
@@ -20,16 +26,39 @@
     "projectsDescription": "In 2025, focused on cloud-native tooling. Building open source infrastructure at Bridgeberg Labs.",
     "projectsCta": "View All Projects →",
     "contactItems": [
-      { "label": "Email", "value": "hello@bridgeberg.dev", "href": "mailto:hello@bridgeberg.dev" },
-      { "label": "Twitter/X", "value": "@bridgeberg", "href": "https://x.com/bridgeberg" },
-      { "label": "GitHub", "value": "bridgeberg", "href": "https://github.com/bridgeberg" }
+      {
+        "label": "Email",
+        "value": "hello@bridgeberg.dev",
+        "href": "mailto:hello@bridgeberg.dev"
+      },
+      {
+        "label": "Twitter/X",
+        "value": "@bridgeberg",
+        "href": "https://x.com/bridgeberg"
+      },
+      {
+        "label": "GitHub",
+        "value": "bridgeberg",
+        "href": "https://github.com/bridgeberg"
+      }
     ],
     "footerCopyright": "© 2020-2026, BRIDGEBERG. ALL RIGHTS RESERVED.",
     "footerLinks": [
-      { "label": "@BRIDGEBERG", "href": "https://x.com/bridgeberg" },
-      { "label": "GITHUB", "href": "https://github.com/bridgeberg" },
-      { "label": "RSS", "href": "/rss.xml" }
+      {
+        "label": "@BRIDGEBERG",
+        "href": "https://x.com/bridgeberg"
+      },
+      {
+        "label": "GITHUB",
+        "href": "https://github.com/bridgeberg"
+      },
+      {
+        "label": "RSS",
+        "href": "/rss.xml"
+      }
     ],
     "instagramUrl": "https://www.instagram.com/webhouse.app"
-  }
+  },
+  "id": "Fk8jVqAwpRuM9X9LWUNJ8",
+  "_fieldMeta": {}
 }

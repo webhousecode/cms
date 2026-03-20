@@ -5,10 +5,16 @@
     "title": "StackFlow",
     "description": "Universal deployment toolkit powered by Rust & WebAssembly.",
     "status": "featured",
-    "icon": "\u26a1",
-    "techTags": ["rust", "wasm", "deployment"],
-    "linkLabel": "GitHub \u2192",
+    "icon": "⚡",
+    "techTags": [
+      "rust",
+      "wasm",
+      "deployment"
+    ],
+    "linkLabel": "GitHub →",
     "linkUrl": "#",
     "sortOrder": 2
-  }
+  },
+  "id": "OyY7768P_JIje4j4uf2-o",
+  "_fieldMeta": {}
 }
