@@ -11,7 +11,7 @@ function setCookie(name: string, value: string) {
 export default function NewOrganizationPage() {
   const router = useRouter();
   const [name, setName] = useState("");
-  const [type, setType] = useState("agency");
+  const [type, setType] = useState("personal");
   const [plan, setPlan] = useState("free");
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
@@ -28,7 +28,7 @@ export default function NewOrganizationPage() {
       const res = await fetch("/api/cms/registry", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "add-org", orgName: name.trim() }),
+        body: JSON.stringify({ action: "add-org", orgName: name.trim(), orgType: type, orgPlan: plan }),
       });
       if (!res.ok) {
         const d = await res.json().catch(() => ({}));

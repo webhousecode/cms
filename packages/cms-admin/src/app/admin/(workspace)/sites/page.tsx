@@ -133,11 +133,11 @@ export default function SitesDashboard() {
       >
         <ActionBarBreadcrumb items={["Sites"]} />
       </ActionBar>
-      <div className="p-8 max-w-5xl">
+      <div style={{ padding: "2rem", maxWidth: "64rem" }}>
         <div style={{
           display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
           padding: "4rem 2rem", border: "1px dashed var(--border)", borderRadius: "12px",
-          background: "var(--card)",
+          background: "var(--card)", marginTop: "1rem",
         }}>
           <Globe style={{ width: "2.5rem", height: "2.5rem", color: "var(--muted-foreground)", marginBottom: "1rem", opacity: 0.5 }} />
           <p style={{ fontSize: "0.95rem", fontWeight: 600, margin: "0 0 0.35rem" }}>No sites yet</p>
