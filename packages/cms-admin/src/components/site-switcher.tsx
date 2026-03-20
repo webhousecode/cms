@@ -221,8 +221,14 @@ export function OrgSwitcher() {
     }
     window.dispatchEvent(new CustomEvent("cms-site-change", { detail: { siteId: newSiteId } }));
     window.dispatchEvent(new CustomEvent("cms-registry-change"));
-    // 1 site → jump straight in, 2+ sites → show Sites overview
-    router.push(org.sites.length <= 1 ? "/admin" : "/admin/sites");
+    if (org.sites.length <= 1) {
+      router.push("/admin");
+    } else {
+      // Multi-site: reset tabs to just "Sites" so old tabs don't leak
+      window.dispatchEvent(new CustomEvent("cms-tabs-reset", { detail: { path: "/admin/sites", title: "Sites" } }));
+      router.push("/admin/sites");
+    }
+    router.refresh();
     router.refresh();
   }
 

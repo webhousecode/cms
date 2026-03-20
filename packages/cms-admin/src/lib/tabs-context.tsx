@@ -237,7 +237,23 @@ export function TabsProvider({ children, siteId }: { children: ReactNode; siteId
       }
     }
     window.addEventListener("cms-site-change", handleSiteChange);
-    return () => window.removeEventListener("cms-site-change", handleSiteChange);
+
+    // Reset tabs to a single tab (used by org-switch to multi-site)
+    function handleTabsReset(e: Event) {
+      const { path, title } = (e as CustomEvent).detail ?? {};
+      if (!path) return;
+      const id = `tab-${Date.now()}`;
+      const fresh = [{ id, path, title: title ?? "Sites" }];
+      setTabs(fresh);
+      setActiveId(id);
+      save(fresh, id, userIdRef.current, siteIdRef.current);
+    }
+    window.addEventListener("cms-tabs-reset", handleTabsReset);
+
+    return () => {
+      window.removeEventListener("cms-site-change", handleSiteChange);
+      window.removeEventListener("cms-tabs-reset", handleTabsReset);
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
