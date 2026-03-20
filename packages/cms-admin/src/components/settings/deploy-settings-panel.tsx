@@ -354,19 +354,7 @@ export function DeploySettingsPanel() {
                 style={{ ...inputStyle, flex: 1 }}
               />
               {config.deployCustomDomain && (
-                <button
-                  type="button"
-                  onClick={() => { navigator.clipboard.writeText(config.deployCustomDomain); }}
-                  title="Copy domain"
-                  style={{
-                    padding: "0.45rem 0.6rem", borderRadius: "7px",
-                    border: "1px solid var(--border)", background: "var(--background)",
-                    color: "var(--muted-foreground)", cursor: "pointer", flexShrink: 0,
-                    fontSize: "0.75rem",
-                  }}
-                >
-                  <Copy style={{ width: "0.8rem", height: "0.8rem" }} />
-                </button>
+                <CopyButton text={config.deployCustomDomain} />
               )}
             </div>
             {config.deployCustomDomain && (
@@ -437,6 +425,29 @@ export function DeploySettingsPanel() {
         )}
       </SettingsCard>
     </>
+  );
+}
+
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      type="button"
+      title="Copy to clipboard"
+      onClick={async () => {
+        await navigator.clipboard.writeText(text);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 1500);
+      }}
+      style={{
+        width: "32px", height: "32px", borderRadius: "6px",
+        border: "1px solid var(--border)", background: "transparent",
+        cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+        color: copied ? "rgb(74 222 128)" : "var(--muted-foreground)", flexShrink: 0,
+      }}
+    >
+      {copied ? <Check style={{ width: "0.85rem", height: "0.85rem" }} /> : <Copy style={{ width: "0.85rem", height: "0.85rem" }} />}
+    </button>
   );
 }
 
