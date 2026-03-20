@@ -9,7 +9,7 @@
  */
 import path from "node:path";
 import { cookies } from "next/headers";
-import { loadRegistry, findSite, getDefaultSite, type SiteEntry } from "./site-registry";
+import { loadRegistry, findSite, findOrg, getDefaultSite, type SiteEntry } from "./site-registry";
 
 /**
  * Cache directory for GitHub-backed sites.
@@ -69,8 +69,18 @@ export async function getActiveSitePaths(): Promise<SitePaths> {
     siteId = registry.defaultSiteId;
   }
 
+  // Guard: if active org has no sites, don't fall through to another org's site
+  const activeOrg = findOrg(registry, orgId);
+  if (activeOrg && activeOrg.sites.length === 0) {
+    throw new Error("No sites in active organization");
+  }
+
   const site = findSite(registry, orgId, siteId);
   if (!site) {
+    // Try first site in active org
+    const firstInOrg = activeOrg?.sites[0];
+    if (firstInOrg) return siteToPaths(firstInOrg);
+    // Only fall back to default if no active org found (shouldn't happen)
     const def = getDefaultSite(registry);
     if (!def) throw new Error("No sites in registry");
     return siteToPaths(def.site);
@@ -126,11 +136,18 @@ export async function getActiveSiteEntry(): Promise<SiteEntry | null> {
     siteId = registry.defaultSiteId;
   }
 
+  // Guard: if active org has no sites, return null (don't leak another org's site)
+  const activeOrg = findOrg(registry, orgId);
+  if (activeOrg && activeOrg.sites.length === 0) return null;
+
   const site = findSite(registry, orgId, siteId);
   if (site) return site;
 
-  const def = getDefaultSite(registry);
-  return def?.site ?? null;
+  // Try first site in active org
+  const firstInOrg = activeOrg?.sites[0];
+  if (firstInOrg) return firstInOrg;
+
+  return null;
 }
 
 /**
