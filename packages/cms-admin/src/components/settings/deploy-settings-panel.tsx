@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { SettingsCard } from "./settings-card";
 import { CustomSelect } from "@/components/ui/custom-select";
-import { Rocket, ExternalLink, Check, X, Loader2, RefreshCw } from "lucide-react";
+import { Rocket, ExternalLink, Check, X, Loader2, RefreshCw, Copy } from "lucide-react";
 
 type DeployProvider = "off" | "vercel" | "netlify" | "flyio" | "cloudflare" | "github-pages" | "custom";
 
@@ -345,16 +345,33 @@ export function DeploySettingsPanel() {
               <span style={{ color: "var(--muted-foreground)" }}>Name:</span> your-subdomain<br />
               <span style={{ color: "var(--muted-foreground)" }}>Target:</span> your-username.github.io.
             </div>
-            <input
-              type="text"
-              value={config.deployCustomDomain}
-              onChange={(e) => updateConfig((c) => ({ ...c, deployCustomDomain: e.target.value }))}
-              placeholder={`${(config.deployAppName.split("/")[1] ?? "my-site").replace(/-site$/, "")}.webhouse.app`}
-              style={inputStyle}
-            />
+            <div style={{ display: "flex", gap: "0.4rem", alignItems: "center" }}>
+              <input
+                type="text"
+                value={config.deployCustomDomain}
+                onChange={(e) => updateConfig((c) => ({ ...c, deployCustomDomain: e.target.value }))}
+                placeholder={`${(config.deployAppName.split("/")[1] ?? "my-site").replace(/-site$/, "")}.webhouse.app`}
+                style={{ ...inputStyle, flex: 1 }}
+              />
+              {config.deployCustomDomain && (
+                <button
+                  type="button"
+                  onClick={() => { navigator.clipboard.writeText(config.deployCustomDomain); }}
+                  title="Copy domain"
+                  style={{
+                    padding: "0.45rem 0.6rem", borderRadius: "7px",
+                    border: "1px solid var(--border)", background: "var(--background)",
+                    color: "var(--muted-foreground)", cursor: "pointer", flexShrink: 0,
+                    fontSize: "0.75rem",
+                  }}
+                >
+                  <Copy style={{ width: "0.8rem", height: "0.8rem" }} />
+                </button>
+              )}
+            </div>
             {config.deployCustomDomain && (
               <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: 0 }}>
-                Next deploy will serve on <strong>{config.deployCustomDomain}</strong> with root paths.
+                Deploys will serve on <strong>{config.deployCustomDomain}</strong> with root paths.
               </p>
             )}
           </SettingsCard>
