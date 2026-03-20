@@ -98,13 +98,6 @@ export default function SitesDashboard() {
 
   useEffect(() => { loadSites(); }, [loadSites]);
 
-  // Re-fetch when org/site changes
-  useEffect(() => {
-    function handleChange() { loadSites(); }
-    window.addEventListener("cms-registry-change", handleChange);
-    return () => window.removeEventListener("cms-registry-change", handleChange);
-  }, [loadSites]);
-
   const activeOrg = registry?.orgs.find((o) => o.id === activeOrgId) ?? registry?.orgs[0];
   // Filter to only sites the user has team access to
   const visibleSites = activeOrg?.sites.filter((s) =>
