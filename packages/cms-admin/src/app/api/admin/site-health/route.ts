@@ -34,9 +34,9 @@ export async function GET(req: NextRequest) {
         if (!url) {
           try {
             const cfg = await readSiteConfigForSite(activeOrgId, site.id);
-            url = cfg?.deployProductionUrl || cfg?.deployCustomDomain
+            url = cfg?.deployCustomDomain
               ? `https://${cfg.deployCustomDomain}`
-              : "";
+              : cfg?.deployProductionUrl || "";
           } catch { /* no config */ }
         }
         if (!url) { results[site.id] = "no-preview"; return; }
