@@ -306,9 +306,18 @@ export function DeploySettingsPanel() {
           <SectionHeading>Custom Domain</SectionHeading>
           <SettingsCard>
             <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>
-              Point a CNAME record to <code style={{ fontSize: "0.7rem" }}>your-username.github.io</code>, then enter the domain below.
-              With a custom domain, links use root paths instead of <code style={{ fontSize: "0.7rem" }}>/repo-name/</code>.
+              Use your own domain instead of <code style={{ fontSize: "0.7rem" }}>username.github.io/repo/</code>.
+              Ask your DNS provider or hostmaster to create a <strong>CNAME</strong> record:
             </p>
+            <div style={{
+              fontSize: "0.72rem", fontFamily: "monospace", padding: "0.4rem 0.6rem",
+              borderRadius: "5px", background: "var(--background)", border: "1px solid var(--border)",
+              color: "var(--foreground)", lineHeight: 1.6,
+            }}>
+              <span style={{ color: "var(--muted-foreground)" }}>Type:</span> CNAME<br />
+              <span style={{ color: "var(--muted-foreground)" }}>Name:</span> your-subdomain<br />
+              <span style={{ color: "var(--muted-foreground)" }}>Target:</span> your-username.github.io.
+            </div>
             <input
               type="text"
               value={config.deployCustomDomain}
