@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Globe, MoreVertical, Settings2, Plus, Copy, Eye } from "lucide-react";
+import { Globe, MoreVertical, Settings2, Plus, Copy, Eye, ExternalLink } from "lucide-react";
 import { useSiteRole } from "@/hooks/use-site-role";
 import { useTabs } from "@/lib/tabs-context";
 import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
@@ -55,6 +55,7 @@ export default function SitesDashboard() {
 
   const [loaded, setLoaded] = useState(false);
   const [healthMap, setHealthMap] = useState<Record<string, "up" | "down" | "no-preview">>({});
+  const [liveUrls, setLiveUrls] = useState<Record<string, string>>({});
 
   useEffect(() => {
     Promise.all([
@@ -82,10 +83,13 @@ export default function SitesDashboard() {
         setLoaded(true);
       })
       .catch(() => setLoaded(true));
-    // Fetch health for all sites
+    // Fetch health + live URLs for all sites
     fetch("/api/admin/site-health?all=true")
       .then((r) => r.ok ? r.json() : { sites: {} })
-      .then((d: { sites: Record<string, "up" | "down" | "no-preview"> }) => setHealthMap(d.sites ?? {}))
+      .then((d: { sites: Record<string, "up" | "down" | "no-preview">; urls?: Record<string, string> }) => {
+        setHealthMap(d.sites ?? {});
+        setLiveUrls(d.urls ?? {});
+      })
       .catch(() => {});
   }, []);
 
@@ -307,6 +311,28 @@ export default function SitesDashboard() {
                 <Eye style={{ width: "0.8rem", height: "0.8rem" }} />
                 Preview
               </button>
+              {liveUrls[site.id] && (
+                <a
+                  href={liveUrls[site.id]}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: "0.375rem",
+                    fontSize: "0.75rem", fontWeight: 500,
+                    padding: "0.3rem 0.75rem", borderRadius: "6px",
+                    background: "transparent",
+                    color: "var(--muted-foreground)",
+                    border: "1px solid var(--border)", cursor: "pointer",
+                    transition: "all 0.2s", textDecoration: "none",
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--primary)"; e.currentTarget.style.color = "var(--primary)"; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--muted-foreground)"; }}
+                >
+                  <ExternalLink style={{ width: "0.8rem", height: "0.8rem" }} />
+                  Live
+                </a>
+              )}
             </div>
           </div>
         ))}
