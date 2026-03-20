@@ -121,7 +121,7 @@ export default function SitesDashboard() {
     );
   }
 
-  if (!registry || !activeOrg) {
+  if (!registry || !activeOrg || activeOrg.sites.length === 0) {
     return (
       <>
       <ActionBar
