@@ -124,7 +124,15 @@ export default function SitesDashboard() {
   }
 
   function enterSite(site: SiteEntry) {
-    persistSiteChoice(site.id);
+    // Navigate immediately — don't reload the current page
+    setCookie("cms-active-site", site.id);
+    setCookie("cms-active-org", activeOrgId);
+    fetch("/api/admin/profile", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ lastActiveOrg: activeOrgId, lastActiveSite: site.id }),
+    }).catch(() => {});
+    window.dispatchEvent(new CustomEvent("cms-site-change", { detail: { siteId: site.id } }));
     router.push("/admin");
     router.refresh();
   }
