@@ -325,6 +325,35 @@ async function githubPagesBuildAndDeploy(token: string, repo: string): Promise<s
     console.log(`[deploy] Added CNAME: ${customDomain}`);
   }
 
+  // F89: Post-build enrichment — inject SEO, OG, JSON-LD, generate sitemap etc.
+  try {
+    const { enrichDist } = await import("./post-build-enrich");
+    const siteEntry = await getActiveSiteEntry();
+    // Read site globals for metadata
+    const contentDir = path.join(sitePaths.projectDir, "content");
+    let siteGlobals: Record<string, unknown> = {};
+    const globalsPath = path.join(contentDir, "globals", "site.json");
+    if (existsSync(globalsPath)) {
+      const raw = JSON.parse(readFileSync(globalsPath, "utf-8"));
+      siteGlobals = raw?.data ?? raw ?? {};
+    }
+    const baseUrl = customDomain
+      ? `https://${customDomain}`
+      : `https://${repo.split("/")[0]}.github.io/${repo.split("/")[1]}`;
+    await enrichDist(distDir, contentDir, {
+      baseUrl,
+      basePath,
+      siteName: (siteGlobals.siteName as string) ?? siteEntry?.name ?? "Site",
+      siteDescription: (siteGlobals.tagline as string) ?? (siteGlobals.siteDescription as string) ?? (siteGlobals.introText as string) ?? "",
+      siteImage: (siteGlobals.heroImage as string) ?? (siteGlobals.ogImage as string),
+      themeColor: (siteGlobals.themeColor as string) ?? "#000000",
+      lang: (siteGlobals.lang as string) ?? "en",
+    });
+  } catch (err) {
+    // Non-fatal — deploy continues even if enrichment fails
+    console.error("[deploy] Post-build enrichment failed:", err instanceof Error ? err.message : err);
+  }
+
   const files = collectFiles(distDir, distDir);
   if (files.length === 0) {
     throw new Error("Build completed but dist/ is empty.");
