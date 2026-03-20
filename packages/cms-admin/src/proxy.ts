@@ -25,7 +25,7 @@ const PUBLIC_PREFIXES = [
   "/favicon",
 ];
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Root path: always show landing page (login is at /admin/login)
