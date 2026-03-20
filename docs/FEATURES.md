@@ -109,6 +109,7 @@
 | F90 | [Marketing Content Bank](#f90-marketing-content-bank) | In progress | [docs/features/F90-marketing-content-bank.md](features/F90-marketing-content-bank.md) |
 | F91 | [Login with GitHub](#f91-login-with-github) | Planned | [docs/features/F91-login-with-github.md](features/F91-login-with-github.md) |
 | F92 | [Desktop PWA](#f92-desktop-pwa) | Planned | [docs/features/F92-desktop-pwa.md](features/F92-desktop-pwa.md) |
+| F93 | [Next.js App Deployment](#f93-nextjs-app-deployment) | Planned | [docs/features/F93-nextjs-deployment.md](features/F93-nextjs-deployment.md) |
 
 ---
 
@@ -395,3 +396,7 @@ Living document of messaging, value propositions, and talking points for the Git
 ## F92 — Desktop PWA
 
 Install webhouse.app CMS admin as a desktop app on Mac/Windows/Linux via Chrome/Edge "Install app". Standalone window without browser chrome, own app icon in dock/taskbar, dark background (#0D0D0D) on launch, Cmd+Tab shows "webhouse.app". Requires: web app manifest, PWA-sized icons (generated from existing SVG), minimal pass-through service worker (no offline caching — admin needs live API). Desktop-first, not mobile. Distinct from F33 (PWA for customer sites).
+
+## F93 — Next.js App Deployment
+
+Deploy Next.js sites (SSR/RSC) to Vercel, Netlify, or Fly.io from the CMS admin with one click. Extends F12 One-Click Deploy beyond static sites. Deploy hooks already built in `deploy-service.ts` (Vercel, Netlify, Cloudflare, custom webhook POST + Fly.io Machines API restart) but untested with real endpoints. Adds deployment status polling (Vercel `/v6/deployments`, Netlify `/api/v1/sites/:id/deploys`, Fly.io machine state). Auto-deploy-on-save option triggers webhook on document publish — fire-and-forget, never blocks save. For Next.js sites with revalidation (F41), content changes push directly via webhook — deploy hooks only needed for layout/code changes. Custom domains managed by hosting provider, not CMS.
