@@ -69,6 +69,7 @@ _Without these, we cannot build and deliver professional sites on the platform._
 | 8e | **F80 Admin Selector Map** | Medium | `data-testid` on all admin UI elements + auto-generated selector map. Foundation for Playwright E2E tests of content editing and site roundtrips. |
 | 8f | **F83 Vibe Site Builder** | Large | THE differentiator. "Describe → Generate → Manage." AI site gen with CMS built in. Only platform with AI gen + CMS + code ownership. |
 | 8g | **F86 Action Bar** | Medium | Standardized sticky action bar below tabs. Consistent buttons, one Save per settings tab. |
+| 8h | **F89 Post-Build Enrichment** | Medium | Auto-inject SEO, OG tags, JSON-LD, favicon, manifest, sitemap, robots.txt, llms.txt into every deployed site. CMS ensures quality regardless of builder. |
 | 9 | **F31 Documentation Site** | Medium | Can't ship without docs. Last because it documents everything above. |
 
 ### Tier 2 — Competitive Edge (v1.1-1.2)

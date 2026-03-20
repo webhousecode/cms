@@ -105,6 +105,7 @@
 | F86 | [Action Bar](#f86-action-bar) | Planned | [docs/features/F86-action-bar.md](features/F86-action-bar.md) |
 | F87 | [Org-Level Global Settings](#f87-org-level-global-settings) | Planned | [docs/features/F87-org-level-settings.md](features/F87-org-level-settings.md) |
 | F88 | [MCP Server Validation](#f88-mcp-server-validation) | Planned | [docs/features/F88-mcp-server-validation.md](features/F88-mcp-server-validation.md) |
+| F89 | [Post-Build Enrichment](#f89-post-build-enrichment) | Planned | [docs/features/F89-post-build-enrichment.md](features/F89-post-build-enrichment.md) |
 
 ---
 
@@ -375,3 +376,7 @@ Shared settings inherited by all sites in an organization. Covers MCP servers, e
 ## F88 — MCP Server Validation
 
 Validate button on MCP server cards that spawns the configured process, performs the MCP initialize handshake, requests tools/list, and displays results. Shows green (connected + tool count) or red (error message). Successful validation expands to show the list of tools the server offers with name and description. Catches wrong commands, missing env vars, and crash-on-startup before users discover failures during AI agent runs.
+
+## F89 — Post-Build Enrichment
+
+CMS-level post-processing of dist/ that injects SEO, favicon, manifest, sitemap, robots.txt, llms.txt, structured data, and AI discoverability — regardless of what the site builder produced. Runs after build.ts but before push to GitHub Pages. Injects/upgrades OpenGraph tags, Twitter Card, JSON-LD (Organization, Product, Article), canonical URLs, favicon links, manifest.json link, theme-color, and generator meta. Generates robots.txt, sitemap.xml, llms.txt, ai-plugin.json, manifest.json. Never overwrites existing tags — only fills gaps. Uses site globals (siteName, tagline, heroImage) for metadata. Ensures every WebHouse site is SEO-optimized and AI-discoverable by default.
