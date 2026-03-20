@@ -124,17 +124,21 @@ export default function SitesDashboard() {
   }
 
   function enterSite(site: SiteEntry) {
-    // Navigate immediately — don't reload the current page
+    // Navigate first, then notify — prevents Sites page from reloading
     setCookie("cms-active-site", site.id);
     setCookie("cms-active-org", activeOrgId);
-    fetch("/api/admin/profile", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ lastActiveOrg: activeOrgId, lastActiveSite: site.id }),
-    }).catch(() => {});
-    window.dispatchEvent(new CustomEvent("cms-site-change", { detail: { siteId: site.id } }));
     router.push("/admin");
     router.refresh();
+    // Fire events after push so header/sidebar update on the new page
+    setTimeout(() => {
+      window.dispatchEvent(new CustomEvent("cms-site-change", { detail: { siteId: site.id } }));
+      window.dispatchEvent(new CustomEvent("cms-registry-change"));
+      fetch("/api/admin/profile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lastActiveOrg: activeOrgId, lastActiveSite: site.id }),
+      }).catch(() => {});
+    }, 50);
   }
 
   function goToSiteSettings(site: SiteEntry) {
