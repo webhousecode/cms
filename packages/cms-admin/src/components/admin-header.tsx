@@ -210,11 +210,11 @@ function DeployButton() {
 
 function PreviewButton() {
   const [previewUrl, setPreviewUrl] = useState<string>("");
+  const [liveUrl, setLiveUrl] = useState<string>("");
   const [siteName, setSiteName] = useState("Site");
   const [fetchKey, setFetchKey] = useState(0);
   const { openTab } = useTabs();
 
-  // Re-fetch on site switch
   useEffect(() => {
     function onSiteChange() { setFetchKey((k) => k + 1); }
     window.addEventListener("cms-site-change", onSiteChange);
@@ -222,11 +222,16 @@ function PreviewButton() {
   }, []);
 
   useEffect(() => {
-    setPreviewUrl(""); // reset while loading
+    setPreviewUrl("");
+    setLiveUrl("");
     fetch("/api/admin/site-config")
       .then((r) => r.ok ? r.json() : null)
       .then((data) => {
         setPreviewUrl(data?.previewSiteUrl ?? "");
+        const live = data?.deployCustomDomain
+          ? `https://${data.deployCustomDomain}`
+          : data?.deployProductionUrl ?? "";
+        setLiveUrl(live);
       })
       .catch(() => {});
     fetch("/api/cms/registry")
@@ -246,7 +251,6 @@ function PreviewButton() {
     if (previewUrl) {
       openTab(`/admin/preview?url=${encodeURIComponent(previewUrl)}`, `Preview: ${siteName}`);
     } else {
-      // No external URL — start built-in preview server
       try {
         const res = await fetch("/api/preview-serve", { method: "POST" });
         if (res.ok) {
@@ -257,38 +261,69 @@ function PreviewButton() {
     }
   }, [previewUrl, siteName, openTab]);
 
-  // "p" shortcut → open preview
+  const openLive = useCallback(() => {
+    if (liveUrl) window.open(liveUrl, "_blank");
+  }, [liveUrl]);
+
+  // "p" = preview, "l" = live site
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (e.key !== "p" || e.metaKey || e.ctrlKey || e.altKey) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
       const tag = (document.activeElement?.tagName ?? "").toLowerCase();
       if (tag === "input" || tag === "textarea" || tag === "select" || (document.activeElement as HTMLElement)?.isContentEditable) return;
-      e.preventDefault();
-      openPreview();
+      if (e.key === "p") { e.preventDefault(); openPreview(); }
+      if (e.key === "l" && liveUrl) { e.preventDefault(); openLive(); }
     }
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [openPreview]);
+  }, [openPreview, openLive, liveUrl]);
 
+  // No live URL → simple preview button (no dropdown)
+  if (!liveUrl) {
+    return (
+      <button
+        type="button"
+        onClick={openPreview}
+        style={{
+          background: "none", border: "1.5px solid var(--border)", cursor: "pointer",
+          color: "var(--muted-foreground)", display: "flex", alignItems: "center", justifyContent: "center",
+          borderRadius: "50%", width: "2rem", height: "2rem", padding: 0,
+        }}
+        className="hover:border-foreground hover:text-foreground transition-colors"
+        title="Preview site (p)"
+      >
+        <ExternalLink style={{ width: "0.9rem", height: "0.9rem" }} />
+      </button>
+    );
+  }
+
+  // Has live URL → dropdown with Preview + Live
   return (
-    <button
-      type="button"
-      onClick={openPreview}
-      style={{
-        background: "none",
-        border: "1.5px solid var(--border)",
-        cursor: "pointer",
-        color: "var(--muted-foreground)",
-        display: "flex", alignItems: "center", justifyContent: "center",
-        borderRadius: "50%",
-        width: "2rem", height: "2rem",
-        padding: 0,
-      }}
-      className="hover:border-foreground hover:text-foreground transition-colors"
-      title="Preview site (p)"
-    >
-      <ExternalLink style={{ width: "0.9rem", height: "0.9rem" }} />
-    </button>
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        style={{
+          background: "none", border: "1.5px solid var(--border)", cursor: "pointer",
+          color: "var(--muted-foreground)", display: "flex", alignItems: "center", justifyContent: "center",
+          borderRadius: "50%", width: "2rem", height: "2rem", padding: 0,
+        }}
+        className="hover:border-foreground hover:text-foreground transition-colors focus-visible:outline-none"
+        title="Preview / Live site"
+      >
+        <ExternalLink style={{ width: "0.9rem", height: "0.9rem" }} />
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" style={{ width: "200px" }}>
+        <DropdownMenuItem onClick={openPreview}>
+          <ExternalLink className="mr-2 h-4 w-4" />
+          Preview
+          <span className="ml-auto text-xs text-muted-foreground">p</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={openLive} style={{ color: "rgb(74 222 128)" }}>
+          <ExternalLink className="mr-2 h-4 w-4" />
+          Live site
+          <span className="ml-auto text-xs text-muted-foreground">l</span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 
