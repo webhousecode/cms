@@ -11,6 +11,11 @@ import path from "node:path";
 import { cookies } from "next/headers";
 import { loadRegistry, findSite, findOrg, getDefaultSite, type SiteEntry } from "./site-registry";
 
+/** Thrown when active org has no sites — caught by layout to show OrgSidebar */
+export class EmptyOrgError extends Error {
+  constructor(message: string) { super(message); this.name = "EmptyOrgError"; }
+}
+
 /**
  * Cache directory for GitHub-backed sites.
  * Uses {cms-admin-dir}/.cache/ so it works in Docker, Fly.io, etc.
@@ -72,7 +77,7 @@ export async function getActiveSitePaths(): Promise<SitePaths> {
   // Guard: if active org has no sites, don't fall through to another org's site
   const activeOrg = findOrg(registry, orgId);
   if (activeOrg && activeOrg.sites.length === 0) {
-    throw new Error("No sites in active organization");
+    throw new EmptyOrgError("No sites in active organization");
   }
 
   const site = findSite(registry, orgId, siteId);
@@ -82,7 +87,7 @@ export async function getActiveSitePaths(): Promise<SitePaths> {
     if (firstInOrg) return siteToPaths(firstInOrg);
     // Only fall back to default if no active org found (shouldn't happen)
     const def = getDefaultSite(registry);
-    if (!def) throw new Error("No sites in registry");
+    if (!def) throw new EmptyOrgError("No sites in registry");
     return siteToPaths(def.site);
   }
 

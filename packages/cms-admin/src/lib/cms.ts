@@ -82,10 +82,10 @@ export async function getAdminCms() {
   return instance.cms;
 }
 
-/** Thrown when the active org has no sites */
-export class EmptyOrgError extends Error {
-  constructor(message: string) { super(message); this.name = "EmptyOrgError"; }
-}
+// Re-export from site-paths (single source of truth)
+import { EmptyOrgError as _EmptyOrgError } from "./site-paths";
+const EmptyOrgError = _EmptyOrgError;
+export { _EmptyOrgError as EmptyOrgError };
 
 export async function getAdminConfig(): Promise<CmsConfig> {
   const registry = await loadRegistry();

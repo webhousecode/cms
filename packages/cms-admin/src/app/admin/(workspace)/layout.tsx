@@ -47,44 +47,47 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
 
   // ── Team membership gate ─────────────────────────────────
-  // Ensure the authenticated user is a member of the active site.
-  // If not, redirect them to a site they DO have access to.
   const cookieStore = await cookies();
   const session = await getSessionUser(cookieStore);
+  const activeSiteId = cookieStore.get("cms-active-site")?.value ?? "no-site";
+
+  // Helper: render empty-org layout (OrgSidebar, no collections)
+  const renderEmptyOrg = () => (
+    <SidebarProvider>
+      <OrgSidebar />
+      <SidebarInset>
+        <TabsProvider siteId={activeSiteId}>
+          <AdminHeader />
+          {children}
+        </TabsProvider>
+      </SidebarInset>
+    </SidebarProvider>
+  );
+
+  // Team check — skip for empty orgs (no team file exists)
   if (session) {
-    const members = await getTeamMembers();
-    const isMember = members.some((m) => m.userId === session.sub);
-    if (!isMember) {
-      const accessible = await findFirstAccessibleSite(session.sub);
-      if (accessible) {
-        return <SiteRedirectGate siteId={accessible.siteId} orgId={accessible.orgId} />;
+    try {
+      const members = await getTeamMembers();
+      const isMember = members.some((m) => m.userId === session.sub);
+      if (!isMember) {
+        const accessible = await findFirstAccessibleSite(session.sub);
+        if (accessible) {
+          return <SiteRedirectGate siteId={accessible.siteId} orgId={accessible.orgId} />;
+        }
+        return <NoAccessGate />;
       }
-      return <NoAccessGate />;
+    } catch (err) {
+      if (err instanceof EmptyOrgError) return renderEmptyOrg();
+      throw err;
     }
   }
-
-  // Read active site ID for tab isolation (key forces React re-mount on site switch)
-  const activeSiteId = cookieStore.get("cms-active-site")?.value ?? "no-site";
 
   // ── Load site config ─────────────────────────────────────
   let config;
   try {
     config = await getAdminConfig();
   } catch (err) {
-    // Empty org (no sites) — org-level layout: minimal sidebar, no tabs, no site-specific nav
-    if (err instanceof EmptyOrgError) {
-      return (
-        <SidebarProvider>
-          <OrgSidebar />
-          <SidebarInset>
-            <TabsProvider siteId={activeSiteId}>
-              <AdminHeader />
-              {children}
-            </TabsProvider>
-          </SidebarInset>
-        </SidebarProvider>
-      );
-    }
+    if (err instanceof EmptyOrgError) return renderEmptyOrg();
     const message = err instanceof Error ? err.message : "";
     if (message.includes("GitHub not connected")) {
       const members = await getTeamMembers();
