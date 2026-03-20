@@ -56,6 +56,7 @@ export default function SitesDashboard() {
   const [loaded, setLoaded] = useState(false);
   const [healthMap, setHealthMap] = useState<Record<string, "up" | "down" | "no-preview">>({});
   const [liveUrls, setLiveUrls] = useState<Record<string, string>>({});
+  const [siteFilter, setSiteFilter] = useState<"all" | "local" | "github" | "live">("all");
 
   const loadSites = useCallback(() => {
     setLoaded(false);
@@ -204,21 +205,7 @@ export default function SitesDashboard() {
     <div className="p-8 max-w-5xl">
 
       {/* Filter tabs */}
-      <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem" }}>
-        {[
-          { label: `All (${visibleSites.length})`, active: true },
-          { label: `Local (${visibleSites.filter(s => s.adapter === "filesystem").length})`, active: false },
-          { label: `GitHub (${visibleSites.filter(s => s.adapter === "github").length})`, active: false },
-        ].map((f) => (
-          <span key={f.label} style={{
-            padding: "0.3rem 0.75rem", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 500,
-            cursor: "pointer",
-            background: f.active ? "var(--secondary)" : "transparent",
-            color: f.active ? "var(--foreground)" : "var(--muted-foreground)",
-            border: f.active ? "1px solid var(--border)" : "1px solid transparent",
-          }}>{f.label}</span>
-        ))}
-      </div>
+      <SiteFilters sites={visibleSites} liveUrls={liveUrls} filter={siteFilter} onFilter={setSiteFilter} />
 
       {/* Site cards grid */}
       <div style={{
@@ -226,7 +213,12 @@ export default function SitesDashboard() {
         gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
         gap: "1rem",
       }}>
-        {visibleSites.map((site) => (
+        {visibleSites.filter((s) => {
+          if (siteFilter === "local") return s.adapter === "filesystem";
+          if (siteFilter === "github") return s.adapter === "github";
+          if (siteFilter === "live") return !!liveUrls[s.id];
+          return true;
+        }).map((site) => (
           <div
             key={site.id}
             style={{
@@ -356,5 +348,40 @@ export default function SitesDashboard() {
       </div>
     </div>
     </>
+  );
+}
+
+function SiteFilters({ sites, liveUrls, filter, onFilter }: {
+  sites: SiteEntry[];
+  liveUrls: Record<string, string>;
+  filter: string;
+  onFilter: (f: "all" | "local" | "github" | "live") => void;
+}) {
+  const liveCount = sites.filter((s) => !!liveUrls[s.id]).length;
+  const tabs = [
+    { key: "all" as const, label: "All", count: sites.length },
+    { key: "local" as const, label: "Local", count: sites.filter((s) => s.adapter === "filesystem").length },
+    { key: "github" as const, label: "GitHub", count: sites.filter((s) => s.adapter === "github").length },
+    { key: "live" as const, label: "Live", count: liveCount },
+  ];
+  return (
+    <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem" }}>
+      {tabs.map((t) => (
+        <button
+          key={t.key}
+          type="button"
+          onClick={() => onFilter(t.key)}
+          style={{
+            padding: "0.3rem 0.75rem", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 500,
+            cursor: "pointer",
+            background: filter === t.key ? "var(--secondary)" : "transparent",
+            color: filter === t.key ? (t.key === "live" ? "rgb(74 222 128)" : "var(--foreground)") : "var(--muted-foreground)",
+            border: filter === t.key ? "1px solid var(--border)" : "1px solid transparent",
+          }}
+        >
+          {t.label} ({t.count})
+        </button>
+      ))}
+    </div>
   );
 }
