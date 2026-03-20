@@ -2,60 +2,46 @@
  * Tools scheduler — runs scheduled backup and link-check jobs.
  *
  * Called every 5 minutes from instrumentation.ts.
- * Reads schedule config from site-config.json, tracks last runs
- * in _data/tools-scheduler-state.json.
+ * Iterates ALL sites across ALL orgs (not just the active site).
+ * Triggers jobs via internal HTTP calls with explicit site cookies.
  */
-import fs from "fs/promises";
-import path from "path";
-import { getActiveSitePaths } from "./site-paths";
-import { readSiteConfig } from "./site-config";
-import { createBackup, pruneBackups } from "./backup-service";
+import { loadRegistry } from "./site-registry";
+import { readSiteConfigForSite } from "./site-config";
 
-interface ToolsSchedulerState {
-  lastBackupRun?: string;  // ISO timestamp
+interface SchedulerState {
+  lastBackupRun?: string;
   lastLinkCheckRun?: string;
 }
 
-async function getStatePath(): Promise<string> {
-  const { dataDir } = await getActiveSitePaths();
-  return path.join(dataDir, "tools-scheduler-state.json");
-}
-
-async function readState(): Promise<ToolsSchedulerState> {
+async function readState(dataDir: string): Promise<SchedulerState> {
   try {
-    const raw = await fs.readFile(await getStatePath(), "utf-8");
-    return JSON.parse(raw) as ToolsSchedulerState;
-  } catch {
-    return {};
-  }
+    const fs = await import("fs/promises");
+    const path = await import("path");
+    const raw = await fs.readFile(path.join(dataDir, "tools-scheduler-state.json"), "utf-8");
+    return JSON.parse(raw) as SchedulerState;
+  } catch { return {}; }
 }
 
-async function writeState(state: ToolsSchedulerState): Promise<void> {
-  const filePath = await getStatePath();
+async function writeState(dataDir: string, state: SchedulerState): Promise<void> {
+  const fs = await import("fs/promises");
+  const path = await import("path");
+  const filePath = path.join(dataDir, "tools-scheduler-state.json");
   await fs.mkdir(path.dirname(filePath), { recursive: true });
   await fs.writeFile(filePath, JSON.stringify(state, null, 2));
 }
 
-function isDue(schedule: "off" | "daily" | "weekly", scheduledTime: string, lastRun?: string): boolean {
+function isDue(schedule: string, scheduledTime: string, lastRun?: string): boolean {
   if (schedule === "off") return false;
-
   const now = new Date();
   const [hh, mm] = scheduledTime.split(":").map(Number);
   const scheduledToday = new Date(now);
   scheduledToday.setHours(hh, mm, 0, 0);
-
-  // Not yet past scheduled time
   if (now < scheduledToday) return false;
-
-  // Weekly: only Mondays
   if (schedule === "weekly" && now.getDay() !== 1) return false;
-
-  // Already ran today?
   if (lastRun) {
     const lastRunDate = new Date(lastRun);
     if (lastRunDate.toDateString() === now.toDateString()) return false;
   }
-
   return true;
 }
 
@@ -64,66 +50,125 @@ export async function runToolsScheduler(): Promise<{ backupRan: boolean; linkChe
   let backupRan = false;
   let linkCheckRan = false;
 
-  try {
-    const [config, state] = await Promise.all([readSiteConfig(), readState()]);
+  const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3010";
+  const serviceToken = process.env.CMS_JWT_SECRET ?? "";
 
-    // ── Scheduled Backup ─────────────────────────────────────
-    if (isDue(config.backupSchedule, config.backupTime, state.lastBackupRun)) {
+  const registry = await loadRegistry();
+  if (!registry) {
+    // Single-site mode — run for default site
+    try {
+      const { readSiteConfig } = await import("./site-config");
+      const { getActiveSitePaths } = await import("./site-paths");
+      const config = await readSiteConfig();
+      const { dataDir } = await getActiveSitePaths();
+      const result = await runForSite(dataDir, config, baseUrl, serviceToken, "", "", errors);
+      backupRan = result.backupRan;
+      linkCheckRan = result.linkCheckRan;
+    } catch (err) {
+      errors.push(`single-site: ${err instanceof Error ? err.message : String(err)}`);
+    }
+    return { backupRan, linkCheckRan, errors };
+  }
+
+  // Multi-site mode — iterate ALL sites in ALL orgs
+  for (const org of registry.orgs) {
+    for (const site of org.sites) {
       try {
-        console.log("[tools-scheduler] Running scheduled backup...");
-        const snapshot = await createBackup("scheduled");
-        if (snapshot.status === "complete") {
-          console.log(`[tools-scheduler] Backup complete: ${snapshot.fileName} (${snapshot.documentCount} docs)`);
-          backupRan = true;
-        } else {
-          errors.push(`backup failed: ${snapshot.error}`);
-        }
+        const config = await readSiteConfigForSite(org.id, site.id);
+        if (!config) continue;
+        if (config.backupSchedule === "off" && config.linkCheckSchedule === "off") continue;
 
-        // Prune old backups
-        const pruned = await pruneBackups(config.backupRetentionDays);
-        if (pruned > 0) {
-          console.log(`[tools-scheduler] Pruned ${pruned} old backups`);
-        }
+        const { getSiteDataDir } = await import("./site-paths");
+        const dataDir = await getSiteDataDir(org.id, site.id);
+        if (!dataDir) continue;
 
-        state.lastBackupRun = new Date().toISOString();
+        const label = `${org.id}/${site.id}`;
+        const result = await runForSite(dataDir, config, baseUrl, serviceToken, org.id, site.id, errors, label);
+        if (result.backupRan) backupRan = true;
+        if (result.linkCheckRan) linkCheckRan = true;
       } catch (err) {
-        errors.push(`backup error: ${err instanceof Error ? err.message : String(err)}`);
+        errors.push(`${org.id}/${site.id}: ${err instanceof Error ? err.message : String(err)}`);
       }
     }
-
-    // ── Scheduled Link Check ─────────────────────────────────
-    if (isDue(config.linkCheckSchedule, config.linkCheckTime ?? "04:00", state.lastLinkCheckRun)) {
-      try {
-        console.log("[tools-scheduler] Running scheduled link check...");
-        // Trigger the link check via internal HTTP call (reuses existing logic)
-        const baseUrl = process.env.NEXTAUTH_URL ?? process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3010";
-        const cronSecret = process.env.CMS_CRON_SECRET;
-        if (cronSecret) {
-          const res = await fetch(`${baseUrl}/api/check-links`, {
-            method: "POST",
-            headers: { Authorization: `Bearer ${cronSecret}` },
-          });
-          if (res.ok) {
-            const data = await res.json() as { total?: number; broken?: number };
-            console.log(`[tools-scheduler] Link check complete: ${data.total} links, ${data.broken} broken`);
-            linkCheckRan = true;
-          } else {
-            errors.push(`link-check failed: HTTP ${res.status}`);
-          }
-        } else {
-          console.log("[tools-scheduler] Skipping link check — CMS_CRON_SECRET not set");
-        }
-
-        state.lastLinkCheckRun = new Date().toISOString();
-      } catch (err) {
-        errors.push(`link-check error: ${err instanceof Error ? err.message : String(err)}`);
-      }
-    }
-
-    await writeState(state);
-  } catch (err) {
-    errors.push(`fatal: ${err instanceof Error ? err.message : String(err)}`);
   }
 
   return { backupRan, linkCheckRan, errors };
+}
+
+async function runForSite(
+  dataDir: string,
+  config: { backupSchedule: string; backupTime: string; backupRetentionDays: number; linkCheckSchedule: string; linkCheckTime?: string },
+  baseUrl: string,
+  serviceToken: string,
+  orgId: string,
+  siteId: string,
+  errors: string[],
+  label?: string,
+): Promise<{ backupRan: boolean; linkCheckRan: boolean }> {
+  let backupRan = false;
+  let linkCheckRan = false;
+  const state = await readState(dataDir);
+  const prefix = label ? `[${label}] ` : "";
+
+  // Build cookie header for internal HTTP calls (sets active org/site)
+  const cookies = orgId && siteId
+    ? `cms-active-org=${orgId}; cms-active-site=${siteId}`
+    : "";
+
+  // ── Scheduled Backup ─────────────────────────────────────
+  if (isDue(config.backupSchedule, config.backupTime, state.lastBackupRun)) {
+    try {
+      console.log(`[tools-scheduler] ${prefix}Running scheduled backup...`);
+      const res = await fetch(`${baseUrl}/api/admin/backup`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-cms-service-token": serviceToken,
+          ...(cookies ? { Cookie: cookies } : {}),
+        },
+        body: JSON.stringify({ trigger: "scheduled" }),
+        signal: AbortSignal.timeout(60000),
+      });
+      if (res.ok) {
+        const data = await res.json() as { fileName?: string; documentCount?: number };
+        console.log(`[tools-scheduler] ${prefix}Backup complete: ${data.fileName} (${data.documentCount} docs)`);
+        backupRan = true;
+      } else {
+        errors.push(`${prefix}backup HTTP ${res.status}`);
+      }
+      state.lastBackupRun = new Date().toISOString();
+    } catch (err) {
+      errors.push(`${prefix}backup error: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }
+
+  // ── Scheduled Link Check ─────────────────────────────────
+  if (isDue(config.linkCheckSchedule, config.linkCheckTime ?? "04:00", state.lastLinkCheckRun)) {
+    try {
+      console.log(`[tools-scheduler] ${prefix}Running scheduled link check...`);
+      const cronSecret = process.env.CMS_CRON_SECRET;
+      if (cronSecret) {
+        const res = await fetch(`${baseUrl}/api/check-links`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${cronSecret}`,
+            ...(cookies ? { Cookie: cookies } : {}),
+          },
+        });
+        if (res.ok) {
+          const data = await res.json() as { total?: number; broken?: number };
+          console.log(`[tools-scheduler] ${prefix}Link check complete: ${data.total} links, ${data.broken} broken`);
+          linkCheckRan = true;
+        } else {
+          errors.push(`${prefix}link-check HTTP ${res.status}`);
+        }
+      }
+      state.lastLinkCheckRun = new Date().toISOString();
+    } catch (err) {
+      errors.push(`${prefix}link-check error: ${err instanceof Error ? err.message : String(err)}`);
+    }
+  }
+
+  await writeState(dataDir, state);
+  return { backupRan, linkCheckRan };
 }
