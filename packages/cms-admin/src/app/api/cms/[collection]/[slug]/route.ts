@@ -8,6 +8,15 @@ import { GitHubStorageAdapter } from "@webhouse/cms";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+/** Check if deployOnSave is enabled (lightweight, no deploy) */
+async function checkDeployOnSave(): Promise<boolean> {
+  try {
+    const { readSiteConfig } = await import("@/lib/site-config");
+    const config = await readSiteConfig();
+    return !!config.deployOnSave;
+  } catch { return false; }
+}
+
 /** Fire-and-forget: trigger deploy if deployOnSave is enabled */
 async function dispatchAutoDeployOnSave() {
   const { readSiteConfig } = await import("@/lib/site-config");
@@ -158,9 +167,10 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
     }
 
     // Auto-deploy on save (fire-and-forget)
+    const willDeploy = await checkDeployOnSave();
     dispatchAutoDeployOnSave().catch(() => {});
 
-    return NextResponse.json(updated);
+    return NextResponse.json({ ...updated, _deployTriggered: willDeploy });
   } catch (err) {
     console.error(err);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
