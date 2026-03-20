@@ -842,7 +842,8 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
       }),
     });
     if (res.ok) {
-      const updated = (await res.json()) as DocSnapshot;
+      const updated = (await res.json()) as DocSnapshot & { _deployTriggered?: boolean };
+      const deployTriggered = updated._deployTriggered;
       setDoc(updated);
       setDirty(false);
       setSavedAt(new Date());
@@ -862,6 +863,30 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
             if (d.ok) toast.success("Site rebuilt", { description: "Preview updated" });
           })
           .catch(() => {});
+      }
+      // Show deploy progress toast
+      if (deployTriggered) {
+        const deployToastId = toast.loading("Deploying...", { description: "Building and pushing to live site" });
+        const pollDeploy = setInterval(async () => {
+          try {
+            const r = await fetch("/api/admin/deploy");
+            if (!r.ok) return;
+            const { deploys } = await r.json() as { deploys: { status: string; url?: string; error?: string; timestamp: string }[] };
+            const latest = deploys[0];
+            if (!latest) return;
+            // Check if this deploy started after our save
+            if (new Date(latest.timestamp).getTime() < Date.now() - 30000) return;
+            if (latest.status === "success") {
+              clearInterval(pollDeploy);
+              toast.success("Deployed", { id: deployToastId, description: latest.url ?? "Site is live" });
+            } else if (latest.status === "error") {
+              clearInterval(pollDeploy);
+              toast.error("Deploy failed", { id: deployToastId, description: latest.error ?? "Check deploy log" });
+            }
+          } catch { /* ignore poll errors */ }
+        }, 2000);
+        // Stop polling after 60s
+        setTimeout(() => clearInterval(pollDeploy), 60000);
       }
     }
     setSaving(false);
