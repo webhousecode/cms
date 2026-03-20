@@ -256,29 +256,6 @@ export default function InteractivesPage() {
     >
       <ActionBar
         actions={<>
-          {/* Search */}
-          <div style={{ position: "relative" }}>
-            <Search style={{ position: "absolute", left: "0.5rem", top: "50%", transform: "translateY(-50%)", width: "0.875rem", height: "0.875rem", color: "var(--muted-foreground)" }} />
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search interactives…"
-              style={{
-                paddingLeft: "1.75rem", paddingRight: query ? "1.75rem" : "0.5rem",
-                paddingTop: "0.25rem", paddingBottom: "0.25rem",
-                borderRadius: "6px", border: "1px solid var(--border)",
-                background: "var(--background)", color: "var(--foreground)",
-                fontSize: "0.8rem", width: "200px",
-              }}
-            />
-            {query && (
-              <button type="button" onClick={() => setQuery("")} style={{ position: "absolute", right: "0.5rem", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)" }}>
-                <X style={{ width: "0.75rem", height: "0.75rem" }} />
-              </button>
-            )}
-          </div>
-
           {/* View toggle */}
           <div style={{ display: "flex", border: "1px solid var(--border)", borderRadius: "6px", overflow: "hidden" }}>
             {(["grid", "list"] as ViewMode[]).map((v) => (
@@ -328,7 +305,6 @@ export default function InteractivesPage() {
         </>}
       >
         <ActionBarBreadcrumb items={["Interactives"]} />
-        <span className="text-xs text-muted-foreground">({filtered.length}/{items.length})</span>
       </ActionBar>
 
       <input
@@ -339,6 +315,25 @@ export default function InteractivesPage() {
         style={{ display: "none" }}
         onChange={(e) => handleUpload(e.target.files)}
       />
+
+      {/* Search — in content area, same pattern as collections */}
+      <div style={{ padding: "1.25rem 1.25rem 0" }}>
+        <div style={{ display: "flex", gap: "0.75rem", marginBottom: "1rem", alignItems: "center" }}>
+          <div style={{ position: "relative", flex: 1, minWidth: "180px" }}>
+            <Search style={{ position: "absolute", left: "0.625rem", top: "50%", transform: "translateY(-50%)", width: "0.8rem", height: "0.8rem", color: "var(--muted-foreground)", pointerEvents: "none" }} />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search…"
+              style={{ width: "100%", paddingLeft: "2rem", paddingRight: "0.75rem", paddingTop: "0.375rem", paddingBottom: "0.375rem", borderRadius: "8px", border: "1px solid var(--border)", background: "var(--card)", fontSize: "0.8rem", color: "var(--foreground)", outline: "none", boxSizing: "border-box" }}
+            />
+          </div>
+          <span style={{ fontSize: "0.75rem", fontFamily: "monospace", color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>
+            {filtered.length}/{items.length}
+          </span>
+        </div>
+      </div>
 
       {/* Content */}
       {loading ? (
