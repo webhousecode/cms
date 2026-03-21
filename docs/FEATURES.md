@@ -111,6 +111,7 @@
 | F92 | [Desktop PWA](#f92-desktop-pwa) | Planned | [docs/features/F92-desktop-pwa.md](features/F92-desktop-pwa.md) |
 | F93 | [Next.js App Deployment](#f93-nextjs-app-deployment) | Planned | [docs/features/F93-nextjs-deployment.md](features/F93-nextjs-deployment.md) |
 | F94 | [Favorites](#f94-favorites) | Planned | [docs/features/F94-favorites.md](features/F94-favorites.md) |
+| F95 | [Cloud Backup Providers](#f95-cloud-backup-providers) | Planned | [docs/features/F95-cloud-backup-providers.md](features/F95-cloud-backup-providers.md) |
 
 ---
 
@@ -404,3 +405,6 @@ Deploy Next.js sites (SSR/RSC) to Vercel, Netlify, or Fly.io from the CMS admin 
 
 ## F94 — Favorites
 Heart-toggle (♡→♥) on any document, collection, interactive, admin page, or tool. Favorited items appear in a collapsible "Favorites" section at the top of the sidebar and as the first group in Command Palette (⌘K). Persisted per-user via `UserState` (F43) — survives browser clears. Heart icon lives in the ActionBar so every page gets it automatically. Supports documents, collections, settings pages, deploy, tools. localStorage for instant read, server sync for persistence.
+
+## F95 — Cloud Backup Providers
+Pluggable cloud storage destinations for CMS backups. Three adapter types: S3-compatible (one adapter covers Scaleway 75GB free EU, Cloudflare R2 10GB free, Backblaze B2 10GB free EU, Hetzner, AWS S3), pCloud REST API (10GB free, Luxembourg EU), WebDAV (Hetzner Storage Box, pCloud WebDAV, any server). Provider picker in Site Settings → Backup with guided setup and "Test connection" button showing free space. Credentials stored securely. Dynamic imports — `@aws-sdk/client-s3` only loaded when S3 selected. Extends F27 (Backup & Restore) with cloud destinations.
