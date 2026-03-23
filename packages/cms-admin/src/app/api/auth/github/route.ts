@@ -24,8 +24,8 @@ export async function GET(request: NextRequest) {
   // Determine callback URL from request (works for both localhost and prod)
   const callbackUrl = `${process.env.NEXTAUTH_URL ?? "http://localhost:3010"}/api/auth/github/callback`;
 
-  // Login needs user:email + read:user for profile; connect needs repo access
-  const scope = isLogin ? "read:user user:email" : "read:org repo user:email read:user";
+  // Both flows need repo scope — login users will also deploy sites
+  const scope = "read:org repo user:email read:user";
 
   const params = new URLSearchParams({
     client_id: clientId,
