@@ -2053,7 +2053,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132 }: 
     onUpdate: ({ editor }) => onChange(editor.storage.markdown.getMarkdown()),
     editorProps: {
       attributes: {
-        class: "rte outline-none min-h-[300px]",
+        class: "rte outline-none min-h-[120px]",
         // Block browser extensions (Grammarly, spell-checkers) from injecting
         // DOM nodes that break React's reconciliation with ProseMirror
         "data-gramm": "false",
