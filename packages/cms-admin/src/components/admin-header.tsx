@@ -171,7 +171,7 @@ function DeployButton() {
       setLastResult({ ok: false, error: "Request failed" });
     }
     setDeploying(false);
-  }, []);
+  }, [provider, router]);
 
   // "d" shortcut → deploy
   useEffect(() => {
