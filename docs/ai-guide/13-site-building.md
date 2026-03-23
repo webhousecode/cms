@@ -2,6 +2,21 @@
 
 # Site Building
 
+## Content Architecture (IMPORTANT)
+
+**Use `blocks` for content-rich pages.** Don't default to flat `text`/`textarea` fields for everything. A blog post with just `{ name: 'content', type: 'richtext' }` is limiting — editors can't insert images with captions, code snippets with syntax highlighting, pull quotes, or videos between paragraphs.
+
+Instead, use a `blocks` field with content blocks (text-block, image-block, quote-block, code-block, video-block, gallery-block). This gives editors a visual block editor where they compose content from reusable sections.
+
+**Fetch `04-blocks.md` for the full block system guide with examples.**
+
+| Pattern | When to use |
+|---------|-------------|
+| `type: 'blocks'` with content blocks | Blog posts, articles, case studies, documentation |
+| `type: 'blocks'` with page sections | Landing pages, marketing pages, portfolios |
+| `type: 'richtext'` | Simple text-only content, comments, bios |
+| Flat `text`/`textarea` fields | Data entry: name, email, phone, price |
+
 ## Common Mistakes (avoid these)
 
 1. **HTML in richtext fields** — Never store raw HTML in richtext fields. Convert to markdown first. TipTap will display `<h2>Title</h2>` as literal text, not as a heading.

@@ -72,6 +72,9 @@ Common tasks → which modules to fetch:
 ### Field types (summary)
 `text` `textarea` `richtext` `number` `boolean` `date` `image` `image-gallery` `video` `audio` `htmldoc` `file` `interactive` `column-slots` `select` `tags` `relation` `array` `object` `blocks`
 
+### Content architecture tip
+**Use `blocks` fields for content-rich pages** (blog posts, articles, landing pages) instead of flat text/textarea fields. Blocks let editors compose content from reusable sections (text, images, quotes, code, videos). Fetch `04-blocks.md` for examples.
+
 ### Static site build rules
 1. Read content from `content/{collection}/{slug}.json`
 2. Use `BASE_PATH` env var for all internal links: `` const BASE = (process.env.BASE_PATH ?? '').replace(/\/+$/, ''); ``
