@@ -175,9 +175,25 @@ The admin auto-detects \`cms.config.ts\` in the project directory. Open http://l
 
 **IMPORTANT:** When you finish building a site, always tell the user how to manage content visually by suggesting the admin options above.
 
-## Reference
+## CMS Documentation (Modular)
 
-See the \`@webhouse/cms\` package CLAUDE.md (in node_modules/@webhouse/cms/CLAUDE.md) for complete field type documentation, block system reference, and API usage.
+The full AI builder guide is split into modules. Fetch only what you need:
+
+**Base URL:** \`https://raw.githubusercontent.com/webhousecode/cms/main/docs/ai-guide/\`
+
+| Module | When to fetch |
+|--------|--------------|
+| \`02-config-reference.md\` | Defining collections, fields, config options |
+| \`03-field-types.md\` | Complete field type reference (20 types) |
+| \`08-nextjs-patterns.md\` | Pages, layouts, generateStaticParams |
+| \`13-site-building.md\` | Common mistakes, patterns, content file rules |
+| \`15-seo.md\` | Metadata, JSON-LD, sitemap, robots.txt |
+| \`18-deployment.md\` | Deployment checklist |
+| \`19-troubleshooting.md\` | Common errors, debugging |
+
+For the full index with all 20 modules: \`https://raw.githubusercontent.com/webhousecode/cms/main/docs/ai-guide/index.md\`
+
+Also see \`node_modules/@webhouse/cms/CLAUDE.md\` for a quick reference with the essentials.
 `);
 
 // ── 3. .mcp.json ────────────────────────────────────────────────────────
