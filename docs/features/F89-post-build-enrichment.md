@@ -107,6 +107,23 @@ await enrichDist(distDir, {
 
 The enrichment module reads `globals/site.json` directly from the project's `content/` directory to extract site-level metadata. No API calls needed — it's a file read.
 
+### F97 SEO Module Coordination
+
+F89 is designed as a **fallback system** — F97 provides **editorial control**. When `_seo` fields exist on a document, F89 uses them as the primary source. Priority chains:
+
+| Output | Priority (highest → lowest) |
+|--------|----------------------------|
+| **Title** | `_seo.metaTitle` → `data.title` → `<title>` tag in HTML |
+| **Description** | `_seo.metaDescription` → `data.excerpt` → `data.description` → content snippet → `siteDescription` |
+| **OG Title** | `_seo.ogTitle` → `_seo.metaTitle` → page title |
+| **OG Description** | `_seo.ogDescription` → `_seo.metaDescription` → page description |
+| **OG Image** | `_seo.ogImage` → `data.featured_image` → `data.heroImage` → first `<img>` → `siteImage` |
+| **Canonical** | `_seo.canonical` → auto-generated from URL |
+| **Robots** | `_seo.robots` (only injected if set) |
+| **JSON-LD** | `_seo.jsonLd` → auto-generated from page type |
+
+F89 does NOT wait for F97 — it works with whatever data is available. When F97 populates `_seo`, F89 automatically uses it.
+
 ## Impact Analysis
 
 ### Files affected

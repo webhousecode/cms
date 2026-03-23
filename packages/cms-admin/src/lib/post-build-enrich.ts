@@ -30,6 +30,18 @@ export interface EnrichmentConfig {
   lang?: string;
 }
 
+/** F97 _seo fields — optional per-document SEO overrides */
+interface SeoOverrides {
+  metaTitle?: string;
+  metaDescription?: string;
+  ogTitle?: string;
+  ogDescription?: string;
+  ogImage?: string;
+  canonical?: string;
+  robots?: string;
+  jsonLd?: Record<string, unknown>;
+}
+
 interface PageInfo {
   /** Relative path from distDir, e.g. "blog/my-post/index.html" */
   relativePath: string;
@@ -45,6 +57,8 @@ interface PageInfo {
   firstImage: string;
   /** Page type inferred from path */
   pageType: "homepage" | "article" | "page";
+  /** F97 _seo overrides from content JSON (when available) */
+  seo: SeoOverrides;
 }
 
 // ── Main entry ──────────────────────────────────────────────
@@ -112,16 +126,28 @@ function collectHtmlFiles(dir: string, baseDir: string): { fullPath: string; rel
 
 // ── Content index ───────────────────────────────────────────
 
-/** Slug → { description, date, collection } from content/ JSON files */
+/** Slug → content data from content/ JSON files */
 interface ContentEntry {
   description: string;
+  title?: string;
   date?: string;
   collection: string;
+  image?: string;
+  /** F97 _seo overrides — first-class SEO input when available */
+  seo: SeoOverrides;
 }
 
 /**
- * Scan content/ directory to build a slug→description map.
- * Reads excerpt, metaDescription, description, or first 160 chars of content.
+ * Scan content/ directory to build a slug→content map.
+ *
+ * Priority chain for descriptions (F97 coordination):
+ *   _seo.metaDescription > excerpt > metaDescription > description > content snippet
+ *
+ * Priority chain for titles:
+ *   _seo.metaTitle > title field
+ *
+ * Priority chain for images:
+ *   _seo.ogImage > featured_image > heroImage > image
  */
 function buildContentIndex(contentDir: string): Map<string, ContentEntry> {
   const index = new Map<string, ContentEntry>();
@@ -138,14 +164,15 @@ function buildContentIndex(contentDir: string): Map<string, ContentEntry> {
         const raw = JSON.parse(readFileSync(path.join(collDir, file), "utf-8"));
         const data = raw?.data ?? raw;
         const slug = raw?.slug ?? file.replace(/\.json$/, "");
+        const seo: SeoOverrides = data._seo ?? {};
 
-        // Find the best description: excerpt > metaDescription > description > content snippet
+        // Description priority: _seo.metaDescription > excerpt > metaDescription > description > content snippet
         let desc = "";
-        if (data.excerpt) desc = data.excerpt;
+        if (seo.metaDescription) desc = seo.metaDescription;
+        else if (data.excerpt) desc = data.excerpt;
         else if (data.metaDescription) desc = data.metaDescription;
         else if (data.description) desc = data.description;
         else if (data.content && typeof data.content === "string") {
-          // Strip markdown, take first 160 chars
           desc = data.content
             .replace(/#{1,6}\s+/g, "")
             .replace(/\*{1,3}([^*]+)\*{1,3}/g, "$1")
@@ -156,12 +183,24 @@ function buildContentIndex(contentDir: string): Map<string, ContentEntry> {
           if (desc.length === 160) desc += "...";
         }
 
-        if (desc) {
-          index.set(`${collection}/${slug}`, { description: desc, date: data.date, collection });
-          // Also index by slug alone for simpler lookups
-          if (!index.has(slug)) {
-            index.set(slug, { description: desc, date: data.date, collection });
-          }
+        // Title priority: _seo.metaTitle > title field
+        const title = seo.metaTitle ?? data.title;
+
+        // Image priority: _seo.ogImage > featured_image > heroImage > image
+        const image = seo.ogImage ?? data.featured_image ?? data.heroImage ?? data.image;
+
+        const entry: ContentEntry = {
+          description: desc,
+          title,
+          date: data.date,
+          collection,
+          image,
+          seo,
+        };
+
+        index.set(`${collection}/${slug}`, entry);
+        if (!index.has(slug)) {
+          index.set(slug, entry);
         }
       } catch { /* skip malformed JSON */ }
     }
@@ -173,17 +212,17 @@ function buildContentIndex(contentDir: string): Map<string, ContentEntry> {
 // ── Page info extraction ────────────────────────────────────
 
 function extractPageInfo(relativePath: string, html: string, config: EnrichmentConfig, contentIndex: Map<string, ContentEntry>): PageInfo {
-  // Extract title
+  // Extract title from HTML
   const titleMatch = html.match(/<title>([^<]*)<\/title>/i);
-  const rawTitle = titleMatch?.[1] ?? config.siteName;
+  const htmlTitle = titleMatch?.[1] ?? config.siteName;
 
-  // Extract meta description from HTML first
+  // Extract meta description from HTML
   const descMatch = html.match(/<meta\s+name=["']description["']\s+content=["']([^"']*)["']/i);
-  let description = descMatch?.[1] ?? "";
+  const htmlDesc = descMatch?.[1] ?? "";
 
-  // Extract first image
+  // Extract first image from HTML
   const imgMatch = html.match(/<img[^>]+src=["']([^"']+)["']/i);
-  const firstImage = imgMatch?.[1] ?? "";
+  const htmlImage = imgMatch?.[1] ?? "";
 
   // Build URL path from relative file path
   let urlPath = "/" + relativePath.replace(/\\/g, "/");
@@ -198,47 +237,61 @@ function extractPageInfo(relativePath: string, html: string, config: EnrichmentC
     pageType = "article";
   }
 
-  // If no meta description in HTML, look up content index by URL path
-  if (!description) {
-    // URL path like /blog/ai-assisted-code-review/ → try "posts/ai-assisted-code-review", "blog/ai-assisted-code-review", then just slug
-    const segments = urlPath.replace(/^\/|\/$/g, "").split("/");
-    if (segments.length >= 2) {
-      const slug = segments[segments.length - 1];
-      const collection = segments[segments.length - 2];
-      // Try exact collection/slug match, then common aliases
-      const entry = contentIndex.get(`${collection}/${slug}`)
-        ?? contentIndex.get(`posts/${slug}`)
-        ?? contentIndex.get(`pages/${slug}`)
-        ?? contentIndex.get(`products/${slug}`)
-        ?? contentIndex.get(`projects/${slug}`)
-        ?? contentIndex.get(slug);
-      if (entry) description = entry.description;
-    } else if (segments.length === 1 && segments[0]) {
-      // Top-level page like /about/ → try pages/about
-      const entry = contentIndex.get(`pages/${segments[0]}`) ?? contentIndex.get(segments[0]);
-      if (entry) description = entry.description;
-    }
+  // Look up content entry by URL path for _seo fields + fallback descriptions
+  let contentEntry: ContentEntry | undefined;
+  const segments = urlPath.replace(/^\/|\/$/g, "").split("/");
+  if (segments.length >= 2) {
+    const slug = segments[segments.length - 1];
+    const collection = segments[segments.length - 2];
+    contentEntry = contentIndex.get(`${collection}/${slug}`)
+      ?? contentIndex.get(`posts/${slug}`)
+      ?? contentIndex.get(`pages/${slug}`)
+      ?? contentIndex.get(`products/${slug}`)
+      ?? contentIndex.get(`projects/${slug}`)
+      ?? contentIndex.get(slug);
+  } else if (segments.length === 1 && segments[0]) {
+    contentEntry = contentIndex.get(`pages/${segments[0]}`) ?? contentIndex.get(segments[0]);
   }
 
-  // Final fallback: site description
-  if (!description) description = config.siteDescription;
+  const seo = contentEntry?.seo ?? {};
+
+  // ── Priority chains (F97 coordination) ──
+  //
+  // Title:       _seo.metaTitle > content data.title > <title> tag in HTML
+  // Description: _seo.metaDescription > data.excerpt/metaDescription/description > <meta description> in HTML > siteDescription
+  // Image:       _seo.ogImage > data.featured_image/heroImage > first <img> in HTML > config.siteImage
+  //
+  // When F97 lands, _seo fields will be populated by the SEO panel / AI agent.
+  // Until then, they're undefined and the chain falls through to content data.
+
+  const title = seo.metaTitle ?? contentEntry?.title ?? htmlTitle;
+  const description = seo.metaDescription ?? contentEntry?.description ?? (htmlDesc || config.siteDescription);
+  const firstImage = seo.ogImage ?? contentEntry?.image ?? htmlImage;
 
   return {
     relativePath,
     fullPath: "",
     urlPath,
-    title: rawTitle,
+    title,
     description,
     firstImage,
     pageType,
+    seo,
   };
 }
 
 // ── Head tag injection ──────────────────────────────────────
 
 function injectHeadTags(html: string, info: PageInfo, config: EnrichmentConfig, lang: string): string {
-  const canonicalUrl = config.baseUrl + config.basePath + info.urlPath;
+  const seo = info.seo;
+  // Canonical: _seo.canonical > auto-generated from URL
+  const canonicalUrl = seo.canonical ?? (config.baseUrl + config.basePath + info.urlPath);
   const ogImage = resolveImage(info.firstImage, config);
+
+  // OG title/desc: _seo.ogTitle > _seo.metaTitle > page title (already resolved in extractPageInfo)
+  const ogTitle = seo.ogTitle ?? info.title;
+  const ogDesc = seo.ogDescription ?? info.description;
+
   const tags: string[] = [];
 
   // Generator
@@ -251,12 +304,17 @@ function injectHeadTags(html: string, info: PageInfo, config: EnrichmentConfig, 
     tags.push(`<link rel="canonical" href="${canonicalUrl}" />`);
   }
 
+  // Robots — only if _seo.robots is set (default: let search engines decide)
+  if (seo.robots && !hasTag(html, "robots")) {
+    tags.push(`<meta name="robots" content="${escAttr(seo.robots)}" />`);
+  }
+
   // OpenGraph
   if (!hasOgTag(html, "og:title")) {
-    tags.push(`<meta property="og:title" content="${escAttr(info.title)}" />`);
+    tags.push(`<meta property="og:title" content="${escAttr(ogTitle)}" />`);
   }
   if (!hasOgTag(html, "og:description")) {
-    tags.push(`<meta property="og:description" content="${escAttr(info.description)}" />`);
+    tags.push(`<meta property="og:description" content="${escAttr(ogDesc)}" />`);
   }
   if (!hasOgTag(html, "og:url")) {
     tags.push(`<meta property="og:url" content="${canonicalUrl}" />`);
@@ -276,10 +334,10 @@ function injectHeadTags(html: string, info: PageInfo, config: EnrichmentConfig, 
     tags.push(`<meta name="twitter:card" content="${ogImage ? "summary_large_image" : "summary"}" />`);
   }
   if (!hasTag(html, "twitter:title")) {
-    tags.push(`<meta name="twitter:title" content="${escAttr(info.title)}" />`);
+    tags.push(`<meta name="twitter:title" content="${escAttr(ogTitle)}" />`);
   }
   if (!hasTag(html, "twitter:description")) {
-    tags.push(`<meta name="twitter:description" content="${escAttr(info.description)}" />`);
+    tags.push(`<meta name="twitter:description" content="${escAttr(ogDesc)}" />`);
   }
   if (ogImage && !hasTag(html, "twitter:image")) {
     tags.push(`<meta name="twitter:image" content="${ogImage}" />`);
@@ -318,53 +376,59 @@ function injectHeadTags(html: string, info: PageInfo, config: EnrichmentConfig, 
 // ── JSON-LD injection ───────────────────────────────────────
 
 function injectJsonLd(html: string, info: PageInfo, config: EnrichmentConfig): string {
-  // Skip if JSON-LD already exists
+  // Skip if JSON-LD already exists in HTML
   if (html.includes("application/ld+json")) return html;
 
-  const canonicalUrl = config.baseUrl + config.basePath + info.urlPath;
+  const canonicalUrl = info.seo.canonical ?? (config.baseUrl + config.basePath + info.urlPath);
   let schema: Record<string, unknown>;
 
-  switch (info.pageType) {
-    case "homepage":
-      schema = {
-        "@context": "https://schema.org",
-        "@type": "WebSite",
-        name: config.siteName,
-        url: config.baseUrl + config.basePath + "/",
-        description: config.siteDescription,
-      };
-      break;
-
-    case "article":
-      schema = {
-        "@context": "https://schema.org",
-        "@type": "Article",
-        headline: info.title,
-        description: info.description,
-        url: canonicalUrl,
-        publisher: {
-          "@type": "Organization",
-          name: config.siteName,
-        },
-      };
-      if (info.firstImage) {
-        schema.image = resolveImage(info.firstImage, config);
-      }
-      break;
-
-    default:
-      schema = {
-        "@context": "https://schema.org",
-        "@type": "WebPage",
-        name: info.title,
-        url: canonicalUrl,
-        description: info.description,
-        isPartOf: {
+  // Priority: _seo.jsonLd > auto-generated from page type
+  if (info.seo.jsonLd && Object.keys(info.seo.jsonLd).length > 0) {
+    // Use custom JSON-LD from F97 SEO module, ensure @context is set
+    schema = { "@context": "https://schema.org", ...info.seo.jsonLd };
+  } else {
+    switch (info.pageType) {
+      case "homepage":
+        schema = {
+          "@context": "https://schema.org",
           "@type": "WebSite",
           name: config.siteName,
           url: config.baseUrl + config.basePath + "/",
-        },
-      };
+          description: config.siteDescription,
+        };
+        break;
+
+      case "article":
+        schema = {
+          "@context": "https://schema.org",
+          "@type": "Article",
+          headline: info.title,
+          description: info.description,
+          url: canonicalUrl,
+          publisher: {
+            "@type": "Organization",
+            name: config.siteName,
+          },
+        };
+        if (info.firstImage) {
+          schema.image = resolveImage(info.firstImage, config);
+        }
+        break;
+
+      default:
+        schema = {
+          "@context": "https://schema.org",
+          "@type": "WebPage",
+          name: info.title,
+          url: canonicalUrl,
+          description: info.description,
+          isPartOf: {
+            "@type": "WebSite",
+            name: config.siteName,
+            url: config.baseUrl + config.basePath + "/",
+          },
+        };
+    }
   }
 
   const script = `\n<script type="application/ld+json">${JSON.stringify(schema)}</script>\n`;
