@@ -59,13 +59,16 @@ export async function enrichDist(distDir: string, contentDir: string, config: En
 
   console.log(`[enrich] Processing ${htmlFiles.length} HTML files...`);
 
+  // Build content index from content/ JSON files for per-page descriptions
+  const contentIndex = buildContentIndex(contentDir);
+
   // Parse all pages for sitemap/llms.txt generation
   const pages: PageInfo[] = [];
 
   for (const file of htmlFiles) {
     let html = readFileSync(file.fullPath, "utf-8");
 
-    const info = extractPageInfo(file.relativePath, html, config);
+    const info = extractPageInfo(file.relativePath, html, config, contentIndex);
     pages.push(info);
 
     // Inject head tags
@@ -86,8 +89,9 @@ export async function enrichDist(distDir: string, contentDir: string, config: En
   generateLlmsTxt(distDir, pages, config);
   generateManifestJson(distDir, config);
   generateAiPluginJson(distDir, config);
+  generateJekyllConfig(distDir);
 
-  console.log(`[enrich] Done — ${htmlFiles.length} pages enriched, 5 files generated`);
+  console.log(`[enrich] Done — ${htmlFiles.length} pages enriched, aux files generated`);
 }
 
 // ── HTML file collection ────────────────────────────────────
@@ -106,16 +110,76 @@ function collectHtmlFiles(dir: string, baseDir: string): { fullPath: string; rel
   return results;
 }
 
+// ── Content index ───────────────────────────────────────────
+
+/** Slug → { description, date, collection } from content/ JSON files */
+interface ContentEntry {
+  description: string;
+  date?: string;
+  collection: string;
+}
+
+/**
+ * Scan content/ directory to build a slug→description map.
+ * Reads excerpt, metaDescription, description, or first 160 chars of content.
+ */
+function buildContentIndex(contentDir: string): Map<string, ContentEntry> {
+  const index = new Map<string, ContentEntry>();
+  if (!existsSync(contentDir)) return index;
+
+  for (const collection of readdirSync(contentDir)) {
+    const collDir = path.join(contentDir, collection);
+    if (!statSync(collDir).isDirectory()) continue;
+    if (collection === "globals") continue; // handled separately
+
+    for (const file of readdirSync(collDir)) {
+      if (!file.endsWith(".json")) continue;
+      try {
+        const raw = JSON.parse(readFileSync(path.join(collDir, file), "utf-8"));
+        const data = raw?.data ?? raw;
+        const slug = raw?.slug ?? file.replace(/\.json$/, "");
+
+        // Find the best description: excerpt > metaDescription > description > content snippet
+        let desc = "";
+        if (data.excerpt) desc = data.excerpt;
+        else if (data.metaDescription) desc = data.metaDescription;
+        else if (data.description) desc = data.description;
+        else if (data.content && typeof data.content === "string") {
+          // Strip markdown, take first 160 chars
+          desc = data.content
+            .replace(/#{1,6}\s+/g, "")
+            .replace(/\*{1,3}([^*]+)\*{1,3}/g, "$1")
+            .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+            .replace(/\n+/g, " ")
+            .trim()
+            .slice(0, 160);
+          if (desc.length === 160) desc += "...";
+        }
+
+        if (desc) {
+          index.set(`${collection}/${slug}`, { description: desc, date: data.date, collection });
+          // Also index by slug alone for simpler lookups
+          if (!index.has(slug)) {
+            index.set(slug, { description: desc, date: data.date, collection });
+          }
+        }
+      } catch { /* skip malformed JSON */ }
+    }
+  }
+
+  return index;
+}
+
 // ── Page info extraction ────────────────────────────────────
 
-function extractPageInfo(relativePath: string, html: string, config: EnrichmentConfig): PageInfo {
+function extractPageInfo(relativePath: string, html: string, config: EnrichmentConfig, contentIndex: Map<string, ContentEntry>): PageInfo {
   // Extract title
   const titleMatch = html.match(/<title>([^<]*)<\/title>/i);
   const rawTitle = titleMatch?.[1] ?? config.siteName;
 
-  // Extract meta description
+  // Extract meta description from HTML first
   const descMatch = html.match(/<meta\s+name=["']description["']\s+content=["']([^"']*)["']/i);
-  const description = descMatch?.[1] ?? config.siteDescription;
+  let description = descMatch?.[1] ?? "";
 
   // Extract first image
   const imgMatch = html.match(/<img[^>]+src=["']([^"']+)["']/i);
@@ -130,9 +194,34 @@ function extractPageInfo(relativePath: string, html: string, config: EnrichmentC
   let pageType: PageInfo["pageType"] = "page";
   if (urlPath === "/" || urlPath === "/index.html") {
     pageType = "homepage";
-  } else if (urlPath.match(/\/blog\/[^/]+\//)) {
+  } else if (urlPath.match(/\/blog\/[^/]+\//) || urlPath.match(/\/posts\/[^/]+\//)) {
     pageType = "article";
   }
+
+  // If no meta description in HTML, look up content index by URL path
+  if (!description) {
+    // URL path like /blog/ai-assisted-code-review/ → try "posts/ai-assisted-code-review", "blog/ai-assisted-code-review", then just slug
+    const segments = urlPath.replace(/^\/|\/$/g, "").split("/");
+    if (segments.length >= 2) {
+      const slug = segments[segments.length - 1];
+      const collection = segments[segments.length - 2];
+      // Try exact collection/slug match, then common aliases
+      const entry = contentIndex.get(`${collection}/${slug}`)
+        ?? contentIndex.get(`posts/${slug}`)
+        ?? contentIndex.get(`pages/${slug}`)
+        ?? contentIndex.get(`products/${slug}`)
+        ?? contentIndex.get(`projects/${slug}`)
+        ?? contentIndex.get(slug);
+      if (entry) description = entry.description;
+    } else if (segments.length === 1 && segments[0]) {
+      // Top-level page like /about/ → try pages/about
+      const entry = contentIndex.get(`pages/${segments[0]}`) ?? contentIndex.get(segments[0]);
+      if (entry) description = entry.description;
+    }
+  }
+
+  // Final fallback: site description
+  if (!description) description = config.siteDescription;
 
   return {
     relativePath,
@@ -321,7 +410,6 @@ function generateRobotsTxt(distDir: string, config: EnrichmentConfig): void {
 
 function generateSitemapXml(distDir: string, pages: PageInfo[], config: EnrichmentConfig): void {
   const sitemapPath = path.join(distDir, "sitemap.xml");
-  if (existsSync(sitemapPath)) return;
 
   const today = new Date().toISOString().split("T")[0];
   const urls = pages
@@ -339,7 +427,6 @@ function generateSitemapXml(distDir: string, pages: PageInfo[], config: Enrichme
 
 function generateLlmsTxt(distDir: string, pages: PageInfo[], config: EnrichmentConfig): void {
   const llmsPath = path.join(distDir, "llms.txt");
-  if (existsSync(llmsPath)) return;
 
   const lines = [
     `# ${config.siteName}`,
@@ -406,6 +493,15 @@ function generateAiPluginJson(distDir: string, config: EnrichmentConfig): void {
 
   writeFileSync(pluginPath, JSON.stringify(plugin, null, 2));
   console.log("  -> .well-known/ai-plugin.json");
+}
+
+/** GitHub Pages _config.yml — tells Jekyll to include dotfile directories like .well-known */
+function generateJekyllConfig(distDir: string): void {
+  const configPath = path.join(distDir, "_config.yml");
+  if (existsSync(configPath)) return;
+
+  writeFileSync(configPath, 'include: [".well-known"]\n');
+  console.log("  -> _config.yml (include .well-known)");
 }
 
 // ── Helpers ─────────────────────────────────────────────────
