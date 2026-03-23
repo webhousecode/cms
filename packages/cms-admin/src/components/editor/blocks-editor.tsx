@@ -36,7 +36,11 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
   const blocks = Array.isArray(value) ? value : [];
   const baseNames = field.blocks ?? blocksConfig.map((b) => b.name);
   // Add builtin blocks that exist in blocksConfig but aren't already in baseNames
-  const builtinNames = ["columns", "video", "audio", "file", "interactive"];
+  const builtinNames = [
+    "columns", "video", "audio", "file", "interactive",
+    "text", "textarea", "richtext", "image", "image-gallery",
+    "number", "boolean", "date", "select", "tags", "htmldoc", "relation",
+  ];
   const configNames = blocksConfig.map((b) => b.name);
   const allowedBlockNames = [
     ...new Set([...baseNames,
