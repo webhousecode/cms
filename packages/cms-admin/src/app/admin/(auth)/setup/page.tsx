@@ -56,30 +56,56 @@ export default function SetupPage() {
 
   return (
     <div style={{
-      minHeight: "100vh",
+      position: "fixed",
+      inset: 0,
+      zIndex: 200,
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      background: "var(--background)",
+      background: "linear-gradient(135deg, hsl(0 0% 5%) 0%, hsl(0 0% 10%) 50%, hsl(35 20% 10%) 100%)",
+      overflow: "hidden",
     }}>
+      {/* Subtle grid pattern */}
+      <div style={{
+        position: "absolute",
+        inset: 0,
+        backgroundImage: "radial-gradient(circle at 1px 1px, hsl(0 0% 20% / 0.3) 1px, transparent 0)",
+        backgroundSize: "32px 32px",
+        pointerEvents: "none",
+      }} />
+
+      {/* Glow accent */}
+      <div style={{
+        position: "absolute",
+        top: "-20%",
+        right: "-10%",
+        width: "600px",
+        height: "600px",
+        borderRadius: "50%",
+        background: "radial-gradient(circle, hsl(38 92% 50% / 0.06) 0%, transparent 70%)",
+        pointerEvents: "none",
+      }} />
+
+      <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
       <div style={{
         width: "100%",
-        maxWidth: "400px",
+        maxWidth: "380px",
         padding: "2rem",
-        background: "var(--card)",
-        border: "1px solid var(--border)",
-        borderRadius: "12px",
-        boxShadow: "0 8px 40px rgba(0,0,0,0.2)",
+        background: "hsl(0 0% 8% / 0.8)",
+        backdropFilter: "blur(12px)",
+        border: "1px solid hsl(0 0% 18%)",
+        borderRadius: "16px",
+        boxShadow: "0 16px 64px rgba(0,0,0,0.4), 0 0 0 1px hsl(0 0% 15%)",
       }}>
-        <div style={{ marginBottom: "1.75rem" }}>
-          <img src="/cms-logo-icon.svg" alt="CMS" style={{ width: "48px", height: "48px", marginBottom: "0.75rem" }} />
-          <h1 style={{ fontSize: "1.125rem", fontWeight: 700, margin: "0 0 0.25rem" }}>Welcome to CMS Admin</h1>
-          <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", margin: 0 }}>Create your admin account to get started</p>
+        <div style={{ marginBottom: "1.75rem", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem" }}>
+          <img src="/webhouse.app-dark-icon.svg" alt="" style={{ width: "72px", height: "72px", marginBottom: "0.25rem" }} />
+          <img src="/webhouse-wordmark-dark.svg" alt="webhouse.app" style={{ height: "28px", width: "auto" }} />
+          <p style={{ fontSize: "0.8rem", color: "hsl(0 0% 50%)", margin: 0 }}>Create your admin account to get started</p>
         </div>
 
         <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-            <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "var(--foreground)" }}>Name</label>
+            <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "hsl(0 0% 70%)" }}>Name</label>
             <input
               type="text"
               value={name}
@@ -87,28 +113,28 @@ export default function SetupPage() {
               required
               autoFocus
               placeholder="Your name"
-              style={{ padding: "0.5rem 0.75rem", borderRadius: "7px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.875rem", outline: "none", width: "100%", boxSizing: "border-box" }}
-              onFocus={(e) => { e.target.style.borderColor = "var(--primary)"; }}
-              onBlur={(e) => { e.target.style.borderColor = "var(--border)"; }}
+              style={{ padding: "0.5rem 0.75rem", borderRadius: "7px", border: "1px solid hsl(0 0% 20%)", background: "hsl(0 0% 10%)", color: "#fff", fontSize: "0.875rem", outline: "none", width: "100%", boxSizing: "border-box" }}
+              onFocus={(e) => { e.target.style.borderColor = "hsl(38 92% 50%)"; }}
+              onBlur={(e) => { e.target.style.borderColor = "hsl(0 0% 20%)"; }}
             />
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-            <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "var(--foreground)" }}>Email</label>
+            <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "hsl(0 0% 70%)" }}>Email</label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
               placeholder="admin@example.com"
-              style={{ padding: "0.5rem 0.75rem", borderRadius: "7px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.875rem", outline: "none", width: "100%", boxSizing: "border-box" }}
-              onFocus={(e) => { e.target.style.borderColor = "var(--primary)"; }}
-              onBlur={(e) => { e.target.style.borderColor = "var(--border)"; }}
+              style={{ padding: "0.5rem 0.75rem", borderRadius: "7px", border: "1px solid hsl(0 0% 20%)", background: "hsl(0 0% 10%)", color: "#fff", fontSize: "0.875rem", outline: "none", width: "100%", boxSizing: "border-box" }}
+              onFocus={(e) => { e.target.style.borderColor = "hsl(38 92% 50%)"; }}
+              onBlur={(e) => { e.target.style.borderColor = "hsl(0 0% 20%)"; }}
             />
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-            <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "var(--foreground)" }}>Password</label>
+            <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "hsl(0 0% 70%)" }}>Password</label>
             <input
               type="password"
               value={password}
@@ -116,9 +142,9 @@ export default function SetupPage() {
               required
               minLength={8}
               placeholder="Min 8 characters"
-              style={{ padding: "0.5rem 0.75rem", borderRadius: "7px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.875rem", outline: "none", width: "100%", boxSizing: "border-box" }}
-              onFocus={(e) => { e.target.style.borderColor = "var(--primary)"; }}
-              onBlur={(e) => { e.target.style.borderColor = "var(--border)"; }}
+              style={{ padding: "0.5rem 0.75rem", borderRadius: "7px", border: "1px solid hsl(0 0% 20%)", background: "hsl(0 0% 10%)", color: "#fff", fontSize: "0.875rem", outline: "none", width: "100%", boxSizing: "border-box" }}
+              onFocus={(e) => { e.target.style.borderColor = "hsl(38 92% 50%)"; }}
+              onBlur={(e) => { e.target.style.borderColor = "hsl(0 0% 20%)"; }}
             />
           </div>
 
@@ -129,11 +155,15 @@ export default function SetupPage() {
           <button
             type="submit"
             disabled={loading}
-            style={{ padding: "0.6rem", borderRadius: "7px", border: "none", background: loading ? "var(--muted)" : "var(--primary)", color: "var(--primary-foreground)", fontSize: "0.875rem", fontWeight: 600, cursor: loading ? "wait" : "pointer", marginTop: "0.25rem" }}
+            style={{ padding: "0.6rem", borderRadius: "7px", border: "none", background: loading ? "hsl(0 0% 25%)" : "hsl(38 92% 50%)", color: loading ? "hsl(0 0% 50%)" : "hsl(38 30% 10%)", fontSize: "0.875rem", fontWeight: 600, cursor: loading ? "wait" : "pointer", marginTop: "0.25rem", transition: "opacity 150ms" }}
           >
             {loading ? "Creating account…" : "Create admin account"}
           </button>
         </form>
+      </div>
+      <p style={{ marginTop: "1.5rem", fontSize: "0.7rem", color: "hsl(0 0% 30%)", letterSpacing: "0.05em" }}>
+        Powered by <span style={{ color: "hsl(38 80% 55%)", fontWeight: 500 }}>@webhouse/cms</span>
+      </p>
       </div>
     </div>
   );
