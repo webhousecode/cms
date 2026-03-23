@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Blog — Bridgeberg</title>
+  <title>Monorepo Architecture with pnpm and Turborepo — Bridgeberg</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -555,15 +555,15 @@
 
   <!-- webhouse.app enrichment -->
   <meta name="generator" content="webhouse.app" />
-  <link rel="canonical" href="https://bridgeberg.webhouse.app/blog/" />
-  <meta property="og:title" content="Blog" />
-  <meta property="og:description" content="Articles about AI-native development, web architecture, CMS design, and lessons from 30 years of building software." />
-  <meta property="og:url" content="https://bridgeberg.webhouse.app/blog/" />
-  <meta property="og:type" content="website" />
+  <link rel="canonical" href="https://bridgeberg.webhouse.app/blog/monorepo-architecture-pnpm-turbo/" />
+  <meta property="og:title" content="Monorepo Architecture with pnpm and Turborepo" />
+  <meta property="og:description" content="How I structure multi-package TypeScript projects with pnpm workspaces and Turborepo — and why it's worth the initial complexity." />
+  <meta property="og:url" content="https://bridgeberg.webhouse.app/blog/monorepo-architecture-pnpm-turbo/" />
+  <meta property="og:type" content="article" />
   <meta property="og:site_name" content="Bridgeberg" />
   <meta name="twitter:card" content="summary" />
-  <meta name="twitter:title" content="Blog" />
-  <meta name="twitter:description" content="Articles about AI-native development, web architecture, CMS design, and lessons from 30 years of building software." />
+  <meta name="twitter:title" content="Monorepo Architecture with pnpm and Turborepo" />
+  <meta name="twitter:description" content="How I structure multi-package TypeScript projects with pnpm workspaces and Turborepo — and why it's worth the initial complexity." />
   <link rel="icon" href="/favicon.ico" />
   <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
   <link rel="manifest" href="/manifest.json" />
@@ -587,102 +587,29 @@
 
   <main class="main-content">
 
-    <div class="section">
-      <div class="section-heading">Blog</div>
-      <hr />
-      <p style="font-size:0.8125rem;color:#666;margin-bottom:1.5rem;">Writing about AI-native development, web architecture, CMS design, and lessons from 30 years of building.</p>
+    <a href="/blog/" class="back-link">&larr; Back to Blog</a>
 
-      <!-- Category filters -->
-      <div class="filter-pills">
-        <span class="filter-pill active">All</span>
-        <span class="filter-pill">Ai</span>
-        <span class="filter-pill">Cms</span>
-        <span class="filter-pill">Infrastructure</span>
-        <span class="filter-pill">Iot</span>
-        <span class="filter-pill">Architecture</span>
-        <span class="filter-pill">Web Development</span>
-      </div>
+    <h1 class="post-title">Monorepo Architecture with pnpm and Turborepo</h1>
 
-      <!-- Tags -->
-      <div class="tags-row">
-        <span class="hash-tag">#ai</span>
-        <span class="hash-tag">#architecture</span>
-        <span class="hash-tag">#career</span>
-        <span class="hash-tag">#claude</span>
-        <span class="hash-tag">#claude-code</span>
-        <span class="hash-tag">#cms</span>
-        <span class="hash-tag">#dns</span>
-        <span class="hash-tag">#infrastructure</span>
-        <span class="hash-tag">#iot</span>
-        <span class="hash-tag">#mcp</span>
-        <span class="hash-tag">#monorepo</span>
-        <span class="hash-tag">#mqtt</span>
-        <span class="hash-tag">#next-js</span>
-        <span class="hash-tag">#pnpm</span>
-        <span class="hash-tag">#senti-cloud</span>
-        <span class="hash-tag">#turborepo</span>
-        <span class="hash-tag">#typescript</span>
-        <span class="hash-tag">#web-development</span>
-        <span class="hash-tag">#webhouse</span>
-        <span class="hash-tag">#workflow</span>
-      </div>
-
-      <!-- Posts table -->
-      <table class="blog-table">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Title</th>
-            <th>Category</th>
-            <th>Tags</th>
-          </tr>
-        </thead>
-        <tbody>
-          
-          <tr>
-            <td class="date-col">03/10/2026</td>
-            <td class="title-col"><a href="/blog/ai-native-development/">AI-Native Development: How I Build Software in 2026</a></td>
-            <td><span style="display:inline-block;background:#6a3d8a;color:#fff;font-size:0.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;padding:2px 8px;border-radius:2px;">ai</span></td>
-            <td class="tags-col">#claude-code #ai #architecture #workflow</td>
-          </tr>
-
-          <tr>
-            <td class="date-col">02/15/2026</td>
-            <td class="title-col"><a href="/blog/building-cms-from-scratch/">Building a CMS from Scratch in 2026</a></td>
-            <td><span style="display:inline-block;background:#666;color:#fff;font-size:0.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;padding:2px 8px;border-radius:2px;">cms</span></td>
-            <td class="tags-col">#cms #typescript #next-js #ai</td>
-          </tr>
-
-          <tr>
-            <td class="date-col">01/20/2026</td>
-            <td class="title-col"><a href="/blog/mcp-servers-dns-management/">MCP Servers: Teaching AI to Manage DNS</a></td>
-            <td><span style="display:inline-block;background:#666;color:#fff;font-size:0.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;padding:2px 8px;border-radius:2px;">infrastructure</span></td>
-            <td class="tags-col">#mcp #dns #claude #infrastructure</td>
-          </tr>
-
-          <tr>
-            <td class="date-col">12/05/2025</td>
-            <td class="title-col"><a href="/blog/decade-building-iot-platform/">A Decade Building an IoT Platform</a></td>
-            <td><span style="display:inline-block;background:#666;color:#fff;font-size:0.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;padding:2px 8px;border-radius:2px;">iot</span></td>
-            <td class="tags-col">#iot #senti-cloud #architecture #mqtt</td>
-          </tr>
-
-          <tr>
-            <td class="date-col">11/10/2025</td>
-            <td class="title-col"><a href="/blog/monorepo-architecture-pnpm-turbo/">Monorepo Architecture with pnpm and Turborepo</a></td>
-            <td><span style="display:inline-block;background:#666;color:#fff;font-size:0.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;padding:2px 8px;border-radius:2px;">architecture</span></td>
-            <td class="tags-col">#monorepo #pnpm #turborepo #typescript</td>
-          </tr>
-
-          <tr>
-            <td class="date-col">10/01/2025</td>
-            <td class="title-col"><a href="/blog/from-1000-websites-to-ai/">From 1,000 Websites to AI-Native: 30 Years of Evolution</a></td>
-            <td><span style="display:inline-block;background:#666;color:#fff;font-size:0.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;padding:2px 8px;border-radius:2px;">web development</span></td>
-            <td class="tags-col">#webhouse #career #web-development #ai</td>
-          </tr>
-        </tbody>
-      </table>
+    <div class="post-meta">
+      <span>Nov 10, 2025</span>
+      <span style="display:inline-block;background:#666;color:#fff;font-size:0.6875rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;padding:2px 8px;border-radius:2px;">architecture</span>
     </div>
+
+    <article class="prose">
+      <h2>Why Monorepo?</h2>
+<p>Every project I've started in the last two years is a monorepo. Not because it's trendy, but because the alternative — maintaining multiple repos with cross-dependencies — becomes a coordination nightmare the moment you have more than two packages that need to stay in sync.</p>
+<p><code>@webhouse/cms</code> is 8 packages. <code>CodePromptMaker</code> is 5. <code>fysiodk-aalborg-sport</code> has a web app and shared packages. In each case, a monorepo means one PR, one CI run, one version bump, and one mental model.</p>
+<h2>The Stack: pnpm + Turborepo</h2>
+<p>I use <strong>pnpm workspaces</strong> for package management and <strong>Turborepo</strong> for build orchestration. The combination gives you:</p>
+<p>- <strong>Strict dependency isolation</strong> — pnpm's non-flat <code>node_modules</code> catches missing dependency declarations that npm and yarn silently allow<br />- <strong>Cached builds</strong> — Turborepo hashes inputs and skips unchanged packages. On a cold CI run, the CMS monorepo builds in ~45 seconds. On a warm cache, it's under 10.<br />- <strong>Parallel execution</strong> — <code>turbo run build</code> builds all packages in the correct dependency order, maximizing parallelism</p>
+<h2>Project Structure Pattern</h2>
+<p>Every monorepo follows the same layout:</p>
+<p>``<code><br />packages/<br />  core/           → shared logic<br />  web/            → Next.js app<br />  cli/            → command-line tools<br />  shared/         → shared types and utilities<br />scripts/          → automation scripts<br />turbo.json        → pipeline config<br />pnpm-workspace.yaml<br /></code>`<code></p>
+<p>The </code>packages/<code> directory contains publishable or deployable units. The </code>scripts/<code> directory contains automation — deploy scripts, code audits, migration helpers. Everything is TypeScript, everything is built with </code>tsup<code>, and every package has a consistent </code>tsconfig.json<code> that extends a root config.</p>
+<h2>Lessons Learned</h2>
+<p>- <strong>Version all packages together.</strong> Keeping independent versions per package sounds flexible but creates dependency hell. All </code>@webhouse/cms-*<code> packages share the same version number.<br />- <strong>Use </code>tsup` for library packages.</strong> It handles CJS/ESM dual output, declaration files, and tree-shaking with zero config.<br />- <strong>Automate the boring parts.</strong> A single script bumps all versions, and GitHub Actions publishes everything via OIDC. No manual npm publish, ever.<br />- <strong>The monorepo is the documentation.</strong> When all related code lives together, the import graph IS the architecture diagram.</p>
+    </article>
 
   </main>
 
@@ -702,6 +629,6 @@
   </footer>
 </div>
 
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"Blog","url":"https://bridgeberg.webhouse.app/blog/","description":"Articles about AI-native development, web architecture, CMS design, and lessons from 30 years of building software.","isPartOf":{"@type":"WebSite","name":"Bridgeberg","url":"https://bridgeberg.webhouse.app/"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Monorepo Architecture with pnpm and Turborepo","description":"How I structure multi-package TypeScript projects with pnpm workspaces and Turborepo — and why it's worth the initial complexity.","url":"https://bridgeberg.webhouse.app/blog/monorepo-architecture-pnpm-turbo/","publisher":{"@type":"Organization","name":"Bridgeberg"}}</script>
 </body>
 </html>
