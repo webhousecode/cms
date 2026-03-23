@@ -113,6 +113,7 @@
 | F94 | [Favorites](#f94-favorites) | Planned | [docs/features/F94-favorites.md](features/F94-favorites.md) |
 | F95 | [Cloud Backup Providers](#f95-cloud-backup-providers) | Planned | [docs/features/F95-cloud-backup-providers.md](features/F95-cloud-backup-providers.md) |
 | F96 | [Embeddable Maps](#f96-embeddable-maps) | Planned | [docs/features/F96-embeddable-maps.md](features/F96-embeddable-maps.md) |
+| F97 | [SEO Module](#f97-seo-module) | Planned | [docs/features/F97-seo-module.md](features/F97-seo-module.md) |
 
 ---
 
@@ -412,3 +413,6 @@ Pluggable cloud storage destinations for CMS backups. Three adapter types: S3-co
 
 ## F96 — Embeddable Maps
 Three ways to embed Google Maps in CMS content: (1) Paste Google Maps embed URL in any richtext field — auto-detected and rendered as responsive iframe. (2) New `map` field type with address autocomplete, draggable pin, and lat/lng/zoom storage — renders a map picker in admin. (3) Pre-built Map Interactive HTML template for the Interactives library with configurable pins, info windows, and style presets. All three options are independent and additive — no breaking changes.
+
+## F97 — SEO Module
+Dedicated SEO management in the CMS admin. Per-document SEO panel in document editor sidebar: meta title (60 chars), meta description (160 chars), keywords (chips), OG image picker, canonical URL, robots directive, JSON-LD template selector. Real-time Google SERP preview + social sharing preview. SEO score (0-100) with 13 rules (title length, keyword density, heading structure, alt tags, internal links, etc.). AI Optimize button runs existing `cms ai seo` agent. SEO Dashboard with all-docs score overview, issue tracker (missing descriptions, duplicate titles), keyword tracker with coverage per keyword. Bulk "Optimize All" for AI SEO across entire site. JSON-LD templates for Article, Product, FAQ, Event, Person, LocalBusiness. Feeds into F89 (Post-Build Enrichment) and F17 (AI Content Index). References F16 (Link Checker) for link health signals.

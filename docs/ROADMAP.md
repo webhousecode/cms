@@ -70,7 +70,8 @@ _Without these, we cannot build and deliver professional sites on the platform._
 | 8e | **F80 Admin Selector Map** | Medium | `data-testid` on all admin UI elements + auto-generated selector map. Foundation for Playwright E2E tests of content editing and site roundtrips. |
 | 8f | **F83 Vibe Site Builder** | Large | THE differentiator. "Describe → Generate → Manage." AI site gen with CMS built in. Only platform with AI gen + CMS + code ownership. |
 | ~~8g~~ | ~~**F86 Action Bar**~~ | ~~Done~~ | ~~All pages migrated. Shipped 2026-03-20~~ |
-| 8h | **F89 Post-Build Enrichment** | Medium | Auto-inject SEO, OG tags, JSON-LD, favicon, manifest, sitemap, robots.txt, llms.txt into every deployed site. CMS ensures quality regardless of builder. |
+| 8h | **F97 SEO Module** | Medium-Large | Per-doc SEO panel, keywords, AI optimize, SERP preview, score, dashboard, JSON-LD templates. The Yoast of webhouse.app. |
+| 8i | **F89 Post-Build Enrichment** | Medium | Auto-inject SEO, OG tags, JSON-LD, favicon, manifest, sitemap, robots.txt, llms.txt. Consumes F97's `_seo` fields. |
 | 9 | **F31 Documentation Site** | Medium | Can't ship without docs. Last because it documents everything above. |
 | 9b | **F90 Marketing Content Bank** | Small | Living doc of messaging, talking points, README copy. Source of truth for product positioning. |
 | 9c | **F96 Embeddable Maps** | Small | Every business site needs a map. Richtext embed, map field type, Interactive template. |
