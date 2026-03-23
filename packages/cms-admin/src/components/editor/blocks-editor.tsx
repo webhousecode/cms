@@ -86,6 +86,7 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
 
   const [pickerQuery, setPickerQuery] = useState("");
   const pickerInputRef = useRef<HTMLInputElement>(null);
+  const [pickerMounted, setPickerMounted] = useState(false);
 
   // Filtered block names based on search query
   const filteredBlockNames = pickerQuery
@@ -96,11 +97,18 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
       })
     : allowedBlockNames;
 
-  // Focus input when picker opens
+  // Focus input when picker opens + force re-render so ref is available for dropdown
   useEffect(() => {
     if (showPicker) {
       setPickerQuery("");
-      setTimeout(() => pickerInputRef.current?.focus(), 0);
+      setPickerMounted(false);
+      // Wait for input to mount, then focus + trigger re-render for dropdown positioning
+      requestAnimationFrame(() => {
+        pickerInputRef.current?.focus();
+        setPickerMounted(true);
+      });
+    } else {
+      setPickerMounted(false);
     }
   }, [showPicker]);
 
@@ -547,8 +555,9 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
                 }}
               />
               {/* Dropdown rendered via fixed positioning to escape overflow:hidden parents */}
-              {pickerInputRef.current && (filteredBlockNames.length > 0 || pickerQuery) && (() => {
-                const r = pickerInputRef.current!.getBoundingClientRect();
+              {pickerMounted && (() => {
+                const r = pickerInputRef.current?.getBoundingClientRect();
+                if (!r) return null;
                 return (
                   <div style={{
                     position: "fixed",
