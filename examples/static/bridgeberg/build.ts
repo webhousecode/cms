@@ -810,7 +810,7 @@ function buildHomePage(
     .join('\n            ');
 
   const philosophyItems = globals.philosophyItems
-    .map((p) => `<p>${p.text}</p>`)
+    .map((p) => `<div class="philosophy-box-item">${p.text}</div>`)
     .join('\n          ');
 
   const featuredProject = projects.find((p) => p.data.status === 'featured');
@@ -828,51 +828,55 @@ function buildHomePage(
 
   <main class="main-content">
 
-    <!-- Hello section with sidebar -->
-    <div class="home-layout">
-      <div>
-        <div class="section">
-          <div class="section-heading">Hello</div>
-          <hr />
-          <p style="font-size:0.875rem;font-weight:500;margin-bottom:0.75rem;">${globals.role}</p>
-          <blockquote>${globals.philosophy}</blockquote>
-          <p style="margin:1rem 0;font-size:0.8125rem;color:#444;">${globals.introText}</p>
+    <!-- Hello section with philosophy sidebar -->
+    <div class="section">
+      <div class="section-heading">Hello</div>
+      <hr />
+      <div class="home-grid">
+        <div>
+          <p style="font-size:0.875rem;margin-bottom:1rem;">${globals.role}</p>
+          <blockquote><em>${globals.philosophy}</em></blockquote>
+          <p style="margin:1rem 0;font-size:0.875rem;">${globals.introText}</p>
           <div style="display:flex;align-items:center;gap:1rem;margin-top:1rem;">
-            <a href="#contact" class="btn">${globals.contactCta}</a>
-            <span style="font-size:0.75rem;color:#999;">${globals.contactNote}</span>
+            <a href="#contact" class="btn btn-gold">${globals.contactCta}</a>
+            <span style="font-size:0.75rem;color:#6b7280;">${globals.contactNote}</span>
           </div>
         </div>
-      </div>
-
-      <div>
-        <div class="section">
-          <div class="section-heading">Philosophy</div>
-          <hr />
+        <div>
           <div class="philosophy-box">
+            <div class="philosophy-box-header">Philosophy</div>
             ${philosophyItems}
           </div>
         </div>
       </div>
     </div>
 
+    <hr class="section-divider" />
+
     <!-- Blog section -->
     <div class="section">
       <div class="section-heading">${globals.blogHeading}</div>
       <hr />
       <p style="font-size:0.8125rem;color:#666;margin-bottom:1rem;">${globals.blogDescription}</p>
-      <a href="${BASE}/blog/" class="btn">${globals.blogCta}</a>
+      <a href="${BASE}/blog/" class="btn btn-green">${globals.blogCta}</a>
     </div>
+
+    <hr class="section-divider" />
 
     <!-- Projects section -->
     <div class="section">
       <div class="section-heading">${globals.projectsHeading}</div>
       <hr />
-      <p style="font-size:0.8125rem;color:#666;margin-bottom:1rem;">${globals.projectsDescription}</p>
-      ${featuredCard}
-      <div style="margin-top:1rem;">
-        <a href="${BASE}/projects/" class="btn">${globals.projectsCta}</a>
+      <div class="home-grid">
+        <div>
+          <p style="font-size:0.875rem;margin-bottom:1rem;">${globals.projectsDescription}</p>
+          <a href="${BASE}/projects/" class="btn btn-orange">${globals.projectsCta}</a>
+        </div>
+        <div>${featuredCard}</div>
       </div>
     </div>
+
+    <hr class="section-divider" />
 
     <!-- Contact section -->
     <div class="section" id="contact">
