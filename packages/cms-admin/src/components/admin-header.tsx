@@ -212,6 +212,8 @@ function PreviewButton() {
   const [previewUrl, setPreviewUrl] = useState<string>("");
   const [liveUrl, setLiveUrl] = useState<string>("");
   const [siteName, setSiteName] = useState("Site");
+  const [previewDown, setPreviewDown] = useState(false);
+  const [liveDown, setLiveDown] = useState(false);
   const [fetchKey, setFetchKey] = useState(0);
   const { openTab } = useTabs();
 
@@ -224,6 +226,8 @@ function PreviewButton() {
   useEffect(() => {
     setPreviewUrl("");
     setLiveUrl("");
+    setPreviewDown(false);
+    setLiveDown(false);
     fetch("/api/admin/site-config")
       .then((r) => r.ok ? r.json() : null)
       .then((data) => {
@@ -245,9 +249,25 @@ function PreviewButton() {
         if (site?.name) setSiteName(site.name);
       })
       .catch(() => {});
+    // Health check for the active site
+    fetch("/api/admin/site-health")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d: { status?: string } | null) => {
+        if (d?.status === "down" || d?.status === "no-preview") setPreviewDown(true);
+      })
+      .catch(() => {});
   }, [fetchKey]);
 
+  // Also check live URL health separately when we have one
+  useEffect(() => {
+    if (!liveUrl) return;
+    fetch(liveUrl, { method: "HEAD", mode: "no-cors", signal: AbortSignal.timeout(3000) })
+      .then(() => setLiveDown(false))
+      .catch(() => setLiveDown(true));
+  }, [liveUrl]);
+
   const openPreview = useCallback(async () => {
+    if (previewDown) return;
     if (previewUrl) {
       openTab(`/admin/preview?url=${encodeURIComponent(previewUrl)}`, `Preview: ${siteName}`);
     } else {
@@ -259,68 +279,91 @@ function PreviewButton() {
         }
       } catch { /* ignore */ }
     }
-  }, [previewUrl, siteName, openTab]);
+  }, [previewUrl, previewDown, siteName, openTab]);
 
   const openLive = useCallback(() => {
-    if (liveUrl) window.open(liveUrl, "_blank");
-  }, [liveUrl]);
+    if (liveUrl && !liveDown) window.open(liveUrl, "_blank");
+  }, [liveUrl, liveDown]);
 
-  // "p" = preview, "l" = live site
+  // "p" = preview, "l" = live site — skip when down
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       const tag = (document.activeElement?.tagName ?? "").toLowerCase();
       if (tag === "input" || tag === "textarea" || tag === "select" || (document.activeElement as HTMLElement)?.isContentEditable) return;
-      if (e.key === "p") { e.preventDefault(); openPreview(); }
-      if (e.key === "l" && liveUrl) { e.preventDefault(); openLive(); }
+      if (e.key === "p" && !previewDown) { e.preventDefault(); openPreview(); }
+      if (e.key === "l" && liveUrl && !liveDown) { e.preventDefault(); openLive(); }
     }
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [openPreview, openLive, liveUrl]);
+  }, [openPreview, openLive, liveUrl, previewDown, liveDown]);
 
-  // No live URL → simple preview button (no dropdown)
+  // Both down or no URLs → greyed out button
+  const allDown = previewDown && (!liveUrl || liveDown);
+
+  // No live URL → simple preview button
   if (!liveUrl) {
     return (
       <button
         type="button"
         onClick={openPreview}
+        disabled={previewDown}
         style={{
-          background: "none", border: "1.5px solid var(--border)", cursor: "pointer",
+          background: "none", border: "1.5px solid var(--border)",
+          cursor: previewDown ? "not-allowed" : "pointer",
+          opacity: previewDown ? 0.35 : 1,
           color: "var(--muted-foreground)", display: "flex", alignItems: "center", justifyContent: "center",
           borderRadius: "50%", width: "2rem", height: "2rem", padding: 0,
         }}
-        className="hover:border-foreground hover:text-foreground transition-colors"
-        title="Preview site (p)"
+        className={previewDown ? "" : "hover:border-foreground hover:text-foreground transition-colors"}
+        title={previewDown ? "Preview unavailable — site is down" : "Preview site (p)"}
       >
         <ExternalLink style={{ width: "0.9rem", height: "0.9rem" }} />
       </button>
     );
   }
 
-  // Has live URL → dropdown with Preview + Live
+  // Has live URL → dropdown with Preview + Live (greyed items when down)
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
+        disabled={allDown}
         style={{
-          background: "none", border: "1.5px solid var(--border)", cursor: "pointer",
+          background: "none", border: "1.5px solid var(--border)",
+          cursor: allDown ? "not-allowed" : "pointer",
+          opacity: allDown ? 0.35 : 1,
           color: "var(--muted-foreground)", display: "flex", alignItems: "center", justifyContent: "center",
           borderRadius: "50%", width: "2rem", height: "2rem", padding: 0,
         }}
-        className="hover:border-foreground hover:text-foreground transition-colors focus-visible:outline-none"
-        title="Preview / Live site"
+        className={allDown ? "" : "hover:border-foreground hover:text-foreground transition-colors focus-visible:outline-none"}
+        title={allDown ? "Preview & Live unavailable — site is down" : "Preview / Live site"}
       >
         <ExternalLink style={{ width: "0.9rem", height: "0.9rem" }} />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" style={{ width: "200px" }}>
-        <DropdownMenuItem onClick={openPreview}>
+        <DropdownMenuItem
+          onClick={openPreview}
+          disabled={previewDown}
+          style={previewDown ? { opacity: 0.35, cursor: "not-allowed" } : undefined}
+        >
           <ExternalLink className="mr-2 h-4 w-4" />
           Preview
-          <span className="ml-auto text-xs text-muted-foreground">p</span>
+          {previewDown
+            ? <span className="ml-auto text-xs text-muted-foreground">down</span>
+            : <span className="ml-auto text-xs text-muted-foreground">p</span>}
         </DropdownMenuItem>
-        <DropdownMenuItem onClick={openLive} style={{ color: "rgb(74 222 128)" }}>
+        <DropdownMenuItem
+          onClick={openLive}
+          disabled={liveDown}
+          style={liveDown
+            ? { opacity: 0.35, cursor: "not-allowed" }
+            : { color: "rgb(74 222 128)" }}
+        >
           <ExternalLink className="mr-2 h-4 w-4" />
           Live site
-          <span className="ml-auto text-xs text-muted-foreground">l</span>
+          {liveDown
+            ? <span className="ml-auto text-xs text-muted-foreground">down</span>
+            : <span className="ml-auto text-xs text-muted-foreground">l</span>}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
