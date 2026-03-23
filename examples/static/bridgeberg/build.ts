@@ -353,7 +353,7 @@ function css(): string {
       transform: translate(2px, 2px);
     }
     .btn-green { background: #177a45; color: #fff; }
-    .btn-orange { background: #f2572b; color: #fff; }
+    .btn-orange { background: #c9441f; color: #fff; }
     .btn-gold { background: #d4a72c; color: #000; }
 
     /* Contact table */
@@ -685,7 +685,7 @@ function css(): string {
       gap: 1.5rem;
     }
     .footer-links a {
-      color: #999;
+      color: #595959;
       text-decoration: none;
       font-size: 0.6875rem;
     }
@@ -695,7 +695,7 @@ function css(): string {
       text-align: center;
       margin-top: 0.5rem;
     }
-    .footer-built a { color: #999; text-decoration: underline; }
+    .footer-built a { color: #595959; text-decoration: underline; }
     .footer-built a:hover { color: #1a1a1a; }
 
     /* Home layout with sidebar */
@@ -727,12 +727,13 @@ function css(): string {
   `;
 }
 
-function head(title: string, globals: GlobalsData): string {
+function head(title: string, globals: GlobalsData, metaDescription?: string): string {
+  const descTag = metaDescription ? `\n  <meta name="description" content="${metaDescription}" />` : '';
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />${descTag}
   <title>${title} — ${globals.siteName}</title>
   <style>${css()}</style>
 </head>`;
@@ -821,7 +822,7 @@ function buildHomePage(
       </div>`
     : '';
 
-  return `${head(page.title, globals)}
+  return `${head(page.title, globals, page.metaDescription)}
 <body>
 <div class="outer">
   ${nav(globals, 'home')}
@@ -928,7 +929,7 @@ function buildBlogListing(
     )
     .join('\n');
 
-  return `${head(page.title, globals)}
+  return `${head(page.title, globals, page.metaDescription)}
 <body>
 <div class="outer">
   ${nav(globals, 'blog')}
@@ -980,7 +981,7 @@ function buildBlogPost(
 ): string {
   const contentHtml = markdownToHtml(post.data.content);
 
-  return `${head(post.data.title, globals)}
+  return `${head(post.data.title, globals, post.data.excerpt)}
 <body>
 <div class="outer">
   ${nav(globals, 'blog')}
@@ -1042,7 +1043,7 @@ function buildProjectsListing(
   const activeCards = active.map((p) => projectCard(p)).join('\n');
   const archivedCards = archived.map((p) => projectCard(p, true)).join('\n');
 
-  return `${head(page.title, globals)}
+  return `${head(page.title, globals, page.metaDescription)}
 <body>
 <div class="outer">
   ${nav(globals, 'projects')}
@@ -1122,7 +1123,7 @@ function buildAboutPage(
     )
     .join('\n          ');
 
-  return `${head(page.title, globals)}
+  return `${head(page.title, globals, page.metaDescription)}
 <body>
 <div class="outer">
   ${nav(globals, 'about')}
