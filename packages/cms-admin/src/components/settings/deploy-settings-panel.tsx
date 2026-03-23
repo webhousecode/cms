@@ -388,7 +388,7 @@ export function DeploySettingsPanel() {
               <span>Duration</span>
               <span>URL</span>
             </div>
-            {deploys.slice(0, 20).map((d) => (
+            {deploys.slice(0, 10).map((d) => (
               <div key={d.id} style={{
                 display: "grid", gridTemplateColumns: "auto 1fr auto auto",
                 gap: "0.75rem", padding: "0.5rem 0", fontSize: "0.75rem",
