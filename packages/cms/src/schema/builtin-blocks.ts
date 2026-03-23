@@ -67,7 +67,7 @@ export const builtinBlocks: BlockConfig[] = [
     name: 'text',
     label: 'Text',
     fields: [
-      { name: 'content', type: 'text', label: 'Text' },
+      { name: 'body', type: 'text', label: 'Text' },
     ],
   },
   {
