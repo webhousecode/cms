@@ -5,7 +5,7 @@
  * Deploy history stored in _data/deploy-log.json.
  */
 import { readFile, writeFile, mkdir } from "node:fs/promises";
-import { existsSync, readdirSync, statSync, readFileSync } from "node:fs";
+import { existsSync, readdirSync, statSync, readFileSync, rmSync } from "node:fs";
 import path from "node:path";
 import { execSync } from "node:child_process";
 import { getActiveSitePaths, getActiveSiteEntry } from "./site-paths";
@@ -298,6 +298,13 @@ async function githubPagesBuildAndDeploy(token: string, repo: string): Promise<s
   const customDomain = config.deployCustomDomain || "";
   const repoName = repo.split("/")[1] ?? "";
   const basePath = customDomain ? "" : `/${repoName}`;
+
+  // Clean output dir before build to remove orphaned files from previous builds
+  const deployDir = path.join(sitePaths.projectDir, "deploy");
+  if (existsSync(deployDir)) {
+    rmSync(deployDir, { recursive: true, force: true });
+    console.log("[deploy] Cleaned deploy/ directory");
+  }
 
   console.log(`[deploy] Running build.ts in ${sitePaths.projectDir} (BASE_PATH=${basePath || "(root)"}, out=deploy/)...`);
   try {

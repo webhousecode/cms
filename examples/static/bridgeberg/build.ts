@@ -422,7 +422,7 @@ function css(): string {
       vertical-align: top;
     }
     .blog-table .date-col {
-      color: #999;
+      color: #767676;
       white-space: nowrap;
       width: 80px;
       font-size: 0.8125rem;
@@ -474,7 +474,7 @@ function css(): string {
     }
     .hash-tag {
       font-size: 0.75rem;
-      color: #999;
+      color: #767676;
     }
 
     /* Project cards */
@@ -644,7 +644,7 @@ function css(): string {
       gap: 0.75rem;
       margin-bottom: 2rem;
       font-size: 0.8125rem;
-      color: #999;
+      color: #767676;
     }
 
     /* Prose (article body) */
@@ -1182,7 +1182,6 @@ function build() {
 
   console.log(`Building ${globals.siteName} — ${posts.length} posts, ${projects.length} projects`);
 
-  // dist/
   mkdirSync(DIST, { recursive: true });
 
   // Home

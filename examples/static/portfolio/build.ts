@@ -431,7 +431,6 @@ function build() {
 
   console.log(`Building portfolio — ${projects.length} projects found`);
 
-  // dist/
   mkdirSync(DIST, { recursive: true });
 
   // Home

@@ -59,8 +59,10 @@ export const builtinBlocks: BlockConfig[] = [
       { name: 'fullscreenLabel', type: 'text', label: 'Fullscreen button label' },
     ],
   },
-  // ── Field-type wrapper blocks ──────────────────────────────
-  // These allow inserting any field type as a block in the editor.
+  // ── Content wrapper blocks ──────────────────────────────────
+  // Only visually renderable content types. Data-only types (date, number,
+  // boolean, select, tags, relation) belong as fields INSIDE custom blocks,
+  // not as standalone blocks.
   {
     name: 'text',
     label: 'Text',
@@ -100,57 +102,10 @@ export const builtinBlocks: BlockConfig[] = [
     ],
   },
   {
-    name: 'number',
-    label: 'Number',
-    fields: [
-      { name: 'value', type: 'number', label: 'Value' },
-      { name: 'label', type: 'text', label: 'Label' },
-    ],
-  },
-  {
-    name: 'boolean',
-    label: 'Toggle',
-    fields: [
-      { name: 'value', type: 'boolean', label: 'Value' },
-      { name: 'label', type: 'text', label: 'Label' },
-    ],
-  },
-  {
-    name: 'date',
-    label: 'Date',
-    fields: [
-      { name: 'value', type: 'date', label: 'Date' },
-      { name: 'label', type: 'text', label: 'Label' },
-    ],
-  },
-  {
-    name: 'select',
-    label: 'Select',
-    fields: [
-      { name: 'value', type: 'text', label: 'Value' },
-      { name: 'label', type: 'text', label: 'Label' },
-    ],
-  },
-  {
-    name: 'tags',
-    label: 'Tags',
-    fields: [
-      { name: 'tags', type: 'tags', label: 'Tags' },
-    ],
-  },
-  {
     name: 'htmldoc',
     label: 'HTML Document',
     fields: [
       { name: 'content', type: 'htmldoc' as const, label: 'HTML' },
-    ],
-  },
-  {
-    name: 'relation',
-    label: 'Relation',
-    fields: [
-      { name: 'ref', type: 'text', label: 'Reference (slug)' },
-      { name: 'collection', type: 'text', label: 'Collection' },
     ],
   },
 ];

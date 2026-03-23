@@ -453,7 +453,6 @@ function build() {
 
   console.log(`Building ${site.siteName} — ${projects.length} projects found`);
 
-  // Home
   mkdirSync(DIST, { recursive: true });
   if (homePage) {
     writeFileSync(join(DIST, 'index.html'), buildHome(site, homePage, projects));

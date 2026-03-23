@@ -347,8 +347,6 @@ function buildTagsIndex(posts: Post[], tagsPage: Page, siteTitle: string): strin
 function build() {
   console.log('Building blog...');
 
-  // Clean dist
-  if (fs.existsSync(DIST)) fs.rmSync(DIST, { recursive: true });
   ensureDir(DIST);
 
   // Read content
