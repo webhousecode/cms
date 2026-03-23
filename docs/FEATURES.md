@@ -112,6 +112,7 @@
 | F93 | [Next.js App Deployment](#f93-nextjs-app-deployment) | Planned | [docs/features/F93-nextjs-deployment.md](features/F93-nextjs-deployment.md) |
 | F94 | [Favorites](#f94-favorites) | Planned | [docs/features/F94-favorites.md](features/F94-favorites.md) |
 | F95 | [Cloud Backup Providers](#f95-cloud-backup-providers) | Planned | [docs/features/F95-cloud-backup-providers.md](features/F95-cloud-backup-providers.md) |
+| F96 | [Embeddable Maps](#f96-embeddable-maps) | Planned | [docs/features/F96-embeddable-maps.md](features/F96-embeddable-maps.md) |
 
 ---
 
@@ -408,3 +409,6 @@ Heart-toggle (♡→♥) on any document, collection, interactive, admin page, o
 
 ## F95 — Cloud Backup Providers
 Pluggable cloud storage destinations for CMS backups. Three adapter types: S3-compatible (one adapter covers Scaleway 75GB free EU, Cloudflare R2 10GB free, Backblaze B2 10GB free EU, Hetzner, AWS S3), pCloud REST API (10GB free, Luxembourg EU), WebDAV (Hetzner Storage Box, pCloud WebDAV, any server). Provider picker in Site Settings → Backup with guided setup and "Test connection" button showing free space. Credentials stored securely. Dynamic imports — `@aws-sdk/client-s3` only loaded when S3 selected. Extends F27 (Backup & Restore) with cloud destinations.
+
+## F96 — Embeddable Maps
+Three ways to embed Google Maps in CMS content: (1) Paste Google Maps embed URL in any richtext field — auto-detected and rendered as responsive iframe. (2) New `map` field type with address autocomplete, draggable pin, and lat/lng/zoom storage — renders a map picker in admin. (3) Pre-built Map Interactive HTML template for the Interactives library with configurable pins, info windows, and style presets. All three options are independent and additive — no breaking changes.

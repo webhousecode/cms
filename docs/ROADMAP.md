@@ -73,6 +73,7 @@ _Without these, we cannot build and deliver professional sites on the platform._
 | 8h | **F89 Post-Build Enrichment** | Medium | Auto-inject SEO, OG tags, JSON-LD, favicon, manifest, sitemap, robots.txt, llms.txt into every deployed site. CMS ensures quality regardless of builder. |
 | 9 | **F31 Documentation Site** | Medium | Can't ship without docs. Last because it documents everything above. |
 | 9b | **F90 Marketing Content Bank** | Small | Living doc of messaging, talking points, README copy. Source of truth for product positioning. |
+| 9c | **F96 Embeddable Maps** | Small | Every business site needs a map. Richtext embed, map field type, Interactive template. |
 
 ### Tier 2 — Competitive Edge (v1.1-1.2)
 
