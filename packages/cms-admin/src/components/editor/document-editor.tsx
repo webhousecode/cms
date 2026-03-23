@@ -5,7 +5,7 @@ import { CustomSelect } from "@/components/ui/custom-select";
 import { useRouter } from "next/navigation";
 import type { CollectionConfig, BlockConfig } from "@webhouse/cms";
 import { FieldEditor } from "./field-editor";
-import { Save, Globe, FileText, Trash2, ArrowLeft, Lock, LockOpen, Copy, Clock, History, Eye, Languages, Sparkles, Settings2, Wand2, ChevronDown, ChevronRight } from "lucide-react";
+import { Save, Globe, FileText, Trash2, ArrowLeft, Lock, LockOpen, Copy, Clock, History, Eye, Languages, Sparkles, Settings2, Wand2, ChevronDown, ChevronRight, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { ActionBar, ActionBarBreadcrumb } from "@/components/action-bar";
 import { formatDate, cn } from "@/lib/utils";
@@ -1182,7 +1182,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
                 className="gap-1.5"
                 title={dirty ? "Save changes (⌘S)" : "No unsaved changes"}
               >
-                <Save className="w-3.5 h-3.5" />
+                {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
                 {saving ? "Saving…" : "Save"}
               </Button>
             </>
