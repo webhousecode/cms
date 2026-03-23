@@ -74,11 +74,16 @@ export async function triggerDeploy(): Promise<DeployEntry> {
     }
 
     if (siteEntry?.adapter === "github" && siteEntry.configPath?.startsWith("github://")) {
-      // GitHub-backed site → deploy to its own repo
-      const match = siteEntry.configPath.match(/^github:\/\/([^/]+\/[^/]+)/);
-      if (match) {
-        provider = "github-pages";
-        appName = match[1];
+      // GitHub-backed site — only auto-deploy if it has a build.ts (static site)
+      // Next.js sites need explicit deploy config (Fly, Vercel, etc.)
+      const sitePaths = await getActiveSitePaths();
+      const buildFile = path.join(sitePaths.projectDir, "build.ts");
+      if (existsSync(buildFile)) {
+        const match = siteEntry.configPath.match(/^github:\/\/([^/]+\/[^/]+)/);
+        if (match) {
+          provider = "github-pages";
+          appName = match[1];
+        }
       }
     } else if (siteEntry?.adapter === "filesystem" && token) {
       // Filesystem site with build.ts → auto-create GitHub repo if needed
@@ -137,6 +142,12 @@ export async function triggerDeploy(): Promise<DeployEntry> {
         break;
 
       case "github-pages": {
+        // GitHub Pages requires build.ts (static site builder)
+        const ghSitePaths = await getActiveSitePaths();
+        const ghBuildFile = path.join(ghSitePaths.projectDir, "build.ts");
+        if (!existsSync(ghBuildFile)) {
+          throw new Error("No build.ts found — this site doesn't support static builds. Configure a different deploy provider (Fly.io, Vercel) in Site Settings → Deploy.");
+        }
         // Resolve token: explicit config → OAuth cookie → service token → scan all sites
         let useToken = token || config.deployApiToken;
         if (!useToken) {

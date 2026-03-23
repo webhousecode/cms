@@ -31,19 +31,18 @@ export async function GET() {
       return NextResponse.json({ canDeploy: false, hasGitHubToken });
     }
 
-    // GitHub-backed site → can always deploy to GitHub Pages
-    if (siteEntry.adapter === "github") {
+    // Check if site has a build.ts (static site that can deploy to GitHub Pages)
+    const sitePaths = await getActiveSitePaths();
+    const buildFile = path.join(sitePaths.projectDir, "build.ts");
+    const hasBuildTs = existsSync(buildFile);
+
+    if (hasBuildTs) {
+      // Static site with build.ts → can auto-deploy to GitHub Pages
       return NextResponse.json({ canDeploy: true, provider: "github-pages", hasGitHubToken });
     }
 
-    // Filesystem site with build.ts → can deploy to GitHub Pages
-    if (siteEntry.adapter === "filesystem") {
-      const sitePaths = await getActiveSitePaths();
-      const buildFile = path.join(sitePaths.projectDir, "build.ts");
-      if (existsSync(buildFile)) {
-        return NextResponse.json({ canDeploy: true, provider: "github-pages", hasGitHubToken });
-      }
-    }
+    // No build.ts (e.g. Next.js site) → needs explicit deploy config
+    // Return canDeploy: false so the rocket button prompts to configure
 
     return NextResponse.json({ canDeploy: false, hasGitHubToken });
   } catch {
