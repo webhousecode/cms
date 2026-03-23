@@ -2,7 +2,8 @@
   "slug": "home",
   "status": "published",
   "data": {
-    "title": "Home"
+    "title": "Home",
+    "metaDescription": "Christian Broberg — Founder & Chief Software Architect at WebHouse ApS. Building AI-native software since 2025, web since 1995."
   },
   "id": "vMbGbYB7IQ_28vDqduHwf",
   "_fieldMeta": {}

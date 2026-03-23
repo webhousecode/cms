@@ -3,93 +3,30 @@
   "status": "published",
   "data": {
     "title": "About",
-    "metaDescription": "Full-stack developer, open source contributor, and cloud architect.",
-    "bio": "I am a full-stack developer with a deep focus on infrastructure, developer tooling, and open source. My work spans from designing type-safe APIs and building deployment pipelines to contributing to the Rust and TypeScript ecosystems. I believe great software is built on clear thinking, clean abstractions, and relentless iteration.",
+    "metaDescription": "Christian Broberg — 30+ years of web development, software architecture, and AI-native building.",
+    "bio": "Hi, I'm Christian Broberg, a software architect and founder of WebHouse ApS — Denmark's first web bureau, established in 1995.\n\nPassionate about building production-grade systems where architecture is clear, code is maintainable, and AI is a first-class development partner. Currently focused on @webhouse/cms and transitioning all WebHouse operations to modern cloud-native infrastructure.",
     "skillCategories": [
-      {
-        "name": "Languages",
-        "skills": [
-          "TypeScript",
-          "Go",
-          "Rust",
-          "Python",
-          "SQL"
-        ]
-      },
-      {
-        "name": "Frontend",
-        "skills": [
-          "React",
-          "Next.js",
-          "Tailwind CSS",
-          "Vue"
-        ]
-      },
-      {
-        "name": "Backend",
-        "skills": [
-          "Node.js",
-          "Fastify",
-          "PostgreSQL",
-          "Redis",
-          "gRPC"
-        ]
-      },
-      {
-        "name": "DevOps",
-        "skills": [
-          "Docker",
-          "Kubernetes",
-          "Terraform",
-          "GitHub Actions",
-          "AWS",
-          "Fly.io"
-        ]
-      }
+      { "name": "Languages & Runtime", "skills": ["TypeScript", "JavaScript", "Node.js", "Python", "SQL"] },
+      { "name": "Frontend", "skills": ["Next.js", "React 19", "Tailwind CSS v4", "shadcn/ui", "Radix UI"] },
+      { "name": "Backend & Data", "skills": ["SQLite", "Drizzle ORM", "PostgreSQL", "Supabase", "Redis", "REST APIs"] },
+      { "name": "Infrastructure", "skills": ["Fly.io", "AWS LightSail", "Docker", "GitHub Actions", "pnpm + Turborepo", "BIND DNS"] },
+      { "name": "AI & Tooling", "skills": ["Claude Code", "Anthropic API", "Vercel AI SDK", "MCP Servers", "Prompt Engineering", "CodePromptMaker"] },
+      { "name": "IoT", "skills": ["MQTT", "CoAP", "Timeseries DBs", "Node-RED", "Sensor Platforms", "Senti.Cloud"] }
     ],
     "timeline": [
-      {
-        "year": "2026",
-        "description": "Founded Bridgeberg Labs"
-      },
-      {
-        "year": "2025",
-        "description": "Led cloud migration at ScaleForge"
-      },
-      {
-        "year": "2023",
-        "description": "Joined CoreStack as Principal Engineer"
-      },
-      {
-        "year": "2021",
-        "description": "Built real-time analytics platform at DataPulse"
-      },
-      {
-        "year": "2019",
-        "description": "First open source project hit 1k stars"
-      },
-      {
-        "year": "2016",
-        "description": "Started professional development career"
-      }
+      { "year": "2026", "description": "Launched @webhouse/cms — AI-native, plugin-based CMS with admin UI at webhouse.app" },
+      { "year": "2025", "description": "Shifted to AI-native development. Built WHop, CodePromptMaker, DNS Manager, Cronjobs service" },
+      { "year": "2016", "description": "Took on Chief Software Architect role at Senti.Cloud — decade-long IoT platform build" },
+      { "year": "2008", "description": "Consultant in Dubai — IoT business development at M-tec Telematics, Dubai Internet City" },
+      { "year": "1996", "description": "Won European Commission Award at 5th International WWW Conference, Paris" },
+      { "year": "1995", "description": "Founded WebHouse ApS — Denmark's first web bureau" }
     ],
     "aboutLinks": [
-      {
-        "label": "Website",
-        "href": "https://bridgeberg.dev"
-      },
-      {
-        "label": "GitHub",
-        "href": "https://github.com/bridgeberg"
-      },
-      {
-        "label": "Twitter/X",
-        "href": "https://x.com/bridgeberg"
-      },
-      {
-        "label": "LinkedIn",
-        "href": "https://linkedin.com/in/bridgeberg"
-      }
+      { "label": "GitHub (personal)", "href": "https://github.com/cbroberg" },
+      { "label": "GitHub (WebHouse)", "href": "https://github.com/webhousecode" },
+      { "label": "LinkedIn", "href": "https://linkedin.com/in/christianbroberg" },
+      { "label": "WebHouse", "href": "https://webhouse.dk" },
+      { "label": "webhouse.app", "href": "https://webhouse.app" }
     ]
   },
   "id": "ZZsLQowzSNSmjO6QH8Dja",

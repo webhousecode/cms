@@ -1,0 +1,14 @@
+{
+  "slug": "monorepo-architecture-pnpm-turbo",
+  "status": "published",
+  "data": {
+    "title": "Monorepo Architecture with pnpm and Turborepo",
+    "excerpt": "How I structure multi-package TypeScript projects with pnpm workspaces and Turborepo — and why it's worth the initial complexity.",
+    "date": "2025-11-10",
+    "category": "architecture",
+    "tags": ["monorepo", "pnpm", "turborepo", "typescript"],
+    "content": "## Why Monorepo?\n\nEvery project I've started in the last two years is a monorepo. Not because it's trendy, but because the alternative — maintaining multiple repos with cross-dependencies — becomes a coordination nightmare the moment you have more than two packages that need to stay in sync.\n\n`@webhouse/cms` is 8 packages. `CodePromptMaker` is 5. `fysiodk-aalborg-sport` has a web app and shared packages. In each case, a monorepo means one PR, one CI run, one version bump, and one mental model.\n\n## The Stack: pnpm + Turborepo\n\nI use **pnpm workspaces** for package management and **Turborepo** for build orchestration. The combination gives you:\n\n- **Strict dependency isolation** — pnpm's non-flat `node_modules` catches missing dependency declarations that npm and yarn silently allow\n- **Cached builds** — Turborepo hashes inputs and skips unchanged packages. On a cold CI run, the CMS monorepo builds in ~45 seconds. On a warm cache, it's under 10.\n- **Parallel execution** — `turbo run build` builds all packages in the correct dependency order, maximizing parallelism\n\n## Project Structure Pattern\n\nEvery monorepo follows the same layout:\n\n```\npackages/\n  core/           → shared logic\n  web/            → Next.js app\n  cli/            → command-line tools\n  shared/         → shared types and utilities\nscripts/          → automation scripts\nturbo.json        → pipeline config\npnpm-workspace.yaml\n```\n\nThe `packages/` directory contains publishable or deployable units. The `scripts/` directory contains automation — deploy scripts, code audits, migration helpers. Everything is TypeScript, everything is built with `tsup`, and every package has a consistent `tsconfig.json` that extends a root config.\n\n## Lessons Learned\n\n- **Version all packages together.** Keeping independent versions per package sounds flexible but creates dependency hell. All `@webhouse/cms-*` packages share the same version number.\n- **Use `tsup` for library packages.** It handles CJS/ESM dual output, declaration files, and tree-shaking with zero config.\n- **Automate the boring parts.** A single script bumps all versions, and GitHub Actions publishes everything via OIDC. No manual npm publish, ever.\n- **The monorepo is the documentation.** When all related code lives together, the import graph IS the architecture diagram."
+  },
+  "id": "post-monorepo-005",
+  "_fieldMeta": {}
+}

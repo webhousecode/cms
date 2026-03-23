@@ -1,0 +1,16 @@
+{
+  "slug": "dns-mcp",
+  "status": "published",
+  "data": {
+    "title": "DNS MCP Server",
+    "description": "Model Context Protocol server for AI-assisted DNS zone management via Claude.",
+    "status": "active",
+    "icon": "🌐",
+    "techTags": ["mcp", "typescript", "dns", "ai"],
+    "linkLabel": "GitHub →",
+    "linkUrl": "https://github.com/webhousecode/dns-mcp",
+    "sortOrder": 7
+  },
+  "id": "proj-dns-mcp-007",
+  "_fieldMeta": {}
+}

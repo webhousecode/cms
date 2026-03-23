@@ -1,0 +1,14 @@
+{
+  "slug": "building-cms-from-scratch",
+  "status": "published",
+  "data": {
+    "title": "Building a CMS from Scratch in 2026",
+    "excerpt": "After 30 years of working with every CMS from Drupal to WordPress to custom solutions, I decided to build my own. Here's why.",
+    "date": "2026-02-15",
+    "category": "cms",
+    "tags": ["cms", "typescript", "next-js", "ai"],
+    "content": "## Why Another CMS?\n\nI've been building websites since 1995. I've used Drupal, WordPress, Joomla, custom PHP systems, and even built a CMS called ODEUM back in the early 2000s. Every single one eventually hit a wall — either too opinionated about the frontend, too complex for simple sites, or too simple for complex ones.\n\nIn 2026, with AI as a development partner, I realized I could build the CMS I always wanted. Not a page builder. Not a monolithic platform. A **headless, plugin-based content engine** that an AI agent could understand, extend, and build sites with.\n\n## The Architecture\n\n`@webhouse/cms` is a pnpm monorepo with 8 publishable npm packages:\n\n- **cms** — the core engine with collection definitions, field types, and storage adapters\n- **cms-admin** — a Next.js admin UI with rich text editing, media management, and AI assistance\n- **cms-ai** — AI agents that can generate content, optimize SEO, and scaffold entire sites\n- **cms-cli** — command-line tools for building and deploying\n- **cms-mcp-server** — Model Context Protocol server so AI assistants can manage content directly\n\nThe key design decision was **storage adapters**. The same CMS config works with a filesystem adapter (JSON files in a `content/` directory) or a GitHub adapter (content lives in a repo, changes go through PRs). This means a developer can start locally and move to GitHub-backed content without changing their schema.\n\n> \"The architecture you'll be proud of in five years is the one that was obvious to understand on day one.\"\n\n## What 30 Years Taught Me\n\nThe biggest lesson from three decades of CMS work: **content modeling is the hard part**. Not routing, not rendering, not auth. Getting the data model right — the collections, the field types, the relationships — determines whether the system scales or collapses under its own weight.\n\nThat's why `@webhouse/cms` starts with `defineConfig` and `defineCollection`. Everything flows from the schema. The admin UI, the API, the build output — all generated from the same source of truth. It's the pattern I wish every CMS I used in the past had followed."
+  },
+  "id": "post-building-cms-002",
+  "_fieldMeta": {}
+}

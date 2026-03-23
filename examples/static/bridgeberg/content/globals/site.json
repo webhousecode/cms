@@ -3,59 +3,32 @@
   "status": "published",
   "data": {
     "siteName": "Bridgeberg",
-    "role": "Full Stack Developer / Open Source Contributor / Cloud Architect",
-    "philosophy": "*Bridgeberg — A developer who believes in building tools that make infrastructure disappear. Passionate about clean APIs, elegant abstractions, and the craft of shipping.*",
-    "introText": "I anchor my work in the fundamentals of software engineering, its purpose, and its utility.",
+    "role": "Founder & Chief Software Architect / AI-Native Builder / 30 Years of Web",
+    "philosophy": "*Bridgeberg — A software architect who believes in elegant systems over clever hacks, user-focused solutions over feature lists, and building things that last. Thirty years of craft, now amplified by AI.*",
+    "introText": "I anchor my work in the fundamentals of software engineering, its purpose, and its utility. Since 1995, I've built over 1,000 websites and 50+ mobile apps. Since 2025, AI is not a tool I use — it's how I build.",
     "contactCta": "Contact →",
     "contactNote": "(Open for collaboration)",
     "philosophyItems": [
-      {
-        "text": "Less is more."
-      },
-      {
-        "text": "Ship it, then iterate."
-      },
-      {
-        "text": "Automation over repetition."
-      }
+      { "text": "Elegant over clever." },
+      { "text": "Ship it, then iterate." },
+      { "text": "AI is a partner, not a shortcut." }
     ],
     "blogHeading": "Blog",
-    "blogDescription": "Writing about development, infrastructure, and everything in between.",
+    "blogDescription": "Writing about AI-native development, web architecture, CMS design, and lessons from 30 years of building.",
     "blogCta": "View All Posts →",
     "projectsHeading": "Projects",
-    "projectsDescription": "In 2025, focused on cloud-native tooling. Building open source infrastructure at Bridgeberg Labs.",
+    "projectsDescription": "In 2026, building @webhouse/cms — an AI-native content management system. Leading WebHouse's transition from legacy infrastructure to modern cloud-native tooling.",
     "projectsCta": "View All Projects →",
     "contactItems": [
-      {
-        "label": "Email",
-        "value": "hello@bridgeberg.dev",
-        "href": "mailto:hello@bridgeberg.dev"
-      },
-      {
-        "label": "Twitter/X",
-        "value": "@bridgeberg",
-        "href": "https://x.com/bridgeberg"
-      },
-      {
-        "label": "GitHub",
-        "value": "bridgeberg",
-        "href": "https://github.com/bridgeberg"
-      }
+      { "label": "Email", "value": "cb@webhouse.dk", "href": "mailto:cb@webhouse.dk" },
+      { "label": "GitHub", "value": "cbroberg", "href": "https://github.com/cbroberg" },
+      { "label": "LinkedIn", "value": "christianbroberg", "href": "https://linkedin.com/in/christianbroberg" }
     ],
-    "footerCopyright": "© 2020-2026, BRIDGEBERG. ALL RIGHTS RESERVED.",
+    "footerCopyright": "© 1995–2026, CHRISTIAN BROBERG / WEBHOUSE APS. ALL RIGHTS RESERVED.",
     "footerLinks": [
-      {
-        "label": "@BRIDGEBERG",
-        "href": "https://x.com/bridgeberg"
-      },
-      {
-        "label": "GITHUB",
-        "href": "https://github.com/bridgeberg"
-      },
-      {
-        "label": "RSS",
-        "href": "/rss.xml"
-      }
+      { "label": "@CBROBERG", "href": "https://github.com/cbroberg" },
+      { "label": "WEBHOUSE", "href": "https://github.com/webhousecode" },
+      { "label": "LINKEDIN", "href": "https://linkedin.com/in/christianbroberg" }
     ],
     "instagramUrl": "https://www.instagram.com/webhouse.app"
   },

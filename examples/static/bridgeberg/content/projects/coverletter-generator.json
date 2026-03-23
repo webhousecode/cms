@@ -1,0 +1,16 @@
+{
+  "slug": "coverletter-generator",
+  "status": "published",
+  "data": {
+    "title": "Cover Letter Generator",
+    "description": "AI-powered cover letter and CV generator. Scrapes job postings, generates personalized PDFs.",
+    "status": "active",
+    "icon": "📝",
+    "techTags": ["next-js", "ai", "playwright", "pdf"],
+    "linkLabel": "GitHub →",
+    "linkUrl": "https://github.com/cbroberg/coverletter-generator",
+    "sortOrder": 9
+  },
+  "id": "proj-cover-009",
+  "_fieldMeta": {}
+}

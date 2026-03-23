@@ -1,0 +1,16 @@
+{
+  "slug": "codepromptmaker",
+  "status": "published",
+  "data": {
+    "title": "CodePromptMaker",
+    "description": "Transforms natural language into structured Prompt Contracts for Claude Code sessions. pnpm monorepo with web, CLI, runner, and database packages.",
+    "status": "featured",
+    "icon": "⚡",
+    "techTags": ["typescript", "turborepo", "ai", "cli", "prompt-engineering"],
+    "linkLabel": "GitHub →",
+    "linkUrl": "https://github.com/cbroberg/codepromptmaker",
+    "sortOrder": 2
+  },
+  "id": "proj-cpm-002",
+  "_fieldMeta": {}
+}

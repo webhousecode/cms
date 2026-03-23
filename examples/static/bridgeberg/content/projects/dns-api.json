@@ -1,0 +1,16 @@
+{
+  "slug": "dns-api",
+  "status": "published",
+  "data": {
+    "title": "DNS API",
+    "description": "REST API for BIND DNS zone management.",
+    "status": "archived",
+    "icon": "📡",
+    "techTags": ["bun", "hono", "dns"],
+    "linkLabel": "Archived",
+    "linkUrl": "#",
+    "sortOrder": 20
+  },
+  "id": "proj-dnsapi-011",
+  "_fieldMeta": {}
+}

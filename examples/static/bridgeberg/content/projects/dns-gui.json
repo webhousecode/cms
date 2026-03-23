@@ -1,0 +1,16 @@
+{
+  "slug": "dns-gui",
+  "status": "published",
+  "data": {
+    "title": "DNS GUI",
+    "description": "Web GUI for DNS management (superseded by dns-mcp).",
+    "status": "archived",
+    "icon": "🖥️",
+    "techTags": ["next-js", "sqlite", "dns"],
+    "linkLabel": "Archived",
+    "linkUrl": "#",
+    "sortOrder": 21
+  },
+  "id": "proj-dnsgui-012",
+  "_fieldMeta": {}
+}

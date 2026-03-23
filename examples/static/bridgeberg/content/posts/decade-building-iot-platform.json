@@ -1,0 +1,14 @@
+{
+  "slug": "decade-building-iot-platform",
+  "status": "published",
+  "data": {
+    "title": "A Decade Building an IoT Platform",
+    "excerpt": "Reflections on 10 years as Chief Software Architect at Senti.Cloud — from sensor protocols to time-series databases to the lessons that carry forward.",
+    "date": "2025-12-05",
+    "category": "iot",
+    "tags": ["iot", "senti-cloud", "architecture", "mqtt"],
+    "content": "## The Beginning\n\nIn 2016, I joined Senti as Chief Software Architect. The mission was ambitious: build a horizontal IoT platform that could ingest data from any sensor, any protocol, and present it through configurable dashboards. Over the next decade, that's exactly what we did — and the lessons I learned about building long-lived systems have shaped everything I build today.\n\n## The Technical Stack\n\nSenti.Cloud grew into a full IoT ecosystem:\n\n- **MQTT and CoAP** for device communication — lightweight protocols that work on constrained hardware\n- **Time-series databases** for storing billions of sensor readings with efficient range queries\n- **Node-RED** for visual flow programming, letting non-developers create data pipelines\n- **React dashboards** with real-time WebSocket updates\n- **Multi-tenant architecture** supporting hundreds of organizations\n\nThe hardest technical challenge was **data ingestion at scale**. When you have thousands of sensors each reporting every few seconds, the write path has to be bulletproof. We went through three different database backends before finding the right balance of write throughput, query performance, and operational simplicity.\n\n## What IoT Teaches You About Architecture\n\nIoT systems are unforgiving. Devices in the field can't be easily updated. Network connections are unreliable. Data loss is permanent. This forces you into architectural patterns that are valuable everywhere:\n\n- **Design for failure.** Every component must handle the next component being down.\n- **Idempotency is not optional.** Messages will be delivered more than once. Your system must handle that gracefully.\n- **Schema evolution is a first-class concern.** Sensors deployed in 2017 are still sending data in 2026. Your data model must accommodate a decade of evolution without breaking.\n\n> The architecture you'll be proud of in five years is the one that was obvious to understand on day one. I wrote that recently, but I learned it at Senti.\n\n## Carrying It Forward\n\nThe Senti chapter closed in 2026, but its influence is everywhere in my current work. The plugin architecture in `@webhouse/cms`, the storage adapter pattern, the emphasis on clear data models — all of it traces back to lessons learned building an IoT platform that had to last."
+  },
+  "id": "post-iot-decade-004",
+  "_fieldMeta": {}
+}

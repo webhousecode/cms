@@ -1,0 +1,16 @@
+{
+  "slug": "whop",
+  "status": "published",
+  "data": {
+    "title": "WHop",
+    "description": "WebHouse Operations Platform — server inventory, health monitoring, AI-powered migration planner for 21 servers.",
+    "status": "active",
+    "icon": "🖥️",
+    "techTags": ["next-js", "sqlite", "aws", "ssh", "ai"],
+    "linkLabel": "Internal",
+    "linkUrl": "#",
+    "sortOrder": 4
+  },
+  "id": "proj-whop-004",
+  "_fieldMeta": {}
+}
