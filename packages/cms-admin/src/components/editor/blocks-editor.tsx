@@ -480,136 +480,133 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
           </div>
         );
       })}
-      {/* Add block */}
+      {/* Add block — inline select with autocomplete */}
       {!locked && (
-        <div style={{ position: "relative" }} ref={pickerContainerRef}>
-          <button
-            type="button"
-            onClick={() => { setShowPicker((p) => { if (!p) setPickerHighlight(0); return !p; }); }}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "0.35rem",
-              background: "none",
-              border: "1px dashed var(--border)",
-              borderRadius: "6px",
-              cursor: "pointer",
-              color: "var(--muted-foreground)",
-              fontSize: "0.7rem",
-              padding: "0.25rem 0.6rem",
-              transition: "all 150ms",
-            }}
-            onMouseEnter={(e) => {
-              const btn = e.currentTarget;
-              btn.style.background = "#1F3024";
-              btn.style.borderColor = "#4ade80";
-              btn.style.borderStyle = "solid";
-              btn.style.color = "#4ade80";
-              btn.style.boxShadow = "0 0 24px rgba(74, 222, 128, 0.35), 0 0 8px rgba(74, 222, 128, 0.2)";
-            }}
-            onMouseLeave={(e) => {
-              const btn = e.currentTarget;
-              btn.style.background = "none";
-              btn.style.borderColor = "var(--border)";
-              btn.style.borderStyle = "dashed";
-              btn.style.color = "var(--muted-foreground)";
-              btn.style.boxShadow = "none";
-            }}
-          >
-            <Plus style={{ width: 14, height: 14 }} /> Add block
-          </button>
-          {showPicker && pickerContainerRef.current && (() => {
-            const rect = pickerContainerRef.current!.getBoundingClientRect();
-            const goUp = window.innerHeight - rect.bottom < 300;
-            return (
-            <div style={{
-              position: "fixed",
-              left: rect.left,
-              ...(goUp ? { bottom: window.innerHeight - rect.top + 4 } : { top: rect.bottom + 4 }),
-              zIndex: 9999,
-              background: "var(--popover)",
-              border: "1px solid var(--border)",
-              borderRadius: "8px",
-              boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
-              minWidth: "220px",
-              maxWidth: "280px",
-              display: "flex",
-              flexDirection: "column",
-            }}>
-              {/* Search input */}
-              <div style={{ padding: "0.5rem 0.5rem 0.25rem", borderBottom: "1px solid var(--border)" }}>
-                <input
-                  ref={pickerInputRef}
-                  type="text"
-                  value={pickerQuery}
-                  onChange={(e) => setPickerQuery(e.target.value)}
-                  placeholder="Search blocks..."
-                  style={{
-                    width: "100%",
-                    padding: "0.35rem 0.5rem",
-                    fontSize: "0.8rem",
-                    background: "var(--input)",
-                    border: "1px solid var(--border)",
-                    borderRadius: "5px",
-                    color: "var(--foreground)",
-                    outline: "none",
-                    boxSizing: "border-box",
-                  }}
-                  onFocus={(e) => { e.target.style.borderColor = "var(--primary)"; }}
-                  onBlur={(e) => { e.target.style.borderColor = "var(--border)"; }}
-                />
-              </div>
-              {/* Scrollable block list */}
-              <div style={{ maxHeight: "240px", overflowY: "auto", padding: "0.25rem 0" }}>
-                {filteredBlockNames.map((name, idx) => {
-                  const cfg = getConfig(name);
-                  const highlighted = pickerHighlight === idx;
-                  return (
-                    <button
-                      key={name}
-                      type="button"
-                      onClick={() => { addBlock(name); setPickerHighlight(-1); setPickerQuery(""); }}
-                      onMouseEnter={() => setPickerHighlight(idx)}
-                      style={{
-                        width: "100%",
-                        textAlign: "left",
-                        padding: "0.4rem 0.6rem",
-                        fontSize: "0.85rem",
-                        background: highlighted ? "var(--accent)" : "transparent",
-                        border: "none",
-                        cursor: "pointer",
-                        display: "flex",
-                        alignItems: "center",
-                        gap: "0.5rem",
-                      }}
-                      className={highlighted ? "" : "hover:bg-accent"}
-                    >
-                      <span style={{
-                        fontSize: "0.65rem",
-                        fontWeight: 600,
-                        textTransform: "uppercase",
-                        letterSpacing: "0.05em",
-                        padding: "0.1rem 0.4rem",
-                        borderRadius: "4px",
-                        background: "var(--primary)",
-                        color: "var(--primary-foreground)",
-                        transition: "box-shadow 150ms",
-                        boxShadow: highlighted ? "0 0 12px rgba(247, 187, 46, 0.5)" : "none",
-                      }}>
+        <div ref={pickerContainerRef} style={{ display: "flex", alignItems: "flex-start", gap: "0.5rem", marginTop: "0.25rem" }}>
+          {!showPicker ? (
+            <button
+              type="button"
+              onClick={() => { setShowPicker(true); setPickerHighlight(0); }}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "0.35rem",
+                background: "none",
+                border: "1px dashed var(--border)",
+                borderRadius: "6px",
+                cursor: "pointer",
+                color: "var(--muted-foreground)",
+                fontSize: "0.7rem",
+                padding: "0.25rem 0.6rem",
+                transition: "all 150ms",
+              }}
+              onMouseEnter={(e) => {
+                const btn = e.currentTarget;
+                btn.style.background = "#1F3024";
+                btn.style.borderColor = "#4ade80";
+                btn.style.borderStyle = "solid";
+                btn.style.color = "#4ade80";
+                btn.style.boxShadow = "0 0 24px rgba(74, 222, 128, 0.35), 0 0 8px rgba(74, 222, 128, 0.2)";
+              }}
+              onMouseLeave={(e) => {
+                const btn = e.currentTarget;
+                btn.style.background = "none";
+                btn.style.borderColor = "var(--border)";
+                btn.style.borderStyle = "dashed";
+                btn.style.color = "var(--muted-foreground)";
+                btn.style.boxShadow = "none";
+              }}
+            >
+              <Plus style={{ width: 14, height: 14 }} /> Add block
+            </button>
+          ) : (
+            <div style={{ position: "relative", width: "220px" }}>
+              <input
+                ref={pickerInputRef}
+                type="text"
+                value={pickerQuery}
+                onChange={(e) => setPickerQuery(e.target.value)}
+                placeholder="Type to search..."
+                style={{
+                  width: "100%",
+                  padding: "0.3rem 0.5rem",
+                  fontSize: "0.8rem",
+                  background: "var(--background)",
+                  border: "1px solid var(--border)",
+                  borderRadius: showPicker && filteredBlockNames.length > 0 ? "5px 5px 0 0" : "5px",
+                  color: "var(--foreground)",
+                  outline: "none",
+                  boxSizing: "border-box",
+                }}
+                onFocus={(e) => { e.target.style.borderColor = "var(--primary)"; }}
+                onBlur={(e) => {
+                  // Delay close so click on option registers first
+                  setTimeout(() => {
+                    e.target.style.borderColor = "var(--border)";
+                    setShowPicker(false); setPickerQuery(""); setPickerHighlight(-1);
+                  }, 150);
+                }}
+              />
+              {filteredBlockNames.length > 0 && (
+                <div style={{
+                  position: "absolute",
+                  top: "100%",
+                  left: 0,
+                  right: 0,
+                  zIndex: 50,
+                  background: "var(--popover)",
+                  border: "1px solid var(--border)",
+                  borderTop: "none",
+                  borderRadius: "0 0 5px 5px",
+                  maxHeight: "200px",
+                  overflowY: "auto",
+                }}>
+                  {filteredBlockNames.map((name, idx) => {
+                    const cfg = getConfig(name);
+                    const highlighted = pickerHighlight === idx;
+                    return (
+                      <button
+                        key={name}
+                        type="button"
+                        onMouseDown={(e) => { e.preventDefault(); addBlock(name); setShowPicker(false); setPickerQuery(""); setPickerHighlight(-1); }}
+                        onMouseEnter={() => setPickerHighlight(idx)}
+                        style={{
+                          width: "100%",
+                          textAlign: "left",
+                          padding: "0.35rem 0.5rem",
+                          fontSize: "0.8rem",
+                          color: highlighted ? "var(--foreground)" : "var(--muted-foreground)",
+                          background: highlighted ? "var(--accent)" : "transparent",
+                          border: "none",
+                          cursor: "pointer",
+                        }}
+                      >
                         {cfg?.label ?? name}
-                      </span>
-                    </button>
-                  );
-                })}
-                {filteredBlockNames.length === 0 && (
-                  <div style={{ padding: "0.75rem", fontSize: "0.8rem", color: "var(--muted-foreground)" }}>
-                    {pickerQuery ? `No blocks matching "${pickerQuery}"` : "No block types available"}
-                  </div>
-                )}
-              </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              {filteredBlockNames.length === 0 && pickerQuery && (
+                <div style={{
+                  position: "absolute",
+                  top: "100%",
+                  left: 0,
+                  right: 0,
+                  zIndex: 50,
+                  background: "var(--popover)",
+                  border: "1px solid var(--border)",
+                  borderTop: "none",
+                  borderRadius: "0 0 5px 5px",
+                  padding: "0.5rem",
+                  fontSize: "0.75rem",
+                  color: "var(--muted-foreground)",
+                }}>
+                  No match
+                </div>
+              )}
             </div>
-          );
-          })()}
+          )}
         </div>
       )}
       {/* Clone flash animation */}
