@@ -1,0 +1,36 @@
+name: Tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'packages/cms/src/**'
+      - 'packages/cms/package.json'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'packages/cms/src/**'
+
+jobs:
+  test:
+    name: Contract tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      - name: Builtin blocks contract tests
+        run: cd packages/cms && npx vitest run src/schema/__tests__/builtin-blocks.test.ts
+
+      - name: TypeScript type-check (cms)
+        run: cd packages/cms && npx tsc --noEmit
