@@ -160,6 +160,29 @@ export default function SetupPage() {
             {loading ? "Creating account…" : "Create admin account"}
           </button>
         </form>
+
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", margin: "1.25rem 0 0.25rem" }}>
+          <div style={{ flex: 1, height: "1px", background: "hsl(0 0% 20%)" }} />
+          <span style={{ fontSize: "0.7rem", color: "hsl(0 0% 40%)", textTransform: "uppercase", letterSpacing: "0.05em" }}>or</span>
+          <div style={{ flex: 1, height: "1px", background: "hsl(0 0% 20%)" }} />
+        </div>
+        <a
+          href="/api/auth/github?login=true"
+          style={{
+            display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem",
+            width: "100%", padding: "0.55rem", marginTop: "0.25rem",
+            borderRadius: "7px", border: "1px solid hsl(0 0% 20%)",
+            background: "hsl(0 0% 10%)", color: "hsl(0 0% 85%)",
+            fontSize: "0.875rem", fontWeight: 500, textDecoration: "none",
+            cursor: "pointer", transition: "border-color 150ms, color 150ms",
+            boxSizing: "border-box",
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.borderColor = "hsl(0 0% 40%)"; e.currentTarget.style.color = "#fff"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.borderColor = "hsl(0 0% 20%)"; e.currentTarget.style.color = "hsl(0 0% 85%)"; }}
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" /></svg>
+          Set up with GitHub
+        </a>
       </div>
       <p style={{ marginTop: "1.5rem", fontSize: "0.7rem", color: "hsl(0 0% 30%)", letterSpacing: "0.05em" }}>
         Powered by <span style={{ color: "hsl(38 80% 55%)", fontWeight: 500 }}>@webhouse/cms</span>

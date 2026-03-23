@@ -14,7 +14,7 @@ function LoginForm() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
-  const [hasGitHub, setHasGitHub] = useState(false);
+  const [hasGitHub, setHasGitHub] = useState(true); // always show — GitHub OAuth is part of the platform
 
   // If no users exist yet, redirect to setup. Also check if GitHub OAuth is configured.
   useEffect(() => {
@@ -22,10 +22,7 @@ function LoginForm() {
       .then((r) => r.json())
       .then((d: { hasUsers?: boolean; hasGitHub?: boolean }) => {
         if (!d.hasUsers) router.replace("/admin/setup");
-        else {
-          setHasGitHub(!!d.hasGitHub);
-          setChecking(false);
-        }
+        else setChecking(false);
       })
       .catch(() => setChecking(false));
   }, [router]);
