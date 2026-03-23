@@ -366,7 +366,8 @@ export function DeploySettingsPanel() {
         </>
       )}
 
-      {/* ── Deploy history ───────────────────────────────── */}
+      {/* ── Deploy history (only when a provider is configured) ── */}
+      {effectiveProvider !== "off" && <>
       <SectionHeading>Deploy History</SectionHeading>
       <SettingsCard>
         {deploys.length === 0 ? (
@@ -424,6 +425,7 @@ export function DeploySettingsPanel() {
           </button>
         )}
       </SettingsCard>
+      </>}
     </>
   );
 }
