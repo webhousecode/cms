@@ -114,6 +114,7 @@
 | F95 | [Cloud Backup Providers](#f95-cloud-backup-providers) | Planned | [docs/features/F95-cloud-backup-providers.md](features/F95-cloud-backup-providers.md) |
 | F96 | [Embeddable Maps](#f96-embeddable-maps) | Planned | [docs/features/F96-embeddable-maps.md](features/F96-embeddable-maps.md) |
 | F97 | [SEO Module](#f97-seo-module) | Planned | [docs/features/F97-seo-module.md](features/F97-seo-module.md) |
+| F98 | [Performance Audit (Lighthouse)](#f98-lighthouse-audit) | Planned | [docs/features/F98-lighthouse-audit.md](features/F98-lighthouse-audit.md) |
 
 ---
 
@@ -416,3 +417,6 @@ Three ways to embed Google Maps in CMS content: (1) Paste Google Maps embed URL 
 
 ## F97 — SEO Module
 Dedicated SEO management in the CMS admin. Per-document SEO panel in document editor sidebar: meta title (60 chars), meta description (160 chars), keywords (chips), OG image picker, canonical URL, robots directive, JSON-LD template selector. Real-time Google SERP preview + social sharing preview. SEO score (0-100) with 13 rules (title length, keyword density, heading structure, alt tags, internal links, etc.). AI Optimize button runs existing `cms ai seo` agent. SEO Dashboard with all-docs score overview, issue tracker (missing descriptions, duplicate titles), keyword tracker with coverage per keyword. Bulk "Optimize All" for AI SEO across entire site. JSON-LD templates for Article, Product, FAQ, Event, Person, LocalBusiness. Feeds into F89 (Post-Build Enrichment) and F17 (AI Content Index). References F16 (Link Checker) for link health signals.
+
+## F98 — Performance Audit (Lighthouse)
+Løbende Lighthouse-scanning af sites fra CMS admin. Dual-engine: PageSpeed Insights API (production, cloud-baseret, 25K/dag gratis) + npm `lighthouse` med Playwright Chromium (development, localhost scans). Dashboard widget med 4 category scores (Performance, Accessibility, SEO, Best Practices) + trend-graf over tid. Core Web Vitals (LCP, CLS, INP). Full audit page i Tools med opportunities, diagnostics, og per-page scores. Scheduled scans (ugentligt via scheduler). Alert når score falder under threshold. Score-historik (90 dage). Integrerer med F97 (SEO score), F72 (route index for scan all pages), F64 (toast alerts).

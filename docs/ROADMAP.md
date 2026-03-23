@@ -102,6 +102,7 @@ _Makes us stand out. Customers expect these from a modern CMS._
 | 18e | **F92 Desktop PWA** | Small | Install CMS admin as desktop app. Standalone window, dock icon, no browser chrome. Half-day of work. |
 | 18f | **F94 Favorites** | Small | Heart-toggle on any page/document. Sidebar section + Command Palette priority. Per-user persistence. |
 | 18g | **F95 Cloud Backup Providers** | Medium | pCloud, Scaleway (75GB free), R2, B2, Hetzner. S3 + pCloud + WebDAV adapters. Extends F27. |
+| 18h | **F98 Lighthouse Audit** | Medium | PSI API + local Lighthouse. Dashboard scores + trend, scheduled scans, per-page audits, alerts on drop. |
 | 19 | **F49 Incremental Builds** | Small | Performance. Only matters at scale (100+ pages). |
 | 20 | **F51 Admin AI Assistant** | Medium | Persistent AI chat in admin. Executes MCP tools. Huge differentiator. |
 | 20b | **F55 Enhance Prompt** | Small | Magic wand that rewrites vague prompts into effective ones. Better AI output for everyone. |
