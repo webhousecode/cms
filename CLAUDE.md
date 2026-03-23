@@ -63,6 +63,16 @@ npx tsc --noEmit --project packages/cms-admin/tsconfig.json
 bash scripts/code-audit.sh
 ```
 
+## Critical: Builtin Blocks Are Immutable Contracts
+
+**NEVER change field names or types in `packages/cms/src/schema/builtin-blocks.ts` without checking existing content first.** These blocks have data stored in production JSON files. Changing a field name (e.g. `body` → `content`) or type (e.g. `richtext` → `text`) silently destroys all existing content using that block.
+
+Before modifying ANY builtin block:
+1. `grep -r '"_block":"<blockname>"' examples/ content/` — find all content using it
+2. If content exists → DO NOT change field names or types
+3. Adding a NEW block is fine — run `npx vitest run` after to update snapshot
+4. Run `cd packages/cms && npx vitest run` — tests MUST pass before commit
+
 ## Key Conventions
 
 - **Follow instructions exactly** — when given a task description, implement EXACTLY what is described. "Same as X" means find X's implementation and replicate the pattern. Do not add creative interpretations, extra features, or alternative approaches not asked for. When in doubt, ask — don't assume.

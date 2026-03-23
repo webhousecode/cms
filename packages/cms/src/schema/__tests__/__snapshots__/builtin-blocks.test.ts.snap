@@ -1,0 +1,223 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`builtin-blocks > block definitions match snapshot 1`] = `
+[
+  {
+    "fields": [
+      {
+        "label": "Label (internal)",
+        "name": "label",
+        "type": "text",
+      },
+      {
+        "defaultValue": "1-1",
+        "label": "Layout",
+        "name": "layout",
+        "options": [
+          {
+            "label": "50 / 50",
+            "value": "1-1",
+          },
+          {
+            "label": "66 / 33",
+            "value": "2-1",
+          },
+          {
+            "label": "33 / 66",
+            "value": "1-2",
+          },
+          {
+            "label": "3 equal",
+            "value": "1-1-1",
+          },
+          {
+            "label": "4 equal",
+            "value": "1-1-1-1",
+          },
+        ],
+        "type": "select",
+      },
+      {
+        "label": "Columns",
+        "name": "columns",
+        "type": "column-slots",
+      },
+    ],
+    "label": "Columns",
+    "name": "columns",
+    "propertyFields": [
+      "label",
+    ],
+  },
+  {
+    "fields": [
+      {
+        "label": "Video URL",
+        "name": "src",
+        "required": true,
+        "type": "video",
+      },
+      {
+        "label": "Caption",
+        "name": "caption",
+        "type": "text",
+      },
+    ],
+    "label": "Video",
+    "name": "video",
+  },
+  {
+    "fields": [
+      {
+        "label": "Audio File",
+        "name": "src",
+        "required": true,
+        "type": "audio",
+      },
+      {
+        "label": "Caption",
+        "name": "caption",
+        "type": "text",
+      },
+    ],
+    "label": "Audio",
+    "name": "audio",
+  },
+  {
+    "fields": [
+      {
+        "label": "File",
+        "name": "src",
+        "required": true,
+        "type": "file",
+      },
+      {
+        "label": "Display Name",
+        "name": "filename",
+        "type": "text",
+      },
+    ],
+    "label": "File",
+    "name": "file",
+  },
+  {
+    "fields": [
+      {
+        "label": "Interactive",
+        "name": "interactiveId",
+        "required": true,
+        "type": "interactive",
+      },
+      {
+        "label": "Caption",
+        "name": "caption",
+        "type": "text",
+      },
+      {
+        "label": "Scale (%)",
+        "name": "scale",
+        "type": "number",
+      },
+      {
+        "label": "Fullscreen button",
+        "name": "allowFullscreen",
+        "type": "boolean",
+      },
+      {
+        "label": "Fullscreen button label",
+        "name": "fullscreenLabel",
+        "type": "text",
+      },
+    ],
+    "label": "Interactive",
+    "name": "interactive",
+    "propertyFields": [
+      "scale",
+      "allowFullscreen",
+      "fullscreenLabel",
+    ],
+  },
+  {
+    "fields": [
+      {
+        "label": "Text",
+        "name": "body",
+        "type": "richtext",
+      },
+    ],
+    "label": "Text",
+    "name": "text",
+  },
+  {
+    "fields": [
+      {
+        "label": "Text",
+        "name": "content",
+        "type": "textarea",
+      },
+    ],
+    "label": "Text Area",
+    "name": "textarea",
+  },
+  {
+    "fields": [
+      {
+        "label": "Content",
+        "name": "content",
+        "type": "richtext",
+      },
+    ],
+    "label": "Rich Text",
+    "name": "richtext",
+  },
+  {
+    "fields": [
+      {
+        "label": "Image",
+        "name": "src",
+        "required": true,
+        "type": "image",
+      },
+      {
+        "label": "Alt text",
+        "name": "alt",
+        "type": "text",
+      },
+      {
+        "label": "Caption",
+        "name": "caption",
+        "type": "text",
+      },
+    ],
+    "label": "Image",
+    "name": "image",
+  },
+  {
+    "fields": [
+      {
+        "label": "Images",
+        "name": "images",
+        "type": "image-gallery",
+      },
+      {
+        "label": "Caption",
+        "name": "caption",
+        "type": "text",
+      },
+    ],
+    "label": "Image Gallery",
+    "name": "image-gallery",
+  },
+  {
+    "fields": [
+      {
+        "label": "HTML",
+        "name": "content",
+        "type": "htmldoc",
+      },
+    ],
+    "label": "HTML Document",
+    "name": "htmldoc",
+  },
+]
+`;
