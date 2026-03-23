@@ -110,6 +110,7 @@ function UserNav({ user }: { user: SessionUser | null }) {
 }
 
 function DeployButton() {
+  const router = useRouter();
   const [provider, setProvider] = useState<string>("off");
   const [deploying, setDeploying] = useState(false);
   const [lastResult, setLastResult] = useState<{ ok: boolean; error?: string } | null>(null);
@@ -123,18 +124,16 @@ function DeployButton() {
 
   useEffect(() => {
     setProvider("off");
-    // Check explicit deploy config first
     fetch("/api/admin/site-config")
       .then((r) => r.ok ? r.json() : null)
       .then((data) => {
         if (data?.deployProvider && data.deployProvider !== "off") {
           setProvider(data.deployProvider);
         } else {
-          // Auto-detect: any site with build.ts or GitHub adapter can deploy
           fetch("/api/admin/deploy/can-deploy")
             .then((r) => r.ok ? r.json() : null)
             .then((d: any) => {
-              if (d?.canDeploy) setProvider(d.provider ?? "github-pages");
+              if (d?.canDeploy) setProvider(d.provider ?? "off");
             })
             .catch(() => {});
         }
@@ -143,6 +142,15 @@ function DeployButton() {
   }, [fetchKey]);
 
   const handleDeploy = useCallback(async () => {
+    // Not configured → prompt to configure
+    if (provider === "off") {
+      toast.info("Deploy not configured", {
+        description: "Set up a deploy provider for this site.",
+        action: { label: "Configure", onClick: () => router.push("/admin/settings?tab=deploy") },
+        duration: 8000,
+      });
+      return;
+    }
     setDeploying(true);
     setLastResult(null);
     try {
@@ -178,8 +186,6 @@ function DeployButton() {
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [provider, handleDeploy]);
-
-  if (provider === "off") return null;
 
   return (
     <button
