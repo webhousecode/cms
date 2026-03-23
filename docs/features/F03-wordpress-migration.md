@@ -207,7 +207,7 @@ Use the brand colors from the tokens. Map to Tailwind's naming convention.`;
 
 ### Phase 4 — Migration Wizard UI
 
-4-step wizard at `/admin/tools?tab=wp-migrate`:
+5-step wizard at `/admin/tools?tab=wp-migrate`:
 
 ```
 Step 1: Connect
@@ -227,47 +227,137 @@ Step 1: Connect
 
 Step 2: Review (after probe)
 ┌─────────────────────────────────────────────────┐
-│ Site Analysis                                    │
+│ Site Analysis: maurseth.dk                       │
 │                                                  │
-│ Theme: flavor-flavor   Builder: Elementor        │
-│ REST API: ✅ Available                           │
+│ Theme: Oxygen   Builder: Oxygen Builder          │
+│ REST API: ✅ Available   Content: ✅ Clean HTML  │
 │                                                  │
 │ CONTENT                     DESIGN               │
-│ ☑ 47 Posts → posts         Colors: 8 detected    │
-│ ☑ 12 Pages → pages         Fonts: Inter, Merri   │
-│ ☑ 156 Media files          Spacing: 4px scale    │
-│ ☑ 8 Categories             Layout: header, hero,  │
-│ ☑ 23 Tags                  sidebar, footer       │
-│ ☐ 3 Custom Post Types      [Preview design →]    │
+│ ☑ 15 Posts → posts         Colors: 6 detected    │
+│ ☑ 10 Pages → pages         Fonts: Inter, Cardo   │
+│ ☑ 30 Media files           Spacing: 4px scale    │
+│ ☑ 25 Udstillinger → exhibitions                  │
+│ ☑ 1 Event  → events        [Preview design →]   │
 │                                                  │
-│ [← Back]                    [Start migration →]  │
+│ [← Back]                    [Create site →]      │
 └─────────────────────────────────────────────────┘
 
-Step 3: Progress
+Step 3: Create Site (NEW — this is the critical missing step)
 ┌─────────────────────────────────────────────────┐
-│ Migrating...                                     │
+│ Create webhouse.app Site                         │
 │                                                  │
-│ Content:  ████████████████░░░░ 38/47 posts       │
-│ Media:    ████████░░░░░░░░░░░ 62/156 files       │
+│ The migration will create a new site with        │
+│ collections matching the WordPress content.      │
+│                                                  │
+│ SITE SETUP                                       │
+│ Organization:  [WebHouse ▾]                      │
+│ Site name:     [maurseth.dk              ]       │
+│ Adapter:       (●) Filesystem  ( ) GitHub        │
+│                                                  │
+│ GENERATED CONFIG (cms.config.ts)                 │
+│ ┌─────────────────────────────────────────────┐ │
+│ │ collections:                                 │ │
+│ │   - posts      (15 docs, richtext + image)   │ │
+│ │   - pages      (10 docs, richtext)           │ │
+│ │   - exhibitions (25 docs, text + image)      │ │
+│ │   - events     (1 doc, text + date)          │ │
+│ │                                              │ │
+│ │ Fields auto-detected from WP content:        │ │
+│ │   title (text), content (richtext),          │ │
+│ │   excerpt (textarea), featured_image (image) │ │
+│ │   + custom fields per CPT                    │ │
+│ └─────────────────────────────────────────────┘ │
+│                                                  │
+│ [← Back]              [Create site & migrate →]  │
+└─────────────────────────────────────────────────┘
+
+Step 4: Progress
+┌─────────────────────────────────────────────────┐
+│ Migrating maurseth.dk → webhouse.app             │
+│                                                  │
+│ Site:     ████████████████████ Created            │
+│ Config:   ████████████████████ Generated          │
+│ Content:  ████████████████░░░░ 38/51 docs        │
+│ Media:    ████████░░░░░░░░░░░ 18/30 files        │
 │ Design:   ████████████████████ Complete           │
 │                                                  │
-│ ⚡ Extracting design tokens...                   │
-│ ⚡ Generating Tailwind config via AI...          │
-│ ✅ 38 posts imported                             │
-│ ⚠️ 2 posts had Divi shortcodes (HTML fallback)   │
+│ ✅ Site "maurseth.dk" created in org "WebHouse"  │
+│ ✅ 4 collections generated from WP structure     │
+│ ⚡ Importing 15 posts...                         │
+│ ⚡ Downloading media files...                    │
+│ ✅ Tailwind config generated via AI              │
 └─────────────────────────────────────────────────┘
 
-Step 4: Done
+Step 5: Done
 ┌─────────────────────────────────────────────────┐
 │ Migration Complete ✅                            │
 │                                                  │
-│ 47 posts, 12 pages, 156 media files imported     │
+│ Site "maurseth.dk" is ready                      │
+│ 51 documents, 30 media files, 4 collections      │
 │ Design tokens + Tailwind config generated        │
 │                                                  │
+│ [Open site in CMS →]                             │
 │ [Download redirect map (JSON)]                   │
 │ [Download Tailwind config]                       │
-│ [View imported content →]                        │
+│ [Deploy site (F12) →]                            │
 └─────────────────────────────────────────────────┘
+```
+
+### What "Create Site" Does Under the Hood
+
+Step 3 runs this sequence:
+
+1. **Generate `cms.config.ts`** from WP probe data:
+   - Map WP post types → CMS collections
+   - Detect fields from content structure (title, content, excerpt, featured_image, date, author, categories, tags)
+   - Custom post types → custom collections with auto-detected fields
+   - Set `urlPrefix` matching WP permalink structure (for redirect compatibility)
+
+2. **Create site in registry** via existing `POST /api/cms/registry` with `action: "add-site"`:
+   - Filesystem adapter: create project directory with `content/`, `public/uploads/`, `cms.config.ts`
+   - GitHub adapter: create repo, push config + scaffolding
+
+3. **Switch active site** to the new migration target
+
+4. **Begin content import** into the newly created site's content directory
+
+```typescript
+// packages/cms-admin/src/lib/wp-migration/create-site.ts
+
+export async function createMigrationSite(
+  probe: WpProbeResult,
+  options: {
+    orgId: string;
+    siteName: string;
+    adapter: "filesystem" | "github";
+    githubRepo?: string;
+  },
+): Promise<{ siteId: string; configPath: string; contentDir: string }> {
+  // 1. Generate cms.config.ts from probe data
+  const config = generateCmsConfig(probe);
+
+  // 2. Create project directory structure
+  //    {baseDir}/{siteName}/
+  //      cms.config.ts
+  //      content/
+  //        posts/
+  //        pages/
+  //        exhibitions/  (from CPTs)
+  //      public/uploads/
+
+  // 3. Register site in CMS registry
+  //    POST /api/cms/registry { action: "add-site", orgId, site: { ... } }
+
+  // 4. Return paths for content import phase
+}
+
+function generateCmsConfig(probe: WpProbeResult): string {
+  // Map WP post types → CMS collections
+  // posts → { name: "posts", urlPrefix: "/blog/", fields: [title, content, excerpt, ...] }
+  // pages → { name: "pages", urlPrefix: "/", fields: [title, content, ...] }
+  // udstilling → { name: "exhibitions", urlPrefix: "/udstillinger/", fields: [...] }
+  // Detect field types from actual content (richtext if HTML, text if plain, etc.)
+}
 ```
 
 ### Output Files
@@ -312,6 +402,7 @@ GET  /api/admin/wp-migrate/result/[id]   → get migration results + downloads
 - `packages/cms-admin/src/lib/wp-migration/extract-content.ts` — **new** content extractor
 - `packages/cms-admin/src/lib/wp-migration/extract-design.ts` — **new** design extractor
 - `packages/cms-admin/src/lib/wp-migration/block-transform.ts` — **new** Gutenberg parser
+- `packages/cms-admin/src/lib/wp-migration/create-site.ts` — **new** site creation + config generation
 - `packages/cms-admin/src/app/api/admin/wp-migrate/` — **new** API routes
 - `packages/cms-admin/src/app/admin/(workspace)/tools/` — **modified** (add WP Migration tab)
 - `packages/cms-admin/package.json` — add `fast-xml-parser`, `dembrandt`
@@ -332,7 +423,7 @@ Tools page (`admin/tools/`) — gains new tab, no breaking changes to existing L
 ### Test plan
 - [ ] TypeScript compiles: `npx tsc --noEmit`
 - [ ] Probe detects REST API on a test WP site
-- [ ] Probe detects page builder (Elementor, Gutenberg)
+- [ ] Probe detects page builder (Elementor, Gutenberg, Oxygen)
 - [ ] Dembrandt extracts design tokens from WP site
 - [ ] REST API pagination fetches all posts (>100)
 - [ ] Gutenberg blocks transform to clean HTML
@@ -340,8 +431,12 @@ Tools page (`admin/tools/`) — gains new tab, no breaking changes to existing L
 - [ ] WXR XML parser extracts posts, pages, menus
 - [ ] HTML scraping fallback works for Divi/WPBakery
 - [ ] AI generates valid Tailwind config from tokens
+- [ ] **Site creation: cms.config.ts generated with correct collections from WP post types**
+- [ ] **Site creation: registered in CMS registry under selected org**
+- [ ] **Content imported into new site's content directory**
 - [ ] Redirect map correctly maps old→new URLs
 - [ ] Wizard UI shows progress via SSE
+- [ ] **End-to-end: maurseth.dk probe → create site → import 51 docs + 30 media → design tokens**
 
 ## Implementation Steps
 
@@ -359,16 +454,18 @@ Tools page (`admin/tools/`) — gains new tab, no breaking changes to existing L
 9. Create AI prompt for Tailwind config generation from tokens + screenshots
 10. Build `extract-design.ts` pipeline (Dembrandt → screenshots → AI → config)
 
-### Phase 3 — Wizard UI (days 6-8)
-11. Build 4-step wizard in Tools → WP Migration tab
+### Phase 3 — Wizard UI (days 6-9)
+11. Build 5-step wizard in Tools → WP Migration tab
 12. Step 1: URL input + WXR upload + optional auth
 13. Step 2: Probe results with content/design preview
-14. Step 3: SSE-driven progress (content + media + design)
-15. Step 4: Results with download links (redirects, Tailwind config)
+14. Step 3: Create site — org picker, name, adapter, auto-generated cms.config.ts preview
+15. Step 4: SSE-driven progress (site creation + content + media + design)
+16. Step 5: Results with "Open site in CMS" + download links
 
 ## Dependencies
 
 - F02 (Import Engine) — shares batch import pattern, can build independently
+- F76 (Create New Organization) — Done. Site creation uses registry API
 - `fast-xml-parser` — WXR XML parsing
 - `dembrandt` — design token extraction (uses Playwright internally)
 - Playwright — already a dev dependency
@@ -376,8 +473,139 @@ Tools page (`admin/tools/`) — gains new tab, no breaking changes to existing L
 
 ## Effort Estimate
 
-**Large** — 7-8 days
+**Large** — 8-9 days
 
 - Days 1-4: Probe + content extraction (REST API, WXR, block transform, media)
-- Days 4-6: Design extraction (Dembrandt, screenshots, AI Tailwind generation)
-- Days 6-8: Wizard UI + SSE progress + testing against real WP sites
+- Days 4-5: Site creation (cms.config.ts generation, registry, directory scaffolding)
+- Days 5-7: Design extraction (Dembrandt, screenshots, AI Tailwind generation)
+- Days 7-9: Wizard UI + SSE progress + testing with maurseth.dk reference case
+
+---
+
+## Reference Test Case: maurseth.dk
+
+Probed 2026-03-23. This is the pipeline test case for validating F03 end-to-end.
+
+### Site Profile
+
+| | |
+|---|---|
+| **URL** | https://www.maurseth.dk |
+| **WordPress** | REST API fully open, no auth required |
+| **Theme** | Oxygen Builder ("oxygen-is-not-a-theme") |
+| **Page builder** | Oxygen — renders clean HTML in REST API (no shortcode leakage) |
+| **Fonts** | Inter (variable, 300-900) + Cardo (400, 400i, 700) |
+| **Language** | Danish (da), Europe/Copenhagen |
+| **Site name** | "Kunstner" — "Grafik & billedkunstner" |
+| **Complexity** | Low-Medium — small site, clean data, 2 custom post types |
+
+### Content Inventory
+
+| WP Type | Count | CMS Collection | Fields |
+|---------|-------|----------------|--------|
+| Posts | 15 | `posts` | title, content (richtext), excerpt, featured_image, date, categories |
+| Pages | 10 | `pages` | title, content (richtext), featured_image |
+| Udstilling (CPT) | 25 | `exhibitions` | title, content (richtext), featured_image, date |
+| Events (CPT) | 1 | `events` | title, content (richtext), date |
+| Media | 30+ | `public/uploads/` | JPEG images (artwork, exhibitions, artist books) |
+| Categories | 1 | — | "Ikke-kategoriseret" (all posts, not useful) |
+| **Total** | **~81 items** | **4 collections** | |
+
+### Generated cms.config.ts (expected output)
+
+```typescript
+import { defineConfig, defineCollection, defineField } from "@webhouse/cms";
+
+export default defineConfig({
+  collections: [
+    defineCollection({
+      name: "posts",
+      label: "Nyheder",
+      urlPrefix: "/",
+      fields: [
+        defineField({ name: "title", type: "text", required: true }),
+        defineField({ name: "content", type: "richtext" }),
+        defineField({ name: "excerpt", type: "textarea" }),
+        defineField({ name: "featured_image", type: "image" }),
+      ],
+    }),
+    defineCollection({
+      name: "pages",
+      label: "Sider",
+      urlPrefix: "/",
+      fields: [
+        defineField({ name: "title", type: "text", required: true }),
+        defineField({ name: "content", type: "richtext" }),
+        defineField({ name: "featured_image", type: "image" }),
+      ],
+    }),
+    defineCollection({
+      name: "exhibitions",
+      label: "Udstillinger",
+      urlPrefix: "/udstilling/",
+      fields: [
+        defineField({ name: "title", type: "text", required: true }),
+        defineField({ name: "content", type: "richtext" }),
+        defineField({ name: "featured_image", type: "image" }),
+        defineField({ name: "date", type: "date" }),
+      ],
+    }),
+    defineCollection({
+      name: "events",
+      label: "Events",
+      urlPrefix: "/events/",
+      fields: [
+        defineField({ name: "title", type: "text", required: true }),
+        defineField({ name: "content", type: "richtext" }),
+        defineField({ name: "date", type: "date" }),
+      ],
+    }),
+  ],
+});
+```
+
+### Redirect Map (expected output)
+
+```json
+[
+  { "from": "/filosofgangen-kommende-udstilling/", "to": "/posts/filosofgangen-kommende-udstilling" },
+  { "from": "/artist-book-2025-og-2026/", "to": "/posts/artist-book-2025-og-2026" },
+  { "from": "/collager/", "to": "/pages/collager" },
+  { "from": "/cv/", "to": "/pages/cv" },
+  { "from": "/kontakt/", "to": "/pages/kontakt" },
+  { "from": "/kunstforeningen-limfjorden-paaskeudstilling-2025/", "to": "/udstilling/kunstforeningen-limfjorden-paaskeudstilling-2025" }
+]
+```
+
+### Design Tokens (expected Dembrandt output)
+
+```json
+{
+  "colors": {
+    "primary": "...",
+    "background": "#...",
+    "text": "#..."
+  },
+  "fonts": {
+    "heading": "Cardo, serif",
+    "body": "Inter, sans-serif"
+  },
+  "spacing": [4, 8, 16, 24, 32, 48],
+  "borderRadius": [0, 4, 8]
+}
+```
+
+### Acceptance Criteria
+
+- [ ] `POST /api/admin/wp-migrate/probe` with URL `https://www.maurseth.dk` returns probe result in <10s
+- [ ] Probe detects Oxygen Builder, 15 posts, 10 pages, 25 exhibitions, 1 event, 30+ media
+- [ ] "Create site" generates valid `cms.config.ts` with 4 collections
+- [ ] Site registered in CMS registry under selected org
+- [ ] All 51 documents imported as JSON in `content/{collection}/{slug}.json`
+- [ ] All 30+ media files downloaded to `public/uploads/`
+- [ ] Image URLs in content rewritten from `maurseth.dk/wp-content/uploads/...` → `/uploads/...`
+- [ ] Redirect map generated with all old→new URL mappings
+- [ ] Design tokens extracted (colors, fonts, spacing)
+- [ ] AI generates Tailwind config with Inter + Cardo + detected color palette
+- [ ] Site opens in CMS admin with all content visible and editable
+- [ ] Total migration time < 5 minutes for this site size
