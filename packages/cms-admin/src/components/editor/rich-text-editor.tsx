@@ -37,6 +37,8 @@ interface Props {
   disabled?: boolean;
   /** Sticky toolbar offset from top in px (default 0). Top-level editors pass header height. */
   stickyOffset?: number;
+  /** Whitelist of toolbar features. If omitted, all features available. */
+  features?: string[];
 }
 
 type HeadingKey = "paragraph" | "h1" | "h2" | "h3";
@@ -1962,7 +1964,9 @@ function LinkPopup({ onConfirm, onRemove, onClose, initial }: {
 }
 
 /* ─── Main editor ─────────────────────────────────────────────── */
-function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132 }: Props) {
+function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, features }: Props) {
+  // Feature check: if features whitelist is set, only show those toolbar items
+  const has = (feature: string) => !features || features.includes(feature);
   const [headingOpen, setHeadingOpen] = useState(false);
   const [hoveredKey, setHoveredKey] = useState<string | null>(null);
   const [linkOpen, setLinkOpen] = useState(false);
@@ -2369,46 +2373,46 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132 }: 
 
             <Sep />
 
-            <Btn tooltip="Bold (⌘B)" active={editor.isActive("bold")}
+            {has("bold") && <Btn tooltip="Bold (⌘B)" active={editor.isActive("bold")}
               onClick={() => editor.chain().focus().toggleBold().run()}>
               <IconBold />
-            </Btn>
-            <Btn tooltip="Italic (⌘I)" active={editor.isActive("italic")}
+            </Btn>}
+            {has("italic") && <Btn tooltip="Italic (⌘I)" active={editor.isActive("italic")}
               onClick={() => editor.chain().focus().toggleItalic().run()}>
               <IconItalic />
-            </Btn>
-            <Btn tooltip="Strikethrough" active={editor.isActive("strike")}
+            </Btn>}
+            {has("strike") && <Btn tooltip="Strikethrough" active={editor.isActive("strike")}
               onClick={() => editor.chain().focus().toggleStrike().run()}>
               <IconStrikethrough />
-            </Btn>
-            <Btn tooltip="Inline code" active={editor.isActive("code")}
+            </Btn>}
+            {has("code") && <Btn tooltip="Inline code" active={editor.isActive("code")}
               onClick={() => editor.chain().focus().toggleCode().run()}>
               <IconCode />
-            </Btn>
+            </Btn>}
 
-            <Sep />
+            {(has("bold") || has("italic") || has("strike") || has("code")) && <Sep />}
 
-            <Btn tooltip="Bullet list" active={editor.isActive("bulletList")}
+            {has("bulletList") && <Btn tooltip="Bullet list" active={editor.isActive("bulletList")}
               onClick={() => editor.chain().focus().toggleBulletList().run()}>
               <IconBulletList />
-            </Btn>
-            <Btn tooltip="Numbered list" active={editor.isActive("orderedList")}
+            </Btn>}
+            {has("orderedList") && <Btn tooltip="Numbered list" active={editor.isActive("orderedList")}
               onClick={() => editor.chain().focus().toggleOrderedList().run()}>
               <IconNumberedList />
-            </Btn>
-            <Btn tooltip="Blockquote" active={editor.isActive("blockquote")}
+            </Btn>}
+            {has("blockquote") && <Btn tooltip="Blockquote" active={editor.isActive("blockquote")}
               onClick={() => editor.chain().focus().toggleBlockquote().run()}>
               <IconBlockquote />
-            </Btn>
-            <Btn tooltip="Horizontal rule"
+            </Btn>}
+            {has("horizontalRule") && <Btn tooltip="Horizontal rule"
               onClick={() => editor.chain().focus().setHorizontalRule().run()}>
               <IconHorizontalRule />
-            </Btn>
+            </Btn>}
 
-            <Sep />
+            {(has("bulletList") || has("orderedList") || has("blockquote") || has("horizontalRule")) && <Sep />}
 
             {/* Link */}
-            <div style={{ position: "relative" }} ref={linkRef}>
+            {has("link") && <div style={{ position: "relative" }} ref={linkRef}>
               <Btn tooltip="Link (⌘K)" active={editor.isActive("link")}
                 onClick={() => setLinkOpen(o => !o)}>
                 <IconLink />
@@ -2421,15 +2425,15 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132 }: 
                   onClose={() => setLinkOpen(false)}
                 />
               )}
-            </div>
+            </div>}
 
             {/* Table */}
-            <Btn tooltip="Insert table" active={editor.isActive("table")}
+            {has("table") && <Btn tooltip="Insert table" active={editor.isActive("table")}
               onClick={insertTable}>
               <IconTable />
-            </Btn>
+            </Btn>}
 
-            {/* Insert Media (combined dropdown) */}
+            {/* Insert Media (combined dropdown) — shown if any media feature is enabled */}
             <div style={{ position: "relative" }} ref={mediaDropdownRef}>
               <Btn tooltip={uploading ? "Uploading…" : "Insert media"} disabled={uploading}
                 onClick={() => { setShowMediaDropdown((o) => !o); setMediaSubMenu(null); }}>
@@ -2634,7 +2638,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132 }: 
             </Btn>
 
             {/* Insert Callout */}
-            <Btn tooltip="Insert callout" onClick={() => {
+            {has("callout") && <Btn tooltip="Insert callout" onClick={() => {
               editor.chain().focus().insertContent({
                 type: "callout",
                 attrs: { variant: "info" },
@@ -2642,10 +2646,10 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132 }: 
               }).run();
             }}>
               <MessageSquareWarning className="w-[18px] h-[18px]" />
-            </Btn>
+            </Btn>}
 
             {/* Insert Interactive (separate from media — Zap icon, same as sidebar) */}
-            <Btn tooltip="Insert interactive" onClick={() => {
+            {has("interactive") && <Btn tooltip="Insert interactive" onClick={() => {
               setShowInteractivePicker(true);
               setIntSearch("");
               setInteractivesLoading(true);
@@ -2661,7 +2665,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132 }: 
                 .finally(() => setInteractivesLoading(false));
             }}>
               <Zap className="w-[18px] h-[18px]" />
-            </Btn>
+            </Btn>}
 
           </div>
         )}

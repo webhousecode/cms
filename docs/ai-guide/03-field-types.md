@@ -38,10 +38,14 @@ Multi-line plain text.
 ```
 
 #### richtext
-Rich text / Markdown content. Rendered as a block editor in the admin UI.
+Rich text / Markdown content. Rendered as a block editor in the admin UI. Optional `features` array controls which toolbar items are shown — if omitted, all are available.
 ```typescript
 { name: 'content', type: 'richtext', label: 'Content' }
+
+// Restricted: only basic formatting + images
+{ name: 'content', type: 'richtext', features: ['bold', 'italic', 'heading', 'link', 'image', 'bulletList'] }
 ```
+See `05-richtext.md` for the full features list. **Only enable features your site can render.**
 
 #### number
 Numeric value.

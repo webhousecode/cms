@@ -38,6 +38,11 @@ export interface FieldConfig {
   fields?: FieldConfig[];
   // blocks
   blocks?: string[];
+  // richtext features whitelist — controls which toolbar items are shown.
+  // If omitted, all features are available. Example: ['bold', 'italic', 'link', 'image', 'heading']
+  // Available: bold, italic, strike, code, heading, bulletList, orderedList, blockquote,
+  //   horizontalRule, link, table, image, video, audio, file, interactive, callout, codeBlock
+  features?: string[];
   // AI hints
   ai?: {
     hint?: string;
