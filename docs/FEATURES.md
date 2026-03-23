@@ -122,8 +122,8 @@ Invite editors and collaborators to a site via email. Role-based access (admin, 
 ## F02 — Import Engine
 Generic import pipeline for bulk content ingestion. CSV, JSON, Markdown file imports. Field mapping UI. Dry-run preview before commit. Import history and rollback.
 
-## F03 — WordPress Migration
-Automated WordPress-to-CMS migration. Connect via WP REST API or WP admin credentials. Import posts, pages, media, categories, tags, users. Content transformation (Gutenberg blocks → CMS blocks). Preserves URL structure for SEO.
+## F03 — WordPress Migration (Content + Design)
+Automated WordPress-to-CMS migration of both content AND design. 3-phase pipeline: (1) Probe — given just a URL, detect REST API, page builder, theme, content counts + extract design tokens via Dembrandt. (2) Extract Content — paginate REST API for posts/pages/media/taxonomies, WXR XML fallback, HTML scraping for Divi/WPBakery sites. Gutenberg block transformation. (3) Extract Design — Dembrandt tokens + Playwright screenshots → AI generates Tailwind config + CSS variables. 4 tiers: URL-only (~80%), XML export (~90%), App Password (~98%), FTP (100%). Output: cms.config.ts + content/*.json + uploads + tailwind.config.ts + redirect map. Wizard UI in Tools tab.
 
 ## F04 — MCP Server Enhancements
 Extend the dual MCP architecture. Add write tools to the public server (with rate limits). Improve tool descriptions for better AI tool selection. Add `cms_get_schema` tool for AI introspection. Stdio-based local MCP server via `cms mcp serve`.
