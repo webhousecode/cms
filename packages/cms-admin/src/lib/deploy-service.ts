@@ -508,10 +508,11 @@ async function githubPagesBuildAndDeploy(token: string, repo: string): Promise<s
   return pagesUrl;
 }
 
-/** Recursively collect all files in a directory */
+/** Recursively collect all files in a directory (skips dotfile directories like .well-known) */
 function collectFiles(dir: string, baseDir: string): { fullPath: string; relativePath: string }[] {
   const results: { fullPath: string; relativePath: string }[] = [];
   for (const entry of readdirSync(dir)) {
+    if (entry.startsWith(".")) continue; // skip dotfiles/dotdirs — GitHub Pages/API issues
     const full = path.join(dir, entry);
     const stat = statSync(full);
     if (stat.isDirectory()) {
