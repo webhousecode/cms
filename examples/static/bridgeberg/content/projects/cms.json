@@ -1,0 +1,16 @@
+{
+  "slug": "cms",
+  "status": "published",
+  "data": {
+    "title": "@webhouse/cms",
+    "description": "AI-native headless CMS with admin UI, AI agents, MCP servers, and CLI tools. Built on Next.js, TypeScript, and 30 years of CMS experience.",
+    "status": "featured",
+    "icon": "📦",
+    "techTags": ["typescript", "next-js", "ai", "cms", "npm"],
+    "linkLabel": "webhouse.app →",
+    "linkUrl": "https://webhouse.app",
+    "sortOrder": 1
+  },
+  "id": "proj-cms-001",
+  "_fieldMeta": {}
+}

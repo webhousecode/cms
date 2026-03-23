@@ -1,0 +1,16 @@
+{
+  "slug": "ai-tech-radar",
+  "status": "published",
+  "data": {
+    "title": "AI Tech Radar",
+    "description": "Autonomous daily AI tech scanner — scrapes RSS, analyzes with Claude, stores with vector embeddings.",
+    "status": "active",
+    "icon": "📡",
+    "techTags": ["bun", "ai", "vector-search", "rss"],
+    "linkLabel": "GitHub →",
+    "linkUrl": "https://github.com/cbroberg/ai-tech-radar",
+    "sortOrder": 8
+  },
+  "id": "proj-radar-008",
+  "_fieldMeta": {}
+}

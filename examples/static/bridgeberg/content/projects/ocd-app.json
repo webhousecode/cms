@@ -1,0 +1,16 @@
+{
+  "slug": "ocd-app",
+  "status": "published",
+  "data": {
+    "title": "OCD App",
+    "description": "Personal OCD symptom tracker with ERP exercises and progress charts.",
+    "status": "archived",
+    "icon": "🧠",
+    "techTags": ["next-js", "sqlite", "health"],
+    "linkLabel": "Archived",
+    "linkUrl": "#",
+    "sortOrder": 23
+  },
+  "id": "proj-ocd-014",
+  "_fieldMeta": {}
+}

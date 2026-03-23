@@ -1,0 +1,16 @@
+{
+  "slug": "pitch",
+  "status": "published",
+  "data": {
+    "title": "Pitch",
+    "description": "Token-gated pitch presentation site with Monaco editor.",
+    "status": "archived",
+    "icon": "🎤",
+    "techTags": ["next-js", "sqlite", "monaco"],
+    "linkLabel": "Archived",
+    "linkUrl": "#",
+    "sortOrder": 22
+  },
+  "id": "proj-pitch-013",
+  "_fieldMeta": {}
+}

@@ -1,0 +1,14 @@
+{
+  "slug": "mcp-servers-dns-management",
+  "status": "published",
+  "data": {
+    "title": "MCP Servers: Teaching AI to Manage DNS",
+    "excerpt": "Building a Model Context Protocol server that lets Claude manage DNS zones directly. Infrastructure as conversation.",
+    "date": "2026-01-20",
+    "category": "infrastructure",
+    "tags": ["mcp", "dns", "claude", "infrastructure"],
+    "content": "## The Problem\n\nWebHouse manages DNS for hundreds of domains across multiple BIND servers. Updating a zone file means SSH-ing into a server, editing the zone, incrementing the serial, reloading BIND, and verifying propagation. It's error-prone, and I've been doing it for 25 years.\n\nWhen Anthropic released the Model Context Protocol (MCP), I saw an opportunity: what if Claude could manage DNS directly?\n\n## Building dns-mcp\n\nThe DNS MCP server exposes tools like `dns_list_zones`, `dns_list_records`, `dns_create_record`, `dns_upsert_record`, and `dns_reload_zone`. Under the hood, it talks to a REST API that manages BIND zone files on the server.\n\nThe implementation was straightforward — MCP is essentially a JSON-RPC protocol over stdio. The hard part was **safety**. DNS is critical infrastructure. A bad record can take down email, websites, or entire services. So every destructive operation requires explicit confirmation, and the server validates record syntax before writing.\n\n> Infrastructure as conversation — not infrastructure as code, but infrastructure as *dialogue*.\n\n## How It Works in Practice\n\nIn a Claude Code session, I can now say:\n\n- \"Add an A record for api.example.dk pointing to 185.x.x.x\"\n- \"Show me all MX records for webhouse.dk\"\n- \"Update the TTL on all CNAME records to 3600\"\n\nClaude calls the MCP tools, I see the proposed changes, and they execute. What used to take 5 minutes of careful SSH work now takes 10 seconds of conversation.\n\n## Lessons for MCP Server Builders\n\n- **Auth is non-negotiable.** Every MCP server that touches real infrastructure must authenticate. I use bearer tokens.\n- **Validate aggressively.** The AI might generate a syntactically valid but semantically wrong DNS record. Validate against RFC standards.\n- **Log everything.** When something goes wrong with DNS, you need an audit trail. Every MCP call gets logged with timestamp, user, and the exact change made.\n- **Make it reversible.** Every create has a delete. Every update preserves the previous value. DNS mistakes need fast rollback."
+  },
+  "id": "post-mcp-dns-003",
+  "_fieldMeta": {}
+}

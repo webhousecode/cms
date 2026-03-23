@@ -1,0 +1,16 @@
+{
+  "slug": "webhouse-site",
+  "status": "published",
+  "data": {
+    "title": "webhouse.dk",
+    "description": "The WebHouse company website, built on @webhouse/cms with filesystem adapter.",
+    "status": "active",
+    "icon": "🏠",
+    "techTags": ["next-js", "cms", "tailwind"],
+    "linkLabel": "Live →",
+    "linkUrl": "https://webhouse.dk",
+    "sortOrder": 10
+  },
+  "id": "proj-whsite-010",
+  "_fieldMeta": {}
+}

@@ -1,0 +1,16 @@
+{
+  "slug": "whapi",
+  "status": "published",
+  "data": {
+    "title": "WHapi",
+    "description": "Internal API testing and documentation platform. Postman replacement with HTTP proxy and CodeMirror.",
+    "status": "active",
+    "icon": "🔌",
+    "techTags": ["next-js", "sqlite", "api", "codemirror"],
+    "linkLabel": "Internal",
+    "linkUrl": "#",
+    "sortOrder": 5
+  },
+  "id": "proj-whapi-005",
+  "_fieldMeta": {}
+}

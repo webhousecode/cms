@@ -1,0 +1,16 @@
+{
+  "slug": "fysiodk-aalborg-sport",
+  "status": "published",
+  "data": {
+    "title": "FysioDK Aalborg Sport",
+    "description": "Sports physiotherapy clinic PWA + native iOS/Android app. Supabase, TanStack Query, Capacitor.",
+    "status": "active",
+    "icon": "🏃",
+    "techTags": ["next-js", "supabase", "capacitor", "pwa", "ios"],
+    "linkLabel": "Live →",
+    "linkUrl": "https://sport.fdaalborg.dk",
+    "sortOrder": 3
+  },
+  "id": "proj-fysio-003",
+  "_fieldMeta": {}
+}

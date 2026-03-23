@@ -1,0 +1,16 @@
+{
+  "slug": "cronjobs",
+  "status": "published",
+  "data": {
+    "title": "Cronjobs",
+    "description": "Centralized cron scheduler and dashboard for WebHouse services. Croner, SQLite, Discord/email alerts.",
+    "status": "active",
+    "icon": "⏰",
+    "techTags": ["next-js", "sqlite", "cron", "fly-io"],
+    "linkLabel": "Internal",
+    "linkUrl": "#",
+    "sortOrder": 6
+  },
+  "id": "proj-cron-006",
+  "_fieldMeta": {}
+}
