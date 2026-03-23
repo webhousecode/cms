@@ -9,11 +9,13 @@ export type UserRole = "admin" | "editor" | "viewer";
 export interface User {
   id: string;
   email: string;
-  passwordHash: string;
+  passwordHash?: string; // optional — GitHub-only users have no password
   name: string;
   role: UserRole;
   createdAt: string;
   invitedBy?: string; // user ID of inviter
+  source?: "local" | "github" | "invite"; // how the user was created
+  githubUsername?: string; // linked GitHub username
   zoom?: number; // UI zoom level in percent, e.g. 110
   lastActiveOrg?: string; // last active org ID (persists across devices)
   lastActiveSite?: string; // last active site ID (persists across devices)
@@ -64,25 +66,27 @@ export async function getUsers(): Promise<User[]> {
 
 export async function createUser(
   email: string,
-  password: string,
+  password: string | null,
   name: string,
-  opts?: { role?: UserRole; invitedBy?: string },
+  opts?: { role?: UserRole; invitedBy?: string; source?: "local" | "github" | "invite"; githubUsername?: string },
 ): Promise<User> {
   const users = await getUsers();
   if (users.find((u) => u.email.toLowerCase() === email.toLowerCase())) {
     throw new Error("User already exists");
   }
-  const passwordHash = await bcrypt.hash(password, 12);
+  const passwordHash = password ? await bcrypt.hash(password, 12) : undefined;
   // First user is always admin; invited users get the specified role
   const role = opts?.role ?? (users.length === 0 ? "admin" : "editor");
   const user: User = {
     id: crypto.randomUUID(),
     email: email.toLowerCase().trim(),
-    passwordHash,
+    ...(passwordHash ? { passwordHash } : {}),
     name: name.trim(),
     role,
     createdAt: new Date().toISOString(),
     ...(opts?.invitedBy ? { invitedBy: opts.invitedBy } : {}),
+    ...(opts?.source ? { source: opts.source } : {}),
+    ...(opts?.githubUsername ? { githubUsername: opts.githubUsername } : {}),
   };
   users.push(user);
   const filePath = await getUsersFilePath();
@@ -94,6 +98,8 @@ export async function verifyPassword(email: string, password: string): Promise<U
   const users = await getUsers();
   const user = users.find((u) => u.email.toLowerCase() === email.toLowerCase());
   if (!user) return null;
+  // GitHub-only users have no password — reject with null (caller should show "use GitHub" message)
+  if (!user.passwordHash) return null;
   const valid = await bcrypt.compare(password, user.passwordHash);
   return valid ? user : null;
 }

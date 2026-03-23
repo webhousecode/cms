@@ -30,6 +30,11 @@ export async function GET(request: NextRequest) {
   }
   const membership = members.find((m) => m.userId === payload.sub);
 
+  // Prefer GitHub avatar for linked users, fall back to Gravatar
+  const avatarUrl = user?.githubUsername
+    ? `https://github.com/${user.githubUsername}.png?size=64`
+    : gravatarUrl(payload.email);
+
   return NextResponse.json({
     user: {
       id: payload.sub,
@@ -37,7 +42,7 @@ export async function GET(request: NextRequest) {
       name: payload.name,
       role: user?.role ?? payload.role ?? "admin",
       siteRole: membership?.role ?? null, // null = no access to this site
-      gravatarUrl: gravatarUrl(payload.email),
+      gravatarUrl: avatarUrl,
       zoom: user?.zoom ?? 100,
     },
   });

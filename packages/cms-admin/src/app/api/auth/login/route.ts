@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { verifyPassword, createToken, COOKIE_NAME } from "@/lib/auth";
+import { verifyPassword, createToken, getUsers, COOKIE_NAME } from "@/lib/auth";
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,6 +10,12 @@ export async function POST(request: NextRequest) {
 
     const user = await verifyPassword(email, password);
     if (!user) {
+      // Check if the user exists but has no password (GitHub-only account)
+      const users = await getUsers();
+      const exists = users.find((u) => u.email.toLowerCase() === email.toLowerCase());
+      if (exists && !exists.passwordHash) {
+        return NextResponse.json({ error: "This account uses GitHub login — click \"Sign in with GitHub\" below" }, { status: 401 });
+      }
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
     }
 

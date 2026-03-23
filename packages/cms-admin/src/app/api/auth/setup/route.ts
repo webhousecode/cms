@@ -3,7 +3,10 @@ import { getUsers, createUser, createToken, COOKIE_NAME } from "@/lib/auth";
 
 export async function GET() {
   const users = await getUsers();
-  return NextResponse.json({ hasUsers: users.length > 0 });
+  return NextResponse.json({
+    hasUsers: users.length > 0,
+    hasGitHub: !!process.env.GITHUB_OAUTH_CLIENT_ID,
+  });
 }
 
 export async function POST(request: NextRequest) {
