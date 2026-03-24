@@ -31,12 +31,38 @@ async function getConfigPath(): Promise<string> {
 
 export async function readAiConfig(): Promise<AiConfig> {
   const filePath = await getConfigPath();
+  let stored: Partial<AiConfig> = {};
   try {
-    const raw = await fs.readFile(filePath, "utf-8");
-    return JSON.parse(raw) as AiConfig;
-  } catch {
-    return { defaultProvider: "anthropic" };
-  }
+    stored = JSON.parse(await fs.readFile(filePath, "utf-8")) as Partial<AiConfig>;
+  } catch { /* first read */ }
+
+  // F87: Org-level AI keys fallback
+  try {
+    const { readOrgSettings } = await import("./org-settings");
+    const org = await readOrgSettings();
+    if (Object.keys(org).length > 0) {
+      // Map org field names → ai-config field names
+      const orgAi: Partial<AiConfig> = {};
+      if (org.aiDefaultProvider) orgAi.defaultProvider = org.aiDefaultProvider;
+      if (org.aiAnthropicApiKey) orgAi.anthropicApiKey = org.aiAnthropicApiKey;
+      if (org.aiOpenaiApiKey) orgAi.openaiApiKey = org.aiOpenaiApiKey;
+      if (org.aiGeminiApiKey) orgAi.geminiApiKey = org.aiGeminiApiKey;
+      if (org.aiWebSearchProvider) orgAi.webSearchProvider = org.aiWebSearchProvider;
+      if (org.aiBraveApiKey) orgAi.braveApiKey = org.aiBraveApiKey;
+      if (org.aiTavilyApiKey) orgAi.tavilyApiKey = org.aiTavilyApiKey;
+
+      // Merge: defaults ← org ← site (empty strings in site don't override org)
+      const merged: AiConfig = { defaultProvider: "anthropic", ...orgAi };
+      for (const [k, v] of Object.entries(stored)) {
+        if (v !== undefined && v !== null && v !== "") {
+          (merged as unknown as Record<string, unknown>)[k] = v;
+        }
+      }
+      return merged;
+    }
+  } catch { /* org-settings not available */ }
+
+  return { defaultProvider: "anthropic", ...stored };
 }
 
 export async function writeAiConfig(config: AiConfig): Promise<void> {
