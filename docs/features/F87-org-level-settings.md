@@ -1,14 +1,26 @@
 # F87 — Org-Level Global Settings
 
-> Shared settings inherited by all sites in an organization — MCP servers, email, AI keys, budget, webhooks — with per-site override.
+> Shared settings inherited by all sites in an organization — deploy credentials, AI providers & keys, email, MCP servers, automation defaults, webhooks — with per-site override and auto-migration.
 
 ## Problem
 
-Every site in an org must configure MCP servers, email (Resend), AI API keys, AI budget, and default webhooks independently. With 10 sites, that's 10x the same Discord webhook URL, 10x the same Resend API key, 10x the same MCP server configs. Changes require visiting every site's settings individually.
+Every site in an org must configure the same credentials and defaults independently:
+
+- **Deploy tokens** — paste the same Fly.io org token into 5 sites
+- **AI API keys** — enter Anthropic/OpenAI/Gemini keys on every site
+- **Web Search keys** — Brave/Tavily API keys duplicated N times
+- **Email** — same Resend API key and from-address across all sites
+- **MCP servers** — re-add the same external servers per site
+- **Webhooks** — same Discord/Slack notification URLs everywhere
+- **Automation defaults** — every site needs backup/link-check schedules set individually
+
+With 10 sites, that's 10x the same API key. Change a key? Visit every site's settings. Forget one? Silent failure.
 
 ## Solution
 
-Org-level settings stored in a shared config file. Sites inherit org defaults automatically. Site-level overrides take precedence. UI shows "Inherited from org" badge on fields using the org default, with a toggle to override locally.
+Org-level settings stored in a shared config file (`_data/org-settings/{orgId}.json`). Sites inherit org defaults automatically via a merge chain. Site-level overrides take precedence. UI shows "Inherited from [OrgName]" badge on fields using the org default, with a toggle to override locally.
+
+The Org Settings page mirrors the full Site Settings structure — Deploy, AI, Email, Automation, MCP — so admins configure shared credentials once. Auto-migration detects common values across existing sites and proposes hoisting them to org level.
 
 ## Technical Design
 
@@ -18,82 +30,139 @@ Org-level settings stored in a shared config file. Sites inherit org defaults au
 // packages/cms-admin/src/lib/org-settings.ts
 
 export interface OrgSettings {
-  // Email
+  // ── Deploy credentials ─────────────────────────────
+  deployApiToken?: string;      // Fly.io org token
+  deployFlyOrg?: string;        // Fly.io org slug
+  deployHookUrl?: string;       // Vercel/Netlify/Custom webhook
+  deployGitHubToken?: string;   // GitHub PAT for Pages deploys
+
+  // ── AI providers & keys ────────────────────────────
+  aiDefaultProvider?: "anthropic" | "openai" | "gemini";
+  aiAnthropicApiKey?: string;
+  aiOpenaiApiKey?: string;
+  aiGeminiApiKey?: string;
+  aiWebSearchProvider?: "brave" | "tavily";
+  aiBraveApiKey?: string;
+  aiTavilyApiKey?: string;
+
+  // ── AI model defaults ──────────────────────────────
+  aiInteractivesModel?: string;
+  aiInteractivesMaxTokens?: number;
+  aiContentModel?: string;
+  aiContentMaxTokens?: number;
+
+  // ── Email ──────────────────────────────────────────
   resendApiKey?: string;
   emailFrom?: string;
   emailFromName?: string;
 
-  // AI
-  aiApiKeys?: { provider: string; key: string }[];
-  aiContentModel?: string;
-  aiInteractivesModel?: string;
-  aiBudgetUsd?: number;
+  // ── Automation defaults ────────────────────────────
+  backupSchedule?: "off" | "daily" | "weekly";
+  backupTime?: string;
+  backupRetentionDays?: number;
+  linkCheckSchedule?: "off" | "daily" | "weekly";
+  linkCheckTime?: string;
 
-  // Deploy credentials (shared across all sites in org)
-  deployFlyToken?: string;
-  deployFlyOrg?: string;
-  deployGitHubToken?: string;
-  deployVercelToken?: string;
-  deployNetlifyToken?: string;
+  // ── Default webhooks ───────────────────────────────
+  publishWebhooks?: { id: string; url: string }[];
+  backupWebhooks?: { id: string; url: string }[];
+  linkCheckWebhooks?: { id: string; url: string }[];
+  agentDefaultWebhooks?: { id: string; url: string }[];
 
-  // MCP Servers (shared across all sites)
-  mcpServers?: { name: string; command: string; args?: string[]; env?: Record<string, string> }[];
-
-  // Default Webhooks
-  defaultWebhooks?: { id: string; url: string }[];
+  // ── MCP servers (shared across all sites) ──────────
+  mcpServers?: {
+    name: string;
+    command: string;
+    args?: string[];
+    env?: Record<string, string>;
+    enabled?: boolean;
+  }[];
 }
 ```
 
-### Storage
+### Two config files, one inheritance chain
 
-Org settings stored at `{registryDir}/_data/org-settings/{orgId}.json`.
-- `registryDir` is the directory containing `registry.json` (from `getAdminDataDir()` in `site-registry.ts`)
-- One file per org
-- Created on first write, empty object by default
+The CMS stores settings in two separate files per site:
 
-### Inheritance Chain
+| File | Contains | Module |
+|------|----------|--------|
+| `_data/site-config.json` | Deploy, email, AI model defaults, automation, webhooks | `site-config.ts` |
+| `_data/ai-config.json` | AI provider keys, web search keys | `ai-config.ts` |
+
+Org settings unifies both. The inheritance chain for each:
 
 ```
-site-config.json → org-settings/{orgId}.json → env vars → defaults
+site-config.json  → org-settings.json → env vars → defaults
+ai-config.json    → org-settings.json → env vars → defaults
 ```
 
-`readSiteConfig()` modified to check org settings as fallback:
-```typescript
-export async function readSiteConfig(): Promise<SiteConfig> {
-  const stored = ...; // site config
-  const orgSettings = await readOrgSettings(); // org config
-  const defs = await defaults(); // env vars + hardcoded
+### Fields classified
 
-  return {
-    ...defs,
-    ...orgSettings,  // org overrides defaults
-    ...stored,       // site overrides org
-  };
-}
-```
+**Inheritable (org → site):**
+- Deploy: `deployApiToken`, `deployFlyOrg`, `deployHookUrl`, `deployGitHubToken`
+- AI keys: `aiDefaultProvider`, `aiAnthropicApiKey`, `aiOpenaiApiKey`, `aiGeminiApiKey`
+- Web search: `aiWebSearchProvider`, `aiBraveApiKey`, `aiTavilyApiKey`
+- AI defaults: `aiInteractivesModel`, `aiInteractivesMaxTokens`, `aiContentModel`, `aiContentMaxTokens`
+- Email: `resendApiKey`, `emailFrom`, `emailFromName`
+- Automation: `backupSchedule`, `backupTime`, `backupRetentionDays`, `linkCheckSchedule`, `linkCheckTime`
+- Webhooks: `publishWebhooks`, `backupWebhooks`, `linkCheckWebhooks`, `agentDefaultWebhooks`
+
+**NEVER inherited (site-specific):**
+- `calendarSecret` — per-site HMAC, inheriting breaks existing calendar feed tokens
+- `deployAppName` — unique per site (GitHub repo name or Fly app name)
+- `deployProductionUrl` — unique per site
+- `deployCustomDomain` — unique per site
+- `deployProvider` — each site picks its own provider
+- `deployOnSave` — site-level preference
+- `previewSiteUrl` — site-specific preview URL
+- Brand voice, AI prompts, team/users, revalidation, schema
+
+### Empty string handling (critical)
+
+Site config uses `""` as default for string fields. Without special handling, `""` from site config would override a valid org value via spread merge.
+
+**Rule:** Empty strings in site config for inheritable fields do NOT override org values. The merge function filters them out before merging.
+
+### MCP server merging
+
+MCP servers from org and site are **combined** (not replaced). Site servers append to org servers. Duplicate names are resolved by site-wins.
+
+### Webhook array behavior
+
+Webhook arrays use **site-replaces-org** semantics. If a site explicitly sets `publishWebhooks: []`, it clears the org webhooks. If a site has no `publishWebhooks` key at all, it inherits from org.
 
 ### API Endpoints
 
 | Method | Path | Description |
 |--------|------|-------------|
 | GET | `/api/admin/org-settings` | Read org settings for active org |
-| POST | `/api/admin/org-settings` | Update org settings |
+| POST | `/api/admin/org-settings` | Update org settings (partial merge) |
 
-### UI Changes
+### Storage
 
-Extend `/admin/organizations/settings` page with tabs:
-- **General** (existing: name, type, plan, delete)
-- **Deploy** — Fly.io token + org, GitHub token, Vercel/Netlify tokens (shared across all sites)
+Org settings stored at `{registryDir}/_data/org-settings/{orgId}.json`.
+- One file per org
+- Created on first write, empty object by default
+- Keys stored in plain text (same security model as site-config)
+
+### UI: Org Settings tabs
+
+The Org Settings page (`/admin/organizations/settings`) gets full tabs:
+
+- **General** (existing: name, type, plan, sites, delete)
+- **Deploy** — Fly.io token + org, GitHub PAT, Vercel/Netlify hook URLs
+- **AI** — Default provider, 3 LLM API keys, web search provider + 2 keys, model defaults
 - **Email** — Resend API key, from address, from name
-- **AI** — API keys, default models, monthly budget
-- **MCP** — Shared MCP servers
-- **Webhooks** — Default webhook URLs
+- **Automation** — Backup schedule/time/retention defaults, link check defaults
+- **Webhooks** — Default webhook URLs for publish, backup, link check, agents
+- **MCP** — Shared MCP servers (external)
+
+### UI: Site Settings inheritance badges
 
 Each field in Site Settings that has an org-level equivalent shows:
-- Badge: "Inherited from [OrgName]" (muted, small) when using org value
+- Badge: `Inherited from [OrgName]` (muted, small) when using org value
 - Toggle: "Override for this site" to set a site-specific value
-
-### Per-field inheritance UI pattern
+- Clearing the override falls back to org value
 
 ```tsx
 <InheritedField
@@ -105,65 +174,92 @@ Each field in Site Settings that has an org-level equivalent shows:
 />
 ```
 
+### Auto-migration
+
+On first visit to Org Settings → Credentials, the system scans all sites in the org and detects common values. If all sites share the same Fly.io token, it proposes hoisting it to org level.
+
+Migration rules:
+1. Only INHERITABLE_FIELDS are candidates
+2. Only migrate if ALL sites (with non-empty values) have the same value
+3. After migration, clear the field from each site's config
+4. Never migrate NEVER_INHERIT fields
+5. User must confirm before migration executes
+
 ## Impact Analysis
 
 ### Files affected
 
 **New files:**
-- `packages/cms-admin/src/lib/org-settings.ts` — OrgSettings interface, read/write functions
-- `packages/cms-admin/src/app/api/admin/org-settings/route.ts` — API endpoint
-- `packages/cms-admin/src/components/settings/inherited-field.tsx` — UI component for inheritance badge + override toggle
+- `packages/cms-admin/src/lib/org-settings.ts` — OrgSettings interface, merge, read/write (DONE)
+- `packages/cms-admin/src/app/api/admin/org-settings/route.ts` — API endpoint (DONE)
+- `packages/cms-admin/src/components/settings/inherited-field.tsx` — Inheritance badge + override toggle
+- `packages/cms-admin/src/lib/__tests__/org-settings.test.ts` — 38+ tests (DONE, expanding)
 
 **Modified files:**
 
-- `packages/cms-admin/src/lib/site-config.ts` — add org settings fallback in `readSiteConfig()`
-  - Dependents (16 files import from site-config): `settings/page.tsx`, `[collection]/page.tsx`, `[collection]/[slug]/page.tsx`, `scheduled/calendar.ics/route.ts`, `scheduled-snapshot.ts`, `tools-scheduler.ts`, `scheduler-notify.ts`, `site-config/route.ts`, `email.ts`, `invitations/route.ts`, `ai/chat/route.ts`, `schema/[collection]/route.ts`, `schema/collections/route.ts`, `curation/route.ts`, `schema/route.ts`
-- `packages/cms-admin/src/app/admin/(workspace)/organizations/settings/page.tsx` — add tabs for shared settings
-  - No downstream dependents (leaf page)
-- `packages/cms-admin/src/components/settings/general-settings-panel.tsx` — add inheritance badges
-  - Dependents: `settings/page.tsx`, `account/page.tsx`
-- `packages/cms-admin/src/components/settings/email-settings-panel.tsx` — add inheritance badges
-  - Dependents: `settings/page.tsx`, `account/page.tsx`
-- `packages/cms-admin/src/components/settings/ai-settings-panel.tsx` — add inheritance badges
-  - Dependents: `settings/page.tsx`
-- `packages/cms-admin/src/components/settings/mcp-settings-panel.tsx` — add inheritance badges
-  - Dependents: `settings/page.tsx`
-- `packages/cms-admin/src/components/settings/deploy-settings-panel.tsx` — add inheritance badges for token/org
-  - Dependents: `settings/page.tsx`
-- `packages/cms-admin/src/lib/deploy-service.ts` — token resolution: site → org → OAuth
-  - No downstream dependents (called from API route)
+- `packages/cms-admin/src/lib/site-config.ts` — org settings merge in readSiteConfig() (DONE)
+- `packages/cms-admin/src/lib/ai-config.ts` — org settings fallback for AI keys
+- `packages/cms-admin/src/lib/site-registry.ts` — export getAdminDataDir() (DONE)
+- `packages/cms-admin/src/app/admin/(workspace)/organizations/settings/page.tsx` — full tabbed UI (partial)
+- `packages/cms-admin/src/components/settings/deploy-settings-panel.tsx` — inheritance badges
+- `packages/cms-admin/src/components/settings/ai-settings-panel.tsx` — inheritance badges
+- `packages/cms-admin/src/components/settings/email-settings-panel.tsx` — inheritance badges
+- `packages/cms-admin/src/components/settings/tools-settings-panel.tsx` — inheritance badges
+- `packages/cms-admin/src/components/settings/mcp-settings-panel.tsx` — inheritance badges + org servers
+
+### Downstream dependents
+
+`site-config.ts` imported by 16+ files — merge is backwards-compatible (empty org = identical output).
+
+`ai-config.ts` imported by AI chat routes, agent routes, settings panels — org fallback must preserve env var fallback chain.
 
 ### Blast radius
-- `readSiteConfig()` is called by 16 files — adding org fallback must not break existing behavior. The spread-merge pattern (`...defs, ...orgSettings, ...stored`) is safe: if org settings is empty `{}`, result is identical to current behavior.
-- Org settings file must be created lazily (not all orgs will have settings)
-- MCP server merging: org servers + site servers = combined list (not replacement)
-- AI key fallback must preserve existing env var fallback (`defaults()` already reads env vars)
-- `readSiteConfigForSite()` also needs the org fallback for consistency (calendar token validation, scheduler)
+- `readSiteConfig()` called by 16 files — safe: empty org settings = no change
+- `readAiConfig()` called by AI routes — must check org before env vars
+- MCP server list must combine (not replace) — deduplication by name
+- Webhook arrays: site-replaces-org is safest (avoids double-notification)
+- Calendar secret NEVER inherited — protects existing HMAC tokens
+- Empty string filter prevents org tokens from being wiped by default site config
 
 ### Breaking changes
-None — purely additive. Existing site configs continue to work as before. Org settings layer is opt-in.
+None — purely additive. All changes are opt-in via org settings.
 
 ### Test plan
-- [ ] TypeScript compiles (`npx tsc --noEmit --project packages/cms-admin/tsconfig.json`)
-- [ ] Site with no org settings works exactly as before
-- [ ] Org settings created and readable via API
-- [ ] Site inherits org email settings when site has none
-- [ ] Site override takes precedence over org setting
-- [ ] MCP servers merge (org + site)
-- [ ] Clearing site override falls back to org value
-- [ ] `readSiteConfigForSite()` also inherits org settings
+- [ ] TypeScript compiles
+- [ ] 38 existing tests pass (merge logic, NEVER_INHERIT, empty strings, arrays)
+- [ ] AI keys inherited: org Anthropic key used when site has none
+- [ ] Web search key inherited from org
+- [ ] Automation defaults inherited (backup schedule, webhooks)
+- [ ] MCP servers combined (org + site, no duplicates)
+- [ ] AI config file fallback chain works
+- [ ] Auto-migration detects common values
+- [ ] Auto-migration skips NEVER_INHERIT fields
+- [ ] Backwards compatible: no org settings = identical behavior
 
-## Implementation Steps
+## Implementation Status
 
-1. Create `org-settings.ts` with OrgSettings interface + `readOrgSettings()` / `writeOrgSettings()` functions
-2. Create `/api/admin/org-settings` API route (GET + POST)
-3. Modify `readSiteConfig()` and `readSiteConfigForSite()` to include org settings in fallback chain
-4. Add tabs to org settings page (Email, AI, MCP, Webhooks)
-5. Create `InheritedField` component for badge + override toggle
-6. Add inheritance badges to site settings panels (general, email, AI, MCP)
+### Phase 1 — Core (DONE)
+1. ✅ `org-settings.ts` — interface, mergeConfigs(), read/write, INHERITABLE/NEVER_INHERIT lists
+2. ✅ `/api/admin/org-settings` — GET/POST
+3. ✅ `readSiteConfig()` + `readSiteConfigForSite()` — org merge chain
+4. ✅ `getAdminDataDir()` exported
+5. ✅ 38 tests passing
+
+### Phase 2 — Full scope (IN PROGRESS)
+6. Expand INHERITABLE_FIELDS: AI keys, web search, automation, webhooks, MCP, GitHub token
+7. Expand OrgSettings interface to match
+8. AI config integration: `readAiConfig()` checks org settings
+9. Org Settings UI: Deploy, AI, Email, Automation, Webhooks, MCP tabs
+10. `InheritedField` component for Site Settings badges
+11. Auto-migration UI in Org Settings
+
+### Phase 3 — Polish
+12. Inheritance badges on all Site Settings panels
+13. "Clear override" action on each field
+14. Migration wizard with preview + confirm
 
 ## Dependencies
 - F76 Create Organization (Done)
 
 ## Effort Estimate
-**Medium** — 3-4 days
+**Medium-Large** — 5-6 days total (2 done, 3-4 remaining)

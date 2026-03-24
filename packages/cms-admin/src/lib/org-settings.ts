@@ -15,39 +15,77 @@ export interface OrgSettings {
   deployApiToken?: string;
   deployFlyOrg?: string;
   deployHookUrl?: string;
+  deployGitHubToken?: string;
+
+  // AI providers & keys
+  aiDefaultProvider?: "anthropic" | "openai" | "gemini";
+  aiAnthropicApiKey?: string;
+  aiOpenaiApiKey?: string;
+  aiGeminiApiKey?: string;
+  aiWebSearchProvider?: "brave" | "tavily";
+  aiBraveApiKey?: string;
+  aiTavilyApiKey?: string;
+
+  // AI model defaults
+  aiInteractivesModel?: string;
+  aiInteractivesMaxTokens?: number;
+  aiContentModel?: string;
+  aiContentMaxTokens?: number;
 
   // Email
   resendApiKey?: string;
   emailFrom?: string;
   emailFromName?: string;
 
-  // AI
-  aiInteractivesModel?: string;
-  aiInteractivesMaxTokens?: number;
-  aiContentModel?: string;
-  aiContentMaxTokens?: number;
+  // Automation defaults
+  backupSchedule?: "off" | "daily" | "weekly";
+  backupTime?: string;
+  backupRetentionDays?: number;
+  linkCheckSchedule?: "off" | "daily" | "weekly";
+  linkCheckTime?: string;
+
+  // Default webhooks
+  publishWebhooks?: { id: string; url: string }[];
+  backupWebhooks?: { id: string; url: string }[];
+  linkCheckWebhooks?: { id: string; url: string }[];
+  agentDefaultWebhooks?: { id: string; url: string }[];
 
   // MCP Servers (shared across all sites)
-  mcpServers?: { name: string; command: string; args?: string[]; env?: Record<string, string> }[];
-
-  // Default Webhooks
-  defaultWebhooks?: { id: string; url: string }[];
+  mcpServers?: { name: string; command: string; args?: string[]; env?: Record<string, string>; enabled?: boolean }[];
 }
 
 // ── Field classification ─────────────────────────────────────
 
 /** Fields that CAN be inherited from org → site */
 export const INHERITABLE_FIELDS = [
+  // Deploy
   "deployApiToken",
   "deployFlyOrg",
   "deployHookUrl",
-  "resendApiKey",
-  "emailFrom",
-  "emailFromName",
+  "deployGitHubToken",
+  // AI providers & keys
+  "aiDefaultProvider",
+  "aiAnthropicApiKey",
+  "aiOpenaiApiKey",
+  "aiGeminiApiKey",
+  "aiWebSearchProvider",
+  "aiBraveApiKey",
+  "aiTavilyApiKey",
+  // AI model defaults
   "aiInteractivesModel",
   "aiInteractivesMaxTokens",
   "aiContentModel",
   "aiContentMaxTokens",
+  // Email
+  "resendApiKey",
+  "emailFrom",
+  "emailFromName",
+  // Automation defaults
+  "backupSchedule",
+  "backupTime",
+  "backupRetentionDays",
+  "linkCheckSchedule",
+  "linkCheckTime",
 ] as const;
 
 /** Fields that must NEVER be inherited from org */
