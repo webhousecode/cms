@@ -1,9 +1,9 @@
 import { getAdminCms, getAdminConfig, getActiveSiteInfo, EmptyOrgError } from "@/lib/cms";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Clock, Calendar, Image, Zap, ExternalLink } from "lucide-react";
+import { Clock, Calendar, Image, Zap } from "lucide-react";
 import { getMediaAdapter } from "@/lib/media";
-import { readSiteConfig } from "@/lib/site-config";
+import { SiteIntroCard } from "@/components/site-intro-card";
 
 export default async function AdminDashboard() {
   // Multi-site with no site selected → go to sites dashboard
@@ -68,18 +68,7 @@ export default async function AdminDashboard() {
     return aDate.localeCompare(bDate);
   });
 
-  // Site preview URL for intro card
-  let sitePreviewUrl = "";
-  let siteLiveUrl = "";
-  try {
-    const siteConfig = await readSiteConfig();
-    sitePreviewUrl = siteConfig.previewSiteUrl ?? "";
-    siteLiveUrl = siteConfig.deployCustomDomain
-      ? `https://${siteConfig.deployCustomDomain}`
-      : siteConfig.deployProductionUrl ?? "";
-  } catch { /* no config */ }
   const siteName = siteInfo?.siteName ?? "Site";
-  const thumbnailUrl = sitePreviewUrl || siteLiveUrl;
 
   return (
     <>
@@ -91,48 +80,7 @@ export default async function AdminDashboard() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* Site intro card — always first */}
-        <a
-          href={thumbnailUrl ? `/admin/preview?url=${encodeURIComponent(thumbnailUrl)}` : "#"}
-          className="group block rounded-xl border border-border bg-card hover:border-primary/40 transition-all duration-200 overflow-hidden col-span-1 sm:col-span-2 lg:col-span-1"
-          style={{ textDecoration: "none" }}
-        >
-          {/* Thumbnail — scaled iframe of site front page */}
-          <div style={{
-            width: "100%", height: "140px", overflow: "hidden",
-            background: "var(--muted)", position: "relative",
-          }}>
-            {thumbnailUrl ? (
-              <iframe
-                src={thumbnailUrl}
-                title={siteName}
-                sandbox=""
-                loading="lazy"
-                style={{
-                  width: "1280px", height: "800px", border: "none",
-                  transform: "scale(0.22)", transformOrigin: "top left",
-                  pointerEvents: "none",
-                }}
-              />
-            ) : (
-              <div style={{
-                width: "100%", height: "100%", display: "flex",
-                alignItems: "center", justifyContent: "center",
-                color: "var(--muted-foreground)", fontSize: "0.75rem",
-              }}>No preview available</div>
-            )}
-          </div>
-          <div style={{ padding: "0.75rem 1rem" }}>
-            <p className="font-semibold text-foreground group-hover:text-primary transition-colors" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-              {siteName}
-              <ExternalLink style={{ width: 12, height: 12, opacity: 0.5 }} />
-            </p>
-            {siteLiveUrl && (
-              <p className="text-xs text-muted-foreground font-mono mt-0.5" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                {siteLiveUrl.replace("https://", "")}
-              </p>
-            )}
-          </div>
-        </a>
+        <SiteIntroCard siteName={siteName} />
         {stats.map((col) => (
           <Link
             key={col.name}
