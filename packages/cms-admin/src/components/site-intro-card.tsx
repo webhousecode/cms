@@ -48,9 +48,9 @@ export function SiteIntroCard({ siteName }: { siteName: string }) {
       className="group block rounded-xl border border-border bg-card hover:border-primary/40 transition-all duration-200 overflow-hidden"
       style={{ textDecoration: "none" }}
     >
-      {/* Thumbnail — scaled iframe of site front page */}
+      {/* Thumbnail — scaled iframe of site front page, fills card width */}
       <div style={{
-        width: "100%", height: "140px", overflow: "hidden",
+        width: "100%", aspectRatio: "16/9", overflow: "hidden",
         background: "var(--muted)", position: "relative",
       }}>
         {thumbnailUrl ? (
@@ -60,9 +60,17 @@ export function SiteIntroCard({ siteName }: { siteName: string }) {
             sandbox=""
             loading="lazy"
             style={{
-              width: "1280px", height: "800px", border: "none",
-              transform: "scale(0.22)", transformOrigin: "top left",
+              position: "absolute", top: 0, left: 0,
+              width: "1280px", height: "720px", border: "none",
+              transform: "scale(var(--thumb-scale, 0.25))", transformOrigin: "top left",
               pointerEvents: "none",
+            }}
+            ref={(el) => {
+              // Calculate scale to fill card width
+              if (el?.parentElement) {
+                const w = el.parentElement.clientWidth;
+                el.parentElement.style.setProperty("--thumb-scale", String(w / 1280));
+              }
             }}
           />
         ) : (

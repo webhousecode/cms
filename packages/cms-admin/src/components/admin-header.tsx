@@ -234,24 +234,35 @@ function PreviewButton() {
     setLiveUrl("");
     setPreviewDown(false);
     setLiveDown(false);
-    // Always try sirv preview server — works for all filesystem sites with build.ts
+    let customPreview = "";
+
+    // Always try sirv preview server first — works for all filesystem sites
     fetch("/api/preview-serve", { method: "POST" })
       .then((r) => r.ok ? r.json() : null)
       .then((d: { url?: string } | null) => {
-        if (d?.url) setPreviewUrl(d.url);
+        if (d?.url && !customPreview) setPreviewUrl(d.url);
       })
       .catch(() => {});
-    // Also fetch site config — previewSiteUrl overrides sirv if explicitly set
+
+    // Fetch site config for custom preview URL + live URL
     fetch("/api/admin/site-config")
       .then((r) => r.ok ? r.json() : null)
       .then((data) => {
-        if (data?.previewSiteUrl) setPreviewUrl(data.previewSiteUrl);
+        if (data?.previewSiteUrl) {
+          customPreview = data.previewSiteUrl;
+          setPreviewUrl(data.previewSiteUrl);
+          // Health check ONLY on custom preview URL — sirv is always up
+          fetch(data.previewSiteUrl, { method: "HEAD", mode: "no-cors", signal: AbortSignal.timeout(3000) })
+            .catch(() => setPreviewDown(true));
+        }
         const live = data?.deployCustomDomain
           ? `https://${data.deployCustomDomain}`
           : data?.deployProductionUrl ?? "";
         setLiveUrl(live);
       })
       .catch(() => {});
+
+    // Get site name
     fetch("/api/cms/registry")
       .then((r) => r.ok ? r.json() : null)
       .then((d: any) => {
@@ -263,28 +274,22 @@ function PreviewButton() {
         if (site?.name) setSiteName(site.name);
       })
       .catch(() => {});
-    // Health check for the active site
-    fetch("/api/admin/site-health")
-      .then((r) => r.ok ? r.json() : null)
-      .then((d: { status?: string } | null) => {
-        if (d?.status === "down" || d?.status === "no-preview") setPreviewDown(true);
-      })
-      .catch(() => {});
   }, [fetchKey]);
 
-  // Also check live URL health separately when we have one
+  // Check live URL health separately
   useEffect(() => {
-    if (!liveUrl) return;
+    if (!liveUrl) { setLiveDown(false); return; }
     fetch(liveUrl, { method: "HEAD", mode: "no-cors", signal: AbortSignal.timeout(3000) })
       .then(() => setLiveDown(false))
       .catch(() => setLiveDown(true));
   }, [liveUrl]);
 
   const openPreview = useCallback(async () => {
-    if (previewDown) return;
+    // Preview is NEVER disabled — sirv is always available
     if (previewUrl) {
       openTab(`/admin/preview?url=${encodeURIComponent(previewUrl)}`, `Preview: ${siteName}`);
     } else {
+      // Fallback: start sirv on demand
       try {
         const res = await fetch("/api/preview-serve", { method: "POST" });
         if (res.ok) {
@@ -293,78 +298,66 @@ function PreviewButton() {
         }
       } catch { /* ignore */ }
     }
-  }, [previewUrl, previewDown, siteName, openTab]);
+  }, [previewUrl, siteName, openTab]);
 
   const openLive = useCallback(() => {
     if (liveUrl && !liveDown) window.open(liveUrl, "_blank");
   }, [liveUrl, liveDown]);
 
-  // "p" = preview, "l" = live site — skip when down
+  // "p" = preview (always works), "l" = live site (may be down)
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       const tag = (document.activeElement?.tagName ?? "").toLowerCase();
       if (tag === "input" || tag === "textarea" || tag === "select" || (document.activeElement as HTMLElement)?.isContentEditable) return;
-      if (e.key === "p" && !previewDown) { e.preventDefault(); openPreview(); }
+      if (e.key === "p") { e.preventDefault(); openPreview(); }
       if (e.key === "l" && liveUrl && !liveDown) { e.preventDefault(); openLive(); }
     }
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [openPreview, openLive, liveUrl, previewDown, liveDown]);
+  }, [openPreview, openLive, liveUrl, liveDown]);
 
-  // Both down or no URLs → greyed out button
-  const allDown = previewDown && (!liveUrl || liveDown);
-
-  // No live URL → simple preview button
+  // No live URL → simple preview button (NEVER disabled)
   if (!liveUrl) {
     return (
       <button
         type="button"
         onClick={openPreview}
-        disabled={previewDown}
         style={{
           background: "none", border: "1.5px solid var(--border)",
-          cursor: previewDown ? "not-allowed" : "pointer",
-          opacity: previewDown ? 0.35 : 1,
+          cursor: "pointer",
           color: "var(--muted-foreground)", display: "flex", alignItems: "center", justifyContent: "center",
           borderRadius: "50%", width: "2rem", height: "2rem", padding: 0,
         }}
-        className={previewDown ? "" : "hover:border-foreground hover:text-foreground transition-colors"}
-        title={previewDown ? "Preview unavailable — site is down" : "Preview site (p)"}
+        className="hover:border-foreground hover:text-foreground transition-colors"
+        title="Preview site (p)"
       >
         <ExternalLink style={{ width: "0.9rem", height: "0.9rem" }} />
       </button>
     );
   }
 
-  // Has live URL → dropdown with Preview + Live (greyed items when down)
+  // Has live URL → dropdown with Preview (always works) + Live (may be down)
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
-        disabled={allDown}
         style={{
           background: "none", border: "1.5px solid var(--border)",
-          cursor: allDown ? "not-allowed" : "pointer",
-          opacity: allDown ? 0.35 : 1,
+          cursor: "pointer",
           color: "var(--muted-foreground)", display: "flex", alignItems: "center", justifyContent: "center",
           borderRadius: "50%", width: "2rem", height: "2rem", padding: 0,
         }}
-        className={allDown ? "" : "hover:border-foreground hover:text-foreground transition-colors focus-visible:outline-none"}
-        title={allDown ? "Preview & Live unavailable — site is down" : "Preview / Live site"}
+        className="hover:border-foreground hover:text-foreground transition-colors focus-visible:outline-none"
+        title="Preview / Live site"
       >
         <ExternalLink style={{ width: "0.9rem", height: "0.9rem" }} />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" style={{ width: "200px" }}>
-        <DropdownMenuItem
-          onClick={openPreview}
-          disabled={previewDown}
-          style={previewDown ? { opacity: 0.35, cursor: "not-allowed" } : undefined}
-        >
+        <DropdownMenuItem onClick={openPreview}>
           <ExternalLink className="mr-2 h-4 w-4" />
           Preview
-          {previewDown
-            ? <span className="ml-auto text-xs text-muted-foreground">down</span>
-            : <span className="ml-auto text-xs text-muted-foreground">p</span>}
+          {previewDown && <span className="ml-auto text-xs text-yellow-500">sirv</span>}
+          {!previewDown && <span className="ml-auto text-xs text-muted-foreground">p</span>}
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={openLive}
