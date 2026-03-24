@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ExternalLink } from "lucide-react";
 import { useTabs } from "@/lib/tabs-context";
 
-export function SiteIntroCard({ siteName }: { siteName: string }) {
+export function SiteIntroCard() {
   const [previewUrl, setPreviewUrl] = useState("");
   const [liveUrl, setLiveUrl] = useState("");
+  const [siteName, setSiteName] = useState("Site");
   const { openTab } = useTabs();
 
   useEffect(() => {
@@ -18,7 +18,7 @@ export function SiteIntroCard({ siteName }: { siteName: string }) {
       })
       .catch(() => {});
 
-    // 2. Also fetch site config for live URL display
+    // 2. Also fetch site config for live URL display + site name
     fetch("/api/admin/site-config")
       .then((r) => r.ok ? r.json() : null)
       .then((data) => {
@@ -28,6 +28,7 @@ export function SiteIntroCard({ siteName }: { siteName: string }) {
           ? `https://${data.deployCustomDomain}`
           : data?.deployProductionUrl ?? "";
         setLiveUrl(live);
+        if (data?.siteName) setSiteName(data.siteName);
       })
       .catch(() => {});
   }, []);
@@ -45,13 +46,13 @@ export function SiteIntroCard({ siteName }: { siteName: string }) {
     <a
       href="#"
       onClick={handleClick}
-      className="group block rounded-xl border border-border bg-card hover:border-primary/40 transition-all duration-200 overflow-hidden"
+      className="group block p-5 rounded-xl border border-border bg-card hover:border-primary/40 transition-all duration-200 overflow-hidden"
       style={{ textDecoration: "none" }}
     >
-      {/* Thumbnail — scaled iframe of site front page, fills card width */}
+      {/* Thumbnail — scaled iframe of site front page */}
       <div style={{
         width: "100%", aspectRatio: "16/9", overflow: "hidden",
-        background: "var(--muted)", position: "relative",
+        background: "var(--muted)", position: "relative", borderRadius: "0.5rem",
       }}>
         {thumbnailUrl ? (
           <iframe
@@ -79,17 +80,6 @@ export function SiteIntroCard({ siteName }: { siteName: string }) {
             alignItems: "center", justifyContent: "center",
             color: "var(--muted-foreground)", fontSize: "0.75rem",
           }}>Loading preview...</div>
-        )}
-      </div>
-      <div style={{ padding: "0.75rem 1rem" }}>
-        <p className="font-semibold text-foreground group-hover:text-primary transition-colors" style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          {siteName}
-          <ExternalLink style={{ width: 12, height: 12, opacity: 0.5 }} />
-        </p>
-        {liveUrl && (
-          <p className="text-xs text-muted-foreground font-mono mt-0.5" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-            {liveUrl.replace("https://", "")}
-          </p>
         )}
       </div>
     </a>
