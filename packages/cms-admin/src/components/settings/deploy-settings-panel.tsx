@@ -328,13 +328,15 @@ export function DeploySettingsPanel() {
       )}
 
       {/* ── Custom domain ────────────────────────────────── */}
-      {(effectiveProvider === "github-pages") && (
+      {(effectiveProvider === "github-pages" || effectiveProvider === "flyio") && (
         <>
           <SectionHeading>Custom Domain</SectionHeading>
           <SettingsCard>
             <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>
-              Use your own domain instead of <code style={{ fontSize: "0.7rem" }}>username.github.io/repo/</code>.
-              Ask your DNS provider or hostmaster to create a <strong>CNAME</strong> record:
+              {effectiveProvider === "github-pages"
+                ? <>Use your own domain instead of <code style={{ fontSize: "0.7rem" }}>username.github.io/repo/</code>. Ask your DNS provider to create a <strong>CNAME</strong> record:</>
+                : <>Use your own domain instead of <code style={{ fontSize: "0.7rem" }}>{config.deployAppName || "app"}.fly.dev</code>. Ask your DNS provider to create a <strong>CNAME</strong> record:</>
+              }
             </p>
             <div style={{
               fontSize: "0.72rem", fontFamily: "monospace", padding: "0.4rem 0.6rem",
@@ -343,7 +345,9 @@ export function DeploySettingsPanel() {
             }}>
               <span style={{ color: "var(--muted-foreground)" }}>Type:</span> CNAME<br />
               <span style={{ color: "var(--muted-foreground)" }}>Name:</span> your-subdomain<br />
-              <span style={{ color: "var(--muted-foreground)" }}>Target:</span> your-username.github.io.
+              <span style={{ color: "var(--muted-foreground)" }}>Target:</span> {effectiveProvider === "github-pages"
+                ? "your-username.github.io."
+                : `${config.deployAppName || "app"}.fly.dev.`}
             </div>
             <div style={{ display: "flex", gap: "0.4rem", alignItems: "center" }}>
               <input

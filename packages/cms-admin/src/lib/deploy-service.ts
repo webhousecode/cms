@@ -5,7 +5,7 @@
  * Deploy history stored in _data/deploy-log.json.
  */
 import { readFile, writeFile, mkdir } from "node:fs/promises";
-import { existsSync, readdirSync, statSync, readFileSync, rmSync } from "node:fs";
+import { existsSync, readdirSync, statSync, readFileSync, rmSync, mkdirSync, writeFileSync, cpSync } from "node:fs";
 import path from "node:path";
 import { execSync } from "node:child_process";
 import { getActiveSitePaths, getActiveSiteEntry } from "./site-paths";
@@ -129,16 +129,36 @@ export async function triggerDeploy(): Promise<DeployEntry> {
         entry.status = "success";
         break;
 
-      case "flyio":
-        // Fly.io uses their Machines API or deploy hook
+      case "flyio": {
+        // Fly.io: deploy hook (simple) or full build+deploy pipeline
         if (config.deployHookUrl) {
           await postHook(config.deployHookUrl);
-        } else if (config.deployApiToken && config.deployAppName) {
-          await flyDeploy(config.deployApiToken, config.deployAppName);
+          entry.status = "success";
         } else {
-          throw new Error("Fly.io requires either a deploy hook URL or API token + app name");
+          let useToken = token || config.deployApiToken;
+          if (!useToken) {
+            throw new Error("Fly.io requires an API token. Get one at fly.io/dashboard → Tokens.");
+          }
+          let useAppName = appName || config.deployAppName;
+          // Auto-create app name if not configured
+          if (!useAppName) {
+            const siteEntry = await getActiveSiteEntry();
+            if (siteEntry) {
+              useAppName = flyAppName(siteEntry.name, siteEntry.id);
+              try { await writeSiteConfig({ deployAppName: useAppName }); } catch { /* non-fatal */ }
+            }
+          }
+          if (!useAppName) throw new Error("Fly.io requires an app name.");
+          const flyUrl = await flyioBuildAndDeploy(useToken, useAppName);
+          if (flyUrl) {
+            entry.url = flyUrl;
+            if (!config.deployProductionUrl) {
+              try { await writeSiteConfig({ deployProductionUrl: flyUrl }); } catch { /* non-fatal */ }
+            }
+          }
+          entry.status = "success";
         }
-        entry.status = "success";
+      }
         break;
 
       case "github-pages": {
@@ -358,23 +378,213 @@ async function postHook(url: string): Promise<void> {
   }
 }
 
-async function flyDeploy(token: string, appName: string): Promise<void> {
-  // Trigger a new machine deployment via Fly.io Machines API
-  const res = await fetch(`https://api.machines.dev/v1/apps/${appName}/machines`, {
-    method: "GET",
-    headers: { Authorization: `Bearer ${token}` },
-    signal: AbortSignal.timeout(15000),
-  });
-  if (!res.ok) throw new Error(`Fly.io API error: ${res.status}`);
-  // For a full redeploy, we'd restart all machines
-  const machines = await res.json() as { id: string }[];
-  for (const m of machines.slice(0, 5)) {
-    await fetch(`https://api.machines.dev/v1/apps/${appName}/machines/${m.id}/restart`, {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
-      signal: AbortSignal.timeout(15000),
-    });
+/**
+ * Full Fly.io deploy pipeline:
+ * 1. Run build.ts → deploy/
+ * 2. F89 enrichment
+ * 3. Generate Dockerfile (caddy static server) + fly.toml (region: arn)
+ * 4. Create Fly app if it doesn't exist
+ * 5. Deploy via flyctl --remote-only
+ * 6. Configure custom domain if set
+ * 7. Return the app URL
+ */
+async function flyioBuildAndDeploy(token: string, appName: string): Promise<string | undefined> {
+  // 1. Build site
+  const sitePaths = await getActiveSitePaths();
+  const buildFile = path.join(sitePaths.projectDir, "build.ts");
+  if (!existsSync(buildFile)) {
+    throw new Error("No build.ts found — this site doesn't support static builds. For Next.js/SSR apps, use a deploy hook URL instead.");
   }
+
+  // Check flyctl is available
+  try {
+    execSync("flyctl version", { stdio: "pipe", timeout: 5000 });
+  } catch {
+    throw new Error("flyctl CLI not found. Install it: curl -L https://fly.io/install.sh | sh");
+  }
+
+  const config = await readSiteConfig();
+  const customDomain = config.deployCustomDomain || "";
+
+  // Clean deploy dir
+  const deployDir = path.join(sitePaths.projectDir, "deploy");
+  if (existsSync(deployDir)) {
+    rmSync(deployDir, { recursive: true, force: true });
+    console.log("[deploy] Cleaned deploy/ directory");
+  }
+
+  // Build with root paths — Fly serves at root, not under a subpath
+  console.log(`[deploy] Running build.ts in ${sitePaths.projectDir} (Fly.io, root paths, out=deploy/)...`);
+  try {
+    execSync("npx tsx build.ts", {
+      cwd: sitePaths.projectDir,
+      timeout: 60000,
+      env: { ...process.env, NODE_ENV: "production", BASE_PATH: "", BUILD_OUT_DIR: "deploy" },
+      stdio: "pipe",
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? (err as Error & { stderr?: Buffer }).stderr?.toString().slice(0, 300) || err.message : "Build failed";
+    throw new Error(`Build failed: ${msg}`);
+  }
+
+  if (!existsSync(deployDir)) {
+    throw new Error("Build completed but no deploy/ directory was created.");
+  }
+
+  // 2. F89 enrichment
+  const appUrl = customDomain ? `https://${customDomain}` : `https://${appName}.fly.dev`;
+  try {
+    const { enrichDist } = await import("./post-build-enrich");
+    const siteEntry = await getActiveSiteEntry();
+    const contentDir = path.join(sitePaths.projectDir, "content");
+    let siteGlobals: Record<string, unknown> = {};
+    const globalsPath = path.join(contentDir, "globals", "site.json");
+    if (existsSync(globalsPath)) {
+      const raw = JSON.parse(readFileSync(globalsPath, "utf-8"));
+      siteGlobals = raw?.data ?? raw ?? {};
+    }
+    await enrichDist(deployDir, contentDir, {
+      baseUrl: appUrl,
+      basePath: "",
+      siteName: (siteGlobals.siteName as string) ?? siteEntry?.name ?? "Site",
+      siteDescription: (siteGlobals.tagline as string) ?? (siteGlobals.siteDescription as string) ?? (siteGlobals.introText as string) ?? "",
+      siteImage: (siteGlobals.heroImage as string) ?? (siteGlobals.ogImage as string),
+      themeColor: (siteGlobals.themeColor as string) ?? "#000000",
+      lang: (siteGlobals.lang as string) ?? "en",
+    });
+  } catch (err) {
+    console.error("[deploy] Fly.io enrichment failed:", err instanceof Error ? err.message : err);
+  }
+
+  const files = collectFiles(deployDir, deployDir);
+  console.log(`[deploy] Collected ${files.length} files from deploy/`);
+
+  // 3. Create temp deploy context with Dockerfile + fly.toml
+  const tmpDir = path.join("/tmp", `fly-deploy-${Date.now()}`);
+  mkdirSync(tmpDir, { recursive: true });
+  const publicDir = path.join(tmpDir, "public");
+  mkdirSync(publicDir, { recursive: true });
+
+  // Copy deploy/ contents to tmpDir/public/
+  cpSync(deployDir, publicDir, { recursive: true });
+
+  // Caddyfile — static file server with SPA support, gzip, security headers
+  writeFileSync(path.join(tmpDir, "Caddyfile"), `:80 {
+	root * /srv
+	file_server
+	try_files {path} {path}/index.html /index.html
+	encode gzip
+
+	header {
+		X-Frame-Options "SAMEORIGIN"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+	}
+
+	# Cache static assets aggressively
+	@static path *.css *.js *.svg *.png *.jpg *.jpeg *.webp *.woff2 *.ico
+	header @static Cache-Control "public, max-age=31536000, immutable"
+}
+`);
+
+  // Dockerfile — minimal caddy image
+  writeFileSync(path.join(tmpDir, "Dockerfile"), `FROM caddy:2-alpine
+COPY Caddyfile /etc/caddy/Caddyfile
+COPY public/ /srv
+`);
+
+  // fly.toml — region always arn (Stockholm)
+  writeFileSync(path.join(tmpDir, "fly.toml"), `app = "${appName}"
+primary_region = "arn"
+
+[build]
+
+[http_service]
+  internal_port = 80
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "256mb"
+`);
+
+  // 4. Create Fly app if it doesn't exist
+  console.log(`[deploy] Ensuring Fly app "${appName}" exists...`);
+  try {
+    execSync(`flyctl status --app ${appName}`, {
+      env: { ...process.env, FLY_API_TOKEN: token },
+      timeout: 10000,
+      stdio: "pipe",
+    });
+    console.log(`[deploy] App ${appName} already exists`);
+  } catch {
+    // App doesn't exist — create it
+    console.log(`[deploy] Creating Fly app ${appName}...`);
+    try {
+      execSync(`flyctl apps create ${appName} --org personal`, {
+        env: { ...process.env, FLY_API_TOKEN: token },
+        timeout: 15000,
+        stdio: "pipe",
+      });
+      console.log(`[deploy] Created Fly app ${appName}`);
+    } catch (err) {
+      const msg = err instanceof Error ? (err as Error & { stderr?: Buffer }).stderr?.toString().slice(0, 200) || err.message : "Failed";
+      throw new Error(`Failed to create Fly app "${appName}": ${msg}`);
+    }
+  }
+
+  // 5. Deploy via flyctl (remote build on Fly's builders)
+  console.log(`[deploy] Deploying ${files.length} files to Fly.io (${appName})...`);
+  try {
+    execSync(`flyctl deploy --remote-only --ha=false`, {
+      cwd: tmpDir,
+      env: { ...process.env, FLY_API_TOKEN: token },
+      timeout: 180000, // 3 min for remote build
+      stdio: "pipe",
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? (err as Error & { stderr?: Buffer }).stderr?.toString().slice(0, 300) || err.message : "Deploy failed";
+    // Clean up before throwing
+    try { rmSync(tmpDir, { recursive: true, force: true }); } catch { /* */ }
+    throw new Error(`Fly.io deploy failed: ${msg}`);
+  }
+
+  // 6. Custom domain
+  if (customDomain) {
+    console.log(`[deploy] Adding custom domain: ${customDomain}...`);
+    try {
+      execSync(`flyctl certs add ${customDomain} --app ${appName}`, {
+        env: { ...process.env, FLY_API_TOKEN: token },
+        timeout: 15000,
+        stdio: "pipe",
+      });
+    } catch {
+      // Certificate might already exist — non-fatal
+      console.log(`[deploy] Custom domain cert already exists or pending`);
+    }
+  }
+
+  // 7. Clean up temp dir
+  try { rmSync(tmpDir, { recursive: true, force: true }); } catch { /* */ }
+
+  console.log(`[deploy] Fly.io deploy complete: ${appUrl}`);
+  return appUrl;
+}
+
+/**
+ * Auto-create a Fly.io app name from site name.
+ * Returns the app name (e.g. "boutique-site").
+ */
+function flyAppName(siteName: string, siteId: string): string {
+  const slug = siteName
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    || siteId;
+  return `${slug}-site`;
 }
 
 /**
