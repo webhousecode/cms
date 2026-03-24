@@ -29,7 +29,9 @@ interface OrgCreds {
   // Deploy
   deployApiToken: string;
   deployFlyOrg: string;
-  deployHookUrl: string;
+  deployVercelHookUrl: string;
+  deployNetlifyHookUrl: string;
+  deployCloudflareHookUrl: string;
   deployGitHubToken: string;
   // AI providers & keys
   aiDefaultProvider: string;
@@ -59,7 +61,9 @@ interface OrgCreds {
 const CREDS_DEFAULTS: OrgCreds = {
   deployApiToken: "",
   deployFlyOrg: "",
-  deployHookUrl: "",
+  deployVercelHookUrl: "",
+  deployNetlifyHookUrl: "",
+  deployCloudflareHookUrl: "",
   deployGitHubToken: "",
   aiDefaultProvider: "",
   aiAnthropicApiKey: "",
@@ -129,7 +133,9 @@ export default function OrgSettingsPage() {
         const n = (k: string) => (data[k] as number) ?? 0;
         setCreds({
           deployApiToken: s("deployApiToken"), deployFlyOrg: s("deployFlyOrg"),
-          deployHookUrl: s("deployHookUrl"), deployGitHubToken: s("deployGitHubToken"),
+          deployVercelHookUrl: s("deployVercelHookUrl"), deployNetlifyHookUrl: s("deployNetlifyHookUrl"),
+          deployCloudflareHookUrl: s("deployCloudflareHookUrl"),
+          deployGitHubToken: s("deployGitHubToken"),
           aiDefaultProvider: s("aiDefaultProvider"), aiAnthropicApiKey: s("aiAnthropicApiKey"),
           aiOpenaiApiKey: s("aiOpenaiApiKey"), aiGeminiApiKey: s("aiGeminiApiKey"),
           aiWebSearchProvider: s("aiWebSearchProvider"), aiBraveApiKey: s("aiBraveApiKey"),
@@ -291,9 +297,31 @@ export default function OrgSettingsPage() {
               placeholder="ghp_..." style={{ ...credInputStyle, fontFamily: "inherit" }} />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
-            <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Deploy Hook URL (Vercel / Netlify / Custom)</label>
-            <input type="url" value={creds.deployHookUrl} onChange={(e) => setCreds((c) => ({ ...c, deployHookUrl: e.target.value }))}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Vercel Deploy Hook</label>
+              <a href="https://vercel.com/docs/deploy-hooks" target="_blank" rel="noopener noreferrer"
+                style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>Docs <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
+            </div>
+            <input type="url" value={creds.deployVercelHookUrl} onChange={(e) => setCreds((c) => ({ ...c, deployVercelHookUrl: e.target.value }))}
               placeholder="https://api.vercel.com/v1/integrations/deploy/..." style={credInputStyle} />
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Netlify Build Hook</label>
+              <a href="https://docs.netlify.com/configure-builds/build-hooks/" target="_blank" rel="noopener noreferrer"
+                style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>Docs <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
+            </div>
+            <input type="url" value={creds.deployNetlifyHookUrl} onChange={(e) => setCreds((c) => ({ ...c, deployNetlifyHookUrl: e.target.value }))}
+              placeholder="https://api.netlify.com/build_hooks/..." style={credInputStyle} />
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Cloudflare Pages Deploy Hook</label>
+              <a href="https://developers.cloudflare.com/pages/configuration/deploy-hooks/" target="_blank" rel="noopener noreferrer"
+                style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>Docs <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
+            </div>
+            <input type="url" value={creds.deployCloudflareHookUrl} onChange={(e) => setCreds((c) => ({ ...c, deployCloudflareHookUrl: e.target.value }))}
+              placeholder="https://api.cloudflare.com/client/v4/pages/webhooks/deploy_hooks/..." style={credInputStyle} />
           </div>
         </div>
       )}

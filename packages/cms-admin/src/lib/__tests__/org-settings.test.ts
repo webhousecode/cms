@@ -18,8 +18,10 @@ const INHERITABLE_FIELDS = [
   // Deploy
   "deployApiToken",
   "deployFlyOrg",
-  "deployHookUrl",
   "deployGitHubToken",
+  "deployVercelHookUrl",
+  "deployNetlifyHookUrl",
+  "deployCloudflareHookUrl",
   // AI providers & keys
   "aiDefaultProvider",
   "aiAnthropicApiKey",
