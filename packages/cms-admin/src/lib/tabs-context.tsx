@@ -225,12 +225,11 @@ export function TabsProvider({ children, siteId }: { children: ReactNode; siteId
         activeIdRef.current = restoredActiveId;
         setTabs(migrated);
         setActiveId(restoredActiveId);
-        // Navigate to the active tab's URL so content matches the tab title
-        const activeTab = migrated.find((t) => t.id === restoredActiveId);
-        if (activeTab) {
-          skipNextPathChange.current = true;
-          router.push(activeTab.path);
-        }
+        // Navigate to Dashboard after site switch — the restored tabs are for
+        // browsing later, but the initial landing should always be Dashboard
+        // to avoid navigating to a path that doesn't exist on the new site.
+        skipNextPathChange.current = true;
+        router.push("/admin");
       } else {
         // No saved tabs for this site — fresh Dashboard
         const id = uid();
