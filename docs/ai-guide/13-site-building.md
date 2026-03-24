@@ -23,15 +23,17 @@ Instead, use a `blocks` field with content blocks (text-block, image-block, quot
 
 2. **Tailwind CDN in production** — Never use `cdn.tailwindcss.com` in static site builds. It loads ~300KB of runtime JavaScript, shows console warnings, and defeats the purpose of static HTML. Instead, write all styles as inline CSS in `<style>` tags. Static sites should have zero JavaScript dependencies — pure HTML + CSS only.
 
-3. **HTML in richtext fields** — Never store raw HTML in richtext fields. Convert to markdown first. TipTap will display `<h2>Title</h2>` as literal text, not as a heading.
+3. **Removing fields from cms.config.ts** — NEVER remove or reduce fields in an existing collection unless explicitly asked. When editing `cms.config.ts` for any reason (rename, add fields, fix config), always preserve ALL existing fields exactly as they are. Removing a field from the schema makes its content invisible in the admin UI — the data still exists in JSON but editors can no longer see or edit it. This is a silent data loss. Always diff your changes against the original to verify no fields were accidentally dropped.
 
-4. **Accessing fields wrong** — Document fields live in `doc.data.title`, not `doc.title`. Top-level properties (`id`, `slug`, `status`, `createdAt`) are system fields. Everything from the schema is inside `data`.
+4. **HTML in richtext fields** — Never store raw HTML in richtext fields. Convert to markdown first. TipTap will display `<h2>Title</h2>` as literal text, not as a heading.
 
-5. **Block discriminator** — Blocks use `_block` as the type key, not `_type` or `type`. Always check `item._block === "hero"`, not `item.type`.
+5. **Accessing fields wrong** — Document fields live in `doc.data.title`, not `doc.title`. Top-level properties (`id`, `slug`, `status`, `createdAt`) are system fields. Everything from the schema is inside `data`.
 
-6. **Hardcoded ports** — Don't assume `:3000` or `:3010`. Use environment variables or auto-detect with port scanning.
+6. **Block discriminator** — Blocks use `_block` as the type key, not `_type` or `type`. Always check `item._block === "hero"`, not `item.type`.
 
-7. **Missing status filter** — `getCollection()` defaults to published only. To include drafts, pass `{ status: 'all' }`. Raw `findMany()` returns all statuses.
+7. **Hardcoded ports** — Don't assume `:3000` or `:3010`. Use environment variables or auto-detect with port scanning.
+
+8. **Missing status filter** — `getCollection()` defaults to published only. To include drafts, pass `{ status: 'all' }`. Raw `findMany()` returns all statuses.
 
 8. **Richtext rendering** — ALWAYS use `react-markdown` with `remark-gfm` and custom components. NEVER use regex-based markdown parsers or `dangerouslySetInnerHTML` — they break images with sizing/alignment, tables, and complex markdown. The `img` component MUST parse the `title` prop for TipTap's `float:left|width:300px` format.
 
