@@ -25,7 +25,16 @@ export interface OrgSettings {
 
   // AI
   aiApiKeys?: { provider: string; key: string }[];
+  aiContentModel?: string;
+  aiInteractivesModel?: string;
   aiBudgetUsd?: number;
+
+  // Deploy credentials (shared across all sites in org)
+  deployFlyToken?: string;
+  deployFlyOrg?: string;
+  deployGitHubToken?: string;
+  deployVercelToken?: string;
+  deployNetlifyToken?: string;
 
   // MCP Servers (shared across all sites)
   mcpServers?: { name: string; command: string; args?: string[]; env?: Record<string, string> }[];
@@ -74,8 +83,9 @@ export async function readSiteConfig(): Promise<SiteConfig> {
 
 Extend `/admin/organizations/settings` page with tabs:
 - **General** (existing: name, type, plan, delete)
+- **Deploy** — Fly.io token + org, GitHub token, Vercel/Netlify tokens (shared across all sites)
 - **Email** — Resend API key, from address, from name
-- **AI** — API keys, monthly budget
+- **AI** — API keys, default models, monthly budget
 - **MCP** — Shared MCP servers
 - **Webhooks** — Default webhook URLs
 
@@ -118,6 +128,10 @@ Each field in Site Settings that has an org-level equivalent shows:
   - Dependents: `settings/page.tsx`
 - `packages/cms-admin/src/components/settings/mcp-settings-panel.tsx` — add inheritance badges
   - Dependents: `settings/page.tsx`
+- `packages/cms-admin/src/components/settings/deploy-settings-panel.tsx` — add inheritance badges for token/org
+  - Dependents: `settings/page.tsx`
+- `packages/cms-admin/src/lib/deploy-service.ts` — token resolution: site → org → OAuth
+  - No downstream dependents (called from API route)
 
 ### Blast radius
 - `readSiteConfig()` is called by 16 files — adding org fallback must not break existing behavior. The spread-merge pattern (`...defs, ...orgSettings, ...stored`) is safe: if org settings is empty `{}`, result is identical to current behavior.
