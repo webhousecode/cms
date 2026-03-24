@@ -394,6 +394,16 @@ Ingen. Rent additivt — kun nye filer og konfiguration.
 15. **Marker F65 som superseded** i FEATURES.md og plan doc
 16. Kør fuld suite, fix opdagede bugs
 
+## Early Implementations
+
+Følgende tests er allerede skrevet og kan indgå direkte i suites:
+
+| Test fil | Target suite | Dækker |
+|---|---|---|
+| `tests/org-site-switch.spec.ts` | Suite 10 — Navigation | Org-skift loader korrekt default site, intet content-leak mellem orgs, site-skift indenfor org, single-site org → dashboard |
+
+Disse tests bruger `getByRole`/`filter` selectors og `window.location.href` wait-strategi (hard reload). De kan migreres til `e2e/suites/10-navigation.spec.ts` med shared auth fixture når F99 implementeres.
+
 ## Dependencies
 
 - **F80 Admin Selector Map** — stable `data-testid` selectors gør tests robuste (nice-to-have, ikke blocker — tests kan starte med `getByText`/`getByRole`)
