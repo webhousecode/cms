@@ -46,13 +46,13 @@ export function SiteIntroCard() {
     <a
       href="#"
       onClick={handleClick}
-      className="group block p-5 rounded-xl border border-border bg-card hover:border-primary/40 transition-all duration-200 overflow-hidden"
+      className="group block rounded-xl border border-border bg-card hover:border-primary/40 transition-all duration-200 overflow-hidden"
       style={{ textDecoration: "none" }}
     >
-      {/* Thumbnail — scaled iframe of site front page */}
+      {/* Thumbnail — scaled iframe of site front page, fills entire card */}
       <div style={{
-        width: "100%", aspectRatio: "16/9", overflow: "hidden",
-        background: "var(--muted)", position: "relative", borderRadius: "0.5rem",
+        width: "100%", height: "100%", overflow: "hidden",
+        background: "var(--muted)", position: "relative",
       }}>
         {thumbnailUrl ? (
           <iframe
