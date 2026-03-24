@@ -123,6 +123,7 @@ export function SiteSwitcher() {
   if (sites.length <= 1) return null;
 
   function handleSelect(site: SiteEntry) {
+    if (site.id === activeSiteId) return; // already active
     setActiveSiteId(site.id);
     setCookie("cms-active-site", site.id);
     // Persist last active site on user record (survives cookie clear / device switch)
@@ -131,10 +132,8 @@ export function SiteSwitcher() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ lastActiveOrg: activeOrgId, lastActiveSite: site.id }),
     }).catch(() => {});
-    window.dispatchEvent(new CustomEvent("cms-site-change", { detail: { siteId: site.id } }));
-    window.dispatchEvent(new CustomEvent("cms-registry-change"));
-    router.push("/admin");
-    router.refresh();
+    // Navigate to dashboard, then notify components
+    window.location.href = "/admin";
   }
 
   return (
