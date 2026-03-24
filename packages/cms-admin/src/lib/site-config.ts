@@ -47,8 +47,10 @@ export interface SiteConfig {
   deployHookUrl: string;
   deployApiToken: string;
   deployAppName: string;  // Fly.io app name or GitHub repo
+  /** Fly.io organization slug (auto-detected from token if not set) */
+  deployFlyOrg: string;
   deployProductionUrl: string;  // Live site URL after deploy
-  /** Custom domain for GitHub Pages (e.g. boutique.webhouse.app) */
+  /** Custom domain for deploy (e.g. boutique.webhouse.app) */
   deployCustomDomain: string;
   /** Auto-deploy when content is saved */
   deployOnSave: boolean;
@@ -90,6 +92,7 @@ async function defaults(): Promise<SiteConfig> {
     deployHookUrl: "",
     deployApiToken: "",
     deployAppName: "",
+    deployFlyOrg: "",
     deployProductionUrl: "",
     deployCustomDomain: "",
     deployOnSave: false,

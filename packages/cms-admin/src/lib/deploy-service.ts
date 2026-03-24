@@ -149,7 +149,7 @@ export async function triggerDeploy(): Promise<DeployEntry> {
             }
           }
           if (!useAppName) throw new Error("Fly.io requires an app name.");
-          const flyUrl = await flyioBuildAndDeploy(useToken, useAppName);
+          const flyUrl = await flyioBuildAndDeploy(useToken, useAppName, config.deployFlyOrg || undefined);
           if (flyUrl) {
             entry.url = flyUrl;
             if (!config.deployProductionUrl) {
@@ -388,7 +388,7 @@ async function postHook(url: string): Promise<void> {
  * 6. Configure custom domain if set
  * 7. Return the app URL
  */
-async function flyioBuildAndDeploy(token: string, appName: string): Promise<string | undefined> {
+async function flyioBuildAndDeploy(token: string, appName: string, orgSlug?: string): Promise<string | undefined> {
   // 1. Build site
   const sitePaths = await getActiveSitePaths();
   const buildFile = path.join(sitePaths.projectDir, "build.ts");
@@ -511,8 +511,29 @@ primary_region = "arn"
   memory = "256mb"
 `);
 
-  // 4. Create Fly app if it doesn't exist
-  console.log(`[deploy] Ensuring Fly app "${appName}" exists...`);
+  // 4. Resolve org — use explicit config, or auto-detect from token
+  let org = orgSlug;
+  if (!org) {
+    try {
+      const orgOutput = execSync("flyctl orgs list --json", {
+        env: { ...process.env, FLY_API_TOKEN: token },
+        timeout: 10000,
+        stdio: "pipe",
+      }).toString();
+      // flyctl returns { "slug": "name", ... } — pick first org (org tokens have exactly one)
+      const orgsMap = JSON.parse(orgOutput) as Record<string, string>;
+      const slugs = Object.keys(orgsMap);
+      // Prefer non-personal orgs (shared/team orgs)
+      org = slugs.find((s) => s !== "personal") ?? slugs[0] ?? "personal";
+      console.log(`[deploy] Auto-detected Fly org: ${org} (${orgsMap[org]})`);
+    } catch {
+      org = "personal";
+      console.log("[deploy] Could not detect org, falling back to personal");
+    }
+  }
+
+  // Create Fly app if it doesn't exist
+  console.log(`[deploy] Ensuring Fly app "${appName}" exists (org: ${org})...`);
   try {
     execSync(`flyctl status --app ${appName}`, {
       env: { ...process.env, FLY_API_TOKEN: token },
@@ -521,10 +542,9 @@ primary_region = "arn"
     });
     console.log(`[deploy] App ${appName} already exists`);
   } catch {
-    // App doesn't exist — create it
-    console.log(`[deploy] Creating Fly app ${appName}...`);
+    console.log(`[deploy] Creating Fly app ${appName} in org ${org}...`);
     try {
-      execSync(`flyctl apps create ${appName} --org personal`, {
+      execSync(`flyctl apps create ${appName} --org ${org}`, {
         env: { ...process.env, FLY_API_TOKEN: token },
         timeout: 15000,
         stdio: "pipe",
@@ -532,7 +552,7 @@ primary_region = "arn"
       console.log(`[deploy] Created Fly app ${appName}`);
     } catch (err) {
       const msg = err instanceof Error ? (err as Error & { stderr?: Buffer }).stderr?.toString().slice(0, 200) || err.message : "Failed";
-      throw new Error(`Failed to create Fly app "${appName}": ${msg}`);
+      throw new Error(`Failed to create Fly app "${appName}" in org "${org}": ${msg}`);
     }
   }
 

@@ -23,6 +23,7 @@ interface DeployConfig {
   deployHookUrl: string;
   deployApiToken: string;
   deployAppName: string;
+  deployFlyOrg: string;
   deployProductionUrl: string;
   deployCustomDomain: string;
   deployOnSave: boolean;
@@ -33,6 +34,7 @@ const CONFIG_DEFAULTS: DeployConfig = {
   deployHookUrl: "",
   deployApiToken: "",
   deployAppName: "",
+  deployFlyOrg: "",
   deployProductionUrl: "",
   deployCustomDomain: "",
   deployOnSave: false,
@@ -60,6 +62,7 @@ export function DeploySettingsPanel() {
       deployHookUrl: (cfgRes.deployHookUrl as string) ?? "",
       deployApiToken: (cfgRes.deployApiToken as string) ?? "",
       deployAppName: (cfgRes.deployAppName as string) ?? "",
+      deployFlyOrg: (cfgRes.deployFlyOrg as string) ?? "",
       deployProductionUrl: (cfgRes.deployProductionUrl as string) ?? "",
       deployCustomDomain: (cfgRes.deployCustomDomain as string) ?? "",
       deployOnSave: (cfgRes.deployOnSave as boolean) ?? false,
@@ -227,6 +230,17 @@ export function DeploySettingsPanel() {
             </label>
             <input type="text" value={config.deployAppName} onChange={(e) => updateConfig((c) => ({ ...c, deployAppName: e.target.value }))}
               placeholder={config.deployProvider === "flyio" ? "my-app" : "owner/repo"} style={inputStyle} />
+          </div>
+        )}
+
+        {config.deployProvider === "flyio" && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+            <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Organization</label>
+            <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: 0 }}>
+              Fly.io org slug — auto-detected from token if left empty
+            </p>
+            <input type="text" value={config.deployFlyOrg} onChange={(e) => updateConfig((c) => ({ ...c, deployFlyOrg: e.target.value }))}
+              placeholder="Auto-detect from token" style={inputStyle} />
           </div>
         )}
 
