@@ -14,8 +14,10 @@ export interface OrgSettings {
   // Deploy credentials
   deployApiToken?: string;
   deployFlyOrg?: string;
-  deployHookUrl?: string;
   deployGitHubToken?: string;
+  deployVercelHookUrl?: string;
+  deployNetlifyHookUrl?: string;
+  deployCloudflareHookUrl?: string;
 
   // AI providers & keys
   aiDefaultProvider?: "anthropic" | "openai" | "gemini";
@@ -61,8 +63,10 @@ export const INHERITABLE_FIELDS = [
   // Deploy
   "deployApiToken",
   "deployFlyOrg",
-  "deployHookUrl",
   "deployGitHubToken",
+  "deployVercelHookUrl",
+  "deployNetlifyHookUrl",
+  "deployCloudflareHookUrl",
   // AI providers & keys
   "aiDefaultProvider",
   "aiAnthropicApiKey",
