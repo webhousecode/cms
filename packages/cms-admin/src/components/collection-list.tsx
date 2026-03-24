@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Search, Copy, Clock, MoreHorizontal, Pencil, Globe, FileX, ArrowUpDown } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
 
+export type ViewMode = "list" | "grid";
 type StatusFilter = "all" | "published" | "draft" | "scheduled" | "expired" | "trashed";
 type SortKey = string;
 type SortDir = "asc" | "desc";
@@ -33,6 +34,8 @@ interface Props {
   fields: FieldConfig[];
   initialDocs: Doc[];
   readOnly?: boolean;
+  view?: ViewMode;
+  urlPrefix?: string;
 }
 
 /* ─── Column definitions ─────────────────────────────────────── */
@@ -172,7 +175,7 @@ function RowMenu({ doc, collection, onClone, onToggle, onTrash, cloning }: {
 
 /* ─── Main component ──────────────────────────────────────────── */
 
-export function CollectionList({ collection, titleField, fields, initialDocs, readOnly }: Props) {
+export function CollectionList({ collection, titleField, fields, initialDocs, readOnly, view = "list", urlPrefix }: Props) {
   const [docs, setDocs] = useState(initialDocs);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
@@ -183,6 +186,22 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
   const router = useRouter();
 
   const extraColumns = buildColumns(fields, titleField);
+
+  // Resolve preview base URL for grid view thumbnails
+  const [previewBase, setPreviewBase] = useState("");
+  useEffect(() => {
+    if (view !== "grid" || !urlPrefix) return;
+    // Try sirv preview server first
+    fetch("/api/preview-serve", { method: "POST" })
+      .then((r) => r.ok ? r.json() : null)
+      .then((d: { url?: string } | null) => { if (d?.url) setPreviewBase(d.url); })
+      .catch(() => {});
+    // Also check site config for explicit previewSiteUrl
+    fetch("/api/admin/site-config")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => { if (data?.previewSiteUrl) setPreviewBase(data.previewSiteUrl); })
+      .catch(() => {});
+  }, [view, urlPrefix]);
 
   const counts = {
     published: docs.filter((d) => d.status === "published").length,
@@ -344,8 +363,77 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
         </div>
       )}
 
-      {/* Table */}
-      {filtered.length > 0 && (
+      {/* Grid view */}
+      {filtered.length > 0 && view === "grid" && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" style={{ gridAutoRows: "minmax(10rem, auto)" }}>
+          {filtered.map((doc) => {
+            const title = String(doc.data[titleField] ?? doc.data["title"] ?? doc.slug);
+            const prefix = (urlPrefix ?? "").replace(/\/$/, "");
+            const isHomepage = (prefix === "" || prefix === "/") && (doc.slug === "home" || doc.slug === "index");
+            const pagePath = isHomepage ? "/" : `${prefix}/${doc.slug}`;
+            const previewUrl = previewBase ? `${previewBase}${pagePath}` : "";
+
+            return (
+              <Link
+                key={doc.id ?? doc.slug}
+                href={`/admin/${collection}/${doc.slug}`}
+                className="group block rounded-xl border border-border bg-card hover:border-primary/40 transition-all duration-200 overflow-hidden"
+                style={{ textDecoration: "none", display: "flex", flexDirection: "column" }}
+              >
+                {/* Preview thumbnail */}
+                {previewUrl ? (
+                  <div style={{
+                    width: "100%", flex: 1, minHeight: "8rem", overflow: "hidden",
+                    background: "var(--muted)", position: "relative",
+                  }}>
+                    <iframe
+                      src={previewUrl}
+                      title={title}
+                      sandbox="allow-same-origin allow-scripts"
+                      loading="lazy"
+                      style={{
+                        position: "absolute", top: 0, left: 0,
+                        width: "1280px", height: "720px", border: "none",
+                        transform: "scale(var(--thumb-scale, 0.25))", transformOrigin: "top left",
+                        pointerEvents: "none",
+                      }}
+                      ref={(el) => {
+                        if (el?.parentElement) {
+                          const w = el.parentElement.clientWidth;
+                          el.parentElement.style.setProperty("--thumb-scale", String(w / 1280));
+                        }
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <div style={{
+                    width: "100%", flex: 1, minHeight: "8rem",
+                    background: "var(--muted)", display: "flex",
+                    alignItems: "center", justifyContent: "center",
+                    color: "var(--muted-foreground)", fontSize: "0.75rem",
+                  }}>No preview</div>
+                )}
+                {/* Title + status footer */}
+                <div style={{ padding: "0.6rem 0.75rem", borderTop: "1px solid var(--border)" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                    <StatusDot status={doc.status} publishAt={doc.publishAt} />
+                    <p style={{
+                      fontSize: "0.8rem", fontWeight: 500, color: "var(--foreground)",
+                      overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                      flex: 1, minWidth: 0,
+                    }} className="group-hover:text-primary transition-colors">
+                      {title}
+                    </p>
+                  </div>
+                </div>
+              </Link>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Table (list view) */}
+      {filtered.length > 0 && view === "list" && (
         <div style={{ border: "1px solid var(--border)", borderRadius: "10px", overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "700px" }}>
             <thead>
