@@ -51,7 +51,7 @@ export function SiteIntroCard() {
     >
       {/* Thumbnail — scaled iframe of site front page, fills entire card */}
       <div style={{
-        width: "100%", height: "100%", overflow: "hidden",
+        width: "100%", minHeight: "100%", overflow: "hidden",
         background: "var(--muted)", position: "relative",
       }}>
         {thumbnailUrl ? (
