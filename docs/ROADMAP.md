@@ -59,7 +59,8 @@ _Without these, we cannot build and deliver professional sites on the platform._
 | ~~3~~ | ~~**F47 Content Scheduling**~~ | ~~Done~~ | ~~Shipped 2026-03-18~~ |
 | ~~4~~ | ~~**F43 Persist User State**~~ | ~~Done~~ | ~~Shipped 2026-03-18~~ |
 | ~~4b~~ | ~~**F91 Login with GitHub**~~ | ~~Done~~ | ~~Shipped 2026-03-23~~ |
-| 4c | **F65 Agent Pipeline E2E Tests** | Medium | If agents/curation breaks silently, AI stops. Mock LLM, full roundtrip, budget, approve/reject. Ship blocker. |
+| ~~4c~~ | ~~**F65 Agent Pipeline E2E Tests**~~ | ~~Superseded~~ | ~~Absorbed into F99 End-to-End Testing Suite as Suite 05~~ |
+| 4c | **F99 End-to-End Testing Suite** | Large | Komplet testinfrastruktur: 10 Playwright UI suites, API integration tests, unit tests. CI-ready. Ship blocker — ingen regression catching uden dette. |
 | 4c | **F67 Security Gate** | Medium | Semgrep + Gitleaks + custom rules. Pre-commit hook, CI, weekly Discord scan. Can't ship with 82 unaudited API routes. |
 | ~~4d~~ | ~~**F76 Create New Organization**~~ | ~~Done~~ | ~~Shipped 2026-03-19~~ |
 | ~~4e~~ | ~~**F77 Middleware→Proxy**~~ | ~~Done~~ | ~~Shipped 2026-03-20~~ |

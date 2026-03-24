@@ -81,7 +81,7 @@
 | F62 | [Directory Sync](#f62-directory-sync) | Planned | [docs/features/F62-directory-sync.md](features/F62-directory-sync.md) |
 | F63 | [Shared Component Library](#f63-shared-components) | Planned | [docs/features/F63-shared-components.md](features/F63-shared-components.md) |
 | F64 | [Toast Notifications System](#f64-toast-notifications-system) | In progress | [docs/features/F64-toast-notifications.md](features/F64-toast-notifications.md) |
-| F65 | [Agent Pipeline E2E Tests](#f65-agent-pipeline-tests) | Planned | [docs/features/F65-agent-pipeline-tests.md](features/F65-agent-pipeline-tests.md) |
+| F65 | [Agent Pipeline E2E Tests](#f65-agent-pipeline-tests) | Superseded by F99 | [docs/features/F65-agent-pipeline-tests.md](features/F65-agent-pipeline-tests.md) |
 | F66 | [Search Index](#f66-search-index) | Planned | [docs/features/F66-search-index.md](features/F66-search-index.md) |
 | F67 | [Security Gate](#f67-security-gate) | Planned | [docs/features/F67-security-gate.md](features/F67-security-gate.md) |
 | F68 | [Shop Plugin](#f68-shop-plugin) | Planned | [docs/features/F68-shop-plugin.md](features/F68-shop-plugin.md) |
@@ -115,6 +115,7 @@
 | F96 | [Embeddable Maps](#f96-embeddable-maps) | Planned | [docs/features/F96-embeddable-maps.md](features/F96-embeddable-maps.md) |
 | F97 | [SEO Module](#f97-seo-module) | Planned | [docs/features/F97-seo-module.md](features/F97-seo-module.md) |
 | F98 | [Performance Audit (Lighthouse)](#f98-lighthouse-audit) | Planned | [docs/features/F98-lighthouse-audit.md](features/F98-lighthouse-audit.md) |
+| F99 | [End-to-End Testing Suite](#f99-e2e-testing-suite) | Planned | [docs/features/F99-e2e-testing-suite.md](features/F99-e2e-testing-suite.md) |
 
 ---
 
@@ -310,8 +311,8 @@ Consolidate ~1,965 inline style objects and 5 local-only components into a share
 ## F64 — Toast Notifications System
 Comprehensive toast notification system with event-driven feedback across all CMS admin actions. Phase 1 (complete): Sonner with dark theme, SSE push from scheduler daemon, custom Web Audio notification sounds, toasts on document CRUD, media upload, interactives upload, settings saves, team invitations. Phase 2 (planned): AI generation/rewrite toasts, link checker result summary, undo-trash button, error toasts (network/conflict/auth), agent run complete, brand voice interview complete, notification preferences per user (stored in user-state), Browser Notification API for background tabs.
 
-## F65 — Agent Pipeline E2E Tests
-Playwright end-to-end tests covering the full AI agent lifecycle: cockpit settings → agent config → schedule/run now → mocked LLM call → curation queue → approve/reject/edit → published document. Mock LLM fixture intercepts Anthropic/OpenAI API calls for $0 test cost. 17 test files across 4 suites: agents (CRUD, run now, scheduled, budget, autonomy), curation (queue, approve, reject, edit, alternatives, purge), cockpit (settings, budget bar, status monitor), pipeline (full roundtrip, scheduled roundtrip). Ship blocker — if this pipeline breaks silently, AI content stops flowing.
+## F65 — Agent Pipeline E2E Tests *(Superseded by F99)*
+~~Playwright end-to-end tests covering the full AI agent lifecycle.~~ Absorbed into F99 (End-to-End Testing Suite) as Suite 05. See F99 for the comprehensive test plan.
 
 ## F66 — Search Index
 Persistent SQLite FTS5 search index for instant full-text search across all documents. Current search scans all documents via storage adapter on every query — O(n) per collection. SQLite FTS5 database stored in `_data/search-index.db`. Built incrementally on document create/update/delete via storage hooks. Cold-start builder syncs all content on first request. Field-weighted ranking (title 10x > excerpt 3x > content 1x). Works with all storage adapters. Uses `better-sqlite3`.
@@ -420,3 +421,6 @@ Dedicated SEO management in the CMS admin. Per-document SEO panel in document ed
 
 ## F98 — Performance Audit (Lighthouse)
 Løbende Lighthouse-scanning af sites fra CMS admin. Dual-engine: PageSpeed Insights API (production, cloud-baseret, 25K/dag gratis) + npm `lighthouse` med Playwright Chromium (development, localhost scans). Dashboard widget med 4 category scores (Performance, Accessibility, SEO, Best Practices) + trend-graf over tid. Core Web Vitals (LCP, CLS, INP). Full audit page i Tools med opportunities, diagnostics, og per-page scores. Scheduled scans (ugentligt via scheduler). Alert når score falder under threshold. Score-historik (90 dage). Integrerer med F97 (SEO score), F72 (route index for scan all pages), F64 (toast alerts).
+
+## F99 — End-to-End Testing Suite
+Komplet testinfrastruktur for CMS'et. Tre lag: (1) Playwright UI tests — 10 suites dækkende auth, content CRUD, richtext, media, agent pipeline, interactives, settings, deploy, scheduling, navigation. (2) Vitest API integration tests — direkte HTTP-kald mod alle 99 API routes med test-database. (3) Vitest unit tests — udvidet dækning af core logic (registry, auth, media-meta, content-transform, enrichment, scheduler). Shared fixtures: JWT auth, mock LLM ($0 agent tests), test data seeding. CI-ready med GitHub Actions — unit, API og E2E tests kører parallelt. Absorberer F65 (Agent Pipeline E2E Tests) som Suite 05. Bygger på F80 (Admin Selector Map) for stabile selectors.

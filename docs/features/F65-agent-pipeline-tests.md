@@ -1,6 +1,8 @@
-# F65 — Agent Pipeline E2E Tests
+# F65 — Agent Pipeline E2E Tests *(Superseded by F99)*
 
-> Playwright end-to-end tests covering the full AI agent lifecycle: configure → schedule → run → curation queue → approve/reject → cockpit monitoring.
+> ~~Playwright end-to-end tests covering the full AI agent lifecycle: configure → schedule → run → curation queue → approve/reject → cockpit monitoring.~~
+>
+> **This feature has been absorbed into [F99 — End-to-End Testing Suite](F99-e2e-testing-suite.md) as Suite 05 (Agent Pipeline).** The mock LLM fixture, curation tests, and cockpit tests from this plan are incorporated into F99's comprehensive test architecture.
 
 ## Problem
 
