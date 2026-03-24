@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Clock, Calendar, Image, Zap } from "lucide-react";
 import { getMediaAdapter } from "@/lib/media";
-import { SiteIntroCard } from "@/components/site-intro-card";
 
 export default async function AdminDashboard() {
   // Multi-site with no site selected → go to sites dashboard
@@ -68,8 +67,6 @@ export default async function AdminDashboard() {
     return aDate.localeCompare(bDate);
   });
 
-  const siteName = siteInfo?.siteName ?? "Site";
-
   return (
     <>
       <div className="p-8 max-w-5xl">
@@ -79,8 +76,6 @@ export default async function AdminDashboard() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {/* Site intro card — always first */}
-        <SiteIntroCard siteName={siteName} />
         {stats.map((col) => (
           <Link
             key={col.name}
