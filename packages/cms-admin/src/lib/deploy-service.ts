@@ -268,14 +268,17 @@ async function pushBrandedReadme(headers: Record<string, string>, repo: string, 
   const pagesUrl = `https://${repo.split("/")[0]}.github.io/${repoName}`;
   const readme = `<div align="center">
 
-<img src="https://webhouse.app/webhouse-logo-dark.svg" alt="webhouse.app" width="200" />
+<img src="https://raw.githubusercontent.com/webhousecode/cms/main/logo/webhouse.app-dark.svg" alt="webhouse.app" width="240" />
+
+<br /><br />
 
 # ${siteName}
 
 **Built and managed with [webhouse.app](https://webhouse.app)** — the AI-native content management system.
 
-[![Deployed with webhouse.app](https://img.shields.io/badge/deployed%20with-webhouse.app-F7BB2E?style=flat-square&logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSIxMCIgZmlsbD0iI0Y3QkIyRSIvPjwvc3ZnPg==)](https://webhouse.app)
-[![GitHub Pages](https://img.shields.io/badge/live-GitHub%20Pages-222?style=flat-square&logo=github)](${pagesUrl})
+[![Deployed with webhouse.app](https://img.shields.io/badge/deployed%20with-webhouse.app-F7BB2E?style=for-the-badge)](https://webhouse.app)
+&nbsp;
+[![GitHub Pages](https://img.shields.io/badge/live_site-GitHub%20Pages-222?style=for-the-badge&logo=github)](${pagesUrl})
 
 </div>
 
@@ -283,36 +286,46 @@ async function pushBrandedReadme(headers: Record<string, string>, repo: string, 
 
 ## About
 
-This site is powered by **[@webhouse/cms](https://github.com/webhousecode/cms)** — a file-based, AI-native CMS for TypeScript projects. Content is managed visually through the webhouse.app admin UI and deployed automatically to GitHub Pages.
+This site is powered by **[@webhouse/cms](https://github.com/webhousecode/cms)** — a file-based, AI-native CMS engine for TypeScript projects. Content is managed through a visual admin UI and deployed to GitHub Pages with one click.
 
-## How it works
+### How it works
 
 | | |
 |---|---|
-| **Content management** | Visual admin UI at [webhouse.app](https://webhouse.app) |
-| **Storage** | Content stored as JSON files, version-controlled in this repo |
-| **Deployment** | One-click deploy to GitHub Pages from the admin |
-| **AI-powered** | AI content generation, SEO optimization, and site building |
-| **Static output** | Fast, secure, zero server costs |
+| **Content** | Managed visually in the [webhouse.app](https://webhouse.app) admin — no code needed to edit |
+| **Storage** | Content stored as JSON, version-controlled in this repo |
+| **Deploy** | One-click publish from the admin UI to GitHub Pages |
+| **AI** | Built-in AI agents for content generation, SEO, and translation |
+| **Output** | Static HTML — fast, secure, zero hosting costs |
 
-## Tech stack
+### What is webhouse.app?
 
-- **CMS**: [@webhouse/cms](https://github.com/webhousecode/cms) — file-based, AI-native
-- **Hosting**: GitHub Pages (this repo's \`gh-pages\` branch)
-- **Build**: TypeScript static site generator with post-build SEO enrichment
-- **SEO**: Auto-injected OpenGraph, JSON-LD, sitemap, robots.txt, llms.txt
+[webhouse.app](https://webhouse.app) is a new kind of CMS — **AI-native from the ground up.** You describe what you want, and AI builds it. You manage content visually. You deploy with one click. And you own all the code.
 
-## Links
+- **AI Site Builder** — describe your site and watch it build
+- **Visual Editor** — rich text, blocks, media, interactives
+- **SEO Automation** — OpenGraph, JSON-LD, sitemap, robots.txt auto-generated
+- **Multi-site** — manage multiple sites from one admin
+- **Open Source** — [github.com/webhousecode/cms](https://github.com/webhousecode/cms)
 
-- [Live site](${pagesUrl})
-- [webhouse.app](https://webhouse.app) — AI-native CMS
-- [@webhouse/cms on GitHub](https://github.com/webhousecode/cms)
-- [@webhouse/cms on npm](https://www.npmjs.com/package/@webhouse/cms)
+### Tech stack
+
+| Layer | Technology |
+|-------|-----------|
+| CMS | [@webhouse/cms](https://www.npmjs.com/package/@webhouse/cms) |
+| Admin | [webhouse.app](https://webhouse.app) |
+| Hosting | GitHub Pages |
+| Build | TypeScript SSG + post-build SEO enrichment |
+| AI | Claude, GPT-4, or any LLM provider |
 
 ---
 
 <div align="center">
-<sub>Deployed with <a href="https://webhouse.app">webhouse.app</a> — the CMS that builds itself.</sub>
+
+**[webhouse.app](https://webhouse.app)** — the CMS that builds itself.
+
+<sub>[@webhouse/cms](https://github.com/webhousecode/cms) &middot; [npm](https://www.npmjs.com/package/@webhouse/cms) &middot; [docs](https://github.com/webhousecode/cms/tree/main/docs/ai-guide)</sub>
+
 </div>
 `;
 
