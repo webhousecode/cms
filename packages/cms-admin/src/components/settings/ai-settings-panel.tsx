@@ -47,12 +47,34 @@ export function AISettingsPanel() {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
+  const [orgName, setOrgName] = useState("");
+  const [orgKeys, setOrgKeys] = useState<Record<string, string>>({});
 
   useEffect(() => {
     fetch("/api/admin/ai-config")
       .then((r) => r.json())
       .then((d: AiConfigMasked) => { setConfig(d); setLoading(false); })
       .catch(() => setLoading(false));
+
+    // F87: Load org settings to show "inherited" badges
+    Promise.all([
+      fetch("/api/admin/org-settings").then((r) => r.ok ? r.json() : {}).catch(() => ({})),
+      fetch("/api/cms/registry").then((r) => r.ok ? r.json() : {}).catch(() => ({})),
+    ]).then(([orgData, regData]: [Record<string, unknown>, Record<string, unknown>]) => {
+      const orgMap: Record<string, string> = {};
+      if (orgData.aiAnthropicApiKey) orgMap.anthropicApiKey = orgData.aiAnthropicApiKey as string;
+      if (orgData.aiOpenaiApiKey) orgMap.openaiApiKey = orgData.aiOpenaiApiKey as string;
+      if (orgData.aiGeminiApiKey) orgMap.geminiApiKey = orgData.aiGeminiApiKey as string;
+      if (orgData.aiBraveApiKey) orgMap.braveApiKey = orgData.aiBraveApiKey as string;
+      if (orgData.aiTavilyApiKey) orgMap.tavilyApiKey = orgData.aiTavilyApiKey as string;
+      setOrgKeys(orgMap);
+
+      // Resolve org name
+      const reg = regData?.registry as { orgs?: { id: string; name: string }[]; defaultOrgId?: string } | undefined;
+      const activeOrgId = document.cookie.match(/cms-active-org=([^;]*)/)?.[1] ?? reg?.defaultOrgId;
+      const org = reg?.orgs?.find((o) => o.id === activeOrgId);
+      if (org) setOrgName(org.name);
+    });
   }, []);
 
   async function handleSave(e: FormEvent) {
@@ -153,12 +175,21 @@ export function AISettingsPanel() {
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                 <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>{p.label} API key</label>
                 {hasKey && !isEditing && (
-                  <span style={{
-                    fontSize: "0.65rem", fontFamily: "monospace",
-                    padding: "0.1rem 0.4rem", borderRadius: "4px",
-                    background: "color-mix(in srgb, var(--primary) 10%, transparent)",
-                    color: "var(--primary)",
-                  }}>configured</span>
+                  orgKeys[p.field] && !isEditing ? (
+                    <span style={{
+                      fontSize: "0.65rem", fontFamily: "monospace",
+                      padding: "0.1rem 0.4rem", borderRadius: "4px",
+                      background: "color-mix(in srgb, var(--primary) 10%, transparent)",
+                      color: "var(--primary)",
+                    }}>inherited{orgName ? ` from ${orgName}` : ""}</span>
+                  ) : (
+                    <span style={{
+                      fontSize: "0.65rem", fontFamily: "monospace",
+                      padding: "0.1rem 0.4rem", borderRadius: "4px",
+                      background: "color-mix(in srgb, var(--primary) 10%, transparent)",
+                      color: "var(--primary)",
+                    }}>configured</span>
+                  )
                 )}
                 <a
                   href={p.docsUrl}
@@ -263,7 +294,7 @@ export function AISettingsPanel() {
                     padding: "0.1rem 0.4rem", borderRadius: "4px",
                     background: "color-mix(in srgb, var(--primary) 10%, transparent)",
                     color: "var(--primary)",
-                  }}>configured</span>
+                  }}>{orgKeys[keyField] ? `inherited${orgName ? ` from ${orgName}` : ""}` : "configured"}</span>
                 )}
               </div>
               {keyField in editing ? (

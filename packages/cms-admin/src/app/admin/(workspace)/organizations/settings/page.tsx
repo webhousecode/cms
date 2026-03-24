@@ -219,6 +219,18 @@ export default function OrgSettingsPage() {
     color: "var(--foreground)", fontSize: "0.875rem", outline: "none",
   };
 
+  const configuredBadge = (value: string | number) => {
+    if (!value || value === 0) return null;
+    return (
+      <span style={{
+        fontSize: "0.65rem", fontFamily: "monospace",
+        padding: "0.1rem 0.4rem", borderRadius: "4px",
+        background: "color-mix(in srgb, var(--primary) 10%, transparent)",
+        color: "var(--primary)",
+      }}>configured</span>
+    );
+  };
+
   const tabStyle = (t: OrgTab): React.CSSProperties => ({
     padding: "0.5rem 0.75rem", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer",
     border: "none", borderBottom: tab === t ? "2px solid var(--primary)" : "2px solid transparent",
@@ -275,7 +287,7 @@ export default function OrgSettingsPage() {
         <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "10px", padding: "1.25rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Fly.io API Token</label>
+              <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Fly.io API Token</label>{configuredBadge(creds.deployApiToken)}</span>
               <a href="https://fly.io/dashboard" target="_blank" rel="noopener noreferrer"
                 style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>fly.io/dashboard <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
             </div>
@@ -289,7 +301,7 @@ export default function OrgSettingsPage() {
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>GitHub Personal Access Token</label>
+              <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><label style={{ fontSize: "0.75rem", fontWeight: 500 }}>GitHub Personal Access Token</label>{configuredBadge(creds.deployGitHubToken)}</span>
               <a href="https://github.com/settings/tokens/new?scopes=repo&description=webhouse-deploy" target="_blank" rel="noopener noreferrer"
                 style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>Create token <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
             </div>
@@ -298,7 +310,7 @@ export default function OrgSettingsPage() {
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Vercel Deploy Hook</label>
+              <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Vercel Deploy Hook</label>{configuredBadge(creds.deployVercelHookUrl)}</span>
               <a href="https://vercel.com/docs/deploy-hooks" target="_blank" rel="noopener noreferrer"
                 style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>Docs <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
             </div>
@@ -307,7 +319,7 @@ export default function OrgSettingsPage() {
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Netlify Build Hook</label>
+              <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Netlify Build Hook</label>{configuredBadge(creds.deployNetlifyHookUrl)}</span>
               <a href="https://docs.netlify.com/configure-builds/build-hooks/" target="_blank" rel="noopener noreferrer"
                 style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>Docs <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
             </div>
@@ -316,7 +328,7 @@ export default function OrgSettingsPage() {
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Cloudflare Pages Deploy Hook</label>
+              <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Cloudflare Pages Deploy Hook</label>{configuredBadge(creds.deployCloudflareHookUrl)}</span>
               <a href="https://developers.cloudflare.com/pages/configuration/deploy-hooks/" target="_blank" rel="noopener noreferrer"
                 style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>Docs <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
             </div>
@@ -334,7 +346,7 @@ export default function OrgSettingsPage() {
           <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "10px", padding: "1.25rem", display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "1.5rem" }}>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Anthropic API Key</label>
+                <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Anthropic API Key</label>{configuredBadge(creds.aiAnthropicApiKey)}</span>
                 <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer"
                   style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>Get key <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
               </div>
@@ -343,7 +355,7 @@ export default function OrgSettingsPage() {
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>OpenAI API Key</label>
+                <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><label style={{ fontSize: "0.75rem", fontWeight: 500 }}>OpenAI API Key</label>{configuredBadge(creds.aiOpenaiApiKey)}</span>
                 <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer"
                   style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>Get key <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
               </div>
@@ -352,7 +364,7 @@ export default function OrgSettingsPage() {
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Google Gemini API Key</label>
+                <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Google Gemini API Key</label>{configuredBadge(creds.aiGeminiApiKey)}</span>
                 <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer"
                   style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>Get key <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
               </div>
@@ -376,7 +388,7 @@ export default function OrgSettingsPage() {
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Brave Search API Key</label>
+                <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Brave Search API Key</label>{configuredBadge(creds.aiBraveApiKey)}</span>
                 <a href="https://brave.com/search/api/" target="_blank" rel="noopener noreferrer"
                   style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>Get key <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
               </div>
@@ -385,7 +397,7 @@ export default function OrgSettingsPage() {
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Tavily API Key</label>
+                <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Tavily API Key</label>{configuredBadge(creds.aiTavilyApiKey)}</span>
                 <a href="https://tavily.com/" target="_blank" rel="noopener noreferrer"
                   style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>Get key <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
               </div>
@@ -430,7 +442,7 @@ export default function OrgSettingsPage() {
         <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "10px", padding: "1.25rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Resend API Key</label>
+              <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Resend API Key</label>{configuredBadge(creds.resendApiKey)}</span>
               <a href="https://resend.com/api-keys" target="_blank" rel="noopener noreferrer"
                 style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>resend.com <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
             </div>
