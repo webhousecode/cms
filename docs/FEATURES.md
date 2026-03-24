@@ -116,6 +116,7 @@
 | F97 | [SEO Module](#f97-seo-module) | Planned | [docs/features/F97-seo-module.md](features/F97-seo-module.md) |
 | F98 | [Performance Audit (Lighthouse)](#f98-lighthouse-audit) | Planned | [docs/features/F98-lighthouse-audit.md](features/F98-lighthouse-audit.md) |
 | F99 | [End-to-End Testing Suite](#f99-e2e-testing-suite) | Planned | [docs/features/F99-e2e-testing-suite.md](features/F99-e2e-testing-suite.md) |
+| F100 | [Custom Domain DNS Validation](#f100-custom-domain-dns-validation) | Planned | [docs/features/F100-custom-domain-dns.md](features/F100-custom-domain-dns.md) |
 
 ---
 
@@ -424,3 +425,6 @@ Løbende Lighthouse-scanning af sites fra CMS admin. Dual-engine: PageSpeed Insi
 
 ## F99 — End-to-End Testing Suite
 Komplet testinfrastruktur for CMS'et. Tre lag: (1) Playwright UI tests — 10 suites dækkende auth, content CRUD, richtext, media, agent pipeline, interactives, settings, deploy, scheduling, navigation. (2) Vitest API integration tests — direkte HTTP-kald mod alle 99 API routes med test-database. (3) Vitest unit tests — udvidet dækning af core logic (registry, auth, media-meta, content-transform, enrichment, scheduler). Shared fixtures: JWT auth, mock LLM ($0 agent tests), test data seeding. CI-ready med GitHub Actions — unit, API og E2E tests kører parallelt. Absorberer F65 (Agent Pipeline E2E Tests) som Suite 05. Bygger på F80 (Admin Selector Map) for stabile selectors.
+
+## F100 — Custom Domain DNS Validation
+Real-time DNS-validering i Deploy Settings custom domain felt. For `*.webhouse.app` subdomæner: tjek tilgængelighed mod webhouse.app DNS-zonen via REST API, auto-opret CNAME record ved gem. For eksterne domæner: verificer CNAME peger korrekt mod deploy target (`.github.io` / `.fly.dev`). UI viser grønt/rødt feedback mens brugeren skriver. Auto-provisioning af DNS records for webhouse.app subdomæner eliminerer manuelt DNS-arbejde.
