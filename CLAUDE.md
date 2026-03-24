@@ -73,6 +73,50 @@ Before modifying ANY builtin block:
 3. Adding a NEW block is fine — run `npx vitest run` after to update snapshot
 4. Run `cd packages/cms && npx vitest run` — tests MUST pass before commit
 
+## Feature Implementation Process
+
+All non-trivial features follow this 5-step process:
+
+### 1. Risk Assessment
+Before writing any code, identify what can break:
+- Which existing files/functions are affected?
+- What are the edge cases? (empty strings vs undefined, array merging, etc.)
+- What data could be corrupted or leaked?
+- What is the blast radius if something goes wrong?
+
+### 2. Test Suite (write BEFORE implementation)
+Design and write tests that cover:
+- **Happy path** — the feature works as intended
+- **Edge cases** — empty values, nulls, zeros, false, empty arrays
+- **Backwards compatibility** — existing behavior is unchanged when feature is not used
+- **Safety guards** — fields/data that must NEVER be affected
+- **Migration** — if data format changes, test the migration logic
+
+Tests must be runnable independently of the implementation (use inline helper functions or mocks). All tests should FAIL before implementation and PASS after.
+
+```bash
+# cms core tests
+cd packages/cms && npx vitest run
+
+# cms-admin tests
+cd packages/cms-admin && npx vitest run src/lib/__tests__/
+```
+
+### 3. Implementation
+Write the code to make tests pass. Keep changes minimal and focused.
+
+### 4. Test
+Run the full test suite. Type-check. Manual verification if needed.
+
+```bash
+npx tsc --noEmit --project packages/cms-admin/tsconfig.json
+cd packages/cms && npx vitest run
+cd packages/cms-admin && npx vitest run
+```
+
+### 5. Deploy
+Commit, push, verify in production.
+
 ## Key Conventions
 
 - **Follow instructions exactly** — when given a task description, implement EXACTLY what is described. "Same as X" means find X's implementation and replicate the pattern. Do not add creative interpretations, extra features, or alternative approaches not asked for. When in doubt, ask — don't assume.
