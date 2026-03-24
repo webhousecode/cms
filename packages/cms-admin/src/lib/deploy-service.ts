@@ -251,7 +251,88 @@ async function autoCreateGitHubRepo(token: string, siteName: string, siteId: str
   }
 
   console.log(`[deploy] Created repo ${fullName}`);
+
+  // Push branded README to main branch
+  try {
+    await pushBrandedReadme(headers, fullName, siteName);
+  } catch (err) {
+    console.error("[deploy] Failed to push README:", err instanceof Error ? err.message : err);
+  }
+
   return fullName;
+}
+
+/** Push a branded README.md to the repo's main branch */
+async function pushBrandedReadme(headers: Record<string, string>, repo: string, siteName: string): Promise<void> {
+  const repoName = repo.split("/")[1] ?? siteName;
+  const pagesUrl = `https://${repo.split("/")[0]}.github.io/${repoName}`;
+  const readme = `<div align="center">
+
+<img src="https://webhouse.app/webhouse-logo-dark.svg" alt="webhouse.app" width="200" />
+
+# ${siteName}
+
+**Built and managed with [webhouse.app](https://webhouse.app)** — the AI-native content management system.
+
+[![Deployed with webhouse.app](https://img.shields.io/badge/deployed%20with-webhouse.app-F7BB2E?style=flat-square&logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIxMiIgY3k9IjEyIiByPSIxMCIgZmlsbD0iI0Y3QkIyRSIvPjwvc3ZnPg==)](https://webhouse.app)
+[![GitHub Pages](https://img.shields.io/badge/live-GitHub%20Pages-222?style=flat-square&logo=github)](${pagesUrl})
+
+</div>
+
+---
+
+## About
+
+This site is powered by **[@webhouse/cms](https://github.com/webhousecode/cms)** — a file-based, AI-native CMS for TypeScript projects. Content is managed visually through the webhouse.app admin UI and deployed automatically to GitHub Pages.
+
+## How it works
+
+| | |
+|---|---|
+| **Content management** | Visual admin UI at [webhouse.app](https://webhouse.app) |
+| **Storage** | Content stored as JSON files, version-controlled in this repo |
+| **Deployment** | One-click deploy to GitHub Pages from the admin |
+| **AI-powered** | AI content generation, SEO optimization, and site building |
+| **Static output** | Fast, secure, zero server costs |
+
+## Tech stack
+
+- **CMS**: [@webhouse/cms](https://github.com/webhousecode/cms) — file-based, AI-native
+- **Hosting**: GitHub Pages (this repo's \`gh-pages\` branch)
+- **Build**: TypeScript static site generator with post-build SEO enrichment
+- **SEO**: Auto-injected OpenGraph, JSON-LD, sitemap, robots.txt, llms.txt
+
+## Links
+
+- [Live site](${pagesUrl})
+- [webhouse.app](https://webhouse.app) — AI-native CMS
+- [@webhouse/cms on GitHub](https://github.com/webhousecode/cms)
+- [@webhouse/cms on npm](https://www.npmjs.com/package/@webhouse/cms)
+
+---
+
+<div align="center">
+<sub>Deployed with <a href="https://webhouse.app">webhouse.app</a> — the CMS that builds itself.</sub>
+</div>
+`;
+
+  // Get current README sha (needed for update)
+  const getRes = await fetch(`https://api.github.com/repos/${repo}/contents/README.md`, {
+    headers, signal: AbortSignal.timeout(10000),
+  });
+  const sha = getRes.ok ? ((await getRes.json()) as { sha: string }).sha : undefined;
+
+  await fetch(`https://api.github.com/repos/${repo}/contents/README.md`, {
+    method: "PUT",
+    headers,
+    body: JSON.stringify({
+      message: "docs: branded README — built with webhouse.app",
+      content: Buffer.from(readme).toString("base64"),
+      ...(sha ? { sha } : {}),
+    }),
+    signal: AbortSignal.timeout(10000),
+  });
+  console.log(`[deploy] Pushed branded README to ${repo}`);
 }
 
 // ── Provider implementations ─────────────────────────────────
