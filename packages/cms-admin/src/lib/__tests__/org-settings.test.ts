@@ -19,15 +19,30 @@ const INHERITABLE_FIELDS = [
   "deployApiToken",
   "deployFlyOrg",
   "deployHookUrl",
-  // Email
-  "resendApiKey",
-  "emailFrom",
-  "emailFromName",
-  // AI
+  "deployGitHubToken",
+  // AI providers & keys
+  "aiDefaultProvider",
+  "aiAnthropicApiKey",
+  "aiOpenaiApiKey",
+  "aiGeminiApiKey",
+  "aiWebSearchProvider",
+  "aiBraveApiKey",
+  "aiTavilyApiKey",
+  // AI model defaults
   "aiInteractivesModel",
   "aiInteractivesMaxTokens",
   "aiContentModel",
   "aiContentMaxTokens",
+  // Email
+  "resendApiKey",
+  "emailFrom",
+  "emailFromName",
+  // Automation defaults
+  "backupSchedule",
+  "backupTime",
+  "backupRetentionDays",
+  "linkCheckSchedule",
+  "linkCheckTime",
 ] as const;
 
 /** Fields that must NEVER be inherited */
@@ -574,5 +589,275 @@ describe("F87 — Calendar secret safety", () => {
     // Token should still validate with the merged config's secret
     const validationToken = crypto.createHmac("sha256", result.calendarSecret as string).update(userId).digest("hex");
     expect(validationToken).toBe(token);
+  });
+});
+
+// ── AI provider keys inheritance ─────────────────────────────
+
+describe("F87 — AI provider keys inheritance", () => {
+  const DEFAULTS: Record<string, unknown> = {
+    aiDefaultProvider: "anthropic",
+    aiAnthropicApiKey: "",
+    aiOpenaiApiKey: "",
+    aiGeminiApiKey: "",
+    aiWebSearchProvider: "",
+    aiBraveApiKey: "",
+    aiTavilyApiKey: "",
+    aiContentModel: "claude-haiku-4-5-20251001",
+    aiInteractivesModel: "claude-sonnet-4-6",
+    calendarSecret: "site-secret",
+  };
+
+  it("Anthropic API key inherited from org", () => {
+    const result = mergeConfigs(DEFAULTS, {
+      aiAnthropicApiKey: "sk-ant-org-key-abc",
+    }, {});
+    expect(result.aiAnthropicApiKey).toBe("sk-ant-org-key-abc");
+  });
+
+  it("site Anthropic key overrides org key", () => {
+    const result = mergeConfigs(DEFAULTS, {
+      aiAnthropicApiKey: "sk-ant-org-key",
+    }, {
+      aiAnthropicApiKey: "sk-ant-site-key",
+    });
+    expect(result.aiAnthropicApiKey).toBe("sk-ant-site-key");
+  });
+
+  it("empty site AI key does NOT wipe org key", () => {
+    const result = mergeConfigs(DEFAULTS, {
+      aiAnthropicApiKey: "sk-ant-org-key",
+      aiOpenaiApiKey: "sk-openai-org-key",
+    }, {
+      aiAnthropicApiKey: "",
+      aiOpenaiApiKey: "",
+    });
+    expect(result.aiAnthropicApiKey).toBe("sk-ant-org-key");
+    expect(result.aiOpenaiApiKey).toBe("sk-openai-org-key");
+  });
+
+  it("all three provider keys inherit independently", () => {
+    const result = mergeConfigs(DEFAULTS, {
+      aiAnthropicApiKey: "sk-ant-org",
+      aiOpenaiApiKey: "sk-oai-org",
+      aiGeminiApiKey: "sk-gem-org",
+    }, {
+      aiOpenaiApiKey: "sk-oai-site-override",
+      // anthropic and gemini not set at site → inherit org
+    });
+    expect(result.aiAnthropicApiKey).toBe("sk-ant-org");
+    expect(result.aiOpenaiApiKey).toBe("sk-oai-site-override");
+    expect(result.aiGeminiApiKey).toBe("sk-gem-org");
+  });
+
+  it("default provider inherited from org", () => {
+    const result = mergeConfigs(DEFAULTS, {
+      aiDefaultProvider: "openai",
+    }, {});
+    expect(result.aiDefaultProvider).toBe("openai");
+  });
+
+  it("web search provider + key inherited from org", () => {
+    const result = mergeConfigs(DEFAULTS, {
+      aiWebSearchProvider: "brave",
+      aiBraveApiKey: "BSA-org-key-123",
+    }, {});
+    expect(result.aiWebSearchProvider).toBe("brave");
+    expect(result.aiBraveApiKey).toBe("BSA-org-key-123");
+  });
+
+  it("site can switch web search provider while keeping org key", () => {
+    const result = mergeConfigs(DEFAULTS, {
+      aiWebSearchProvider: "brave",
+      aiBraveApiKey: "BSA-org-key",
+      aiTavilyApiKey: "tvly-org-key",
+    }, {
+      aiWebSearchProvider: "tavily",
+      // keys not overridden → inherit both from org
+    });
+    expect(result.aiWebSearchProvider).toBe("tavily");
+    expect(result.aiBraveApiKey).toBe("BSA-org-key");
+    expect(result.aiTavilyApiKey).toBe("tvly-org-key");
+  });
+});
+
+// ── Automation defaults inheritance ──────────────────────────
+
+describe("F87 — Automation defaults inheritance", () => {
+  const DEFAULTS: Record<string, unknown> = {
+    backupSchedule: "off",
+    backupTime: "03:00",
+    backupRetentionDays: 30,
+    linkCheckSchedule: "off",
+    linkCheckTime: "04:00",
+    publishWebhooks: [],
+    backupWebhooks: [],
+    linkCheckWebhooks: [],
+    agentDefaultWebhooks: [],
+    calendarSecret: "site-secret",
+  };
+
+  it("backup schedule inherited from org", () => {
+    const result = mergeConfigs(DEFAULTS, {
+      backupSchedule: "daily",
+      backupTime: "02:00",
+      backupRetentionDays: 60,
+    }, {});
+    expect(result.backupSchedule).toBe("daily");
+    expect(result.backupTime).toBe("02:00");
+    expect(result.backupRetentionDays).toBe(60);
+  });
+
+  it("site can override backup schedule", () => {
+    const result = mergeConfigs(DEFAULTS, {
+      backupSchedule: "daily",
+    }, {
+      backupSchedule: "weekly",
+    });
+    expect(result.backupSchedule).toBe("weekly");
+  });
+
+  it("link check schedule inherited from org", () => {
+    const result = mergeConfigs(DEFAULTS, {
+      linkCheckSchedule: "weekly",
+      linkCheckTime: "05:00",
+    }, {});
+    expect(result.linkCheckSchedule).toBe("weekly");
+    expect(result.linkCheckTime).toBe("05:00");
+  });
+
+  it("org publish webhooks inherited when site has none", () => {
+    const result = mergeConfigs(DEFAULTS, {
+      publishWebhooks: [{ id: "org1", url: "https://discord.com/org-hook" }],
+    }, {
+      // no publishWebhooks at site level
+    });
+    const hooks = result.publishWebhooks as { id: string; url: string }[];
+    expect(hooks).toHaveLength(1);
+    expect(hooks[0].url).toBe("https://discord.com/org-hook");
+  });
+
+  it("org backup webhooks inherited", () => {
+    const result = mergeConfigs(DEFAULTS, {
+      backupWebhooks: [
+        { id: "bw1", url: "https://discord.com/backup-notify" },
+        { id: "bw2", url: "https://slack.com/backup-notify" },
+      ],
+    }, {});
+    const hooks = result.backupWebhooks as { id: string; url: string }[];
+    expect(hooks).toHaveLength(2);
+  });
+
+  it("site webhooks replace org webhooks completely", () => {
+    const result = mergeConfigs(DEFAULTS, {
+      agentDefaultWebhooks: [{ id: "org1", url: "https://org-hook" }],
+    }, {
+      agentDefaultWebhooks: [{ id: "site1", url: "https://site-hook" }],
+    });
+    const hooks = result.agentDefaultWebhooks as { id: string; url: string }[];
+    expect(hooks).toHaveLength(1);
+    expect(hooks[0].url).toBe("https://site-hook");
+  });
+});
+
+// ── GitHub token inheritance ─────────────────────────────────
+
+describe("F87 — GitHub token inheritance", () => {
+  const DEFAULTS: Record<string, unknown> = {
+    deployApiToken: "",
+    deployGitHubToken: "",
+    deployProvider: "off",
+    deployAppName: "",
+    calendarSecret: "secret",
+  };
+
+  it("GitHub token inherited from org for GitHub Pages deploy", () => {
+    const result = mergeConfigs(DEFAULTS, {
+      deployGitHubToken: "ghp_org-shared-token",
+    }, {
+      deployProvider: "github-pages",
+      deployAppName: "owner/my-site",
+    });
+    expect(result.deployGitHubToken).toBe("ghp_org-shared-token");
+    expect(result.deployAppName).toBe("owner/my-site"); // site-specific
+  });
+
+  it("site GitHub token overrides org", () => {
+    const result = mergeConfigs(DEFAULTS, {
+      deployGitHubToken: "ghp_org-token",
+    }, {
+      deployGitHubToken: "ghp_site-specific-token",
+    });
+    expect(result.deployGitHubToken).toBe("ghp_site-specific-token");
+  });
+});
+
+// ── Migration detects AI keys ────────────────────────────────
+
+describe("F87 — Migration detects AI + automation fields", () => {
+  function detectMigratableFields(
+    siteConfigs: Record<string, unknown>[],
+  ): Record<string, unknown> {
+    if (siteConfigs.length === 0) return {};
+    const result: Record<string, unknown> = {};
+    for (const field of INHERITABLE_FIELDS) {
+      const values = siteConfigs
+        .map((c) => c[field])
+        .filter((v) => v !== undefined && v !== null && v !== "");
+      if (values.length === 0) continue;
+      const first = JSON.stringify(values[0]);
+      const allSame = values.every((v) => JSON.stringify(v) === first);
+      if (allSame) result[field] = values[0];
+    }
+    return result;
+  }
+
+  it("detects common Anthropic API key across sites", () => {
+    const sites = [
+      { aiAnthropicApiKey: "sk-ant-shared" },
+      { aiAnthropicApiKey: "sk-ant-shared" },
+      { aiAnthropicApiKey: "sk-ant-shared" },
+    ];
+    const migratable = detectMigratableFields(sites);
+    expect(migratable.aiAnthropicApiKey).toBe("sk-ant-shared");
+  });
+
+  it("detects common web search config", () => {
+    const sites = [
+      { aiWebSearchProvider: "brave", aiBraveApiKey: "BSA-shared" },
+      { aiWebSearchProvider: "brave", aiBraveApiKey: "BSA-shared" },
+    ];
+    const migratable = detectMigratableFields(sites);
+    expect(migratable.aiWebSearchProvider).toBe("brave");
+    expect(migratable.aiBraveApiKey).toBe("BSA-shared");
+  });
+
+  it("detects common backup schedule", () => {
+    const sites = [
+      { backupSchedule: "daily", backupTime: "03:00" },
+      { backupSchedule: "daily", backupTime: "03:00" },
+    ];
+    const migratable = detectMigratableFields(sites);
+    expect(migratable.backupSchedule).toBe("daily");
+    expect(migratable.backupTime).toBe("03:00");
+  });
+
+  it("does NOT detect mismatched AI keys", () => {
+    const sites = [
+      { aiAnthropicApiKey: "sk-ant-key-a" },
+      { aiAnthropicApiKey: "sk-ant-key-b" },
+    ];
+    const migratable = detectMigratableFields(sites);
+    expect(migratable).not.toHaveProperty("aiAnthropicApiKey");
+  });
+
+  it("detects GitHub token across GitHub Pages sites", () => {
+    const sites = [
+      { deployGitHubToken: "ghp_shared", deployAppName: "owner/site-a" },
+      { deployGitHubToken: "ghp_shared", deployAppName: "owner/site-b" },
+    ];
+    const migratable = detectMigratableFields(sites);
+    expect(migratable.deployGitHubToken).toBe("ghp_shared");
+    expect(migratable).not.toHaveProperty("deployAppName");
   });
 });
