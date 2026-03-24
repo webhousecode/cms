@@ -208,7 +208,7 @@ export function OrgSwitcher() {
   const activeOrg = registry.orgs.find((o) => o.id === activeOrgId) ?? registry.orgs[0];
 
   function handleSelect(org: OrgEntry) {
-    setActiveOrgId(org.id);
+    if (org.id === activeOrgId) return; // already active
     setCookie("cms-active-org", org.id);
     // Set site cookie to first site in new org (or clear if no sites)
     const newSite = org.sites.length > 0 ? org.sites[0] : null;
@@ -218,16 +218,14 @@ export function OrgSwitcher() {
     } else {
       document.cookie = "cms-active-site=;path=/;max-age=0";
     }
-    window.dispatchEvent(new CustomEvent("cms-site-change", { detail: { siteId: newSiteId } }));
-    window.dispatchEvent(new CustomEvent("cms-registry-change"));
-    if (org.sites.length <= 1) {
-      window.dispatchEvent(new CustomEvent("cms-tabs-reset", { detail: { path: "/admin", title: "Dashboard" } }));
-      router.push("/admin");
-    } else {
-      window.dispatchEvent(new CustomEvent("cms-tabs-reset", { detail: { path: "/admin/sites", title: "Sites" } }));
-      router.push("/admin/sites");
-    }
-    router.refresh();
+    // Persist last active org+site on user record (survives cookie clear / device switch)
+    fetch("/api/admin/profile", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ lastActiveOrg: org.id, lastActiveSite: newSiteId }),
+    }).catch(() => {});
+    // Hard reload to ensure server re-reads cookies and loads correct CMS instance
+    window.location.href = org.sites.length <= 1 ? "/admin" : "/admin/sites";
   }
 
   return (
