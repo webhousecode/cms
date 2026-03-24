@@ -1,16 +1,19 @@
-<!-- @webhouse/cms ai-guide v0.3.0 — last updated 2026-03-23 -->
+<!-- @webhouse/cms ai-guide v0.3.0 — last updated 2026-03-24 -->
 
 # Storage Adapters
 
 ## Storage Adapters
 
-### Filesystem (default)
-Stores documents as JSON files in `content/<collection>/<slug>.json`. Best for Git-based workflows.
+> **CRITICAL: You MUST always specify `storage` in `cms.config.ts`.** If omitted, the CMS defaults to **SQLite** — NOT filesystem. This means content created in the admin UI is stored in a SQLite database (`.cms/content.db`), while `build.ts` reads from `content/` JSON files. The two systems become completely disconnected: edits in the admin UI won't appear on the site, and seed content files won't appear in the admin UI.
+
+### Filesystem (recommended for static sites)
+Stores documents as JSON files in `content/<collection>/<slug>.json`. **Required for static sites with `build.ts`.** Best for Git-based workflows.
 
 ```typescript
+// ALWAYS include this in cms.config.ts for static sites
 storage: {
   adapter: 'filesystem',
-  filesystem: { contentDir: 'content' },  // Default: 'content'
+  filesystem: { contentDir: 'content' },
 }
 ```
 

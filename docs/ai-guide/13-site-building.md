@@ -19,21 +19,25 @@ Instead, use a `blocks` field with content blocks (text-block, image-block, quot
 
 ## Common Mistakes (avoid these)
 
-1. **HTML in richtext fields** — Never store raw HTML in richtext fields. Convert to markdown first. TipTap will display `<h2>Title</h2>` as literal text, not as a heading.
+1. **Missing storage adapter** — If `cms.config.ts` omits the `storage` config, the CMS defaults to **SQLite** — NOT filesystem. This silently disconnects the admin UI from `build.ts`. Content created in the admin goes to SQLite while `build.ts` reads from `content/` JSON files. **Always specify `storage: { adapter: 'filesystem', filesystem: { contentDir: 'content' } }` for static sites.**
 
-2. **Accessing fields wrong** — Document fields live in `doc.data.title`, not `doc.title`. Top-level properties (`id`, `slug`, `status`, `createdAt`) are system fields. Everything from the schema is inside `data`.
+2. **Tailwind CDN in production** — Never use `cdn.tailwindcss.com` in static site builds. It loads ~300KB of runtime JavaScript, shows console warnings, and defeats the purpose of static HTML. Instead, write all styles as inline CSS in `<style>` tags. Static sites should have zero JavaScript dependencies — pure HTML + CSS only.
 
-3. **Block discriminator** — Blocks use `_block` as the type key, not `_type` or `type`. Always check `item._block === "hero"`, not `item.type`.
+3. **HTML in richtext fields** — Never store raw HTML in richtext fields. Convert to markdown first. TipTap will display `<h2>Title</h2>` as literal text, not as a heading.
 
-4. **Hardcoded ports** — Don't assume `:3000` or `:3010`. Use environment variables or auto-detect with port scanning.
+4. **Accessing fields wrong** — Document fields live in `doc.data.title`, not `doc.title`. Top-level properties (`id`, `slug`, `status`, `createdAt`) are system fields. Everything from the schema is inside `data`.
 
-5. **Missing status filter** — `getCollection()` defaults to published only. To include drafts, pass `{ status: 'all' }`. Raw `findMany()` returns all statuses.
+5. **Block discriminator** — Blocks use `_block` as the type key, not `_type` or `type`. Always check `item._block === "hero"`, not `item.type`.
 
-6. **Richtext rendering** — ALWAYS use `react-markdown` with `remark-gfm` and custom components. NEVER use regex-based markdown parsers or `dangerouslySetInnerHTML` — they break images with sizing/alignment, tables, and complex markdown. The `img` component MUST parse the `title` prop for TipTap's `float:left|width:300px` format.
+6. **Hardcoded ports** — Don't assume `:3000` or `:3010`. Use environment variables or auto-detect with port scanning.
 
-7. **Image references** — Image fields store URL strings (e.g. `/uploads/image.jpg`), not file objects. In Next.js, use `<img>` or `next/image` with the URL directly.
+7. **Missing status filter** — `getCollection()` defaults to published only. To include drafts, pass `{ status: 'all' }`. Raw `findMany()` returns all statuses.
 
-8. **Relation values** — Relations store slugs as strings (single) or string arrays (multiple), not full document objects. To get the related document, do a separate `getDocument()` lookup.
+8. **Richtext rendering** — ALWAYS use `react-markdown` with `remark-gfm` and custom components. NEVER use regex-based markdown parsers or `dangerouslySetInnerHTML` — they break images with sizing/alignment, tables, and complex markdown. The `img` component MUST parse the `title` prop for TipTap's `float:left|width:300px` format.
+
+9. **Image references** — Image fields store URL strings (e.g. `/uploads/image.jpg`), not file objects. In Next.js, use `<img>` or `next/image` with the URL directly.
+
+10. **Relation values** — Relations store slugs as strings (single) or string arrays (multiple), not full document objects. To get the related document, do a separate `getDocument()` lookup.
 
 ## MANDATORY: Content File Requirements
 
@@ -85,11 +89,13 @@ The CMS discovers content by scanning `content/<collectionName>/` for `.json` fi
 ### Verification checklist
 
 Before considering a site complete, verify:
+- [ ] `cms.config.ts` has explicit `storage: { adapter: 'filesystem', filesystem: { contentDir: 'content' } }`
 - [ ] Every collection in `cms.config.ts` has JSON files in `content/<name>/`
 - [ ] Every JSON file has `slug`, `status: "published"`, and `data` with the correct fields
 - [ ] `build.ts` reads all content from JSON files (no hardcoded content strings)
 - [ ] `build.ts` uses `BASE` variable for all internal links (never hardcoded `/path`)
 - [ ] `build.ts` uses `BUILD_OUT_DIR` env var for output directory (never hardcoded `'dist'`)
+- [ ] `build.ts` uses only inline CSS — no CDN scripts (Tailwind, Bootstrap, etc.)
 - [ ] Running `npx tsx build.ts` produces output that reflects the JSON content
 - [ ] Changing a value in a JSON file and rebuilding changes the output
 

@@ -108,12 +108,14 @@ export default defineConfig({
 
 ### Critical rules
 
-1. **`image-gallery` values must be `{ url, alt }[]`** — never plain string arrays
-2. **Always filter by `status === "published"`** — skip drafts
-3. **Use `BASE_PATH` env var** for all internal links in static builds
-4. **Use `BUILD_OUT_DIR` env var** for output directory in static builds
-5. **`_fieldMeta` is required** in document JSON (can be empty `{}`)
-6. **Slug must match filename** — `hello-world.json` must have `"slug": "hello-world"`
+1. **Always specify `storage` in `cms.config.ts`** — omitting it defaults to SQLite, not filesystem! Static sites MUST use `storage: { adapter: 'filesystem', filesystem: { contentDir: 'content' } }`
+2. **`image-gallery` values must be `{ url, alt }[]`** — never plain string arrays
+3. **Always filter by `status === "published"`** — skip drafts
+4. **Use `BASE_PATH` env var** for all internal links in static builds
+5. **Use `BUILD_OUT_DIR` env var** for output directory in static builds
+6. **`_fieldMeta` is required** in document JSON (can be empty `{}`)
+7. **Slug must match filename** — `hello-world.json` must have `"slug": "hello-world"`
+8. **Never use CDN scripts** (Tailwind, Bootstrap, etc.) — static sites must use inline CSS only
 
 ### Reading content in Next.js
 

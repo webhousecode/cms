@@ -1,0 +1,18 @@
+{
+  "slug": "number-uno",
+  "status": "published",
+  "collection": "posts",
+  "data": {
+    "title": "Number Uno",
+    "date": "2026-03-24",
+    "excerpt": "This is an excerpt for the first blog post on my site. ",
+    "content": "This is an excerpt for the forst blog post on my site. This is an excerpt for the forst blog post on my site. This is an excerpt for the forst blog post on my site. This is an excerpt for the forst blog post on my site. This is an excerpt for the forst blog post on my site. This is an excerpt for the forst blog post on my site. This is an excerpt for the forst blog post on my site. This is an excerpt for the forst blog post on my site. This is an excerpt for the forst blog post on my site. This is an excerpt for the forst blog post on my site. This is an excerpt for the forst blog post on my site. This is an excerpt for the forst blog post on my site. This is an excerpt for the forst blog post on my site. This is an excerpt for the forst blog post on my site. This is an excerpt for the forst blog post on my site. This is an excerpt for the forst blog post on my site. ",
+    "tags": ["post", "blog", "excerpt"],
+    "author": "Christian Broberg",
+    "coverImage": ""
+  },
+  "id": "6S7_HopMEaJ-U7Pe7MuZD",
+  "_fieldMeta": {},
+  "createdAt": "2026-03-24T21:05:10.116Z",
+  "updatedAt": "2026-03-24T21:13:06.095Z"
+}

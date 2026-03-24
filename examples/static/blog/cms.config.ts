@@ -31,6 +31,10 @@ export default defineConfig({
       ],
     }),
   ],
+  storage: {
+    adapter: 'filesystem',
+    filesystem: { contentDir: 'content' },
+  },
   build: {
     outDir: 'dist',
     baseUrl: '/',

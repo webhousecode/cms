@@ -15,7 +15,7 @@ export default defineConfig({
   defaultLocale: 'en',           // Optional: default locale for <html lang="">
   locales: ['en', 'da'],         // Optional: supported locales for AI translation
   autolinks: [ /* ... */ ],      // Optional: automatic internal linking rules
-  storage: { /* ... */ },        // Optional: storage adapter config
+  storage: { /* ... */ },        // REQUIRED — defaults to SQLite if omitted! Use 'filesystem' for static sites
   build: { outDir: 'dist', baseUrl: '/' },
   api: { port: 3000 },
 });
