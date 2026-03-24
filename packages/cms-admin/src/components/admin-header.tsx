@@ -164,6 +164,8 @@ function DeployButton() {
           duration: 10000,
           action: { label: "Open", onClick: () => window.open(data.url, "_blank") },
         });
+        // Re-trigger preview button to pick up new deploy URL
+        window.dispatchEvent(new CustomEvent("cms-site-change", { detail: {} }));
       } else if (data.status === "error") {
         toast.error("Deploy failed", { description: data.error, duration: 8000 });
       }
