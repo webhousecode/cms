@@ -120,6 +120,7 @@ _Makes us stand out. Customers expect these from a modern CMS._
 | 18f | **F88 MCP Server Validation** | Small | Validate button spawns MCP server, tests connection, lists available tools. |
 | 18g | **F93 Next.js App Deployment** | Medium | Deploy Next.js SSR/RSC sites to Vercel/Netlify/Fly.io. Deploy hooks built but untested. Status polling + auto-deploy on save. |
 | 18h | **F100 Custom Domain DNS Validation** | Small | Real-time DNS validation in Deploy Settings. Auto-provision *.webhouse.app subdomains via DNS API. Verify CNAME for external domains. |
+| 18i | **F101 Update Manager** | Medium | Dagligt version check mod npm, update banner i admin, `cms update` CLI, deployment detection. WordPress-style "Update Available" for Node.js/Docker. |
 
 ### Tier 3 — Differentiation (v1.3+)
 
