@@ -357,7 +357,7 @@ describe("F87 Org-Level Settings — mergeConfigs", () => {
         calendarSecret: "existing-secret",
       };
       const withOrg = mergeConfigs(DEFAULTS, {}, siteConfig);
-      const withoutOrg = { ...DEFAULTS, ...siteConfig };
+      const withoutOrg = { ...DEFAULTS, ...siteConfig } as Record<string, unknown>;
 
       // Every field should be identical
       for (const key of Object.keys(DEFAULTS)) {

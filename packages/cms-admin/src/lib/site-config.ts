@@ -137,6 +137,20 @@ export async function readSiteConfig(): Promise<SiteConfig> {
     } catch { /* non-fatal */ }
   }
 
+  // F87: Org-level settings inheritance (defaults ← org ← site)
+  let orgSettings: Record<string, unknown> = {};
+  try {
+    const { readOrgSettings, mergeConfigs } = await import("./org-settings");
+    orgSettings = await readOrgSettings() as Record<string, unknown>;
+    if (Object.keys(orgSettings).length > 0) {
+      return mergeConfigs(
+        defs as unknown as Record<string, unknown>,
+        orgSettings,
+        stored as Record<string, unknown>,
+      ) as unknown as SiteConfig;
+    }
+  } catch { /* org-settings not available — single-site mode */ }
+
   return { ...defs, ...stored };
 }
 
@@ -168,7 +182,22 @@ export async function readSiteConfigForSite(orgId: string, siteId: string): Prom
     const filePath = path.join(dataDir, "site-config.json");
     const raw = await fs.readFile(filePath, "utf-8");
     const stored = JSON.parse(raw) as Partial<SiteConfig>;
-    return { ...(await defaults()), ...stored };
+    const defs = await defaults();
+
+    // F87: Org-level settings inheritance
+    try {
+      const { readOrgSettingsForOrg, mergeConfigs } = await import("./org-settings");
+      const orgSettings = await readOrgSettingsForOrg(orgId) as Record<string, unknown>;
+      if (Object.keys(orgSettings).length > 0) {
+        return mergeConfigs(
+          defs as unknown as Record<string, unknown>,
+          orgSettings,
+          stored as Record<string, unknown>,
+        ) as unknown as SiteConfig;
+      }
+    } catch { /* org-settings not available */ }
+
+    return { ...defs, ...stored };
   } catch {
     return null;
   }

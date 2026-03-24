@@ -49,7 +49,7 @@ export interface Registry {
 
 // ─── Paths ────────────────────────────────────────────────
 
-function getAdminDataDir(): string {
+export function getAdminDataDir(): string {
   const configPath = process.env.CMS_CONFIG_PATH;
   if (configPath) {
     return path.join(path.dirname(path.resolve(configPath)), "_admin");
