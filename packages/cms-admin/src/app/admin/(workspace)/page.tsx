@@ -76,7 +76,7 @@ export default async function AdminDashboard() {
         <h1 className="text-2xl font-bold text-foreground">Content Overview</h1>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" style={{ gridAutoRows: "minmax(10rem, auto)" }}>
         <SiteIntroCard />
         {stats.map((col) => (
           <Link
