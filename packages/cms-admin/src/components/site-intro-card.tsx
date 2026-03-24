@@ -10,26 +10,24 @@ export function SiteIntroCard({ siteName }: { siteName: string }) {
   const { openTab } = useTabs();
 
   useEffect(() => {
-    // 1. Try site config for explicit URLs
+    // 1. Always try sirv preview server first — it works for all filesystem sites
+    fetch("/api/preview-serve", { method: "POST" })
+      .then((r) => r.ok ? r.json() : null)
+      .then((d: { url?: string } | null) => {
+        if (d?.url) setPreviewUrl(d.url);
+      })
+      .catch(() => {});
+
+    // 2. Also fetch site config for live URL display
     fetch("/api/admin/site-config")
       .then((r) => r.ok ? r.json() : null)
       .then((data) => {
-        const preview = data?.previewSiteUrl ?? "";
+        // previewSiteUrl overrides sirv if explicitly set
+        if (data?.previewSiteUrl) setPreviewUrl(data.previewSiteUrl);
         const live = data?.deployCustomDomain
           ? `https://${data.deployCustomDomain}`
           : data?.deployProductionUrl ?? "";
-        setPreviewUrl(preview);
         setLiveUrl(live);
-
-        // 2. If no preview URL, try starting sirv preview server
-        if (!preview && !live) {
-          fetch("/api/preview-serve", { method: "POST" })
-            .then((r) => r.ok ? r.json() : null)
-            .then((d: { url?: string } | null) => {
-              if (d?.url) setPreviewUrl(d.url);
-            })
-            .catch(() => {});
-        }
       })
       .catch(() => {});
   }, []);

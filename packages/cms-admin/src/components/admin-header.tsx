@@ -234,10 +234,18 @@ function PreviewButton() {
     setLiveUrl("");
     setPreviewDown(false);
     setLiveDown(false);
+    // Always try sirv preview server — works for all filesystem sites with build.ts
+    fetch("/api/preview-serve", { method: "POST" })
+      .then((r) => r.ok ? r.json() : null)
+      .then((d: { url?: string } | null) => {
+        if (d?.url) setPreviewUrl(d.url);
+      })
+      .catch(() => {});
+    // Also fetch site config — previewSiteUrl overrides sirv if explicitly set
     fetch("/api/admin/site-config")
       .then((r) => r.ok ? r.json() : null)
       .then((data) => {
-        setPreviewUrl(data?.previewSiteUrl ?? "");
+        if (data?.previewSiteUrl) setPreviewUrl(data.previewSiteUrl);
         const live = data?.deployCustomDomain
           ? `https://${data.deployCustomDomain}`
           : data?.deployProductionUrl ?? "";
