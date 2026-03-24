@@ -119,6 +119,7 @@ _Makes us stand out. Customers expect these from a modern CMS._
 | 9d | **F87 Org-Level Global Settings** | Medium | Shared org settings inherited by all sites. MCP, email, AI keys, webhooks. Per-site override. |
 | 18f | **F88 MCP Server Validation** | Small | Validate button spawns MCP server, tests connection, lists available tools. |
 | 18g | **F93 Next.js App Deployment** | Medium | Deploy Next.js SSR/RSC sites to Vercel/Netlify/Fly.io. Deploy hooks built but untested. Status polling + auto-deploy on save. |
+| 18h | **F100 Custom Domain DNS Validation** | Small | Real-time DNS validation in Deploy Settings. Auto-provision *.webhouse.app subdomains via DNS API. Verify CNAME for external domains. |
 
 ### Tier 3 — Differentiation (v1.3+)
 
