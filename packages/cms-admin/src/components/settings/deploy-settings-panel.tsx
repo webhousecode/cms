@@ -211,11 +211,11 @@ export function DeploySettingsPanel() {
               <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>API Token</label>
               {config.deployProvider === "flyio" && (
                 <a href="https://fly.io/dashboard/personal/tokens" target="_blank" rel="noopener noreferrer"
-                  style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none" }}>Get key ↗</a>
+                  style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>Get key <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
               )}
               {config.deployProvider === "github-pages" && (
                 <a href="https://github.com/settings/tokens/new?scopes=repo&description=webhouse-deploy" target="_blank" rel="noopener noreferrer"
-                  style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none" }}>Get key ↗</a>
+                  style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>Get key <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
               )}
             </div>
             <input type="password" value={config.deployApiToken} onChange={(e) => updateConfig((c) => ({ ...c, deployApiToken: e.target.value }))}

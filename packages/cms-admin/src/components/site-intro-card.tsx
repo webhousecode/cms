@@ -57,7 +57,7 @@ export function SiteIntroCard({ siteName }: { siteName: string }) {
           <iframe
             src={thumbnailUrl}
             title={siteName}
-            sandbox=""
+            sandbox="allow-same-origin allow-scripts"
             loading="lazy"
             style={{
               position: "absolute", top: 0, left: 0,
