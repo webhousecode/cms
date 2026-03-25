@@ -868,11 +868,13 @@ function DangerZone() {
 								</div>
 								{!moveConfirm && !moveDone && (
 									<div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexShrink: 0 }}>
-										<CustomSelect
-											value={targetOrgId}
-											onChange={(v) => setTargetOrgId(v)}
-											options={[{ value: "", label: "Select org..." }, ...orgs.map((o) => ({ value: o.id, label: o.name }))]}
-										/>
+										<div style={{ minWidth: "200px" }}>
+											<CustomSelect
+												value={targetOrgId}
+												onChange={(v) => setTargetOrgId(v)}
+												options={[{ value: "", label: "Select org..." }, ...orgs.map((o) => ({ value: o.id, label: o.name }))]}
+											/>
+										</div>
 										<button
 											type="button"
 											disabled={!targetOrgId}
