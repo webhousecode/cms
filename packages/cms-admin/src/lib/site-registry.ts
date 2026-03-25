@@ -150,6 +150,37 @@ export async function removeSite(orgId: string, siteId: string): Promise<void> {
   await saveRegistry(registry);
 }
 
+export async function moveSite(siteId: string, fromOrgId: string, toOrgId: string): Promise<void> {
+  if (fromOrgId === toOrgId) throw new Error("Source and target org are the same");
+
+  const registry = await loadRegistry();
+  if (!registry) throw new Error("No registry");
+
+  const fromOrg = findOrg(registry, fromOrgId);
+  if (!fromOrg) throw new Error(`Source org "${fromOrgId}" not found`);
+
+  const toOrg = findOrg(registry, toOrgId);
+  if (!toOrg) throw new Error(`Target org "${toOrgId}" not found`);
+
+  const siteIdx = fromOrg.sites.findIndex((s) => s.id === siteId);
+  if (siteIdx === -1) throw new Error(`Site "${siteId}" not found in org "${fromOrgId}"`);
+
+  if (toOrg.sites.some((s) => s.id === siteId)) {
+    throw new Error(`Site "${siteId}" already exists in org "${toOrgId}"`);
+  }
+
+  // Atomic move
+  const [site] = fromOrg.sites.splice(siteIdx, 1);
+  toOrg.sites.push(site);
+
+  // Update defaults if the moved site was the default
+  if (registry.defaultSiteId === siteId && registry.defaultOrgId === fromOrgId) {
+    registry.defaultOrgId = toOrgId;
+  }
+
+  await saveRegistry(registry);
+}
+
 export async function removeOrg(orgId: string): Promise<void> {
   const registry = await loadRegistry();
   if (!registry) throw new Error("No registry");

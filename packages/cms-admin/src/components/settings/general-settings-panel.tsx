@@ -755,6 +755,34 @@ function DangerZone() {
 	const [purging, setPurging] = useState(false);
 	const [done, setDone] = useState(false);
 	const [count, setCount] = useState<number | null>(null);
+	// F84: Move site to other org
+	const [orgs, setOrgs] = useState<{ id: string; name: string }[]>([]);
+	const [activeOrgId, setActiveOrgId] = useState("");
+	const [activeSiteId, setActiveSiteId] = useState("");
+	const [activeSiteName, setActiveSiteName] = useState("");
+	const [targetOrgId, setTargetOrgId] = useState("");
+	const [moveConfirm, setMoveConfirm] = useState(false);
+	const [moving, setMoving] = useState(false);
+	const [moveDone, setMoveDone] = useState(false);
+
+	useEffect(() => {
+		fetch("/api/cms/registry")
+			.then((r) => r.ok ? r.json() : {})
+			.then((d: { registry?: { orgs: { id: string; name: string; sites: { id: string; name: string }[] }[]; defaultOrgId: string } }) => {
+				if (!d.registry) return;
+				const orgCookie = document.cookie.match(/cms-active-org=([^;]*)/)?.[1] ?? d.registry.defaultOrgId;
+				const siteCookie = document.cookie.match(/cms-active-site=([^;]*)/)?.[1] ?? "";
+				setActiveOrgId(orgCookie);
+				setActiveSiteId(siteCookie);
+				// Find site name
+				const org = d.registry.orgs.find((o) => o.id === orgCookie);
+				const site = org?.sites.find((s) => s.id === siteCookie);
+				if (site) setActiveSiteName(site.name);
+				// Other orgs (exclude current)
+				setOrgs(d.registry.orgs.filter((o) => o.id !== orgCookie).map((o) => ({ id: o.id, name: o.name })));
+			})
+			.catch(() => {});
+	}, []);
 
 	async function purgeTrash() {
 		setPurging(true);
@@ -766,10 +794,33 @@ function DangerZone() {
 		setPurging(false);
 	}
 
+	async function handleMove() {
+		setMoving(true);
+		try {
+			const res = await fetch("/api/cms/registry/move-site", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ siteId: activeSiteId, fromOrgId: activeOrgId, toOrgId: targetOrgId }),
+			});
+			if (res.ok) {
+				setMoveDone(true);
+				// Switch to target org + same site
+				document.cookie = `cms-active-org=${targetOrgId};path=/;max-age=31536000`;
+				window.dispatchEvent(new CustomEvent("cms-registry-change"));
+				setTimeout(() => { window.location.href = "/admin"; }, 1000);
+			}
+		} finally {
+			setMoving(false);
+		}
+	}
+
+	const targetOrgName = orgs.find((o) => o.id === targetOrgId)?.name ?? "";
+
 	return (
 		<div>
 			<SectionHeading>Danger zone</SectionHeading>
 			<div style={{ background: "color-mix(in srgb, var(--destructive) 6%, transparent)", border: "1px solid color-mix(in srgb, var(--destructive) 25%, transparent)", borderRadius: "10px", padding: "1.25rem 1.5rem", display: "flex", flexDirection: "column", gap: "0.875rem" }}>
+				{/* Purge trash */}
 				<div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem" }}>
 					<div>
 						<p style={{ fontSize: "0.875rem", fontWeight: 500, margin: 0 }}>Purge trash</p>
@@ -802,6 +853,60 @@ function DangerZone() {
 							{purging ? "Purging…" : "Yes, purge"}
 						</button>
 					</div>
+				)}
+
+				{/* F84: Move site to other org */}
+				{orgs.length > 0 && (
+					<>
+						<div style={{ borderTop: "1px solid color-mix(in srgb, var(--destructive) 15%, transparent)", paddingTop: "0.875rem" }}>
+							<div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem" }}>
+								<div>
+									<p style={{ fontSize: "0.875rem", fontWeight: 500, margin: 0 }}>Move site to another organization</p>
+									<p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", margin: "0.15rem 0 0" }}>
+										Transfer this site and all its settings to a different organization.
+									</p>
+								</div>
+								{!moveConfirm && !moveDone && (
+									<div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexShrink: 0 }}>
+										<select
+											value={targetOrgId}
+											onChange={(e) => setTargetOrgId(e.target.value)}
+											style={{ padding: "0.35rem 0.5rem", borderRadius: "5px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.75rem" }}
+										>
+											<option value="">Select org...</option>
+											{orgs.map((o) => <option key={o.id} value={o.id}>{o.name}</option>)}
+										</select>
+										<button
+											type="button"
+											disabled={!targetOrgId}
+											onClick={() => setMoveConfirm(true)}
+											style={{ padding: "0.4rem 0.875rem", borderRadius: "6px", border: "1px solid color-mix(in srgb, var(--destructive) 40%, transparent)", background: "transparent", color: targetOrgId ? "var(--destructive)" : "var(--muted-foreground)", fontSize: "0.8rem", cursor: targetOrgId ? "pointer" : "not-allowed", whiteSpace: "nowrap" }}
+										>
+											Move site
+										</button>
+									</div>
+								)}
+								{moveDone && (
+									<span style={{ fontSize: "0.8rem", color: "rgb(74 222 128)", flexShrink: 0 }}>
+										Moved to {targetOrgName} — redirecting...
+									</span>
+								)}
+							</div>
+						</div>
+
+						{moveConfirm && (
+							<div style={{ display: "flex", alignItems: "center", gap: "0.625rem", padding: "0.75rem", background: "var(--card)", borderRadius: "7px", border: "1px solid var(--border)" }}>
+								<AlertTriangle style={{ width: "0.9rem", height: "0.9rem", color: "var(--destructive)", flexShrink: 0 }} />
+								<span style={{ fontSize: "0.8rem", flex: 1 }}>
+									Move <strong>{activeSiteName || activeSiteId}</strong> to <strong>{targetOrgName}</strong>? Settings and content will be preserved.
+								</span>
+								<button type="button" onClick={() => setMoveConfirm(false)} style={{ padding: "0.3rem 0.625rem", borderRadius: "5px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: "pointer" }}>No</button>
+								<button type="button" onClick={handleMove} disabled={moving} style={{ padding: "0.3rem 0.625rem", borderRadius: "5px", border: "none", background: "var(--destructive)", color: "#fff", fontSize: "0.75rem", cursor: moving ? "wait" : "pointer" }}>
+									{moving ? "Moving…" : "Yes"}
+								</button>
+							</div>
+						)}
+					</>
 				)}
 			</div>
 		</div>
