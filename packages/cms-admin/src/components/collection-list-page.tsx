@@ -40,7 +40,19 @@ export function CollectionListPage({
   collection, collectionLabel, titleField, fields, initialDocs,
   readOnly, urlPrefix, schemaEnabled, defaultLocale,
 }: Props) {
-  const [view, setView] = useState<ViewMode>("list");
+  const storageKey = `cms-view-${collection}`;
+  const [view, setView] = useState<ViewMode>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem(storageKey);
+      if (saved === "grid" || saved === "list") return saved;
+    }
+    return "list";
+  });
+
+  function changeView(v: ViewMode) {
+    setView(v);
+    localStorage.setItem(storageKey, v);
+  }
 
   return (
     <>
@@ -53,7 +65,7 @@ export function CollectionListPage({
                 <button
                   key={v}
                   type="button"
-                  onClick={() => setView(v)}
+                  onClick={() => changeView(v)}
                   style={{
                     padding: "0.25rem 0.5rem", background: view === v ? "var(--accent)" : "transparent",
                     border: "none", cursor: "pointer", color: view === v ? "var(--foreground)" : "var(--muted-foreground)",
