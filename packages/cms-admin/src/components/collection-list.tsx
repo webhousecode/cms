@@ -190,18 +190,27 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
   // Resolve preview base URL for grid view thumbnails
   const [previewBase, setPreviewBase] = useState("");
   useEffect(() => {
-    if (view !== "grid" || !urlPrefix) return;
-    // Try sirv preview server first
-    fetch("/api/preview-serve", { method: "POST" })
-      .then((r) => r.ok ? r.json() : null)
-      .then((d: { url?: string } | null) => { if (d?.url) setPreviewBase(d.url); })
-      .catch(() => {});
-    // Also check site config for explicit previewSiteUrl
-    fetch("/api/admin/site-config")
-      .then((r) => r.ok ? r.json() : null)
-      .then((data) => { if (data?.previewSiteUrl) setPreviewBase(data.previewSiteUrl); })
-      .catch(() => {});
-  }, [view, urlPrefix]);
+    if (view !== "grid") return;
+    async function resolve() {
+      // 1. Try sirv (static sites with dist/)
+      try {
+        const r = await fetch("/api/preview-serve", { method: "POST" });
+        if (r.ok) {
+          const d = await r.json() as { url?: string };
+          if (d?.url) { setPreviewBase(d.url); return; }
+        }
+      } catch { /* sirv not available */ }
+      // 2. Fall back to previewSiteUrl from site config (Next.js dev server etc.)
+      try {
+        const r = await fetch("/api/admin/site-config");
+        if (r.ok) {
+          const data = await r.json();
+          if (data?.previewSiteUrl) { setPreviewBase(data.previewSiteUrl); return; }
+        }
+      } catch { /* no config */ }
+    }
+    resolve();
+  }, [view]);
 
   const counts = {
     published: docs.filter((d) => d.status === "published").length,
