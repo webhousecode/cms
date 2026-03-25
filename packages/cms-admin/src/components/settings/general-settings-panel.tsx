@@ -804,10 +804,10 @@ function DangerZone() {
 			});
 			if (res.ok) {
 				setMoveDone(true);
-				// Switch to target org + same site
+				// Switch to target org — full page load to /admin avoids stale tab routes
 				document.cookie = `cms-active-org=${targetOrgId};path=/;max-age=31536000`;
-				window.dispatchEvent(new CustomEvent("cms-registry-change"));
-				setTimeout(() => { window.location.href = "/admin"; }, 1000);
+				window.location.href = "/admin";
+				return;
 			}
 		} finally {
 			setMoving(false);
