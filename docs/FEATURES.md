@@ -432,3 +432,6 @@ Real-time DNS-validering i Deploy Settings custom domain felt. For `*.webhouse.a
 
 ## F101 — Update Manager
 Automatisk versionstjek og opdateringsflow for alle webhouse.app-installationer. Dagligt scheduler-tjek mod npm registry for nyeste versioner af alle `@webhouse/*` pakker. Update banner i CMS admin med changelog og breaking change warnings — dismissable per version. System Settings panel med fuld update-oversigt, deployment type detection (npm/Docker/Hub), og kontekstuelle update-instruktioner. CLI kommando `cms update` automatiserer pnpm update + backup + type-check + rollback ved fejl. Tre faser: v1 (check + banner + CLI), v2 (Docker auto-update), v3 (Hub rolling updates via F70).
+
+## F102 — Schema Drift Detection
+Detect når cms.config.ts mangler felter som eksisterer i content JSON-filer. Ved site load sampler CMS de første 5 dokumenter per collection og sammenligner data-keys mod schema-felter. Viser gul warning banner i collection list: "8 fields found in content but missing from schema (excerpt, content, date, ...)". Tre faser: v1 (admin banner), v2 (CLI `cms validate`), v3 (pre-commit hook). Motiveret af real incident: en AI-session strippede Posts-felter ved et uheld, uopdaget i 6 dage.

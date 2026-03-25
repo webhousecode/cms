@@ -76,6 +76,7 @@ _Without these, we cannot build and deliver professional sites on the platform._
 | ~~8g~~ | ~~**F86 Action Bar**~~ | ~~Done~~ | ~~All pages migrated. Shipped 2026-03-20~~ |
 | 8h | **F97 SEO Module** | Medium-Large | Per-doc SEO panel, keywords, AI optimize, SERP preview, score, dashboard, JSON-LD templates. The Yoast of webhouse.app. |
 | ~~8i~~ | ~~**F89 Post-Build Enrichment**~~ | ~~Done~~ | ~~Shipped 2026-03-23. Per-page descriptions, _seo coordination with F97.~~ |
+| 8j | **F102 Schema Drift Detection** | Small-Medium | Warn when content has fields missing from schema. Prevents silent data loss from accidental field removal. |
 | 9 | **F31 Documentation Site** | Medium | Can't ship without docs. Last because it documents everything above. |
 | 9b | **F90 Marketing Content Bank** | Small | Living doc of messaging, talking points, README copy. Source of truth for product positioning. |
 | 9c | **F96 Embeddable Maps** | Small | Every business site needs a map. Richtext embed, map field type, Interactive template. |
