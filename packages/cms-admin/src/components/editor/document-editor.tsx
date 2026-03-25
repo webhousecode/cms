@@ -904,7 +904,10 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
     const prefix = colConfig.urlPrefix.replace(/\/$/, "");
     // Homepage: slug "home" or "index" with urlPrefix "/" maps to root
     const isHomepage = (prefix === "" || prefix === "/") && (doc.slug === "home" || doc.slug === "index");
-    const pagePath = isHomepage ? "/" : `${prefix}/${doc.slug}`;
+    // Include category segment if present (e.g. /blog/{category}/{slug})
+    const category = typeof doc.data?.category === "string" ? doc.data.category : "";
+    const slugPath = category ? `${category}/${doc.slug}` : doc.slug;
+    const pagePath = isHomepage ? "/" : `${prefix}/${slugPath}`;
 
     if (PREVIEW_SITE_URL) {
       const url = `${PREVIEW_SITE_URL}${pagePath}`;
