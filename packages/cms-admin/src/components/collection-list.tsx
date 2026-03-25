@@ -184,22 +184,31 @@ function NoPreviewPlaceholder() {
   );
 }
 
-function PreviewThumb({ previewUrl, title, updatedAt }: { previewUrl: string; title: string; updatedAt: string }) {
-  const [failed, setFailed] = useState(false);
-
-  if (!previewUrl || failed) return <NoPreviewPlaceholder />;
+function PreviewThumb({ previewUrl, title }: { previewUrl: string; title: string }) {
+  if (!previewUrl) return <NoPreviewPlaceholder />;
 
   return (
     <div style={{
       width: "100%", flex: 1, minHeight: "8rem", overflow: "hidden",
       background: "var(--muted)", position: "relative",
     }}>
-      <img
-        src={`/api/admin/thumbnail?url=${encodeURIComponent(previewUrl)}&key=${encodeURIComponent(updatedAt)}`}
-        alt={title}
+      <iframe
+        src={previewUrl}
+        title={title}
+        sandbox="allow-same-origin allow-scripts"
         loading="lazy"
-        style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "top left" }}
-        onError={() => setFailed(true)}
+        style={{
+          position: "absolute", top: 0, left: 0,
+          width: "1280px", height: "720px", border: "none",
+          transform: "scale(var(--thumb-scale, 0.25))", transformOrigin: "top left",
+          pointerEvents: "none",
+        }}
+        ref={(el) => {
+          if (el?.parentElement) {
+            const w = el.parentElement.clientWidth;
+            el.parentElement.style.setProperty("--thumb-scale", String(w / 1280));
+          }
+        }}
       />
     </div>
   );
@@ -428,7 +437,7 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
                 style={{ textDecoration: "none", display: "flex", flexDirection: "column" }}
               >
                 {/* Preview thumbnail */}
-                <PreviewThumb previewUrl={previewUrl} title={title} updatedAt={doc.updatedAt} />
+                <PreviewThumb previewUrl={previewUrl} title={title} />
                 {/* Title + status footer */}
                 <div style={{ padding: "0.6rem 0.75rem", borderTop: "1px solid var(--border)" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
