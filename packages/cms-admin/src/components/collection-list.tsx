@@ -377,13 +377,16 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" style={{ gridAutoRows: "minmax(10rem, auto)" }}>
           {filtered.map((doc) => {
             const title = String(doc.data[titleField] ?? doc.data["title"] ?? doc.slug);
-            const prefix = (urlPrefix ?? "").replace(/\/$/, "");
-            const isHomepage = (prefix === "" || prefix === "/") && (doc.slug === "home" || doc.slug === "index");
-            // Include category segment if present (e.g. /blog/{category}/{slug})
-            const category = typeof doc.data.category === "string" ? doc.data.category : "";
-            const slugPath = category ? `${category}/${doc.slug}` : doc.slug;
-            const pagePath = isHomepage ? "/" : `${prefix}/${slugPath}`;
-            const previewUrl = previewBase ? `${previewBase}${pagePath}` : "";
+            // Only build preview URL if collection has a urlPrefix (meaning it renders pages)
+            let previewUrl = "";
+            if (urlPrefix && previewBase) {
+              const prefix = urlPrefix.replace(/\/$/, "");
+              const isHomepage = (prefix === "" || prefix === "/") && (doc.slug === "home" || doc.slug === "index");
+              const category = typeof doc.data.category === "string" ? doc.data.category : "";
+              const slugPath = category ? `${category}/${doc.slug}` : doc.slug;
+              const pagePath = isHomepage ? "/" : `${prefix}/${slugPath}`;
+              previewUrl = `${previewBase}${pagePath}`;
+            }
 
             return (
               <Link
@@ -398,22 +401,17 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
                     width: "100%", flex: 1, minHeight: "8rem", overflow: "hidden",
                     background: "var(--muted)", position: "relative",
                   }}>
-                    <iframe
-                      src={previewUrl}
-                      title={title}
-                      sandbox="allow-same-origin allow-scripts"
+                    <img
+                      src={`/api/admin/thumbnail?url=${encodeURIComponent(previewUrl)}&key=${encodeURIComponent(doc.updatedAt)}`}
+                      alt={title}
                       loading="lazy"
                       style={{
-                        position: "absolute", top: 0, left: 0,
-                        width: "1280px", height: "720px", border: "none",
-                        transform: "scale(var(--thumb-scale, 0.25))", transformOrigin: "top left",
-                        pointerEvents: "none",
+                        width: "100%", height: "100%",
+                        objectFit: "cover", objectPosition: "top left",
                       }}
-                      ref={(el) => {
-                        if (el?.parentElement) {
-                          const w = el.parentElement.clientWidth;
-                          el.parentElement.style.setProperty("--thumb-scale", String(w / 1280));
-                        }
+                      onError={(e) => {
+                        // Hide broken image, show fallback
+                        (e.target as HTMLImageElement).style.display = "none";
                       }}
                     />
                   </div>
