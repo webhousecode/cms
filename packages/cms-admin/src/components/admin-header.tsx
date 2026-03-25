@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Settings, Fingerprint, Check, Moon, Sun, Monitor, LogOut, Search, ExternalLink, Rocket, Loader2 } from "lucide-react";
 import { HelpButton } from "@/components/help-drawer";
-import { useTheme } from "next-themes";
+import { useThemeAxes, type Temperature } from "@/lib/hooks/use-theme-axes";
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -37,8 +37,14 @@ function getInitials(name: string): string {
     .toUpperCase();
 }
 
+const TEMP_OPTIONS: { value: Temperature; label: string }[] = [
+  { value: "neutral", label: "Neutral" },
+  { value: "cool",    label: "Cool" },
+  { value: "warm",    label: "Warm" },
+];
+
 function ThemeItems() {
-  const { setTheme, theme } = useTheme();
+  const { brightness, temperature, setBrightness, setTemperature } = useThemeAxes();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   if (!mounted) return null;
@@ -46,17 +52,43 @@ function ThemeItems() {
   return (
     <DropdownMenuGroup>
       <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">Theme</DropdownMenuLabel>
+      {/* Brightness */}
       {([
-        { value: "dark", label: "Dark", icon: Moon },
-        { value: "light", label: "Light", icon: Sun },
-        { value: "system", label: "System", icon: Monitor },
-      ] as const).map(({ value, label, icon: Icon }) => (
-        <DropdownMenuItem key={value} onClick={() => setTheme(value)}>
+        { value: "dark" as const, label: "Dark", icon: Moon },
+        { value: "light" as const, label: "Light", icon: Sun },
+        { value: "system" as const, label: "System", icon: Monitor },
+      ]).map(({ value, label, icon: Icon }) => (
+        <DropdownMenuItem key={value} onClick={() => setBrightness(value)}>
           <Icon className="mr-2 h-4 w-4" />
           {label}
-          {theme === value && <Check className="ml-auto h-4 w-4" />}
+          {brightness === value && <Check className="ml-auto h-4 w-4" />}
         </DropdownMenuItem>
       ))}
+      {/* Temperature segmented control */}
+      <div style={{ padding: "6px 8px 4px" }}>
+        <div style={{ display: "flex", borderRadius: "6px", border: "1px solid var(--border)", padding: "2px", gap: "2px" }}>
+          {TEMP_OPTIONS.map(({ value, label }) => (
+            <button
+              key={value}
+              onClick={(e) => { e.stopPropagation(); setTemperature(value); }}
+              style={{
+                flex: 1,
+                padding: "3px 8px",
+                fontSize: "0.7rem",
+                fontWeight: 500,
+                borderRadius: "4px",
+                border: "none",
+                cursor: "pointer",
+                transition: "all 150ms",
+                background: temperature === value ? "var(--primary)" : "transparent",
+                color: temperature === value ? "var(--primary-foreground)" : "var(--muted-foreground)",
+              }}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
     </DropdownMenuGroup>
   );
 }

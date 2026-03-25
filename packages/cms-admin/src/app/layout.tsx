@@ -18,7 +18,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning className={cn("font-sans", geist.variable)}>
       <body>
-        <ThemeProvider attribute="class" defaultTheme="dark" disableTransitionOnChange>
+        <ThemeProvider
+          attribute="data-theme"
+          defaultTheme="system"
+          enableSystem
+          themes={["light", "dark", "light-cool", "light-warm", "dark-cool", "dark-warm"]}
+          disableTransitionOnChange
+        >
           <TooltipProvider>{children}</TooltipProvider>
           <Toaster position="bottom-right" />
         </ThemeProvider>

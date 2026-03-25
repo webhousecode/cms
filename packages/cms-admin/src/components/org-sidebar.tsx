@@ -24,6 +24,7 @@ export function OrgSidebar() {
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
+  const isLight = mounted && (resolvedTheme?.startsWith("light") ?? false);
 
   const [showLogoIcon, setShowLogoIcon] = useState(false); // default: wordmark
 
@@ -54,13 +55,13 @@ export function OrgSidebar() {
         <Link href="/admin/sites" className={`flex flex-col gap-2 px-3 ${showLogoIcon ? "items-center" : "items-start"}`} style={{ marginRight: "auto", marginLeft: "0.5rem", paddingTop: showLogoIcon ? "1.25rem" : "0.75rem", paddingBottom: showLogoIcon ? "1.25rem" : "0.75rem", textDecoration: "none" }}>
           {showLogoIcon ? (
             <img
-              src={mounted && resolvedTheme === "light" ? "/webhouse.app-light-icon.svg" : "/webhouse.app-dark-icon.svg"}
+              src={isLight ? "/webhouse.app-light-icon.svg" : "/webhouse.app-dark-icon.svg"}
               alt="webhouse.app"
               className="w-14 h-14"
             />
           ) : (
             <img
-              src={mounted && resolvedTheme === "light" ? "/webhouse-wordmark-light.svg" : "/webhouse-wordmark-dark.svg"}
+              src={isLight ? "/webhouse-wordmark-light.svg" : "/webhouse-wordmark-dark.svg"}
               alt="webhouse.app"
               className="h-11 w-auto"
               style={{ maxWidth: "100%", marginLeft: "-0.9rem" }}
