@@ -224,8 +224,8 @@ export function OrgSwitcher() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ lastActiveOrg: org.id, lastActiveSite: newSiteId }),
     }).catch(() => {});
-    // Hard reload to ensure server re-reads cookies and loads correct CMS instance
-    window.location.href = org.sites.length <= 1 ? "/admin" : "/admin/sites";
+    // Hard reload — always land on Sites page after org switch
+    window.location.href = "/admin/sites";
   }
 
   return (
