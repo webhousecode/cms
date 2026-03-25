@@ -379,7 +379,10 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
             const title = String(doc.data[titleField] ?? doc.data["title"] ?? doc.slug);
             const prefix = (urlPrefix ?? "").replace(/\/$/, "");
             const isHomepage = (prefix === "" || prefix === "/") && (doc.slug === "home" || doc.slug === "index");
-            const pagePath = isHomepage ? "/" : `${prefix}/${doc.slug}`;
+            // Include category segment if present (e.g. /blog/{category}/{slug})
+            const category = typeof doc.data.category === "string" ? doc.data.category : "";
+            const slugPath = category ? `${category}/${doc.slug}` : doc.slug;
+            const pagePath = isHomepage ? "/" : `${prefix}/${slugPath}`;
             const previewUrl = previewBase ? `${previewBase}${pagePath}` : "";
 
             return (
