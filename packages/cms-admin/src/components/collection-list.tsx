@@ -173,6 +173,38 @@ function RowMenu({ doc, collection, onClone, onToggle, onTrash, cloning }: {
   );
 }
 
+function NoPreviewPlaceholder() {
+  return (
+    <div style={{
+      width: "100%", flex: 1, minHeight: "8rem",
+      background: "var(--muted)", display: "flex",
+      alignItems: "center", justifyContent: "center",
+      color: "var(--muted-foreground)", fontSize: "0.75rem",
+    }}>No preview</div>
+  );
+}
+
+function PreviewThumb({ previewUrl, title, updatedAt }: { previewUrl: string; title: string; updatedAt: string }) {
+  const [failed, setFailed] = useState(false);
+
+  if (!previewUrl || failed) return <NoPreviewPlaceholder />;
+
+  return (
+    <div style={{
+      width: "100%", flex: 1, minHeight: "8rem", overflow: "hidden",
+      background: "var(--muted)", position: "relative",
+    }}>
+      <img
+        src={`/api/admin/thumbnail?url=${encodeURIComponent(previewUrl)}&key=${encodeURIComponent(updatedAt)}`}
+        alt={title}
+        loading="lazy"
+        style={{ width: "100%", height: "100%", objectFit: "cover", objectPosition: "top left" }}
+        onError={() => setFailed(true)}
+      />
+    </div>
+  );
+}
+
 /* ─── Main component ──────────────────────────────────────────── */
 
 export function CollectionList({ collection, titleField, fields, initialDocs, readOnly, view = "list", urlPrefix }: Props) {
@@ -396,33 +428,7 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
                 style={{ textDecoration: "none", display: "flex", flexDirection: "column" }}
               >
                 {/* Preview thumbnail */}
-                {previewUrl ? (
-                  <div style={{
-                    width: "100%", flex: 1, minHeight: "8rem", overflow: "hidden",
-                    background: "var(--muted)", position: "relative",
-                  }}>
-                    <img
-                      src={`/api/admin/thumbnail?url=${encodeURIComponent(previewUrl)}&key=${encodeURIComponent(doc.updatedAt)}`}
-                      alt={title}
-                      loading="lazy"
-                      style={{
-                        width: "100%", height: "100%",
-                        objectFit: "cover", objectPosition: "top left",
-                      }}
-                      onError={(e) => {
-                        // Hide broken image, show fallback
-                        (e.target as HTMLImageElement).style.display = "none";
-                      }}
-                    />
-                  </div>
-                ) : (
-                  <div style={{
-                    width: "100%", flex: 1, minHeight: "8rem",
-                    background: "var(--muted)", display: "flex",
-                    alignItems: "center", justifyContent: "center",
-                    color: "var(--muted-foreground)", fontSize: "0.75rem",
-                  }}>No preview</div>
-                )}
+                <PreviewThumb previewUrl={previewUrl} title={title} updatedAt={doc.updatedAt} />
                 {/* Title + status footer */}
                 <div style={{ padding: "0.6rem 0.75rem", borderTop: "1px solid var(--border)" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>

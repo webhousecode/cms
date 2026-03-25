@@ -65,6 +65,10 @@ export async function GET(req: NextRequest) {
     const cachedKey = readFileSync(keyPath, "utf-8").trim();
     if (cachedKey === key) {
       const png = readFileSync(cachePath);
+      // Empty file = cached 404/failure
+      if (png.length === 0) {
+        return new NextResponse(null, { status: 204 });
+      }
       return new NextResponse(png, {
         headers: {
           "Content-Type": "image/png",
@@ -82,12 +86,33 @@ export async function GET(req: NextRequest) {
   }
 
   try {
+    // Quick HTTP check first — skip screenshot if page doesn't exist
+    try {
+      const probe = await fetch(url, { method: "HEAD", signal: AbortSignal.timeout(5000) });
+      if (!probe.ok) {
+        // Cache the failure so we don't re-probe on every request
+        writeFileSync(keyPath, key);
+        writeFileSync(cachePath, Buffer.alloc(0));
+        return new NextResponse(null, { status: 204 });
+      }
+    } catch {
+      // Server unreachable — no preview available
+      return new NextResponse(null, { status: 204 });
+    }
+
     const context = await browser.newContext({
       viewport: { width: 1280, height: 720 },
       deviceScaleFactor: 1,
     });
     const page = await context.newPage();
-    await page.goto(url, { waitUntil: "load", timeout: 10000 });
+    const response = await page.goto(url, { waitUntil: "load", timeout: 10000 });
+    // Skip screenshot if page returned non-200
+    if (!response || response.status() >= 400) {
+      await context.close();
+      writeFileSync(keyPath, key);
+      writeFileSync(cachePath, Buffer.alloc(0));
+      return new NextResponse(null, { status: 204 });
+    }
     // Wait a bit for JS rendering (dark mode, fonts, etc.)
     await page.waitForTimeout(1500);
     const screenshot = await page.screenshot({ type: "png" });
