@@ -210,15 +210,22 @@ export function OrgSwitcher() {
   function handleSelect(org: OrgEntry) {
     if (org.id === activeOrgId) return; // already active
     setCookie("cms-active-org", org.id);
-    // Clear active site — user picks a site on the Sites page
-    document.cookie = "cms-active-site=;path=/;max-age=0";
+    // Set site to first in new org (needed for sidebar/layout)
+    const newSite = org.sites[0];
+    if (newSite) {
+      setCookie("cms-active-site", newSite.id);
+    } else {
+      document.cookie = "cms-active-site=;path=/;max-age=0";
+    }
+    // Signal TabsProvider: don't restore saved tabs on next load
+    sessionStorage.setItem("org-switched", "1");
     // Persist org switch on user record
     fetch("/api/admin/profile", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ lastActiveOrg: org.id, lastActiveSite: null }),
+      body: JSON.stringify({ lastActiveOrg: org.id, lastActiveSite: newSite?.id ?? null }),
     }).catch(() => {});
-    // Hard reload — always land on Sites page, no site active = no tab restoration
+    // Hard reload — always land on Sites page
     window.location.href = "/admin/sites";
   }
 
