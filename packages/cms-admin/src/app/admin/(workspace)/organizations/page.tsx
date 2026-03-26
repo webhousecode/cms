@@ -153,7 +153,7 @@ export default function OrganizationsPage() {
                 <DropdownMenuContent align="end" className="w-44">
                   <DropdownMenuItem onClick={(e) => { e.stopPropagation(); switchToOrg(org); router.push("/admin/organizations/settings"); }}>
                     <Settings2 className="mr-2 h-4 w-4 text-muted-foreground" />
-                    Organization settings
+                    Settings
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
