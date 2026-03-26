@@ -94,6 +94,15 @@ export async function POST(request: NextRequest) {
       const team = [{ userId: session.sub, role: "admin", addedAt: new Date().toISOString() }];
       await mkdir(dataDir, { recursive: true });
       await writeFile(teamFile, JSON.stringify(team, null, 2));
+
+      // Create essential directories for filesystem sites
+      if (site.adapter !== "github" && !site.configPath.startsWith("github://")) {
+        const projDir = dirname(resolve(site.configPath));
+        const contentDir = site.contentDir ?? join(projDir, "content");
+        const uploadDir = site.uploadDir ?? join(projDir, "public", "uploads");
+        await mkdir(contentDir, { recursive: true });
+        await mkdir(uploadDir, { recursive: true });
+      }
     }
 
     return NextResponse.json({ ok: true });
