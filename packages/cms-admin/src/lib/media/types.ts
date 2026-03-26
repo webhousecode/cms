@@ -33,6 +33,12 @@ export interface MediaMeta {
   folder: string;
   status: MediaStatus;
   trashedAt?: string;
+  /** F103 — AI Image Analysis */
+  aiCaption?: string;
+  aiAlt?: string;
+  aiTags?: string[];
+  aiAnalyzedAt?: string;
+  aiProvider?: string;
 }
 
 export interface InteractiveMeta {

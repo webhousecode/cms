@@ -30,6 +30,7 @@ import {
   IconInteractive, IconFile, IconDownload,
 } from "./editor-icons";
 import { Image as LucideImage, Zap, MessageSquareWarning } from "lucide-react";
+import { AIMetadataPopover } from "@/components/media/ai-metadata-popover";
 
 interface Props {
   value: string;
@@ -2075,6 +2076,9 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
     editor,
     selector: (ctx) => ({
       isImage: ctx.editor?.isActive("image") ?? false,
+      imageSrc: (ctx.editor?.isActive("image")
+        ? (ctx.editor?.getAttributes("image").src as string | undefined) ?? null
+        : null) as string | null,
       imageAlign: (ctx.editor?.isActive("image")
         ? (ctx.editor?.getAttributes("image").align as string | undefined) ?? "center"
         : null) as string | null,
@@ -2722,6 +2726,12 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
               onClick={() => editor.chain().focus().updateAttributes("image", { width: null }).run()}>
               <IconMaximize />
             </CtxBtn>
+            {toolbarState.imageSrc && toolbarState.imageSrc.includes("/uploads/") && (
+              <>
+                <CtxSep />
+                <AIMetadataPopover imageUrl={toolbarState.imageSrc} variant="ctx" />
+              </>
+            )}
           </div>
         )}
 

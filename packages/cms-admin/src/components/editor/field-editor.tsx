@@ -2,6 +2,7 @@
 
 import type { FieldConfig, BlockConfig } from "@webhouse/cms";
 import { X, Upload, Image as ImageIcon, FolderOpen } from "lucide-react";
+import { AIMetadataPopover } from "@/components/media/ai-metadata-popover";
 import { RichTextEditor } from "./rich-text-editor";
 import { TagsInput } from "./tags-input";
 import { ImageGalleryEditor } from "./image-gallery-editor";
@@ -525,6 +526,9 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
                 <FolderOpen style={{ width: 12, height: 12 }} />
                 Browse
               </button>
+              {strVal && strVal.includes("/uploads/") && (
+                <AIMetadataPopover imageUrl={strVal} />
+              )}
             </div>
           )}
 
