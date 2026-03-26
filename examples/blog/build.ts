@@ -69,7 +69,7 @@ footer { border-top: 1px solid var(--color-border); padding: 1.5rem 0; margin-to
 .prose pre { background: #1e293b; color: #e2e8f0; padding: 1rem; border-radius: var(--radius); overflow-x: auto; margin-bottom: 1.25rem; font-family: var(--font-mono); font-size: 0.875rem; }
 .prose code { background: #f1f5f9; padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-family: var(--font-mono); font-size: 0.875em; }
 .prose pre code { background: none; padding: 0; }
-.prose ul, .prose ol { padding-left: 1.5rem; margin-bottom: 1.25rem; }
+.prose ul, .prose ol { padding-left: 1.5rem; margin-bottom: 1.25rem; overflow: hidden; }
 .prose li { margin-bottom: 0.375rem; }
 .prose blockquote { border-left: 4px solid var(--color-primary); padding-left: 1rem; margin: 1.5rem 0; color: var(--color-muted); }
 .prose img { border-radius: var(--radius); margin: 1.5rem 0; }
