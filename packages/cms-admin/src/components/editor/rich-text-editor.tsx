@@ -2680,10 +2680,12 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                   setSourceText(editor.storage.markdown.getMarkdown());
                   setShowSource(true);
                 } else {
-                  // Switch back to visual: apply source changes
-                  editor.commands.setContent(sourceText);
-                  onChange(editor.storage.markdown.getMarkdown());
+                  // Switch back to visual: defer setContent to avoid flushSync during render
                   setShowSource(false);
+                  queueMicrotask(() => {
+                    editor.commands.setContent(sourceText);
+                    onChange(editor.storage.markdown.getMarkdown());
+                  });
                 }
               }}>
               <IconCode />
