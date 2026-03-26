@@ -184,8 +184,38 @@ function NoPreviewPlaceholder() {
   );
 }
 
+// Cache probe results so we only check each URL once per session
+const probeCache = new Map<string, boolean>();
+
 function PreviewThumb({ previewUrl, title }: { previewUrl: string; title: string }) {
-  if (!previewUrl) return <NoPreviewPlaceholder />;
+  const [status, setStatus] = useState<"loading" | "ok" | "failed">(
+    !previewUrl ? "failed" : probeCache.has(previewUrl) ? (probeCache.get(previewUrl) ? "ok" : "failed") : "loading"
+  );
+
+  useEffect(() => {
+    if (!previewUrl || probeCache.has(previewUrl)) return;
+    // Probe via server-side API to avoid CORS issues
+    fetch(`/api/admin/probe-url?url=${encodeURIComponent(previewUrl)}`)
+      .then((r) => r.json())
+      .then((d: { ok: boolean }) => {
+        probeCache.set(previewUrl, d.ok);
+        setStatus(d.ok ? "ok" : "failed");
+      })
+      .catch(() => {
+        probeCache.set(previewUrl, false);
+        setStatus("failed");
+      });
+  }, [previewUrl]);
+
+  if (status === "failed") return <NoPreviewPlaceholder />;
+  if (status === "loading") return (
+    <div style={{
+      width: "100%", flex: 1, minHeight: "8rem",
+      background: "var(--muted)", display: "flex",
+      alignItems: "center", justifyContent: "center",
+      color: "var(--muted-foreground)", fontSize: "0.75rem",
+    }} />
+  );
 
   return (
     <div style={{
