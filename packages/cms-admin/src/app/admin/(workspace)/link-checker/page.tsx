@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Link2, Play, CheckCircle, XCircle, ArrowRight, ExternalLink, Loader2, Wrench, Check, X, ImageOff, Image as ImageIcon } from "lucide-react";
+import { Link2, Play, CheckCircle, XCircle, ArrowRight, ExternalLink, Loader2, Wrench, Check, X, ImageOff, Image as ImageIcon, Download } from "lucide-react";
 import type { LinkResult, ProgressEvent } from "@/app/api/check-links/route";
 import type { LinkCheckRecord } from "@/lib/link-check-store";
 import { cn } from "@/lib/utils";
@@ -242,6 +242,51 @@ export default function LinkCheckerPage() {
     : filter === "redirect" ? redirects
     : ok;
 
+  function exportReport() {
+    const report = {
+      exportedAt: new Date().toISOString(),
+      checkedAt,
+      summary: {
+        total: results.length,
+        brokenLinks: broken.length,
+        brokenImages: brokenImages.length,
+        redirects: redirects.length,
+        ok: ok.length,
+      },
+      brokenLinks: broken.map((r) => ({
+        url: r.url,
+        text: r.text,
+        document: `${r.docCollection}/${r.docSlug}`,
+        title: r.docTitle,
+        field: r.field,
+        status: r.httpStatus ?? r.error,
+      })),
+      brokenImages: brokenImages.map((r) => ({
+        url: r.url,
+        alt: r.text,
+        document: `${r.docCollection}/${r.docSlug}`,
+        title: r.docTitle,
+        field: r.field,
+        status: r.httpStatus ?? r.error,
+      })),
+      redirects: redirects.map((r) => ({
+        url: r.url,
+        redirectTo: r.redirectTo,
+        document: `${r.docCollection}/${r.docSlug}`,
+        title: r.docTitle,
+        field: r.field,
+        httpStatus: r.httpStatus,
+      })),
+    };
+    const blob = new Blob([JSON.stringify(report, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `link-check-report-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   const progress = total > 0 ? Math.round((checked / total) * 100) : 0;
 
   return (
@@ -249,6 +294,11 @@ export default function LinkCheckerPage() {
     <div className="flex flex-col min-h-screen">
       <ActionBar
         actions={<>
+          {state === "done" && allBroken.length > 0 && (
+            <ActionButton variant="secondary" onClick={exportReport} icon={<Download style={{ width: 14, height: 14 }} />}>
+              Export JSON
+            </ActionButton>
+          )}
           {state === "running" ? (
             <ActionButton variant="secondary" onClick={stop}>
               Stop
