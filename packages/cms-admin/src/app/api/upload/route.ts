@@ -53,6 +53,27 @@ export async function POST(req: NextRequest) {
           const { appendMediaMeta } = await import("@/lib/media/media-meta");
           await appendMediaMeta(folder ? `${folder}/${filename}` : filename, { exif });
         }
+
+        // AI analysis (caption, alt-text, tags) — runs async, non-blocking
+        try {
+          const { analyzeImage } = await import("@/lib/ai/image-analysis");
+          const ext = filename.split(".").pop()?.toLowerCase() ?? "jpeg";
+          const mimeType = ext === "png" ? "image/png" : ext === "webp" ? "image/webp" : "image/jpeg";
+          analyzeImage(buffer, mimeType).then(async (analysis) => {
+            if (analysis) {
+              const { appendMediaMeta: append } = await import("@/lib/media/media-meta");
+              await append(folder ? `${folder}/${filename}` : filename, {
+                aiCaption: analysis.caption,
+                aiAlt: analysis.alt,
+                aiTags: analysis.tags,
+                aiAnalyzedAt: new Date().toISOString(),
+              });
+              console.log(`[upload] AI analyzed ${filename}: "${analysis.alt}"`);
+            }
+          }).catch((err) => {
+            console.error(`[upload] AI analysis failed for ${filename}:`, err instanceof Error ? err.message : err);
+          });
+        } catch { /* AI not configured — skip */ }
       } catch (err) {
         // Non-fatal — upload succeeded, variants/exif are bonus
         console.error("[upload] Post-processing error:", err instanceof Error ? err.message : err);
