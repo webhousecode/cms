@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://bridgeberg.webhouse.app/sitemap.xml

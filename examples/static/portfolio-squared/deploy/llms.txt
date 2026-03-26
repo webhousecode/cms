@@ -1,0 +1,15 @@
+# Elina Voss
+
+> 
+
+## Pages
+
+- [About](https://cbroberg.github.io/elina-voss-site/elina-voss-site/about/): <p>Elina Voss is a Copenhagen-based photographer specializing in editorial, portrait, and street photography. With over a decade of experience, her work has bee...
+- [Contact](https://cbroberg.github.io/elina-voss-site/elina-voss-site/contact/): <p>For commissions, collaborations, or general inquiries.</p>
+- [Select Works — Elina Voss](https://cbroberg.github.io/elina-voss-site/elina-voss-site/): 
+- [Editorial Styling](https://cbroberg.github.io/elina-voss-site/elina-voss-site/projects/editorial-styling/): A fashion editorial exploring the intersection of minimalism and bold textures. Shot on location in Copenhagen, this series captures the essence of Scandinavian design through the lens of contemporary streetwear.
+- [Still Life](https://cbroberg.github.io/elina-voss-site/elina-voss-site/projects/magazine-spread/): A commissioned series for Kinfolk Magazine exploring the beauty of everyday objects. Each composition tells a story of texture, light, and the quiet luxury of simplicity.
+- [Faces of Light](https://cbroberg.github.io/elina-voss-site/elina-voss-site/projects/portrait-series/): An intimate portrait series using only natural window light. Each subject was photographed in their own home, creating an atmosphere of trust and vulnerability that reveals character beyond the surface.
+- [Urban Fragments](https://cbroberg.github.io/elina-voss-site/elina-voss-site/projects/street-photography/): Candid moments captured in the streets of Tokyo and Berlin. This ongoing series documents the quiet poetry of everyday urban life — fleeting gestures, shadows, and the geometry of the city.
+
+Built with [webhouse.app](https://webhouse.app)

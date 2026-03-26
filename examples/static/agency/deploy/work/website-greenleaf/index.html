@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Greenleaf Digital Platform — Meridian Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            heading: ['Sora', 'sans-serif'],
+            body: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            dark: '#111111',
+            accent: { from: '#6366f1', to: '#a855f7' },
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #fff;
+      color: #111;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Gradient text utility */
+    .gradient-text {
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* Gradient button */
+    .btn-gradient {
+      display: inline-block;
+      padding: 1rem 2.5rem;
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      color: #fff;
+      text-decoration: none;
+      font-family: 'Sora', sans-serif;
+      font-weight: 600;
+      font-size: 0.875rem;
+      letter-spacing: 0.04em;
+      border-radius: 9999px;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .btn-gradient:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 20px 40px rgba(99, 102, 241, 0.3);
+    }
+
+    /* Card hover */
+    .card-hover {
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .card-hover:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Work card image zoom */
+    .work-card img {
+      transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+    .work-card:hover img {
+      transform: scale(1.05);
+    }
+
+    /* Category pill */
+    .pill {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(168,85,247,0.1));
+      color: #6366f1;
+      font-family: 'Sora', sans-serif;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      border-radius: 9999px;
+    }
+
+    /* Nav */
+    .nav-fixed {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      background: rgba(255, 255, 255, 0.9);
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+    }
+
+    /* Footer */
+    .footer-link {
+      color: #666; text-decoration: none; font-size: 0.875rem; transition: color 0.3s;
+    }
+    .footer-link:hover { color: #111; }
+
+    /* Fade-in animation */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up { animation: fadeUp 0.8s ease-out both; }
+    .fade-up-d1 { animation-delay: 0.1s; }
+    .fade-up-d2 { animation-delay: 0.2s; }
+    .fade-up-d3 { animation-delay: 0.3s; }
+    .fade-up-d4 { animation-delay: 0.4s; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .hero-title { font-size: 2.5rem !important; }
+      .section-title { font-size: 2rem !important; }
+    }
+  </style>
+
+  <!-- webhouse.app enrichment -->
+  <meta name="generator" content="webhouse.app" />
+  <link rel="canonical" href="https://cbroberg.github.io/meridian-studio-site/meridian-studio-site/work/website-greenleaf/" />
+  <meta property="og:title" content="Greenleaf Digital Platform" />
+  <meta property="og:description" content="A ground-up website redesign for a sustainable food brand, combining editorial storytelling with a seamless e-commerce experience." />
+  <meta property="og:url" content="https://cbroberg.github.io/meridian-studio-site/meridian-studio-site/work/website-greenleaf/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Meridian Studio" />
+  <meta property="og:image" content="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1600&q=80" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Greenleaf Digital Platform" />
+  <meta name="twitter:description" content="A ground-up website redesign for a sustainable food brand, combining editorial storytelling with a seamless e-commerce experience." />
+  <meta name="twitter:image" content="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1600&q=80" />
+  <link rel="icon" href="/meridian-studio-site/favicon.ico" />
+  <link rel="apple-touch-icon" href="/meridian-studio-site/apple-touch-icon.png" />
+  <link rel="manifest" href="/meridian-studio-site/manifest.json" />
+  <meta name="theme-color" content="#000000" />
+</head>
+<body>
+  
+  <nav class="nav-fixed">
+    <div class="max-w-7xl mx-auto flex items-center justify-between px-6 lg:px-8 py-5">
+      <a href="/meridian-studio-site/index.html" class="font-heading font-800 text-lg tracking-tight" style="font-weight:800;">Meridian Studio</a>
+      <div class="flex items-center gap-8">
+        <a href="/meridian-studio-site/index.html" class="font-body text-sm tracking-wide transition-colors text-[#888] hover:text-[#111]">Home</a>
+          <a href="/meridian-studio-site/work/index.html" class="font-body text-sm tracking-wide transition-colors text-[#111] font-medium">Work</a>
+          <a href="/meridian-studio-site/about/index.html" class="font-body text-sm tracking-wide transition-colors text-[#888] hover:text-[#111]">About</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Image -->
+  <div class="pt-[73px]">
+    <div class="w-full" style="height: 70vh; overflow: hidden;">
+      <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1600&q=80" alt="Greenleaf Digital Platform" class="w-full h-full object-cover fade-up" />
+    </div>
+  </div>
+
+  <!-- Content -->
+  <section class="py-16 lg:py-24 px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-20">
+        <!-- Main content -->
+        <div class="lg:col-span-8">
+          <h1 class="fade-up font-heading tracking-tight mb-4" style="font-size: clamp(2rem, 4vw, 3.5rem); font-weight: 800;">Greenleaf Digital Platform</h1>
+          <p class="fade-up fade-up-d1 text-[#888] text-lg mb-10">A ground-up website redesign for a sustainable food brand, combining editorial storytelling with a seamless e-commerce experience.</p>
+          <div class="fade-up fade-up-d2">
+            <p class="text-[#555] text-base lg:text-lg leading-relaxed mb-6">Greenleaf Organics had outgrown their Shopify template. Their product line had expanded from 12 to 80+ SKUs, they'd launched a subscription box, and their content team was publishing weekly recipes and farm stories. They needed a digital home that could do justice to all of it.</p>
+          <p class="text-[#555] text-base lg:text-lg leading-relaxed mb-6">We designed and built a custom platform on Next.js with a headless CMS, giving their editorial and e-commerce teams independent workflows that converge on the frontend. The design language draws from organic forms — soft curves, earthy tones, generous whitespace — but with the precision and speed users expect from modern e-commerce. Every product page tells a story: where the ingredients are sourced, who grows them, and why it matters.</p>
+          <p class="text-[#555] text-base lg:text-lg leading-relaxed mb-6">Page load times dropped from 4.8s to 1.2s. Conversion rate improved 34% in the first quarter post-launch. But the metric Greenleaf cares about most: average time on the "Our Farms" story pages jumped to 6.1 minutes, proving their customers genuinely engage with the brand's mission, not just the products.</p>
+          </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="lg:col-span-4">
+          <div class="fade-up fade-up-d3 sticky top-24 space-y-8 border-l border-gray-100 pl-8">
+            <div>
+              <p class="font-heading font-600 text-xs tracking-[0.15em] uppercase text-[#999] mb-2" style="font-weight:600;">Client</p>
+              <p class="font-heading font-700 text-base" style="font-weight:700;">Greenleaf Organics</p>
+            </div>
+            <div>
+              <p class="font-heading font-600 text-xs tracking-[0.15em] uppercase text-[#999] mb-2" style="font-weight:600;">Category</p>
+              <span class="pill">Web Design</span>
+            </div>
+            <div>
+              <p class="font-heading font-600 text-xs tracking-[0.15em] uppercase text-[#999] mb-2" style="font-weight:600;">Year</p>
+              <p class="text-base">2024</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Back link -->
+  <div class="text-center pb-20">
+    <a href="/meridian-studio-site/work/index.html" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium transition-colors">&larr; Back to Work</a>
+  </div>
+
+  
+  <footer class="border-t border-gray-100" style="background: #fafafa;">
+    <div class="max-w-7xl mx-auto px-6 lg:px-8 py-16">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-10">
+        <!-- Brand -->
+        <div class="md:col-span-2">
+          <p class="font-heading font-800 text-lg tracking-tight mb-3" style="font-weight:800;">Meridian Studio</p>
+          <p class="text-[#666] text-sm leading-relaxed max-w-md">
+            A creative agency crafting bold digital experiences for ambitious brands. Based in Copenhagen, working worldwide.
+          </p>
+        </div>
+
+        <!-- Links -->
+        <div>
+          <p class="font-heading font-700 text-xs tracking-widest uppercase text-[#999] mb-4" style="font-weight:700;">Navigation</p>
+          <div class="flex flex-col gap-2">
+            <a href="/meridian-studio-site/index.html" class="footer-link">Home</a>
+            <a href="/meridian-studio-site/work/index.html" class="footer-link">Work</a>
+            <a href="/meridian-studio-site/about/index.html" class="footer-link">About</a>
+          </div>
+        </div>
+
+        <!-- Contact -->
+        <div>
+          <p class="font-heading font-700 text-xs tracking-widest uppercase text-[#999] mb-4" style="font-weight:700;">Contact</p>
+          <div class="flex flex-col gap-2">
+            <a href="mailto:hello@meridianstudio.co" class="footer-link">hello@meridianstudio.co</a>
+            <a href="https://www.instagram.com/webhouse.app" class="footer-link">Instagram</a>
+            <a href="#" class="footer-link">LinkedIn</a>
+            <a href="#" class="footer-link">Dribbble</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="border-t border-gray-200 mt-12 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+        <p class="text-[#999] text-xs">&copy; 2026 Meridian Studio. All rights reserved.</p>
+        <p class="text-[#999] text-xs">Built with <a href="https://webhouse.app" target="_blank" rel="noopener" class="hover:text-[#111] transition-colors">@webhouse/cms</a></p>
+      </div>
+    </div>
+  </footer>
+
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"Greenleaf Digital Platform","url":"https://cbroberg.github.io/meridian-studio-site/meridian-studio-site/work/website-greenleaf/","description":"A ground-up website redesign for a sustainable food brand, combining editorial storytelling with a seamless e-commerce experience.","isPartOf":{"@type":"WebSite","name":"Meridian Studio","url":"https://cbroberg.github.io/meridian-studio-site/meridian-studio-site/"}}</script>
+</body>
+</html>

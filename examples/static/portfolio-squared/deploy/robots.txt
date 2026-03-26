@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://cbroberg.github.io/elina-voss-site/elina-voss-site/sitemap.xml

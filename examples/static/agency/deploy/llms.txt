@@ -1,0 +1,15 @@
+# Meridian Studio
+
+> 
+
+## Pages
+
+- [About](https://cbroberg.github.io/meridian-studio-site/meridian-studio-site/about/): Meridian Studio was founded in 2019 with a simple conviction: great brands deserve great craft. We are a tight-knit team of strategists, designers, and developers.
+- [Home — Meridian Studio](https://cbroberg.github.io/meridian-studio-site/meridian-studio-site/): 
+- [FinFlow Mobile App](https://cbroberg.github.io/meridian-studio-site/meridian-studio-site/work/app-finflow/): A mobile-first banking app designed to make personal finance feel intuitive, approachable, and even enjoyable for a younger generation.
+- [Aurora Summer Campaign](https://cbroberg.github.io/meridian-studio-site/meridian-studio-site/work/campaign-aurora/): A multi-channel marketing campaign that redefined Aurora's summer collection launch with immersive digital storytelling and bold art direction.
+- [Work](https://cbroberg.github.io/meridian-studio-site/meridian-studio-site/work/): Explore our portfolio of case studies across branding, web, and app design.
+- [Nexus Brand Identity](https://cbroberg.github.io/meridian-studio-site/meridian-studio-site/work/rebrand-nexus/): A complete brand identity redesign that repositioned Nexus from a niche B2B vendor into a bold, consumer-facing technology brand.
+- [Greenleaf Digital Platform](https://cbroberg.github.io/meridian-studio-site/meridian-studio-site/work/website-greenleaf/): A ground-up website redesign for a sustainable food brand, combining editorial storytelling with a seamless e-commerce experience.
+
+Built with [webhouse.app](https://webhouse.app)

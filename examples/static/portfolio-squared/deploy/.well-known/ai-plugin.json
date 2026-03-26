@@ -1,0 +1,17 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "Elina Voss",
+  "name_for_model": "elina_voss",
+  "description_for_human": "",
+  "description_for_model": "",
+  "auth": {
+    "type": "none"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "https://cbroberg.github.io/elina-voss-site/elina-voss-site/openapi.yaml"
+  },
+  "logo_url": "https://cbroberg.github.io/elina-voss-site/elina-voss-site/favicon.ico",
+  "contact_email": "",
+  "legal_info_url": "https://cbroberg.github.io/elina-voss-site/elina-voss-site/"
+}
