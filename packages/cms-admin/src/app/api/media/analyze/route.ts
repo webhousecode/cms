@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { analyzeImage, type ImageAnalysis } from "@/lib/ai/image-analysis";
+import { analyzeImage } from "@/lib/ai/image-analysis";
+import type { ImageAnalysis } from "@/lib/ai/image-analysis";
 import { getMediaAdapter } from "@/lib/media";
 
 export async function POST(req: NextRequest) {
@@ -72,7 +73,7 @@ async function saveAIMetadata(
       aiAlt: analysis.alt,
       aiTags: analysis.tags,
       aiAnalyzedAt: new Date().toISOString(),
-      aiProvider: "gemini-2.0-flash",
+      aiProvider: (analysis as any).provider ?? "unknown",
     };
 
     if (idx >= 0) {
