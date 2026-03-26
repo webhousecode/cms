@@ -20,6 +20,8 @@ interface Props {
   onAnalyzed?: (meta: AIMetadata) => void;
   /** Optional callback to apply alt-text to the current image in editor */
   onApplyAlt?: (alt: string) => void;
+  /** Current alt-text on the image (to detect if already applied) */
+  currentAlt?: string;
 }
 
 function CopyBtn({ text, label }: { text: string; label: string }) {
@@ -46,7 +48,7 @@ function CopyBtn({ text, label }: { text: string; label: string }) {
   );
 }
 
-export function AIMetadataPopover({ imageUrl, variant = "button", onAnalyzed, onApplyAlt }: Props) {
+export function AIMetadataPopover({ imageUrl, variant = "button", onAnalyzed, onApplyAlt, currentAlt }: Props) {
   const [open, setOpen] = useState(false);
   const [meta, setMeta] = useState<AIMetadata | null>(null);
   const [loading, setLoading] = useState(false);
@@ -257,22 +259,32 @@ export function AIMetadataPopover({ imageUrl, variant = "button", onAnalyzed, on
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "2px" }}>
                     <span style={{ fontSize: "0.65rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted-foreground)" }}>Alt-text</span>
                     <div style={{ display: "flex", alignItems: "center", gap: "2px" }}>
-                      {meta.alt && onApplyAlt && (
-                        <button
-                          type="button"
-                          title="Apply alt-text to image"
-                          onClick={() => { onApplyAlt(meta.alt!); setApplied(true); setTimeout(() => setApplied(false), 2000); }}
-                          style={{
+                      {meta.alt && onApplyAlt && (() => {
+                        const alreadyApplied = applied || (currentAlt === meta.alt);
+                        return alreadyApplied ? (
+                          <span style={{
                             display: "inline-flex", alignItems: "center", gap: "3px",
                             padding: "1px 6px", borderRadius: "4px", fontSize: "0.6rem", fontWeight: 500,
-                            border: "none", cursor: "pointer",
-                            background: applied ? "rgba(74,222,128,0.15)" : "rgba(247,187,46,0.15)",
-                            color: applied ? "#4ade80" : "#F7BB2E",
-                          }}
-                        >
-                          {applied ? <><Check style={{ width: 10, height: 10 }} /> Applied</> : <><ArrowDownToLine style={{ width: 10, height: 10 }} /> Apply</>}
-                        </button>
-                      )}
+                            background: "rgba(74,222,128,0.15)", color: "#4ade80",
+                          }}>
+                            <Check style={{ width: 10, height: 10 }} /> Applied
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            title="Apply alt-text to image"
+                            onClick={() => { onApplyAlt(meta.alt!); setApplied(true); }}
+                            style={{
+                              display: "inline-flex", alignItems: "center", gap: "3px",
+                              padding: "1px 6px", borderRadius: "4px", fontSize: "0.6rem", fontWeight: 500,
+                              border: "none", cursor: "pointer",
+                              background: "rgba(247,187,46,0.15)", color: "#F7BB2E",
+                            }}
+                          >
+                            <ArrowDownToLine style={{ width: 10, height: 10 }} /> Apply
+                          </button>
+                        );
+                      })()}
                       {meta.alt && <CopyBtn text={meta.alt} label="alt-text" />}
                     </div>
                   </div>

@@ -2079,6 +2079,9 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
       imageSrc: (ctx.editor?.isActive("image")
         ? (ctx.editor?.getAttributes("image").src as string | undefined) ?? null
         : null) as string | null,
+      imageAlt: (ctx.editor?.isActive("image")
+        ? (ctx.editor?.getAttributes("image").alt as string | undefined) ?? ""
+        : "") as string,
       imageAlign: (ctx.editor?.isActive("image")
         ? (ctx.editor?.getAttributes("image").align as string | undefined) ?? "center"
         : null) as string | null,
@@ -2762,6 +2765,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                 <AIMetadataPopover
                   imageUrl={toolbarState.imageSrc}
                   variant="ctx"
+                  currentAlt={toolbarState.imageAlt}
                   onApplyAlt={(alt) => {
                     editor.chain().focus().updateAttributes("image", { alt }).run();
                     onChange(editor.storage.markdown.getMarkdown());
