@@ -1,17 +1,18 @@
 /**
  * F103 — AI Image Analysis (Caption, Alt-text & Tags)
  *
- * Uses Google Gemini 2.0 Flash via Vercel AI SDK for vision-based
- * image analysis. Returns structured caption, alt-text, and tags.
+ * Provider-agnostic image analysis via Vercel AI SDK.
+ * Uses whichever provider has an API key configured:
+ *   1. Anthropic (Claude) — best vision, already configured for most CMS installs
+ *   2. Google Gemini — fallback if no Anthropic key
  *
- * API key comes from existing ai-config.json (geminiApiKey field)
- * or GOOGLE_GENERATIVE_AI_API_KEY / GEMINI_API_KEY env vars.
+ * API keys come from existing ai-config.json or env vars.
  */
 
-import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { createAnthropic } from "@ai-sdk/anthropic";
 import { generateObject } from "ai";
 import { z } from "zod";
-import { getApiKey } from "@/lib/ai-config";
+import { readAiConfig } from "@/lib/ai-config";
 
 export const imageAnalysisSchema = z.object({
   caption: z.string().describe("A descriptive sentence about the image content"),
@@ -41,26 +42,34 @@ Rules:
 ${langMap[language] ?? langMap.en}`;
 }
 
-async function getGeminiApiKey(): Promise<string> {
-  // 1. Check ai-config.json (existing CMS config)
-  const configKey = await getApiKey("gemini");
-  if (configKey) return configKey;
+/** Resolve the best available vision model from configured API keys */
+async function getVisionModel(): Promise<{ model: Parameters<typeof generateObject>[0]["model"]; provider: string }> {
+  const config = await readAiConfig();
 
-  // 2. Check env vars (Vercel AI SDK convention)
-  const envKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY ?? process.env.GEMINI_API_KEY;
-  if (envKey) return envKey;
+  // 1. Anthropic — best vision quality, usually already configured
+  const anthropicKey = config.anthropicApiKey ?? process.env.ANTHROPIC_API_KEY;
+  if (anthropicKey) {
+    const anthropic = createAnthropic({ apiKey: anthropicKey });
+    return { model: anthropic("claude-sonnet-4-20250514"), provider: "claude-sonnet-4-20250514" };
+  }
 
-  throw new Error("Gemini API key not configured. Go to Settings → AI to add your key.");
+  // 2. Google Gemini — fallback
+  const geminiKey = config.geminiApiKey ?? process.env.GOOGLE_GENERATIVE_AI_API_KEY ?? process.env.GEMINI_API_KEY;
+  if (geminiKey) {
+    const { createGoogleGenerativeAI } = await import("@ai-sdk/google");
+    const google = createGoogleGenerativeAI({ apiKey: geminiKey });
+    return { model: google("gemini-2.0-flash") as Parameters<typeof generateObject>[0]["model"], provider: "gemini-2.0-flash" };
+  }
+
+  throw new Error("No AI API key configured. Add an Anthropic or Gemini key in Cockpit → Settings.");
 }
 
 export async function analyzeImage(
   imageBuffer: Buffer,
   mimeType: string,
   language: string = "da",
-): Promise<ImageAnalysis> {
-  const apiKey = await getGeminiApiKey();
-  const google = createGoogleGenerativeAI({ apiKey });
-  const model = google("gemini-2.0-flash");
+): Promise<ImageAnalysis & { provider: string }> {
+  const { model, provider } = await getVisionModel();
 
   const { object } = await generateObject({
     model,
@@ -69,40 +78,28 @@ export async function analyzeImage(
       role: "user",
       content: [
         { type: "text", text: getAnalysisPrompt(language) },
-        {
-          type: "image",
-          image: imageBuffer,
-        },
+        { type: "image", image: imageBuffer },
       ],
     }],
   });
 
-  return object;
+  return { ...object, provider };
 }
 
-/** Quick test that the API key works — sends a tiny test and checks response */
-export async function testGeminiConnection(): Promise<{ ok: boolean; error?: string }> {
+/** Quick test that the vision model works */
+export async function testVisionConnection(): Promise<{ ok: boolean; provider?: string; error?: string }> {
   try {
-    const apiKey = await getGeminiApiKey();
-    const google = createGoogleGenerativeAI({ apiKey });
-    const model = google("gemini-2.0-flash");
+    const { model, provider } = await getVisionModel();
 
-    // Simple text-only test to verify key
     const { object } = await generateObject({
       model,
       schema: z.object({ status: z.string() }),
       prompt: "Return status: ok",
     });
 
-    return { ok: object.status === "ok" };
+    return { ok: object.status === "ok", provider };
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);
-    if (msg.includes("401") || msg.includes("UNAUTHENTICATED")) {
-      return { ok: false, error: "Invalid API key" };
-    }
-    if (msg.includes("429") || msg.includes("RESOURCE_EXHAUSTED")) {
-      return { ok: false, error: "Rate limit reached (1,500/day). Try again tomorrow." };
-    }
     return { ok: false, error: msg.slice(0, 200) };
   }
 }
