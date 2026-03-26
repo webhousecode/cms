@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { LayoutGrid, List, Edit2 } from "lucide-react";
 import { ActionBar, ActionBarBreadcrumb } from "@/components/action-bar";
@@ -41,13 +41,13 @@ export function CollectionListPage({
   readOnly, urlPrefix, schemaEnabled, defaultLocale,
 }: Props) {
   const storageKey = `cms-view-${collection}`;
-  const [view, setView] = useState<ViewMode>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem(storageKey);
-      if (saved === "grid" || saved === "list") return saved;
-    }
-    return "list";
-  });
+  const [view, setView] = useState<ViewMode>("list");
+
+  // Restore saved preference after mount (avoids SSR hydration mismatch)
+  useEffect(() => {
+    const saved = localStorage.getItem(storageKey);
+    if (saved === "grid" || saved === "list") setView(saved);
+  }, [storageKey]);
 
   function changeView(v: ViewMode) {
     setView(v);
