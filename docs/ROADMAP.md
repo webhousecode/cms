@@ -150,6 +150,7 @@ _Unique selling points and advanced features._
 | 31e | **F71 Multi-Player Editing** | Small (v1) | Optimistic document locking — prevents concurrent edit data loss. v2 (real-time CRDT) is Large. |
 | 31f | **F73 Troubleshooting Guide** | Small | In-app searchable help — common issues with solutions, reduces support burden |
 | 31g | **F74 System Status Page** | Small | Public status page with health checks, status badges, builds trust |
+| 31h | **F105 Voice Module** | Large | Real-time voice for CMS: Admin Voice Assistant (stemmekommandoer) + Frontend Voice Widget (besøgende). Gemini Live API, function calling, GDPR-safe. |
 
 ### Tier 4 — Growth & Enterprise (v2.0+)
 
