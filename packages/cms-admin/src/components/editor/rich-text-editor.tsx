@@ -1998,6 +1998,8 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
   const [showMediaDropdown, setShowMediaDropdown] = useState(false);
   const [mediaSubMenu, setMediaSubMenu] = useState<"image" | "audio" | null>(null);
   const mediaDropdownRef = useRef<HTMLDivElement>(null);
+  const [showSource, setShowSource] = useState(false);
+  const [sourceText, setSourceText] = useState("");
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -2667,6 +2669,26 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
               <Zap className="w-[18px] h-[18px]" />
             </Btn>}
 
+            {/* Spacer to push Source to the right */}
+            <div style={{ flex: 1 }} />
+
+            {/* Source toggle */}
+            <Btn tooltip={showSource ? "Visual editor" : "View source"} active={showSource}
+              onClick={() => {
+                if (!showSource) {
+                  // Switch to source: grab current markdown
+                  setSourceText(editor.storage.markdown.getMarkdown());
+                  setShowSource(true);
+                } else {
+                  // Switch back to visual: apply source changes
+                  editor.commands.setContent(sourceText);
+                  onChange(editor.storage.markdown.getMarkdown());
+                  setShowSource(false);
+                }
+              }}>
+              <IconCode />
+            </Btn>
+
           </div>
         )}
 
@@ -2816,10 +2838,32 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
         )}
 
         {/* ── Body ── */}
-        <div className="rte-body">
-          <EditorContent editor={editor} />
-          {editor && <AIBubbleMenu editor={editor} />}
-        </div>
+        {showSource ? (
+          <textarea
+            value={sourceText}
+            onChange={(e) => setSourceText(e.target.value)}
+            spellCheck={false}
+            style={{
+              width: "100%",
+              minHeight: "300px",
+              padding: "1rem",
+              fontFamily: "ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace",
+              fontSize: "0.8rem",
+              lineHeight: "1.6",
+              color: "var(--foreground)",
+              backgroundColor: "var(--background)",
+              border: "none",
+              outline: "none",
+              resize: "vertical",
+              tabSize: 2,
+            }}
+          />
+        ) : (
+          <div className="rte-body">
+            <EditorContent editor={editor} />
+            {editor && <AIBubbleMenu editor={editor} />}
+          </div>
+        )}
       </div>
 
       {/* ── Interactive Picker dialog ── */}
