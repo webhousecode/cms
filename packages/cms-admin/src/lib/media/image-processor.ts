@@ -110,6 +110,76 @@ export function upgradeImages(
   );
 }
 
+// ── EXIF extraction ─────────────────────────────────────────
+
+export interface ImageExif {
+  make?: string;
+  model?: string;
+  date?: string;
+  gpsLat?: number;
+  gpsLon?: number;
+  gpsAlt?: number;
+  iso?: number;
+  fNumber?: number;
+  exposureTime?: number;
+  focalLength?: number;
+  lens?: string;
+  software?: string;
+  width?: number;
+  height?: number;
+  orientation?: number;
+}
+
+/** Convert GPS DMS array [degrees, minutes, seconds] + ref to decimal */
+function gpsToDecimal(dms: number[], ref: string): number {
+  const dec = dms[0] + dms[1] / 60 + dms[2] / 3600;
+  return (ref === "S" || ref === "W") ? -dec : dec;
+}
+
+/**
+ * Extract EXIF metadata from an image buffer using Sharp + exif-reader.
+ * Returns null for images without EXIF data.
+ */
+export async function extractExif(inputBuffer: Buffer): Promise<ImageExif | null> {
+  try {
+    const meta = await sharp(inputBuffer).metadata();
+    if (!meta.exif) return null;
+
+    const exifReader = (await import("exif-reader")).default;
+    const exif = exifReader(meta.exif);
+
+    const result: ImageExif = {
+      width: meta.width,
+      height: meta.height,
+      orientation: meta.orientation,
+    };
+
+    if (exif.Image?.Make) result.make = exif.Image.Make;
+    if (exif.Image?.Model) result.model = exif.Image.Model;
+    if (exif.Image?.Software) result.software = exif.Image.Software;
+    if (exif.Photo?.DateTimeOriginal) result.date = new Date(exif.Photo.DateTimeOriginal).toISOString();
+    if (exif.Photo?.ISOSpeedRatings) result.iso = exif.Photo.ISOSpeedRatings;
+    if (exif.Photo?.FNumber) result.fNumber = exif.Photo.FNumber;
+    if (exif.Photo?.ExposureTime) result.exposureTime = exif.Photo.ExposureTime;
+    if (exif.Photo?.FocalLength) result.focalLength = exif.Photo.FocalLength;
+    if (exif.Photo?.LensModel) result.lens = exif.Photo.LensModel;
+
+    if (exif.GPSInfo?.GPSLatitude && exif.GPSInfo?.GPSLatitudeRef) {
+      result.gpsLat = gpsToDecimal(exif.GPSInfo.GPSLatitude, exif.GPSInfo.GPSLatitudeRef);
+    }
+    if (exif.GPSInfo?.GPSLongitude && exif.GPSInfo?.GPSLongitudeRef) {
+      result.gpsLon = gpsToDecimal(exif.GPSInfo.GPSLongitude, exif.GPSInfo.GPSLongitudeRef);
+    }
+    if (exif.GPSInfo?.GPSAltitude != null) {
+      result.gpsAlt = Math.round(exif.GPSInfo.GPSAltitude * 10) / 10;
+    }
+
+    return result;
+  } catch {
+    return null;
+  }
+}
+
 /** Check if a file is a processable image (not SVG, not GIF, not video) */
 export function isProcessableImage(filename: string): boolean {
   const ext = filename.split(".").pop()?.toLowerCase();

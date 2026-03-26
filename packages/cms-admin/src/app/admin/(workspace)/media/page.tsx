@@ -103,6 +103,8 @@ export default function MediaPage() {
   const folders = Array.from(new Set(allFiles.map((f) => f.folder).filter(Boolean))).sort();
 
   const filtered = allFiles.filter((f) => {
+    // Hide generated WebP variants (hero-800w.webp etc.) — they're not user-uploaded
+    if (/-\d+w\.webp$/i.test(f.name)) return false;
     if (folder !== "" && f.folder !== folder) return false;
     if (typeFilter && f.mediaType !== typeFilter) return false;
     if (aiFilter) {
