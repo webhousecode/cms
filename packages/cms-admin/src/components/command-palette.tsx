@@ -285,14 +285,14 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
     // Add content results
     for (const r of contentResults) {
       if (r.status === "media" && r.mediaUrl) {
-        // Media result — show thumbnail
+        // Media result — show thumbnail, navigate to media with search query
         result.push({
           id: `media-${r.slug}`,
           label: r.title,
           sublabel: r.slug,
           category: "content",
           icon: <img src={r.mediaThumbnail ?? r.mediaUrl} alt="" style={{ width: "0.9rem", height: "0.9rem", objectFit: "cover", borderRadius: "2px" }} />,
-          href: `/admin/media`,
+          href: `/admin/media?q=${encodeURIComponent(r.slug)}`,
         });
       } else {
         result.push({
