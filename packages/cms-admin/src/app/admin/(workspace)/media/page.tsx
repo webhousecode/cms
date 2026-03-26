@@ -310,9 +310,41 @@ export default function MediaPage() {
                 {selected.size} selected
               </span>
               {selected.size > 0 && !confirmBulk && (
-                <ActionButton variant="secondary" onClick={() => setConfirmBulk(true)} icon={<Trash2 style={{ width: 14, height: 14, color: "var(--destructive)" }} />}>
-                  Delete
-                </ActionButton>
+                <>
+                  <ActionButton variant="secondary" onClick={() => setConfirmBulk(true)} icon={<Trash2 style={{ width: 14, height: 14, color: "var(--destructive)" }} />}>
+                    Delete
+                  </ActionButton>
+
+                  {/* Analyze selected */}
+                  <ActionButton
+                    variant="secondary"
+                    onClick={() => setShowBatchAnalyze(true)}
+                    icon={<Sparkles style={{ width: 14, height: 14 }} />}
+                  >
+                    Analyze
+                  </ActionButton>
+
+                  {/* Optimize selected */}
+                  <ActionButton
+                    variant="secondary"
+                    onClick={async () => {
+                      const urls = Array.from(selected);
+                      const res = await fetch("/api/media/optimize-batch", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ files: urls }),
+                      });
+                      if (res.ok) {
+                        const d = await res.json() as { processed: number; skipped: number; errors: number; savedMB: number };
+                        const { toast } = await import("sonner");
+                        toast.success(`Optimized ${d.processed} of ${selected.size} selected (${d.savedMB} MB saved)`);
+                      }
+                    }}
+                    icon={<Zap style={{ width: 14, height: 14 }} />}
+                  >
+                    Optimize
+                  </ActionButton>
+                </>
               )}
               {confirmBulk && (
                 <>
@@ -422,6 +454,7 @@ export default function MediaPage() {
         <div style={{
           width: "200px", flexShrink: 0, borderRight: "1px solid var(--border)",
           padding: "1rem 0.75rem", display: "flex", flexDirection: "column", gap: "0.25rem",
+          position: "sticky", top: 0, alignSelf: "flex-start", maxHeight: "100vh", overflowY: "auto",
         }}>
           <p style={{ fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted-foreground)", marginBottom: "0.5rem", paddingLeft: "0.25rem" }}>
             Folders

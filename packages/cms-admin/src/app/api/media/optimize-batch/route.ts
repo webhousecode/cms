@@ -4,7 +4,7 @@
  * Scans the upload directory, finds images without variants, and generates them.
  * Returns progress summary. Can be called multiple times (idempotent).
  */
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { readdir, readFile, writeFile, stat } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
@@ -12,7 +12,7 @@ import { getActiveSitePaths } from "@/lib/site-paths";
 import { generateVariants, isProcessableImage, variantFilename, extractExif, DEFAULT_VARIANTS } from "@/lib/media/image-processor";
 import { appendMediaMeta } from "@/lib/media/media-meta";
 
-export async function POST() {
+export async function POST(req: NextRequest) {
   try {
     const sitePaths = await getActiveSitePaths();
     const uploadDir = sitePaths.uploadDir;
@@ -20,7 +20,22 @@ export async function POST() {
       return NextResponse.json({ error: "No upload directory found" }, { status: 404 });
     }
 
-    const files = await scanImages(uploadDir);
+    // Optional: only process selected files (URLs like /uploads/IMG_0051.jpeg)
+    let selectedUrls: string[] | null = null;
+    try {
+      const body = await req.json() as { files?: string[] };
+      if (body?.files && body.files.length > 0) {
+        selectedUrls = body.files;
+      }
+    } catch { /* no body = process all */ }
+
+    let files = await scanImages(uploadDir);
+
+    // Filter to selected files if provided
+    if (selectedUrls) {
+      const selectedNames = new Set(selectedUrls.map((u) => u.split("/").pop()!));
+      files = files.filter((f) => selectedNames.has(f.name));
+    }
     let processed = 0;
     let skipped = 0;
     let errors = 0;
