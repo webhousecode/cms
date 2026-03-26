@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useTabs } from "@/lib/tabs-context";
+import { previewPath } from "@/lib/utils";
 
 export function SiteIntroCard() {
   const [previewUrl, setPreviewUrl] = useState("");
@@ -38,7 +39,7 @@ export function SiteIntroCard() {
   function handleClick(e: React.MouseEvent) {
     e.preventDefault();
     if (thumbnailUrl) {
-      openTab(`/admin/preview?url=${encodeURIComponent(thumbnailUrl)}`, `Preview: ${siteName}`);
+      openTab(previewPath(thumbnailUrl), `Preview: ${siteName}`);
     }
   }
 

@@ -6,6 +6,7 @@ import { Globe, MoreVertical, Settings2, Plus, Copy, Eye, ExternalLink } from "l
 import { useSiteRole } from "@/hooks/use-site-role";
 import { useTabs } from "@/lib/tabs-context";
 import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
+import { previewPath } from "@/lib/utils";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -291,12 +292,12 @@ export default function SitesDashboard() {
                   e.stopPropagation();
                   persistSiteChoice(site.id);
                   if (site.previewUrl) {
-                    openTab(`/admin/preview?url=${encodeURIComponent(site.previewUrl)}`, `Preview: ${site.name}`);
+                    openTab(previewPath(site.previewUrl), `Preview: ${site.name}`);
                   } else {
                     const res = await fetch("/api/preview-serve", { method: "POST" });
                     if (res.ok) {
                       const { url } = await res.json() as { url: string };
-                      openTab(`/admin/preview?url=${encodeURIComponent(url)}`, `Preview: ${site.name}`);
+                      openTab(previewPath(url), `Preview: ${site.name}`);
                     }
                   }
                 }}

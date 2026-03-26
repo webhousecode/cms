@@ -19,6 +19,7 @@ import { useThemeAxes, type Temperature } from "@/lib/hooks/use-theme-axes";
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { previewPath } from "@/lib/utils";
 
 interface SessionUser {
   email: string;
@@ -321,14 +322,14 @@ function PreviewButton() {
   const openPreview = useCallback(async () => {
     // Preview is NEVER disabled — sirv is always available
     if (previewUrl) {
-      openTab(`/admin/preview?url=${encodeURIComponent(previewUrl)}`, `Preview: ${siteName}`);
+      openTab(previewPath(previewUrl), `Preview: ${siteName}`);
     } else {
       // Fallback: start sirv on demand
       try {
         const res = await fetch("/api/preview-serve", { method: "POST" });
         if (res.ok) {
           const { url } = await res.json() as { url: string };
-          openTab(`/admin/preview?url=${encodeURIComponent(url)}`, `Preview: ${siteName}`);
+          openTab(previewPath(url), `Preview: ${siteName}`);
         }
       } catch { /* ignore */ }
     }

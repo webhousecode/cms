@@ -12,6 +12,11 @@ export function formatDate(dateStr: string | undefined | null): string {
   return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
 }
 
+/** Build a clean preview path — encodeURI keeps :// and / readable */
+export function previewPath(url: string): string {
+  return `/admin/preview?url=${encodeURI(url)}`;
+}
+
 export function slugify(str: string): string {
   return str
     .toLowerCase()

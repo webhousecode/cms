@@ -8,7 +8,7 @@ import { FieldEditor } from "./field-editor";
 import { Save, Globe, FileText, Trash2, ArrowLeft, Lock, LockOpen, Copy, Clock, History, Eye, Languages, Sparkles, Settings2, Wand2, ChevronDown, ChevronRight, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { ActionBar, ActionBarBreadcrumb } from "@/components/action-bar";
-import { formatDate, cn } from "@/lib/utils";
+import { formatDate, cn, previewPath } from "@/lib/utils";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -969,7 +969,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
     if (PREVIEW_SITE_URL) {
       const url = `${PREVIEW_SITE_URL}${pagePath}`;
       if (PREVIEW_IN_IFRAME) {
-        openTab(`/admin/preview?url=${encodeURIComponent(url)}`, `Preview: ${doc.slug}`, true);
+        openTab(previewPath(url), `Preview: ${doc.slug}`, true);
       } else {
         window.open(url, "_blank", "noopener,noreferrer");
       }
@@ -980,7 +980,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
         if (res.ok) {
           const { url: baseUrl } = await res.json() as { url: string };
           const url = `${baseUrl}${pagePath}`;
-          openTab(`/admin/preview?url=${encodeURIComponent(url)}`, `Preview: ${doc.slug}`, true);
+          openTab(previewPath(url), `Preview: ${doc.slug}`, true);
         }
       } catch { /* ignore */ }
     }
