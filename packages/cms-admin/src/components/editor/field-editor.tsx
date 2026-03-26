@@ -342,7 +342,7 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
       );
 
     case "richtext":
-      return <RichTextEditor value={strVal} onChange={onChange} disabled={locked} features={field.features} stickyOffset={0} />;
+      return <RichTextEditor value={strVal} onChange={onChange} disabled={locked} features={field.features} />;
 
     case "relation":
       if (!field.collection) return <Input type="text" value={strVal} onChange={(e) => onChange(e.target.value)} disabled={locked} />;

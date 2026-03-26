@@ -2306,7 +2306,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
 
         {/* ── Main Toolbar ── */}
         {!disabled && editor && (
-          <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "2px", padding: "0.375rem 0.75rem", borderBottom: "1px solid var(--border)", position: stickyOffset > 0 ? "sticky" : "relative", top: stickyOffset > 0 ? stickyOffset : undefined, zIndex: 20, backgroundColor: "var(--background)", borderRadius: "0.5rem 0.5rem 0 0" }}>
+          <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "2px", padding: "0.375rem 0.75rem", borderBottom: "1px solid var(--border)", position: "sticky", top: stickyOffset, zIndex: 20, backgroundColor: "var(--background)", borderRadius: "0.5rem 0.5rem 0 0" }}>
 
             <Btn tooltip="Undo (⌘Z)" disabled={!editor.can().undo()}
               onClick={() => editor.chain().focus().undo().run()}>
