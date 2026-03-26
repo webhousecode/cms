@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import { Trash2, Copy, Check, Upload, LayoutGrid, List, FolderOpen, Folder, ChevronLeft, ChevronRight, Search, X, ZoomIn, ExternalLink, FileWarning, Music, Video, FileText, Code, File, Pencil, Sparkles, RefreshCw, Loader2, CheckSquare, Zap } from "lucide-react";
 import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
 import type { UsageRef } from "@/app/api/cms/media/usage/route";
@@ -51,7 +52,8 @@ export default function MediaPage() {
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<ViewMode>("grid");
   const [folder, setFolder] = useState<string>(""); // "" = all / root
-  const [query, setQuery] = useState("");
+  const searchParams = useSearchParams();
+  const [query, setQuery] = useState(searchParams.get("q") ?? "");
   const [page, setPage] = useState(1);
   const [copied, setCopied] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
@@ -65,6 +67,7 @@ export default function MediaPage() {
   const [typeFilter, setTypeFilter] = useState<string>(""); // "" = all
   const [aiFilter, setAiFilter] = useState<"" | "analyzed" | "not-analyzed">("");
   const [aiAnalyzedSet, setAiAnalyzedSet] = useState<Set<string>>(new Set());
+  const [aiMetaMap, setAiMetaMap] = useState<Record<string, { caption?: string; alt?: string; tags?: string[] }>>({});
   const [showBatchAnalyze, setShowBatchAnalyze] = useState(false);
   const [selecting, setSelecting] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -91,9 +94,15 @@ export default function MediaPage() {
 
   const loadAiAnalyzed = useCallback(async () => {
     try {
-      const res = await fetch("/api/media/ai-analyzed");
-      const keys: string[] = await res.json();
-      setAiAnalyzedSet(new Set(keys));
+      const res = await fetch("/api/media/ai-analyzed?meta=1");
+      const data = await res.json();
+      if (data && data.keys) {
+        setAiAnalyzedSet(new Set(data.keys as string[]));
+        setAiMetaMap(data.meta ?? {});
+      } else {
+        // Fallback for old response format (plain array)
+        setAiAnalyzedSet(new Set(data as string[]));
+      }
     } catch { /* ignore */ }
   }, []);
 
@@ -117,7 +126,16 @@ export default function MediaPage() {
     }
     if (query) {
       const q = query.toLowerCase();
-      return f.name.toLowerCase().includes(q) || f.folder.toLowerCase().includes(q);
+      if (f.name.toLowerCase().includes(q) || f.folder.toLowerCase().includes(q)) return true;
+      // Search in AI metadata (caption, alt, tags)
+      const aiKey = f.folder ? `${f.folder}/${f.name}` : f.name;
+      const ai = aiMetaMap[aiKey];
+      if (ai) {
+        if (ai.caption?.toLowerCase().includes(q)) return true;
+        if (ai.alt?.toLowerCase().includes(q)) return true;
+        if (ai.tags?.some((t) => t.toLowerCase().includes(q))) return true;
+      }
+      return false;
     }
     return true;
   });
