@@ -18,7 +18,17 @@ function PreviewFrame() {
     fetch("/api/preview-serve", { method: "POST" })
       .then((r) => r.ok ? r.json() as Promise<{ url: string }> : null)
       .then((d) => {
-        if (d?.url && d.url !== rawUrl) setLiveUrl(d.url);
+        if (!d?.url) return;
+        // Preserve the path from the original URL, only replace the base (host:port)
+        try {
+          const orig = new URL(rawUrl);
+          const fresh = new URL(d.url);
+          if (orig.host !== fresh.host) {
+            fresh.pathname = orig.pathname;
+            fresh.search = orig.search;
+            setLiveUrl(fresh.toString());
+          }
+        } catch { /* invalid URL, skip */ }
       })
       .catch(() => {});
   }, [rawUrl]);
