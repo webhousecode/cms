@@ -1070,13 +1070,14 @@ function Lightbox({ files, index, onNavigate, onClose, onCopy, copied, onDelete 
           )}
         </div>
 
-        {/* AI Metadata panel — right side */}
+        {/* Metadata panel — right side */}
         {(file.isImage || file.mediaType === "video") && (
           <div
             onClick={(e) => e.stopPropagation()}
-            style={{ width: "300px", flexShrink: 0, borderLeft: "1px solid rgba(255,255,255,0.08)", display: "flex", flexDirection: "column", overflow: "hidden" }}
+            style={{ width: "300px", flexShrink: 0, borderLeft: "1px solid rgba(255,255,255,0.08)", display: "flex", flexDirection: "column", overflowY: "auto" }}
           >
             <LightboxAIPanel imageUrl={file.url} />
+            {file.isImage && <LightboxExifPanel imageUrl={file.url} />}
           </div>
         )}
       </div>
@@ -1231,6 +1232,82 @@ function LightboxAIPanel({ imageUrl }: { imageUrl: string }) {
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+/* ─── Lightbox EXIF Panel ────────────────────────────────────── */
+function LightboxExifPanel({ imageUrl }: { imageUrl: string }) {
+  const [exif, setExif] = useState<{
+    make?: string; model?: string; date?: string;
+    gpsLat?: number; gpsLon?: number; gpsAlt?: number;
+    iso?: number; fNumber?: number; exposureTime?: number;
+    focalLength?: number; lens?: string; width?: number; height?: number;
+  } | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    setLoading(true);
+    setExif(null);
+    fetch(`/api/media/exif?file=${encodeURIComponent(imageUrl)}`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { if (d?.exif) setExif(d.exif); })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [imageUrl]);
+
+  if (loading) return null;
+  if (!exif) return null;
+
+  const lbl: React.CSSProperties = { fontSize: "0.65rem", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: "0.05em" };
+  const val: React.CSSProperties = { fontSize: "0.75rem", color: "rgba(255,255,255,0.8)", fontFamily: "monospace" };
+  const row: React.CSSProperties = { display: "flex", justifyContent: "space-between", alignItems: "baseline" };
+
+  return (
+    <div style={{ padding: "1rem 1.25rem", borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+      <p style={{ fontSize: "0.7rem", fontWeight: 600, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.75rem" }}>
+        EXIF Data
+      </p>
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+        {exif.make && exif.model && (
+          <div style={row}><span style={lbl}>Camera</span><span style={val}>{exif.make} {exif.model}</span></div>
+        )}
+        {exif.date && (
+          <div style={row}><span style={lbl}>Date</span><span style={val}>{new Date(exif.date).toLocaleDateString("da-DK", { year: "numeric", month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" })}</span></div>
+        )}
+        {exif.width && exif.height && (
+          <div style={row}><span style={lbl}>Size</span><span style={val}>{exif.width} × {exif.height}</span></div>
+        )}
+        {exif.lens && (
+          <div style={row}><span style={lbl}>Lens</span><span style={{ ...val, fontSize: "0.68rem" }}>{exif.lens}</span></div>
+        )}
+        {exif.fNumber && (
+          <div style={row}><span style={lbl}>Aperture</span><span style={val}>f/{exif.fNumber}</span></div>
+        )}
+        {exif.exposureTime && (
+          <div style={row}><span style={lbl}>Shutter</span><span style={val}>{exif.exposureTime < 1 ? `1/${Math.round(1 / exif.exposureTime)}` : `${exif.exposureTime}s`}</span></div>
+        )}
+        {exif.iso && (
+          <div style={row}><span style={lbl}>ISO</span><span style={val}>{exif.iso}</span></div>
+        )}
+        {exif.focalLength && (
+          <div style={row}><span style={lbl}>Focal length</span><span style={val}>{exif.focalLength}mm</span></div>
+        )}
+        {exif.gpsLat != null && exif.gpsLon != null && (
+          <div style={row}>
+            <span style={lbl}>GPS</span>
+            <a
+              href={`https://maps.google.com/?q=${exif.gpsLat},${exif.gpsLon}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{ ...val, color: "var(--primary)", textDecoration: "none", fontSize: "0.68rem" }}
+            >
+              {exif.gpsLat.toFixed(4)}°, {exif.gpsLon.toFixed(4)}°
+              {exif.gpsAlt != null ? ` (${Math.round(exif.gpsAlt)}m)` : ""}
+            </a>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
