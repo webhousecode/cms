@@ -142,8 +142,18 @@ function renderContent(raw: unknown): string {
   // If it starts with HTML tags, it's already HTML (from richtext editor)
   if (/^\s*</.test(s)) return s;
   // Otherwise treat as markdown
-  return marked.parse(s, { async: false }) as string;
+  let html = marked.parse(s, { async: false }) as string;
+  // Convert image title attributes to inline styles (float:left|width:303px)
+  html = html.replace(
+    /<img\s+([^>]*?)title="([^"]*(?:float|width|height|margin)[^"]*)"([^>]*?)>/gi,
+    (_match, pre, title, post) => {
+      const styles = title.split("|").map((p: string) => p.trim()).join("; ");
+      return `<img ${pre}style="${styles}"${post}>`;
+    },
+  );
+  return html;
 }
+
 
 const UPLOADS_DIR = join(import.meta.dirname, "public", "uploads");
 const VARIANT_WIDTHS = [400, 800, 1200, 1600];
