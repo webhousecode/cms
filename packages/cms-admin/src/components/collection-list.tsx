@@ -454,7 +454,9 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
               const prefix = urlPrefix.replace(/\/$/, "");
               const isHomepage = (prefix === "" || prefix === "/") && (doc.slug === "home" || doc.slug === "index");
               const category = typeof doc.data.category === "string" ? doc.data.category : "";
-              const slugPath = category ? `${category}/${doc.slug}` : doc.slug;
+              const prefixBase = prefix.split("/").pop() ?? "";
+              const useCategory = category && category !== prefixBase;
+              const slugPath = useCategory ? `${category}/${doc.slug}` : doc.slug;
               const pagePath = isHomepage ? "/" : `${prefix}/${slugPath}`;
               previewUrl = `${previewBase}${pagePath}`;
             }
