@@ -699,6 +699,11 @@ export default function MediaPage() {
       {/* ── Batch AI Analyze dialog ── */}
       {showBatchAnalyze && (
         <BatchAnalyzeDialog
+          selectedFiles={selecting && selected.size > 0 ? Array.from(selected).map((url) => {
+            const file = allFiles.find((f) => f.url === url);
+            if (!file) return "";
+            return file.folder ? `${file.folder}/${file.name}` : file.name;
+          }).filter(Boolean) : undefined}
           onClose={() => { setShowBatchAnalyze(false); loadAiAnalyzed(); }}
         />
       )}
@@ -1519,7 +1524,7 @@ function RenameDialog({ file, onConfirm, onCancel }: {
 type BatchState = "idle" | "running" | "done";
 type BatchLogEntry = { kind: "result" | "error"; filename: string; message: string };
 
-function BatchAnalyzeDialog({ onClose }: { onClose: () => void }) {
+function BatchAnalyzeDialog({ onClose, selectedFiles }: { onClose: () => void; selectedFiles?: string[] }) {
   const [state, setState] = useState<BatchState>("idle");
   const [overwriteSetting, setOverwriteSetting] = useState<"ask" | "skip" | "overwrite">("ask");
   const [overwriteChoice, setOverwriteChoice] = useState<boolean>(false);
@@ -1568,7 +1573,7 @@ function BatchAnalyzeDialog({ onClose }: { onClose: () => void }) {
       const res = await fetch("/api/media/analyze-batch", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ language: "da", overwrite: overwriteChoice }),
+        body: JSON.stringify({ language: "da", overwrite: overwriteChoice, files: selectedFiles }),
         signal: ctrl.signal,
       });
       if (!res.body) throw new Error("No response body");
@@ -1629,7 +1634,11 @@ function BatchAnalyzeDialog({ onClose }: { onClose: () => void }) {
         {/* Header */}
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
           <Sparkles style={{ width: "1.25rem", height: "1.25rem", color: "#F7BB2E", flexShrink: 0 }} />
-          <p style={{ fontWeight: 600, fontSize: "0.9rem", flex: 1 }}>AI Analyze All Images</p>
+          <p style={{ fontWeight: 600, fontSize: "0.9rem", flex: 1 }}>
+            {selectedFiles && selectedFiles.length > 0
+              ? `AI Analyze ${selectedFiles.length} Selected`
+              : "AI Analyze All Images"}
+          </p>
           <button type="button" onClick={onClose} style={{ display: "flex", alignItems: "center", border: "none", background: "transparent", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.25rem" }}>
             <X style={{ width: "1rem", height: "1rem" }} />
           </button>
