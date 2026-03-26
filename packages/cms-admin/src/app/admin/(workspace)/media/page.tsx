@@ -558,7 +558,7 @@ export default function MediaPage() {
           files={imageFiles}
           index={lightboxIndex}
           onNavigate={setLightboxIndex}
-          onClose={() => setLightboxIndex(null)}
+          onClose={() => { setLightboxIndex(null); loadAiAnalyzed(); }}
           onCopy={copyUrl}
           copied={copied}
           onDelete={readOnly ? () => {} : handleDelete}
