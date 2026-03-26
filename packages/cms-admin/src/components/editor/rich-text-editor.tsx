@@ -2202,6 +2202,35 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
       .finally(() => setMediaBrowserLoading(false));
   }
 
+  /** Try to auto-fill alt text from AI metadata for a just-inserted image */
+  const tryAutoFillAlt = useCallback((imageUrl: string) => {
+    if (!editor) return;
+    fetch(`/api/media/ai-meta?file=${encodeURIComponent(imageUrl)}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (!data || !data.alt) return;
+        // Find the image node with this src and update its alt
+        const { doc } = editor.state;
+        let found = false;
+        doc.descendants((node, pos) => {
+          if (found) return false;
+          if (node.type.name === "image" && node.attrs.src === imageUrl) {
+            // Only update if alt is still the filename (not manually set)
+            const currentAlt = node.attrs.alt ?? "";
+            const filename = imageUrl.split("/").pop() ?? "";
+            if (!currentAlt || currentAlt === filename) {
+              editor.chain().command(({ tr }) => {
+                tr.setNodeMarkup(pos, undefined, { ...node.attrs, alt: data.alt });
+                return true;
+              }).run();
+            }
+            found = true;
+          }
+        });
+      })
+      .catch(() => { /* ignore — alt fill is best-effort */ });
+  }, [editor]);
+
   const uploadImage = useCallback(async (file: File) => {
     setUploading(true);
     try {
@@ -2210,10 +2239,11 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
       const res = await fetch("/api/upload", { method: "POST", body: fd });
       const { url } = await res.json();
       editor?.chain().focus().setImage({ src: url, alt: file.name }).run();
+      tryAutoFillAlt(url);
     } finally {
       setUploading(false);
     }
-  }, [editor]);
+  }, [editor, tryAutoFillAlt]);
 
   const openBlockPicker = useCallback(() => {
     setReplacePos(null);
@@ -3141,6 +3171,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                             let storedUrl = item.url;
                             try { const u = new URL(item.url); storedUrl = u.pathname; } catch { /* already relative */ }
                             editor?.chain().focus().setImage({ src: storedUrl, alt: item.name }).run();
+                            tryAutoFillAlt(storedUrl);
                             setShowImageMediaBrowser(false);
                           }}
                           style={{

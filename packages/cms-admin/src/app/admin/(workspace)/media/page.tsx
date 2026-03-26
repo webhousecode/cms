@@ -63,6 +63,8 @@ export default function MediaPage() {
   const [renaming, setRenaming] = useState<MediaFile | null>(null);
   const [newFolder, setNewFolder] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>(""); // "" = all
+  const [aiAnalyzedSet, setAiAnalyzedSet] = useState<Set<string>>(new Set());
+  const [showBatchAnalyze, setShowBatchAnalyze] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const pageRef = useRef<HTMLDivElement>(null);
   const dragCounter = useRef(0);
@@ -80,10 +82,19 @@ export default function MediaPage() {
     setLoading(false);
   }, []);
 
+  const loadAiAnalyzed = useCallback(async () => {
+    try {
+      const res = await fetch("/api/media/ai-analyzed");
+      const keys: string[] = await res.json();
+      setAiAnalyzedSet(new Set(keys));
+    } catch { /* ignore */ }
+  }, []);
+
   useEffect(() => {
     loadFiles();
     loadUsage();
-  }, [loadFiles, loadUsage]);
+    loadAiAnalyzed();
+  }, [loadFiles, loadUsage, loadAiAnalyzed]);
 
   /* ── Derived state ────────────────────────────────────────── */
   const folders = Array.from(new Set(allFiles.map((f) => f.folder).filter(Boolean))).sort();
@@ -254,6 +265,17 @@ export default function MediaPage() {
       {/* ── Action bar ── */}
       <ActionBar
         actions={<>
+          {/* AI Batch Analyze */}
+          {!readOnly && (
+            <ActionButton
+              variant="secondary"
+              onClick={() => setShowBatchAnalyze(true)}
+              icon={<Sparkles style={{ width: 14, height: 14 }} />}
+            >
+              Analyze All
+            </ActionButton>
+          )}
+
           {/* View toggle */}
           <div style={{ display: "flex", border: "1px solid var(--border)", borderRadius: "6px", overflow: "hidden" }}>
             {(["grid", "list"] as ViewMode[]).map((v) => (
@@ -437,9 +459,9 @@ export default function MediaPage() {
           ) : (
             <>
               {view === "grid" ? (
-                <GridView files={paginated} copied={copied} deleting={deleting} onCopy={copyUrl} onDelete={readOnly ? () => {} : handleDelete} onOpen={openLightbox} onRename={readOnly ? () => {} : setRenaming} usageMap={usageMap} />
+                <GridView files={paginated} copied={copied} deleting={deleting} onCopy={copyUrl} onDelete={readOnly ? () => {} : handleDelete} onOpen={openLightbox} onRename={readOnly ? () => {} : setRenaming} usageMap={usageMap} aiAnalyzedSet={aiAnalyzedSet} />
               ) : (
-                <ListView files={paginated} copied={copied} deleting={deleting} onCopy={copyUrl} onDelete={readOnly ? () => {} : handleDelete} onOpen={openLightbox} onRename={readOnly ? () => {} : setRenaming} usageMap={usageMap} />
+                <ListView files={paginated} copied={copied} deleting={deleting} onCopy={copyUrl} onDelete={readOnly ? () => {} : handleDelete} onOpen={openLightbox} onRename={readOnly ? () => {} : setRenaming} usageMap={usageMap} aiAnalyzedSet={aiAnalyzedSet} />
               )}
 
               {/* ── Pagination ── */}
@@ -489,6 +511,13 @@ export default function MediaPage() {
           file={renaming}
           onConfirm={(newName) => handleRename(renaming, newName)}
           onCancel={() => setRenaming(null)}
+        />
+      )}
+
+      {/* ── Batch AI Analyze dialog ── */}
+      {showBatchAnalyze && (
+        <BatchAnalyzeDialog
+          onClose={() => { setShowBatchAnalyze(false); loadAiAnalyzed(); }}
         />
       )}
 
@@ -565,17 +594,20 @@ type ViewProps = {
   copied: string | null;
   deleting: string | null;
   usageMap: Record<string, UsageRef[]>;
+  aiAnalyzedSet: Set<string>;
   onCopy: (url: string) => void;
   onDelete: (file: MediaFile) => void;
   onOpen: (file: MediaFile) => void;
   onRename: (file: MediaFile) => void;
 };
 
-function GridView({ files, copied, deleting, usageMap, onCopy, onDelete, onOpen, onRename }: ViewProps) {
+function GridView({ files, copied, deleting, usageMap, aiAnalyzedSet, onCopy, onDelete, onOpen, onRename }: ViewProps) {
   return (
     <div style={{ padding: "1.25rem", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: "0.875rem" }}>
       {files.map((file) => {
         const usages = usageMap[file.url] ?? [];
+        const aiKey = file.folder ? `${file.folder}/${file.name}` : file.name;
+        const isAiAnalyzed = aiAnalyzedSet.has(aiKey);
         return (
           <div
             key={file.url}
@@ -594,6 +626,18 @@ function GridView({ files, copied, deleting, usageMap, onCopy, onDelete, onOpen,
                 <MediaIcon mediaType={file.mediaType} size="2rem" />
               )}
             </div>
+
+            {/* AI analyzed badge */}
+            {isAiAnalyzed && file.isImage && (
+              <span title="AI analyzed" style={{
+                position: "absolute", bottom: "calc(28% + 0.375rem)", right: "0.375rem",
+                background: "rgba(0,0,0,0.65)", backdropFilter: "blur(4px)",
+                color: "#F7BB2E", display: "flex", alignItems: "center", justifyContent: "center",
+                width: "1.25rem", height: "1.25rem", borderRadius: "9999px", pointerEvents: "none",
+              }}>
+                <Sparkles style={{ width: "0.6rem", height: "0.6rem" }} />
+              </span>
+            )}
 
             {/* Usage badge */}
             {usages.length > 0 && (
@@ -643,13 +687,13 @@ function GridView({ files, copied, deleting, usageMap, onCopy, onDelete, onOpen,
   );
 }
 
-function ListView({ files, copied, deleting, usageMap, onCopy, onDelete, onOpen, onRename }: ViewProps) {
+function ListView({ files, copied, deleting, usageMap, aiAnalyzedSet, onCopy, onDelete, onOpen, onRename }: ViewProps) {
   return (
     <div style={{ overflow: "auto" }}>
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem" }}>
         <thead>
           <tr style={{ borderBottom: "1px solid var(--border)" }}>
-            {["File", "Folder", "Size", "Date", "Used in", ""].map((h) => (
+            {["File", "Folder", "Size", "Date", "AI", "Used in", ""].map((h) => (
               <th key={h} style={{ padding: "0.5rem 1rem", textAlign: "left", fontFamily: "monospace", fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--muted-foreground)", fontWeight: 400 }}>{h}</th>
             ))}
           </tr>
@@ -657,6 +701,8 @@ function ListView({ files, copied, deleting, usageMap, onCopy, onDelete, onOpen,
         <tbody>
           {files.map((file) => {
             const usages = usageMap[file.url] ?? [];
+            const aiKey = file.folder ? `${file.folder}/${file.name}` : file.name;
+            const isAiAnalyzed = aiAnalyzedSet.has(aiKey);
             return (
               <tr key={file.url} className="group" style={{ borderBottom: "1px solid var(--border)" }}>
                 <td style={{ padding: "0.5rem 1rem", display: "flex", alignItems: "center", gap: "0.625rem" }}>
@@ -675,6 +721,13 @@ function ListView({ files, copied, deleting, usageMap, onCopy, onDelete, onOpen,
                 </td>
                 <td style={{ padding: "0.5rem 1rem", color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>{formatSize(file.size)}</td>
                 <td style={{ padding: "0.5rem 1rem", color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>{formatDate(file.createdAt)}</td>
+                <td style={{ padding: "0.5rem 1rem", whiteSpace: "nowrap" }}>
+                  {isAiAnalyzed && file.isImage ? (
+                    <span title="AI analyzed"><Sparkles style={{ width: "0.75rem", height: "0.75rem", color: "#F7BB2E" }} /></span>
+                  ) : (
+                    <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", opacity: 0.4 }}>—</span>
+                  )}
+                </td>
                 <td style={{ padding: "0.5rem 1rem", whiteSpace: "nowrap" }}>
                   {usages.length > 0 ? (
                     <span title={usages.map((u) => `${u.collection}/${u.slug}`).join("\n")} style={{
@@ -1129,6 +1182,204 @@ function RenameDialog({ file, onConfirm, onCancel }: {
           >
             Rename
           </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ─── Batch AI Analyze Dialog ─────────────────────────────── */
+type BatchState = "idle" | "running" | "done";
+type BatchLogEntry = { kind: "result" | "error"; filename: string; message: string };
+
+function BatchAnalyzeDialog({ onClose }: { onClose: () => void }) {
+  const [state, setState] = useState<BatchState>("idle");
+  const [total, setTotal] = useState(0);
+  const [skipped, setSkipped] = useState(0);
+  const [processed, setProcessed] = useState(0);
+  const [analyzed, setAnalyzed] = useState(0);
+  const [failed, setFailed] = useState(0);
+  const [log, setLog] = useState<BatchLogEntry[]>([]);
+  const abortRef = useRef<AbortController | null>(null);
+  const logEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    logEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [log]);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [onClose]);
+
+  async function runBatch() {
+    setState("running");
+    setLog([]);
+    setProcessed(0);
+    setAnalyzed(0);
+    setFailed(0);
+
+    const ctrl = new AbortController();
+    abortRef.current = ctrl;
+
+    try {
+      const res = await fetch("/api/media/analyze-batch", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ language: "da" }),
+        signal: ctrl.signal,
+      });
+      if (!res.body) throw new Error("No response body");
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buf = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buf += decoder.decode(value, { stream: true });
+        const lines = buf.split("\n");
+        buf = lines.pop() ?? "";
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          try {
+            const evt = JSON.parse(line);
+            if (evt.kind === "start") {
+              setTotal(evt.total);
+              setSkipped(evt.skipped);
+            } else if (evt.kind === "result") {
+              setProcessed((n) => n + 1);
+              setAnalyzed((n) => n + 1);
+              setLog((prev) => [...prev, { kind: "result", filename: evt.filename, message: evt.caption }]);
+            } else if (evt.kind === "error") {
+              setProcessed((n) => n + 1);
+              setFailed((n) => n + 1);
+              setLog((prev) => [...prev, { kind: "error", filename: evt.filename, message: evt.error }]);
+            } else if (evt.kind === "done") {
+              setState("done");
+            }
+          } catch { /* malformed line */ }
+        }
+      }
+    } catch (err: unknown) {
+      if ((err as Error).name !== "AbortError") setState("done");
+    }
+  }
+
+  function stop() {
+    abortRef.current?.abort();
+    setState("done");
+  }
+
+  const progress = total > 0 ? Math.round((processed / total) * 100) : 0;
+
+  return (
+    <div
+      style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
+      onClick={onClose}
+    >
+      <div
+        style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "12px", padding: "1.5rem", maxWidth: "560px", width: "90%", display: "flex", flexDirection: "column", gap: "1rem", maxHeight: "80vh" }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+          <Sparkles style={{ width: "1.25rem", height: "1.25rem", color: "#F7BB2E", flexShrink: 0 }} />
+          <p style={{ fontWeight: 600, fontSize: "0.9rem", flex: 1 }}>AI Analyze All Images</p>
+          <button type="button" onClick={onClose} style={{ display: "flex", alignItems: "center", border: "none", background: "transparent", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.25rem" }}>
+            <X style={{ width: "1rem", height: "1rem" }} />
+          </button>
+        </div>
+
+        {/* Stats */}
+        {state === "idle" && (
+          <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>
+            Analyzes all unprocessed images using AI vision. Each image gets a caption, alt-text, and tags.
+            This uses a 2-second delay between calls to respect rate limits.
+          </p>
+        )}
+
+        {(state === "running" || state === "done") && (
+          <div style={{ display: "flex", gap: "1rem", fontSize: "0.75rem", fontFamily: "monospace", color: "var(--muted-foreground)" }}>
+            <span>Total: {total}</span>
+            <span>Skipped: {skipped}</span>
+            <span style={{ color: "#4ade80" }}>Analyzed: {analyzed}</span>
+            {failed > 0 && <span style={{ color: "#f87171" }}>Failed: {failed}</span>}
+          </div>
+        )}
+
+        {/* Progress bar */}
+        {state === "running" && total > 0 && (
+          <div>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.375rem" }}>
+              <Loader2 style={{ width: "0.875rem", height: "0.875rem", animation: "spin 1s linear infinite", color: "var(--primary)" }} />
+              <span style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>
+                {processed} / {total} ({progress}%)
+              </span>
+            </div>
+            <div style={{ height: "4px", background: "var(--muted)", borderRadius: "2px", overflow: "hidden" }}>
+              <div style={{ height: "100%", width: `${progress}%`, background: "#F7BB2E", transition: "width 200ms" }} />
+            </div>
+          </div>
+        )}
+
+        {/* Log */}
+        {log.length > 0 && (
+          <div style={{
+            flex: 1, minHeight: 0, maxHeight: "300px", overflowY: "auto",
+            border: "1px solid var(--border)", borderRadius: "8px",
+            padding: "0.5rem", fontFamily: "monospace", fontSize: "0.7rem",
+            background: "var(--background)",
+          }}>
+            {log.map((entry, i) => (
+              <div key={i} style={{ padding: "0.2rem 0", display: "flex", gap: "0.5rem", alignItems: "flex-start" }}>
+                {entry.kind === "result" ? (
+                  <Check style={{ width: "0.7rem", height: "0.7rem", color: "#4ade80", flexShrink: 0, marginTop: "2px" }} />
+                ) : (
+                  <X style={{ width: "0.7rem", height: "0.7rem", color: "#f87171", flexShrink: 0, marginTop: "2px" }} />
+                )}
+                <span style={{ color: "var(--muted-foreground)" }}>{entry.filename}</span>
+                <span style={{ color: "var(--foreground)", opacity: 0.7, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
+                  {entry.message}
+                </span>
+              </div>
+            ))}
+            <div ref={logEndRef} />
+          </div>
+        )}
+
+        {/* Done message */}
+        {state === "done" && (
+          <p style={{ fontSize: "0.8rem", color: "#4ade80", fontWeight: 500 }}>
+            Done. {analyzed} images analyzed{failed > 0 ? `, ${failed} failed` : ""}.
+          </p>
+        )}
+
+        {/* Actions */}
+        <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
+          {state === "idle" && (
+            <>
+              <button type="button" onClick={onClose} style={{ padding: "0.4rem 1rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", cursor: "pointer", fontSize: "0.875rem" }}>
+                Cancel
+              </button>
+              <button type="button" onClick={runBatch} style={{ padding: "0.4rem 1rem", borderRadius: "6px", border: "none", background: "#F7BB2E", color: "#0D0D0D", cursor: "pointer", fontSize: "0.875rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "0.375rem" }}>
+                <Sparkles style={{ width: 14, height: 14 }} /> Start Analysis
+              </button>
+            </>
+          )}
+          {state === "running" && (
+            <button type="button" onClick={stop} style={{ padding: "0.4rem 1rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", cursor: "pointer", fontSize: "0.875rem" }}>
+              Stop
+            </button>
+          )}
+          {state === "done" && (
+            <button type="button" onClick={onClose} style={{ padding: "0.4rem 1rem", borderRadius: "6px", border: "none", background: "var(--primary)", color: "var(--primary-foreground)", cursor: "pointer", fontSize: "0.875rem" }}>
+              Close
+            </button>
+          )}
         </div>
       </div>
     </div>
