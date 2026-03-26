@@ -81,8 +81,10 @@ export default function MediaPage() {
   const loadFiles = useCallback(async () => {
     const res = await fetch("/api/media");
     const data = await res.json();
-    // Filter out generated WebP variants (hero-800w.webp etc.) — not user-uploaded
-    const files = Array.isArray(data) ? data.filter((f: { name: string }) => !/-\d+w\.webp$/i.test(f.name)) : [];
+    // Filter out generated WebP variants + dotfiles (.gitignore etc.)
+    const files = Array.isArray(data) ? data.filter((f: { name: string }) =>
+      !/-\d+w\.webp$/i.test(f.name) && !f.name.startsWith(".")
+    ) : [];
     setAllFiles(files);
     setLoading(false);
   }, []);
