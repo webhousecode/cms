@@ -9,7 +9,8 @@ import { readdir, readFile, writeFile, stat } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { getActiveSitePaths } from "@/lib/site-paths";
-import { generateVariants, isProcessableImage, variantFilename, DEFAULT_VARIANTS } from "@/lib/media/image-processor";
+import { generateVariants, isProcessableImage, variantFilename, extractExif, DEFAULT_VARIANTS } from "@/lib/media/image-processor";
+import { appendMediaMeta } from "@/lib/media/media-meta";
 
 export async function POST() {
   try {
@@ -45,6 +46,15 @@ export async function POST() {
           await writeFile(path.join(file.dir, v.filename), v.buffer);
           totalSaved += inputBuffer.length - v.size;
         }
+
+        // Extract and persist EXIF metadata
+        try {
+          const exif = await extractExif(inputBuffer);
+          if (exif) {
+            const relKey = path.relative(uploadDir, file.fullPath);
+            await appendMediaMeta(relKey, { exif });
+          }
+        } catch { /* non-fatal */ }
 
         processed++;
       } catch (err) {

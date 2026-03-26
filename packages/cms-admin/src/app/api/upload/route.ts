@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getMediaAdapter } from "@/lib/media";
+import { writeFile } from "node:fs/promises";
+import { join } from "node:path";
+import { generateVariants, isProcessableImage, extractExif } from "@/lib/media/image-processor";
+import { getActiveSitePaths } from "@/lib/site-paths";
 
 const UPLOAD_BASE = process.env.UPLOAD_BASE ?? "";
 
@@ -25,6 +29,36 @@ export async function POST(req: NextRequest) {
     const adapter = await getMediaAdapter();
     const result = await adapter.uploadFile(filename, buffer, folder || undefined);
     const url = adapter.type === "filesystem" ? `${UPLOAD_BASE}${result.url}` : result.url;
+
+    // F44: Auto-generate WebP variants + extract EXIF on upload
+    if (adapter.type === "filesystem" && isProcessableImage(filename)) {
+      try {
+        const sitePaths = await getActiveSitePaths();
+        const uploadDir = folder
+          ? join(sitePaths.uploadDir, folder)
+          : sitePaths.uploadDir;
+
+        // Generate WebP variants
+        const variants = await generateVariants(buffer, filename);
+        for (const v of variants) {
+          await writeFile(join(uploadDir, v.filename), v.buffer);
+        }
+        if (variants.length > 0) {
+          console.log(`[upload] Generated ${variants.length} WebP variants for ${filename}`);
+        }
+
+        // Extract and persist EXIF metadata
+        const exif = await extractExif(buffer);
+        if (exif) {
+          const { appendMediaMeta } = await import("@/lib/media/media-meta");
+          await appendMediaMeta(folder ? `${folder}/${filename}` : filename, { exif });
+        }
+      } catch (err) {
+        // Non-fatal — upload succeeded, variants/exif are bonus
+        console.error("[upload] Post-processing error:", err instanceof Error ? err.message : err);
+      }
+    }
+
     return NextResponse.json({ url, folder, name: filename });
   } catch (err) {
     console.error("[upload] error:", err);

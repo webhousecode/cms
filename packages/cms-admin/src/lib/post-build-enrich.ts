@@ -91,6 +91,12 @@ export async function enrichDist(distDir: string, contentDir: string, config: En
     // Inject JSON-LD before </body>
     html = injectJsonLd(html, info, config);
 
+    // F44: Upgrade <img> to <picture> with WebP srcset when variants exist
+    const uploadsDir = path.join(distDir, "uploads");
+    if (existsSync(uploadsDir)) {
+      html = upgradeImagesInHtml(html, uploadsDir);
+    }
+
     writeFileSync(file.fullPath, html);
   }
 
@@ -595,4 +601,27 @@ function resolveImage(src: string, config: EnrichmentConfig): string {
   // Relative path → absolute URL
   const abs = src.startsWith("/") ? src : "/" + src;
   return config.baseUrl + config.basePath + abs;
+}
+
+// ── F44: Image → Picture upgrade ─────────────────────────────
+
+const VARIANT_WIDTHS = [400, 800, 1200, 1600];
+
+/** Upgrade <img src="/uploads/x.jpg"> → <picture> with WebP srcset */
+function upgradeImagesInHtml(html: string, uploadsDir: string): string {
+  return html.replace(
+    /<img\s+([^>]*?)src="(\/uploads\/[^"]+\.(jpg|jpeg|png))"([^>]*?)>/gi,
+    (match, pre, src, _ext, post) => {
+      const base = src.replace(/\.[^.]+$/, "");
+      const srcsetParts = VARIANT_WIDTHS
+        .map((w) => ({ path: `${base}-${w}w.webp`, w }))
+        .filter((v) => existsSync(path.join(uploadsDir, "..", v.path.slice(1))));
+      if (srcsetParts.length === 0) return match;
+      const srcset = srcsetParts.map((v) => `${v.path} ${v.w}w`).join(", ");
+      return `<picture>` +
+        `<source srcset="${srcset}" type="image/webp" sizes="(max-width: 800px) 100vw, 800px">` +
+        `<img ${pre}src="${src}"${post}>` +
+        `</picture>`;
+    },
+  );
 }

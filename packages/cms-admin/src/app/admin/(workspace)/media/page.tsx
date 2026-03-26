@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Trash2, Copy, Check, Upload, LayoutGrid, List, FolderOpen, Folder, ChevronLeft, ChevronRight, Search, X, ZoomIn, ExternalLink, FileWarning, Music, Video, FileText, Code, File, Pencil, Sparkles, RefreshCw, Loader2, CheckSquare } from "lucide-react";
+import { Trash2, Copy, Check, Upload, LayoutGrid, List, FolderOpen, Folder, ChevronLeft, ChevronRight, Search, X, ZoomIn, ExternalLink, FileWarning, Music, Video, FileText, Code, File, Pencil, Sparkles, RefreshCw, Loader2, CheckSquare, Zap } from "lucide-react";
 import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
 import type { UsageRef } from "@/app/api/cms/media/usage/route";
 import { cn } from "@/lib/utils";
@@ -350,6 +350,22 @@ export default function MediaPage() {
                 icon={<Sparkles style={{ width: 14, height: 14 }} />}
               >
                 Analyze All
+              </ActionButton>
+
+              {/* F44: Batch optimize (WebP variants) */}
+              <ActionButton
+                variant="secondary"
+                onClick={async () => {
+                  const res = await fetch("/api/media/optimize-batch", { method: "POST" });
+                  if (res.ok) {
+                    const d = await res.json() as { processed: number; skipped: number; errors: number; savedMB: number };
+                    const { toast } = await import("sonner");
+                    toast.success(`Optimized ${d.processed} images (${d.savedMB} MB saved)${d.skipped ? `, ${d.skipped} skipped` : ""}${d.errors ? `, ${d.errors} errors` : ""}`);
+                  }
+                }}
+                icon={<Zap style={{ width: 14, height: 14 }} />}
+              >
+                Optimize All
               </ActionButton>
             </>
           ) : null}
