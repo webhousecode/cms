@@ -118,27 +118,22 @@ export default function SitesDashboard() {
   }
 
   function enterSite(site: SiteEntry) {
-    // Navigate first, then notify — prevents Sites page from reloading
+    // Set cookies, then full page load — no router.push race conditions
     setCookie("cms-active-site", site.id);
     setCookie("cms-active-org", activeOrgId);
-    router.push("/admin");
-    router.refresh();
-    // Fire events after push so header/sidebar update on the new page
-    setTimeout(() => {
-      window.dispatchEvent(new CustomEvent("cms-site-change", { detail: { siteId: site.id } }));
-      window.dispatchEvent(new CustomEvent("cms-registry-change"));
-      fetch("/api/admin/profile", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ lastActiveOrg: activeOrgId, lastActiveSite: site.id }),
-      }).catch(() => {});
-    }, 50);
+    // Persist on user record
+    fetch("/api/admin/profile", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ lastActiveOrg: activeOrgId, lastActiveSite: site.id }),
+    }).catch(() => {});
+    // Full page load — server reads fresh cookies, loads correct CMS config
+    window.location.href = "/admin";
   }
 
   function goToSiteSettings(site: SiteEntry) {
     persistSiteChoice(site.id);
-    router.push("/admin/settings");
-    router.refresh();
+    window.location.href = "/admin/settings";
   }
 
   if (!loaded) {

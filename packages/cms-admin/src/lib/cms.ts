@@ -105,17 +105,19 @@ export async function getAdminConfig(): Promise<CmsConfig> {
     throw new EmptyOrgError("No sites in active organization");
   }
 
-  const site = findSite(registry, activeOrgId, activeSiteId);
+  let site = findSite(registry, activeOrgId, activeSiteId);
   if (!site) {
+    // Cookie has stale/invalid site ID — try first site in active org
+    // Log so we can trace mismatches
+    console.warn(`[cms] Site "${activeSiteId}" not found in org "${activeOrgId}" — falling back`);
     const firstInOrg = activeOrg?.sites[0];
     if (firstInOrg) {
-      const instance = await getOrCreateInstance(activeOrgId, firstInOrg);
-      return instance.config;
+      site = firstInOrg;
+    } else {
+      const def = getDefaultSite(registry);
+      if (!def) throw new EmptyOrgError("No sites in active organization");
+      site = def.site;
     }
-    const def = getDefaultSite(registry);
-    if (!def) throw new EmptyOrgError("No sites in active organization");
-    const instance = await getOrCreateInstance(def.org.id, def.site);
-    return instance.config;
   }
 
   const instance = await getOrCreateInstance(activeOrgId, site);
