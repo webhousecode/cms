@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Trash2, Copy, Check, Upload, LayoutGrid, List, FolderOpen, Folder, ChevronLeft, ChevronRight, Search, X, ZoomIn, ExternalLink, FileWarning, Music, Video, FileText, Code, File, Pencil, Sparkles, RefreshCw, Loader2 } from "lucide-react";
+import { Trash2, Copy, Check, Upload, LayoutGrid, List, FolderOpen, Folder, ChevronLeft, ChevronRight, Search, X, ZoomIn, ExternalLink, FileWarning, Music, Video, FileText, Code, File, Pencil, Sparkles, RefreshCw, Loader2, CheckSquare } from "lucide-react";
 import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
 import type { UsageRef } from "@/app/api/cms/media/usage/route";
 import { cn } from "@/lib/utils";
@@ -66,6 +66,8 @@ export default function MediaPage() {
   const [aiFilter, setAiFilter] = useState<"" | "analyzed" | "not-analyzed">("");
   const [aiAnalyzedSet, setAiAnalyzedSet] = useState<Set<string>>(new Set());
   const [showBatchAnalyze, setShowBatchAnalyze] = useState(false);
+  const [selecting, setSelecting] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const inputRef = useRef<HTMLInputElement>(null);
   const pageRef = useRef<HTMLDivElement>(null);
   const dragCounter = useRef(0);
@@ -199,6 +201,33 @@ export default function MediaPage() {
     loadUsage();
   }
 
+  /* ── Bulk delete ────────────────────────────────────────── */
+  const [confirmBulk, setConfirmBulk] = useState(false);
+  async function bulkDelete() {
+    if (readOnly || selected.size === 0) return;
+    const urls = Array.from(selected);
+    setConfirmBulk(false);
+    for (const url of urls) {
+      const file = allFiles.find((f) => f.url === url);
+      if (!file) continue;
+      const pathSegments = file.folder ? `${file.folder}/${file.name}` : file.name;
+      await fetch(`/api/media/${encodeURIComponent(pathSegments)}`, { method: "DELETE" });
+    }
+    setAllFiles((prev) => prev.filter((f) => !selected.has(f.url)));
+    setSelected(new Set());
+    setSelecting(false);
+    loadUsage();
+  }
+
+  function toggleSelect(file: MediaFile) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(file.url)) next.delete(file.url);
+      else next.add(file.url);
+      return next;
+    });
+  }
+
   /* ── Rename ─────────────────────────────────────────────── */
   async function handleRename(file: MediaFile, newName: string) {
     if (readOnly) return;
@@ -272,16 +301,56 @@ export default function MediaPage() {
       {/* ── Action bar ── */}
       <ActionBar
         actions={<>
-          {/* AI Batch Analyze */}
-          {!readOnly && (
-            <ActionButton
-              variant="secondary"
-              onClick={() => setShowBatchAnalyze(true)}
-              icon={<Sparkles style={{ width: 14, height: 14 }} />}
-            >
-              Analyze All
-            </ActionButton>
-          )}
+          {/* Multi-select toggle + bulk actions */}
+          {!readOnly && selecting ? (
+            <>
+              <span style={{ fontSize: "0.75rem", color: "var(--foreground)", fontWeight: 500 }}>
+                {selected.size} selected
+              </span>
+              {selected.size > 0 && !confirmBulk && (
+                <ActionButton variant="secondary" onClick={() => setConfirmBulk(true)} icon={<Trash2 style={{ width: 14, height: 14, color: "var(--destructive)" }} />}>
+                  Delete
+                </ActionButton>
+              )}
+              {confirmBulk && (
+                <>
+                  <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
+                  <button onClick={bulkDelete}
+                    style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
+                      border: "none", background: "var(--destructive)", color: "#fff",
+                      cursor: "pointer", lineHeight: 1 }}>Yes</button>
+                  <button onClick={() => setConfirmBulk(false)}
+                    style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
+                      border: "1px solid var(--border)", background: "transparent",
+                      color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
+                </>
+              )}
+              <ActionButton variant="secondary" onClick={() => {
+                // Select all visible files
+                setSelected(new Set(filtered.map((f) => f.url)));
+              }}>
+                All
+              </ActionButton>
+              <ActionButton variant="secondary" onClick={() => { setSelecting(false); setSelected(new Set()); setConfirmBulk(false); }}>
+                Cancel
+              </ActionButton>
+            </>
+          ) : !readOnly ? (
+            <>
+              <ActionButton variant="secondary" onClick={() => setSelecting(true)} icon={<CheckSquare style={{ width: 14, height: 14 }} />}>
+                Select
+              </ActionButton>
+
+              {/* AI Batch Analyze */}
+              <ActionButton
+                variant="secondary"
+                onClick={() => setShowBatchAnalyze(true)}
+                icon={<Sparkles style={{ width: 14, height: 14 }} />}
+              >
+                Analyze All
+              </ActionButton>
+            </>
+          ) : null}
 
           {/* View toggle */}
           <div style={{ display: "flex", border: "1px solid var(--border)", borderRadius: "6px", overflow: "hidden" }}>
@@ -519,9 +588,9 @@ export default function MediaPage() {
           ) : (
             <>
               {view === "grid" ? (
-                <GridView files={paginated} copied={copied} deleting={deleting} onCopy={copyUrl} onDelete={readOnly ? () => {} : handleDelete} onOpen={openLightbox} onRename={readOnly ? () => {} : setRenaming} usageMap={usageMap} aiAnalyzedSet={aiAnalyzedSet} />
+                <GridView files={paginated} copied={copied} deleting={deleting} onCopy={copyUrl} onDelete={readOnly ? () => {} : handleDelete} onOpen={openLightbox} onRename={readOnly ? () => {} : setRenaming} usageMap={usageMap} aiAnalyzedSet={aiAnalyzedSet} selecting={selecting} selected={selected} onToggleSelect={toggleSelect} />
               ) : (
-                <ListView files={paginated} copied={copied} deleting={deleting} onCopy={copyUrl} onDelete={readOnly ? () => {} : handleDelete} onOpen={openLightbox} onRename={readOnly ? () => {} : setRenaming} usageMap={usageMap} aiAnalyzedSet={aiAnalyzedSet} />
+                <ListView files={paginated} copied={copied} deleting={deleting} onCopy={copyUrl} onDelete={readOnly ? () => {} : handleDelete} onOpen={openLightbox} onRename={readOnly ? () => {} : setRenaming} usageMap={usageMap} aiAnalyzedSet={aiAnalyzedSet} selecting={selecting} selected={selected} onToggleSelect={toggleSelect} />
               )}
 
               {/* ── Pagination ── */}
@@ -684,25 +753,43 @@ type ViewProps = {
   onDelete: (file: MediaFile) => void;
   onOpen: (file: MediaFile) => void;
   onRename: (file: MediaFile) => void;
+  selecting?: boolean;
+  selected?: Set<string>;
+  onToggleSelect?: (file: MediaFile) => void;
 };
 
-function GridView({ files, copied, deleting, usageMap, aiAnalyzedSet, onCopy, onDelete, onOpen, onRename }: ViewProps) {
+function GridView({ files, copied, deleting, usageMap, aiAnalyzedSet, onCopy, onDelete, onOpen, onRename, selecting, selected, onToggleSelect }: ViewProps) {
   return (
     <div style={{ padding: "1.25rem", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: "0.875rem" }}>
       {files.map((file) => {
         const usages = usageMap[file.url] ?? [];
         const aiKey = file.folder ? `${file.folder}/${file.name}` : file.name;
         const isAiAnalyzed = aiAnalyzedSet.has(aiKey);
+        const isSelected = selecting && selected?.has(file.url);
         return (
           <div
             key={file.url}
-            className="group relative rounded-lg border border-border bg-card"
-            style={{ aspectRatio: "1 / 1.15" }}
+            className="group relative rounded-lg border bg-card"
+            style={{ aspectRatio: "1 / 1.15", borderColor: isSelected ? "var(--primary)" : "var(--border)", boxShadow: isSelected ? "0 0 0 1px var(--primary)" : "none" }}
+            onClick={selecting ? () => onToggleSelect?.(file) : undefined}
           >
+            {/* Selection checkbox */}
+            {selecting && (
+              <div style={{
+                position: "absolute", top: "0.375rem", left: "0.375rem", zIndex: 5,
+                width: "1.25rem", height: "1.25rem", borderRadius: "4px",
+                border: isSelected ? "none" : "2px solid rgba(255,255,255,0.6)",
+                background: isSelected ? "var(--primary)" : "rgba(0,0,0,0.3)",
+                display: "flex", alignItems: "center", justifyContent: "center",
+                cursor: "pointer",
+              }}>
+                {isSelected && <Check style={{ width: "0.75rem", height: "0.75rem", color: "var(--primary-foreground)" }} />}
+              </div>
+            )}
             {/* Thumbnail */}
             <div
-              style={{ width: "100%", height: "72%", background: "var(--muted)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", borderRadius: "0.5rem 0.5rem 0 0", cursor: (file.isImage || file.mediaType === "video") ? "pointer" : "default", position: "relative" }}
-              onClick={() => (file.isImage || file.mediaType === "video") && onOpen(file)}
+              style={{ width: "100%", height: "72%", background: "var(--muted)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", borderRadius: "0.5rem 0.5rem 0 0", cursor: selecting ? "pointer" : (file.isImage || file.mediaType === "video") ? "pointer" : "default", position: "relative" }}
+              onClick={!selecting ? () => (file.isImage || file.mediaType === "video") && onOpen(file) : undefined}
             >
               {file.isImage ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -774,12 +861,13 @@ function GridView({ files, copied, deleting, usageMap, aiAnalyzedSet, onCopy, on
   );
 }
 
-function ListView({ files, copied, deleting, usageMap, aiAnalyzedSet, onCopy, onDelete, onOpen, onRename }: ViewProps) {
+function ListView({ files, copied, deleting, usageMap, aiAnalyzedSet, onCopy, onDelete, onOpen, onRename, selecting, selected, onToggleSelect }: ViewProps) {
   return (
     <div style={{ overflow: "auto" }}>
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem" }}>
         <thead>
           <tr style={{ borderBottom: "1px solid var(--border)" }}>
+            {selecting && <th style={{ padding: "0.5rem 0.5rem 0.5rem 1rem", width: "2rem" }} />}
             {["File", "Folder", "Size", "Date", "AI", "Used in", ""].map((h) => (
               <th key={h} style={{ padding: "0.5rem 1rem", textAlign: "left", fontFamily: "monospace", fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--muted-foreground)", fontWeight: 400 }}>{h}</th>
             ))}
@@ -791,7 +879,19 @@ function ListView({ files, copied, deleting, usageMap, aiAnalyzedSet, onCopy, on
             const aiKey = file.folder ? `${file.folder}/${file.name}` : file.name;
             const isAiAnalyzed = aiAnalyzedSet.has(aiKey);
             return (
-              <tr key={file.url} className="group" style={{ borderBottom: "1px solid var(--border)" }}>
+              <tr key={file.url} className="group" style={{ borderBottom: "1px solid var(--border)", cursor: selecting ? "pointer" : undefined }} onClick={selecting ? () => onToggleSelect?.(file) : undefined}>
+                {selecting && (
+                  <td style={{ padding: "0.5rem 0.5rem 0.5rem 1rem", width: "2rem" }}>
+                    <div style={{
+                      width: "1.1rem", height: "1.1rem", borderRadius: "3px",
+                      border: selected?.has(file.url) ? "none" : "2px solid var(--border)",
+                      background: selected?.has(file.url) ? "var(--primary)" : "transparent",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                    }}>
+                      {selected?.has(file.url) && <Check style={{ width: "0.7rem", height: "0.7rem", color: "var(--primary-foreground)" }} />}
+                    </div>
+                  </td>
+                )}
                 <td style={{ padding: "0.5rem 1rem", display: "flex", alignItems: "center", gap: "0.625rem" }}>
                   {file.isImage ? (
                     // eslint-disable-next-line @next/next/no-img-element
