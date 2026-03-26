@@ -611,6 +611,8 @@ function PropertiesPanel({ doc, collection, onClose, onSaved }: {
       onSaved(updated);
       router.replace(`/admin/${collection}/${slug}`);
       router.refresh();
+      // Trigger rebuild for static sites after slug rename
+      fetch("/api/preview-build", { method: "POST" }).catch(() => {});
     } else {
       const body = await res.json().catch(() => ({})) as { error?: string };
       setError(body.error ?? "Failed to save");
