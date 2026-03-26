@@ -38,8 +38,12 @@ export async function generateVariants(
   variants: VariantConfig[] = DEFAULT_VARIANTS,
   quality: number = 80,
 ): Promise<GeneratedVariant[]> {
-  const meta = await sharp(inputBuffer).metadata();
-  const originalWidth = meta.width ?? 9999;
+  // Use rotate() to get correct dimensions after EXIF orientation
+  const rotated = sharp(inputBuffer).rotate();
+  const meta = await rotated.metadata();
+  // After EXIF rotation, width/height may swap — use the rotated dimensions
+  const isRotated = meta.orientation && meta.orientation >= 5;
+  const originalWidth = isRotated ? (meta.height ?? 9999) : (meta.width ?? 9999);
   const results: GeneratedVariant[] = [];
 
   for (const v of variants) {
@@ -47,6 +51,7 @@ export async function generateVariants(
     if (v.width >= originalWidth) continue;
 
     const buffer = await sharp(inputBuffer)
+      .rotate() // auto-rotate based on EXIF orientation (iPhone photos)
       .resize(v.width, undefined, { fit: "inside", withoutEnlargement: true })
       .webp({ quality })
       .toBuffer();
