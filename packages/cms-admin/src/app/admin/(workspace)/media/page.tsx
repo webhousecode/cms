@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Trash2, Copy, Check, Upload, LayoutGrid, List, FolderOpen, Folder, ChevronLeft, ChevronRight, Search, X, ZoomIn, ExternalLink, FileWarning, Music, Video, FileText, Code, File, Pencil } from "lucide-react";
+import { Trash2, Copy, Check, Upload, LayoutGrid, List, FolderOpen, Folder, ChevronLeft, ChevronRight, Search, X, ZoomIn, ExternalLink, FileWarning, Music, Video, FileText, Code, File, Pencil, Sparkles, RefreshCw, Loader2 } from "lucide-react";
 import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
 import type { UsageRef } from "@/app/api/cms/media/usage/route";
 import { cn } from "@/lib/utils";
@@ -787,34 +787,45 @@ function Lightbox({ files, index, onNavigate, onClose, onCopy, copied, onDelete 
         </button>
       </div>
 
-      {/* Image area */}
-      <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" }} onClick={onClose}>
-        {/* Prev */}
-        {hasPrev && (
-          <button type="button" onClick={(e) => { e.stopPropagation(); onNavigate(index - 1); }}
-            style={{ position: "absolute", left: "1rem", zIndex: 2, width: "2.5rem", height: "2.5rem", borderRadius: "50%", border: "1px solid rgba(255,255,255,0.2)", background: "rgba(0,0,0,0.5)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}
-            className="hover:bg-white/20 transition-colors"
-          >
-            <ChevronLeft style={{ width: "1.25rem", height: "1.25rem" }} />
-          </button>
-        )}
+      {/* Image area + AI panel */}
+      <div style={{ flex: 1, display: "flex", overflow: "hidden" }} onClick={onClose}>
+        {/* Image */}
+        <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
+          {hasPrev && (
+            <button type="button" onClick={(e) => { e.stopPropagation(); onNavigate(index - 1); }}
+              style={{ position: "absolute", left: "1rem", zIndex: 2, width: "2.5rem", height: "2.5rem", borderRadius: "50%", border: "1px solid rgba(255,255,255,0.2)", background: "rgba(0,0,0,0.5)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}
+              className="hover:bg-white/20 transition-colors"
+            >
+              <ChevronLeft style={{ width: "1.25rem", height: "1.25rem" }} />
+            </button>
+          )}
 
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={file.url}
-          alt={file.name}
-          style={{ maxWidth: "calc(100% - 8rem)", maxHeight: "100%", objectFit: "contain", borderRadius: "4px", boxShadow: "0 8px 40px rgba(0,0,0,0.6)" }}
-          onClick={(e) => e.stopPropagation()}
-        />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={file.url}
+            alt={file.name}
+            style={{ maxWidth: "calc(100% - 8rem)", maxHeight: "100%", objectFit: "contain", borderRadius: "4px", boxShadow: "0 8px 40px rgba(0,0,0,0.6)" }}
+            onClick={(e) => e.stopPropagation()}
+          />
 
-        {/* Next */}
-        {hasNext && (
-          <button type="button" onClick={(e) => { e.stopPropagation(); onNavigate(index + 1); }}
-            style={{ position: "absolute", right: "1rem", zIndex: 2, width: "2.5rem", height: "2.5rem", borderRadius: "50%", border: "1px solid rgba(255,255,255,0.2)", background: "rgba(0,0,0,0.5)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}
-            className="hover:bg-white/20 transition-colors"
+          {hasNext && (
+            <button type="button" onClick={(e) => { e.stopPropagation(); onNavigate(index + 1); }}
+              style={{ position: "absolute", right: "1rem", zIndex: 2, width: "2.5rem", height: "2.5rem", borderRadius: "50%", border: "1px solid rgba(255,255,255,0.2)", background: "rgba(0,0,0,0.5)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}
+              className="hover:bg-white/20 transition-colors"
+            >
+              <ChevronRight style={{ width: "1.25rem", height: "1.25rem" }} />
+            </button>
+          )}
+        </div>
+
+        {/* AI Metadata panel — right side */}
+        {file.isImage && (
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{ width: "300px", flexShrink: 0, borderLeft: "1px solid rgba(255,255,255,0.08)", display: "flex", flexDirection: "column", overflow: "hidden" }}
           >
-            <ChevronRight style={{ width: "1.25rem", height: "1.25rem" }} />
-          </button>
+            <LightboxAIPanel imageUrl={file.url} />
+          </div>
         )}
       </div>
 
@@ -827,6 +838,147 @@ function Lightbox({ files, index, onNavigate, onClose, onCopy, copied, onDelete 
         <span style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.35)", fontFamily: "monospace" }}>{formatDate(file.createdAt)}</span>
         {file.folder && <span style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.35)", fontFamily: "monospace" }}>/{file.folder}</span>}
       </div>
+    </div>
+  );
+}
+
+/* ─── Lightbox AI Panel ──────────────────────────────────────── */
+function LightboxAIPanel({ imageUrl }: { imageUrl: string }) {
+  const [meta, setMeta] = useState<{ caption: string | null; alt: string | null; tags: string[]; analyzedAt: string; provider: string | null } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLoading(true);
+    setMeta(null);
+    setError(null);
+    fetch(`/api/media/ai-meta?file=${encodeURIComponent(imageUrl)}`)
+      .then((r) => r.json())
+      .then((data) => { setMeta(data); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, [imageUrl]);
+
+  async function runAnalysis() {
+    setAnalyzing(true);
+    setError(null);
+    try {
+      const filename = imageUrl.replace(/^\/(api\/)?uploads\//, "");
+      const parts = filename.split("/");
+      const name = parts.pop()!;
+      const folder = parts.join("/");
+      const res = await fetch("/api/media/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ filename: name, folder }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        setError(data.error ?? "Analysis failed");
+        setAnalyzing(false);
+        return;
+      }
+      const result = await res.json();
+      setMeta({ caption: result.caption, alt: result.alt, tags: result.tags, analyzedAt: new Date().toISOString(), provider: result.provider ?? "unknown" });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Analysis failed");
+    }
+    setAnalyzing(false);
+  }
+
+  function copyText(text: string, field: string) {
+    navigator.clipboard.writeText(text);
+    setCopiedField(field);
+    setTimeout(() => setCopiedField(null), 2000);
+  }
+
+  const CopyIcon = ({ text, field }: { text: string; field: string }) => (
+    <button type="button" title={`Copy ${field}`} onClick={() => copyText(text, field)}
+      style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 20, height: 20, borderRadius: 4, border: "none", background: "transparent", cursor: "pointer", color: copiedField === field ? "#4ade80" : "rgba(255,255,255,0.4)", flexShrink: 0 }}>
+      {copiedField === field ? <Check style={{ width: 12, height: 12 }} /> : <Copy style={{ width: 12, height: 12 }} />}
+    </button>
+  );
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%", padding: "1rem", overflowY: "auto" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
+        <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "rgba(255,255,255,0.9)", display: "flex", alignItems: "center", gap: "0.375rem" }}>
+          <Sparkles style={{ width: 14, height: 14 }} /> AI Analysis
+        </span>
+        {meta && !analyzing && (
+          <button type="button" title="Re-analyze" onClick={runAnalysis}
+            style={{ display: "flex", alignItems: "center", border: "none", background: "transparent", cursor: "pointer", color: "rgba(255,255,255,0.4)" }}>
+            <RefreshCw style={{ width: 12, height: 12 }} />
+          </button>
+        )}
+      </div>
+
+      {loading && (
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "rgba(255,255,255,0.4)", fontSize: "0.8rem" }}>
+          <Loader2 style={{ width: 14, height: 14, animation: "spin 1s linear infinite" }} /> Loading…
+        </div>
+      )}
+
+      {!loading && !meta && !analyzing && (
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.75rem", paddingTop: "2rem" }}>
+          <p style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.4)" }}>No AI analysis yet.</p>
+          <button type="button" onClick={runAnalysis}
+            style={{ display: "inline-flex", alignItems: "center", gap: "0.375rem", padding: "0.4rem 1rem", borderRadius: "6px", border: "none", background: "#F7BB2E", color: "#0D0D0D", cursor: "pointer", fontSize: "0.8rem", fontWeight: 600 }}>
+            <Sparkles style={{ width: 14, height: 14 }} /> Analyze
+          </button>
+        </div>
+      )}
+
+      {analyzing && (
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", color: "rgba(255,255,255,0.4)", fontSize: "0.8rem", justifyContent: "center", paddingTop: "2rem" }}>
+          <Loader2 style={{ width: 14, height: 14, animation: "spin 1s linear infinite" }} /> Analyzing…
+        </div>
+      )}
+
+      {error && <p style={{ fontSize: "0.75rem", color: "#f87171", marginBottom: "0.5rem" }}>{error}</p>}
+
+      {meta && (
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          {/* Caption */}
+          <div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
+              <span style={{ fontSize: "0.6rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "rgba(255,255,255,0.35)" }}>Caption</span>
+              {meta.caption && <CopyIcon text={meta.caption} field="caption" />}
+            </div>
+            <p style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.85)", margin: 0, lineHeight: 1.5 }}>{meta.caption ?? "—"}</p>
+          </div>
+
+          {/* Alt-text */}
+          <div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
+              <span style={{ fontSize: "0.6rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "rgba(255,255,255,0.35)" }}>Alt-text</span>
+              {meta.alt && <CopyIcon text={meta.alt} field="alt" />}
+            </div>
+            <p style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.85)", margin: 0, fontFamily: "monospace", lineHeight: 1.5 }}>{meta.alt ?? "—"}</p>
+          </div>
+
+          {/* Tags */}
+          <div>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
+              <span style={{ fontSize: "0.6rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "rgba(255,255,255,0.35)" }}>Tags</span>
+              {meta.tags.length > 0 && <CopyIcon text={meta.tags.join(", ")} field="tags" />}
+            </div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "4px" }}>
+              {meta.tags.length > 0 ? meta.tags.map((tag) => (
+                <span key={tag} style={{ fontSize: "0.7rem", padding: "2px 8px", borderRadius: "9999px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.12)", color: "rgba(255,255,255,0.8)" }}>{tag}</span>
+              )) : <span style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.35)" }}>—</span>}
+            </div>
+          </div>
+
+          {/* Timestamp */}
+          {meta.analyzedAt && (
+            <p style={{ fontSize: "0.6rem", color: "rgba(255,255,255,0.25)", margin: 0, fontFamily: "monospace" }}>
+              {new Date(meta.analyzedAt).toLocaleString()} · {meta.provider}
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }
