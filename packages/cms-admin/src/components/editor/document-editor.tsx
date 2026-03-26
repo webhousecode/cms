@@ -537,6 +537,27 @@ function RevisionPanel({ collection, slug, currentData, onRestore, onClose }: {
 }
 
 /* ─── Properties panel ─────────────────────────────────────── */
+/** Check if a slug looks auto-generated (numeric ID, UUID, filename hash, etc.) */
+function isAutoSlug(s: string): boolean {
+  // Pure numbers or numbers with hyphens (e.g. "10828042-10205557498204127-...")
+  if (/^\d[\d-]*$/.test(s)) return true;
+  // UUID-like
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-/.test(s)) return true;
+  // Very long slug (>40 chars) with mostly numbers — likely a filename hash
+  if (s.length > 40 && (s.match(/\d/g)?.length ?? 0) > s.length * 0.5) return true;
+  return false;
+}
+
+function slugifyTitle(title: string): string {
+  return title.trim().toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // strip diacritics
+    .replace(/[æ]/g, "ae").replace(/[ø]/g, "oe").replace(/[å]/g, "aa")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 80);
+}
+
 function PropertiesPanel({ doc, collection, onClose, onSaved }: {
   doc: DocSnapshot;
   collection: string;
@@ -667,6 +688,27 @@ function PropertiesPanel({ doc, collection, onClose, onSaved }: {
           <p style={{ fontSize: "0.68rem", color: "var(--muted-foreground)", marginTop: "0.3rem" }}>
             Lowercase letters, numbers and hyphens only
           </p>
+          {/* Update slug from title button */}
+          {(() => {
+            const title = String(doc.data?.title ?? doc.data?.[Object.keys(doc.data)[0]] ?? "");
+            const suggested = slugifyTitle(title);
+            if (!suggested || suggested === slug) return null;
+            return (
+              <button
+                type="button"
+                onClick={() => setSlug(suggested)}
+                style={{
+                  marginTop: "0.35rem", padding: "0.2rem 0.5rem", borderRadius: "4px",
+                  border: "1px solid var(--border)", background: "transparent",
+                  color: "var(--muted-foreground)", fontSize: "0.68rem", cursor: "pointer",
+                  display: "flex", alignItems: "center", gap: "0.3rem",
+                }}
+                title={`Set slug to: ${suggested}`}
+              >
+                ↻ Update from title
+              </button>
+            );
+          })()}
         </div>
 
         {/* Status */}
@@ -828,6 +870,12 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
   async function save(status?: "draft" | "published") {
     setSaving(true);
     const nextStatus = status ?? doc.status;
+
+    // Auto-slug: if draft with auto-generated slug and title has changed, include slug rename
+    const titleFieldName = colConfig.fields[0]?.name ?? "title";
+    const title = String(doc.data[titleFieldName] ?? "");
+    const autoSlug = (doc.status === "draft" && isAutoSlug(doc.slug) && title) ? slugifyTitle(title) : null;
+
     const res = await fetch(`/api/cms/${collection}/${doc.slug}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -839,12 +887,17 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
         // Always send publishAt so PATCH route can manage it; null clears it
         publishAt: nextStatus === "published" ? null : (doc.publishAt ?? null),
         unpublishAt: doc.unpublishAt ?? null,
+        ...(autoSlug && autoSlug !== doc.slug ? { slug: autoSlug } : {}),
       }),
     });
     if (res.ok) {
       const updated = (await res.json()) as DocSnapshot & { _deployTriggered?: boolean };
       const deployTriggered = updated._deployTriggered;
       setDoc(updated);
+      // Navigate to new slug if it changed
+      if (updated.slug !== doc.slug) {
+        router.replace(`/admin/${collection}/${updated.slug}`);
+      }
       setDirty(false);
       setSavedAt(new Date());
       startTransition(() => router.refresh());
