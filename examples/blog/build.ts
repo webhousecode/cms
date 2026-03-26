@@ -73,6 +73,8 @@ footer { border-top: 1px solid var(--color-border); padding: 1.5rem 0; margin-to
 .prose li { margin-bottom: 0.375rem; }
 .prose blockquote { border-left: 4px solid var(--color-primary); padding-left: 1rem; margin: 1.5rem 0; color: var(--color-muted); }
 .prose img { border-radius: var(--radius); margin: 1.5rem 0; }
+.prose img[style*="float:left"] { margin: 0.25rem 1.25rem 0.75rem 0; }
+.prose img[style*="float:right"] { margin: 0.25rem 0 0.75rem 1.25rem; }
 .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
 .card { border: 1px solid var(--color-border); border-radius: var(--radius); padding: 1.5rem; transition: box-shadow 0.2s; }
 .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
