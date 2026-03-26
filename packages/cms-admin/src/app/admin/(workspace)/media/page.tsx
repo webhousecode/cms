@@ -375,9 +375,23 @@ export default function MediaPage() {
               Type
             </p>
             {(() => {
-              // Build type list dynamically from actual files
+              // Pre-filter by folder + AI (but NOT type) so counts reflect active filters
+              const baseFiltered = allFiles.filter((f) => {
+                if (folder !== "" && f.folder !== folder) return false;
+                if (aiFilter) {
+                  const aiKey = f.folder ? `${f.folder}/${f.name}` : f.name;
+                  const isAnalyzed = aiAnalyzedSet.has(aiKey);
+                  if (aiFilter === "analyzed" && !isAnalyzed) return false;
+                  if (aiFilter === "not-analyzed" && isAnalyzed) return false;
+                }
+                if (query) {
+                  const q = query.toLowerCase();
+                  if (!f.name.toLowerCase().includes(q) && !f.folder.toLowerCase().includes(q)) return false;
+                }
+                return true;
+              });
               const typeCounts = new Map<string, number>();
-              for (const f of allFiles) {
+              for (const f of baseFiltered) {
                 const mt = f.mediaType ?? "other";
                 typeCounts.set(mt, (typeCounts.get(mt) ?? 0) + 1);
               }
@@ -393,7 +407,7 @@ export default function MediaPage() {
               ];
               return typeList;
             })().map((t) => {
-              const count = t.value ? allFiles.filter((f) => f.mediaType === t.value).length : allFiles.length;
+              const count = t.value ? filtered.filter((f) => f.mediaType === t.value).length : filtered.length;
               if (t.value && count === 0) return null;
               return (
                 <button
