@@ -31,7 +31,12 @@ function extractLinks(markdown: string): Array<{ text: string; url: string }> {
   let m: RegExpExecArray | null;
   while ((m = re.exec(markdown)) !== null) {
     const url = m[2].trim();
-    if (!url.startsWith("#")) found.push({ text: m[1] || url, url });
+    const text = m[1];
+    if (url.startsWith("#")) continue;
+    // Skip image-links: [![alt](img)](url) — extractLinks captures the outer link
+    // with text starting with "![" and url pointing to the image, not the link target
+    if (text.startsWith("![")) continue;
+    found.push({ text: text || url, url });
   }
   return found;
 }
@@ -44,6 +49,18 @@ function extractMarkdownImages(markdown: string): Array<{ text: string; url: str
   while ((m = re.exec(markdown)) !== null) {
     const url = m[2].trim();
     if (url) found.push({ text: m[1] || url, url });
+  }
+  return found;
+}
+
+/** Extract the outer link URL from linked-images: [![alt](img)](linkUrl) */
+function extractLinkedImageLinks(markdown: string): Array<{ text: string; url: string }> {
+  const found: Array<{ text: string; url: string }> = [];
+  const re = /\[!\[[^\]]*\]\([^)]+\)\]\(([^)\s]+)\)/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(markdown)) !== null) {
+    const url = m[1].trim();
+    if (url && !url.startsWith("#")) found.push({ text: "linked image", url });
   }
   return found;
 }
@@ -133,6 +150,10 @@ export async function runLinkCheck(
       for (const fieldName of richtextFields) {
         const content = String(doc.data?.[fieldName] ?? "");
         for (const link of extractLinks(content)) {
+          allLinks.push({ docCollection: col.name, docSlug: doc.slug, docTitle: title, field: fieldName, kind: "link", ...link });
+        }
+        // Outer links from linked-images: [![alt](img)](url)
+        for (const link of extractLinkedImageLinks(content)) {
           allLinks.push({ docCollection: col.name, docSlug: doc.slug, docTitle: title, field: fieldName, kind: "link", ...link });
         }
         // Images from richtext — both markdown ![alt](url) and HTML <img src="...">
