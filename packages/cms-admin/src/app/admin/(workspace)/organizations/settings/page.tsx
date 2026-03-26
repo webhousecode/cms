@@ -56,6 +56,8 @@ interface OrgCreds {
   backupRetentionDays: number;
   linkCheckSchedule: string;
   linkCheckTime: string;
+  // AI Image Analysis
+  aiImageOverwrite: string;
 }
 
 const CREDS_DEFAULTS: OrgCreds = {
@@ -84,6 +86,7 @@ const CREDS_DEFAULTS: OrgCreds = {
   backupRetentionDays: 0,
   linkCheckSchedule: "",
   linkCheckTime: "",
+  aiImageOverwrite: "",
 };
 
 export default function OrgSettingsPage() {
@@ -146,6 +149,7 @@ export default function OrgSettingsPage() {
           backupSchedule: s("backupSchedule"), backupTime: s("backupTime"),
           backupRetentionDays: n("backupRetentionDays"),
           linkCheckSchedule: s("linkCheckSchedule"), linkCheckTime: s("linkCheckTime"),
+          aiImageOverwrite: s("aiImageOverwrite"),
         });
       })
       .catch(() => {});
@@ -432,6 +436,24 @@ export default function OrgSettingsPage() {
                 <input type="number" value={creds.aiInteractivesMaxTokens || ""} onChange={(e) => setCreds((c) => ({ ...c, aiInteractivesMaxTokens: parseInt(e.target.value) || 0 }))}
                   placeholder="16384" style={credInputStyle} />
               </div>
+            </div>
+
+            {/* AI Image Analysis */}
+            <div style={{ borderTop: "1px solid var(--border)", paddingTop: "0.75rem", marginTop: "0.25rem" }}>
+              <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Image Analysis — batch overwrite</label>
+              <p style={{ fontSize: "0.68rem", color: "var(--muted-foreground)", margin: "0.25rem 0 0.5rem" }}>
+                Default for all sites in this org. Sites can override.
+              </p>
+              <select
+                value={creds.aiImageOverwrite}
+                onChange={(e) => setCreds((c) => ({ ...c, aiImageOverwrite: e.target.value }))}
+                style={{ ...credInputStyle, fontFamily: "inherit", cursor: "pointer" }}
+              >
+                <option value="">Inherit default (ask)</option>
+                <option value="ask">Ask each time</option>
+                <option value="skip">Skip already analyzed</option>
+                <option value="overwrite">Always re-analyze</option>
+              </select>
             </div>
           </div>
         </>
