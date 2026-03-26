@@ -16,6 +16,9 @@ importers:
       exif-reader:
         specifier: ^2.0.3
         version: 2.0.3
+      marked:
+        specifier: ^15.0.12
+        version: 15.0.12
       sharp:
         specifier: ^0.34.5
         version: 0.34.5

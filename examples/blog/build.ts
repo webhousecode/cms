@@ -9,6 +9,7 @@
  */
 import { readdirSync, readFileSync, mkdirSync, writeFileSync, existsSync, cpSync } from "node:fs";
 import { join, dirname } from "node:path";
+import { marked } from "marked";
 
 const BASE_PATH = process.env.BASE_PATH ?? "";
 const OUT_DIR = process.env.BUILD_OUT_DIR ?? "dist";
@@ -134,10 +135,43 @@ function formatDate(d: unknown): string {
   catch { return String(d); }
 }
 
+/** Render content — parse markdown if needed, pass HTML through */
+function renderContent(raw: unknown): string {
+  const s = String(raw ?? "");
+  if (!s) return "";
+  // If it starts with HTML tags, it's already HTML (from richtext editor)
+  if (/^\s*</.test(s)) return s;
+  // Otherwise treat as markdown
+  return marked.parse(s, { async: false }) as string;
+}
+
+const UPLOADS_DIR = join(import.meta.dirname, "public", "uploads");
+const VARIANT_WIDTHS = [400, 800, 1200, 1600];
+
+/** Upgrade <img> to <picture> with WebP srcset when variants exist */
+function upgradeImages(html: string): string {
+  return html.replace(
+    /<img\s+([^>]*?)src="(\/uploads\/[^"]+\.(jpg|jpeg|png))"([^>]*?)>/gi,
+    (match, pre, src, _ext, post) => {
+      const base = src.replace(/\.[^.]+$/, "");
+      const srcsetParts = VARIANT_WIDTHS
+        .map((w) => ({ path: `${base}-${w}w.webp`, w }))
+        .filter((v) => existsSync(join(UPLOADS_DIR, v.path.replace(/^\/uploads\//, ""))));
+      if (srcsetParts.length === 0) return match;
+      const srcset = srcsetParts.map((v) => `${bp(v.path)} ${v.w}w`).join(", ");
+      return `<picture>` +
+        `<source srcset="${srcset}" type="image/webp" sizes="(max-width: 800px) 100vw, 800px">` +
+        `<img ${pre}src="${bp(src)}"${post}>` +
+        `</picture>`;
+    },
+  );
+}
+
 function write(relPath: string, html: string): void {
+  const upgraded = upgradeImages(html);
   const fullPath = join(import.meta.dirname, OUT_DIR, relPath);
   mkdirSync(dirname(fullPath), { recursive: true });
-  writeFileSync(fullPath, html);
+  writeFileSync(fullPath, upgraded);
   console.log(`  ${relPath}`);
 }
 
@@ -179,14 +213,13 @@ write("posts/index.html", layout("All Posts", `
 
 // Individual posts
 for (const post of posts) {
-  const content = String(post.data.content ?? "");
   write(`posts/${post.slug}/index.html`, layout(String(post.data.title), `
     <article>
       <div class="post-header">
         <h1>${esc(post.data.title)}</h1>
         <div class="post-meta">${formatDate(post.data.date)}${post.data.author ? ` · ${esc(post.data.author)}` : ""}</div>
       </div>
-      <div class="prose">${content}</div>
+      <div class="prose">${renderContent(post.data.content)}</div>
     </article>
     <p style="margin-top: 3rem;"><a href="${bp("/posts/")}">← All posts</a></p>
   `, String(post.data.excerpt ?? "")));
@@ -199,7 +232,7 @@ for (const page of pages) {
   write(path, layout(String(page.data.title), `
     <article class="prose">
       <h1>${esc(page.data.title)}</h1>
-      ${String(page.data.content ?? "")}
+      ${renderContent(page.data.content)}
     </article>
   `));
 }
