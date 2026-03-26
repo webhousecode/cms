@@ -55,6 +55,10 @@ export interface SiteConfig {
   /** Auto-deploy when content is saved */
   deployOnSave: boolean;
 
+  /** AI Image Analysis: how to handle already-analyzed images in batch
+   *  "ask" = prompt user, "skip" = skip existing, "overwrite" = always re-analyze */
+  aiImageOverwrite: "ask" | "skip" | "overwrite";
+
   /** Webhook URLs per automation (ordered, multiple per type) */
   backupWebhooks: { id: string; url: string }[];
   linkCheckWebhooks: { id: string; url: string }[];
@@ -101,6 +105,7 @@ async function defaults(): Promise<SiteConfig> {
     backupRetentionDays: 30,
     linkCheckSchedule: "off",
     linkCheckTime: "04:00",
+    aiImageOverwrite: "ask",
     backupWebhooks: [],
     linkCheckWebhooks: [],
     publishWebhooks: [],

@@ -33,6 +33,8 @@ export interface OrgSettings {
   aiInteractivesMaxTokens?: number;
   aiContentModel?: string;
   aiContentMaxTokens?: number;
+  /** AI Image Analysis: batch overwrite behavior */
+  aiImageOverwrite?: "ask" | "skip" | "overwrite";
 
   // Email
   resendApiKey?: string;

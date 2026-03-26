@@ -16,6 +16,7 @@ interface AutomationConfig {
   linkCheckWebhooks: WebhookEntry[];
   publishWebhooks: WebhookEntry[];
   agentDefaultWebhooks: WebhookEntry[];
+  aiImageOverwrite: "ask" | "skip" | "overwrite";
 }
 
 const DEFAULTS: AutomationConfig = {
@@ -28,6 +29,7 @@ const DEFAULTS: AutomationConfig = {
   linkCheckWebhooks: [],
   publishWebhooks: [],
   agentDefaultWebhooks: [],
+  aiImageOverwrite: "ask",
 };
 
 export function ToolsSettingsPanel() {
@@ -54,6 +56,7 @@ export function ToolsSettingsPanel() {
           linkCheckWebhooks: data.linkCheckWebhooks ?? [],
           publishWebhooks: data.publishWebhooks ?? [],
           agentDefaultWebhooks: data.agentDefaultWebhooks ?? [],
+          aiImageOverwrite: data.aiImageOverwrite ?? "ask",
         });
       })
       .catch(() => {});
@@ -219,6 +222,27 @@ export function ToolsSettingsPanel() {
           webhooks={config.agentDefaultWebhooks}
           onChange={(w) => updateConfig((c) => ({ ...c, agentDefaultWebhooks: w }))}
         />
+      </SettingsCard>
+
+      <SectionHeading>AI Image Analysis</SectionHeading>
+      <SettingsCard>
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+          <label style={{ fontSize: "0.8rem", fontWeight: 500 }}>
+            Batch overwrite behavior
+          </label>
+          <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>
+            When running &quot;Analyze All&quot;, how should already-analyzed images be handled?
+          </p>
+          <CustomSelect
+            value={config.aiImageOverwrite}
+            onChange={(v) => updateConfig((c) => ({ ...c, aiImageOverwrite: v as AutomationConfig["aiImageOverwrite"] }))}
+            options={[
+              { value: "ask", label: "Ask each time" },
+              { value: "skip", label: "Skip already analyzed" },
+              { value: "overwrite", label: "Always re-analyze" },
+            ]}
+          />
+        </div>
       </SettingsCard>
 
     </div>
