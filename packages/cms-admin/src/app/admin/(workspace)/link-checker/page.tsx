@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Link2, Play, CheckCircle, XCircle, ArrowRight, ExternalLink, Loader2, Wrench, Check, X } from "lucide-react";
+import { Link2, Play, CheckCircle, XCircle, ArrowRight, ExternalLink, Loader2, Wrench, Check, X, ImageOff, Image as ImageIcon } from "lucide-react";
 import type { LinkResult, ProgressEvent } from "@/app/api/check-links/route";
 import type { LinkCheckRecord } from "@/lib/link-check-store";
 import { cn } from "@/lib/utils";
@@ -159,7 +159,7 @@ export default function LinkCheckerPage() {
   const [total, setTotal] = useState(0);
   const [checked, setChecked] = useState(0);
   const [results, setResults] = useState<LinkResult[]>([]);
-  const [filter, setFilter] = useState<"all" | "broken" | "redirect" | "ok">("broken");
+  const [filter, setFilter] = useState<"all" | "broken" | "redirect" | "ok" | "broken-images">("broken");
   const [checkedAt, setCheckedAt] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const { openTab } = useTabs();
@@ -230,12 +230,15 @@ export default function LinkCheckerPage() {
     setState("idle");
   }
 
-  const broken = results.filter((r) => r.status === "broken" || r.status === "error");
+  const broken = results.filter((r) => (r.status === "broken" || r.status === "error") && r.kind !== "image");
+  const brokenImages = results.filter((r) => (r.status === "broken" || r.status === "error") && r.kind === "image");
+  const allBroken = results.filter((r) => r.status === "broken" || r.status === "error");
   const redirects = results.filter((r) => r.status === "redirect");
   const ok = results.filter((r) => r.status === "ok");
 
   const visible = filter === "all" ? results
     : filter === "broken" ? broken
+    : filter === "broken-images" ? brokenImages
     : filter === "redirect" ? redirects
     : ok;
 
@@ -260,7 +263,7 @@ export default function LinkCheckerPage() {
         <ActionBarBreadcrumb items={["Tools", "Link Checker"]} />
         {state === "done" && (
           <span style={{ fontSize: "0.75rem", color: "var(--muted-foreground)" }}>
-            · {results.length} links · {broken.length} broken · {redirects.length} redirects
+            · {results.length} checked · {broken.length} broken links · {brokenImages.length} broken images · {redirects.length} redirects
           </span>
         )}
       </ActionBar>
@@ -278,8 +281,8 @@ export default function LinkCheckerPage() {
         {state === "idle" && results.length === 0 && (
           <div className="flex flex-col items-center justify-center gap-4 py-24 text-muted-foreground">
             <Link2 style={{ width: "3rem", height: "3rem", opacity: 0.2 }} />
-            <p className="text-sm">Checks all internal and external links across every richtext field.</p>
-            <p className="text-xs opacity-60">Internal links verify the target document exists. External links send a HEAD request.</p>
+            <p className="text-sm">Checks all links and images across every richtext and image field.</p>
+            <p className="text-xs opacity-60">Internal links verify the target document exists. Internal images verify the file exists on disk. External URLs send a HEAD request.</p>
             <button type="button" onClick={runCheck}
               className="mt-2 flex items-center gap-2 text-sm px-4 py-2 rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-opacity">
               <Play style={{ width: "0.875rem", height: "0.875rem" }} />
@@ -309,7 +312,8 @@ export default function LinkCheckerPage() {
         {(state === "running" || state === "done") && results.length > 0 && (
           <div style={{ display: "flex", gap: "0.75rem", marginBottom: "1.5rem", flexWrap: "wrap" }}>
             {[
-              { key: "broken" as const, label: "Broken / Error", count: broken.length, icon: <XCircle style={{ width: "1rem", height: "1rem", color: "#f87171" }} /> },
+              { key: "broken" as const, label: "Broken Links", count: broken.length, icon: <XCircle style={{ width: "1rem", height: "1rem", color: "#f87171" }} /> },
+              { key: "broken-images" as const, label: "Broken Images", count: brokenImages.length, icon: <ImageOff style={{ width: "1rem", height: "1rem", color: "#f87171" }} /> },
               { key: "redirect" as const, label: "Redirects", count: redirects.length, icon: <ArrowRight style={{ width: "1rem", height: "1rem", color: "#facc15" }} /> },
               { key: "ok" as const, label: "OK", count: ok.length, icon: <CheckCircle style={{ width: "1rem", height: "1rem", color: "#4ade80" }} /> },
               { key: "all" as const, label: "All", count: results.length, icon: <Link2 style={{ width: "1rem", height: "1rem", color: "var(--muted-foreground)" }} /> },
@@ -340,7 +344,7 @@ export default function LinkCheckerPage() {
             <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem" }}>
               <thead>
                 <tr style={{ borderBottom: "1px solid var(--border)", background: "var(--muted)" }}>
-                  {["icon", "URL", "Item", "Field", "Status", "Fix"].map((h) => (
+                  {["icon", "URL / Image", "Item", "Field", "Status", "Fix"].map((h) => (
                     <th key={h} style={{ padding: "0.5rem 0.875rem", textAlign: "left", fontFamily: "monospace", fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.07em", color: "var(--muted-foreground)", fontWeight: 400 }}>{h === "icon" ? "" : h}</th>
                   ))}
                 </tr>
@@ -357,7 +361,11 @@ export default function LinkCheckerPage() {
                     <td style={{ padding: "0.5rem 0.875rem" }}>{statusIcon(r.status)}</td>
                     <td style={{ padding: "0.5rem 0.875rem", maxWidth: "260px" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
-                        {r.type === "external" && <ExternalLink style={{ width: "0.7rem", height: "0.7rem", color: "var(--muted-foreground)", flexShrink: 0 }} />}
+                        {r.kind === "image" ? (
+                          <ImageIcon style={{ width: "0.7rem", height: "0.7rem", color: "var(--muted-foreground)", flexShrink: 0 }} />
+                        ) : r.type === "external" ? (
+                          <ExternalLink style={{ width: "0.7rem", height: "0.7rem", color: "var(--muted-foreground)", flexShrink: 0 }} />
+                        ) : null}
                         <span
                           className="font-mono truncate"
                           style={{ fontSize: "0.75rem", color: "var(--foreground)" }}
@@ -417,11 +425,11 @@ export default function LinkCheckerPage() {
         )}
 
         {/* Done — no broken links */}
-        {state === "done" && broken.length === 0 && (
+        {state === "done" && allBroken.length === 0 && (
           <div className="flex flex-col items-center gap-2 py-8 text-muted-foreground">
             <CheckCircle style={{ width: "2rem", height: "2rem", color: "#4ade80" }} />
-            <p className="text-sm font-medium text-foreground">All links are healthy</p>
-            <p className="text-xs">Checked {results.length} links · {new Date(checkedAt!).toLocaleString()}</p>
+            <p className="text-sm font-medium text-foreground">All links and images are healthy</p>
+            <p className="text-xs">Checked {results.length} items · {new Date(checkedAt!).toLocaleString()}</p>
           </div>
         )}
       </div>

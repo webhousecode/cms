@@ -1,4 +1,7 @@
 import { getAdminCms, getAdminConfig } from "@/lib/cms";
+import { getUploadDir } from "@/lib/upload-dir";
+import fs from "fs/promises";
+import path from "path";
 
 export type LinkResult = {
   docCollection: string;
@@ -7,6 +10,7 @@ export type LinkResult = {
   field: string;
   url: string;
   text: string;
+  kind: "link" | "image";
   type: "internal" | "external";
   status: "ok" | "broken" | "redirect" | "error";
   httpStatus?: number;
@@ -28,6 +32,34 @@ function extractLinks(markdown: string): Array<{ text: string; url: string }> {
   while ((m = re.exec(markdown)) !== null) {
     const url = m[2].trim();
     if (!url.startsWith("#")) found.push({ text: m[1] || url, url });
+  }
+  return found;
+}
+
+/** Extract markdown images: ![alt](url) */
+function extractMarkdownImages(markdown: string): Array<{ text: string; url: string }> {
+  const found: Array<{ text: string; url: string }> = [];
+  const re = /!\[([^\]]*)\]\(([^)\s]+)\)/g;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(markdown)) !== null) {
+    const url = m[2].trim();
+    if (url) found.push({ text: m[1] || url, url });
+  }
+  return found;
+}
+
+/** Extract HTML img tags: <img src="..."> (TipTap richtext stores images as HTML) */
+function extractHtmlImages(html: string): Array<{ text: string; url: string }> {
+  const found: Array<{ text: string; url: string }> = [];
+  const re = /<img\s[^>]*src=["']([^"']+)["'][^>]*>/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(html)) !== null) {
+    const url = m[1].trim();
+    if (url) {
+      // Try to extract alt text
+      const altMatch = m[0].match(/alt=["']([^"']*)["']/i);
+      found.push({ text: altMatch?.[1] || url, url });
+    }
   }
   return found;
 }
@@ -79,17 +111,44 @@ export async function runLinkCheck(
     }
   }
 
-  // Collect all links across richtext fields
-  type RawLink = { docCollection: string; docSlug: string; docTitle: string; field: string; text: string; url: string };
+  // Resolve upload dir for internal image checks
+  let uploadDir: string;
+  try {
+    uploadDir = await getUploadDir();
+  } catch {
+    uploadDir = "";
+  }
+
+  // Collect all links AND images across richtext + image fields
+  type RawLink = { docCollection: string; docSlug: string; docTitle: string; field: string; text: string; url: string; kind: "link" | "image" };
   const allLinks: RawLink[] = [];
   for (const col of config.collections) {
     const { documents } = await cms.content.findMany(col.name, {});
     const richtextFields = col.fields.filter((f) => f.type === "richtext").map((f) => f.name);
+    const imageFields = col.fields.filter((f) => f.type === "image").map((f) => f.name);
     for (const doc of documents) {
       const title = String(doc.data?.title ?? doc.data?.name ?? doc.data?.label ?? doc.slug);
+
+      // Links from richtext
       for (const fieldName of richtextFields) {
-        for (const link of extractLinks(String(doc.data?.[fieldName] ?? ""))) {
-          allLinks.push({ docCollection: col.name, docSlug: doc.slug, docTitle: title, field: fieldName, ...link });
+        const content = String(doc.data?.[fieldName] ?? "");
+        for (const link of extractLinks(content)) {
+          allLinks.push({ docCollection: col.name, docSlug: doc.slug, docTitle: title, field: fieldName, kind: "link", ...link });
+        }
+        // Images from richtext — both markdown ![alt](url) and HTML <img src="...">
+        for (const img of extractMarkdownImages(content)) {
+          allLinks.push({ docCollection: col.name, docSlug: doc.slug, docTitle: title, field: fieldName, kind: "image", ...img });
+        }
+        for (const img of extractHtmlImages(content)) {
+          allLinks.push({ docCollection: col.name, docSlug: doc.slug, docTitle: title, field: fieldName, kind: "image", ...img });
+        }
+      }
+
+      // Images from image fields (type: "image")
+      for (const fieldName of imageFields) {
+        const val = doc.data?.[fieldName];
+        if (typeof val === "string" && val.trim()) {
+          allLinks.push({ docCollection: col.name, docSlug: doc.slug, docTitle: title, field: fieldName, kind: "image", text: fieldName, url: val.trim() });
         }
       }
     }
@@ -106,11 +165,32 @@ export async function runLinkCheck(
     let statusFields: Pick<LinkResult, "status" | "httpStatus" | "redirectTo" | "error">;
 
     if (isInternal) {
-      const p = raw.url.split(/[?#]/)[0].replace(/\/$/, "") || "/";
-      statusFields = (internalMap.has(p) || internalMap.has(p + "/"))
-        ? { status: "ok" }
-        : { status: "broken", error: "No matching document found" };
+      if (raw.kind === "image") {
+        // Internal image: check if file exists on disk
+        // Images are typically /uploads/filename.jpg or /api/uploads/filename.jpg
+        const urlPath = raw.url.split(/[?#]/)[0];
+        const uploadPath = urlPath.replace(/^\/(api\/)?uploads\//, "");
+        if (uploadDir && uploadPath !== urlPath) {
+          const filePath = path.join(uploadDir, uploadPath);
+          try {
+            await fs.access(filePath);
+            statusFields = { status: "ok" };
+          } catch {
+            statusFields = { status: "broken", error: "Image file not found on disk" };
+          }
+        } else {
+          // Unknown internal path format — skip (can't verify)
+          statusFields = { status: "ok" };
+        }
+      } else {
+        // Internal link: check against document map
+        const p = raw.url.split(/[?#]/)[0].replace(/\/$/, "") || "/";
+        statusFields = (internalMap.has(p) || internalMap.has(p + "/"))
+          ? { status: "ok" }
+          : { status: "broken", error: "No matching document found" };
+      }
     } else {
+      // External link or image: HTTP HEAD check
       if (!externalCache.has(raw.url)) externalCache.set(raw.url, await checkExternal(raw.url));
       statusFields = externalCache.get(raw.url)!;
     }
