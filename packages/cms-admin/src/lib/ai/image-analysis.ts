@@ -46,19 +46,19 @@ ${langMap[language] ?? langMap.en}`;
 async function getVisionModel(): Promise<{ model: Parameters<typeof generateObject>[0]["model"]; provider: string }> {
   const config = await readAiConfig();
 
-  // 1. Anthropic — best vision quality, usually already configured
+  // 1. Anthropic — best vision quality, reliable structured output
   const anthropicKey = config.anthropicApiKey ?? process.env.ANTHROPIC_API_KEY;
   if (anthropicKey) {
     const anthropic = createAnthropic({ apiKey: anthropicKey });
     return { model: anthropic("claude-sonnet-4-20250514"), provider: "claude-sonnet-4-20250514" };
   }
 
-  // 2. Google Gemini — fallback
+  // 2. Google Gemini — fallback (free tier but less reliable structured output)
   const geminiKey = config.geminiApiKey ?? process.env.GOOGLE_GENERATIVE_AI_API_KEY ?? process.env.GEMINI_API_KEY;
   if (geminiKey) {
     const { createGoogleGenerativeAI } = await import("@ai-sdk/google");
     const google = createGoogleGenerativeAI({ apiKey: geminiKey });
-    return { model: google("gemini-2.0-flash") as Parameters<typeof generateObject>[0]["model"], provider: "gemini-2.0-flash" };
+    return { model: google("gemini-2.5-flash") as Parameters<typeof generateObject>[0]["model"], provider: "gemini-2.5-flash" };
   }
 
   throw new Error("No AI API key configured. Add an Anthropic or Gemini key in Cockpit → Settings.");

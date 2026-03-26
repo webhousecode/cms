@@ -66,6 +66,20 @@ export function TagsInput({ value, onChange, disabled }: Props) {
               removeTag(value[value.length - 1]);
             }
           }}
+          onPaste={(e) => {
+            const text = e.clipboardData.getData("text");
+            if (text.includes(",")) {
+              e.preventDefault();
+              const tags = text.split(",").map((t) => t.trim()).filter(Boolean);
+              const newTags = [...value];
+              for (const tag of tags) {
+                const trimmed = tag.toLowerCase().replace(/\s+/g, "-");
+                if (trimmed && !newTags.includes(trimmed)) newTags.push(trimmed);
+              }
+              onChange(newTags);
+              setInput("");
+            }
+          }}
           onBlur={() => {
             if (input.trim()) addTag(input);
           }}
