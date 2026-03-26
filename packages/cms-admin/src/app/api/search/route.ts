@@ -7,6 +7,9 @@ export type SearchResult = {
   slug: string;
   title: string;
   status: string;
+  /** Media-specific fields */
+  mediaUrl?: string;
+  mediaThumbnail?: string;
 };
 
 /**
@@ -51,7 +54,48 @@ export async function GET(req: NextRequest) {
       })
     );
 
-    const results = collectionResults.flat();
+    // F44: Search media by EXIF + AI metadata
+    const mediaHits: (SearchResult & { score: number })[] = [];
+    try {
+      const { readMediaMeta } = await import("@/lib/media/media-meta");
+      const mediaMeta = await readMediaMeta();
+      for (const m of mediaMeta) {
+        const haystack = [
+          m.name,
+          m.aiCaption ?? "",
+          m.aiAlt ?? "",
+          ...(m.aiTags ?? []),
+          m.exif?.make ?? "",
+          m.exif?.model ?? "",
+          m.exif?.lens ?? "",
+          m.exif?.date ?? "",
+          m.exif?.gpsLat != null ? `${m.exif.gpsLat.toFixed(2)}` : "",
+          m.exif?.gpsLon != null ? `${m.exif.gpsLon.toFixed(2)}` : "",
+        ].join(" ").toLowerCase();
+
+        let score = 0;
+        if (m.name.toLowerCase().includes(q)) score = 30;
+        if (haystack.includes(q)) score = Math.max(score, 20);
+        // Boost AI tags (exact match)
+        if (m.aiTags?.some((t) => t.toLowerCase() === q)) score = Math.max(score, 40);
+
+        if (score > 0) {
+          const url = m.folder ? `/uploads/${m.folder}/${m.name}` : `/uploads/${m.name}`;
+          mediaHits.push({
+            collection: "media",
+            collectionLabel: "Media",
+            slug: m.key,
+            title: m.aiCaption ?? m.aiAlt ?? m.name,
+            status: "media",
+            mediaUrl: url,
+            mediaThumbnail: url,
+            score,
+          });
+        }
+      }
+    } catch { /* media-meta not available */ }
+
+    const results = [...collectionResults.flat(), ...mediaHits];
     results.sort((a, b) => b.score - a.score || a.title.localeCompare(b.title));
     const top20 = results.slice(0, 20).map(({ score: _s, ...r }) => r);
     return NextResponse.json(top20);

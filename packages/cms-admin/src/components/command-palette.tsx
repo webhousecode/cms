@@ -284,18 +284,30 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
 
     // Add content results
     for (const r of contentResults) {
-      result.push({
-        id: `content-${r.collection}-${r.slug}`,
-        label: r.title,
-        sublabel: `${r.collectionLabel} · ${r.slug}`,
-        category: "content",
-        icon: r.status === "published"
-          ? <Globe style={{ ...ICON_SIZE, color: "#4ade80" }} />
-          : r.status === "expired"
-          ? <FileText style={{ ...ICON_SIZE, color: "rgb(239 68 68)" }} />
-          : <FileText style={{ ...ICON_SIZE, color: MUTED }} />,
-        href: `/admin/${r.collection}/${r.slug}`,
-      });
+      if (r.status === "media" && r.mediaUrl) {
+        // Media result — show thumbnail
+        result.push({
+          id: `media-${r.slug}`,
+          label: r.title,
+          sublabel: r.slug,
+          category: "content",
+          icon: <img src={r.mediaThumbnail ?? r.mediaUrl} alt="" style={{ width: "0.9rem", height: "0.9rem", objectFit: "cover", borderRadius: "2px" }} />,
+          href: `/admin/media`,
+        });
+      } else {
+        result.push({
+          id: `content-${r.collection}-${r.slug}`,
+          label: r.title,
+          sublabel: `${r.collectionLabel} · ${r.slug}`,
+          category: "content",
+          icon: r.status === "published"
+            ? <Globe style={{ ...ICON_SIZE, color: "#4ade80" }} />
+            : r.status === "expired"
+            ? <FileText style={{ ...ICON_SIZE, color: "rgb(239 68 68)" }} />
+            : <FileText style={{ ...ICON_SIZE, color: MUTED }} />,
+          href: `/admin/${r.collection}/${r.slug}`,
+        });
+      }
     }
 
     return result;
