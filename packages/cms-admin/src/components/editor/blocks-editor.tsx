@@ -558,17 +558,20 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
               {pickerMounted && (() => {
                 const r = pickerInputRef.current?.getBoundingClientRect();
                 if (!r) return null;
+                const dropdownHeight = Math.min(filteredBlockNames.length * 30, 200);
+                const spaceBelow = window.innerHeight - r.bottom;
+                const openUpward = spaceBelow < dropdownHeight + 8;
                 return (
                   <div style={{
                     position: "fixed",
-                    top: r.bottom,
+                    ...(openUpward
+                      ? { bottom: window.innerHeight - r.top, borderRadius: "5px 5px 0 0", borderBottom: "none", borderTop: "1px solid var(--border)" }
+                      : { top: r.bottom, borderRadius: "0 0 5px 5px", borderTop: "none" }),
                     left: r.left,
                     width: r.width,
                     zIndex: 9999,
                     background: "var(--popover)",
                     border: "1px solid var(--border)",
-                    borderTop: "none",
-                    borderRadius: "0 0 5px 5px",
                     maxHeight: "200px",
                     overflowY: "auto",
                   }}>
