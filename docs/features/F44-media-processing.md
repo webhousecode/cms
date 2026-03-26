@@ -1,266 +1,224 @@
 # F44 — Media Processing Pipeline
 
-> Sharp-based image processing, responsive variant generation, SVG optimization, audio waveforms, and AI alt-text — as the `@webhouse/cms-media` package.
+> Sharp-based image optimization, responsive WebP variant generation, and automatic srcset resolution in build — originals always preserved, content references never modified.
 
 ## Problem
 
-Uploaded media is stored as-is. No resizing, no format conversion, no responsive `srcset` generation. Sites either rely on Next.js image optimization at request time (slow first hit, no AVIF for non-Vercel hosts) or serve unoptimized originals. SVGs are never cleaned. Audio files have no visual representation for podcast UIs.
+Uploaded media is stored as-is. A 3 MB JPEG is served as a 3 MB JPEG. No resizing, no WebP/AVIF conversion, no responsive `srcset`. Sites either rely on Next.js image optimization at request time (slow first hit, no AVIF for non-Vercel hosts) or serve unoptimized originals. A gallery site like Maurseth with 900 images at 2-4 MB each = 2-4 GB page weight with zero optimization.
+
+Lighthouse Performance score: ~40 without optimization, ~90+ with responsive WebP.
 
 ## Solution
 
-A dedicated `@webhouse/cms-media` package that processes media on upload. The MediaAdapter calls the pipeline after writing the original file, producing optimized variants stored alongside the original. Sites consume variants via a simple URL convention (`/images/hero.jpg` → `/images/hero.webp`, `/images/hero-800w.webp`).
+Sharp generates optimized WebP variants **alongside** originals on upload. Originals are never replaced, content references are never modified. At build time (`build.ts`), image references in HTML are automatically upgraded to `<picture>` with WebP srcset when variants exist. Batch processing for existing media libraries.
+
+### Key principles
+
+1. **Originals preserved** — never deleted, never overwritten
+2. **Content references unchanged** — JSON/markdown still says `hero.jpg`
+3. **Variants alongside originals** — `hero.jpg` → `hero-800w.webp`, `hero-1200w.webp`
+4. **Build-time resolution** — `build.ts` replaces `<img src="hero.jpg">` with `<picture>` when variants exist
+5. **Opt-in for existing media** — "Optimize All" action in Media Library
 
 ## Technical Design
 
-### 1. Package Structure
+### 1. Variant naming convention
 
 ```
-packages/cms-media/
-  src/
-    index.ts                    # Public API
-    pipeline.ts                 # Orchestrates processing steps
-    processors/
-      image.ts                  # Sharp: resize, convert, optimize
-      svg.ts                    # SVGO optimization
-      audio.ts                  # Waveform generation
-      alt-text.ts               # AI alt-text via cms-ai
-    variants.ts                 # Responsive variant definitions
-    types.ts                    # Shared types
-  package.json
+uploads/
+  hero.jpg              ← original (untouched)
+  hero-400w.webp        ← variant
+  hero-800w.webp        ← variant
+  hero-1200w.webp       ← variant
+  hero-1600w.webp       ← variant
 ```
 
-### 2. Core Types
+Naming: `{basename}-{width}w.webp` — predictable, no database needed.
+
+### 2. Sharp processor
 
 ```typescript
-// packages/cms-media/src/types.ts
+// packages/cms-admin/src/lib/media/image-processor.ts
 
-export interface MediaPipelineConfig {
-  /** Image variants to generate */
-  variants: ImageVariant[];
-  /** Output formats (originals are always kept) */
-  formats: ("webp" | "avif" | "png" | "jpg")[];
-  /** JPEG/WebP quality (1-100) */
-  quality: number;
-  /** Enable SVG optimization */
-  svgo: boolean;
-  /** Enable AI alt-text generation */
-  aiAltText: boolean;
-  /** Enable audio waveform generation */
-  audioWaveforms: boolean;
+import sharp from "sharp";
+
+export interface VariantConfig {
+  suffix: string;  // "400w"
+  width: number;   // 400
 }
 
-export interface ImageVariant {
-  /** Variant suffix, e.g. "800w" → hero-800w.webp */
-  suffix: string;
-  /** Max width in pixels */
-  width: number;
-  /** Max height (optional, maintains aspect ratio if omitted) */
-  height?: number;
-  /** Resize fit mode */
-  fit?: "cover" | "contain" | "fill" | "inside" | "outside";
-}
-
-export interface ProcessedMedia {
-  /** Original file path */
-  original: string;
-  /** Generated variant paths */
-  variants: { path: string; width: number; format: string }[];
-  /** Generated srcset string */
-  srcset?: string;
-  /** AI-generated alt text */
-  altText?: string;
-  /** Audio waveform data (for audio files) */
-  waveform?: number[];
-}
-
-export const DEFAULT_VARIANTS: ImageVariant[] = [
+export const DEFAULT_VARIANTS: VariantConfig[] = [
   { suffix: "400w", width: 400 },
   { suffix: "800w", width: 800 },
   { suffix: "1200w", width: 1200 },
   { suffix: "1600w", width: 1600 },
 ];
-```
 
-### 3. Image Processor (Sharp)
-
-```typescript
-// packages/cms-media/src/processors/image.ts
-
-import sharp from "sharp";
-import type { ImageVariant, MediaPipelineConfig } from "../types.js";
-
-export async function processImage(
-  input: Buffer,
+export async function generateVariants(
+  inputBuffer: Buffer,
   filename: string,
-  config: MediaPipelineConfig,
-): Promise<{ variants: { buffer: Buffer; suffix: string; format: string; width: number }[] }> {
-  const variants: { buffer: Buffer; suffix: string; format: string; width: number }[] = [];
+  variants: VariantConfig[] = DEFAULT_VARIANTS,
+  quality: number = 80,
+): Promise<{ suffix: string; buffer: Buffer; width: number }[]> {
+  const results: { suffix: string; buffer: Buffer; width: number }[] = [];
+  const meta = await sharp(inputBuffer).metadata();
+  const originalWidth = meta.width ?? 9999;
 
-  for (const variant of config.variants) {
-    for (const format of config.formats) {
-      const pipeline = sharp(input)
-        .resize(variant.width, variant.height, { fit: variant.fit ?? "inside", withoutEnlargement: true });
+  for (const v of variants) {
+    // Skip variants larger than original
+    if (v.width >= originalWidth) continue;
 
-      let buffer: Buffer;
-      switch (format) {
-        case "webp":  buffer = await pipeline.webp({ quality: config.quality }).toBuffer(); break;
-        case "avif":  buffer = await pipeline.avif({ quality: config.quality }).toBuffer(); break;
-        case "png":   buffer = await pipeline.png().toBuffer(); break;
-        case "jpg":   buffer = await pipeline.jpeg({ quality: config.quality }).toBuffer(); break;
-      }
+    const buffer = await sharp(inputBuffer)
+      .resize(v.width, undefined, { fit: "inside", withoutEnlargement: true })
+      .webp({ quality })
+      .toBuffer();
 
-      variants.push({ buffer: buffer!, suffix: variant.suffix, format, width: variant.width });
+    results.push({ suffix: v.suffix, buffer, width: v.width });
+  }
+
+  return results;
+}
+```
+
+### 3. Upload integration
+
+On file upload, after storing the original, generate and store variants:
+
+```typescript
+// In media upload handler
+const variants = await generateVariants(fileBuffer, filename);
+for (const v of variants) {
+  const variantName = `${basename}-${v.suffix}.webp`;
+  await writeFile(join(uploadDir, variantName), v.buffer);
+}
+```
+
+### 4. Batch processing (existing media)
+
+API endpoint for processing all existing images:
+
+```
+POST /api/media/optimize-batch
+  → Scans uploads/ for images without variants
+  → Generates WebP variants for each
+  → Returns { processed: number, skipped: number, errors: number }
+```
+
+UI: "Optimize All" button in Media Library (next to existing "Analyze All").
+Progress via SSE or polling.
+
+### 5. Build-time image resolution
+
+In `build.ts` post-processing (or in F89 enrichDist), scan HTML for `<img>` tags and upgrade to `<picture>` when variants exist:
+
+```typescript
+// In post-build enrichment or build.ts
+function upgradeImages(html: string, uploadsDir: string): string {
+  return html.replace(
+    /<img\s+([^>]*?)src="(\/uploads\/[^"]+\.(jpg|jpeg|png))"([^>]*?)>/gi,
+    (match, pre, src, ext, post) => {
+      const basename = src.replace(/\.[^.]+$/, "");
+      // Check if WebP variants exist
+      const srcset = DEFAULT_VARIANTS
+        .map(v => `${basename}-${v.suffix}.webp ${v.width}w`)
+        .filter(s => existsSync(join(uploadsDir, s.split(" ")[0].slice(1))))
+        .join(", ");
+
+      if (!srcset) return match; // no variants, keep original
+
+      return `<picture>` +
+        `<source srcset="${srcset}" type="image/webp" sizes="(max-width: 800px) 100vw, 800px">` +
+        `<img ${pre}src="${src}"${post}>` +
+        `</picture>`;
     }
-  }
-
-  return { variants };
+  );
 }
 ```
 
-### 4. SVG Optimization
+This means:
+- Content JSON stays as `"image": "/uploads/hero.jpg"`
+- Build output HTML gets `<picture>` with WebP srcset
+- Browser picks best variant automatically
+- Fallback to original JPEG for old browsers
 
-```typescript
-// packages/cms-media/src/processors/svg.ts
+### 6. Settings
 
-import { optimize } from "svgo";
+In Site Settings → General (or new Media tab):
 
-export function optimizeSvg(input: string): string {
-  const result = optimize(input, {
-    multipass: true,
-    plugins: [
-      "preset-default",
-      "removeDimensions",
-      { name: "removeViewBox", active: false },
-    ],
-  });
-  return result.data;
-}
+```
+MEDIA PROCESSING
+├─ Generate WebP variants on upload    [toggle, default: on]
+├─ Variant sizes                       [400, 800, 1200, 1600] (configurable)
+├─ WebP quality                        [80] (1-100 slider)
+└─ [Optimize existing media]           (action button, batch)
 ```
 
-### 5. Audio Waveform Generation
+### 7. SiteConfig additions
 
 ```typescript
-// packages/cms-media/src/processors/audio.ts
-
-/**
- * Generate a waveform array (0-1 amplitude values) from audio data.
- * Uses Web Audio API decode or ffmpeg for server-side extraction.
- * Returns ~100 samples for compact visualization.
- */
-export async function generateWaveform(
-  audioBuffer: Buffer,
-  samples?: number,
-): Promise<number[]> {
-  // Decode audio and downsample to `samples` amplitude peaks
-  // Implementation uses audiowaveform npm package or ffmpeg
-}
-```
-
-### 6. AI Alt-Text Generation
-
-```typescript
-// packages/cms-media/src/processors/alt-text.ts
-
-import type { AiProvider } from "@webhouse/cms-ai";
-
-export async function generateAltText(
-  imageBuffer: Buffer,
-  provider: AiProvider,
-): Promise<string> {
-  // Send image to vision model, get descriptive alt text
-  // Prompt: "Describe this image in one sentence for use as alt text on a website."
-}
-```
-
-### 7. MediaAdapter Integration
-
-The pipeline hooks into `MediaAdapter.uploadFile()`. After the original file is stored, the pipeline runs and stores variants alongside it.
-
-```typescript
-// In packages/cms-admin/src/lib/media/filesystem.ts (modified)
-
-import { processMedia } from "@webhouse/cms-media";
-
-async uploadFile(filename: string, content: Buffer, folder?: string) {
-  // 1. Store original (existing behavior)
-  const { url } = await this.writeOriginal(filename, content, folder);
-
-  // 2. Run media pipeline (new)
-  const result = await processMedia(content, filename, this.pipelineConfig);
-
-  // 3. Store variants alongside original
-  for (const variant of result.variants) {
-    await this.writeVariant(variant.path, variant.buffer, folder);
-  }
-
-  return { url, variants: result.variants, altText: result.altText };
-}
-```
-
-### 8. Srcset Helper for Sites
-
-```typescript
-// packages/cms-media/src/variants.ts
-
-export function buildSrcset(originalUrl: string, formats: string[] = ["webp"]): string {
-  // /images/hero.jpg → /images/hero-400w.webp 400w, /images/hero-800w.webp 800w, ...
-  const base = originalUrl.replace(/\.[^.]+$/, "");
-  const format = formats[0] ?? "webp";
-  return DEFAULT_VARIANTS
-    .map(v => `${base}-${v.suffix}.${format} ${v.width}w`)
-    .join(", ");
-}
+// In SiteConfig interface
+mediaAutoOptimize: boolean;        // default: true
+mediaVariantWidths: number[];      // default: [400, 800, 1200, 1600]
+mediaWebpQuality: number;          // default: 80
 ```
 
 ## Impact Analysis
 
 ### Files affected
-- `packages/cms-media/` — entirely new package
-- `packages/cms-admin/src/lib/media/filesystem.ts` — hook pipeline into upload
-- `packages/cms-admin/src/lib/media/github.ts` — hook pipeline into upload
-- `packages/cms-admin/src/lib/media/types.ts` — extend upload result types
-- `packages/cms/src/schema/types.ts` — add `media` pipeline config
+
+**New files:**
+- `packages/cms-admin/src/lib/media/image-processor.ts` — Sharp variant generation
+- `packages/cms-admin/src/app/api/media/optimize-batch/route.ts` — batch processing endpoint
+- `packages/cms-admin/src/lib/__tests__/image-processor.test.ts` — tests
+
+**Modified files:**
+- `packages/cms-admin/src/app/api/uploads/route.ts` — call generateVariants after upload
+- `packages/cms-admin/src/lib/post-build-enrich.ts` — upgradeImages in enrichDist
+- `packages/cms-admin/src/lib/site-config.ts` — add media* fields
+- `packages/cms-admin/src/app/admin/(workspace)/media/page.tsx` — "Optimize All" button
+- `package.json` — add `sharp` dependency
 
 ### Blast radius
-- Media upload flow changes for all adapters — test both filesystem and GitHub
-- Sharp dependency may cause platform-specific install issues
-- Variant generation increases storage usage
+- Upload flow gains variant generation step — may slow uploads slightly (~200ms per image)
+- Build output changes: `<img>` → `<picture>` — sites must handle `<picture>` in CSS
+- Sharp is a native dependency — may need platform-specific install
+- Existing media unaffected until batch optimization is run
 
 ### Breaking changes
-- Upload API response gains `variants` and `altText` fields (additive)
+None — purely additive. Existing images serve as before. Variants are only used when present.
 
 ### Test plan
-- [ ] TypeScript compiles: `npx tsc --noEmit`
-- [ ] Image upload generates WebP variants at all sizes
-- [ ] SVG optimization reduces file size
-- [ ] AI alt-text generates descriptive text
-- [ ] Srcset helper produces correct format
+- [ ] TypeScript compiles
+- [ ] Sharp generates 4 WebP variants from a JPEG
+- [ ] Variants are smaller than original
+- [ ] Variants skip sizes larger than original
+- [ ] Upload stores variants alongside original
+- [ ] Batch processes existing images
+- [ ] Build-time upgrade: `<img>` → `<picture>` with srcset
+- [ ] No variants = original `<img>` preserved
+- [ ] Maurseth: 900 images batch-processed without crash
 
 ## Implementation Steps
 
-1. **Create `packages/cms-media/` package** — types, package.json, tsconfig
-2. **Implement Sharp image processor** — resize + convert to WebP/AVIF
-3. **Implement SVGO processor** — optimize SVGs on upload
-4. **Implement srcset builder** — generate srcset strings from variant paths
-5. **Integrate into FilesystemMediaAdapter.uploadFile()** — call pipeline after storing original
-6. **Integrate into GitHubMediaAdapter.uploadFile()** — same pattern, commit variants alongside original
-7. **Implement audio waveform generation** — peaks array for podcast/audio UI
-8. **Implement AI alt-text** — call vision model via cms-ai provider
-9. **Add pipeline config to `cms.config.ts`** — `media: { variants, formats, quality }`
-10. **Test** — upload images, verify variants are created, verify srcset output
+1. Add `sharp` dependency
+2. Create `image-processor.ts` with `generateVariants()`
+3. Write tests for variant generation
+4. Integrate into upload flow
+5. Create batch optimization endpoint
+6. Add "Optimize All" button to Media Library
+7. Add build-time `<picture>` upgrade in post-build enrichment
+8. Add media settings to SiteConfig
+9. Test with Simple Blog (419 images)
 
 ## Dependencies
 
-- **MediaAdapter interface** — `packages/cms-admin/src/lib/media/types.ts` (existing)
-- **cms-ai ProviderRegistry** — `packages/cms-ai/src/providers/registry.ts` (for AI alt-text)
-- **Sharp** — new dependency (`sharp`)
-- **SVGO** — new dependency (`svgo`)
+- **sharp** npm package (new dependency)
+- **F89 Post-Build Enrichment** (Done) — for build-time image upgrade
 
 ## Effort Estimate
 
-**Medium** — 3-4 days
+**Medium** — 3 days
 
-- Day 1: Package scaffold, Sharp image processor, variant types
-- Day 2: SVGO, srcset builder, MediaAdapter integration
-- Day 3: Audio waveforms, AI alt-text
-- Day 4: Config in cms.config.ts, testing, documentation
+- Day 1: Sharp processor + tests + upload integration
+- Day 2: Batch optimization + Media Library UI
+- Day 3: Build-time `<picture>` upgrade + settings + test with 419 images
