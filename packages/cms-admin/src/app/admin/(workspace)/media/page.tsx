@@ -653,8 +653,16 @@ export default function MediaPage() {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Search…"
-                  style={{ width: "100%", paddingLeft: "2rem", paddingRight: "0.75rem", paddingTop: "0.375rem", paddingBottom: "0.375rem", borderRadius: "8px", border: "1px solid var(--border)", background: "var(--card)", fontSize: "0.8rem", color: "var(--foreground)", outline: "none", boxSizing: "border-box" }}
+                  style={{ width: "100%", paddingLeft: "2rem", paddingRight: query ? "2rem" : "0.75rem", paddingTop: "0.375rem", paddingBottom: "0.375rem", borderRadius: "8px", border: "1px solid var(--border)", background: "var(--card)", fontSize: "0.8rem", color: "var(--foreground)", outline: "none", boxSizing: "border-box" }}
                 />
+                {query && (
+                  <button
+                    onClick={() => setQuery("")}
+                    style={{ position: "absolute", right: "0.5rem", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", padding: 0, cursor: "pointer", color: "var(--muted-foreground)", display: "flex", alignItems: "center" }}
+                  >
+                    <X style={{ width: "0.8rem", height: "0.8rem" }} />
+                  </button>
+                )}
               </div>
               <span style={{ fontSize: "0.75rem", fontFamily: "monospace", color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>
                 {filtered.length}/{allFiles.length}
