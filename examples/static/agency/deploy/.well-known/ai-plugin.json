@@ -1,0 +1,17 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "Meridian Studio",
+  "name_for_model": "meridian_studio",
+  "description_for_human": "",
+  "description_for_model": "",
+  "auth": {
+    "type": "none"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "https://cbroberg.github.io/meridian-studio-site/meridian-studio-site/openapi.yaml"
+  },
+  "logo_url": "https://cbroberg.github.io/meridian-studio-site/meridian-studio-site/favicon.ico",
+  "contact_email": "",
+  "legal_info_url": "https://cbroberg.github.io/meridian-studio-site/meridian-studio-site/"
+}

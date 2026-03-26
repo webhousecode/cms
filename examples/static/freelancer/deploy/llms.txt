@@ -1,0 +1,15 @@
+# Freelancer
+
+> 
+
+## Pages
+
+- [Building a Data-Driven Culture Without Drowning in Dashboards](https://cbroberg.github.io/freelancer-site/freelancer-site/blog/building-a-data-driven-culture/): Data-driven doesn't mean dashboard-driven. Learn how to build a culture where decisions are informed by data without creating analysis paralysis.
+- [Blog](https://cbroberg.github.io/freelancer-site/freelancer-site/blog/): Insights, strategies, and frameworks from a decade of helping businesses grow smarter.
+- [The Strategic Framework I Use to Scale Every Business](https://cbroberg.github.io/freelancer-site/freelancer-site/blog/strategic-framework-for-scaling/): After working with 50+ companies, I've distilled the growth process into a repeatable framework. Here's the exact system I use to identify leverage points and build scalable growth engines.
+- [Why Most Growth Strategies Fail (And How to Fix Yours)](https://cbroberg.github.io/freelancer-site/freelancer-site/blog/why-most-growth-strategies-fail/): I've audited hundreds of growth strategies. The same five mistakes appear again and again. Here's what separates companies that scale from those that stall.
+- [Contact](https://cbroberg.github.io/freelancer-site/freelancer-site/contact/): Get in touch with Sarah Mitchell. Book a free strategy call or send a message to discuss how strategic consulting can help your business.
+- [Home — Sarah Mitchell](https://cbroberg.github.io/freelancer-site/freelancer-site/): Digital strategy consultant helping ambitious businesses scale with clarity and data-driven frameworks.
+- [Services](https://cbroberg.github.io/freelancer-site/freelancer-site/services/): Simple, transparent pricing for digital strategy consulting. No hidden fees, no long-term contracts — just clear value at every tier.
+
+Built with [webhouse.app](https://webhouse.app)

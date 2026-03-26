@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://cbroberg.github.io/freelancer-site/freelancer-site/sitemap.xml

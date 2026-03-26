@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Home — Meridian Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            heading: ['Sora', 'sans-serif'],
+            body: ['Inter', 'sans-serif'],
+          },
+          colors: {
+            dark: '#111111',
+            accent: { from: '#6366f1', to: '#a855f7' },
+          },
+        },
+      },
+    };
+  </script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #fff;
+      color: #111;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Gradient text utility */
+    .gradient-text {
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    /* Gradient button */
+    .btn-gradient {
+      display: inline-block;
+      padding: 1rem 2.5rem;
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      color: #fff;
+      text-decoration: none;
+      font-family: 'Sora', sans-serif;
+      font-weight: 600;
+      font-size: 0.875rem;
+      letter-spacing: 0.04em;
+      border-radius: 9999px;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .btn-gradient:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 20px 40px rgba(99, 102, 241, 0.3);
+    }
+
+    /* Card hover */
+    .card-hover {
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+    .card-hover:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Work card image zoom */
+    .work-card img {
+      transition: transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    }
+    .work-card:hover img {
+      transform: scale(1.05);
+    }
+
+    /* Category pill */
+    .pill {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(168,85,247,0.1));
+      color: #6366f1;
+      font-family: 'Sora', sans-serif;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      border-radius: 9999px;
+    }
+
+    /* Nav */
+    .nav-fixed {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+      backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+      background: rgba(255, 255, 255, 0.9);
+      border-bottom: 1px solid rgba(0,0,0,0.06);
+    }
+
+    /* Footer */
+    .footer-link {
+      color: #666; text-decoration: none; font-size: 0.875rem; transition: color 0.3s;
+    }
+    .footer-link:hover { color: #111; }
+
+    /* Fade-in animation */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .fade-up { animation: fadeUp 0.8s ease-out both; }
+    .fade-up-d1 { animation-delay: 0.1s; }
+    .fade-up-d2 { animation-delay: 0.2s; }
+    .fade-up-d3 { animation-delay: 0.3s; }
+    .fade-up-d4 { animation-delay: 0.4s; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .hero-title { font-size: 2.5rem !important; }
+      .section-title { font-size: 2rem !important; }
+    }
+  </style>
+
+  <!-- webhouse.app enrichment -->
+  <meta name="generator" content="webhouse.app" />
+  <link rel="canonical" href="https://cbroberg.github.io/meridian-studio-site/meridian-studio-site/" />
+  <meta property="og:title" content="Home — Meridian Studio" />
+  <meta property="og:description" content="" />
+  <meta property="og:url" content="https://cbroberg.github.io/meridian-studio-site/meridian-studio-site/" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Meridian Studio" />
+  <meta property="og:image" content="https://images.unsplash.com/photo-1551434678-e076c223a692?w=1600&q=80" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Home — Meridian Studio" />
+  <meta name="twitter:description" content="" />
+  <meta name="twitter:image" content="https://images.unsplash.com/photo-1551434678-e076c223a692?w=1600&q=80" />
+  <link rel="icon" href="/meridian-studio-site/favicon.ico" />
+  <link rel="apple-touch-icon" href="/meridian-studio-site/apple-touch-icon.png" />
+  <link rel="manifest" href="/meridian-studio-site/manifest.json" />
+  <meta name="theme-color" content="#000000" />
+</head>
+<body>
+  
+  <nav class="nav-fixed">
+    <div class="max-w-7xl mx-auto flex items-center justify-between px-6 lg:px-8 py-5">
+      <a href="/meridian-studio-site/index.html" class="font-heading font-800 text-lg tracking-tight" style="font-weight:800;">Meridian Studio</a>
+      <div class="flex items-center gap-8">
+        <a href="/meridian-studio-site/index.html" class="font-body text-sm tracking-wide transition-colors text-[#111] font-medium">Home</a>
+          <a href="/meridian-studio-site/work/index.html" class="font-body text-sm tracking-wide transition-colors text-[#888] hover:text-[#111]">Work</a>
+          <a href="/meridian-studio-site/about/index.html" class="font-body text-sm tracking-wide transition-colors text-[#888] hover:text-[#111]">About</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="pt-32 pb-20 lg:pt-44 lg:pb-32 px-6 lg:px-8">
+    <div class="max-w-5xl mx-auto text-center">
+      <p class="fade-up font-heading font-600 text-xs tracking-[0.2em] uppercase text-[#999] mb-6" style="font-weight:600;">Creative Agency</p>
+      <h1 class="fade-up fade-up-d1 font-heading hero-title leading-[1.08] tracking-tight mb-8" style="font-size: clamp(2.5rem, 6vw, 4.5rem); font-weight: 800;">
+        We craft <span class="gradient-text">digital experiences</span> that matter
+      </h1>
+      <p class="fade-up fade-up-d2 text-[#666] text-lg lg:text-xl max-w-2xl mx-auto leading-relaxed mb-10">
+        Meridian Studio is a creative agency specialising in brand strategy, digital design, and web development for ambitious brands.
+      </p>
+      <div class="fade-up fade-up-d3">
+        <a href="/work/index.html" class="btn-gradient">View Our Work</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Services -->
+  <section class="py-20 lg:py-28 px-6 lg:px-8" style="background: #fafafa;">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-16">
+        <p class="font-heading font-600 text-xs tracking-[0.2em] uppercase text-[#999] mb-4" style="font-weight:600;">What We Do</p>
+        <h2 class="font-heading section-title tracking-tight" style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 800;">Services</h2>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        
+        <div class="card-hover bg-white border border-gray-100 rounded-2xl p-8">
+          <div class="text-3xl mb-4">🧭</div>
+          <h3 class="font-heading font-700 text-lg mb-3" style="font-weight:700;">Brand Strategy</h3>
+          <p class="text-[#666] text-sm leading-relaxed">We uncover what makes your brand distinct and build a strategic foundation that guides every creative decision. From positioning and messaging to visual identity systems, we craft brands that resonate deeply with their audience and stand the test of time.</p>
+        </div>
+
+        <div class="card-hover bg-white border border-gray-100 rounded-2xl p-8">
+          <div class="text-3xl mb-4">✏️</div>
+          <h3 class="font-heading font-700 text-lg mb-3" style="font-weight:700;">Content Strategy</h3>
+          <p class="text-[#666] text-sm leading-relaxed">We develop content frameworks that turn your brand voice into a scalable system. From editorial calendars and tone guidelines to SEO-driven copywriting, we ensure every word works harder for your business.</p>
+        </div>
+
+        <div class="card-hover bg-white border border-gray-100 rounded-2xl p-8">
+          <div class="text-3xl mb-4">🎨</div>
+          <h3 class="font-heading font-700 text-lg mb-3" style="font-weight:700;">Digital Design</h3>
+          <p class="text-[#666] text-sm leading-relaxed">We design digital experiences that are visually stunning and functionally flawless. Our process blends user research, interaction design, and meticulous visual craft to create interfaces that feel intuitive from the first tap.</p>
+        </div>
+
+        <div class="card-hover bg-white border border-gray-100 rounded-2xl p-8">
+          <div class="text-3xl mb-4">💻</div>
+          <h3 class="font-heading font-700 text-lg mb-3" style="font-weight:700;">Web Development</h3>
+          <p class="text-[#666] text-sm leading-relaxed">We build fast, accessible, and scalable websites using modern frameworks like Next.js and React. Every line of code is written with performance, SEO, and maintainability in mind — because beautiful design deserves flawless execution.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Featured Work -->
+  <section class="py-20 lg:py-28 px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto">
+      <div class="flex items-end justify-between mb-16">
+        <div>
+          <p class="font-heading font-600 text-xs tracking-[0.2em] uppercase text-[#999] mb-4" style="font-weight:600;">Selected Projects</p>
+          <h2 class="font-heading section-title tracking-tight" style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 800;">Featured Work</h2>
+        </div>
+        <a href="/meridian-studio-site/work/index.html" class="hidden md:inline-block text-sm font-medium text-indigo-600 hover:text-indigo-800 transition-colors">
+          View all &rarr;
+        </a>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        
+        <a href="/meridian-studio-site/work/app-finflow/index.html" class="work-card group block card-hover rounded-2xl overflow-hidden bg-white border border-gray-100">
+          <div class="overflow-hidden aspect-[4/3]">
+            <img src="https://images.unsplash.com/photo-1551434678-e076c223a692?w=1600&q=80" alt="FinFlow Mobile App" loading="lazy" class="w-full h-full object-cover" />
+          </div>
+          <div class="p-6">
+            <div class="flex items-center gap-3 mb-3">
+              <span class="pill">App Design</span>
+              <span class="text-[#999] text-xs">2024</span>
+            </div>
+            <h3 class="font-heading font-700 text-lg mb-1 group-hover:text-indigo-600 transition-colors" style="font-weight:700;">FinFlow Mobile App</h3>
+            <p class="text-[#888] text-sm">FinFlow</p>
+          </div>
+        </a>
+
+        <a href="/meridian-studio-site/work/campaign-aurora/index.html" class="work-card group block card-hover rounded-2xl overflow-hidden bg-white border border-gray-100">
+          <div class="overflow-hidden aspect-[4/3]">
+            <img src="https://images.unsplash.com/photo-1558655146-9f40138edfeb?w=1600&q=80" alt="Aurora Summer Campaign" loading="lazy" class="w-full h-full object-cover" />
+          </div>
+          <div class="p-6">
+            <div class="flex items-center gap-3 mb-3">
+              <span class="pill">Campaign</span>
+              <span class="text-[#999] text-xs">2024</span>
+            </div>
+            <h3 class="font-heading font-700 text-lg mb-1 group-hover:text-indigo-600 transition-colors" style="font-weight:700;">Aurora Summer Campaign</h3>
+            <p class="text-[#888] text-sm">Aurora Fashion</p>
+          </div>
+        </a>
+
+        <a href="/meridian-studio-site/work/rebrand-nexus/index.html" class="work-card group block card-hover rounded-2xl overflow-hidden bg-white border border-gray-100">
+          <div class="overflow-hidden aspect-[4/3]">
+            <img src="https://images.unsplash.com/photo-1542744094-3a31f272c490?w=1600&q=80" alt="Nexus Brand Identity" loading="lazy" class="w-full h-full object-cover" />
+          </div>
+          <div class="p-6">
+            <div class="flex items-center gap-3 mb-3">
+              <span class="pill">Branding</span>
+              <span class="text-[#999] text-xs">2024</span>
+            </div>
+            <h3 class="font-heading font-700 text-lg mb-1 group-hover:text-indigo-600 transition-colors" style="font-weight:700;">Nexus Brand Identity</h3>
+            <p class="text-[#888] text-sm">Nexus Technologies</p>
+          </div>
+        </a>
+
+        <a href="/meridian-studio-site/work/website-greenleaf/index.html" class="work-card group block card-hover rounded-2xl overflow-hidden bg-white border border-gray-100">
+          <div class="overflow-hidden aspect-[4/3]">
+            <img src="https://images.unsplash.com/photo-1460925895917-afdab827c52f?w=1600&q=80" alt="Greenleaf Digital Platform" loading="lazy" class="w-full h-full object-cover" />
+          </div>
+          <div class="p-6">
+            <div class="flex items-center gap-3 mb-3">
+              <span class="pill">Web Design</span>
+              <span class="text-[#999] text-xs">2024</span>
+            </div>
+            <h3 class="font-heading font-700 text-lg mb-1 group-hover:text-indigo-600 transition-colors" style="font-weight:700;">Greenleaf Digital Platform</h3>
+            <p class="text-[#888] text-sm">Greenleaf Organics</p>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Team -->
+  <section class="py-20 lg:py-28 px-6 lg:px-8" style="background: #fafafa;">
+    <div class="max-w-7xl mx-auto">
+      <div class="text-center mb-16">
+        <p class="font-heading font-600 text-xs tracking-[0.2em] uppercase text-[#999] mb-4" style="font-weight:600;">The People</p>
+        <h2 class="font-heading section-title tracking-tight" style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 800;">Our Team</h2>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto">
+        
+        <div class="text-center">
+          <div class="overflow-hidden rounded-2xl mb-4 aspect-square">
+            <img src="https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?w=800&q=80" alt="Elena Vasquez" loading="lazy" class="w-full h-full object-cover" />
+          </div>
+          <h3 class="font-heading font-700 text-base" style="font-weight:700;">Elena Vasquez</h3>
+          <p class="text-[#888] text-sm mt-1">Creative Director</p>
+        </div>
+
+        <div class="text-center">
+          <div class="overflow-hidden rounded-2xl mb-4 aspect-square">
+            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80" alt="Marcus Chen" loading="lazy" class="w-full h-full object-cover" />
+          </div>
+          <h3 class="font-heading font-700 text-base" style="font-weight:700;">Marcus Chen</h3>
+          <p class="text-[#888] text-sm mt-1">Design Lead</p>
+        </div>
+
+        <div class="text-center">
+          <div class="overflow-hidden rounded-2xl mb-4 aspect-square">
+            <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=800&q=80" alt="Jonas Lindberg" loading="lazy" class="w-full h-full object-cover" />
+          </div>
+          <h3 class="font-heading font-700 text-base" style="font-weight:700;">Jonas Lindberg</h3>
+          <p class="text-[#888] text-sm mt-1">Lead Developer</p>
+        </div>
+
+        <div class="text-center">
+          <div class="overflow-hidden rounded-2xl mb-4 aspect-square">
+            <img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?w=800&q=80" alt="Aisha Okoye" loading="lazy" class="w-full h-full object-cover" />
+          </div>
+          <h3 class="font-heading font-700 text-base" style="font-weight:700;">Aisha Okoye</h3>
+          <p class="text-[#888] text-sm mt-1">Brand Strategist</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="py-24 lg:py-32 px-6 lg:px-8 text-center" style="background: linear-gradient(135deg, #6366f1, #a855f7);">
+    <div class="max-w-3xl mx-auto">
+      <h2 class="font-heading text-white tracking-tight mb-6" style="font-size: clamp(2rem, 4vw, 3rem); font-weight: 800;">Ready to start your next project?</h2>
+      <p class="text-white/80 text-lg mb-10">Let’s create something extraordinary together.</p>
+      <a href="mailto:hello@meridianstudio.co" class="inline-block px-8 py-4 bg-white text-[#111] font-heading font-700 text-sm rounded-full hover:shadow-xl transition-shadow" style="font-weight:700;">Get in Touch</a>
+    </div>
+  </section>
+
+  
+  <footer class="border-t border-gray-100" style="background: #fafafa;">
+    <div class="max-w-7xl mx-auto px-6 lg:px-8 py-16">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-10">
+        <!-- Brand -->
+        <div class="md:col-span-2">
+          <p class="font-heading font-800 text-lg tracking-tight mb-3" style="font-weight:800;">Meridian Studio</p>
+          <p class="text-[#666] text-sm leading-relaxed max-w-md">
+            A creative agency crafting bold digital experiences for ambitious brands. Based in Copenhagen, working worldwide.
+          </p>
+        </div>
+
+        <!-- Links -->
+        <div>
+          <p class="font-heading font-700 text-xs tracking-widest uppercase text-[#999] mb-4" style="font-weight:700;">Navigation</p>
+          <div class="flex flex-col gap-2">
+            <a href="/meridian-studio-site/index.html" class="footer-link">Home</a>
+            <a href="/meridian-studio-site/work/index.html" class="footer-link">Work</a>
+            <a href="/meridian-studio-site/about/index.html" class="footer-link">About</a>
+          </div>
+        </div>
+
+        <!-- Contact -->
+        <div>
+          <p class="font-heading font-700 text-xs tracking-widest uppercase text-[#999] mb-4" style="font-weight:700;">Contact</p>
+          <div class="flex flex-col gap-2">
+            <a href="mailto:hello@meridianstudio.co" class="footer-link">hello@meridianstudio.co</a>
+            <a href="https://www.instagram.com/webhouse.app" class="footer-link">Instagram</a>
+            <a href="#" class="footer-link">LinkedIn</a>
+            <a href="#" class="footer-link">Dribbble</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="border-t border-gray-200 mt-12 pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
+        <p class="text-[#999] text-xs">&copy; 2026 Meridian Studio. All rights reserved.</p>
+        <p class="text-[#999] text-xs">Built with <a href="https://webhouse.app" target="_blank" rel="noopener" class="hover:text-[#111] transition-colors">@webhouse/cms</a></p>
+      </div>
+    </div>
+  </footer>
+
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebSite","name":"Meridian Studio","url":"https://cbroberg.github.io/meridian-studio-site/meridian-studio-site/","description":""}</script>
+</body>
+</html>
