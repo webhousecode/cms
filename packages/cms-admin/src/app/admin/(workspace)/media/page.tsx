@@ -63,6 +63,7 @@ export default function MediaPage() {
   const [renaming, setRenaming] = useState<MediaFile | null>(null);
   const [newFolder, setNewFolder] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>(""); // "" = all
+  const [aiFilter, setAiFilter] = useState<"" | "analyzed" | "not-analyzed">("");
   const [aiAnalyzedSet, setAiAnalyzedSet] = useState<Set<string>>(new Set());
   const [showBatchAnalyze, setShowBatchAnalyze] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -102,6 +103,12 @@ export default function MediaPage() {
   const filtered = allFiles.filter((f) => {
     if (folder !== "" && f.folder !== folder) return false;
     if (typeFilter && f.mediaType !== typeFilter) return false;
+    if (aiFilter) {
+      const aiKey = f.folder ? `${f.folder}/${f.name}` : f.name;
+      const isAnalyzed = aiAnalyzedSet.has(aiKey);
+      if (aiFilter === "analyzed" && !isAnalyzed) return false;
+      if (aiFilter === "not-analyzed" && isAnalyzed) return false;
+    }
     if (query) {
       const q = query.toLowerCase();
       return f.name.toLowerCase().includes(q) || f.folder.toLowerCase().includes(q);
@@ -409,8 +416,47 @@ export default function MediaPage() {
             })}
           </div>
 
+          {/* AI filter */}
+          <div style={{ marginTop: "0.75rem", borderTop: "1px solid var(--border)", paddingTop: "0.75rem" }}>
+            <p style={{ fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted-foreground)", marginBottom: "0.375rem" }}>
+              AI Analysis
+            </p>
+            {([
+              { value: "" as const, label: "All" },
+              { value: "analyzed" as const, label: "Analyzed" },
+              { value: "not-analyzed" as const, label: "Not analyzed" },
+            ]).map((t) => {
+              const count = t.value === ""
+                ? allFiles.filter((f) => f.isImage).length
+                : t.value === "analyzed"
+                  ? allFiles.filter((f) => f.isImage && aiAnalyzedSet.has(f.folder ? `${f.folder}/${f.name}` : f.name)).length
+                  : allFiles.filter((f) => f.isImage && !aiAnalyzedSet.has(f.folder ? `${f.folder}/${f.name}` : f.name)).length;
+              return (
+                <button
+                  key={t.value}
+                  type="button"
+                  onClick={() => setAiFilter(t.value)}
+                  style={{
+                    display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%",
+                    padding: "0.3rem 0.5rem", borderRadius: "5px", border: "none", cursor: "pointer",
+                    background: aiFilter === t.value ? "var(--secondary)" : "transparent",
+                    color: aiFilter === t.value ? "var(--foreground)" : "var(--muted-foreground)",
+                    fontSize: "0.8rem", marginBottom: "0.125rem",
+                  }}
+                  className="hover:bg-secondary/50"
+                >
+                  <span style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
+                    {t.value === "analyzed" && <Sparkles style={{ width: 10, height: 10, color: "#F7BB2E" }} />}
+                    {t.label}
+                  </span>
+                  <span style={{ fontSize: "0.7rem", opacity: 0.6 }}>{count}</span>
+                </button>
+              );
+            })}
+          </div>
+
           {/* New folder input */}
-          <div style={{ marginTop: "1rem", borderTop: "1px solid var(--border)", paddingTop: "0.75rem" }}>
+          <div style={{ marginTop: "0.75rem", borderTop: "1px solid var(--border)", paddingTop: "0.75rem" }}>
             <p style={{ fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted-foreground)", marginBottom: "0.375rem" }}>
               Upload to folder
             </p>
@@ -1194,6 +1240,8 @@ type BatchLogEntry = { kind: "result" | "error"; filename: string; message: stri
 
 function BatchAnalyzeDialog({ onClose }: { onClose: () => void }) {
   const [state, setState] = useState<BatchState>("idle");
+  const [overwriteSetting, setOverwriteSetting] = useState<"ask" | "skip" | "overwrite">("ask");
+  const [overwriteChoice, setOverwriteChoice] = useState<boolean>(false);
   const [total, setTotal] = useState(0);
   const [skipped, setSkipped] = useState(0);
   const [processed, setProcessed] = useState(0);
@@ -1202,6 +1250,18 @@ function BatchAnalyzeDialog({ onClose }: { onClose: () => void }) {
   const [log, setLog] = useState<BatchLogEntry[]>([]);
   const abortRef = useRef<AbortController | null>(null);
   const logEndRef = useRef<HTMLDivElement>(null);
+
+  // Fetch site setting on mount
+  useEffect(() => {
+    fetch("/api/admin/site-config")
+      .then((r) => r.json())
+      .then((cfg) => {
+        const setting = cfg.aiImageOverwrite ?? "ask";
+        setOverwriteSetting(setting);
+        if (setting === "overwrite") setOverwriteChoice(true);
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     logEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -1227,7 +1287,7 @@ function BatchAnalyzeDialog({ onClose }: { onClose: () => void }) {
       const res = await fetch("/api/media/analyze-batch", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ language: "da" }),
+        body: JSON.stringify({ language: "da", overwrite: overwriteChoice }),
         signal: ctrl.signal,
       });
       if (!res.body) throw new Error("No response body");
@@ -1296,10 +1356,33 @@ function BatchAnalyzeDialog({ onClose }: { onClose: () => void }) {
 
         {/* Stats */}
         {state === "idle" && (
-          <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>
-            Analyzes all unprocessed images using AI vision. Each image gets a caption, alt-text, and tags.
-            This uses a 2-second delay between calls to respect rate limits.
-          </p>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+            <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)" }}>
+              Analyzes all images using AI vision. Each image gets a caption, alt-text, and tags.
+              Uses a 2-second delay between calls to respect rate limits.
+            </p>
+            {overwriteSetting === "ask" && (
+              <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.8rem", color: "var(--foreground)", cursor: "pointer" }}>
+                <input
+                  type="checkbox"
+                  checked={overwriteChoice}
+                  onChange={(e) => setOverwriteChoice(e.target.checked)}
+                  style={{ accentColor: "#F7BB2E" }}
+                />
+                Re-analyze images that already have AI data
+              </label>
+            )}
+            {overwriteSetting === "skip" && (
+              <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", fontStyle: "italic" }}>
+                Already-analyzed images will be skipped (configured in Site Settings).
+              </p>
+            )}
+            {overwriteSetting === "overwrite" && (
+              <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", fontStyle: "italic" }}>
+                All images will be re-analyzed, including existing (configured in Site Settings).
+              </p>
+            )}
+          </div>
         )}
 
         {(state === "running" || state === "done") && (

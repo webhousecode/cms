@@ -21,6 +21,7 @@ export type BatchEvent = StartEvent | ResultEvent | ErrorEvent | DoneEvent;
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
   const language = body.language ?? "da";
+  const overwrite = body.overwrite === true;
 
   const adapter = await getMediaAdapter();
   const allFiles = await adapter.listMedia();
@@ -41,10 +42,12 @@ export async function POST(req: NextRequest) {
     meta.filter((m) => m.aiAnalyzedAt).map((m) => m.key as string),
   );
 
-  const toAnalyze = images.filter((f) => {
-    const key = f.folder ? `${f.folder}/${f.name}` : f.name;
-    return !analyzedKeys.has(key);
-  });
+  const toAnalyze = overwrite
+    ? images
+    : images.filter((f) => {
+        const key = f.folder ? `${f.folder}/${f.name}` : f.name;
+        return !analyzedKeys.has(key);
+      });
 
   const skipped = images.length - toAnalyze.length;
 
