@@ -84,6 +84,9 @@ export function AIPanel({ collection, colConfig, doc, onClose, onInsert }: Props
             type: f.type,
             label: f.label,
           })),
+          targetField: insertTarget
+            ? { name: insertTarget, ...(colConfig.fields.find((f) => f.name === insertTarget) ?? {}) }
+            : undefined,
         }),
       });
 

@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
   const client = new Anthropic({ apiKey });
 
   try {
-    const { message, docData, collectionName, fields, systemPrompt: customSystem, context, maxTokens, model: requestedModel, purpose } = (await request.json()) as {
+    const { message, docData, collectionName, fields, systemPrompt: customSystem, context, maxTokens, model: requestedModel, purpose, targetField } = (await request.json()) as {
       message?: string;
       docData?: Record<string, unknown>;
       collectionName?: string;
@@ -34,6 +34,8 @@ export async function POST(request: NextRequest) {
       model?: string;
       /** "interactives" or "content" — determines which site config defaults to use */
       purpose?: "interactives" | "content";
+      /** The field the user will insert the result into */
+      targetField?: { name: string; type: string; label?: string };
     };
     if (!message) {
       return NextResponse.json({ error: "message required" }, { status: 400 });
@@ -56,16 +58,30 @@ export async function POST(request: NextRequest) {
 
       const contentContext = await buildContentContext().catch(() => "");
 
+      // Build field-specific constraint based on target field type
+      let fieldConstraint = "";
+      if (targetField) {
+        const label = targetField.label ?? targetField.name;
+        if (targetField.type === "text") {
+          fieldConstraint = `\nTARGET FIELD: "${label}" (short text). Your output MUST be a single concise line — a title, name, or label. Never more than ~80 characters. No markdown, no line breaks.`;
+        } else if (targetField.type === "textarea") {
+          fieldConstraint = `\nTARGET FIELD: "${label}" (plain text). Your output should be a short paragraph — a summary, excerpt, or description. No markdown headings, no bullet lists.`;
+        } else if (targetField.type === "richtext") {
+          fieldConstraint = `\nTARGET FIELD: "${label}" (rich text). Markdown formatting is allowed.`;
+        }
+      }
+
       systemPrompt = `You are a content writer inside a CMS. ${collectionName ? `Collection: ${collectionName}.` : ""}
 ${fieldDescriptions ? `Fields:\n${fieldDescriptions}` : ""}
+${fieldConstraint}
 
 ABSOLUTE RULES — violating any of these makes your output useless:
-1. Output ONLY the final content. Nothing else. No preamble, no explanation, no commentary, no suggestions.
+1. Output ONLY the final content for the "${targetField?.label ?? targetField?.name ?? "target"}" field. Nothing else. No preamble, no explanation, no commentary, no suggestions.
 2. NEVER output "---", "**Field:**", "# Heading", or any metadata/labels/dividers.
 3. NEVER add notes like "Here is...", "The content below...", "Feel free to adjust...".
 4. Start your response with the FIRST WORD of the actual content.
 5. End your response with the LAST WORD of the actual content.
-6. Use Markdown for formatting. Use "- " for bullet lists. Never use ">" for lists.
+6. Use Markdown for formatting only if the target field supports it. Use "- " for bullet lists. Never use ">" for lists.
 
 ${contentContext}`;
     }
