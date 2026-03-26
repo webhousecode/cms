@@ -14,6 +14,12 @@ interface SchedulerEvent {
   action: "published" | "unpublished";
   collection: string;
   slug: string;
+  title?: string;
+  orgId?: string;
+  orgName?: string;
+  siteId?: string;
+  siteName?: string;
+  instanceUrl?: string;
 }
 
 /**
@@ -48,30 +54,48 @@ export async function notifySchedulerEvents(events: SchedulerEvent[], siteConfig
 }
 
 function formatDiscord(events: SchedulerEvent[]) {
-  const embeds = events.map((e) => ({
-    title: e.action === "published"
-      ? `Published: ${e.slug}`
-      : `Unpublished: ${e.slug}`,
-    description: `Collection: **${e.collection}**`,
-    color: e.action === "published" ? 0x4ade80 : 0xef4444, // green / red
-    timestamp: new Date().toISOString(),
-    footer: { text: "CMS Scheduler" },
-  }));
+  const first = events[0];
+  const instance = first?.instanceUrl ?? "unknown";
+  const org = first?.orgName ?? first?.orgId ?? "—";
+  const site = first?.siteName ?? first?.siteId ?? "—";
+
+  const embeds = events.map((e) => {
+    const title = e.title && e.title !== e.slug ? e.title : e.slug;
+    const lines = [
+      `Document: **${title}**`,
+      `Collection: **${e.collection}**`,
+      `Slug: \`${e.slug}\``,
+      `Org: **${e.orgName ?? e.orgId ?? "—"}** · Site: **${e.siteName ?? e.siteId ?? "—"}**`,
+    ];
+    return {
+      title: e.action === "published"
+        ? `Published: ${title}`
+        : `Unpublished: ${title}`,
+      description: lines.join("\n"),
+      color: e.action === "published" ? 0x4ade80 : 0xef4444,
+      timestamp: new Date().toISOString(),
+      footer: { text: `CMS Scheduler · ${instance}` },
+    };
+  });
 
   return {
-    content: `Scheduler executed ${events.length} task${events.length > 1 ? "s" : ""}`,
-    embeds: embeds.slice(0, 10), // Discord max 10 embeds
+    content: `Scheduler executed ${events.length} task${events.length > 1 ? "s" : ""} on **${site}** (${org})`,
+    embeds: embeds.slice(0, 10),
   };
 }
 
 function formatSlack(events: SchedulerEvent[]) {
-  const lines = events.map((e) =>
-    e.action === "published"
-      ? `:white_check_mark: *Published* \`${e.collection}/${e.slug}\``
-      : `:red_circle: *Unpublished* \`${e.collection}/${e.slug}\``
-  );
+  const first = events[0];
+  const site = first?.siteName ?? first?.siteId ?? "—";
+  const org = first?.orgName ?? first?.orgId ?? "—";
+  const lines = events.map((e) => {
+    const title = e.title && e.title !== e.slug ? e.title : e.slug;
+    return e.action === "published"
+      ? `:white_check_mark: *Published* _${title}_ \`${e.collection}/${e.slug}\``
+      : `:red_circle: *Unpublished* _${title}_ \`${e.collection}/${e.slug}\``;
+  });
   return {
-    text: `*CMS Scheduler* — ${events.length} task${events.length > 1 ? "s" : ""} executed\n${lines.join("\n")}`,
+    text: `*CMS Scheduler* — ${events.length} task${events.length > 1 ? "s" : ""} on *${site}* (${org})\n${lines.join("\n")}`,
   };
 }
 

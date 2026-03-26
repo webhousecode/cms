@@ -69,9 +69,18 @@ export async function register() {
             }
           } catch { /* non-critical */ }
 
-          // Send webhook with site-specific config
+          // Send webhook with site-specific config + enriched context
           const siteConfig = orgId ? await readSiteConfigForSite(orgId, siteId).catch(() => null) : null;
-          notifySchedulerEvents(actions, siteConfig ?? undefined).catch(() => {});
+          const org = registry?.orgs.find((o: any) => o.id === orgId);
+          const site = org?.sites.find((s: any) => s.id === siteId);
+          const port = process.env.PORT ?? "3010";
+          const instanceUrl = `localhost:${port}`;
+          const enriched = actions.map((a: any) => ({
+            ...a,
+            title: a.title ?? a.slug,
+            orgId, orgName: org?.name, siteId, siteName: site?.name, instanceUrl,
+          }));
+          notifySchedulerEvents(enriched, siteConfig ?? undefined).catch(() => {});
         }
       }
     } catch (err) {
