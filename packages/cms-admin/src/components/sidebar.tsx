@@ -58,9 +58,9 @@ export function AppSidebar({ collections }: Props) {
     return saved !== null ? saved === "true" : true;
   });
   const [toolsOpen, setToolsOpen] = useState(() => {
-    if (typeof window === "undefined") return true;
+    if (typeof window === "undefined") return false;
     const saved = localStorage.getItem("cms-sidebar-tools-open");
-    return saved !== null ? saved === "true" : true;
+    return saved !== null ? saved === "true" : false;
   });
 
   // Load logo preference from user profile (global, not per-site)
