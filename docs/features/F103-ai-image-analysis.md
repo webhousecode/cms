@@ -1,10 +1,10 @@
-# F103 — AI Image Analysis (Caption, Alt-text & Tags)
+# F103 — AI Image & Video Analysis (Caption, Alt-text & Tags)
 
-> AI-drevet billedanalyse direkte fra Media Manager — genererer caption, alt-tekst og tags via Google Gemini. Gratis tier (1.500/dag), én API-nøgle, batch-analyse med progress.
+> AI-drevet billed- og videoanalyse direkte fra Media Manager — genererer caption, alt-tekst og tags. Provider-agnostisk (Anthropic Claude primær, Google Gemini fallback). Batch-analyse med streaming progress. Videoer analyseres via thumbnail-extraction (ffmpeg).
 
 ## Problem
 
-Billeder i CMS'et mangler alt-tekst, caption og tags. Det skader SEO (Google kan ikke indeksere billeder uden alt), tilgængelighed (skærmlæsere har intet at læse), og findbarhed (ingen søgning/filtrering på indhold). Manuelt at skrive alt-tekst for 925 billeder (som Maurseth-sitet) er urealistisk. Vi har brug for AI der analyserer billederne og foreslår tekst som brugeren kan godkende/redigere.
+Billeder og videoer i CMS'et mangler alt-tekst, caption og tags. Det skader SEO (Google kan ikke indeksere billeder uden alt), tilgængelighed (skærmlæsere har intet at læse), og findbarhed (ingen søgning/filtrering på indhold). Manuelt at skrive alt-tekst for 925 billeder (som Maurseth-sitet) er urealistisk. Vi har brug for AI der analyserer mediefiler og foreslår tekst som brugeren kan godkende/redigere.
 
 ## Solution
 
@@ -252,17 +252,44 @@ Når et billede indsættes i richtext og har `aiAlt` i media-meta:
 - Auto-udfyld `alt` attribut med `aiAlt`
 - Vis caption som `title` attribut (TipTap's image title)
 
-### 8. Provider Fallback
+### 8. Video Analysis via Thumbnail
 
-Vercel AI SDK er provider-agnostisk. Skift provider ved at ændre import:
+Videoer (MP4, MOV, WebM, AVI, MKV, M4V) analyseres via deres thumbnail:
+
+1. `/api/media/analyze` detecter video-extension → henter thumbnail fra `/api/media/video-thumb`
+2. Thumbnail (JPEG frame fra ffmpeg) sendes til samme AI vision pipeline som billeder
+3. Caption, alt-text og tags genereres baseret på video-framets indhold
+4. "Analyze All" inkluderer videoer automatisk
+5. AI badge (gold sparkle) vises på analyserede videoer i grid + list view
+6. Lightbox AI panel vises for videoer (samme layout som billeder)
+
+**Krav:** ffmpeg installeret lokalt. Thumbnails caches i `_data/.cache/video-thumbs/`.
+
+### 9. Provider Strategy
+
+Anthropic Claude som primær provider (bedst vision quality, allerede konfigureret for de fleste CMS installs). Google Gemini som fallback (generøs gratis tier men upålidelig quota). Provider-agnostisk via Vercel AI SDK.
 
 | Provider | Model | Pris/billede | Package |
 |----------|-------|-------------|---------|
-| **Google Gemini** (primær) | `gemini-2.0-flash` | Gratis (1.500/dag) | `@ai-sdk/google` |
-| OpenAI (fallback) | `gpt-4o-mini` | ~$0.00035 | `@ai-sdk/openai` |
-| Anthropic (fallback) | `claude-sonnet-4-6-20250514` | ~$0.001 | `@ai-sdk/anthropic` |
+| **Anthropic** (primær) | `claude-sonnet-4-20250514` | ~$0.001 | `@ai-sdk/anthropic` |
+| Google Gemini (fallback) | `gemini-2.5-flash` | Gratis (1.500/dag) | `@ai-sdk/google` |
 
-### 9. Error Handling
+### 10. Overwrite Setting
+
+Site Setting `aiImageOverwrite` med 3 states:
+- **"ask"** (default) — batch dialog viser checkbox "Re-analyze images that already have AI data"
+- **"skip"** — batch springer automatisk allerede-analyserede over
+- **"overwrite"** — batch re-analyserer alt
+
+Hoisted til Org Settings med inheritance: defaults ← org ← site.
+
+### 11. Alt-text Auto-Apply
+
+- **Ved indsættelse:** Når et billede indsættes i richtext editor (upload eller Browse), hentes AI alt-tekst automatisk og sættes som `alt` attribut → `![AI alt text](/uploads/img.jpg)`
+- **Apply-knap:** I AI popover (richtext context toolbar) — gold "Apply" knap skriver alt-tekst direkte ind i TipTap image node
+- **Copy:** Alle felter har copy-to-clipboard knapper til manuel brug
+
+### 12. Error Handling
 
 | Fejl | Årsag | Bruger-besked |
 |------|-------|---------------|

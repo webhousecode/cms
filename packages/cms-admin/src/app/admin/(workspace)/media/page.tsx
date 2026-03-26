@@ -715,7 +715,7 @@ function GridView({ files, copied, deleting, usageMap, aiAnalyzedSet, onCopy, on
             </div>
 
             {/* AI analyzed badge */}
-            {isAiAnalyzed && file.isImage && (
+            {isAiAnalyzed && (file.isImage || file.mediaType === "video") && (
               <span title="AI analyzed" style={{
                 position: "absolute", bottom: "calc(28% + 0.375rem)", right: "0.375rem",
                 background: "rgba(0,0,0,0.65)", backdropFilter: "blur(4px)",
@@ -809,7 +809,7 @@ function ListView({ files, copied, deleting, usageMap, aiAnalyzedSet, onCopy, on
                 <td style={{ padding: "0.5rem 1rem", color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>{formatSize(file.size)}</td>
                 <td style={{ padding: "0.5rem 1rem", color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>{formatDate(file.createdAt)}</td>
                 <td style={{ padding: "0.5rem 1rem", whiteSpace: "nowrap" }}>
-                  {isAiAnalyzed && file.isImage ? (
+                  {isAiAnalyzed && (file.isImage || file.mediaType === "video") ? (
                     <span title="AI analyzed"><Sparkles style={{ width: "0.75rem", height: "0.75rem", color: "#F7BB2E" }} /></span>
                   ) : (
                     <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", opacity: 0.4 }}>—</span>
@@ -969,7 +969,7 @@ function Lightbox({ files, index, onNavigate, onClose, onCopy, copied, onDelete 
         </div>
 
         {/* AI Metadata panel — right side */}
-        {file.isImage && (
+        {(file.isImage || file.mediaType === "video") && (
           <div
             onClick={(e) => e.stopPropagation()}
             style={{ width: "300px", flexShrink: 0, borderLeft: "1px solid rgba(255,255,255,0.08)", display: "flex", flexDirection: "column", overflow: "hidden" }}

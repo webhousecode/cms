@@ -6,6 +6,8 @@ import fs from "fs/promises";
 import path from "path";
 
 const IMAGE_EXTS = new Set(["jpg", "jpeg", "png", "webp", "gif"]);
+const VIDEO_EXTS = new Set(["mp4", "mov", "webm", "avi", "mkv", "m4v"]);
+const ANALYZABLE_EXTS = new Set([...IMAGE_EXTS, ...VIDEO_EXTS]);
 const MIME_MAP: Record<string, string> = {
   jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png",
   webp: "image/webp", gif: "image/gif",
@@ -26,10 +28,10 @@ export async function POST(req: NextRequest) {
   const adapter = await getMediaAdapter();
   const allFiles = await adapter.listMedia();
 
-  // Only raster images
+  // Raster images + videos (videos use thumbnail for analysis)
   const images = allFiles.filter((f) => {
     const ext = f.name.toLowerCase().split(".").pop() ?? "";
-    return f.isImage && IMAGE_EXTS.has(ext);
+    return ANALYZABLE_EXTS.has(ext);
   });
 
   // Load existing media-meta to find already-analyzed
@@ -74,15 +76,30 @@ export async function POST(req: NextRequest) {
         const key = file.folder ? `${file.folder}/${file.name}` : file.name;
 
         try {
-          const segments = file.folder ? [file.folder, file.name] : [file.name];
-          const buffer = await adapter.readFile(segments);
-          if (!buffer) {
-            send({ kind: "error", filename: key, error: "File not found" });
-            failed++;
-            continue;
+          const isVideo = VIDEO_EXTS.has(ext);
+          let buffer: Buffer | null;
+
+          if (isVideo) {
+            // For videos: extract thumbnail directly via ffmpeg
+            const { getVideoThumbnail } = await import("@/lib/video-thumbnail");
+            const fileUrl = file.folder ? `/uploads/${file.folder}/${file.name}` : `/uploads/${file.name}`;
+            buffer = await getVideoThumbnail(fileUrl);
+            if (!buffer) {
+              send({ kind: "error", filename: key, error: "Video thumbnail failed (ffmpeg required)" });
+              failed++;
+              continue;
+            }
+          } else {
+            const segments = file.folder ? [file.folder, file.name] : [file.name];
+            buffer = await adapter.readFile(segments);
+            if (!buffer) {
+              send({ kind: "error", filename: key, error: "File not found" });
+              failed++;
+              continue;
+            }
           }
 
-          const result = await analyzeImage(buffer, mimeType, language);
+          const result = await analyzeImage(buffer, isVideo ? "image/jpeg" : mimeType, language);
 
           // Save to media-meta.json
           const aiFields = {

@@ -3,6 +3,8 @@ import { analyzeImage } from "@/lib/ai/image-analysis";
 import type { ImageAnalysis } from "@/lib/ai/image-analysis";
 import { getMediaAdapter } from "@/lib/media";
 
+const VIDEO_EXTS = new Set(["mp4", "mov", "webm", "avi", "mkv", "m4v"]);
+
 export async function POST(req: NextRequest) {
   try {
     const { filename, folder = "", language = "da" } = await req.json();
@@ -10,31 +12,45 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "filename required" }, { status: 400 });
     }
 
-    // Read image from media adapter
-    const adapter = await getMediaAdapter();
-    const segments = folder ? [folder, filename] : [filename];
-    const buffer = await adapter.readFile(segments);
-    if (!buffer) {
-      return NextResponse.json({ error: "Image not found" }, { status: 404 });
-    }
-
-    // Detect mime type
     const ext = filename.toLowerCase().split(".").pop() ?? "";
-    const mimeMap: Record<string, string> = {
-      jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png",
-      webp: "image/webp", gif: "image/gif", svg: "image/svg+xml",
-    };
-    const mimeType = mimeMap[ext] ?? "image/jpeg";
+    const isVideo = VIDEO_EXTS.has(ext);
 
-    // Skip non-raster images
-    if (mimeType === "image/svg+xml") {
-      return NextResponse.json({ error: "SVG images cannot be analyzed" }, { status: 400 });
+    let buffer: Buffer | null;
+    let mimeType = "image/jpeg";
+
+    if (isVideo) {
+      // For videos: extract thumbnail directly via ffmpeg
+      const { getVideoThumbnail } = await import("@/lib/video-thumbnail");
+      const fileUrl = folder ? `/uploads/${folder}/${filename}` : `/uploads/${filename}`;
+      buffer = await getVideoThumbnail(fileUrl);
+      if (!buffer) {
+        return NextResponse.json({ error: "Could not generate video thumbnail (ffmpeg required)" }, { status: 400 });
+      }
+      mimeType = "image/jpeg";
+    } else {
+      // For images: read directly from media adapter
+      const adapter = await getMediaAdapter();
+      const segments = folder ? [folder, filename] : [filename];
+      buffer = await adapter.readFile(segments);
+      if (!buffer) {
+        return NextResponse.json({ error: "File not found" }, { status: 404 });
+      }
+
+      const mimeMap: Record<string, string> = {
+        jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png",
+        webp: "image/webp", gif: "image/gif", svg: "image/svg+xml",
+      };
+      mimeType = mimeMap[ext] ?? "image/jpeg";
+
+      if (mimeType === "image/svg+xml") {
+        return NextResponse.json({ error: "SVG images cannot be analyzed" }, { status: 400 });
+      }
     }
 
     const result = await analyzeImage(buffer, mimeType, language);
 
     // Save AI metadata to media-meta
-    await saveAIMetadata(adapter, folder, filename, result);
+    await saveAIMetadata(folder, filename, result);
 
     return NextResponse.json(result);
   } catch (err) {
@@ -44,15 +60,12 @@ export async function POST(req: NextRequest) {
   }
 }
 
-/** Save AI analysis results into the media adapter's metadata */
+/** Save AI analysis results into media-meta.json */
 async function saveAIMetadata(
-  adapter: Awaited<ReturnType<typeof getMediaAdapter>>,
   folder: string,
   filename: string,
   analysis: ImageAnalysis,
 ) {
-  // Access filesystem adapter's internal methods via the media-meta pattern
-  // We import and use the same loadMediaMeta/saveMediaMeta from filesystem adapter
   try {
     const { getActiveSitePaths } = await import("@/lib/site-paths");
     const { dataDir } = await getActiveSitePaths();
