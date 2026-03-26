@@ -119,7 +119,8 @@
 | F100 | [Custom Domain DNS Validation](#f100-custom-domain-dns-validation) | Planned | [docs/features/F100-custom-domain-dns.md](features/F100-custom-domain-dns.md) |
 | F101 | [Update Manager](#f101-update-manager) | Planned | [docs/features/F101-update-manager.md](features/F101-update-manager.md) |
 | F102 | [Schema Drift Detection](#f102-schema-drift-detection) | Planned | [docs/features/F102-schema-drift-detection.md](features/F102-schema-drift-detection.md) |
-| F103 | [AI Image Analysis](#f103-ai-image-analysis) | Planned | [docs/features/F103-ai-image-analysis.md](features/F103-ai-image-analysis.md) |
+| F103 | [AI Image Analysis](#f103-ai-image-analysis) | In progress | [docs/features/F103-ai-image-analysis.md](features/F103-ai-image-analysis.md) |
+| F104 | [Performance & Data Optimization](#f104-performance-optimization) | Planned | [docs/features/F104-performance-optimization.md](features/F104-performance-optimization.md) |
 
 ---
 
@@ -439,4 +440,7 @@ Automatisk versionstjek og opdateringsflow for alle webhouse.app-installationer.
 Detect når cms.config.ts mangler felter som eksisterer i content JSON-filer. Ved site load sampler CMS de første 5 dokumenter per collection og sammenligner data-keys mod schema-felter. Viser gul warning banner i collection list: "8 fields found in content but missing from schema (excerpt, content, date, ...)". Tre faser: v1 (admin banner), v2 (CLI `cms validate`), v3 (pre-commit hook). Motiveret af real incident: en AI-session strippede Posts-felter ved et uheld, uopdaget i 6 dage.
 
 ## F103 — AI Image Analysis (Caption, Alt-text & Tags)
-AI-drevet billedanalyse direkte fra Media Manager via Google Gemini 2.0 Flash (1.500 gratis/dag, ingen kreditkort). Genererer caption, alt-tekst (maks 125 tegn) og 3-8 tags per billede. Zod-baseret structured output via Vercel AI SDK (`ai` + `@ai-sdk/google`). Single-image analyse med ✨ knap i media grid + batch-analyse med NDJSON streaming progress. AI-data gemmes i eksisterende media-meta.json. Editor auto-udfylder alt-tekst ved billed-indsættelse. Provider-agnostisk — kan skifte til OpenAI/Anthropic med én import-ændring. Inline API key onboarding med direkte link til Google AI Studio.
+AI-drevet billed- og videoanalyse direkte fra Media Manager. Anthropic Claude primær, Google Gemini fallback. Genererer caption, alt-tekst (maks 125 tegn) og 3-8 tags per billede/video. Zod-baseret structured output via Vercel AI SDK. Single-image analyse med ✨ knap + batch-analyse med NDJSON streaming progress. Video-analyse via ffmpeg thumbnail extraction. AI-data gemmes i media-meta.json. Editor auto-udfylder alt-tekst ved billed-indsættelse. Apply-knap i AI popover skriver alt direkte ind i TipTap image node. Provider-agnostisk arkitektur. Overwrite-setting (ask/skip/overwrite) i Site + Org Settings.
+
+## F104 — Performance & Data Optimization
+Systematisk hastighedsoptimering af CMS admin. SQLite for media metadata (erstatter media-meta.json — O(1) lookup vs O(n) JSON parse). In-memory LRU config cache med TTL for site-config, registry, ai-config, users (10s TTL, mtime-invalidering). Server-side API pagination for media og collections. Bundle splitting med dynamic imports for tunge editor dialogs/extensions. Debounced config writes. Scheduler log rotation. Target: media page load <150ms (fra ~400ms), SQLite lookup <1ms (fra ~15ms JSON parse), config read <0.1ms (fra ~5ms disk).
