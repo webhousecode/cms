@@ -219,7 +219,7 @@ export default function MediaPage() {
   }
 
   /* ── Lightbox ─────────────────────────────────────────────── */
-  const imageFiles = filtered.filter((f) => f.isImage);
+  const imageFiles = filtered.filter((f) => f.isImage || f.mediaType === "video");
   function openLightbox(file: MediaFile) {
     const idx = imageFiles.findIndex((f) => f.url === file.url);
     if (idx >= 0) setLightboxIndex(idx);
@@ -607,6 +607,31 @@ function MediaIcon({ mediaType, size = "1.5rem" }: { mediaType: string; size?: s
   }
 }
 
+function VideoThumb({ file }: { file: MediaFile }) {
+  const [src, setSrc] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
+  useEffect(() => {
+    fetch(`/api/media/video-thumb?file=${encodeURIComponent(file.url)}`)
+      .then((r) => r.ok ? r.blob() : null)
+      .then((blob) => {
+        if (blob) setSrc(URL.createObjectURL(blob));
+        else setFailed(true);
+      })
+      .catch(() => setFailed(true));
+  }, [file.url]);
+
+  if (failed || !src) {
+    return <MediaIcon mediaType="video" size="2rem" />;
+  }
+  return (
+    <>
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img src={src} alt={file.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+      <Video style={{ position: "absolute", top: "0.375rem", right: "0.375rem", width: "1rem", height: "1rem", color: "white", filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.6))" }} />
+    </>
+  );
+}
+
 /* ─── Sub-components ─────────────────────────────────────────── */
 
 function FolderBtn({ label, count, active, icon, onClick }: {
@@ -676,12 +701,14 @@ function GridView({ files, copied, deleting, usageMap, aiAnalyzedSet, onCopy, on
           >
             {/* Thumbnail */}
             <div
-              style={{ width: "100%", height: "72%", background: "var(--muted)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", borderRadius: "0.5rem 0.5rem 0 0", cursor: file.isImage ? "zoom-in" : "default" }}
-              onClick={() => file.isImage && onOpen(file)}
+              style={{ width: "100%", height: "72%", background: "var(--muted)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", borderRadius: "0.5rem 0.5rem 0 0", cursor: (file.isImage || file.mediaType === "video") ? "pointer" : "default", position: "relative" }}
+              onClick={() => (file.isImage || file.mediaType === "video") && onOpen(file)}
             >
               {file.isImage ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={file.url} alt={file.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              ) : file.mediaType === "video" ? (
+                <VideoThumb file={file} />
               ) : (
                 <MediaIcon mediaType={file.mediaType} size="2rem" />
               )}
@@ -913,13 +940,23 @@ function Lightbox({ files, index, onNavigate, onClose, onCopy, copied, onDelete 
             </button>
           )}
 
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={file.url}
-            alt={file.name}
-            style={{ maxWidth: "calc(100% - 8rem)", maxHeight: "100%", objectFit: "contain", borderRadius: "4px", boxShadow: "0 8px 40px rgba(0,0,0,0.6)" }}
-            onClick={(e) => e.stopPropagation()}
-          />
+          {file.mediaType === "video" ? (
+            <video
+              src={file.url}
+              controls
+              autoPlay
+              style={{ maxWidth: "calc(100% - 8rem)", maxHeight: "100%", borderRadius: "4px", boxShadow: "0 8px 40px rgba(0,0,0,0.6)" }}
+              onClick={(e) => e.stopPropagation()}
+            />
+          ) : (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={file.url}
+              alt={file.name}
+              style={{ maxWidth: "calc(100% - 8rem)", maxHeight: "100%", objectFit: "contain", borderRadius: "4px", boxShadow: "0 8px 40px rgba(0,0,0,0.6)" }}
+              onClick={(e) => e.stopPropagation()}
+            />
+          )}
 
           {hasNext && (
             <button type="button" onClick={(e) => { e.stopPropagation(); onNavigate(index + 1); }}
