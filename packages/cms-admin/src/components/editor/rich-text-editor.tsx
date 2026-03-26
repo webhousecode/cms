@@ -2759,7 +2759,14 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
             {toolbarState.imageSrc && toolbarState.imageSrc.includes("/uploads/") && (
               <>
                 <CtxSep />
-                <AIMetadataPopover imageUrl={toolbarState.imageSrc} variant="ctx" />
+                <AIMetadataPopover
+                  imageUrl={toolbarState.imageSrc}
+                  variant="ctx"
+                  onApplyAlt={(alt) => {
+                    editor.chain().focus().updateAttributes("image", { alt }).run();
+                    onChange(editor.storage.markdown.getMarkdown());
+                  }}
+                />
               </>
             )}
           </div>
