@@ -41,6 +41,17 @@ Instead, use a `blocks` field with content blocks (text-block, image-block, quot
 
 10. **Relation values** — Relations store slugs as strings (single) or string arrays (multiple), not full document objects. To get the related document, do a separate `getDocument()` lookup.
 
+11. **Image path handling** — Image fields store paths like `/uploads/filename.jpg` (with leading slash). In `build.ts`, NEVER concatenate `${BASE}/${path}` directly — this produces double slashes (`//uploads/...`) when BASE is empty. Instead, create a helper function:
+    ```typescript
+    function imgUrl(src: string): string {
+      if (!src) return '';
+      if (src.startsWith('http')) return src;
+      if (src.startsWith('/')) return `${BASE}${src}`;
+      return `${BASE}/${src}`;
+    }
+    ```
+    Use `imgUrl()` for ALL image src attributes. This handles `/uploads/x` (with slash), `uploads/x` (without), and `https://...` (external) correctly.
+
 ## MANDATORY: Content File Requirements
 
 **CRITICAL — READ THIS BEFORE BUILDING ANY SITE.**
@@ -98,6 +109,7 @@ Before considering a site complete, verify:
 - [ ] `build.ts` uses `BASE` variable for all internal links (never hardcoded `/path`)
 - [ ] `build.ts` uses `BUILD_OUT_DIR` env var for output directory (never hardcoded `'dist'`)
 - [ ] `build.ts` uses only inline CSS — no CDN scripts (Tailwind, Bootstrap, etc.)
+- [ ] All image `src` attributes use an `imgUrl()` helper — never raw `${BASE}/${path}` concatenation
 - [ ] Running `npx tsx build.ts` produces output that reflects the JSON content
 - [ ] Changing a value in a JSON file and rebuilding changes the output
 
