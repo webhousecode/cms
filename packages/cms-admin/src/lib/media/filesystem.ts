@@ -134,8 +134,8 @@ export class FilesystemMediaAdapter implements MediaAdapter {
     const filePath = folder
       ? path.join(this.uploadDir, folder, name)
       : path.join(this.uploadDir, name);
-    await unlink(filePath);
-    // Also remove from metadata
+    await unlink(filePath).catch(() => {}); // file may already be gone
+    // Always remove from metadata (even if file is missing from disk)
     const meta = await this.loadMediaMeta();
     const key = this.mediaKey(folder, name);
     const idx = meta.findIndex((m) => m.key === key);
