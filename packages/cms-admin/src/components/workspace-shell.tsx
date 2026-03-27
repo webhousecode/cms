@@ -36,10 +36,12 @@ export function WorkspaceShell({ collections, globals, activeSiteId, children }:
 
   if (mode === "chat") {
     return (
-      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "var(--background)" }}>
-        <AdminHeader mode={mode} onToggleMode={toggle} />
-        <ChatInterface collections={collections} activeSiteId={activeSiteId} />
-      </div>
+      <TabsProvider siteId={activeSiteId}>
+        <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column", background: "var(--background)" }}>
+          <AdminHeader mode={mode} onToggleMode={toggle} />
+          <ChatInterface collections={collections} activeSiteId={activeSiteId} />
+        </div>
+      </TabsProvider>
     );
   }
 
