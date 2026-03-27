@@ -112,12 +112,17 @@ export function ChatInput({ onSend, disabled, placeholder, visible }: ChatInputP
             try {
               const extractForm = new FormData();
               extractForm.append("file", file);
+              console.log("[chat-input] Extracting text from:", file.name);
               const extractRes = await fetch("/api/extract-text", { method: "POST", body: extractForm });
+              console.log("[chat-input] Extract response status:", extractRes.status);
               if (extractRes.ok) {
-                const { text } = await extractRes.json() as { text: string | null };
-                if (text) uploaded.textContent = text;
+                const json = await extractRes.json() as { text: string | null; reason?: string };
+                console.log("[chat-input] Extracted text:", json.text ? `${json.text.length} chars` : `null (${json.reason})`);
+                if (json.text) uploaded.textContent = json.text;
               }
-            } catch { /* extraction failed, still have the file URL */ }
+            } catch (e) {
+              console.error("[chat-input] Extract failed:", e);
+            }
           }
           results.push(uploaded);
         }
@@ -136,6 +141,7 @@ export function ChatInput({ onSend, disabled, placeholder, visible }: ChatInputP
     // Build message with uploaded files referenced
     let message = trimmed;
     if (uploads.length > 0) {
+      console.log("[chat-input] Sending uploads:", uploads.map(u => ({ name: u.name, hasText: !!u.textContent, textLen: u.textContent?.length })));
       const refs = uploads.map((u) => {
         if (u.textContent) {
           return `[File: ${u.name} (${u.category})]\n\`\`\`\n${u.textContent.slice(0, 10000)}\n\`\`\``;
