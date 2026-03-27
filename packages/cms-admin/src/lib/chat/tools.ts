@@ -1194,14 +1194,27 @@ DESIGN GUIDELINES:
       handler: async () => {
         const [cms, config] = await Promise.all([getAdminCms(), getAdminConfig()]);
         const items: string[] = [];
+
+        // Content documents
         for (const col of config.collections) {
           const { documents } = await cms.content.findMany(col.name, {}).catch(() => ({ documents: [] as any[] }));
           for (const d of documents) {
-            if (d.status === "trashed") {
+            if ((d.status as string) === "trashed") {
               items.push(`- **${d.data.title ?? d.slug}** (${col.label ?? col.name}/${d.slug}) trashed ${d.data._trashedAt ?? ""}`);
             }
           }
         }
+
+        // Media files
+        try {
+          const { getMediaAdapter } = await import("@/lib/media");
+          const adapter = await getMediaAdapter();
+          const trashed = await adapter.listTrashed();
+          for (const m of trashed) {
+            items.push(`- **${m.name}** (media) trashed ${m.trashedAt ?? ""}`);
+          }
+        } catch { /* media trash not available */ }
+
         return items.length > 0 ? `${items.length} trashed item(s):\n${items.join("\n")}` : "Trash is empty.";
       },
     },
