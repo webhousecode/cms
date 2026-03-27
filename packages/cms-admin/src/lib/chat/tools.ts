@@ -270,6 +270,41 @@ export async function buildChatTools(): Promise<ToolPair[]> {
       },
     },
 
+    // ── update_site_settings ──────────────────────────────────
+    {
+      definition: {
+        name: "update_site_settings",
+        description:
+          "Update site settings. Use get_site_config first to see current values. Only include fields you want to change. Sensitive fields (API keys) cannot be changed via chat.",
+        input_schema: {
+          type: "object",
+          properties: {
+            settings: {
+              type: "object",
+              description: "Key-value pairs to update. E.g. { previewSiteUrl: 'http://...', trashRetentionDays: 30, deployOnSave: true }",
+            },
+          },
+          required: ["settings"],
+        },
+      },
+      handler: async (input) => {
+        const patch = (input.settings ?? {}) as Record<string, unknown>;
+
+        // Block sensitive fields
+        const blocked = ["anthropicApiKey", "openaiApiKey", "geminiApiKey", "braveApiKey", "tavilyApiKey", "resendApiKey", "deployApiToken", "calendarSecret"];
+        const attempted = Object.keys(patch).filter((k) => blocked.includes(k));
+        if (attempted.length > 0) {
+          return `Error: Cannot update sensitive fields via chat: ${attempted.join(", ")}. Use Site Settings in Admin mode.`;
+        }
+
+        const { writeSiteConfig } = await import("@/lib/site-config");
+        const updated = await writeSiteConfig(patch as any);
+
+        const changedKeys = Object.keys(patch).join(", ");
+        return `Updated site settings: ${changedKeys}`;
+      },
+    },
+
     // ═══════════════════════════════════════════════════════════
     // Media tools
     // ═══════════════════════════════════════════════════════════

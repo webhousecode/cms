@@ -18,6 +18,8 @@ const TOOL_META: Record<string, ToolMeta> = {
   get_schema:        { label: "Reading schema" },
   list_drafts:       { label: "Checking drafts" },
   get_site_config:   { label: "Reading site config" },
+  // Settings
+  update_site_settings: { label: "Updating settings", icon: Pencil },
   // Media
   list_media:        { label: "Browsing media library" },
   search_media:      { label: "Searching media", icon: Search },
