@@ -451,7 +451,7 @@ function HistoryItem({ id, title, updatedAt, isActive, onLoad, onRename }: {
           cursor: "pointer", color: "var(--foreground)",
         }}
       >
-        <div style={{ fontSize: "0.8rem", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+        <div style={{ fontSize: "0.8rem", fontWeight: 500, lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as any, overflow: "hidden" }}>
           {title}
         </div>
         <div style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", marginTop: "2px" }}>
