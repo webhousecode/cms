@@ -159,10 +159,13 @@ export function TabsProvider({ children, siteId }: { children: ReactNode; siteId
     if (userId === null) return; // wait for userId
 
     function restoreTabs(saved: { tabs: Tab[]; activeId: string | null } | null) {
-      // F84: After org switch, don't navigate to saved tabs — stay on current page (/admin/sites)
-      const orgJustSwitched = typeof sessionStorage !== "undefined" && sessionStorage.getItem("org-switched") === "1";
-      if (orgJustSwitched) {
+      // F84: After org/site switch, don't navigate to saved tabs — stay on current page
+      const justSwitched = typeof sessionStorage !== "undefined" && (
+        sessionStorage.getItem("org-switched") === "1" || sessionStorage.getItem("site-switched") === "1"
+      );
+      if (justSwitched) {
         sessionStorage.removeItem("org-switched");
+        sessionStorage.removeItem("site-switched");
         // Start fresh with current page as only tab
         const id = uid();
         applyTabs([{ id, path: pathname, title: pathTitle(pathname) }], id);
