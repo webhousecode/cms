@@ -391,7 +391,12 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
       )}
 
       {/* Input */}
-      <ChatInput onSend={handleSend} disabled={isThinking} visible={visible} />
+      <ChatInput
+        onSend={handleSend}
+        disabled={isThinking}
+        visible={visible}
+        lastUserMessage={messages.filter((m) => m.role === "user").pop()?.content}
+      />
     </div>
   );
 }
