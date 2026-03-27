@@ -110,7 +110,8 @@ _Makes us stand out. Customers expect these from a modern CMS._
 | 18g | **F95 Cloud Backup Providers** | Medium | pCloud, Scaleway (75GB free), R2, B2, Hetzner. S3 + pCloud + WebDAV adapters. Extends F27. |
 | 18h | **F98 Lighthouse Audit** | Medium | PSI API + local Lighthouse. Dashboard scores + trend, scheduled scans, per-page audits, alerts on drop. |
 | 19 | **F49 Incremental Builds** | Small | Performance. Only matters at scale (100+ pages). |
-| 20 | **F51 Admin AI Assistant** | Medium | Persistent AI chat in admin. Executes MCP tools. Huge differentiator. |
+| 20 | **F107 Chat with Your Site** | Large | Full-screen conversational CMS. Master switch Chat/Traditional. 4 phases. THE AI-first CMS differentiator. Supersedes F51. |
+| ~~20~~ | ~~**F51 Admin AI Assistant**~~ | ~~Superseded~~ | ~~Absorbed into F107 Chat with Your Site~~ |
 | 20b | **F55 Enhance Prompt** | Small | Magic wand that rewrites vague prompts into effective ones. Better AI output for everyone. |
 | 20c | **F57 Extranet** | Large | Protected site pages for visitors. Client portals, member content, gated resources. |
 | 20d | **F60 Reliable Scheduled Tasks** | Small | Heartbeat endpoint + external cron ensures publishing/agents run on time despite Fly auto-stop. |
