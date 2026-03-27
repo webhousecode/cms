@@ -405,6 +405,78 @@ export async function buildChatTools(): Promise<ToolPair[]> {
     },
 
     // ═══════════════════════════════════════════════════════════
+    // Phase 3: Inline forms
+    // ═══════════════════════════════════════════════════════════
+
+    // ── show_edit_form ────────────────────────────────────────
+    {
+      definition: {
+        name: "show_edit_form",
+        description:
+          "Show an inline edit form for specific fields on a document. The form renders directly in the chat so the user can edit and save. Use this when the user wants to manually edit specific fields rather than having AI do it.",
+        input_schema: {
+          type: "object",
+          properties: {
+            collection: { type: "string", description: "Collection name" },
+            slug: { type: "string", description: "Document slug" },
+            fields: {
+              type: "array",
+              items: { type: "string" },
+              description: "Field names to show in the form. If omitted, shows all fields.",
+            },
+          },
+          required: ["collection", "slug"],
+        },
+      },
+      handler: async (input) => {
+        const collection = String(input.collection);
+        const slug = String(input.slug);
+        const fieldFilter = input.fields as string[] | undefined;
+
+        const cms = await getAdminCms();
+        const config = await getAdminConfig();
+        const doc = await cms.content.findBySlug(collection, slug);
+        if (!doc) return `Error: Document not found: ${collection}/${slug}`;
+
+        const col = config.collections.find((c) => c.name === collection);
+        if (!col) return `Error: Collection not found: ${collection}`;
+
+        const schemaFields = (col.fields ?? []) as Array<{
+          name: string; type: string; label?: string; required?: boolean;
+          options?: Array<{ label: string; value: string }>;
+        }>;
+
+        const fields = schemaFields
+          .filter((f) => !fieldFilter || fieldFilter.includes(f.name))
+          .map((f) => {
+            let formType: string = "text";
+            if (f.type === "textarea" || f.type === "richtext") formType = "textarea";
+            else if (f.type === "select") formType = "select";
+            else if (f.type === "boolean") formType = "boolean";
+            else if (f.type === "date") formType = "date";
+            else if (f.type === "tags") formType = "tags";
+
+            return {
+              name: f.name,
+              type: formType,
+              label: f.label ?? f.name,
+              value: doc.data[f.name] ?? (f.type === "boolean" ? false : f.type === "tags" ? [] : ""),
+              ...(f.options ? { options: f.options } : {}),
+              ...(f.required ? { required: true } : {}),
+            };
+          });
+
+        // Return as a special JSON that the chat UI will render as a form
+        return `__INLINE_FORM__${JSON.stringify({
+          collection,
+          slug,
+          title: String(doc.data.title ?? doc.data.name ?? slug),
+          fields,
+        })}`;
+      },
+    },
+
+    // ═══════════════════════════════════════════════════════════
     // Phase 2: Write tools
     // ═══════════════════════════════════════════════════════════
 

@@ -131,6 +131,13 @@ export async function POST(request: NextRequest) {
               result = `Unknown tool: ${block.name}`;
             }
 
+            // Check for inline form response
+            if (result.startsWith("__INLINE_FORM__")) {
+              const formJson = result.slice("__INLINE_FORM__".length);
+              sendEvent("form", JSON.parse(formJson));
+              result = "Showing edit form for the user.";
+            }
+
             sendEvent("tool_result", {
               tool: block.name,
               result: result.slice(0, 3000),

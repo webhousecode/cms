@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from "react";
 import { ToolCallCard } from "./tool-call-card";
 import { ThinkingAnimation } from "./thinking-animation";
 import { MarkdownRenderer } from "./markdown-renderer";
+import { InlineForm } from "./inline-form";
 import { User, Bot, Copy, Check } from "lucide-react";
 
 export interface ToolCall {
@@ -13,11 +14,28 @@ export interface ToolCall {
   status: "running" | "done" | "error";
 }
 
+export interface InlineFormField {
+  name: string;
+  type: "text" | "textarea" | "select" | "boolean" | "date" | "tags";
+  label: string;
+  value: unknown;
+  options?: Array<{ label: string; value: string }>;
+  required?: boolean;
+}
+
+export interface InlineFormData {
+  collection: string;
+  slug: string;
+  title: string;
+  fields: InlineFormField[];
+}
+
 export interface ChatMessageUI {
   id: string;
   role: "user" | "assistant";
   content: string;
   toolCalls?: ToolCall[];
+  inlineForm?: InlineFormData;
   isStreaming?: boolean;
 }
 
@@ -116,6 +134,11 @@ function MessageBubble({ message }: { message: ChatMessageUI }) {
               <MessageCopyButton text={message.content} />
             )}
           </div>
+        )}
+
+        {/* Inline form (Phase 3) */}
+        {!isUser && message.inlineForm && (
+          <InlineForm form={message.inlineForm} />
         )}
 
         {/* Streaming cursor */}
