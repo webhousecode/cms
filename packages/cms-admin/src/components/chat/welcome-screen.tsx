@@ -1,6 +1,6 @@
 "use client";
 
-import { MessageSquare, Search, FileText, BarChart3, Settings } from "lucide-react";
+import { MessageSquare, Search, FileText, BarChart3, Settings, Wrench, PenLine } from "lucide-react";
 
 interface WelcomeScreenProps {
   siteName: string;
@@ -27,6 +27,16 @@ const SUGGESTIONS = [
     icon: Settings,
     label: "View schema",
     message: "Show me the full schema for all collections — fields, types, and requirements.",
+  },
+  {
+    icon: Wrench,
+    label: "What can you do?",
+    message: "List all the tools and capabilities you have — what can I ask you to do?",
+  },
+  {
+    icon: PenLine,
+    label: "Edit a page",
+    message: "I want to edit the ",
   },
 ];
 
@@ -71,10 +81,10 @@ export function WelcomeScreen({ siteName, onSuggestionClick }: WelcomeScreenProp
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(2, 1fr)",
+          gridTemplateColumns: "repeat(3, 1fr)",
           gap: "10px",
           width: "100%",
-          maxWidth: "520px",
+          maxWidth: "620px",
         }}
       >
         {SUGGESTIONS.map(({ icon: Icon, label, message }) => (
