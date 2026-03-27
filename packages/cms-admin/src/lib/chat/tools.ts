@@ -571,13 +571,26 @@ export async function buildChatTools(): Promise<ToolPair[]> {
         const existing = await cms.content.findBySlug(collection, slug).catch(() => null);
         if (existing) return `Error: Document with slug "${slug}" already exists in ${collection}.`;
 
+        // Auto-generate _seo from content
+        const title = String(data.title ?? data.name ?? "");
+        const content = String(data.content ?? data.body ?? "");
+        if (title && !data._seo) {
+          const desc = content.replace(/[#*_\[\]()>]/g, "").trim().slice(0, 155);
+          data._seo = {
+            metaTitle: title.slice(0, 60),
+            metaDescription: desc.length > 120 ? desc : undefined,
+            keywords: [],
+            lastOptimized: new Date().toISOString(),
+          };
+        }
+
         const doc = await cms.content.create(collection, {
           slug,
           data,
           status: "draft",
         });
 
-        return `Created "${data.title ?? slug}" in ${collection} (draft).\nSlug: ${doc.slug}\nStatus: draft`;
+        return `Created "${data.title ?? slug}" in ${collection} (draft).\nSlug: ${doc.slug}\nStatus: draft\nSEO: meta title and description auto-generated.`;
       },
     },
 

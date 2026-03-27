@@ -339,6 +339,17 @@ export function AppSidebar({ collections }: Props) {
                 </SidebarMenuItem>
                 <SidebarMenuItem>
                   <SidebarMenuButton
+                    isActive={pathname === "/admin/seo"}
+                    tooltip="SEO"
+                    render={<Link href="/admin/seo" />}
+                    style={{ paddingLeft: "1.75rem" }}
+                  >
+                    <Search className="!w-5 !h-5" />
+                    <span>SEO</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
                     isActive={pathname === "/admin/backup"}
                     tooltip="Backup & Restore"
                     render={<Link href="/admin/backup" />}
