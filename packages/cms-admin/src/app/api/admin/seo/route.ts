@@ -1,0 +1,79 @@
+import { NextResponse } from "next/server";
+import { getAdminCms, getAdminConfig } from "@/lib/cms";
+import { calculateSeoScore, type SeoFields } from "@/lib/seo/score";
+
+export interface SeoDocSummary {
+  collection: string;
+  collectionLabel: string;
+  slug: string;
+  title: string;
+  status: string;
+  score: number;
+  hasTitle: boolean;
+  hasDesc: boolean;
+  hasOgImage: boolean;
+  hasKeywords: boolean;
+  optimized: boolean;
+}
+
+/**
+ * GET /api/admin/seo
+ * Returns SEO summary for all published/draft documents across all collections.
+ */
+export async function GET() {
+  try {
+    const [cms, config] = await Promise.all([getAdminCms(), getAdminConfig()]);
+    const results: SeoDocSummary[] = [];
+
+    for (const col of config.collections) {
+      try {
+        const { documents } = await cms.content.findMany(col.name, {});
+        for (const doc of documents) {
+          if ((doc.status as string) === "trashed") continue;
+          const data = (doc as { data?: Record<string, unknown> }).data ?? {};
+          const seo = (data._seo as SeoFields) ?? {};
+          const { score } = calculateSeoScore(
+            { slug: doc.slug, data },
+            seo,
+          );
+          results.push({
+            collection: col.name,
+            collectionLabel: col.label ?? col.name,
+            slug: doc.slug,
+            title: String(data.title ?? data.name ?? doc.slug),
+            status: doc.status as string,
+            score,
+            hasTitle: !!(seo.metaTitle),
+            hasDesc: !!(seo.metaDescription),
+            hasOgImage: !!(seo.ogImage),
+            hasKeywords: !!(seo.keywords?.length),
+            optimized: !!(seo.lastOptimized),
+          });
+        }
+      } catch { /* skip broken collections */ }
+    }
+
+    // Sort by score ascending (worst first)
+    results.sort((a, b) => a.score - b.score);
+
+    const total = results.length;
+    const optimized = results.filter((r) => r.optimized).length;
+    const avgScore = total > 0 ? Math.round(results.reduce((s, r) => s + r.score, 0) / total) : 0;
+    const missingTitle = results.filter((r) => !r.hasTitle).length;
+    const missingDesc = results.filter((r) => !r.hasDesc).length;
+    const missingOg = results.filter((r) => !r.hasOgImage).length;
+
+    return NextResponse.json({
+      total,
+      optimized,
+      avgScore,
+      issues: { missingTitle, missingDesc, missingOg },
+      documents: results,
+    });
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : "Failed" },
+      { status: 500 },
+    );
+  }
+}
