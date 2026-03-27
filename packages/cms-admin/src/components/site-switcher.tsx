@@ -126,6 +126,8 @@ export function SiteSwitcher() {
     if (site.id === activeSiteId) return; // already active
     setActiveSiteId(site.id);
     setCookie("cms-active-site", site.id);
+    // Signal tabs system to NOT navigate back to saved tabs after reload
+    sessionStorage.setItem("site-switched", "1");
     // Persist last active site on user record (survives cookie clear / device switch)
     fetch("/api/admin/profile", {
       method: "POST",

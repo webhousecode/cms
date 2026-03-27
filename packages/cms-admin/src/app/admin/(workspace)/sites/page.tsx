@@ -122,6 +122,8 @@ export default function SitesDashboard() {
     // Set cookies, then full page load — no router.push race conditions
     setCookie("cms-active-site", site.id);
     setCookie("cms-active-org", activeOrgId);
+    // Signal tabs system to NOT navigate back to saved tabs after reload
+    sessionStorage.setItem("site-switched", "1");
     // Persist on user record
     fetch("/api/admin/profile", {
       method: "POST",
