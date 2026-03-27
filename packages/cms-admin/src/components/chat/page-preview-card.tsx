@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ExternalLink, Monitor } from "lucide-react";
+import { ExternalLink, Monitor, Loader2, RefreshCw } from "lucide-react";
 
 interface PagePreviewCardProps {
   pagePath: string;
@@ -9,16 +9,47 @@ interface PagePreviewCardProps {
 
 export function PagePreviewCard({ pagePath }: PagePreviewCardProps) {
   const [previewUrl, setPreviewUrl] = useState<string>("");
+  const [status, setStatus] = useState<"building" | "ready" | "error">("building");
 
   useEffect(() => {
-    // Get the preview server URL
-    fetch("/api/preview-serve", { method: "POST" })
-      .then((r) => r.ok ? r.json() : null)
-      .then((d: { url?: string } | null) => {
-        if (d?.url) setPreviewUrl(d.url);
-      })
-      .catch(() => {});
-  }, []);
+    let cancelled = false;
+
+    async function buildAndServe() {
+      setStatus("building");
+
+      // 1. Rebuild the site so dist/ is fresh
+      try {
+        const buildRes = await fetch("/api/preview-build", { method: "POST" });
+        if (!buildRes.ok) {
+          // Build failed — still try to show whatever is in dist/
+          console.warn("[preview] Build failed, showing cached version");
+        }
+      } catch {
+        // Build endpoint missing — show cached
+      }
+
+      if (cancelled) return;
+
+      // 2. Start/reuse preview server
+      try {
+        const serveRes = await fetch("/api/preview-serve", { method: "POST" });
+        if (serveRes.ok) {
+          const { url } = await serveRes.json() as { url: string };
+          if (!cancelled) {
+            setPreviewUrl(url);
+            setStatus("ready");
+          }
+        } else {
+          if (!cancelled) setStatus("error");
+        }
+      } catch {
+        if (!cancelled) setStatus("error");
+      }
+    }
+
+    buildAndServe();
+    return () => { cancelled = true; };
+  }, [pagePath]);
 
   const fullUrl = previewUrl ? `${previewUrl}${pagePath}` : "";
 
@@ -42,7 +73,7 @@ export function PagePreviewCard({ pagePath }: PagePreviewCardProps) {
           overflow: "hidden",
         }}
       >
-        {fullUrl ? (
+        {status === "ready" && fullUrl ? (
           <iframe
             src={fullUrl}
             title={`Preview: ${pagePath}`}
@@ -59,15 +90,26 @@ export function PagePreviewCard({ pagePath }: PagePreviewCardProps) {
           <div
             style={{
               display: "flex",
+              flexDirection: "column",
               alignItems: "center",
               justifyContent: "center",
               height: "100%",
+              gap: "8px",
               color: "var(--muted-foreground)",
               fontSize: "0.8rem",
             }}
           >
-            <Monitor style={{ width: "20px", height: "20px", marginRight: "8px", opacity: 0.5 }} />
-            Loading preview...
+            {status === "building" ? (
+              <>
+                <RefreshCw style={{ width: "20px", height: "20px", opacity: 0.5 }} className="animate-spin" />
+                Building preview...
+              </>
+            ) : (
+              <>
+                <Monitor style={{ width: "20px", height: "20px", opacity: 0.5 }} />
+                Preview unavailable
+              </>
+            )}
           </div>
         )}
       </div>
