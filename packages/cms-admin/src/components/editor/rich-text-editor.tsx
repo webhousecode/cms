@@ -11,6 +11,12 @@ import { Placeholder } from "@tiptap/extensions";
 import TipTapLink from "@tiptap/extension-link";
 import TipTapImage from "@tiptap/extension-image";
 import { Table, TableRow, TableCell, TableHeader } from "@tiptap/extension-table";
+import Superscript from "@tiptap/extension-superscript";
+import Subscript from "@tiptap/extension-subscript";
+import TextAlign from "@tiptap/extension-text-align";
+import Highlight from "@tiptap/extension-highlight";
+import Color from "@tiptap/extension-color";
+import { TextStyle } from "@tiptap/extension-text-style";
 import { Markdown } from "tiptap-markdown";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
@@ -25,8 +31,11 @@ import {
   IconAlignLeft, IconAlignCenter, IconAlignRight, IconTrash, IconMaximize,
   IconHorizontalRule, IconVideo, IconAudio, IconAttachment, IconCallout,
   IconInteractive, IconFile, IconDownload,
+  IconUnderline, IconSuperscript, IconSubscript, IconHighlight,
+  IconZoomIn, IconZoomOut, IconProofread,
 } from "./editor-icons";
 import { Image as LucideImage, Zap, MessageSquareWarning } from "lucide-react";
+import { toast } from "sonner";
 import { AIMetadataPopover } from "@/components/media/ai-metadata-popover";
 
 interface Props {
@@ -1967,6 +1976,9 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
   const [headingOpen, setHeadingOpen] = useState(false);
   const [hoveredKey, setHoveredKey] = useState<string | null>(null);
   const [linkOpen, setLinkOpen] = useState(false);
+  const [highlightOpen, setHighlightOpen] = useState(false);
+  const highlightRef = useRef<HTMLDivElement>(null);
+  const [zoom, setZoom] = useState(100);
   const [blockPickerOpen, setBlockPickerOpen] = useState(false);
   const [blockSearch, setBlockSearch] = useState("");
   const [replacePos, setReplacePos] = useState<number | null>(null);
@@ -2005,10 +2017,15 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
     extensions: [
       StarterKit.configure({
         link: false,       // configured separately below
-        underline: false,  // not used
       }),
       Placeholder.configure({ placeholder: "Start writing…" }),
       TipTapLink.configure({ openOnClick: false }),
+      Superscript,
+      Subscript,
+      TextAlign.configure({ types: ["heading", "paragraph"] }),
+      TextStyle,
+      Highlight.configure({ multicolor: true }),
+      Color,
       ResizableImage.configure({ inline: false }),
       BlockMarker,
       VideoEmbed,
@@ -2021,7 +2038,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
       TableRow,
       TableHeader,
       TableCell,
-      Markdown.configure({ html: false, transformPastedText: true }),
+      Markdown.configure({ html: true, transformPastedText: true }),
     ],
     content: value || "",
     editable: !disabled,
@@ -2116,6 +2133,13 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
       isCodeBlock: ctx.editor?.isActive("codeBlock") ?? false,
       isLink: ctx.editor?.isActive("link") ?? false,
       isTable: ctx.editor?.isActive("table") ?? false,
+      isUnderline: ctx.editor?.isActive("underline") ?? false,
+      isSuperscript: ctx.editor?.isActive("superscript") ?? false,
+      isSubscript: ctx.editor?.isActive("subscript") ?? false,
+      isHighlight: ctx.editor?.isActive("highlight") ?? false,
+      textAlign: (ctx.editor?.isActive({ textAlign: "center" }) ? "center"
+        : ctx.editor?.isActive({ textAlign: "right" }) ? "right"
+        : "left") as string,
       headingLevel: (ctx.editor?.isActive("heading")
         ? (ctx.editor?.getAttributes("heading").level as number) ?? 0
         : 0) as number,
@@ -2448,13 +2472,25 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
               onClick={() => editor.chain().focus().toggleItalic().run()}>
               <IconItalic />
             </Btn>}
-            {has("strike") && <Btn tooltip="Strikethrough" active={toolbarState?.isStrike ?? false}
+            {has("strike") && <Btn tooltip="Strikethrough (⌘⇧S)" active={toolbarState?.isStrike ?? false}
               onClick={() => editor.chain().focus().toggleStrike().run()}>
               <IconStrikethrough />
+            </Btn>}
+            {has("underline") && <Btn tooltip="Underline (⌘U)" active={toolbarState?.isUnderline ?? false}
+              onClick={() => editor.chain().focus().toggleUnderline().run()}>
+              <IconUnderline />
             </Btn>}
             {has("code") && <Btn tooltip="Inline code" active={toolbarState?.isCode ?? false}
               onClick={() => editor.chain().focus().toggleCode().run()}>
               <IconCode />
+            </Btn>}
+            {has("superscript") && <Btn tooltip="Superscript (⌘.)" active={toolbarState?.isSuperscript ?? false}
+              onClick={() => editor.chain().focus().toggleSuperscript().run()}>
+              <IconSuperscript />
+            </Btn>}
+            {has("subscript") && <Btn tooltip="Subscript (⌘,)" active={toolbarState?.isSubscript ?? false}
+              onClick={() => editor.chain().focus().toggleSubscript().run()}>
+              <IconSubscript />
             </Btn>}
 
             {(has("bold") || has("italic") || has("strike") || has("code")) && <Sep />}
@@ -2478,6 +2514,23 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
 
             {(has("bulletList") || has("orderedList") || has("blockquote") || has("horizontalRule")) && <Sep />}
 
+            {/* Text alignment */}
+            {has("textAlign") && <>
+              <Btn tooltip="Align left" active={(toolbarState?.textAlign ?? "left") === "left"}
+                onClick={() => editor.chain().focus().setTextAlign("left").run()}>
+                <IconAlignLeft />
+              </Btn>
+              <Btn tooltip="Align center" active={toolbarState?.textAlign === "center"}
+                onClick={() => editor.chain().focus().setTextAlign("center").run()}>
+                <IconAlignCenter />
+              </Btn>
+              <Btn tooltip="Align right" active={toolbarState?.textAlign === "right"}
+                onClick={() => editor.chain().focus().setTextAlign("right").run()}>
+                <IconAlignRight />
+              </Btn>
+              <Sep />
+            </>}
+
             {/* Link */}
             {has("link") && <div style={{ position: "relative" }} ref={linkRef}>
               <Btn tooltip="Link (⌘K)" active={toolbarState?.isLink ?? false}
@@ -2491,6 +2544,50 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                   onRemove={() => { editor.chain().focus().unsetLink().run(); setLinkOpen(false); }}
                   onClose={() => setLinkOpen(false)}
                 />
+              )}
+            </div>}
+
+            {/* Highlight */}
+            {has("highlight") && <div style={{ position: "relative" }} ref={highlightRef}>
+              <Btn tooltip="Highlight" active={toolbarState?.isHighlight ?? false}
+                onClick={() => setHighlightOpen(o => !o)}>
+                <IconHighlight />
+              </Btn>
+              {highlightOpen && (
+                <div style={{
+                  position: "absolute", top: "100%", left: 0, zIndex: 50,
+                  display: "flex", gap: "4px", padding: "6px 8px",
+                  background: "var(--popover)", border: "1px solid var(--border)",
+                  borderRadius: "8px", boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+                  marginTop: "4px",
+                }}>
+                  {[
+                    { color: "#bbf7d0", label: "Green" },
+                    { color: "#bfdbfe", label: "Blue" },
+                    { color: "#fde68a", label: "Yellow" },
+                    { color: "#fecaca", label: "Red" },
+                    { color: "#e9d5ff", label: "Purple" },
+                    { color: "#fed7aa", label: "Orange" },
+                  ].map(({ color, label }) => (
+                    <button key={color} type="button" title={label}
+                      onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().toggleHighlight({ color }).run(); setHighlightOpen(false); }}
+                      style={{
+                        width: 22, height: 22, borderRadius: "50%",
+                        background: color, border: "2px solid transparent",
+                        cursor: "pointer",
+                        outline: (toolbarState?.isHighlight && editor.getAttributes("highlight").color === color) ? "2px solid var(--foreground)" : "none",
+                        outlineOffset: "1px",
+                      }} />
+                  ))}
+                  <button type="button" title="Clear highlight"
+                    onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().unsetHighlight().run(); setHighlightOpen(false); }}
+                    style={{
+                      width: 22, height: 22, borderRadius: "50%",
+                      background: "transparent", border: "2px solid var(--border)",
+                      cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: "0.7rem", color: "var(--muted-foreground)",
+                    }}>⌀</button>
+                </div>
               )}
             </div>}
 
@@ -2759,8 +2856,60 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
               <Zap className="w-[18px] h-[18px]" />
             </Btn>}
 
-            {/* Spacer to push Source to the right */}
+            {/* Spacer to push right-side controls to the right */}
             <div style={{ flex: 1 }} />
+
+            {/* Zoom */}
+            <div style={{ display: "flex", alignItems: "center", gap: "2px", marginRight: "0.25rem" }}>
+              <button type="button" title="Zoom out"
+                onMouseDown={(e) => { e.preventDefault(); setZoom(z => Math.max(50, z - 10)); }}
+                disabled={zoom <= 50}
+                style={{ width: 24, height: 24, borderRadius: 4, border: "none", background: "transparent", cursor: zoom <= 50 ? "not-allowed" : "pointer", color: "var(--muted-foreground)", display: "flex", alignItems: "center", justifyContent: "center", opacity: zoom <= 50 ? 0.3 : 1 }}>
+                <IconZoomOut />
+              </button>
+              <button type="button" title="Reset zoom"
+                onMouseDown={(e) => { e.preventDefault(); setZoom(100); }}
+                style={{ fontSize: "0.65rem", fontFamily: "monospace", color: zoom === 100 ? "var(--muted-foreground)" : "var(--foreground)", background: "transparent", border: "none", cursor: "pointer", padding: "0 2px", minWidth: "2rem", textAlign: "center" }}>
+                {zoom}%
+              </button>
+              <button type="button" title="Zoom in"
+                onMouseDown={(e) => { e.preventDefault(); setZoom(z => Math.min(200, z + 10)); }}
+                disabled={zoom >= 200}
+                style={{ width: 24, height: 24, borderRadius: 4, border: "none", background: "transparent", cursor: zoom >= 200 ? "not-allowed" : "pointer", color: "var(--muted-foreground)", display: "flex", alignItems: "center", justifyContent: "center", opacity: zoom >= 200 ? 0.3 : 1 }}>
+                <IconZoomIn />
+              </button>
+            </div>
+
+            <Sep />
+
+            {/* Proofread */}
+            <Btn tooltip="Proofread" onClick={async () => {
+              if (!editor) return;
+              const text = editor.getText();
+              if (!text.trim()) return;
+              const toastId = toast.loading("Proofreading...");
+              try {
+                const res = await fetch("/api/cms/ai/proofread", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ text }),
+                });
+                const data = await res.json();
+                if (!res.ok) { toast.error(data.error ?? "Proofread failed", { id: toastId }); return; }
+                const corrections = data.corrections ?? [];
+                if (corrections.length === 0) {
+                  toast.success(`No errors found (${data.language})`, { id: toastId });
+                } else {
+                  toast.success(`${corrections.length} issue${corrections.length > 1 ? "s" : ""} found (${data.language})`, { id: toastId, duration: 8000,
+                    description: corrections.map((c: { original: string; suggestion: string; reason: string; type: string }) =>
+                      `${c.type}: "${c.original}" → "${c.suggestion}" — ${c.reason}`
+                    ).join("\n"),
+                  });
+                }
+              } catch { toast.error("Proofread failed", { id: toastId }); }
+            }}>
+              <IconProofread />
+            </Btn>
 
             {/* Source toggle */}
             <Btn tooltip={showSource ? "Visual editor" : "View source"} active={showSource}
@@ -2965,7 +3114,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
             }}
           />
         ) : (
-          <div className="rte-body">
+          <div className="rte-body" style={zoom !== 100 ? { fontSize: `${zoom}%` } : undefined}>
             <EditorContent editor={editor} />
             {editor && <AIBubbleMenu editor={editor} />}
           </div>
