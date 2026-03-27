@@ -13,6 +13,7 @@ import { marked } from "marked";
 
 const BASE_PATH = process.env.BASE_PATH ?? "";
 const OUT_DIR = process.env.BUILD_OUT_DIR ?? "dist";
+const INCLUDE_DRAFTS = process.env.INCLUDE_DRAFTS === "true";
 const CONTENT_DIR = join(import.meta.dirname, "content");
 
 interface Doc {
@@ -32,7 +33,7 @@ function readCollection(name: string): Doc[] {
       const raw = JSON.parse(readFileSync(join(dir, f), "utf-8"));
       return { slug: f.replace(/\.json$/, ""), data: raw.data ?? raw, status: raw.status };
     })
-    .filter((d) => d.status !== "draft");
+    .filter((d) => d.status !== "draft" || INCLUDE_DRAFTS);
 }
 
 const posts = readCollection("posts").sort((a, b) =>
@@ -90,6 +91,9 @@ footer { border-top: 1px solid var(--color-border); padding: 1.5rem 0; margin-to
 `;
 
 // ── HTML helpers ─────────────────────────────────────────────
+
+const DRAFT_BANNER = `<div style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#F7BB2E;color:#0D0D0D;text-align:center;padding:0.5rem 1rem;font-weight:700;font-size:0.875rem;font-family:system-ui,sans-serif;">DRAFT — not published</div><div style="height:2.5rem"></div>`;
+const DRAFT_BADGE = `<span style="display:inline-block;background:#F7BB2E;color:#0D0D0D;font-size:0.7rem;font-weight:700;padding:0.1rem 0.4rem;border-radius:3px;margin-left:0.5rem;vertical-align:middle;">DRAFT</span>`;
 
 function bp(p: string): string { return `${BASE_PATH}${p}`; }
 
@@ -202,7 +206,7 @@ write("index.html", layout("Home", `
   <div class="card-grid">
     ${posts.slice(0, 12).map((p) => `
       <div class="card">
-        <h2><a href="${bp(`/posts/${p.slug}/`)}">${esc(p.data.title)}</a></h2>
+        <h2><a href="${bp(`/posts/${p.slug}/`)}">${esc(p.data.title)}</a>${p.status === "draft" ? DRAFT_BADGE : ""}</h2>
         <div class="meta">${formatDate(p.data.date)}${p.data.author ? ` · ${esc(p.data.author)}` : ""}</div>
         ${p.data.excerpt ? `<div class="excerpt">${esc(p.data.excerpt)}</div>` : ""}
       </div>
@@ -216,7 +220,7 @@ write("posts/index.html", layout("All Posts", `
   <div class="card-grid">
     ${posts.map((p) => `
       <div class="card">
-        <h2><a href="${bp(`/posts/${p.slug}/`)}">${esc(p.data.title)}</a></h2>
+        <h2><a href="${bp(`/posts/${p.slug}/`)}">${esc(p.data.title)}</a>${p.status === "draft" ? DRAFT_BADGE : ""}</h2>
         <div class="meta">${formatDate(p.data.date)}${p.data.author ? ` · ${esc(p.data.author)}` : ""}</div>
         ${p.data.excerpt ? `<div class="excerpt">${esc(p.data.excerpt)}</div>` : ""}
       </div>
@@ -226,7 +230,9 @@ write("posts/index.html", layout("All Posts", `
 
 // Individual posts
 for (const post of posts) {
+  const isDraft = post.status === "draft";
   write(`posts/${post.slug}/index.html`, layout(String(post.data.title), `
+    ${isDraft ? DRAFT_BANNER : ""}
     <article>
       <div class="post-header">
         <h1>${esc(post.data.title)}</h1>
@@ -240,9 +246,11 @@ for (const post of posts) {
 
 // Pages
 for (const page of pages) {
+  const isDraft = page.status === "draft";
   const slug = page.slug === "home" ? "" : page.slug;
   const path = slug ? `${slug}/index.html` : "about/index.html";
   write(path, layout(String(page.data.title), `
+    ${isDraft ? DRAFT_BANNER : ""}
     <article class="prose">
       <h1>${esc(page.data.title)}</h1>
       ${renderContent(page.data.content)}

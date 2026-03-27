@@ -15,6 +15,8 @@ function getSiteTitle(context: SiteContext): string {
   return String((context.config.build as Record<string, unknown> | undefined)?.['siteTitle'] ?? 'My Site');
 }
 
+const DRAFT_BANNER = `<div style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#F7BB2E;color:#0D0D0D;text-align:center;padding:0.5rem 1rem;font-weight:700;font-size:0.875rem;font-family:system-ui,sans-serif;">DRAFT — not published</div><div style="height:2.5rem"></div>`;
+
 async function renderDocument(doc: Document, context: SiteContext): Promise<string> {
   const title = String(doc.data['title'] ?? doc.slug);
   const content = String(doc.data['content'] ?? doc.data['body'] ?? '');
@@ -52,9 +54,11 @@ function renderCollectionIndex(
     const href = collectionConfig
       ? getDocumentUrl(doc, collectionConfig, allDocsMap)
       : `/${collectionName}/${doc.slug}/`;
+    const isDraft = context.includeDrafts && doc.status === 'draft';
+    const draftBadge = isDraft ? raw(`<span style="display:inline-block;background:#F7BB2E;color:#0D0D0D;font-size:0.7rem;font-weight:700;padding:0.1rem 0.4rem;border-radius:3px;margin-left:0.5rem;vertical-align:middle;">DRAFT</span>`) : '';
     return html`
 <article class="card">
-  <h2><a href="${href}">${title}</a></h2>
+  <h2><a href="${href}">${title}</a>${draftBadge}</h2>
   <p class="meta">${date}</p>
   ${excerpt ? raw(html`<p class="excerpt">${excerpt}</p>`) : ''}
 </article>`;
@@ -188,6 +192,7 @@ export async function renderSite(context: SiteContext): Promise<RenderedPage[]> 
 
     // Individual documents
     for (const doc of documents) {
+      const isDraft = context.includeDrafts && doc.status === 'draft';
       const docContent = await renderDocument(doc, context);
       const title = String(doc.data['title'] ?? doc.slug);
       const description = String(doc.data['excerpt'] ?? doc.data['description'] ?? '').slice(0, 160) || undefined;
@@ -212,9 +217,10 @@ export async function renderSite(context: SiteContext): Promise<RenderedPage[]> 
         doc, collectionName, allDocsList, collectionConfig, allDocsMap, baseUrl,
       );
 
+      const renderedContent = isDraft ? DRAFT_BANNER + docContent : docContent;
       pages.push({
         path: docPath,
-        content: layoutTemplate(docContent, {
+        content: layoutTemplate(renderedContent, {
           site: siteContext,
           page: {
             title: String(seoData?.['metaTitle'] ?? title),

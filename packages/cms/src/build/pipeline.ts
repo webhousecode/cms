@@ -12,6 +12,8 @@ import { generateAiPlugin } from './ai-plugin.js';
 
 export interface BuildOptions {
   outDir?: string;
+  /** Include draft documents in the build output. Defaults to false. Also reads INCLUDE_DRAFTS env var. */
+  includeDrafts?: boolean;
 }
 
 export interface BuildResult {
@@ -27,9 +29,10 @@ export async function runBuild(
 ): Promise<BuildResult> {
   const start = Date.now();
   const outDir = options.outDir ?? config.build?.outDir ?? 'dist';
+  const includeDrafts = options.includeDrafts ?? process.env.INCLUDE_DRAFTS === 'true';
 
   // Phase 1: Resolve
-  const context = await resolveSite(config, storage);
+  const context = await resolveSite(config, storage, { includeDrafts });
 
   // Phase 2: Render
   const pages = await renderSite(context);
