@@ -18,6 +18,7 @@ export function SchemaDriftBanner({ collection, collectionName, fields }: Props)
   const [confirmFix, setConfirmFix] = useState(false);
   const [fixing, setFixing] = useState(false);
   const [result, setResult] = useState<{ fixed: number } | null>(null);
+  const [error, setError] = useState("");
 
   if (dismissed) return null;
 
@@ -33,8 +34,14 @@ export function SchemaDriftBanner({ collection, collectionName, fields }: Props)
       if (res.ok) {
         setResult(data);
         setTimeout(() => setDismissed(true), 3000);
+      } else {
+        setError(data.error ?? "Fix failed");
+        setConfirmFix(false);
       }
-    } catch { /* ignore */ }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Fix failed");
+      setConfirmFix(false);
+    }
     setFixing(false);
   }
 
@@ -77,6 +84,7 @@ export function SchemaDriftBanner({ collection, collectionName, fields }: Props)
         <p style={{ margin: "0.25rem 0 0", color: "var(--muted-foreground)", fontSize: "0.72rem" }}>
           These fields exist in your content files but are not visible in the editor.
         </p>
+        {error && <p style={{ margin: "0.25rem 0 0", color: "#f87171", fontSize: "0.72rem" }}>{error}</p>}
         <div style={{ marginTop: "0.5rem", display: "flex", gap: "0.5rem", alignItems: "center" }}>
           {!confirmFix ? (
             <button
