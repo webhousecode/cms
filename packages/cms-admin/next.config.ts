@@ -4,24 +4,6 @@ const nextConfig: NextConfig = {
   // Admin UI runs standalone — no static export
   // CMS_CONFIG_PATH env var points to the project's cms.config.ts
   serverExternalPackages: ["better-sqlite3", "@webhouse/cms", "jiti"],
-  // Exclude site content/build directories from file watching.
-  // Without this, preview-build writing to dist/ triggers Fast Refresh
-  // which remounts the editor and causes content loss.
-  webpack: (config, { dev }) => {
-    if (dev) {
-      config.watchOptions = {
-        ...config.watchOptions,
-        ignored: [
-          ...(Array.isArray(config.watchOptions?.ignored) ? config.watchOptions.ignored : config.watchOptions?.ignored ? [config.watchOptions.ignored] : []),
-          "**/dist/**",
-          "**/deploy/**",
-          "**/_revisions/**",
-          "**/node_modules/**",
-        ],
-      };
-    }
-    return config;
-  },
   // Serve /uploads/* via the dynamic API route which reads from UPLOAD_DIR.
   // This means uploaded files can live anywhere (e.g. the site's public dir)
   // and admin thumbnails still work.
