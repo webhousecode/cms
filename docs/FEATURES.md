@@ -123,6 +123,7 @@
 | F104 | [Performance & Data Optimization](#f104-performance-optimization) | Planned | [docs/features/F104-performance-optimization.md](features/F104-performance-optimization.md) |
 | F105 | [Voice Module](#f105-voice-module) | Planned | [docs/features/F105-voice-module.md](features/F105-voice-module.md) |
 | F106 | [TipTap v3 Upgrade](#f106-tiptap-v3-upgrade) | Planned | [docs/features/F106-tiptap-v3-upgrade.md](features/F106-tiptap-v3-upgrade.md) |
+| F107 | [Chat with Your Site](#f107-chat-with-your-site) | Planned | [docs/features/F107-chat-with-your-site.md](features/F107-chat-with-your-site.md) |
 
 ---
 
@@ -452,3 +453,6 @@ Real-time voice interaction til CMS via Gemini 3.1 Flash Live API (WebSocket aud
 
 ## F106 — TipTap v3 Upgrade
 Upgrade richtext editor fra TipTap v2.x til v3.x. Fixer React 19 flushSync warnings. Tilføjer Static Renderer (server-side content→HTML uden editor instans), Drag Handle (gratis, var Pro), File Handling, Emoji, Math/LaTeX. Konsoliderer packages (TableKit, ListKit, TextStyleKit). BubbleMenu migreres fra Tippy.js til Floating UI. Alle 6+ custom NodeViews (image resize, video/audio/interactive embed, file attachment, callout) verificeres. Ingen content-format breaking changes — TipTap v3 JSON er backwards compatible med v2.
+
+## F107 — Chat with Your Site
+Full-screen conversational CMS interface — manage your entire site through natural language. Master switch in admin header toggles between "Chat" and "Traditional" modes, swapping the entire workspace. Chat uses Claude with tool-use, calling internal CMS API routes directly (not MCP) for low latency and automatic feature parity. Schema-aware system prompt gives the AI complete knowledge of collections, fields, and content. Four incremental phases: v1 read/search (site summary, list docs, search, get schema), v2 create/edit (create, update, publish with confirmation flow), v3 inline forms (hybrid mode — AI renders focused form controls for manual edits), v4 workflows (bulk operations, build/deploy triggers, agent execution, multi-step automation). Conversation persistence per user. Smart welcome screen with context-aware suggestions. No breaking changes to traditional admin. Supersedes F51 (Admin AI Assistant) scope — F51 is a sidebar helper, F107 is an AI-first CMS.
