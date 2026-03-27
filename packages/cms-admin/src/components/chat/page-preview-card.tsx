@@ -30,9 +30,9 @@ export function PagePreviewCard({ pagePath }: PagePreviewCardProps) {
 
       if (cancelled) return;
 
-      // 2. Start/reuse preview server
+      // 2. Start fresh preview server (fresh=true restarts to pick up new dist/)
       try {
-        const serveRes = await fetch("/api/preview-serve", { method: "POST" });
+        const serveRes = await fetch("/api/preview-serve?fresh=true", { method: "POST" });
         if (serveRes.ok) {
           const { url } = await serveRes.json() as { url: string };
           if (!cancelled) {
