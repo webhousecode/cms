@@ -97,8 +97,8 @@ Return ONLY the JSON, no explanation.`,
           if (parsed.metaTitle) setMetaTitle(parsed.metaTitle);
           if (parsed.metaDescription) setMetaDesc(parsed.metaDescription);
           if (parsed.keywords?.length) setKeywords(parsed.keywords);
-          // Auto-fill OG image from content if not already set
-          if (!ogImage) {
+          // Auto-fill OG image from content (always re-extract on optimize)
+          {
             const rawContent = String(doc.data.content ?? doc.data.body ?? "");
             // Try dedicated image fields first (cleanest source)
             const fieldImg = String(doc.data.heroImage ?? doc.data.coverImage ?? doc.data.image ?? "");
