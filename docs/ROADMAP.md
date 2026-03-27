@@ -124,6 +124,7 @@ _Makes us stand out. Customers expect these from a modern CMS._
 | 18h | **F100 Custom Domain DNS Validation** | Small | Real-time DNS validation in Deploy Settings. Auto-provision *.webhouse.app subdomains via DNS API. Verify CNAME for external domains. |
 | 18i | **F101 Update Manager** | Medium | Dagligt version check mod npm, update banner i admin, `cms update` CLI, deployment detection. WordPress-style "Update Available" for Node.js/Docker. |
 | 18j | **F104 Performance & Data Optimization** | Medium | SQLite media metadata, config cache, API pagination, bundle splitting, debounced writes. Targets: media load <150ms, config read <0.1ms. |
+| 18k | **F106 TipTap v3 Upgrade** | Medium | Richtext editor v2→v3. Fixer React 19 flushSync, tilføjer Static Renderer, Drag Handle, konsoliderer packages. 1-2 dage. |
 
 ### Tier 3 — Differentiation (v1.3+)
 

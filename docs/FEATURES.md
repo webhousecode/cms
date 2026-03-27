@@ -122,6 +122,7 @@
 | F103 | [AI Image Analysis](#f103-ai-image-analysis) | In progress | [docs/features/F103-ai-image-analysis.md](features/F103-ai-image-analysis.md) |
 | F104 | [Performance & Data Optimization](#f104-performance-optimization) | Planned | [docs/features/F104-performance-optimization.md](features/F104-performance-optimization.md) |
 | F105 | [Voice Module](#f105-voice-module) | Planned | [docs/features/F105-voice-module.md](features/F105-voice-module.md) |
+| F106 | [TipTap v3 Upgrade](#f106-tiptap-v3-upgrade) | Planned | [docs/features/F106-tiptap-v3-upgrade.md](features/F106-tiptap-v3-upgrade.md) |
 
 ---
 
@@ -448,3 +449,6 @@ Systematisk hastighedsoptimering af CMS admin. SQLite for media metadata (erstat
 
 ## F105 — Voice Module
 Real-time voice interaction til CMS via Gemini 3.1 Flash Live API (WebSocket audio-to-audio). To modes: (1) Admin Voice Assistant — floating mic-knap i CMS admin, stemmekommandoer udfører CMS actions via function calling (opret side, søg content, navigér, opdater status). Bekræftelse før destruktive handlinger. (2) Frontend Voice Widget — plugin for website/webshop besøgende, spørg om produkter/priser/åbningstider via stemme (read-only tools). @webhouse/ai integration med ny "live" model tier + usage tracking + budget caps. Dansk/engelsk. GDPR-safe (ingen audio storage). WebSocket proxy via Next.js API route.
+
+## F106 — TipTap v3 Upgrade
+Upgrade richtext editor fra TipTap v2.x til v3.x. Fixer React 19 flushSync warnings. Tilføjer Static Renderer (server-side content→HTML uden editor instans), Drag Handle (gratis, var Pro), File Handling, Emoji, Math/LaTeX. Konsoliderer packages (TableKit, ListKit, TextStyleKit). BubbleMenu migreres fra Tippy.js til Floating UI. Alle 6+ custom NodeViews (image resize, video/audio/interactive embed, file attachment, callout) verificeres. Ingen content-format breaking changes — TipTap v3 JSON er backwards compatible med v2.
