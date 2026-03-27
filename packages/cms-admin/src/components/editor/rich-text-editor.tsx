@@ -2014,6 +2014,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
 
   const editor = useEditor({
     immediatelyRender: false,
+    shouldRerenderOnTransaction: false,
     extensions: [
       StarterKit.configure({
         link: false,       // configured separately below
