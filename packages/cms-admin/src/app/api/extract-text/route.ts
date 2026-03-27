@@ -1,9 +1,4 @@
 import { NextRequest, NextResponse } from "next/server";
-// Import the actual parser, not the test-runner entry point
-// pdf-parse@1.1.1 main entry tries to readFileSync a test PDF which crashes
-// @ts-expect-error — pdf-parse has no type declarations
-import pdfParse from "pdf-parse/lib/pdf-parse.js";
-import mammoth from "mammoth";
 
 /**
  * POST /api/extract-text
@@ -21,6 +16,9 @@ export async function POST(req: NextRequest) {
 
   try {
     if (name.endsWith(".pdf")) {
+      // Dynamic import to avoid Turbopack bundling issues
+      // @ts-expect-error — pdf-parse has no type declarations
+      const pdfParse = (await import("pdf-parse/lib/pdf-parse.js")).default;
       const result = await pdfParse(buffer);
       const text = result.text?.trim();
       if (!text || text.length < 10) {
@@ -30,6 +28,7 @@ export async function POST(req: NextRequest) {
     }
 
     if (name.endsWith(".docx") || name.endsWith(".doc")) {
+      const mammoth = await import("mammoth");
       const result = await mammoth.extractRawText({ buffer });
       const text = result.value?.trim();
       if (!text) return NextResponse.json({ text: null, reason: "No text found" });
