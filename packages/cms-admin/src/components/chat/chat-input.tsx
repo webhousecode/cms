@@ -62,9 +62,10 @@ interface ChatInputProps {
   disabled?: boolean;
   placeholder?: string;
   visible?: boolean;
+  lastUserMessage?: string;
 }
 
-export function ChatInput({ onSend, disabled, placeholder, visible }: ChatInputProps) {
+export function ChatInput({ onSend, disabled, placeholder, visible, lastUserMessage }: ChatInputProps) {
   const [value, setValue] = useState("");
   const [uploads, setUploads] = useState<UploadedFile[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -202,8 +203,13 @@ export function ChatInput({ onSend, disabled, placeholder, visible }: ChatInputP
         e.preventDefault();
         handleSend();
       }
+      // Arrow up on empty input → recall last message
+      if (e.key === "ArrowUp" && !value && lastUserMessage) {
+        e.preventDefault();
+        setValue(lastUserMessage);
+      }
     },
-    [handleSend]
+    [handleSend, value, lastUserMessage]
   );
 
   // Auto-resize textarea
