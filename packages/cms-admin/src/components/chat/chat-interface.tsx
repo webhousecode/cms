@@ -317,36 +317,61 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
         backgroundColor: "var(--background)",
       }}
     >
-      {/* Toolbar buttons moved to AdminHeader — events bridge the gap */}
-
-      {/* History panel */}
+      {/* History drawer — left side panel */}
       {showHistory && (
-        <div
-          style={{
-            borderBottom: "1px solid var(--border)",
-            maxHeight: "240px",
-            overflowY: "auto",
-            backgroundColor: "var(--card)",
-          }}
-        >
-          {conversations.length === 0 ? (
-            <div style={{ padding: "20px", textAlign: "center", fontSize: "0.8rem", color: "var(--muted-foreground)" }}>
-              No previous conversations
+        <>
+          {/* Backdrop */}
+          <div
+            onClick={() => setShowHistory(false)}
+            style={{
+              position: "fixed", inset: 0, zIndex: 998,
+              backgroundColor: "rgba(0,0,0,0.3)",
+            }}
+          />
+          {/* Drawer */}
+          <div
+            style={{
+              position: "fixed", top: 0, left: 0, bottom: 0, width: "300px", zIndex: 999,
+              background: "var(--card)", borderRight: "1px solid var(--border)",
+              boxShadow: "4px 0 20px rgba(0,0,0,0.3)",
+              display: "flex", flexDirection: "column",
+            }}
+          >
+            {/* Header */}
+            <div style={{
+              display: "flex", alignItems: "center", justifyContent: "space-between",
+              padding: "12px 16px", borderBottom: "1px solid var(--border)",
+            }}>
+              <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>Conversations</span>
+              <button
+                onClick={() => setShowHistory(false)}
+                style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "4px" }}
+              >
+                <X style={{ width: "16px", height: "16px" }} />
+              </button>
             </div>
-          ) : (
-            conversations.map((c) => (
-              <HistoryItem
-                key={c.id}
-                id={c.id}
-                title={c.title}
-                updatedAt={c.updatedAt}
-                isActive={c.id === conversationId}
-                onLoad={() => loadConversation(c.id)}
-                onRename={(newTitle) => renameConversation(c.id, newTitle)}
-              />
-            ))
-          )}
-        </div>
+            {/* List */}
+            <div style={{ flex: 1, overflowY: "auto" }}>
+              {conversations.length === 0 ? (
+                <div style={{ padding: "20px", textAlign: "center", fontSize: "0.8rem", color: "var(--muted-foreground)" }}>
+                  No previous conversations
+                </div>
+              ) : (
+                conversations.map((c) => (
+                  <HistoryItem
+                    key={c.id}
+                    id={c.id}
+                    title={c.title}
+                    updatedAt={c.updatedAt}
+                    isActive={c.id === conversationId}
+                    onLoad={() => loadConversation(c.id)}
+                    onRename={(newTitle) => renameConversation(c.id, newTitle)}
+                  />
+                ))
+              )}
+            </div>
+          </div>
+        </>
       )}
 
       {/* Main content area */}
@@ -430,7 +455,7 @@ function HistoryItem({ id, title, updatedAt, isActive, onLoad, onRename }: {
           {title}
         </div>
         <div style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", marginTop: "2px" }}>
-          {new Date(updatedAt).toLocaleDateString()}
+          {new Date(updatedAt).toLocaleString("da-DK", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
         </div>
       </button>
       <button
