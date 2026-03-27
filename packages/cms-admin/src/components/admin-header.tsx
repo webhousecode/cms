@@ -323,15 +323,23 @@ function PreviewButton() {
 
   const openPreview = useCallback(async () => {
     // Preview is NEVER disabled — sirv is always available
+    const isChatMode = localStorage.getItem("cms-admin-mode") === "chat";
+    const open = (url: string) => {
+      if (isChatMode) {
+        window.open(url, "_blank");
+      } else {
+        openTab(previewPath(url), `Preview: ${siteName}`);
+      }
+    };
+
     if (previewUrl) {
-      openTab(previewPath(previewUrl), `Preview: ${siteName}`);
+      open(previewUrl);
     } else {
-      // Fallback: start sirv on demand
       try {
         const res = await fetch("/api/preview-serve", { method: "POST" });
         if (res.ok) {
           const { url } = await res.json() as { url: string };
-          openTab(previewPath(url), `Preview: ${siteName}`);
+          open(url);
         }
       } catch { /* ignore */ }
     }
