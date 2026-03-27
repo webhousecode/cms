@@ -28,9 +28,9 @@ export async function extractDocumentText(
 }
 
 async function extractPdf(buffer: Buffer): Promise<string | null> {
-  const mod = await import("pdf-parse");
-  const pdfParse = (mod as any).default ?? mod;
-  const result = await pdfParse(buffer, { max: 100 }); // max 100 pages
+  // pdf-parse v1 — CommonJS, default export is a function
+  const pdfParse = (await import("pdf-parse")).default;
+  const result = await pdfParse(buffer);
   const text = result.text?.trim();
   if (!text || text.length < 10) return null; // Likely scanned/image-only PDF
   return text.slice(0, MAX_TEXT_LENGTH);

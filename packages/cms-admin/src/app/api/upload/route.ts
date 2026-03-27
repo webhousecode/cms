@@ -93,7 +93,10 @@ export async function POST(req: NextRequest) {
       try {
         const { extractDocumentText } = await import("@/lib/document-extractor");
         extractedText = await extractDocumentText(buffer, filename);
-      } catch { /* non-fatal */ }
+        console.log(`[upload] Text extraction for ${filename}: ${extractedText ? `${extractedText.length} chars` : "null (no text found)"}`);
+      } catch (extractErr) {
+        console.error(`[upload] Text extraction failed for ${filename}:`, extractErr instanceof Error ? extractErr.message : extractErr);
+      }
     }
 
     return NextResponse.json({ url, folder, name: filename, ...(extractedText ? { extractedText } : {}) });
