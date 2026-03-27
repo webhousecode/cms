@@ -363,7 +363,7 @@ export default function InteractivesPage() {
                 <iframe
                   src={`/api/interactives/${item.id}/preview`}
                   title={item.name}
-                  sandbox="allow-scripts"
+                  sandbox="allow-scripts allow-same-origin"
                   style={{ width: "200%", height: "300px", border: "none", transform: "scale(0.5)", transformOrigin: "top left", pointerEvents: "none" }}
                 />
               </div>
@@ -408,7 +408,7 @@ export default function InteractivesPage() {
                 <iframe
                   src={`/api/interactives/${item.id}/preview`}
                   title={item.name}
-                  sandbox="allow-scripts"
+                  sandbox="allow-scripts allow-same-origin"
                   style={{ width: "360px", height: "240px", border: "none", transform: "scale(0.2)", transformOrigin: "top left", pointerEvents: "none" }}
                 />
               </div>
