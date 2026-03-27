@@ -12,6 +12,9 @@ interface AiDefaults {
   aiInteractivesMaxTokens: number;
   aiContentModel: string;
   aiContentMaxTokens: number;
+  aiChatModel: string;
+  aiChatMaxTokens: number;
+  aiChatMaxToolIterations: number;
 }
 
 const MODEL_OPTIONS = [
@@ -27,6 +30,13 @@ const TOKEN_OPTIONS = [
   { value: "4096", label: "4,096 — standard content" },
   { value: "8192", label: "8,192 — long content" },
   { value: "16384", label: "16,384 — large HTML/code" },
+];
+
+const ITERATION_OPTIONS = [
+  { value: "10", label: "10 — simple tasks" },
+  { value: "15", label: "15 — moderate tasks" },
+  { value: "25", label: "25 — complex multi-step" },
+  { value: "40", label: "40 — very complex workflows" },
 ];
 
 const fieldStyle = {
@@ -47,6 +57,9 @@ export function AIDefaultsPanel() {
     aiInteractivesMaxTokens: 16384,
     aiContentModel: "claude-haiku-4-5-20251001",
     aiContentMaxTokens: 4096,
+    aiChatModel: "claude-sonnet-4-6",
+    aiChatMaxTokens: 8192,
+    aiChatMaxToolIterations: 25,
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -74,6 +87,9 @@ export function AIDefaultsPanel() {
         aiInteractivesMaxTokens: config.aiInteractivesMaxTokens,
         aiContentModel: config.aiContentModel,
         aiContentMaxTokens: config.aiContentMaxTokens,
+        aiChatModel: config.aiChatModel,
+        aiChatMaxTokens: config.aiChatMaxTokens,
+        aiChatMaxToolIterations: config.aiChatMaxToolIterations,
       }),
     });
     setSaving(false);
@@ -155,6 +171,50 @@ export function AIDefaultsPanel() {
               onChange={(v) => setConfig((c) => ({ ...c, aiContentMaxTokens: parseInt(v, 10) }))}
               options={TOKEN_OPTIONS}
             />
+          </div>
+        </div>
+      </div>
+
+      {/* Chat section */}
+      <div style={{ marginBottom: "2rem" }}>
+        <SectionHeading>Chat (AI Assistant)</SectionHeading>
+        <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginBottom: "1rem" }}>
+          Used for the full-screen Chat mode. Higher token limits and more tool iterations allow complex multi-step tasks like creating multiple posts with scheduling.
+        </p>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <div>
+            <label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: "0.35rem" }}>
+              Model
+            </label>
+            <CustomSelect
+              value={config.aiChatModel}
+              onChange={(v) => setConfig((c) => ({ ...c, aiChatModel: v }))}
+              options={MODEL_OPTIONS}
+            />
+          </div>
+          <div>
+            <label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: "0.35rem" }}>
+              Max tokens per response
+            </label>
+            <CustomSelect
+              value={String(config.aiChatMaxTokens)}
+              onChange={(v) => setConfig((c) => ({ ...c, aiChatMaxTokens: parseInt(v, 10) }))}
+              options={TOKEN_OPTIONS}
+            />
+          </div>
+          <div>
+            <label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: "0.35rem" }}>
+              Max tool iterations per message
+            </label>
+            <CustomSelect
+              value={String(config.aiChatMaxToolIterations)}
+              onChange={(v) => setConfig((c) => ({ ...c, aiChatMaxToolIterations: parseInt(v, 10) }))}
+              options={ITERATION_OPTIONS}
+            />
+            <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", marginTop: "0.3rem" }}>
+              Each tool call (search, create, schedule) counts as one iteration. Complex tasks may need 25+.
+            </p>
           </div>
         </div>
       </div>

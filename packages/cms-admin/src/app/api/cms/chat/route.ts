@@ -4,6 +4,7 @@ import { getApiKey } from "@/lib/ai-config";
 import { gatherSiteContext, buildChatSystemPrompt } from "@/lib/chat/system-prompt";
 import { buildChatTools } from "@/lib/chat/tools";
 import { getSiteRole } from "@/lib/require-role";
+import { readSiteConfig } from "@/lib/site-config";
 
 export const maxDuration = 300;
 
@@ -65,11 +66,17 @@ export async function POST(request: NextRequest) {
   }));
   const handlers = new Map(toolPairs.map((t) => [t.definition.name, t.handler]));
 
-  // Resolve model
+  // Read configurable limits from site config (inherits from org)
+  const siteConfig = await readSiteConfig();
+  const chatMaxTokens = siteConfig.aiChatMaxTokens || 8192;
+  const chatMaxIterations = siteConfig.aiChatMaxToolIterations || 25;
+
+  // Resolve model: request param → site config → default
+  const defaultModel = siteConfig.aiChatModel || "claude-sonnet-4-6";
   const resolvedModel =
     requestedModel && ALLOWED_MODELS.includes(requestedModel as any)
       ? requestedModel
-      : "claude-sonnet-4-6";
+      : defaultModel;
 
   // SSE stream
   const encoder = new TextEncoder();
@@ -88,12 +95,10 @@ export async function POST(request: NextRequest) {
           content: m.content,
         }));
 
-        const MAX_TOOL_ITERATIONS = 25;
-
-        for (let i = 0; i < MAX_TOOL_ITERATIONS; i++) {
+        for (let i = 0; i < chatMaxIterations; i++) {
           const response = await client.messages.create({
             model: resolvedModel,
-            max_tokens: 8192,
+            max_tokens: chatMaxTokens,
             system: systemPrompt,
             messages: anthropicMessages,
             tools: anthropicTools,

@@ -46,6 +46,9 @@ interface OrgCreds {
   aiContentMaxTokens: number;
   aiInteractivesModel: string;
   aiInteractivesMaxTokens: number;
+  aiChatModel: string;
+  aiChatMaxTokens: number;
+  aiChatMaxToolIterations: number;
   // Email
   resendApiKey: string;
   emailFrom: string;
@@ -78,6 +81,9 @@ const CREDS_DEFAULTS: OrgCreds = {
   aiContentMaxTokens: 0,
   aiInteractivesModel: "",
   aiInteractivesMaxTokens: 0,
+  aiChatModel: "",
+  aiChatMaxTokens: 0,
+  aiChatMaxToolIterations: 0,
   resendApiKey: "",
   emailFrom: "",
   emailFromName: "",
@@ -145,6 +151,7 @@ export default function OrgSettingsPage() {
           aiTavilyApiKey: s("aiTavilyApiKey"),
           aiContentModel: s("aiContentModel"), aiContentMaxTokens: n("aiContentMaxTokens"),
           aiInteractivesModel: s("aiInteractivesModel"), aiInteractivesMaxTokens: n("aiInteractivesMaxTokens"),
+          aiChatModel: s("aiChatModel"), aiChatMaxTokens: n("aiChatMaxTokens"), aiChatMaxToolIterations: n("aiChatMaxToolIterations"),
           resendApiKey: s("resendApiKey"), emailFrom: s("emailFrom"), emailFromName: s("emailFromName"),
           backupSchedule: s("backupSchedule"), backupTime: s("backupTime"),
           backupRetentionDays: n("backupRetentionDays"),
@@ -435,6 +442,24 @@ export default function OrgSettingsPage() {
                 <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Max tokens</label>
                 <input type="number" value={creds.aiInteractivesMaxTokens || ""} onChange={(e) => setCreds((c) => ({ ...c, aiInteractivesMaxTokens: parseInt(e.target.value) || 0 }))}
                   placeholder="16384" style={credInputStyle} />
+              </div>
+            </div>
+
+            <div style={{ display: "flex", gap: "1rem" }}>
+              <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+                <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Chat model</label>
+                <input type="text" value={creds.aiChatModel} onChange={(e) => setCreds((c) => ({ ...c, aiChatModel: e.target.value }))}
+                  placeholder="claude-sonnet-4-6" style={credInputStyle} />
+              </div>
+              <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+                <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Max tokens</label>
+                <input type="number" value={creds.aiChatMaxTokens || ""} onChange={(e) => setCreds((c) => ({ ...c, aiChatMaxTokens: parseInt(e.target.value) || 0 }))}
+                  placeholder="8192" style={credInputStyle} />
+              </div>
+              <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+                <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Tool iterations</label>
+                <input type="number" value={creds.aiChatMaxToolIterations || ""} onChange={(e) => setCreds((c) => ({ ...c, aiChatMaxToolIterations: parseInt(e.target.value) || 0 }))}
+                  placeholder="25" style={credInputStyle} />
               </div>
             </div>
 

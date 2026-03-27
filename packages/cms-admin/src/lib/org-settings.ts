@@ -33,6 +33,9 @@ export interface OrgSettings {
   aiInteractivesMaxTokens?: number;
   aiContentModel?: string;
   aiContentMaxTokens?: number;
+  aiChatModel?: string;
+  aiChatMaxTokens?: number;
+  aiChatMaxToolIterations?: number;
   /** AI Image Analysis: batch overwrite behavior */
   aiImageOverwrite?: "ask" | "skip" | "overwrite";
 
@@ -82,6 +85,9 @@ export const INHERITABLE_FIELDS = [
   "aiInteractivesMaxTokens",
   "aiContentModel",
   "aiContentMaxTokens",
+  "aiChatModel",
+  "aiChatMaxTokens",
+  "aiChatMaxToolIterations",
   // Email
   "resendApiKey",
   "emailFrom",

@@ -19,6 +19,12 @@ export interface SiteConfig {
   aiContentModel: string;
   /** Default max tokens for content writing */
   aiContentMaxTokens: number;
+  /** Default AI model for chat conversations */
+  aiChatModel: string;
+  /** Default max tokens per chat response */
+  aiChatMaxTokens: number;
+  /** Max tool iterations per chat message (how many tools the AI can call in sequence) */
+  aiChatMaxToolIterations: number;
   /** Resend API key for transactional email */
   resendApiKey: string;
   /** Sender email for outgoing emails (must be verified in Resend) */
@@ -93,6 +99,9 @@ async function defaults(): Promise<SiteConfig> {
     aiInteractivesMaxTokens: 16384,
     aiContentModel: "claude-haiku-4-5-20251001",
     aiContentMaxTokens: 4096,
+    aiChatModel: "claude-sonnet-4-6",
+    aiChatMaxTokens: 8192,
+    aiChatMaxToolIterations: 25,
     resendApiKey: "",
     emailFrom: "",
     emailFromName: "webhouse.app",
