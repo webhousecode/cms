@@ -1994,6 +1994,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
   const [mediaBrowserItems, setMediaBrowserItems] = useState<Array<{ name: string; url: string; isImage: boolean; mediaType?: string; size: number }>>([]);
   const [mediaBrowserLoading, setMediaBrowserLoading] = useState(false);
   const [mediaBrowserSearch, setMediaBrowserSearch] = useState("");
+  const [mediaBrowserPage, setMediaBrowserPage] = useState(1);
   const [mediaBrowserAiMeta, setMediaBrowserAiMeta] = useState<Record<string, { caption?: string; alt?: string; tags?: string[] }>>({});
   const imagePickerRef = useRef<HTMLDivElement>(null);
   const audioPickerRef = useRef<HTMLDivElement>(null);
@@ -3152,7 +3153,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
             onMouseDown={(e) => { if (e.target === e.currentTarget) setShowImageMediaBrowser(false); }}
           >
             <div onMouseDown={(e) => e.stopPropagation()} style={{
-              width: "min(640px, 90vw)", maxHeight: "70vh",
+              width: "min(640px, 90vw)", height: "70vh",
               backgroundColor: "var(--card)", border: "1px solid var(--border)",
               borderRadius: "1rem", boxShadow: "0 24px 48px rgba(0,0,0,0.5)",
               display: "flex", flexDirection: "column", overflow: "hidden",
@@ -3168,7 +3169,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                 <input
                   type="text"
                   value={mediaBrowserSearch}
-                  onChange={(e) => setMediaBrowserSearch(e.target.value)}
+                  onChange={(e) => { setMediaBrowserSearch(e.target.value); setMediaBrowserPage(1); }}
                   placeholder="Search images..."
                   autoFocus
                   style={{
@@ -3191,9 +3192,13 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                       No images match &ldquo;{mediaBrowserSearch}&rdquo;
                     </div>
                   );
+                  const PAGE_SIZE = 50;
+                  const visible = filtered.slice(0, mediaBrowserPage * PAGE_SIZE);
+                  const hasMore = visible.length < filtered.length;
                   return (
+                    <>
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))", gap: "0.5rem" }}>
-                      {filtered.map((item) => (
+                      {visible.map((item) => (
                         <button
                           key={item.url}
                           type="button"
@@ -3214,7 +3219,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                           className="hover:border-primary transition-colors"
                           title={item.name}
                         >
-                          <img src={item.url} alt={item.name}
+                          <img src={item.url} alt={item.name} loading="lazy"
                             style={{ width: "100%", height: "80px", objectFit: "cover", borderRadius: "4px" }} />
                           <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", width: "100%", textAlign: "center" }}>
                             {item.name}
@@ -3222,6 +3227,13 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                         </button>
                       ))}
                     </div>
+                    {hasMore && (
+                      <button type="button" onClick={() => setMediaBrowserPage((p) => p + 1)}
+                        style={{ display: "block", margin: "0.75rem auto 0", padding: "0.4rem 1.25rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: "pointer" }}>
+                        Show more ({filtered.length - visible.length} remaining)
+                      </button>
+                    )}
+                    </>
                   );
                 })()}
               </div>
