@@ -277,7 +277,7 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
         backgroundColor: "var(--background)",
       }}
     >
-      {/* Chat toolbar */}
+      {/* Chat toolbar — always sticky at top */}
       <div
         style={{
           display: "flex",
@@ -285,7 +285,12 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
           justifyContent: "flex-end",
           gap: "4px",
           padding: "4px 16px",
-          borderBottom: hasMessages ? "1px solid var(--border)" : "none",
+          borderBottom: "1px solid var(--border)",
+          flexShrink: 0,
+          backgroundColor: "var(--background)",
+          position: "sticky",
+          top: 0,
+          zIndex: 10,
         }}
       >
         <button
