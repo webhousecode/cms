@@ -902,7 +902,9 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
       }
       setDirty(false);
       setSavedAt(new Date());
-      startTransition(() => router.refresh());
+      // Note: NO router.refresh() — we already have the updated doc via setDoc(updated).
+      // router.refresh() triggers server re-fetch, and combined with preview-build
+      // writing to dist/, causes Fast Refresh which remounts the editor and loses state.
       if (nextStatus === "published" && doc.status !== "published") {
         toast.success("Published", { description: doc.slug });
       } else if (nextStatus === "draft" && doc.status === "published") {
