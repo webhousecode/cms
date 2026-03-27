@@ -4,28 +4,30 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>404 — Page not found</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath fill='%232a2a3e' d='M32,0C16.8,0,1.5,9.1,1.5,27.3s9.1,32.2,21.3,36.5c6.1,1.8,9.1-1.8,9.1-7.9'/%3E%3Cpath fill='%23212135' d='M1.5,27.3c-3,9.1-1.2,22.5,4.9,29.8,4.9,4.9,12.2,7.3,16.4,6.7'/%3E%3Cpath fill='%23f7bb2e' d='M32,0c15.2,0,30.4,9.1,30.4,27.3s-9.1,32.2-21.3,36.5c-6.1,1.8-9.1-1.8-9.1-7.9'/%3E%3Cpath fill='%23d9a11a' d='M62.3,27.3c3,9.1,1.2,22.5-4.9,29.8-4.9,4.9-12.2,7.3-16.4,6.7'/%3E%3Cpath fill='%23fff' d='M10,30.4c7.3-11.3,14.6-17,21.9-17s14.6,5.7,21.9,17c-7.3,11.3-14.6,17-21.9,17s-14.6-5.7-21.9-17Z'/%3E%3Ccircle fill='%23f7bb2e' cx='32' cy='30.4' r='9.1'/%3E%3Ccircle fill='%230d0d0d' cx='32' cy='30.4' r='4'/%3E%3Ccircle fill='%23fff' opacity='.9' cx='34.4' cy='27.9' r='1.7'/%3E%3Ccircle fill='%23fff' opacity='.3' cx='30' cy='32.5' r='.8'/%3E%3C/svg%3E">
 <style>
   *{margin:0;padding:0;box-sizing:border-box}
   body{background:#0D0D0D;color:#a0a0a0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
     display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem;text-align:center}
   .wrap{max-width:420px}
-  .logo{font-size:1.1rem;font-weight:600;color:#F7BB2E;letter-spacing:.02em;margin-bottom:2.5rem;
-    opacity:0;animation:fadeIn .8s .2s forwards}
-  .code{font-size:6rem;font-weight:700;color:#F7BB2E;line-height:1;
-    opacity:0;animation:fadeIn .6s forwards}
-  .title{font-size:1.25rem;font-weight:500;color:#e0e0e0;margin:.75rem 0 1.25rem;
-    opacity:0;animation:fadeIn .8s .1s forwards}
-  .hint{font-size:.85rem;line-height:1.6;color:#606060;
-    opacity:0;animation:fadeIn .8s .3s forwards}
+  .logo{margin:0 auto 2.5rem;width:220px;opacity:0;animation:fadeIn .8s .2s forwards}
+  .code{font-size:6rem;font-weight:700;color:#F7BB2E;line-height:1;opacity:0;animation:fadeIn .6s forwards}
+  .title{font-size:1.25rem;font-weight:500;color:#e0e0e0;margin:.75rem 0 1.25rem;opacity:0;animation:fadeIn .8s .1s forwards}
   .divider{width:40px;height:2px;background:#F7BB2E;margin:0 auto 1.5rem;border-radius:1px;
     opacity:0;animation:fadeIn .8s .25s forwards,glow 3s 1s ease-in-out infinite}
+  .hint{font-size:.85rem;line-height:1.6;color:#606060;opacity:0;animation:fadeIn .8s .3s forwards}
   @keyframes fadeIn{to{opacity:1}}
-  @keyframes glow{0%,100%{opacity:1;box-shadow:0 0 4px transparent}50%{opacity:.7;box-shadow:0 0 8px #F7BB2E40}}
+  @keyframes glow{0%,100%{box-shadow:0 0 4px transparent}50%{box-shadow:0 0 8px #F7BB2E40}}
 </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="logo">webhouse.app</div>
+    <!-- webhouse.app wordmark (light version — white text, gold .app) -->
+    <div class="logo">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1122.69 255.2" width="220">
+        <g><path fill="#fff" d="M1054.41,255.2H68.28C30.54,255.2,0,232.3,0,204.1V51.2C0,23,30.54,0,68.28,0h986.14c37.74,0,68.28,22.9,68.28,51.2v152.8c0,28.3-30.54,51.2-68.28,51.2Z"/><g><path d="M283.1,139.3h-50.4c1.9,8.3,8.9,13.4,19.1,13.4,7.1,0,12.1-2.1,16.7-6.4l10.3,11.1c-6.2,7.1-15.5,10.8-27.5,10.8-23,0-38-14.5-38-34.3s15.2-34.3,35.5-34.3,34.7,13.1,34.7,34.5c-.1,1.5-.3,3.6-.4,5.2ZM232.4,128h32.8c-1.4-8.4-7.7-13.9-16.3-13.9s-15.1,5.4-16.5,13.9Z"/><path d="M366.8,133.8c0,20.9-14.5,34.3-33.2,34.3-8.9,0-16.1-2.8-20.9-8.7v7.7h-18.4v-91.9h19.3v32.3c5-5.4,11.8-8,20.1-8,18.6,0,33.1,13.4,33.1,34.3ZM347.2,133.8c0-11.5-7.3-18.4-17-18.4s-17,6.9-17,18.4,7.3,18.4,17,18.4c9.7.1,17-6.9,17-18.4Z"/><path d="M445.7,129v38.1h-19.3v-35.1c0-10.8-5-15.7-13.5-15.7-9.3,0-16,5.7-16,18v32.9h-19.3v-91.9h19.3v32.2c5.2-5.2,12.6-7.9,21.2-7.9,15.7-.1,27.6,9.1,27.6,29.4Z"/><path d="M454.8,133.8c0-20.1,15.5-34.3,36.6-34.3s36.5,14.2,36.5,34.3-15.4,34.3-36.5,34.3c-21.1,0-36.6-14.2-36.6-34.3ZM508.4,133.8c0-11.5-7.3-18.4-17-18.4s-17.1,6.9-17.1,18.4,7.4,18.4,17.1,18.4c9.7.1,17-6.9,17-18.4Z"/><path d="M603.9,100.5v66.6h-18.3v-7.9c-5.1,5.8-12.5,8.9-20.7,8.9-16.7,0-28.5-9.4-28.5-30v-37.6h19.3v34.8c0,11.1,5,16.1,13.5,16.1s15.4-5.7,15.4-18v-32.9h19.3Z"/><path d="M615.4,160.9l6.4-13.9c5.9,3.8,15,6.4,23.2,6.4,8.9,0,12.3-2.4,12.3-6.1,0-10.9-40.2.2-40.2-26.4,0-12.6,11.4-21.5,30.8-21.5,9.2,0,19.3,2.1,25.6,5.8l-6.4,13.7c-6.6-3.7-13.1-5-19.2-5-8.7,0-12.4,2.7-12.4,6.2,0,11.4,40.2.4,40.2,26.6,0,12.4-11.5,21.2-31.4,21.2-11.3.2-22.7-2.9-28.9-7Z"/><path d="M752.4,139.3h-50.4c1.9,8.3,8.9,13.4,19.1,13.4,7.1,0,12.1-2.1,16.7-6.4l10.3,11.1c-6.2,7.1-15.5,10.8-27.5,10.8-23,0-38-14.5-38-34.3s15.2-34.3,35.5-34.3,34.7,13.1,34.7,34.5c0,1.5-.2,3.6-.4,5.2ZM701.8,128h32.8c-1.4-8.4-7.7-13.9-16.3-13.9s-15.1,5.4-16.5,13.9Z"/><path d="M203.6,94.9v39.8c0,21.2-11.9,33.4-33.5,33.4-9.9,0-18.1-2.7-23.7-10.2-5.5,7.2-13.4,10.2-23.9,10.2-21.7,0-33.4-12.2-33.4-33.4v-39.8h20.9v38.2c0,11.9,3.9,17.4,12.7,17.4s13.1-5.5,13.1-17.4v-38.2h20.9v38.2c0,11.9,4.3,17.4,13.1,17.4s12.7-5.5,12.7-17.4v-38.2h21.1Z"/></g></g><g><path fill="#f5ba2b" d="M764.05,157.7c0-7.25,5.38-12,12.12-12s12.12,4.75,12.12,12-5.38,12.25-12.12,12.25-12.12-5.12-12.12-12.25Z"/><path fill="#f5ba2b" d="M868.93,101.7v67.25h-18.62v-7.75c-4.88,5.88-12,8.75-21,8.75-19,0-33.62-13.5-33.62-34.62s14.62-34.63,33.62-34.63c8.25,0,15.25,2.62,20.12,8.12v-7.12h19.5ZM849.8,135.32c0-11.63-7.5-18.63-17.12-18.63s-17.25,7-17.25,18.63,7.5,18.62,17.25,18.62,17.12-7,17.12-18.62Z"/><path fill="#f5ba2b" d="M956.42,135.32c0,21.12-14.62,34.62-33.5,34.62-8.38,0-15.25-2.62-20.25-8.12v31.38h-19.5v-91.5h18.62v7.75c4.88-5.88,12.12-8.75,21.12-8.75,18.88,0,33.5,13.5,33.5,34.63ZM936.67,135.32c0-11.63-7.38-18.63-17.12-18.63s-17.12,7-17.12,18.63,7.38,18.62,17.12,18.62,17.12-7,17.12-18.62Z"/><path fill="#f5ba2b" d="M1038.92,135.32c0,21.12-14.62,34.62-33.5,34.62-8.38,0-15.25-2.62-20.25-8.12v31.38h-19.5v-91.5h18.62v7.75c4.88-5.88,12.12-8.75,21.12-8.75,18.88,0,33.5,13.5,33.5,34.63ZM1019.17,135.32c0-11.63-7.38-18.63-17.12-18.63s-17.12,7-17.12,18.63,7.38,18.62,17.12,18.62,17.12-7,17.12-18.62Z"/></g>
+      </svg>
+    </div>
     <div class="code">404</div>
     <div class="title">Page not found</div>
     <div class="divider"></div>
