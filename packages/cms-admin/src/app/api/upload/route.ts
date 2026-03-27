@@ -33,18 +33,25 @@ export async function POST(req: NextRequest) {
     // F44: Auto-generate WebP variants + extract EXIF on upload
     if (adapter.type === "filesystem" && isProcessableImage(filename)) {
       try {
+        const { readSiteConfig } = await import("@/lib/site-config");
+        const siteConfig = await readSiteConfig();
         const sitePaths = await getActiveSitePaths();
         const uploadDir = folder
           ? join(sitePaths.uploadDir, folder)
           : sitePaths.uploadDir;
 
-        // Generate WebP variants
-        const variants = await generateVariants(buffer, filename);
-        for (const v of variants) {
-          await writeFile(join(uploadDir, v.filename), v.buffer);
-        }
-        if (variants.length > 0) {
-          console.log(`[upload] Generated ${variants.length} WebP variants for ${filename}`);
+        // Generate WebP variants (respects site config)
+        if (siteConfig.mediaAutoOptimize !== false) {
+          const variantConfigs = (siteConfig.mediaVariantWidths ?? [400, 800, 1200, 1600]).map(
+            (w: number) => ({ suffix: `${w}w`, width: w })
+          );
+          const variants = await generateVariants(buffer, filename, variantConfigs, siteConfig.mediaWebpQuality ?? 80);
+          for (const v of variants) {
+            await writeFile(join(uploadDir, v.filename), v.buffer);
+          }
+          if (variants.length > 0) {
+            console.log(`[upload] Generated ${variants.length} WebP variants for ${filename}`);
+          }
         }
 
         // Extract and persist EXIF metadata

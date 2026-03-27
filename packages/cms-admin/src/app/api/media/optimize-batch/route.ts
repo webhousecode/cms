@@ -9,7 +9,8 @@ import { readdir, readFile, writeFile, stat } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { getActiveSitePaths } from "@/lib/site-paths";
-import { generateVariants, isProcessableImage, variantFilename, extractExif, DEFAULT_VARIANTS } from "@/lib/media/image-processor";
+import { readSiteConfig } from "@/lib/site-config";
+import { generateVariants, isProcessableImage, variantFilename, extractExif, DEFAULT_VARIANTS, type VariantConfig } from "@/lib/media/image-processor";
 import { appendMediaMeta } from "@/lib/media/media-meta";
 
 export async function POST(req: NextRequest) {
@@ -29,6 +30,13 @@ export async function POST(req: NextRequest) {
       }
     } catch { /* no body = process all */ }
 
+    // Read site config for variant widths and quality
+    const siteConfig = await readSiteConfig();
+    const variantConfigs: VariantConfig[] = (siteConfig.mediaVariantWidths ?? [400, 800, 1200, 1600]).map(
+      (w: number) => ({ suffix: `${w}w`, width: w })
+    );
+    const webpQuality = siteConfig.mediaWebpQuality ?? 80;
+
     let files = await scanImages(uploadDir);
 
     // Filter to selected files if provided
@@ -44,7 +52,7 @@ export async function POST(req: NextRequest) {
     for (const file of files) {
       try {
         // Check if variants already exist
-        const hasAllVariants = DEFAULT_VARIANTS.every((v) => {
+        const hasAllVariants = variantConfigs.every((v) => {
           const vName = variantFilename(file.name, v.suffix);
           return existsSync(path.join(file.dir, vName));
         });
@@ -55,7 +63,7 @@ export async function POST(req: NextRequest) {
         }
 
         const inputBuffer = await readFile(file.fullPath);
-        const variants = await generateVariants(inputBuffer, file.name);
+        const variants = await generateVariants(inputBuffer, file.name, variantConfigs, webpQuality);
 
         for (const v of variants) {
           await writeFile(path.join(file.dir, v.filename), v.buffer);

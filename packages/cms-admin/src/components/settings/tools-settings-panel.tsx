@@ -17,6 +17,9 @@ interface AutomationConfig {
   publishWebhooks: WebhookEntry[];
   agentDefaultWebhooks: WebhookEntry[];
   aiImageOverwrite: "ask" | "skip" | "overwrite";
+  mediaAutoOptimize: boolean;
+  mediaVariantWidths: number[];
+  mediaWebpQuality: number;
 }
 
 const DEFAULTS: AutomationConfig = {
@@ -30,6 +33,9 @@ const DEFAULTS: AutomationConfig = {
   publishWebhooks: [],
   agentDefaultWebhooks: [],
   aiImageOverwrite: "ask",
+  mediaAutoOptimize: true,
+  mediaVariantWidths: [400, 800, 1200, 1600],
+  mediaWebpQuality: 80,
 };
 
 export function ToolsSettingsPanel() {
@@ -57,6 +63,9 @@ export function ToolsSettingsPanel() {
           publishWebhooks: data.publishWebhooks ?? [],
           agentDefaultWebhooks: data.agentDefaultWebhooks ?? [],
           aiImageOverwrite: data.aiImageOverwrite ?? "ask",
+          mediaAutoOptimize: data.mediaAutoOptimize ?? true,
+          mediaVariantWidths: data.mediaVariantWidths ?? [400, 800, 1200, 1600],
+          mediaWebpQuality: data.mediaWebpQuality ?? 80,
         });
       })
       .catch(() => {});
@@ -242,6 +251,75 @@ export function ToolsSettingsPanel() {
               { value: "overwrite", label: "Always re-analyze" },
             ]}
           />
+        </div>
+      </SettingsCard>
+
+      <SectionHeading>Media Processing</SectionHeading>
+      <SettingsCard>
+        <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+            <input
+              type="checkbox"
+              checked={config.mediaAutoOptimize}
+              onChange={(e) => updateConfig((c) => ({ ...c, mediaAutoOptimize: e.target.checked }))}
+              style={{ accentColor: "var(--primary)" }}
+            />
+            <div>
+              <label style={{ fontSize: "0.8rem", fontWeight: 500 }}>Generate WebP variants on upload</label>
+              <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>
+                Automatically create optimized WebP variants when images are uploaded
+              </p>
+            </div>
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+            <label style={{ fontSize: "0.8rem", fontWeight: 500 }}>Variant widths (px)</label>
+            <input
+              type="text"
+              value={config.mediaVariantWidths.join(", ")}
+              onChange={(e) => {
+                const widths = e.target.value
+                  .split(",")
+                  .map((s) => parseInt(s.trim(), 10))
+                  .filter((n) => !isNaN(n) && n > 0)
+                  .sort((a, b) => a - b);
+                if (widths.length > 0) {
+                  updateConfig((c) => ({ ...c, mediaVariantWidths: widths }));
+                }
+              }}
+              placeholder="400, 800, 1200, 1600"
+              style={{
+                padding: "0.375rem 0.5rem",
+                borderRadius: "6px",
+                border: "1px solid var(--border)",
+                background: "var(--card)",
+                fontSize: "0.8rem",
+                color: "var(--foreground)",
+                fontFamily: "monospace",
+              }}
+            />
+            <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>
+              Comma-separated pixel widths. Variants larger than the original are skipped.
+            </p>
+          </div>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+            <label style={{ fontSize: "0.8rem", fontWeight: 500 }}>
+              WebP quality: {config.mediaWebpQuality}
+            </label>
+            <input
+              type="range"
+              min={10}
+              max={100}
+              step={5}
+              value={config.mediaWebpQuality}
+              onChange={(e) => updateConfig((c) => ({ ...c, mediaWebpQuality: parseInt(e.target.value, 10) }))}
+              style={{ accentColor: "var(--primary)" }}
+            />
+            <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>
+              Higher = better quality, larger files. 80 is recommended.
+            </p>
+          </div>
         </div>
       </SettingsCard>
 

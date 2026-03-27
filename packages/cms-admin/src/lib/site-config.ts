@@ -59,6 +59,13 @@ export interface SiteConfig {
    *  "ask" = prompt user, "skip" = skip existing, "overwrite" = always re-analyze */
   aiImageOverwrite: "ask" | "skip" | "overwrite";
 
+  /** Generate WebP variants on upload */
+  mediaAutoOptimize: boolean;
+  /** Variant widths in pixels */
+  mediaVariantWidths: number[];
+  /** WebP quality (1-100) */
+  mediaWebpQuality: number;
+
   /** Webhook URLs per automation (ordered, multiple per type) */
   backupWebhooks: { id: string; url: string }[];
   linkCheckWebhooks: { id: string; url: string }[];
@@ -106,6 +113,9 @@ async function defaults(): Promise<SiteConfig> {
     linkCheckSchedule: "off",
     linkCheckTime: "04:00",
     aiImageOverwrite: "ask",
+    mediaAutoOptimize: true,
+    mediaVariantWidths: [400, 800, 1200, 1600],
+    mediaWebpQuality: 80,
     backupWebhooks: [],
     linkCheckWebhooks: [],
     publishWebhooks: [],
