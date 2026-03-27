@@ -65,62 +65,62 @@ export function calculateSeoScore(
   // 1. Meta title length (30-60 chars)
   const mt = seo.metaTitle ?? "";
   if (!mt) {
-    details.push({ rule: "meta-title", label: "Meta title", status: "fail", message: "Missing — add a meta title (30-60 chars)" });
+    details.push({ rule: "meta-title", label: "Meta title", status: "fail", message: "Meta title is missing. Write a title for search results (30-60 characters)." });
   } else if (mt.length < 30) {
-    details.push({ rule: "meta-title", label: "Meta title", status: "warn", message: `Too short: ${mt.length} chars (aim for 30-60)` });
+    details.push({ rule: "meta-title", label: "Meta title", status: "warn", message: `Meta title is too short (${mt.length} characters). Add more words to reach 30-60 characters.` });
   } else if (mt.length > 60) {
-    details.push({ rule: "meta-title", label: "Meta title", status: "warn", message: `Too long: ${mt.length} chars (max 60, gets truncated)` });
+    details.push({ rule: "meta-title", label: "Meta title", status: "warn", message: `Meta title is too long (${mt.length} characters). Google cuts off after 60. Shorten it.` });
   } else {
-    details.push({ rule: "meta-title", label: "Meta title", status: "pass", message: `Meta title: ${mt.length} chars` });
+    details.push({ rule: "meta-title", label: "Meta title", status: "pass", message: `Meta title length is good (${mt.length}/60 characters)` });
   }
 
   // 2. Meta description length (120-160 chars)
   const md = seo.metaDescription ?? "";
   if (!md) {
-    details.push({ rule: "meta-desc", label: "Meta description", status: "fail", message: "Missing — add a meta description (120-160 chars)" });
+    details.push({ rule: "meta-desc", label: "Meta description", status: "fail", message: "Meta description is missing. Write a description for search results (120-160 characters)." });
   } else if (md.length < 120) {
-    details.push({ rule: "meta-desc", label: "Meta description", status: "warn", message: `Short: ${md.length} chars (aim for 120-160)` });
+    details.push({ rule: "meta-desc", label: "Meta description", status: "warn", message: `Meta description is too short (${md.length} characters). Add ${120 - md.length} more characters to reach 120.` });
   } else if (md.length > 160) {
-    details.push({ rule: "meta-desc", label: "Meta description", status: "warn", message: `Too long: ${md.length} chars (max 160, gets truncated)` });
+    details.push({ rule: "meta-desc", label: "Meta description", status: "warn", message: `Meta description is too long (${md.length} characters). Google cuts off after 160. Remove ${md.length - 160} characters.` });
   } else {
-    details.push({ rule: "meta-desc", label: "Meta description", status: "pass", message: `Meta description: ${md.length} chars` });
+    details.push({ rule: "meta-desc", label: "Meta description", status: "pass", message: `Meta description length is good (${md.length}/160 characters)` });
   }
 
   // 3. Keyword in meta title
   if (keywords.length > 0 && mt) {
     if (keywordInText(mt, keywords)) {
-      details.push({ rule: "keyword-title", label: "Keyword in title", status: "pass", message: "Primary keyword found in meta title" });
+      details.push({ rule: "keyword-title", label: "Keyword in title", status: "pass", message: `Keyword "${keywords[0]}" found in meta title` });
     } else {
-      details.push({ rule: "keyword-title", label: "Keyword in title", status: "warn", message: "Primary keyword not in meta title" });
+      details.push({ rule: "keyword-title", label: "Keyword in title", status: "warn", message: `Add the keyword "${keywords[0]}" to the meta title field above.` });
     }
   }
 
   // 4. Keyword in meta description
   if (keywords.length > 0 && md) {
     if (keywordInText(md, keywords)) {
-      details.push({ rule: "keyword-desc", label: "Keyword in description", status: "pass", message: "Primary keyword found in meta description" });
+      details.push({ rule: "keyword-desc", label: "Keyword in description", status: "pass", message: `Keyword "${keywords[0]}" found in meta description` });
     } else {
-      details.push({ rule: "keyword-desc", label: "Keyword in description", status: "warn", message: "Primary keyword not in meta description" });
+      details.push({ rule: "keyword-desc", label: "Keyword in description", status: "warn", message: `Add the keyword "${keywords[0]}" to the meta description field above.` });
     }
   }
 
   // 5. Content length (min 300 words)
   const wc = wordCount(content);
   if (wc < 100) {
-    details.push({ rule: "content-length", label: "Content length", status: "fail", message: `Only ${wc} words (minimum 300 for SEO)` });
+    details.push({ rule: "content-length", label: "Content length", status: "fail", message: `Content is only ${wc} words. Write at least 300 words for search engines to index properly.` });
   } else if (wc < 300) {
-    details.push({ rule: "content-length", label: "Content length", status: "warn", message: `${wc} words (aim for 300+)` });
+    details.push({ rule: "content-length", label: "Content length", status: "warn", message: `Content is ${wc} words. Write ${300 - wc} more words to reach 300 (recommended minimum).` });
   } else {
-    details.push({ rule: "content-length", label: "Content length", status: "pass", message: `${wc} words` });
+    details.push({ rule: "content-length", label: "Content length", status: "pass", message: `Content is ${wc} words (300+ is good)` });
   }
 
   // 6. Heading structure (has H2s)
   const rawContent = String(doc.data.content ?? doc.data.body ?? "");
   const hasH2 = /#{2}\s|<h2/i.test(rawContent);
   if (hasH2) {
-    details.push({ rule: "headings", label: "Heading structure", status: "pass", message: "Content has H2 headings" });
+    details.push({ rule: "headings", label: "Heading structure", status: "pass", message: "Content uses H2 headings for structure" });
   } else if (wc > 200) {
-    details.push({ rule: "headings", label: "Heading structure", status: "warn", message: "Long content without H2 headings — add structure" });
+    details.push({ rule: "headings", label: "Heading structure", status: "warn", message: "Content has no H2 headings. Break up the text with ## subheadings." });
   }
 
   // 7. Images have alt text
@@ -133,41 +133,41 @@ export function calculateSeoScore(
   if (totalImgs === 0) {
     // No images — not a fail, just skip
   } else if (totalMissing > 0) {
-    details.push({ rule: "img-alt", label: "Image alt text", status: "warn", message: `${totalMissing}/${totalImgs} image${totalMissing > 1 ? "s" : ""} missing alt text` });
+    details.push({ rule: "img-alt", label: "Image alt text", status: "warn", message: `${totalMissing} of ${totalImgs} images are missing alt text. Edit each image and add a description.` });
   } else {
     details.push({ rule: "img-alt", label: "Image alt text", status: "pass", message: `All ${totalImgs} images have alt text` });
   }
 
   // 8. OG image
   if (seo.ogImage) {
-    details.push({ rule: "og-image", label: "Social image", status: "pass", message: "OG image set" });
+    details.push({ rule: "og-image", label: "Social image", status: "pass", message: "Social sharing image (OG) is set" });
   } else {
-    details.push({ rule: "og-image", label: "Social image", status: "warn", message: "No OG image — social shares will lack a preview" });
+    details.push({ rule: "og-image", label: "Social image", status: "warn", message: "No social image set. Add an image in the \"Social image (OG)\" field above — it shows when someone shares this page on Facebook/LinkedIn." });
   }
 
   // 9. Keyword in URL slug
   if (keywords.length > 0) {
     const slugLower = doc.slug.toLowerCase();
     if (keywords.some((k) => slugLower.includes(k.toLowerCase().replace(/\s+/g, "-")))) {
-      details.push({ rule: "keyword-slug", label: "Keyword in URL", status: "pass", message: "Keyword found in URL slug" });
+      details.push({ rule: "keyword-slug", label: "Keyword in URL", status: "pass", message: `Keyword "${keywords[0]}" found in the URL` });
     } else {
-      details.push({ rule: "keyword-slug", label: "Keyword in URL", status: "warn", message: "Primary keyword not in URL slug" });
+      details.push({ rule: "keyword-slug", label: "Keyword in URL", status: "warn", message: `The keyword "${keywords[0]}" is not in the URL slug (${doc.slug}). Consider renaming the slug in Properties.` });
     }
   }
 
   // 10. Internal links
   const hasInternalLinks = /\]\(\/|href=["']\//.test(rawContent);
   if (hasInternalLinks) {
-    details.push({ rule: "internal-links", label: "Internal links", status: "pass", message: "Content has internal links" });
+    details.push({ rule: "internal-links", label: "Internal links", status: "pass", message: "Content links to other pages on the site" });
   } else if (wc > 200) {
-    details.push({ rule: "internal-links", label: "Internal links", status: "warn", message: "No internal links found — add links to related content" });
+    details.push({ rule: "internal-links", label: "Internal links", status: "warn", message: "No internal links. Add links to other pages on your site (e.g. related posts) to improve SEO." });
   }
 
   // 11. Document has title
   if (title) {
-    details.push({ rule: "title", label: "Page title", status: "pass", message: "Document has a title" });
+    details.push({ rule: "title", label: "Page title", status: "pass", message: "Page has a title" });
   } else {
-    details.push({ rule: "title", label: "Page title", status: "fail", message: "Document is missing a title" });
+    details.push({ rule: "title", label: "Page title", status: "fail", message: "Page has no title. Fill in the Title field at the top of the editor." });
   }
 
   // Calculate score
