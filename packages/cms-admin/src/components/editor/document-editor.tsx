@@ -811,6 +811,13 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
   const [doc, setDocRaw] = useState(() => {
     // Prefer cached state over server-provided initialDoc (survives tab navigation)
     const cached = docStateCache.get(cacheKey);
+    console.log("[DocEditor mount]", cacheKey, {
+      hasCached: !!cached,
+      cacheSize: docStateCache.size,
+      cachedUpdatedAt: cached?.updatedAt,
+      initialUpdatedAt: initialDoc.updatedAt,
+      willUseCache: !!(cached && cached.updatedAt >= initialDoc.updatedAt),
+    });
     if (cached && cached.updatedAt >= initialDoc.updatedAt) {
       return cached;
     }
@@ -828,7 +835,9 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
   const setDoc = useCallback((update: DocSnapshot | ((prev: DocSnapshot) => DocSnapshot)) => {
     setDocRaw((prev) => {
       const next = typeof update === "function" ? update(prev) : update;
-      docStateCache.set(`${collection}/${next.slug}`, next);
+      const key = `${collection}/${next.slug}`;
+      docStateCache.set(key, next);
+      console.log("[DocEditor setDoc]", key, "cached, cacheSize:", docStateCache.size);
       return next;
     });
   }, [collection]);
