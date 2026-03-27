@@ -605,17 +605,26 @@ function resolveImage(src: string, config: EnrichmentConfig): string {
 
 // ── F44: Image → Picture upgrade ─────────────────────────────
 
-const VARIANT_WIDTHS = [400, 800, 1200, 1600];
+/** Discover variant widths by scanning for existing *-Nw.webp files */
+function discoverVariantWidths(uploadsDir: string, basePath: string): { path: string; w: number }[] {
+  const base = basePath.replace(/\.[^.]+$/, "");
+  const results: { path: string; w: number }[] = [];
+  // Check common widths + any that exist on disk
+  for (const w of [400, 600, 800, 1000, 1200, 1400, 1600, 1920, 2400]) {
+    const variantPath = `${base}-${w}w.webp`;
+    if (existsSync(path.join(uploadsDir, "..", variantPath.slice(1)))) {
+      results.push({ path: variantPath, w });
+    }
+  }
+  return results;
+}
 
 /** Upgrade <img src="/uploads/x.jpg"> → <picture> with WebP srcset */
 function upgradeImagesInHtml(html: string, uploadsDir: string): string {
   return html.replace(
     /<img\s+([^>]*?)src="(\/uploads\/[^"]+\.(jpg|jpeg|png))"([^>]*?)>/gi,
     (match, pre, src, _ext, post) => {
-      const base = src.replace(/\.[^.]+$/, "");
-      const srcsetParts = VARIANT_WIDTHS
-        .map((w) => ({ path: `${base}-${w}w.webp`, w }))
-        .filter((v) => existsSync(path.join(uploadsDir, "..", v.path.slice(1))));
+      const srcsetParts = discoverVariantWidths(uploadsDir, src);
       if (srcsetParts.length === 0) return match;
       const srcset = srcsetParts.map((v) => `${v.path} ${v.w}w`).join(", ");
       return `<picture>` +

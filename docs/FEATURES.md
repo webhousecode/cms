@@ -60,7 +60,7 @@
 | F41 | [GitHub Site Auto-Sync & Webhook Revalidation](#f41-github-site-sync) | Done | [docs/features/F41-github-site-sync.md](features/F41-github-site-sync.md) |
 | F42 | [Framework Boilerplates](#f42-framework-boilerplates) | Planned | [docs/features/F42-framework-boilerplates.md](features/F42-framework-boilerplates.md) |
 | F43 | [Persist User State](#f43-persist-user-state) | Done | [docs/features/F43-persist-user-state.md](features/F43-persist-user-state.md) |
-| F44 | [Media Processing Pipeline](#f44-media-processing-pipeline) | Planned | [docs/features/F44-media-processing.md](features/F44-media-processing.md) |
+| F44 | [Media Processing Pipeline](#f44-media-processing-pipeline) | ✅ Done | [docs/features/F44-media-processing.md](features/F44-media-processing.md) |
 | F45 | [AI Image Generation](#f45-ai-image-generation) | Planned | [docs/features/F45-ai-image-generation.md](features/F45-ai-image-generation.md) |
 | F46 | [Plugin System](#f46-plugin-system) | Planned | [docs/features/F46-plugin-system.md](features/F46-plugin-system.md) |
 | F47 | [Content Scheduling](#f47-content-scheduling) | Done | [docs/features/F47-content-scheduling.md](features/F47-content-scheduling.md) |
