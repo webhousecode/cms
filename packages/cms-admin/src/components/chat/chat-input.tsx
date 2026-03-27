@@ -104,9 +104,23 @@ export function ChatInput({ onSend, disabled, placeholder, visible }: ChatInputP
           textContent: text.slice(0, 50000),
         });
       } else {
-        // Binary documents (PDF, DOCX, PPTX): upload and let server extract text
+        // Binary documents (PDF, DOCX, PPTX): upload + extract text server-side
         const uploaded = await uploadFile(file);
-        if (uploaded) results.push(uploaded);
+        if (uploaded) {
+          // Try server-side text extraction for PDF/DOCX
+          if (file.name.match(/\.(pdf|docx?)$/i)) {
+            try {
+              const extractForm = new FormData();
+              extractForm.append("file", file);
+              const extractRes = await fetch("/api/extract-text", { method: "POST", body: extractForm });
+              if (extractRes.ok) {
+                const { text } = await extractRes.json() as { text: string | null };
+                if (text) uploaded.textContent = text;
+              }
+            } catch { /* extraction failed, still have the file URL */ }
+          }
+          results.push(uploaded);
+        }
       }
     }
 
