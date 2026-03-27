@@ -111,7 +111,7 @@ export function WelcomeScreen({ siteName, onSuggestionClick }: WelcomeScreenProp
       </div>
 
       <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", opacity: 0.5 }}>
-        Press / to focus input &middot; Cmd+Shift+C to switch to Admin
+        Press / to focus input &middot; Cmd+Shift+. to switch to Admin
       </p>
     </div>
   );
