@@ -99,17 +99,17 @@ export async function POST(request: NextRequest) {
             (b): b is Anthropic.TextBlock => b.type === "text"
           );
 
-          // Stream text blocks
-          for (const block of textBlocks) {
-            if (block.text) {
-              sendEvent("text", { text: block.text });
-            }
-          }
-
-          // If no tool calls, we're done
+          // If no tool calls, stream the final text and we're done
           if (toolUseBlocks.length === 0 || response.stop_reason === "end_turn") {
+            for (const block of textBlocks) {
+              if (block.text) {
+                sendEvent("text", { text: block.text });
+              }
+            }
             break;
           }
+
+          // Has tool calls — don't stream intermediate "thinking" text
 
           // Execute tool calls
           const toolResults: Anthropic.ToolResultBlockParam[] = [];
