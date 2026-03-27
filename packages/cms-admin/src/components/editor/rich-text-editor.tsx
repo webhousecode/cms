@@ -2061,6 +2061,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
     onUpdate: ({ editor }) => {
       const md = (editor.storage as any).markdown.getMarkdown();
       lastEmittedRef.current = md;
+      skipNextSyncRef.current = true;
       onChange(md);
     },
     editorProps: {
@@ -2124,16 +2125,24 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
     }),
   });
 
-  // Track the last value we sent to onChange to avoid round-trip overwrites
+  // Track what the editor currently holds to avoid overwriting user edits
   const lastEmittedRef = useRef(value);
+  const skipNextSyncRef = useRef(false);
   useEffect(() => {
-    if (editor && !editor.isFocused) {
-      // Only apply external value changes — skip if value matches what we last emitted
-      if (value === lastEmittedRef.current) return;
-      const current = (editor.storage as any).markdown.getMarkdown();
-      if (value !== current) {
-        queueMicrotask(() => editor.commands.setContent(value || "", { emitUpdate: false }));
-      }
+    if (!editor) return;
+    // Skip sync if we just emitted this value (save round-trip)
+    if (value === lastEmittedRef.current) return;
+    // Skip one sync cycle after save (build may cause remount)
+    if (skipNextSyncRef.current) { skipNextSyncRef.current = false; return; }
+    // Only sync when editor is not focused (external changes like history restore)
+    if (editor.isFocused) return;
+    const current = (editor.storage as any).markdown.getMarkdown();
+    if (value !== current) {
+      queueMicrotask(() => {
+        if (!editor.isDestroyed) {
+          editor.commands.setContent(value || "", { emitUpdate: false });
+        }
+      });
     }
   }, [value, editor]);
 
