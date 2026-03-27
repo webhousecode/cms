@@ -275,7 +275,7 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
           sublabel: r.slug,
           category: "content",
           icon: <img src={r.mediaThumbnail ?? r.mediaUrl} alt="" style={{ width: "0.9rem", height: "0.9rem", objectFit: "cover", borderRadius: "2px" }} />,
-          href: `/admin/media?q=${encodeURIComponent(r.slug)}`,
+          href: `/admin/media?q=${encodeURIComponent(query)}`,
         });
       } else {
         result.push({
