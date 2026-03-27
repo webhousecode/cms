@@ -112,7 +112,8 @@ _Makes us stand out. Customers expect these from a modern CMS._
 | 19 | **F49 Incremental Builds** | Small | Performance. Only matters at scale (100+ pages). |
 | 20 | **F107 Chat with Your Site** | Large | Full-screen conversational CMS. Master switch Chat/Traditional. 4 phases. THE AI-first CMS differentiator. Supersedes F51. |
 | ~~20~~ | ~~**F51 Admin AI Assistant**~~ | ~~Superseded~~ | ~~Absorbed into F107 Chat with Your Site~~ |
-| 20b | **F55 Enhance Prompt** | Small | Magic wand that rewrites vague prompts into effective ones. Better AI output for everyone. |
+| 20b | **F110 Digital Island Apps** | Medium | AI-generated sandboxed micro-apps via chat. Artifact cards with live preview. Save to Interactives, embed on site. |
+| 20c | **F55 Enhance Prompt** | Small | Magic wand that rewrites vague prompts into effective ones. Better AI output for everyone. |
 | 20c | **F57 Extranet** | Large | Protected site pages for visitors. Client portals, member content, gated resources. |
 | 20d | **F60 Reliable Scheduled Tasks** | Small | Heartbeat endpoint + external cron ensures publishing/agents run on time despite Fly auto-stop. |
 | 20e | **F64 Toast Notifications System** | Small | Event-driven toasts for all actions. Phase 1 done (Sonner + SSE + scheduler). Phase 2: AI toasts, undo-trash, error feedback, notification prefs. |

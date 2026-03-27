@@ -126,6 +126,7 @@
 | F107 | [Chat with Your Site](#f107-chat-with-your-site) | Planned | [docs/features/F107-chat-with-your-site.md](features/F107-chat-with-your-site.md) |
 | F108 | [Rich Text Editor Enhancements](#f108-rich-text-editor-enhancements) | ✅ Done | [docs/features/F108-richtext-editor-enhancements.md](features/F108-richtext-editor-enhancements.md) |
 | F109 | [Inline Proofreading](#f109-inline-proofreading) | Planned | [docs/features/F109-inline-proofreading.md](features/F109-inline-proofreading.md) |
+| F110 | [Digital Island Apps](#f110-digital-island-apps) | Planned | [docs/features/F110-digital-island-apps.md](features/F110-digital-island-apps.md) |
 
 ---
 
@@ -464,3 +465,6 @@ Underline, superscript/subscript, text alignment, highlight colors, editor zoom,
 
 ## F109 — Inline Proofreading
 TipTap-native inline spelling/grammar corrections using ProseMirror Decorations. Corrections render directly in the editor text: original words shown with strikethrough (red), suggestions in green next to them. Bottom toolbar with navigation (← 1/9 →), accept/reject per correction, accept all/reject all. Auto-detects language. Reuses the F108 proofread API endpoint. Inspired by TipTap Pro's proofread extension and Grammarly's inline UX. Depends on F108.
+
+## F110 — Digital Island Apps
+AI-generated sandboxed micro-apps built via chat, saved as Interactives, embeddable on any site page. Users say "make me a price calculator" in chat — AI generates self-contained HTML, shows live preview in an artifact card (sandboxed iframe), user can interact, request changes, save to CMS Interactives library, or download as .html. Sandbox security: allow-scripts only, no allow-same-origin, srcdoc (no network access). Future: postMessage bridge for theme inheritance and data passing. Extends F39 (Interactives Engine) with AI generation via F107 (Chat with Your Site).
