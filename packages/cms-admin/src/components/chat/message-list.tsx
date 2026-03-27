@@ -5,6 +5,7 @@ import { ToolCallCard } from "./tool-call-card";
 import { ThinkingAnimation } from "./thinking-animation";
 import { MarkdownRenderer } from "./markdown-renderer";
 import { InlineForm } from "./inline-form";
+import { ArtifactCard } from "./artifact-card";
 import { User, Bot, Copy, Check } from "lucide-react";
 
 export interface ToolCall {
@@ -30,12 +31,18 @@ export interface InlineFormData {
   fields: InlineFormField[];
 }
 
+export interface ArtifactData {
+  title: string;
+  html: string;
+}
+
 export interface ChatMessageUI {
   id: string;
   role: "user" | "assistant";
   content: string;
   toolCalls?: ToolCall[];
   inlineForm?: InlineFormData;
+  artifact?: ArtifactData;
   isStreaming?: boolean;
 }
 
@@ -140,6 +147,11 @@ function MessageBubble({ message }: { message: ChatMessageUI }) {
         {/* Inline form (Phase 3) */}
         {!isUser && message.inlineForm && (
           <InlineForm form={message.inlineForm} />
+        )}
+
+        {/* Artifact (Interactive HTML) */}
+        {!isUser && message.artifact && (
+          <ArtifactCard title={message.artifact.title} html={message.artifact.html} />
         )}
 
         {/* Streaming cursor */}

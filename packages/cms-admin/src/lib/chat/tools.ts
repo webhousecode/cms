@@ -830,6 +830,87 @@ export async function buildChatTools(): Promise<ToolPair[]> {
     },
 
     // ═══════════════════════════════════════════════════════════
+    // Artifact generation (F110 Digital Island Apps)
+    // ═══════════════════════════════════════════════════════════
+
+    // ── generate_interactive ──────────────────────────────────
+    {
+      definition: {
+        name: "generate_interactive",
+        description:
+          "Generate an interactive HTML component — a calculator, form, quiz, chart, widget, or mini-app. Returns a complete self-contained HTML document that can be previewed live and saved to the CMS Interactives library.",
+        input_schema: {
+          type: "object",
+          properties: {
+            title: { type: "string", description: "Name for the interactive (e.g. 'Price Calculator')" },
+            description: { type: "string", description: "Detailed description of what it should do, look like, and behave" },
+          },
+          required: ["title", "description"],
+        },
+      },
+      handler: async (input) => {
+        const title = String(input.title);
+        const description = String(input.description);
+
+        const { getApiKey } = await import("@/lib/ai-config");
+        const Anthropic = (await import("@anthropic-ai/sdk")).default;
+        const apiKey = await getApiKey("anthropic");
+        if (!apiKey) return "Error: Anthropic API key not configured.";
+
+        const systemPrompt = `You are an expert HTML/CSS/JavaScript developer. Generate a COMPLETE, self-contained HTML document.
+
+CRITICAL REQUIREMENTS:
+1. Output a COMPLETE HTML document starting with <!DOCTYPE html> and ending with </html>
+2. ALL CSS must be inline in a <style> tag in <head>
+3. ALL JavaScript must be inline in <script> tags
+4. NO external dependencies — no CDN links, no external stylesheets, no external scripts
+5. Must be fully responsive and work on mobile
+6. Use modern CSS (flexbox, grid, custom properties)
+7. Support dark mode via prefers-color-scheme media query
+8. Use clean, professional design with good spacing and typography
+9. Include proper ARIA labels for accessibility
+10. Dollar signs in JavaScript must be preserved literally
+
+DESIGN GUIDELINES:
+- Default color scheme: dark background (#1a1a2e), accent color (#F7BB2E gold), text (#e0e0e0)
+- Font: system-ui, -apple-system, sans-serif
+- Border radius: 8-12px for cards, 6px for inputs
+- Subtle shadows and transitions for polish
+- Minimum touch target: 44px for interactive elements`;
+
+        const client = new Anthropic({ apiKey });
+        const response = await client.messages.create({
+          model: "claude-sonnet-4-6",
+          max_tokens: 8192,
+          system: systemPrompt,
+          messages: [{ role: "user", content: `Create: ${title}\n\n${description}` }],
+        });
+
+        const rawText = response.content
+          .filter((b: any) => b.type === "text")
+          .map((b: any) => b.text)
+          .join("");
+
+        // Extract HTML from response (may be wrapped in ```html fences)
+        let html = rawText;
+        const fenceMatch = rawText.match(/```html\s*([\s\S]*?)```/);
+        if (fenceMatch) {
+          html = fenceMatch[1].trim();
+        } else {
+          const docMatch = rawText.match(/(<!DOCTYPE html[\s\S]*<\/html>)/i);
+          if (docMatch) html = docMatch[1];
+        }
+
+        // Validate: must have closing tags
+        if (!html.includes("</html>") || !html.includes("</body>")) {
+          return `Error: Generated HTML was truncated. Try a simpler description.`;
+        }
+
+        return `__ARTIFACT__${JSON.stringify({ title, html })}`;
+      },
+    },
+
+    // ═══════════════════════════════════════════════════════════
     // Operations & Management tools
     // ═══════════════════════════════════════════════════════════
 

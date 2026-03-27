@@ -25,6 +25,8 @@ const TOOL_META: Record<string, ToolMeta> = {
   search_media:      { label: "Searching media", icon: Search },
   // Phase 3: Forms
   show_edit_form:    { label: "Showing edit form", icon: Pencil },
+  // Artifacts
+  generate_interactive: { label: "Generating interactive", icon: Sparkles },
   // Operations
   list_scheduled:    { label: "Checking calendar" },
   list_agents:       { label: "Listing agents" },
