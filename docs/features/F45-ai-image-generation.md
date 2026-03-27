@@ -245,6 +245,9 @@ interface AiImageSettings {
 11. **Wire up F44 media pipeline** — post-process generated images (optimize, create variants)
 12. **Test** — generate images, verify upload + optimization, verify editor insertion
 
+
+> **NOTE — F107 Chat Integration:** When this feature introduces new API routes, tools, or admin actions, ensure they are also exposed as tool-use functions in F107 (Chat with Your Site). The chat interface must be able to perform any action the traditional admin UI can. See `docs/features/F107-chat-with-your-site.md`.
+
 ## Dependencies
 
 - **F44 Media Processing Pipeline** — generated images are post-processed through the media pipeline

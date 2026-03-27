@@ -240,6 +240,9 @@ Live Content sources can be mapped as Interactive sources — HTML files from th
 9. Wire up Interactives integration — map HTML files from live content to Interactives Manager
 10. Add "Add Live Content Source" dialog in Sites → Settings
 
+
+> **NOTE — F107 Chat Integration:** When this feature introduces new API routes, tools, or admin actions, ensure they are also exposed as tool-use functions in F107 (Chat with Your Site). The chat interface must be able to perform any action the traditional admin UI can. See `docs/features/F107-chat-with-your-site.md`.
+
 ## Dependencies
 
 - F26 (GitHub Login) — for OAuth token to access private repos

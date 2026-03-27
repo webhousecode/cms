@@ -258,6 +258,9 @@ None — purely additive. All changes are opt-in via org settings.
 13. "Clear override" action on each field
 14. Migration wizard with preview + confirm
 
+
+> **NOTE — F107 Chat Integration:** When this feature introduces new API routes, tools, or admin actions, ensure they are also exposed as tool-use functions in F107 (Chat with Your Site). The chat interface must be able to perform any action the traditional admin UI can. See `docs/features/F107-chat-with-your-site.md`.
+
 ## Dependencies
 - F76 Create Organization (Done)
 

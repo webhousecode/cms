@@ -122,6 +122,9 @@ export function AudioPlayer({ src, title }: { src: string; title: string }) {
 7. Add audio file cleanup when document is deleted
 8. Document the `AudioPlayer` component for site developers
 
+
+> **NOTE — F107 Chat Integration:** When this feature introduces new API routes, tools, or admin actions, ensure they are also exposed as tool-use functions in F107 (Chat with Your Site). The chat interface must be able to perform any action the traditional admin UI can. See `docs/features/F107-chat-with-your-site.md`.
+
 ## Dependencies
 
 - F25 (Storage Buckets) — optional, can use local filesystem

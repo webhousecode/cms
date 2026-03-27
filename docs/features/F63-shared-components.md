@@ -282,6 +282,9 @@ When building new admin UI, always import from shared components:
 13. Run `scripts/code-audit.sh` to verify no broken imports
 14. Gradually migrate remaining inline patterns in future features (not a big-bang rewrite)
 
+
+> **NOTE — F107 Chat Integration:** When this feature introduces new API routes, tools, or admin actions, ensure they are also exposed as tool-use functions in F107 (Chat with Your Site). The chat interface must be able to perform any action the traditional admin UI can. See `docs/features/F107-chat-with-your-site.md`.
+
 ## Dependencies
 
 None — this is a refactoring/infrastructure feature that improves all future work.

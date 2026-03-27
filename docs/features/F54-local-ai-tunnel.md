@@ -260,6 +260,9 @@ $ npx cms dev
 6. **CLI auto-detect** — `cms dev` suggests tunnel when no API key found
 7. **In-memory token cache** — Cache resolved token for 5 minutes to avoid hitting Keychain on every request
 
+
+> **NOTE — F107 Chat Integration:** When this feature introduces new API routes, tools, or admin actions, ensure they are also exposed as tool-use functions in F107 (Chat with Your Site). The chat interface must be able to perform any action the traditional admin UI can. See `docs/features/F107-chat-with-your-site.md`.
+
 ## Dependencies
 
 - Claude Code installed and authenticated on the developer's machine (Pro/Max plan)

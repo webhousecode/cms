@@ -297,6 +297,9 @@ export default async function ResourcePage({ params }) {
 12. Add Extranet example to Next.js boilerplate (F42) — protected `/portal` section
 13. Password reset flow (manual link from admin; self-service deferred to F29)
 
+
+> **NOTE — F107 Chat Integration:** When this feature introduces new API routes, tools, or admin actions, ensure they are also exposed as tool-use functions in F107 (Chat with Your Site). The chat interface must be able to perform any action the traditional admin UI can. See `docs/features/F107-chat-with-your-site.md`.
+
 ## Dependencies
 
 - **F01 Invite Users** — reuses invite pattern, must exist for admin user management

@@ -462,6 +462,9 @@ Tools page (`admin/tools/`) — gains new tab, no breaking changes to existing L
 15. Step 4: SSE-driven progress (site creation + content + media + design)
 16. Step 5: Results with "Open site in CMS" + download links
 
+
+> **NOTE — F107 Chat Integration:** When this feature introduces new API routes, tools, or admin actions, ensure they are also exposed as tool-use functions in F107 (Chat with Your Site). The chat interface must be able to perform any action the traditional admin UI can. See `docs/features/F107-chat-with-your-site.md`.
+
 ## Dependencies
 
 - F02 (Import Engine) — shares batch import pattern, can build independently

@@ -389,6 +389,9 @@ Both files are part of F27 which is not yet shipped. This feature extends F27's 
 10. Test with Backblaze B2 free tier (10 GB, EU Amsterdam)
 11. Test with pCloud free tier (10 GB, Luxembourg)
 
+
+> **NOTE — F107 Chat Integration:** When this feature introduces new API routes, tools, or admin actions, ensure they are also exposed as tool-use functions in F107 (Chat with Your Site). The chat interface must be able to perform any action the traditional admin UI can. See `docs/features/F107-chat-with-your-site.md`.
+
 ## Dependencies
 
 - F27 (Backup & Restore) — this extends F27 with cloud destinations

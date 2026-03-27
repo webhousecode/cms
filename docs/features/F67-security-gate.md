@@ -354,6 +354,9 @@ Runs full scan + sends Discord report to security channel.
 22. Add circular dependency check to pre-commit hook
 23. Add `--changed` mode for pre-commit blast radius report
 
+
+> **NOTE — F107 Chat Integration:** When this feature introduces new API routes, tools, or admin actions, ensure they are also exposed as tool-use functions in F107 (Chat with Your Site). The chat interface must be able to perform any action the traditional admin UI can. See `docs/features/F107-chat-with-your-site.md`.
+
 ## Dependencies
 
 - None — this is infrastructure that improves security of all existing features

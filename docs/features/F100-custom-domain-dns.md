@@ -138,6 +138,9 @@ None — purely additive. Existing custom domain field works as before, validati
 5. Update `deploy-service.ts` — call provisioning before deploy for webhouse.app domains
 6. Test with existing sites (boutique, bridgeberg) to verify no conflicts
 
+
+> **NOTE — F107 Chat Integration:** When this feature introduces new API routes, tools, or admin actions, ensure they are also exposed as tool-use functions in F107 (Chat with Your Site). The chat interface must be able to perform any action the traditional admin UI can. See `docs/features/F107-chat-with-your-site.md`.
+
 ## Dependencies
 - F12 One-Click Deploy (In progress) — custom domain field exists
 - dns-manager API access (already available)

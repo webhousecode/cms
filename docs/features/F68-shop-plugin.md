@@ -349,6 +349,9 @@ export default defineConfig({
 22. Build mini product card CSS/HTML for chat UI rendering
 23. End-to-end testing: search → display card → confirm → add to cart → checkout
 
+
+> **NOTE — F107 Chat Integration:** When this feature introduces new API routes, tools, or admin actions, ensure they are also exposed as tool-use functions in F107 (Chat with Your Site). The chat interface must be able to perform any action the traditional admin UI can. See `docs/features/F107-chat-with-your-site.md`.
+
 ## Dependencies
 
 - **F46 — Plugin System** — required for `cms.registerPlugin()` API, hooks, route registration

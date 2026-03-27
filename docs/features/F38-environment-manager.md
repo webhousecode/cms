@@ -204,6 +204,9 @@ When in Dev mode with a filesystem site, content saves are instant (file write).
 8. Add server status indicator in Settings + header badge
 9. Handle GitHub sites gracefully (no local dev server, but staging/prod URLs work)
 
+
+> **NOTE — F107 Chat Integration:** When this feature introduces new API routes, tools, or admin actions, ensure they are also exposed as tool-use functions in F107 (Chat with Your Site). The chat interface must be able to perform any action the traditional admin UI can. See `docs/features/F107-chat-with-your-site.md`.
+
 ## Dependencies
 
 - None critical — extends existing site-config and admin header

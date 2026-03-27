@@ -166,6 +166,9 @@ No breaking changes to CMS APIs, data formats, or component props. The upgrade i
 11. **Merge** — merge to main after all tests pass
 12. **Follow-up: Static Renderer** — add `@tiptap/static-renderer` for server-side content rendering (separate PR)
 
+
+> **NOTE — F107 Chat Integration:** When this feature introduces new API routes, tools, or admin actions, ensure they are also exposed as tool-use functions in F107 (Chat with Your Site). The chat interface must be able to perform any action the traditional admin UI can. See `docs/features/F107-chat-with-your-site.md`.
+
 ## Dependencies
 
 - None — this is an infrastructure upgrade with no feature dependencies.

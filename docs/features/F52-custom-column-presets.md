@@ -156,6 +156,9 @@ Site rendering just uses `block.gridCols` (falling back to the existing lookup f
 6. **Data model update** — store `gridCols` in columns block data for site rendering
 7. **Site rendering** — use `block.gridCols` with fallback to builtin lookup
 
+
+> **NOTE — F107 Chat Integration:** When this feature introduces new API routes, tools, or admin actions, ensure they are also exposed as tool-use functions in F107 (Chat with Your Site). The chat interface must be able to perform any action the traditional admin UI can. See `docs/features/F107-chat-with-your-site.md`.
+
 ## Dependencies
 
 - Columns block system (done — this session)

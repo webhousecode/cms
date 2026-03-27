@@ -380,6 +380,9 @@ Site-wide keyword tracker: `_data/seo-keywords.json`
 20. Wire JSON-LD output to F89 Post-Build Enrichment
 21. Validate generated JSON-LD against Google's structured data guidelines
 
+
+> **NOTE — F107 Chat Integration:** When this feature introduces new API routes, tools, or admin actions, ensure they are also exposed as tool-use functions in F107 (Chat with Your Site). The chat interface must be able to perform any action the traditional admin UI can. See `docs/features/F107-chat-with-your-site.md`.
+
 ## Dependencies
 
 - `@webhouse/cms-ai` — existing SEO agent for AI optimization
