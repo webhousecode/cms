@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Search, Sparkles, Loader2, ChevronDown, ChevronUp } from "lucide-react";
 import { calculateSeoScore, type SeoFields, type SeoScoreResult } from "@/lib/seo/score";
+import { CustomSelect } from "@/components/ui/custom-select";
 import { toast } from "sonner";
 
 interface Props {
@@ -220,11 +221,15 @@ Return ONLY the JSON, no explanation.`,
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
             <div>
               <p style={lbl}>Robots</p>
-              <select value={robots} onChange={(e) => setRobots(e.target.value)} style={{ ...input, cursor: "pointer" }}>
-                <option value="index,follow">index, follow (default)</option>
-                <option value="noindex,follow">noindex, follow</option>
-                <option value="noindex,nofollow">noindex, nofollow</option>
-              </select>
+              <CustomSelect
+                value={robots}
+                onChange={setRobots}
+                options={[
+                  { value: "index,follow", label: "index, follow (default)" },
+                  { value: "noindex,follow", label: "noindex, follow" },
+                  { value: "noindex,nofollow", label: "noindex, nofollow" },
+                ]}
+              />
             </div>
           </div>
         )}
