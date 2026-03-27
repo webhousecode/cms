@@ -13,7 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Settings, Fingerprint, Check, Moon, Sun, Monitor, LogOut, Search, ExternalLink, Rocket, Loader2, MessageSquare, LayoutDashboard } from "lucide-react";
+import { Settings, Fingerprint, Check, Moon, Sun, Monitor, LogOut, Search, ExternalLink, Rocket, Loader2, MessageSquare, LayoutDashboard, Plus, History } from "lucide-react";
 import type { AdminMode } from "@/lib/hooks/use-admin-mode";
 import { HelpButton } from "@/components/help-drawer";
 import { useThemeAxes, type Temperature } from "@/lib/hooks/use-theme-axes";
@@ -455,7 +455,15 @@ function ModeToggle({ mode, onToggle }: { mode: AdminMode; onToggle: () => void 
   );
 }
 
-export function AdminHeader({ mode, onToggleMode }: { mode?: AdminMode; onToggleMode?: () => void } = {}) {
+interface AdminHeaderProps {
+  mode?: AdminMode;
+  onToggleMode?: () => void;
+  onNewChat?: () => void;
+  onToggleHistory?: () => void;
+  showHistory?: boolean;
+}
+
+export function AdminHeader({ mode, onToggleMode, onNewChat, onToggleHistory, showHistory }: AdminHeaderProps = {}) {
   const { tabs, activeId } = useTabs();
   const activeTab = tabs.find((t) => t.id === activeId);
   const title = activeTab?.title;
@@ -495,9 +503,31 @@ export function AdminHeader({ mode, onToggleMode }: { mode?: AdminMode; onToggle
       <div style={{ display: "flex", flex: 1, alignItems: "center", gap: "0.5rem", padding: "0 1rem" }}>
         {mode !== "chat" && <SidebarTrigger className="-ml-1 text-muted-foreground hover:text-foreground" />}
         {mode === "chat" ? (
-          <span style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--foreground)" }}>
-            Chat with your site
-          </span>
+          <>
+            <span style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--foreground)" }}>
+              Chat with your site
+            </span>
+            {onNewChat && (
+              <button
+                onClick={onNewChat}
+                title="New conversation"
+                style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "4px", borderRadius: "4px", display: "flex", alignItems: "center", gap: "3px", fontSize: "0.75rem", marginLeft: "8px" }}
+                className="hover:text-foreground hover:bg-muted transition-colors"
+              >
+                <Plus style={{ width: "14px", height: "14px" }} /> New
+              </button>
+            )}
+            {onToggleHistory && (
+              <button
+                onClick={onToggleHistory}
+                title="Conversation history"
+                style={{ background: showHistory ? "var(--muted)" : "none", border: "none", cursor: "pointer", color: showHistory ? "var(--foreground)" : "var(--muted-foreground)", padding: "4px", borderRadius: "4px", display: "flex", alignItems: "center", gap: "3px", fontSize: "0.75rem" }}
+                className="hover:text-foreground hover:bg-muted transition-colors"
+              >
+                <History style={{ width: "14px", height: "14px" }} /> History
+              </button>
+            )}
+          </>
         ) : title ? (
           <>
             <div style={{ width: "1px", height: "1rem", backgroundColor: "var(--border)", alignSelf: "center", margin: "0 0.125rem" }} />
