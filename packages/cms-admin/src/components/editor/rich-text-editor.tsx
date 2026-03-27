@@ -2061,7 +2061,6 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
     onUpdate: ({ editor }) => {
       const md = (editor.storage as any).markdown.getMarkdown();
       lastEmittedRef.current = md;
-      skipNextSyncRef.current = true;
       onChange(md);
     },
     editorProps: {
@@ -2127,17 +2126,20 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
 
   // Track what the editor currently holds to avoid overwriting user edits
   const lastEmittedRef = useRef(value);
-  const skipNextSyncRef = useRef(false);
   useEffect(() => {
     if (!editor) return;
-    // Skip sync if we just emitted this value (save round-trip)
+    // Skip sync if value matches what the editor last emitted (save round-trip)
     if (value === lastEmittedRef.current) return;
-    // Skip one sync cycle after save (build may cause remount)
-    if (skipNextSyncRef.current) { skipNextSyncRef.current = false; return; }
     // Only sync when editor is not focused (external changes like history restore)
     if (editor.isFocused) return;
     const current = (editor.storage as any).markdown.getMarkdown();
     if (value !== current) {
+      console.log("[RTE sync] value prop changed, updating editor", {
+        valueLen: value?.length,
+        currentLen: current?.length,
+        lastEmittedLen: lastEmittedRef.current?.length,
+        focused: editor.isFocused,
+      });
       queueMicrotask(() => {
         if (!editor.isDestroyed) {
           editor.commands.setContent(value || "", { emitUpdate: false });
