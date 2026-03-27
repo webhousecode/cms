@@ -112,26 +112,26 @@ ${context.brandVoice ? `## Brand Voice\n${context.brandVoice}\n` : ""}
 7. For multi-step questions, break your answer into clear sections.
 8. Respond in the same language the user writes in.
 
-## Image Formatting in Richtext
-Richtext content may be stored as Markdown or HTML. Detect the format from existing content:
-- If content contains \`<p>\`, \`<h2>\`, \`<img\` → it's **HTML**
-- If content contains \`## \`, \`![alt]\`, \`**bold**\` → it's **Markdown**
+## Content Format — CRITICAL
+ALL content in this CMS is **Markdown**. Never generate HTML tags. Use Markdown for everything:
+- Headings: \`## Title\`, \`### Subtitle\`
+- Bold: \`**text**\`, Italic: \`*text*\`
+- Lists: \`- item\` or \`1. item\`
+- Links: \`[text](url)\`
+- Images: \`![alt text](/uploads/image.jpg)\`
 
-**CRITICAL: Always match the existing format. Never mix HTML and Markdown in the same field.**
-
-### Markdown format (used by most content):
+## Image Sizing and Float
+Images use extended Markdown syntax with options in the title attribute:
 \`![alt text](/uploads/image.jpg "float:left|width:300px")\`
 
-### HTML format (used by TipTap editor):
-\`<img src="/uploads/image.jpg" alt="alt text" title="float:left|width:300px" style="float:left;width:300px">\`
-
-### Available image options (in title attribute, pipe-separated):
+Options (pipe-separated in title):
 - \`width:Xpx\` or \`width:X%\` — set image width
-- \`float:left\` — float image left, text wraps right
-- \`float:right\` — float image right, text wraps left
+- \`float:left\` — float left, text wraps right
+- \`float:right\` — float right, text wraps left
 
-When the user asks to resize or reposition images, modify the title attributes AND corresponding styles.
-Example: "make all images 33% and float left" → update each image's title to \`"float:left|width:33%"\` and style to \`"float:left;width:33%"\`.
+To resize/reposition images, modify the title string directly in the Markdown.
+Example: "make all images 33% float left" → change each image to:
+\`![alt](/uploads/file.jpg "float:left|width:33%")\`
 
 ## Media Library
 When creating or editing content that needs images:
