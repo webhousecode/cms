@@ -176,7 +176,7 @@ function renderContent(raw: unknown): string {
         : align === "right" ? "float:right; margin: 0.25rem 0 1.25rem 1.25rem; width: 50%;"
         : "margin: 1.5rem auto; width: 100%;";
       return `<div class="interactive-embed" style="${floatStyle}">
-        <iframe src="${bp(`/interactives/${id}.html`)}" title="${esc(title)}"
+        <iframe src="${bp(`/uploads/interactives/${id}.html`)}" title="${esc(title)}"
           style="width:100%; border:none; border-radius:var(--radius); min-height:300px;"
           loading="lazy" sandbox="allow-scripts allow-same-origin"></iframe>
       </div>`;
@@ -303,15 +303,6 @@ if (existsSync(uploadsDir)) {
   cpSync(uploadsDir, distUploads, { recursive: true });
   const count = readdirSync(uploadsDir).length;
   console.log(`  uploads/ (${count} files copied)`);
-}
-
-// Copy interactives to dist (so !!INTERACTIVE embeds work)
-const interactivesDir = join(import.meta.dirname, "public", "interactives");
-const distInteractives = join(import.meta.dirname, OUT_DIR, "interactives");
-if (existsSync(interactivesDir)) {
-  cpSync(interactivesDir, distInteractives, { recursive: true });
-  const count = readdirSync(interactivesDir).length;
-  console.log(`  interactives/ (${count} files copied)`);
 }
 
 console.log(`\nDone! ${posts.length} posts, ${pages.length} pages → ${OUT_DIR}/`);
