@@ -112,6 +112,10 @@ Before considering a site complete, verify:
 - [ ] All image `src` attributes use an `imgUrl()` helper — never raw `${BASE}/${path}` concatenation
 - [ ] Running `npx tsx build.ts` produces output that reflects the JSON content
 - [ ] Changing a value in a JSON file and rebuilding changes the output
+- [ ] `build.ts` handles `!!INTERACTIVE[id|title|options]` tokens in richtext (render as iframes)
+- [ ] `build.ts` handles `!!FILE[filename|label]` tokens in richtext (render as download links)
+- [ ] `build.ts` copies `public/uploads/` to output (includes images, interactives, media)
+- [ ] Images get `<picture>` with WebP srcset when variants exist (post-build enrichment handles this automatically)
 
 ## Site Building Patterns
 

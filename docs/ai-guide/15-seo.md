@@ -1,4 +1,4 @@
-<!-- @webhouse/cms ai-guide v0.3.0 — last updated 2026-03-23 -->
+<!-- @webhouse/cms ai-guide v0.4.0 — last updated 2026-03-27 -->
 
 # SEO Patterns
 
@@ -256,3 +256,28 @@ export function getAbsoluteUrl(doc: Document, baseUrl = 'https://example.com'): 
   return `${baseUrl}${getDocumentUrl(doc)}`;
 }
 ```
+
+## Post-Build Enrichment (F89)
+
+For static sites, the CMS automatically enriches the built HTML with SEO metadata during the build step:
+
+- **Per-page `<meta name="description">`** — extracted from excerpt or first paragraph
+- **Open Graph tags** — `og:title`, `og:description`, `og:type`, `og:url`
+- **JSON-LD structured data** — Article, WebPage, BreadcrumbList schemas
+- **Sitemap generation** — `sitemap.xml` with all published pages
+- **robots.txt** — allows all crawlers, links to sitemap
+- **llms.txt** — AI-friendly site index for LLM crawlers
+- **manifest.json** — PWA manifest with site name and colors
+- **`<picture>` upgrade** — `<img>` tags get WebP srcset when variants exist (F44)
+
+This runs automatically when `build.ts` is executed — no configuration needed.
+
+## AI Image Alt-Text (F103)
+
+Every uploaded image is automatically analyzed by Claude to generate:
+
+- **Alt-text** — accessible description (max 125 chars), auto-fills in the editor
+- **Caption** — descriptive sentence for captions
+- **Tags** — 3-8 keywords for search and filtering
+
+When inserting an image in the richtext editor, the alt-text field is pre-filled with the AI-generated description. This ensures every image has meaningful alt-text for accessibility and SEO without manual effort.
