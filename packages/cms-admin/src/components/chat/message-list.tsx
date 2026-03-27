@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { ToolCallCard } from "./tool-call-card";
 import { ThinkingAnimation } from "./thinking-animation";
 import { MarkdownRenderer } from "./markdown-renderer";
-import { User, Bot } from "lucide-react";
+import { User, Bot, Copy, Check } from "lucide-react";
 
 export interface ToolCall {
   tool: string;
@@ -24,6 +24,42 @@ export interface ChatMessageUI {
 interface MessageListProps {
   messages: ChatMessageUI[];
   isThinking: boolean;
+}
+
+function MessageCopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = useCallback(() => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }, [text]);
+  return (
+    <button
+      onClick={handleCopy}
+      title="Copy response"
+      style={{
+        marginTop: "8px",
+        background: "none",
+        border: "1px solid var(--border)",
+        borderRadius: "5px",
+        padding: "3px 8px",
+        cursor: "pointer",
+        color: copied ? "rgb(74 222 128)" : "var(--muted-foreground)",
+        display: "inline-flex",
+        alignItems: "center",
+        gap: "4px",
+        fontSize: "0.65rem",
+        opacity: copied ? 1 : 0.5,
+        transition: "all 150ms",
+      }}
+      onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }}
+      onMouseLeave={(e) => { if (!copied) e.currentTarget.style.opacity = "0.5"; }}
+    >
+      {copied ? <Check style={{ width: "11px", height: "11px" }} /> : <Copy style={{ width: "11px", height: "11px" }} />}
+      {copied ? "Copied" : "Copy"}
+    </button>
+  );
 }
 
 function MessageBubble({ message }: { message: ChatMessageUI }) {
@@ -74,8 +110,11 @@ function MessageBubble({ message }: { message: ChatMessageUI }) {
         {isUser ? (
           <div style={{ fontWeight: 500 }}>{message.content}</div>
         ) : (
-          <div>
+          <div style={{ position: "relative" }}>
             <MarkdownRenderer text={message.content} />
+            {message.content && !message.isStreaming && (
+              <MessageCopyButton text={message.content} />
+            )}
           </div>
         )}
 

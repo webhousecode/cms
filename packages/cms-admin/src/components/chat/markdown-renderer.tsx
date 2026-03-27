@@ -1,6 +1,7 @@
 "use client";
 
-import { Fragment } from "react";
+import { Fragment, useState, useCallback } from "react";
+import { Copy, Check } from "lucide-react";
 import { PagePreviewCard } from "./page-preview-card";
 
 /**
@@ -12,6 +13,45 @@ export function MarkdownRenderer({ text }: { text: string }) {
   if (!text) return null;
   const blocks = parseBlocks(text);
   return <>{blocks.map((block, i) => renderBlock(block, i))}</>;
+}
+
+/** Small copy button — used on code blocks */
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = useCallback(() => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }, [text]);
+  return (
+    <button
+      onClick={handleCopy}
+      title="Copy"
+      style={{
+        position: "absolute",
+        top: "6px",
+        right: "6px",
+        background: "var(--card)",
+        border: "1px solid var(--border)",
+        borderRadius: "4px",
+        padding: "3px 5px",
+        cursor: "pointer",
+        color: copied ? "rgb(74 222 128)" : "var(--muted-foreground)",
+        display: "flex",
+        alignItems: "center",
+        gap: "3px",
+        fontSize: "0.65rem",
+        opacity: copied ? 1 : 0.6,
+        transition: "opacity 150ms",
+      }}
+      onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }}
+      onMouseLeave={(e) => { if (!copied) e.currentTarget.style.opacity = "0.6"; }}
+    >
+      {copied ? <Check style={{ width: "11px", height: "11px" }} /> : <Copy style={{ width: "11px", height: "11px" }} />}
+      {copied ? "Copied" : "Copy"}
+    </button>
+  );
 }
 
 // ── Block-level parsing ──────────────────────────────────
@@ -184,24 +224,32 @@ function renderBlock(block: Block, key: number): React.ReactNode {
 
     case "code":
       return (
-        <pre
-          key={key}
-          style={{
-            margin: "8px 0",
-            padding: "12px 14px",
-            borderRadius: "8px",
-            backgroundColor: "var(--muted)",
-            border: "1px solid var(--border)",
-            fontSize: "0.8rem",
-            lineHeight: 1.5,
-            fontFamily: "monospace",
-            overflowX: "auto",
-            whiteSpace: "pre-wrap",
-            wordBreak: "break-word",
-          }}
-        >
-          <code>{block.content}</code>
-        </pre>
+        <div key={key} style={{ position: "relative", margin: "8px 0" }}>
+          <CopyButton text={block.content} />
+          {block.lang && (
+            <div style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", padding: "6px 14px 0", backgroundColor: "var(--muted)", borderRadius: "8px 8px 0 0", border: "1px solid var(--border)", borderBottom: "none", fontFamily: "monospace" }}>
+              {block.lang}
+            </div>
+          )}
+          <pre
+            style={{
+              padding: "12px 14px",
+              borderRadius: block.lang ? "0 0 8px 8px" : "8px",
+              backgroundColor: "var(--muted)",
+              border: "1px solid var(--border)",
+              borderTop: block.lang ? "none" : undefined,
+              fontSize: "0.8rem",
+              lineHeight: 1.5,
+              fontFamily: "monospace",
+              overflowX: "auto",
+              whiteSpace: "pre-wrap",
+              wordBreak: "break-word",
+              margin: 0,
+            }}
+          >
+            <code>{block.content}</code>
+          </pre>
+        </div>
       );
 
     case "table":
