@@ -7,17 +7,20 @@ interface ChatInputProps {
   onSend: (message: string) => void;
   disabled?: boolean;
   placeholder?: string;
-  autoFocus?: boolean;
+  visible?: boolean;
 }
 
-export function ChatInput({ onSend, disabled, placeholder, autoFocus }: ChatInputProps) {
+export function ChatInput({ onSend, disabled, placeholder, visible }: ChatInputProps) {
   const [value, setValue] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
-  // Auto-focus on mount
+  // Focus whenever the chat becomes visible
   useEffect(() => {
-    if (autoFocus) textareaRef.current?.focus();
-  }, [autoFocus]);
+    if (visible) {
+      // Small delay to ensure display:none → flex has painted
+      requestAnimationFrame(() => textareaRef.current?.focus());
+    }
+  }, [visible]);
 
   const handleSend = useCallback(() => {
     const trimmed = value.trim();

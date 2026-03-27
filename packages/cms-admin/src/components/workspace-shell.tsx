@@ -55,7 +55,7 @@ export function WorkspaceShell({ collections, globals, activeSiteId, children }:
             }}
           >
             <AdminHeader mode={mode} onToggleMode={toggle} />
-            <ChatInterface collections={collections} activeSiteId={activeSiteId} />
+            <ChatInterface collections={collections} activeSiteId={activeSiteId} visible={isChat} />
           </div>
 
           {/* ── Traditional mode (shown/hidden via CSS) ── */}
