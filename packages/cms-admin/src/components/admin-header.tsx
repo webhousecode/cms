@@ -13,7 +13,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Settings, Fingerprint, Check, Moon, Sun, Monitor, LogOut, Search, ExternalLink, Rocket, Loader2 } from "lucide-react";
+import { Settings, Fingerprint, Check, Moon, Sun, Monitor, LogOut, Search, ExternalLink, Rocket, Loader2, MessageSquare, LayoutDashboard } from "lucide-react";
+import type { AdminMode } from "@/lib/hooks/use-admin-mode";
 import { HelpButton } from "@/components/help-drawer";
 import { useThemeAxes, type Temperature } from "@/lib/hooks/use-theme-axes";
 import { useEffect, useState, useCallback } from "react";
@@ -412,7 +413,48 @@ function PreviewButton() {
   );
 }
 
-export function AdminHeader() {
+function ModeToggle({ mode, onToggle }: { mode: AdminMode; onToggle: () => void }) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        borderRadius: "6px",
+        border: "1px solid var(--border)",
+        padding: "2px",
+        gap: "2px",
+      }}
+    >
+      {([
+        { value: "traditional" as const, label: "Admin", icon: LayoutDashboard },
+        { value: "chat" as const, label: "Chat", icon: MessageSquare },
+      ]).map(({ value, label, icon: Icon }) => (
+        <button
+          key={value}
+          onClick={(e) => { e.stopPropagation(); if (mode !== value) onToggle(); }}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "4px",
+            padding: "3px 10px",
+            fontSize: "0.7rem",
+            fontWeight: 500,
+            borderRadius: "4px",
+            border: "none",
+            cursor: mode === value ? "default" : "pointer",
+            transition: "all 150ms",
+            background: mode === value ? "var(--primary)" : "transparent",
+            color: mode === value ? "var(--primary-foreground)" : "var(--muted-foreground)",
+          }}
+        >
+          <Icon style={{ width: "0.75rem", height: "0.75rem" }} />
+          {label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+export function AdminHeader({ mode, onToggleMode }: { mode?: AdminMode; onToggleMode?: () => void } = {}) {
   const { tabs, activeId } = useTabs();
   const activeTab = tabs.find((t) => t.id === activeId);
   const title = activeTab?.title;
@@ -439,17 +481,23 @@ export function AdminHeader() {
       backgroundColor: "var(--card)",
     }}>
       <div style={{ display: "flex", flex: 1, alignItems: "center", gap: "0.5rem", padding: "0 1rem" }}>
-        <SidebarTrigger className="-ml-1 text-muted-foreground hover:text-foreground" />
-        {title && (
+        {mode !== "chat" && <SidebarTrigger className="-ml-1 text-muted-foreground hover:text-foreground" />}
+        {mode === "chat" ? (
+          <span style={{ fontSize: "0.875rem", fontWeight: 600, color: "var(--foreground)" }}>
+            Chat with your site
+          </span>
+        ) : title ? (
           <>
             <div style={{ width: "1px", height: "1rem", backgroundColor: "var(--border)", alignSelf: "center", margin: "0 0.125rem" }} />
             <span style={{ fontSize: "0.875rem", color: "var(--muted-foreground)", fontFamily: "monospace", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "320px" }}>
               {title}
             </span>
           </>
-        )}
+        ) : null}
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0 1rem" }}>
+        {mode && onToggleMode && <ModeToggle mode={mode} onToggle={onToggleMode} />}
+        <div style={{ width: "1px", height: "1rem", backgroundColor: "var(--border)" }} />
         <SiteSwitcher />
         <OrgSwitcher />
         <DeployButton />

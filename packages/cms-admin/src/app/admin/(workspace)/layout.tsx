@@ -2,14 +2,10 @@
 export const dynamic = "force-dynamic";
 
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
-import { AppSidebarClient } from "@/components/sidebar-client";
 import { getAdminConfig, getActiveSiteInfo, EmptyOrgError } from "@/lib/cms";
-import { CommandPaletteProvider } from "@/components/command-palette";
 import { TabsProvider } from "@/lib/tabs-context";
-import { TabBar } from "@/components/tab-bar";
 import { AdminHeader } from "@/components/admin-header";
-import { DevInspector } from "@/components/dev-inspector";
-import { SchedulerNotifier } from "@/components/scheduler-notifier";
+import { WorkspaceShell } from "@/components/workspace-shell";
 import { cookies } from "next/headers";
 import { getSessionUser } from "@/lib/auth";
 import { getTeamMembers } from "@/lib/team";
@@ -124,19 +120,12 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const globals = allCollections.filter((c) => c.name === "global");
 
   return (
-    <SidebarProvider>
-      <AppSidebarClient collections={collections} globals={globals} />
-      <SidebarInset>
-        <TabsProvider siteId={activeSiteId}>
-          <AdminHeader />
-          <TabBar />
-          <CommandPaletteProvider>
-            {children}
-          </CommandPaletteProvider>
-          <DevInspector />
-          <SchedulerNotifier />
-        </TabsProvider>
-      </SidebarInset>
-    </SidebarProvider>
+    <WorkspaceShell
+      collections={collections}
+      globals={globals}
+      activeSiteId={activeSiteId}
+    >
+      {children}
+    </WorkspaceShell>
   );
 }

@@ -24,7 +24,7 @@ Built incrementally across 4 phases, each self-contained and shippable.
 
 ### 1. Master Switch — Mode Toggle
 
-The admin header gets a segmented control that toggles between Chat and Traditional modes. Mode is persisted in localStorage (not server — follows tabs-localstorage-only rule).
+The admin header gets a segmented control that toggles between Chat and Traditional modes. Mode is persisted in localStorage (not server — follows tabs-localstorage-only rule). Obviously the chat interface maintains the current organization and site so chat know which site we are "talking to". 
 
 ```typescript
 // packages/cms-admin/src/lib/hooks/use-admin-mode.ts
@@ -393,7 +393,7 @@ interface Suggestion {
 ### 10. Keyboard Shortcuts
 
 ```
-Cmd+K          → Toggle between Chat and Traditional mode
+Cmd+Shift+C    → Toggle between Chat and Traditional mode
 /              → Focus chat input (when in chat mode)
 Escape         → Clear current input
 Cmd+Shift+N    → New conversation
