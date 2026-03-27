@@ -83,29 +83,33 @@ export async function DELETE() {
       media.listInteractives(),
     ]);
 
-    // Delete all trashed items in parallel
-    const deleteOps: Promise<unknown>[] = [];
+    let deleted = 0;
 
+    // Delete trashed documents (parallel is safe — each is a separate file)
+    const docDeletes: Promise<unknown>[] = [];
     for (const { col, documents } of collectionResults) {
       for (const doc of documents) {
         if (doc.status === "trashed") {
-          deleteOps.push(cms.content.delete(col.name, doc.id).catch(() => {}));
+          docDeletes.push(cms.content.delete(col.name, doc.id).catch(() => {}));
+          deleted++;
         }
       }
     }
+    await Promise.all(docDeletes);
 
+    // Delete trashed media SEQUENTIALLY (shared media-meta.json — race condition if parallel)
     for (const m of trashedMedia) {
-      deleteOps.push(media.deleteFile(m.folder, m.name).catch(() => {}));
+      await media.deleteFile(m.folder, m.name).catch(() => {});
+      deleted++;
     }
 
+    // Delete trashed interactives SEQUENTIALLY (shared interactives.json)
     for (const int of ints) {
       if (int.status === "trashed") {
-        deleteOps.push(media.deleteInteractive(int.id).catch(() => {}));
+        await media.deleteInteractive(int.id).catch(() => {});
+        deleted++;
       }
     }
-
-    await Promise.all(deleteOps);
-    const deleted = deleteOps.length;
 
     return NextResponse.json({ ok: true, deleted });
   } catch (err) {
