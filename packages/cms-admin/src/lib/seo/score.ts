@@ -77,9 +77,9 @@ export function calculateSeoScore(
   // 2. Meta description length (120-160 chars)
   const md = seo.metaDescription ?? "";
   if (!md) {
-    details.push({ rule: "meta-desc", label: "Meta description", status: "fail", message: "Missing — add a meta description (70-160 chars)" });
-  } else if (md.length < 70) {
-    details.push({ rule: "meta-desc", label: "Meta description", status: "warn", message: `Short: ${md.length} chars (aim for 70-160)` });
+    details.push({ rule: "meta-desc", label: "Meta description", status: "fail", message: "Missing — add a meta description (120-160 chars)" });
+  } else if (md.length < 120) {
+    details.push({ rule: "meta-desc", label: "Meta description", status: "warn", message: `Short: ${md.length} chars (aim for 120-160)` });
   } else if (md.length > 160) {
     details.push({ rule: "meta-desc", label: "Meta description", status: "warn", message: `Too long: ${md.length} chars (max 160, gets truncated)` });
   } else {

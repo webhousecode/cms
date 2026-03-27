@@ -82,8 +82,8 @@ export function SeoPanel({ doc, onUpdate, onSave, onClose }: Props) {
           text: `Title: ${title}\n\nContent: ${content.slice(0, 2000)}`,
           instruction: `Generate SEO metadata for this content. Return ONLY a JSON object with these fields:
 {
-  "metaTitle": "SEO-optimized title (max 60 chars) — MUST include the primary keyword",
-  "metaDescription": "compelling meta description (120-160 chars) — MUST include the primary keyword naturally",
+  "metaTitle": "SEO-optimized title (30-60 characters) — MUST include the primary keyword",
+  "metaDescription": "compelling meta description (MUST be 130-155 characters, never shorter than 120) — MUST include the primary keyword naturally",
   "keywords": ["primary-keyword", "keyword2", "keyword3", "keyword4", "keyword5"]
 }
 IMPORTANT: The primary keyword (first in the keywords array) MUST appear in BOTH metaTitle and metaDescription.
