@@ -264,65 +264,26 @@ export function ChatInput({ onSend, disabled, placeholder, visible }: ChatInputP
           maxWidth: "768px",
           margin: "0 auto",
           display: "flex",
-          alignItems: "flex-end",
-          gap: "8px",
+          flexDirection: "column",
           backgroundColor: "var(--card)",
           border: dragOver ? "1px solid var(--primary)" : "1px solid var(--border)",
-          borderRadius: "12px",
-          padding: "8px 12px",
+          borderRadius: "16px",
+          padding: "14px 16px 10px",
           transition: "border-color 150ms",
         }}
       >
-        {/* + button */}
-        <button
-          onClick={() => fileInputRef.current?.click()}
-          disabled={disabled || uploading}
-          title="Upload image"
-          style={{
-            width: "32px",
-            height: "32px",
-            borderRadius: "8px",
-            border: "none",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            cursor: "pointer",
-            backgroundColor: "transparent",
-            color: "var(--muted-foreground)",
-            flexShrink: 0,
-            transition: "color 150ms",
-          }}
-          className="hover:text-foreground"
-        >
-          {uploading ? (
-            <Loader2 style={{ width: "18px", height: "18px" }} className="animate-spin" />
-          ) : (
-            <Plus style={{ width: "18px", height: "18px" }} />
-          )}
-        </button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept={ACCEPT_TYPES}
-          multiple
-          style={{ display: "none" }}
-          onChange={(e) => {
-            if (e.target.files) handleFiles(e.target.files);
-            e.target.value = "";
-          }}
-        />
-
+        {/* Textarea — full width top row */}
         <textarea
           ref={textareaRef}
           value={value}
           onChange={(e) => setValue(e.target.value)}
           onKeyDown={handleKeyDown}
           disabled={disabled}
-          placeholder={placeholder ?? "Type a message... (/ to focus)"}
-          rows={1}
+          placeholder={placeholder ?? "How can I help you today?"}
+          rows={2}
           className="chat-textarea"
           style={{
-            flex: 1,
+            width: "100%",
             resize: "none",
             border: "none",
             outline: "none",
@@ -330,36 +291,78 @@ export function ChatInput({ onSend, disabled, placeholder, visible }: ChatInputP
             color: "#fafafa",
             fontSize: "0.875rem",
             lineHeight: 1.5,
-            padding: "4px 0",
+            padding: 0,
             fontFamily: "inherit",
             maxHeight: "200px",
             overflowY: value.includes("\n") ? "auto" : "hidden",
           }}
         />
-        <button
-          onClick={handleSend}
-          disabled={disabled || (!value.trim() && uploads.length === 0)}
-          style={{
-            width: "32px",
-            height: "32px",
-            borderRadius: "8px",
-            border: "none",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            cursor: disabled || (!value.trim() && uploads.length === 0) ? "default" : "pointer",
-            backgroundColor:
-              disabled || (!value.trim() && uploads.length === 0) ? "transparent" : "var(--primary)",
-            color:
-              disabled || (!value.trim() && uploads.length === 0)
-                ? "var(--muted-foreground)"
-                : "var(--primary-foreground)",
-            transition: "all 150ms",
-            flexShrink: 0,
-          }}
-        >
-          <Send style={{ width: "16px", height: "16px" }} />
-        </button>
+
+        {/* Bottom row: + on left, send on right */}
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "6px" }}>
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={disabled || uploading}
+            title="Upload files"
+            style={{
+              width: "28px",
+              height: "28px",
+              borderRadius: "8px",
+              border: "1px solid var(--border)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: "pointer",
+              backgroundColor: "transparent",
+              color: "var(--muted-foreground)",
+              flexShrink: 0,
+              transition: "color 150ms",
+            }}
+            className="hover:text-foreground hover:border-foreground"
+          >
+            {uploading ? (
+              <Loader2 style={{ width: "14px", height: "14px" }} className="animate-spin" />
+            ) : (
+              <Plus style={{ width: "14px", height: "14px" }} />
+            )}
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept={ACCEPT_TYPES}
+            multiple
+            style={{ display: "none" }}
+            onChange={(e) => {
+              if (e.target.files) handleFiles(e.target.files);
+              e.target.value = "";
+            }}
+          />
+
+          <button
+            onClick={handleSend}
+            disabled={disabled || (!value.trim() && uploads.length === 0)}
+            style={{
+              width: "28px",
+              height: "28px",
+              borderRadius: "8px",
+              border: "none",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              cursor: disabled || (!value.trim() && uploads.length === 0) ? "default" : "pointer",
+              backgroundColor:
+                disabled || (!value.trim() && uploads.length === 0) ? "transparent" : "var(--primary)",
+              color:
+                disabled || (!value.trim() && uploads.length === 0)
+                  ? "var(--muted-foreground)"
+                  : "var(--primary-foreground)",
+              transition: "all 150ms",
+              flexShrink: 0,
+            }}
+          >
+            <Send style={{ width: "14px", height: "14px" }} />
+          </button>
+        </div>
       </div>
       <div
         style={{
