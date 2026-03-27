@@ -74,7 +74,7 @@ export function ToolCallCard({ tool, input, result, status }: ToolCallCardProps)
     <div
       style={{
         display: "flex",
-        alignItems: "flex-start",
+        alignItems: "center",
         gap: "8px",
         padding: "6px 10px",
         margin: "4px 0",
@@ -86,13 +86,13 @@ export function ToolCallCard({ tool, input, result, status }: ToolCallCardProps)
       }}
     >
       {status === "running" ? (
-        <Wrench style={{ width: "0.8rem", height: "0.8rem", marginTop: "1px", flexShrink: 0 }} className="animate-spin" />
+        <Wrench style={{ width: "0.8rem", height: "0.8rem", flexShrink: 0 }} className="animate-spin" />
       ) : status === "error" ? (
-        <AlertCircle style={{ width: "0.8rem", height: "0.8rem", marginTop: "1px", flexShrink: 0, color: "var(--destructive)" }} />
+        <AlertCircle style={{ width: "0.8rem", height: "0.8rem", flexShrink: 0, color: "var(--destructive)" }} />
       ) : meta.icon ? (
-        <meta.icon style={{ width: "0.8rem", height: "0.8rem", marginTop: "1px", flexShrink: 0, color: isDestructive ? "var(--destructive)" : "rgb(74 222 128)" }} />
+        <meta.icon style={{ width: "0.8rem", height: "0.8rem", flexShrink: 0, color: isDestructive ? "var(--destructive)" : "rgb(74 222 128)" }} />
       ) : (
-        <Check style={{ width: "0.8rem", height: "0.8rem", marginTop: "1px", flexShrink: 0, color: "rgb(74 222 128)" }} />
+        <Check style={{ width: "0.8rem", height: "0.8rem", flexShrink: 0, color: "rgb(74 222 128)" }} />
       )}
       <div style={{ flex: 1, minWidth: 0 }}>
         <span style={{ fontWeight: 500 }}>{meta.label}</span>
