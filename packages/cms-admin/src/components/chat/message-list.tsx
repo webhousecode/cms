@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { ToolCallCard } from "./tool-call-card";
 import { ThinkingAnimation } from "./thinking-animation";
+import { MarkdownRenderer } from "./markdown-renderer";
 import { User, Bot } from "lucide-react";
 
 export interface ToolCall {
@@ -23,80 +24,6 @@ export interface ChatMessageUI {
 interface MessageListProps {
   messages: ChatMessageUI[];
   isThinking: boolean;
-}
-
-/** Simple markdown-lite renderer — handles bold, italic, code, and line breaks */
-function renderContent(text: string) {
-  if (!text) return null;
-
-  // Split into paragraphs
-  const paragraphs = text.split(/\n\n+/);
-
-  return paragraphs.map((para, i) => {
-    // Check if it's a list
-    const lines = para.split("\n");
-    const isList = lines.every((l) => l.match(/^[-*•]\s/) || l.trim() === "");
-
-    if (isList) {
-      return (
-        <ul key={i} style={{ margin: "4px 0", paddingLeft: "20px", listStyleType: "disc" }}>
-          {lines
-            .filter((l) => l.match(/^[-*•]\s/))
-            .map((l, j) => (
-              <li key={j} style={{ margin: "2px 0" }}>
-                <InlineText text={l.replace(/^[-*•]\s/, "")} />
-              </li>
-            ))}
-        </ul>
-      );
-    }
-
-    return (
-      <p key={i} style={{ margin: i > 0 ? "8px 0 0" : "0" }}>
-        {lines.map((line, j) => (
-          <span key={j}>
-            {j > 0 && <br />}
-            <InlineText text={line} />
-          </span>
-        ))}
-      </p>
-    );
-  });
-}
-
-/** Render inline formatting: bold, italic, inline code */
-function InlineText({ text }: { text: string }) {
-  // Very lightweight inline markdown
-  const parts = text.split(/(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*)/g);
-  return (
-    <>
-      {parts.map((part, i) => {
-        if (part.startsWith("**") && part.endsWith("**")) {
-          return <strong key={i}>{part.slice(2, -2)}</strong>;
-        }
-        if (part.startsWith("*") && part.endsWith("*")) {
-          return <em key={i}>{part.slice(1, -1)}</em>;
-        }
-        if (part.startsWith("`") && part.endsWith("`")) {
-          return (
-            <code
-              key={i}
-              style={{
-                padding: "1px 4px",
-                borderRadius: "3px",
-                fontSize: "0.85em",
-                backgroundColor: "var(--muted)",
-                fontFamily: "monospace",
-              }}
-            >
-              {part.slice(1, -1)}
-            </code>
-          );
-        }
-        return <span key={i}>{part}</span>;
-      })}
-    </>
-  );
 }
 
 function MessageBubble({ message }: { message: ChatMessageUI }) {
@@ -133,18 +60,24 @@ function MessageBubble({ message }: { message: ChatMessageUI }) {
       </div>
 
       {/* Content */}
-      <div style={{ flex: 1, minWidth: 0, fontSize: "0.875rem", lineHeight: 1.6, color: "var(--foreground)" }}>
-        {/* Tool calls (shown before text for assistant) */}
+      <div style={{ flex: 1, minWidth: 0, fontSize: "0.875rem", lineHeight: 1.7, color: "var(--foreground)" }}>
+        {/* Tool calls */}
         {!isUser && message.toolCalls && message.toolCalls.length > 0 && (
-          <div style={{ marginBottom: "8px" }}>
+          <div style={{ marginBottom: "10px" }}>
             {message.toolCalls.map((tc, i) => (
               <ToolCallCard key={i} tool={tc.tool} input={tc.input} result={tc.result} status={tc.status} />
             ))}
           </div>
         )}
 
-        {/* Text content */}
-        <div>{renderContent(message.content)}</div>
+        {/* Rendered markdown content */}
+        {isUser ? (
+          <div style={{ fontWeight: 500 }}>{message.content}</div>
+        ) : (
+          <div>
+            <MarkdownRenderer text={message.content} />
+          </div>
+        )}
 
         {/* Streaming cursor */}
         {message.isStreaming && (
