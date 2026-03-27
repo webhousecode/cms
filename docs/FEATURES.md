@@ -125,6 +125,7 @@
 | F106 | [TipTap v3 Upgrade](#f106-tiptap-v3-upgrade) | Planned | [docs/features/F106-tiptap-v3-upgrade.md](features/F106-tiptap-v3-upgrade.md) |
 | F107 | [Chat with Your Site](#f107-chat-with-your-site) | Planned | [docs/features/F107-chat-with-your-site.md](features/F107-chat-with-your-site.md) |
 | F108 | [Rich Text Editor Enhancements](#f108-rich-text-editor-enhancements) | Planned | [docs/features/F108-richtext-editor-enhancements.md](features/F108-richtext-editor-enhancements.md) |
+| F109 | [Inline Proofreading](#f109-inline-proofreading) | Planned | [docs/features/F109-inline-proofreading.md](features/F109-inline-proofreading.md) |
 
 ---
 
@@ -460,3 +461,6 @@ Full-screen conversational CMS interface — manage your entire site through nat
 
 ## F108 — Rich Text Editor Enhancements
 Underline, superscript/subscript, text alignment, highlight colors, editor zoom, and AI proofreading for the TipTap v3 richtext editor. Enables underline (Cmd+U, already in StarterKit v3), superscript (Cmd+.), subscript (Cmd+,), paragraph text alignment (left/center/right), highlight with 6 preset background colors, editor content zoom (50-200%), and AI proofreading with auto language detection. Uses HTML-in-markdown for formatting that standard markdown doesn't support (`<u>`, `<sup>`, `<sub>`, `<mark>`). Depends on F106 TipTap v3 Upgrade.
+
+## F109 — Inline Proofreading
+TipTap-native inline spelling/grammar corrections using ProseMirror Decorations. Corrections render directly in the editor text: original words shown with strikethrough (red), suggestions in green next to them. Bottom toolbar with navigation (← 1/9 →), accept/reject per correction, accept all/reject all. Auto-detects language. Reuses the F108 proofread API endpoint. Inspired by TipTap Pro's proofread extension and Grammarly's inline UX. Depends on F108.
