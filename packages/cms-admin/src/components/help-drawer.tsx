@@ -20,7 +20,7 @@ const SHORTCUT_GROUPS = [
   {
     label: "Chat with Your Site",
     shortcuts: [
-      { keys: "⌘ ⇧ .", label: "Toggle Chat / Admin mode" },
+      { keys: "⌃ ⇧ C", label: "Toggle Chat / Admin mode" },
       { keys: "/", label: "Focus chat input" },
       { keys: "⌘ ⇧ N", label: "New conversation" },
     ],

@@ -25,7 +25,7 @@ export function WorkspaceShell({ collections, globals, activeSiteId, children }:
   // Keyboard shortcut: Cmd+Shift+C to toggle mode
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
-      if (e.key === "." && (e.metaKey || e.ctrlKey) && e.shiftKey) {
+      if ((e.key === "." || e.key === "C" || e.key === "c") && (e.metaKey || e.ctrlKey) && e.shiftKey) {
         e.preventDefault();
         toggle();
       }
