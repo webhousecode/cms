@@ -54,7 +54,12 @@ export function WorkspaceShell({ collections, globals, activeSiteId, children }:
               background: "var(--background)",
             }}
           >
-            <AdminHeader mode={mode} onToggleMode={toggle} />
+            <AdminHeader
+              mode={mode}
+              onToggleMode={toggle}
+              onNewChat={() => window.dispatchEvent(new Event("chat-new"))}
+              onToggleHistory={() => window.dispatchEvent(new Event("chat-toggle-history"))}
+            />
             <ChatInterface collections={collections} activeSiteId={activeSiteId} visible={isChat} />
           </div>
 

@@ -27,6 +27,18 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
   const [conversations, setConversations] = useState<ConversationMeta[]>([]);
   const abortRef = useRef<AbortController | null>(null);
 
+  // Listen for header button events
+  useEffect(() => {
+    function onNewChat() { handleNewConversation(); }
+    function onToggleHist() { loadHistory(); }
+    window.addEventListener("chat-new", onNewChat);
+    window.addEventListener("chat-toggle-history", onToggleHist);
+    return () => {
+      window.removeEventListener("chat-new", onNewChat);
+      window.removeEventListener("chat-toggle-history", onToggleHist);
+    };
+  });
+
   // Fetch site name
   useEffect(() => {
     fetch("/api/admin/site-config")
@@ -274,66 +286,11 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
         display: "flex",
         flexDirection: "column",
         overflow: "hidden",
+        minHeight: 0,
         backgroundColor: "var(--background)",
       }}
     >
-      {/* Chat toolbar — always sticky at top */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "flex-end",
-          gap: "4px",
-          padding: "4px 16px",
-          borderBottom: "1px solid var(--border)",
-          flexShrink: 0,
-          backgroundColor: "var(--background)",
-          position: "sticky",
-          top: 0,
-          zIndex: 10,
-        }}
-      >
-        <button
-          onClick={handleNewConversation}
-          title="New conversation (Cmd+Shift+N)"
-          style={{
-            background: "none",
-            border: "none",
-            cursor: "pointer",
-            color: "var(--muted-foreground)",
-            padding: "6px",
-            borderRadius: "6px",
-            display: "flex",
-            alignItems: "center",
-            gap: "4px",
-            fontSize: "0.75rem",
-          }}
-          className="hover:text-foreground hover:bg-muted transition-colors"
-        >
-          <Plus style={{ width: "14px", height: "14px" }} />
-          New
-        </button>
-        <button
-          onClick={loadHistory}
-          title="Conversation history"
-          style={{
-            background: showHistory ? "var(--muted)" : "none",
-            border: "none",
-            cursor: "pointer",
-            color: showHistory ? "var(--foreground)" : "var(--muted-foreground)",
-            padding: "6px",
-            borderRadius: "6px",
-            display: "flex",
-            alignItems: "center",
-            gap: "4px",
-            fontSize: "0.75rem",
-          }}
-          className="hover:text-foreground hover:bg-muted transition-colors"
-        >
-          <History style={{ width: "14px", height: "14px" }} />
-          History
-        </button>
-      </div>
+      {/* Toolbar buttons moved to AdminHeader — events bridge the gap */}
 
       {/* History panel */}
       {showHistory && (
