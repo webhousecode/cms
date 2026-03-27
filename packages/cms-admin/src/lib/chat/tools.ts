@@ -2,7 +2,7 @@ import { getAdminCms, getAdminConfig } from "@/lib/cms";
 import { readSiteConfig } from "@/lib/site-config";
 import { loadRegistry, findSite } from "@/lib/site-registry";
 import { saveRevision } from "@/lib/revisions";
-import { getDocumentUrl } from "@webhouse/cms";
+// getDocumentUrl imported dynamically in get_document handler to avoid Turbopack bundling issues
 import { cookies } from "next/headers";
 import type { ToolDefinition, ToolHandler } from "@/lib/tools";
 
@@ -148,6 +148,7 @@ export async function buildChatTools(): Promise<ToolPair[]> {
 
         // Build page path using the same routing resolver as the build system
         const col = config.collections.find((c) => c.name === collection);
+        const { getDocumentUrl } = await import("@webhouse/cms");
         const pagePath = col
           ? getDocumentUrl(doc, col as any)
           : `/${collection}/${slug}/`;
