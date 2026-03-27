@@ -16,6 +16,12 @@ export function ArtifactCard({ title, html }: ArtifactCardProps) {
   const [copied, setCopied] = useState(false);
   const iframeRef = useRef<HTMLIFrameElement>(null);
 
+  // Inject <base> tag so relative URLs (/uploads/...) resolve against the CMS server
+  const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
+  const htmlWithBase = html.includes("<base")
+    ? html
+    : html.replace(/<head([^>]*)>/, `<head$1><base href="${baseUrl}/">`);
+
   const handleSave = useCallback(async () => {
     setSaving(true);
     setSaveError(null);
@@ -122,8 +128,8 @@ export function ArtifactCard({ title, html }: ArtifactCardProps) {
         >
           <iframe
             ref={iframeRef}
-            sandbox="allow-scripts"
-            srcDoc={html}
+            sandbox="allow-scripts allow-same-origin"
+            srcDoc={htmlWithBase}
             title={title}
             style={{ width: "100%", height: "100%", border: "none" }}
           />

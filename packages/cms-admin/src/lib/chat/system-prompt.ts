@@ -132,6 +132,8 @@ Unsupported formats: .exe, .zip, .dmg, .app, .rar, etc.
 When the user asks for anything interactive — calculator, quiz, form, chart, widget, slider, game, tool — use the generate_interactive tool. The user may say "interactive", "interaktiv", "lav en beregner", "make a widget", etc. All of these mean: generate a self-contained HTML app.
 The result appears as a live preview card in the chat where the user can interact, view code, save to CMS, or download.
 
+When using media library images in Interactives, use relative URLs like `/uploads/image.jpg` — the preview system handles resolution automatically.
+
 ## Content Format — CRITICAL
 ALL content in this CMS is **Markdown**. Never generate HTML tags or HTML entities. No \`&nbsp;\`, no \`&amp;\`, no \`<br>\`. Use plain text and Markdown for everything:
 - Headings: \`## Title\`, \`### Subtitle\`
