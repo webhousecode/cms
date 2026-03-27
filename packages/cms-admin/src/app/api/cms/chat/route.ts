@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     systemPrompt = buildChatSystemPrompt(siteContext);
     toolPairs = await buildChatTools();
   } catch (initErr) {
-    console.error("[chat] Init error:", initErr instanceof Error ? initErr.message : initErr);
+    console.error("[chat] Init error:", initErr instanceof Error ? initErr.stack : initErr);
     return NextResponse.json(
       { error: `Chat init failed: ${initErr instanceof Error ? initErr.message : "unknown"}` },
       { status: 500 }
