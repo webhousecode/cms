@@ -4,7 +4,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { MessageList, type ChatMessageUI, type ToolCall } from "./message-list";
 import { ChatInput } from "./chat-input";
 import { WelcomeScreen } from "./welcome-screen";
-import { Plus, History, X } from "lucide-react";
+import { Pencil, Check, X } from "lucide-react";
 
 interface ChatInterfaceProps {
   collections: Array<{ name: string; label: string }>;
@@ -272,6 +272,24 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
     } catch { /* ignore */ }
   }
 
+  async function renameConversation(id: string, newTitle: string) {
+    try {
+      // Load, rename, save
+      const res = await fetch(`/api/cms/chat/conversations/${id}`);
+      if (!res.ok) return;
+      const { conversation } = await res.json();
+      conversation.title = newTitle;
+      await fetch("/api/cms/chat/conversations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(conversation),
+      });
+      setConversations((prev) =>
+        prev.map((c) => (c.id === id ? { ...c, title: newTitle } : c))
+      );
+    } catch { /* ignore */ }
+  }
+
   const handleSuggestionClick = useCallback(
     (message: string) => {
       // If the suggestion ends with a space (e.g. "Search my content for "),
@@ -317,29 +335,15 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
             </div>
           ) : (
             conversations.map((c) => (
-              <button
+              <HistoryItem
                 key={c.id}
-                onClick={() => loadConversation(c.id)}
-                style={{
-                  display: "block",
-                  width: "100%",
-                  textAlign: "left",
-                  padding: "10px 16px",
-                  border: "none",
-                  borderBottom: "1px solid var(--border)",
-                  backgroundColor: c.id === conversationId ? "var(--muted)" : "transparent",
-                  cursor: "pointer",
-                  color: "var(--foreground)",
-                }}
-                className="hover:bg-muted transition-colors"
-              >
-                <div style={{ fontSize: "0.8rem", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                  {c.title}
-                </div>
-                <div style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", marginTop: "2px" }}>
-                  {new Date(c.updatedAt).toLocaleDateString()}
-                </div>
-              </button>
+                id={c.id}
+                title={c.title}
+                updatedAt={c.updatedAt}
+                isActive={c.id === conversationId}
+                onLoad={() => loadConversation(c.id)}
+                onRename={(newTitle) => renameConversation(c.id, newTitle)}
+              />
             ))
           )}
         </div>
@@ -354,6 +358,95 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
 
       {/* Input */}
       <ChatInput onSend={handleSend} disabled={isThinking} visible={visible} />
+    </div>
+  );
+}
+
+function HistoryItem({ id, title, updatedAt, isActive, onLoad, onRename }: {
+  id: string; title: string; updatedAt: string; isActive: boolean;
+  onLoad: () => void; onRename: (t: string) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [editValue, setEditValue] = useState(title);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (editing) inputRef.current?.focus();
+  }, [editing]);
+
+  if (editing) {
+    return (
+      <div
+        style={{
+          display: "flex", alignItems: "center", gap: "6px",
+          padding: "8px 16px", borderBottom: "1px solid var(--border)",
+          backgroundColor: "var(--muted)",
+        }}
+      >
+        <input
+          ref={inputRef}
+          value={editValue}
+          onChange={(e) => setEditValue(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") { onRename(editValue); setEditing(false); }
+            if (e.key === "Escape") { setEditValue(title); setEditing(false); }
+          }}
+          style={{
+            flex: 1, fontSize: "0.8rem", padding: "4px 6px", borderRadius: "4px",
+            border: "1px solid var(--border)", backgroundColor: "var(--background)",
+            color: "var(--foreground)", outline: "none", fontFamily: "inherit",
+          }}
+        />
+        <button onClick={() => { onRename(editValue); setEditing(false); }}
+          style={{ background: "none", border: "none", cursor: "pointer", color: "rgb(74 222 128)", padding: "2px" }}>
+          <Check style={{ width: "14px", height: "14px" }} />
+        </button>
+        <button onClick={() => { setEditValue(title); setEditing(false); }}
+          style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "2px" }}>
+          <X style={{ width: "14px", height: "14px" }} />
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div
+      style={{
+        display: "flex", alignItems: "center",
+        borderBottom: "1px solid var(--border)",
+        backgroundColor: isActive ? "var(--muted)" : "transparent",
+      }}
+      className="hover:bg-muted transition-colors"
+    >
+      <button
+        onClick={onLoad}
+        style={{
+          flex: 1, textAlign: "left", padding: "10px 16px",
+          border: "none", backgroundColor: "transparent",
+          cursor: "pointer", color: "var(--foreground)",
+        }}
+      >
+        <div style={{ fontSize: "0.8rem", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          {title}
+        </div>
+        <div style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", marginTop: "2px" }}>
+          {new Date(updatedAt).toLocaleDateString()}
+        </div>
+      </button>
+      <button
+        onClick={(e) => { e.stopPropagation(); setEditing(true); }}
+        title="Rename"
+        style={{
+          background: "none", border: "none", cursor: "pointer",
+          color: "var(--muted-foreground)", padding: "8px 12px",
+          opacity: 0.5,
+        }}
+        className="hover:opacity-100"
+        onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }}
+        onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.5"; }}
+      >
+        <Pencil style={{ width: "12px", height: "12px" }} />
+      </button>
     </div>
   );
 }
