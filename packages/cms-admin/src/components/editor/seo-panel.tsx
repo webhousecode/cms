@@ -9,10 +9,11 @@ import { toast } from "sonner";
 interface Props {
   doc: { slug: string; data: Record<string, unknown> };
   onUpdate: (seo: SeoFields) => void;
+  onSave: () => void;
   onClose: () => void;
 }
 
-export function SeoPanel({ doc, onUpdate, onClose }: Props) {
+export function SeoPanel({ doc, onUpdate, onSave, onClose }: Props) {
   const seo: SeoFields = (doc.data._seo as SeoFields) ?? {};
   const [metaTitle, setMetaTitle] = useState(seo.metaTitle ?? "");
   const [metaDesc, setMetaDesc] = useState(seo.metaDescription ?? "");
@@ -22,6 +23,7 @@ export function SeoPanel({ doc, onUpdate, onClose }: Props) {
   const [robots, setRobots] = useState(seo.robots ?? "index,follow");
   const [lastOptimized, setLastOptimized] = useState(seo.lastOptimized ?? "");
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [showPreview, setShowPreview] = useState(false);
   const [optimizing, setOptimizing] = useState(false);
   const [confirmReoptimize, setConfirmReoptimize] = useState(false);
   const [score, setScore] = useState<SeoScoreResult | null>(null);
@@ -80,10 +82,11 @@ export function SeoPanel({ doc, onUpdate, onClose }: Props) {
           text: `Title: ${title}\n\nContent: ${content.slice(0, 2000)}`,
           instruction: `Generate SEO metadata for this content. Return ONLY a JSON object with these fields:
 {
-  "metaTitle": "SEO-optimized title (max 60 chars)",
-  "metaDescription": "compelling meta description (120-160 chars)",
-  "keywords": ["keyword1", "keyword2", "keyword3", "keyword4", "keyword5"]
+  "metaTitle": "SEO-optimized title (max 60 chars) — MUST include the primary keyword",
+  "metaDescription": "compelling meta description (120-160 chars) — MUST include the primary keyword naturally",
+  "keywords": ["primary-keyword", "keyword2", "keyword3", "keyword4", "keyword5"]
 }
+IMPORTANT: The primary keyword (first in the keywords array) MUST appear in BOTH metaTitle and metaDescription.
 Return ONLY the JSON, no explanation.`,
         }),
       });
@@ -96,7 +99,9 @@ Return ONLY the JSON, no explanation.`,
           if (parsed.keywords?.length) setKeywords(parsed.keywords);
           setLastOptimized(new Date().toISOString());
           setConfirmReoptimize(false);
-          toast.success("SEO optimized by AI — save document to persist");
+          // Auto-save after a short delay to let state propagate
+          setTimeout(() => onSave(), 500);
+          toast.success("SEO optimized and saved");
         } catch {
           toast.error("AI returned invalid JSON");
         }
@@ -130,6 +135,14 @@ Return ONLY the JSON, no explanation.`,
           <span style={{ fontSize: "0.8rem", fontWeight: 700, fontFamily: "monospace", color: scoreColor }}>
             {score?.score ?? 0}
           </span>
+          <button type="button" onClick={onSave}
+            style={{
+              padding: "0.25rem 0.5rem", borderRadius: "5px", border: "none",
+              background: "#F7BB2E", color: "#0D0D0D", cursor: "pointer",
+              fontSize: "0.7rem", fontWeight: 600,
+            }}>
+            Save
+          </button>
           <button type="button" onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1.1rem" }}>&times;</button>
         </div>
       </div>
@@ -188,20 +201,6 @@ Return ONLY the JSON, no explanation.`,
             // eslint-disable-next-line @next/next/no-img-element
             <img src={ogImage} alt="OG preview" style={{ width: "100%", height: 80, objectFit: "cover", borderRadius: "4px", marginTop: "0.375rem", border: "1px solid var(--border)" }} />
           )}
-        </div>
-
-        {/* SERP Preview */}
-        <div>
-          <p style={lbl}>Google preview</p>
-          <div style={{ padding: "0.75rem", background: "#fff", borderRadius: "8px", fontFamily: "Arial, sans-serif" }}>
-            <p style={{ fontSize: "0.7rem", color: "#202124", margin: 0 }}>{siteUrl} › ...</p>
-            <p style={{ fontSize: "0.9rem", color: "#1a0dab", margin: "0.15rem 0", fontWeight: 400, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {metaTitle || title || "Page title"}
-            </p>
-            <p style={{ fontSize: "0.72rem", color: "#4d5156", margin: 0, lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as const, overflow: "hidden" }}>
-              {metaDesc || "No meta description set. Google will auto-generate one from your content."}
-            </p>
-          </div>
         </div>
 
         {/* AI Optimize */}
@@ -280,6 +279,24 @@ Return ONLY the JSON, no explanation.`,
                 ]}
               />
             </div>
+          </div>
+        )}
+
+        {/* Google Preview — collapsible */}
+        <button type="button" onClick={() => setShowPreview(!showPreview)}
+          style={{ display: "flex", alignItems: "center", gap: "0.25rem", background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "0.75rem", padding: 0 }}>
+          {showPreview ? <ChevronUp style={{ width: 12, height: 12 }} /> : <ChevronDown style={{ width: 12, height: 12 }} />}
+          Google preview
+        </button>
+        {showPreview && (
+          <div style={{ padding: "0.75rem", background: "#fff", borderRadius: "8px", fontFamily: "Arial, sans-serif" }}>
+            <p style={{ fontSize: "0.7rem", color: "#202124", margin: 0 }}>{siteUrl} › ...</p>
+            <p style={{ fontSize: "0.9rem", color: "#1a0dab", margin: "0.15rem 0", fontWeight: 400, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+              {metaTitle || title || "Page title"}
+            </p>
+            <p style={{ fontSize: "0.72rem", color: "#4d5156", margin: 0, lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as const, overflow: "hidden" }}>
+              {metaDesc || "No meta description set."}
+            </p>
           </div>
         )}
 
