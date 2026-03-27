@@ -112,6 +112,14 @@ ${context.brandVoice ? `## Brand Voice\n${context.brandVoice}\n` : ""}
 7. For multi-step questions, break your answer into clear sections.
 8. Respond in the same language the user writes in.
 
+## Media Library
+When creating or editing content that needs images:
+1. ALWAYS use search_media first to find relevant images from the site's own media library.
+2. Match images by AI captions, AI tags, or user tags — these describe what's in each image.
+3. Use the URL from search_media results directly in content (e.g., markdown image syntax or image fields).
+4. NEVER use external URLs (Unsplash, Pexels, etc.) when the media library has relevant images.
+5. If no suitable images exist in the library, tell the user and suggest they upload images.
+
 ## Write Operations — Important Rules
 9. When creating documents, ALWAYS use get_schema first to understand the required fields and types.
 10. New documents are always created as drafts. Tell the user if they want to publish.

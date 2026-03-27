@@ -271,6 +271,140 @@ export async function buildChatTools(): Promise<ToolPair[]> {
     },
 
     // ═══════════════════════════════════════════════════════════
+    // Media tools
+    // ═══════════════════════════════════════════════════════════
+
+    // ── list_media ────────────────────────────────────────────
+    {
+      definition: {
+        name: "list_media",
+        description:
+          "List all media files (images, videos, audio, documents) in the site's media library. Returns file names, URLs, types, and AI analysis data if available.",
+        input_schema: {
+          type: "object",
+          properties: {
+            type: { type: "string", description: "Filter by type: 'image', 'video', 'audio', 'document', 'all' (default: 'all')" },
+            limit: { type: "number", description: "Max files to return (default: 50)" },
+          },
+        },
+      },
+      handler: async (input) => {
+        const typeFilter = String(input.type ?? "all");
+        const limit = Math.min(Number(input.limit ?? 50), 200);
+
+        const { getMediaAdapter } = await import("@/lib/media");
+        const { readMediaMeta } = await import("@/lib/media/media-meta");
+
+        const [files, meta] = await Promise.all([
+          getMediaAdapter().then((a) => a.listMedia()),
+          readMediaMeta(),
+        ]);
+
+        // Build meta lookup by key
+        const metaMap = new Map(meta.map((m) => [m.key, m]));
+
+        let filtered = files.filter((f) => !/-\d+w\.webp$/i.test(f.name));
+        if (typeFilter !== "all") {
+          filtered = filtered.filter((f) => f.mediaType === typeFilter);
+        }
+        filtered = filtered.slice(0, limit);
+
+        if (filtered.length === 0) return `No ${typeFilter === "all" ? "" : typeFilter + " "}files found in media library.`;
+
+        return filtered
+          .map((f) => {
+            const key = f.folder ? `${f.folder}/${f.name}` : f.name;
+            const m = metaMap.get(key);
+            const parts = [`- ${f.name} (${f.mediaType}, ${Math.round(f.size / 1024)}KB)`];
+            parts.push(`  URL: ${f.url}`);
+            if (m?.aiCaption) parts.push(`  AI caption: ${m.aiCaption}`);
+            if (m?.aiAlt) parts.push(`  AI alt: ${m.aiAlt}`);
+            if (m?.aiTags?.length) parts.push(`  AI tags: ${m.aiTags.join(", ")}`);
+            if (m?.tags?.length) parts.push(`  User tags: ${m.tags.join(", ")}`);
+            return parts.join("\n");
+          })
+          .join("\n\n");
+      },
+    },
+
+    // ── search_media ──────────────────────────────────────────
+    {
+      definition: {
+        name: "search_media",
+        description:
+          "Search media files by AI captions, AI tags, user tags, or filename. Use this to find relevant images for content. Returns matching files with their URLs.",
+        input_schema: {
+          type: "object",
+          properties: {
+            query: { type: "string", description: "Search query — matches against AI captions, AI tags, user tags, and filenames" },
+            type: { type: "string", description: "Filter by type: 'image', 'video', 'audio', 'all' (default: 'image')" },
+            limit: { type: "number", description: "Max results (default: 10)" },
+          },
+          required: ["query"],
+        },
+      },
+      handler: async (input) => {
+        const query = String(input.query).toLowerCase();
+        const typeFilter = String(input.type ?? "image");
+        const limit = Math.min(Number(input.limit ?? 10), 50);
+
+        const { getMediaAdapter } = await import("@/lib/media");
+        const { readMediaMeta } = await import("@/lib/media/media-meta");
+
+        const [files, meta] = await Promise.all([
+          getMediaAdapter().then((a) => a.listMedia()),
+          readMediaMeta(),
+        ]);
+
+        const metaMap = new Map(meta.map((m) => [m.key, m]));
+
+        // Score each file by relevance
+        const scored = files
+          .filter((f) => !/-\d+w\.webp$/i.test(f.name))
+          .filter((f) => typeFilter === "all" || f.mediaType === typeFilter)
+          .map((f) => {
+            const key = f.folder ? `${f.folder}/${f.name}` : f.name;
+            const m = metaMap.get(key);
+            let score = 0;
+
+            // Match against various fields
+            if (f.name.toLowerCase().includes(query)) score += 3;
+            if (m?.aiCaption?.toLowerCase().includes(query)) score += 5;
+            if (m?.aiAlt?.toLowerCase().includes(query)) score += 4;
+            if (m?.aiTags?.some((t) => t.toLowerCase().includes(query))) score += 4;
+            if (m?.tags?.some((t) => t.toLowerCase().includes(query))) score += 4;
+
+            // Partial word matching for multi-word queries
+            const words = query.split(/\s+/);
+            if (words.length > 1) {
+              for (const word of words) {
+                if (m?.aiCaption?.toLowerCase().includes(word)) score += 1;
+                if (m?.aiTags?.some((t) => t.toLowerCase().includes(word))) score += 1;
+              }
+            }
+
+            return { file: f, meta: m, score };
+          })
+          .filter((s) => s.score > 0)
+          .sort((a, b) => b.score - a.score)
+          .slice(0, limit);
+
+        if (scored.length === 0) return `No media files matching "${query}" found.`;
+
+        return scored
+          .map(({ file: f, meta: m }) => {
+            const parts = [`- **${f.name}** (${f.mediaType})`];
+            parts.push(`  URL: ${f.url}`);
+            if (m?.aiCaption) parts.push(`  Caption: ${m.aiCaption}`);
+            if (m?.aiAlt) parts.push(`  Alt: ${m.aiAlt}`);
+            if (m?.aiTags?.length) parts.push(`  Tags: ${m.aiTags.join(", ")}`);
+            return parts.join("\n");
+          })
+          .join("\n\n");
+      },
+    },
+
+    // ═══════════════════════════════════════════════════════════
     // Phase 2: Write tools
     // ═══════════════════════════════════════════════════════════
 

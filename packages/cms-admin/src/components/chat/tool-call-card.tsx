@@ -1,6 +1,6 @@
 "use client";
 
-import { Wrench, Check, AlertCircle, Plus, Pencil, Send, Undo2, Trash2, Sparkles, RotateCcw } from "lucide-react";
+import { Wrench, Check, AlertCircle, Plus, Pencil, Send, Undo2, Trash2, Sparkles, RotateCcw, Search } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 interface ToolMeta {
@@ -18,6 +18,9 @@ const TOOL_META: Record<string, ToolMeta> = {
   get_schema:        { label: "Reading schema" },
   list_drafts:       { label: "Checking drafts" },
   get_site_config:   { label: "Reading site config" },
+  // Media
+  list_media:        { label: "Browsing media library" },
+  search_media:      { label: "Searching media", icon: Search },
   // Phase 2: Write
   create_document:   { label: "Creating document", icon: Plus },
   update_document:   { label: "Updating document", icon: Pencil },
