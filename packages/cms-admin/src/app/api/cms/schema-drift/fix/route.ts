@@ -1,14 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminCms, getAdminConfig } from "@/lib/cms";
+import { getAdminConfig } from "@/lib/cms";
+import { getActiveSitePaths } from "@/lib/site-paths";
+import { readFileSync, writeFileSync, readdirSync, existsSync } from "node:fs";
+import { join } from "node:path";
 
 /**
  * POST /api/cms/schema-drift/fix
  *
- * Fixes schema drift by removing orphaned fields from content documents.
+ * Removes orphaned fields from content JSON files.
  * Body: { collection: string, fields: string[] }
  *
- * For each document in the collection, removes the specified fields from data.
- * Only removes fields that are NOT in the current schema (safety check).
+ * Directly reads/writes JSON files to ensure fields are truly removed
+ * (cms.content.update merges data, which doesn't support field deletion).
  */
 export async function POST(req: NextRequest) {
   try {
@@ -17,7 +20,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "collection and fields[] required" }, { status: 400 });
     }
 
-    const [cms, config] = await Promise.all([getAdminCms(), getAdminConfig()]);
+    const config = await getAdminConfig();
     const colConfig = config.collections.find((c) => c.name === collection);
     if (!colConfig) {
       return NextResponse.json({ error: `Collection "${collection}" not found` }, { status: 404 });
@@ -30,31 +33,38 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "All specified fields exist in schema — nothing to remove" }, { status: 400 });
     }
 
-    // Process all documents
-    const { documents } = await cms.content.findMany(collection, {});
+    // Read content directory directly
+    const { contentDir } = await getActiveSitePaths();
+    const collectionDir = join(contentDir, collection);
+    if (!existsSync(collectionDir)) {
+      return NextResponse.json({ error: `Content directory not found: ${collection}` }, { status: 404 });
+    }
+
+    const jsonFiles = readdirSync(collectionDir).filter((f) => f.endsWith(".json"));
     let fixed = 0;
 
-    for (const doc of documents) {
-      const data = (doc as { data?: Record<string, unknown> }).data;
+    for (const file of jsonFiles) {
+      const filePath = join(collectionDir, file);
+      const doc = JSON.parse(readFileSync(filePath, "utf-8"));
+      const data = doc.data;
       if (!data) continue;
 
       const hasOrphans = safeFields.some((f) => f in data);
       if (!hasOrphans) continue;
 
-      // Remove orphaned fields
-      const cleaned = { ...data };
+      // Remove orphaned fields directly from data
       for (const f of safeFields) {
-        delete cleaned[f];
+        delete data[f];
       }
 
-      // Save back
-      await cms.content.update(collection, doc.slug, { data: cleaned });
+      // Write back with same formatting
+      writeFileSync(filePath, JSON.stringify(doc, null, 2) + "\n");
       fixed++;
     }
 
     return NextResponse.json({
       fixed,
-      total: documents.length,
+      total: jsonFiles.length,
       removedFields: safeFields,
     });
   } catch (err) {
