@@ -342,8 +342,8 @@ export function ChatInput({ onSend, disabled, placeholder, visible }: ChatInputP
             onClick={handleSend}
             disabled={disabled || (!value.trim() && uploads.length === 0)}
             style={{
-              width: "32px",
-              height: "32px",
+              width: "40px",
+              height: "40px",
               borderRadius: "50%",
               border: "none",
               display: "flex",
@@ -357,7 +357,7 @@ export function ChatInput({ onSend, disabled, placeholder, visible }: ChatInputP
               flexShrink: 0,
             }}
           >
-            <Send style={{ width: "16px", height: "16px" }} />
+            <Send style={{ width: "18px", height: "18px" }} />
           </button>
         </div>
       </div>
