@@ -160,3 +160,47 @@ case "interactive": {
 ```
 
 **Example:** `viewportWidth: 1000`, `viewportHeight: 800`, `scale: 50` → renders a 500x400px miniature of the full 1000x800 interactive. All sliders, buttons, and charts remain functional.
+
+### Richtext Embed Syntax
+
+Interactives can be embedded directly in richtext fields using a special token:
+
+```
+!!INTERACTIVE[id|title|align:left]
+```
+
+| Part | Description |
+|------|-------------|
+| `id` | Interactive filename without `.html` extension |
+| `title` | Display title (used for iframe `title` attribute) |
+| `align:left` | Optional alignment: `align:left`, `align:right`, or `align:center` (default) |
+
+The editor inserts this token when you click the Interactive button in the toolbar and select an interactive. The token is stored as plain text in the markdown.
+
+### Rendering Embeds in Static Sites
+
+Your `build.ts` must convert `!!INTERACTIVE` tokens to iframes after markdown parsing:
+
+```typescript
+// After marked.parse(), replace tokens with iframes
+html = html.replace(
+  /!!INTERACTIVE\[([^\]]+)\]/g,
+  (_match, inner) => {
+    const [id, title = id, options = ""] = inner.split("|").map(s => s.trim());
+    const align = options.match(/align:(\w+)/)?.[1] || "center";
+    const floatStyle = align === "left" ? "float:left; width:50%; margin:0.25rem 1.25rem 1.25rem 0;"
+      : align === "right" ? "float:right; width:50%; margin:0.25rem 0 1.25rem 1.25rem;"
+      : "width:100%; margin:1.5rem auto;";
+    return `<div style="${floatStyle}">
+      <iframe src="/uploads/interactives/${id}.html" title="${title}"
+        style="width:100%; border:none; border-radius:0.5rem; overflow:hidden;"
+        onload="this.style.height=this.contentDocument.documentElement.scrollHeight+'px'"
+        loading="lazy" sandbox="allow-scripts allow-same-origin"></iframe>
+    </div>`;
+  },
+);
+```
+
+The `onload` handler auto-resizes the iframe to match its content height — no scrollbars needed.
+
+**Important:** Interactives are stored in `public/uploads/interactives/` — the iframe `src` path must be `/uploads/interactives/{id}.html`, not `/interactives/{id}.html`.
