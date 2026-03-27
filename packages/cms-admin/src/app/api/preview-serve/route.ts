@@ -84,8 +84,10 @@ export async function POST(_req: NextRequest) {
     if (existsSync(site404)) {
       custom404 = readFileSync(site404, "utf-8");
     } else {
-      const cms404 = require.resolve("@webhouse/cms/static/404.html");
-      custom404 = readFileSync(cms404, "utf-8");
+      // Resolve without require.resolve (Turbopack treats it as a module import)
+      const cmsDir = path.dirname(require.resolve("@webhouse/cms/package.json"));
+      const cms404 = path.join(cmsDir, "static", "404.html");
+      if (existsSync(cms404)) custom404 = readFileSync(cms404, "utf-8");
     }
   } catch { /* use fallback */ }
 
