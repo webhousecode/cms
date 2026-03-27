@@ -71,7 +71,7 @@ export function calculateSeoScore(
   } else if (mt.length > 60) {
     details.push({ rule: "meta-title", label: "Meta title", status: "warn", message: `Too long: ${mt.length} chars (max 60, gets truncated)` });
   } else {
-    details.push({ rule: "meta-title", label: "Meta title", status: "pass", message: `${mt.length} chars` });
+    details.push({ rule: "meta-title", label: "Meta title", status: "pass", message: `Meta title: ${mt.length} chars` });
   }
 
   // 2. Meta description length (120-160 chars)
@@ -83,7 +83,7 @@ export function calculateSeoScore(
   } else if (md.length > 160) {
     details.push({ rule: "meta-desc", label: "Meta description", status: "warn", message: `Too long: ${md.length} chars (max 160, gets truncated)` });
   } else {
-    details.push({ rule: "meta-desc", label: "Meta description", status: "pass", message: `${md.length} chars` });
+    details.push({ rule: "meta-desc", label: "Meta description", status: "pass", message: `Meta description: ${md.length} chars` });
   }
 
   // 3. Keyword in meta title
