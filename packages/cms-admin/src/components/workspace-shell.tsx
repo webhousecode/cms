@@ -40,7 +40,9 @@ export function WorkspaceShell({ collections, globals, activeSiteId, children }:
   // so switching back is instant.
   return (
     <SidebarProvider>
-      <AppSidebarClient collections={collections} globals={globals} />
+      <div style={{ display: isChat ? "none" : "contents" }}>
+        <AppSidebarClient collections={collections} globals={globals} />
+      </div>
       <SidebarInset>
         <TabsProvider siteId={activeSiteId}>
           {/* ── Chat mode (shown/hidden via CSS) ── */}
