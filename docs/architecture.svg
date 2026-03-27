@@ -1,0 +1,254 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 900" font-family="system-ui, -apple-system, sans-serif">
+  <defs>
+    <style>
+      .bg { fill: #0D0D0D; }
+      .card { fill: #1a1a1a; stroke: #333; stroke-width: 1; rx: 12; }
+      .card-gold { fill: #1a1a1a; stroke: #F7BB2E; stroke-width: 2; rx: 12; }
+      .card-dim { fill: #141414; stroke: #2a2a2a; stroke-width: 1; rx: 8; }
+      .title { fill: #F7BB2E; font-size: 28px; font-weight: 700; }
+      .subtitle { fill: #888; font-size: 13px; font-weight: 400; }
+      .heading { fill: #F7BB2E; font-size: 14px; font-weight: 700; letter-spacing: 2px; }
+      .label { fill: #fff; font-size: 13px; font-weight: 600; }
+      .label-sm { fill: #fff; font-size: 11px; font-weight: 600; }
+      .desc { fill: #888; font-size: 11px; }
+      .code { fill: #F7BB2E; font-size: 10px; font-family: ui-monospace, 'SF Mono', monospace; }
+      .code-dim { fill: #666; font-size: 10px; font-family: ui-monospace, 'SF Mono', monospace; }
+      .arrow { stroke: #555; stroke-width: 1.5; fill: none; marker-end: url(#arrowhead); }
+      .arrow-gold { stroke: #F7BB2E; stroke-width: 2; fill: none; marker-end: url(#arrowhead-gold); }
+      .line { stroke: #333; stroke-width: 1; stroke-dasharray: 4,4; }
+      .badge { rx: 4; }
+      .badge-green { fill: #166534; }
+      .badge-blue { fill: #1e3a5f; }
+      .badge-purple { fill: #3b1f6e; }
+      .badge-text { fill: #fff; font-size: 9px; font-weight: 600; }
+    </style>
+    <marker id="arrowhead" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#555"/>
+    </marker>
+    <marker id="arrowhead-gold" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#F7BB2E"/>
+    </marker>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1200" height="900" class="bg"/>
+
+  <!-- Title -->
+  <text x="40" y="42" class="title">@webhouse/cms</text>
+  <text x="40" y="62" class="subtitle">AI-native content engine — config-driven, adapter-based, multi-site CMS</text>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- SECTION 1: cms.config.ts (top left) -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <text x="40" y="100" class="heading">CMS.CONFIG.TS</text>
+
+  <rect x="40" y="112" width="320" height="200" class="card-gold"/>
+  <text x="60" y="136" class="code">import { defineConfig } from '@webhouse/cms';</text>
+  <text x="60" y="156" class="code-dim">export default defineConfig({</text>
+  <text x="60" y="174" class="code-dim">  collections: [</text>
+  <text x="60" y="192" class="code">    { name: "pages", urlPrefix: "/" }</text>
+  <text x="60" y="210" class="code">    { name: "posts", urlPrefix: "/blog" }</text>
+  <text x="60" y="228" class="code-dim">  ],</text>
+  <text x="60" y="246" class="code-dim">  storage: {</text>
+  <text x="60" y="264" class="code">    adapter: "filesystem"</text>
+  <text x="60" y="282" class="code-dim">  }</text>
+  <text x="60" y="300" class="code-dim">});</text>
+
+  <!-- Arrow from config to packages -->
+  <path d="M 360 212 L 420 212" class="arrow-gold"/>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- SECTION 2: Monorepo Packages (top center) -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <text x="420" y="100" class="heading">PACKAGES</text>
+
+  <!-- cms core -->
+  <rect x="420" y="112" width="160" height="80" class="card"/>
+  <text x="440" y="134" class="label">@webhouse/cms</text>
+  <text x="440" y="150" class="desc">Core engine</text>
+  <text x="440" y="164" class="code-dim">createCms() • Schema</text>
+  <text x="440" y="178" class="code-dim">Content CRUD • Adapters</text>
+
+  <!-- cms-admin -->
+  <rect x="420" y="202" width="160" height="80" class="card"/>
+  <text x="440" y="224" class="label">@webhouse/cms-admin</text>
+  <text x="440" y="240" class="desc">Next.js 16 Admin UI</text>
+  <text x="440" y="254" class="code-dim">Dashboard • Editor</text>
+  <text x="440" y="268" class="code-dim">Media • 99 API routes</text>
+
+  <!-- cms-ai -->
+  <rect x="590" y="112" width="140" height="80" class="card"/>
+  <text x="610" y="134" class="label">@webhouse/cms-ai</text>
+  <text x="610" y="150" class="desc">AI agents</text>
+  <text x="610" y="164" class="code-dim">Generate • Rewrite</text>
+  <text x="610" y="178" class="code-dim">Analyze • Chat</text>
+
+  <!-- cms-cli -->
+  <rect x="590" y="202" width="140" height="36" class="card-dim"/>
+  <text x="610" y="226" class="label-sm">cms-cli</text>
+
+  <!-- cms-mcp-server -->
+  <rect x="590" y="246" width="140" height="36" class="card-dim"/>
+  <text x="610" y="270" class="label-sm">cms-mcp-server</text>
+
+  <!-- create-cms -->
+  <rect x="420" y="292" width="160" height="36" class="card-dim"/>
+  <text x="440" y="316" class="label-sm">create-@webhouse/cms</text>
+  <text x="570" y="316" class="desc">scaffolder</text>
+
+  <!-- Arrows between packages -->
+  <path d="M 500 192 L 500 202" class="arrow"/>
+  <path d="M 580 152 L 590 152" class="arrow"/>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- SECTION 3: Storage Adapters (top right) -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <text x="790" y="100" class="heading">STORAGE ADAPTERS</text>
+
+  <rect x="790" y="112" width="170" height="56" class="card"/>
+  <rect x="800" y="122" width="24" height="24" class="badge badge-green"/>
+  <text x="806" y="138" class="badge-text">FS</text>
+  <text x="834" y="134" class="label-sm">Filesystem</text>
+  <text x="834" y="150" class="desc">JSON files on disk</text>
+
+  <rect x="790" y="178" width="170" height="56" class="card"/>
+  <rect x="800" y="188" width="24" height="24" class="badge badge-purple"/>
+  <text x="804" y="204" class="badge-text">GH</text>
+  <text x="834" y="200" class="label-sm">GitHub</text>
+  <text x="834" y="216" class="desc">Git-backed via API</text>
+
+  <rect x="790" y="244" width="170" height="56" class="card"/>
+  <rect x="800" y="254" width="24" height="24" class="badge badge-blue"/>
+  <text x="804" y="270" class="badge-text">DB</text>
+  <text x="834" y="266" class="label-sm">SQLite (future)</text>
+  <text x="834" y="282" class="desc">Embedded database</text>
+
+  <!-- Arrow from packages to adapters -->
+  <path d="M 730 152 L 790 152" class="arrow"/>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- SECTION 4: Multi-site Registry (middle) -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <text x="40" y="365" class="heading">MULTI-ORG / MULTI-SITE</text>
+
+  <rect x="40" y="378" width="920" height="160" class="card"/>
+
+  <!-- Org 1 -->
+  <rect x="60" y="398" width="260" height="120" class="card-dim"/>
+  <text x="80" y="420" class="label">Agency Co</text>
+  <text x="80" y="436" class="desc">Organization</text>
+
+  <rect x="76" y="448" width="110" height="28" rx="6" fill="#1e3322" stroke="#4ade80" stroke-width="1"/>
+  <circle cx="88" cy="462" r="4" fill="#4ade80"/>
+  <text x="98" y="466" class="label-sm">Client A</text>
+
+  <rect x="196" y="448" width="110" height="28" rx="6" fill="#1e3322" stroke="#4ade80" stroke-width="1"/>
+  <circle cx="208" cy="462" r="4" fill="#4ade80"/>
+  <text x="218" y="466" class="label-sm">Client B</text>
+
+  <rect x="76" y="484" width="110" height="28" rx="6" fill="#1e3322" stroke="#4ade80" stroke-width="1"/>
+  <circle cx="88" cy="498" r="4" fill="#4ade80"/>
+  <text x="98" y="502" class="label-sm">Client C</text>
+
+  <!-- Org 2 -->
+  <rect x="340" y="398" width="200" height="120" class="card-dim"/>
+  <text x="360" y="420" class="label">Freelancer</text>
+  <text x="360" y="436" class="desc">Personal org</text>
+
+  <rect x="356" y="448" width="120" height="28" rx="6" fill="#1e3322" stroke="#4ade80" stroke-width="1"/>
+  <circle cx="368" cy="462" r="4" fill="#4ade80"/>
+  <text x="378" y="466" class="label-sm">Portfolio</text>
+
+  <!-- Cookie routing -->
+  <rect x="570" y="398" width="370" height="120" class="card-dim"/>
+  <text x="590" y="420" class="label">Cookie-based routing</text>
+  <text x="590" y="444" class="code">cms-active-org = "agency-co"</text>
+  <text x="590" y="462" class="code">cms-active-site = "client-a"</text>
+  <text x="590" y="486" class="desc">→ Server reads cookies → loads correct CMS instance</text>
+  <text x="590" y="502" class="desc">→ Each site: own config, content, media, settings</text>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- SECTION 5: Deployment (bottom) -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <text x="40" y="580" class="heading">DEPLOYMENT</text>
+
+  <!-- Developer box -->
+  <rect x="40" y="595" width="200" height="120" class="card"/>
+  <text x="60" y="620" class="label">Developer</text>
+  <text x="60" y="642" class="code-dim">pnpm ship</text>
+  <text x="60" y="658" class="code-dim">  → lint + build + test</text>
+  <text x="60" y="674" class="code-dim">  → git push</text>
+  <text x="60" y="690" class="code-dim">  → GitHub Actions</text>
+
+  <!-- Arrow -->
+  <path d="M 240 655 L 310 655" class="arrow-gold"/>
+
+  <!-- GitHub Actions -->
+  <rect x="310" y="595" width="200" height="120" class="card"/>
+  <text x="330" y="620" class="label">GitHub Actions</text>
+  <text x="330" y="642" class="code-dim">1. pnpm install</text>
+  <text x="330" y="658" class="code-dim">2. pnpm build</text>
+  <text x="330" y="674" class="code-dim">3. tsc --noEmit</text>
+  <text x="330" y="690" class="code-dim">4. vitest + flyctl deploy</text>
+
+  <!-- Arrow -->
+  <path d="M 510 655 L 580 655" class="arrow-gold"/>
+
+  <!-- Cloud / VPS -->
+  <rect x="580" y="595" width="200" height="120" class="card-gold"/>
+  <text x="600" y="618" class="label">Cloud / VPS / Docker</text>
+  <text x="600" y="640" class="code">cms-admin instance</text>
+  <text x="600" y="658" class="desc">Next.js standalone • port 3010</text>
+  <text x="600" y="674" class="desc">Admin UI • 99 API routes</text>
+  <text x="600" y="690" class="desc">Scheduler • AI agents</text>
+
+  <!-- Persistent storage -->
+  <rect x="580" y="725" width="200" height="80" class="card-dim"/>
+  <text x="600" y="748" class="label-sm">Persistent Storage</text>
+  <text x="600" y="764" class="code-dim">cms.config.ts</text>
+  <text x="600" y="778" class="code-dim">content/ • uploads/ • _data/</text>
+  <text x="600" y="792" class="code-dim">users.json • ai-config.json</text>
+
+  <path d="M 680 715 L 680 725" class="arrow"/>
+
+  <!-- Client sites -->
+  <text x="840" y="580" class="heading">CLIENT SITES</text>
+
+  <rect x="840" y="595" width="150" height="70" class="card"/>
+  <rect x="852" y="608" width="44" height="16" rx="4" fill="#1e3a5f"/>
+  <text x="858" y="619" class="badge-text">Vercel</text>
+  <text x="852" y="644" class="label-sm">Client A</text>
+  <text x="852" y="656" class="desc">Next.js SSR</text>
+
+  <rect x="840" y="675" width="150" height="70" class="card"/>
+  <rect x="852" y="688" width="52" height="16" rx="4" fill="#166534"/>
+  <text x="856" y="699" class="badge-text">Netlify</text>
+  <text x="852" y="724" class="label-sm">Client B</text>
+  <text x="852" y="736" class="desc">Astro static</text>
+
+  <rect x="840" y="755" width="150" height="70" class="card"/>
+  <rect x="852" y="768" width="42" height="16" rx="4" fill="#3b1f6e"/>
+  <text x="856" y="779" class="badge-text">GH Pages</text>
+  <text x="852" y="804" class="label-sm">Client C</text>
+  <text x="852" y="816" class="desc">Static HTML</text>
+
+  <!-- Arrows from Fly to client sites -->
+  <path d="M 780 640 L 840 630" class="arrow"/>
+  <path d="M 780 670 L 840 710" class="arrow"/>
+  <path d="M 780 700 L 840 790" class="arrow"/>
+
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <!-- SECTION 6: Field Types (bottom left) -->
+  <!-- ═══════════════════════════════════════════════════════ -->
+  <text x="40" y="750" class="heading">20 FIELD TYPES</text>
+
+  <rect x="40" y="762" width="480" height="60" class="card-dim"/>
+  <text x="58" y="782" class="code">text  textarea  richtext  htmldoc  number  boolean  date</text>
+  <text x="58" y="798" class="code">select  tags  array  object  relation  image  image-gallery</text>
+  <text x="58" y="814" class="code">video  audio  file  blocks  interactive  column-slots</text>
+
+  <!-- Footer -->
+  <text x="40" y="870" class="subtitle">webhouse.app — Built by WebHouse · Powered by @webhouse/cms</text>
+  <rect x="1050" y="854" width="110" height="24" rx="6" fill="#F7BB2E"/>
+  <text x="1066" y="870" fill="#0D0D0D" font-size="11" font-weight="700">webhouse.app</text>
+</svg>
