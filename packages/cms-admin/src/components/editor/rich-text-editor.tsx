@@ -2058,7 +2058,11 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
         editor.view.dispatch(tr);
       }
     },
-    onUpdate: ({ editor }) => onChange((editor.storage as any).markdown.getMarkdown()),
+    onUpdate: ({ editor }) => {
+      const md = (editor.storage as any).markdown.getMarkdown();
+      lastEmittedRef.current = md;
+      onChange(md);
+    },
     editorProps: {
       attributes: {
         class: "rte outline-none min-h-[120px]",
@@ -2120,11 +2124,14 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
     }),
   });
 
+  // Track the last value we sent to onChange to avoid round-trip overwrites
+  const lastEmittedRef = useRef(value);
   useEffect(() => {
     if (editor && !editor.isFocused) {
+      // Only apply external value changes — skip if value matches what we last emitted
+      if (value === lastEmittedRef.current) return;
       const current = (editor.storage as any).markdown.getMarkdown();
       if (value !== current) {
-        // Defer to avoid flushSync inside lifecycle
         queueMicrotask(() => editor.commands.setContent(value || "", { emitUpdate: false }));
       }
     }
