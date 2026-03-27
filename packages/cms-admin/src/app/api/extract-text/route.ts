@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-// Static imports — Turbopack bundles these at build time
+// Import the actual parser, not the test-runner entry point
+// pdf-parse@1.1.1 main entry tries to readFileSync a test PDF which crashes
 // @ts-expect-error — pdf-parse has no type declarations
-import pdfParse from "pdf-parse";
+import pdfParse from "pdf-parse/lib/pdf-parse.js";
 import mammoth from "mammoth";
 
 /**
