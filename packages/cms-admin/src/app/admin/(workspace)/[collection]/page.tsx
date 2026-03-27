@@ -10,6 +10,7 @@ import { TabTitle } from "@/lib/tabs-context";
 import { Edit2 } from "lucide-react";
 import { readSiteConfig } from "@/lib/site-config";
 import { getSiteRole } from "@/lib/require-role";
+import { SchemaDriftBanner } from "@/components/schema-drift-banner";
 
 type Props = { params: Promise<{ collection: string }> };
 
@@ -28,9 +29,33 @@ export default async function CollectionPage({ params }: Props) {
     (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
   );
 
+  // F102: Schema drift detection — compare content keys vs schema fields
+  const SYSTEM_KEYS = new Set(["_fieldMeta", "_lastEditedBy", "_trashedAt", "_trashedBy", "_lockedFields"]);
+  const schemaKeys = new Set(colConfig.fields.map((f) => f.name));
+  const contentKeys = new Set<string>();
+  const sample = sorted.filter((d) => (d.status as string) !== "trashed").slice(0, 5);
+  for (const doc of sample) {
+    const data = (doc as { data?: Record<string, unknown> }).data;
+    if (!data) continue;
+    for (const key of Object.keys(data)) {
+      if (!SYSTEM_KEYS.has(key) && !key.startsWith("_")) {
+        contentKeys.add(key);
+      }
+    }
+  }
+  const driftFields = [...contentKeys].filter((k) => !schemaKeys.has(k)).sort();
+
   return (
     <>
       <TabTitle value={colConfig.label ?? collection} />
+      {driftFields.length > 0 && (
+        <SchemaDriftBanner
+          collection={colConfig.label ?? collection}
+          fields={driftFields}
+          schemaEnabled={schemaEnabled}
+          editHref={`/admin/${collection}/schema`}
+        />
+      )}
       <CollectionListPage
         collection={collection}
         collectionLabel={colConfig.label ?? collection}
