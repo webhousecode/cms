@@ -3,6 +3,7 @@ export const dynamic = "force-dynamic";
 
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { getAdminConfig, getActiveSiteInfo, EmptyOrgError } from "@/lib/cms";
+import { readSiteConfig } from "@/lib/site-config";
 import { TabsProvider } from "@/lib/tabs-context";
 import { AdminHeader } from "@/components/admin-header";
 import { WorkspaceShell } from "@/components/workspace-shell";
@@ -109,6 +110,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     throw err;
   }
 
+  // ── Read site-level settings ────────────────────────────
+  const siteConfig = await readSiteConfig();
+
   // ── Normal workspace layout ──────────────────────────────
   const allCollections = config.collections.map((c) => ({
     name: c.name,
@@ -124,6 +128,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       collections={collections}
       globals={globals}
       activeSiteId={activeSiteId}
+      devInspector={siteConfig.devInspector}
     >
       {children}
     </WorkspaceShell>

@@ -16,10 +16,11 @@ interface WorkspaceShellProps {
   collections: Array<{ name: string; label: string }>;
   globals: Array<{ name: string; label: string }>;
   activeSiteId: string;
+  devInspector?: boolean;
   children: React.ReactNode;
 }
 
-export function WorkspaceShell({ collections, globals, activeSiteId, children }: WorkspaceShellProps) {
+export function WorkspaceShell({ collections, globals, activeSiteId, devInspector, children }: WorkspaceShellProps) {
   const { mode, toggle } = useAdminMode();
   const isChat = mode === "chat";
 
@@ -70,7 +71,7 @@ export function WorkspaceShell({ collections, globals, activeSiteId, children }:
             <CommandPaletteProvider>
               {children}
             </CommandPaletteProvider>
-            <DevInspector />
+            {devInspector && <DevInspector />}
             <SchedulerNotifier />
           </div>
         </TabsProvider>
