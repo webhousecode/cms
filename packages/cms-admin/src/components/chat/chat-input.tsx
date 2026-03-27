@@ -344,18 +344,15 @@ export function ChatInput({ onSend, disabled, placeholder, visible }: ChatInputP
             style={{
               width: "32px",
               height: "32px",
-              borderRadius: "8px",
+              borderRadius: "50%",
               border: "none",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              cursor: disabled || (!value.trim() && uploads.length === 0) ? "default" : "pointer",
-              backgroundColor:
-                disabled || (!value.trim() && uploads.length === 0) ? "transparent" : "var(--primary)",
-              color:
-                disabled || (!value.trim() && uploads.length === 0)
-                  ? "var(--muted-foreground)"
-                  : "var(--primary-foreground)",
+              cursor: disabled ? "default" : "pointer",
+              backgroundColor: "var(--primary)",
+              color: "var(--primary-foreground)",
+              opacity: disabled || (!value.trim() && uploads.length === 0) ? 0.4 : 1,
               transition: "all 150ms",
               flexShrink: 0,
             }}
