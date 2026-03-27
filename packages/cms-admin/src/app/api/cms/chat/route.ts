@@ -44,11 +44,20 @@ export async function POST(request: NextRequest) {
   const client = new Anthropic({ apiKey });
 
   // Build system prompt with full site context
-  const siteContext = await gatherSiteContext();
-  const systemPrompt = buildChatSystemPrompt(siteContext);
-
-  // Build tools
-  const toolPairs = await buildChatTools();
+  let siteContext;
+  let systemPrompt: string;
+  let toolPairs;
+  try {
+    siteContext = await gatherSiteContext();
+    systemPrompt = buildChatSystemPrompt(siteContext);
+    toolPairs = await buildChatTools();
+  } catch (initErr) {
+    console.error("[chat] Init error:", initErr instanceof Error ? initErr.message : initErr);
+    return NextResponse.json(
+      { error: `Chat init failed: ${initErr instanceof Error ? initErr.message : "unknown"}` },
+      { status: 500 }
+    );
+  }
   const anthropicTools: Anthropic.Tool[] = toolPairs.map((t) => ({
     name: t.definition.name,
     description: t.definition.description,
