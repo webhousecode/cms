@@ -1,6 +1,6 @@
 "use client";
 
-import { BubbleMenu } from "@tiptap/react";
+import { BubbleMenu } from "@tiptap/react/menus";
 import type { Editor } from "@tiptap/core";
 import { useState } from "react";
 import { Sparkles, ChevronDown } from "lucide-react";
@@ -61,7 +61,7 @@ export function AIBubbleMenu({ editor }: Props) {
   return (
     <BubbleMenu
       editor={editor}
-      tippyOptions={{ duration: 100, placement: "top-start", maxWidth: "none" }}
+      options={{ placement: "top-start", offset: 6 }}
       shouldShow={({ editor, from, to }) => {
         // Hide for non-text atom nodes where AI text operations don't make sense
         const nonTextNodes = ["image", "interactiveEmbed", "audioEmbed", "videoEmbed", "fileAttachment", "blockMarker"];

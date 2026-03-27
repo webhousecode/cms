@@ -7,13 +7,10 @@ import type { NodeViewProps } from "@tiptap/react";
 import { Node as TipTapNode, Extension } from "@tiptap/core";
 import { Plugin, PluginKey } from "prosemirror-state";
 import StarterKit from "@tiptap/starter-kit";
-import Placeholder from "@tiptap/extension-placeholder";
+import { Placeholder } from "@tiptap/extensions";
 import TipTapLink from "@tiptap/extension-link";
 import TipTapImage from "@tiptap/extension-image";
-import { Table } from "@tiptap/extension-table";
-import { TableRow } from "@tiptap/extension-table-row";
-import { TableCell } from "@tiptap/extension-table-cell";
-import { TableHeader } from "@tiptap/extension-table-header";
+import { Table, TableRow, TableCell, TableHeader } from "@tiptap/extension-table";
 import { Markdown } from "tiptap-markdown";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
@@ -352,8 +349,7 @@ function BlockMarkerView({ node, deleteNode, editor, getPos }: NodeViewProps) {
   const handleDoubleClick = () => {
     const pos = typeof getPos === "function" ? getPos() : null;
     if (pos !== null) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (editor.storage.blockMarker as any).openPicker?.(pos);
+      (editor.storage as any).blockMarker?.openPicker?.(pos);
     }
   };
 
@@ -2007,7 +2003,10 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
   const editor = useEditor({
     immediatelyRender: false,
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        link: false,       // configured separately below
+        underline: false,  // not used
+      }),
       Placeholder.configure({ placeholder: "Start writing…" }),
       TipTapLink.configure({ openOnClick: false }),
       ResizableImage.configure({ inline: false }),
@@ -2059,7 +2058,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
         editor.view.dispatch(tr);
       }
     },
-    onUpdate: ({ editor }) => onChange(editor.storage.markdown.getMarkdown()),
+    onUpdate: ({ editor }) => onChange((editor.storage as any).markdown.getMarkdown()),
     editorProps: {
       attributes: {
         class: "rte outline-none min-h-[120px]",
@@ -2109,10 +2108,10 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
 
   useEffect(() => {
     if (editor && !editor.isFocused) {
-      const current = editor.storage.markdown.getMarkdown();
+      const current = (editor.storage as any).markdown.getMarkdown();
       if (value !== current) {
         // Defer to avoid flushSync inside lifecycle
-        queueMicrotask(() => editor.commands.setContent(value || "", false));
+        queueMicrotask(() => editor.commands.setContent(value || "", { emitUpdate: false }));
       }
     }
   }, [value, editor]);
@@ -2331,7 +2330,8 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
       .catch(() => {});
 
     // Let BlockMarkerView trigger the picker in replace mode via storage callback
-    editor.storage.blockMarker.openPicker = (pos: number) => {
+    (editor.storage as any).blockMarker = (editor.storage as any).blockMarker ?? {};
+    (editor.storage as any).blockMarker.openPicker = (pos: number) => {
       setReplacePos(pos);
       setBlockPickerOpen(true);
       setBlockSearch("");
@@ -2724,14 +2724,14 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
               onClick={() => {
                 if (!showSource) {
                   // Switch to source: grab current markdown
-                  setSourceText(editor.storage.markdown.getMarkdown());
+                  setSourceText((editor.storage as any).markdown.getMarkdown());
                   setShowSource(true);
                 } else {
                   // Switch back to visual: defer setContent to avoid flushSync during render
                   setShowSource(false);
                   queueMicrotask(() => {
                     editor.commands.setContent(sourceText);
-                    onChange(editor.storage.markdown.getMarkdown());
+                    onChange((editor.storage as any).markdown.getMarkdown());
                   });
                 }
               }}>
@@ -2778,7 +2778,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                   currentAlt={toolbarState.imageAlt}
                   onApplyAlt={(alt) => {
                     editor.chain().focus().updateAttributes("image", { alt }).run();
-                    onChange(editor.storage.markdown.getMarkdown());
+                    onChange((editor.storage as any).markdown.getMarkdown());
                   }}
                 />
               </>
