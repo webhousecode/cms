@@ -2134,12 +2134,6 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
     if (editor.isFocused) return;
     const current = (editor.storage as any).markdown.getMarkdown();
     if (value !== current) {
-      console.log("[RTE sync] value prop changed, updating editor", {
-        valueLen: value?.length,
-        currentLen: current?.length,
-        lastEmittedLen: lastEmittedRef.current?.length,
-        focused: editor.isFocused,
-      });
       queueMicrotask(() => {
         if (!editor.isDestroyed) {
           editor.commands.setContent(value || "", { emitUpdate: false });
