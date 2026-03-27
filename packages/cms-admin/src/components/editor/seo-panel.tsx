@@ -100,12 +100,25 @@ Return ONLY the JSON, no explanation.`,
           // Auto-fill OG image from content if not already set
           if (!ogImage) {
             const rawContent = String(doc.data.content ?? doc.data.body ?? "");
-            // Extract just the URL from markdown ![alt](url "title") or HTML <img src="url">
-            const mdImg = rawContent.match(/!\[[^\]]*\]\(([^\s")]+)/)?.[1];
-            const htmlImg = rawContent.match(/<img[^>]+src="([^"]+)"/)?.[1];
+            // Try dedicated image fields first (cleanest source)
             const fieldImg = String(doc.data.heroImage ?? doc.data.coverImage ?? doc.data.image ?? "");
-            const imgMatch = mdImg ?? htmlImg ?? fieldImg;
-            if (imgMatch) setOgImage(imgMatch);
+            let picked = "";
+            if (fieldImg && fieldImg.startsWith("/uploads/")) {
+              picked = fieldImg;
+            } else {
+              // Extract from markdown: ![alt](/uploads/file.jpg "title") — capture only the path
+              const mdMatch = rawContent.match(/!\[[^\]]*\]\((\/uploads\/[^\s"]+)/);
+              if (mdMatch) picked = mdMatch[1];
+              else {
+                // Extract from HTML: <img src="/uploads/file.jpg">
+                const htmlMatch = rawContent.match(/<img[^>]+src="(\/uploads\/[^"]+)"/);
+                if (htmlMatch) picked = htmlMatch[1];
+              }
+            }
+            // Only set if it's a valid /uploads/ path
+            if (picked && picked.startsWith("/uploads/")) {
+              setOgImage(picked);
+            }
           }
           setLastOptimized(new Date().toISOString());
           setConfirmReoptimize(false);
@@ -207,11 +220,10 @@ Return ONLY the JSON, no explanation.`,
         <div>
           <p style={lbl}>Social image (OG)</p>
           <input type="text" value={ogImage} onChange={(e) => setOgImage(e.target.value)} placeholder="/uploads/..." style={input} />
-          {ogImage && (
+          {ogImage && ogImage.startsWith("/uploads/") && (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={ogImage} alt="OG preview"
               style={{ width: "100%", height: 80, objectFit: "cover", borderRadius: "4px", marginTop: "0.375rem", border: "1px solid var(--border)" }}
-              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
             />
           )}
         </div>
