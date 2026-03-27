@@ -63,8 +63,13 @@ export function ChatInput({ onSend, disabled, placeholder, visible }: ChatInputP
     try {
       const res = await fetch("/api/upload", { method: "POST", body: formData });
       if (!res.ok) return null;
-      const data = await res.json() as { url: string; name: string };
-      return { name: data.name, url: data.url, category: "image" as FileCategory };
+      const data = await res.json() as { url: string; name: string; extractedText?: string };
+      return {
+        name: data.name,
+        url: data.url,
+        category: categorizeFile(file),
+        textContent: data.extractedText ?? undefined,
+      };
     } catch {
       return null;
     }
@@ -89,21 +94,19 @@ export function ChatInput({ onSend, disabled, placeholder, visible }: ChatInputP
         const uploaded = await uploadFile(file);
         const text = await file.text().catch(() => null);
         if (uploaded) results.push({ ...uploaded, category, textContent: text ?? undefined });
+      } else if (file.name.match(/\.(csv|md|markdown|txt)$/i)) {
+        // Plain text files: read content client-side
+        const text = await file.text().catch(() => "");
+        results.push({
+          name: file.name,
+          url: "",
+          category,
+          textContent: text.slice(0, 50000),
+        });
       } else {
-        // Text-based files: read content client-side and include in message
-        try {
-          const text = await file.text();
-          results.push({
-            name: file.name,
-            url: "",
-            category,
-            textContent: text.slice(0, 50000), // Cap at 50K chars
-          });
-        } catch {
-          // Binary files (docx, pptx, pdf): upload to media
-          const uploaded = await uploadFile(file);
-          if (uploaded) results.push({ ...uploaded, category });
-        }
+        // Binary documents (PDF, DOCX, PPTX): upload and let server extract text
+        const uploaded = await uploadFile(file);
+        if (uploaded) results.push(uploaded);
       }
     }
 
@@ -193,7 +196,7 @@ export function ChatInput({ onSend, disabled, placeholder, visible }: ChatInputP
 
   return (
     <div
-      style={{ flexShrink: 0, padding: "12px 16px 16px", borderTop: "1px solid var(--border)", backgroundColor: "var(--background)" }}
+      style={{ flexShrink: 0, padding: "12px 16px 16px", backgroundColor: "var(--background)" }}
       onDragOver={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}

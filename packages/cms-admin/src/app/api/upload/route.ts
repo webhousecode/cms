@@ -87,7 +87,16 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    return NextResponse.json({ url, folder, name: filename });
+    // Extract text from PDF/DOCX for chat AI
+    let extractedText: string | null = null;
+    if (/\.(pdf|docx?)$/i.test(filename)) {
+      try {
+        const { extractDocumentText } = await import("@/lib/document-extractor");
+        extractedText = await extractDocumentText(buffer, filename);
+      } catch { /* non-fatal */ }
+    }
+
+    return NextResponse.json({ url, folder, name: filename, ...(extractedText ? { extractedText } : {}) });
   } catch (err) {
     console.error("[upload] error:", err);
     return NextResponse.json({ error: String(err) }, { status: 500 });
