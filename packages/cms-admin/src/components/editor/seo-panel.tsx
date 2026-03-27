@@ -23,6 +23,13 @@ export function SeoPanel({ doc, onUpdate, onClose }: Props) {
   const [optimizing, setOptimizing] = useState(false);
   const [score, setScore] = useState<SeoScoreResult | null>(null);
 
+  // Escape to close
+  useEffect(() => {
+    const h = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", h);
+    return () => document.removeEventListener("keydown", h);
+  }, [onClose]);
+
   // Calculate score whenever fields change
   const recalc = useCallback(() => {
     const current: SeoFields = { metaTitle, metaDescription: metaDesc, keywords, ogImage, robots };
@@ -103,9 +110,10 @@ Return ONLY the JSON, no explanation.`,
 
   return (
     <div style={{
-      width: 320, flexShrink: 0, borderLeft: "1px solid var(--border)",
-      display: "flex", flexDirection: "column", overflowY: "auto",
-      background: "var(--card)",
+      position: "fixed", top: 0, right: 0, bottom: 0, width: "340px", zIndex: 100,
+      background: "var(--card)", borderLeft: "1px solid var(--border)",
+      boxShadow: "-4px 0 20px rgba(0,0,0,0.3)",
+      display: "flex", flexDirection: "column",
     }}>
       {/* Header */}
       <div style={{ padding: "0.75rem 1rem", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -120,7 +128,7 @@ Return ONLY the JSON, no explanation.`,
         </div>
       </div>
 
-      <div style={{ padding: "1rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
+      <div style={{ flex: 1, overflowY: "auto", padding: "1rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
 
         {/* Score bar */}
         <div>
