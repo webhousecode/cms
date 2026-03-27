@@ -218,7 +218,9 @@
   font-size: 15px !important;
   line-height: 1.75 !important;
   color: var(--foreground);
+  overflow-x: hidden;
 }
+.rte img { max-width: 100% !important; height: auto; }
 .rte > * + * { margin-top: 0.8em; }
 .rte p { margin: 0; }
 
