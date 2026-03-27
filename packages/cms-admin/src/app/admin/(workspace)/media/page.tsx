@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
 import { Trash2, Copy, Check, Upload, LayoutGrid, List, FolderOpen, Folder, ChevronLeft, ChevronRight, Search, X, ZoomIn, ExternalLink, FileWarning, Music, Video, FileText, Code, File, Pencil, Sparkles, RefreshCw, Loader2, CheckSquare, Zap } from "lucide-react";
 import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
 import type { UsageRef } from "@/app/api/cms/media/usage/route";
@@ -52,17 +51,17 @@ export default function MediaPage() {
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<ViewMode>("grid");
   const [folder, setFolder] = useState<string>(""); // "" = all / root
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const [query, setQuery] = useState(searchParams.get("q") ?? "");
-
-  // Clear ?q= from URL after reading it (so user doesn't get stuck with stale param)
-  useEffect(() => {
-    if (searchParams.get("q")) {
-      router.replace("/admin/media", { scroll: false });
+  const [query, setQuery] = useState(() => {
+    if (typeof window === "undefined") return "";
+    const url = new URL(window.location.href);
+    const q = url.searchParams.get("q") ?? "";
+    // Clear ?q= from URL after reading it
+    if (q) {
+      url.searchParams.delete("q");
+      window.history.replaceState({}, "", url.pathname);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    return q;
+  });
   const [page, setPage] = useState(1);
   const [copied, setCopied] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
@@ -74,6 +73,7 @@ export default function MediaPage() {
   const [renaming, setRenaming] = useState<MediaFile | null>(null);
   const [newFolder, setNewFolder] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>(""); // "" = all
+  const [sortBy, setSortBy] = useState<"newest" | "oldest" | "name" | "size">("newest");
   const [aiFilter, setAiFilter] = useState<"" | "analyzed" | "not-analyzed">("");
   const [aiAnalyzedSet, setAiAnalyzedSet] = useState<Set<string>>(new Set());
   const [aiMetaMap, setAiMetaMap] = useState<Record<string, { caption?: string; alt?: string; tags?: string[] }>>({});
@@ -135,7 +135,10 @@ export default function MediaPage() {
     }
     if (query) {
       const q = query.toLowerCase();
-      if (f.name.toLowerCase().includes(q) || f.folder.toLowerCase().includes(q)) return true;
+      // Also try matching without extension (e.g. "IMG_7569.JPG" matches "IMG_7569-a3x2.JPG")
+      const qNoExt = q.replace(/\.[^.]+$/, "");
+      const fLower = f.name.toLowerCase();
+      if (fLower.includes(q) || fLower.includes(qNoExt) || f.folder.toLowerCase().includes(q)) return true;
       // Search in AI metadata (caption, alt, tags)
       const aiKey = f.folder ? `${f.folder}/${f.name}` : f.name;
       const ai = aiMetaMap[aiKey];
@@ -149,13 +152,24 @@ export default function MediaPage() {
     return true;
   });
 
+  // Sort
+  const sorted = [...filtered].sort((a, b) => {
+    switch (sortBy) {
+      case "newest": return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      case "oldest": return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      case "name": return a.name.localeCompare(b.name);
+      case "size": return b.size - a.size;
+      default: return 0;
+    }
+  });
+
   const pageSize = view === "grid" ? PAGE_SIZE_GRID : PAGE_SIZE_LIST;
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize));
   const currentPage = Math.min(page, totalPages);
-  const paginated = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const paginated = sorted.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   /* Reset page when filters change */
-  useEffect(() => { setPage(1); }, [folder, query, view]);
+  useEffect(() => { setPage(1); }, [folder, query, view, sortBy]);
 
   /* ── Upload ───────────────────────────────────────────────── */
   async function uploadFiles(fileList: FileList | null | File[]) {
@@ -185,6 +199,8 @@ export default function MediaPage() {
 
     await loadFiles();
     loadUsage();
+    setSortBy("newest");
+    setPage(1);
     setTimeout(() => setJobs([]), 1500);
     if (targetFolder && !folder) setFolder(targetFolder);
   }
@@ -618,27 +634,35 @@ export default function MediaPage() {
             })}
           </div>
 
-          {/* New folder input */}
+          {/* Sort */}
           <div style={{ marginTop: "0.75rem", borderTop: "1px solid var(--border)", paddingTop: "0.75rem" }}>
             <p style={{ fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted-foreground)", marginBottom: "0.375rem" }}>
-              Upload to folder
+              Sort by
             </p>
-            <input
-              type="text"
-              value={newFolder}
-              onChange={(e) => setNewFolder(e.target.value.replace(/[^a-zA-Z0-9_-]/g, ""))}
-              placeholder="folder-name"
-              style={{
-                width: "100%", padding: "0.3rem 0.5rem",
-                borderRadius: "5px", border: "1px solid var(--border)",
-                background: "var(--background)", color: "var(--foreground)",
-                fontSize: "0.75rem", fontFamily: "monospace",
-              }}
-            />
-            <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", marginTop: "0.25rem" }}>
-              New files go here
-            </p>
+            {([
+              { value: "newest" as const, label: "Newest first" },
+              { value: "oldest" as const, label: "Oldest first" },
+              { value: "name" as const, label: "Name" },
+              { value: "size" as const, label: "Size" },
+            ]).map((t) => (
+              <button
+                key={t.value}
+                type="button"
+                onClick={() => setSortBy(t.value)}
+                style={{
+                  display: "flex", alignItems: "center", width: "100%",
+                  padding: "0.3rem 0.5rem", borderRadius: "5px", border: "none", cursor: "pointer",
+                  background: sortBy === t.value ? "var(--secondary)" : "transparent",
+                  color: sortBy === t.value ? "var(--foreground)" : "var(--muted-foreground)",
+                  fontSize: "0.8rem", marginBottom: "0.125rem",
+                }}
+                className="hover:bg-secondary/50"
+              >
+                {t.label}
+              </button>
+            ))}
           </div>
+
         </div>
 
         {/* ── Content area ── */}
@@ -683,7 +707,16 @@ export default function MediaPage() {
 
               {/* ── Pagination ── */}
               {totalPages > 1 && (
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.75rem", padding: "1.25rem", borderTop: "1px solid var(--border)" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", padding: "1.25rem", borderTop: "1px solid var(--border)" }}>
+                  <button
+                    type="button"
+                    onClick={() => setPage(1)}
+                    disabled={currentPage === 1}
+                    title="First page"
+                    style={{ padding: "0.35rem 0.5rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", cursor: currentPage === 1 ? "not-allowed" : "pointer", opacity: currentPage === 1 ? 0.4 : 1, fontSize: "0.7rem", fontFamily: "monospace" }}
+                  >
+                    1
+                  </button>
                   <button
                     type="button"
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
@@ -693,7 +726,7 @@ export default function MediaPage() {
                     <ChevronLeft style={{ width: "0.875rem", height: "0.875rem" }} />
                   </button>
                   <span style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", fontFamily: "monospace" }}>
-                    {currentPage} / {totalPages} &nbsp;·&nbsp; {filtered.length} files
+                    {currentPage} / {totalPages} &nbsp;·&nbsp; {sorted.length} files
                   </span>
                   <button
                     type="button"
@@ -702,6 +735,15 @@ export default function MediaPage() {
                     style={{ padding: "0.35rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", cursor: currentPage === totalPages ? "not-allowed" : "pointer", opacity: currentPage === totalPages ? 0.4 : 1 }}
                   >
                     <ChevronRight style={{ width: "0.875rem", height: "0.875rem" }} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPage(totalPages)}
+                    disabled={currentPage === totalPages}
+                    title="Last page"
+                    style={{ padding: "0.35rem 0.5rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", cursor: currentPage === totalPages ? "not-allowed" : "pointer", opacity: currentPage === totalPages ? 0.4 : 1, fontSize: "0.7rem", fontFamily: "monospace" }}
+                  >
+                    {totalPages}
                   </button>
                 </div>
               )}
