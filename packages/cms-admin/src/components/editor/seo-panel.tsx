@@ -97,6 +97,14 @@ Return ONLY the JSON, no explanation.`,
           if (parsed.metaTitle) setMetaTitle(parsed.metaTitle);
           if (parsed.metaDescription) setMetaDesc(parsed.metaDescription);
           if (parsed.keywords?.length) setKeywords(parsed.keywords);
+          // Auto-fill OG image from content if not already set
+          if (!ogImage) {
+            const rawContent = String(doc.data.content ?? doc.data.body ?? "");
+            const imgMatch = rawContent.match(/!\[[^\]]*\]\(([^)]+)\)/)?.[1]
+              ?? rawContent.match(/<img[^>]+src="([^"]+)"/)?.[1]
+              ?? String(doc.data.heroImage ?? doc.data.coverImage ?? doc.data.image ?? "");
+            if (imgMatch) setOgImage(imgMatch);
+          }
           setLastOptimized(new Date().toISOString());
           setConfirmReoptimize(false);
           // Auto-save after a short delay to let state propagate
