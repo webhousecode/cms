@@ -173,7 +173,6 @@ export function MessageList({ messages, isThinking }: MessageListProps) {
       style={{
         flex: 1,
         overflowY: "auto",
-        padding: "0 16px",
       }}
     >
       <style>{`
@@ -183,7 +182,7 @@ export function MessageList({ messages, isThinking }: MessageListProps) {
         }
       `}</style>
 
-      <div style={{ maxWidth: "768px", margin: "0 auto" }}>
+      <div style={{ maxWidth: "768px", margin: "0 auto", padding: "0 16px" }}>
         {messages.map((msg) => (
           <MessageBubble key={msg.id} message={msg} />
         ))}
