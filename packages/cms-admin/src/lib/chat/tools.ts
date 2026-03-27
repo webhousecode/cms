@@ -145,11 +145,31 @@ export async function buildChatTools(): Promise<ToolPair[]> {
           }
         }
 
-        // Build page path for preview
+        // Build page path for preview — check dist/ for actual file
         const col = config.collections.find((c) => c.name === collection);
         const rawPrefix = (col as any)?.urlPrefix ?? "";
         const prefix = rawPrefix === "/" ? "" : rawPrefix;
-        const pagePath = prefix ? `${prefix}/${slug}` : `/${slug}`;
+        let pagePath = prefix ? `${prefix}/${slug}` : `/${slug}`;
+
+        // Check if the file actually exists in dist/ — try variations
+        try {
+          const { getActiveSitePaths } = await import("@/lib/site-paths");
+          const { projectDir } = await getActiveSitePaths();
+          const { existsSync } = await import("node:fs");
+          const distDir = `${projectDir}/dist`;
+          // Try: /slug/index.html, /slug.html, or fall back to / for homepage
+          const candidates = [
+            `${distDir}${pagePath}/index.html`,
+            `${distDir}${pagePath}.html`,
+          ];
+          const found = candidates.some((c) => existsSync(c));
+          if (!found) {
+            // Maybe it's the homepage (slug like "home", "index", etc.)
+            if (existsSync(`${distDir}/index.html`)) {
+              pagePath = "/";
+            }
+          }
+        } catch { /* fallback to computed path */ }
 
         return JSON.stringify(
           { slug: doc.slug, status: doc.status, _pagePath: pagePath, ...data },
