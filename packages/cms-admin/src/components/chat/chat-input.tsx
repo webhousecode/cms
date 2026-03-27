@@ -3,10 +3,30 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { Send, Plus, ImageIcon, Loader2, X } from "lucide-react";
 
+type FileCategory = "image" | "document" | "html" | "data";
+
 interface UploadedFile {
   name: string;
   url: string;
+  category: FileCategory;
+  textContent?: string;  // For text-based files (CSV, MD, HTML, etc.)
 }
+
+const ACCEPT_TYPES = "image/*,.csv,.md,.markdown,.txt,.doc,.docx,.ppt,.pptx,.pdf,.html,.htm";
+
+function categorizeFile(file: File): FileCategory {
+  if (file.type.startsWith("image/")) return "image";
+  if (file.name.endsWith(".html") || file.name.endsWith(".htm")) return "html";
+  if (file.name.endsWith(".csv") || file.name.endsWith(".json")) return "data";
+  return "document";
+}
+
+const FILE_ICONS: Record<FileCategory, string> = {
+  image: "🖼️",
+  document: "📄",
+  html: "🌐",
+  data: "📊",
+};
 
 interface ChatInputProps {
   onSend: (message: string) => void;
@@ -44,20 +64,50 @@ export function ChatInput({ onSend, disabled, placeholder, visible }: ChatInputP
       const res = await fetch("/api/upload", { method: "POST", body: formData });
       if (!res.ok) return null;
       const data = await res.json() as { url: string; name: string };
-      return { name: data.name, url: data.url };
+      return { name: data.name, url: data.url, category: "image" as FileCategory };
     } catch {
       return null;
     }
   }
 
   async function handleFiles(files: FileList | File[]) {
-    const imageFiles = Array.from(files).filter((f) => f.type.startsWith("image/"));
-    if (imageFiles.length === 0) return;
+    const fileList = Array.from(files);
+    if (fileList.length === 0) return;
 
     setUploading(true);
-    const results = await Promise.all(imageFiles.map(uploadFile));
-    const successful = results.filter((r): r is UploadedFile => r !== null);
-    setUploads((prev) => [...prev, ...successful]);
+    const results: UploadedFile[] = [];
+
+    for (const file of fileList) {
+      const category = categorizeFile(file);
+
+      if (category === "image") {
+        // Images: upload to media library
+        const uploaded = await uploadFile(file);
+        if (uploaded) results.push({ ...uploaded, category });
+      } else if (category === "html") {
+        // HTML: upload to media (will be available for Interactives)
+        const uploaded = await uploadFile(file);
+        const text = await file.text().catch(() => null);
+        if (uploaded) results.push({ ...uploaded, category, textContent: text ?? undefined });
+      } else {
+        // Text-based files: read content client-side and include in message
+        try {
+          const text = await file.text();
+          results.push({
+            name: file.name,
+            url: "",
+            category,
+            textContent: text.slice(0, 50000), // Cap at 50K chars
+          });
+        } catch {
+          // Binary files (docx, pptx, pdf): upload to media
+          const uploaded = await uploadFile(file);
+          if (uploaded) results.push({ ...uploaded, category });
+        }
+      }
+    }
+
+    setUploads((prev) => [...prev, ...results]);
     setUploading(false);
     textareaRef.current?.focus();
   }
@@ -66,13 +116,18 @@ export function ChatInput({ onSend, disabled, placeholder, visible }: ChatInputP
     const trimmed = value.trim();
     if ((!trimmed && uploads.length === 0) || disabled) return;
 
-    // Build message with uploaded images referenced
+    // Build message with uploaded files referenced
     let message = trimmed;
     if (uploads.length > 0) {
-      const imageRefs = uploads.map((u) => `[Uploaded: ${u.name} → ${u.url}]`).join("\n");
+      const refs = uploads.map((u) => {
+        if (u.textContent) {
+          return `[File: ${u.name} (${u.category})]\n\`\`\`\n${u.textContent.slice(0, 10000)}\n\`\`\``;
+        }
+        return `[Uploaded ${u.category}: ${u.name} → ${u.url}]`;
+      }).join("\n\n");
       message = message
-        ? `${message}\n\n${imageRefs}`
-        : `I uploaded ${uploads.length} image(s):\n${imageRefs}`;
+        ? `${message}\n\n${refs}`
+        : `I uploaded ${uploads.length} file(s):\n\n${refs}`;
     }
 
     onSend(message);
@@ -153,14 +208,22 @@ export function ChatInput({ onSend, disabled, placeholder, visible }: ChatInputP
               key={i}
               style={{
                 position: "relative",
-                width: "64px",
-                height: "64px",
                 borderRadius: "8px",
                 overflow: "hidden",
                 border: "1px solid var(--border)",
+                ...(u.category === "image"
+                  ? { width: "64px", height: "64px" }
+                  : { display: "flex", alignItems: "center", gap: "6px", padding: "6px 10px", backgroundColor: "var(--muted)" }),
               }}
             >
-              <img src={u.url} alt={u.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              {u.category === "image" ? (
+                <img src={u.url} alt={u.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              ) : (
+                <>
+                  <span style={{ fontSize: "1.1rem" }}>{FILE_ICONS[u.category]}</span>
+                  <span style={{ fontSize: "0.7rem", color: "var(--foreground)", maxWidth: "120px", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{u.name}</span>
+                </>
+              )}
               <button
                 onClick={() => removeUpload(i)}
                 style={{
@@ -240,7 +303,7 @@ export function ChatInput({ onSend, disabled, placeholder, visible }: ChatInputP
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/*"
+          accept={ACCEPT_TYPES}
           multiple
           style={{ display: "none" }}
           onChange={(e) => {
