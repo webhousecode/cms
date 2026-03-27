@@ -117,6 +117,16 @@ export function PagePreviewCard({ pagePath }: PagePreviewCardProps) {
               <>
                 <RefreshCw style={{ width: "20px", height: "20px", opacity: 0.5 }} className="animate-spin" />
                 Building preview...
+                <button
+                  onClick={() => setStatus("error")}
+                  style={{
+                    marginTop: "4px", background: "none", border: "1px solid var(--border)",
+                    borderRadius: "4px", padding: "2px 10px", cursor: "pointer",
+                    color: "var(--muted-foreground)", fontSize: "0.7rem",
+                  }}
+                >
+                  Cancel
+                </button>
               </>
             ) : (
               <>
