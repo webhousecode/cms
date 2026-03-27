@@ -77,6 +77,8 @@ footer { border-top: 1px solid var(--color-border); padding: 1.5rem 0; margin-to
 .prose img[style*="float:left"] { margin: 0.25rem 1.25rem 1.25rem 0; }
 .prose img[style*="float:right"] { margin: 0.25rem 0 1.25rem 1.25rem; }
 .prose h2, .prose h3 { clear: both; }
+.prose .interactive-embed iframe { background: #fff; }
+.prose::after { content: ""; display: table; clear: both; }
 .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1.5rem; }
 .card { border: 1px solid var(--color-border); border-radius: var(--radius); padding: 1.5rem; transition: box-shadow 0.2s; }
 .card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
@@ -156,6 +158,42 @@ function renderContent(raw: unknown): string {
     (_match, pre, title, post) => {
       const styles = title.split("|").map((p: string) => p.trim()).join("; ");
       return `<img ${pre}style="${styles}"${post}>`;
+    },
+  );
+  // Render !!INTERACTIVE[id|title|options] embeds as iframes
+  html = html.replace(
+    /!!INTERACTIVE\[([^\]]+)\]/g,
+    (_match, inner) => {
+      const parts = inner.split("|");
+      const id = parts[0]?.trim();
+      const title = parts[1]?.trim() || id;
+      const options = parts[2]?.trim() || "";
+      if (!id) return "";
+      // Parse alignment from options (e.g. "align:left")
+      const alignMatch = options.match(/align:(\w+)/);
+      const align = alignMatch?.[1] || "center";
+      const floatStyle = align === "left" ? "float:left; margin: 0.25rem 1.25rem 1.25rem 0; width: 50%;"
+        : align === "right" ? "float:right; margin: 0.25rem 0 1.25rem 1.25rem; width: 50%;"
+        : "margin: 1.5rem auto; width: 100%;";
+      return `<div class="interactive-embed" style="${floatStyle}">
+        <iframe src="${bp(`/interactives/${id}.html`)}" title="${esc(title)}"
+          style="width:100%; border:none; border-radius:var(--radius); min-height:300px;"
+          loading="lazy" sandbox="allow-scripts allow-same-origin"></iframe>
+      </div>`;
+    },
+  );
+  // Render !!FILE[filename|label] embeds as download links
+  html = html.replace(
+    /!!FILE\[([^\]]+)\]/g,
+    (_match, inner) => {
+      const parts = inner.split("|");
+      const filename = parts[0]?.trim();
+      const label = parts[1]?.trim() || filename;
+      if (!filename) return "";
+      return `<a href="${bp(`/uploads/${filename}`)}" download class="file-download"
+        style="display:inline-flex; align-items:center; gap:0.5rem; padding:0.5rem 1rem; border:1px solid var(--color-border); border-radius:var(--radius); text-decoration:none; color:var(--color-fg); font-size:0.875rem; margin:0.5rem 0;">
+        📎 ${esc(label)}
+      </a>`;
     },
   );
   return html;
@@ -265,6 +303,15 @@ if (existsSync(uploadsDir)) {
   cpSync(uploadsDir, distUploads, { recursive: true });
   const count = readdirSync(uploadsDir).length;
   console.log(`  uploads/ (${count} files copied)`);
+}
+
+// Copy interactives to dist (so !!INTERACTIVE embeds work)
+const interactivesDir = join(import.meta.dirname, "public", "interactives");
+const distInteractives = join(import.meta.dirname, OUT_DIR, "interactives");
+if (existsSync(interactivesDir)) {
+  cpSync(interactivesDir, distInteractives, { recursive: true });
+  const count = readdirSync(interactivesDir).length;
+  console.log(`  interactives/ (${count} files copied)`);
 }
 
 console.log(`\nDone! ${posts.length} posts, ${pages.length} pages → ${OUT_DIR}/`);
