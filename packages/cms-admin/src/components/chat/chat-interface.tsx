@@ -381,7 +381,7 @@ export function ChatInterface({ collections, activeSiteId }: ChatInterfaceProps)
       )}
 
       {/* Input */}
-      <ChatInput onSend={handleSend} disabled={isThinking} />
+      <ChatInput onSend={handleSend} disabled={isThinking} autoFocus />
     </div>
   );
 }

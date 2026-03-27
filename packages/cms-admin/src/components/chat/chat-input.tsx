@@ -7,11 +7,17 @@ interface ChatInputProps {
   onSend: (message: string) => void;
   disabled?: boolean;
   placeholder?: string;
+  autoFocus?: boolean;
 }
 
-export function ChatInput({ onSend, disabled, placeholder }: ChatInputProps) {
+export function ChatInput({ onSend, disabled, placeholder, autoFocus }: ChatInputProps) {
   const [value, setValue] = useState("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // Auto-focus on mount
+  useEffect(() => {
+    if (autoFocus) textareaRef.current?.focus();
+  }, [autoFocus]);
 
   const handleSend = useCallback(() => {
     const trimmed = value.trim();
@@ -79,18 +85,19 @@ export function ChatInput({ onSend, disabled, placeholder }: ChatInputProps) {
           disabled={disabled}
           placeholder={placeholder ?? "Type a message... (/ to focus)"}
           rows={1}
+          className="text-foreground placeholder:text-muted-foreground"
           style={{
             flex: 1,
             resize: "none",
             border: "none",
             outline: "none",
             backgroundColor: "transparent",
-            color: "var(--foreground)",
             fontSize: "0.875rem",
             lineHeight: 1.5,
             padding: "4px 0",
             fontFamily: "inherit",
             maxHeight: "200px",
+            caretColor: "var(--foreground)",
           }}
         />
         <button
