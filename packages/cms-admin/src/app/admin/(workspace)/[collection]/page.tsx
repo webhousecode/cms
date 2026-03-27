@@ -51,9 +51,8 @@ export default async function CollectionPage({ params }: Props) {
       {driftFields.length > 0 && (
         <SchemaDriftBanner
           collection={colConfig.label ?? collection}
+          collectionName={collection}
           fields={driftFields}
-          schemaEnabled={schemaEnabled}
-          editHref={`/admin/${collection}/schema`}
         />
       )}
       <CollectionListPage
