@@ -1567,6 +1567,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
           onUpdate={(seo) => {
             updateField("_seo", seo);
           }}
+          onSave={() => saveRef.current()}
           onClose={() => setSeoPanelOpen(false)}
         />
       )}
