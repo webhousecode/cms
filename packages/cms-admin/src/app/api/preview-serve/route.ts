@@ -41,7 +41,7 @@ async function findFreePort(): Promise<number> {
   });
 }
 
-export async function POST(_req: NextRequest) {
+export async function POST(req: NextRequest) {
   const sitePaths = await getActiveSitePaths();
   const distDir = path.join(sitePaths.projectDir, "dist");
 
@@ -54,16 +54,23 @@ export async function POST(_req: NextRequest) {
 
   const siteId = distDir;
 
+  // Check for fresh=true param (restarts server to pick up new dist/ files + 404)
+  const fresh = req.nextUrl?.searchParams?.get("fresh") === "true";
+
   // Reuse existing server if still running
   const existing = activeServers.get(siteId);
-  if (existing) {
+  if (existing && !fresh) {
     try {
-      // Quick check that it's still alive
       const check = await fetch(`http://localhost:${existing.port}/`, { signal: AbortSignal.timeout(500) });
       if (check.ok) {
         return NextResponse.json({ url: `http://localhost:${existing.port}` });
       }
     } catch { /* server died, start new one */ }
+    activeServers.delete(siteId);
+  }
+  // Kill old server if restarting fresh
+  if (existing && fresh) {
+    try { existing.server.close(); } catch { /* ignore */ }
     activeServers.delete(siteId);
   }
 
@@ -84,10 +91,25 @@ export async function POST(_req: NextRequest) {
     if (existsSync(site404)) {
       custom404 = readFileSync(site404, "utf-8");
     } else {
-      // Resolve without require.resolve (Turbopack treats it as a module import)
-      const cmsDir = path.dirname(require.resolve("@webhouse/cms/package.json"));
-      const cms404 = path.join(cmsDir, "static", "404.html");
-      if (existsSync(cms404)) custom404 = readFileSync(cms404, "utf-8");
+      // Try multiple resolution strategies for the CMS 404 page
+      const candidates = [
+        // Monorepo sibling package
+        path.resolve(process.cwd(), "..", "cms", "static", "404.html"),
+        // npm installed
+        path.resolve(process.cwd(), "node_modules", "@webhouse", "cms", "static", "404.html"),
+      ];
+      try {
+        // Also try require.resolve (works in Node, may fail in Turbopack)
+        const resolved = require.resolve("@webhouse/cms/package.json");
+        candidates.unshift(path.join(path.dirname(resolved), "static", "404.html"));
+      } catch { /* skip */ }
+
+      for (const candidate of candidates) {
+        if (existsSync(candidate)) {
+          custom404 = readFileSync(candidate, "utf-8");
+          break;
+        }
+      }
     }
   } catch { /* use fallback */ }
 
