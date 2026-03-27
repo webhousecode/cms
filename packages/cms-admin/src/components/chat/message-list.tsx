@@ -92,7 +92,7 @@ function MessageBubble({ message }: { message: ChatMessageUI }) {
         alignItems: "flex-start",
       }}
     >
-      {/* Avatar — vertically centered with first line of text */}
+      {/* Avatar — aligned with first content element (tool card or text) */}
       <div
         style={{
           width: "28px",
@@ -102,7 +102,7 @@ function MessageBubble({ message }: { message: ChatMessageUI }) {
           alignItems: "center",
           justifyContent: "center",
           flexShrink: 0,
-          marginTop: "-2px",
+          marginTop: isUser ? "-2px" : "2px",
           backgroundColor: isUser ? "var(--primary)" : "var(--muted)",
           color: isUser ? "var(--primary-foreground)" : "var(--foreground)",
         }}
