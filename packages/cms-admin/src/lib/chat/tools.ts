@@ -1,6 +1,7 @@
 import { getAdminCms, getAdminConfig } from "@/lib/cms";
 import { readSiteConfig } from "@/lib/site-config";
 import { loadRegistry, findSite } from "@/lib/site-registry";
+import { saveRevision } from "@/lib/revisions";
 import { cookies } from "next/headers";
 import type { ToolDefinition, ToolHandler } from "@/lib/tools";
 
@@ -258,6 +259,324 @@ export async function buildChatTools(): Promise<ToolPair[]> {
         delete safe.anthropicApiKey;
         delete safe.openaiApiKey;
         return JSON.stringify(safe, null, 2);
+      },
+    },
+
+    // ═══════════════════════════════════════════════════════════
+    // Phase 2: Write tools
+    // ═══════════════════════════════════════════════════════════
+
+    // ── create_document ───────────────────────────────────────
+    {
+      definition: {
+        name: "create_document",
+        description:
+          "Create a new document in a collection. Returns the created document. Always creates as draft.",
+        input_schema: {
+          type: "object",
+          properties: {
+            collection: { type: "string", description: "Collection name (e.g. 'posts', 'pages')" },
+            slug: { type: "string", description: "URL slug for the document (lowercase, hyphens). If omitted, generated from title." },
+            data: {
+              type: "object",
+              description: "Document fields as key-value pairs. Must match the collection schema. E.g. { title: '...', body: '...', tags: ['a','b'] }",
+            },
+          },
+          required: ["collection", "data"],
+        },
+      },
+      handler: async (input) => {
+        const collection = String(input.collection);
+        const data = (input.data ?? {}) as Record<string, unknown>;
+
+        // Generate slug from title if not provided
+        let slug = input.slug ? String(input.slug) : "";
+        if (!slug) {
+          const title = String(data.title ?? data.name ?? "untitled");
+          slug = title
+            .toLowerCase()
+            .replace(/[æ]/g, "ae").replace(/[ø]/g, "oe").replace(/[å]/g, "aa")
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-|-$/g, "")
+            .slice(0, 80);
+        }
+
+        const cms = await getAdminCms();
+        const config = await getAdminConfig();
+        const col = config.collections.find((c) => c.name === collection);
+        if (!col) return `Error: Collection "${collection}" not found.`;
+
+        // Check slug doesn't already exist
+        const existing = await cms.content.findBySlug(collection, slug).catch(() => null);
+        if (existing) return `Error: Document with slug "${slug}" already exists in ${collection}.`;
+
+        const doc = await cms.content.create(collection, {
+          slug,
+          data,
+          status: "draft",
+        });
+
+        return `Created "${data.title ?? slug}" in ${collection} (draft).\nSlug: ${doc.slug}\nStatus: draft`;
+      },
+    },
+
+    // ── update_document ───────────────────────────────────────
+    {
+      definition: {
+        name: "update_document",
+        description:
+          "Update fields on an existing document. Only the provided fields are changed; others are preserved.",
+        input_schema: {
+          type: "object",
+          properties: {
+            collection: { type: "string", description: "Collection name" },
+            slug: { type: "string", description: "Document slug" },
+            data: {
+              type: "object",
+              description: "Fields to update. Only include fields you want to change.",
+            },
+          },
+          required: ["collection", "slug", "data"],
+        },
+      },
+      handler: async (input) => {
+        const collection = String(input.collection);
+        const slug = String(input.slug);
+        const newData = (input.data ?? {}) as Record<string, unknown>;
+
+        const cms = await getAdminCms();
+        const doc = await cms.content.findBySlug(collection, slug);
+        if (!doc) return `Error: Document not found: ${collection}/${slug}`;
+
+        // Save revision before updating
+        await saveRevision(collection, doc).catch(() => {});
+
+        const mergedData = { ...doc.data, ...newData };
+        await cms.content.update(collection, doc.id, { data: mergedData });
+
+        const changedFields = Object.keys(newData).join(", ");
+        return `Updated "${doc.data.title ?? slug}" in ${collection}.\nChanged fields: ${changedFields}`;
+      },
+    },
+
+    // ── publish_document ──────────────────────────────────────
+    {
+      definition: {
+        name: "publish_document",
+        description: "Publish a draft document (change status from draft to published).",
+        input_schema: {
+          type: "object",
+          properties: {
+            collection: { type: "string", description: "Collection name" },
+            slug: { type: "string", description: "Document slug" },
+          },
+          required: ["collection", "slug"],
+        },
+      },
+      handler: async (input) => {
+        const collection = String(input.collection);
+        const slug = String(input.slug);
+
+        const cms = await getAdminCms();
+        const doc = await cms.content.findBySlug(collection, slug);
+        if (!doc) return `Error: Document not found: ${collection}/${slug}`;
+        if (doc.status === "published") return `"${doc.data.title ?? slug}" is already published.`;
+
+        await saveRevision(collection, doc).catch(() => {});
+        await cms.content.update(collection, doc.id, { status: "published" });
+
+        return `Published "${doc.data.title ?? slug}" in ${collection}.`;
+      },
+    },
+
+    // ── unpublish_document ────────────────────────────────────
+    {
+      definition: {
+        name: "unpublish_document",
+        description: "Unpublish a document (change status from published to draft).",
+        input_schema: {
+          type: "object",
+          properties: {
+            collection: { type: "string", description: "Collection name" },
+            slug: { type: "string", description: "Document slug" },
+          },
+          required: ["collection", "slug"],
+        },
+      },
+      handler: async (input) => {
+        const collection = String(input.collection);
+        const slug = String(input.slug);
+
+        const cms = await getAdminCms();
+        const doc = await cms.content.findBySlug(collection, slug);
+        if (!doc) return `Error: Document not found: ${collection}/${slug}`;
+        if (doc.status === "draft") return `"${doc.data.title ?? slug}" is already a draft.`;
+
+        await saveRevision(collection, doc).catch(() => {});
+        await cms.content.update(collection, doc.id, { status: "draft" });
+
+        return `Unpublished "${doc.data.title ?? slug}" — now a draft.`;
+      },
+    },
+
+    // ── trash_document ────────────────────────────────────────
+    {
+      definition: {
+        name: "trash_document",
+        description:
+          "Move a document to trash. DESTRUCTIVE — only call after user confirms. The document can be restored from the Trash page.",
+        input_schema: {
+          type: "object",
+          properties: {
+            collection: { type: "string", description: "Collection name" },
+            slug: { type: "string", description: "Document slug" },
+          },
+          required: ["collection", "slug"],
+        },
+      },
+      handler: async (input) => {
+        const collection = String(input.collection);
+        const slug = String(input.slug);
+
+        const cms = await getAdminCms();
+        const doc = await cms.content.findBySlug(collection, slug);
+        if (!doc) return `Error: Document not found: ${collection}/${slug}`;
+
+        await saveRevision(collection, doc).catch(() => {});
+        await cms.content.update(collection, doc.id, {
+          status: "trashed" as any,
+          data: { ...doc.data, _trashedAt: new Date().toISOString() },
+        });
+
+        return `Trashed "${doc.data.title ?? slug}" from ${collection}. It can be restored from the Trash page.`;
+      },
+    },
+
+    // ── generate_content ──────────────────────────────────────
+    {
+      definition: {
+        name: "generate_content",
+        description:
+          "Generate AI content for a specific field on a document. Uses the site's AI model to write content based on a prompt.",
+        input_schema: {
+          type: "object",
+          properties: {
+            collection: { type: "string", description: "Collection name" },
+            slug: { type: "string", description: "Document slug" },
+            field: { type: "string", description: "Field name to generate content for (e.g. 'body', 'excerpt', 'description')" },
+            prompt: { type: "string", description: "Instructions for what to generate" },
+          },
+          required: ["collection", "slug", "field", "prompt"],
+        },
+      },
+      handler: async (input) => {
+        const collection = String(input.collection);
+        const slug = String(input.slug);
+        const field = String(input.field);
+        const prompt = String(input.prompt);
+
+        const cms = await getAdminCms();
+        const doc = await cms.content.findBySlug(collection, slug);
+        if (!doc) return `Error: Document not found: ${collection}/${slug}`;
+
+        // Use the existing AI chat endpoint internally
+        const { getApiKey } = await import("@/lib/ai-config");
+        const Anthropic = (await import("@anthropic-ai/sdk")).default;
+        const apiKey = await getApiKey("anthropic");
+        if (!apiKey) return "Error: Anthropic API key not configured.";
+
+        const client = new Anthropic({ apiKey });
+        const config = await getAdminConfig();
+        const col = config.collections.find((c) => c.name === collection);
+        const fieldDef = col?.fields?.find((f: any) => f.name === field) as any;
+        const fieldType = fieldDef?.type ?? "text";
+
+        let constraint = "";
+        if (fieldType === "text") constraint = "Output a single concise line. No markdown.";
+        else if (fieldType === "textarea") constraint = "Output a short paragraph. No markdown headings.";
+        else constraint = "Markdown formatting is allowed.";
+
+        const response = await client.messages.create({
+          model: "claude-sonnet-4-6",
+          max_tokens: 2048,
+          system: `You are a content writer. Generate content for the "${fieldDef?.label ?? field}" field. ${constraint}\nExisting document: ${JSON.stringify(doc.data, null, 2)}`,
+          messages: [{ role: "user", content: prompt }],
+        });
+
+        const generated = response.content
+          .filter((b: any) => b.type === "text")
+          .map((b: any) => b.text)
+          .join("");
+
+        // Save to document
+        await saveRevision(collection, doc).catch(() => {});
+        await cms.content.update(collection, doc.id, {
+          data: { ...doc.data, [field]: generated },
+        });
+
+        const preview = generated.length > 300 ? generated.slice(0, 300) + "…" : generated;
+        return `Generated content for "${field}" on "${doc.data.title ?? slug}".\n\nPreview:\n${preview}`;
+      },
+    },
+
+    // ── rewrite_field ─────────────────────────────────────────
+    {
+      definition: {
+        name: "rewrite_field",
+        description:
+          "Rewrite an existing field on a document with AI, based on an instruction (e.g. 'make it shorter', 'translate to English', 'more professional tone').",
+        input_schema: {
+          type: "object",
+          properties: {
+            collection: { type: "string", description: "Collection name" },
+            slug: { type: "string", description: "Document slug" },
+            field: { type: "string", description: "Field name to rewrite" },
+            instruction: { type: "string", description: "How to rewrite (e.g. 'make it shorter', 'translate to Danish')" },
+          },
+          required: ["collection", "slug", "field", "instruction"],
+        },
+      },
+      handler: async (input) => {
+        const collection = String(input.collection);
+        const slug = String(input.slug);
+        const field = String(input.field);
+        const instruction = String(input.instruction);
+
+        const cms = await getAdminCms();
+        const doc = await cms.content.findBySlug(collection, slug);
+        if (!doc) return `Error: Document not found: ${collection}/${slug}`;
+
+        const currentValue = doc.data[field];
+        if (!currentValue) return `Error: Field "${field}" is empty on ${collection}/${slug}.`;
+
+        const { getApiKey } = await import("@/lib/ai-config");
+        const Anthropic = (await import("@anthropic-ai/sdk")).default;
+        const apiKey = await getApiKey("anthropic");
+        if (!apiKey) return "Error: Anthropic API key not configured.";
+
+        const client = new Anthropic({ apiKey });
+        const response = await client.messages.create({
+          model: "claude-sonnet-4-6",
+          max_tokens: 2048,
+          system: "You are a content rewriter. Output ONLY the rewritten content. No preamble, no explanation.",
+          messages: [{
+            role: "user",
+            content: `Rewrite this content. Instruction: ${instruction}\n\nOriginal:\n${String(currentValue)}`,
+          }],
+        });
+
+        const rewritten = response.content
+          .filter((b: any) => b.type === "text")
+          .map((b: any) => b.text)
+          .join("");
+
+        await saveRevision(collection, doc).catch(() => {});
+        await cms.content.update(collection, doc.id, {
+          data: { ...doc.data, [field]: rewritten },
+        });
+
+        const preview = rewritten.length > 300 ? rewritten.slice(0, 300) + "…" : rewritten;
+        return `Rewrote "${field}" on "${doc.data.title ?? slug}".\n\nNew content:\n${preview}`;
       },
     },
   ];
