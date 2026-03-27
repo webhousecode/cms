@@ -798,10 +798,20 @@ interface Props {
   readOnly?: boolean;
 }
 
+// Module-level cache: survives unmount/remount from tab navigation.
+// Keyed by collection/slug, stores the latest saved doc state.
+const docStateCache = new Map<string, DocSnapshot>();
+
 export function DocumentEditor({ collection, colConfig, blocksConfig = [], locales = [], defaultLocale = "en", initialDoc, translations = [], previewSiteUrl, previewInIframe, backHref, readOnly = false }: Props) {
   const PREVIEW_SITE_URL = previewSiteUrl ?? PREVIEW_SITE_URL_DEFAULT;
   const PREVIEW_IN_IFRAME = previewInIframe ?? PREVIEW_IN_IFRAME_DEFAULT;
-  const [doc, setDoc] = useState(() => {
+  const cacheKey = `${collection}/${initialDoc.slug}`;
+  const [doc, setDocRaw] = useState(() => {
+    // Prefer cached state over server-provided initialDoc (survives tab navigation)
+    const cached = docStateCache.get(cacheKey);
+    if (cached && cached.updatedAt >= initialDoc.updatedAt) {
+      return cached;
+    }
     // Default empty date fields to today
     const today = new Date().toISOString().split("T")[0];
     const data = { ...initialDoc.data };
@@ -812,6 +822,14 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
     }
     return { ...initialDoc, data };
   });
+  // Wrap setDoc to also update the cache
+  const setDoc = useCallback((update: DocSnapshot | ((prev: DocSnapshot) => DocSnapshot)) => {
+    setDocRaw((prev) => {
+      const next = typeof update === "function" ? update(prev) : update;
+      docStateCache.set(`${collection}/${next.slug}`, next);
+      return next;
+    });
+  }, [collection]);
   const [dirty, setDirty] = useState(false);
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState<Date | null>(null);
@@ -902,9 +920,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
       }
       setDirty(false);
       setSavedAt(new Date());
-      // Note: NO router.refresh() — we already have the updated doc via setDoc(updated).
-      // router.refresh() triggers server re-fetch, and combined with preview-build
-      // writing to dist/, causes Fast Refresh which remounts the editor and loses state.
+      startTransition(() => router.refresh());
       if (nextStatus === "published" && doc.status !== "published") {
         toast.success("Published", { description: doc.slug });
       } else if (nextStatus === "draft" && doc.status === "published") {
