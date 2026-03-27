@@ -76,7 +76,9 @@ export default function MediaPage() {
   const [sortBy, setSortBy] = useState<"newest" | "oldest" | "name" | "size">("newest");
   const [aiFilter, setAiFilter] = useState<"" | "analyzed" | "not-analyzed">("");
   const [aiAnalyzedSet, setAiAnalyzedSet] = useState<Set<string>>(new Set());
-  const [aiMetaMap, setAiMetaMap] = useState<Record<string, { caption?: string; alt?: string; tags?: string[] }>>({});
+  const [aiMetaMap, setAiMetaMap] = useState<Record<string, { caption?: string; alt?: string; aiTags?: string[]; userTags?: string[] }>>({});
+  const [allTags, setAllTags] = useState<{ tag: string; count: number }[]>([]);
+  const [tagFilter, setTagFilter] = useState("");
   const [showBatchAnalyze, setShowBatchAnalyze] = useState(false);
   const [selecting, setSelecting] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -115,11 +117,20 @@ export default function MediaPage() {
     } catch { /* ignore */ }
   }, []);
 
+  const loadTags = useCallback(async () => {
+    try {
+      const res = await fetch("/api/media/tags");
+      const data = await res.json();
+      setAllTags(data);
+    } catch { /* ignore */ }
+  }, []);
+
   useEffect(() => {
     loadFiles();
     loadUsage();
     loadAiAnalyzed();
-  }, [loadFiles, loadUsage, loadAiAnalyzed]);
+    loadTags();
+  }, [loadFiles, loadUsage, loadAiAnalyzed, loadTags]);
 
   /* ── Derived state ────────────────────────────────────────── */
   const folders = Array.from(new Set(allFiles.map((f) => f.folder).filter(Boolean))).sort();
@@ -127,25 +138,28 @@ export default function MediaPage() {
   const filtered = allFiles.filter((f) => {
     if (folder !== "" && f.folder !== folder) return false;
     if (typeFilter && f.mediaType !== typeFilter) return false;
+    const aiKey = f.folder ? `${f.folder}/${f.name}` : f.name;
     if (aiFilter) {
-      const aiKey = f.folder ? `${f.folder}/${f.name}` : f.name;
       const isAnalyzed = aiAnalyzedSet.has(aiKey);
       if (aiFilter === "analyzed" && !isAnalyzed) return false;
       if (aiFilter === "not-analyzed" && isAnalyzed) return false;
     }
+    if (tagFilter) {
+      const ai = aiMetaMap[aiKey];
+      if (!ai?.userTags?.includes(tagFilter)) return false;
+    }
     if (query) {
       const q = query.toLowerCase();
-      // Also try matching without extension (e.g. "IMG_7569.JPG" matches "IMG_7569-a3x2.JPG")
       const qNoExt = q.replace(/\.[^.]+$/, "");
       const fLower = f.name.toLowerCase();
       if (fLower.includes(q) || fLower.includes(qNoExt) || f.folder.toLowerCase().includes(q)) return true;
-      // Search in AI metadata (caption, alt, tags)
-      const aiKey = f.folder ? `${f.folder}/${f.name}` : f.name;
+      // Search in AI + user metadata
       const ai = aiMetaMap[aiKey];
       if (ai) {
         if (ai.caption?.toLowerCase().includes(q)) return true;
         if (ai.alt?.toLowerCase().includes(q)) return true;
-        if (ai.tags?.some((t) => t.toLowerCase().includes(q))) return true;
+        if (ai.aiTags?.some((t) => t.toLowerCase().includes(q))) return true;
+        if (ai.userTags?.some((t) => t.toLowerCase().includes(q))) return true;
       }
       return false;
     }
@@ -169,7 +183,7 @@ export default function MediaPage() {
   const paginated = sorted.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   /* Reset page when filters change */
-  useEffect(() => { setPage(1); }, [folder, query, view, sortBy]);
+  useEffect(() => { setPage(1); }, [folder, query, view, sortBy, tagFilter]);
 
   /* ── Upload ───────────────────────────────────────────────── */
   async function uploadFiles(fileList: FileList | null | File[]) {
@@ -634,6 +648,47 @@ export default function MediaPage() {
             })}
           </div>
 
+          {/* Tags filter */}
+          {allTags.length > 0 && (
+            <div style={{ marginTop: "0.75rem", borderTop: "1px solid var(--border)", paddingTop: "0.75rem" }}>
+              <p style={{ fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted-foreground)", marginBottom: "0.375rem" }}>
+                Tags
+              </p>
+              <button
+                type="button"
+                onClick={() => setTagFilter("")}
+                style={{
+                  display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%",
+                  padding: "0.3rem 0.5rem", borderRadius: "5px", border: "none", cursor: "pointer",
+                  background: tagFilter === "" ? "var(--secondary)" : "transparent",
+                  color: tagFilter === "" ? "var(--foreground)" : "var(--muted-foreground)",
+                  fontSize: "0.8rem", marginBottom: "0.125rem",
+                }}
+                className="hover:bg-secondary/50"
+              >
+                <span>All</span>
+              </button>
+              {allTags.map((t) => (
+                <button
+                  key={t.tag}
+                  type="button"
+                  onClick={() => setTagFilter(tagFilter === t.tag ? "" : t.tag)}
+                  style={{
+                    display: "flex", alignItems: "center", justifyContent: "space-between", width: "100%",
+                    padding: "0.3rem 0.5rem", borderRadius: "5px", border: "none", cursor: "pointer",
+                    background: tagFilter === t.tag ? "var(--secondary)" : "transparent",
+                    color: tagFilter === t.tag ? "var(--foreground)" : "var(--muted-foreground)",
+                    fontSize: "0.8rem", marginBottom: "0.125rem",
+                  }}
+                  className="hover:bg-secondary/50"
+                >
+                  <span>{t.tag}</span>
+                  <span style={{ fontSize: "0.7rem", opacity: 0.6 }}>{t.count}</span>
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* Sort */}
           <div style={{ marginTop: "0.75rem", borderTop: "1px solid var(--border)", paddingTop: "0.75rem" }}>
             <p style={{ fontSize: "0.65rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted-foreground)", marginBottom: "0.375rem" }}>
@@ -757,10 +812,11 @@ export default function MediaPage() {
           files={imageFiles}
           index={lightboxIndex}
           onNavigate={setLightboxIndex}
-          onClose={() => { setLightboxIndex(null); loadAiAnalyzed(); }}
+          onClose={() => { setLightboxIndex(null); loadAiAnalyzed(); loadTags(); }}
           onCopy={copyUrl}
           copied={copied}
           onDelete={readOnly ? () => {} : handleDelete}
+          onTagsChanged={loadTags}
         />
       )}
 
@@ -1090,7 +1146,7 @@ function ListView({ files, copied, deleting, usageMap, aiAnalyzedSet, onCopy, on
 }
 
 /* ─── Lightbox ───────────────────────────────────────────────── */
-function Lightbox({ files, index, onNavigate, onClose, onCopy, copied, onDelete }: {
+function Lightbox({ files, index, onNavigate, onClose, onCopy, copied, onDelete, onTagsChanged }: {
   files: MediaFile[];
   index: number;
   onNavigate: (i: number) => void;
@@ -1098,6 +1154,7 @@ function Lightbox({ files, index, onNavigate, onClose, onCopy, copied, onDelete 
   onCopy: (url: string) => void;
   copied: string | null;
   onDelete: (file: MediaFile) => void;
+  onTagsChanged?: () => void;
 }) {
   const file = files[index];
   const hasPrev = index > 0;
@@ -1210,6 +1267,7 @@ function Lightbox({ files, index, onNavigate, onClose, onCopy, copied, onDelete 
             style={{ width: "300px", flexShrink: 0, borderLeft: "1px solid rgba(255,255,255,0.08)", display: "flex", flexDirection: "column", overflowY: "auto" }}
           >
             <LightboxAIPanel imageUrl={file.url} />
+            <LightboxTagPanel fileKey={file.folder ? `${file.folder}/${file.name}` : file.name} onTagsChanged={onTagsChanged} />
             {file.isImage && <LightboxExifPanel imageUrl={file.url} />}
           </div>
         )}
@@ -1364,6 +1422,102 @@ function LightboxAIPanel({ imageUrl }: { imageUrl: string }) {
             </p>
           )}
         </div>
+      )}
+    </div>
+  );
+}
+
+/* ─── Lightbox Tag Panel ─────────────────────────────────────── */
+function LightboxTagPanel({ fileKey, onTagsChanged }: { fileKey: string; onTagsChanged?: () => void }) {
+  const [tags, setTags] = useState<string[]>([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLoading(true);
+    setInput("");
+    setConfirmRemove(null);
+    // Fetch current tags from media meta
+    fetch(`/api/media/ai-meta?file=/uploads/${encodeURIComponent(fileKey)}`)
+      .then((r) => r.json())
+      .then((data) => {
+        // userTags are stored as "tags" in media-meta
+        setTags(data?.userTags ?? []);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, [fileKey]);
+
+  async function saveTags(newTags: string[]) {
+    setTags(newTags);
+    await fetch("/api/media/tags", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ key: fileKey, tags: newTags }),
+    });
+    onTagsChanged?.();
+  }
+
+  function addTag() {
+    const tag = input.trim().toLowerCase();
+    if (!tag || tags.includes(tag)) { setInput(""); return; }
+    saveTags([...tags, tag]);
+    setInput("");
+  }
+
+  function removeTag(tag: string) {
+    saveTags(tags.filter((t) => t !== tag));
+    setConfirmRemove(null);
+  }
+
+  return (
+    <div style={{ padding: "1rem 1.25rem", borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+      <p style={{ fontSize: "0.7rem", fontWeight: 600, color: "rgba(255,255,255,0.5)", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: "0.75rem" }}>
+        Tags
+      </p>
+      {loading ? null : (
+        <>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: "4px", marginBottom: tags.length > 0 ? "0.625rem" : 0 }}>
+            {tags.map((tag) => (
+              <span key={tag} style={{ fontSize: "0.7rem", padding: "2px 6px", borderRadius: "9999px", background: "rgba(247,187,46,0.12)", border: "1px solid rgba(247,187,46,0.25)", color: "rgba(255,255,255,0.85)", display: "inline-flex", alignItems: "center", gap: "4px" }}>
+                {tag}
+                {confirmRemove === tag ? (
+                  <>
+                    <span style={{ fontSize: "0.6rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
+                    <button onClick={() => removeTag(tag)}
+                      style={{ fontSize: "0.55rem", padding: "0.05rem 0.25rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
+                    <button onClick={() => setConfirmRemove(null)}
+                      style={{ fontSize: "0.55rem", padding: "0.05rem 0.25rem", borderRadius: "3px", border: "1px solid rgba(255,255,255,0.2)", background: "transparent", color: "rgba(255,255,255,0.6)", cursor: "pointer", lineHeight: 1 }}>No</button>
+                  </>
+                ) : (
+                  <button onClick={() => setConfirmRemove(tag)}
+                    style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.3)", padding: 0, fontSize: "0.75rem", lineHeight: 1 }}>&times;</button>
+                )}
+              </span>
+            ))}
+          </div>
+          <div style={{ display: "flex", gap: "0.25rem" }}>
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value.replace(/[^a-zA-Z0-9æøåÆØÅäöüÄÖÜ_ -]/g, ""))}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTag(); } }}
+              placeholder="Add tag…"
+              style={{
+                flex: 1, padding: "0.25rem 0.4rem", borderRadius: "5px",
+                border: "1px solid rgba(255,255,255,0.12)", background: "rgba(255,255,255,0.05)",
+                color: "rgba(255,255,255,0.85)", fontSize: "0.75rem", outline: "none",
+              }}
+            />
+            {input.trim() && (
+              <button onClick={addTag}
+                style={{ padding: "0.25rem 0.5rem", borderRadius: "5px", border: "none", background: "#F7BB2E", color: "#0D0D0D", fontSize: "0.7rem", fontWeight: 600, cursor: "pointer" }}>
+                +
+              </button>
+            )}
+          </div>
+        </>
       )}
     </div>
   );

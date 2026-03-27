@@ -22,13 +22,24 @@ export async function GET(request: Request) {
 
     const url = new URL(request.url);
     if (url.searchParams.get("meta") === "1") {
-      const metaMap: Record<string, { caption?: string; alt?: string; tags?: string[] }> = {};
+      const metaMap: Record<string, { caption?: string; alt?: string; aiTags?: string[]; userTags?: string[] }> = {};
+      // Include AI metadata from analyzed files
       for (const m of analyzed) {
         metaMap[m.key as string] = {
           caption: (m.aiCaption as string) || undefined,
           alt: (m.aiAlt as string) || undefined,
-          tags: (m.aiTags as string[]) || undefined,
+          aiTags: (m.aiTags as string[]) || undefined,
+          userTags: (m.tags as string[]) || undefined,
         };
+      }
+      // Also include user tags from non-analyzed files
+      for (const m of meta) {
+        if (!m.aiAnalyzedAt && m.tags && (m.tags as string[]).length > 0) {
+          metaMap[m.key as string] = {
+            ...metaMap[m.key as string],
+            userTags: m.tags as string[],
+          };
+        }
       }
       return NextResponse.json({ keys, meta: metaMap });
     }

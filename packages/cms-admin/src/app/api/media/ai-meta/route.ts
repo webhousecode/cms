@@ -21,14 +21,15 @@ export async function GET(req: NextRequest) {
     const key = file.replace(/^\/(api\/)?uploads\//, "");
 
     const entry = meta.find((m) => m.key === key);
-    if (!entry || !entry.aiAnalyzedAt) return NextResponse.json(null);
+    if (!entry) return NextResponse.json(null);
 
     return NextResponse.json({
       caption: entry.aiCaption ?? null,
       alt: entry.aiAlt ?? null,
       tags: entry.aiTags ?? [],
-      analyzedAt: entry.aiAnalyzedAt,
+      analyzedAt: entry.aiAnalyzedAt ?? null,
       provider: entry.aiProvider ?? null,
+      userTags: entry.tags ?? [],
     });
   } catch {
     return NextResponse.json(null);

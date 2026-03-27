@@ -12,6 +12,8 @@ export interface MediaMeta {
   name: string;
   folder: string;
   status?: string;
+  // User-defined tags
+  tags?: string[];
   // AI analysis (from F103)
   aiCaption?: string;
   aiAlt?: string;
