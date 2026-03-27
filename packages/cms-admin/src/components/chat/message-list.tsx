@@ -92,7 +92,7 @@ function MessageBubble({ message }: { message: ChatMessageUI }) {
         alignItems: "flex-start",
       }}
     >
-      {/* Avatar */}
+      {/* Avatar — vertically centered with first line of text */}
       <div
         style={{
           width: "28px",
@@ -102,6 +102,7 @@ function MessageBubble({ message }: { message: ChatMessageUI }) {
           alignItems: "center",
           justifyContent: "center",
           flexShrink: 0,
+          marginTop: "-2px",
           backgroundColor: isUser ? "var(--primary)" : "var(--muted)",
           color: isUser ? "var(--primary-foreground)" : "var(--foreground)",
         }}
@@ -198,6 +199,7 @@ export function MessageList({ messages, isThinking }: MessageListProps) {
                 alignItems: "center",
                 justifyContent: "center",
                 flexShrink: 0,
+                marginTop: "-2px",
                 backgroundColor: "var(--muted)",
                 color: "var(--foreground)",
               }}
