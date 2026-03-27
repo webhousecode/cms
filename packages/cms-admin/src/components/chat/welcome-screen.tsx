@@ -25,8 +25,8 @@ const SUGGESTIONS = [
   },
   {
     icon: Settings,
-    label: "View schema",
-    message: "Show me the full schema for all collections — fields, types, and requirements.",
+    label: "Site info",
+    message: "Tell me everything about my site — collections, fields, settings, deploy config, and content stats.",
   },
   {
     icon: Wrench,
