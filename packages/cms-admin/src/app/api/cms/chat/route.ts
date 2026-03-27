@@ -138,6 +138,13 @@ export async function POST(request: NextRequest) {
               result = "Showing edit form for the user.";
             }
 
+            // Check for artifact (interactive HTML)
+            if (result.startsWith("__ARTIFACT__")) {
+              const artifactJson = result.slice("__ARTIFACT__".length);
+              sendEvent("artifact", JSON.parse(artifactJson));
+              result = "Interactive generated and displayed.";
+            }
+
             sendEvent("tool_result", {
               tool: block.name,
               result: result.slice(0, 3000),

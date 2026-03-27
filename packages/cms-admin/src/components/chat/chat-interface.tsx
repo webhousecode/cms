@@ -201,6 +201,15 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
         );
         break;
 
+      case "artifact":
+        setIsThinking(false);
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === assistantId ? { ...m, artifact: data } : m
+          )
+        );
+        break;
+
       case "error":
         setMessages((prev) =>
           prev.map((m) =>
