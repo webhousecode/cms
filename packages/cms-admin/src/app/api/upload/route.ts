@@ -89,13 +89,25 @@ export async function POST(req: NextRequest) {
 
     // Extract text from PDF/DOCX for chat AI
     let extractedText: string | null = null;
-    if (/\.(pdf|docx?)$/i.test(filename)) {
+    if (/\.pdf$/i.test(filename)) {
       try {
-        const { extractDocumentText } = await import("@/lib/document-extractor");
-        extractedText = await extractDocumentText(buffer, filename);
-        console.log(`[upload] Text extraction for ${filename}: ${extractedText ? `${extractedText.length} chars` : "null (no text found)"}`);
-      } catch (extractErr) {
-        console.error(`[upload] Text extraction failed for ${filename}:`, extractErr instanceof Error ? extractErr.message : extractErr);
+        const pdfParse = require("pdf-parse");
+        const result = await pdfParse(buffer);
+        const text = result.text?.trim();
+        if (text && text.length >= 10) extractedText = text.slice(0, 50_000);
+        console.log(`[upload] PDF extraction: ${extractedText ? `${extractedText.length} chars` : "no text"}`);
+      } catch (e) {
+        console.error(`[upload] PDF extraction failed:`, e instanceof Error ? e.message : e);
+      }
+    } else if (/\.docx?$/i.test(filename)) {
+      try {
+        const mammoth = require("mammoth");
+        const result = await mammoth.extractRawText({ buffer });
+        const text = result.value?.trim();
+        if (text) extractedText = text.slice(0, 50_000);
+        console.log(`[upload] DOCX extraction: ${extractedText ? `${extractedText.length} chars` : "no text"}`);
+      } catch (e) {
+        console.error(`[upload] DOCX extraction failed:`, e instanceof Error ? e.message : e);
       }
     }
 
