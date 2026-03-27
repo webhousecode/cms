@@ -331,7 +331,7 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
           {/* Drawer */}
           <div
             style={{
-              position: "fixed", top: 0, left: 0, bottom: 0, width: "300px", zIndex: 999,
+              position: "fixed", top: 0, left: 0, bottom: 0, width: "400px", zIndex: 999,
               background: "var(--card)", borderRight: "1px solid var(--border)",
               boxShadow: "4px 0 20px rgba(0,0,0,0.3)",
               display: "flex", flexDirection: "column",
