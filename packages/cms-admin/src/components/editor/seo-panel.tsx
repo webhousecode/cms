@@ -20,8 +20,10 @@ export function SeoPanel({ doc, onUpdate, onClose }: Props) {
   const [keywordInput, setKeywordInput] = useState("");
   const [ogImage, setOgImage] = useState(seo.ogImage ?? "");
   const [robots, setRobots] = useState(seo.robots ?? "index,follow");
+  const [lastOptimized, setLastOptimized] = useState(seo.lastOptimized ?? "");
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [optimizing, setOptimizing] = useState(false);
+  const [confirmReoptimize, setConfirmReoptimize] = useState(false);
   const [score, setScore] = useState<SeoScoreResult | null>(null);
 
   // Escape to close
@@ -51,6 +53,7 @@ export function SeoPanel({ doc, onUpdate, onClose }: Props) {
         robots,
         score: score?.score,
         scoreDetails: score?.details,
+        lastOptimized: lastOptimized || undefined,
       });
     }, 300);
     return () => clearTimeout(timer);
@@ -91,7 +94,9 @@ Return ONLY the JSON, no explanation.`,
           if (parsed.metaTitle) setMetaTitle(parsed.metaTitle);
           if (parsed.metaDescription) setMetaDesc(parsed.metaDescription);
           if (parsed.keywords?.length) setKeywords(parsed.keywords);
-          toast.success("SEO optimized by AI");
+          setLastOptimized(new Date().toISOString());
+          setConfirmReoptimize(false);
+          toast.success("SEO optimized by AI — save document to persist");
         } catch {
           toast.error("AI returned invalid JSON");
         }
@@ -200,16 +205,60 @@ Return ONLY the JSON, no explanation.`,
         </div>
 
         {/* AI Optimize */}
-        <button type="button" onClick={aiOptimize} disabled={optimizing}
-          style={{
-            display: "flex", alignItems: "center", justifyContent: "center", gap: "0.375rem",
-            padding: "0.5rem 1rem", borderRadius: "6px", border: "none",
-            background: "#F7BB2E", color: "#0D0D0D", cursor: optimizing ? "wait" : "pointer",
-            fontSize: "0.8rem", fontWeight: 600,
-          }}>
-          {optimizing ? <Loader2 style={{ width: 14, height: 14, animation: "spin 1s linear infinite" }} /> : <Sparkles style={{ width: 14, height: 14 }} />}
-          {optimizing ? "Optimizing..." : "AI Optimize"}
-        </button>
+        {lastOptimized && !confirmReoptimize ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem" }}>
+            <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: 0 }}>
+              Optimized: {new Date(lastOptimized).toLocaleDateString()}
+            </p>
+            <button type="button" onClick={() => setConfirmReoptimize(true)}
+              style={{
+                display: "flex", alignItems: "center", justifyContent: "center", gap: "0.375rem",
+                padding: "0.4rem 0.75rem", borderRadius: "6px",
+                border: "1px solid var(--border)", background: "transparent",
+                color: "var(--foreground)", cursor: "pointer",
+                fontSize: "0.75rem", fontWeight: 500,
+              }}>
+              <Sparkles style={{ width: 12, height: 12 }} /> Re-optimize with AI
+            </button>
+          </div>
+        ) : confirmReoptimize ? (
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem" }}>
+            <p style={{ fontSize: "0.72rem", color: "#F7BB2E", margin: 0, fontWeight: 500 }}>
+              This will overwrite existing SEO fields.
+            </p>
+            <div style={{ display: "flex", gap: "0.375rem" }}>
+              <button type="button" onClick={aiOptimize} disabled={optimizing}
+                style={{
+                  display: "flex", alignItems: "center", gap: "0.25rem",
+                  padding: "0.3rem 0.6rem", borderRadius: "5px", border: "none",
+                  background: "#F7BB2E", color: "#0D0D0D", cursor: "pointer",
+                  fontSize: "0.7rem", fontWeight: 600,
+                }}>
+                {optimizing ? <Loader2 style={{ width: 10, height: 10, animation: "spin 1s linear infinite" }} /> : null}
+                Yes, re-optimize
+              </button>
+              <button type="button" onClick={() => setConfirmReoptimize(false)}
+                style={{
+                  padding: "0.3rem 0.6rem", borderRadius: "5px",
+                  border: "1px solid var(--border)", background: "transparent",
+                  color: "var(--foreground)", cursor: "pointer", fontSize: "0.7rem",
+                }}>
+                Cancel
+              </button>
+            </div>
+          </div>
+        ) : (
+          <button type="button" onClick={aiOptimize} disabled={optimizing}
+            style={{
+              display: "flex", alignItems: "center", justifyContent: "center", gap: "0.375rem",
+              padding: "0.5rem 1rem", borderRadius: "6px", border: "none",
+              background: "#F7BB2E", color: "#0D0D0D", cursor: optimizing ? "wait" : "pointer",
+              fontSize: "0.8rem", fontWeight: 600,
+            }}>
+            {optimizing ? <Loader2 style={{ width: 14, height: 14, animation: "spin 1s linear infinite" }} /> : <Sparkles style={{ width: 14, height: 14 }} />}
+            {optimizing ? "Optimizing..." : "AI Optimize"}
+          </button>
+        )}
 
         {/* Advanced */}
         <button type="button" onClick={() => setShowAdvanced(!showAdvanced)}
