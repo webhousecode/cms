@@ -192,6 +192,15 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
         );
         break;
 
+      case "form":
+        setIsThinking(false);
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === assistantId ? { ...m, inlineForm: data } : m
+          )
+        );
+        break;
+
       case "error":
         setMessages((prev) =>
           prev.map((m) =>

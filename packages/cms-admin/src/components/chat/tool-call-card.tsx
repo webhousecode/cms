@@ -21,6 +21,8 @@ const TOOL_META: Record<string, ToolMeta> = {
   // Media
   list_media:        { label: "Browsing media library" },
   search_media:      { label: "Searching media", icon: Search },
+  // Phase 3: Forms
+  show_edit_form:    { label: "Showing edit form", icon: Pencil },
   // Phase 2: Write
   create_document:   { label: "Creating document", icon: Plus },
   update_document:   { label: "Updating document", icon: Pencil },
