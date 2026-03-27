@@ -21,6 +21,13 @@ export function ChatInput({ onSend, disabled, placeholder, visible }: ChatInputP
     }
   }, [visible]);
 
+  // Re-focus when AI finishes (disabled goes from true → false)
+  useEffect(() => {
+    if (!disabled && visible) {
+      requestAnimationFrame(() => textareaRef.current?.focus());
+    }
+  }, [disabled, visible]);
+
   const handleSend = useCallback(() => {
     const trimmed = value.trim();
     if (!trimmed || disabled) return;
