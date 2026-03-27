@@ -798,9 +798,11 @@ interface Props {
   readOnly?: boolean;
 }
 
-// Module-level cache: survives unmount/remount from tab navigation.
-// Keyed by collection/slug, stores the latest saved doc state.
-const docStateCache = new Map<string, DocSnapshot>();
+// Global cache: survives unmount/remount from tab navigation + HMR.
+// Keyed by collection/slug, stores the latest doc state.
+const G = globalThis as unknown as { __docCache?: Map<string, DocSnapshot> };
+if (!G.__docCache) G.__docCache = new Map();
+const docStateCache = G.__docCache;
 
 export function DocumentEditor({ collection, colConfig, blocksConfig = [], locales = [], defaultLocale = "en", initialDoc, translations = [], previewSiteUrl, previewInIframe, backHref, readOnly = false }: Props) {
   const PREVIEW_SITE_URL = previewSiteUrl ?? PREVIEW_SITE_URL_DEFAULT;
