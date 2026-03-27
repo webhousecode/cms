@@ -16,14 +16,25 @@ export async function POST(req: NextRequest) {
 
   try {
     if (name.endsWith(".pdf")) {
-      // Use child_process to avoid Turbopack bundling issues with pdf-parse
-      const { execSync } = await import("node:child_process");
-      const text = execSync(
-        `node -e "const p=require('pdf-parse');const fs=require('fs');p(fs.readFileSync('/dev/stdin')).then(r=>process.stdout.write(r.text||''))"`,
-        { input: buffer, timeout: 10000, maxBuffer: 5 * 1024 * 1024, cwd: process.cwd() },
-      ).toString().trim();
+      // pdf-parse v1 is CJS — try multiple import strategies
+      let pdfParse: (buf: Buffer) => Promise<{ text?: string; numpages?: number }>;
+      try {
+        // Strategy 1: dynamic import (works in most bundlers)
+        const mod = await import("pdf-parse");
+        pdfParse = (mod as any).default ?? mod;
+      } catch {
+        try {
+          // Strategy 2: globalThis.require (Node.js runtime)
+          pdfParse = (globalThis as any).require("pdf-parse");
+        } catch {
+          return NextResponse.json({ text: null, reason: "pdf-parse not available" });
+        }
+      }
 
-      if (text.length < 10) {
+      const result = await pdfParse(buffer);
+      const text = result.text?.trim();
+
+      if (!text || text.length < 10) {
         return NextResponse.json({ text: null, reason: "No readable text found (possibly scanned/image PDF)" });
       }
       return NextResponse.json({ text: text.slice(0, 50_000) });
