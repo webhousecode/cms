@@ -2103,6 +2103,20 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
       calloutVariant: (ctx.editor?.isActive("callout")
         ? (ctx.editor?.getAttributes("callout").variant as string | undefined) ?? "info"
         : null) as string | null,
+      // Mark states for toolbar reactivity (v3: no auto-rerender on transaction)
+      isBold: ctx.editor?.isActive("bold") ?? false,
+      isItalic: ctx.editor?.isActive("italic") ?? false,
+      isStrike: ctx.editor?.isActive("strike") ?? false,
+      isCode: ctx.editor?.isActive("code") ?? false,
+      isBulletList: ctx.editor?.isActive("bulletList") ?? false,
+      isOrderedList: ctx.editor?.isActive("orderedList") ?? false,
+      isBlockquote: ctx.editor?.isActive("blockquote") ?? false,
+      isCodeBlock: ctx.editor?.isActive("codeBlock") ?? false,
+      isLink: ctx.editor?.isActive("link") ?? false,
+      isTable: ctx.editor?.isActive("table") ?? false,
+      headingLevel: (ctx.editor?.isActive("heading")
+        ? (ctx.editor?.getAttributes("heading").level as number) ?? 0
+        : 0) as number,
     }),
   });
 
@@ -2152,9 +2166,9 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
 
   function activeKey(): HeadingKey {
     if (!editor) return "paragraph";
-    if (editor.isActive("heading", { level: 1 })) return "h1";
-    if (editor.isActive("heading", { level: 2 })) return "h2";
-    if (editor.isActive("heading", { level: 3 })) return "h3";
+    if (toolbarState?.headingLevel === 1) return "h1";
+    if (toolbarState?.headingLevel === 2) return "h2";
+    if (toolbarState?.headingLevel === 3) return "h3";
     return "paragraph";
   }
 
@@ -2422,34 +2436,34 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
 
             <Sep />
 
-            {has("bold") && <Btn tooltip="Bold (⌘B)" active={editor.isActive("bold")}
+            {has("bold") && <Btn tooltip="Bold (⌘B)" active={toolbarState?.isBold ?? false}
               onClick={() => editor.chain().focus().toggleBold().run()}>
               <IconBold />
             </Btn>}
-            {has("italic") && <Btn tooltip="Italic (⌘I)" active={editor.isActive("italic")}
+            {has("italic") && <Btn tooltip="Italic (⌘I)" active={toolbarState?.isItalic ?? false}
               onClick={() => editor.chain().focus().toggleItalic().run()}>
               <IconItalic />
             </Btn>}
-            {has("strike") && <Btn tooltip="Strikethrough" active={editor.isActive("strike")}
+            {has("strike") && <Btn tooltip="Strikethrough" active={toolbarState?.isStrike ?? false}
               onClick={() => editor.chain().focus().toggleStrike().run()}>
               <IconStrikethrough />
             </Btn>}
-            {has("code") && <Btn tooltip="Inline code" active={editor.isActive("code")}
+            {has("code") && <Btn tooltip="Inline code" active={toolbarState?.isCode ?? false}
               onClick={() => editor.chain().focus().toggleCode().run()}>
               <IconCode />
             </Btn>}
 
             {(has("bold") || has("italic") || has("strike") || has("code")) && <Sep />}
 
-            {has("bulletList") && <Btn tooltip="Bullet list" active={editor.isActive("bulletList")}
+            {has("bulletList") && <Btn tooltip="Bullet list" active={toolbarState?.isBulletList ?? false}
               onClick={() => editor.chain().focus().toggleBulletList().run()}>
               <IconBulletList />
             </Btn>}
-            {has("orderedList") && <Btn tooltip="Numbered list" active={editor.isActive("orderedList")}
+            {has("orderedList") && <Btn tooltip="Numbered list" active={toolbarState?.isOrderedList ?? false}
               onClick={() => editor.chain().focus().toggleOrderedList().run()}>
               <IconNumberedList />
             </Btn>}
-            {has("blockquote") && <Btn tooltip="Blockquote" active={editor.isActive("blockquote")}
+            {has("blockquote") && <Btn tooltip="Blockquote" active={toolbarState?.isBlockquote ?? false}
               onClick={() => editor.chain().focus().toggleBlockquote().run()}>
               <IconBlockquote />
             </Btn>}
@@ -2462,7 +2476,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
 
             {/* Link */}
             {has("link") && <div style={{ position: "relative" }} ref={linkRef}>
-              <Btn tooltip="Link (⌘K)" active={editor.isActive("link")}
+              <Btn tooltip="Link (⌘K)" active={toolbarState?.isLink ?? false}
                 onClick={() => setLinkOpen(o => !o)}>
                 <IconLink />
               </Btn>
@@ -2477,7 +2491,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
             </div>}
 
             {/* Table */}
-            {has("table") && <Btn tooltip="Insert table" active={editor.isActive("table")}
+            {has("table") && <Btn tooltip="Insert table" active={toolbarState?.isTable ?? false}
               onClick={insertTable}>
               <IconTable />
             </Btn>}
