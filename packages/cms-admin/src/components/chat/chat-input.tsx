@@ -17,7 +17,6 @@ export function ChatInput({ onSend, disabled, placeholder, visible }: ChatInputP
   // Focus whenever the chat becomes visible
   useEffect(() => {
     if (visible) {
-      // Small delay to ensure display:none → flex has painted
       requestAnimationFrame(() => textareaRef.current?.focus());
     }
   }, [visible]);
@@ -27,7 +26,6 @@ export function ChatInput({ onSend, disabled, placeholder, visible }: ChatInputP
     if (!trimmed || disabled) return;
     onSend(trimmed);
     setValue("");
-    // Reset height
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
     }
@@ -48,7 +46,13 @@ export function ChatInput({ onSend, disabled, placeholder, visible }: ChatInputP
     const ta = textareaRef.current;
     if (!ta) return;
     ta.style.height = "auto";
-    ta.style.height = Math.min(ta.scrollHeight, 200) + "px";
+    const h = ta.scrollHeight;
+    // Only grow beyond 1 row if there's actual multi-line content
+    if (value.includes("\n") || h > 40) {
+      ta.style.height = Math.min(h, 200) + "px";
+    }
+    // Ensure scroll position is at top for single-line
+    ta.scrollTop = 0;
   }, [value]);
 
   // Focus on "/" shortcut
@@ -65,7 +69,8 @@ export function ChatInput({ onSend, disabled, placeholder, visible }: ChatInputP
   }, []);
 
   return (
-    <div style={{ padding: "12px 16px 16px", borderTop: "1px solid var(--border)" }}>
+    <div style={{ flexShrink: 0, padding: "12px 16px 16px", borderTop: "1px solid var(--border)", backgroundColor: "var(--background)" }}>
+      <style>{`.chat-textarea::placeholder { color: #888 !important; opacity: 1 !important; }`}</style>
       <div
         style={{
           maxWidth: "768px",
@@ -77,7 +82,6 @@ export function ChatInput({ onSend, disabled, placeholder, visible }: ChatInputP
           border: "1px solid var(--border)",
           borderRadius: "12px",
           padding: "8px 12px",
-          transition: "border-color 150ms",
         }}
       >
         <textarea
@@ -88,19 +92,20 @@ export function ChatInput({ onSend, disabled, placeholder, visible }: ChatInputP
           disabled={disabled}
           placeholder={placeholder ?? "Type a message... (/ to focus)"}
           rows={1}
-          className="text-foreground placeholder:text-foreground/40"
+          className="chat-textarea"
           style={{
             flex: 1,
             resize: "none",
             border: "none",
             outline: "none",
             backgroundColor: "transparent",
+            color: "#fafafa",
             fontSize: "0.875rem",
             lineHeight: 1.5,
             padding: "4px 0",
             fontFamily: "inherit",
             maxHeight: "200px",
-            caretColor: "var(--foreground)",
+            overflowY: value.includes("\n") ? "auto" : "hidden",
           }}
         />
         <button
