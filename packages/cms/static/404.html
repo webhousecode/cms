@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>404 — Page not found</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#0D0D0D;color:#a0a0a0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    display:flex;align-items:center;justify-content:center;min-height:100vh;padding:2rem;text-align:center}
+  .wrap{max-width:420px}
+  .logo{font-size:1.1rem;font-weight:600;color:#F7BB2E;letter-spacing:.02em;margin-bottom:2.5rem;
+    opacity:0;animation:fadeIn .8s .2s forwards}
+  .code{font-size:6rem;font-weight:700;color:#F7BB2E;line-height:1;
+    opacity:0;animation:fadeIn .6s forwards}
+  .title{font-size:1.25rem;font-weight:500;color:#e0e0e0;margin:.75rem 0 1.25rem;
+    opacity:0;animation:fadeIn .8s .1s forwards}
+  .hint{font-size:.85rem;line-height:1.6;color:#606060;
+    opacity:0;animation:fadeIn .8s .3s forwards}
+  .divider{width:40px;height:2px;background:#F7BB2E;margin:0 auto 1.5rem;border-radius:1px;
+    opacity:0;animation:fadeIn .8s .25s forwards,glow 3s 1s ease-in-out infinite}
+  @keyframes fadeIn{to{opacity:1}}
+  @keyframes glow{0%,100%{opacity:1;box-shadow:0 0 4px transparent}50%{opacity:.7;box-shadow:0 0 8px #F7BB2E40}}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="logo">webhouse.app</div>
+    <div class="code">404</div>
+    <div class="title">Page not found</div>
+    <div class="divider"></div>
+    <p class="hint">This page hasn't been built yet. Try rebuilding your site.</p>
+  </div>
+</body>
+</html>

@@ -147,8 +147,9 @@ export async function buildChatTools(): Promise<ToolPair[]> {
 
         // Build page path for preview
         const col = config.collections.find((c) => c.name === collection);
-        const urlPrefix = (col as any)?.urlPrefix ?? "";
-        const pagePath = urlPrefix ? `${urlPrefix}/${slug}` : `/${slug}`;
+        const rawPrefix = (col as any)?.urlPrefix ?? "";
+        const prefix = rawPrefix === "/" ? "" : rawPrefix;
+        const pagePath = prefix ? `${prefix}/${slug}` : `/${slug}`;
 
         return JSON.stringify(
           { slug: doc.slug, status: doc.status, _pagePath: pagePath, ...data },

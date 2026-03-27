@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getActiveSitePaths } from "@/lib/site-paths";
 import { createServer, type Server } from "node:http";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "path";
 import sirv from "sirv";
 
@@ -76,13 +76,25 @@ export async function POST(_req: NextRequest) {
     dev: true,    // no caching in dev
   });
 
+  // Load custom 404 page from @webhouse/cms static assets
+  let custom404 = "<h1>404 — Not Found</h1>";
+  try {
+    // Try site's own dist/404.html first, then CMS bundled 404
+    const site404 = path.join(distDir, "404.html");
+    if (existsSync(site404)) {
+      custom404 = readFileSync(site404, "utf-8");
+    } else {
+      const cms404 = require.resolve("@webhouse/cms/static/404.html");
+      custom404 = readFileSync(cms404, "utf-8");
+    }
+  } catch { /* use fallback */ }
+
   const server = createServer((req, res) => {
     // Add CORS for iframe embedding from admin
     res.setHeader("Access-Control-Allow-Origin", "*");
     handler(req, res, () => {
-      // 404 fallback
-      res.writeHead(404, { "Content-Type": "text/html" });
-      res.end("<h1>404 — Not Found</h1><p>This page doesn't exist in dist/.</p>");
+      res.writeHead(404, { "Content-Type": "text/html; charset=utf-8" });
+      res.end(custom404);
     });
   });
 
