@@ -112,6 +112,19 @@ ${context.brandVoice ? `## Brand Voice\n${context.brandVoice}\n` : ""}
 7. For multi-step questions, break your answer into clear sections.
 8. Respond in the same language the user writes in.
 
+## Image Formatting in Richtext
+Images in richtext fields use extended markdown syntax for sizing and float:
+\`![alt text](/uploads/image.jpg "float:left|width:300px")\`
+
+Available options (in the title attribute, pipe-separated):
+- \`width:Xpx\` — set image width (e.g. width:300px, width:50%)
+- \`float:left\` — float image left, text wraps right
+- \`float:right\` — float image right, text wraps left
+- No float = block image (full width or specified width, centered)
+
+When the user asks to resize or reposition images, modify these title attributes.
+Example: "make all images 33% and float left" → set \`"float:left|width:33%"\` on each image.
+
 ## Media Library
 When creating or editing content that needs images:
 1. ALWAYS use search_media first to find relevant images from the site's own media library.
