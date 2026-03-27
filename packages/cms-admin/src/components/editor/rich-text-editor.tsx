@@ -1994,6 +1994,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
   const [mediaBrowserItems, setMediaBrowserItems] = useState<Array<{ name: string; url: string; isImage: boolean; mediaType?: string; size: number }>>([]);
   const [mediaBrowserLoading, setMediaBrowserLoading] = useState(false);
   const [mediaBrowserSearch, setMediaBrowserSearch] = useState("");
+  const [mediaBrowserAiMeta, setMediaBrowserAiMeta] = useState<Record<string, { caption?: string; alt?: string; tags?: string[] }>>({});
   const imagePickerRef = useRef<HTMLDivElement>(null);
   const audioPickerRef = useRef<HTMLDivElement>(null);
   const [showMediaDropdown, setShowMediaDropdown] = useState(false);
@@ -2185,10 +2186,18 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
     fetch("/api/media")
       .then((r) => r.json())
       .then((items: Array<{ name: string; url: string; isImage: boolean; mediaType?: string; size: number }>) => {
-        setMediaBrowserItems(items.filter((i) => i.isImage));
+        // Filter out WebP variants (e.g. hero-400w.webp) — only show originals
+        setMediaBrowserItems(items.filter((i) => i.isImage && !/-\d+w\.webp$/i.test(i.name)));
       })
       .catch(() => setMediaBrowserItems([]))
       .finally(() => setMediaBrowserLoading(false));
+    // Also fetch AI metadata for search
+    fetch("/api/media/ai-analyzed?meta=1")
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.meta) setMediaBrowserAiMeta(data.meta);
+      })
+      .catch(() => {});
   }
 
   function openAudioMediaBrowser() {
@@ -3123,9 +3132,20 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
 
       {/* ── Image Media Browser ── */}
       {showImageMediaBrowser && (() => {
-        const filtered = mediaBrowserItems.filter((item) =>
-          !mediaBrowserSearch || item.name.toLowerCase().includes(mediaBrowserSearch.toLowerCase())
-        );
+        const filtered = mediaBrowserItems.filter((item) => {
+          if (!mediaBrowserSearch) return true;
+          const q = mediaBrowserSearch.toLowerCase();
+          const qNoExt = q.replace(/\.[^.]+$/, "");
+          if (item.name.toLowerCase().includes(q) || item.name.toLowerCase().includes(qNoExt)) return true;
+          // Search AI metadata (caption, alt, tags)
+          const ai = mediaBrowserAiMeta[item.name];
+          if (ai) {
+            if (ai.caption?.toLowerCase().includes(q)) return true;
+            if (ai.alt?.toLowerCase().includes(q)) return true;
+            if (ai.tags?.some((t) => t.toLowerCase().includes(q))) return true;
+          }
+          return false;
+        });
         return (
           <div
             style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0,0,0,0.5)" }}
@@ -3212,8 +3232,12 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
 
       {/* ── Audio Media Browser ── */}
       {showAudioMediaBrowser && (() => {
-        const filtered = mediaBrowserItems.filter((item) =>
-          !mediaBrowserSearch || item.name.toLowerCase().includes(mediaBrowserSearch.toLowerCase())
+        const filtered = mediaBrowserItems.filter((item) => {
+          if (!mediaBrowserSearch) return true;
+          const q = mediaBrowserSearch.toLowerCase();
+          const qNoExt = q.replace(/\.[^.]+$/, "");
+          return item.name.toLowerCase().includes(q) || item.name.toLowerCase().includes(qNoExt);
+        }
         );
         return (
           <div
