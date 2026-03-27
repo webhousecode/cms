@@ -1,7 +1,12 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
-import { Send } from "lucide-react";
+import { Send, Plus, ImageIcon, Loader2, X } from "lucide-react";
+
+interface UploadedFile {
+  name: string;
+  url: string;
+}
 
 interface ChatInputProps {
   onSend: (message: string) => void;
@@ -12,7 +17,11 @@ interface ChatInputProps {
 
 export function ChatInput({ onSend, disabled, placeholder, visible }: ChatInputProps) {
   const [value, setValue] = useState("");
+  const [uploads, setUploads] = useState<UploadedFile[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Focus whenever the chat becomes visible
   useEffect(() => {
@@ -28,15 +37,51 @@ export function ChatInput({ onSend, disabled, placeholder, visible }: ChatInputP
     }
   }, [disabled, visible]);
 
+  async function uploadFile(file: File): Promise<UploadedFile | null> {
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      if (!res.ok) return null;
+      const data = await res.json() as { url: string; name: string };
+      return { name: data.name, url: data.url };
+    } catch {
+      return null;
+    }
+  }
+
+  async function handleFiles(files: FileList | File[]) {
+    const imageFiles = Array.from(files).filter((f) => f.type.startsWith("image/"));
+    if (imageFiles.length === 0) return;
+
+    setUploading(true);
+    const results = await Promise.all(imageFiles.map(uploadFile));
+    const successful = results.filter((r): r is UploadedFile => r !== null);
+    setUploads((prev) => [...prev, ...successful]);
+    setUploading(false);
+    textareaRef.current?.focus();
+  }
+
   const handleSend = useCallback(() => {
     const trimmed = value.trim();
-    if (!trimmed || disabled) return;
-    onSend(trimmed);
+    if ((!trimmed && uploads.length === 0) || disabled) return;
+
+    // Build message with uploaded images referenced
+    let message = trimmed;
+    if (uploads.length > 0) {
+      const imageRefs = uploads.map((u) => `[Uploaded: ${u.name} → ${u.url}]`).join("\n");
+      message = message
+        ? `${message}\n\n${imageRefs}`
+        : `I uploaded ${uploads.length} image(s):\n${imageRefs}`;
+    }
+
+    onSend(message);
     setValue("");
+    setUploads([]);
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
     }
-  }, [value, disabled, onSend]);
+  }, [value, uploads, disabled, onSend]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -54,11 +99,9 @@ export function ChatInput({ onSend, disabled, placeholder, visible }: ChatInputP
     if (!ta) return;
     ta.style.height = "auto";
     const h = ta.scrollHeight;
-    // Only grow beyond 1 row if there's actual multi-line content
     if (value.includes("\n") || h > 40) {
       ta.style.height = Math.min(h, 200) + "px";
     }
-    // Ensure scroll position is at top for single-line
     ta.scrollTop = 0;
   }, [value]);
 
@@ -75,9 +118,84 @@ export function ChatInput({ onSend, disabled, placeholder, visible }: ChatInputP
     return () => document.removeEventListener("keydown", onKey);
   }, []);
 
+  // Drag & drop
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(true);
+  }, []);
+  const handleDragLeave = useCallback(() => setDragOver(false), []);
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    if (e.dataTransfer.files.length > 0) {
+      handleFiles(e.dataTransfer.files);
+    }
+  }, []);
+
+  function removeUpload(idx: number) {
+    setUploads((prev) => prev.filter((_, i) => i !== idx));
+  }
+
   return (
-    <div style={{ flexShrink: 0, padding: "12px 16px 16px", borderTop: "1px solid var(--border)", backgroundColor: "var(--background)" }}>
+    <div
+      style={{ flexShrink: 0, padding: "12px 16px 16px", borderTop: "1px solid var(--border)", backgroundColor: "var(--background)" }}
+      onDragOver={handleDragOver}
+      onDragLeave={handleDragLeave}
+      onDrop={handleDrop}
+    >
       <style>{`.chat-textarea::placeholder { color: #888 !important; opacity: 1 !important; }`}</style>
+
+      {/* Upload thumbnails */}
+      {uploads.length > 0 && (
+        <div style={{ maxWidth: "768px", margin: "0 auto 8px", display: "flex", gap: "8px", flexWrap: "wrap" }}>
+          {uploads.map((u, i) => (
+            <div
+              key={i}
+              style={{
+                position: "relative",
+                width: "64px",
+                height: "64px",
+                borderRadius: "8px",
+                overflow: "hidden",
+                border: "1px solid var(--border)",
+              }}
+            >
+              <img src={u.url} alt={u.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+              <button
+                onClick={() => removeUpload(i)}
+                style={{
+                  position: "absolute",
+                  top: "2px",
+                  right: "2px",
+                  width: "18px",
+                  height: "18px",
+                  borderRadius: "50%",
+                  border: "none",
+                  backgroundColor: "rgba(0,0,0,0.7)",
+                  color: "#fff",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  padding: 0,
+                }}
+              >
+                <X style={{ width: "10px", height: "10px" }} />
+              </button>
+            </div>
+          ))}
+          {uploading && (
+            <div style={{
+              width: "64px", height: "64px", borderRadius: "8px",
+              border: "1px dashed var(--border)", display: "flex",
+              alignItems: "center", justifyContent: "center",
+            }}>
+              <Loader2 style={{ width: "16px", height: "16px", color: "var(--muted-foreground)" }} className="animate-spin" />
+            </div>
+          )}
+        </div>
+      )}
+
       <div
         style={{
           maxWidth: "768px",
@@ -86,11 +204,51 @@ export function ChatInput({ onSend, disabled, placeholder, visible }: ChatInputP
           alignItems: "flex-end",
           gap: "8px",
           backgroundColor: "var(--card)",
-          border: "1px solid var(--border)",
+          border: dragOver ? "1px solid var(--primary)" : "1px solid var(--border)",
           borderRadius: "12px",
           padding: "8px 12px",
+          transition: "border-color 150ms",
         }}
       >
+        {/* + button */}
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          disabled={disabled || uploading}
+          title="Upload image"
+          style={{
+            width: "32px",
+            height: "32px",
+            borderRadius: "8px",
+            border: "none",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+            backgroundColor: "transparent",
+            color: "var(--muted-foreground)",
+            flexShrink: 0,
+            transition: "color 150ms",
+          }}
+          className="hover:text-foreground"
+        >
+          {uploading ? (
+            <Loader2 style={{ width: "18px", height: "18px" }} className="animate-spin" />
+          ) : (
+            <Plus style={{ width: "18px", height: "18px" }} />
+          )}
+        </button>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          style={{ display: "none" }}
+          onChange={(e) => {
+            if (e.target.files) handleFiles(e.target.files);
+            e.target.value = "";
+          }}
+        />
+
         <textarea
           ref={textareaRef}
           value={value}
@@ -117,7 +275,7 @@ export function ChatInput({ onSend, disabled, placeholder, visible }: ChatInputP
         />
         <button
           onClick={handleSend}
-          disabled={disabled || !value.trim()}
+          disabled={disabled || (!value.trim() && uploads.length === 0)}
           style={{
             width: "32px",
             height: "32px",
@@ -126,11 +284,11 @@ export function ChatInput({ onSend, disabled, placeholder, visible }: ChatInputP
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            cursor: disabled || !value.trim() ? "default" : "pointer",
+            cursor: disabled || (!value.trim() && uploads.length === 0) ? "default" : "pointer",
             backgroundColor:
-              disabled || !value.trim() ? "transparent" : "var(--primary)",
+              disabled || (!value.trim() && uploads.length === 0) ? "transparent" : "var(--primary)",
             color:
-              disabled || !value.trim()
+              disabled || (!value.trim() && uploads.length === 0)
                 ? "var(--muted-foreground)"
                 : "var(--primary-foreground)",
             transition: "all 150ms",
@@ -150,7 +308,7 @@ export function ChatInput({ onSend, disabled, placeholder, visible }: ChatInputP
           opacity: 0.6,
         }}
       >
-        Press Enter to send, Shift+Enter for new line
+        Press Enter to send, Shift+Enter for new line{dragOver ? " — Drop to upload" : ""}
       </div>
     </div>
   );
