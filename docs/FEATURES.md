@@ -124,6 +124,7 @@
 | F105 | [Voice Module](#f105-voice-module) | Planned | [docs/features/F105-voice-module.md](features/F105-voice-module.md) |
 | F106 | [TipTap v3 Upgrade](#f106-tiptap-v3-upgrade) | Planned | [docs/features/F106-tiptap-v3-upgrade.md](features/F106-tiptap-v3-upgrade.md) |
 | F107 | [Chat with Your Site](#f107-chat-with-your-site) | Planned | [docs/features/F107-chat-with-your-site.md](features/F107-chat-with-your-site.md) |
+| F108 | [Rich Text Editor Enhancements](#f108-rich-text-editor-enhancements) | Planned | [docs/features/F108-richtext-editor-enhancements.md](features/F108-richtext-editor-enhancements.md) |
 
 ---
 
@@ -456,3 +457,6 @@ Upgrade richtext editor fra TipTap v2.x til v3.x. Fixer React 19 flushSync warni
 
 ## F107 — Chat with Your Site
 Full-screen conversational CMS interface — manage your entire site through natural language. Master switch in admin header toggles between "Chat" and "Traditional" modes, swapping the entire workspace. Chat uses Claude with tool-use, calling internal CMS API routes directly (not MCP) for low latency and automatic feature parity. Schema-aware system prompt gives the AI complete knowledge of collections, fields, and content. Four incremental phases: v1 read/search (site summary, list docs, search, get schema), v2 create/edit (create, update, publish with confirmation flow), v3 inline forms (hybrid mode — AI renders focused form controls for manual edits), v4 workflows (bulk operations, build/deploy triggers, agent execution, multi-step automation). Conversation persistence per user. Smart welcome screen with context-aware suggestions. No breaking changes to traditional admin. Supersedes F51 (Admin AI Assistant) scope — F51 is a sidebar helper, F107 is an AI-first CMS.
+
+## F108 — Rich Text Editor Enhancements
+Underline, superscript/subscript, text alignment, highlight colors, editor zoom, and AI proofreading for the TipTap v3 richtext editor. Enables underline (Cmd+U, already in StarterKit v3), superscript (Cmd+.), subscript (Cmd+,), paragraph text alignment (left/center/right), highlight with 6 preset background colors, editor content zoom (50-200%), and AI proofreading with auto language detection. Uses HTML-in-markdown for formatting that standard markdown doesn't support (`<u>`, `<sup>`, `<sub>`, `<mark>`). Depends on F106 TipTap v3 Upgrade.
