@@ -100,9 +100,11 @@ Return ONLY the JSON, no explanation.`,
           // Auto-fill OG image from content if not already set
           if (!ogImage) {
             const rawContent = String(doc.data.content ?? doc.data.body ?? "");
-            const imgMatch = rawContent.match(/!\[[^\]]*\]\(([^)]+)\)/)?.[1]
-              ?? rawContent.match(/<img[^>]+src="([^"]+)"/)?.[1]
-              ?? String(doc.data.heroImage ?? doc.data.coverImage ?? doc.data.image ?? "");
+            // Extract just the URL from markdown ![alt](url "title") or HTML <img src="url">
+            const mdImg = rawContent.match(/!\[[^\]]*\]\(([^\s")]+)/)?.[1];
+            const htmlImg = rawContent.match(/<img[^>]+src="([^"]+)"/)?.[1];
+            const fieldImg = String(doc.data.heroImage ?? doc.data.coverImage ?? doc.data.image ?? "");
+            const imgMatch = mdImg ?? htmlImg ?? fieldImg;
             if (imgMatch) setOgImage(imgMatch);
           }
           setLastOptimized(new Date().toISOString());
