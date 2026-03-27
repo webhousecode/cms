@@ -191,7 +191,7 @@ Return ONLY the JSON, no explanation.`,
         {/* Meta description */}
         <div>
           <p style={lbl}>Meta description</p>
-          <textarea value={metaDesc} onChange={(e) => setMetaDesc(e.target.value)} placeholder="Compelling description for search results..." style={{ ...input, minHeight: 60, resize: "vertical" }} maxLength={200} />
+          <textarea value={metaDesc} onChange={(e) => setMetaDesc(e.target.value)} placeholder="Compelling description for search results..." style={{ ...input, minHeight: 100, resize: "vertical" }} maxLength={200} />
           <p style={{ fontSize: "0.65rem", color: metaDesc.length > 160 ? "#f87171" : "var(--muted-foreground)", marginTop: "0.2rem", textAlign: "right" }}>
             {metaDesc.length}/160
           </p>
