@@ -60,11 +60,12 @@ export async function GET(req: NextRequest) {
       const { readMediaMeta } = await import("@/lib/media/media-meta");
       const mediaMeta = await readMediaMeta();
       for (const m of mediaMeta) {
+        const allTags = [...(m.tags ?? []), ...(m.aiTags ?? [])];
         const haystack = [
           m.name,
           m.aiCaption ?? "",
           m.aiAlt ?? "",
-          ...(m.aiTags ?? []),
+          ...allTags,
           m.exif?.make ?? "",
           m.exif?.model ?? "",
           m.exif?.lens ?? "",
@@ -76,8 +77,8 @@ export async function GET(req: NextRequest) {
         let score = 0;
         if (m.name.toLowerCase().includes(q)) score = 30;
         if (haystack.includes(q)) score = Math.max(score, 20);
-        // Boost AI tags (exact match)
-        if (m.aiTags?.some((t) => t.toLowerCase() === q)) score = Math.max(score, 40);
+        // Boost tags (exact match on user or AI tags)
+        if (allTags.some((t) => t.toLowerCase() === q)) score = Math.max(score, 40);
 
         if (score > 0) {
           const url = m.folder ? `/uploads/${m.folder}/${m.name}` : `/uploads/${m.name}`;
