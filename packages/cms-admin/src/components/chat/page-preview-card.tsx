@@ -1,7 +1,44 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ExternalLink, Monitor, Loader2, RefreshCw } from "lucide-react";
+import { ExternalLink, Monitor, RefreshCw } from "lucide-react";
+
+// ── Shared build singleton — all preview cards share one build ───
+let buildPromise: Promise<string | null> | null = null;
+let buildTimestamp = 0;
+const BUILD_DEBOUNCE_MS = 5000; // Don't rebuild within 5 seconds
+
+async function ensureBuiltAndServing(): Promise<string | null> {
+  const now = Date.now();
+
+  // Reuse in-flight or recent build
+  if (buildPromise && now - buildTimestamp < BUILD_DEBOUNCE_MS) {
+    return buildPromise;
+  }
+
+  buildTimestamp = now;
+  buildPromise = (async () => {
+    // 1. Build
+    try {
+      await fetch("/api/preview-build", { method: "POST" });
+    } catch { /* build failed — try serve anyway */ }
+
+    // 2. Serve (fresh restart)
+    try {
+      const res = await fetch("/api/preview-serve?fresh=true", { method: "POST" });
+      if (res.ok) {
+        const { url } = await res.json() as { url: string };
+        return url;
+      }
+    } catch { /* serve failed */ }
+
+    return null;
+  })();
+
+  return buildPromise;
+}
+
+// ── Component ────────────────────────────────────────────────────
 
 interface PagePreviewCardProps {
   pagePath: string;
@@ -13,41 +50,18 @@ export function PagePreviewCard({ pagePath }: PagePreviewCardProps) {
 
   useEffect(() => {
     let cancelled = false;
+    setStatus("building");
 
-    async function buildAndServe() {
-      setStatus("building");
-
-      // 1. Rebuild the site so dist/ is fresh
-      try {
-        const buildRes = await fetch("/api/preview-build", { method: "POST" });
-        if (!buildRes.ok) {
-          // Build failed — still try to show whatever is in dist/
-          console.warn("[preview] Build failed, showing cached version");
-        }
-      } catch {
-        // Build endpoint missing — show cached
-      }
-
+    ensureBuiltAndServing().then((url) => {
       if (cancelled) return;
-
-      // 2. Start fresh preview server (fresh=true restarts to pick up new dist/)
-      try {
-        const serveRes = await fetch("/api/preview-serve?fresh=true", { method: "POST" });
-        if (serveRes.ok) {
-          const { url } = await serveRes.json() as { url: string };
-          if (!cancelled) {
-            setPreviewUrl(url);
-            setStatus("ready");
-          }
-        } else {
-          if (!cancelled) setStatus("error");
-        }
-      } catch {
-        if (!cancelled) setStatus("error");
+      if (url) {
+        setPreviewUrl(url);
+        setStatus("ready");
+      } else {
+        setStatus("error");
       }
-    }
+    });
 
-    buildAndServe();
     return () => { cancelled = true; };
   }, [pagePath]);
 

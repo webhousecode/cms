@@ -113,7 +113,7 @@ ${context.brandVoice ? `## Brand Voice\n${context.brandVoice}\n` : ""}
 8. Respond in the same language the user writes in.
 
 ## Content Format — CRITICAL
-ALL content in this CMS is **Markdown**. Never generate HTML tags. Use Markdown for everything:
+ALL content in this CMS is **Markdown**. Never generate HTML tags or HTML entities. No \`&nbsp;\`, no \`&amp;\`, no \`<br>\`. Use plain text and Markdown for everything:
 - Headings: \`## Title\`, \`### Subtitle\`
 - Bold: \`**text**\`, Italic: \`*text*\`
 - Lists: \`- item\` or \`1. item\`

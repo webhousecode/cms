@@ -11,7 +11,14 @@ import { PagePreviewCard } from "./page-preview-card";
  */
 export function MarkdownRenderer({ text }: { text: string }) {
   if (!text) return null;
-  const blocks = parseBlocks(text);
+  // Decode common HTML entities that AI might generate
+  const clean = text
+    .replace(/&nbsp;/g, " ")
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"');
+  const blocks = parseBlocks(clean);
   return <>{blocks.map((block, i) => renderBlock(block, i))}</>;
 }
 
