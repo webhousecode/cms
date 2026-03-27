@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Building2, Plus, Search, MoreVertical, Settings2, Trash2 } from "lucide-react";
 import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
+import { switchOrg, switchToNewOrg } from "@/lib/switch-context";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -59,19 +60,11 @@ export default function OrganizationsPage() {
   }, []);
 
   function switchToOrg(org: OrgEntry) {
-    setCookie("cms-active-org", org.id);
-    document.cookie = "cms-active-site=;path=/;max-age=0";
-    window.dispatchEvent(new CustomEvent("cms-registry-change"));
     if (org.sites.length === 0) {
-      router.push("/admin/sites/new");
-    } else if (org.sites.length === 1) {
-      setCookie("cms-active-site", org.sites[0].id);
-      router.push("/admin");
+      switchToNewOrg(org.id);
     } else {
-      setCookie("cms-active-site", org.sites[0].id);
-      router.push("/admin/sites");
+      switchOrg(org.id, org.sites[0].id, org.sites.length);
     }
-    router.refresh();
   }
 
   if (!loaded) {

@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Building2, ChevronDown, Check, Plus, LayoutGrid, Globe } from "lucide-react";
+import { switchSite, switchOrg } from "@/lib/switch-context";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -123,19 +124,8 @@ export function SiteSwitcher() {
   if (sites.length <= 1) return null;
 
   function handleSelect(site: SiteEntry) {
-    if (site.id === activeSiteId) return; // already active
-    setActiveSiteId(site.id);
-    setCookie("cms-active-site", site.id);
-    // Signal tabs system to NOT navigate back to saved tabs after reload
-    sessionStorage.setItem("site-switched", "1");
-    // Persist last active site on user record (survives cookie clear / device switch)
-    fetch("/api/admin/profile", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ lastActiveOrg: activeOrgId, lastActiveSite: site.id }),
-    }).catch(() => {});
-    // Navigate to dashboard, then notify components
-    window.location.href = "/admin";
+    if (site.id === activeSiteId) return;
+    switchSite(site.id, activeOrgId);
   }
 
   return (
@@ -210,25 +200,8 @@ export function OrgSwitcher() {
   const activeOrg = registry.orgs.find((o) => o.id === activeOrgId) ?? registry.orgs[0];
 
   function handleSelect(org: OrgEntry) {
-    if (org.id === activeOrgId) return; // already active
-    setCookie("cms-active-org", org.id);
-    // Set site to first in new org (needed for sidebar/layout)
-    const newSite = org.sites[0];
-    if (newSite) {
-      setCookie("cms-active-site", newSite.id);
-    } else {
-      document.cookie = "cms-active-site=;path=/;max-age=0";
-    }
-    // Signal TabsProvider: don't restore saved tabs on next load
-    sessionStorage.setItem("org-switched", "1");
-    // Persist org switch on user record
-    fetch("/api/admin/profile", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ lastActiveOrg: org.id, lastActiveSite: newSite?.id ?? null }),
-    }).catch(() => {});
-    // Hard reload — always land on Sites page
-    window.location.href = "/admin/sites";
+    if (org.id === activeOrgId) return;
+    switchOrg(org.id, org.sites[0]?.id ?? null, org.sites.length);
   }
 
   return (

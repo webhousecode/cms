@@ -159,17 +159,10 @@ export function TabsProvider({ children, siteId }: { children: ReactNode; siteId
     if (userId === null) return; // wait for userId
 
     function restoreTabs(saved: { tabs: Tab[]; activeId: string | null } | null) {
-      // F84: After org/site switch, don't navigate to saved tabs — stay on current page
-      const justSwitched = typeof sessionStorage !== "undefined" && (
-        sessionStorage.getItem("org-switched") === "1" || sessionStorage.getItem("site-switched") === "1"
-      );
-      if (justSwitched) {
+      // Clear any switch flags (no longer needed — we never navigate on init)
+      if (typeof sessionStorage !== "undefined") {
         sessionStorage.removeItem("org-switched");
         sessionStorage.removeItem("site-switched");
-        // Start fresh with current page as only tab
-        const id = uid();
-        applyTabs([{ id, path: pathname, title: pathTitle(pathname) }], id);
-        return;
       }
 
       if (saved && saved.tabs.length > 0) {
@@ -179,16 +172,14 @@ export function TabsProvider({ children, siteId }: { children: ReactNode; siteId
         }));
         const match = migrated.find((t) => t.path === pathname);
         if (match) {
+          // Current URL matches a saved tab — activate it
           applyTabs(migrated, match.id);
-        } else if (saved.activeId) {
-          const activeTab = migrated.find((t) => t.id === saved.activeId);
-          applyTabs(migrated, saved.activeId);
-          if (activeTab && activeTab.path !== pathname) {
-            skipNextPathChange.current = true;
-            router.push(activeTab.path);
-          }
         } else {
-          applyTabs(migrated, saved.activeId);
+          // Current URL is not in saved tabs — add it as active tab
+          // NEVER navigate away from the current URL on init
+          const id = uid();
+          const newTab = { id, path: pathname, title: pathTitle(pathname) };
+          applyTabs([newTab, ...migrated], id);
         }
       } else {
         const id = uid();

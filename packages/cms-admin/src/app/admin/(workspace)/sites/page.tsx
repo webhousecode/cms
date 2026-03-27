@@ -7,6 +7,7 @@ import { useSiteRole } from "@/hooks/use-site-role";
 import { useTabs } from "@/lib/tabs-context";
 import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
 import { previewPath } from "@/lib/utils";
+import { switchSite } from "@/lib/switch-context";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -106,37 +107,19 @@ export default function SitesDashboard() {
     !allowedSiteIds || allowedSiteIds.includes(s.id)
   ) ?? [];
 
-  function persistSiteChoice(siteId: string) {
-    setCookie("cms-active-site", siteId);
-    setCookie("cms-active-org", activeOrgId);
-    // Persist on user record (survives cookie clear / device switch)
-    fetch("/api/admin/profile", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ lastActiveOrg: activeOrgId, lastActiveSite: siteId }),
-    }).catch(() => {});
-    window.dispatchEvent(new CustomEvent("cms-registry-change"));
-  }
-
   function enterSite(site: SiteEntry) {
-    // Set cookies, then full page load — no router.push race conditions
-    setCookie("cms-active-site", site.id);
-    setCookie("cms-active-org", activeOrgId);
-    // Signal tabs system to NOT navigate back to saved tabs after reload
-    sessionStorage.setItem("site-switched", "1");
-    // Persist on user record
-    fetch("/api/admin/profile", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ lastActiveOrg: activeOrgId, lastActiveSite: site.id }),
-    }).catch(() => {});
-    // Full page load — server reads fresh cookies, loads correct CMS config
-    window.location.href = "/admin";
+    switchSite(site.id, activeOrgId);
   }
 
   function goToSiteSettings(site: SiteEntry) {
-    persistSiteChoice(site.id);
-    window.location.href = "/admin/settings";
+    switchSite(site.id, activeOrgId, "/admin/settings");
+  }
+
+  // For preview button — sets cookie without navigating away
+  function persistSiteChoice(siteId: string) {
+    setCookie("cms-active-site", siteId);
+    setCookie("cms-active-org", activeOrgId);
+    window.dispatchEvent(new CustomEvent("cms-registry-change"));
   }
 
   if (!loaded) {

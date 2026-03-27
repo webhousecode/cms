@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { CustomSelect } from "@/components/ui/custom-select";
+import { switchToNewOrg } from "@/lib/switch-context";
 
 function setCookie(name: string, value: string) {
   document.cookie = `${name}=${encodeURIComponent(value)};path=/;max-age=${60 * 60 * 24 * 365};samesite=lax`;
@@ -35,10 +36,7 @@ export default function NewOrganizationPage() {
         throw new Error(d.error ?? `Failed (${res.status})`);
       }
       const { org } = await res.json() as { org: { id: string } };
-      setCookie("cms-active-org", org.id);
-      document.cookie = "cms-active-site=;path=/;max-age=0";
-      window.dispatchEvent(new CustomEvent("cms-registry-change"));
-      router.push("/admin/sites/new");
+      switchToNewOrg(org.id);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create organization");
     } finally {

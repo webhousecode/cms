@@ -10,6 +10,7 @@ import {
   Building2, HelpCircle, HardDrive, Play, ExternalLink, Moon, Sun, RefreshCw,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { switchSite, switchOrg } from "@/lib/switch-context";
 
 /* ─── Quick actions (Spotlight-style) ────────────────────────── */
 
@@ -142,7 +143,7 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
 
   const [collections, setCollections] = useState<{ name: string; label: string }[]>([]);
   const [sites, setSites] = useState<{ id: string; name: string; orgId: string }[]>([]);
-  const [orgs, setOrgs] = useState<{ id: string; name: string; firstSiteId: string | null }[]>([]);
+  const [orgs, setOrgs] = useState<{ id: string; name: string; firstSiteId: string | null; siteCount: number }[]>([]);
   const [activeSiteId, setActiveSiteId] = useState<string>("");
   const [activeOrgId, setActiveOrgId] = useState<string>("");
 
@@ -171,16 +172,7 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
         icon: <Globe style={{ ...ICON_SIZE, color: MUTED }} />,
         keywords: [site.name.toLowerCase(), "site", "switch", "skift"],
         action: () => {
-          document.cookie = `cms-active-site=${encodeURIComponent(site.id)};path=/;max-age=${60 * 60 * 24 * 365};samesite=lax`;
-          fetch("/api/admin/profile", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ lastActiveOrg: site.orgId, lastActiveSite: site.id }),
-          }).catch(() => {});
-          window.dispatchEvent(new CustomEvent("cms-site-change", { detail: { siteId: site.id } }));
-          window.dispatchEvent(new CustomEvent("cms-registry-change"));
-          router.push("/admin");
-          router.refresh();
+          switchSite(site.id, site.orgId);
         },
       });
     }
@@ -195,16 +187,7 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
         icon: <Building2 style={{ ...ICON_SIZE, color: MUTED }} />,
         keywords: [org.name.toLowerCase(), "org", "organization", "organisation", "switch", "skift"],
         action: () => {
-          document.cookie = `cms-active-org=${encodeURIComponent(org.id)};path=/;max-age=${60 * 60 * 24 * 365};samesite=lax`;
-          if (org.firstSiteId) {
-            document.cookie = `cms-active-site=${encodeURIComponent(org.firstSiteId)};path=/;max-age=${60 * 60 * 24 * 365};samesite=lax`;
-            window.dispatchEvent(new CustomEvent("cms-site-change", { detail: { siteId: org.firstSiteId } }));
-          } else {
-            document.cookie = "cms-active-site=;path=/;max-age=0";
-          }
-          window.dispatchEvent(new CustomEvent("cms-registry-change"));
-          router.push("/admin");
-          router.refresh();
+          switchOrg(org.id, org.firstSiteId ?? null, org.siteCount ?? 0);
         },
       });
     }
@@ -236,9 +219,9 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
         }
         setSites(orgSites);
         // Orgs: all orgs for switching
-        const allOrgs: { id: string; name: string; firstSiteId: string | null }[] = [];
+        const allOrgs: { id: string; name: string; firstSiteId: string | null; siteCount: number }[] = [];
         for (const org of d.registry.orgs ?? []) {
-          allOrgs.push({ id: org.id, name: org.name, firstSiteId: org.sites?.[0]?.id ?? null });
+          allOrgs.push({ id: org.id, name: org.name, firstSiteId: org.sites?.[0]?.id ?? null, siteCount: org.sites?.length ?? 0 });
         }
         setOrgs(allOrgs);
       })

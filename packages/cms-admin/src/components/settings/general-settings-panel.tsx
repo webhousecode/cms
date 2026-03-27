@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Check, Eye, EyeOff, AlertTriangle, Copy, RefreshCw, Zap, Send } from "lucide-react";
+import { switchSite } from "@/lib/switch-context";
 import { toast } from "sonner";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { SectionHeading } from "@/components/ui/section-heading";
@@ -804,9 +805,7 @@ function DangerZone() {
 			});
 			if (res.ok) {
 				setMoveDone(true);
-				document.cookie = `cms-active-org=${targetOrgId};path=/;max-age=31536000`;
-				sessionStorage.setItem("org-switched", "1");
-				window.location.href = "/admin/sites";
+				switchSite(activeSiteId, targetOrgId, "/admin/sites");
 				return;
 			}
 		} finally {
