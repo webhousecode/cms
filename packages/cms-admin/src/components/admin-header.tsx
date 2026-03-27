@@ -101,6 +101,7 @@ function UserNav({ user }: { user: SessionUser | null }) {
   const router = useRouter();
 
   async function logout() {
+    sessionStorage.removeItem("cms-session-user");
     await fetch("/api/auth/logout", { method: "POST" });
     window.location.href = "/";
   }
@@ -458,16 +459,27 @@ export function AdminHeader({ mode, onToggleMode }: { mode?: AdminMode; onToggle
   const { tabs, activeId } = useTabs();
   const activeTab = tabs.find((t) => t.id === activeId);
   const title = activeTab?.title;
-  const [user, setUser] = useState<SessionUser | null>(null);
+  const [user, setUser] = useState<SessionUser | null>(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      const cached = sessionStorage.getItem("cms-session-user");
+      return cached ? JSON.parse(cached) as SessionUser : null;
+    } catch { return null; }
+  });
 
   useEffect(() => {
+    // If already cached, skip fetch — only refresh on login
+    if (user) return;
     fetch("/api/auth/me")
       .then((r) => r.json())
       .then((d: { user?: SessionUser | null }) => {
-        if (d.user) setUser(d.user);
+        if (d.user) {
+          setUser(d.user);
+          sessionStorage.setItem("cms-session-user", JSON.stringify(d.user));
+        }
       })
       .catch(() => {});
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <header style={{
