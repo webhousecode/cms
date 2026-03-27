@@ -117,6 +117,15 @@ cd packages/cms-admin && npx vitest run
 ### 5. Deploy
 Commit, push, verify in production.
 
+## TipTap + Next.js SSR
+
+The richtext editor uses TipTap v3 (`@tiptap/react ^3.21`). Two critical settings in `useEditor()`:
+
+- **`immediatelyRender: false`** — REQUIRED. Without it, TipTap tries to render during SSR and throws "SSR has been detected" hydration errors. This was removed once (to fix a flushSync warning in v2) but MUST stay in v3. The flushSync issue is fixed in v3 separately.
+- **`shouldRerenderOnTransaction: false`** — Prevents per-transaction flushSync calls. Toolbar state is driven by `useEditorState` instead.
+
+Do NOT remove `immediatelyRender: false` — it will break SSR hydration.
+
 ## Key Conventions
 
 - **Follow instructions exactly** — when given a task description, implement EXACTLY what is described. "Same as X" means find X's implementation and replicate the pattern. Do not add creative interpretations, extra features, or alternative approaches not asked for. When in doubt, ask — don't assume.
