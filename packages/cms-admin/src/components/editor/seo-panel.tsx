@@ -209,7 +209,10 @@ Return ONLY the JSON, no explanation.`,
           <input type="text" value={ogImage} onChange={(e) => setOgImage(e.target.value)} placeholder="/uploads/..." style={input} />
           {ogImage && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={ogImage} alt="OG preview" style={{ width: "100%", height: 80, objectFit: "cover", borderRadius: "4px", marginTop: "0.375rem", border: "1px solid var(--border)" }} />
+            <img src={ogImage} alt="OG preview"
+              style={{ width: "100%", height: 80, objectFit: "cover", borderRadius: "4px", marginTop: "0.375rem", border: "1px solid var(--border)" }}
+              onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+            />
           )}
         </div>
 
