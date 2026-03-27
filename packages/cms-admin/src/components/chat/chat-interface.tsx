@@ -9,6 +9,7 @@ import { Plus, History, X } from "lucide-react";
 interface ChatInterfaceProps {
   collections: Array<{ name: string; label: string }>;
   activeSiteId: string;
+  visible?: boolean;
 }
 
 interface ConversationMeta {
@@ -17,7 +18,7 @@ interface ConversationMeta {
   updatedAt: string;
 }
 
-export function ChatInterface({ collections, activeSiteId }: ChatInterfaceProps) {
+export function ChatInterface({ collections, activeSiteId, visible }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<ChatMessageUI[]>([]);
   const [isThinking, setIsThinking] = useState(false);
   const [conversationId, setConversationId] = useState(() => crypto.randomUUID());
@@ -381,7 +382,7 @@ export function ChatInterface({ collections, activeSiteId }: ChatInterfaceProps)
       )}
 
       {/* Input */}
-      <ChatInput onSend={handleSend} disabled={isThinking} autoFocus />
+      <ChatInput onSend={handleSend} disabled={isThinking} visible={visible} />
     </div>
   );
 }
