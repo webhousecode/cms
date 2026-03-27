@@ -357,6 +357,12 @@ export async function buildChatTools(): Promise<ToolPair[]> {
             if (m?.aiAlt) parts.push(`  AI alt: ${m.aiAlt}`);
             if (m?.aiTags?.length) parts.push(`  AI tags: ${m.aiTags.join(", ")}`);
             if (m?.tags?.length) parts.push(`  User tags: ${m.tags.join(", ")}`);
+            if (m?.exif) {
+              const e = m.exif;
+              if (e.gpsLat != null && e.gpsLon != null) parts.push(`  GPS: ${e.gpsLat.toFixed(5)}, ${e.gpsLon.toFixed(5)}`);
+              if (e.date) parts.push(`  Date taken: ${e.date}`);
+              if (e.make || e.model) parts.push(`  Camera: ${[e.make, e.model].filter(Boolean).join(" ")}`);
+            }
             return parts.join("\n");
           })
           .join("\n\n");
@@ -434,6 +440,11 @@ export async function buildChatTools(): Promise<ToolPair[]> {
             if (m?.aiCaption) parts.push(`  Caption: ${m.aiCaption}`);
             if (m?.aiAlt) parts.push(`  Alt: ${m.aiAlt}`);
             if (m?.aiTags?.length) parts.push(`  Tags: ${m.aiTags.join(", ")}`);
+            if (m?.exif) {
+              const e = m.exif;
+              if (e.gpsLat != null && e.gpsLon != null) parts.push(`  GPS: ${e.gpsLat.toFixed(5)}, ${e.gpsLon.toFixed(5)}`);
+              if (e.date) parts.push(`  Date taken: ${e.date}`);
+            }
             return parts.join("\n");
           })
           .join("\n\n");
