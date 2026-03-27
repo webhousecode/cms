@@ -1376,5 +1376,175 @@ DESIGN GUIDELINES:
         ).join("\n");
       },
     },
+
+    // ═══════════════════════════════════════════════════════════
+    // Phase 4: Bulk & Workflow tools
+    // ═══════════════════════════════════════════════════════════
+
+    // ── bulk_publish ─────────────────────────────────────────
+    {
+      definition: {
+        name: "bulk_publish",
+        description:
+          "Publish multiple draft documents at once. Can target a specific collection or all collections. Returns a list of what was published.",
+        input_schema: {
+          type: "object",
+          properties: {
+            collection: { type: "string", description: "Collection name to publish drafts from. If omitted, publishes drafts across ALL collections." },
+          },
+        },
+      },
+      handler: async (input) => {
+        const targetCollection = input.collection ? String(input.collection) : null;
+        const [cms, config] = await Promise.all([getAdminCms(), getAdminConfig()]);
+        const published: string[] = [];
+
+        const collections = targetCollection
+          ? config.collections.filter((c) => c.name === targetCollection)
+          : config.collections.filter((c) => c.name !== "global");
+
+        if (targetCollection && collections.length === 0) {
+          return `Error: Collection "${targetCollection}" not found.`;
+        }
+
+        for (const col of collections) {
+          const { documents } = await cms.content.findMany(col.name, {}).catch(() => ({ documents: [] as any[] }));
+          const drafts = documents.filter((d: any) => d.status === "draft");
+          for (const d of drafts) {
+            await saveRevision(col.name, d).catch(() => {});
+            await cms.content.update(col.name, d.id, { status: "published" });
+            published.push(`${col.label ?? col.name}/${d.slug} — "${d.data.title ?? d.slug}"`);
+          }
+        }
+
+        if (published.length === 0) {
+          return targetCollection
+            ? `No drafts to publish in ${targetCollection}.`
+            : "No drafts to publish anywhere.";
+        }
+        return `Published ${published.length} document(s):\n${published.map((p) => `- ${p}`).join("\n")}`;
+      },
+    },
+
+    // ── bulk_update ──────────────────────────────────────────
+    {
+      definition: {
+        name: "bulk_update",
+        description:
+          "Update a field on multiple documents in a collection. Useful for adding tags, changing a category, or setting a value across many documents. Supports 'append' mode for array fields (tags) to add values without replacing existing ones.",
+        input_schema: {
+          type: "object",
+          properties: {
+            collection: { type: "string", description: "Collection name" },
+            field: { type: "string", description: "Field name to update (e.g. 'tags', 'category', 'author')" },
+            value: { description: "New value for the field. For tags with mode 'append', this should be an array of strings to add." },
+            mode: { type: "string", description: "'set' replaces the field value (default), 'append' adds to array fields (like tags)" },
+            filter: {
+              type: "object",
+              description: "Optional filter. { status: 'published' } to only update published docs. { slug: ['a','b'] } to target specific slugs.",
+              properties: {
+                status: { type: "string", description: "Filter by status: published, draft" },
+                slugs: { type: "array", items: { type: "string" }, description: "Only update these specific slugs" },
+              },
+            },
+          },
+          required: ["collection", "field", "value"],
+        },
+      },
+      handler: async (input) => {
+        const collection = String(input.collection);
+        const field = String(input.field);
+        const value = input.value;
+        const mode = String(input.mode ?? "set");
+        const filter = (input.filter ?? {}) as { status?: string; slugs?: string[] };
+
+        const [cms, config] = await Promise.all([getAdminCms(), getAdminConfig()]);
+        const col = config.collections.find((c) => c.name === collection);
+        if (!col) return `Error: Collection "${collection}" not found.`;
+
+        // Verify the field exists in schema
+        const fieldDef = (col.fields ?? []).find((f: any) => f.name === field);
+        if (!fieldDef) return `Error: Field "${field}" not found in ${collection} schema. Use get_schema to check available fields.`;
+
+        const { documents } = await cms.content.findMany(collection, {}).catch(() => ({ documents: [] as any[] }));
+        let targets = documents.filter((d: any) => d.status !== "trashed");
+
+        if (filter.status) {
+          targets = targets.filter((d: any) => d.status === filter.status);
+        }
+        if (filter.slugs?.length) {
+          const slugSet = new Set(filter.slugs);
+          targets = targets.filter((d: any) => slugSet.has(d.slug));
+        }
+
+        if (targets.length === 0) return `No documents match the filter in ${collection}.`;
+
+        const updated: string[] = [];
+        for (const d of targets) {
+          await saveRevision(collection, d).catch(() => {});
+          let newValue = value;
+          if (mode === "append" && Array.isArray(value)) {
+            const existing = Array.isArray(d.data[field]) ? d.data[field] : [];
+            const combined = [...existing, ...value.filter((v: any) => !existing.includes(v))];
+            newValue = combined;
+          }
+          await cms.content.update(collection, d.id, {
+            data: { ...d.data, [field]: newValue },
+          });
+          updated.push(`${d.slug} — "${d.data.title ?? d.slug}"`);
+        }
+
+        return `Updated "${field}" on ${updated.length} document(s) in ${collection} (mode: ${mode}):\n${updated.map((u) => `- ${u}`).join("\n")}`;
+      },
+    },
+
+    // ── schedule_publish ─────────────────────────────────────
+    {
+      definition: {
+        name: "schedule_publish",
+        description:
+          "Schedule a document for future publishing or unpublishing. The scheduler runs every 60 seconds and will automatically change the status when the time comes. Dates should be ISO 8601 format (e.g. '2026-03-29T09:00:00').",
+        input_schema: {
+          type: "object",
+          properties: {
+            collection: { type: "string", description: "Collection name" },
+            slug: { type: "string", description: "Document slug" },
+            publishAt: { type: "string", description: "ISO 8601 datetime to publish (e.g. '2026-03-29T09:00:00'). Set to null to clear." },
+            unpublishAt: { type: "string", description: "ISO 8601 datetime to unpublish (e.g. '2026-04-15T00:00:00'). Set to null to clear." },
+          },
+          required: ["collection", "slug"],
+        },
+      },
+      handler: async (input) => {
+        const collection = String(input.collection);
+        const slug = String(input.slug);
+
+        const cms = await getAdminCms();
+        const doc = await cms.content.findBySlug(collection, slug);
+        if (!doc) return `Error: Document not found: ${collection}/${slug}`;
+
+        const update: Record<string, unknown> = {};
+        if (input.publishAt !== undefined) {
+          update.publishAt = input.publishAt === "null" || input.publishAt === null ? null : String(input.publishAt);
+        }
+        if (input.unpublishAt !== undefined) {
+          update.unpublishAt = input.unpublishAt === "null" || input.unpublishAt === null ? null : String(input.unpublishAt);
+        }
+
+        if (Object.keys(update).length === 0) {
+          return `Error: Provide publishAt and/or unpublishAt.`;
+        }
+
+        await saveRevision(collection, doc).catch(() => {});
+        await cms.content.update(collection, doc.id, update);
+
+        const parts = [`Scheduled "${doc.data.title ?? slug}" in ${collection}:`];
+        if (update.publishAt) parts.push(`  Publish at: ${update.publishAt}`);
+        if (update.publishAt === null) parts.push(`  Cleared publish schedule`);
+        if (update.unpublishAt) parts.push(`  Unpublish at: ${update.unpublishAt}`);
+        if (update.unpublishAt === null) parts.push(`  Cleared unpublish schedule`);
+        return parts.join("\n");
+      },
+    },
   ];
 }

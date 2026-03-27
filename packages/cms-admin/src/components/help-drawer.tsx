@@ -281,6 +281,8 @@ const AI_TOOL_GROUPS = [
       { icon: Copy, name: "Clone document", desc: "Duplicate any document as draft" },
       { icon: Sparkles, name: "Generate content", desc: "AI-write or rewrite any field" },
       { icon: Pencil, name: "Inline edit form", desc: "Edit specific fields directly in chat" },
+      { icon: Send, name: "Bulk publish", desc: "Publish all drafts at once" },
+      { icon: Pencil, name: "Bulk update", desc: "Update a field across many docs" },
     ],
   },
   {
@@ -314,6 +316,7 @@ const AI_TOOL_GROUPS = [
   {
     label: "Scheduling & History",
     tools: [
+      { icon: Clock, name: "Schedule publish", desc: "Set future publish/unpublish date" },
       { icon: Clock, name: "Calendar", desc: "View scheduled publishes/unpublishes" },
       { icon: Clock, name: "Revisions", desc: "View document change history" },
       { icon: Trash2, name: "Trash", desc: "List trashed docs, restore them" },

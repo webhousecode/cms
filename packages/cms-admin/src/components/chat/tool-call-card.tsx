@@ -54,6 +54,10 @@ const TOOL_META: Record<string, ToolMeta> = {
   trash_document:    { label: "Moving to trash", icon: Trash2, destructive: true },
   generate_content:  { label: "Generating content", icon: Sparkles },
   rewrite_field:     { label: "Rewriting field", icon: RotateCcw },
+  // Phase 4: Bulk & Workflow
+  bulk_publish:      { label: "Publishing all drafts", icon: Send },
+  bulk_update:       { label: "Bulk updating", icon: Pencil },
+  schedule_publish:  { label: "Scheduling", icon: Sparkles },
 };
 
 interface ToolCallCardProps {
