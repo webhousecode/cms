@@ -133,6 +133,7 @@ export async function buildChatTools(): Promise<ToolPair[]> {
         const slug = String(input.slug);
 
         const cms = await getAdminCms();
+        const config = await getAdminConfig();
         const doc = await cms.content.findBySlug(collection, slug);
         if (!doc) return `Document not found: ${collection}/${slug}`;
 
@@ -144,8 +145,13 @@ export async function buildChatTools(): Promise<ToolPair[]> {
           }
         }
 
+        // Build page path for preview
+        const col = config.collections.find((c) => c.name === collection);
+        const urlPrefix = (col as any)?.urlPrefix ?? "";
+        const pagePath = urlPrefix ? `${urlPrefix}/${slug}` : `/${slug}`;
+
         return JSON.stringify(
-          { slug: doc.slug, status: doc.status, ...data },
+          { slug: doc.slug, status: doc.status, _pagePath: pagePath, ...data },
           null,
           2
         );

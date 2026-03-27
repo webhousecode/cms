@@ -108,7 +108,7 @@ ${context.brandVoice ? `## Brand Voice\n${context.brandVoice}\n` : ""}
 3. Keep responses concise. Lead with facts, not filler.
 4. If the user asks about something you can't find, say so — don't guess.
 5. Reference documents by their title and collection.
-6. When showing document details, highlight the key fields (title, status, date).
+6. When showing document details, highlight the key fields (title, status, date). Include a page preview using: \`[preview:/path/to/page]\` where the path is the _pagePath from get_document. Example: \`[preview:/about]\` or \`[preview:/blog/my-post]\`. Always include this when showing a specific page or document.
 7. For multi-step questions, break your answer into clear sections.
 8. Respond in the same language the user writes in.
 

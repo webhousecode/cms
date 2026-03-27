@@ -1,6 +1,7 @@
 "use client";
 
 import { Fragment } from "react";
+import { PagePreviewCard } from "./page-preview-card";
 
 /**
  * Rich markdown renderer for chat messages.
@@ -16,7 +17,7 @@ export function MarkdownRenderer({ text }: { text: string }) {
 // ── Block-level parsing ──────────────────────────────────
 
 interface Block {
-  type: "paragraph" | "heading" | "code" | "table" | "ul" | "ol" | "blockquote" | "hr";
+  type: "paragraph" | "heading" | "code" | "table" | "ul" | "ol" | "blockquote" | "hr" | "preview";
   content: string;
   level?: number; // heading level 1-3
   lang?: string;  // code block language
@@ -30,6 +31,14 @@ function parseBlocks(text: string): Block[] {
 
   while (i < lines.length) {
     const line = lines[i];
+
+    // Page preview embed: [preview:/path]
+    const previewMatch = line.match(/^\[preview:(\/[^\]]+)\]$/);
+    if (previewMatch) {
+      blocks.push({ type: "preview", content: previewMatch[1] });
+      i++;
+      continue;
+    }
 
     // Horizontal rule
     if (/^---+$/.test(line.trim()) || /^\*\*\*+$/.test(line.trim())) {
@@ -126,7 +135,8 @@ function parseBlocks(text: string): Block[] {
       !lines[i].match(/^[-*•]\s/) &&
       !lines[i].match(/^\d+[.)]\s/) &&
       !lines[i].startsWith("> ") &&
-      !/^---+$/.test(lines[i].trim())
+      !/^---+$/.test(lines[i].trim()) &&
+      !lines[i].match(/^\[preview:\/[^\]]+\]$/)
     ) {
       paraLines.push(lines[i]);
       i++;
@@ -143,6 +153,9 @@ function parseBlocks(text: string): Block[] {
 
 function renderBlock(block: Block, key: number): React.ReactNode {
   switch (block.type) {
+    case "preview":
+      return <PagePreviewCard key={key} pagePath={block.content} />;
+
     case "hr":
       return (
         <hr
