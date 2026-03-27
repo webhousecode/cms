@@ -88,12 +88,12 @@ export async function POST(request: NextRequest) {
           content: m.content,
         }));
 
-        const MAX_TOOL_ITERATIONS = 10;
+        const MAX_TOOL_ITERATIONS = 25;
 
         for (let i = 0; i < MAX_TOOL_ITERATIONS; i++) {
           const response = await client.messages.create({
             model: resolvedModel,
-            max_tokens: 4096,
+            max_tokens: 8192,
             system: systemPrompt,
             messages: anthropicMessages,
             tools: anthropicTools,
