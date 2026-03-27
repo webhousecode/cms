@@ -28,8 +28,10 @@ export async function extractDocumentText(
 }
 
 async function extractPdf(buffer: Buffer): Promise<string | null> {
-  // pdf-parse v1 — CommonJS, default export is a function
-  const pdfParse = (await import("pdf-parse")).default;
+  // pdf-parse v1 is CommonJS — use createRequire for reliable loading in ESM/Turbopack
+  const { createRequire } = await import("node:module");
+  const require = createRequire(import.meta.url);
+  const pdfParse = require("pdf-parse");
   const result = await pdfParse(buffer);
   const text = result.text?.trim();
   if (!text || text.length < 10) return null; // Likely scanned/image-only PDF
