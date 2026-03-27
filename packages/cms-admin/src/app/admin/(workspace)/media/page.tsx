@@ -1459,10 +1459,13 @@ function LightboxTagPanel({ fileKey, onTagsChanged }: { fileKey: string; onTagsC
     onTagsChanged?.();
   }
 
-  function addTag() {
-    const tag = input.trim().toLowerCase();
-    if (!tag || tags.includes(tag)) { setInput(""); return; }
-    saveTags([...tags, tag]);
+  function addTag(value?: string) {
+    const raw = (value ?? input).trim().toLowerCase();
+    if (!raw) { setInput(""); return; }
+    // Support comma-separated list (from paste or typing)
+    const parts = raw.split(",").map((t) => t.trim()).filter(Boolean);
+    const unique = parts.filter((t) => !tags.includes(t));
+    if (unique.length > 0) saveTags([...tags, ...unique]);
     setInput("");
   }
 
@@ -1501,8 +1504,16 @@ function LightboxTagPanel({ fileKey, onTagsChanged }: { fileKey: string; onTagsC
             <input
               type="text"
               value={input}
-              onChange={(e) => setInput(e.target.value.replace(/[^a-zA-Z0-9æøåÆØÅäöüÄÖÜ_ -]/g, ""))}
+              onChange={(e) => {
+                const v = e.target.value;
+                if (v.includes(",")) { addTag(v); return; }
+                setInput(v.replace(/[^a-zA-Z0-9æøåÆØÅäöüÄÖÜ_ -]/g, ""));
+              }}
               onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addTag(); } }}
+              onPaste={(e) => {
+                const text = e.clipboardData.getData("text");
+                if (text.includes(",")) { e.preventDefault(); addTag(text); }
+              }}
               placeholder="Add tag…"
               style={{
                 flex: 1, padding: "0.25rem 0.4rem", borderRadius: "5px",
