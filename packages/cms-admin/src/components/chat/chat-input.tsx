@@ -88,7 +88,7 @@ export function ChatInput({ onSend, disabled, placeholder, visible }: ChatInputP
           disabled={disabled}
           placeholder={placeholder ?? "Type a message... (/ to focus)"}
           rows={1}
-          className="text-foreground placeholder:text-muted-foreground"
+          className="text-foreground placeholder:text-foreground/40"
           style={{
             flex: 1,
             resize: "none",
