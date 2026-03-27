@@ -844,7 +844,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
   /* ── Cmd+S → save document ────────────────────────────────── */
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      if ((e.metaKey || e.ctrlKey) && e.key === "s") {
+      if ((e.metaKey || e.ctrlKey) && e.key === "s" && !e.shiftKey) {
         e.preventDefault();
         if (!saving) save();
       }
