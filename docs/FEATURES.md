@@ -124,7 +124,7 @@
 | F105 | [Voice Module](#f105-voice-module) | Planned | [docs/features/F105-voice-module.md](features/F105-voice-module.md) |
 | F106 | [TipTap v3 Upgrade](#f106-tiptap-v3-upgrade) | Planned | [docs/features/F106-tiptap-v3-upgrade.md](features/F106-tiptap-v3-upgrade.md) |
 | F107 | [Chat with Your Site](#f107-chat-with-your-site) | Planned | [docs/features/F107-chat-with-your-site.md](features/F107-chat-with-your-site.md) |
-| F108 | [Rich Text Editor Enhancements](#f108-rich-text-editor-enhancements) | Planned | [docs/features/F108-richtext-editor-enhancements.md](features/F108-richtext-editor-enhancements.md) |
+| F108 | [Rich Text Editor Enhancements](#f108-rich-text-editor-enhancements) | ✅ Done | [docs/features/F108-richtext-editor-enhancements.md](features/F108-richtext-editor-enhancements.md) |
 | F109 | [Inline Proofreading](#f109-inline-proofreading) | Planned | [docs/features/F109-inline-proofreading.md](features/F109-inline-proofreading.md) |
 
 ---

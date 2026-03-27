@@ -126,7 +126,7 @@ _Makes us stand out. Customers expect these from a modern CMS._
 | 18i | **F101 Update Manager** | Medium | Dagligt version check mod npm, update banner i admin, `cms update` CLI, deployment detection. WordPress-style "Update Available" for Node.js/Docker. |
 | 18j | **F104 Performance & Data Optimization** | Medium | SQLite media metadata, config cache, API pagination, bundle splitting, debounced writes. Targets: media load <150ms, config read <0.1ms. |
 | ~~18k~~ | ~~**F106 TipTap v3 Upgrade**~~ | ~~Done~~ | ~~Shipped 2026-03-27. v2.27→v3.20, Floating UI, consolidated packages, toolbar reactivity fix, save stale closure fix.~~ |
-| 18l | **F108 Rich Text Editor Enhancements** | Medium | Underline, superscript/subscript, text alignment, highlight colors, editor zoom, AI proofreading. 1-2 dage. |
+| ~~18l~~ | ~~**F108 Rich Text Editor Enhancements**~~ | ~~Done~~ | ~~Shipped 2026-03-27. Underline, super/subscript, alignment, highlight, zoom, AI proofread.~~ |
 | 18m | **F109 Inline Proofreading** | Medium | ProseMirror decorations for inline corrections — strikethrough + green suggestion, accept/reject, navigation. 2-3 dage. |
 
 ### Tier 3 — Differentiation (v1.3+)
