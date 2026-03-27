@@ -871,17 +871,18 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
   }, [doc.status, doc.publishAt, setTabStatus]);
 
   /* ── Cmd+S → save document ────────────────────────────────── */
+  const saveRef = useRef(save);
+  saveRef.current = save; // always points to the latest save() with current doc state
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === "s" && !e.shiftKey) {
         e.preventDefault();
-        if (!saving) save();
+        saveRef.current();
       }
     }
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [saving]);
+  }, []);
 
   // Close locale dropdown on outside click
   useEffect(() => {
@@ -896,7 +897,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
   const updateField = useCallback((name: string, value: unknown) => {
     setDoc((prev) => ({ ...prev, data: { ...prev.data, [name]: value } }));
     setDirty(true);
-  }, []);
+  }, [setDoc]);
 
   async function save(status?: "draft" | "published") {
     setSaving(true);
