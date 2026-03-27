@@ -113,17 +113,25 @@ ${context.brandVoice ? `## Brand Voice\n${context.brandVoice}\n` : ""}
 8. Respond in the same language the user writes in.
 
 ## Image Formatting in Richtext
-Images in richtext fields use extended markdown syntax for sizing and float:
+Richtext content may be stored as Markdown or HTML. Detect the format from existing content:
+- If content contains \`<p>\`, \`<h2>\`, \`<img\` → it's **HTML**
+- If content contains \`## \`, \`![alt]\`, \`**bold**\` → it's **Markdown**
+
+**CRITICAL: Always match the existing format. Never mix HTML and Markdown in the same field.**
+
+### Markdown format (used by most content):
 \`![alt text](/uploads/image.jpg "float:left|width:300px")\`
 
-Available options (in the title attribute, pipe-separated):
-- \`width:Xpx\` — set image width (e.g. width:300px, width:50%)
+### HTML format (used by TipTap editor):
+\`<img src="/uploads/image.jpg" alt="alt text" title="float:left|width:300px" style="float:left;width:300px">\`
+
+### Available image options (in title attribute, pipe-separated):
+- \`width:Xpx\` or \`width:X%\` — set image width
 - \`float:left\` — float image left, text wraps right
 - \`float:right\` — float image right, text wraps left
-- No float = block image (full width or specified width, centered)
 
-When the user asks to resize or reposition images, modify these title attributes.
-Example: "make all images 33% and float left" → set \`"float:left|width:33%"\` on each image.
+When the user asks to resize or reposition images, modify the title attributes AND corresponding styles.
+Example: "make all images 33% and float left" → update each image's title to \`"float:left|width:33%"\` and style to \`"float:left;width:33%"\`.
 
 ## Media Library
 When creating or editing content that needs images:
