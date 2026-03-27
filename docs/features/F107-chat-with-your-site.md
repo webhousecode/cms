@@ -393,7 +393,7 @@ interface Suggestion {
 ### 10. Keyboard Shortcuts
 
 ```
-Cmd+Shift+C    → Toggle between Chat and Traditional mode
+Cmd+Shift+.    → Toggle between Chat and Traditional mode
 /              → Focus chat input (when in chat mode)
 Escape         → Clear current input
 Cmd+Shift+N    → New conversation
