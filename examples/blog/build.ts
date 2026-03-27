@@ -177,8 +177,9 @@ function renderContent(raw: unknown): string {
         : "margin: 1.5rem auto; width: 100%;";
       return `<div class="interactive-embed" style="${floatStyle}">
         <iframe src="${bp(`/uploads/interactives/${id}.html`)}" title="${esc(title)}"
-          style="width:100%; border:none; border-radius:var(--radius); min-height:300px;"
-          loading="lazy" sandbox="allow-scripts allow-same-origin"></iframe>
+          style="width:100%; border:none; border-radius:var(--radius); overflow:hidden;"
+          loading="lazy" sandbox="allow-scripts allow-same-origin"
+          onload="this.style.height=this.contentDocument.documentElement.scrollHeight+'px'"></iframe>
       </div>`;
     },
   );
