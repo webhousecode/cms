@@ -1,0 +1,108 @@
+import { getAdminCms, getAdminConfig } from "@/lib/cms";
+import { readBrandVoice, brandVoiceToPromptContext } from "@/lib/brand-voice";
+import { loadRegistry, findSite } from "@/lib/site-registry";
+import { cookies } from "next/headers";
+
+export interface SiteContext {
+  siteName: string;
+  adapter: string;
+  collections: Array<{
+    name: string;
+    label: string;
+    fields: Array<{ name: string; type: string; label?: string; required?: boolean }>;
+    documentCount: number;
+  }>;
+  brandVoice?: string;
+}
+
+/** Gather full site context for the chat system prompt */
+export async function gatherSiteContext(): Promise<SiteContext> {
+  const [cms, config] = await Promise.all([getAdminCms(), getAdminConfig()]);
+
+  // Get site name and adapter from registry
+  let siteName = "My Site";
+  let adapter = "filesystem";
+  try {
+    const registry = await loadRegistry();
+    if (registry) {
+      const cookieStore = await cookies();
+      const orgId = cookieStore.get("cms-active-org")?.value ?? registry.defaultOrgId;
+      const siteId = cookieStore.get("cms-active-site")?.value ?? registry.defaultSiteId;
+      const site = findSite(registry, orgId, siteId);
+      if (site) {
+        siteName = site.name;
+        adapter = site.adapter;
+      }
+    }
+  } catch { /* fallback to defaults */ }
+
+  const brandVoice = await readBrandVoice().catch(() => null);
+  const brandContext = brandVoice ? brandVoiceToPromptContext(brandVoice) : undefined;
+
+  const collections: SiteContext["collections"] = [];
+
+  for (const col of config.collections) {
+    if (col.name === "global") continue;
+    const { documents } = await cms.content
+      .findMany(col.name, {})
+      .catch(() => ({ documents: [] as any[] }));
+
+    collections.push({
+      name: col.name,
+      label: col.label ?? col.name,
+      fields: (col.fields ?? []).map((f: any) => ({
+        name: f.name,
+        type: f.type,
+        label: f.label,
+        required: f.required,
+      })),
+      documentCount: documents.filter((d: any) => d.status !== "trashed").length,
+    });
+  }
+
+  return {
+    siteName,
+    adapter,
+    collections,
+    brandVoice: brandContext ?? undefined,
+  };
+}
+
+/** Build the full system prompt for the chat interface */
+export function buildChatSystemPrompt(context: SiteContext): string {
+  const collectionDescriptions = context.collections
+    .map((c) => {
+      const fieldList = c.fields
+        .map((f) => `    - ${f.label ?? f.name} (${f.type})${f.required ? " *required" : ""}`)
+        .join("\n");
+      return `  ### ${c.label} (\`${c.name}\`) — ${c.documentCount} documents\n${fieldList}`;
+    })
+    .join("\n\n");
+
+  return `You are the AI assistant for "${context.siteName}", a website managed by webhouse CMS.
+You have full access to read and manage all content on this site through tools.
+
+## Your Capabilities
+- List, search, and read all content across all collections
+- View site schema (collections, fields, types)
+- View site configuration and drafts
+- Answer questions about the site's content and structure
+
+## Site Schema
+
+${collectionDescriptions}
+
+## Storage Adapter
+${context.adapter}
+
+${context.brandVoice ? `## Brand Voice\n${context.brandVoice}\n` : ""}
+## Rules
+1. ALWAYS use tools to look up content. Never make up or assume data.
+2. When listing documents, format as a clean bullet list or table.
+3. Keep responses concise. Lead with facts, not filler.
+4. If the user asks about something you can't find, say so — don't guess.
+5. Reference documents by their title and collection.
+6. When showing document details, highlight the key fields (title, status, date).
+7. For multi-step questions, break your answer into clear sections.
+8. Respond in the same language the user writes in.`;
+}
