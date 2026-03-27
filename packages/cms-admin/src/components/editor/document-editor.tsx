@@ -5,7 +5,7 @@ import { CustomSelect } from "@/components/ui/custom-select";
 import { useRouter } from "next/navigation";
 import type { CollectionConfig, BlockConfig } from "@webhouse/cms";
 import { FieldEditor } from "./field-editor";
-import { Save, Globe, FileText, Trash2, ArrowLeft, Lock, LockOpen, Copy, Clock, History, Eye, Languages, Sparkles, Settings2, Wand2, ChevronDown, ChevronRight, Loader2 } from "lucide-react";
+import { Save, Globe, FileText, Trash2, ArrowLeft, Lock, LockOpen, Copy, Clock, History, Eye, Languages, Sparkles, Settings2, Wand2, ChevronDown, ChevronRight, Loader2, Search as SearchIcon } from "lucide-react";
 import Link from "next/link";
 import { ActionBar, ActionBarBreadcrumb } from "@/components/action-bar";
 import { formatDate, cn, previewPath } from "@/lib/utils";
@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { useTabs } from "@/lib/tabs-context";
 import { AIPanel } from "./ai-panel";
+import { SeoPanel } from "./seo-panel";
 import { GenerateDocumentDialog } from "@/components/generate-document-dialog";
 
 // Fallback to env vars for backwards compatibility — overridden by props from server
@@ -847,6 +848,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
   const [historyOpen, setHistoryOpen] = useState(false);
   const [aiPanelOpen, setAiPanelOpen] = useState(false);
   const [propertiesOpen, setPropertiesOpen] = useState(false);
+  const [seoPanelOpen, setSeoPanelOpen] = useState(false);
   const [generateOpen, setGenerateOpen] = useState(false);
   const [cloning, setCloning] = useState(false);
   const [confirmTrash, setConfirmTrash] = useState(false);
@@ -1149,7 +1151,18 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => { setHistoryOpen((o) => !o); if (aiPanelOpen) setAiPanelOpen(false); if (propertiesOpen) setPropertiesOpen(false); }}
+            onClick={() => { setSeoPanelOpen((o) => !o); if (historyOpen) setHistoryOpen(false); if (aiPanelOpen) setAiPanelOpen(false); if (propertiesOpen) setPropertiesOpen(false); }}
+            className={seoPanelOpen ? "gap-1.5 text-primary" : "gap-1.5 text-muted-foreground hover:text-foreground"}
+            title="SEO settings"
+          >
+            <SearchIcon className="w-3.5 h-3.5" />
+            SEO
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => { setHistoryOpen((o) => !o); if (aiPanelOpen) setAiPanelOpen(false); if (propertiesOpen) setPropertiesOpen(false); if (seoPanelOpen) setSeoPanelOpen(false); }}
             className="text-muted-foreground hover:text-foreground gap-1.5"
             title="Revision history"
           >
@@ -1545,6 +1558,16 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
             setDoc(updated);
             setPropertiesOpen(false);
           }}
+        />
+      )}
+
+      {seoPanelOpen && (
+        <SeoPanel
+          doc={doc}
+          onUpdate={(seo) => {
+            updateField("_seo", seo);
+          }}
+          onClose={() => setSeoPanelOpen(false)}
         />
       )}
 
