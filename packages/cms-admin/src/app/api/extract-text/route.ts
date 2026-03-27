@@ -1,4 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+// Static imports — Turbopack bundles these at build time
+// @ts-expect-error — pdf-parse has no type declarations
+import pdfParse from "pdf-parse";
+import mammoth from "mammoth";
 
 /**
  * POST /api/extract-text
@@ -16,41 +20,24 @@ export async function POST(req: NextRequest) {
 
   try {
     if (name.endsWith(".pdf")) {
-      // pdf-parse v1 is CJS — try multiple import strategies
-      let pdfParse: (buf: Buffer) => Promise<{ text?: string; numpages?: number }>;
-      try {
-        // Strategy 1: dynamic import (works in most bundlers)
-        const mod = await import("pdf-parse");
-        pdfParse = (mod as any).default ?? mod;
-      } catch {
-        try {
-          // Strategy 2: globalThis.require (Node.js runtime)
-          pdfParse = (globalThis as any).require("pdf-parse");
-        } catch {
-          return NextResponse.json({ text: null, reason: "pdf-parse not available" });
-        }
-      }
-
       const result = await pdfParse(buffer);
       const text = result.text?.trim();
-
       if (!text || text.length < 10) {
-        return NextResponse.json({ text: null, reason: "No readable text found (possibly scanned/image PDF)" });
+        return NextResponse.json({ text: null, reason: "No readable text (possibly scanned/image PDF)" });
       }
       return NextResponse.json({ text: text.slice(0, 50_000) });
     }
 
     if (name.endsWith(".docx") || name.endsWith(".doc")) {
-      const mammoth = await import("mammoth");
       const result = await mammoth.extractRawText({ buffer });
       const text = result.value?.trim();
-      if (!text) return NextResponse.json({ text: null, reason: "No text found in document" });
+      if (!text) return NextResponse.json({ text: null, reason: "No text found" });
       return NextResponse.json({ text: text.slice(0, 50_000) });
     }
 
     return NextResponse.json({ text: null, reason: "Unsupported file type" });
   } catch (err) {
     console.error("[extract-text] Error:", err instanceof Error ? err.message : err);
-    return NextResponse.json({ text: null, reason: "Extraction failed" });
+    return NextResponse.json({ text: null, reason: `Extraction error: ${err instanceof Error ? err.message : "unknown"}` });
   }
 }
