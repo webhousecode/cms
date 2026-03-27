@@ -14,6 +14,35 @@ interface UploadedFile {
 
 const ACCEPT_TYPES = "image/*,.csv,.md,.markdown,.txt,.doc,.docx,.ppt,.pptx,.pdf,.html,.htm";
 
+const ALLOWED_EXTENSIONS = new Set([
+  // Images
+  "jpg", "jpeg", "png", "gif", "webp", "svg", "bmp", "ico",
+  // Documents (server-side text extraction)
+  "pdf", "doc", "docx",
+  // Text (client-side read)
+  "csv", "md", "markdown", "txt", "json",
+  // Web (Interactives)
+  "html", "htm",
+  // Presentations (upload to media)
+  "ppt", "pptx",
+]);
+
+const SUPPORTED_FILE_INFO = `**Supported file types:**
+
+| Type | Formats | What happens |
+|------|---------|-------------|
+| Images | JPG, PNG, GIF, WebP, SVG | Upload to media + AI analysis + WebP variants |
+| PDF | PDF | Text extracted server-side, content sent to AI |
+| Word | DOC, DOCX | Text extracted server-side, content sent to AI |
+| Text | CSV, MD, TXT, JSON | Read client-side, content sent to AI |
+| HTML | HTML, HTM | Upload to media (available for Interactives) |
+| Presentations | PPT, PPTX | Upload to media library |`;
+
+function isAllowedFile(file: File): boolean {
+  const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+  return ALLOWED_EXTENSIONS.has(ext) || file.type.startsWith("image/");
+}
+
 function categorizeFile(file: File): FileCategory {
   if (file.type.startsWith("image/")) return "image";
   if (file.name.endsWith(".html") || file.name.endsWith(".htm")) return "html";
@@ -75,14 +104,26 @@ export function ChatInput({ onSend, disabled, placeholder, visible }: ChatInputP
     }
   }
 
+  const [rejectedMsg, setRejectedMsg] = useState<string | null>(null);
+
   async function handleFiles(files: FileList | File[]) {
     const fileList = Array.from(files);
     if (fileList.length === 0) return;
 
+    // Check for unsupported files
+    const rejected = fileList.filter((f) => !isAllowedFile(f));
+    if (rejected.length > 0) {
+      const names = rejected.map((f) => f.name).join(", ");
+      setRejectedMsg(`Unsupported: ${names}`);
+      setTimeout(() => setRejectedMsg(null), 5000);
+    }
+    const allowed = fileList.filter((f) => isAllowedFile(f));
+    if (allowed.length === 0) return;
+
     setUploading(true);
     const results: UploadedFile[] = [];
 
-    for (const file of fileList) {
+    for (const file of allowed) {
       const category = categorizeFile(file);
 
       if (category === "image") {
@@ -390,6 +431,22 @@ export function ChatInput({ onSend, disabled, placeholder, visible }: ChatInputP
       >
         Press Enter to send, Shift+Enter for new line{dragOver ? " — Drop to upload" : ""}
       </div>
+      {rejectedMsg && (
+        <div
+          style={{
+            maxWidth: "768px",
+            margin: "6px auto 0",
+            padding: "8px 12px",
+            borderRadius: "8px",
+            fontSize: "0.75rem",
+            backgroundColor: "rgba(239, 68, 68, 0.1)",
+            border: "1px solid rgba(239, 68, 68, 0.25)",
+            color: "var(--destructive)",
+          }}
+        >
+          {rejectedMsg}. Supported: images, PDF, Word, CSV, Markdown, TXT, HTML.
+        </div>
+      )}
     </div>
   );
 }
