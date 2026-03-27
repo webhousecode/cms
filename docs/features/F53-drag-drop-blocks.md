@@ -169,6 +169,9 @@ The existing `BlocksEditor` gets an optional `enableDragHandle` prop. When true,
 6. **Drag handle in block header** — grip icon, optional via prop
 7. **Test** — drag between 2/3/4 columns, reorder within, keyboard, touch
 
+
+> **NOTE — F107 Chat Integration:** When this feature introduces new API routes, tools, or admin actions, ensure they are also exposed as tool-use functions in F107 (Chat with Your Site). The chat interface must be able to perform any action the traditional admin UI can. See `docs/features/F107-chat-with-your-site.md`.
+
 ## Dependencies
 
 - Columns block system (done)

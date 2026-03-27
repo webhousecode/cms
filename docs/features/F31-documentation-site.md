@@ -148,6 +148,9 @@ docs/
 10. Deploy to `docs.webhouse.app` on Fly.io (region: arn)
 11. Add search bar using CMS content API
 
+
+> **NOTE — F107 Chat Integration:** When this feature introduces new API routes, tools, or admin actions, ensure they are also exposed as tool-use functions in F107 (Chat with Your Site). The chat interface must be able to perform any action the traditional admin UI can. See `docs/features/F107-chat-with-your-site.md`.
+
 ## Dependencies
 
 - The @webhouse/cms packages (dogfooding)

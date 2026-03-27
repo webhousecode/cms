@@ -247,6 +247,9 @@ A small "Recent Activity" section on the Dashboard showing the last 5 entries �
 10. **Log rotation** — auto-rotate at 10K lines
 11. **Calendar integration** — show historical publish events
 
+
+> **NOTE — F107 Chat Integration:** When this feature introduces new API routes, tools, or admin actions, ensure they are also exposed as tool-use functions in F107 (Chat with Your Site). The chat interface must be able to perform any action the traditional admin UI can. See `docs/features/F107-chat-with-your-site.md`.
+
 ## Dependencies
 
 - None — all infrastructure exists. The feature is purely additive.

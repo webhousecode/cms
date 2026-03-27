@@ -117,6 +117,9 @@ export interface ChatConfig {
 10. Build and host widget script at `chat.webhouse.app/widget.js`
 11. Add embed code snippet to admin settings for easy copy
 
+
+> **NOTE — F107 Chat Integration:** When this feature introduces new API routes, tools, or admin actions, ensure they are also exposed as tool-use functions in F107 (Chat with Your Site). The chat interface must be able to perform any action the traditional admin UI can. See `docs/features/F107-chat-with-your-site.md`.
+
 ## Dependencies
 
 - F08 (RAG Knowledge Base) — required for content-aware responses

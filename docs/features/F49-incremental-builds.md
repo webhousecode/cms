@@ -303,6 +303,9 @@ npx cms build --force
 9. **Add `.gitignore` entry** — `_data/build-cache.json` should be gitignored
 10. **Test** — build once (full), modify one document, build again (incremental), verify only changed page rebuilt; test --force; test config change triggers full rebuild
 
+
+> **NOTE — F107 Chat Integration:** When this feature introduces new API routes, tools, or admin actions, ensure they are also exposed as tool-use functions in F107 (Chat with Your Site). The chat interface must be able to perform any action the traditional admin UI can. See `docs/features/F107-chat-with-your-site.md`.
+
 ## Dependencies
 
 - **Build pipeline** — `packages/cms/src/build/pipeline.ts` (existing, modified)

@@ -238,6 +238,9 @@ _data/users.json              # Extended with providers[] array
 12. **Azure AD** — requires tenant ID configuration
 13. **Test** — OAuth flow for each provider, account linking, unlinking
 
+
+> **NOTE — F107 Chat Integration:** When this feature introduces new API routes, tools, or admin actions, ensure they are also exposed as tool-use functions in F107 (Chat with Your Site). The chat interface must be able to perform any action the traditional admin UI can. See `docs/features/F107-chat-with-your-site.md`.
+
 ## Dependencies
 
 - **F26 GitHub Login** — existing GitHub OAuth flow to generalize (Done)

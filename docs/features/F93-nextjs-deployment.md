@@ -200,6 +200,9 @@ The CMS does not manage provider env vars — that's the provider's responsibili
 9. Wire auto-deploy trigger into document save endpoint
 10. Document setup guide for each provider in deploy settings panel help text
 
+
+> **NOTE — F107 Chat Integration:** When this feature introduces new API routes, tools, or admin actions, ensure they are also exposed as tool-use functions in F107 (Chat with Your Site). The chat interface must be able to perform any action the traditional admin UI can. See `docs/features/F107-chat-with-your-site.md`.
+
 ## Dependencies
 
 - F12 One-Click Publish (in progress — deploy hooks already built in deploy-service.ts)

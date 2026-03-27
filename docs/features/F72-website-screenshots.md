@@ -279,6 +279,9 @@ Naming: `{collection}-{slug}.png`. Overwrites on re-capture (no versioning — l
 14. Add error handling for pages that fail to load (timeout, 404, 500)
 15. Test with webhouse-site (filesystem) and SproutLake (GitHub)
 
+
+> **NOTE — F107 Chat Integration:** When this feature introduces new API routes, tools, or admin actions, ensure they are also exposed as tool-use functions in F107 (Chat with Your Site). The chat interface must be able to perform any action the traditional admin UI can. See `docs/features/F107-chat-with-your-site.md`.
+
 ## Dependencies
 
 - `playwright` — headless browser (already a dev dependency for E2E tests)

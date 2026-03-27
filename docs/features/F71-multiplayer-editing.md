@@ -306,6 +306,9 @@ User A browser  ──WebSocket──►  PartyKit Room (per document)  ◄─�
 19. Migration path: v1 locking gracefully upgrades to v2 (v2 replaces v1 when active)
 20. Load testing: 5+ simultaneous editors on one document
 
+
+> **NOTE — F107 Chat Integration:** When this feature introduces new API routes, tools, or admin actions, ensure they are also exposed as tool-use functions in F107 (Chat with Your Site). The chat interface must be able to perform any action the traditional admin UI can. See `docs/features/F107-chat-with-your-site.md`.
+
 ## Dependencies
 
 - **F01 — Invite Users (Done)** — prerequisite: multiple users must exist in the system

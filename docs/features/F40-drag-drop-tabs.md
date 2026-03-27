@@ -200,3 +200,5 @@ No schema changes needed. The existing `save()` function in `tabs-context.tsx` a
 - **Size:** Small (1-2 hours)
 - **Risk:** Low — additive change, no modifications to tab state shape or persistence format
 - **Dependencies:** `@dnd-kit/core`, `@dnd-kit/sortable`, `@dnd-kit/utilities` (all from same maintainer)
+
+> **NOTE — F107 Chat Integration:** When this feature introduces new API routes, tools, or admin actions, ensure they are also exposed as tool-use functions in F107 (Chat with Your Site). The chat interface must be able to perform any action the traditional admin UI can. See `docs/features/F107-chat-with-your-site.md`.

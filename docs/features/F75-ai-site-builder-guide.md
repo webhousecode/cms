@@ -224,6 +224,9 @@ The index includes the version so the AI can check if it has an outdated cached 
 9. Test with Cursor/Windsurf: can smaller-context AI tools use the index effectively?
 10. Update project CLAUDE.md to reference the modular guide
 
+
+> **NOTE — F107 Chat Integration:** When this feature introduces new API routes, tools, or admin actions, ensure they are also exposed as tool-use functions in F107 (Chat with Your Site). The chat interface must be able to perform any action the traditional admin UI can. See `docs/features/F107-chat-with-your-site.md`.
+
 ## Dependencies
 
 - F24 (AI Playbook) — Done. This evolves the existing CLAUDE.md approach.

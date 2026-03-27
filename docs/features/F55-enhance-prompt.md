@@ -176,6 +176,9 @@ Editable in Settings → AI Prompts like all other prompts.
 6. **Integrate in Create with AI modal** — Add button next to Generate
 7. **Integrate in content AI chat** — Add button next to Send (lower priority, shorter prompts)
 
+
+> **NOTE — F107 Chat Integration:** When this feature introduces new API routes, tools, or admin actions, ensure they are also exposed as tool-use functions in F107 (Chat with Your Site). The chat interface must be able to perform any action the traditional admin UI can. See `docs/features/F107-chat-with-your-site.md`.
+
 ## Dependencies
 
 - Existing AI chat infrastructure (`/api/cms/ai/chat` or similar)

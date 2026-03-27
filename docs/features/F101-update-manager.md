@@ -546,6 +546,9 @@ Ingen. Rent additivt — nye filer, nye endpoints, ny banner-komponent i layout.
 
 **Anbefaling:** Ship v1 først. Docker auto-update er nice-to-have men kræver container orchestration der er out-of-scope for et CMS. Hub-scenariet er del af F70.
 
+
+> **NOTE — F107 Chat Integration:** When this feature introduces new API routes, tools, or admin actions, ensure they are also exposed as tool-use functions in F107 (Chat with Your Site). The chat interface must be able to perform any action the traditional admin UI can. See `docs/features/F107-chat-with-your-site.md`.
+
 ## Dependencies
 
 - Eksisterende scheduler i `instrumentation.ts` (Done)

@@ -155,6 +155,9 @@ None. All three options are purely additive.
 2. **Option 2 (map field):** Add `'map'` to FieldType union. Create `map-field.tsx` admin component with address input + optional map preview. Add renderer case in document-editor.
 3. **Option 3 (Interactive template):** Create `map-interactive.html` with Google Maps JS API. Add to Interactives template gallery (if exists) or document as uploadable template.
 
+
+> **NOTE — F107 Chat Integration:** When this feature introduces new API routes, tools, or admin actions, ensure they are also exposed as tool-use functions in F107 (Chat with Your Site). The chat interface must be able to perform any action the traditional admin UI can. See `docs/features/F107-chat-with-your-site.md`.
+
 ## Dependencies
 
 - None blocking. All three options can be built independently.

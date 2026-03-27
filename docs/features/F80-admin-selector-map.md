@@ -194,6 +194,9 @@ Reads `cms.config.ts` for the active site and generates the field selector map w
 6. Add `cms selector-map` CLI command
 7. Document the convention for future contributors
 
+
+> **NOTE — F107 Chat Integration:** When this feature introduces new API routes, tools, or admin actions, ensure they are also exposed as tool-use functions in F107 (Chat with Your Site). The chat interface must be able to perform any action the traditional admin UI can. See `docs/features/F107-chat-with-your-site.md`.
+
 ## Dependencies
 
 - None strictly required, but benefits from:
