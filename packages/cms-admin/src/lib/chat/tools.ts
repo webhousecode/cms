@@ -1247,6 +1247,43 @@ DESIGN GUIDELINES:
       },
     },
 
+    // ── empty_trash ─────────────────────────────────────────
+    {
+      definition: {
+        name: "empty_trash",
+        description: "Permanently delete all items in trash (documents and media). This cannot be undone.",
+        input_schema: { type: "object", properties: {} },
+      },
+      handler: async () => {
+        const [cms, config] = await Promise.all([getAdminCms(), getAdminConfig()]);
+        let deleted = 0;
+
+        // Delete trashed documents
+        for (const col of config.collections) {
+          const { documents } = await cms.content.findMany(col.name, {}).catch(() => ({ documents: [] as any[] }));
+          for (const d of documents) {
+            if ((d.status as string) === "trashed") {
+              await cms.content.delete(col.name, d.id);
+              deleted++;
+            }
+          }
+        }
+
+        // Delete trashed media
+        try {
+          const { getMediaAdapter } = await import("@/lib/media");
+          const adapter = await getMediaAdapter();
+          const trashed = await adapter.listTrashed();
+          for (const m of trashed) {
+            await adapter.deleteFile(m.folder, m.name);
+            deleted++;
+          }
+        } catch { /* media not available */ }
+
+        return deleted > 0 ? `Permanently deleted ${deleted} item(s) from trash.` : "Trash was already empty.";
+      },
+    },
+
     // ── run_link_check ────────────────────────────────────────
     {
       definition: {

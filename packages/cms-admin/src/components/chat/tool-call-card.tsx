@@ -41,6 +41,7 @@ const TOOL_META: Record<string, ToolMeta> = {
   clone_document:    { label: "Cloning document", icon: Plus },
   list_trash:        { label: "Checking trash" },
   restore_from_trash:{ label: "Restoring from trash", icon: RotateCcw },
+  empty_trash:       { label: "Emptying trash", icon: Trash2, destructive: true },
   run_link_check:    { label: "Checking links" },
   create_backup:     { label: "Creating backup" },
   content_stats:     { label: "Calculating stats" },
