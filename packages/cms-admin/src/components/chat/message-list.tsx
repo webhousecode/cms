@@ -189,7 +189,7 @@ export function MessageList({ messages, isThinking }: MessageListProps) {
         ))}
 
         {isThinking && (
-          <div style={{ display: "flex", gap: "12px", padding: "16px 0", alignItems: "flex-start" }}>
+          <div style={{ display: "flex", gap: "12px", padding: "16px 0", alignItems: "center" }}>
             <div
               style={{
                 width: "28px",
@@ -199,7 +199,6 @@ export function MessageList({ messages, isThinking }: MessageListProps) {
                 alignItems: "center",
                 justifyContent: "center",
                 flexShrink: 0,
-                marginTop: "-2px",
                 backgroundColor: "var(--muted)",
                 color: "var(--foreground)",
               }}

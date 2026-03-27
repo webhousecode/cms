@@ -6,7 +6,7 @@
  */
 export function ThinkingAnimation({ label }: { label?: string }) {
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "10px", padding: "8px 0" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
       <div style={{ position: "relative", width: "28px", height: "28px" }}>
         <style>{`
           @keyframes chat-orbit {

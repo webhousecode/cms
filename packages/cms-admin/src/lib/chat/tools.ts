@@ -828,5 +828,421 @@ export async function buildChatTools(): Promise<ToolPair[]> {
         return `Rewrote "${field}" on "${doc.data.title ?? slug}".\n\nNew content:\n${preview}`;
       },
     },
+
+    // ═══════════════════════════════════════════════════════════
+    // Operations & Management tools
+    // ═══════════════════════════════════════════════════════════
+
+    // ── list_scheduled ────────────────────────────────────────
+    {
+      definition: {
+        name: "list_scheduled",
+        description: "List all content scheduled for future publishing or unpublishing. Shows the content calendar.",
+        input_schema: { type: "object", properties: {} },
+      },
+      handler: async () => {
+        const [cms, config] = await Promise.all([getAdminCms(), getAdminConfig()]);
+        const items: string[] = [];
+        for (const col of config.collections) {
+          if (col.name === "global") continue;
+          const { documents } = await cms.content.findMany(col.name, {}).catch(() => ({ documents: [] as any[] }));
+          for (const d of documents) {
+            if (d.publishAt || d.unpublishAt) {
+              const title = d.data.title ?? d.slug;
+              const parts = [`- **${title}** (${col.label ?? col.name}/${d.slug}) [${d.status}]`];
+              if (d.publishAt) parts.push(`  Publish at: ${d.publishAt}`);
+              if (d.unpublishAt) parts.push(`  Unpublish at: ${d.unpublishAt}`);
+              items.push(parts.join("\n"));
+            }
+          }
+        }
+        return items.length > 0 ? `${items.length} scheduled item(s):\n\n${items.join("\n\n")}` : "No scheduled content.";
+      },
+    },
+
+    // ── list_agents ───────────────────────────────────────────
+    {
+      definition: {
+        name: "list_agents",
+        description: "List all AI agents configured for this site. Shows name, role, target collection, and status.",
+        input_schema: { type: "object", properties: {} },
+      },
+      handler: async () => {
+        const { listAgents } = await import("@/lib/agents");
+        const agents = await listAgents();
+        if (agents.length === 0) return "No AI agents configured.";
+        return agents.map((a: any) =>
+          `- **${a.name}** (${a.role}) → ${a.targetCollections?.join(", ") ?? "any"} [${a.active ? "active" : "inactive"}]\n  ID: \`${a.id}\``
+        ).join("\n");
+      },
+    },
+
+    // ── create_agent ──────────────────────────────────────────
+    {
+      definition: {
+        name: "create_agent",
+        description: "Create a new AI agent. Requires a name, role (copywriter/seo/translator/refresher/custom), and system prompt.",
+        input_schema: {
+          type: "object",
+          properties: {
+            name: { type: "string", description: "Agent name" },
+            role: { type: "string", description: "Agent role: copywriter, seo, translator, refresher, or custom" },
+            systemPrompt: { type: "string", description: "System prompt that defines the agent's behavior" },
+            targetCollections: { type: "array", items: { type: "string" }, description: "Collections the agent works with (default: ['posts'])" },
+          },
+          required: ["name", "role", "systemPrompt"],
+        },
+      },
+      handler: async (input) => {
+        const { createAgent } = await import("@/lib/agents");
+        const agent = await createAgent({
+          name: String(input.name),
+          role: String(input.role) as any,
+          systemPrompt: String(input.systemPrompt),
+          targetCollections: (input.targetCollections as string[]) ?? ["posts"],
+          active: true,
+          behavior: { temperature: 50, formality: 50, verbosity: 50 },
+          tools: { webSearch: false, internalDatabase: true },
+          autonomy: "draft",
+          schedule: { enabled: false, frequency: "manual", time: "09:00", maxPerRun: 1 },
+          fieldDefaults: {},
+        } as any);
+        return `Created agent **${agent.name}** (${agent.role})\nID: \`${agent.id}\`\nTarget: ${agent.targetCollections.join(", ")}`;
+      },
+    },
+
+    // ── run_agent ─────────────────────────────────────────────
+    {
+      definition: {
+        name: "run_agent",
+        description: "Run an AI agent with a prompt. The agent generates content and adds it to the curation queue.",
+        input_schema: {
+          type: "object",
+          properties: {
+            agentId: { type: "string", description: "Agent ID (use list_agents to find it)" },
+            prompt: { type: "string", description: "What to generate" },
+            collection: { type: "string", description: "Override target collection (optional)" },
+          },
+          required: ["agentId", "prompt"],
+        },
+      },
+      handler: async (input) => {
+        const { runAgent } = await import("@/lib/agent-runner");
+        const result = await runAgent(
+          String(input.agentId),
+          String(input.prompt),
+          input.collection ? String(input.collection) : undefined,
+        );
+        return `Agent produced: **${result.title}**\nCollection: ${result.collection}/${result.slug}\nCost: $${result.costUsd.toFixed(4)}\nStatus: In curation queue`;
+      },
+    },
+
+    // ── list_curation_queue ───────────────────────────────────
+    {
+      definition: {
+        name: "list_curation_queue",
+        description: "List items in the AI curation queue. Shows content generated by agents awaiting review.",
+        input_schema: {
+          type: "object",
+          properties: {
+            status: { type: "string", description: "Filter: ready, in_review, approved, rejected, published (default: ready)" },
+          },
+        },
+      },
+      handler: async (input) => {
+        const { listQueueItems, getQueueStats } = await import("@/lib/curation");
+        const status = input.status ? String(input.status) : undefined;
+        const [items, stats] = await Promise.all([
+          listQueueItems(status as any),
+          getQueueStats(),
+        ]);
+        const statsLine = Object.entries(stats).map(([k, v]) => `${k}: ${v}`).join(", ");
+        if (items.length === 0) return `Queue is empty (filter: ${status ?? "all"}).\nStats: ${statsLine}`;
+        const list = items.map((item: any) =>
+          `- **${item.title}** by ${item.agentName} → ${item.collection}/${item.slug} [${item.status}]\n  ID: \`${item.id}\` | Cost: $${item.costUsd?.toFixed(4) ?? "?"}`
+        ).join("\n");
+        return `Queue stats: ${statsLine}\n\n${list}`;
+      },
+    },
+
+    // ── approve_queue_item ────────────────────────────────────
+    {
+      definition: {
+        name: "approve_queue_item",
+        description: "Approve a curation queue item for publishing. Creates the document in the collection.",
+        input_schema: {
+          type: "object",
+          properties: {
+            id: { type: "string", description: "Queue item ID" },
+            asDraft: { type: "boolean", description: "Approve as draft instead of published (default: false)" },
+          },
+          required: ["id"],
+        },
+      },
+      handler: async (input) => {
+        const { approveQueueItem } = await import("@/lib/curation");
+        const item = await approveQueueItem(String(input.id), input.asDraft === true);
+        return `Approved: **${item.title}** → ${item.collection}/${item.slug} [${input.asDraft ? "draft" : "published"}]`;
+      },
+    },
+
+    // ── reject_queue_item ─────────────────────────────────────
+    {
+      definition: {
+        name: "reject_queue_item",
+        description: "Reject a curation queue item with feedback for the agent.",
+        input_schema: {
+          type: "object",
+          properties: {
+            id: { type: "string", description: "Queue item ID" },
+            feedback: { type: "string", description: "Why it was rejected — used for agent learning" },
+          },
+          required: ["id", "feedback"],
+        },
+      },
+      handler: async (input) => {
+        const { rejectQueueItem } = await import("@/lib/curation");
+        const item = await rejectQueueItem(String(input.id), String(input.feedback));
+        return `Rejected: **${item.title}** — Feedback: "${input.feedback}"`;
+      },
+    },
+
+    // ── trigger_deploy ────────────────────────────────────────
+    {
+      definition: {
+        name: "trigger_deploy",
+        description: "Deploy the site to the configured provider (GitHub Pages, Fly.io, etc.).",
+        input_schema: { type: "object", properties: {} },
+      },
+      handler: async () => {
+        const { triggerDeploy } = await import("@/lib/deploy-service");
+        const result = await triggerDeploy();
+        if (result.status === "success") {
+          return `Deployed successfully!${result.url ? `\nURL: ${result.url}` : ""}`;
+        }
+        return `Deploy failed: ${result.error ?? "Unknown error"}`;
+      },
+    },
+
+    // ── trigger_build ─────────────────────────────────────────
+    {
+      definition: {
+        name: "trigger_build",
+        description: "Rebuild the static site (regenerates all pages in dist/). Use before deploy or to refresh preview.",
+        input_schema: { type: "object", properties: {} },
+      },
+      handler: async () => {
+        const { runBuild } = await import("@webhouse/cms");
+        const [cms, config] = await Promise.all([getAdminCms(), getAdminConfig()]);
+        const { getActiveSitePaths } = await import("@/lib/site-paths");
+        const { projectDir } = await getActiveSitePaths();
+        const result = await runBuild(config, cms.storage, {
+          outDir: `${projectDir}/dist`,
+          includeDrafts: true,
+        });
+        return `Built ${result.pages} pages in ${result.duration}ms → ${result.outDir}`;
+      },
+    },
+
+    // ── list_revisions ────────────────────────────────────────
+    {
+      definition: {
+        name: "list_revisions",
+        description: "List revision history for a document. Shows when each version was saved.",
+        input_schema: {
+          type: "object",
+          properties: {
+            collection: { type: "string", description: "Collection name" },
+            slug: { type: "string", description: "Document slug" },
+          },
+          required: ["collection", "slug"],
+        },
+      },
+      handler: async (input) => {
+        const { listRevisions } = await import("@/lib/revisions");
+        const revisions = await listRevisions(String(input.collection), String(input.slug));
+        if (revisions.length === 0) return "No revisions found.";
+        return revisions.map((r: any, i: number) =>
+          `${i}. ${r.savedAt ?? "unknown date"} — ${r.status ?? "?"}`
+        ).join("\n");
+      },
+    },
+
+    // ── clone_document ────────────────────────────────────────
+    {
+      definition: {
+        name: "clone_document",
+        description: "Create a copy of an existing document. The clone is created as a draft with '-copy' suffix.",
+        input_schema: {
+          type: "object",
+          properties: {
+            collection: { type: "string", description: "Collection name" },
+            slug: { type: "string", description: "Document slug to clone" },
+          },
+          required: ["collection", "slug"],
+        },
+      },
+      handler: async (input) => {
+        const collection = String(input.collection);
+        const slug = String(input.slug);
+        const cms = await getAdminCms();
+        const doc = await cms.content.findBySlug(collection, slug);
+        if (!doc) return `Error: Document not found: ${collection}/${slug}`;
+
+        let newSlug = `${slug}-copy`;
+        let existing = await cms.content.findBySlug(collection, newSlug).catch(() => null);
+        let n = 2;
+        while (existing) {
+          newSlug = `${slug}-copy-${n}`;
+          existing = await cms.content.findBySlug(collection, newSlug).catch(() => null);
+          n++;
+        }
+        const cloned = await cms.content.create(collection, { slug: newSlug, status: "draft", data: { ...doc.data } });
+        return `Cloned **${doc.data.title ?? slug}** → ${collection}/${newSlug} (draft)`;
+      },
+    },
+
+    // ── list_trash ────────────────────────────────────────────
+    {
+      definition: {
+        name: "list_trash",
+        description: "List all trashed documents across all collections.",
+        input_schema: { type: "object", properties: {} },
+      },
+      handler: async () => {
+        const [cms, config] = await Promise.all([getAdminCms(), getAdminConfig()]);
+        const items: string[] = [];
+        for (const col of config.collections) {
+          const { documents } = await cms.content.findMany(col.name, {}).catch(() => ({ documents: [] as any[] }));
+          for (const d of documents) {
+            if (d.status === "trashed") {
+              items.push(`- **${d.data.title ?? d.slug}** (${col.label ?? col.name}/${d.slug}) trashed ${d.data._trashedAt ?? ""}`);
+            }
+          }
+        }
+        return items.length > 0 ? `${items.length} trashed item(s):\n${items.join("\n")}` : "Trash is empty.";
+      },
+    },
+
+    // ── restore_from_trash ────────────────────────────────────
+    {
+      definition: {
+        name: "restore_from_trash",
+        description: "Restore a trashed document back to draft status.",
+        input_schema: {
+          type: "object",
+          properties: {
+            collection: { type: "string", description: "Collection name" },
+            slug: { type: "string", description: "Document slug" },
+          },
+          required: ["collection", "slug"],
+        },
+      },
+      handler: async (input) => {
+        const collection = String(input.collection);
+        const slug = String(input.slug);
+        const cms = await getAdminCms();
+        const doc = await cms.content.findBySlug(collection, slug);
+        if (!doc) return `Error: Not found: ${collection}/${slug}`;
+        if ((doc.status as string) !== "trashed") return `"${doc.data.title ?? slug}" is not trashed (status: ${doc.status}).`;
+        const data = { ...doc.data };
+        delete data._trashedAt;
+        await cms.content.update(collection, doc.id, { status: "draft", data });
+        return `Restored **${doc.data.title ?? slug}** from trash → draft`;
+      },
+    },
+
+    // ── run_link_check ────────────────────────────────────────
+    {
+      definition: {
+        name: "run_link_check",
+        description: "Check all links across the site for broken URLs. Returns results summary.",
+        input_schema: { type: "object", properties: {} },
+      },
+      handler: async () => {
+        const { readLinkCheckResult } = await import("@/lib/link-check-store");
+        // Return last results if recent (< 1 hour), otherwise suggest running
+        const last = await readLinkCheckResult();
+        if (last) {
+          const broken = last.results?.filter((r: any) => r.status === "broken") ?? [];
+          const ok = last.results?.filter((r: any) => r.status === "ok") ?? [];
+          return `Last check: ${last.checkedAt ?? "unknown"}\n${ok.length} OK, ${broken.length} broken\n\n${
+            broken.length > 0
+              ? broken.map((r: any) => `- **${r.url}** in ${r.collection}/${r.slug} — ${r.error ?? r.httpStatus}`).join("\n")
+              : "No broken links!"
+          }`;
+        }
+        return "No link check results yet. Run a check from Tools → Link Checker in Admin mode.";
+      },
+    },
+
+    // ── create_backup ─────────────────────────────────────────
+    {
+      definition: {
+        name: "create_backup",
+        description: "Create a backup of the site's content right now.",
+        input_schema: { type: "object", properties: {} },
+      },
+      handler: async () => {
+        const { createBackup } = await import("@/lib/backup-service");
+        const snapshot = await createBackup("manual");
+        return `Backup created: ${snapshot.fileName}\nSize: ${Math.round(snapshot.sizeBytes / 1024)}KB\nDocs: ${snapshot.documentCount}\nTime: ${snapshot.timestamp}`;
+      },
+    },
+
+    // ── content_stats ─────────────────────────────────────────
+    {
+      definition: {
+        name: "content_stats",
+        description: "Get content statistics: word counts, document counts, AI vs human content ratio, recent activity.",
+        input_schema: { type: "object", properties: {} },
+      },
+      handler: async () => {
+        const [cms, config] = await Promise.all([getAdminCms(), getAdminConfig()]);
+        let totalDocs = 0;
+        let totalWords = 0;
+        let published = 0;
+        let drafts = 0;
+
+        for (const col of config.collections) {
+          if (col.name === "global") continue;
+          const { documents } = await cms.content.findMany(col.name, {}).catch(() => ({ documents: [] as any[] }));
+          for (const d of documents) {
+            if (d.status === "trashed") continue;
+            totalDocs++;
+            if (d.status === "published") published++;
+            if (d.status === "draft") drafts++;
+            const content = String(d.data.content ?? d.data.body ?? "");
+            totalWords += content.split(/\s+/).filter(Boolean).length;
+          }
+        }
+
+        // AI stats
+        try {
+          const { getContentRatio } = await import("@/lib/analytics");
+          const ratio = await getContentRatio();
+          return `**Content stats:**\n- ${totalDocs} documents (${published} published, ${drafts} drafts)\n- ${totalWords.toLocaleString()} total words\n- AI content ratio: ${Math.round((ratio.aiEdits / Math.max(ratio.totalEdits, 1)) * 100)}% (${ratio.aiEdits} AI / ${ratio.humanEdits} human edits)`;
+        } catch {
+          return `**Content stats:**\n- ${totalDocs} documents (${published} published, ${drafts} drafts)\n- ${totalWords.toLocaleString()} total words`;
+        }
+      },
+    },
+
+    // ── list_deploy_history ───────────────────────────────────
+    {
+      definition: {
+        name: "list_deploy_history",
+        description: "Show recent deployment history.",
+        input_schema: { type: "object", properties: {} },
+      },
+      handler: async () => {
+        const { listDeploys } = await import("@/lib/deploy-service");
+        const deploys = await listDeploys();
+        if (deploys.length === 0) return "No deploy history.";
+        return deploys.slice(0, 10).map((d: any) =>
+          `- ${d.timestamp ?? d.createdAt} — ${d.status}${d.url ? ` → ${d.url}` : ""}${d.error ? ` (${d.error})` : ""}`
+        ).join("\n");
+      },
+    },
   ];
 }
