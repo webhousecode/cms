@@ -841,6 +841,7 @@ interface Props {
   initialDoc: DocSnapshot;
   translations?: { slug: string; locale: string | null; status: string; translationOf: string | null; updatedAt?: string }[];
   sourceUpdatedAt?: string;
+  sourceData?: Record<string, unknown>;
   previewSiteUrl?: string;
   previewInIframe?: boolean;
   backHref?: string;
@@ -853,7 +854,7 @@ const G = globalThis as unknown as { __docCache?: Map<string, DocSnapshot> };
 if (!G.__docCache) G.__docCache = new Map();
 const docStateCache = G.__docCache;
 
-export function DocumentEditor({ collection, colConfig, blocksConfig = [], locales = [], defaultLocale = "en", initialDoc, translations = [], sourceUpdatedAt, previewSiteUrl, previewInIframe, backHref, readOnly = false }: Props) {
+export function DocumentEditor({ collection, colConfig, blocksConfig = [], locales = [], defaultLocale = "en", initialDoc, translations = [], sourceUpdatedAt, sourceData: sourceDataProp, previewSiteUrl, previewInIframe, backHref, readOnly = false }: Props) {
   const PREVIEW_SITE_URL = previewSiteUrl ?? PREVIEW_SITE_URL_DEFAULT;
   const PREVIEW_IN_IFRAME = previewInIframe ?? PREVIEW_IN_IFRAME_DEFAULT;
   const cacheKey = `${collection}/${initialDoc.slug}`;
@@ -905,20 +906,11 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
   const [localeOpen, setLocaleOpen] = useState(false);
   const [createTranslationOpen, setCreateTranslationOpen] = useState(false);
   const [sideBySide, setSideBySide] = useState(false);
-  const [sourceDoc, setSourceDoc] = useState<Record<string, unknown> | null>(null);
+  const sourceDoc = sourceDataProp ?? null;
   const localeRef = useRef<HTMLDivElement>(null);
   const [, startTransition] = useTransition();
   const router = useRouter();
   const { openTab, setTabStatus } = useTabs();
-
-  // Fetch source document when side-by-side is toggled on a translation
-  useEffect(() => {
-    if (!sideBySide || !translationOf) { setSourceDoc(null); return; }
-    fetch(`/api/cms/${collection}/${translationOf}`)
-      .then(r => r.json())
-      .then(d => setSourceDoc(d.data ?? d))
-      .catch(() => setSourceDoc(null));
-  }, [sideBySide, translationOf, collection]);
 
   // Sync document status to active tab (for the colored dot)
   useEffect(() => {

@@ -63,6 +63,7 @@ export default async function DocumentPage({ params, searchParams }: Props) {
         }}
         translations={translations}
         sourceUpdatedAt={sourceDoc?.updatedAt}
+        sourceData={sourceDoc?.data}
         previewSiteUrl={siteConfig.previewSiteUrl}
         previewInIframe={siteConfig.previewInIframe}
         backHref={from === "curation" ? "/admin/curation" : undefined}
