@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Fragment } from "react";
 import { Sparkles, Loader2, CheckCircle2, Plus, X, Download, Tag } from "lucide-react";
 import { TabTitle } from "@/lib/tabs-context";
 import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
@@ -339,9 +339,8 @@ export default function SeoPage() {
                   </thead>
                   <tbody>
                     {keywordData.analyses.map((kw) => (
-                      <>
+                      <Fragment key={kw.keyword}>
                         <tr
-                          key={kw.keyword}
                           style={{ borderBottom: "1px solid var(--border)", cursor: kw.documents.length > 0 ? "pointer" : "default" }}
                           onClick={() => kw.documents.length > 0 && setExpandedKeyword(expandedKeyword === kw.keyword ? null : kw.keyword)}
                         >
@@ -402,7 +401,7 @@ export default function SeoPage() {
                           </td>
                         </tr>
                         {expandedKeyword === kw.keyword && kw.documents.length > 0 && (
-                          <tr key={`${kw.keyword}-detail`}>
+                          <tr>
                             <td colSpan={5} style={{ padding: "0 0.75rem 0.75rem", background: "var(--card)" }}>
                               <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.72rem" }}>
                                 <thead>
@@ -437,7 +436,7 @@ export default function SeoPage() {
                             </td>
                           </tr>
                         )}
-                      </>
+                      </Fragment>
                     ))}
                   </tbody>
                 </table>
