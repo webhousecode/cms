@@ -8,12 +8,21 @@ import type { CollectionConfig } from '../schema/types.js';
 export function getLocalizedDocumentUrl(
   doc: Document,
   collection: CollectionConfig,
-  config: { defaultLocale?: string; locales?: string[] },
+  config: { defaultLocale?: string; locales?: string[]; localeStrategy?: string },
   allDocs?: Map<string, Document>,
 ): string {
   const baseUrl = getDocumentUrl(doc, collection, allDocs);
   const docLocale = doc.locale;
+  const strategy = config.localeStrategy ?? "prefix-other";
+
+  // No prefix needed for single-locale sites or "none" strategy
   if (!docLocale || !config.locales || config.locales.length <= 1) return baseUrl;
+  if (strategy === "none") return baseUrl;
+
+  // "prefix-all": every locale gets a prefix
+  if (strategy === "prefix-all") return `/${docLocale}${baseUrl}`;
+
+  // "prefix-other" (default): only non-default locales get prefix
   if (docLocale === (config.defaultLocale || config.locales[0])) return baseUrl;
   return `/${docLocale}${baseUrl}`;
 }

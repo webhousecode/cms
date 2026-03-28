@@ -86,6 +86,8 @@ export interface SiteConfig {
   defaultLocale: string;
   /** F48 i18n — all locales the site supports (empty = single-locale site) */
   locales: string[];
+  /** F48 i18n — URL strategy for locale prefixes */
+  localeStrategy: "none" | "prefix-other" | "prefix-all";
 }
 
 async function getConfigPath(): Promise<string> {
@@ -142,6 +144,7 @@ async function defaults(): Promise<SiteConfig> {
     agentDefaultWebhooks: [],
     defaultLocale: "en",
     locales: [],
+    localeStrategy: "prefix-other",
   };
 }
 

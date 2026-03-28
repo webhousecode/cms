@@ -20,10 +20,17 @@
       ],
       "ogImage": "/uploads/FullSizeRender-4.jpg",
       "lastOptimized": "2026-03-28T01:03:01.464Z"
+    },
+    "_lastEditedBy": {
+      "userId": "dev-token",
+      "name": "Dev Token",
+      "email": "dev@localhost",
+      "at": "2026-03-28T18:36:58.106Z"
     }
   },
   "_fieldMeta": {},
   "createdAt": "2026-03-27T23:51:48.922Z",
-  "updatedAt": "2026-03-28T01:03:01.467Z",
-  "publishAt": "2026-04-02T09:00:00"
+  "updatedAt": "2026-03-28T18:36:58.107Z",
+  "publishAt": "2026-04-02T09:00:00",
+  "locale": "da"
 }

@@ -20,9 +20,16 @@
       ],
       "ogImage": "/uploads/a-logo-for-a-new-community-in-my-city-of-aalborg-1773597146740-t4ci.PNG",
       "lastOptimized": "2026-03-28T01:03:02.939Z"
+    },
+    "_lastEditedBy": {
+      "userId": "dev-token",
+      "name": "Dev Token",
+      "email": "dev@localhost",
+      "at": "2026-03-28T18:36:58.240Z"
     }
   },
   "_fieldMeta": {},
   "createdAt": "2026-03-27T18:30:58.714Z",
-  "updatedAt": "2026-03-28T01:03:02.939Z"
+  "updatedAt": "2026-03-28T18:36:58.241Z",
+  "locale": "da"
 }

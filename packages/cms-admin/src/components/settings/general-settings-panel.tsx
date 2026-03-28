@@ -300,6 +300,7 @@ function SiteSection() {
 		showCloseAllTabs: false,
 		defaultLocale: "en",
 		locales: [] as string[],
+		localeStrategy: "prefix-other",
 	});
 	const [saving, setSaving] = useState(false);
 	const [saved, setSaved] = useState(false);
@@ -517,7 +518,7 @@ import { LOCALE_LABELS, LOCALE_FLAGS } from "@/lib/locale";
 const AVAILABLE_LOCALES = Object.keys(LOCALE_LABELS);
 
 function LanguageSection({ cfg, setCfg }: {
-	cfg: { defaultLocale: string; locales: string[] };
+	cfg: { defaultLocale: string; locales: string[]; localeStrategy: string };
 	setCfg: (fn: (c: any) => any) => void;
 }) {
 	const [adding, setAdding] = useState(false);
@@ -660,6 +661,29 @@ function LanguageSection({ cfg, setCfg }: {
 						</button>
 					)}
 				</div>
+
+				{cfg.locales?.length > 1 && (
+					<>
+						<div style={{ height: "1px", background: "var(--border)" }} />
+						<div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+							<div>
+								<p style={{ fontSize: "0.875rem", fontWeight: 500, margin: 0 }}>URL strategy</p>
+								<p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", margin: "0.15rem 0 0" }}>
+									How locale prefixes appear in URLs.
+								</p>
+							</div>
+							<CustomSelect
+								value={cfg.localeStrategy || "prefix-other"}
+								onChange={(v) => setCfg((c: any) => ({ ...c, localeStrategy: v }))}
+								options={[
+									{ value: "prefix-other", label: "Prefix non-default — /posts/slug/ + /en/posts/slug/" },
+									{ value: "prefix-all", label: "Prefix all — /da/posts/slug/ + /en/posts/slug/" },
+									{ value: "none", label: "No prefix — /posts/slug/ (all locales)" },
+								]}
+							/>
+						</div>
+					</>
+				)}
 			</Card>
 		</div>
 	);

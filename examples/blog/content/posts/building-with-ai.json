@@ -20,9 +20,16 @@
         "static site generator"
       ],
       "lastOptimized": "2026-03-28T01:03:10.279Z"
+    },
+    "_lastEditedBy": {
+      "userId": "dev-token",
+      "name": "Dev Token",
+      "email": "dev@localhost",
+      "at": "2026-03-28T18:36:58.439Z"
     }
   },
   "createdAt": "2026-03-09T01:00:00.000Z",
-  "updatedAt": "2026-03-28T01:03:10.280Z",
-  "_fieldMeta": {}
+  "updatedAt": "2026-03-28T18:36:58.440Z",
+  "_fieldMeta": {},
+  "locale": "da"
 }

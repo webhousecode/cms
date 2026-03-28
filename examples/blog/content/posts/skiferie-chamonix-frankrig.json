@@ -97,9 +97,16 @@
       ],
       "lastOptimized": "2026-03-28T16:39:22.403Z"
     },
-    "date": "2026-03-28"
+    "date": "2026-03-28",
+    "_lastEditedBy": {
+      "userId": "dev-token",
+      "name": "Dev Token",
+      "email": "dev@localhost",
+      "at": "2026-03-28T18:36:57.617Z"
+    }
   },
   "_fieldMeta": {},
   "createdAt": "2026-03-28T16:39:15.816Z",
-  "updatedAt": "2026-03-28T16:40:36.771Z"
+  "updatedAt": "2026-03-28T18:36:57.618Z",
+  "locale": "da"
 }

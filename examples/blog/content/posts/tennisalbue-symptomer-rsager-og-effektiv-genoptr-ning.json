@@ -21,9 +21,16 @@
         "overbelastningsskade"
       ],
       "lastOptimized": "2026-03-28T01:03:07.360Z"
+    },
+    "_lastEditedBy": {
+      "userId": "dev-token",
+      "name": "Dev Token",
+      "email": "dev@localhost",
+      "at": "2026-03-28T18:36:58.359Z"
     }
   },
   "createdAt": "2026-03-09T22:16:30.787Z",
-  "updatedAt": "2026-03-28T01:03:07.364Z",
-  "_fieldMeta": {}
+  "updatedAt": "2026-03-28T18:36:58.361Z",
+  "_fieldMeta": {},
+  "locale": "da"
 }

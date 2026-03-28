@@ -20,9 +20,16 @@
         "headless CMS"
       ],
       "lastOptimized": "2026-03-28T00:36:57.690Z"
+    },
+    "_lastEditedBy": {
+      "userId": "dev-token",
+      "name": "Dev Token",
+      "email": "dev@localhost",
+      "at": "2026-03-28T18:36:58.496Z"
     }
   },
   "createdAt": "2026-03-09T00:00:00.000Z",
-  "updatedAt": "2026-03-28T00:36:57.692Z",
-  "_fieldMeta": {}
+  "updatedAt": "2026-03-28T18:36:58.497Z",
+  "_fieldMeta": {},
+  "locale": "da"
 }

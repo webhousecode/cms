@@ -93,14 +93,15 @@
     },
     "date": "2026-03-28",
     "_lastEditedBy": {
-      "userId": "fb4eda6a-bc5c-4dec-8cb6-c77c9fb74cd9",
-      "name": "Christian Broberg",
-      "email": "cb@webhouse.dk",
-      "at": "2026-03-28T01:03:56.275Z"
+      "userId": "dev-token",
+      "name": "Dev Token",
+      "email": "dev@localhost",
+      "at": "2026-03-28T18:36:58.134Z"
     }
   },
   "_fieldMeta": {},
   "createdAt": "2026-03-27T23:51:48.917Z",
-  "updatedAt": "2026-03-28T01:03:56.290Z",
-  "publishAt": "2026-04-01T09:00:00"
+  "updatedAt": "2026-03-28T18:36:58.136Z",
+  "publishAt": "2026-04-01T09:00:00",
+  "locale": "da"
 }

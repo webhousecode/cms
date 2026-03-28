@@ -10,10 +10,10 @@
     "author": "Christian",
     "date": "2026-03-27",
     "_lastEditedBy": {
-      "userId": "fb4eda6a-bc5c-4dec-8cb6-c77c9fb74cd9",
-      "name": "Christian Broberg",
-      "email": "cb@webhouse.dk",
-      "at": "2026-03-28T11:06:16.396Z"
+      "userId": "dev-token",
+      "name": "Dev Token",
+      "email": "dev@localhost",
+      "at": "2026-03-28T18:36:58.400Z"
     },
     "_seo": {
       "metaTitle": "Pitchet via API - REST API Content Management Demo",
@@ -31,6 +31,7 @@
     }
   },
   "createdAt": "2026-03-09T21:22:24.033Z",
-  "updatedAt": "2026-03-28T11:06:16.403Z",
-  "_fieldMeta": {}
+  "updatedAt": "2026-03-28T18:36:58.400Z",
+  "_fieldMeta": {},
+  "locale": "da"
 }
