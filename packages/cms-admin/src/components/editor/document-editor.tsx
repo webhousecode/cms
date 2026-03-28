@@ -686,10 +686,7 @@ function PropertiesPanel({ doc, collection, onClose, onSaved }: {
 
       <div style={{ flex: 1, overflowY: "auto", padding: "1rem", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
         {/* ID */}
-        <div>
-          <p style={labelStyle}>ID</p>
-          <p style={{ ...valueStyle, color: "var(--muted-foreground)", fontSize: "0.72rem" }}>{doc.id}</p>
-        </div>
+        <CopyField label="ID" value={doc.id} labelStyle={labelStyle} valueStyle={{ ...valueStyle, color: "var(--muted-foreground)", fontSize: "0.72rem" }} />
 
         {/* Slug — editable */}
         <div>
