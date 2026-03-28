@@ -188,6 +188,36 @@ Return ONLY a JSON object with the translated fields. No explanation, no preambl
       mergedData._seo = { ...sourceSeo, ...translatedSeo };
     }
 
+    // Replace image alt-text in richtext fields with locale-specific alt from media-meta
+    try {
+      const { readMediaMeta } = await import("@/lib/media/media-meta");
+      const mediaMeta = await readMediaMeta();
+      const richtextFields = translatableFields.filter((f) => f.type === "richtext");
+      for (const field of richtextFields) {
+        const html = mergedData[field.name];
+        if (typeof html !== "string" || !html.includes("<img")) continue;
+        mergedData[field.name] = html.replace(
+          /<img\s+([^>]*?)alt="([^"]*)"([^>]*?)>/gi,
+          (match, pre, _alt, post) => {
+            // Extract src to find media-meta entry
+            const srcMatch = (pre + post).match(/src="([^"]+)"/);
+            if (!srcMatch) return match;
+            const src = srcMatch[1];
+            const key = src.replace(/^\/(api\/)?uploads\//, "");
+            const entry = mediaMeta.find((m) => m.key === key);
+            if (!entry) return match;
+            // Pick target locale alt, fall back to legacy
+            const localeAlt = (entry as any).aiAlts?.[targetLocale]
+              ?? entry.aiAlt
+              ?? _alt;
+            return `<img ${pre}alt="${localeAlt.replace(/"/g, "&quot;")}"${post}>`;
+          },
+        );
+      }
+    } catch (err) {
+      console.error("[translate] Alt-text localization failed (non-fatal):", err);
+    }
+
     // Check if translation already exists
     let existingTranslation;
     try {
