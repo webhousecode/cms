@@ -27,7 +27,18 @@ function miniMarkdownToHtml(md: string): string {
     .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
     .replace(/\*(.+?)\*/g, "<em>$1</em>")
     .replace(/`([^`]+)`/g, "<code>$1</code>")
-    .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" style="max-width:100%;border-radius:6px;margin:0.5rem 0" />')
+    .replace(/!\[([^\]]*)\]\((\S+?)(?:\s+"([^"]*)")?\)/g, (_m, alt, src, title) => {
+      // Parse TipTap-style title for styling: "float:right|width:287px"
+      let style = "max-width:100%;border-radius:6px;margin:0.5rem 0";
+      if (title) {
+        for (const part of title.split("|")) {
+          const [k, v] = part.split(":");
+          if (k === "float") style += `;float:${v};margin:${v === "right" ? "0 0 0.5rem 0.75rem" : "0 0.75rem 0.5rem 0"}`;
+          else if (k === "width") style += `;width:${v};max-width:${v}`;
+        }
+      }
+      return `<img src="${src}" alt="${alt}" style="${style}" />`;
+    })
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" style="color:var(--primary);text-decoration:underline">$1</a>')
     .replace(/\n{2,}/g, "</p><p>")
     .replace(/^(?!<[h|p|i|a|u|o|d])/, "<p>")
