@@ -1287,18 +1287,30 @@ function Lightbox({ files, index, onNavigate, onClose, onCopy, copied, onDelete,
 }
 
 /* ─── Lightbox AI Panel ──────────────────────────────────────── */
+interface LightboxAIMeta {
+  caption: string | null;
+  alt: string | null;
+  tags: string[];
+  analyzedAt: string;
+  provider: string | null;
+  captions?: Record<string, string> | null;
+  alts?: Record<string, string> | null;
+}
+
 function LightboxAIPanel({ imageUrl }: { imageUrl: string }) {
-  const [meta, setMeta] = useState<{ caption: string | null; alt: string | null; tags: string[]; analyzedAt: string; provider: string | null } | null>(null);
+  const [meta, setMeta] = useState<LightboxAIMeta | null>(null);
   const [loading, setLoading] = useState(true);
   const [analyzing, setAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [activeLocale, setActiveLocale] = useState<string | null>(null);
   const hasAiData = meta && (meta.caption || meta.alt || (meta.tags && meta.tags.length > 0));
 
   useEffect(() => {
     setLoading(true);
     setMeta(null);
     setError(null);
+    setActiveLocale(null);
     fetch(`/api/media/ai-meta?file=${encodeURIComponent(imageUrl)}`)
       .then((r) => r.json())
       .then((data) => { setMeta(data); setLoading(false); })
@@ -1325,7 +1337,11 @@ function LightboxAIPanel({ imageUrl }: { imageUrl: string }) {
         return;
       }
       const result = await res.json();
-      setMeta({ caption: result.caption, alt: result.alt, tags: result.tags, analyzedAt: new Date().toISOString(), provider: result.provider ?? "unknown" });
+      setMeta({
+        caption: result.caption, alt: result.alt, tags: result.tags,
+        analyzedAt: new Date().toISOString(), provider: result.provider ?? "unknown",
+        captions: result.captions ?? null, alts: result.alts ?? null,
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Analysis failed");
     }
@@ -1383,24 +1399,57 @@ function LightboxAIPanel({ imageUrl }: { imageUrl: string }) {
 
       {error && <p style={{ fontSize: "0.75rem", color: "#f87171", marginBottom: "0.5rem" }}>{error}</p>}
 
-      {hasAiData && meta && (
+      {hasAiData && meta && (() => {
+        const locales = meta.captions ? Object.keys(meta.captions) : [];
+        const hasMultiLocale = locales.length > 1;
+        const viewLocale = activeLocale ?? locales[0] ?? null;
+        const displayCaption = hasMultiLocale && viewLocale && meta.captions?.[viewLocale]
+          ? meta.captions[viewLocale]
+          : meta.caption;
+        const displayAlt = hasMultiLocale && viewLocale && meta.alts?.[viewLocale]
+          ? meta.alts[viewLocale]
+          : meta.alt;
+
+        return (
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+          {/* Locale pills */}
+          {hasMultiLocale && (
+            <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
+              {locales.map((l) => (
+                <button
+                  key={l}
+                  type="button"
+                  onClick={() => setActiveLocale(l)}
+                  style={{
+                    fontSize: "0.6rem", fontWeight: 600, padding: "2px 8px",
+                    borderRadius: "9999px", cursor: "pointer",
+                    border: (viewLocale === l) ? "1px solid #F7BB2E" : "1px solid rgba(255,255,255,0.12)",
+                    background: (viewLocale === l) ? "rgba(247,187,46,0.15)" : "transparent",
+                    color: (viewLocale === l) ? "#F7BB2E" : "rgba(255,255,255,0.5)",
+                  }}
+                >
+                  {l.toUpperCase()}
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* Caption */}
           <div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
               <span style={{ fontSize: "0.6rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "rgba(255,255,255,0.35)" }}>Caption</span>
-              {meta.caption && <CopyIcon text={meta.caption} field="caption" />}
+              {displayCaption && <CopyIcon text={displayCaption} field="caption" />}
             </div>
-            <p style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.85)", margin: 0, lineHeight: 1.5 }}>{meta.caption ?? "—"}</p>
+            <p style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.85)", margin: 0, lineHeight: 1.5 }}>{displayCaption ?? "—"}</p>
           </div>
 
           {/* Alt-text */}
           <div>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
               <span style={{ fontSize: "0.6rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "rgba(255,255,255,0.35)" }}>Alt-text</span>
-              {meta.alt && <CopyIcon text={meta.alt} field="alt" />}
+              {displayAlt && <CopyIcon text={displayAlt} field="alt" />}
             </div>
-            <p style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.85)", margin: 0, fontFamily: "monospace", lineHeight: 1.5 }}>{meta.alt ?? "—"}</p>
+            <p style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.85)", margin: 0, fontFamily: "monospace", lineHeight: 1.5 }}>{displayAlt ?? "—"}</p>
           </div>
 
           {/* Tags */}
@@ -1423,7 +1472,8 @@ function LightboxAIPanel({ imageUrl }: { imageUrl: string }) {
             </p>
           )}
         </div>
-      )}
+        );
+      })()}
     </div>
   );
 }
