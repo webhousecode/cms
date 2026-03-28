@@ -1232,6 +1232,225 @@ const InteractiveEmbed = TipTapNode.create({
   },
 });
 
+/* ─── Map embed node + NodeView ────────────────────────────── */
+function MapEmbedNodeView({ node, updateAttributes, deleteNode, selected }: NodeViewProps) {
+  const { address, zoom } = node.attrs as { address: string; zoom: string };
+  const [editing, setEditing] = useState(!address);
+  const [inputVal, setInputVal] = useState(address);
+  const mapContainerRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<unknown>(null);
+  const del = useConfirmDelete(deleteNode);
+
+  // Render Leaflet map when address is set
+  useEffect(() => {
+    if (!address || !mapContainerRef.current || mapInstanceRef.current) return;
+    let cancelled = false;
+
+    (async () => {
+      const L = (await import("leaflet")).default;
+      // @ts-expect-error — CSS import for side effects
+      await import("leaflet/dist/leaflet.css");
+      if (cancelled || !mapContainerRef.current) return;
+
+      try {
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&limit=1`,
+          { headers: { "User-Agent": "webhouse-cms/1.0" } },
+        );
+        const results = await res.json();
+        if (cancelled || !results.length || !mapContainerRef.current) return;
+
+        const lat = parseFloat(results[0].lat);
+        const lng = parseFloat(results[0].lon);
+        const z = parseInt(zoom || "14", 10);
+
+        const map = L.map(mapContainerRef.current, { center: [lat, lng], zoom: z, zoomControl: true, attributionControl: false });
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19 }).addTo(map);
+        const icon = L.icon({
+          iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+          iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+          shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+          iconSize: [25, 41], iconAnchor: [12, 41],
+        });
+        L.marker([lat, lng], { icon }).addTo(map);
+        mapInstanceRef.current = map;
+      } catch { /* geocoding failed */ }
+    })();
+
+    return () => { cancelled = true; };
+  }, [address, zoom]);
+
+  // Cleanup map on unmount
+  useEffect(() => {
+    return () => {
+      if (mapInstanceRef.current) {
+        (mapInstanceRef.current as { remove: () => void }).remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, []);
+
+  return (
+    <NodeViewWrapper draggable style={{ margin: "0.75rem 0", position: "relative" }}>
+      <DragHandle />
+      <div style={{
+        borderRadius: "8px", overflow: "hidden",
+        border: selected ? "2px solid var(--primary)" : "1px solid var(--border)",
+      }}>
+        {address && !editing ? (
+          <>
+            <div ref={mapContainerRef} style={{ width: "100%", height: 250 }} />
+            <div style={{
+              padding: "0.375rem 0.75rem", fontSize: "0.72rem", color: "var(--muted-foreground)",
+              background: "var(--card)", display: "flex", alignItems: "center", justifyContent: "space-between",
+            }}>
+              <span>📍 {address}</span>
+              <span style={{ display: "flex", gap: "0.25rem" }}>
+                <button type="button" onClick={() => { setEditing(true); setInputVal(address); }}
+                  style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>
+                  Edit
+                </button>
+                {del.confirming ? (
+                  <>
+                    <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
+                    <button type="button" onClick={del.confirm}
+                      style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
+                    <button type="button" onClick={del.cancel}
+                      style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
+                  </>
+                ) : (
+                  <button type="button" onClick={del.request}
+                    style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", cursor: "pointer", lineHeight: 1 }}>×</button>
+                )}
+              </span>
+            </div>
+          </>
+        ) : (
+          <div style={{ padding: "1.5rem", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem", background: "var(--card)" }}>
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--muted-foreground)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+            <form onSubmit={(e) => {
+              e.preventDefault();
+              if (inputVal.trim()) {
+                // Destroy old map before re-rendering
+                if (mapInstanceRef.current) {
+                  (mapInstanceRef.current as { remove: () => void }).remove();
+                  mapInstanceRef.current = null;
+                }
+                updateAttributes({ address: inputVal.trim() });
+                setEditing(false);
+              }
+            }} style={{ display: "flex", gap: "0.25rem", width: "100%", maxWidth: 320 }}>
+              <input
+                type="text"
+                value={inputVal}
+                onChange={(e) => setInputVal(e.target.value)}
+                placeholder="Address or place..."
+                autoFocus
+                style={{
+                  flex: 1, padding: "0.35rem 0.5rem", fontSize: "0.8rem", borderRadius: "6px",
+                  border: "1px solid var(--border)", background: "var(--background)",
+                  color: "var(--foreground)", outline: "none",
+                }}
+              />
+              <button type="submit" style={{
+                padding: "0.35rem 0.75rem", borderRadius: "6px", border: "none",
+                background: "#F7BB2E", color: "#0D0D0D", fontSize: "0.75rem",
+                fontWeight: 600, cursor: "pointer",
+              }}>
+                Show
+              </button>
+            </form>
+          </div>
+        )}
+      </div>
+    </NodeViewWrapper>
+  );
+}
+
+const MapEmbed = TipTapNode.create({
+  name: "mapEmbed",
+  group: "block",
+  atom: true,
+  draggable: true,
+
+  addAttributes() {
+    return {
+      address: { default: "" },
+      zoom:    { default: "14" },
+    };
+  },
+
+  parseHTML() {
+    return [
+      { tag: "cms-map[data-address]", getAttrs: (el) => ({
+        address: (el as Element).getAttribute("data-address") ?? "",
+        zoom:    (el as Element).getAttribute("data-zoom") ?? "14",
+      }) },
+    ];
+  },
+
+  renderHTML({ node }) {
+    return ["cms-map", {
+      "data-address": node.attrs.address,
+      "data-zoom": node.attrs.zoom,
+    }];
+  },
+
+  addStorage() {
+    return {
+      markdown: {
+        serialize(state: { write: (s: string) => void; closeBlock: (node: unknown) => void }, node: { attrs: Record<string, unknown> }) {
+          const { address, zoom } = node.attrs as { address: string; zoom: string };
+          state.write(`!!MAP[${address}|${zoom}]`);
+          state.closeBlock(node);
+        },
+        parse: {
+          updateDOM(dom: Element) {
+            dom.querySelectorAll("p").forEach((p) => {
+              const text = (p.textContent ?? "").trim();
+              const m = text.match(/^!!MAP\[([^|]+)\|?(\d*)\]$/);
+              if (!m) return;
+              const el = document.createElement("cms-map");
+              el.setAttribute("data-address", m[1]);
+              el.setAttribute("data-zoom", m[2] || "14");
+              p.parentNode?.replaceChild(el, p);
+            });
+          },
+        },
+      },
+    };
+  },
+
+  addKeyboardShortcuts() {
+    return {
+      ArrowDown: ({ editor }) => {
+        const { selection, doc } = editor.state;
+        const node = doc.nodeAt(selection.from);
+        if (node?.type.name !== "mapEmbed") return false;
+        const end = selection.from + node.nodeSize;
+        if (end >= doc.content.size) {
+          editor.chain().insertContentAt(end, { type: "paragraph" }).setTextSelection(end + 1).run();
+          return true;
+        }
+        editor.commands.setTextSelection(end + 1);
+        return true;
+      },
+      Enter: ({ editor }) => {
+        const { selection, doc } = editor.state;
+        const node = doc.nodeAt(selection.from);
+        if (node?.type.name !== "mapEmbed") return false;
+        const end = selection.from + node.nodeSize;
+        editor.chain().insertContentAt(end, { type: "paragraph" }).setTextSelection(end + 1).run();
+        return true;
+      },
+    };
+  },
+
+  addNodeView() {
+    return ReactNodeViewRenderer(MapEmbedNodeView);
+  },
+});
+
 /* ─── File attachment node + NodeView ──────────────────────── */
 function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -2032,6 +2251,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
       VideoEmbed,
       AudioEmbed,
       FileAttachment,
+      MapEmbed,
       InteractiveEmbed,
       Callout,
       TextDragDrop,
@@ -2822,7 +3042,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                         if (addr) {
                           setShowMediaDropdown(false);
                           setMediaSubMenu(null);
-                          editor.chain().focus().insertContent(`\n\n!!MAP[${addr}|14]\n\n`).run();
+                          editor.chain().focus().insertContent({ type: "mapEmbed", attrs: { address: addr, zoom: "14" } }).run();
                         }
                       }}
                       style={{ padding: "0.375rem 0.75rem", display: "flex", gap: "0.25rem" }}
