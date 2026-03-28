@@ -103,6 +103,18 @@ export async function POST(request: NextRequest) {
         await mkdir(contentDir, { recursive: true });
         await mkdir(uploadDir, { recursive: true });
       }
+
+      // F12: For GitHub sites, persist the OAuth token as service token
+      // so the site can load config even when the OAuth cookie expires
+      if (site.adapter === "github" || site.configPath.startsWith("github://")) {
+        try {
+          const githubToken = cookieStore.get("github-token")?.value;
+          if (githubToken) {
+            const serviceTokenFile = join(dataDir, "github-service-token.json");
+            await writeFile(serviceTokenFile, JSON.stringify({ token: githubToken }, null, 2));
+          }
+        } catch { /* non-fatal — token can be added later */ }
+      }
     }
 
     return NextResponse.json({ ok: true });
