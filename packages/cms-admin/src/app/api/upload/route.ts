@@ -65,6 +65,7 @@ export async function POST(req: NextRequest) {
 
         // AI analysis (caption, alt-text, tags) — runs async, non-blocking
         // Uses multi-locale when site has >1 locale configured
+        console.log(`[upload] Starting AI analysis for ${filename}, locales: ${JSON.stringify(siteConfig.locales)}`);
         try {
           const ext = filename.split(".").pop()?.toLowerCase() ?? "jpeg";
           const mimeType = ext === "png" ? "image/png" : ext === "webp" ? "image/webp" : "image/jpeg";
@@ -105,7 +106,9 @@ export async function POST(req: NextRequest) {
               console.error(`[upload] AI analysis failed for ${filename}:`, err instanceof Error ? err.message : err);
             });
           }
-        } catch { /* AI not configured — skip */ }
+        } catch (aiErr) {
+          console.error("[upload] AI analysis setup failed:", aiErr instanceof Error ? aiErr.message : aiErr);
+        }
       } catch (err) {
         // Non-fatal — upload succeeded, variants/exif are bonus
         console.error("[upload] Post-processing error:", err instanceof Error ? err.message : err);
