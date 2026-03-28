@@ -34,8 +34,9 @@ export async function generateOgImage(
 
     const sourceBuffer = readFileSync(sourceFull);
 
-    // Resize + crop source to 1200x630
+    // Auto-rotate (EXIF orientation) then resize + crop to 1200x630
     const resized = await sharp(sourceBuffer)
+      .rotate()
       .resize(OG_WIDTH, OG_HEIGHT, { fit: "cover", position: "center" })
       .toBuffer();
 
