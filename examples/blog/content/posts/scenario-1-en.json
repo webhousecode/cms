@@ -1,0 +1,24 @@
+{
+  "id": "p6WKpXV3shLYN4jnZyhd5",
+  "slug": "scenario-1-en",
+  "collection": "posts",
+  "status": "published",
+  "data": {
+    "title": "Scenario 1 — English translation",
+    "_lastEditedBy": {
+      "userId": "dev-token",
+      "name": "Dev Token",
+      "email": "dev@localhost",
+      "at": "2026-03-28T17:31:37.620Z"
+    },
+    "excerpt": "A test page verifying manual translation from Danish to English.",
+    "author": "Redaktionen",
+    "date": "2026-03-28T17:31:37Z",
+    "content": "<p>This page was created as an English translation of the Danish source document. It is used to test the manual translation workflow in the CMS — where an editor creates an English version and writes the text themselves.</p><p>Ski holidays in the Alps are a classic Danish tradition. Every year, thousands of Danish families head south to enjoy snow, sun, and après-ski. From the Austrian Alps to the French ski resorts, the possibilities are endless.</p>"
+  },
+  "_fieldMeta": {},
+  "createdAt": "2026-03-28T17:23:43.295Z",
+  "updatedAt": "2026-03-28T17:31:37.620Z",
+  "locale": "en",
+  "translationOf": "scenario-1-da"
+}
