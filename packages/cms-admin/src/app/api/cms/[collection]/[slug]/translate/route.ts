@@ -74,6 +74,8 @@ export async function POST(req: NextRequest, { params }: Ctx) {
       sourceData[field.name] = val;
     }
   }
+  // Also include the slug for translation
+  sourceData["_slug"] = slug;
 
   if (Object.keys(sourceData).length === 0) {
     return NextResponse.json(
@@ -94,6 +96,8 @@ Preserve:
 - Proper nouns and brand names
 - Meaning, tone, and formatting
 - Cultural references should be adapted where relevant
+
+Include a "_slug" field with a URL-friendly translated slug (lowercase, hyphens, no special chars).
 
 Return ONLY a JSON object with the translated fields. No explanation, no preamble.`;
 
@@ -122,8 +126,12 @@ Return ONLY a JSON object with the translated fields. No explanation, no preambl
       );
     }
 
-    // Create or update translation document
-    const translationSlug = `${slug}-${targetLocale}`;
+    // Use AI-generated slug, fall back to {slug}-{locale}
+    const aiSlug = translatedData["_slug"];
+    delete translatedData["_slug"];
+    const translationSlug = aiSlug
+      ? aiSlug.toLowerCase().replace(/[^a-z0-9-]/g, "").replace(/-+/g, "-").replace(/^-|-$/g, "")
+      : `${slug}-${targetLocale}`;
 
     // Merge: keep non-translatable fields from source, override with translations
     const mergedData = { ...sourceDoc.data };

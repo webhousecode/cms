@@ -1,16 +1,16 @@
 {
   "id": "page-about-001",
-  "slug": "about",
+  "slug": "om-os",
   "collection": "pages",
   "status": "published",
   "data": {
-    "title": "About us",
+    "title": "Om os",
     "content": "This site is built with **@webhouse/cms** — an AI-native CMS engine.\n\n## Egenskaber\n\n- Schema-driven content\n- Static site generation\n- AI content generation\n- Hierarchical URLs\n- Dette er tilføjet af en AI\n- Dette er tilføjet af mig, og det gemmer også eller hvad? ",
     "_lastEditedBy": {
-      "userId": "fb4eda6a-bc5c-4dec-8cb6-c77c9fb74cd9",
-      "name": "Christian Broberg",
-      "email": "cb@webhouse.dk",
-      "at": "2026-03-27T22:48:45.282Z"
+      "userId": "dev-token",
+      "name": "Dev Token",
+      "email": "dev@localhost",
+      "at": "2026-03-28T19:45:56.195Z"
     },
     "_seo": {
       "metaTitle": "About Us - AI-Native CMS Engine @webhouse/cms",
@@ -26,6 +26,7 @@
     }
   },
   "createdAt": "2026-03-09T00:00:00.000Z",
-  "updatedAt": "2026-03-28T00:47:55.222Z",
-  "_fieldMeta": {}
+  "updatedAt": "2026-03-28T19:45:56.196Z",
+  "_fieldMeta": {},
+  "locale": "da"
 }
