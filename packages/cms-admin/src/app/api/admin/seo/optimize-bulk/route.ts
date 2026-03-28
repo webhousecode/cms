@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminCms, getAdminConfig } from "@/lib/cms";
 import { getApiKey } from "@/lib/ai-config";
+import { readSiteConfig } from "@/lib/site-config";
 import Anthropic from "@anthropic-ai/sdk";
 import type { SeoFields } from "@/lib/seo/score";
 
@@ -17,7 +18,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Anthropic API key not configured" }, { status: 503 });
   }
 
-  const [cms, config] = await Promise.all([getAdminCms(), getAdminConfig()]);
+  const [cms, config, siteConfig] = await Promise.all([getAdminCms(), getAdminConfig(), readSiteConfig()]);
+  const seoModel = siteConfig.aiContentModel || "claude-haiku-4-5-20251001";
   const client = new Anthropic({ apiKey });
 
   // Optional filter
@@ -64,7 +66,7 @@ export async function POST(req: NextRequest) {
       for (const doc of toOptimize) {
         try {
           const message = await client.messages.create({
-            model: "claude-haiku-4-5-20251001",
+            model: seoModel,
             max_tokens: 1024,
             system: "You generate SEO metadata. Return ONLY a JSON object, no explanation.",
             messages: [{

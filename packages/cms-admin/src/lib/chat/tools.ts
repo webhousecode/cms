@@ -586,9 +586,12 @@ export async function buildChatTools(): Promise<ToolPair[]> {
             const Anthropic = (await import("@anthropic-ai/sdk")).default;
             const seoApiKey = await getKey("anthropic");
             if (seoApiKey) {
+              const { readSiteConfig: readCfg } = await import("@/lib/site-config");
+              const cfg = await readCfg();
+              const seoModel = cfg.aiContentModel || "claude-haiku-4-5-20251001";
               const seoClient = new Anthropic({ apiKey: seoApiKey });
               const seoRes = await seoClient.messages.create({
-                model: "claude-haiku-4-5-20251001",
+                model: seoModel,
                 max_tokens: 512,
                 system: "You generate SEO metadata. Return ONLY a JSON object, no explanation.",
                 messages: [{ role: "user", content: `Generate SEO for this page:\nTitle: ${docTitle}\nContent: ${docContent}\n\nReturn JSON:\n{\n  "metaTitle": "SEO title (30-60 chars)",\n  "metaDescription": "description (130-155 chars)",\n  "keywords": ["kw1", "kw2", "kw3", "kw4", "kw5"]\n}` }],
