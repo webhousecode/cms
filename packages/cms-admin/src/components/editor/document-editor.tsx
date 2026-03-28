@@ -1107,49 +1107,20 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
           </span>
 
           {/* Locale selector */}
-          {locales && locales.length > 0 && (
-            <div style={{ position: "relative" }} ref={localeRef}>
-              <button
-                type="button"
-                onClick={() => setLocaleOpen(o => !o)}
-                title="Set document locale"
-                style={{
-                  display: "flex", alignItems: "center", gap: "0.375rem",
-                  padding: "0.25rem 0.5rem", borderRadius: "6px",
-                  border: "1px solid var(--border)", background: "transparent",
-                  color: locale ? "var(--foreground)" : "var(--muted-foreground)",
-                  fontSize: "0.75rem", cursor: "pointer", fontFamily: "monospace",
-                }}
-              >
-                <Languages style={{ width: "0.8rem", height: "0.8rem" }} />
-                {locale ? locale.toUpperCase() : "—"}
-              </button>
-              {localeOpen && (
-                <div style={{
-                  position: "absolute", top: "calc(100% + 4px)", right: 0, zIndex: 50,
-                  background: "var(--popover)", border: "1px solid var(--border)",
-                  borderRadius: "8px", boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
-                  minWidth: "120px", overflow: "hidden",
-                }}>
-                  {["", ...locales].map(l => (
-                    <button
-                      key={l || "__none"}
-                      type="button"
-                      onClick={() => { setLocale(l); setLocaleOpen(false); setDirty(true); }}
-                      style={{
-                        display: "block", width: "100%", textAlign: "left",
-                        padding: "0.4rem 0.75rem", fontSize: "0.8rem",
-                        background: locale === l ? "var(--accent)" : "transparent",
-                        color: "var(--foreground)", border: "none", cursor: "pointer",
-                        fontFamily: "monospace",
-                      }}
-                    >
-                      {l ? l.toUpperCase() : "— none"}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
+          {locales && locales.length > 1 && (locale || defaultLocale) && (
+            <span
+              title={`Document language: ${(locale || defaultLocale || "").toUpperCase()}`}
+              style={{
+                display: "inline-flex", alignItems: "center", gap: "0.3rem",
+                padding: "0.2rem 0.5rem", borderRadius: "6px",
+                border: "1px solid var(--border)", background: "transparent",
+                color: "var(--muted-foreground)",
+                fontSize: "0.75rem", fontFamily: "monospace",
+              }}
+            >
+              <Languages style={{ width: "0.8rem", height: "0.8rem" }} />
+              {(locale || defaultLocale || "").toUpperCase()}
+            </span>
           )}
 
           {!readOnly && (
