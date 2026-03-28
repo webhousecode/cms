@@ -1,6 +1,6 @@
 # @webhouse/cms — Roadmap
 
-**Last updated:** 2026-03-23
+**Last updated:** 2026-03-29
 
 ---
 
@@ -97,7 +97,7 @@ _Makes us stand out. Customers expect these from a modern CMS._
 | 11 | **F38 Environment Manager** | Medium | Dev/Staging/Prod. Professional workflow for agencies. |
 | 12 | **F02 Import Engine** | Medium | Migrating FROM another CMS is the #1 adoption barrier. |
 | 13 | **F03 WordPress Migration** | Medium | WP is the biggest migration source. Built on F02. |
-| 14 | **F13 Notification Channels** | Small | Discord/Slack/webhook notifications on content changes. |
+| ~~14~~ | ~~**F13 Notification Channels**~~ | ~~Done~~ | ~~Shipped 2026-03-29. Shared webhook dispatcher (Discord/Slack/generic), all 4 automation categories wired (publish, backup, link check, agent), notification log.~~ |
 | ~~15~~ | ~~**F15 Agent Scheduler**~~ | ~~Done~~ | ~~Shipped. scheduler.ts, daily/weekly scheduling, calendar UI, run history, scheduler-notify, scheduler-bus.~~ |
 | 16 | **F35 Webhooks** | Small | Generic outbound events for integrations. F41 revalidation is a specific case. |
 | 16b | **F61 Activity Log** | Medium | Audit trail — who did what when. Compliance, debugging, team accountability. |
