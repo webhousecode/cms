@@ -27,6 +27,8 @@ export function SeoPanel({ collection, doc, onUpdate, onSave, onClose }: Props) 
   const [showPreview, setShowPreview] = useState(false);
   const [optimizing, setOptimizing] = useState(false);
   const [confirmReoptimize, setConfirmReoptimize] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
   const [score, setScore] = useState<SeoScoreResult | null>(null);
 
   // Escape to close
@@ -146,13 +148,25 @@ Return ONLY the JSON, no explanation.`,
           <span style={{ fontSize: "0.8rem", fontWeight: 700, fontFamily: "monospace", color: scoreColor }}>
             {score?.score ?? 0}
           </span>
-          <button type="button" onClick={onSave}
+          <button type="button" disabled={saving}
+            onClick={async () => {
+              setSaving(true);
+              setSaved(false);
+              onSave();
+              await new Promise((r) => setTimeout(r, 1000));
+              setSaving(false);
+              setSaved(true);
+              setTimeout(() => setSaved(false), 2000);
+            }}
             style={{
               padding: "0.25rem 0.5rem", borderRadius: "5px", border: "none",
-              background: "#F7BB2E", color: "#0D0D0D", cursor: "pointer",
+              background: saved ? "#4ade80" : "#F7BB2E", color: "#0D0D0D",
+              cursor: saving ? "wait" : "pointer",
               fontSize: "0.7rem", fontWeight: 600,
+              transition: "background 0.2s",
+              opacity: saving ? 0.7 : 1,
             }}>
-            Save
+            {saving ? "Saving…" : saved ? "Saved ✓" : "Save"}
           </button>
           <button type="button" onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1.1rem" }}>&times;</button>
         </div>
