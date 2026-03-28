@@ -336,7 +336,7 @@ export default function MediaPage() {
     <TooltipProvider>
     <div
       ref={pageRef}
-      className="flex flex-col min-h-screen relative"
+      className="flex flex-col relative"
       onDragEnter={!readOnly ? onDragEnter : undefined}
       onDragLeave={!readOnly ? onDragLeave : undefined}
       onDragOver={!readOnly ? onDragOver : undefined}
