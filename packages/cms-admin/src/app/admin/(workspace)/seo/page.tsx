@@ -110,9 +110,7 @@ export default function SeoPage() {
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <TabTitle value="SEO" />
-      <ActionBar>
-        <ActionBarBreadcrumb items={["Tools", "SEO"]} />
-        <div style={{ flex: 1 }} />
+      <ActionBar actions={
         <ActionButton
           variant="primary"
           onClick={optimizeAll}
@@ -121,6 +119,8 @@ export default function SeoPage() {
         >
           {optimizing ? `Optimizing ${optimizeProgress.done}/${optimizeProgress.total}...` : `Optimize All (${data ? data.total - data.optimized : 0})`}
         </ActionButton>
+      }>
+        <ActionBarBreadcrumb items={["Tools", "SEO"]} />
       </ActionBar>
 
       {loading ? (
