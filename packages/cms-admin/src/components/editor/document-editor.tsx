@@ -18,6 +18,23 @@ import { SeoPanel } from "./seo-panel";
 import { GenerateDocumentDialog } from "@/components/generate-document-dialog";
 import { isTranslationStale, LOCALE_LABELS } from "@/lib/locale";
 
+/** Minimal markdown→HTML converter for side-by-side source pane (no external deps) */
+function miniMarkdownToHtml(md: string): string {
+  return md
+    .replace(/^### (.+)$/gm, "<h3>$1</h3>")
+    .replace(/^## (.+)$/gm, "<h2>$1</h2>")
+    .replace(/^# (.+)$/gm, "<h1>$1</h1>")
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/\*(.+?)\*/g, "<em>$1</em>")
+    .replace(/`([^`]+)`/g, "<code>$1</code>")
+    .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" style="max-width:100%;border-radius:6px;margin:0.5rem 0" />')
+    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" style="color:var(--primary);text-decoration:underline">$1</a>')
+    .replace(/\n{2,}/g, "</p><p>")
+    .replace(/^(?!<[h|p|i|a|u|o|d])/, "<p>")
+    .concat("</p>")
+    .replace(/<p><\/p>/g, "");
+}
+
 // Fallback to env vars for backwards compatibility — overridden by props from server
 const PREVIEW_SITE_URL_DEFAULT = process.env.NEXT_PUBLIC_PREVIEW_SITE_URL ?? "";
 const PREVIEW_IN_IFRAME_DEFAULT = process.env.NEXT_PUBLIC_PREVIEW_IN_IFRAME === "true";
@@ -1510,7 +1527,10 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
                     <div
                       className="prose prose-sm dark:prose-invert"
                       style={{ fontSize: "0.85rem", lineHeight: 1.6, color: "var(--foreground)", maxWidth: "none" }}
-                      dangerouslySetInnerHTML={{ __html: String(val) }}
+                      dangerouslySetInnerHTML={{ __html: (() => {
+                        const raw = String(val);
+                        return /<(?:p|h[1-6]|div|ul|ol|table|blockquote)\b/i.test(raw) ? raw : miniMarkdownToHtml(raw);
+                      })() }}
                     />
                   ) : field.type === "image" ? (
                     <img src={String(val)} alt="" style={{ maxWidth: "100%", borderRadius: "6px" }} />
