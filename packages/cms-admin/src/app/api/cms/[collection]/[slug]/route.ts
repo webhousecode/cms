@@ -166,6 +166,32 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
       dispatchRevalidation(site, { collection, slug: newSlug, action, document: updated }, urlPrefix).catch(() => {});
     }
 
+    // Auto-translate on publish (fire-and-forget)
+    if (
+      nextStatus === "published" &&
+      !doc.translationOf &&
+      !body.translationOf
+    ) {
+      try {
+        const { readSiteConfig } = await import("@/lib/site-config");
+        const siteConfig = await readSiteConfig();
+        const docLocale = updated?.locale || siteConfig.locales[0] || "";
+        const targetLocales = siteConfig.locales.filter((l: string) => l !== docLocale);
+        if (targetLocales.length > 0) {
+          const baseUrl = process.env.NEXTAUTH_URL || `http://localhost:${process.env.PORT || 3010}`;
+          const serviceToken = process.env.CMS_JWT_SECRET;
+          for (const targetLocale of targetLocales) {
+            fetch(`${baseUrl}/api/cms/${collection}/${newSlug}/translate`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "x-cms-service-token": serviceToken || "" },
+              body: JSON.stringify({ targetLocale, publish: false }),
+            }).catch(() => {}); // fire-and-forget
+          }
+          console.log(`[auto-translate] Triggered translation of ${collection}/${newSlug} → ${targetLocales.join(", ")}`);
+        }
+      } catch { /* non-fatal */ }
+    }
+
     // Auto-deploy on save (fire-and-forget)
     const willDeploy = await checkDeployOnSave();
     dispatchAutoDeployOnSave().catch(() => {});
