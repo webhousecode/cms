@@ -14,6 +14,7 @@ export interface SeoDocSummary {
   hasOgImage: boolean;
   hasKeywords: boolean;
   optimized: boolean;
+  publishAt?: string;
 }
 
 /**
@@ -48,6 +49,7 @@ export async function GET() {
             hasOgImage: !!(seo.ogImage),
             hasKeywords: !!(seo.keywords?.length),
             optimized: !!(seo.lastOptimized),
+            publishAt: (doc as any).publishAt ?? undefined,
           });
         }
       } catch { /* skip broken collections */ }
