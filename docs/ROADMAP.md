@@ -60,21 +60,21 @@ _Without these, we cannot build and deliver professional sites on the platform._
 | ~~4~~ | ~~**F43 Persist User State**~~ | ~~Done~~ | ~~Shipped 2026-03-18~~ |
 | ~~4b~~ | ~~**F91 Login with GitHub**~~ | ~~Done~~ | ~~Shipped 2026-03-23~~ |
 | ~~4c~~ | ~~**F65 Agent Pipeline E2E Tests**~~ | ~~Superseded~~ | ~~Absorbed into F99 End-to-End Testing Suite as Suite 05~~ |
-| 4c | **F99 End-to-End Testing Suite** | Large | Komplet testinfrastruktur: 10 Playwright UI suites, API integration tests, unit tests. CI-ready. Ship blocker — ingen regression catching uden dette. |
-| 4c | **F67 Security Gate** | Medium | Semgrep + Gitleaks + custom rules. Pre-commit hook, CI, weekly Discord scan. Can't ship with 82 unaudited API routes. |
+| ~~4c~~ | ~~**F99 End-to-End Testing Suite**~~ | ~~Phase A Done~~ | ~~Shipped 2026-03-28. Phase A: shared fixtures, 4 e2e suites (24 tests), CI pipeline, API client. Phase B (retrospective coverage) is Tier 2.~~ |
+| ~~4c~~ | ~~**F67 Security Gate**~~ | ~~Done~~ | ~~Shipped. Gitleaks + Semgrep + custom scanner. Pre-commit hook + CI workflow.~~ |
 | ~~4d~~ | ~~**F76 Create New Organization**~~ | ~~Done~~ | ~~Shipped 2026-03-19~~ |
 | ~~4e~~ | ~~**F77 Middleware→Proxy**~~ | ~~Done~~ | ~~Shipped 2026-03-20~~ |
 | 5 | **F12 One-Click Publish** | In progress | GH Pages pipeline working. Auto-create repo, custom domains, auto-deploy on save + toast, deploy tab, deploy history, site health dots, separate dist/deploy dirs. Deploy hooks (Vercel/Netlify) untested. |
 | 6 | **F27 Backup & Restore** | In progress | Backup working. Scheduler now iterates ALL sites. GitHub restore not yet implemented. |
 | ~~7~~ | ~~**F44 Media Processing Pipeline**~~ | ~~Done~~ | ~~Sharp WebP variant generation on upload + batch, EXIF extraction, build-time `<picture>` upgrade, AI image analysis. Configurable variant widths + quality in Settings.~~ |
-| 8 | **F42 Framework Boilerplates** | Medium | Starter templates + Claude Code skills/hooks/agents. Last in Tier 1 because best practices evolve as we build earlier features. Includes `/.claude/` with skills, hooks, and agent configs for AI site builders. |
+| ~~8~~ | ~~**F42 Framework Boilerplates**~~ | ~~Done~~ | ~~Shipped. 3 boilerplates (static, nextjs, nextjs-github) + Claude Code skills/hooks/agents.~~ |
 | ~~8b~~ | ~~**F75 AI Site Builder Guide**~~ | ~~Done~~ | ~~Shipped 2026-03-23. 2383→137 lines, 20 modules.~~ |
 | ~~8c~~ | ~~**F78 Bundled Preview Server**~~ | ~~Done~~ | ~~Shipped 2026-03-19~~ |
-| 8d | **F79 Site Config Validator** | Medium | Validate cms.config.ts + content/ on site creation and first load. Friendly errors instead of ZodError crashes. Critical for AI-built sites. |
+| ~~8d~~ | ~~**F79 Site Config Validator**~~ | ~~Done~~ | ~~Shipped. Validates cms.config.ts + content/ with friendly errors.~~ |
 | 8e | **F80 Admin Selector Map** | Medium | `data-testid` on all admin UI elements + auto-generated selector map. Foundation for Playwright E2E tests of content editing and site roundtrips. |
 | ~~8f~~ | ~~**F83 Vibe Site Builder**~~ | ~~Large~~ | ~~Moved to Tier 2 top~~ |
 | ~~8g~~ | ~~**F86 Action Bar**~~ | ~~Done~~ | ~~All pages migrated. Shipped 2026-03-20~~ |
-| 8h | **F97 SEO Module** | Medium-Large | Per-doc SEO panel, keywords, AI optimize, SERP preview, score, dashboard, JSON-LD templates. The Yoast of webhouse.app. |
+| ~~8h~~ | ~~**F97 SEO Module**~~ | ~~Done~~ | ~~Shipped. 13 rules, keyword tracker, AI optimize, SERP preview, score dashboard, JSON-LD, bulk optimize, export.~~ |
 | ~~8i~~ | ~~**F89 Post-Build Enrichment**~~ | ~~Done~~ | ~~Shipped 2026-03-23. Per-page descriptions, _seo coordination with F97.~~ |
 | ~~8j~~ | ~~**F102 Schema Drift Detection**~~ | ~~Done~~ | ~~Shipped 2026-03-27. Yellow banner on collection list, 8 unit tests, API endpoint.~~ |
 | ~~8k~~ | ~~**F103 AI Image Analysis**~~ | ~~Done~~ | ~~Shipped 2026-03-25. Claude caption + alt-text + tags. Batch analyze. Auto-fill alt in editor. Auto-analyze on upload.~~ |
@@ -82,7 +82,7 @@ _Without these, we cannot build and deliver professional sites on the platform._
 | 8m | **F112 GEO (Generative Engine Optimization)** | Large | AI visibility is the new SEO. Smart robots.txt, GEO score, llms-full.txt, enhanced JSON-LD, AI visibility monitor, search index checker, GEO agent. First CMS with built-in AI visibility tools — THE differentiator. |
 | 9 | **F31 Documentation Site** | Medium | Can't ship without docs. Last because it documents everything above. |
 | 9b | **F90 Marketing Content Bank** | Small | Living doc of messaging, talking points, README copy. Source of truth for product positioning. |
-| 9c | **F96 Embeddable Maps** | Small | Every business site needs a map. Richtext embed, map field type, Interactive template. |
+| ~~9c~~ | ~~**F96 Embeddable Maps**~~ | ~~Done~~ | ~~Shipped. OSM/Leaflet map block, richtext embed, field type.~~ |
 
 ### Tier 2 — Competitive Edge (v1.1-1.2)
 

@@ -115,7 +115,7 @@
 | F96 | [Embeddable Maps](#f96-embeddable-maps) | Done | [docs/features/F96-embeddable-maps.md](features/F96-embeddable-maps.md) |
 | F97 | [SEO Module](#f97-seo-module) | Done | [docs/features/F97-seo-module.md](features/F97-seo-module.md) |
 | F98 | [Performance Audit (Lighthouse)](#f98-lighthouse-audit) | Planned | [docs/features/F98-lighthouse-audit.md](features/F98-lighthouse-audit.md) |
-| F99 | [End-to-End Testing Suite](#f99-e2e-testing-suite) | Planned | [docs/features/F99-e2e-testing-suite.md](features/F99-e2e-testing-suite.md) |
+| F99 | [End-to-End Testing Suite](#f99-e2e-testing-suite) | Phase A Done | [docs/features/F99-e2e-testing-suite.md](features/F99-e2e-testing-suite.md) |
 | F100 | [Custom Domain DNS Validation](#f100-custom-domain-dns-validation) | Planned | [docs/features/F100-custom-domain-dns.md](features/F100-custom-domain-dns.md) |
 | F101 | [Update Manager](#f101-update-manager) | Planned | [docs/features/F101-update-manager.md](features/F101-update-manager.md) |
 | F102 | [Schema Drift Detection](#f102-schema-drift-detection) | ✅ Done | [docs/features/F102-schema-drift-detection.md](features/F102-schema-drift-detection.md) |
