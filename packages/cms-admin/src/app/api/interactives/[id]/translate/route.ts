@@ -31,14 +31,24 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   }
 
   const siteConfig = await readSiteConfig();
-  const sourceLocale = siteConfig.defaultLocale || "en";
+  const sourceLocale = source.meta.locale || siteConfig.defaultLocale || "en";
   const sourceLang = LOCALE_LABELS[sourceLocale] ?? sourceLocale;
   const targetLang = LOCALE_LABELS[targetLocale] ?? targetLocale;
 
-  // Check if translation already exists
+  // Ensure source has a translationGroup
+  const sourceGroup = source.meta.translationGroup;
+  const translationGroupId = sourceGroup || `int-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  if (!sourceGroup) {
+    await adapter.updateInteractive(id, { translationGroup: translationGroupId });
+  }
+
+  // Check if translation already exists (by translationGroup + locale, or legacy ID pattern)
   const allInteractives = await adapter.listInteractives();
   const translatedId = `${id}-${targetLocale}`;
-  const existing = allInteractives.find(i => i.id === translatedId);
+  const existing = allInteractives.find(i =>
+    (i.translationGroup === translationGroupId && i.locale === targetLocale && i.id !== id) ||
+    i.id === translatedId
+  );
 
   // Translate HTML content via AI
   const model = await getModel("content");
@@ -73,13 +83,15 @@ CRITICAL RULES:
 
     if (existing) {
       // Update existing translation
-      await adapter.updateInteractive(translatedId, { content: cleanHtml });
-      return NextResponse.json({ id: translatedId, action: "updated" });
+      await adapter.updateInteractive(existing.id, { content: cleanHtml, locale: targetLocale, translationGroup: translationGroupId });
+      return NextResponse.json({ id: existing.id, action: "updated" });
     } else {
       // Create new interactive with translated content
       const buffer = Buffer.from(cleanHtml, "utf-8");
-      await adapter.createInteractive(`${translatedId}.html`, buffer);
-      return NextResponse.json({ id: translatedId, action: "created" });
+      const created = await adapter.createInteractive(`${translatedId}.html`, buffer);
+      // Set locale + translationGroup on the new interactive
+      await adapter.updateInteractive(created.id, { locale: targetLocale, translationGroup: translationGroupId });
+      return NextResponse.json({ id: created.id, action: "created" });
     }
   } catch (err) {
     console.error("[interactive-translate] AI translation failed:", err);

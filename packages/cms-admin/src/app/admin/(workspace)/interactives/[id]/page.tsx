@@ -30,6 +30,7 @@ interface InteractiveDetail {
   content: string;
   locale?: string;
   translationOf?: string;
+  translationGroup?: string;
 }
 
 type EditMode = "preview" | "visual" | "code" | "ai-edit";
@@ -325,7 +326,7 @@ export default function InteractiveDetailPage() {
   const [editName, setEditName] = useState("");
   const [siteLocales, setSiteLocales] = useState<string[]>([]);
   const [defaultLocale, setDefaultLocale] = useState("en");
-  const [siblings, setSiblings] = useState<Array<{ id: string; name: string; locale?: string; translationOf?: string }>>([]);
+  const [siblings, setSiblings] = useState<Array<{ id: string; name: string; locale?: string; translationGroup?: string }>>([]);
   const [translating, setTranslating] = useState(false);
   const [localeDropdownOpen, setLocaleDropdownOpen] = useState(false);
   const [originalContent, setOriginalContent] = useState("");
@@ -372,15 +373,21 @@ export default function InteractiveDetailPage() {
     if (!detail) return;
     fetch("/api/interactives")
       .then(r => r.json())
-      .then((all: Array<{ id: string; name: string; locale?: string; translationOf?: string }>) => {
-        const sourceId = detail.translationOf ?? detail.id;
-        setSiblings(all.filter(i =>
-          i.id !== detail.id &&
-          (i.translationOf === sourceId || i.id === sourceId)
-        ));
+      .then((all: Array<{ id: string; name: string; locale?: string; translationGroup?: string; translationOf?: string }>) => {
+        // Find siblings via translationGroup (bidirectional)
+        if (detail.translationGroup) {
+          setSiblings(all.filter(i => i.translationGroup === detail.translationGroup && i.id !== detail.id));
+        } else {
+          // Legacy fallback: use translationOf
+          const sourceId = detail.translationOf ?? detail.id;
+          setSiblings(all.filter(i =>
+            i.id !== detail.id &&
+            ((i as any).translationOf === sourceId || i.id === sourceId)
+          ));
+        }
       })
       .catch(() => {});
-  }, [detail?.id, detail?.translationOf]);
+  }, [detail?.id, detail?.translationGroup]);
 
   /* Close panels and dialogs on Escape */
   useEffect(() => {
@@ -777,8 +784,8 @@ export default function InteractiveDetailPage() {
               }} />
             </Link>
           ))}
-          {/* Add translation — only on source interactives */}
-          {!detail.translationOf && (() => {
+          {/* Add translation — any interactive in a group can add (equal partners) */}
+          {(() => {
             const existingLocales = [detail.locale || defaultLocale, ...siblings.map(s => s.locale).filter(Boolean)];
             const available = siteLocales.filter(l => !existingLocales.includes(l));
             if (available.length === 0) return null;
@@ -804,11 +811,6 @@ export default function InteractiveDetailPage() {
                     });
                     if (res.ok) {
                       const result = await res.json();
-                      await fetch(`/api/interactives/${result.id}`, {
-                        method: "PUT",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ locale, translationOf: id }),
-                      });
                       router.push(`/admin/interactives/${result.id}`);
                     }
                   } finally {

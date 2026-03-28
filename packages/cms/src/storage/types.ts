@@ -42,8 +42,10 @@ export interface Document {
   updatedAt: string;
   /** BCP 47 locale tag, e.g. "en", "da", "se". Defaults to collection sourceLocale or config defaultLocale. */
   locale?: string;
-  /** Slug of the source document this is a translation of (loose reference, same collection). */
+  /** @deprecated Use translationGroup instead. Slug of the source document this is a translation of. */
   translationOf?: string;
+  /** Shared ID linking all translations of the same content. All partners share the same translationGroup value. */
+  translationGroup?: string;
   /** ISO timestamp for scheduled auto-publish. Cleared after the cron job publishes the document. */
   publishAt?: string;
   /** ISO timestamp for scheduled auto-unpublish (content expiry). Cleared after the cron job archives the document. */
@@ -58,8 +60,10 @@ export interface DocumentInput {
   _fieldMeta?: DocumentFieldMeta;
   /** BCP 47 locale tag for this document */
   locale?: string;
-  /** Slug of the source document this is a translation of */
+  /** @deprecated Use translationGroup instead. */
   translationOf?: string;
+  /** Shared ID linking all translations of the same content. */
+  translationGroup?: string;
   /** ISO timestamp for scheduled auto-publish. Pass null to clear. */
   publishAt?: string | null;
   /** ISO timestamp for scheduled auto-unpublish (content expiry). Pass null to clear. */
@@ -78,6 +82,8 @@ export interface QueryOptions {
   locale?: string;
   /** Filter documents that are translations of a given source slug */
   translationOf?: string;
+  /** Filter documents sharing a translationGroup ID */
+  translationGroup?: string;
 }
 
 export interface QueryResult {

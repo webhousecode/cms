@@ -70,6 +70,7 @@ export class FilesystemStorageAdapter implements StorageAdapter {
       updatedAt: timestamp,
       ...(input.locale !== undefined && { locale: input.locale }),
       ...(input.translationOf !== undefined && { translationOf: input.translationOf }),
+      ...(input.translationGroup !== undefined && { translationGroup: input.translationGroup }),
       ...(input.publishAt != null && { publishAt: input.publishAt }),
       ...(input.unpublishAt != null && { unpublishAt: input.unpublishAt }),
     };
@@ -121,6 +122,10 @@ export class FilesystemStorageAdapter implements StorageAdapter {
       documents = documents.filter(d => d.translationOf === options.translationOf);
     }
 
+    if (options.translationGroup) {
+      documents = documents.filter(d => d.translationGroup === options.translationGroup);
+    }
+
     if (options.tags && options.tags.length > 0) {
       documents = documents.filter(d => {
         const docTags = d.data['tags'];
@@ -167,6 +172,7 @@ export class FilesystemStorageAdapter implements StorageAdapter {
       updatedAt: now(),
       ...(((input.locale !== undefined ? input.locale : existing.locale) !== undefined) && { locale: input.locale !== undefined ? input.locale : existing.locale }),
       ...(((input.translationOf !== undefined ? input.translationOf : existing.translationOf) !== undefined) && { translationOf: input.translationOf !== undefined ? input.translationOf : existing.translationOf }),
+      ...(((input.translationGroup !== undefined ? input.translationGroup : existing.translationGroup) !== undefined) && { translationGroup: input.translationGroup !== undefined ? input.translationGroup : existing.translationGroup }),
       ...(() => {
         if (input.publishAt === null) return {};
         const pa = input.publishAt !== undefined ? input.publishAt : existing.publishAt;

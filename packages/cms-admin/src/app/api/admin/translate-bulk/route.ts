@@ -6,6 +6,7 @@ import { readSiteConfig } from "@/lib/site-config";
 import { buildLocaleInstruction, getSeoLimits } from "@/lib/ai/locale-prompt";
 import { getModel } from "@/lib/ai/model-resolver";
 import { LOCALE_LABELS } from "@/lib/locale";
+import { generateId } from "@webhouse/cms";
 import Anthropic from "@anthropic-ai/sdk";
 
 /**
@@ -30,7 +31,7 @@ export async function POST(req: NextRequest) {
   const [cms, config, siteConfig, model] = await Promise.all([getAdminCms(), getAdminConfig(), readSiteConfig(), getModel("content")]);
 
   // Collect all source documents across all collections
-  const toTranslate: { collection: string; slug: string; title: string; data: Record<string, unknown>; locale: string }[] = [];
+  const toTranslate: { collection: string; slug: string; id: string; title: string; data: Record<string, unknown>; locale: string; translationGroup?: string }[] = [];
 
   for (const col of config.collections) {
     // Skip collections explicitly marked as non-translatable
@@ -39,22 +40,27 @@ export async function POST(req: NextRequest) {
     for (const doc of documents) {
       const d = doc as any;
       if (d.status === "trashed") continue;
-      if (d.translationOf) continue; // skip existing translations
       if (d.locale === targetLocale) continue; // already in target locale
 
-      // Check if translation already exists
-      const existingTranslation = (documents as any[]).find(
-        t => t.translationOf === d.slug && t.locale === targetLocale
-      );
-      if (existingTranslation) continue; // already translated
+      // Skip if this doc already has a sibling in the target locale (via translationGroup)
+      if (d.translationGroup) {
+        const hasSibling = (documents as any[]).some(
+          t => t.translationGroup === d.translationGroup && t.locale === targetLocale && t.id !== d.id
+        );
+        if (hasSibling) continue;
+      }
+      // Legacy: skip docs that are translations of something else (old translationOf)
+      if (d.translationOf && !d.translationGroup) continue;
 
       const titleField = col.fields[0]?.name ?? "title";
       toTranslate.push({
         collection: col.name,
         slug: d.slug,
+        id: d.id,
         title: String(d.data[titleField] ?? d.slug),
         data: d.data,
         locale: d.locale || siteConfig.defaultLocale || "en",
+        translationGroup: d.translationGroup,
       });
     }
   }
@@ -168,13 +174,20 @@ Return ONLY a JSON object with the translated fields. No explanation, no preambl
             mergedData._seo = { ...sourceSeo, ...translatedSeo };
           }
 
+          // Ensure source has a translationGroup
+          const groupId = item.translationGroup || generateId();
+          if (!item.translationGroup) {
+            await cms.content.update(item.collection, item.id, { translationGroup: groupId });
+            item.translationGroup = groupId;
+          }
+
           const translationSlug = `${item.slug}-${targetLocale}`;
           await cms.content.create(item.collection, {
             slug: translationSlug,
             data: mergedData,
             status: publish ? "published" : "draft",
             locale: targetLocale,
-            translationOf: item.slug,
+            translationGroup: groupId,
           });
 
           done++;

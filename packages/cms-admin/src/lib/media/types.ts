@@ -52,6 +52,7 @@ export interface InteractiveMeta {
   /** F48 i18n */
   locale?: string;
   translationOf?: string;
+  translationGroup?: string;
 }
 
 export interface MediaAdapter {
@@ -100,7 +101,7 @@ export interface MediaAdapter {
   createInteractive(filename: string, content: Buffer): Promise<InteractiveMeta>;
 
   /** Update interactive content and/or name and/or status */
-  updateInteractive(id: string, updates: { content?: string; name?: string; status?: InteractiveStatus; locale?: string; translationOf?: string }): Promise<InteractiveMeta | null>;
+  updateInteractive(id: string, updates: { content?: string; name?: string; status?: InteractiveStatus; locale?: string; translationOf?: string; translationGroup?: string }): Promise<InteractiveMeta | null>;
 
   /** Permanently delete an interactive (use updateInteractive with status:"trashed" for soft delete) */
   deleteInteractive(id: string): Promise<boolean>;
