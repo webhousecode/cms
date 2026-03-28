@@ -913,6 +913,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
   const [seoPanelOpen, setSeoPanelOpen] = useState(false);
   const [generateOpen, setGenerateOpen] = useState(false);
   const [cloning, setCloning] = useState(false);
+  const [retranslating, setRetranslating] = useState(false);
   const [confirmTrash, setConfirmTrash] = useState(false);
   const [locale, setLocale] = useState(initialDoc.locale ?? "");
   const [translationOf] = useState(initialDoc.translationOf ?? "");
@@ -1483,17 +1484,42 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
           <span>Source document was updated — this translation may be outdated.</span>
           <button
             type="button"
-            onClick={() => {
-              setCreateTranslationOpen(true);
+            disabled={retranslating}
+            onClick={async () => {
+              // Find source sibling slug (the one that was updated)
+              const sourceSibling = translations.find(t => t.updatedAt && new Date(t.updatedAt) > new Date(initialDoc.updatedAt));
+              const sourceSlug = sourceSibling?.slug || translationOf;
+              if (!sourceSlug) { toast.error("Cannot find source document"); return; }
+              setRetranslating(true);
+              try {
+                const res = await fetch(`/api/cms/${collection}/${sourceSlug}/translate`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ targetLocale: locale }),
+                });
+                if (res.ok) {
+                  toast.success("Translation updated from source");
+                  router.refresh();
+                } else {
+                  const body = await res.json().catch(() => ({ error: "Failed" }));
+                  toast.error(body.error ?? "Re-translation failed");
+                }
+              } catch {
+                toast.error("Re-translation failed");
+              } finally {
+                setRetranslating(false);
+              }
             }}
             style={{
               padding: "0.2rem 0.5rem", borderRadius: "4px",
               border: "1px solid rgb(234 179 8 / 0.4)", background: "rgb(234 179 8 / 0.1)",
               color: "rgb(234 179 8)", fontSize: "0.7rem", cursor: "pointer",
               display: "inline-flex", alignItems: "center", gap: "0.3rem",
+              opacity: retranslating ? 0.6 : 1,
             }}
           >
-            <Sparkles size={11} /> Re-translate with AI
+            {retranslating ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} />}
+            {retranslating ? "Re-translating…" : "Re-translate with AI"}
           </button>
         </div>
       )}
