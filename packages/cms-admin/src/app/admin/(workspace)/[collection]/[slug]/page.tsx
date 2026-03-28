@@ -47,8 +47,8 @@ export default async function DocumentPage({ params, searchParams }: Props) {
         collection={collection}
         colConfig={colConfig}
         blocksConfig={[...builtinBlocks, ...(config.blocks ?? [])]}
-        locales={config.locales ?? []}
-        defaultLocale={config.defaultLocale ?? "en"}
+        locales={siteConfig.locales?.length ? siteConfig.locales : (config.locales ?? [])}
+        defaultLocale={siteConfig.defaultLocale || config.defaultLocale || "en"}
         initialDoc={{
           id: doc.id,
           slug: doc.slug,
