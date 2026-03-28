@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Search, Sparkles, Loader2, ExternalLink, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { TabTitle } from "@/lib/tabs-context";
-import { ActionBar, ActionBarBreadcrumb } from "@/components/action-bar";
+import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
 import { toast } from "sonner";
 import type { SeoDocSummary } from "@/app/api/admin/seo/route";
 
@@ -111,21 +111,15 @@ export default function SeoPage() {
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
       <TabTitle value="SEO" />
       <ActionBar>
-        <ActionBarBreadcrumb items={["SEO"]} />
+        <ActionBarBreadcrumb items={["Tools", "SEO"]} />
         <div style={{ flex: 1 }} />
-        <button
+        <ActionButton
           onClick={optimizeAll}
           disabled={optimizing || !data || data.optimized === data.total}
-          style={{
-            display: "inline-flex", alignItems: "center", gap: "0.375rem",
-            padding: "0.4rem 1rem", borderRadius: "6px", border: "none",
-            background: "#F7BB2E", color: "#0D0D0D", cursor: optimizing ? "wait" : "pointer",
-            fontSize: "0.8rem", fontWeight: 600, opacity: optimizing ? 0.7 : 1,
-          }}
+          icon={optimizing ? <Loader2 style={{ width: 14, height: 14, animation: "spin 1s linear infinite" }} /> : <Sparkles style={{ width: 14, height: 14 }} />}
         >
-          {optimizing ? <Loader2 style={{ width: 14, height: 14, animation: "spin 1s linear infinite" }} /> : <Sparkles style={{ width: 14, height: 14 }} />}
-          {optimizing ? `Optimizing ${optimizeProgress.done}/${optimizeProgress.total}...` : `Optimize All (${data ? data.total - data.optimized : 0} unoptimized)`}
-        </button>
+          {optimizing ? `Optimizing ${optimizeProgress.done}/${optimizeProgress.total}...` : `Optimize All (${data ? data.total - data.optimized : 0})`}
+        </ActionButton>
       </ActionBar>
 
       {loading ? (
