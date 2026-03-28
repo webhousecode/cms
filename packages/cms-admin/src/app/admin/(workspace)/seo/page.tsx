@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Search, Sparkles, Loader2, ExternalLink, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { Sparkles, Loader2, CheckCircle2, Plus, X, Download, Tag } from "lucide-react";
 import { TabTitle } from "@/lib/tabs-context";
 import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
 import { toast } from "sonner";
 import type { SeoDocSummary } from "@/app/api/admin/seo/route";
+import type { KeywordAnalysis } from "@/lib/seo/keywords";
 
 interface SeoOverview {
   total: number;
@@ -21,14 +22,29 @@ function scoreColor(score: number): string {
   return "#f87171";
 }
 
+function densityColor(density: number): string {
+  if (density >= 1 && density <= 3) return "#4ade80";
+  if (density > 3) return "#f87171";
+  return "#F7BB2E";
+}
+
 export default function SeoPage() {
   const [data, setData] = useState<SeoOverview | null>(null);
   const [loading, setLoading] = useState(true);
   const [optimizing, setOptimizing] = useState(false);
   const [optimizeProgress, setOptimizeProgress] = useState({ done: 0, total: 0 });
 
+  // Keyword tracker state
+  const [keywordData, setKeywordData] = useState<{ analyses: KeywordAnalysis[] } | null>(null);
+  const [keywordLoading, setKeywordLoading] = useState(true);
+  const [newKeyword, setNewKeyword] = useState("");
+  const [addingKeyword, setAddingKeyword] = useState(false);
+  const [confirmRemove, setConfirmRemove] = useState<string | null>(null);
+  const [expandedKeyword, setExpandedKeyword] = useState<string | null>(null);
+
   useEffect(() => {
     loadData();
+    loadKeywords();
   }, []);
 
   async function loadData() {
@@ -38,6 +54,68 @@ export default function SeoPage() {
       setData(await res.json());
     } catch { /* ignore */ }
     setLoading(false);
+  }
+
+  async function loadKeywords() {
+    setKeywordLoading(true);
+    try {
+      const res = await fetch("/api/admin/seo/keywords");
+      setKeywordData(await res.json());
+    } catch { /* ignore */ }
+    setKeywordLoading(false);
+  }
+
+  async function handleAddKeyword() {
+    if (!newKeyword.trim()) return;
+    setAddingKeyword(true);
+    try {
+      const res = await fetch("/api/admin/seo/keywords", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "add", keyword: newKeyword.trim() }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        toast.error(err.error ?? "Failed to add keyword");
+      } else {
+        setNewKeyword("");
+        loadKeywords();
+      }
+    } catch {
+      toast.error("Failed to add keyword");
+    }
+    setAddingKeyword(false);
+  }
+
+  async function handleRemoveKeyword(keyword: string) {
+    try {
+      await fetch("/api/admin/seo/keywords", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "remove", keyword }),
+      });
+      setConfirmRemove(null);
+      loadKeywords();
+    } catch {
+      toast.error("Failed to remove keyword");
+    }
+  }
+
+  async function handleExport(format: "csv" | "json") {
+    try {
+      const res = await fetch(`/api/admin/seo/export?format=${format}`);
+      if (!res.ok) { toast.error("Export failed"); return; }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `seo-report.${format}`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success(`Downloaded seo-report.${format}`);
+    } catch {
+      toast.error("Export failed");
+    }
   }
 
   async function optimizeAll() {
@@ -75,6 +153,7 @@ export default function SeoPage() {
     }
     setOptimizing(false);
     loadData();
+    loadKeywords();
   }
 
   async function optimizeSingle(collection: string, slug: string) {
@@ -111,14 +190,23 @@ export default function SeoPage() {
     <>
       <TabTitle value="SEO" />
       <ActionBar actions={
-        <ActionButton
-          variant="primary"
-          onClick={optimizeAll}
-          disabled={optimizing || !data || data.optimized === data.total}
-          icon={optimizing ? <Loader2 style={{ width: 14, height: 14, animation: "spin 1s linear infinite" }} /> : <Sparkles style={{ width: 14, height: 14 }} />}
-        >
-          {optimizing ? `Optimizing ${optimizeProgress.done}/${optimizeProgress.total}...` : `Optimize All (${data ? data.total - data.optimized : 0})`}
-        </ActionButton>
+        <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+          <ActionButton
+            variant="ghost"
+            onClick={() => handleExport("csv")}
+            icon={<Download style={{ width: 14, height: 14 }} />}
+          >
+            Export CSV
+          </ActionButton>
+          <ActionButton
+            variant="primary"
+            onClick={optimizeAll}
+            disabled={optimizing || !data || data.optimized === data.total}
+            icon={optimizing ? <Loader2 style={{ width: 14, height: 14, animation: "spin 1s linear infinite" }} /> : <Sparkles style={{ width: 14, height: 14 }} />}
+          >
+            {optimizing ? `Optimizing ${optimizeProgress.done}/${optimizeProgress.total}...` : `Optimize All (${data ? data.total - data.optimized : 0})`}
+          </ActionButton>
+        </div>
       }>
         <ActionBarBreadcrumb items={["Tools", "SEO"]} />
       </ActionBar>
@@ -174,7 +262,174 @@ export default function SeoPage() {
             </div>
           </div>
 
+          {/* Keyword Tracker */}
+          <div style={{ marginBottom: "1.5rem" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.75rem" }}>
+              <h3 style={{ margin: 0, fontSize: "0.85rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "0.375rem" }}>
+                <Tag style={{ width: 14, height: 14, color: "var(--muted-foreground)" }} />
+                Keyword Tracker
+              </h3>
+              <form
+                onSubmit={(e) => { e.preventDefault(); handleAddKeyword(); }}
+                style={{ display: "flex", gap: "0.375rem", alignItems: "center" }}
+              >
+                <input
+                  type="text"
+                  value={newKeyword}
+                  onChange={(e) => setNewKeyword(e.target.value)}
+                  placeholder="Add keyword..."
+                  style={{
+                    padding: "0.25rem 0.5rem", fontSize: "0.75rem", borderRadius: "4px",
+                    border: "1px solid var(--border)", background: "var(--background)",
+                    color: "var(--foreground)", width: 160, outline: "none",
+                  }}
+                />
+                <button
+                  type="submit"
+                  disabled={addingKeyword || !newKeyword.trim()}
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: "0.2rem",
+                    padding: "0.25rem 0.5rem", borderRadius: "4px", border: "none",
+                    background: newKeyword.trim() ? "#F7BB2E" : "var(--border)",
+                    color: newKeyword.trim() ? "#0D0D0D" : "var(--muted-foreground)",
+                    cursor: newKeyword.trim() ? "pointer" : "default",
+                    fontSize: "0.7rem", fontWeight: 600,
+                  }}
+                >
+                  <Plus style={{ width: 12, height: 12 }} /> Add
+                </button>
+              </form>
+            </div>
+
+            {keywordLoading ? (
+              <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)" }}>Loading keywords...</p>
+            ) : !keywordData?.analyses?.length ? (
+              <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", padding: "0.5rem 0" }}>
+                No tracked keywords yet. Add keywords above to track coverage across your content.
+              </p>
+            ) : (
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem" }}>
+                <thead>
+                  <tr style={{ borderBottom: "1px solid var(--border)" }}>
+                    <th style={{ textAlign: "left", padding: "0.5rem 0.75rem", color: "var(--muted-foreground)", fontWeight: 500, fontSize: "0.72rem" }}>Keyword</th>
+                    <th style={{ textAlign: "center", padding: "0.5rem", color: "var(--muted-foreground)", fontWeight: 500, fontSize: "0.72rem", width: 60 }}>Type</th>
+                    <th style={{ textAlign: "center", padding: "0.5rem", color: "var(--muted-foreground)", fontWeight: 500, fontSize: "0.72rem", width: 60 }}>Docs</th>
+                    <th style={{ textAlign: "center", padding: "0.5rem", color: "var(--muted-foreground)", fontWeight: 500, fontSize: "0.72rem", width: 100 }}>Coverage</th>
+                    <th style={{ textAlign: "right", padding: "0.5rem 0.75rem", width: 80 }}></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {keywordData.analyses.map((kw) => (
+                    <>
+                      <tr
+                        key={kw.keyword}
+                        style={{ borderBottom: "1px solid var(--border)", cursor: "pointer" }}
+                        onClick={() => setExpandedKeyword(expandedKeyword === kw.keyword ? null : kw.keyword)}
+                      >
+                        <td style={{ padding: "0.625rem 0.75rem", fontWeight: 500 }}>
+                          {kw.keyword}
+                        </td>
+                        <td style={{ textAlign: "center", padding: "0.5rem" }}>
+                          <span style={{
+                            fontSize: "0.6rem", padding: "0.15rem 0.4rem", borderRadius: "3px",
+                            background: kw.target === "primary" ? "rgba(247,187,46,0.2)" : kw.target === "secondary" ? "rgba(74,222,128,0.15)" : "rgba(168,139,250,0.15)",
+                            color: kw.target === "primary" ? "#F7BB2E" : kw.target === "secondary" ? "#4ade80" : "#a78bfa",
+                            fontWeight: 600, textTransform: "uppercase",
+                          }}>
+                            {kw.target}
+                          </span>
+                        </td>
+                        <td style={{ textAlign: "center", padding: "0.5rem", fontFamily: "monospace" }}>
+                          {kw.documents.length}
+                        </td>
+                        <td style={{ textAlign: "center", padding: "0.5rem" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "0.375rem", justifyContent: "center" }}>
+                            <div style={{ width: 60, height: 6, borderRadius: 3, background: "var(--border)", overflow: "hidden" }}>
+                              <div style={{
+                                height: "100%", width: `${kw.coverage}%`, borderRadius: 3,
+                                background: kw.coverage >= 50 ? "#4ade80" : kw.coverage >= 20 ? "#F7BB2E" : "#f87171",
+                              }} />
+                            </div>
+                            <span style={{ fontSize: "0.72rem", fontFamily: "monospace", fontWeight: 600, color: "var(--foreground)" }}>
+                              {kw.coverage}%
+                            </span>
+                          </div>
+                        </td>
+                        <td style={{ textAlign: "right", padding: "0.5rem 0.75rem" }}>
+                          {confirmRemove === kw.keyword ? (
+                            <span style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
+                              <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleRemoveKeyword(kw.keyword); }}
+                                style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}
+                              >Yes</button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setConfirmRemove(null); }}
+                                style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}
+                              >No</button>
+                            </span>
+                          ) : (
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setConfirmRemove(kw.keyword); }}
+                              style={{
+                                display: "inline-flex", alignItems: "center", padding: "0.2rem",
+                                borderRadius: "3px", border: "none", background: "transparent",
+                                color: "var(--muted-foreground)", cursor: "pointer",
+                              }}
+                            >
+                              <X style={{ width: 12, height: 12 }} />
+                            </button>
+                          )}
+                        </td>
+                      </tr>
+                      {/* Expanded keyword detail rows */}
+                      {expandedKeyword === kw.keyword && kw.documents.length > 0 && (
+                        <tr key={`${kw.keyword}-detail`}>
+                          <td colSpan={5} style={{ padding: "0 0.75rem 0.75rem", background: "var(--card)" }}>
+                            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.72rem" }}>
+                              <thead>
+                                <tr>
+                                  <th style={{ textAlign: "left", padding: "0.375rem 0.5rem", color: "var(--muted-foreground)", fontWeight: 500 }}>Document</th>
+                                  <th style={{ textAlign: "center", padding: "0.375rem 0.25rem", color: "var(--muted-foreground)", fontWeight: 500, width: 50 }}>Title</th>
+                                  <th style={{ textAlign: "center", padding: "0.375rem 0.25rem", color: "var(--muted-foreground)", fontWeight: 500, width: 50 }}>Desc</th>
+                                  <th style={{ textAlign: "center", padding: "0.375rem 0.25rem", color: "var(--muted-foreground)", fontWeight: 500, width: 50 }}>Content</th>
+                                  <th style={{ textAlign: "center", padding: "0.375rem 0.25rem", color: "var(--muted-foreground)", fontWeight: 500, width: 70 }}>Density</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {kw.documents.map((d) => (
+                                  <tr key={`${d.collection}/${d.slug}`} style={{ borderTop: "1px solid var(--border)" }}>
+                                    <td style={{ padding: "0.375rem 0.5rem" }}>
+                                      <a href={`/admin/${d.collection}/${d.slug}`} style={{ color: "var(--foreground)", textDecoration: "none" }}>
+                                        {d.title}
+                                      </a>
+                                    </td>
+                                    <td style={{ textAlign: "center", padding: "0.375rem 0.25rem" }}>{d.inTitle ? "✅" : "❌"}</td>
+                                    <td style={{ textAlign: "center", padding: "0.375rem 0.25rem" }}>{d.inDescription ? "✅" : "❌"}</td>
+                                    <td style={{ textAlign: "center", padding: "0.375rem 0.25rem" }}>{d.inContent ? "✅" : "❌"}</td>
+                                    <td style={{ textAlign: "center", padding: "0.375rem 0.25rem" }}>
+                                      <span style={{ fontFamily: "monospace", fontWeight: 600, color: densityColor(d.density) }}>
+                                        {d.density}%
+                                      </span>
+                                    </td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </td>
+                        </tr>
+                      )}
+                    </>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
+
           {/* Documents table */}
+          <h3 style={{ margin: "0 0 0.5rem", fontSize: "0.85rem", fontWeight: 600 }}>
+            Per-Document SEO
+          </h3>
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem" }}>
             <thead>
               <tr style={{ borderBottom: "1px solid var(--border)" }}>

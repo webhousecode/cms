@@ -113,7 +113,7 @@
 | F94 | [Favorites](#f94-favorites) | Planned | [docs/features/F94-favorites.md](features/F94-favorites.md) |
 | F95 | [Cloud Backup Providers](#f95-cloud-backup-providers) | Planned | [docs/features/F95-cloud-backup-providers.md](features/F95-cloud-backup-providers.md) |
 | F96 | [Embeddable Maps](#f96-embeddable-maps) | Planned | [docs/features/F96-embeddable-maps.md](features/F96-embeddable-maps.md) |
-| F97 | [SEO Module](#f97-seo-module) | Planned | [docs/features/F97-seo-module.md](features/F97-seo-module.md) |
+| F97 | [SEO Module](#f97-seo-module) | Done | [docs/features/F97-seo-module.md](features/F97-seo-module.md) |
 | F98 | [Performance Audit (Lighthouse)](#f98-lighthouse-audit) | Planned | [docs/features/F98-lighthouse-audit.md](features/F98-lighthouse-audit.md) |
 | F99 | [End-to-End Testing Suite](#f99-e2e-testing-suite) | Planned | [docs/features/F99-e2e-testing-suite.md](features/F99-e2e-testing-suite.md) |
 | F100 | [Custom Domain DNS Validation](#f100-custom-domain-dns-validation) | Planned | [docs/features/F100-custom-domain-dns.md](features/F100-custom-domain-dns.md) |
