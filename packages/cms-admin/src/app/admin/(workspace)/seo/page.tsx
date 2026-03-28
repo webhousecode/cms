@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Search, Sparkles, Loader2, ExternalLink, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { TabTitle } from "@/lib/tabs-context";
 import { ActionBar, ActionBarBreadcrumb } from "@/components/action-bar";
 import { toast } from "sonner";
 import type { SeoDocSummary } from "@/app/api/admin/seo/route";
@@ -108,6 +109,7 @@ export default function SeoPage() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      <TabTitle value="SEO" />
       <ActionBar>
         <ActionBarBreadcrumb items={["SEO"]} />
         <div style={{ flex: 1 }} />
