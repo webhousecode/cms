@@ -64,7 +64,7 @@ _Without these, we cannot build and deliver professional sites on the platform._
 | ~~4c~~ | ~~**F67 Security Gate**~~ | ~~Done~~ | ~~Shipped. Gitleaks + Semgrep + custom scanner. Pre-commit hook + CI workflow.~~ |
 | ~~4d~~ | ~~**F76 Create New Organization**~~ | ~~Done~~ | ~~Shipped 2026-03-19~~ |
 | ~~4e~~ | ~~**F77 Middleware→Proxy**~~ | ~~Done~~ | ~~Shipped 2026-03-20~~ |
-| 5 | **F12 One-Click Publish** | In progress | GH Pages pipeline working. Auto-create repo, custom domains, auto-deploy on save + toast, deploy tab, deploy history, site health dots, separate dist/deploy dirs. Deploy hooks (Vercel/Netlify) untested. |
+| ~~5~~ | ~~**F12 One-Click Publish**~~ | ~~Done~~ | ~~Shipped. All providers: GH Pages, Fly.io, Vercel, Netlify, Cloudflare. Deploy history, auto-deploy on save, deploy tab, custom domains.~~ |
 | 6 | **F27 Backup & Restore** | In progress | Backup working. Scheduler now iterates ALL sites. GitHub restore not yet implemented. |
 | ~~7~~ | ~~**F44 Media Processing Pipeline**~~ | ~~Done~~ | ~~Sharp WebP variant generation on upload + batch, EXIF extraction, build-time `<picture>` upgrade, AI image analysis. Configurable variant widths + quality in Settings.~~ |
 | ~~8~~ | ~~**F42 Framework Boilerplates**~~ | ~~Done~~ | ~~Shipped. 3 boilerplates (static, nextjs, nextjs-github) + Claude Code skills/hooks/agents.~~ |
@@ -81,7 +81,7 @@ _Without these, we cannot build and deliver professional sites on the platform._
 | 8l | **F48 Internationalization (i18n)** | Large | Full multi-language CMS. AI auto-translates all content + SEO + metadata. Locale-aware AI prompts, build pipeline, translation UI, bulk translate, auto-translate on publish. Must ship before codebase grows more — every new feature needs locale hooks. |
 | 8m | **F112 GEO (Generative Engine Optimization)** | Large | AI visibility is the new SEO. Smart robots.txt, GEO score, llms-full.txt, enhanced JSON-LD, AI visibility monitor, search index checker, GEO agent. First CMS with built-in AI visibility tools — THE differentiator. |
 | 9 | **F31 Documentation Site** | Medium | Can't ship without docs. Last because it documents everything above. |
-| 9b | **F90 Marketing Content Bank** | Small | Living doc of messaging, talking points, README copy. Source of truth for product positioning. |
+| ~~9b~~ | ~~**F90 Marketing Content Bank**~~ | ~~Done~~ | ~~Shipped. 5 messaging frameworks, talking points, badge/shield suggestions, deploy targets.~~ |
 | ~~9c~~ | ~~**F96 Embeddable Maps**~~ | ~~Done~~ | ~~Shipped. OSM/Leaflet map block, richtext embed, field type.~~ |
 
 ### Tier 2 — Competitive Edge (v1.1-1.2)
@@ -98,7 +98,7 @@ _Makes us stand out. Customers expect these from a modern CMS._
 | 12 | **F02 Import Engine** | Medium | Migrating FROM another CMS is the #1 adoption barrier. |
 | 13 | **F03 WordPress Migration** | Medium | WP is the biggest migration source. Built on F02. |
 | 14 | **F13 Notification Channels** | Small | Discord/Slack/webhook notifications on content changes. |
-| 15 | **F15 Agent Scheduler** | Small | Cron agents (link check, SEO audit, content refresh). Already in progress. |
+| ~~15~~ | ~~**F15 Agent Scheduler**~~ | ~~Done~~ | ~~Shipped. scheduler.ts, daily/weekly scheduling, calendar UI, run history, scheduler-notify, scheduler-bus.~~ |
 | 16 | **F35 Webhooks** | Small | Generic outbound events for integrations. F41 revalidation is a specific case. |
 | 16b | **F61 Activity Log** | Medium | Audit trail — who did what when. Compliance, debugging, team accountability. |
 | 17 | **F40 Drag and Drop Tabs** | Small | Polish. Expected UX in a tabbed interface. |
@@ -113,17 +113,17 @@ _Makes us stand out. Customers expect these from a modern CMS._
 | 18g | **F95 Cloud Backup Providers** | Medium | pCloud, Scaleway (75GB free), R2, B2, Hetzner. S3 + pCloud + WebDAV adapters. Extends F27. |
 | 18h | **F98 Lighthouse Audit** | Medium | PSI API + local Lighthouse. Dashboard scores + trend, scheduled scans, per-page audits, alerts on drop. |
 | 19 | **F49 Incremental Builds** | Small | Performance. Only matters at scale (100+ pages). |
-| 20 | **F107 Chat with Your Site** | Large | Full-screen conversational CMS. Master switch Chat/Traditional. 4 phases. THE AI-first CMS differentiator. Supersedes F51. |
+| ~~20~~ | ~~**F107 Chat with Your Site**~~ | ~~Done~~ | ~~Shipped. 40 tools, SSE streaming, conversation history, thinking toggle + timer, artifact cards, inline forms, bulk tools, AI SEO on create. Supersedes F51.~~ |
 | ~~20~~ | ~~**F51 Admin AI Assistant**~~ | ~~Superseded~~ | ~~Absorbed into F107 Chat with Your Site~~ |
 | 20b | **F110 Digital Island Apps** | Medium | AI-generated sandboxed micro-apps via chat. Artifact cards with live preview. Save to Interactives, embed on site. |
 | 20c | **F55 Enhance Prompt** | Small | Magic wand that rewrites vague prompts into effective ones. Better AI output for everyone. |
 | 20c | **F57 Extranet** | Large | Protected site pages for visitors. Client portals, member content, gated resources. |
 | 20d | **F60 Reliable Scheduled Tasks** | Small | Heartbeat endpoint + external cron ensures publishing/agents run on time despite Fly auto-stop. |
-| 20e | **F64 Toast Notifications System** | Small | Event-driven toasts for all actions. Phase 1 done (Sonner + SSE + scheduler). Phase 2: AI toasts, undo-trash, error feedback, notification prefs. |
+| ~~20e~~ | ~~**F64 Toast Notifications System**~~ | ~~Phase 1 Done~~ | ~~Shipped. Sonner + SSE + scheduler integration. Phase 2 (AI toasts, undo-trash, notification prefs) deferred.~~ |
 | 20f | **F72 Website Screenshots** | Medium | Playwright captures all site pages. New Tools sidebar group (Link Checker + Screenshots tabs). Visual QA. |
 | 20f | **F66 Search Index** | Medium | SQLite FTS5 full-text search. Incremental indexing via storage hooks. Field-weighted ranking. Replaces O(n) scan. |
 | 20g | **F85 CC Hooks & Quality Gates** | Small | Auto type-check, destructive command guards, post-commit audit. Catches errors before user sees them. |
-| 9d | **F87 Org-Level Global Settings** | Medium | Shared org settings inherited by all sites. MCP, email, AI keys, webhooks. Per-site override. |
+| ~~9d~~ | ~~**F87 Org-Level Global Settings**~~ | ~~Done~~ | ~~Shipped. org-settings.ts, inheritance chain (defaults ← org ← site), INHERITABLE_FIELDS, NEVER_INHERIT, migration helper.~~ |
 | 18f | **F88 MCP Server Validation** | Small | Validate button spawns MCP server, tests connection, lists available tools. |
 | 18g | **F93 Next.js App Deployment** | Medium | Deploy Next.js SSR/RSC sites to Vercel/Netlify/Fly.io. Deploy hooks built but untested. Status polling + auto-deploy on save. |
 | 18h | **F100 Custom Domain DNS Validation** | Small | Real-time DNS validation in Deploy Settings. Auto-provision *.webhouse.app subdomains via DNS API. Verify CNAME for external domains. |

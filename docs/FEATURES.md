@@ -31,7 +31,7 @@
 | F12 | [One-Click Publish](#f12-one-click-publish) | Done | [docs/features/F12-one-click-publish.md](features/F12-one-click-publish.md) |
 | F13 | [Notification Channels](#f13-notification-channels) | Planned | [docs/features/F13-notification-channels.md](features/F13-notification-channels.md) |
 | F14 | [Newsletter Engine](#f14-newsletter-engine) | Planned | [docs/features/F14-newsletter-engine.md](features/F14-newsletter-engine.md) |
-| F15 | [Agent Scheduler & Notifications](#f15-agent-scheduler) | In progress | [docs/features/F15-agent-scheduler.md](features/F15-agent-scheduler.md) |
+| F15 | [Agent Scheduler & Notifications](#f15-agent-scheduler) | Done | [docs/features/F15-agent-scheduler.md](features/F15-agent-scheduler.md) |
 | F16 | [Link Checker Agent](#f16-link-checker-agent) | Done | [docs/features/F16-link-checker-agent.md](features/F16-link-checker-agent.md) |
 | F17 | [AI-Friendly Content Index](#f17-ai-content-index) | Planned | [docs/features/F17-ai-content-index.md](features/F17-ai-content-index.md) |
 | F18 | [Design System & Themes](#f18-design-system) | Idea | [docs/features/F18-design-system.md](features/F18-design-system.md) |
@@ -80,7 +80,7 @@
 | F61 | [Activity Log](#f61-activity-log) | Planned | [docs/features/F61-activity-log.md](features/F61-activity-log.md) |
 | F62 | [Directory Sync](#f62-directory-sync) | Planned | [docs/features/F62-directory-sync.md](features/F62-directory-sync.md) |
 | F63 | [Shared Component Library](#f63-shared-components) | Planned | [docs/features/F63-shared-components.md](features/F63-shared-components.md) |
-| F64 | [Toast Notifications System](#f64-toast-notifications-system) | In progress | [docs/features/F64-toast-notifications.md](features/F64-toast-notifications.md) |
+| F64 | [Toast Notifications System](#f64-toast-notifications-system) | Phase 1 Done | [docs/features/F64-toast-notifications.md](features/F64-toast-notifications.md) |
 | F65 | [Agent Pipeline E2E Tests](#f65-agent-pipeline-tests) | Superseded by F99 | [docs/features/F65-agent-pipeline-tests.md](features/F65-agent-pipeline-tests.md) |
 | F66 | [Search Index](#f66-search-index) | Planned | [docs/features/F66-search-index.md](features/F66-search-index.md) |
 | F67 | [Security Gate](#f67-security-gate) | Done | [docs/features/F67-security-gate.md](features/F67-security-gate.md) |
@@ -103,10 +103,10 @@
 | F84 | [Move Site to Org](#f84-move-site-to-org) | Planned | [docs/features/F84-move-site-to-org.md](features/F84-move-site-to-org.md) |
 | F85 | [CC Hooks & Quality Gates](#f85-cc-hooks-quality-gates) | Planned | [docs/features/F85-cc-hooks-quality-gates.md](features/F85-cc-hooks-quality-gates.md) |
 | F86 | [Action Bar](#f86-action-bar) | Done | [docs/features/F86-action-bar.md](features/F86-action-bar.md) |
-| F87 | [Org-Level Global Settings](#f87-org-level-global-settings) | Planned | [docs/features/F87-org-level-settings.md](features/F87-org-level-settings.md) |
+| F87 | [Org-Level Global Settings](#f87-org-level-global-settings) | Done | [docs/features/F87-org-level-settings.md](features/F87-org-level-settings.md) |
 | F88 | [MCP Server Validation](#f88-mcp-server-validation) | Planned | [docs/features/F88-mcp-server-validation.md](features/F88-mcp-server-validation.md) |
 | F89 | [Post-Build Enrichment](#f89-post-build-enrichment) | Done | [docs/features/F89-post-build-enrichment.md](features/F89-post-build-enrichment.md) |
-| F90 | [Marketing Content Bank](#f90-marketing-content-bank) | In progress | [docs/features/F90-marketing-content-bank.md](features/F90-marketing-content-bank.md) |
+| F90 | [Marketing Content Bank](#f90-marketing-content-bank) | Done | [docs/features/F90-marketing-content-bank.md](features/F90-marketing-content-bank.md) |
 | F91 | [Login with GitHub](#f91-login-with-github) | Planned | [docs/features/F91-login-with-github.md](features/F91-login-with-github.md) |
 | F92 | [Desktop PWA](#f92-desktop-pwa) | Planned | [docs/features/F92-desktop-pwa.md](features/F92-desktop-pwa.md) |
 | F93 | [Next.js App Deployment](#f93-nextjs-app-deployment) | Planned | [docs/features/F93-nextjs-deployment.md](features/F93-nextjs-deployment.md) |
@@ -123,7 +123,7 @@
 | F104 | [Performance & Data Optimization](#f104-performance-optimization) | Planned | [docs/features/F104-performance-optimization.md](features/F104-performance-optimization.md) |
 | F105 | [Voice Module](#f105-voice-module) | Planned | [docs/features/F105-voice-module.md](features/F105-voice-module.md) |
 | F106 | [TipTap v3 Upgrade](#f106-tiptap-v3-upgrade) | Planned | [docs/features/F106-tiptap-v3-upgrade.md](features/F106-tiptap-v3-upgrade.md) |
-| F107 | [Chat with Your Site](#f107-chat-with-your-site) | Planned | [docs/features/F107-chat-with-your-site.md](features/F107-chat-with-your-site.md) |
+| F107 | [Chat with Your Site](#f107-chat-with-your-site) | Done | [docs/features/F107-chat-with-your-site.md](features/F107-chat-with-your-site.md) |
 | F108 | [Rich Text Editor Enhancements](#f108-rich-text-editor-enhancements) | ✅ Done | [docs/features/F108-richtext-editor-enhancements.md](features/F108-richtext-editor-enhancements.md) |
 | F109 | [Inline Proofreading](#f109-inline-proofreading) | Planned | [docs/features/F109-inline-proofreading.md](features/F109-inline-proofreading.md) |
 | F110 | [Digital Island Apps](#f110-digital-island-apps) | Planned | [docs/features/F110-digital-island-apps.md](features/F110-digital-island-apps.md) |
