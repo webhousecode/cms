@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getMediaAdapter } from "@/lib/media";
+import { denyViewers } from "@/lib/require-role";
 
 export async function POST(req: NextRequest) {
+  const denied = await denyViewers(); if (denied) return denied;
   try {
     const { folder, name } = await req.json();
     const adapter = await getMediaAdapter();

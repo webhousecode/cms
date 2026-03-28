@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readCockpit, writeCockpit } from "@/lib/cockpit";
+import { denyViewers } from "@/lib/require-role";
 
 export async function GET() {
   const params = await readCockpit();
@@ -7,6 +8,7 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const denied = await denyViewers(); if (denied) return denied;
   try {
     const body = await request.json();
     await writeCockpit(body);

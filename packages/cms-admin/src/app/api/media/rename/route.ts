@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getMediaAdapter } from "@/lib/media";
+import { denyViewers } from "@/lib/require-role";
 
 /**
  * POST /api/media/rename
@@ -7,6 +8,7 @@ import { getMediaAdapter } from "@/lib/media";
  * Returns: { url: string } — the new browser-renderable URL
  */
 export async function POST(req: NextRequest) {
+  const denied = await denyViewers(); if (denied) return denied;
   try {
     const { folder, oldName, newName } = (await req.json()) as {
       folder: string;

@@ -12,8 +12,10 @@ import { getActiveSitePaths } from "@/lib/site-paths";
 import { readSiteConfig } from "@/lib/site-config";
 import { generateVariants, isProcessableImage, variantFilename, extractExif, DEFAULT_VARIANTS, type VariantConfig } from "@/lib/media/image-processor";
 import { appendMediaMeta } from "@/lib/media/media-meta";
+import { denyViewers } from "@/lib/require-role";
 
 export async function POST(req: NextRequest) {
+  const denied = await denyViewers(); if (denied) return denied;
   try {
     const sitePaths = await getActiveSitePaths();
     const uploadDir = sitePaths.uploadDir;

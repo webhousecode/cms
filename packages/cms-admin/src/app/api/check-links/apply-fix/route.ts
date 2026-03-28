@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminCms } from "@/lib/cms";
+import { denyViewers } from "@/lib/require-role";
 
 export async function POST(req: NextRequest) {
+  const denied = await denyViewers(); if (denied) return denied;
   const body = await req.json() as {
     docCollection: string;
     docSlug: string;

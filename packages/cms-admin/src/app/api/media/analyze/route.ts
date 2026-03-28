@@ -2,10 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { analyzeImage } from "@/lib/ai/image-analysis";
 import type { ImageAnalysis } from "@/lib/ai/image-analysis";
 import { getMediaAdapter } from "@/lib/media";
+import { denyViewers } from "@/lib/require-role";
 
 const VIDEO_EXTS = new Set(["mp4", "mov", "webm", "avi", "mkv", "m4v"]);
 
 export async function POST(req: NextRequest) {
+  const denied = await denyViewers(); if (denied) return denied;
   try {
     const { filename, folder = "", language = "da" } = await req.json();
     if (!filename) {

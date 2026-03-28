@@ -4,6 +4,7 @@ import { getMediaAdapter } from "@/lib/media";
 import { getActiveSitePaths } from "@/lib/site-paths";
 import fs from "fs/promises";
 import path from "path";
+import { denyViewers } from "@/lib/require-role";
 
 const IMAGE_EXTS = new Set(["jpg", "jpeg", "png", "webp", "gif"]);
 const VIDEO_EXTS = new Set(["mp4", "mov", "webm", "avi", "mkv", "m4v"]);
@@ -21,6 +22,7 @@ type DoneEvent = { kind: "done"; analyzed: number; failed: number };
 export type BatchEvent = StartEvent | ResultEvent | ErrorEvent | DoneEvent;
 
 export async function POST(req: NextRequest) {
+  const denied = await denyViewers(); if (denied) return denied;
   const body = await req.json().catch(() => ({}));
   const language = body.language ?? "da";
   const overwrite = body.overwrite === true;

@@ -1,6 +1,7 @@
 import { getAdminCms, getAdminConfig } from "@/lib/cms";
 import { getMediaAdapter } from "@/lib/media";
 import { NextResponse } from "next/server";
+import { denyViewers } from "@/lib/require-role";
 
 const RETENTION_DAYS = parseInt(process.env.TRASH_RETENTION_DAYS ?? "30");
 
@@ -70,6 +71,7 @@ export async function GET() {
 }
 
 export async function DELETE() {
+  const denied = await denyViewers(); if (denied) return denied;
   try {
     const [cms, config, media] = await Promise.all([getAdminCms(), getAdminConfig(), getMediaAdapter()]);
 

@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { getSessionUser } from "@/lib/auth";
 import { getTeamMember } from "@/lib/team";
 import { getActiveSitePaths } from "@/lib/site-paths";
+import { denyViewers } from "@/lib/require-role";
 import fs from "fs/promises";
 import path from "path";
 
@@ -12,6 +13,7 @@ import path from "path";
  * This allows editors without GitHub accounts to access GitHub-backed sites.
  */
 export async function POST(request: NextRequest) {
+  const denied = await denyViewers(); if (denied) return denied;
   const cookieStore = await cookies();
   const session = await getSessionUser(cookieStore);
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

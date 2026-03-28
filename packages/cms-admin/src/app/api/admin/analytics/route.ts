@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { denyViewers } from "@/lib/require-role";
 import {
   getRunHistory,
   getAgentStats,
@@ -62,6 +63,7 @@ export async function GET(request: NextRequest) {
  * Body: { type: "run" | "edit", data: RunEntry | ContentEdit }
  */
 export async function POST(request: NextRequest) {
+  const denied = await denyViewers(); if (denied) return denied;
   try {
     const body = await request.json();
     const { type, data } = body as { type: string; data: Record<string, unknown> };

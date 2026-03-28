@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { listMcpServers, addMcpServer, updateMcpServer, deleteMcpServer } from "@/lib/mcp-servers";
+import { denyViewers } from "@/lib/require-role";
 
 export async function GET() {
   const servers = await listMcpServers();
@@ -7,6 +8,7 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
+  const denied = await denyViewers(); if (denied) return denied;
   const body = await request.json();
   const server = await addMcpServer({
     name: body.name ?? "Unnamed",
@@ -19,6 +21,7 @@ export async function POST(request: NextRequest) {
 }
 
 export async function PUT(request: NextRequest) {
+  const denied = await denyViewers(); if (denied) return denied;
   const body = await request.json();
   if (!body.id) return NextResponse.json({ error: "id required" }, { status: 400 });
   const server = await updateMcpServer(body.id, body);
@@ -26,6 +29,7 @@ export async function PUT(request: NextRequest) {
 }
 
 export async function DELETE(request: NextRequest) {
+  const denied = await denyViewers(); if (denied) return denied;
   const { id } = (await request.json()) as { id?: string };
   if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
   await deleteMcpServer(id);

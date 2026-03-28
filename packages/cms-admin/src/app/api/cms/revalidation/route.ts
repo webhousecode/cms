@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { loadRegistry, saveRegistry, findSite } from "@/lib/site-registry";
 import { sendTestPing, readRevalidationLog } from "@/lib/revalidation";
 import { cookies } from "next/headers";
+import { denyViewers } from "@/lib/require-role";
 
 /**
  * GET /api/cms/revalidation — get revalidation settings + recent log for active site
@@ -24,6 +25,7 @@ export async function GET() {
  * POST /api/cms/revalidation — update revalidation settings for active site
  */
 export async function POST(request: NextRequest) {
+  const denied = await denyViewers(); if (denied) return denied;
   const body = await request.json() as {
     action?: "test-ping" | "save";
     revalidateUrl?: string;

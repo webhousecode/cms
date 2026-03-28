@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getSessionUser } from "@/lib/auth";
 import { sendEmail } from "@/lib/email";
+import { denyViewers } from "@/lib/require-role";
 
 export async function POST(request: NextRequest) {
+  const denied = await denyViewers(); if (denied) return denied;
   const cookieStore = await cookies();
   const session = await getSessionUser(cookieStore);
   if (!session) {

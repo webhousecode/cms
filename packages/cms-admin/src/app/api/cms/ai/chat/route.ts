@@ -4,6 +4,7 @@ import { getApiKey } from "@/lib/ai-config";
 import { buildContentContext } from "@/lib/content-context";
 import { readSiteConfig } from "@/lib/site-config";
 import { getModel } from "@/lib/ai/model-resolver";
+import { denyViewers } from "@/lib/require-role";
 
 // Allow long-running streaming responses (Sonnet + large context can take 2+ minutes)
 export const maxDuration = 300;
@@ -17,6 +18,7 @@ const ALLOWED_MODELS = [
 ] as const;
 
 export async function POST(request: NextRequest) {
+  const denied = await denyViewers(); if (denied) return denied;
   const apiKey = await getApiKey("anthropic");
   if (!apiKey) {
     return NextResponse.json({ error: "Anthropic API key not configured — add it in Settings → AI" }, { status: 503 });

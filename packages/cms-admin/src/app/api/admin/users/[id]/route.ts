@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getSessionUser } from "@/lib/auth";
 import { getTeamMember, updateTeamMemberRole, removeTeamMember } from "@/lib/team";
+import { denyViewers } from "@/lib/require-role";
 import type { UserRole } from "@/lib/auth";
 
 async function requireSiteAdmin() {
@@ -17,6 +18,7 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const denied = await denyViewers(); if (denied) return denied;
   const session = await requireSiteAdmin();
   if (!session) {
     return NextResponse.json({ error: "Site admin access required" }, { status: 403 });
@@ -47,6 +49,7 @@ export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const denied = await denyViewers(); if (denied) return denied;
   const session = await requireSiteAdmin();
   if (!session) {
     return NextResponse.json({ error: "Site admin access required" }, { status: 403 });

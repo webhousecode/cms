@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getQueueItem, approveQueueItem, rejectQueueItem, updateQueueItemData, pickAlternative } from "@/lib/curation";
+import { denyViewers } from "@/lib/require-role";
 
 export async function GET(
   _request: NextRequest,
@@ -15,6 +16,7 @@ export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const denied = await denyViewers(); if (denied) return denied;
   const { id } = await params;
   const body = await request.json() as Record<string, unknown>;
 

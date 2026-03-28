@@ -7,6 +7,7 @@ import {
   type TrackedKeyword,
 } from "@/lib/seo/keywords";
 import { getAdminCms, getAdminConfig } from "@/lib/cms";
+import { denyViewers } from "@/lib/require-role";
 import type { SeoFields } from "@/lib/seo/score";
 
 /** Strip HTML/markdown to plain text for keyword density analysis */
@@ -74,6 +75,7 @@ export async function GET() {
  * Body: { action: "add" | "remove", keyword: string, target?: "primary" | "secondary" | "long-tail" }
  */
 export async function POST(request: NextRequest) {
+  const denied = await denyViewers(); if (denied) return denied;
   try {
     const body = await request.json() as {
       action: "add" | "remove";

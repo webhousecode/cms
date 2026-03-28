@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readBrandVoice, readBrandVoiceVersions, writeBrandVoice } from "@/lib/brand-voice";
+import { denyViewers } from "@/lib/require-role";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = request.nextUrl;
@@ -10,6 +11,7 @@ export async function GET(request: NextRequest) {
 }
 
 export async function POST(request: NextRequest) {
+  const denied = await denyViewers(); if (denied) return denied;
   try {
     const body = await request.json();
     const saved = await writeBrandVoice(body);

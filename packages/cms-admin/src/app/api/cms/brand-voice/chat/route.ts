@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { getApiKey } from "@/lib/ai-config";
 import { getModel } from "@/lib/ai/model-resolver";
+import { denyViewers } from "@/lib/require-role";
 
 const SYSTEM = `You are a senior brand strategist conducting a discovery interview to define a website's Brand Voice & Goals document. This document will be the foundation for all future AI-generated content on the site — every agent will read it before writing anything.
 
@@ -136,6 +137,7 @@ async function runWithTools(
 }
 
 export async function POST(request: NextRequest) {
+  const denied = await denyViewers(); if (denied) return denied;
   const apiKey = await getApiKey("anthropic");
   if (!apiKey) {
     return new Response(

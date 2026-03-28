@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getMediaAdapter } from "@/lib/media";
+import { denyViewers } from "@/lib/require-role";
 
 type Ctx = { params: Promise<{ path: string[] }> };
 
 /** DELETE: move to trash (soft delete) */
 export async function DELETE(req: NextRequest, { params }: Ctx) {
+  const denied = await denyViewers(); if (denied) return denied;
   try {
     const { path: segments } = await params;
     const adapter = await getMediaAdapter();

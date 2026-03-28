@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminCms } from "@/lib/cms";
 import { generateOgImage } from "@/lib/seo/og-image";
+import { denyViewers } from "@/lib/require-role";
 
 /**
  * POST /api/admin/seo/og-image
@@ -11,6 +12,7 @@ import { generateOgImage } from "@/lib/seo/og-image";
  * Returns: { url: string } or { error: string }
  */
 export async function POST(req: NextRequest) {
+  const denied = await denyViewers(); if (denied) return denied;
   try {
     const { collection, slug } = (await req.json()) as { collection?: string; slug?: string };
     if (!collection || !slug) {

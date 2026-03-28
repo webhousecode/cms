@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAdminCms } from "@/lib/cms";
 import { listRevisions, saveRevision } from "@/lib/revisions";
+import { denyViewers } from "@/lib/require-role";
 
 type Ctx = { params: Promise<{ collection: string; slug: string; index: string }> };
 
@@ -9,6 +10,7 @@ type Ctx = { params: Promise<{ collection: string; slug: string; index: string }
  * Restores the document to the revision at position {index}.
  */
 export async function POST(_req: Request, { params }: Ctx) {
+  const denied = await denyViewers(); if (denied) return denied;
   try {
     const { collection, slug, index } = await params;
     const idx = parseInt(index, 10);

@@ -5,6 +5,7 @@ import { existsSync } from "node:fs";
 import { exec } from "node:child_process";
 import { promisify } from "node:util";
 import path from "path";
+import { denyViewers } from "@/lib/require-role";
 
 const execAsync = promisify(exec);
 
@@ -17,6 +18,7 @@ const execAsync = promisify(exec);
  * 2. Otherwise → use runBuild() from @webhouse/cms directly
  */
 export async function POST() {
+  const denied = await denyViewers(); if (denied) return denied;
   const sitePaths = await getActiveSitePaths();
   const projectDir = sitePaths.projectDir;
 

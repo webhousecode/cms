@@ -29,6 +29,19 @@ export async function getSiteRole(): Promise<UserRole | null> {
 }
 
 /**
+ * Guard for write endpoints — returns a 403 Response if user is a viewer.
+ * Usage: const denied = await denyViewers(); if (denied) return denied;
+ */
+export async function denyViewers(): Promise<Response | null> {
+  const role = await getSiteRole();
+  if (!role || role === "viewer") {
+    const { NextResponse } = await import("next/server");
+    return NextResponse.json({ error: "No write access" }, { status: 403 });
+  }
+  return null;
+}
+
+/**
  * Get session + site role in one call. Returns null if not authenticated.
  */
 export async function getSessionWithSiteRole(): Promise<{

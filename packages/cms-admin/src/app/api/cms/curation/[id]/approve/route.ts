@@ -1,11 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { approveQueueItem, getQueueItem } from "@/lib/curation";
 import { getAgent, updateAgent } from "@/lib/agents";
+import { denyViewers } from "@/lib/require-role";
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const denied = await denyViewers(); if (denied) return denied;
   const { id } = await params;
   const body = await request.json().catch(() => ({})) as { asDraft?: boolean };
   try {

@@ -4,10 +4,12 @@ import { writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { generateVariants, isProcessableImage, extractExif } from "@/lib/media/image-processor";
 import { getActiveSitePaths } from "@/lib/site-paths";
+import { denyViewers } from "@/lib/require-role";
 
 const UPLOAD_BASE = process.env.UPLOAD_BASE ?? "";
 
 export async function POST(req: NextRequest) {
+  const denied = await denyViewers(); if (denied) return denied;
   const formData = await req.formData();
   const file = formData.get("file") as File | null;
   if (!file) return NextResponse.json({ error: "No file" }, { status: 400 });

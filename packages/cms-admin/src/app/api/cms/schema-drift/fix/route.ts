@@ -42,6 +42,10 @@ export async function POST(req: NextRequest) {
     // Read content directory directly
     const { contentDir } = await getActiveSitePaths();
     const collectionDir = join(contentDir, collection);
+    // Path containment — prevent traversal via crafted collection name
+    if (!collectionDir.startsWith(contentDir + "/")) {
+      return NextResponse.json({ error: "Invalid collection path" }, { status: 400 });
+    }
     if (!existsSync(collectionDir)) {
       return NextResponse.json({ error: `Content directory not found: ${collection}` }, { status: 404 });
     }

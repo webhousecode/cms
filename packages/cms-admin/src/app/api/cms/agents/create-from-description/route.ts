@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { getApiKey } from "@/lib/ai-config";
 import { getModel } from "@/lib/ai/model-resolver";
+import { denyViewers } from "@/lib/require-role";
 
 const SYSTEM = `You are an AI agent configurator for a headless CMS. Given a natural language description of a desired content agent, return a single valid JSON object — no markdown, no explanation, no code fences.
 
@@ -40,6 +41,7 @@ Rules:
 - active defaults to true`;
 
 export async function POST(request: NextRequest) {
+  const denied = await denyViewers(); if (denied) return denied;
   const apiKey = await getApiKey("anthropic");
   if (!apiKey) {
     return NextResponse.json(

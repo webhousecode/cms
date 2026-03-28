@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { getSessionUser } from "@/lib/auth";
 import { emitSchedulerEvents } from "@/lib/scheduler-bus";
+import { denyViewers } from "@/lib/require-role";
 
 export async function POST(req: NextRequest) {
+  const denied = await denyViewers(); if (denied) return denied;
   const session = await getSessionUser(await cookies());
   if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 

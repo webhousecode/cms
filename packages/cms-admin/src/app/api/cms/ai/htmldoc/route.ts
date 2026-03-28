@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { getApiKey } from "@/lib/ai-config";
 import { getModel } from "@/lib/ai/model-resolver";
+import { denyViewers } from "@/lib/require-role";
 
 export async function POST(request: NextRequest) {
+  const denied = await denyViewers(); if (denied) return denied;
   const apiKey = await getApiKey("anthropic");
   if (!apiKey) {
     return NextResponse.json(

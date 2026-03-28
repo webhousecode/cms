@@ -2,8 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAdminCms, getAdminConfig } from "@/lib/cms";
 import Anthropic from "@anthropic-ai/sdk";
 import { getModel } from "@/lib/ai/model-resolver";
+import { denyViewers } from "@/lib/require-role";
 
 export async function POST(req: NextRequest) {
+  const denied = await denyViewers(); if (denied) return denied;
   const body = await req.json() as {
     url: string;
     text: string;

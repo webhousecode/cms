@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAgent, updateAgent, deleteAgent } from "@/lib/agents";
+import { denyViewers } from "@/lib/require-role";
 
 export async function GET(
   _request: NextRequest,
@@ -15,6 +16,7 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const denied = await denyViewers(); if (denied) return denied;
   const { id } = await params;
   try {
     const body = await request.json();
@@ -30,6 +32,7 @@ export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const denied = await denyViewers(); if (denied) return denied;
   const { id } = await params;
   try {
     await deleteAgent(id);

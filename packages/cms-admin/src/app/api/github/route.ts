@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { denyViewers } from "@/lib/require-role";
 
 /**
  * GET /api/github?action=status|orgs|repos&org=...
@@ -94,6 +95,7 @@ export async function GET(request: NextRequest) {
 
 /** POST /api/github — Create repo or seed content */
 export async function POST(request: NextRequest) {
+  const denied = await denyViewers(); if (denied) return denied;
   const token = request.cookies.get("github-token")?.value;
   if (!token) return NextResponse.json({ error: "Not connected to GitHub" }, { status: 401 });
 

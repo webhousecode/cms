@@ -3,8 +3,10 @@ import Anthropic from "@anthropic-ai/sdk";
 import { getApiKey } from "@/lib/ai-config";
 import { getModel } from "@/lib/ai/model-resolver";
 import type { BrandVoice } from "@/lib/brand-voice";
+import { denyViewers } from "@/lib/require-role";
 
 export async function POST(request: NextRequest) {
+  const denied = await denyViewers(); if (denied) return denied;
   const apiKey = await getApiKey("anthropic");
   if (!apiKey) return NextResponse.json({ error: "Anthropic API key not configured" }, { status: 503 });
 

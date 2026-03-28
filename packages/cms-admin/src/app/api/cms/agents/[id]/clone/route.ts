@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAgent, createAgent } from "@/lib/agents";
+import { denyViewers } from "@/lib/require-role";
 
 export async function POST(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const denied = await denyViewers(); if (denied) return denied;
   const { id } = await params;
   const original = await getAgent(id);
   if (!original) return NextResponse.json({ error: "Agent not found" }, { status: 404 });

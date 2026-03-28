@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { runAgent } from "@/lib/agent-runner";
+import { denyViewers } from "@/lib/require-role";
 
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  const denied = await denyViewers(); if (denied) return denied;
   const { id } = await params;
   const { prompt, collection } = (await request.json()) as { prompt?: string; collection?: string };
 

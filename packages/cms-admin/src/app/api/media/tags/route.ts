@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readMediaMeta, appendMediaMeta } from "@/lib/media/media-meta";
+import { denyViewers } from "@/lib/require-role";
 
 /** GET /api/media/tags — Returns all unique user tags with counts */
 export async function GET() {
@@ -25,6 +26,7 @@ export async function GET() {
 /** PATCH /api/media/tags — Set tags for a specific file
  *  Body: { key: string, tags: string[] } */
 export async function PATCH(req: NextRequest) {
+  const denied = await denyViewers(); if (denied) return denied;
   try {
     const { key, tags } = (await req.json()) as { key: string; tags: string[] };
     if (!key || !Array.isArray(tags)) {
