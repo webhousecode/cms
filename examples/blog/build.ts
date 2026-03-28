@@ -204,15 +204,31 @@ function renderContent(raw: unknown): string {
       const parts = inner.split("|");
       const address = parts[0]?.trim();
       const zoom = parts[1]?.trim() || "14";
-      const style = parts[2]?.trim() || "default";
       if (!address) return "";
-      return `<div class="map-embed" style="margin: 1.5rem 0; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--color-border);">
-        <iframe src="https://www.openstreetmap.org/export/embed.html?bbox=&layer=mapnik&marker="
-          data-map-address="${esc(address)}" data-map-zoom="${zoom}" data-map-style="${style}"
-          style="width:100%; height:350px; border:none;" loading="lazy" title="Map: ${esc(address)}"></iframe>
-        <div style="padding: 0.5rem 0.75rem; font-size: 0.75rem; color: var(--color-fg-muted); background: var(--color-bg-subtle);">
+      const mapId = `map-${Math.random().toString(36).slice(2, 8)}`;
+      return `<div class="map-embed" style="margin: 1.5rem 0; border-radius: 8px; overflow: hidden; border: 1px solid #e5e7eb;">
+        <div id="${mapId}" style="width:100%; height:350px;"></div>
+        <div style="padding: 0.5rem 0.75rem; font-size: 0.75rem; color: #666; background: #f9fafb;">
           📍 ${esc(address)}
         </div>
+        <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"><\/script>
+        <script>
+          (function(){
+            var z=${zoom};
+            fetch('https://nominatim.openstreetmap.org/search?format=json&q='+encodeURIComponent(${JSON.stringify(address)})+'&limit=1')
+              .then(function(r){return r.json()})
+              .then(function(d){
+                if(!d.length)return;
+                var lat=parseFloat(d[0].lat),lng=parseFloat(d[0].lon);
+                var m=L.map('${mapId}').setView([lat,lng],z);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+                  attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',maxZoom:19
+                }).addTo(m);
+                L.marker([lat,lng]).addTo(m);
+              });
+          })();
+        <\/script>
       </div>`;
     },
   );
