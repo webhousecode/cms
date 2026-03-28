@@ -8,6 +8,8 @@ import { getModel } from "@/lib/ai/model-resolver";
 import { buildContentContext } from "@/lib/content-context";
 import { buildToolRegistry, type ToolDefinition, type ToolHandler } from "@/lib/tools";
 import { denyViewers } from "@/lib/require-role";
+import { buildLocaleInstruction } from "@/lib/ai/locale-prompt";
+import { readSiteConfig } from "@/lib/site-config";
 
 interface SelectOption { label: string; value: string }
 interface FieldDef { name: string; type: string; required?: boolean; label?: string; options?: SelectOption[] }
@@ -111,10 +113,11 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { prompt, collection, existingData } = (await request.json()) as {
+    const { prompt, collection, existingData, locale: bodyLocale } = (await request.json()) as {
       prompt: string;
       collection: string;
       existingData?: Record<string, unknown>;
+      locale?: string;
     };
     if (!prompt?.trim()) {
       return NextResponse.json({ error: "prompt required" }, { status: 400 });
@@ -143,7 +146,11 @@ export async function POST(request: NextRequest) {
 
     const toolNames = toolRegistry.definitions.map((t) => t.name);
 
+    const siteConfig = await readSiteConfig();
+    const locale = bodyLocale || siteConfig.defaultLocale || "en";
+
     const systemParts = [
+      buildLocaleInstruction(locale),
       "You are a professional content writer. Generate publication-ready content.",
       brandContext ? `\n## Brand Voice\n${brandContext}` : null,
       contentContext ? `\n${contentContext}` : null,

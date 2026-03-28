@@ -5,6 +5,8 @@ import { readBrandVoice, brandVoiceToPromptContext } from "@/lib/brand-voice";
 import { getApiKey } from "@/lib/ai-config";
 import { getAdminConfig } from "@/lib/cms";
 import { buildContentContext } from "@/lib/content-context";
+import { buildLocaleInstruction } from "@/lib/ai/locale-prompt";
+import { readSiteConfig } from "@/lib/site-config";
 import { buildToolRegistry, type ToolDefinition, type ToolHandler } from "@/lib/tools";
 import fs from "fs/promises";
 import path from "path";
@@ -224,7 +226,10 @@ export async function runAgent(agentId: string, userPrompt: string, overrideColl
 
   const brandContext = brandVoice ? brandVoiceToPromptContext(brandVoice) : null;
 
-  let systemPrompt = buildSystemPrompt(
+  const siteConfig = await readSiteConfig();
+  const localeInstruction = buildLocaleInstruction(siteConfig.defaultLocale);
+
+  let systemPrompt = `${localeInstruction}\n\n` + buildSystemPrompt(
     agent.systemPrompt,
     agent.behavior.temperature,
     agent.behavior.formality,

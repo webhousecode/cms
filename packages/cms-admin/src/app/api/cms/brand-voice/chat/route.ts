@@ -3,6 +3,8 @@ import Anthropic from "@anthropic-ai/sdk";
 import { getApiKey } from "@/lib/ai-config";
 import { getModel } from "@/lib/ai/model-resolver";
 import { denyViewers } from "@/lib/require-role";
+import { buildLocaleInstruction } from "@/lib/ai/locale-prompt";
+import { readSiteConfig } from "@/lib/site-config";
 
 const SYSTEM = `You are a senior brand strategist conducting a discovery interview to define a website's Brand Voice & Goals document. This document will be the foundation for all future AI-generated content on the site — every agent will read it before writing anything.
 
@@ -88,7 +90,8 @@ type ConversationMessage =
 /** Runs the agentic tool-use loop, returns final assistant text. */
 async function runWithTools(
   client: Anthropic,
-  apiMessages: ConversationMessage[]
+  apiMessages: ConversationMessage[],
+  systemPrompt: string
 ): Promise<string> {
   let messages = [...apiMessages];
 
@@ -97,7 +100,7 @@ async function runWithTools(
     const response = await client.messages.create({
       model: premiumModel,
       max_tokens: 1024,
-      system: SYSTEM,
+      system: systemPrompt,
       tools: [FETCH_URL_TOOL],
       messages: messages as Anthropic.MessageParam[],
     });
@@ -155,13 +158,16 @@ export async function POST(request: NextRequest) {
     : messages.map((m) => ({ role: m.role, content: m.content }));
 
   const client = new Anthropic({ apiKey });
+  const siteConfig = await readSiteConfig();
+  const localeInstruction = buildLocaleInstruction(siteConfig.defaultLocale);
+  const systemPrompt = `${localeInstruction}\n\n${SYSTEM}`;
 
   // Run tool loop, then stream the final text back
   const encoder = new TextEncoder();
   const readable = new ReadableStream({
     async start(controller) {
       try {
-        const text = await runWithTools(client, apiMessages);
+        const text = await runWithTools(client, apiMessages, systemPrompt);
 
         // Stream the response in chunks for UI feel
         const CHUNK = 4;

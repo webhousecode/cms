@@ -3,6 +3,8 @@ import Anthropic from "@anthropic-ai/sdk";
 import { getApiKey } from "@/lib/ai-config";
 import { getModel } from "@/lib/ai/model-resolver";
 import { denyViewers } from "@/lib/require-role";
+import { buildLocaleInstruction } from "@/lib/ai/locale-prompt";
+import { readSiteConfig } from "@/lib/site-config";
 
 export async function POST(request: NextRequest) {
   const denied = await denyViewers(); if (denied) return denied;
@@ -26,13 +28,15 @@ export async function POST(request: NextRequest) {
     }
 
     const client = new Anthropic({ apiKey });
+    const siteConfig = await readSiteConfig();
+    const localeInstruction = buildLocaleInstruction(siteConfig.defaultLocale);
 
     const contentModel = await getModel("content");
     const msg = await client.messages.create({
       model: contentModel,
       max_tokens: 1024,
       system:
-        "You are a CMS configuration assistant. Generate a concise, professional system prompt for an AI content agent. The prompt should define the agent's role, tone, constraints, and output format. Write in English. Return only the system prompt text — no explanations or markdown.",
+        `You are a CMS configuration assistant. Generate a concise, professional system prompt for an AI content agent. The prompt should define the agent's role, tone, constraints, and output format. Write the prompt in English but include a language directive so the agent produces content in the site's language. ${localeInstruction} — include this language directive in the generated prompt. Return only the system prompt text — no explanations or markdown.`,
       messages: [
         {
           role: "user",

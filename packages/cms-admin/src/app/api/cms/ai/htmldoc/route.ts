@@ -3,6 +3,8 @@ import Anthropic from "@anthropic-ai/sdk";
 import { getApiKey } from "@/lib/ai-config";
 import { getModel } from "@/lib/ai/model-resolver";
 import { denyViewers } from "@/lib/require-role";
+import { buildLocaleInstruction } from "@/lib/ai/locale-prompt";
+import { readSiteConfig } from "@/lib/site-config";
 
 export async function POST(request: NextRequest) {
   const denied = await denyViewers(); if (denied) return denied;
@@ -16,9 +18,10 @@ export async function POST(request: NextRequest) {
   const client = new Anthropic({ apiKey });
 
   try {
-    const { instruction, html } = (await request.json()) as {
+    const { instruction, html, locale: bodyLocale } = (await request.json()) as {
       instruction?: string;
       html?: string;
+      locale?: string;
     };
     if (!instruction) {
       return NextResponse.json({ error: "instruction required" }, { status: 400 });
@@ -27,7 +30,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "html required" }, { status: 400 });
     }
 
-    const systemPrompt = `You are an expert HTML editor. The user will give you a complete HTML document and an instruction to modify it. You MUST return ONLY the complete, modified HTML document — nothing else. No explanation, no markdown fences, no preamble. Start with <!DOCTYPE html> or <html> and end with </html>.
+    const siteConfigData = await readSiteConfig();
+    const locale = bodyLocale || siteConfigData.defaultLocale || "en";
+
+    const systemPrompt = `${buildLocaleInstruction(locale)}
+You are an expert HTML editor. The user will give you a complete HTML document and an instruction to modify it. You MUST return ONLY the complete, modified HTML document — nothing else. No explanation, no markdown fences, no preamble. Start with <!DOCTYPE html> or <html> and end with </html>.
 
 Rules:
 - Preserve the overall structure and styling of the document

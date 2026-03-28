@@ -61,6 +61,9 @@ export interface OrgSettings {
 
   // MCP Servers (shared across all sites)
   mcpServers?: { name: string; command: string; args?: string[]; env?: Record<string, string>; enabled?: boolean }[];
+
+  // F48 i18n — default language inheritable from org
+  defaultLocale?: string;
 }
 
 // ── Field classification ─────────────────────────────────────
@@ -102,6 +105,8 @@ export const INHERITABLE_FIELDS = [
   "backupRetentionDays",
   "linkCheckSchedule",
   "linkCheckTime",
+  // F48 i18n
+  "defaultLocale",
 ] as const;
 
 /** Fields that must NEVER be inherited from org */
@@ -113,6 +118,8 @@ export const NEVER_INHERIT = [
   "deployProvider",
   "deployOnSave",
   "previewSiteUrl",
+  // F48 i18n — each site controls its own supported locales
+  "locales",
 ] as const;
 
 // ── Pure merge function ──────────────────────────────────────

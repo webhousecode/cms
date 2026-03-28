@@ -129,6 +129,7 @@
 | F110 | [Digital Island Apps](#f110-digital-island-apps) | Planned | [docs/features/F110-digital-island-apps.md](features/F110-digital-island-apps.md) |
 | F111 | [External Publishing](#f111-external-publishing) | Planned | [docs/features/F111-external-publishing.md](features/F111-external-publishing.md) |
 | F112 | [GEO — Generative Engine Optimization](#f112-geo-generative-engine-optimization) | Planned | [docs/features/F112-geo-generative-engine-optimization.md](features/F112-geo-generative-engine-optimization.md) |
+| F113 | [Service Role Keys](#f113-service-role-keys) | Planned | [docs/features/F113-service-role-keys.md](features/F113-service-role-keys.md) |
 
 ---
 
