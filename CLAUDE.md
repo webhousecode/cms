@@ -126,6 +126,30 @@ The richtext editor uses TipTap v3 (`@tiptap/react ^3.21`). Two critical setting
 
 Do NOT remove `immediatelyRender: false` — it will break SSR hydration.
 
+## Security Requirements (F67)
+
+### Secrets & Configuration
+- NEVER hardcode API keys, passwords, tokens in source code
+- ALWAYS use process.env — secrets in .env files listed in .gitignore
+- NEVER expose secrets via NEXT_PUBLIC_ prefix (sent to browser)
+
+### Authentication & Authorization
+- ALL API routes MUST have authentication (middleware or in-handler)
+- Routes under /api/cms/, /api/admin/, /api/media/ are middleware-protected
+- Write endpoints (POST/PUT/DELETE/PATCH) MUST check getSiteRole() — reject viewers
+- NEVER rely on client-side auth checks as sole security layer
+
+### Input Validation
+- ALWAYS validate file paths stay within expected directories (path traversal)
+- ALWAYS use execFileSync() instead of execSync() (command injection)
+- ALWAYS validate request body server-side
+- NEVER return stack traces or internal error messages to client
+
+### Security Scanning
+- Pre-commit hook: `scripts/security-gate-hook.sh` (Gitleaks + SAST)
+- Custom scanner: `npx tsx scripts/security-scan.ts` (CMS-specific rules)
+- CI: `.github/workflows/security-gate.yml` (Semgrep + Gitleaks + npm audit)
+
 ## Key Conventions
 
 - **Follow instructions exactly** — when given a task description, implement EXACTLY what is described. "Same as X" means find X's implementation and replicate the pattern. Do not add creative interpretations, extra features, or alternative approaches not asked for. When in doubt, ask — don't assume.

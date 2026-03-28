@@ -1,0 +1,57 @@
+name: Security Gate
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: '0 8 * * 1'  # Weekly Monday 08:00 UTC
+
+jobs:
+  secrets-scan:
+    name: Secrets Detection
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  sast:
+    name: SAST (Semgrep)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: returntocorp/semgrep-action@v1
+        with:
+          config: >-
+            p/nextjs
+            p/typescript
+            p/owasp-top-ten
+            p/secrets
+
+  dependency-audit:
+    name: Dependency Audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm audit --audit-level=high || true
+      - name: Check for critical vulnerabilities
+        run: |
+          # Fail only on critical vulns
+          CRITICAL=$(pnpm audit --json 2>/dev/null | jq '.advisories | to_entries | map(select(.value.severity == "critical")) | length' 2>/dev/null || echo "0")
+          if [ "$CRITICAL" -gt 0 ]; then
+            echo "::error::$CRITICAL critical vulnerabilities found!"
+            pnpm audit --audit-level=critical
+            exit 1
+          fi

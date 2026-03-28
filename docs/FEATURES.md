@@ -83,7 +83,7 @@
 | F64 | [Toast Notifications System](#f64-toast-notifications-system) | In progress | [docs/features/F64-toast-notifications.md](features/F64-toast-notifications.md) |
 | F65 | [Agent Pipeline E2E Tests](#f65-agent-pipeline-tests) | Superseded by F99 | [docs/features/F65-agent-pipeline-tests.md](features/F65-agent-pipeline-tests.md) |
 | F66 | [Search Index](#f66-search-index) | Planned | [docs/features/F66-search-index.md](features/F66-search-index.md) |
-| F67 | [Security Gate](#f67-security-gate) | Planned | [docs/features/F67-security-gate.md](features/F67-security-gate.md) |
+| F67 | [Security Gate](#f67-security-gate) | Done | [docs/features/F67-security-gate.md](features/F67-security-gate.md) |
 | F68 | [Shop Plugin](#f68-shop-plugin) | Planned | [docs/features/F68-shop-plugin.md](features/F68-shop-plugin.md) |
 | F69 | [Social Media Plugin](#f69-social-media-plugin) | Planned | [docs/features/F69-social-media-plugin.md](features/F69-social-media-plugin.md) |
 | F70 | [Managed SaaS Hub App](#f70-managed-saas) | Planned | [docs/features/F70-managed-saas.md](features/F70-managed-saas.md) |
