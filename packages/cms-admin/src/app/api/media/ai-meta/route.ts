@@ -30,6 +30,9 @@ export async function GET(req: NextRequest) {
       analyzedAt: entry.aiAnalyzedAt ?? null,
       provider: entry.aiProvider ?? null,
       userTags: entry.tags ?? [],
+      // Per-locale fields (F48 i18n)
+      captions: entry.aiCaptions ?? null,
+      alts: entry.aiAlts ?? null,
     });
   } catch {
     return NextResponse.json(null);

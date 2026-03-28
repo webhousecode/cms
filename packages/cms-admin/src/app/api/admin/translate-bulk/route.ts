@@ -3,7 +3,7 @@ import { getAdminCms, getAdminConfig } from "@/lib/cms";
 import { getApiKey } from "@/lib/ai-config";
 import { getSiteRole } from "@/lib/require-role";
 import { readSiteConfig } from "@/lib/site-config";
-import { buildLocaleInstruction } from "@/lib/ai/locale-prompt";
+import { buildLocaleInstruction, getSeoLimits } from "@/lib/ai/locale-prompt";
 import { getModel } from "@/lib/ai/model-resolver";
 import { LOCALE_LABELS } from "@/lib/locale";
 import Anthropic from "@anthropic-ai/sdk";
@@ -73,11 +73,29 @@ export async function POST(req: NextRequest) {
           const colConfig = config.collections.find(c => c.name === item.collection);
           const translatableFields = colConfig?.fields.filter(f => TRANSLATABLE_TYPES.has(f.type)) ?? [];
 
-          const sourceData: Record<string, string> = {};
+          const sourceData: Record<string, string | string[]> = {};
           for (const field of translatableFields) {
             const val = item.data[field.name];
             if (val && typeof val === "string" && val.trim()) {
               sourceData[field.name] = val;
+            }
+          }
+
+          // Include SEO fields for translation (F48 i18n)
+          const sourceSeo = item.data._seo as Record<string, unknown> | undefined;
+          let hasSeoToTranslate = false;
+          if (sourceSeo) {
+            if (typeof sourceSeo.metaTitle === "string" && sourceSeo.metaTitle.trim()) {
+              sourceData["_seo_metaTitle"] = sourceSeo.metaTitle;
+              hasSeoToTranslate = true;
+            }
+            if (typeof sourceSeo.metaDescription === "string" && sourceSeo.metaDescription.trim()) {
+              sourceData["_seo_metaDescription"] = sourceSeo.metaDescription;
+              hasSeoToTranslate = true;
+            }
+            if (Array.isArray(sourceSeo.keywords) && sourceSeo.keywords.length > 0) {
+              sourceData["_seo_keywords"] = sourceSeo.keywords;
+              hasSeoToTranslate = true;
             }
           }
 
@@ -91,6 +109,14 @@ export async function POST(req: NextRequest) {
 
           const sourceLang = LOCALE_LABELS[item.locale] ?? item.locale;
           const targetLang = LOCALE_LABELS[targetLocale] ?? targetLocale;
+          const seoLimits = getSeoLimits(targetLocale);
+
+          const seoInstruction = hasSeoToTranslate
+            ? `\nSEO fields (_seo_metaTitle, _seo_metaDescription, _seo_keywords):
+- metaTitle: ${seoLimits.titleMin}-${seoLimits.titleMax} characters for ${targetLang}
+- metaDescription: ${seoLimits.descMin}-${seoLimits.descMax} characters for ${targetLang}
+- keywords: translate each keyword naturally, keep as array of strings`
+            : "";
 
           const systemPrompt = `You are a professional translator. Translate from ${sourceLang} to ${targetLang}.
 ${buildLocaleInstruction(targetLocale)}
@@ -100,7 +126,7 @@ Preserve:
 - Proper nouns and brand names
 - Meaning, tone, and formatting
 - Cultural references should be adapted where relevant
-
+${seoInstruction}
 Return ONLY a JSON object with the translated fields. No explanation, no preamble.`;
 
           const response = await client.messages.create({
@@ -114,10 +140,30 @@ Return ONLY a JSON object with the translated fields. No explanation, no preambl
           const jsonMatch = aiText.match(/\{[\s\S]*\}/);
           const translatedData = JSON.parse(jsonMatch?.[0] ?? aiText);
 
+          // Extract translated SEO fields
+          const translatedSeo: Record<string, unknown> = {};
+          if (translatedData["_seo_metaTitle"]) {
+            translatedSeo.metaTitle = translatedData["_seo_metaTitle"];
+            delete translatedData["_seo_metaTitle"];
+          }
+          if (translatedData["_seo_metaDescription"]) {
+            translatedSeo.metaDescription = translatedData["_seo_metaDescription"];
+            delete translatedData["_seo_metaDescription"];
+          }
+          if (translatedData["_seo_keywords"]) {
+            translatedSeo.keywords = translatedData["_seo_keywords"];
+            delete translatedData["_seo_keywords"];
+          }
+
           // Merge translated fields with source data (keep non-translatable fields)
           const mergedData = { ...item.data };
           for (const [key, val] of Object.entries(translatedData)) {
             mergedData[key] = val;
+          }
+
+          // Merge SEO: preserve non-translatable SEO fields, override translated ones
+          if (Object.keys(translatedSeo).length > 0 && sourceSeo) {
+            mergedData._seo = { ...sourceSeo, ...translatedSeo };
           }
 
           const translationSlug = `${item.slug}-${targetLocale}`;

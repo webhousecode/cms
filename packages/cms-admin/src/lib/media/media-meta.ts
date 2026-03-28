@@ -20,6 +20,9 @@ export interface MediaMeta {
   aiTags?: string[];
   aiAnalyzedAt?: string;
   aiProvider?: string;
+  // Per-locale AI analysis (F48 i18n)
+  aiCaptions?: Record<string, string>;
+  aiAlts?: Record<string, string>;
   // EXIF data (from F44)
   exif?: ImageExif;
 }

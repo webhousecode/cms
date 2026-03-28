@@ -9,6 +9,9 @@ interface AIMetadata {
   tags: string[];
   analyzedAt: string;
   provider: string | null;
+  // Per-locale (F48 i18n)
+  captions?: Record<string, string> | null;
+  alts?: Record<string, string> | null;
 }
 
 interface Props {
@@ -22,6 +25,8 @@ interface Props {
   onApplyAlt?: (alt: string) => void;
   /** Current alt-text on the image (to detect if already applied) */
   currentAlt?: string;
+  /** Current document locale (for picking the right alt/caption) */
+  docLocale?: string;
 }
 
 function CopyBtn({ text, label }: { text: string; label: string }) {
@@ -48,13 +53,14 @@ function CopyBtn({ text, label }: { text: string; label: string }) {
   );
 }
 
-export function AIMetadataPopover({ imageUrl, variant = "button", onAnalyzed, onApplyAlt, currentAlt }: Props) {
+export function AIMetadataPopover({ imageUrl, variant = "button", onAnalyzed, onApplyAlt, currentAlt, docLocale }: Props) {
   const [open, setOpen] = useState(false);
   const [meta, setMeta] = useState<AIMetadata | null>(null);
   const [loading, setLoading] = useState(false);
   const [analyzing, setAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [applied, setApplied] = useState(false);
+  const [activeLocale, setActiveLocale] = useState<string | null>(null);
   const ref = useRef<HTMLDivElement>(null);
 
   // Close on click outside
@@ -241,16 +247,49 @@ export function AIMetadataPopover({ imageUrl, variant = "button", onAnalyzed, on
               <p style={{ fontSize: "0.75rem", color: "var(--destructive)", marginBottom: "0.5rem" }}>{error}</p>
             )}
 
-            {meta && (
+            {meta && (() => {
+              const locales = meta.captions ? Object.keys(meta.captions) : [];
+              const hasMultiLocale = locales.length > 1;
+              const viewLocale = activeLocale ?? docLocale ?? locales[0] ?? null;
+              const displayCaption = hasMultiLocale && viewLocale && meta.captions?.[viewLocale]
+                ? meta.captions[viewLocale]
+                : meta.caption;
+              const displayAlt = hasMultiLocale && viewLocale && meta.alts?.[viewLocale]
+                ? meta.alts[viewLocale]
+                : meta.alt;
+
+              return (
               <div style={{ display: "flex", flexDirection: "column", gap: "0.625rem" }}>
+                {/* Locale pills (only for multi-locale) */}
+                {hasMultiLocale && (
+                  <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
+                    {locales.map((l) => (
+                      <button
+                        key={l}
+                        type="button"
+                        onClick={() => setActiveLocale(l)}
+                        style={{
+                          fontSize: "0.6rem", fontWeight: 600, padding: "2px 8px",
+                          borderRadius: "9999px", cursor: "pointer",
+                          border: (viewLocale === l) ? "1px solid var(--primary)" : "1px solid var(--border)",
+                          background: (viewLocale === l) ? "rgba(247,187,46,0.15)" : "transparent",
+                          color: (viewLocale === l) ? "#F7BB2E" : "var(--muted-foreground)",
+                        }}
+                      >
+                        {l.toUpperCase()}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
                 {/* Caption */}
                 <div>
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "2px" }}>
                     <span style={{ fontSize: "0.65rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted-foreground)" }}>Caption</span>
-                    {meta.caption && <CopyBtn text={meta.caption} label="caption" />}
+                    {displayCaption && <CopyBtn text={displayCaption} label="caption" />}
                   </div>
                   <p style={{ fontSize: "0.8rem", color: "var(--foreground)", margin: 0, lineHeight: 1.4 }}>
-                    {meta.caption ?? "—"}
+                    {displayCaption ?? "—"}
                   </p>
                 </div>
 
@@ -259,8 +298,8 @@ export function AIMetadataPopover({ imageUrl, variant = "button", onAnalyzed, on
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "2px" }}>
                     <span style={{ fontSize: "0.65rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted-foreground)" }}>Alt-text</span>
                     <div style={{ display: "flex", alignItems: "center", gap: "2px" }}>
-                      {meta.alt && onApplyAlt && (() => {
-                        const alreadyApplied = applied || (currentAlt === meta.alt);
+                      {displayAlt && onApplyAlt && (() => {
+                        const alreadyApplied = applied || (currentAlt === displayAlt);
                         return alreadyApplied ? (
                           <span style={{
                             display: "inline-flex", alignItems: "center", gap: "3px",
@@ -273,7 +312,7 @@ export function AIMetadataPopover({ imageUrl, variant = "button", onAnalyzed, on
                           <button
                             type="button"
                             title="Apply alt-text to image"
-                            onClick={() => { onApplyAlt(meta.alt!); setApplied(true); }}
+                            onClick={() => { onApplyAlt(displayAlt); setApplied(true); }}
                             style={{
                               display: "inline-flex", alignItems: "center", gap: "3px",
                               padding: "1px 6px", borderRadius: "4px", fontSize: "0.6rem", fontWeight: 500,
@@ -285,11 +324,11 @@ export function AIMetadataPopover({ imageUrl, variant = "button", onAnalyzed, on
                           </button>
                         );
                       })()}
-                      {meta.alt && <CopyBtn text={meta.alt} label="alt-text" />}
+                      {displayAlt && <CopyBtn text={displayAlt} label="alt-text" />}
                     </div>
                   </div>
                   <p style={{ fontSize: "0.8rem", color: "var(--foreground)", margin: 0, fontFamily: "monospace", lineHeight: 1.4 }}>
-                    {meta.alt ?? "—"}
+                    {displayAlt ?? "—"}
                   </p>
                 </div>
 
@@ -317,7 +356,8 @@ export function AIMetadataPopover({ imageUrl, variant = "button", onAnalyzed, on
                   </p>
                 )}
               </div>
-            )}
+              );
+            })()}
           </div>
         </div>
       )}

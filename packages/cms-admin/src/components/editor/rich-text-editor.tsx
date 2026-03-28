@@ -2477,25 +2477,37 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
       .finally(() => setMediaBrowserLoading(false));
   }
 
-  /** Try to auto-fill alt text from AI metadata for a just-inserted image */
+  /** Try to auto-fill alt text from AI metadata for a just-inserted image.
+   *  Picks per-locale alt when available (reads doc locale from closest form context). */
   const tryAutoFillAlt = useCallback((imageUrl: string) => {
     if (!editor) return;
     fetch(`/api/media/ai-meta?file=${encodeURIComponent(imageUrl)}`)
       .then((r) => r.json())
       .then((data) => {
-        if (!data || !data.alt) return;
+        if (!data) return;
+        // Pick best alt: per-locale > legacy single field
+        // Read doc locale from the editor form's data attribute (set by document-editor)
+        const docLocale = document.querySelector<HTMLElement>("[data-doc-locale]")?.dataset.docLocale;
+        let bestAlt: string | null = null;
+        if (docLocale && data.alts?.[docLocale]) {
+          bestAlt = data.alts[docLocale];
+        } else if (data.alt) {
+          bestAlt = data.alt;
+        } else if (data.alts) {
+          bestAlt = Object.values(data.alts)[0] as string ?? null;
+        }
+        if (!bestAlt) return;
         // Find the image node with this src and update its alt
         const { doc } = editor.state;
         let found = false;
         doc.descendants((node, pos) => {
           if (found) return false;
           if (node.type.name === "image" && node.attrs.src === imageUrl) {
-            // Only update if alt is still the filename (not manually set)
             const currentAlt = node.attrs.alt ?? "";
             const filename = imageUrl.split("/").pop() ?? "";
             if (!currentAlt || currentAlt === filename) {
               editor.chain().command(({ tr }) => {
-                tr.setNodeMarkup(pos, undefined, { ...node.attrs, alt: data.alt });
+                tr.setNodeMarkup(pos, undefined, { ...node.attrs, alt: bestAlt });
                 return true;
               }).run();
             }

@@ -1,7 +1,8 @@
 import { NextRequest } from "next/server";
-import { analyzeImage } from "@/lib/ai/image-analysis";
+import { analyzeImage, analyzeImageMultiLocale } from "@/lib/ai/image-analysis";
 import { getMediaAdapter } from "@/lib/media";
 import { getActiveSitePaths } from "@/lib/site-paths";
+import { readSiteConfig } from "@/lib/site-config";
 import fs from "fs/promises";
 import path from "path";
 import { denyViewers } from "@/lib/require-role";
@@ -76,6 +77,11 @@ export async function POST(req: NextRequest) {
 
       send({ kind: "start", total: toAnalyze.length, skipped });
 
+      // Determine if multi-locale
+      const siteConfig = await readSiteConfig();
+      const siteLocales = siteConfig.locales?.length ? siteConfig.locales : [];
+      const isMultiLocale = siteLocales.length > 1;
+
       let analyzed = 0;
       let failed = 0;
 
@@ -111,16 +117,42 @@ export async function POST(req: NextRequest) {
             }
           }
 
-          const result = await analyzeImage(buffer, isVideo ? "image/jpeg" : mimeType, language);
+          let aiFields: Record<string, unknown>;
+          let resultCaption: string;
+          let resultAlt: string;
+          let resultTags: string[];
+          let resultProvider: string;
 
-          // Save to media-meta.json
-          const aiFields = {
-            aiCaption: result.caption,
-            aiAlt: result.alt,
-            aiTags: result.tags,
-            aiAnalyzedAt: new Date().toISOString(),
-            aiProvider: result.provider ?? "unknown",
-          };
+          if (isMultiLocale) {
+            const multiResult = await analyzeImageMultiLocale(buffer, isVideo ? "image/jpeg" : mimeType, siteLocales);
+            const firstLocale = siteLocales[0];
+            resultCaption = multiResult.captions[firstLocale] ?? Object.values(multiResult.captions)[0] ?? "";
+            resultAlt = multiResult.alts[firstLocale] ?? Object.values(multiResult.alts)[0] ?? "";
+            resultTags = multiResult.tags;
+            resultProvider = multiResult.provider;
+            aiFields = {
+              aiCaption: resultCaption,
+              aiAlt: resultAlt,
+              aiCaptions: multiResult.captions,
+              aiAlts: multiResult.alts,
+              aiTags: resultTags,
+              aiAnalyzedAt: new Date().toISOString(),
+              aiProvider: resultProvider,
+            };
+          } else {
+            const result = await analyzeImage(buffer, isVideo ? "image/jpeg" : mimeType, language);
+            resultCaption = result.caption;
+            resultAlt = result.alt;
+            resultTags = result.tags;
+            resultProvider = result.provider;
+            aiFields = {
+              aiCaption: resultCaption,
+              aiAlt: resultAlt,
+              aiTags: resultTags,
+              aiAnalyzedAt: new Date().toISOString(),
+              aiProvider: resultProvider,
+            };
+          }
 
           // Re-read meta for each save to avoid race conditions
           let currentMeta: Array<Record<string, unknown>> = [];
@@ -134,7 +166,7 @@ export async function POST(req: NextRequest) {
           await fs.mkdir(path.dirname(metaPath), { recursive: true });
           await fs.writeFile(metaPath, JSON.stringify(currentMeta, null, 2), "utf-8");
 
-          send({ kind: "result", filename: key, caption: result.caption, alt: result.alt, tags: result.tags, provider: result.provider });
+          send({ kind: "result", filename: key, caption: resultCaption, alt: resultAlt, tags: resultTags, provider: resultProvider });
           analyzed++;
         } catch (err) {
           const msg = err instanceof Error ? err.message : String(err);

@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { analyzeImage } from "@/lib/ai/image-analysis";
-import type { ImageAnalysis } from "@/lib/ai/image-analysis";
+import { analyzeImage, analyzeImageMultiLocale } from "@/lib/ai/image-analysis";
+import type { ImageAnalysis, MultiLocaleImageAnalysis } from "@/lib/ai/image-analysis";
 import { getMediaAdapter } from "@/lib/media";
 import { denyViewers } from "@/lib/require-role";
+import { readSiteConfig } from "@/lib/site-config";
 
 const VIDEO_EXTS = new Set(["mp4", "mov", "webm", "avi", "mkv", "m4v"]);
 
@@ -49,6 +50,27 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Determine site locales for multi-locale analysis
+    const siteConfig = await readSiteConfig();
+    const siteLocales = siteConfig.locales?.length ? siteConfig.locales : [];
+
+    if (siteLocales.length > 1) {
+      // Multi-locale site: generate caption/alt for ALL locales in one call
+      const multiResult = await analyzeImageMultiLocale(buffer, mimeType, siteLocales);
+      await saveAIMetadataMultiLocale(folder, filename, multiResult);
+      // Return backwards-compat format + per-locale fields
+      const primaryLocale = language || siteConfig.defaultLocale || siteLocales[0];
+      return NextResponse.json({
+        caption: multiResult.captions[primaryLocale] ?? Object.values(multiResult.captions)[0] ?? "",
+        alt: multiResult.alts[primaryLocale] ?? Object.values(multiResult.alts)[0] ?? "",
+        tags: multiResult.tags,
+        provider: multiResult.provider,
+        captions: multiResult.captions,
+        alts: multiResult.alts,
+      });
+    }
+
+    // Single-locale site: use standard analysis
     const result = await analyzeImage(buffer, mimeType, language);
 
     // Save AI metadata to media-meta
@@ -59,6 +81,52 @@ export async function POST(req: NextRequest) {
     const msg = err instanceof Error ? err.message : String(err);
     const status = msg.includes("API key") ? 401 : msg.includes("429") ? 429 : 500;
     return NextResponse.json({ error: msg }, { status });
+  }
+}
+
+/** Save multi-locale AI analysis results into media-meta.json */
+async function saveAIMetadataMultiLocale(
+  folder: string,
+  filename: string,
+  analysis: MultiLocaleImageAnalysis,
+) {
+  try {
+    const { getActiveSitePaths } = await import("@/lib/site-paths");
+    const { dataDir } = await getActiveSitePaths();
+    const fs = await import("fs/promises");
+    const path = await import("path");
+
+    const metaPath = path.join(dataDir, "media-meta.json");
+    let meta: Array<Record<string, unknown>> = [];
+    try {
+      meta = JSON.parse(await fs.readFile(metaPath, "utf-8"));
+    } catch { /* empty */ }
+
+    const key = folder ? `${folder}/${filename}` : filename;
+    const idx = meta.findIndex((m) => m.key === key);
+
+    // Pick first locale for backwards-compat single fields
+    const firstLocale = Object.keys(analysis.captions)[0];
+    const aiFields = {
+      aiCaption: analysis.captions[firstLocale] ?? "",
+      aiAlt: analysis.alts[firstLocale] ?? "",
+      aiCaptions: analysis.captions,
+      aiAlts: analysis.alts,
+      aiTags: analysis.tags,
+      aiAnalyzedAt: new Date().toISOString(),
+      aiProvider: analysis.provider ?? "unknown",
+    };
+
+    if (idx >= 0) {
+      meta[idx] = { ...meta[idx], ...aiFields };
+    } else {
+      meta.push({ key, name: filename, folder, status: "active", ...aiFields });
+    }
+
+    await fs.mkdir(path.dirname(metaPath), { recursive: true });
+    await fs.writeFile(metaPath, JSON.stringify(meta, null, 2), "utf-8");
+  } catch (err) {
+    console.error("[analyze] Failed to save multi-locale AI metadata:", err);
   }
 }
 

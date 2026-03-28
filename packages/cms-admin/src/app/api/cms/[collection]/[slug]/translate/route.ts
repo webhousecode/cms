@@ -67,7 +67,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
     TRANSLATABLE_TYPES.has(f.type),
   );
 
-  const sourceData: Record<string, string> = {};
+  const sourceData: Record<string, string | string[]> = {};
   for (const field of translatableFields) {
     const val = sourceDoc.data[field.name];
     if (val && typeof val === "string" && val.trim()) {
@@ -76,6 +76,24 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   }
   // Also include the slug for translation
   sourceData["_slug"] = slug;
+
+  // Include SEO fields for translation (F48 i18n)
+  const sourceSeo = sourceDoc.data._seo as Record<string, unknown> | undefined;
+  let hasSeoToTranslate = false;
+  if (sourceSeo) {
+    if (typeof sourceSeo.metaTitle === "string" && sourceSeo.metaTitle.trim()) {
+      sourceData["_seo_metaTitle"] = sourceSeo.metaTitle;
+      hasSeoToTranslate = true;
+    }
+    if (typeof sourceSeo.metaDescription === "string" && sourceSeo.metaDescription.trim()) {
+      sourceData["_seo_metaDescription"] = sourceSeo.metaDescription;
+      hasSeoToTranslate = true;
+    }
+    if (Array.isArray(sourceSeo.keywords) && sourceSeo.keywords.length > 0) {
+      sourceData["_seo_keywords"] = sourceSeo.keywords;
+      hasSeoToTranslate = true;
+    }
+  }
 
   if (Object.keys(sourceData).length === 0) {
     return NextResponse.json(
@@ -88,6 +106,17 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   const model = await getModel("content");
   const client = new Anthropic();
 
+  // Import SEO limits for target locale
+  const { getSeoLimits } = await import("@/lib/ai/locale-prompt");
+  const seoLimits = getSeoLimits(targetLocale);
+
+  const seoInstruction = hasSeoToTranslate
+    ? `\nSEO fields (_seo_metaTitle, _seo_metaDescription, _seo_keywords):
+- metaTitle: ${seoLimits.titleMin}-${seoLimits.titleMax} characters for ${targetLang}
+- metaDescription: ${seoLimits.descMin}-${seoLimits.descMax} characters for ${targetLang}
+- keywords: translate each keyword naturally, keep as array of strings`
+    : "";
+
   const systemPrompt = `You are a professional translator. Translate content from ${sourceLang} to ${targetLang}.
 ${buildLocaleInstruction(targetLocale)}
 
@@ -96,7 +125,7 @@ Preserve:
 - Proper nouns and brand names
 - Meaning, tone, and formatting
 - Cultural references should be adapted where relevant
-
+${seoInstruction}
 Include a "_slug" field with a URL-friendly translated slug (lowercase, hyphens, no special chars).
 
 Return ONLY a JSON object with the translated fields. No explanation, no preamble.`;
@@ -133,10 +162,30 @@ Return ONLY a JSON object with the translated fields. No explanation, no preambl
       ? aiSlug.toLowerCase().replace(/[^a-z0-9-]/g, "").replace(/-+/g, "-").replace(/^-|-$/g, "")
       : `${slug}-${targetLocale}`;
 
+    // Extract translated SEO fields and rebuild _seo object
+    const translatedSeo: Record<string, unknown> = {};
+    if (translatedData["_seo_metaTitle"]) {
+      translatedSeo.metaTitle = translatedData["_seo_metaTitle"];
+      delete translatedData["_seo_metaTitle"];
+    }
+    if (translatedData["_seo_metaDescription"]) {
+      translatedSeo.metaDescription = translatedData["_seo_metaDescription"];
+      delete translatedData["_seo_metaDescription"];
+    }
+    if (translatedData["_seo_keywords"]) {
+      translatedSeo.keywords = translatedData["_seo_keywords"];
+      delete translatedData["_seo_keywords"];
+    }
+
     // Merge: keep non-translatable fields from source, override with translations
     const mergedData = { ...sourceDoc.data };
     for (const [key, val] of Object.entries(translatedData)) {
       mergedData[key] = val;
+    }
+
+    // Merge SEO: preserve non-translatable SEO fields (ogImage, canonical, score), override translated ones
+    if (Object.keys(translatedSeo).length > 0 && sourceSeo) {
+      mergedData._seo = { ...sourceSeo, ...translatedSeo };
     }
 
     // Check if translation already exists

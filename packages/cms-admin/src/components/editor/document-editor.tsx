@@ -1086,7 +1086,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
   const isExpired = doc.status === "expired";
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col" data-doc-locale={doc.locale || defaultLocale}>
       {/* Top bar — sticky */}
       <ActionBar
         actions={

@@ -322,6 +322,233 @@ describe("F48 Phase 2 — AI Locale-Awareness", () => {
 
 import { isTranslationStale } from "../locale";
 
+// ── Per-locale Media Metadata helpers ─────────────────────────
+// These mirror the logic we'll implement — tested here as pure functions.
+
+/** Upgrade legacy single-locale media meta to per-locale format */
+function upgradeMediaMeta(entry: {
+  aiCaption?: string;
+  aiAlt?: string;
+  aiCaptions?: Record<string, string>;
+  aiAlts?: Record<string, string>;
+}, locale: string): { captions: Record<string, string>; alts: Record<string, string> } {
+  const captions = entry.aiCaptions ? { ...entry.aiCaptions } : {};
+  const alts = entry.aiAlts ? { ...entry.aiAlts } : {};
+  // Backwards compat: if legacy single fields exist and per-locale doesn't have that locale
+  if (entry.aiCaption && !captions[locale]) captions[locale] = entry.aiCaption;
+  if (entry.aiAlt && !alts[locale]) alts[locale] = entry.aiAlt;
+  return { captions, alts };
+}
+
+/** Pick best alt-text for a given locale with fallback chain */
+function pickAlt(
+  entry: { aiAlt?: string; aiAlts?: Record<string, string> },
+  locale: string,
+  defaultLocale?: string,
+): string | null {
+  // 1. Per-locale match
+  if (entry.aiAlts?.[locale]) return entry.aiAlts[locale];
+  // 2. Legacy single field
+  if (entry.aiAlt) return entry.aiAlt;
+  // 3. Default locale fallback
+  if (defaultLocale && entry.aiAlts?.[defaultLocale]) return entry.aiAlts[defaultLocale];
+  // 4. Any available
+  if (entry.aiAlts) {
+    const first = Object.values(entry.aiAlts)[0];
+    if (first) return first;
+  }
+  return null;
+}
+
+/** Pick best caption for a given locale with fallback chain */
+function pickCaption(
+  entry: { aiCaption?: string; aiCaptions?: Record<string, string> },
+  locale: string,
+  defaultLocale?: string,
+): string | null {
+  if (entry.aiCaptions?.[locale]) return entry.aiCaptions[locale];
+  if (entry.aiCaption) return entry.aiCaption;
+  if (defaultLocale && entry.aiCaptions?.[defaultLocale]) return entry.aiCaptions[defaultLocale];
+  if (entry.aiCaptions) {
+    const first = Object.values(entry.aiCaptions)[0];
+    if (first) return first;
+  }
+  return null;
+}
+
+/** Extract translatable SEO fields from _seo object */
+function extractTranslatableSeo(seo: Record<string, unknown>): {
+  metaTitle?: string;
+  metaDescription?: string;
+  keywords?: string[];
+} {
+  const result: Record<string, unknown> = {};
+  if (typeof seo.metaTitle === "string" && seo.metaTitle.trim()) result.metaTitle = seo.metaTitle;
+  if (typeof seo.metaDescription === "string" && seo.metaDescription.trim()) result.metaDescription = seo.metaDescription;
+  if (Array.isArray(seo.keywords) && seo.keywords.length > 0) result.keywords = seo.keywords;
+  return result as { metaTitle?: string; metaDescription?: string; keywords?: string[] };
+}
+
+/** Merge translated SEO fields back into _seo object (preserving non-translatable fields) */
+function mergeSeoTranslation(
+  originalSeo: Record<string, unknown>,
+  translatedSeo: Record<string, unknown>,
+): Record<string, unknown> {
+  return { ...originalSeo, ...translatedSeo };
+}
+
+// ── Tests ─────────────────────────────────────────────────────
+
+describe("F48 — Per-locale Media Metadata", () => {
+  describe("upgradeMediaMeta() — backwards compatibility", () => {
+    it("upgrades legacy single-field to per-locale", () => {
+      const result = upgradeMediaMeta(
+        { aiCaption: "Et billede af en kat", aiAlt: "Kat på sofa" },
+        "da",
+      );
+      expect(result.captions).toEqual({ da: "Et billede af en kat" });
+      expect(result.alts).toEqual({ da: "Kat på sofa" });
+    });
+
+    it("preserves per-locale fields when they exist", () => {
+      const result = upgradeMediaMeta(
+        {
+          aiCaption: "Et billede af en kat",
+          aiCaptions: { da: "En kat", en: "A cat" },
+          aiAlt: "Kat",
+          aiAlts: { da: "Kat på sofa", en: "Cat on sofa" },
+        },
+        "da",
+      );
+      expect(result.captions).toEqual({ da: "En kat", en: "A cat" });
+      expect(result.alts).toEqual({ da: "Kat på sofa", en: "Cat on sofa" });
+    });
+
+    it("does NOT overwrite per-locale with legacy if locale already exists", () => {
+      const result = upgradeMediaMeta(
+        {
+          aiCaption: "LEGACY CAPTION",
+          aiCaptions: { da: "PER-LOCALE CAPTION" },
+          aiAlt: "LEGACY ALT",
+          aiAlts: { da: "PER-LOCALE ALT" },
+        },
+        "da",
+      );
+      expect(result.captions.da).toBe("PER-LOCALE CAPTION");
+      expect(result.alts.da).toBe("PER-LOCALE ALT");
+    });
+
+    it("handles empty entry gracefully", () => {
+      const result = upgradeMediaMeta({}, "da");
+      expect(result.captions).toEqual({});
+      expect(result.alts).toEqual({});
+    });
+  });
+
+  describe("pickAlt() — locale-aware alt-text selection", () => {
+    it("returns exact locale match from per-locale", () => {
+      expect(pickAlt({ aiAlts: { da: "Dansk alt", en: "English alt" } }, "en")).toBe("English alt");
+    });
+
+    it("falls back to legacy aiAlt when per-locale missing", () => {
+      expect(pickAlt({ aiAlt: "Legacy alt" }, "en")).toBe("Legacy alt");
+    });
+
+    it("falls back to default locale when requested locale missing", () => {
+      expect(pickAlt({ aiAlts: { da: "Dansk alt" } }, "en", "da")).toBe("Dansk alt");
+    });
+
+    it("falls back to any available when no match", () => {
+      expect(pickAlt({ aiAlts: { fr: "Alt français" } }, "en", "da")).toBe("Alt français");
+    });
+
+    it("returns null when no alt available", () => {
+      expect(pickAlt({}, "en")).toBeNull();
+    });
+  });
+
+  describe("pickCaption() — locale-aware caption selection", () => {
+    it("returns exact locale match", () => {
+      expect(pickCaption({ aiCaptions: { da: "Dansk", en: "English" } }, "da")).toBe("Dansk");
+    });
+
+    it("falls back to legacy aiCaption", () => {
+      expect(pickCaption({ aiCaption: "Legacy" }, "en")).toBe("Legacy");
+    });
+
+    it("returns null when nothing available", () => {
+      expect(pickCaption({}, "en")).toBeNull();
+    });
+  });
+});
+
+describe("F48 — SEO Translation in Translate Endpoint", () => {
+  describe("extractTranslatableSeo()", () => {
+    it("extracts metaTitle, metaDescription, keywords", () => {
+      const seo = {
+        metaTitle: "Min side",
+        metaDescription: "En beskrivelse af min side",
+        keywords: ["cms", "webhouse"],
+        ogImage: "/uploads/og.jpg",
+        canonical: "https://example.com/min-side",
+        score: 85,
+      };
+      const result = extractTranslatableSeo(seo);
+      expect(result).toEqual({
+        metaTitle: "Min side",
+        metaDescription: "En beskrivelse af min side",
+        keywords: ["cms", "webhouse"],
+      });
+    });
+
+    it("skips empty/missing fields", () => {
+      const seo = { metaTitle: "", metaDescription: "  ", ogImage: "/og.jpg" };
+      const result = extractTranslatableSeo(seo);
+      expect(result).toEqual({});
+    });
+
+    it("skips when no SEO fields present", () => {
+      const result = extractTranslatableSeo({ score: 90 });
+      expect(result).toEqual({});
+    });
+
+    it("handles keywords as empty array", () => {
+      const result = extractTranslatableSeo({ keywords: [] });
+      expect(result).toEqual({});
+    });
+  });
+
+  describe("mergeSeoTranslation()", () => {
+    it("merges translated fields into original, preserving non-translatable", () => {
+      const original = {
+        metaTitle: "Min side",
+        metaDescription: "Dansk beskrivelse",
+        keywords: ["cms"],
+        ogImage: "/uploads/og.jpg",
+        canonical: "https://example.com",
+        score: 85,
+      };
+      const translated = {
+        metaTitle: "My page",
+        metaDescription: "English description",
+        keywords: ["cms"],
+      };
+      const result = mergeSeoTranslation(original, translated);
+      expect(result.metaTitle).toBe("My page");
+      expect(result.metaDescription).toBe("English description");
+      expect(result.ogImage).toBe("/uploads/og.jpg");
+      expect(result.canonical).toBe("https://example.com");
+      expect(result.score).toBe(85);
+    });
+
+    it("preserves original when no translation provided", () => {
+      const original = { metaTitle: "Titel", score: 50 };
+      const result = mergeSeoTranslation(original, {});
+      expect(result).toEqual(original);
+    });
+  });
+});
+
 describe("F48 Phase 3 — Stale Translation Detection", () => {
   it("returns true when source.updatedAt > translation.updatedAt", () => {
     expect(isTranslationStale("2026-03-28T18:00:00Z", "2026-03-28T17:00:00Z")).toBe(true);
