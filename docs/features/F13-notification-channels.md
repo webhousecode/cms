@@ -1,174 +1,136 @@
 # F13 — Notification Channels
 
-> Multi-channel notifications for CMS events via Discord, Slack, Telegram, and webhooks.
+> Multi-channel webhook notifications for CMS automation events (backup, link check, publish, agent completion).
 
-## Problem
+## Status: In Progress (Phase 2)
 
-CMS events (new content created, AI agent completed, publish, errors) are only visible in the admin UI. There is no way to get notifications in team communication tools or trigger external automations.
+**Phase 1 (Done):** UI, config, publish webhooks
+**Phase 2 (Current):** Shared dispatcher, wire remaining automations, notification log
 
-## Solution
+## What's Already Built
 
-A notification channel system that dispatches events to configured channels. Supports Discord, Slack, Telegram, and generic webhooks. Each channel can subscribe to specific event types. Users configure preferences per channel.
+### Webhook List UI (`webhook-list.tsx`)
+- Add/remove/reorder webhook URLs
+- Auto-detect Discord/Slack URLs → send correctly formatted test messages
+- Per-webhook test button with success/failure feedback
+- Used in Settings → Automation for all 4 webhook categories
+
+### SiteConfig Storage (`site-config.ts`)
+- `backupWebhooks: { id: string; url: string }[]`
+- `linkCheckWebhooks: { id: string; url: string }[]`
+- `publishWebhooks: { id: string; url: string }[]`
+- `agentDefaultWebhooks: { id: string; url: string }[]`
+- Org-level inheritance via F87
+
+### Publish Webhook Dispatch (`scheduler-notify.ts`)
+- Sends Discord embeds / Slack blocks / generic JSON on scheduled publish/unpublish
+- Called from `instrumentation-node.ts` every 60s
+- **Legacy issue:** Still reads from `schedulerWebhookUrl` (single URL) instead of `publishWebhooks` array
+
+### Settings UI (`tools-settings-panel.tsx`)
+- Backup: frequency, time, retention, webhooks
+- Link Checker: frequency, time, webhooks
+- Content Publishing: webhooks
+- AI Agents (Default): webhooks
+
+## What's Missing (Phase 2)
+
+### 1. Shared Webhook Dispatch Utility
+Create `packages/cms-admin/src/lib/webhook-dispatch.ts`:
+- Accepts `webhooks: { id: string; url: string }[]` + event payload
+- Auto-detect Discord/Slack/generic and format accordingly
+- Parallel dispatch to all webhooks in array
+- Error handling per webhook (don't let one failure block others)
+- Appends to notification log
+
+### 2. Migrate Publish Webhooks
+Update `scheduler-notify.ts` to use `publishWebhooks` array via the shared dispatcher instead of legacy `schedulerWebhookUrl`.
+
+### 3. Wire Backup Webhooks
+In `tools-scheduler.ts`, after successful backup → dispatch to `config.backupWebhooks` with backup details (fileName, documentCount, trigger).
+
+### 4. Wire Link Check Webhooks
+In `tools-scheduler.ts`, after successful link check → dispatch to `config.linkCheckWebhooks` with results (total links, broken count).
+
+### 5. Wire Agent Completion Webhooks
+In agent runner, after agent completion/failure → dispatch to `config.agentDefaultWebhooks` with agent name, status, summary.
+
+### 6. Notification Log
+Append all webhook dispatches to `<dataDir>/notification-log.jsonl`:
+```json
+{"timestamp":"...","event":"backup.completed","webhookUrl":"...","success":true,"statusCode":200}
+```
 
 ## Technical Design
 
-### Channel Types
+### Shared Dispatcher Interface
 
 ```typescript
-// packages/cms-admin/src/lib/notifications/types.ts
+// packages/cms-admin/src/lib/webhook-dispatch.ts
 
-export type ChannelType = 'discord' | 'slack' | 'telegram' | 'webhook' | 'email';
-
-export type EventType =
-  | 'content.created'
-  | 'content.published'
-  | 'content.deleted'
-  | 'agent.completed'
-  | 'agent.failed'
-  | 'curation.new'
-  | 'deploy.success'
-  | 'deploy.failed'
-  | 'link-check.broken'
-  | 'scheduled.published';
-
-export interface NotificationChannel {
-  id: string;
-  type: ChannelType;
-  name: string;               // e.g. "Team Discord"
-  config: DiscordConfig | SlackConfig | TelegramConfig | WebhookConfig | EmailConfig;
-  events: EventType[];        // which events trigger this channel
-  enabled: boolean;
-  createdAt: string;
+interface WebhookEvent {
+  event: string;                    // e.g. "backup.completed", "content.published"
+  title: string;                    // Discord embed title / Slack header
+  message: string;                  // Description body
+  color?: number;                   // Discord embed color (hex)
+  fields?: { name: string; value: string }[];  // Extra fields
+  orgName?: string;
+  siteName?: string;
+  instanceUrl?: string;
 }
 
-export interface DiscordConfig {
-  webhookUrl: string;         // Discord webhook URL
-}
-
-export interface SlackConfig {
-  webhookUrl: string;         // Slack incoming webhook URL
-}
-
-export interface TelegramConfig {
-  botToken: string;
-  chatId: string;
-}
-
-export interface WebhookConfig {
-  url: string;
-  method: 'POST' | 'PUT';
-  headers?: Record<string, string>;
-  secret?: string;            // HMAC signing secret
-}
-
-export interface EmailConfig {
-  to: string[];
-}
+export async function dispatchWebhooks(
+  webhooks: { id: string; url: string }[],
+  event: WebhookEvent,
+  dataDir?: string,                 // for notification log
+): Promise<void>;
 ```
 
-### Notification Dispatcher
+### Event Types
 
-```typescript
-// packages/cms-admin/src/lib/notifications/dispatcher.ts
-
-export interface NotificationPayload {
-  event: EventType;
-  title: string;
-  message: string;
-  url?: string;               // link to admin page
-  metadata?: Record<string, unknown>;
-  timestamp: string;
-}
-
-export class NotificationDispatcher {
-  async dispatch(payload: NotificationPayload): Promise<void>;
-  // Loads channels from <dataDir>/notification-channels.json
-  // Filters channels by event type
-  // Sends to each matching channel in parallel
-}
-```
-
-### Channel Senders
-
-```typescript
-// packages/cms-admin/src/lib/notifications/senders/
-// discord.ts — POST to webhook URL with Discord embed format
-// slack.ts — POST to webhook URL with Slack Block Kit format
-// telegram.ts — POST to Telegram Bot API
-// webhook.ts — POST/PUT with HMAC signature in X-Signature header
-```
-
-### Storage
-
-Channels stored at `<dataDir>/notification-channels.json`. Notification log at `<dataDir>/notification-log.jsonl`.
-
-### API Endpoints
-
-| Method | Path | Description |
-|--------|------|-------------|
-| `GET` | `/api/admin/notifications/channels` | List channels |
-| `POST` | `/api/admin/notifications/channels` | Create channel |
-| `PUT` | `/api/admin/notifications/channels/[id]` | Update channel |
-| `DELETE` | `/api/admin/notifications/channels/[id]` | Delete channel |
-| `POST` | `/api/admin/notifications/channels/[id]/test` | Send test notification |
+| Event | Source | Payload |
+|-------|--------|---------|
+| `content.published` | scheduler-notify | collection, slug, title, action |
+| `content.unpublished` | scheduler-notify | collection, slug, title, action |
+| `backup.completed` | tools-scheduler | fileName, documentCount, trigger |
+| `backup.failed` | tools-scheduler | error message |
+| `linkcheck.completed` | tools-scheduler | total, broken |
+| `agent.completed` | agent-runner | agent name, collection, documents generated |
+| `agent.failed` | agent-runner | agent name, error |
 
 ## Impact Analysis
 
 ### Files affected
-- `packages/cms-admin/src/lib/notifications/types.ts` — new notification types
-- `packages/cms-admin/src/lib/notifications/dispatcher.ts` — new dispatcher
-- `packages/cms-admin/src/lib/notifications/senders/discord.ts` — new Discord sender
-- `packages/cms-admin/src/lib/notifications/senders/slack.ts` — new Slack sender
-- `packages/cms-admin/src/lib/notifications/senders/telegram.ts` — new Telegram sender
-- `packages/cms-admin/src/lib/notifications/senders/webhook.ts` — new webhook sender
-- `packages/cms-admin/src/app/api/admin/notifications/` — new API routes
-- `packages/cms-admin/src/app/admin/settings/notifications/page.tsx` — new settings page
+- `packages/cms-admin/src/lib/webhook-dispatch.ts` — **new**: shared dispatcher
+- `packages/cms-admin/src/lib/notification-log.ts` — **new**: JSONL log append/read
+- `packages/cms-admin/src/lib/scheduler-notify.ts` — **modify**: use shared dispatcher + publishWebhooks array
+- `packages/cms-admin/src/lib/tools-scheduler.ts` — **modify**: dispatch backup + link check webhooks
+- `packages/cms-admin/src/lib/agent-runner.ts` — **modify**: dispatch agent webhooks
 
 ### Blast radius
-- Event dispatch hooks need to be wired into existing content/agent lifecycle — could add latency
-- Webhook payloads are a public API contract
+- Publish webhook behavior changes from single URL to array — existing single URL migrated via legacy field
+- No UI changes needed (webhook-list already supports arrays)
 
 ### Breaking changes
-- None
+- None. Legacy `schedulerWebhookUrl` continues to work via migration in `readSiteConfig()`.
 
-### Test plan
+## Test Plan
+- [ ] Shared dispatcher formats Discord embeds correctly
+- [ ] Shared dispatcher formats Slack blocks correctly
+- [ ] Shared dispatcher sends generic JSON for unknown URLs
+- [ ] Empty webhook array = no dispatches, no errors
+- [ ] Failed fetch for one webhook doesn't block others
+- [ ] Backup completion triggers backupWebhooks
+- [ ] Link check completion triggers linkCheckWebhooks
+- [ ] Agent completion triggers agentDefaultWebhooks
+- [ ] Publish still works with publishWebhooks array
+- [ ] Notification log records all dispatches
 - [ ] TypeScript compiles: `npx tsc --noEmit`
-- [ ] Discord webhook delivers notification
-- [ ] Event filtering works per channel
-- [ ] Test notification button sends sample message
-- [ ] Notification log records deliveries
-
-## Implementation Steps
-
-1. Create `packages/cms-admin/src/lib/notifications/types.ts` with interfaces
-2. Create senders: `discord.ts`, `slack.ts`, `telegram.ts`, `webhook.ts`
-3. Create `packages/cms-admin/src/lib/notifications/dispatcher.ts`
-4. Create API routes at `packages/cms-admin/src/app/api/admin/notifications/`
-5. Build channel management UI at `packages/cms-admin/src/app/admin/settings/notifications/page.tsx`
-6. Add "Test" button that sends a sample notification to the channel
-7. Hook dispatcher into existing event points: document create/publish/delete, agent runner completion, link checker results
-8. Add notification log viewer in admin
-
-
-> **NOTE — F107 Chat Integration:** When this feature introduces new API routes, tools, or admin actions, ensure they are also exposed as tool-use functions in F107 (Chat with Your Site). The chat interface must be able to perform any action the traditional admin UI can. See `docs/features/F107-chat-with-your-site.md`.
-
-## Dependencies
-
-- None — standalone system that hooks into existing events
 
 ## Effort Estimate
 
-**Medium** — 3-4 days
+**Small** — 1-2 days. Most infrastructure exists. Core work is the shared dispatcher + wiring 3 missing automation hooks.
 
 ---
 
-> **Testing (F99):** This feature MUST include tests using the [F99 Test Infrastructure](F99-e2e-testing-suite.md).
-> - **Unit tests** → `packages/cms-admin/src/lib/__tests__/{feature}.test.ts` or `packages/cms/src/__tests__/{feature}.test.ts`
-> - **API tests** → `packages/cms-admin/tests/api/{feature}.test.ts`
-> - **E2E tests** → `packages/cms-admin/e2e/suites/{nn}-{feature}.spec.ts`
-> - Use shared fixtures: `auth.ts` (JWT login), `mock-llm.ts` (intercept AI), `test-data.ts` (seed/cleanup)
-> - Tests are written BEFORE implementation. All tests must pass before merge.
-
-> **i18n (F48):** This feature produces or manages user-facing content. All generated text,
-> AI prompts, and UI output MUST respect the site's `defaultLocale` and `locales` settings.
-> Use `getLocale()` for runtime locale resolution. See [F48 i18n](F48-i18n.md) for details.
+> **Testing (F99):** Unit tests in `packages/cms-admin/src/lib/__tests__/webhook-dispatch.test.ts`

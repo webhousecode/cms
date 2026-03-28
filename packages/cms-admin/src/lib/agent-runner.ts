@@ -392,5 +392,24 @@ export async function runAgent(agentId: string, userPrompt: string, overrideColl
   // Cleanup MCP connections
   await toolRegistry.cleanup();
 
+  // Dispatch agent completion webhooks (non-blocking)
+  const agentWebhooks = siteConfig.agentDefaultWebhooks ?? [];
+  if (agentWebhooks.length > 0) {
+    const { dispatchWebhooks } = await import("./webhook-dispatch");
+    const { dataDir } = await getActiveSitePaths();
+    dispatchWebhooks(agentWebhooks, {
+      event: "agent.completed",
+      title: `Agent Complete: ${agent.name}`,
+      message: `Generated **${title}** in \`${targetCollection}\`. Cost: $${totalCost.toFixed(4)}.`,
+      color: 0x4ade80,
+      fields: [
+        { name: "Agent", value: agent.name },
+        { name: "Collection", value: targetCollection },
+        { name: "Document", value: title },
+        { name: "Cost", value: `$${totalCost.toFixed(4)}` },
+      ],
+    }, dataDir).catch((err) => console.error("[agent-runner] webhook error:", err));
+  }
+
   return { queueItemId: queueItem.id, title, collection: targetCollection, slug, costUsd: totalCost, alternatives };
 }

@@ -6,7 +6,8 @@
  * Triggers jobs via internal HTTP calls with explicit site cookies.
  */
 import { loadRegistry } from "./site-registry";
-import { readSiteConfigForSite } from "./site-config";
+import { readSiteConfigForSite, type SiteConfig } from "./site-config";
+import { dispatchWebhooks } from "./webhook-dispatch";
 
 interface SchedulerState {
   lastBackupRun?: string;
@@ -97,7 +98,7 @@ export async function runToolsScheduler(): Promise<{ backupRan: boolean; linkChe
 
 async function runForSite(
   dataDir: string,
-  config: { backupSchedule: string; backupTime: string; backupRetentionDays: number; linkCheckSchedule: string; linkCheckTime?: string },
+  config: { backupSchedule: string; backupTime: string; backupRetentionDays: number; linkCheckSchedule: string; linkCheckTime?: string; backupWebhooks?: { id: string; url: string }[]; linkCheckWebhooks?: { id: string; url: string }[] },
   baseUrl: string,
   serviceToken: string,
   orgId: string,
@@ -133,8 +134,39 @@ async function runForSite(
         const data = await res.json() as { fileName?: string; documentCount?: number };
         console.log(`[tools-scheduler] ${prefix}Backup complete: ${data.fileName} (${data.documentCount} docs)`);
         backupRan = true;
+
+        // Dispatch backup webhooks
+        const backupWebhooks = config.backupWebhooks ?? [];
+        if (backupWebhooks.length > 0) {
+          dispatchWebhooks(backupWebhooks, {
+            event: "backup.completed",
+            title: "Backup Complete",
+            message: `Created **${data.fileName}** with ${data.documentCount ?? "?"} documents.`,
+            color: 0x4ade80,
+            fields: [
+              { name: "File", value: data.fileName ?? "unknown" },
+              { name: "Documents", value: String(data.documentCount ?? "?") },
+              { name: "Trigger", value: "scheduled" },
+            ],
+            orgName: label?.split("/")[0],
+            siteName: label?.split("/")[1],
+          }, dataDir).catch((err) => console.error(`[tools-scheduler] ${prefix}backup webhook error:`, err));
+        }
       } else {
         errors.push(`${prefix}backup HTTP ${res.status}`);
+
+        // Dispatch backup failure webhooks
+        const backupWebhooks = config.backupWebhooks ?? [];
+        if (backupWebhooks.length > 0) {
+          dispatchWebhooks(backupWebhooks, {
+            event: "backup.failed",
+            title: "Backup Failed",
+            message: `Backup returned HTTP ${res.status}.`,
+            color: 0xef4444,
+            orgName: label?.split("/")[0],
+            siteName: label?.split("/")[1],
+          }, dataDir).catch(() => {});
+        }
       }
       state.lastBackupRun = new Date().toISOString();
     } catch (err) {
@@ -159,6 +191,24 @@ async function runForSite(
           const data = await res.json() as { total?: number; broken?: number };
           console.log(`[tools-scheduler] ${prefix}Link check complete: ${data.total} links, ${data.broken} broken`);
           linkCheckRan = true;
+
+          // Dispatch link check webhooks
+          const lcWebhooks = config.linkCheckWebhooks ?? [];
+          if (lcWebhooks.length > 0) {
+            const hasBroken = (data.broken ?? 0) > 0;
+            dispatchWebhooks(lcWebhooks, {
+              event: "linkcheck.completed",
+              title: hasBroken ? `Link Check: ${data.broken} Broken Links` : "Link Check: All Clear",
+              message: `Checked ${data.total ?? "?"} links. ${data.broken ?? 0} broken.`,
+              color: hasBroken ? 0xef4444 : 0x4ade80,
+              fields: [
+                { name: "Total", value: String(data.total ?? "?") },
+                { name: "Broken", value: String(data.broken ?? 0) },
+              ],
+              orgName: label?.split("/")[0],
+              siteName: label?.split("/")[1],
+            }, dataDir).catch((err) => console.error(`[tools-scheduler] ${prefix}link-check webhook error:`, err));
+          }
         } else {
           errors.push(`${prefix}link-check HTTP ${res.status}`);
         }
