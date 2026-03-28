@@ -72,7 +72,7 @@ _Without these, we cannot build and deliver professional sites on the platform._
 | ~~8c~~ | ~~**F78 Bundled Preview Server**~~ | ~~Done~~ | ~~Shipped 2026-03-19~~ |
 | 8d | **F79 Site Config Validator** | Medium | Validate cms.config.ts + content/ on site creation and first load. Friendly errors instead of ZodError crashes. Critical for AI-built sites. |
 | 8e | **F80 Admin Selector Map** | Medium | `data-testid` on all admin UI elements + auto-generated selector map. Foundation for Playwright E2E tests of content editing and site roundtrips. |
-| 8f | **F83 Vibe Site Builder** | Large | THE differentiator. "Describe → Generate → Manage." AI site gen with CMS built in. Only platform with AI gen + CMS + code ownership. |
+| ~~8f~~ | ~~**F83 Vibe Site Builder**~~ | ~~Large~~ | ~~Moved to Tier 2 top~~ |
 | ~~8g~~ | ~~**F86 Action Bar**~~ | ~~Done~~ | ~~All pages migrated. Shipped 2026-03-20~~ |
 | 8h | **F97 SEO Module** | Medium-Large | Per-doc SEO panel, keywords, AI optimize, SERP preview, score, dashboard, JSON-LD templates. The Yoast of webhouse.app. |
 | ~~8i~~ | ~~**F89 Post-Build Enrichment**~~ | ~~Done~~ | ~~Shipped 2026-03-23. Per-page descriptions, _seo coordination with F97.~~ |
@@ -90,6 +90,7 @@ _Makes us stand out. Customers expect these from a modern CMS._
 
 | Priority | Feature | Size | Why it matters |
 |----------|---------|------|----------------|
+| 9a | **F83 Vibe Site Builder** | Large | THE differentiator. "Describe → Generate → Manage." AI site gen with CMS built in. Only platform with AI gen + CMS + code ownership. |
 | 9b | **F63 Shared Components** | Medium | Design tokens, shared UI components, API helpers. Makes all future features faster + consistent. |
 | 9c | **F84 Move Site to Org** | Small | Transfer site between orgs. Atomic registry move. Essential for agency org restructuring. |
 | 10 | ~~**F48 i18n**~~ | ~~Medium~~ | ~~Moved to Tier 1~~ |
