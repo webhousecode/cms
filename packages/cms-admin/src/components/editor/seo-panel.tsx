@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Search, Sparkles, Loader2, ChevronDown, ChevronUp, Code2 } from "lucide-react";
-import { calculateSeoScore, type SeoFields, type SeoScoreResult } from "@/lib/seo/score";
+import { Search, Sparkles, Loader2, ChevronDown, ChevronUp, Code2, RefreshCw } from "lucide-react";
+import { calculateSeoScore, calculateReadability, type SeoFields, type SeoScoreResult } from "@/lib/seo/score";
 import { JSON_LD_TEMPLATES, autoFillFields, generateJsonLd, type JsonLdTemplate } from "@/lib/seo/json-ld";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { toast } from "sonner";
@@ -23,12 +23,16 @@ export function SeoPanel({ collection, doc, onUpdate, onSave, onClose }: Props) 
   const [keywordInput, setKeywordInput] = useState("");
   const [ogImage, setOgImage] = useState(seo.ogImage ?? "");
   const [robots, setRobots] = useState(seo.robots ?? "index,follow");
+  const [canonical, setCanonical] = useState(seo.canonical ?? "");
   const [jsonLd, setJsonLd] = useState<Record<string, unknown> | null>(seo.jsonLd ?? null);
   const [jsonLdTemplate, setJsonLdTemplate] = useState<string>(seo.jsonLdTemplate ?? "");
   const [jsonLdValues, setJsonLdValues] = useState<Record<string, string>>(seo.jsonLdValues ?? {});
   const [lastOptimized, setLastOptimized] = useState(seo.lastOptimized ?? "");
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
+  const [showSocialPreview, setShowSocialPreview] = useState(false);
+  const [rewriteKeyword, setRewriteKeyword] = useState("");
+  const [rewriting, setRewriting] = useState(false);
   const [optimizing, setOptimizing] = useState(false);
   const [confirmReoptimize, setConfirmReoptimize] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -60,6 +64,7 @@ export function SeoPanel({ collection, doc, onUpdate, onSave, onClose }: Props) 
         keywords: keywords.length > 0 ? keywords : undefined,
         ogImage: ogImage || undefined,
         robots,
+        canonical: canonical || undefined,
         score: score?.score,
         scoreDetails: score?.details,
         lastOptimized: lastOptimized || undefined,
@@ -70,7 +75,7 @@ export function SeoPanel({ collection, doc, onUpdate, onSave, onClose }: Props) 
     }, 300);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [metaTitle, metaDesc, keywords, ogImage, robots, score, jsonLd, jsonLdTemplate, jsonLdValues]);
+  }, [metaTitle, metaDesc, keywords, ogImage, robots, canonical, score, jsonLd, jsonLdTemplate, jsonLdValues]);
 
   function addKeyword() {
     const kw = keywordInput.trim().toLowerCase();
@@ -131,6 +136,48 @@ Return ONLY the JSON, no explanation.`,
     }
     setOptimizing(false);
   }
+
+  async function rewriteForKeyword() {
+    if (!rewriteKeyword.trim()) return;
+    setRewriting(true);
+    try {
+      const content = String(doc.data.content ?? doc.data.body ?? "");
+      const res = await fetch("/api/cms/ai/rewrite", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: `Meta title: ${metaTitle}\n\nMeta description: ${metaDesc}\n\nContent excerpt: ${content.slice(0, 2000)}`,
+          instruction: `Rewrite the meta title and meta description to optimize for the keyword "${rewriteKeyword.trim()}".
+
+Rules:
+- The keyword MUST appear naturally in BOTH the meta title and meta description
+- Meta title: 30-60 characters
+- Meta description: 130-155 characters
+- Keep the original meaning and tone
+- Return ONLY a JSON object: {"metaTitle": "...", "metaDescription": "..."}`,
+        }),
+      });
+      const data = await res.json();
+      if (data.result) {
+        const parsed = JSON.parse(data.result.replace(/^```json?\n?/, "").replace(/\n?```$/, ""));
+        if (parsed.metaTitle) setMetaTitle(parsed.metaTitle);
+        if (parsed.metaDescription) setMetaDesc(parsed.metaDescription);
+        if (!keywords.includes(rewriteKeyword.trim().toLowerCase())) {
+          setKeywords([...keywords, rewriteKeyword.trim().toLowerCase()]);
+        }
+        toast.success(`Rewritten for "${rewriteKeyword.trim()}"`);
+        setRewriteKeyword("");
+      }
+    } catch {
+      toast.error("Rewrite failed");
+    }
+    setRewriting(false);
+  }
+
+  // Readability
+  const content = String(doc.data.content ?? doc.data.body ?? "");
+  const plainText = content.replace(/<[^>]+>/g, " ").replace(/[#*_~`>]/g, "").trim();
+  const readabilityScore = plainText.split(/\s+/).length >= 100 ? calculateReadability(plainText) : null;
 
   const scoreColor = (score?.score ?? 0) >= 80 ? "#4ade80" : (score?.score ?? 0) >= 50 ? "#F7BB2E" : "#f87171";
   const title = String(doc.data.title ?? "");
@@ -293,6 +340,62 @@ Return ONLY the JSON, no explanation.`,
           </button>
         )}
 
+        {/* Rewrite for keyword */}
+        <div>
+          <p style={lbl}>Rewrite for keyword</p>
+          <div style={{ display: "flex", gap: "0.25rem" }}>
+            <input
+              type="text"
+              value={rewriteKeyword}
+              onChange={(e) => setRewriteKeyword(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); rewriteForKeyword(); } }}
+              placeholder="Target keyword..."
+              style={{ ...input, flex: 1 }}
+            />
+            <button type="button" onClick={rewriteForKeyword} disabled={rewriting || !rewriteKeyword.trim()}
+              style={{
+                display: "flex", alignItems: "center", gap: "0.2rem",
+                padding: "0.35rem 0.5rem", borderRadius: "6px", border: "none",
+                background: rewriteKeyword.trim() ? "var(--foreground)" : "var(--border)",
+                color: rewriteKeyword.trim() ? "var(--background)" : "var(--muted-foreground)",
+                cursor: rewriteKeyword.trim() ? "pointer" : "default",
+                fontSize: "0.7rem", fontWeight: 600, flexShrink: 0,
+              }}>
+              {rewriting ? <Loader2 style={{ width: 10, height: 10, animation: "spin 1s linear infinite" }} /> : <RefreshCw style={{ width: 10, height: 10 }} />}
+              Rewrite
+            </button>
+          </div>
+          <p style={{ fontSize: "0.6rem", color: "var(--muted-foreground)", marginTop: "0.2rem" }}>
+            AI rewrites meta title + description to target this keyword
+          </p>
+        </div>
+
+        {/* Readability */}
+        {readabilityScore !== null && (
+          <div>
+            <p style={lbl}>Readability</p>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <span style={{
+                fontSize: "1.1rem", fontWeight: 700, fontFamily: "monospace",
+                color: readabilityScore >= 60 ? "#4ade80" : readabilityScore >= 30 ? "#F7BB2E" : "#f87171",
+              }}>
+                {readabilityScore}
+              </span>
+              <div style={{ flex: 1 }}>
+                <div style={{ height: 4, borderRadius: 2, background: "var(--border)" }}>
+                  <div style={{
+                    height: "100%", width: `${readabilityScore}%`, borderRadius: 2,
+                    background: readabilityScore >= 60 ? "#4ade80" : readabilityScore >= 30 ? "#F7BB2E" : "#f87171",
+                  }} />
+                </div>
+              </div>
+              <span style={{ fontSize: "0.6rem", color: "var(--muted-foreground)" }}>
+                {readabilityScore >= 60 ? "Easy" : readabilityScore >= 30 ? "Moderate" : "Hard"}
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* Advanced */}
         <button type="button" onClick={() => setShowAdvanced(!showAdvanced)}
           style={{ display: "flex", alignItems: "center", gap: "0.25rem", background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "0.75rem", padding: 0 }}>
@@ -301,6 +404,11 @@ Return ONLY the JSON, no explanation.`,
         </button>
         {showAdvanced && (
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+            <div>
+              <p style={lbl}>Canonical URL</p>
+              <input type="text" value={canonical} onChange={(e) => setCanonical(e.target.value)}
+                placeholder="https://... (default: self)" style={input} />
+            </div>
             <div>
               <p style={lbl}>Robots</p>
               <CustomSelect
@@ -402,6 +510,36 @@ Return ONLY the JSON, no explanation.`,
             <p style={{ fontSize: "0.72rem", color: "#4d5156", margin: 0, lineHeight: 1.4, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as const, overflow: "hidden" }}>
               {metaDesc || "No meta description set."}
             </p>
+          </div>
+        )}
+
+        {/* Social preview (Facebook/LinkedIn) — collapsible */}
+        <button type="button" onClick={() => setShowSocialPreview(!showSocialPreview)}
+          style={{ display: "flex", alignItems: "center", gap: "0.25rem", background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "0.75rem", padding: 0 }}>
+          {showSocialPreview ? <ChevronUp style={{ width: 12, height: 12 }} /> : <ChevronDown style={{ width: 12, height: 12 }} />}
+          Social preview
+        </button>
+        {showSocialPreview && (
+          <div style={{ borderRadius: "8px", overflow: "hidden", border: "1px solid #ddd", background: "#f0f2f5", fontFamily: "-apple-system, sans-serif" }}>
+            {ogImage && ogImage.startsWith("/uploads/") ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={ogImage} alt="Social preview" style={{ width: "100%", height: 130, objectFit: "cover", display: "block" }} />
+            ) : (
+              <div style={{ width: "100%", height: 130, background: "#e4e6eb", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <span style={{ fontSize: "0.7rem", color: "#65676b" }}>No image set</span>
+              </div>
+            )}
+            <div style={{ padding: "0.5rem 0.75rem" }}>
+              <p style={{ fontSize: "0.6rem", color: "#65676b", margin: 0, textTransform: "uppercase", letterSpacing: "0.03em" }}>
+                {siteUrl}
+              </p>
+              <p style={{ fontSize: "0.82rem", color: "#1c1e21", margin: "0.15rem 0", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {seo.ogTitle || metaTitle || title || "Page title"}
+              </p>
+              <p style={{ fontSize: "0.7rem", color: "#65676b", margin: 0, lineHeight: 1.3, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as const, overflow: "hidden" }}>
+                {seo.ogDescription || metaDesc || "No description set."}
+              </p>
+            </div>
           </div>
         )}
 

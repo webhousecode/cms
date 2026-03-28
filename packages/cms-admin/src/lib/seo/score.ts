@@ -59,9 +59,45 @@ function keywordInText(text: string, keywords: string[]): boolean {
   return keywords.some((k) => lower.includes(k.toLowerCase()));
 }
 
+/**
+ * Simplified readability score (0-100).
+ * Based on average sentence length and average word length.
+ * Language-agnostic approach since content can be Danish or English.
+ */
+export function calculateReadability(text: string): number {
+  const clean = text.trim();
+  if (!clean) return 0;
+
+  // Count sentences: split on . ! ? followed by space or end of string
+  const sentences = clean.split(/[.!?](?:\s|$)/).filter((s) => s.trim().length > 0);
+  const sentenceCount = Math.max(sentences.length, 1);
+
+  // Count words
+  const words = clean.split(/\s+/).filter((w) => w.length > 0);
+  const wordsCount = words.length;
+  if (wordsCount === 0) return 0;
+
+  // Count syllables: approximate by counting vowel groups per word
+  const vowelPattern = /[aeiouyæøå]+/gi;
+  let totalSyllables = 0;
+  for (const word of words) {
+    const matches = word.match(vowelPattern);
+    totalSyllables += matches ? Math.max(matches.length, 1) : 1;
+  }
+
+  // Flesch Reading Ease
+  const avgSentenceLen = wordsCount / sentenceCount;
+  const avgSyllablesPerWord = totalSyllables / wordsCount;
+  const score = 206.835 - 1.015 * avgSentenceLen - 84.6 * avgSyllablesPerWord;
+
+  // Clamp to 0-100
+  return Math.round(Math.max(0, Math.min(100, score)));
+}
+
 export function calculateSeoScore(
   doc: { slug: string; data: Record<string, unknown> },
   seo: SeoFields,
+  allTitles?: string[],
 ): SeoScoreResult {
   const details: SeoScoreDetail[] = [];
   const content = stripToText(String(doc.data.content ?? doc.data.body ?? ""));
@@ -174,6 +210,29 @@ export function calculateSeoScore(
     details.push({ rule: "title", label: "Page title", status: "pass", message: "Page has a title" });
   } else {
     details.push({ rule: "title", label: "Page title", status: "fail", message: "Page has no title. Fill in the Title field at the top of the editor." });
+  }
+
+  // 12. Readability (only if 100+ words)
+  if (wc >= 100) {
+    const readability = calculateReadability(content);
+    if (readability >= 60) {
+      details.push({ rule: "readability", label: "Readability", status: "pass", message: `Readability score is ${readability}/100 — easy to read` });
+    } else if (readability >= 30) {
+      details.push({ rule: "readability", label: "Readability", status: "warn", message: `Readability score is ${readability}/100 — consider shorter sentences and simpler words` });
+    } else {
+      details.push({ rule: "readability", label: "Readability", status: "fail", message: `Readability score is ${readability}/100 — text is very hard to read. Use shorter sentences and simpler words.` });
+    }
+  }
+
+  // 13. Unique title
+  if (allTitles && mt) {
+    const mtLower = mt.toLowerCase();
+    const duplicates = allTitles.filter((t) => t.toLowerCase() === mtLower).length;
+    if (duplicates > 1) {
+      details.push({ rule: "duplicate-title", label: "Unique title", status: "warn", message: `Meta title "${mt}" is used by ${duplicates} documents. Each page should have a unique title.` });
+    } else {
+      details.push({ rule: "duplicate-title", label: "Unique title", status: "pass", message: "Meta title is unique across all documents" });
+    }
   }
 
   // Calculate score
