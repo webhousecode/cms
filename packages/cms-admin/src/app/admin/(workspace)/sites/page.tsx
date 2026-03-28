@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Globe, MoreVertical, Settings2, Plus, Copy, Eye, ExternalLink } from "lucide-react";
+import { Globe, MoreVertical, Settings2, Plus, Copy, Eye, ExternalLink, Pencil } from "lucide-react";
 import { useSiteRole } from "@/hooks/use-site-role";
 import { useTabs } from "@/lib/tabs-context";
 import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
@@ -59,6 +59,8 @@ export default function SitesDashboard() {
   const [healthMap, setHealthMap] = useState<Record<string, "up" | "down" | "no-preview">>({});
   const [liveUrls, setLiveUrls] = useState<Record<string, string>>({});
   const [siteFilter, setSiteFilter] = useState<"all" | "local" | "github" | "live">("all");
+  const [renamingSiteId, setRenamingSiteId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState("");
 
   const loadSites = useCallback(() => {
     setLoaded(false);
@@ -113,6 +115,18 @@ export default function SitesDashboard() {
 
   function goToSiteSettings(site: SiteEntry) {
     switchSite(site.id, activeOrgId, "/admin/settings");
+  }
+
+  async function renameSite(siteId: string, newName: string) {
+    const trimmed = newName.trim();
+    if (!trimmed) return;
+    await fetch("/api/cms/registry/rename", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ orgId: activeOrgId, siteId, name: trimmed }),
+    });
+    setRenamingSiteId(null);
+    loadSites();
   }
 
   // For preview button — sets cookie without navigating away
@@ -231,6 +245,10 @@ export default function SitesDashboard() {
                   <MoreVertical style={{ width: "0.875rem", height: "0.875rem", color: "var(--muted-foreground)" }} />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-44">
+                  <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setRenameValue(site.name); setRenamingSiteId(site.id); }}>
+                    <Pencil className="mr-2 h-4 w-4 text-muted-foreground" />
+                    Rename
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(site.id); }}>
                     <Copy className="mr-2 h-4 w-4 text-muted-foreground" />
                     Copy site ID
@@ -328,6 +346,56 @@ export default function SitesDashboard() {
         ))}
       </div>
     </div>
+
+    {/* Rename modal */}
+    {renamingSiteId && (
+      <div
+        style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.5)" }}
+        onClick={() => setRenamingSiteId(null)}
+      >
+        <div
+          style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "12px", padding: "1.5rem", width: "24rem", boxShadow: "0 8px 30px rgba(0,0,0,0.4)" }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <h3 style={{ fontSize: "0.95rem", fontWeight: 600, margin: "0 0 1rem" }}>Rename Site</h3>
+          <input
+            autoFocus
+            value={renameValue}
+            onChange={(e) => setRenameValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") renameSite(renamingSiteId, renameValue);
+              if (e.key === "Escape") setRenamingSiteId(null);
+            }}
+            style={{
+              width: "100%", padding: "0.5rem 0.75rem", borderRadius: "8px",
+              border: "1px solid var(--input)", background: "transparent",
+              color: "var(--foreground)", fontSize: "0.875rem", outline: "none",
+              boxSizing: "border-box",
+            }}
+          />
+          <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end", marginTop: "1rem" }}>
+            <button
+              type="button"
+              onClick={() => setRenamingSiteId(null)}
+              style={{
+                padding: "0.4rem 0.875rem", borderRadius: "6px", fontSize: "0.8rem",
+                border: "1px solid var(--border)", background: "transparent",
+                color: "var(--foreground)", cursor: "pointer",
+              }}
+            >No</button>
+            <button
+              type="button"
+              onClick={() => renameSite(renamingSiteId, renameValue)}
+              style={{
+                padding: "0.4rem 0.875rem", borderRadius: "6px", fontSize: "0.8rem",
+                border: "none", background: "var(--primary)", color: "var(--primary-foreground)",
+                cursor: "pointer", fontWeight: 500,
+              }}
+            >Yes</button>
+          </div>
+        </div>
+      </div>
+    )}
     </>
   );
 }
