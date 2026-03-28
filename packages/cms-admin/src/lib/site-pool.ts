@@ -4,10 +4,36 @@
  * Each site gets its own CMS engine instance with its own config,
  * storage adapter, and content service. Instances are cached in memory.
  */
-import { createCms } from "@webhouse/cms";
+import { createCms, VALID_FIELD_TYPES } from "@webhouse/cms";
 import type { CmsConfig } from "@webhouse/cms";
 import { dirname, resolve } from "node:path";
 import type { SiteEntry } from "./site-registry";
+import { ZodError } from "zod";
+
+/**
+ * F79: Format config loading errors into human-readable messages.
+ */
+function formatSiteError(err: unknown, site: SiteEntry): string {
+  if (err instanceof ZodError) {
+    const issues = err.issues.map((issue) => {
+      const path = issue.path.join(".");
+      if (issue.code === "invalid_enum_value" && path.endsWith(".type")) {
+        const received = (issue as { received?: string }).received ?? "";
+        const validTypes = VALID_FIELD_TYPES.join(", ");
+        return `Invalid field type "${received}" at ${path}. Valid types: ${validTypes}`;
+      }
+      return `${path}: ${issue.message}`;
+    });
+    return `Site "${site.name}" config validation failed:\n${issues.join("\n")}`;
+  }
+  if (err instanceof Error) {
+    if (err.message.includes("Cannot find module") || err.message.includes("ENOENT")) {
+      return `Site "${site.name}": Config file not found at "${site.configPath}". Check the path in site settings.`;
+    }
+    return `Site "${site.name}": ${err.message}`;
+  }
+  return `Site "${site.name}": Unknown error loading config`;
+}
 
 // ─── GitHub helpers ────────────────────────────────────────
 
@@ -167,31 +193,37 @@ export async function getOrCreateInstance(
     // Dev + filesystem: always reload (file may have changed)
   }
 
-  if (site.adapter === "github") {
-    const config = await loadGitHubConfig(site);
+  try {
+    if (site.adapter === "github") {
+      const config = await loadGitHubConfig(site);
+      const cms = await createCms(config);
+      const instance: CmsInstance = { cms, config, site };
+      pool.set(key, instance);
+      poolTimestamps.set(key, Date.now());
+      return instance;
+    }
+
+    // Filesystem adapter — load config via jiti
+    const absoluteConfigPath = resolve(site.configPath);
+    const projectDir = dirname(absoluteConfigPath);
+
+    // Change cwd so relative paths resolve correctly
+    process.chdir(projectDir);
+
+    const { createJiti } = await import("jiti");
+    const jiti = createJiti(absoluteConfigPath, { debug: false, moduleCache: false });
+    const mod = await jiti.import(absoluteConfigPath) as { default?: CmsConfig } | CmsConfig;
+    const config = ((mod as { default?: CmsConfig }).default ?? mod) as CmsConfig;
+
     const cms = await createCms(config);
     const instance: CmsInstance = { cms, config, site };
     pool.set(key, instance);
-    poolTimestamps.set(key, Date.now());
     return instance;
+  } catch (err) {
+    // F79: Graceful error handling — format ZodError and config loading errors
+    const message = formatSiteError(err, site);
+    throw new Error(message);
   }
-
-  // Filesystem adapter — load config via jiti
-  const absoluteConfigPath = resolve(site.configPath);
-  const projectDir = dirname(absoluteConfigPath);
-
-  // Change cwd so relative paths resolve correctly
-  process.chdir(projectDir);
-
-  const { createJiti } = await import("jiti");
-  const jiti = createJiti(absoluteConfigPath, { debug: false, moduleCache: false });
-  const mod = await jiti.import(absoluteConfigPath) as { default?: CmsConfig } | CmsConfig;
-  const config = ((mod as { default?: CmsConfig }).default ?? mod) as CmsConfig;
-
-  const cms = await createCms(config);
-  const instance: CmsInstance = { cms, config, site };
-  pool.set(key, instance);
-  return instance;
 }
 
 export function invalidate(orgId: string, siteId: string): void {

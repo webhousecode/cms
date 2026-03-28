@@ -4,8 +4,10 @@ import type { CmsConfig } from './types.js';
 const fieldTypeSchema = z.enum([
   'text', 'textarea', 'richtext', 'number', 'boolean',
   'date', 'image', 'relation', 'array', 'object', 'blocks', 'select', 'tags',
-  'image-gallery', 'video', 'audio', 'htmldoc', 'file', 'interactive', 'column-slots',
+  'image-gallery', 'video', 'audio', 'htmldoc', 'file', 'interactive', 'column-slots', 'map',
 ]);
+
+export const VALID_FIELD_TYPES = fieldTypeSchema.options;
 
 const fieldConfigSchema: z.ZodType<any> = z.lazy(() =>
   z.object({
@@ -18,8 +20,12 @@ const fieldConfigSchema: z.ZodType<any> = z.lazy(() =>
     minLength: z.number().optional(),
     options: z.array(z.object({ label: z.string(), value: z.string() })).optional(),
     collection: z.string().optional(),
+    multiple: z.boolean().optional(),
     fields: z.array(fieldConfigSchema).optional(),
     blocks: z.array(z.string()).optional(),
+    features: z.array(z.string()).optional(),
+    mapDefaultZoom: z.number().optional(),
+    mapDefaultCenter: z.object({ lat: z.number(), lng: z.number() }).optional(),
     ai: z.object({
       hint: z.string().optional(),
       maxLength: z.number().optional(),

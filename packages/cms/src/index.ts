@@ -1,6 +1,8 @@
 // Schema
 export { defineConfig, defineCollection, defineBlock, defineField } from './schema/define.js';
-export { validateConfig, safeValidateConfig } from './schema/validate.js';
+export { validateConfig, safeValidateConfig, VALID_FIELD_TYPES } from './schema/validate.js';
+export { validateSiteConfig, validateContentDir, validateSite } from './schema/site-validator.js';
+export type { ValidationResult, ValidationIssue } from './schema/site-validator.js';
 export { collectionToJsonSchema, configToManifest } from './schema/introspect.js';
 export { builtinBlocks } from './schema/builtin-blocks.js';
 export type { CmsConfig, CollectionConfig, FieldConfig, BlockConfig, FieldType, BuildConfig, AutolinkConfig } from './schema/types.js';

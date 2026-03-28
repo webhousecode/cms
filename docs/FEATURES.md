@@ -95,7 +95,7 @@
 | F76 | [Create New Organization](#f76-create-organization) | Done | [docs/features/F76-create-organization.md](features/F76-create-organization.md) |
 | F77 | [Middleware to Proxy Migration](#f77-middleware-to-proxy) | Done | [docs/features/F77-middleware-to-proxy.md](features/F77-middleware-to-proxy.md) |
 | F78 | [Bundled Preview Server](#f78-bundled-preview-server) | Done | [docs/features/F78-bundled-preview-server.md](features/F78-bundled-preview-server.md) |
-| F79 | [Site Config Validator](#f79-site-config-validator) | Planned | [docs/features/F79-site-config-validator.md](features/F79-site-config-validator.md) |
+| F79 | [Site Config Validator](#f79-site-config-validator) | Done | [docs/features/F79-site-config-validator.md](features/F79-site-config-validator.md) |
 | F80 | [Admin Selector Map](#f80-admin-selector-map) | Planned | [docs/features/F80-admin-selector-map.md](features/F80-admin-selector-map.md) |
 | F81 | [Homepage Designation](#f81-homepage-designation) | Planned | [docs/features/F81-homepage-designation.md](features/F81-homepage-designation.md) |
 | F82 | [Loaders & Spinners](#f82-loaders--spinners) | Planned | [docs/features/F82-loaders-and-spinners.md](features/F82-loaders-and-spinners.md) |
@@ -112,7 +112,7 @@
 | F93 | [Next.js App Deployment](#f93-nextjs-app-deployment) | Planned | [docs/features/F93-nextjs-deployment.md](features/F93-nextjs-deployment.md) |
 | F94 | [Favorites](#f94-favorites) | Planned | [docs/features/F94-favorites.md](features/F94-favorites.md) |
 | F95 | [Cloud Backup Providers](#f95-cloud-backup-providers) | Planned | [docs/features/F95-cloud-backup-providers.md](features/F95-cloud-backup-providers.md) |
-| F96 | [Embeddable Maps](#f96-embeddable-maps) | Planned | [docs/features/F96-embeddable-maps.md](features/F96-embeddable-maps.md) |
+| F96 | [Embeddable Maps](#f96-embeddable-maps) | Done | [docs/features/F96-embeddable-maps.md](features/F96-embeddable-maps.md) |
 | F97 | [SEO Module](#f97-seo-module) | Done | [docs/features/F97-seo-module.md](features/F97-seo-module.md) |
 | F98 | [Performance Audit (Lighthouse)](#f98-lighthouse-audit) | Planned | [docs/features/F98-lighthouse-audit.md](features/F98-lighthouse-audit.md) |
 | F99 | [End-to-End Testing Suite](#f99-e2e-testing-suite) | Planned | [docs/features/F99-e2e-testing-suite.md](features/F99-e2e-testing-suite.md) |

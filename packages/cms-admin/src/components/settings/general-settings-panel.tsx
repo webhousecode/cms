@@ -116,6 +116,74 @@ function ErrorMsg({ msg }: { msg: string }) {
 	return msg ? <p style={{ fontSize: "0.75rem", color: "var(--destructive)", margin: 0 }}>{msg}</p> : null;
 }
 
+/* ─── F79: Validate Site button ─────────────────────────────────── */
+function ValidateSiteButton({ configPath, contentDir }: { configPath: string; contentDir: string }) {
+	const [validating, setValidating] = useState(false);
+	const [result, setResult] = useState<{ valid: boolean; errors: Array<{ level: string; path: string; message: string; suggestion?: string }>; warnings: Array<{ level: string; path: string; message: string; suggestion?: string }> } | null>(null);
+
+	async function validate() {
+		if (!configPath) return;
+		setValidating(true);
+		setResult(null);
+		try {
+			const res = await fetch("/api/cms/registry/validate", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ configPath, contentDir: contentDir || undefined }),
+			});
+			setResult(await res.json());
+		} catch {
+			setResult({ valid: false, errors: [{ level: "error", path: "", message: "Validation request failed" }], warnings: [] });
+		}
+		setValidating(false);
+	}
+
+	return (
+		<div style={{ borderTop: "1px solid var(--border)", paddingTop: "0.75rem" }}>
+			<div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+				<button type="button" onClick={validate} disabled={validating || !configPath}
+					style={{
+						display: "inline-flex", alignItems: "center", gap: "0.3rem",
+						padding: "0.35rem 0.75rem", borderRadius: "6px", border: "none",
+						background: configPath ? "#F7BB2E" : "var(--border)",
+						color: configPath ? "#0D0D0D" : "var(--muted-foreground)",
+						cursor: configPath ? "pointer" : "default",
+						fontSize: "0.75rem", fontWeight: 600,
+					}}>
+					{validating ? "Validating..." : "Validate site"}
+				</button>
+				{result && (
+					<span style={{
+						fontSize: "0.72rem", fontWeight: 600,
+						color: result.valid && result.warnings.length === 0 ? "#4ade80"
+							: result.valid ? "#F7BB2E" : "#f87171",
+					}}>
+						{result.valid && result.warnings.length === 0 ? "✓ All good"
+							: result.valid ? `✓ Valid (${result.warnings.length} warning${result.warnings.length === 1 ? "" : "s"})`
+							: `✗ ${result.errors.length} error${result.errors.length === 1 ? "" : "s"}`}
+					</span>
+				)}
+			</div>
+			{result && (result.errors.length > 0 || result.warnings.length > 0) && (
+				<div style={{ marginTop: "0.5rem", display: "flex", flexDirection: "column", gap: "0.375rem" }}>
+					{result.errors.map((e, i) => (
+						<div key={`e-${i}`} style={{ fontSize: "0.72rem", color: "#f87171", padding: "0.375rem 0.5rem", background: "rgba(248,113,113,0.08)", borderRadius: "4px" }}>
+							<span style={{ fontWeight: 600 }}>Error:</span> {e.message}
+							{e.suggestion && <span style={{ color: "var(--muted-foreground)", display: "block", marginTop: "0.15rem" }}>💡 {e.suggestion}</span>}
+						</div>
+					))}
+					{result.warnings.map((w, i) => (
+						<div key={`w-${i}`} style={{ fontSize: "0.72rem", color: "#F7BB2E", padding: "0.375rem 0.5rem", background: "rgba(247,187,46,0.08)", borderRadius: "4px" }}>
+							<span style={{ fontWeight: 600 }}>Warning:</span> {w.message}
+							{w.suggestion && <span style={{ color: "var(--muted-foreground)", display: "block", marginTop: "0.15rem" }}>💡 {w.suggestion}</span>}
+						</div>
+					))}
+				</div>
+			)}
+		</div>
+	);
+}
+
 /* ─── Profile section ─────────────────────────────────────────── */
 function ProfileSection() {
 	const [name, setName] = useState("");
@@ -344,6 +412,7 @@ function SiteSection() {
 						style={{ fontFamily: "monospace", fontSize: "0.8rem" }}
 						copiable
 					/>
+					<ValidateSiteButton configPath={configPath} contentDir={contentDir} />
 				</Card>
 			</div>
 
