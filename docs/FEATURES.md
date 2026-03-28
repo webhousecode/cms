@@ -64,7 +64,7 @@
 | F45 | [AI Image Generation](#f45-ai-image-generation) | Planned | [docs/features/F45-ai-image-generation.md](features/F45-ai-image-generation.md) |
 | F46 | [Plugin System](#f46-plugin-system) | Planned | [docs/features/F46-plugin-system.md](features/F46-plugin-system.md) |
 | F47 | [Content Scheduling](#f47-content-scheduling) | Done | [docs/features/F47-content-scheduling.md](features/F47-content-scheduling.md) |
-| F48 | [Internationalization (i18n)](#f48-internationalization-i18n) | Planned | [docs/features/F48-i18n.md](features/F48-i18n.md) |
+| F48 | [Internationalization (i18n)](#f48-internationalization-i18n) | Done | [docs/features/F48-i18n.md](features/F48-i18n.md) |
 | F49 | [Incremental Builds](#f49-incremental-builds) | Planned | [docs/features/F49-incremental-builds.md](features/F49-incremental-builds.md) |
 | F50 | [Sign In Providers](#f50-sign-in-providers) | Planned | [docs/features/F50-sign-in-providers.md](features/F50-sign-in-providers.md) |
 | F51 | [Admin AI Assistant](#f51-admin-ai-assistant) | Planned | [docs/features/F51-admin-ai-assistant.md](features/F51-admin-ai-assistant.md) |
