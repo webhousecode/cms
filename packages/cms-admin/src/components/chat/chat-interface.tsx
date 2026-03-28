@@ -22,6 +22,8 @@ interface ConversationMeta {
 export function ChatInterface({ collections, activeSiteId, visible }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<ChatMessageUI[]>([]);
   const [isThinking, setIsThinking] = useState(false);
+  const [thinkingText, setThinkingText] = useState("");
+  const [thinkingStartTime, setThinkingStartTime] = useState<number | null>(null);
   const [conversationId, setConversationId] = useState(() => crypto.randomUUID());
   const [siteName, setSiteName] = useState("your site");
   const [showHistory, setShowHistory] = useState(false);
@@ -69,6 +71,8 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
       const updatedMessages = [...messages, userMsg];
       setMessages(updatedMessages);
       setIsThinking(true);
+      setThinkingText("");
+      setThinkingStartTime(Date.now());
 
       // Build API messages (only role + content)
       const apiMessages = updatedMessages.map((m) => ({
@@ -160,6 +164,7 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
         prev.map((m) => (m.id === assistantId ? { ...m, isStreaming: false } : m))
       );
       setIsThinking(false);
+      setThinkingStartTime(null);
       abortRef.current = null;
 
       // Save conversation
@@ -219,6 +224,10 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
             m.id === assistantId ? { ...m, artifact: data } : m
           )
         );
+        break;
+
+      case "thinking":
+        setThinkingText((prev) => prev + (data.text ?? "") + "\n");
         break;
 
       case "error":
@@ -431,7 +440,12 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
 
       {/* Main content area */}
       {hasMessages ? (
-        <MessageList messages={messages} isThinking={isThinking} />
+        <MessageList
+          messages={messages}
+          isThinking={isThinking}
+          thinkingText={thinkingText}
+          thinkingStartTime={thinkingStartTime}
+        />
       ) : (
         <WelcomeScreen siteName={siteName} onSuggestionClick={handleSuggestionClick} />
       )}
