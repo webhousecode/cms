@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Upload, Sparkles, Trash2, Zap, MoreVertical, Pencil, Globe, Copy, FileText, LayoutGrid, List, Search, X, AlertTriangle, Loader2, Download } from "lucide-react";
+import { Upload, Sparkles, Trash2, Zap, MoreVertical, Pencil, Globe, Copy, FileText, LayoutGrid, List, Search, X, AlertTriangle, Loader2, Download, ArrowUpDown } from "lucide-react";
 import { ActionBar, ActionBarBreadcrumb } from "@/components/action-bar";
 import {
   DropdownMenu,
@@ -33,8 +33,9 @@ type ViewMode = "grid" | "list";
 
 const thStyle: React.CSSProperties = {
   padding: "0.5rem 0.75rem", textAlign: "left", fontWeight: 500,
-  fontSize: "0.75rem", color: "var(--muted-foreground)",
+  fontSize: "0.72rem", color: "var(--muted-foreground)",
   borderBottom: "1px solid var(--border)", whiteSpace: "nowrap",
+  background: "var(--card)",
 };
 
 /* ─── Helpers ────────────────────────────────────────────────── */
@@ -63,6 +64,9 @@ export default function InteractivesPage() {
   const [confirmTrash, setConfirmTrash] = useState<InteractiveMeta | null>(null);
   const [query, setQuery] = useState("");
   const [view, setView] = useState<ViewMode>("grid");
+  const [statusFilter, setStatusFilter] = useState<"all" | "published" | "draft">("all");
+  const [sortKey, setSortKey] = useState<"name" | "status" | "size" | "updatedAt">("updatedAt");
+  const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const inputRef = useRef<HTMLInputElement>(null);
 
   const loadItems = useCallback(async () => {
@@ -135,9 +139,40 @@ export default function InteractivesPage() {
     loadItems();
   }
 
-  const filtered = query
-    ? items.filter((i) => i.name.toLowerCase().includes(query.toLowerCase()) || i.id.toLowerCase().includes(query.toLowerCase()))
-    : items;
+  const counts = {
+    all: items.length,
+    published: items.filter((i) => i.status === "published").length,
+    draft: items.filter((i) => i.status !== "published").length,
+  };
+
+  const filtered = items
+    .filter((i) => {
+      if (statusFilter === "published" && i.status !== "published") return false;
+      if (statusFilter === "draft" && i.status === "published") return false;
+      if (query) {
+        const q = query.toLowerCase();
+        if (!i.name.toLowerCase().includes(q) && !i.id.toLowerCase().includes(q)) return false;
+      }
+      return true;
+    })
+    .sort((a, b) => {
+      let av: string | number, bv: string | number;
+      switch (sortKey) {
+        case "name": av = a.name.toLowerCase(); bv = b.name.toLowerCase(); break;
+        case "status": av = a.status ?? ""; bv = b.status ?? ""; break;
+        case "size": av = a.size ?? 0; bv = b.size ?? 0;
+          return sortDir === "asc" ? (av as number) - (bv as number) : (bv as number) - (av as number);
+        case "updatedAt": default:
+          av = new Date(a.updatedAt).getTime(); bv = new Date(b.updatedAt).getTime();
+          return sortDir === "asc" ? (av as number) - (bv as number) : (bv as number) - (av as number);
+      }
+      return sortDir === "asc" ? String(av).localeCompare(String(bv)) : String(bv).localeCompare(String(av));
+    });
+
+  function toggleSort(key: typeof sortKey) {
+    if (sortKey === key) setSortDir((d) => d === "asc" ? "desc" : "asc");
+    else { setSortKey(key); setSortDir("desc"); }
+  }
 
   const [aiModalOpen, setAiModalOpen] = useState(false);
   const [aiPrompt, setAiPrompt] = useState("");
@@ -324,9 +359,9 @@ export default function InteractivesPage() {
         onChange={(e) => handleUpload(e.target.files)}
       />
 
-      {/* Search — in content area, same pattern as collections */}
+      {/* Search + Filters — matching collection-list pattern */}
       <div style={{ padding: "1.25rem 1.25rem 0" }}>
-        <div style={{ display: "flex", gap: "0.75rem", marginBottom: "1rem", alignItems: "center" }}>
+        <div style={{ display: "flex", gap: "0.75rem", marginBottom: "1rem", alignItems: "center", flexWrap: "wrap" }}>
           <div style={{ position: "relative", flex: 1, minWidth: "180px" }}>
             <Search style={{ position: "absolute", left: "0.625rem", top: "50%", transform: "translateY(-50%)", width: "0.8rem", height: "0.8rem", color: "var(--muted-foreground)", pointerEvents: "none" }} />
             <input
@@ -337,9 +372,29 @@ export default function InteractivesPage() {
               style={{ width: "100%", paddingLeft: "2rem", paddingRight: "0.75rem", paddingTop: "0.375rem", paddingBottom: "0.375rem", borderRadius: "8px", border: "1px solid var(--border)", background: "var(--card)", fontSize: "0.8rem", color: "var(--foreground)", outline: "none", boxSizing: "border-box" }}
             />
           </div>
-          <span style={{ fontSize: "0.75rem", fontFamily: "monospace", color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>
-            {filtered.length}/{items.length}
-          </span>
+          <div style={{ display: "flex", gap: "0.25rem", flexWrap: "wrap" }}>
+            {([
+              { value: "all" as const, label: "All", count: counts.all, color: "var(--muted-foreground)" },
+              { value: "published" as const, label: "Published", count: counts.published, color: "rgb(74 222 128)" },
+              { value: "draft" as const, label: "Draft", count: counts.draft, color: "rgb(234 179 8)" },
+            ] as const).filter((o) => o.value === "all" || o.count > 0).map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setStatusFilter(opt.value)}
+                style={{
+                  display: "flex", alignItems: "center", gap: "0.3rem",
+                  padding: "0.2rem 0.6rem", borderRadius: "9999px", fontSize: "0.75rem",
+                  fontFamily: "monospace", cursor: "pointer", transition: "all 120ms", whiteSpace: "nowrap",
+                  border: `1px solid ${statusFilter === opt.value ? opt.color : "var(--border)"}`,
+                  background: statusFilter === opt.value ? `color-mix(in srgb, ${opt.color} 12%, transparent)` : "transparent",
+                  color: statusFilter === opt.value ? opt.color : "var(--muted-foreground)",
+                }}
+              >
+                {opt.label} <span style={{ opacity: 0.7 }}>{opt.count}</span>
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -395,14 +450,23 @@ export default function InteractivesPage() {
         </div>
       ) : (
         /* ─── List View — Table matching collection-list style ─── */
+        <div style={{ padding: "0 1.25rem 1.25rem", }}>
         <div style={{ border: "1px solid var(--border)", borderRadius: "10px", overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "600px" }}>
             <thead>
               <tr>
-                <th style={thStyle}>Name</th>
-                <th style={thStyle}>Status</th>
-                <th style={thStyle}>Size</th>
-                <th style={thStyle}>Updated</th>
+                {([["Name", "name"], ["Status", "status"], ["Size", "size"], ["Updated", "updatedAt"]] as const).map(([label, sk]) => (
+                  <th key={sk} style={thStyle}>
+                    <button
+                      type="button"
+                      onClick={() => toggleSort(sk)}
+                      style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", background: "none", border: "none", cursor: "pointer", padding: 0, font: "inherit", color: sortKey === sk ? "var(--foreground)" : "inherit", fontWeight: sortKey === sk ? 600 : 500 }}
+                    >
+                      {label}
+                      <ArrowUpDown style={{ width: "0.65rem", height: "0.65rem", opacity: sortKey === sk ? 1 : 0.4 }} />
+                    </button>
+                  </th>
+                ))}
                 <th style={{ ...thStyle, width: "2.5rem" }} />
               </tr>
             </thead>
@@ -444,6 +508,7 @@ export default function InteractivesPage() {
               ))}
             </tbody>
           </table>
+        </div>
         </div>
       )}
 
