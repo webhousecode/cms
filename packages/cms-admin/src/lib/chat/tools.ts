@@ -569,13 +569,51 @@ export async function buildChatTools(): Promise<ToolPair[]> {
         const col = config.collections.find((c) => c.name === collection);
         if (!col) return `Error: Collection "${collection}" not found.`;
 
+        // Validate and fix field names — AI sometimes uses labels or common aliases
+        const schemaFields = new Set(col.fields.map((f) => f.name));
+        const labelToName = new Map<string, string>();
+        for (const f of col.fields) {
+          // Map common aliases: label words joined → field name
+          if (f.label) {
+            const camel = f.label.replace(/\s+(.)/g, (_, c) => c.toUpperCase()).replace(/^\w/, (c) => c.toLowerCase());
+            labelToName.set(camel, f.name);
+            labelToName.set(f.label.toLowerCase().replace(/\s+/g, ""), f.name);
+          }
+        }
+        // Also map common field aliases
+        for (const f of col.fields) {
+          if (f.type === "richtext") {
+            if (!schemaFields.has("body")) labelToName.set("body", f.name);
+            if (!schemaFields.has("content")) labelToName.set("content", f.name);
+          }
+          if (f.type === "date") {
+            if (!schemaFields.has("publishDate")) labelToName.set("publishDate", f.name);
+            if (!schemaFields.has("publishdate")) labelToName.set("publishdate", f.name);
+          }
+        }
+
+        // Remap unknown fields to schema field names
+        const cleanData: Record<string, unknown> = {};
+        for (const [key, value] of Object.entries(data)) {
+          if (key.startsWith("_")) { cleanData[key] = value; continue; } // preserve meta fields
+          if (schemaFields.has(key)) {
+            cleanData[key] = value;
+          } else {
+            const mapped = labelToName.get(key);
+            if (mapped && !(mapped in cleanData)) {
+              cleanData[mapped] = value;
+            }
+            // Drop truly unknown fields silently
+          }
+        }
+
         // Check slug doesn't already exist
         const existing = await cms.content.findBySlug(collection, slug).catch(() => null);
         if (existing) return `Error: Document with slug "${slug}" already exists in ${collection}.`;
 
         const doc = await cms.content.create(collection, {
           slug,
-          data,
+          data: cleanData,
           status: "draft",
         });
 

@@ -47,6 +47,15 @@ export const LOCALE_LABELS: Record<string, string> = {
   ko: "Korean",
 };
 
+/** Check if a translation is stale (source was updated after translation) */
+export function isTranslationStale(
+  sourceUpdatedAt: string,
+  translationUpdatedAt: string,
+): boolean {
+  if (!sourceUpdatedAt || !translationUpdatedAt) return false;
+  return new Date(sourceUpdatedAt) > new Date(translationUpdatedAt);
+}
+
 /** Flag emoji for locale */
 export const LOCALE_FLAGS: Record<string, string> = {
   da: "\u{1F1E9}\u{1F1F0}",

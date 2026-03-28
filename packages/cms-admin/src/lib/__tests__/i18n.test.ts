@@ -317,3 +317,26 @@ describe("F48 Phase 2 — AI Locale-Awareness", () => {
     });
   });
 });
+
+// ── Phase 3 Tests — Stale Translation Detection ────────────
+
+import { isTranslationStale } from "../locale";
+
+describe("F48 Phase 3 — Stale Translation Detection", () => {
+  it("returns true when source.updatedAt > translation.updatedAt", () => {
+    expect(isTranslationStale("2026-03-28T18:00:00Z", "2026-03-28T17:00:00Z")).toBe(true);
+  });
+
+  it("returns false when translation is newer", () => {
+    expect(isTranslationStale("2026-03-28T17:00:00Z", "2026-03-28T18:00:00Z")).toBe(false);
+  });
+
+  it("returns false when timestamps are equal", () => {
+    expect(isTranslationStale("2026-03-28T17:00:00Z", "2026-03-28T17:00:00Z")).toBe(false);
+  });
+
+  it("returns false when timestamps are missing", () => {
+    expect(isTranslationStale("", "2026-03-28T17:00:00Z")).toBe(false);
+    expect(isTranslationStale("2026-03-28T17:00:00Z", "")).toBe(false);
+  });
+});

@@ -16,6 +16,7 @@ import { useTabs } from "@/lib/tabs-context";
 import { AIPanel } from "./ai-panel";
 import { SeoPanel } from "./seo-panel";
 import { GenerateDocumentDialog } from "@/components/generate-document-dialog";
+import { isTranslationStale, LOCALE_LABELS } from "@/lib/locale";
 
 // Fallback to env vars for backwards compatibility — overridden by props from server
 const PREVIEW_SITE_URL_DEFAULT = process.env.NEXT_PUBLIC_PREVIEW_SITE_URL ?? "";
@@ -164,6 +165,7 @@ function CreateTranslationDialog({
   const [targetLocale, setTargetLocale] = useState(availableLocales[0] ?? locales[0] ?? "");
   const [newSlug, setNewSlug] = useState(`${originalSlug}-${availableLocales[0] ?? locales[0] ?? "xx"}`);
   const [creating, setCreating] = useState(false);
+  const [useAi, setUseAi] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
@@ -181,6 +183,27 @@ function CreateTranslationDialog({
     if (!newSlug.trim()) { setError("Slug is required"); return; }
     setCreating(true);
     setError("");
+
+    if (useAi) {
+      // AI-powered translation: call the translate endpoint
+      const res = await fetch(`/api/cms/${collection}/${originalSlug}/translate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ targetLocale }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({ error: "Translation failed" }));
+        setError(body.error ?? "AI translation failed");
+        setCreating(false);
+        return;
+      }
+      const result = await res.json();
+      setCreating(false);
+      onCreated(result.slug);
+      return;
+    }
+
+    // Manual: create empty doc + set locale/translationOf
     const res = await fetch(`/api/cms/${collection}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -227,25 +250,45 @@ function CreateTranslationDialog({
           />
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-          <label style={{ fontSize: "0.7rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--muted-foreground)" }}>Slug for translation</label>
+        {!useAi && (
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+            <label style={{ fontSize: "0.7rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--muted-foreground)" }}>Slug for translation</label>
+            <input
+              type="text"
+              value={newSlug}
+              onChange={e => setNewSlug(e.target.value)}
+              style={{ padding: "0.4rem 0.625rem", borderRadius: "6px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.85rem", fontFamily: "monospace", outline: "none" }}
+            />
+            <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", margin: 0 }}>
+              translationOf: <code style={{ fontSize: "0.7rem" }}>{originalSlug}</code>
+            </p>
+          </div>
+        )}
+
+        <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer" }}>
           <input
-            type="text"
-            value={newSlug}
-            onChange={e => setNewSlug(e.target.value)}
-            style={{ padding: "0.4rem 0.625rem", borderRadius: "6px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.85rem", fontFamily: "monospace", outline: "none" }}
+            type="checkbox"
+            checked={useAi}
+            onChange={e => setUseAi(e.target.checked)}
+            style={{ width: "14px", height: "14px", accentColor: "var(--primary)", cursor: "pointer" }}
           />
-          <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", margin: 0 }}>
-            translationOf: <code style={{ fontSize: "0.7rem" }}>{originalSlug}</code>
+          <span style={{ display: "flex", alignItems: "center", gap: "0.35rem", fontSize: "0.8rem", color: "var(--foreground)" }}>
+            <Sparkles size={13} style={{ color: "rgb(234 179 8)" }} />
+            Translate with AI
+          </span>
+        </label>
+        {useAi && (
+          <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", margin: "-0.5rem 0 0 1.5rem" }}>
+            AI will translate all text fields from the source document into {LOCALE_LABELS[targetLocale] ?? targetLocale}.
           </p>
-        </div>
+        )}
 
         {error && <p style={{ fontSize: "0.75rem", color: "var(--destructive)", margin: 0 }}>{error}</p>}
 
         <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem" }}>
           <button type="button" onClick={onClose} style={{ padding: "0.4rem 0.875rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", fontSize: "0.8rem", cursor: "pointer" }}>Cancel</button>
           <button type="button" onClick={create} disabled={creating} style={{ padding: "0.4rem 0.875rem", borderRadius: "6px", border: "none", background: "var(--primary)", color: "var(--primary-foreground)", fontSize: "0.8rem", cursor: creating ? "wait" : "pointer" }}>
-            {creating ? "Creating…" : "Create translation"}
+            {creating ? (useAi ? "Translating…" : "Creating…") : (useAi ? "Translate & create" : "Create translation")}
           </button>
         </div>
       </div>
@@ -792,7 +835,8 @@ interface Props {
   locales?: string[];
   defaultLocale?: string;
   initialDoc: DocSnapshot;
-  translations?: { slug: string; locale: string | null; status: string; translationOf: string | null }[];
+  translations?: { slug: string; locale: string | null; status: string; translationOf: string | null; updatedAt?: string }[];
+  sourceUpdatedAt?: string;
   previewSiteUrl?: string;
   previewInIframe?: boolean;
   backHref?: string;
@@ -805,7 +849,7 @@ const G = globalThis as unknown as { __docCache?: Map<string, DocSnapshot> };
 if (!G.__docCache) G.__docCache = new Map();
 const docStateCache = G.__docCache;
 
-export function DocumentEditor({ collection, colConfig, blocksConfig = [], locales = [], defaultLocale = "en", initialDoc, translations = [], previewSiteUrl, previewInIframe, backHref, readOnly = false }: Props) {
+export function DocumentEditor({ collection, colConfig, blocksConfig = [], locales = [], defaultLocale = "en", initialDoc, translations = [], sourceUpdatedAt, previewSiteUrl, previewInIframe, backHref, readOnly = false }: Props) {
   const PREVIEW_SITE_URL = previewSiteUrl ?? PREVIEW_SITE_URL_DEFAULT;
   const PREVIEW_IN_IFRAME = previewInIframe ?? PREVIEW_IN_IFRAME_DEFAULT;
   const cacheKey = `${collection}/${initialDoc.slug}`;
@@ -1325,26 +1369,36 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
           <span style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.06em" }}>
             Translations
           </span>
-          {translations.map(t => (
-            <Link
-              key={t.slug}
-              href={`/admin/${collection}/${t.slug}`}
-              style={{
-                display: "inline-flex", alignItems: "center", gap: "0.3rem",
-                padding: "0.15rem 0.5rem", borderRadius: "4px",
-                border: "1px solid var(--border)", fontSize: "0.7rem",
-                fontFamily: "monospace", color: "var(--foreground)",
-                background: "var(--card)", textDecoration: "none",
-              }}
-            >
-              {t.locale && <span style={{ fontWeight: 600 }}>{t.locale.toUpperCase()}</span>}
-              <span style={{ color: t.locale ? "var(--muted-foreground)" : "var(--foreground)" }}>{t.slug}</span>
-              <span style={{
-                width: "6px", height: "6px", borderRadius: "50%", flexShrink: 0,
-                backgroundColor: t.status === "published" ? "rgb(74 222 128)" : "rgb(234 179 8)",
-              }} />
-            </Link>
-          ))}
+          {translations.map(t => {
+            // If current doc is the source, check if this translation is stale
+            // If current doc is a translation, the "source" link in translations points to the original
+            const isSource = !translationOf; // current doc is the source
+            const stale = isSource && t.translationOf && t.updatedAt
+              ? isTranslationStale(doc.updatedAt, t.updatedAt)
+              : false;
+            return (
+              <Link
+                key={t.slug}
+                href={`/admin/${collection}/${t.slug}`}
+                title={stale ? "Source updated — translation may be outdated" : undefined}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: "0.3rem",
+                  padding: "0.15rem 0.5rem", borderRadius: "4px",
+                  border: `1px solid ${stale ? "rgb(234 179 8 / 0.4)" : "var(--border)"}`, fontSize: "0.7rem",
+                  fontFamily: "monospace", color: "var(--foreground)",
+                  background: "var(--card)", textDecoration: "none",
+                }}
+              >
+                {stale && <span title="Source updated — translation may be outdated" style={{ fontSize: "0.7rem", lineHeight: 1 }}>&#9888;&#65039;</span>}
+                {t.locale && <span style={{ fontWeight: 600 }}>{t.locale.toUpperCase()}</span>}
+                <span style={{ color: t.locale ? "var(--muted-foreground)" : "var(--foreground)" }}>{t.slug}</span>
+                <span style={{
+                  width: "6px", height: "6px", borderRadius: "50%", flexShrink: 0,
+                  backgroundColor: t.status === "published" ? "rgb(74 222 128)" : "rgb(234 179 8)",
+                }} />
+              </Link>
+            );
+          })}
           {locales && locales.length > 0 && (
             <button
               type="button"
@@ -1360,6 +1414,33 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
               + Add translation
             </button>
           )}
+        </div>
+      )}
+
+      {/* Stale translation banner */}
+      {translationOf && sourceUpdatedAt && isTranslationStale(sourceUpdatedAt, initialDoc.updatedAt) && (
+        <div style={{
+          display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap",
+          padding: "0.5rem 1rem",
+          background: "rgb(234 179 8 / 0.08)", borderBottom: "1px solid rgb(234 179 8 / 0.25)",
+          fontSize: "0.75rem", color: "rgb(234 179 8)",
+        }}>
+          <span>&#9888;&#65039;</span>
+          <span>Source document was updated — this translation may be outdated.</span>
+          <button
+            type="button"
+            onClick={() => {
+              setCreateTranslationOpen(true);
+            }}
+            style={{
+              padding: "0.2rem 0.5rem", borderRadius: "4px",
+              border: "1px solid rgb(234 179 8 / 0.4)", background: "rgb(234 179 8 / 0.1)",
+              color: "rgb(234 179 8)", fontSize: "0.7rem", cursor: "pointer",
+              display: "inline-flex", alignItems: "center", gap: "0.3rem",
+            }}
+          >
+            <Sparkles size={11} /> Re-translate with AI
+          </button>
         </div>
       )}
 

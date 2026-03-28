@@ -31,7 +31,12 @@ export default async function DocumentPage({ params, searchParams }: Props) {
       d.status !== "trashed" &&
       (d.translationOf === originalSlug || d.slug === originalSlug)
     )
-    .map(d => ({ slug: d.slug, locale: d.locale ?? null, status: d.status, translationOf: d.translationOf ?? null }));
+    .map(d => ({ slug: d.slug, locale: d.locale ?? null, status: d.status, translationOf: d.translationOf ?? null, updatedAt: d.updatedAt }));
+
+  // If this doc is a translation, find the source document's updatedAt
+  const sourceDoc = (doc as any).translationOf
+    ? allDocs.find(d => d.slug === (doc as any).translationOf)
+    : null;
 
   const docTitle = String(doc.data?.title ?? doc.data?.name ?? doc.data?.label ?? doc.slug);
 
@@ -57,6 +62,7 @@ export default async function DocumentPage({ params, searchParams }: Props) {
           updatedAt: doc.updatedAt,
         }}
         translations={translations}
+        sourceUpdatedAt={sourceDoc?.updatedAt}
         previewSiteUrl={siteConfig.previewSiteUrl}
         previewInIframe={siteConfig.previewInIframe}
         backHref={from === "curation" ? "/admin/curation" : undefined}
