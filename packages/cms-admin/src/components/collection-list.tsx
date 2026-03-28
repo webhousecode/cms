@@ -3,9 +3,10 @@
 import { useState, useTransition, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, Copy, Clock, MoreHorizontal, Pencil, Globe, FileX, ArrowUpDown } from "lucide-react";
+import { Search, Copy, Clock, MoreHorizontal, Pencil, Globe, FileX, ArrowUpDown, Languages } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
+import { LOCALE_FLAGS } from "@/lib/locale";
 
 export type ViewMode = "list" | "grid";
 type StatusFilter = "all" | "published" | "draft" | "scheduled" | "expired" | "trashed";
@@ -26,6 +27,8 @@ interface Doc {
   unpublishAt?: string;
   updatedAt: string;
   data: Record<string, unknown>;
+  locale?: string;
+  translationOf?: string;
 }
 
 interface Props {
@@ -36,6 +39,8 @@ interface Props {
   readOnly?: boolean;
   view?: ViewMode;
   urlPrefix?: string;
+  defaultLocale?: string;
+  siteLocales?: string[];
 }
 
 /* ─── Column definitions ─────────────────────────────────────── */
@@ -264,10 +269,11 @@ function PreviewThumb({ previewUrl, title }: { previewUrl: string; title: string
 
 /* ─── Main component ──────────────────────────────────────────── */
 
-export function CollectionList({ collection, titleField, fields, initialDocs, readOnly, view = "list", urlPrefix }: Props) {
+export function CollectionList({ collection, titleField, fields, initialDocs, readOnly, view = "list", urlPrefix, defaultLocale, siteLocales }: Props) {
   const [docs, setDocs] = useState(initialDocs);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [localeFilter, setLocaleFilter] = useState<string>("all");
   const [sortKey, setSortKey] = useState<SortKey>("updatedAt");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [cloningSlug, setCloningSlug] = useState<string | null>(null);
@@ -335,6 +341,15 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
         const q = search.toLowerCase();
         const title = String(doc.data[titleField] ?? doc.data["title"] ?? doc.slug).toLowerCase();
         if (!title.includes(q) && !doc.slug.includes(q)) return false;
+      }
+      // Locale filter
+      if (localeFilter !== "all") {
+        const docLocale = doc.locale || defaultLocale || "";
+        if (localeFilter === "source") {
+          if (doc.translationOf) return false; // hide translations, show only sources
+        } else if (docLocale !== localeFilter) {
+          return false;
+        }
       }
       return true;
     })
@@ -456,6 +471,33 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
             </button>
           ))}
         </div>
+        {/* Locale filter — only show when site has multiple locales */}
+        {siteLocales && siteLocales.length > 1 && (
+          <div style={{ display: "flex", gap: "0.25rem", flexWrap: "wrap", alignItems: "center" }}>
+            <Languages style={{ width: "0.8rem", height: "0.8rem", color: "var(--muted-foreground)", marginRight: "0.15rem" }} />
+            {[
+              { value: "all", label: "All" },
+              { value: "source", label: "Source" },
+              ...siteLocales.map((l) => ({ value: l, label: `${LOCALE_FLAGS[l] ?? ""} ${l.toUpperCase()}` })),
+            ].map((opt) => (
+              <button
+                key={opt.value}
+                type="button"
+                onClick={() => setLocaleFilter(opt.value)}
+                style={{
+                  display: "flex", alignItems: "center", gap: "0.2rem",
+                  padding: "0.2rem 0.5rem", borderRadius: "9999px", fontSize: "0.7rem",
+                  cursor: "pointer", transition: "all 120ms", whiteSpace: "nowrap",
+                  border: `1px solid ${localeFilter === opt.value ? "var(--primary)" : "var(--border)"}`,
+                  background: localeFilter === opt.value ? "color-mix(in srgb, var(--primary) 15%, transparent)" : "transparent",
+                  color: localeFilter === opt.value ? "var(--primary)" : "var(--muted-foreground)",
+                }}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Empty state after filter */}
@@ -544,11 +586,28 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
                         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                           <StatusDot status={doc.status} publishAt={doc.publishAt} />
                           <div style={{ minWidth: 0 }}>
-                            <p style={{ fontSize: "0.85rem", fontWeight: 500, color: "var(--foreground)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                              {title}
-                            </p>
+                            <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
+                              <p style={{ fontSize: "0.85rem", fontWeight: 500, color: "var(--foreground)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                                {title}
+                              </p>
+                              {siteLocales && siteLocales.length > 1 && doc.locale && (
+                                <span style={{
+                                  fontSize: "0.6rem", fontWeight: 600, padding: "0.05rem 0.3rem",
+                                  borderRadius: "3px", letterSpacing: "0.03em",
+                                  background: doc.translationOf
+                                    ? "color-mix(in srgb, var(--primary) 12%, transparent)"
+                                    : "color-mix(in srgb, var(--muted-foreground) 15%, transparent)",
+                                  color: doc.translationOf ? "var(--primary)" : "var(--muted-foreground)",
+                                }}>
+                                  {doc.locale.toUpperCase()}
+                                </span>
+                              )}
+                            </div>
                             <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", fontFamily: "monospace", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                               {doc.slug}
+                              {doc.translationOf && (
+                                <span style={{ opacity: 0.6 }}> → {doc.translationOf}</span>
+                              )}
                             </p>
                           </div>
                         </div>

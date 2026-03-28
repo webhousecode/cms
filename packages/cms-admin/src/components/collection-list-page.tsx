@@ -22,6 +22,8 @@ interface Doc {
   unpublishAt?: string;
   updatedAt: string;
   data: Record<string, unknown>;
+  locale?: string;
+  translationOf?: string;
 }
 
 interface Props {
@@ -34,11 +36,12 @@ interface Props {
   urlPrefix?: string;
   schemaEnabled?: boolean;
   defaultLocale?: string;
+  siteLocales?: string[];
 }
 
 export function CollectionListPage({
   collection, collectionLabel, titleField, fields, initialDocs,
-  readOnly, urlPrefix, schemaEnabled, defaultLocale,
+  readOnly, urlPrefix, schemaEnabled, defaultLocale, siteLocales,
 }: Props) {
   const storageKey = `cms-view-${collection}`;
   const [view, setView] = useState<ViewMode>("list");
@@ -112,6 +115,8 @@ export function CollectionListPage({
           readOnly={readOnly}
           view={view}
           urlPrefix={urlPrefix}
+          defaultLocale={defaultLocale}
+          siteLocales={siteLocales}
         />
       </div>
     </>

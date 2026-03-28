@@ -64,7 +64,8 @@ export default async function CollectionPage({ params }: Props) {
         readOnly={!canWrite}
         urlPrefix={colConfig.urlPrefix}
         schemaEnabled={schemaEnabled}
-        defaultLocale={config.defaultLocale}
+        defaultLocale={siteConfig.defaultLocale || config.defaultLocale}
+        siteLocales={siteConfig.locales?.length ? siteConfig.locales : config.locales}
       />
     </>
   );
