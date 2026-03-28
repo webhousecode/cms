@@ -8,8 +8,21 @@
     "excerpt": "My first blog post powered by @webhouse/cms.",
     "content": "# Hello, World!\n\nWelcome to this blog, powered by **@webhouse/cms** — an AI-native CMS engine.\n\n## Features\n\n- Schema-driven content modeling\n- Static site generation\n- REST API for content management\n- AI-friendly manifest endpoint\n\n## Getting Started\n\nDefine your collections in `cms.config.ts`, add content, and run `cms build`.\n\n```typescript\nimport { defineConfig, defineCollection } from '@webhouse/cms';\n\nexport default defineConfig({\n  collections: [\n    defineCollection({\n      name: 'posts',\n      fields: [\n        { name: 'title', type: 'text', required: true },\n        { name: 'content', type: 'richtext' },\n      ],\n    }),\n  ],\n});\n```\n\nHappy building!",
     "date": "2026-03-09T00:00:00.000Z",
-    "author": "webhouse"
+    "author": "webhouse",
+    "_seo": {
+      "metaTitle": "Hello, World! | AI-Native CMS Engine",
+      "metaDescription": "Welcome to @webhouse/cms, an AI-native CMS engine with schema-driven content modeling, static site generation, and REST API for content management.",
+      "keywords": [
+        "AI-native CMS",
+        "static site generation",
+        "content management system",
+        "schema-driven content",
+        "headless CMS"
+      ],
+      "lastOptimized": "2026-03-28T00:36:57.690Z"
+    }
   },
   "createdAt": "2026-03-09T00:00:00.000Z",
-  "updatedAt": "2026-03-09T00:00:00.000Z"
+  "updatedAt": "2026-03-28T00:36:57.692Z",
+  "_fieldMeta": {}
 }

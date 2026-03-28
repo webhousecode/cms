@@ -1,0 +1,106 @@
+{
+  "id": "6P5Zg69mNFxBckh4uHUka",
+  "slug": "skiferie-meribel-frankrig",
+  "collection": "posts",
+  "status": "draft",
+  "data": {
+    "title": "Méribel, Frankrig – hjertet af Les Trois Vallées",
+    "excerpt": "Méribel ligger midt i verdens største skiområde og byder på 600 km pister, strålende solskin og legendarisk après-ski. Her er alt, du skal vide før turen.",
+    "author": "Redaktionen",
+    "content": "![Skier foran La Chavanne restaurant på snedækket piste](/uploads/IMG_1583.JPG \"float:right|width:45%\")\n\n## Méribel – midt i Alpernes bedste skiområde\n\nMéribel er en af de mest eftertragtede skidestinationer i Europa, og det er der god grund til. Byen ligger i hjertet af **Les Trois Vallées** – verdens største sammenkoblede skiområde med over 600 km pister, 180 liftar og pistehøjder fra 1.450 til 3.230 meter.\n\nMed GPS-koordinaterne **45°54'N, 6°51'Ø** finder du Méribel i den franske Savoie-region, kun en times kørsel fra Chambéry Lufthavn.\n\n## Pisterne\n\nOmrådet dækker alle niveauer:\n\n- **Begyndere** finder brede, blide pister direkte fra centrum\n- **Øvede skiløbere** kan krydse dalen til Courchevel eller Val Thorens\n- **Eksperter** kaster sig ud på de stejle nedfarter mod Les Menuires\n\nDen ikoniske **La Chavanne**-restaurant på pisten er et must – stop til frokost med udsigt over dalen, et glas Savoie-vin og solskin på terrassen.\n\n## Praktisk info\n\n| | |\n|---|---|\n| **Sæson** | December – april |\n| **Pisteniveau** | Begynder til ekspert |\n| **Liftkort** | Fra ca. 55 € / dag |\n| **Flyv til** | Chambéry (1 t) eller Genève (2 t) |\n| **Bedste periode** | Februar – marts |\n\n## Efter skiløbet\n\nMéribel er berømt for sit livlige après-ski-miljø. Barer og restauranter i bybilledet summer af liv fra sidst på eftermiddagen. Sæt dig ind med en varm vin eller en lokal Génépi-likør og nyd panoramaet.\n\n> **Tip:** Book liftkort online mindst en uge i forvejen – det er billigere og du slipper for kø ved billetlugen.\n\nMéribel er ikke bare et skisted – det er en komplet vinteroplevelse for hele familien.",
+    "_seo": {
+      "metaTitle": "Méribel Skiløb - Les Trois Vallées Bedste Destination",
+      "metaDescription": "Oplev Méribel skiløb i Les Trois Vallées med 600 km pister og 180 lifter. Guide til pisterne, prisinfo og après-ski i Frankrig.",
+      "keywords": [
+        "Méribel skiløb",
+        "Les Trois Vallées",
+        "skidestination Frankrig",
+        "alpinski Savoie",
+        "vinterferier Alper"
+      ],
+      "ogImage": "/uploads/og/skiferie-meribel-frankrig.jpg",
+      "robots": "index,follow",
+      "score": 91,
+      "scoreDetails": [
+        {
+          "rule": "meta-title",
+          "label": "Meta title",
+          "status": "pass",
+          "message": "Meta title length is good (53/60 characters)"
+        },
+        {
+          "rule": "meta-desc",
+          "label": "Meta description",
+          "status": "pass",
+          "message": "Meta description length is good (127/160 characters)"
+        },
+        {
+          "rule": "keyword-title",
+          "label": "Keyword in title",
+          "status": "pass",
+          "message": "Keyword \"Méribel skiløb\" found in meta title"
+        },
+        {
+          "rule": "keyword-desc",
+          "label": "Keyword in description",
+          "status": "pass",
+          "message": "Keyword \"Méribel skiløb\" found in meta description"
+        },
+        {
+          "rule": "content-length",
+          "label": "Content length",
+          "status": "warn",
+          "message": "Content is 250 words. Write 50 more words to reach 300 (recommended minimum)."
+        },
+        {
+          "rule": "headings",
+          "label": "Heading structure",
+          "status": "pass",
+          "message": "Content uses H2 headings for structure"
+        },
+        {
+          "rule": "img-alt",
+          "label": "Image alt text",
+          "status": "pass",
+          "message": "All 1 images have alt text"
+        },
+        {
+          "rule": "og-image",
+          "label": "Social image",
+          "status": "pass",
+          "message": "Social sharing image (OG) is set"
+        },
+        {
+          "rule": "keyword-slug",
+          "label": "Keyword in URL",
+          "status": "warn",
+          "message": "The keyword \"Méribel skiløb\" is not in the URL slug (skiferie-meribel-frankrig). Consider renaming the slug in Properties."
+        },
+        {
+          "rule": "internal-links",
+          "label": "Internal links",
+          "status": "pass",
+          "message": "Content links to other pages on the site"
+        },
+        {
+          "rule": "title",
+          "label": "Page title",
+          "status": "pass",
+          "message": "Page has a title"
+        }
+      ],
+      "lastOptimized": "2026-03-28T01:08:06.726Z"
+    },
+    "date": "2026-03-28",
+    "_lastEditedBy": {
+      "userId": "fb4eda6a-bc5c-4dec-8cb6-c77c9fb74cd9",
+      "name": "Christian Broberg",
+      "email": "cb@webhouse.dk",
+      "at": "2026-03-28T01:08:11.798Z"
+    }
+  },
+  "_fieldMeta": {},
+  "createdAt": "2026-03-27T23:51:48.882Z",
+  "updatedAt": "2026-03-28T01:08:11.800Z",
+  "publishAt": "2026-03-29T09:00:00"
+}

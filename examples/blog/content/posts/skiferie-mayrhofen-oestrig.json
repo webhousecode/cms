@@ -1,0 +1,106 @@
+{
+  "id": "q9OTwZLFjvdxEvhfjUXyG",
+  "slug": "skiferie-mayrhofen-oestrig",
+  "collection": "posts",
+  "status": "draft",
+  "data": {
+    "title": "Mayrhofen, Østrig – hjem for Europas stejleste piste",
+    "excerpt": "Mayrhofen i Zillertaler Alperne er et must for eventyrlyste skiløbere. Her finder du Harakiri – Europas stejleste pistede nedfart – og en après-ski-kultur i særklasse.",
+    "author": "Redaktionen",
+    "content": "![Skiløber ved Harakiri skilt på snedækket piste i bjergene](/uploads/IMG_9316.PNG \"float:right|width:45%\")\n\n## Mayrhofen – tør du tage Harakiri?\n\nI hjertet af **Zillertal** i det østrigske Tirol ligger Mayrhofen – en by der lokker skiløbere fra hele verden med ét enkelt ord: **Harakiri**.\n\nMed en hældning på op til **78%** er Harakiri den stejleste pistede skinedfart i hele Østrig og en af de mest ekstreme i Europa. Men du skal ikke lade det skræmme dig – Mayrhofen byder på langt mere end ekstremer.\n\n## Skiområdet\n\nMayrhofen er en del af det store **Ski Zillertal**-område med over 169 km pister fordelt på fire bjergmassiver:\n\n- **Penken** – hjemsted for Harakiri og masser af røde og blå pister\n- **Horberg** – rolige pister med fantastisk udsigt\n- **Ahorn** – perfekt for familier med brede, lette bakker\n- **Rastkogel & Eggalm** – skovpister og fri natur\n\n## Après-ski i verdensklasse\n\nMayrhofen er mere end bare pister. Byens après-ski er legendarisk. **Ice Bar**, **Brücke 1** og ikke mindst det famøse **Tirolean Evening**-show giver aftener, du ikke glemmer foreløbig.\n\n## Praktisk info\n\n| | |\n|---|---|\n| **Sæson** | December – april |\n| **Antal pister** | 169 km (Ski Zillertal) |\n| **Liftkort** | Fra ca. 58 € / dag |\n| **Flyv til** | Innsbruck (1 t) eller München (2 t) |\n| **Bedste periode** | Januar – marts |\n\n## Hvem passer Mayrhofen til?\n\nMayrhofen er ideel for **erfarne skiløbere** der søger udfordring, men takket være Ahorn-bjerget er det også et glimrende valg for **familier**. Byens charme, de mange restauranter og det levende natteliv gør det til en destination, der appellerer til alle aldersgrupper.\n\n> **Tip:** Harakiri-pisten er kun åben, når vejrforholdene er optimale – tjek lokale pisterapporter dagen før.\n\nEr du klar til at møde Harakiri?",
+    "_seo": {
+      "metaTitle": "Mayrhofen Østrig - Harakiri Skisportssted",
+      "metaDescription": "Oplev Mayrhofen, Østrig - hjem for Europas stejleste skipiste Harakiri med 78% hældning. 169 km pister, verdensklasse après-ski og familievenligt skiområde.",
+      "keywords": [
+        "Mayrhofen",
+        "Harakiri piste",
+        "skiløb Østrig",
+        "Zillertal",
+        "alpinski"
+      ],
+      "ogImage": "/uploads/og/skiferie-mayrhofen-oestrig.jpg",
+      "robots": "index,follow",
+      "score": 95,
+      "scoreDetails": [
+        {
+          "rule": "meta-title",
+          "label": "Meta title",
+          "status": "pass",
+          "message": "Meta title length is good (41/60 characters)"
+        },
+        {
+          "rule": "meta-desc",
+          "label": "Meta description",
+          "status": "pass",
+          "message": "Meta description length is good (156/160 characters)"
+        },
+        {
+          "rule": "keyword-title",
+          "label": "Keyword in title",
+          "status": "pass",
+          "message": "Keyword \"Mayrhofen\" found in meta title"
+        },
+        {
+          "rule": "keyword-desc",
+          "label": "Keyword in description",
+          "status": "pass",
+          "message": "Keyword \"Mayrhofen\" found in meta description"
+        },
+        {
+          "rule": "content-length",
+          "label": "Content length",
+          "status": "warn",
+          "message": "Content is 277 words. Write 23 more words to reach 300 (recommended minimum)."
+        },
+        {
+          "rule": "headings",
+          "label": "Heading structure",
+          "status": "pass",
+          "message": "Content uses H2 headings for structure"
+        },
+        {
+          "rule": "img-alt",
+          "label": "Image alt text",
+          "status": "pass",
+          "message": "All 1 images have alt text"
+        },
+        {
+          "rule": "og-image",
+          "label": "Social image",
+          "status": "pass",
+          "message": "Social sharing image (OG) is set"
+        },
+        {
+          "rule": "keyword-slug",
+          "label": "Keyword in URL",
+          "status": "pass",
+          "message": "Keyword \"Mayrhofen\" found in the URL"
+        },
+        {
+          "rule": "internal-links",
+          "label": "Internal links",
+          "status": "pass",
+          "message": "Content links to other pages on the site"
+        },
+        {
+          "rule": "title",
+          "label": "Page title",
+          "status": "pass",
+          "message": "Page has a title"
+        }
+      ],
+      "lastOptimized": "2026-03-28T01:09:52.559Z"
+    },
+    "date": "2026-03-28",
+    "_lastEditedBy": {
+      "userId": "fb4eda6a-bc5c-4dec-8cb6-c77c9fb74cd9",
+      "name": "Christian Broberg",
+      "email": "cb@webhouse.dk",
+      "at": "2026-03-28T01:09:56.548Z"
+    }
+  },
+  "_fieldMeta": {},
+  "createdAt": "2026-03-27T23:51:48.905Z",
+  "updatedAt": "2026-03-28T01:09:56.550Z",
+  "publishAt": "2026-03-31T09:00:00"
+}

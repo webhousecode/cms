@@ -1,0 +1,106 @@
+{
+  "id": "MPJdNsS-okOxEmrdQJRCl",
+  "slug": "skiferie-trysil-norge",
+  "collection": "posts",
+  "status": "draft",
+  "data": {
+    "title": "Trysil, Norge – Skandinaviens største skiresort",
+    "excerpt": "Trysil er Norges stolthed på ski – et komplet og familievenligt skiresort med 68 pister og perfekte forhold for alle niveauer. Her er din guide til den ultimate norske skioplevelse.",
+    "author": "Redaktionen",
+    "content": "![Kvinde i hvidt skitøj vinker jubelende ved stort TRYSIL-skilt på snedækket bjergtop med udsigt over vinterskov](/uploads/IMG_0148.jpeg \"float:right|width:45%\")\n\n## Trysil – toppen af norsk skiglæde\n\nFar du til **Trysil** i det østlige Norge, træder du ind i Skandinaviens absolut største skiresort. Med bjerget **Trysilfjellet** som kulisse byder området på 68 pister, 31 liftar og et sammenhængende skiområde, der tilfredsstiller alt fra familien med de mindste til den erfarne frikører.\n\nTrysil ligger i **Innlandet-regionen**, kun ca. 3 timers kørsel fra Oslo – og med hyppige busser fra Oslo Lufthavn Gardermoen er det et oplagt valg for danskere, der vil opleve ægte norsk bjergkultur.\n\n## Pisterne\n\nMed en topshøjde på **1.132 meter** og dalstation i 400 meters højde er Trysil ikke de højeste bjerge i Europa – men pølsen er ikke nødvendigvis bedst, fordi den er længst! Her finder du:\n\n- **Brede begynderpister** perfekte for familier og nye skiløbere\n- **Røde og sorte pister** for dem der vil have udfordringer\n- **Snowpark og freeride-zoner** for dem der vil gøre kunster\n\n## Naturen og stemningen\n\nDet, der adskiller Trysil fra de alpine destinationer, er den norske skovnatur. Pisterne slynger sig gennem tæt nåleskov, og der er en stille, rolig stemning, som er svær at finde i de hektiske alpresorter.\n\n## Praktisk info\n\n| | |\n|---|---|\n| **Sæson** | November – april |\n| **Antal pister** | 68 (fra grøn til sort) |\n| **Liftkort** | Fra ca. 550 NOK / dag |\n| **Transport** | Bus fra Oslo Gardermoen |\n| **Bedste periode** | Januar – marts |\n\n## Familieferie i verdensklasse\n\nTrysil er konsekvent kåret som en af Europas bedste familieskiresorts. Børnene kan starte på ski allerede fra 3-årsalderen i de dedikerede børnezoner, mens forældrene nyder en rolig dag på pisterne.\n\n> **Tip:** Trysil har eget charterfly fra Kastrup – check sæsonpakkerne hos de store rejsebureauer for de bedste priser.\n\nVil du kombinere norsk natur, god sne og familievenlig stemning? Trysil er svaret.",
+    "_seo": {
+      "metaTitle": "Trysil Skiresort Norge | Skandinaviens største skiområde",
+      "metaDescription": "Trysil skiresort er Skandinaviens største skiområde med 68 pister og 31 lifter. Perfekt for familier og erfarne skiløbere. Kun 3 timer fra Oslo.",
+      "keywords": [
+        "Trysil skiresort",
+        "skiresort Norge",
+        "Skandinaviens største skiresort",
+        "Trysilfjellet",
+        "familieski Norge"
+      ],
+      "ogImage": "/uploads/og/skiferie-trysil-norge.jpg",
+      "robots": "index,follow",
+      "score": 91,
+      "scoreDetails": [
+        {
+          "rule": "meta-title",
+          "label": "Meta title",
+          "status": "pass",
+          "message": "Meta title length is good (56/60 characters)"
+        },
+        {
+          "rule": "meta-desc",
+          "label": "Meta description",
+          "status": "pass",
+          "message": "Meta description length is good (144/160 characters)"
+        },
+        {
+          "rule": "keyword-title",
+          "label": "Keyword in title",
+          "status": "pass",
+          "message": "Keyword \"Trysil skiresort\" found in meta title"
+        },
+        {
+          "rule": "keyword-desc",
+          "label": "Keyword in description",
+          "status": "pass",
+          "message": "Keyword \"Trysil skiresort\" found in meta description"
+        },
+        {
+          "rule": "content-length",
+          "label": "Content length",
+          "status": "warn",
+          "message": "Content is 298 words. Write 2 more words to reach 300 (recommended minimum)."
+        },
+        {
+          "rule": "headings",
+          "label": "Heading structure",
+          "status": "pass",
+          "message": "Content uses H2 headings for structure"
+        },
+        {
+          "rule": "img-alt",
+          "label": "Image alt text",
+          "status": "pass",
+          "message": "All 1 images have alt text"
+        },
+        {
+          "rule": "og-image",
+          "label": "Social image",
+          "status": "pass",
+          "message": "Social sharing image (OG) is set"
+        },
+        {
+          "rule": "keyword-slug",
+          "label": "Keyword in URL",
+          "status": "warn",
+          "message": "The keyword \"Trysil skiresort\" is not in the URL slug (skiferie-trysil-norge). Consider renaming the slug in Properties."
+        },
+        {
+          "rule": "internal-links",
+          "label": "Internal links",
+          "status": "pass",
+          "message": "Content links to other pages on the site"
+        },
+        {
+          "rule": "title",
+          "label": "Page title",
+          "status": "pass",
+          "message": "Page has a title"
+        }
+      ],
+      "lastOptimized": "2026-03-28T01:08:47.996Z"
+    },
+    "date": "2026-03-28",
+    "_lastEditedBy": {
+      "userId": "fb4eda6a-bc5c-4dec-8cb6-c77c9fb74cd9",
+      "name": "Christian Broberg",
+      "email": "cb@webhouse.dk",
+      "at": "2026-03-28T01:08:48.552Z"
+    }
+  },
+  "_fieldMeta": {},
+  "createdAt": "2026-03-27T23:51:48.891Z",
+  "updatedAt": "2026-03-28T01:08:48.555Z",
+  "publishAt": "2026-03-30T09:00:00"
+}

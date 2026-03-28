@@ -1,9 +1,0 @@
-# Large video files (>10MB) — keep locally, don't push to GitHub
-*.MOV
-*.MP4
-*.mov
-*.mp4
-*.avi
-*.mkv
-*.webm
-*.m4v

@@ -1,0 +1,106 @@
+{
+  "id": "CTbkRhgqrJuVI8JcEihyf",
+  "slug": "skiferie-verbier-schweiz",
+  "collection": "posts",
+  "status": "draft",
+  "data": {
+    "title": "Verbier, Schweiz – det ultimative skimål for de vilde",
+    "excerpt": "Verbier er de ekspertes paradis. Med adgang til 4 Vallées-skiområdet, vilde off-piste ruter og en uforglemmelig atmosfære er det en destination på sin egen liga.",
+    "author": "Redaktionen",
+    "content": "![Gruppe skiløbere på snedækket piste med alpine bjerge i baggrund](/uploads/FullSizeRender-1.jpg \"float:right|width:45%\")\n\n## Verbier – Alpernes svar på frihed på ski\n\nNævner du **Verbier** for en erfaren skiløber, lyser øjnene op. Det schweiziske skiparadis i **Valais-kantonen** er berømt verden over for sin kombination af brutale off-piste-ruter, dramatiske bjerge og en atmosfære der tiltrækker det internationale jetset – og dem, der bare elsker gode ski.\n\nMed en topshøjde på **3.330 meter** (Mont Fort) og adgang til **4 Vallées**-systemet med over 410 km pister er der i bogstaveligste forstand ingen ende på muligheder.\n\n## Pisterne og off-piste\n\nVerbier er ikke et sted for begyndere – det er de uviiskes legeplads:\n\n- **Schwarze Pisten** som *Stairway to Heaven* er ikoniske udfordringer\n- **Off-piste fra Tortin** – en af Europas vildeste ruter\n- **Freeride World Tour** holder hvert år stævne her – og det siger alt\n- Blå og røde pister findes også, men det er off-piste der definerer Verbier\n\n## Udsigten\n\nFra toppen af Mont Fort åbner sig et 360°-panorama over Mont Blanc, Matterhorn og Dents du Midi. Det er en af de mest spektakulære udsigter, du kan opleve på ski i hele Europa.\n\n## Praktisk info\n\n| | |\n|---|---|\n| **Sæson** | November – april |\n| **Skiområde** | 4 Vallées, 410 km |\n| **Liftkort** | Fra ca. 80 CHF / dag |\n| **Flyv til** | Genève (2 t) eller Zürich (3 t) |\n| **Bedste periode** | Januar – marts |\n\n## Après-ski og liv\n\nVerbier er ikke billigt – men det er heller ikke kedeligt. **Fer à Cheval**, **Pub Mont Fort** og **Crok No Name** er blot nogle af de barer, der summer af liv, når solen går ned bag bjergene.\n\n> **Tip:** Book ophold langt i forvejen – Verbier er populært og priserne stiger markant tæt på rejsedatoen.\n\nVerbier er ikke for alle – men for dem der elsker ski, er det svært at forestille sig et bedre sted på jorden.",
+    "_seo": {
+      "metaTitle": "Verbier Schweiz - Det ultimative skimål for erfarne skiløbere",
+      "metaDescription": "Oplev Verbier Schweiz - Alpernes vildeste skiparadis med 410 km pister, dramatiske bjerge og verdensklasse off-piste. Perfekt for eventyrlustige skiløbere.",
+      "keywords": [
+        "Verbier Schweiz",
+        "skiløb i Schweiz",
+        "4 Vallées",
+        "off-piste ski",
+        "freeride Verbier"
+      ],
+      "ogImage": "/uploads/og/skiferie-verbier-schweiz.jpg",
+      "robots": "index,follow",
+      "score": 95,
+      "scoreDetails": [
+        {
+          "rule": "meta-title",
+          "label": "Meta title",
+          "status": "warn",
+          "message": "Meta title is too long (61 characters). Google cuts off after 60. Shorten it."
+        },
+        {
+          "rule": "meta-desc",
+          "label": "Meta description",
+          "status": "pass",
+          "message": "Meta description length is good (155/160 characters)"
+        },
+        {
+          "rule": "keyword-title",
+          "label": "Keyword in title",
+          "status": "pass",
+          "message": "Keyword \"Verbier Schweiz\" found in meta title"
+        },
+        {
+          "rule": "keyword-desc",
+          "label": "Keyword in description",
+          "status": "pass",
+          "message": "Keyword \"Verbier Schweiz\" found in meta description"
+        },
+        {
+          "rule": "content-length",
+          "label": "Content length",
+          "status": "pass",
+          "message": "Content is 307 words (300+ is good)"
+        },
+        {
+          "rule": "headings",
+          "label": "Heading structure",
+          "status": "pass",
+          "message": "Content uses H2 headings for structure"
+        },
+        {
+          "rule": "img-alt",
+          "label": "Image alt text",
+          "status": "pass",
+          "message": "All 1 images have alt text"
+        },
+        {
+          "rule": "og-image",
+          "label": "Social image",
+          "status": "pass",
+          "message": "Social sharing image (OG) is set"
+        },
+        {
+          "rule": "keyword-slug",
+          "label": "Keyword in URL",
+          "status": "pass",
+          "message": "Keyword \"Verbier Schweiz\" found in the URL"
+        },
+        {
+          "rule": "internal-links",
+          "label": "Internal links",
+          "status": "pass",
+          "message": "Content links to other pages on the site"
+        },
+        {
+          "rule": "title",
+          "label": "Page title",
+          "status": "pass",
+          "message": "Page has a title"
+        }
+      ],
+      "lastOptimized": "2026-03-28T01:03:48.823Z"
+    },
+    "date": "2026-03-28",
+    "_lastEditedBy": {
+      "userId": "fb4eda6a-bc5c-4dec-8cb6-c77c9fb74cd9",
+      "name": "Christian Broberg",
+      "email": "cb@webhouse.dk",
+      "at": "2026-03-28T01:03:56.275Z"
+    }
+  },
+  "_fieldMeta": {},
+  "createdAt": "2026-03-27T23:51:48.917Z",
+  "updatedAt": "2026-03-28T01:03:56.290Z",
+  "publishAt": "2026-04-01T09:00:00"
+}

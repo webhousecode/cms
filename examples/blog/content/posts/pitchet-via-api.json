@@ -6,10 +6,31 @@
   "data": {
     "title": "Pitchet via API",
     "excerpt": "Oprettet live under demoen.",
-    "content": "# Det virker!\n\nDette post blev oprettet via REST API mens vi demonstrerede CMS-enginen.\n\nIngen database-opsætning. Ingen WordPress. Bare `POST /api/content/posts`.",
+    "content": "# Det virker!\n\n![Mand med skæg drikker hvid cocktail i træhus med sne synlig gennem vinduet](/uploads/IMG_0064.jpeg \"float:right|width:287px\")\n\nDette post blev oprettet via REST API mens vi demonstrerede CMS-enginen. Vi brugte en simpel HTTP POST-anmodning til endpointet /api/content/posts uden behov for nogen manuel database-opsætning eller [installation](/far-og-datter-p-ski-i-norges-fjelde-en-oplevelse-for-livet) af WordPress. Systemet accepterede dataene direkte gennem APIet og gemte dem **automatisk i lageret**, hvilket viser hvor streamlined og udviklervenligt denne tilgang til indholdsadministration er.\n\n`This is inline code`\n\nDette er den næste paragraf.\n\n![Hånd holder rosa cocktail med is ved vindue med snelandskab](/uploads/IMG_0063.jpeg \"float:left|width:148px\")\n\n> I notice the text you've provided is a placeholder in Norwegian that says \"Write a text here.\" There is no actual content to expand.\n\nPlease provide the actual text you'd like me to rewrite and expand with more detail and context.\n\nDette post blev oprettet via REST API mens vi demonstrerede CMS-enginen. Vi brugte en simpel HTTP POST-anmodning til endpointet /api/content/posts uden behov for nogen manuel database-opsætning eller [installation](/far-og-datter-p-ski-i-norges-fjelde-en-oplevelse-for-livet) af WordPress. Systemet accepterede dataene direkte gennem APIet og gemte dem **automatisk i lageret**, hvilket viser hvor streamlined og udviklervenligt denne tilgang til indholdsadministration er.\n\n!!MAP[Riberhusvej 9, Blokhus, Danmark|14]",
     "author": "Christian",
-    "date": "2026-03-09T21:48:00.000Z"
+    "date": "2026-03-27",
+    "_lastEditedBy": {
+      "userId": "fb4eda6a-bc5c-4dec-8cb6-c77c9fb74cd9",
+      "name": "Christian Broberg",
+      "email": "cb@webhouse.dk",
+      "at": "2026-03-28T02:55:50.177Z"
+    },
+    "_seo": {
+      "metaTitle": "Pitchet via API - REST API Content Management Demo",
+      "metaDescription": "Se hvordan Pitchet via API fungerer. Opret indhold gennem REST API uden manual database-opsætning eller WordPress-installation.",
+      "keywords": [
+        "pitchet via api",
+        "REST API",
+        "content management",
+        "HTTP POST",
+        "API endpoint",
+        "CMS engine"
+      ],
+      "ogImage": "/uploads/IMG_0064.jpeg",
+      "lastOptimized": "2026-03-28T01:03:09.186Z"
+    }
   },
   "createdAt": "2026-03-09T21:22:24.033Z",
-  "updatedAt": "2026-03-09T21:22:24.033Z"
+  "updatedAt": "2026-03-28T02:55:50.182Z",
+  "_fieldMeta": {}
 }
