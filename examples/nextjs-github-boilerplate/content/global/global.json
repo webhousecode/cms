@@ -1,0 +1,16 @@
+{
+  "slug": "global",
+  "status": "published",
+  "data": {
+    "siteTitle": "My Site",
+    "siteDescription": "A Next.js site powered by webhouse.app CMS",
+    "navLinks": [
+      { "label": "Blog", "href": "/blog" },
+      { "label": "About", "href": "/about" },
+      { "label": "Contact", "href": "/contact" }
+    ],
+    "footerText": "Built with webhouse.app"
+  },
+  "id": "global",
+  "_fieldMeta": {}
+}
