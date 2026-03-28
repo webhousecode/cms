@@ -9,8 +9,14 @@ const STORAGE_KEY = "cms-admin-mode";
 export function useAdminMode() {
   const [mode, setMode] = useState<AdminMode>("traditional");
 
-  // Hydrate from localStorage after mount
+  // Hydrate from localStorage after mount (URL ?mode=admin overrides)
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlMode = params.get("mode");
+    if (urlMode === "admin") {
+      setMode("traditional");
+      return;
+    }
     const stored = localStorage.getItem(STORAGE_KEY) as AdminMode | null;
     if (stored === "chat") setMode("chat");
   }, []);

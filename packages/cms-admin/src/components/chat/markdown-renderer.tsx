@@ -400,7 +400,7 @@ function DocPill({ collection, slug, variant }: { collection: string; slug: stri
         e.preventDefault();
         e.stopPropagation();
         if (variant === "edit") {
-          window.open(`/admin/${collection}/${slug}`, "_blank");
+          window.open(`/admin/${collection}/${slug}?mode=admin`, "_blank");
         } else {
           const base = await getPreviewBase();
           if (base) {
