@@ -58,6 +58,9 @@ const TOOL_META: Record<string, ToolMeta> = {
   bulk_publish:      { label: "Publishing all drafts", icon: Send },
   bulk_update:       { label: "Bulk updating", icon: Pencil },
   schedule_publish:  { label: "Scheduling", icon: Sparkles },
+  // Translation
+  translate_document:{ label: "Translating document", icon: Sparkles },
+  translate_site:    { label: "Translating site", icon: Sparkles },
 };
 
 interface ToolCallCardProps {

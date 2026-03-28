@@ -1733,5 +1733,82 @@ DESIGN GUIDELINES:
         return parts.join("\n");
       },
     },
+
+    // ── translate_document ─────────────────────────────────────
+    {
+      definition: {
+        name: "translate_document",
+        description: "Translate a document to another language using AI. Creates a new translated document linked to the original.",
+        input_schema: {
+          type: "object" as const,
+          properties: {
+            collection: { type: "string", description: "Collection name" },
+            slug: { type: "string", description: "Source document slug" },
+            targetLocale: { type: "string", description: "Target locale code (e.g. 'en', 'da', 'de')" },
+            publish: { type: "boolean", description: "Publish immediately (default: false, creates as draft)" },
+          },
+          required: ["collection", "slug", "targetLocale"],
+        },
+      },
+      handler: async (input: any) => {
+        const { collection, slug, targetLocale, publish } = input;
+        const baseUrl = process.env.NEXTAUTH_URL || `http://localhost:${process.env.PORT || 3010}`;
+        const serviceToken = process.env.CMS_JWT_SECRET ?? "";
+        const res = await fetch(`${baseUrl}/api/cms/${collection}/${slug}/translate`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "x-cms-service-token": serviceToken },
+          body: JSON.stringify({ targetLocale, publish: publish ?? false }),
+        });
+        if (!res.ok) {
+          const err = await res.json().catch(() => ({ error: "Translation failed" }));
+          return JSON.stringify({ error: err.error ?? "Translation failed" });
+        }
+        const result = await res.json();
+        return JSON.stringify({ success: true, ...result });
+      },
+    },
+
+    // ── translate_site ─────────────────────────────────────────
+    {
+      definition: {
+        name: "translate_site",
+        description: "Translate ALL untranslated documents on the site to a target language. Creates draft translations for review.",
+        input_schema: {
+          type: "object" as const,
+          properties: {
+            targetLocale: { type: "string", description: "Target locale code (e.g. 'en', 'da', 'de')" },
+            publish: { type: "boolean", description: "Publish translations immediately (default: false)" },
+          },
+          required: ["targetLocale"],
+        },
+      },
+      handler: async (input: any) => {
+        const { targetLocale, publish } = input;
+        const baseUrl = process.env.NEXTAUTH_URL || `http://localhost:${process.env.PORT || 3010}`;
+        const serviceToken = process.env.CMS_JWT_SECRET ?? "";
+        const res = await fetch(`${baseUrl}/api/admin/translate-bulk`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "x-cms-service-token": serviceToken },
+          body: JSON.stringify({ targetLocale, publish: publish ?? false }),
+        });
+        if (!res.ok) {
+          return JSON.stringify({ error: "Bulk translation failed" });
+        }
+        // Read NDJSON stream
+        const text = await res.text();
+        const lines = text.trim().split("\n").map(l => { try { return JSON.parse(l); } catch { return null; } }).filter(Boolean);
+        const results = lines.filter((l: any) => l.type === "result");
+        const errors = lines.filter((l: any) => l.type === "error");
+        const done = lines.find((l: any) => l.type === "done");
+        return JSON.stringify({
+          success: true,
+          translated: results.length,
+          errors: errors.length,
+          total: done?.total ?? 0,
+          details: results.map((r: any) => `${r.collection}/${r.slug}`),
+          errorDetails: errors.map((e: any) => `${e.collection}/${e.slug}: ${e.error}`),
+        });
+      },
+    },
   ];
 }
