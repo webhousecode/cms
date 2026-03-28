@@ -243,7 +243,7 @@ function CreateTranslationDialog({
         <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
           <label style={{ fontSize: "0.7rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--muted-foreground)" }}>Target locale</label>
           <CustomSelect
-            options={locales.map(l => ({ value: l, label: `${l.toUpperCase()}${existingLocales.includes(l) ? " (exists)" : ""}` }))}
+            options={availableLocales.map(l => ({ value: l, label: l.toUpperCase() }))}
             value={targetLocale}
             onChange={handleLocaleChange}
             style={{ width: "100%" }}
@@ -1678,7 +1678,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
           collection={collection}
           originalSlug={translationOf || doc.slug}
           locales={locales}
-          existingLocales={[locale || null, ...translations.map(t => t.locale)]}
+          existingLocales={[locale || defaultLocale || null, ...translations.map(t => t.locale)]}
           defaultLocale={defaultLocale ?? "en"}
           onClose={() => setCreateTranslationOpen(false)}
           onCreated={(slug) => {
