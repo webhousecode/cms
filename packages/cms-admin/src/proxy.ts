@@ -22,6 +22,8 @@ const PUBLIC_PREFIXES = [
   "/api/auth/",
   "/api/admin/invitations/", // Invite accept flow (user not yet logged in)
   "/api/cms/scheduled/calendar.ics", // Auth via ?token= query param
+  "/api/mcp/",              // MCP servers have their own auth (Bearer token)
+  "/api/publish-scheduled", // Called by cron/instrumentation, no user session
   "/_next/",
   "/favicon",
 ];
@@ -39,13 +41,10 @@ export async function proxy(request: NextRequest) {
   if (PUBLIC_PREFIXES.some((p) => pathname.startsWith(p))) return NextResponse.next();
   if (PUBLIC_PREFIXES_ADMIN.some((p) => pathname.startsWith(p))) return NextResponse.next();
 
-  // Only protect admin pages and API routes
+  // Protect ALL admin pages and API routes
   const isAdminPath = pathname.startsWith("/admin");
-  const isCmsApi = pathname.startsWith("/api/cms");
-  const isAdminApi = pathname.startsWith("/api/admin");
-  const isMediaApi = pathname.startsWith("/api/media");
-  const isPreviewApi = pathname.startsWith("/api/preview-");
-  if (!isAdminPath && !isCmsApi && !isAdminApi && !isMediaApi && !isPreviewApi) return NextResponse.next();
+  const isApi = pathname.startsWith("/api/");
+  if (!isAdminPath && !isApi) return NextResponse.next();
 
   // Allow internal service calls with X-CMS-Service-Token header (matches CMS_JWT_SECRET)
   const serviceToken = request.headers.get("x-cms-service-token");
@@ -55,8 +54,6 @@ export async function proxy(request: NextRequest) {
   }
 
   const token = request.cookies.get(COOKIE_NAME)?.value;
-
-  const isApi = isCmsApi || isAdminApi || isMediaApi || isPreviewApi;
 
   if (!token) {
     if (isApi) {
@@ -93,5 +90,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/admin/:path*", "/api/cms/:path*", "/api/admin/:path*", "/api/media/:path*", "/api/preview-:path*"],
+  matcher: ["/", "/admin/:path*", "/api/:path*"],
 };

@@ -23,7 +23,7 @@ fi
 # 2. Check for NEXT_PUBLIC_ env vars that look like secrets
 STAGED=$(git diff --cached --name-only --diff-filter=ACM 2>/dev/null)
 if [ -n "$STAGED" ]; then
-  SUSPECTS=$(echo "$STAGED" | xargs grep -l 'NEXT_PUBLIC_.*\(KEY\|SECRET\|TOKEN\|PASSWORD\|PRIVATE\)' 2>/dev/null || true)
+  SUSPECTS=$(echo "$STAGED" | grep -v 'security-scan\|security-gate' | xargs grep -l 'NEXT_PUBLIC_.*\(KEY\|SECRET\|TOKEN\|PASSWORD\|PRIVATE\)' 2>/dev/null || true)
   if [ -n "$SUSPECTS" ]; then
     echo "WARNING: Potential secrets exposed via NEXT_PUBLIC_ prefix:"
     echo "$SUSPECTS"

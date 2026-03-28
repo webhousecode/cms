@@ -69,11 +69,13 @@ async function checkApiAuth() {
       content.includes("verifyToken") ||
       content.includes("jwt");
 
-    // Routes under /api/cms/ are protected by middleware, so auth check inside is a bonus
-    const isMiddlewareProtected =
-      rel.includes("api/cms/") ||
-      rel.includes("api/admin/") ||
-      rel.includes("api/media/");
+    // All /api/* routes are now middleware-protected (proxy.ts matcher: /api/:path*)
+    // Only routes in PUBLIC_PREFIXES bypass middleware (auth, mcp, publish-scheduled)
+    const isMiddlewareProtected = rel.includes("/api/");
+    const isPublicRoute =
+      rel.includes("api/auth/") ||
+      rel.includes("api/mcp/") ||
+      rel.includes("api/publish-scheduled");
 
     if (!hasAuth && !isMiddlewareProtected) {
       findings.push({
@@ -82,7 +84,19 @@ async function checkApiAuth() {
         file: rel,
         line: 1,
         message: "API route has no authentication check and is not under middleware-protected path",
-        suggestion: "Add getSiteRole() or getSessionUser() check, or move under /api/cms/ or /api/admin/",
+        suggestion: "Add getSiteRole() or getSessionUser() check, or move under /api/",
+      });
+    }
+
+    // Public routes that bypass middleware should have their own auth
+    if (isPublicRoute && !hasAuth) {
+      findings.push({
+        severity: "medium",
+        rule: "cms/public-route-no-auth",
+        file: rel,
+        line: 1,
+        message: "Public API route (bypasses middleware) — ensure it has its own authentication",
+        suggestion: "MCP routes should verify Bearer token, publish-scheduled should verify service token",
       });
     }
 
