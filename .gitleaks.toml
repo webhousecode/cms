@@ -1,0 +1,20 @@
+# Gitleaks configuration — suppress known false positives
+# Dev JWT secrets in test files and e2e specs are intentional test fixtures
+
+[allowlist]
+  description = "Allow known test/dev credentials"
+
+  # Test files with intentional test secrets
+  paths = [
+    '''.*\.test\.ts$''',
+    '''.*\.spec\.ts$''',
+    '''.*e2e/.*''',
+    '''.*__tests__/.*''',
+  ]
+
+  # Known dev-only values (not used in production)
+  regexTarget = "match"
+  regexes = [
+    '''abc123def456''',
+    '''cms-dev-secret-change-me-in-production''',
+  ]
