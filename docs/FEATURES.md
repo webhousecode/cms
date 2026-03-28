@@ -128,6 +128,7 @@
 | F109 | [Inline Proofreading](#f109-inline-proofreading) | Planned | [docs/features/F109-inline-proofreading.md](features/F109-inline-proofreading.md) |
 | F110 | [Digital Island Apps](#f110-digital-island-apps) | Planned | [docs/features/F110-digital-island-apps.md](features/F110-digital-island-apps.md) |
 | F111 | [External Publishing](#f111-external-publishing) | Planned | [docs/features/F111-external-publishing.md](features/F111-external-publishing.md) |
+| F112 | [GEO — Generative Engine Optimization](#f112-geo-generative-engine-optimization) | Planned | [docs/features/F112-geo-generative-engine-optimization.md](features/F112-geo-generative-engine-optimization.md) |
 
 ---
 
@@ -472,3 +473,6 @@ AI-generated sandboxed micro-apps built via chat, saved as Interactives, embedda
 
 ## F111 — External Publishing
 Publish CMS articles to Dev.to, Hashnode, Medium (draft), and LinkedIn with one click. Platform adapter pattern with format conversion, image re-upload, canonical URL management, and analytics sync back to CMS. CMS is master — platforms are distribution channels. Complements F69 (Social Media) which targets FB/IG/LinkedIn SoMe posts, while F111 cross-posts full articles to developer/writing platforms.
+
+## F112 — GEO (Generative Engine Optimization)
+Optimize content so AI platforms (ChatGPT, Claude, Perplexity, Gemini) cite and recommend your brand. 8 phases: smart robots.txt generator, GEO score extension (8 new rules), llms-full.txt + markdown endpoints, enhanced JSON-LD with @graph linking, AI visibility monitor (probe system tracking brand mentions across LLMs), search index checker, GEO agent for automatic content optimization, and admin settings panel. Extends F89 (Post-Build Enrichment) and F97 (SEO Module). First CMS with built-in AI visibility tools.
