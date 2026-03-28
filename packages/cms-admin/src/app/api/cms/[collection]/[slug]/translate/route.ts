@@ -218,28 +218,6 @@ Return ONLY a JSON object with the translated fields. No explanation, no preambl
       console.error("[translate] Alt-text localization failed (non-fatal):", err);
     }
 
-    // Replace !!INTERACTIVE[slug] refs with translated interactive slug if translation exists
-    try {
-      const richtextFields = translatableFields.filter((f) => f.type === "richtext");
-      for (const field of richtextFields) {
-        const html = mergedData[field.name];
-        if (typeof html !== "string" || !html.includes("INTERACTIVE[")) continue;
-        // Check which interactive translations exist
-        const adapter = await (await import("@/lib/media")).getMediaAdapter();
-        const allInts = await adapter.listInteractives();
-        mergedData[field.name] = html.replace(
-          /!!INTERACTIVE\[([^|\]]+)([^\]]*)\]/g,
-          (_match, intSlug, rest) => {
-            const translatedId = `${intSlug}-${targetLocale}`;
-            const exists = allInts.some(i => i.id === translatedId);
-            return exists ? `!!INTERACTIVE[${translatedId}${rest}]` : _match;
-          },
-        );
-      }
-    } catch (err) {
-      console.error("[translate] Interactive ref replacement failed (non-fatal):", err);
-    }
-
     // Check if translation already exists
     let existingTranslation;
     try {
