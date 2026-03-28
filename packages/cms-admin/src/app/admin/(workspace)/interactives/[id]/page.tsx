@@ -524,7 +524,7 @@ export default function InteractiveDetailPage() {
   ];
 
   return (
-    <fieldset disabled={readOnly} style={{ border: "none", padding: 0, margin: 0, display: "flex", flexDirection: "column", height: "calc(100vh - 84px)", minHeight: 0 }}>
+    <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 84px)", minHeight: 0 }}>
       {/* Top bar — matches document editor exactly */}
       <ActionBar
         actions={
@@ -978,6 +978,6 @@ export default function InteractiveDetailPage() {
           </div>
         </div>
       )}
-    </fieldset>
+    </div>
   );
 }
