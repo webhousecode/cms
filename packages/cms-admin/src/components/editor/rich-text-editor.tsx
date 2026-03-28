@@ -3268,6 +3268,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                   imageUrl={toolbarState.imageSrc}
                   variant="ctx"
                   currentAlt={toolbarState.imageAlt}
+                  docLocale={document.querySelector<HTMLElement>("[data-doc-locale]")?.dataset.docLocale}
                   onApplyAlt={(alt) => {
                     editor.chain().focus().updateAttributes("image", { alt }).run();
                     onChange((editor.storage as any).markdown.getMarkdown());
