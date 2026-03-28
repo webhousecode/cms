@@ -197,7 +197,10 @@ export default function SeoPage() {
                     >
                       <span style={{
                         width: 8, height: 8, borderRadius: "50%", flexShrink: 0,
-                        background: doc.status === "published" ? "#4ade80" : doc.status === "draft" ? "#F7BB2E" : "#a78bfa",
+                        background: (doc.publishAt && new Date(doc.publishAt) > new Date()) ? "#a78bfa"
+                          : doc.status === "published" ? "#4ade80"
+                          : doc.status === "draft" ? "#F7BB2E"
+                          : "#a78bfa",
                       }} />
                       {doc.title}
                     </a>
