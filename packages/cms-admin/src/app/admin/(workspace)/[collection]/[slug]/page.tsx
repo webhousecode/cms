@@ -22,21 +22,31 @@ export default async function DocumentPage({ params, searchParams }: Props) {
   const doc = await cms.content.findBySlug(collection, slug);
   if (!doc) notFound();
 
-  // Fetch sibling translations
-  const originalSlug = (doc as any).translationOf ?? doc.slug;
+  // Fetch sibling translations via translationGroup (bidirectional ID partners)
   const { documents: allDocs } = await cms.content.findMany(collection, {});
-  const translations = (allDocs as any[])
-    .filter(d =>
-      d.slug !== doc.slug &&
-      d.status !== "trashed" &&
-      (d.translationOf === originalSlug || d.slug === originalSlug)
-    )
-    .map(d => ({ slug: d.slug, locale: d.locale ?? null, status: d.status, translationOf: d.translationOf ?? null, updatedAt: d.updatedAt }));
+  const groupId = (doc as any).translationGroup as string | undefined;
+  const translations = groupId
+    ? (allDocs as any[])
+        .filter(d => d.translationGroup === groupId && d.id !== doc.id && d.status !== "trashed")
+        .map(d => ({ slug: d.slug, locale: d.locale ?? null, status: d.status, updatedAt: d.updatedAt }))
+    : // Legacy fallback: use translationOf if no translationGroup yet
+      (() => {
+        const originalSlug = (doc as any).translationOf ?? doc.slug;
+        return (allDocs as any[])
+          .filter(d =>
+            d.slug !== doc.slug &&
+            d.status !== "trashed" &&
+            (d.translationOf === originalSlug || d.slug === originalSlug)
+          )
+          .map(d => ({ slug: d.slug, locale: d.locale ?? null, status: d.status, updatedAt: d.updatedAt }));
+      })();
 
-  // If this doc is a translation, find the source document's updatedAt
-  const sourceDoc = (doc as any).translationOf
-    ? allDocs.find(d => d.slug === (doc as any).translationOf)
-    : null;
+  // Find source document's updatedAt for staleness check (any sibling with an earlier locale)
+  const sourceDoc = groupId
+    ? (allDocs as any[]).find(d => d.translationGroup === groupId && d.id !== doc.id)
+    : (doc as any).translationOf
+      ? allDocs.find(d => d.slug === (doc as any).translationOf)
+      : null;
 
   const docTitle = String(doc.data?.title ?? doc.data?.name ?? doc.data?.label ?? doc.slug);
 
@@ -55,6 +65,7 @@ export default async function DocumentPage({ params, searchParams }: Props) {
           status: doc.status,
           locale: (doc as any).locale,
           translationOf: (doc as any).translationOf,
+          translationGroup: (doc as any).translationGroup,
           publishAt: (doc as any).publishAt,
           unpublishAt: (doc as any).unpublishAt,
           data: doc.data,

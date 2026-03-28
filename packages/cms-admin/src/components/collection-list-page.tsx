@@ -24,6 +24,7 @@ interface Doc {
   data: Record<string, unknown>;
   locale?: string;
   translationOf?: string;
+  translationGroup?: string;
 }
 
 interface Props {

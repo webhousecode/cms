@@ -150,11 +150,13 @@ function RichtextCollapsible({ field, value, onChange, locked, blocksConfig, def
 
 /* ─── Create Translation dialog ────────────────────────────── */
 function CreateTranslationDialog({
-  collection, originalSlug, locales, existingLocales, defaultLocale,
+  collection, originalSlug, sourceDocId, translationGroupId, locales, existingLocales, defaultLocale,
   onClose, onCreated,
 }: {
   collection: string;
   originalSlug: string;
+  sourceDocId: string;
+  translationGroupId?: string;
   locales: string[];
   existingLocales: (string | null)[];
   defaultLocale: string;
@@ -203,7 +205,7 @@ function CreateTranslationDialog({
       return;
     }
 
-    // Manual: create empty doc + set locale/translationOf
+    // Manual: create empty doc + set locale/translationGroup
     const res = await fetch(`/api/cms/${collection}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -218,14 +220,24 @@ function CreateTranslationDialog({
       return;
     }
     const created = await res.json();
-    // Set locale + translationOf on the new doc
+    // Ensure source has translationGroup, then link new doc
+    const groupId = translationGroupId || crypto.randomUUID().replace(/-/g, "").slice(0, 21);
+    // Stamp translationGroup on source if it didn't have one
+    if (!translationGroupId) {
+      await fetch(`/api/cms/${collection}/${originalSlug}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ data: {}, translationGroup: groupId }),
+      });
+    }
+    // Set locale + translationGroup on the new doc
     await fetch(`/api/cms/${collection}/${created.slug}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         data: {},
         locale: targetLocale,
-        translationOf: originalSlug,
+        translationGroup: groupId,
       }),
     });
     setCreating(false);
@@ -260,7 +272,7 @@ function CreateTranslationDialog({
               style={{ padding: "0.4rem 0.625rem", borderRadius: "6px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.85rem", fontFamily: "monospace", outline: "none" }}
             />
             <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", margin: 0 }}>
-              translationOf: <code style={{ fontSize: "0.7rem" }}>{originalSlug}</code>
+              Linked to: <code style={{ fontSize: "0.7rem" }}>{originalSlug}</code>
             </p>
           </div>
         )}
@@ -781,11 +793,11 @@ function PropertiesPanel({ doc, collection, onClose, onSaved }: {
           </div>
         )}
 
-        {/* Translation of */}
-        {doc.translationOf && (
+        {/* Translation group */}
+        {(doc as any).translationGroup && (
           <div>
-            <p style={labelStyle}>Translation of</p>
-            <p style={valueStyle}>{doc.translationOf}</p>
+            <p style={labelStyle}>Translation group</p>
+            <p style={valueStyle} title={(doc as any).translationGroup}>{(doc as any).translationGroup.slice(0, 8)}…</p>
           </div>
         )}
 
@@ -825,6 +837,7 @@ interface DocSnapshot {
   status: string;
   locale?: string;
   translationOf?: string;
+  translationGroup?: string;
   publishAt?: string;
   unpublishAt?: string;
   data: Record<string, unknown>;
@@ -839,7 +852,7 @@ interface Props {
   locales?: string[];
   defaultLocale?: string;
   initialDoc: DocSnapshot;
-  translations?: { slug: string; locale: string | null; status: string; translationOf: string | null; updatedAt?: string }[];
+  translations?: { slug: string; locale: string | null; status: string; updatedAt?: string }[];
   sourceUpdatedAt?: string;
   sourceData?: Record<string, unknown>;
   previewSiteUrl?: string;
@@ -903,6 +916,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
   const [confirmTrash, setConfirmTrash] = useState(false);
   const [locale, setLocale] = useState(initialDoc.locale ?? "");
   const [translationOf] = useState(initialDoc.translationOf ?? "");
+  const [translationGroup] = useState(initialDoc.translationGroup ?? "");
   const [localeOpen, setLocaleOpen] = useState(false);
   const [createTranslationOpen, setCreateTranslationOpen] = useState(false);
   const [sideBySide, setSideBySide] = useState(false);
@@ -969,6 +983,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
         status: nextStatus,
         ...(locale && { locale }),
         ...(translationOf && { translationOf }),
+        ...(translationGroup && { translationGroup }),
         // Always send publishAt so PATCH route can manage it; null clears it
         publishAt: nextStatus === "published" ? null : (doc.publishAt ?? null),
         unpublishAt: doc.unpublishAt ?? null,
@@ -1188,7 +1203,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
             </Button>
           )}
 
-          {translationOf && (
+          {(translationOf || (translationGroup && sourceDoc)) && (
             <Button
               variant={sideBySide ? "default" : "ghost"}
               size="sm"
@@ -1406,10 +1421,8 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
             Translations
           </span>
           {translations.map(t => {
-            // If current doc is the source, check if this translation is stale
-            // If current doc is a translation, the "source" link in translations points to the original
-            const isSource = !translationOf; // current doc is the source
-            const stale = isSource && t.translationOf && t.updatedAt
+            // With translationGroup, docs are equal partners — check staleness bidirectionally
+            const stale = t.updatedAt
               ? isTranslationStale(doc.updatedAt, t.updatedAt)
               : false;
             return (
@@ -1436,8 +1449,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
             );
           })}
           {(() => {
-            // Only source documents can create translations (not translations of translations)
-            if (translationOf) return null;
+            // Any doc in a translation group can create new translations (equal partners)
             const existingLocs = [locale || defaultLocale || null, ...translations.map(t => t.locale)];
             const available = (locales ?? []).filter(l => !existingLocs.includes(l));
             return available.length > 0 ? (
@@ -1460,7 +1472,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
       )}
 
       {/* Stale translation banner */}
-      {translationOf && sourceUpdatedAt && isTranslationStale(sourceUpdatedAt, initialDoc.updatedAt) && (
+      {(translationOf || translationGroup) && sourceUpdatedAt && isTranslationStale(sourceUpdatedAt, initialDoc.updatedAt) && (
         <div style={{
           display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap",
           padding: "0.5rem 1rem",
@@ -1495,7 +1507,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
             overflowY: "auto", opacity: 0.85,
           }}>
             <div className="flex gap-6 text-xs text-muted-foreground font-mono pb-8 border-b border-border">
-              <span>Source: {(initialDoc as any).translationOf}</span>
+              <span>Source document</span>
             </div>
             {colConfig.fields.map((field) => (
               <div key={field.name} className="space-y-1.5" style={{ paddingTop: "2rem" }}>
@@ -1523,15 +1535,9 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
             >
               ID: {doc.id.slice(0, 8)}…
             </span>
-            {translationOf && (
-              <span>
-                Translation of{" "}
-                <Link
-                  href={`/admin/${collection}/${translationOf}`}
-                  style={{ color: "var(--foreground)", textDecoration: "underline", textUnderlineOffset: "2px" }}
-                >
-                  {translationOf}
-                </Link>
+            {translationGroup && (
+              <span title={`Translation group: ${translationGroup}`}>
+                Group: {translationGroup.slice(0, 8)}…
               </span>
             )}
           </div>
@@ -1751,6 +1757,8 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
         <CreateTranslationDialog
           collection={collection}
           originalSlug={translationOf || doc.slug}
+          sourceDocId={initialDoc.id}
+          translationGroupId={translationGroup || undefined}
           locales={locales}
           existingLocales={[locale || defaultLocale || null, ...translations.map(t => t.locale)]}
           defaultLocale={defaultLocale ?? "en"}

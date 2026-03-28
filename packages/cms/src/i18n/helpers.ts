@@ -50,11 +50,20 @@ export async function getLocalizedDocument(
   const direct = documents.find(d => d.slug === slug && d.locale === locale);
   if (direct) return direct;
 
-  // Translation match: document that is a translation of this slug
-  const translation = documents.find(
-    d => (d as any).translationOf === slug && d.locale === locale
-  );
-  if (translation) return translation;
+  // Find via translationGroup: look up the slug's doc, then find sibling in target locale
+  const slugDoc = documents.find(d => d.slug === slug);
+  if (slugDoc) {
+    const groupId = (slugDoc as any).translationGroup;
+    if (groupId) {
+      const sibling = documents.find(d => (d as any).translationGroup === groupId && d.locale === locale);
+      if (sibling) return sibling;
+    }
+    // Legacy: translation match via translationOf
+    const translation = documents.find(
+      d => (d as any).translationOf === slug && d.locale === locale
+    );
+    if (translation) return translation;
+  }
 
   // Fallback: return the source document (default locale)
   if (locale !== defaultLocale) {
@@ -82,13 +91,18 @@ export function getHreflangAlternates(
 
   const allDocsMap = new Map(allDocuments.map(d => [d.id, d]));
   const results: Array<{ locale: string; href: string }> = [];
-  const sourceSlug = (doc as any).translationOf || doc.slug;
+  const groupId = (doc as any).translationGroup;
 
-  // Find source document and all translations
-  const family = allDocuments.filter(d =>
-    d.slug === sourceSlug ||
-    (d as any).translationOf === sourceSlug
-  );
+  // Find all translation partners via translationGroup (preferred) or legacy translationOf
+  const family = groupId
+    ? allDocuments.filter(d => (d as any).translationGroup === groupId)
+    : (() => {
+        const sourceSlug = (doc as any).translationOf || doc.slug;
+        return allDocuments.filter(d =>
+          d.slug === sourceSlug ||
+          (d as any).translationOf === sourceSlug
+        );
+      })();
 
   for (const sibling of family) {
     const locale = sibling.locale ?? config.defaultLocale ?? locales[0] ?? 'en';

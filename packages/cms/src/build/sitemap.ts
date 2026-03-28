@@ -44,10 +44,16 @@ export function generateSitemap(context: SiteContext, baseUrl: string): string {
       // Build hreflang alternates if the site has multiple locales
       let alternates: Record<string, string> | undefined;
       if (hasMultipleLocales && doc.locale) {
-        const sourceSlug = doc.translationOf ?? doc.slug;
-        const siblings = allDocsList.filter(
-          d => d.collection === col.name && (d.slug === sourceSlug || d.translationOf === sourceSlug),
-        );
+        // Prefer translationGroup (bidirectional ID partners); fall back to legacy translationOf
+        const groupId = (doc as any).translationGroup;
+        const siblings = groupId
+          ? allDocsList.filter(d => d.collection === col.name && (d as any).translationGroup === groupId)
+          : (() => {
+              const sourceSlug = (doc as any).translationOf ?? doc.slug;
+              return allDocsList.filter(
+                d => d.collection === col.name && (d.slug === sourceSlug || (d as any).translationOf === sourceSlug),
+              );
+            })();
         if (siblings.length > 1) {
           alternates = {};
           for (const s of siblings) {

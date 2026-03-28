@@ -549,6 +549,160 @@ describe("F48 — SEO Translation in Translate Endpoint", () => {
   });
 });
 
+// ── Phase 4 Tests — translationGroup (bidirectional ID partners) ──
+
+describe("F48 Phase 4 — translationGroup", () => {
+  // Simulates the document structure used by the system
+  interface TestDoc {
+    id: string;
+    slug: string;
+    locale?: string;
+    translationOf?: string;
+    translationGroup?: string;
+    updatedAt: string;
+    status: string;
+  }
+
+  /** Find all siblings of a document via translationGroup */
+  function findSiblings(doc: TestDoc, allDocs: TestDoc[]): TestDoc[] {
+    if (!doc.translationGroup) return [];
+    return allDocs.filter(d => d.translationGroup === doc.translationGroup && d.id !== doc.id);
+  }
+
+  /** Migration: given a doc with translationOf, resolve and assign translationGroup */
+  function migrateDoc(
+    doc: TestDoc,
+    allDocs: TestDoc[],
+    generateGroupId: () => string,
+  ): { updated: TestDoc[]; groupId: string } {
+    const source = allDocs.find(d => d.slug === doc.translationOf);
+    if (!source) return { updated: [], groupId: "" };
+
+    const groupId = source.translationGroup || generateGroupId();
+    const updated: TestDoc[] = [];
+
+    if (!source.translationGroup) {
+      source.translationGroup = groupId;
+      updated.push(source);
+    }
+    if (!doc.translationGroup) {
+      doc.translationGroup = groupId;
+      updated.push(doc);
+    }
+
+    return { updated, groupId };
+  }
+
+  describe("findSiblings()", () => {
+    const docs: TestDoc[] = [
+      { id: "1", slug: "om-os", locale: "da", translationGroup: "grp-1", updatedAt: "2026-03-28T18:00:00Z", status: "published" },
+      { id: "2", slug: "about-us", locale: "en", translationGroup: "grp-1", updatedAt: "2026-03-28T19:00:00Z", status: "published" },
+      { id: "3", slug: "ueber-uns", locale: "de", translationGroup: "grp-1", updatedAt: "2026-03-28T17:00:00Z", status: "draft" },
+      { id: "4", slug: "unrelated", locale: "en", updatedAt: "2026-03-28T18:00:00Z", status: "published" },
+    ];
+
+    it("finds all siblings via translationGroup", () => {
+      const siblings = findSiblings(docs[0], docs);
+      expect(siblings).toHaveLength(2);
+      expect(siblings.map(s => s.slug).sort()).toEqual(["about-us", "ueber-uns"]);
+    });
+
+    it("finds siblings from any partner (bidirectional)", () => {
+      const siblings = findSiblings(docs[1], docs);
+      expect(siblings).toHaveLength(2);
+      expect(siblings.map(s => s.slug).sort()).toEqual(["om-os", "ueber-uns"]);
+    });
+
+    it("returns empty for doc without translationGroup", () => {
+      const siblings = findSiblings(docs[3], docs);
+      expect(siblings).toHaveLength(0);
+    });
+
+    it("slug rename does not break the link (ID-based)", () => {
+      // Simulate slug rename
+      const renamedDocs = docs.map(d => d.id === "1" ? { ...d, slug: "om-os-RENAMED" } : d);
+      const siblings = findSiblings(renamedDocs[0], renamedDocs);
+      expect(siblings).toHaveLength(2);
+      // Still finds partners despite slug change
+      expect(siblings.map(s => s.locale).sort()).toEqual(["de", "en"]);
+    });
+  });
+
+  describe("migrateDoc() — translationOf → translationGroup", () => {
+    it("assigns same translationGroup to source and translation", () => {
+      const source: TestDoc = { id: "1", slug: "om-os", locale: "da", updatedAt: "2026-03-28T18:00:00Z", status: "published" };
+      const translation: TestDoc = { id: "2", slug: "about-us", locale: "en", translationOf: "om-os", updatedAt: "2026-03-28T19:00:00Z", status: "published" };
+      const allDocs = [source, translation];
+
+      const { updated, groupId } = migrateDoc(translation, allDocs, () => "test-group-id");
+      expect(groupId).toBe("test-group-id");
+      expect(updated).toHaveLength(2);
+      expect(source.translationGroup).toBe("test-group-id");
+      expect(translation.translationGroup).toBe("test-group-id");
+    });
+
+    it("reuses existing translationGroup from source", () => {
+      const source: TestDoc = { id: "1", slug: "om-os", locale: "da", translationGroup: "existing-grp", updatedAt: "2026-03-28T18:00:00Z", status: "published" };
+      const translation: TestDoc = { id: "2", slug: "about-us", locale: "en", translationOf: "om-os", updatedAt: "2026-03-28T19:00:00Z", status: "published" };
+      const allDocs = [source, translation];
+
+      const { groupId } = migrateDoc(translation, allDocs, () => "should-not-be-used");
+      expect(groupId).toBe("existing-grp");
+      expect(translation.translationGroup).toBe("existing-grp");
+    });
+
+    it("handles missing source gracefully", () => {
+      const translation: TestDoc = { id: "2", slug: "about-us", locale: "en", translationOf: "nonexistent", updatedAt: "2026-03-28T19:00:00Z", status: "published" };
+      const { updated, groupId } = migrateDoc(translation, [translation], () => "grp");
+      expect(updated).toHaveLength(0);
+      expect(groupId).toBe("");
+    });
+
+    it("multiple translations share same group", () => {
+      const source: TestDoc = { id: "1", slug: "om-os", locale: "da", updatedAt: "2026-03-28T18:00:00Z", status: "published" };
+      const en: TestDoc = { id: "2", slug: "about-us", locale: "en", translationOf: "om-os", updatedAt: "2026-03-28T19:00:00Z", status: "published" };
+      const de: TestDoc = { id: "3", slug: "ueber-uns", locale: "de", translationOf: "om-os", updatedAt: "2026-03-28T17:00:00Z", status: "draft" };
+      const allDocs = [source, en, de];
+
+      migrateDoc(en, allDocs, () => "grp-multi");
+      migrateDoc(de, allDocs, () => "should-not-be-used");
+
+      expect(source.translationGroup).toBe("grp-multi");
+      expect(en.translationGroup).toBe("grp-multi");
+      expect(de.translationGroup).toBe("grp-multi");
+    });
+  });
+
+  describe("equality — no parent-child hierarchy", () => {
+    it("all docs in a group can find each other (no 'source' is special)", () => {
+      const docs: TestDoc[] = [
+        { id: "1", slug: "om-os", locale: "da", translationGroup: "grp-eq", updatedAt: "2026-03-28T18:00:00Z", status: "published" },
+        { id: "2", slug: "about-us", locale: "en", translationGroup: "grp-eq", updatedAt: "2026-03-28T19:00:00Z", status: "published" },
+        { id: "3", slug: "ueber-uns", locale: "de", translationGroup: "grp-eq", updatedAt: "2026-03-28T17:00:00Z", status: "draft" },
+      ];
+
+      // Each doc finds all others
+      for (const doc of docs) {
+        const siblings = findSiblings(doc, docs);
+        expect(siblings).toHaveLength(2);
+      }
+    });
+
+    it("any partner can create a new translation (not just original source)", () => {
+      // The EN doc creates a DE translation — both get the same group
+      const en: TestDoc = { id: "2", slug: "about-us", locale: "en", translationGroup: "grp-any", updatedAt: "2026-03-28T19:00:00Z", status: "published" };
+      const de: TestDoc = { id: "3", slug: "ueber-uns", locale: "de", translationGroup: "grp-any", updatedAt: "2026-03-28T20:00:00Z", status: "draft" };
+      const da: TestDoc = { id: "1", slug: "om-os", locale: "da", translationGroup: "grp-any", updatedAt: "2026-03-28T18:00:00Z", status: "published" };
+      const allDocs = [da, en, de];
+
+      // All three can see each other
+      expect(findSiblings(en, allDocs)).toHaveLength(2);
+      expect(findSiblings(de, allDocs)).toHaveLength(2);
+      expect(findSiblings(da, allDocs)).toHaveLength(2);
+    });
+  });
+});
+
 describe("F48 Phase 3 — Stale Translation Detection", () => {
   it("returns true when source.updatedAt > translation.updatedAt", () => {
     expect(isTranslationStale("2026-03-28T18:00:00Z", "2026-03-28T17:00:00Z")).toBe(true);

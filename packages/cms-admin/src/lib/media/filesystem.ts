@@ -241,7 +241,7 @@ export class FilesystemMediaAdapter implements MediaAdapter {
     return entry;
   }
 
-  async updateInteractive(id: string, updates: { content?: string; name?: string; status?: InteractiveMeta["status"]; locale?: string; translationOf?: string }): Promise<InteractiveMeta | null> {
+  async updateInteractive(id: string, updates: { content?: string; name?: string; status?: InteractiveMeta["status"]; locale?: string; translationOf?: string; translationGroup?: string }): Promise<InteractiveMeta | null> {
     const meta = await this.loadMeta();
     const idx = meta.findIndex((m) => m.id === id);
     if (idx === -1) return null;
@@ -257,6 +257,7 @@ export class FilesystemMediaAdapter implements MediaAdapter {
     if (updates.status) meta[idx].status = updates.status;
     if (updates.locale !== undefined) meta[idx].locale = updates.locale;
     if (updates.translationOf !== undefined) meta[idx].translationOf = updates.translationOf;
+    if (updates.translationGroup !== undefined) meta[idx].translationGroup = updates.translationGroup;
 
     await this.saveMeta(meta);
     return meta[idx];

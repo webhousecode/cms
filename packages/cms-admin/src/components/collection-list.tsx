@@ -29,6 +29,7 @@ interface Doc {
   data: Record<string, unknown>;
   locale?: string;
   translationOf?: string;
+  translationGroup?: string;
 }
 
 interface Props {
@@ -346,7 +347,10 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
       if (localeFilter !== "all") {
         const docLocale = doc.locale || defaultLocale || "";
         if (localeFilter === "source") {
-          if (doc.translationOf) return false; // hide translations, show only sources
+          // "Source" filter: show docs that are not translations
+          // With translationGroup, any doc can be a source (equal partners) — just filter by default locale
+          if (doc.translationOf && !doc.translationGroup) return false; // legacy: hide old-style translations
+          if (doc.locale && doc.locale !== (defaultLocale || "")) return false; // hide non-default locale docs
         } else if (docLocale !== localeFilter) {
           return false;
         }
@@ -594,10 +598,10 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
                                 <span style={{
                                   fontSize: "0.6rem", fontWeight: 600, padding: "0.05rem 0.3rem",
                                   borderRadius: "3px", letterSpacing: "0.03em",
-                                  background: doc.translationOf
+                                  background: doc.translationGroup
                                     ? "color-mix(in srgb, var(--primary) 12%, transparent)"
                                     : "color-mix(in srgb, var(--muted-foreground) 15%, transparent)",
-                                  color: doc.translationOf ? "var(--primary)" : "var(--muted-foreground)",
+                                  color: doc.translationGroup ? "var(--primary)" : "var(--muted-foreground)",
                                 }}>
                                   {doc.locale.toUpperCase()}
                                 </span>
@@ -605,9 +609,6 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
                             </div>
                             <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", fontFamily: "monospace", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                               {doc.slug}
-                              {doc.translationOf && (
-                                <span style={{ opacity: 0.6 }}> → {doc.translationOf}</span>
-                              )}
                             </p>
                           </div>
                         </div>

@@ -5,7 +5,7 @@ import { readSiteConfig } from "@/lib/site-config";
 import { buildLocaleInstruction } from "@/lib/ai/locale-prompt";
 import { getModel } from "@/lib/ai/model-resolver";
 import { LOCALE_LABELS } from "@/lib/locale";
-import { GitHubStorageAdapter } from "@webhouse/cms";
+import { GitHubStorageAdapter, generateId } from "@webhouse/cms";
 import Anthropic from "@anthropic-ai/sdk";
 
 type Ctx = { params: Promise<{ collection: string; slug: string }> };
@@ -218,26 +218,31 @@ Return ONLY a JSON object with the translated fields. No explanation, no preambl
       console.error("[translate] Alt-text localization failed (non-fatal):", err);
     }
 
-    // Check if translation already exists
-    let existingTranslation;
-    try {
-      existingTranslation = await cms.content.findBySlug(
-        collection,
-        translationSlug,
-      );
-    } catch {
-      /* doesn't exist */
+    // ── translationGroup: bidirectional ID linking ──────────────
+    // Ensure source has a translationGroup; create one if missing
+    const sourceGroup = (sourceDoc as any).translationGroup as string | undefined;
+    const translationGroupId = sourceGroup || generateId();
+
+    // Stamp translationGroup on source if it didn't have one yet
+    if (!sourceGroup) {
+      await cms.content.update(collection, sourceDoc.id, { translationGroup: translationGroupId });
     }
+
+    // Check if translation already exists (by slug OR by translationGroup + locale)
+    const { documents: allDocs } = await cms.content.findMany(collection, {});
+    const existingTranslation =
+      allDocs.find(d => d.slug === translationSlug) ||
+      allDocs.find(d => (d as any).translationGroup === translationGroupId && d.locale === targetLocale && d.id !== sourceDoc.id);
 
     if (existingTranslation) {
       await cms.content.update(collection, existingTranslation.id, {
         data: mergedData,
         status: publish ? "published" : "draft",
         locale: targetLocale,
-        translationOf: slug,
+        translationGroup: translationGroupId,
       });
       return NextResponse.json({
-        slug: translationSlug,
+        slug: existingTranslation.slug,
         action: "updated",
         locale: targetLocale,
       });
@@ -247,7 +252,7 @@ Return ONLY a JSON object with the translated fields. No explanation, no preambl
         data: mergedData,
         status: publish ? "published" : "draft",
         locale: targetLocale,
-        translationOf: slug,
+        translationGroup: translationGroupId,
       });
       return NextResponse.json({
         slug: created.slug,

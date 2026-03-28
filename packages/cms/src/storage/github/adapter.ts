@@ -210,6 +210,7 @@ export class GitHubStorageAdapter implements StorageAdapter {
       updatedAt: timestamp,
       ...(input.locale !== undefined && { locale: input.locale }),
       ...(input.translationOf !== undefined && { translationOf: input.translationOf }),
+      ...(input.translationGroup !== undefined && { translationGroup: input.translationGroup }),
       ...(input.publishAt != null && { publishAt: input.publishAt }),
       ...(input.unpublishAt != null && { unpublishAt: input.unpublishAt }),
     };
@@ -250,6 +251,19 @@ export class GitHubStorageAdapter implements StorageAdapter {
     // Status filter
     if (options.status) {
       documents = documents.filter(d => d.status === options.status);
+    }
+
+    // Locale filter
+    if (options.locale) {
+      documents = documents.filter(d => d.locale === options.locale);
+    }
+    // translationOf filter (legacy)
+    if (options.translationOf) {
+      documents = documents.filter(d => d.translationOf === options.translationOf);
+    }
+    // translationGroup filter
+    if (options.translationGroup) {
+      documents = documents.filter(d => d.translationGroup === options.translationGroup);
     }
 
     // Tags filter (AND logic)
@@ -300,6 +314,7 @@ export class GitHubStorageAdapter implements StorageAdapter {
       updatedAt: now(),
       ...(((input.locale !== undefined ? input.locale : existing.locale) !== undefined) && { locale: input.locale !== undefined ? input.locale : existing.locale }),
       ...(((input.translationOf !== undefined ? input.translationOf : existing.translationOf) !== undefined) && { translationOf: input.translationOf !== undefined ? input.translationOf : existing.translationOf }),
+      ...(((input.translationGroup !== undefined ? input.translationGroup : existing.translationGroup) !== undefined) && { translationGroup: input.translationGroup !== undefined ? input.translationGroup : existing.translationGroup }),
       ...(() => {
         if (input.publishAt === null) return {};
         const pa = input.publishAt !== undefined ? input.publishAt : (existing as any).publishAt;

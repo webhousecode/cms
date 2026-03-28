@@ -56,6 +56,7 @@ interface DocumentRow {
   updated_at: string;
   locale: string | null;
   translation_of: string | null;
+  translation_group: string | null;
   publish_at: string | null;
 }
 
@@ -113,6 +114,7 @@ export class SupabaseStorageAdapter implements StorageAdapter {
       updatedAt: row.updated_at,
       ...(row.locale != null && { locale: row.locale }),
       ...(row.translation_of != null && { translationOf: row.translation_of }),
+      ...(row.translation_group != null && { translationGroup: row.translation_group }),
       ...(row.publish_at != null && { publishAt: row.publish_at }),
     };
   }
@@ -226,6 +228,7 @@ export class SupabaseStorageAdapter implements StorageAdapter {
       updated_at: timestamp,
       locale: input.locale ?? null,
       translation_of: input.translationOf ?? null,
+      translation_group: input.translationGroup ?? null,
       publish_at: input.publishAt ?? null,
     };
 
@@ -298,9 +301,14 @@ export class SupabaseStorageAdapter implements StorageAdapter {
       query = query.eq('locale', options.locale);
     }
 
-    // Translation filter
+    // Translation filter (legacy)
     if (options.translationOf) {
       query = query.eq('translation_of', options.translationOf);
+    }
+
+    // translationGroup filter
+    if (options.translationGroup) {
+      query = query.eq('translation_group', options.translationGroup);
     }
 
     // Tags filter (AND logic — all tags must be present in data->'tags')
@@ -382,6 +390,10 @@ export class SupabaseStorageAdapter implements StorageAdapter {
 
     if (input.translationOf !== undefined) {
       updates['translation_of'] = input.translationOf;
+    }
+
+    if (input.translationGroup !== undefined) {
+      updates['translation_group'] = input.translationGroup;
     }
 
     if (input.publishAt === null) {

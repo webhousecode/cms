@@ -27,6 +27,7 @@ interface InteractiveMeta {
   updatedAt: string;
   locale?: string;
   translationOf?: string;
+  translationGroup?: string;
 }
 
 type ViewMode = "grid" | "list";

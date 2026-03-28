@@ -104,7 +104,7 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
   }
   try {
     const { collection, slug } = await params;
-    const body = await req.json() as { data?: Record<string, unknown>; status?: string; locale?: string; translationOf?: string | null; publishAt?: string | null; unpublishAt?: string | null; slug?: string };
+    const body = await req.json() as { data?: Record<string, unknown>; status?: string; locale?: string; translationOf?: string | null; translationGroup?: string; publishAt?: string | null; unpublishAt?: string | null; slug?: string };
     const cms = await getAdminCms();
 
     // Set Git commit author to the actual editor (not the service token owner)
@@ -140,6 +140,7 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
       ...(body.slug !== undefined && { slug: body.slug }),
       ...(body.locale !== undefined && { locale: body.locale }),
       ...(body.translationOf !== undefined && { translationOf: body.translationOf ?? undefined }),
+      ...(body.translationGroup !== undefined && { translationGroup: body.translationGroup }),
       ...("publishAt" in body || nextStatus === "published" ? { publishAt } : {}),
       ...("unpublishAt" in body ? { unpublishAt: body.unpublishAt } : {}),
     });
@@ -167,12 +168,16 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
     }
 
     // Auto-translate on publish / auto-retranslate on update (fire-and-forget)
-    if (!doc.translationOf && !body.translationOf) {
+    // Only trigger for docs in default locale to avoid circular translations
+    {
       try {
         const { readSiteConfig } = await import("@/lib/site-config");
         const siteConfig = await readSiteConfig();
         const docLocale = updated?.locale || siteConfig.locales[0] || "";
-        const targetLocales = siteConfig.locales.filter((l: string) => l !== docLocale);
+        const isDefaultLocale = docLocale === (siteConfig.defaultLocale || siteConfig.locales[0] || "");
+        const targetLocales = isDefaultLocale
+          ? siteConfig.locales.filter((l: string) => l !== docLocale)
+          : [];
         if (targetLocales.length > 0) {
           const shouldTranslate =
             nextStatus === "published" || // auto-translate on publish
