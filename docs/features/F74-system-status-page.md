@@ -168,3 +168,12 @@ status.webhouse.app → CNAME → status-webhouse.fly.dev
 **Small** — 1 day
 
 The hardest part is deciding what "healthy" means for each service — the rest is trivial.
+
+---
+
+> **Testing (F99):** This feature MUST include tests using the [F99 Test Infrastructure](F99-e2e-testing-suite.md).
+> - **Unit tests** → `packages/cms-admin/src/lib/__tests__/{feature}.test.ts` or `packages/cms/src/__tests__/{feature}.test.ts`
+> - **API tests** → `packages/cms-admin/tests/api/{feature}.test.ts`
+> - **E2E tests** → `packages/cms-admin/e2e/suites/{nn}-{feature}.spec.ts`
+> - Use shared fixtures: `auth.ts` (JWT login), `mock-llm.ts` (intercept AI), `test-data.ts` (seed/cleanup)
+> - Tests are written BEFORE implementation. All tests must pass before merge.

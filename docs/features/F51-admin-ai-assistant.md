@@ -213,3 +213,12 @@ Based on current page, show relevant quick actions:
 - Day 3: Conversation persistence, suggestions, keyboard shortcut
 - Day 4: Confirmation flow, conversation management, polish
 - Day 5: Testing, edge cases, rate limiting
+
+---
+
+> **Testing (F99):** This feature MUST include tests using the [F99 Test Infrastructure](F99-e2e-testing-suite.md).
+> - **Unit tests** → `packages/cms-admin/src/lib/__tests__/{feature}.test.ts` or `packages/cms/src/__tests__/{feature}.test.ts`
+> - **API tests** → `packages/cms-admin/tests/api/{feature}.test.ts`
+> - **E2E tests** → `packages/cms-admin/e2e/suites/{nn}-{feature}.spec.ts`
+> - Use shared fixtures: `auth.ts` (JWT login), `mock-llm.ts` (intercept AI), `test-data.ts` (seed/cleanup)
+> - Tests are written BEFORE implementation. All tests must pass before merge.
