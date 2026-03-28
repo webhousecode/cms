@@ -596,6 +596,7 @@ export async function buildChatTools(): Promise<ToolPair[]> {
         const cleanData: Record<string, unknown> = {};
         for (const [key, value] of Object.entries(data)) {
           if (key.startsWith("_")) { cleanData[key] = value; continue; } // preserve meta fields
+          if (key === "status" || key === "slug" || key === "id" || key === "collection") continue; // reserved doc-level fields
           if (schemaFields.has(key)) {
             cleanData[key] = value;
           } else {
