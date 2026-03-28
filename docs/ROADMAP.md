@@ -78,7 +78,8 @@ _Without these, we cannot build and deliver professional sites on the platform._
 | ~~8i~~ | ~~**F89 Post-Build Enrichment**~~ | ~~Done~~ | ~~Shipped 2026-03-23. Per-page descriptions, _seo coordination with F97.~~ |
 | ~~8j~~ | ~~**F102 Schema Drift Detection**~~ | ~~Done~~ | ~~Shipped 2026-03-27. Yellow banner on collection list, 8 unit tests, API endpoint.~~ |
 | ~~8k~~ | ~~**F103 AI Image Analysis**~~ | ~~Done~~ | ~~Shipped 2026-03-25. Claude caption + alt-text + tags. Batch analyze. Auto-fill alt in editor. Auto-analyze on upload.~~ |
-| 8l | **F112 GEO (Generative Engine Optimization)** | Large | AI visibility is the new SEO. Smart robots.txt, GEO score, llms-full.txt, enhanced JSON-LD, AI visibility monitor, search index checker, GEO agent. First CMS with built-in AI visibility tools — THE differentiator. |
+| 8l | **F48 Internationalization (i18n)** | Large | Full multi-language CMS. AI auto-translates all content + SEO + metadata. Locale-aware AI prompts, build pipeline, translation UI, bulk translate, auto-translate on publish. Must ship before codebase grows more — every new feature needs locale hooks. |
+| 8m | **F112 GEO (Generative Engine Optimization)** | Large | AI visibility is the new SEO. Smart robots.txt, GEO score, llms-full.txt, enhanced JSON-LD, AI visibility monitor, search index checker, GEO agent. First CMS with built-in AI visibility tools — THE differentiator. |
 | 9 | **F31 Documentation Site** | Medium | Can't ship without docs. Last because it documents everything above. |
 | 9b | **F90 Marketing Content Bank** | Small | Living doc of messaging, talking points, README copy. Source of truth for product positioning. |
 | 9c | **F96 Embeddable Maps** | Small | Every business site needs a map. Richtext embed, map field type, Interactive template. |
@@ -91,7 +92,7 @@ _Makes us stand out. Customers expect these from a modern CMS._
 |----------|---------|------|----------------|
 | 9b | **F63 Shared Components** | Medium | Design tokens, shared UI components, API helpers. Makes all future features faster + consistent. |
 | 9c | **F84 Move Site to Org** | Small | Transfer site between orgs. Atomic registry move. Essential for agency org restructuring. |
-| 10 | **F48 i18n** | Medium | Multi-language is table stakes for European/global sites. Storage layer ready. |
+| 10 | ~~**F48 i18n**~~ | ~~Medium~~ | ~~Moved to Tier 1~~ |
 | 11 | **F38 Environment Manager** | Medium | Dev/Staging/Prod. Professional workflow for agencies. |
 | 12 | **F02 Import Engine** | Medium | Migrating FROM another CMS is the #1 adoption barrier. |
 | 13 | **F03 WordPress Migration** | Medium | WP is the biggest migration source. Built on F02. |
