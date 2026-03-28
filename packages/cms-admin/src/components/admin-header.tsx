@@ -13,7 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Settings, Fingerprint, Check, Moon, Sun, Monitor, LogOut, Search, ExternalLink, Rocket, Loader2, MessageSquare, LayoutDashboard, Plus, History } from "lucide-react";
+import { Settings, Fingerprint, Check, Moon, Sun, Monitor, LogOut, Search, ExternalLink, Rocket, Loader2, MessageSquare, LayoutDashboard, Plus, History, Languages } from "lucide-react";
 import type { AdminMode } from "@/lib/hooks/use-admin-mode";
 import { HelpButton } from "@/components/help-drawer";
 import { useThemeAxes, type Temperature } from "@/lib/hooks/use-theme-axes";
@@ -463,6 +463,41 @@ function ModeToggle({ mode, onToggle }: { mode: AdminMode; onToggle: () => void 
   );
 }
 
+function LocaleIndicator() {
+  const [siteLocales, setSiteLocales] = useState<string[]>([]);
+  const [fetchKey, setFetchKey] = useState(0);
+
+  useEffect(() => {
+    function onSiteChange() { setFetchKey((k) => k + 1); }
+    window.addEventListener("cms-site-change", onSiteChange);
+    return () => window.removeEventListener("cms-site-change", onSiteChange);
+  }, []);
+
+  useEffect(() => {
+    setSiteLocales([]);
+    fetch("/api/admin/site-config")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data?.locales?.length > 1) setSiteLocales(data.locales);
+      })
+      .catch(() => {});
+  }, [fetchKey]);
+
+  if (!siteLocales.length) return null;
+
+  return (
+    <span style={{
+      fontSize: "0.65rem", color: "var(--muted-foreground)",
+      display: "flex", alignItems: "center", gap: "0.2rem",
+      padding: "0.15rem 0.4rem", borderRadius: "4px",
+      border: "1px solid var(--border)",
+    }}>
+      <Languages style={{ width: "0.7rem", height: "0.7rem" }} />
+      {siteLocales.map((l) => l.toUpperCase()).join(" \u00B7 ")}
+    </span>
+  );
+}
+
 interface AdminHeaderProps {
   mode?: AdminMode;
   onToggleMode?: () => void;
@@ -549,6 +584,7 @@ export function AdminHeader({ mode, onToggleMode, onNewChat, onToggleHistory, sh
         {mode && onToggleMode && <ModeToggle mode={mode} onToggle={onToggleMode} />}
         <div style={{ width: "1px", height: "1rem", backgroundColor: "var(--border)" }} />
         <SiteSwitcher />
+        <LocaleIndicator />
         <OrgSwitcher />
         <DeployButton />
         <PreviewButton />

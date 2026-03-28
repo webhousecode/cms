@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, Fragment } from "react";
-import { Sparkles, Loader2, CheckCircle2, Plus, X, Download, Tag } from "lucide-react";
+import { Sparkles, Loader2, CheckCircle2, Plus, X, Download } from "lucide-react";
+import { LOCALE_FLAGS } from "@/lib/locale";
 import { TabTitle } from "@/lib/tabs-context";
 import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
 import { toast } from "sonner";
@@ -37,6 +38,11 @@ export default function SeoPage() {
   // Sub-tab state
   const [activeTab, setActiveTab] = useState<"documents" | "keywords">("documents");
 
+  // Locale filter state
+  const [localeFilter, setLocaleFilter] = useState("all");
+  const [siteLocales, setSiteLocales] = useState<string[]>([]);
+  const [siteDefaultLocale, setSiteDefaultLocale] = useState("en");
+
   // Keyword tracker state
   const [keywordData, setKeywordData] = useState<{ analyses: KeywordAnalysis[] } | null>(null);
   const [keywordLoading, setKeywordLoading] = useState(true);
@@ -48,6 +54,14 @@ export default function SeoPage() {
   useEffect(() => {
     loadData();
     loadKeywords();
+    // Fetch site config for locale filter
+    fetch("/api/admin/site-config")
+      .then((r) => r.ok ? r.json() : null)
+      .then((cfg) => {
+        if (cfg?.locales?.length) setSiteLocales(cfg.locales);
+        if (cfg?.defaultLocale) setSiteDefaultLocale(cfg.defaultLocale);
+      })
+      .catch(() => {});
   }, []);
 
   async function loadData() {
@@ -445,7 +459,34 @@ export default function SeoPage() {
           )}
 
           {/* Documents tab */}
-          {activeTab === "documents" && (
+          {activeTab === "documents" && (() => {
+            const filteredDocs = localeFilter === "all"
+              ? data.documents
+              : data.documents.filter((d) => (d.locale || siteDefaultLocale) === localeFilter);
+            return (
+          <div>
+          {siteLocales.length > 1 && (
+            <div style={{ display: "flex", gap: "0.25rem", marginBottom: "0.75rem", alignItems: "center" }}>
+              {[{ value: "all", label: "All" }, ...siteLocales.map((l) => ({ value: l, label: `${LOCALE_FLAGS[l] ?? ""} ${l.toUpperCase()}` }))].map((opt) => (
+                <button
+                  key={opt.value}
+                  onClick={() => setLocaleFilter(opt.value)}
+                  style={{
+                    padding: "0.2rem 0.5rem",
+                    fontSize: "0.7rem",
+                    fontWeight: localeFilter === opt.value ? 600 : 400,
+                    borderRadius: "9999px",
+                    border: localeFilter === opt.value ? "1px solid var(--foreground)" : "1px solid var(--border)",
+                    background: localeFilter === opt.value ? "var(--foreground)" : "transparent",
+                    color: localeFilter === opt.value ? "var(--background)" : "var(--muted-foreground)",
+                    cursor: "pointer",
+                  }}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          )}
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem" }}>
             <thead>
               <tr style={{ borderBottom: "1px solid var(--border)" }}>
@@ -459,7 +500,7 @@ export default function SeoPage() {
               </tr>
             </thead>
             <tbody>
-              {data.documents.map((doc) => (
+              {filteredDocs.map((doc) => (
                 <tr key={`${doc.collection}/${doc.slug}`} style={{ borderBottom: "1px solid var(--border)" }}>
                   <td style={{ padding: "0.625rem 0.75rem" }}>
                     <a
@@ -507,7 +548,9 @@ export default function SeoPage() {
               ))}
             </tbody>
           </table>
-          )}
+          </div>
+            );
+          })()}
         </div>
       )}
     </>
