@@ -151,3 +151,7 @@ export class InfographicEngine {
 > - **E2E tests** → `packages/cms-admin/e2e/suites/{nn}-{feature}.spec.ts`
 > - Use shared fixtures: `auth.ts` (JWT login), `mock-llm.ts` (intercept AI), `test-data.ts` (seed/cleanup)
 > - Tests are written BEFORE implementation. All tests must pass before merge.
+
+> **i18n (F48):** This feature produces or manages user-facing content. All generated text,
+> AI prompts, and UI output MUST respect the site's `defaultLocale` and `locales` settings.
+> Use `getLocale()` for runtime locale resolution. See [F48 i18n](F48-i18n.md) for details.
