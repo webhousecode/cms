@@ -756,6 +756,56 @@ export async function buildChatTools(): Promise<ToolPair[]> {
       },
     },
 
+    // ── build_site ─────────────────────────────────────────────
+    {
+      definition: {
+        name: "build_site",
+        description:
+          "Build/rebuild the static site so changes are visible in preview. Call this ONCE after you finish creating, updating, publishing, or deleting documents — not after every single document. Includes drafts with a DRAFT banner.",
+        input_schema: {
+          type: "object",
+          properties: {},
+          required: [],
+        },
+      },
+      handler: async () => {
+        try {
+          const { getActiveSitePaths } = await import("@/lib/site-paths");
+          const { getAdminCms, getAdminConfig } = await import("@/lib/cms");
+          const { existsSync } = await import("node:fs");
+          const path = await import("node:path");
+          const sitePaths = await getActiveSitePaths();
+          const projectDir = sitePaths.projectDir;
+
+          // Strategy 1: custom build.ts
+          const buildFile = path.join(projectDir, "build.ts");
+          if (existsSync(buildFile)) {
+            const { execSync } = await import("node:child_process");
+            execSync("npx tsx build.ts", {
+              cwd: projectDir,
+              timeout: 30000,
+              env: { ...process.env, NODE_ENV: "production", BASE_PATH: "", INCLUDE_DRAFTS: "true" },
+              stdio: "pipe",
+            });
+            return "Site built successfully. Changes are now visible in preview.";
+          }
+
+          // Strategy 2: use CMS runBuild directly
+          const { runBuild } = await import("@webhouse/cms");
+          const cms = await getAdminCms();
+          const config = await getAdminConfig();
+          const distDir = path.join(projectDir, "dist");
+          const result = await runBuild(config, cms.storage, {
+            outDir: distDir,
+            includeDrafts: true,
+          });
+          return `Site built successfully — ${result.pages} pages. Changes are now visible in preview.`;
+        } catch (err) {
+          return `Build failed: ${err instanceof Error ? err.message : "unknown error"}`;
+        }
+      },
+    },
+
     // ── trash_document ────────────────────────────────────────
     {
       definition: {

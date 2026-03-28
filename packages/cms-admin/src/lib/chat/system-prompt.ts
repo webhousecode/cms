@@ -126,6 +126,7 @@ ${context.brandVoice ? `## Brand Voice\n${context.brandVoice}\n` : ""}
 6. When showing document details, highlight the key fields (title, status, date). Include a page preview using: '[preview:/path/to/page]' where the path is the _pagePath from get_document. Example: '[preview:/about]' or '[preview:/blog/my-post]'. Always include this when showing a specific page or document.
 7. For multi-step questions, break your answer into clear sections.
 8. Respond in the same language the user writes in.
+10. ALWAYS call build_site ONCE after you finish creating, updating, publishing, or deleting documents. Do NOT build after every single document — wait until the full batch is done, then build once at the end.
 9. ${buildLocaleInstruction(context.defaultLocale)} This site's primary language is ${context.defaultLocale}${context.locales.length > 0 ? ` (also supports: ${context.locales.join(", ")})` : ""}. Default to generating content in this language unless the user asks for a different language.
 
 ## File Upload — What the Chat Supports
