@@ -1492,30 +1492,39 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
         {sideBySide && sourceDoc && (
           <div style={{
             flex: "0 0 50%", maxWidth: "50%", borderRight: "2px solid var(--border)",
-            padding: "2rem 1.5rem", overflowY: "auto", opacity: 0.7,
+            padding: "2rem 1.5rem", overflowY: "auto",
             background: "var(--muted)", fontSize: "0.85rem",
           }}>
-            <p style={{ fontSize: "0.65rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted-foreground)", marginBottom: "1rem" }}>
+            <p style={{ fontSize: "0.65rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted-foreground)", marginBottom: "1.5rem" }}>
               Source ({(initialDoc as any).translationOf})
             </p>
             {colConfig.fields.map((field) => {
               const val = sourceDoc[field.name];
               if (val === undefined || val === null || val === "") return null;
               return (
-                <div key={field.name} style={{ marginBottom: "1.25rem" }}>
-                  <p style={{ fontSize: "0.65rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted-foreground)", marginBottom: "0.25rem" }}>
+                <div key={field.name} style={{ marginBottom: "1.5rem" }}>
+                  <p style={{ fontSize: "0.65rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted-foreground)", marginBottom: "0.35rem" }}>
                     {field.label || field.name}
                   </p>
-                  {field.type === "richtext" ? (
+                  {(field.type === "richtext" || field.type === "htmldoc") ? (
                     <div
-                      style={{ fontSize: "0.85rem", lineHeight: 1.6, color: "var(--foreground)" }}
+                      className="prose prose-sm dark:prose-invert"
+                      style={{ fontSize: "0.85rem", lineHeight: 1.6, color: "var(--foreground)", maxWidth: "none" }}
                       dangerouslySetInnerHTML={{ __html: String(val) }}
                     />
                   ) : field.type === "image" ? (
                     <img src={String(val)} alt="" style={{ maxWidth: "100%", borderRadius: "6px" }} />
+                  ) : field.type === "textarea" ? (
+                    <p style={{ fontSize: "0.85rem", color: "var(--foreground)", margin: 0, whiteSpace: "pre-wrap", lineHeight: 1.6 }}>
+                      {String(val)}
+                    </p>
+                  ) : typeof val === "object" ? (
+                    <pre style={{ fontSize: "0.75rem", color: "var(--foreground)", margin: 0, whiteSpace: "pre-wrap", fontFamily: "monospace", opacity: 0.7 }}>
+                      {JSON.stringify(val, null, 2)}
+                    </pre>
                   ) : (
-                    <p style={{ fontSize: "0.85rem", color: "var(--foreground)", margin: 0, whiteSpace: "pre-wrap" }}>
-                      {typeof val === "object" ? JSON.stringify(val, null, 2) : String(val)}
+                    <p style={{ fontSize: "0.9rem", color: "var(--foreground)", margin: 0 }}>
+                      {String(val)}
                     </p>
                   )}
                 </div>
