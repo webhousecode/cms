@@ -1415,6 +1415,8 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
             );
           })}
           {(() => {
+            // Only source documents can create translations (not translations of translations)
+            if (translationOf) return null;
             const existingLocs = [locale || defaultLocale || null, ...translations.map(t => t.locale)];
             const available = (locales ?? []).filter(l => !existingLocs.includes(l));
             return available.length > 0 ? (
@@ -1466,9 +1468,17 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
       {/* Editor body */}
       <div>
         <div className="doc-editor-body space-y-10">
-          <div className="flex gap-6 text-xs text-muted-foreground font-mono pb-8 border-b border-border">
+          <div className="flex gap-6 text-xs text-muted-foreground font-mono pb-8 border-b border-border flex-wrap">
             <span>Created {formatDate(doc.createdAt)}</span>
             <span>Updated {formatDate(doc.updatedAt)}</span>
+            <span
+              title="Click to copy document ID"
+              onClick={() => { navigator.clipboard.writeText(doc.id); }}
+              style={{ cursor: "pointer", opacity: 0.5 }}
+              className="hover:opacity-100"
+            >
+              ID: {doc.id.slice(0, 8)}…
+            </span>
             {translationOf && (
               <span>
                 Translation of{" "}
