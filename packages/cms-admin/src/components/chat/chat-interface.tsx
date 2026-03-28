@@ -29,6 +29,8 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
   const [showHistory, setShowHistory] = useState(false);
   const [conversations, setConversations] = useState<ConversationMeta[]>([]);
   const abortRef = useRef<AbortController | null>(null);
+  const messagesRef = useRef(messages);
+  messagesRef.current = messages;
 
   // Listen for header button events
   useEffect(() => {
@@ -167,8 +169,8 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
       setThinkingStartTime(null);
       abortRef.current = null;
 
-      // Save conversation
-      saveConversation(conversationId, updatedMessages);
+      // Save conversation (use ref to get latest messages including streamed AI response)
+      saveConversation(conversationId, messagesRef.current);
     },
     [messages, conversationId]
   );
