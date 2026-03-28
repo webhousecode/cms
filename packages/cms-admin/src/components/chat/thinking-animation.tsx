@@ -1,10 +1,38 @@
 "use client";
 
+import { useState, useEffect } from "react";
+
 /**
  * Claude-inspired thinking animation.
  * Three dots orbit in a smooth circular pattern with a warm glow.
+ * Optional elapsed timer (M:SS) when startTime is provided.
  */
-export function ThinkingAnimation({ label }: { label?: string }) {
+export function ThinkingAnimation({
+  label,
+  startTime,
+}: {
+  label?: string;
+  startTime?: number | null;
+}) {
+  const [elapsed, setElapsed] = useState(0);
+
+  useEffect(() => {
+    if (!startTime) {
+      setElapsed(0);
+      return;
+    }
+    // Update immediately
+    setElapsed(Math.floor((Date.now() - startTime) / 1000));
+    const interval = setInterval(() => {
+      setElapsed(Math.floor((Date.now() - startTime) / 1000));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [startTime]);
+
+  const minutes = Math.floor(elapsed / 60);
+  const seconds = elapsed % 60;
+  const timeStr = `${minutes}:${String(seconds).padStart(2, "0")}`;
+
   return (
     <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
       <div style={{ position: "relative", width: "28px", height: "28px" }}>
@@ -68,6 +96,18 @@ export function ThinkingAnimation({ label }: { label?: string }) {
       {label && (
         <span style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", fontStyle: "italic" }}>
           {label}
+        </span>
+      )}
+      {startTime && elapsed > 0 && (
+        <span
+          style={{
+            fontSize: "0.75rem",
+            color: "var(--muted-foreground)",
+            opacity: 0.6,
+            fontVariantNumeric: "tabular-nums",
+          }}
+        >
+          {timeStr}
         </span>
       )}
     </div>

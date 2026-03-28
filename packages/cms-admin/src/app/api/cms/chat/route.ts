@@ -124,7 +124,12 @@ export async function POST(request: NextRequest) {
             break;
           }
 
-          // Has tool calls — don't stream intermediate "thinking" text
+          // Stream intermediate reasoning text so the UI can show it
+          for (const block of textBlocks) {
+            if (block.text) {
+              sendEvent("thinking", { text: block.text });
+            }
+          }
 
           // Execute tool calls
           const toolResults: Anthropic.ToolResultBlockParam[] = [];

@@ -49,6 +49,8 @@ export interface ChatMessageUI {
 interface MessageListProps {
   messages: ChatMessageUI[];
   isThinking: boolean;
+  thinkingText?: string;
+  thinkingStartTime?: number | null;
 }
 
 function MessageCopyButton({ text }: { text: string }) {
@@ -173,7 +175,8 @@ function MessageBubble({ message }: { message: ChatMessageUI }) {
   );
 }
 
-export function MessageList({ messages, isThinking }: MessageListProps) {
+export function MessageList({ messages, isThinking, thinkingText, thinkingStartTime }: MessageListProps) {
+  const [thinkingExpanded, setThinkingExpanded] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -200,23 +203,66 @@ export function MessageList({ messages, isThinking }: MessageListProps) {
         ))}
 
         {isThinking && (
-          <div style={{ display: "flex", gap: "12px", padding: "16px 0", alignItems: "center" }}>
+          <div style={{ padding: "16px 0" }}>
             <div
               style={{
-                width: "28px",
-                height: "28px",
-                borderRadius: "50%",
                 display: "flex",
+                gap: "12px",
                 alignItems: "center",
-                justifyContent: "center",
-                flexShrink: 0,
-                backgroundColor: "var(--muted)",
-                color: "var(--foreground)",
+                cursor: thinkingText ? "pointer" : "default",
               }}
+              onClick={() => thinkingText && setThinkingExpanded((prev) => !prev)}
             >
-              <Bot style={{ width: "14px", height: "14px" }} />
+              <div
+                style={{
+                  width: "28px",
+                  height: "28px",
+                  borderRadius: "50%",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  flexShrink: 0,
+                  backgroundColor: "var(--muted)",
+                  color: "var(--foreground)",
+                }}
+              >
+                <Bot style={{ width: "14px", height: "14px" }} />
+              </div>
+              {thinkingText && (
+                <span
+                  style={{
+                    fontSize: "0.7rem",
+                    color: "var(--muted-foreground)",
+                    opacity: 0.5,
+                    transition: "transform 0.15s",
+                    transform: thinkingExpanded ? "rotate(90deg)" : "rotate(0deg)",
+                  }}
+                >
+                  ▶
+                </span>
+              )}
+              <ThinkingAnimation label="Thinking..." startTime={thinkingStartTime} />
             </div>
-            <ThinkingAnimation label="Thinking..." />
+            {thinkingExpanded && thinkingText && (
+              <div
+                style={{
+                  marginLeft: "40px",
+                  marginTop: "8px",
+                  padding: "8px 12px",
+                  fontSize: "0.75rem",
+                  lineHeight: 1.5,
+                  color: "var(--muted-foreground)",
+                  backgroundColor: "var(--muted)",
+                  borderRadius: "6px",
+                  whiteSpace: "pre-wrap",
+                  maxHeight: "200px",
+                  overflowY: "auto",
+                  opacity: 0.8,
+                }}
+              >
+                {thinkingText.trim()}
+              </div>
+            )}
           </div>
         )}
 
