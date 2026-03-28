@@ -167,7 +167,7 @@ function layout(title: string, content: string, locale: string, alternateUrl?: s
       <nav>
         <a href="${bp(prefix)}/" class="site-title">Simple Blog</a>
         <a href="${bp(prefix)}/posts/" class="nav-link">${navLabels.posts}</a>
-        <a href="${bp(prefix === "" ? "/om-os/" : `${prefix}/about/`)}" class="nav-link">${navLabels.about}</a>
+        <a href="${bp(`${prefix}/${locale === "da" ? "om-os" : "about"}/`)}" class="nav-link">${navLabels.about}</a>
         <a href="${altHref}" class="nav-link" style="margin-left:auto; font-size:0.8rem; border:1px solid var(--color-border); padding:0.2rem 0.6rem; border-radius:4px;" title="${altLabel}">
           ${altFlag} ${altLocale.toUpperCase()}
         </a>
@@ -395,10 +395,16 @@ for (const locale of LOCALES) {
   // Pages
   for (const page of pages) {
     const isDraft = page.status === "draft";
-    const slug = page.slug === "home" ? "" : page.slug;
-    const path = slug ? `${outPrefix}${slug}/index.html` : `${outPrefix}about/index.html`;
+    // Use source slug for path (strip locale suffix, find canonical name)
+    const sourceSlug = page.translationOf ?? page.slug;
+    const cleanSlug = sourceSlug === "home" ? "" : sourceSlug;
+    // For about pages: use "about" as the path regardless of slug (om-os → about for EN, om-os for DA)
+    const pageDir = cleanSlug === "om-os" && locale !== "da" ? "about" : (cleanSlug || "about");
+    const path = `${outPrefix}${pageDir}/index.html`;
     const alt = getAlternate(page, altLocale, allPages);
-    const altUrl = alt ? `${bp(localePrefix(altLocale))}/${alt.slug === "home" ? "about" : alt.slug}/` : undefined;
+    const altSlug = alt?.translationOf ?? alt?.slug;
+    const altDir = altSlug === "om-os" && altLocale !== "da" ? "about" : (altSlug === "home" ? "about" : altSlug);
+    const altUrl = alt ? `${bp(localePrefix(altLocale))}/${altDir}/` : undefined;
     write(path, layout(String(page.data.title), `
       ${isDraft ? DRAFT_BANNER : ""}
       <article class="prose">
