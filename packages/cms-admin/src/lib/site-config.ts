@@ -81,6 +81,11 @@ export interface SiteConfig {
   linkCheckWebhooks: { id: string; url: string }[];
   publishWebhooks: { id: string; url: string }[];
   agentDefaultWebhooks: { id: string; url: string }[];
+
+  /** F48 i18n — default language for the site (BCP 47, e.g. "da", "en") */
+  defaultLocale: string;
+  /** F48 i18n — all locales the site supports (empty = single-locale site) */
+  locales: string[];
 }
 
 async function getConfigPath(): Promise<string> {
@@ -135,6 +140,8 @@ async function defaults(): Promise<SiteConfig> {
     linkCheckWebhooks: [],
     publishWebhooks: [],
     agentDefaultWebhooks: [],
+    defaultLocale: "en",
+    locales: [],
   };
 }
 

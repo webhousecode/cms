@@ -5,6 +5,8 @@ import { getModel } from "@/lib/ai/model-resolver";
 import { denyViewers } from "@/lib/require-role";
 import Anthropic from "@anthropic-ai/sdk";
 import type { SeoFields } from "@/lib/seo/score";
+import { buildLocaleInstruction, getSeoLimits } from "@/lib/ai/locale-prompt";
+import { readSiteConfig } from "@/lib/site-config";
 
 /**
  * POST /api/admin/seo/optimize-bulk
@@ -20,7 +22,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Anthropic API key not configured" }, { status: 503 });
   }
 
-  const [cms, config, seoModel] = await Promise.all([getAdminCms(), getAdminConfig(), getModel("content")]);
+  const [cms, config, seoModel, siteConfig] = await Promise.all([getAdminCms(), getAdminConfig(), getModel("content"), readSiteConfig()]);
   const client = new Anthropic({ apiKey });
 
   // Optional filter
@@ -66,10 +68,13 @@ export async function POST(req: NextRequest) {
       let done = 0;
       for (const doc of toOptimize) {
         try {
+          const docLocale = (doc.data.locale as string) || siteConfig.defaultLocale || "en";
+          const limits = getSeoLimits(docLocale);
+
           const message = await client.messages.create({
             model: seoModel,
             max_tokens: 1024,
-            system: "You generate SEO metadata. Return ONLY a JSON object, no explanation.",
+            system: `${buildLocaleInstruction(docLocale)}\nYou generate SEO metadata. Return ONLY a JSON object, no explanation.`,
             messages: [{
               role: "user",
               content: `Generate SEO for this page:
@@ -78,8 +83,8 @@ Content: ${doc.content}
 
 Return JSON:
 {
-  "metaTitle": "SEO title (30-60 chars, MUST include the primary keyword)",
-  "metaDescription": "description (130-155 chars, MUST include the primary keyword)",
+  "metaTitle": "SEO title (${limits.titleMin}-${limits.titleMax} chars, MUST include the primary keyword)",
+  "metaDescription": "description (${limits.descMin}-${limits.descMax} chars, MUST include the primary keyword)",
   "keywords": ["primary-keyword", "kw2", "kw3", "kw4", "kw5"]
 }`,
             }],

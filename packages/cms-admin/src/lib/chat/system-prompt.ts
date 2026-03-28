@@ -1,6 +1,8 @@
 import { getAdminCms, getAdminConfig } from "@/lib/cms";
 import { readBrandVoice, brandVoiceToPromptContext } from "@/lib/brand-voice";
 import { loadRegistry, findSite } from "@/lib/site-registry";
+import { readSiteConfig } from "@/lib/site-config";
+import { buildLocaleInstruction } from "@/lib/ai/locale-prompt";
 import { cookies } from "next/headers";
 
 export interface SiteContext {
@@ -13,6 +15,8 @@ export interface SiteContext {
     documentCount: number;
   }>;
   brandVoice?: string;
+  defaultLocale: string;
+  locales: string[];
 }
 
 /** Gather full site context for the chat system prompt */
@@ -36,7 +40,10 @@ export async function gatherSiteContext(): Promise<SiteContext> {
     }
   } catch { /* fallback to defaults */ }
 
-  const brandVoice = await readBrandVoice().catch(() => null);
+  const [brandVoice, siteConfig] = await Promise.all([
+    readBrandVoice().catch(() => null),
+    readSiteConfig(),
+  ]);
   const brandContext = brandVoice ? brandVoiceToPromptContext(brandVoice) : undefined;
 
   const collections: SiteContext["collections"] = [];
@@ -65,6 +72,8 @@ export async function gatherSiteContext(): Promise<SiteContext> {
     adapter,
     collections,
     brandVoice: brandContext ?? undefined,
+    defaultLocale: siteConfig.defaultLocale || "en",
+    locales: siteConfig.locales || [],
   };
 }
 
@@ -114,6 +123,7 @@ ${context.brandVoice ? `## Brand Voice\n${context.brandVoice}\n` : ""}
 6. When showing document details, highlight the key fields (title, status, date). Include a page preview using: '[preview:/path/to/page]' where the path is the _pagePath from get_document. Example: '[preview:/about]' or '[preview:/blog/my-post]'. Always include this when showing a specific page or document.
 7. For multi-step questions, break your answer into clear sections.
 8. Respond in the same language the user writes in.
+9. ${buildLocaleInstruction(context.defaultLocale)} This site's primary language is ${context.defaultLocale}${context.locales.length > 0 ? ` (also supports: ${context.locales.join(", ")})` : ""}. Default to generating content in this language unless the user asks for a different language.
 
 ## File Upload — What the Chat Supports
 Users can upload files via the + button or drag & drop. Here's what happens:

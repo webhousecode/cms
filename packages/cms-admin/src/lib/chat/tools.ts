@@ -2,6 +2,7 @@ import { getAdminCms, getAdminConfig } from "@/lib/cms";
 import { readSiteConfig } from "@/lib/site-config";
 import { loadRegistry, findSite } from "@/lib/site-registry";
 import { saveRevision } from "@/lib/revisions";
+import { buildLocaleInstruction, getSeoLimits } from "@/lib/ai/locale-prompt";
 // getDocumentUrl imported dynamically in get_document handler to avoid Turbopack bundling issues
 import { cookies } from "next/headers";
 import type { ToolDefinition, ToolHandler } from "@/lib/tools";
@@ -589,11 +590,15 @@ export async function buildChatTools(): Promise<ToolPair[]> {
               const { getModel } = await import("@/lib/ai/model-resolver");
               const seoModel = await getModel("content");
               const seoClient = new Anthropic({ apiKey: seoApiKey });
+              const seoLocaleConfig = await readSiteConfig();
+              const seoLocale = seoLocaleConfig.defaultLocale || "en";
+              const seoLimits = getSeoLimits(seoLocale);
+              const seoLocaleInstr = buildLocaleInstruction(seoLocale);
               const seoRes = await seoClient.messages.create({
                 model: seoModel,
                 max_tokens: 512,
-                system: "You generate SEO metadata. Return ONLY a JSON object, no explanation.",
-                messages: [{ role: "user", content: `Generate SEO for this page:\nTitle: ${docTitle}\nContent: ${docContent}\n\nReturn JSON:\n{\n  "metaTitle": "SEO title (30-60 chars)",\n  "metaDescription": "description (130-155 chars)",\n  "keywords": ["kw1", "kw2", "kw3", "kw4", "kw5"]\n}` }],
+                system: `${seoLocaleInstr}\nYou generate SEO metadata. Return ONLY a JSON object, no explanation.`,
+                messages: [{ role: "user", content: `Generate SEO for this page:\nTitle: ${docTitle}\nContent: ${docContent}\n\nReturn JSON:\n{\n  "metaTitle": "SEO title (${seoLimits.titleMin}-${seoLimits.titleMax} chars)",\n  "metaDescription": "description (${seoLimits.descMin}-${seoLimits.descMax} chars)",\n  "keywords": ["kw1", "kw2", "kw3", "kw4", "kw5"]\n}` }],
               });
               const raw = (seoRes.content[0] as { text: string }).text.trim();
               const parsed = JSON.parse(raw.replace(/^```json?\n?/, "").replace(/\n?```$/, ""));
@@ -829,10 +834,13 @@ export async function buildChatTools(): Promise<ToolPair[]> {
 
         const { getModel: getM } = await import("@/lib/ai/model-resolver");
         const genModel = await getM("code");
+        const genLocaleConfig = await readSiteConfig();
+        const genLocale = genLocaleConfig.defaultLocale || "en";
+        const genLocaleInstr = buildLocaleInstruction(genLocale);
         const response = await client.messages.create({
           model: genModel,
           max_tokens: 2048,
-          system: `You are a content writer. Generate content for the "${fieldDef?.label ?? field}" field. ${constraint}\nExisting document: ${JSON.stringify(doc.data, null, 2)}`,
+          system: `${genLocaleInstr}\nYou are a content writer. Generate content for the "${fieldDef?.label ?? field}" field. ${constraint}\nExisting document: ${JSON.stringify(doc.data, null, 2)}`,
           messages: [{ role: "user", content: prompt }],
         });
 
@@ -889,11 +897,14 @@ export async function buildChatTools(): Promise<ToolPair[]> {
 
         const { getModel: getM2 } = await import("@/lib/ai/model-resolver");
         const rwModel = await getM2("code");
+        const rwLocaleConfig = await readSiteConfig();
+        const rwLocale = rwLocaleConfig.defaultLocale || "en";
+        const rwLocaleInstr = buildLocaleInstruction(rwLocale);
         const client = new Anthropic({ apiKey });
         const response = await client.messages.create({
           model: rwModel,
           max_tokens: 2048,
-          system: "You are a content rewriter. Output ONLY the rewritten content. No preamble, no explanation.",
+          system: `${rwLocaleInstr}\nYou are a content rewriter. Output ONLY the rewritten content. No preamble, no explanation.`,
           messages: [{
             role: "user",
             content: `Rewrite this content. Instruction: ${instruction}\n\nOriginal:\n${String(currentValue)}`,

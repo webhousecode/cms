@@ -298,6 +298,8 @@ function SiteSection() {
 		schemaEditEnabled: false,
 		devInspector: false,
 		showCloseAllTabs: false,
+		defaultLocale: "en",
+		locales: [] as string[],
 	});
 	const [saving, setSaving] = useState(false);
 	const [saved, setSaved] = useState(false);
@@ -309,8 +311,8 @@ function SiteSection() {
 		let resolvedDir = "";
 		// Fetch site-config first (has resolved paths), then registry (has names)
 		Promise.all([
-			fetch("/api/admin/site-config").then((r) => r.json()),
-			fetch("/api/cms/registry").then((r) => r.json()),
+			fetch("/api/admin/site-config", { cache: "no-store" }).then((r) => r.json()),
+			fetch("/api/cms/registry", { cache: "no-store" }).then((r) => r.json()),
 		]).then(([cfg, reg]: [any, { registry?: { orgs: Array<{ id: string; sites: Array<{ id: string; name: string; configPath?: string; contentDir?: string; github?: { contentDir?: string } }> }> } }]) => {
 			setCfg(cfg);
 			resolvedDir = cfg.resolvedContentDir ?? "";
@@ -482,6 +484,8 @@ function SiteSection() {
 				</Card>
 			</div>
 
+			<LanguageSection cfg={cfg} setCfg={setCfg} />
+
 			<div>
 				<SectionHeading>Developer</SectionHeading>
 				<Card>
@@ -503,6 +507,161 @@ function SiteSection() {
 
 			<ErrorMsg msg={error} />
 		</form>
+	);
+}
+
+/* ─── Language section (F48 i18n) ──────────────────────────────── */
+
+import { LOCALE_LABELS, LOCALE_FLAGS } from "@/lib/locale";
+
+const AVAILABLE_LOCALES = Object.keys(LOCALE_LABELS);
+
+function LanguageSection({ cfg, setCfg }: {
+	cfg: { defaultLocale: string; locales: string[] };
+	setCfg: (fn: (c: any) => any) => void;
+}) {
+	const [adding, setAdding] = useState(false);
+
+	function addLocale(locale: string) {
+		setCfg((c: any) => {
+			const next = [...(c.locales || [])];
+			if (!next.includes(locale)) next.push(locale);
+			// Ensure defaultLocale is always in locales when there are multiple
+			if (!next.includes(c.defaultLocale) && next.length > 0) next.unshift(c.defaultLocale);
+			return { ...c, locales: next };
+		});
+		setAdding(false);
+	}
+
+	function removeLocale(locale: string) {
+		setCfg((c: any) => {
+			const next = (c.locales || []).filter((l: string) => l !== locale);
+			// If removing all extra locales, clear the array
+			if (next.length <= 1) return { ...c, locales: [] };
+			return { ...c, locales: next };
+		});
+	}
+
+	const currentLocales = cfg.locales?.length ? cfg.locales : [];
+	const availableToAdd = AVAILABLE_LOCALES.filter((l) => !currentLocales.includes(l) && l !== cfg.defaultLocale);
+
+	return (
+		<div>
+			<SectionHeading>Language</SectionHeading>
+			<Card>
+				<div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+					<div>
+						<p style={{ fontSize: "0.875rem", fontWeight: 500, margin: 0 }}>Default language</p>
+						<p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", margin: "0.15rem 0 0" }}>
+							The primary language for content on this site.
+						</p>
+					</div>
+					<CustomSelect
+						value={cfg.defaultLocale || "en"}
+						onChange={(v) => setCfg((c: any) => {
+							const next = { ...c, defaultLocale: v };
+							// If locales array exists, update it to include new default
+							if (next.locales?.length > 0 && !next.locales.includes(v)) {
+								next.locales = [v, ...next.locales.filter((l: string) => l !== c.defaultLocale)];
+							}
+							return next;
+						})}
+						options={AVAILABLE_LOCALES.map((l) => ({
+							value: l,
+							label: `${LOCALE_FLAGS[l] || ""} ${LOCALE_LABELS[l] || l} (${l})`,
+						}))}
+						placeholder="Select language"
+					/>
+				</div>
+
+				<div style={{ height: "1px", background: "var(--border)" }} />
+
+				<div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+					<div>
+						<p style={{ fontSize: "0.875rem", fontWeight: 500, margin: 0 }}>Supported languages</p>
+						<p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", margin: "0.15rem 0 0" }}>
+							Additional languages this site supports. Content can be translated to these languages.
+						</p>
+					</div>
+
+					{currentLocales.length > 0 && (
+						<div style={{ display: "flex", flexWrap: "wrap", gap: "0.375rem" }}>
+							{currentLocales.map((l) => (
+								<span
+									key={l}
+									style={{
+										display: "inline-flex", alignItems: "center", gap: "0.35rem",
+										padding: "0.25rem 0.6rem", borderRadius: "6px",
+										background: l === cfg.defaultLocale
+											? "color-mix(in srgb, var(--primary) 15%, transparent)"
+											: "var(--accent)",
+										fontSize: "0.8rem", fontWeight: 500,
+										color: l === cfg.defaultLocale ? "var(--primary)" : "var(--foreground)",
+									}}
+								>
+									{LOCALE_FLAGS[l] || ""} {LOCALE_LABELS[l] || l}
+									{l === cfg.defaultLocale && (
+										<span style={{ fontSize: "0.65rem", opacity: 0.7 }}>default</span>
+									)}
+									{l !== cfg.defaultLocale && (
+										<button
+											type="button"
+											onClick={() => removeLocale(l)}
+											style={{
+												background: "none", border: "none", cursor: "pointer",
+												color: "var(--muted-foreground)", fontSize: "0.75rem",
+												padding: "0 0.1rem", lineHeight: 1,
+											}}
+											title={`Remove ${LOCALE_LABELS[l] || l}`}
+										>
+											&times;
+										</button>
+									)}
+								</span>
+							))}
+						</div>
+					)}
+
+					{adding ? (
+						<div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+							<CustomSelect
+								value=""
+								onChange={(v) => { if (v) addLocale(v); }}
+								options={availableToAdd.map((l) => ({
+									value: l,
+									label: `${LOCALE_FLAGS[l] || ""} ${LOCALE_LABELS[l] || l} (${l})`,
+								}))}
+								placeholder="Select language to add"
+							/>
+							<button
+								type="button"
+								onClick={() => setAdding(false)}
+								style={{
+									padding: "0.4rem 0.75rem", borderRadius: "6px",
+									border: "1px solid var(--border)", background: "transparent",
+									color: "var(--foreground)", fontSize: "0.8rem", cursor: "pointer",
+								}}
+							>
+								Cancel
+							</button>
+						</div>
+					) : (
+						<button
+							type="button"
+							onClick={() => setAdding(true)}
+							style={{
+								alignSelf: "flex-start",
+								padding: "0.4rem 0.75rem", borderRadius: "6px",
+								border: "1px solid var(--border)", background: "transparent",
+								color: "var(--foreground)", fontSize: "0.8rem", cursor: "pointer",
+							}}
+						>
+							+ Add language
+						</button>
+					)}
+				</div>
+			</Card>
+		</div>
 	);
 }
 

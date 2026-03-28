@@ -3,6 +3,8 @@ import Anthropic from "@anthropic-ai/sdk";
 import { getApiKey } from "@/lib/ai-config";
 import { getModel } from "@/lib/ai/model-resolver";
 import { denyViewers } from "@/lib/require-role";
+import { readSiteConfig } from "@/lib/site-config";
+import { LOCALE_LABELS } from "@/lib/locale";
 
 const SYSTEM = `You are an AI agent configurator for a headless CMS. Given a natural language description of a desired content agent, return a single valid JSON object — no markdown, no explanation, no code fences.
 
@@ -34,6 +36,7 @@ Rules:
 - behavior values are 0–100 integers (temperature: 0=factual/100=creative, formality: 0=casual/100=academic, verbosity: 0=concise/100=detailed)
 - schedule.maxPerRun is 1–10
 - systemPrompt must always be written in English regardless of the output language
+- The site's default language is {{SITE_LOCALE}}. Unless the user explicitly requests a different language, end the systemPrompt with: "Generate all content in {{SITE_LANG}}."
 - If the agent should produce content in a non-English language, end the systemPrompt with: "Generate all content in [language]."
 - Default autonomy to "draft" unless the user explicitly requests autonomous publishing
 - Pick the role that best matches: copywriter (articles/pages), seo (meta/keywords), translator (translation), refresher (updating existing content), custom (anything else)
@@ -56,13 +59,18 @@ export async function POST(request: NextRequest) {
   }
 
   const client = new Anthropic({ apiKey });
+  const siteConfig = await readSiteConfig();
+  const langName = LOCALE_LABELS[siteConfig.defaultLocale] ?? siteConfig.defaultLocale;
+  const systemPrompt = SYSTEM
+    .replace("{{SITE_LOCALE}}", `${langName} (${siteConfig.defaultLocale})`)
+    .replace("{{SITE_LANG}}", langName);
 
   try {
     const codeModel = await getModel("code");
     const message = await client.messages.create({
       model: codeModel,
       max_tokens: 1024,
-      system: SYSTEM,
+      system: systemPrompt,
       messages: [{ role: "user", content: description.trim() }],
     });
 

@@ -5,6 +5,8 @@ import { buildContentContext } from "@/lib/content-context";
 import { readSiteConfig } from "@/lib/site-config";
 import { getModel } from "@/lib/ai/model-resolver";
 import { denyViewers } from "@/lib/require-role";
+import { buildLocaleInstruction } from "@/lib/ai/locale-prompt";
+import { getDocLocale } from "@/lib/locale";
 
 // Allow long-running streaming responses (Sonnet + large context can take 2+ minutes)
 export const maxDuration = 300;
@@ -50,10 +52,12 @@ export async function POST(request: NextRequest) {
     const defaultModel = isInteractives ? siteConfig.aiInteractivesModel : siteConfig.aiContentModel;
     const defaultMaxTokens = isInteractives ? siteConfig.aiInteractivesMaxTokens : siteConfig.aiContentMaxTokens;
 
+    const locale = getDocLocale(docData ?? {}, siteConfig.defaultLocale);
+
     let systemPrompt: string;
 
     if (customSystem !== undefined && customSystem !== null && customSystem.length > 0) {
-      systemPrompt = customSystem;
+      systemPrompt = `${buildLocaleInstruction(locale)}\n${customSystem}`;
     } else {
       const fieldDescriptions = fields
         ?.map((f) => `- ${f.label ?? f.name} (${f.type})`)
@@ -74,7 +78,8 @@ export async function POST(request: NextRequest) {
         }
       }
 
-      systemPrompt = `You are a content writer inside a CMS. ${collectionName ? `Collection: ${collectionName}.` : ""}
+      systemPrompt = `${buildLocaleInstruction(locale)}
+You are a content writer inside a CMS. ${collectionName ? `Collection: ${collectionName}.` : ""}
 ${fieldDescriptions ? `Fields:\n${fieldDescriptions}` : ""}
 ${fieldConstraint}
 

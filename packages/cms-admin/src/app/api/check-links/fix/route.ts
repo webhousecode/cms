@@ -3,6 +3,8 @@ import { getAdminCms, getAdminConfig } from "@/lib/cms";
 import Anthropic from "@anthropic-ai/sdk";
 import { getModel } from "@/lib/ai/model-resolver";
 import { denyViewers } from "@/lib/require-role";
+import { buildLocaleInstruction } from "@/lib/ai/locale-prompt";
+import { readSiteConfig } from "@/lib/site-config";
 
 export async function POST(req: NextRequest) {
   const denied = await denyViewers(); if (denied) return denied;
@@ -70,10 +72,14 @@ export async function POST(req: NextRequest) {
   const anthropic = new Anthropic({ apiKey });
   const urlList = availableUrls.map((u) => `${u.url} — ${u.title} (${u.collection})`).join("\n");
 
+  const siteConfig = await readSiteConfig();
+  const localeInstruction = buildLocaleInstruction(siteConfig.defaultLocale);
+
   const contentModel = await getModel("content");
   const msg = await anthropic.messages.create({
     model: contentModel,
     max_tokens: 256,
+    system: localeInstruction,
     messages: [
       {
         role: "user",
