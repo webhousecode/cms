@@ -1,0 +1,105 @@
+{
+  "id": "sWkvUiuDfTcysjM0FEf_Y",
+  "slug": "skiferie-cortina-dampezzo-italien",
+  "collection": "posts",
+  "status": "published",
+  "data": {
+    "title": "Cortina d'Ampezzo, Italien – Alpernes dronning vender tilbage",
+    "excerpt": "Cortina d'Ampezzo er Italiens mest glamourøse skiresort – omgivet af de dramatiske Dolomitter og klar til at skinne igen som vært for vinter-OL 2026.",
+    "author": "Redaktionen",
+    "content": "![Skiløbere på piste med alpine bjerge i baggrunden](/uploads/FullSizeRender-1.jpg \"float:right|width:40%\")\n\n## Cortina d'Ampezzo – Alpernes dronning\n\nI hjertet af de **venetianske Dolomitter** i Norditalien finder du **Cortina d'Ampezzo** – en by, der kombinerer naturens storslåede skønhed med en glamour og elegance, som er svær at finde andre steder i Alperne. Cortina kaldes \"La Regina delle Dolomiti\" – Alpernes dronning – og det er et navn, den har gjort sig fortjent til.\n\nI 2026 vender verdens øjne igen mod Cortina, da byen er med-vært for **Vinter-OL Milano-Cortina 2026**. Det har udløst massive investeringer i infrastruktur, liftsystem og byfornyelse.\n\n## Skiområdet Dolomiti Superski\n\nCortina er en del af det gigantiske **Dolomiti Superski** – et af verdens største sammenkædede skiområder med over **1.200 km pister** fordelt på 12 resorts. Cortinas egne pister byder på:\n\n- **Tofana** – med udsigt over de rosenrøde Dolomit-tinder\n- **Faloria/Cristallo** – eksklusive og smukke pister\n- **Socrepes** – perfekt for begyndere og familier\n- Den ikoniske **Staunies** – en af Italiens smukkeste nedfarter\n\n## Cortina by – stil og gastronomisk nydelse\n\nCortina er ikke blot en skiresort – det er en **italiensk livsstilsoplevelse**:\n\n- Den berømte **Corso Italia** – en shoppinggade med designermærker og lokale butikker\n- Fantastiske restauranter med venetiansk og tirolesk køkken\n- Historiske caféer og konditorier med de bedste croissanter i Alperne\n\n![Varm chokolade med fløde og småkager på træbord](/uploads/IMG_0113.jpeg \"float:left|width:32%\")\n\n## Den italienske ski-oplevelse\n\nAt skiløbe i Italien er noget helt for sig selv. Her tages frokosten seriøst – lange måltider i bjergrestauranter med frisk pasta, lokale vine og en dolce far niente-stemning, der minder dig om, at livet er smukt.\n\n- **Rifugios** (bjerghytter) serverer gourmetmad midt på pisterne\n- Varme og imødekommende italienske værter giver en særlig velkomst\n- Priserne er generelt lavere end i Schweiz og Frankrig\n\n## Praktisk information\n\n- **Sæson:** December – april\n- **Nærmeste lufthavne:** Venezia (2 timer), Innsbruck (2 timer), Verona (2,5 timer)\n- **Niveau:** Alle niveauer – dog mest røde og blå pister\n- **Valuta:** Euro\n\nCortina d'Ampezzo er for dig, der vil have ski, kultur, mad og skønhed samlet i én uforglemmelig pakke. Alpernes dronning venter på dig.",
+    "_seo": {
+      "metaTitle": "Cortina d'Ampezzo – Alpernes Dronning | Ski & Luksus",
+      "metaDescription": "Cortina d'Ampezzo i Dolomitter: Verdenklasse ski, glamour og italiensk livsstil. Del af Dolomiti Superski med 1.200 km pister. Vinter-OL 2026.",
+      "keywords": [
+        "Cortina d'Ampezzo",
+        "Dolomiti Superski",
+        "skiløb Italien",
+        "Vinter-OL 2026",
+        "alpine ski Dolomitter"
+      ],
+      "ogImage": "/uploads/og/skiferie-cortina-dampezzo-italien.jpg",
+      "robots": "index,follow",
+      "score": 88,
+      "scoreDetails": [
+        {
+          "rule": "meta-title",
+          "label": "Meta title",
+          "status": "pass",
+          "message": "Meta title length is good (52/60 characters)"
+        },
+        {
+          "rule": "meta-desc",
+          "label": "Meta description",
+          "status": "pass",
+          "message": "Meta description length is good (142/160 characters)"
+        },
+        {
+          "rule": "keyword-title",
+          "label": "Keyword in title",
+          "status": "pass",
+          "message": "Keyword \"Cortina d'Ampezzo\" found in meta title"
+        },
+        {
+          "rule": "keyword-desc",
+          "label": "Keyword in description",
+          "status": "pass",
+          "message": "Keyword \"Cortina d'Ampezzo\" found in meta description"
+        },
+        {
+          "rule": "content-length",
+          "label": "Content length",
+          "status": "pass",
+          "message": "Content is 328 words (300+ is good)"
+        },
+        {
+          "rule": "headings",
+          "label": "Heading structure",
+          "status": "pass",
+          "message": "Content uses H2 headings for structure"
+        },
+        {
+          "rule": "img-alt",
+          "label": "Image alt text",
+          "status": "pass",
+          "message": "All 2 images have alt text"
+        },
+        {
+          "rule": "og-image",
+          "label": "Social image",
+          "status": "pass",
+          "message": "Social sharing image (OG) is set"
+        },
+        {
+          "rule": "keyword-slug",
+          "label": "Keyword in URL",
+          "status": "warn",
+          "message": "The keyword \"Cortina d'Ampezzo\" is not in the URL slug (skiferie-cortina-dampezzo-italien). Consider renaming the slug in Properties."
+        },
+        {
+          "rule": "internal-links",
+          "label": "Internal links",
+          "status": "pass",
+          "message": "Content links to other pages on the site"
+        },
+        {
+          "rule": "title",
+          "label": "Page title",
+          "status": "pass",
+          "message": "Page has a title"
+        },
+        {
+          "rule": "readability",
+          "label": "Readability",
+          "status": "fail",
+          "message": "Readability score is 3/100 — text is very hard to read. Use shorter sentences and simpler words."
+        }
+      ],
+      "lastOptimized": "2026-03-28T16:40:28.830Z"
+    },
+    "date": "2026-03-28"
+  },
+  "_fieldMeta": {},
+  "createdAt": "2026-03-28T16:40:26.526Z",
+  "updatedAt": "2026-03-28T16:40:36.821Z"
+}

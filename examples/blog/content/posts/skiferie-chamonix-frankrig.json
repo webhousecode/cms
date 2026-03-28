@@ -1,0 +1,105 @@
+{
+  "id": "eRedpsYrfVgMD8JS3XzHX",
+  "slug": "skiferie-chamonix-frankrig",
+  "collection": "posts",
+  "status": "published",
+  "data": {
+    "title": "Chamonix, Frankrig – skisportens vugge ved foden af Mont Blanc",
+    "excerpt": "Chamonix-Mont-Blanc er en legende i skisportens verden – et sted for dem, der søger drama, adrenalin og bjergenes rå skønhed.",
+    "author": "Redaktionen",
+    "content": "![Skiløber med skihjelm og skimask i hvid jakke](/uploads/IMG_0135.jpeg \"float:left|width:40%\")\n\n## Chamonix – legenden lever\n\nDer er skiresorts, og så er der **Chamonix**. Den franske alpeby ved foden af **Mont Blanc** – Europas højeste bjerg – er simpelthen et sted for sig selv. Her afholdes verdens mest ambitiøse skiløb, og det er her, friskiløbningens og off-piste kulturens sjæl bor.\n\nChamonix var vært for **verdens første vinter-OL i 1924**, og ånden fra dengang lever stadig i byens gader og på pisterne.\n\n## Pisterne og terrænet\n\nChamonix-massivet rummer flere forbundne skiområder:\n\n- **Les Grands Montets** – eksperternes paradis med højde over 3.000 m\n- **Le Brévent & La Flégère** – fantastisk udsigt til Mont Blanc\n- **Les Houches** – familievenlige pister med skov og hygge\n- **Vallée Blanche** – den legendariske 20 km lange gletschertur\n\n> *Vallée Blanche er en guidet off-piste tur, som er et absolut must for erfarne skiløbere.*\n\n## Après-ski og byliv\n\nChamonix er ikke kun ski – det er en levende, international by med et kosmopolitisk præg. Her finder du:\n\n- Hyggelige franske bistroer med raclette og fondue\n- Livlige barer og natteliv langs Rue du Docteur Paccard\n- Verdensklasse spa og wellness på de bedste hoteller\n\n![Gruppe skiløbere på piste med bjerge i baggrunden](/uploads/FullSizeRender-4.jpg \"float:right|width:38%\")\n\n## For de eventyrlystne\n\nChamonix er Mekka for **freeride, skialpinisme og off-piste**. Guides og skiskoler tilbyder alt fra begynderkurser til ekspeditioner på gletsjerene. Det er et sted, der kræver respekt – men til gengæld giver det oplevelser, du bærer med dig resten af livet.\n\n**Sæson:** December – april | **Nærmeste lufthavn:** Genève, ca. 1 times kørsel\n\nChamonix er ikke bare en destination – det er en pilgrimsrejse for enhver, der elsker bjerge og ski.",
+    "_seo": {
+      "metaTitle": "Chamonix, Frankrig – Skisportens Vugge ved Mont Blanc",
+      "metaDescription": "Oplev Chamonix ved Mont Blanc. Verdens bedste freeride, off-piste ski og legendariske Vallée Blanche. Perfekt for eventyrlige skiløbere.",
+      "keywords": [
+        "Chamonix ski",
+        "Mont Blanc skiresort",
+        "freeride Chamonix",
+        "Vallée Blanche",
+        "alpinski Frankrig"
+      ],
+      "ogImage": "/uploads/og/skiferie-chamonix-frankrig.jpg",
+      "robots": "index,follow",
+      "score": 83,
+      "scoreDetails": [
+        {
+          "rule": "meta-title",
+          "label": "Meta title",
+          "status": "pass",
+          "message": "Meta title length is good (53/60 characters)"
+        },
+        {
+          "rule": "meta-desc",
+          "label": "Meta description",
+          "status": "pass",
+          "message": "Meta description length is good (136/160 characters)"
+        },
+        {
+          "rule": "keyword-title",
+          "label": "Keyword in title",
+          "status": "warn",
+          "message": "Add the keyword \"Chamonix ski\" to the meta title field above."
+        },
+        {
+          "rule": "keyword-desc",
+          "label": "Keyword in description",
+          "status": "pass",
+          "message": "Keyword \"Chamonix ski\" found in meta description"
+        },
+        {
+          "rule": "content-length",
+          "label": "Content length",
+          "status": "warn",
+          "message": "Content is 258 words. Write 42 more words to reach 300 (recommended minimum)."
+        },
+        {
+          "rule": "headings",
+          "label": "Heading structure",
+          "status": "pass",
+          "message": "Content uses H2 headings for structure"
+        },
+        {
+          "rule": "img-alt",
+          "label": "Image alt text",
+          "status": "pass",
+          "message": "All 2 images have alt text"
+        },
+        {
+          "rule": "og-image",
+          "label": "Social image",
+          "status": "pass",
+          "message": "Social sharing image (OG) is set"
+        },
+        {
+          "rule": "keyword-slug",
+          "label": "Keyword in URL",
+          "status": "warn",
+          "message": "The keyword \"Chamonix ski\" is not in the URL slug (skiferie-chamonix-frankrig). Consider renaming the slug in Properties."
+        },
+        {
+          "rule": "internal-links",
+          "label": "Internal links",
+          "status": "pass",
+          "message": "Content links to other pages on the site"
+        },
+        {
+          "rule": "title",
+          "label": "Page title",
+          "status": "pass",
+          "message": "Page has a title"
+        },
+        {
+          "rule": "readability",
+          "label": "Readability",
+          "status": "warn",
+          "message": "Readability score is 32/100 — consider shorter sentences and simpler words"
+        }
+      ],
+      "lastOptimized": "2026-03-28T16:39:22.403Z"
+    },
+    "date": "2026-03-28"
+  },
+  "_fieldMeta": {},
+  "createdAt": "2026-03-28T16:39:15.816Z",
+  "updatedAt": "2026-03-28T16:40:36.771Z"
+}

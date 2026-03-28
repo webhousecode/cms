@@ -1,0 +1,105 @@
+{
+  "id": "PIAB8t0ehtCxaw_HwUcD0",
+  "slug": "skiferie-val-disere-frankrig",
+  "collection": "posts",
+  "status": "published",
+  "data": {
+    "title": "Val d'Isère, Frankrig – den franske skielites foretrukne destination",
+    "excerpt": "Val d'Isère er en ikonisk fransk alpinby med uovertrufne skimuligheder, en levende bymidte og en stolthed, der trækker de bedste skiløbere i verden.",
+    "author": "Redaktionen",
+    "content": "![Skiløber tager selfie på solrig skibakke med skiløbere bagved](/uploads/IMG_0062.jpeg \"float:left|width:38%\")\n\n## Val d'Isère – Frankrigs stolthed på ski\n\nI den øverste ende af Tarentaise-dalen, tæt på den italienske grænse, finder du **Val d'Isère** – en by, der har givet verden storslåede skiatleter, legendariske VM-ruter og et skimiljø i absolutt verdensklasse.\n\nSammen med den nærliggende resort Tignes udgør Val d'Isère skiområdet **Espace Killy**, opkaldt efter den franske ski-legende Jean-Claude Killy, der voksede op netop her. Området byder på over **300 km pister** med højder op til 3.456 meter.\n\n## Pisterne og terrænet\n\nVal d'Isère er et paradis for **mellemøvede og eksperter**, men byder også på gode muligheder for begyndere:\n\n- **La Face de Bellevarde** – den berømte olympiske nedfart fra Albertville-OL 1992\n- **Solaise** – solrige pister med enestående udsigt\n- **Fornet** – afsidesliggende og storslået off-piste terræn\n- **Gletsjeromraadet** ved Pisaillas – sikrer sne selv i dårlige vintre\n\n## Byliv og stemning\n\nVal d'Isère by er levende og autentisk – ikke en kunstig skabt resort, men en rigtig landsby med sjæl:\n\n- Traditionelle franske brasseries og bjerghytter\n- Livlig après-ski med en blanding af franskmænd og internationale gæster\n- Butikker, kunstgallerier og gourmetmad\n\n![Tre skiløbere tager selfie ovenfra på hvid sne](/uploads/79414158206__10D26378-F77F-4AF8-AD6C-CAFD850991BD (1).jpeg \"float:right|width:36%\")\n\n## Gletscherski og langt sæson\n\nTakket være gletscherområdet er sæsonen i Val d'Isère **usædvanligt lang** – fra slutningen af november til begyndelsen af maj. Det giver fantastiske muligheder for tidlige og sene skiophold, hvor køerne er korte og priserne lavere.\n\n**Sæson:** November – maj | **Nærmeste lufthavn:** Chambéry, Grenoble eller Genève\n\nVal d'Isère er det sted, hvor frisk powder, franske baguetter og passion for ski smelter sammen til en ferie, du aldrig glemmer.",
+    "_seo": {
+      "metaTitle": "Val d'Isère, Frankrig – Verdenklasse skidestination",
+      "metaDescription": "Val d'Isère er Frankrigs præmie skidestination med 300 km pister, gletsjerskiing og autentisk byliv. Perfekt for alle niveauer.",
+      "keywords": [
+        "Val d'Isère",
+        "skisport Frankrig",
+        "Espace Killy",
+        "skiferie alperne",
+        "gletsjerskiing"
+      ],
+      "ogImage": "/uploads/og/skiferie-val-disere-frankrig.jpg",
+      "robots": "index,follow",
+      "score": 83,
+      "scoreDetails": [
+        {
+          "rule": "meta-title",
+          "label": "Meta title",
+          "status": "pass",
+          "message": "Meta title length is good (51/60 characters)"
+        },
+        {
+          "rule": "meta-desc",
+          "label": "Meta description",
+          "status": "pass",
+          "message": "Meta description length is good (127/160 characters)"
+        },
+        {
+          "rule": "keyword-title",
+          "label": "Keyword in title",
+          "status": "pass",
+          "message": "Keyword \"Val d'Isère\" found in meta title"
+        },
+        {
+          "rule": "keyword-desc",
+          "label": "Keyword in description",
+          "status": "pass",
+          "message": "Keyword \"Val d'Isère\" found in meta description"
+        },
+        {
+          "rule": "content-length",
+          "label": "Content length",
+          "status": "warn",
+          "message": "Content is 254 words. Write 46 more words to reach 300 (recommended minimum)."
+        },
+        {
+          "rule": "headings",
+          "label": "Heading structure",
+          "status": "pass",
+          "message": "Content uses H2 headings for structure"
+        },
+        {
+          "rule": "img-alt",
+          "label": "Image alt text",
+          "status": "pass",
+          "message": "All 2 images have alt text"
+        },
+        {
+          "rule": "og-image",
+          "label": "Social image",
+          "status": "pass",
+          "message": "Social sharing image (OG) is set"
+        },
+        {
+          "rule": "keyword-slug",
+          "label": "Keyword in URL",
+          "status": "warn",
+          "message": "The keyword \"Val d'Isère\" is not in the URL slug (skiferie-val-disere-frankrig). Consider renaming the slug in Properties."
+        },
+        {
+          "rule": "internal-links",
+          "label": "Internal links",
+          "status": "pass",
+          "message": "Content links to other pages on the site"
+        },
+        {
+          "rule": "title",
+          "label": "Page title",
+          "status": "pass",
+          "message": "Page has a title"
+        },
+        {
+          "rule": "readability",
+          "label": "Readability",
+          "status": "fail",
+          "message": "Readability score is 2/100 — text is very hard to read. Use shorter sentences and simpler words."
+        }
+      ],
+      "lastOptimized": "2026-03-28T16:39:30.342Z"
+    },
+    "date": "2026-03-28"
+  },
+  "_fieldMeta": {},
+  "createdAt": "2026-03-28T16:39:27.975Z",
+  "updatedAt": "2026-03-28T16:40:36.808Z"
+}

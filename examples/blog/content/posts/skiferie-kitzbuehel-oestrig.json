@@ -1,0 +1,105 @@
+{
+  "id": "gkAIpPl9kxo1hZqwDhKM4",
+  "slug": "skiferie-kitzbuehel-oestrig",
+  "collection": "posts",
+  "status": "published",
+  "data": {
+    "title": "Kitzbühel, Østrig – tradition, glamour og den frygtede Streif",
+    "excerpt": "Kitzbühel er en af Alpernes mest elegante og historiske skibyer – hjemsted for den berømmede Hahnenkamm-nedkørsel og en uforglemmelig blanding af sport og stil.",
+    "author": "Redaktionen",
+    "content": "![Mand med skæg skåler i rustikt træhus med sne udenfor](/uploads/IMG_0064.jpeg \"float:right|width:38%\")\n\n## Kitzbühel – hvor historien møder nutidens skikultur\n\nFor over 100 år siden satte skiløberne kurs mod en lille middelalderby i Tirols bjerge – og siden da har **Kitzbühel** holdt sig i toppen af enhver liste over verdens bedste skidestinationer. Med sine kalkede hvide middelalderhusfacader, tårne og pittoreske gyder er Kitzbühel en by, der er like smuk om sommeren som om vinteren.\n\nMen i januar hvert år samles verdens bedste alpinløbere her til det mest frygtede løb i verdenscuppen – **Hahnenkamm-ugen** med den legendariske **Streif**-nedkørsel.\n\n## Skiområdet KitzSki\n\n**KitzSki** byder på over **200 km pister** fordelt på to sammenkædede bjergområder: Hahnenkamm og Kitzbüheler Horn. Det er primært et område for mellemøvede og erfarne skiløbere, men der er gode muligheder for alle niveauer.\n\n- Smukke, lange røde pister med panoramaudsigt\n- Sorte pister for de vovede – inklusive dele af Streif\n- Moderne liftsystem med minimal ventetid\n- Forbindelsesmuligheder til SkiWelt og andre nærliggende områder\n\n## Gaderne i Kitzbühel – stilfuld alpinby\n\nNår skiene er sat til side for dagen, er Kitzbühel en **shoppingparadis og gastronomisk oplevelse**:\n\n- Designerbutikker, kunstgallerier og eksklusive juvelerforretninger\n- Michelinrestauranter og hyggelige østrigske Stuben\n- Verdensklasse spa i byens mange luksushoteller\n\n![Skiløbere på piste med alpine bjerge i baggrunden](/uploads/FullSizeRender-1.jpg \"float:left|width:36%\")\n\n## Événements og atmosfære\n\nUd over Hahnenkamm-løbene er Kitzbühel vært for en lang række **kulturelle og sportslige events** hele vinteren. Atmosfæren i byen er levende og kosmopolitisk – her mødes den østrigske bondekultur med international glamour.\n\n**Sæson:** December – april | **Nærmeste lufthavn:** Salzburg (1 time) eller Innsbruck (1 time)\n\nKitzbühel er for den rejsende, der vil have historie, skønhed og verdens bedste ski samlet ét sted.",
+    "_seo": {
+      "metaTitle": "Kitzbühel, Østrig – Skiløb, Glamour og Streif",
+      "metaDescription": "Oplev Kitzbühel i Østrig: verdensklasse skiløb, pittoresk middelalderby og den frygtede Streif-nedkørsel. 200 km pister og luksus venter.",
+      "keywords": [
+        "Kitzbühel",
+        "skiløb Østrig",
+        "Streif",
+        "alpinski",
+        "KitzSki"
+      ],
+      "ogImage": "/uploads/og/skiferie-kitzbuehel-oestrig.jpg",
+      "robots": "index,follow",
+      "score": 83,
+      "scoreDetails": [
+        {
+          "rule": "meta-title",
+          "label": "Meta title",
+          "status": "pass",
+          "message": "Meta title length is good (45/60 characters)"
+        },
+        {
+          "rule": "meta-desc",
+          "label": "Meta description",
+          "status": "pass",
+          "message": "Meta description length is good (137/160 characters)"
+        },
+        {
+          "rule": "keyword-title",
+          "label": "Keyword in title",
+          "status": "pass",
+          "message": "Keyword \"Kitzbühel\" found in meta title"
+        },
+        {
+          "rule": "keyword-desc",
+          "label": "Keyword in description",
+          "status": "pass",
+          "message": "Keyword \"Kitzbühel\" found in meta description"
+        },
+        {
+          "rule": "content-length",
+          "label": "Content length",
+          "status": "warn",
+          "message": "Content is 258 words. Write 42 more words to reach 300 (recommended minimum)."
+        },
+        {
+          "rule": "headings",
+          "label": "Heading structure",
+          "status": "pass",
+          "message": "Content uses H2 headings for structure"
+        },
+        {
+          "rule": "img-alt",
+          "label": "Image alt text",
+          "status": "pass",
+          "message": "All 2 images have alt text"
+        },
+        {
+          "rule": "og-image",
+          "label": "Social image",
+          "status": "pass",
+          "message": "Social sharing image (OG) is set"
+        },
+        {
+          "rule": "keyword-slug",
+          "label": "Keyword in URL",
+          "status": "warn",
+          "message": "The keyword \"Kitzbühel\" is not in the URL slug (skiferie-kitzbuehel-oestrig). Consider renaming the slug in Properties."
+        },
+        {
+          "rule": "internal-links",
+          "label": "Internal links",
+          "status": "pass",
+          "message": "Content links to other pages on the site"
+        },
+        {
+          "rule": "title",
+          "label": "Page title",
+          "status": "pass",
+          "message": "Page has a title"
+        },
+        {
+          "rule": "readability",
+          "label": "Readability",
+          "status": "fail",
+          "message": "Readability score is 0/100 — text is very hard to read. Use shorter sentences and simpler words."
+        }
+      ],
+      "lastOptimized": "2026-03-28T16:39:32.597Z"
+    },
+    "date": "2026-03-28"
+  },
+  "_fieldMeta": {},
+  "createdAt": "2026-03-28T16:39:30.401Z",
+  "updatedAt": "2026-03-28T16:40:36.812Z"
+}

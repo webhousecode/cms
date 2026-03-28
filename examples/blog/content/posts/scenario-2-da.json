@@ -9,15 +9,15 @@
       "userId": "dev-token",
       "name": "Dev Token",
       "email": "dev@localhost",
-      "at": "2026-03-28T17:31:37.654Z"
+      "at": "2026-03-28T17:49:35.230Z"
     },
     "excerpt": "En testside til automatisk AI-oversættelse ved publicering.",
     "author": "Redaktionen",
-    "date": "2026-03-28T17:31:37Z",
+    "date": "2026-03-28",
     "content": "<p>Denne side tester det automatiske oversættelsesflow. Når en redaktør publicerer en dansk side, bør CMS automatisk oprette en engelskoversættelse via Translator Agent.</p><p>Val d'Isère er et af Frankrigs mest prestigefyldte skisportsområder. Med over 300 km pister og en garanteret sneperiode fra november til maj tiltrækker det skiløbere fra hele verden.</p>"
   },
   "_fieldMeta": {},
   "createdAt": "2026-03-28T17:23:43.384Z",
-  "updatedAt": "2026-03-28T17:31:37.655Z",
+  "updatedAt": "2026-03-28T17:49:35.231Z",
   "locale": "da"
 }

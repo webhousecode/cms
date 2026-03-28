@@ -1,0 +1,105 @@
+{
+  "id": "-mZ8p92KbyFva7QkkuH-d",
+  "slug": "skiferie-whistler-canada",
+  "collection": "posts",
+  "status": "published",
+  "data": {
+    "title": "Whistler, Canada – Nordamerikas svar på det perfekte skiparadis",
+    "excerpt": "Whistler Blackcomb i British Columbia er en af verdens mest berømte skiresorts – med enorme pistemuligheder, charmerende landsby og en uforglemmelig canadisk stemning.",
+    "author": "Redaktionen",
+    "content": "![Skiløbere på piste med alpine bjerge](/uploads/FullSizeRender-1.jpg \"float:left|width:40%\")\n\n## Whistler Blackcomb – verdens bedste skiresort\n\nHvis du drømmer om den ultimative skiferie, er **Whistler Blackcomb** i British Columbia, Canada, stedet du skal sætte på ønskelisten. Med over **8.000 hektar skibart terræn** fordelt på to mægtige bjerge – Whistler Mountain og Blackcomb Mountain – er dette resort anerkendt som et af de absolut bedste i hele verden.\n\nResorten ligger kun **ca. 120 km nord for Vancouver**, og du kan nå dertil via den maleriske Sea-to-Sky Highway, der i sig selv er en oplevelse.\n\n## Pisternes mangfoldighed\n\nWhistler Blackcomb byder på pister til **alle niveauer**:\n\n- **Begyndere** finder rolige grønne pister i bunden af bjergene\n- **Øvede** kan nyde de lange, rødmærkede pister med fantastisk udsigt\n- **Eksperter** kaster sig ud i de udfordrende sorte pister og legendariske couloirs\n\nDen verdensberømte **Peak 2 Peak Gondola** forbinder de to bjerge og giver en svævende oplevelse 436 meter over dalbunden – et syn du aldrig glemmer.\n\n## Whistler Village – mer end bare ski\n\nNår skiene er parkeret, venter det charmerende **Whistler Village** med sine hyggelige restauranter, barer og butikker. Her kan du nyde:\n\n- Autentisk canadisk mad med friske råvarer\n- Après-ski i verdensklasse langs det bilfrie Village Stroll\n- Spa og wellness efter en lang dag på pisterne\n- Hundeslædeture og snowshoeing i den omgivende natur\n\n## Sæson og praktisk info\n\nSkisæsonen i Whistler løber typisk fra **november til april**, og med sin høje beliggenhed og rigelige snefald er forholdene næsten altid fremragende. Den canadiske dollar gør det desuden til en relativt overkommelig destination sammenlignet med mange europæiske alternativer.\n\n> *\"Whistler er ikke bare en skiresort – det er en destination, der forandrer dig.\"*\n\nSæt kursen mod Canada og oplev skiferie på et helt nyt niveau!",
+    "_seo": {
+      "metaTitle": "Whistler Blackcomb – Nordamerikas bedste skiresort",
+      "metaDescription": "Whistler Blackcomb i Canada tilbyder 8.000 hektar skibart terræn, pister til alle niveauer og verdensklasse après-ski. Oplev det perfekte skiparadis!",
+      "keywords": [
+        "Whistler Blackcomb",
+        "skiresort Canada",
+        "skiferie British Columbia",
+        "Peak 2 Peak Gondola",
+        "Whistler Village"
+      ],
+      "ogImage": "/uploads/og/skiferie-whistler-canada.jpg",
+      "robots": "index,follow",
+      "score": 83,
+      "scoreDetails": [
+        {
+          "rule": "meta-title",
+          "label": "Meta title",
+          "status": "pass",
+          "message": "Meta title length is good (50/60 characters)"
+        },
+        {
+          "rule": "meta-desc",
+          "label": "Meta description",
+          "status": "pass",
+          "message": "Meta description length is good (149/160 characters)"
+        },
+        {
+          "rule": "keyword-title",
+          "label": "Keyword in title",
+          "status": "pass",
+          "message": "Keyword \"Whistler Blackcomb\" found in meta title"
+        },
+        {
+          "rule": "keyword-desc",
+          "label": "Keyword in description",
+          "status": "pass",
+          "message": "Keyword \"Whistler Blackcomb\" found in meta description"
+        },
+        {
+          "rule": "content-length",
+          "label": "Content length",
+          "status": "warn",
+          "message": "Content is 281 words. Write 19 more words to reach 300 (recommended minimum)."
+        },
+        {
+          "rule": "headings",
+          "label": "Heading structure",
+          "status": "pass",
+          "message": "Content uses H2 headings for structure"
+        },
+        {
+          "rule": "img-alt",
+          "label": "Image alt text",
+          "status": "pass",
+          "message": "All 1 images have alt text"
+        },
+        {
+          "rule": "og-image",
+          "label": "Social image",
+          "status": "pass",
+          "message": "Social sharing image (OG) is set"
+        },
+        {
+          "rule": "keyword-slug",
+          "label": "Keyword in URL",
+          "status": "warn",
+          "message": "The keyword \"Whistler Blackcomb\" is not in the URL slug (skiferie-whistler-canada). Consider renaming the slug in Properties."
+        },
+        {
+          "rule": "internal-links",
+          "label": "Internal links",
+          "status": "pass",
+          "message": "Content links to other pages on the site"
+        },
+        {
+          "rule": "title",
+          "label": "Page title",
+          "status": "pass",
+          "message": "Page has a title"
+        },
+        {
+          "rule": "readability",
+          "label": "Readability",
+          "status": "fail",
+          "message": "Readability score is 15/100 — text is very hard to read. Use shorter sentences and simpler words."
+        }
+      ],
+      "lastOptimized": "2026-03-28T16:39:13.949Z"
+    },
+    "date": "2026-03-28"
+  },
+  "_fieldMeta": {},
+  "createdAt": "2026-03-28T16:39:11.486Z",
+  "updatedAt": "2026-03-28T16:40:36.720Z"
+}

@@ -9,15 +9,15 @@
       "userId": "dev-token",
       "name": "Dev Token",
       "email": "dev@localhost",
-      "at": "2026-03-28T17:31:37.696Z"
+      "at": "2026-03-28T17:49:35.273Z"
     },
     "excerpt": "En testside til bulk-oversættelse af hele sitet med AI.",
     "author": "Redaktionen",
-    "date": "2026-03-28T17:31:37Z",
+    "date": "2026-03-28",
     "content": "<p>Denne side tester bulk-oversættelse. En redaktør kan klikke én knap og oversætte hele sitet til engelsk — enten med review i Curation Queue eller direkte publicering.</p><p>Zermatt i Schweiz er hjemsted for det ikoniske Matterhorn. Byen er bilfri og byder på over 360 km pister med udsigt til et af verdens mest genkendelige bjerge.</p>"
   },
   "_fieldMeta": {},
   "createdAt": "2026-03-28T17:23:43.496Z",
-  "updatedAt": "2026-03-28T17:31:37.697Z",
+  "updatedAt": "2026-03-28T17:49:35.274Z",
   "locale": "da"
 }

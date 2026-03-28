@@ -9,15 +9,15 @@
       "userId": "dev-token",
       "name": "Dev Token",
       "email": "dev@localhost",
-      "at": "2026-03-28T17:31:37.566Z"
+      "at": "2026-03-28T17:49:35.147Z"
     },
     "excerpt": "En testside til at verificere manuel oversættelse fra dansk til engelsk.",
     "author": "Redaktionen",
-    "date": "2026-03-28T17:31:37Z",
+    "date": "2026-03-28",
     "content": "<p>Denne side er oprettet som kildedokument på dansk. Den bruges til at teste det manuelle oversættelsesflow i CMS — hvor en redaktør selv opretter en engelsk version og skriver teksten.</p><p>Skiferie i Alperne er en klassisk dansk tradition. Hvert år drager tusindvis af danske familier sydpå for at nyde sne, sol og après-ski. Fra de østrigske Alper til de franske skisportsområder er mulighederne uendelige.</p>"
   },
   "_fieldMeta": {},
   "createdAt": "2026-03-28T17:23:42.970Z",
-  "updatedAt": "2026-03-28T17:31:37.566Z",
+  "updatedAt": "2026-03-28T17:49:35.149Z",
   "locale": "da"
 }

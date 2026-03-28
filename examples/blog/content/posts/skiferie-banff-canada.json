@@ -1,0 +1,105 @@
+{
+  "id": "FNmsduwVxqD2RV4tw01mk",
+  "slug": "skiferie-banff-canada",
+  "collection": "posts",
+  "status": "published",
+  "data": {
+    "title": "Banff, Canada – skiferie midt i Rocky Mountains",
+    "excerpt": "Banff Nationalpark i Alberta byder på tre storslåede skiresorts, vild canadisk natur og en autentisk bjergby-stemning, der er svær at matche.",
+    "author": "Redaktionen",
+    "content": "![Mand tager selfie på skipiste med blå himmel](/uploads/IMG_0100.jpeg \"float:right|width:38%\")\n\n## Banff – tre resorts, én uforglemmelig oplevelse\n\nI hjertet af **Albertas Rocky Mountains** finder du en af Canadas mest ikoniske skidestinationer. Banff-området rummer tre fantastiske skiresorts under én fælles ski-pass, **SkiBig3**:\n\n- **Sunshine Village** – med en af Canadas længste skisæsoner\n- **Lake Louise Ski Resort** – med malerisk udsigt over den turkisblå sø\n- **Mt. Norquay** – det lokale favorit med charme og korte køer\n\nTilsammen byder de på over **250 pister** og mere end **7.700 hektar** skibart terræn – noget for enhver smag.\n\n## Naturen som kulisse\n\nDet, der adskiller Banff fra så mange andre destinationer, er den **vilde og uberørte natur**. Pisterne er omgivet af takkede bjergtinder, tætte nåletræsskove og frosne søer. Det er ikke usædvanligt at spotte **elge, hjorte og ræve** langs vejen til liften.\n\n![Skiløbere samlet på snedækket piste](/uploads/79414156770__DF1D6573-A626-4BF2-8876-4555CAB00D44.jpeg \"float:left|width:38%\")\n\n## Banff Town – hyggelig bjergby\n\nBanff Town er en charmerende lille by med under 10.000 indbyggere, men med et rigt udbud af restauranter, hoteller og oplevelser. Byens **Banff Avenue** er fyldt med butikker, kunstgallerier og caféer, og den varme stemning om aftenen gør det svært at gå tidligt i seng.\n\n## Praktisk information\n\n- **Sæson:** November – maj (Sunshine Village åbner endda allerede i november)\n- **Flyforbindelser:** Calgary Lufthavn, ca. 1,5 times kørsel\n- **Klima:** Tørt, koldt og solrigt – Banff har over 300 soldage om året\n\nBanff er stedet, hvor skiferie møder eventyr i verdensklasse. Grib chancen og oplev Rocky Mountains fra pisterne!",
+    "_seo": {
+      "metaTitle": "Banff Skiferier i Rocky Mountains – 3 Resorts",
+      "metaDescription": "Oplev Banff i Canada med SkiBig3 – tre fantastiske skiresorts, 250+ pister og unik bjergnatur. Perfekt skiferier i Alberta.",
+      "keywords": [
+        "Banff skiferie",
+        "skiferier Canada",
+        "Rocky Mountains",
+        "Lake Louise ski",
+        "Sunshine Village"
+      ],
+      "ogImage": "/uploads/og/skiferie-banff-canada.jpg",
+      "robots": "index,follow",
+      "score": 79,
+      "scoreDetails": [
+        {
+          "rule": "meta-title",
+          "label": "Meta title",
+          "status": "pass",
+          "message": "Meta title length is good (45/60 characters)"
+        },
+        {
+          "rule": "meta-desc",
+          "label": "Meta description",
+          "status": "pass",
+          "message": "Meta description length is good (123/160 characters)"
+        },
+        {
+          "rule": "keyword-title",
+          "label": "Keyword in title",
+          "status": "pass",
+          "message": "Keyword \"Banff skiferie\" found in meta title"
+        },
+        {
+          "rule": "keyword-desc",
+          "label": "Keyword in description",
+          "status": "warn",
+          "message": "Add the keyword \"Banff skiferie\" to the meta description field above."
+        },
+        {
+          "rule": "content-length",
+          "label": "Content length",
+          "status": "warn",
+          "message": "Content is 231 words. Write 69 more words to reach 300 (recommended minimum)."
+        },
+        {
+          "rule": "headings",
+          "label": "Heading structure",
+          "status": "pass",
+          "message": "Content uses H2 headings for structure"
+        },
+        {
+          "rule": "img-alt",
+          "label": "Image alt text",
+          "status": "pass",
+          "message": "All 2 images have alt text"
+        },
+        {
+          "rule": "og-image",
+          "label": "Social image",
+          "status": "pass",
+          "message": "Social sharing image (OG) is set"
+        },
+        {
+          "rule": "keyword-slug",
+          "label": "Keyword in URL",
+          "status": "warn",
+          "message": "The keyword \"Banff skiferie\" is not in the URL slug (skiferie-banff-canada). Consider renaming the slug in Properties."
+        },
+        {
+          "rule": "internal-links",
+          "label": "Internal links",
+          "status": "pass",
+          "message": "Content links to other pages on the site"
+        },
+        {
+          "rule": "title",
+          "label": "Page title",
+          "status": "pass",
+          "message": "Page has a title"
+        },
+        {
+          "rule": "readability",
+          "label": "Readability",
+          "status": "fail",
+          "message": "Readability score is 29/100 — text is very hard to read. Use shorter sentences and simpler words."
+        }
+      ],
+      "lastOptimized": "2026-03-28T16:39:15.810Z"
+    },
+    "date": "2026-03-28"
+  },
+  "_fieldMeta": {},
+  "createdAt": "2026-03-28T16:39:13.959Z",
+  "updatedAt": "2026-03-28T16:40:36.732Z"
+}

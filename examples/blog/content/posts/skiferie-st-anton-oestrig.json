@@ -1,0 +1,105 @@
+{
+  "id": "Qkm4CauYah9vTK8HzueLH",
+  "slug": "skiferie-st-anton-oestrig",
+  "collection": "posts",
+  "status": "published",
+  "data": {
+    "title": "St. Anton, Østrig – hjertet af Arlberg og après-ski kulturen",
+    "excerpt": "St. Anton am Arlberg er Østrigs mest legendariske skiresort – med forbløffende pister, uendelig off-piste og en après-ski kultur, der ikke har sin lige i verden.",
+    "author": "Redaktionen",
+    "content": "![Mand med skibriller kører bil gennem vinterlandskab](/uploads/IMG_0059.jpeg \"float:right|width:38%\")\n\n## St. Anton am Arlberg – en legende i Alperne\n\nI det vestlige Østrig, i delstaten Tirol, finder du **St. Anton am Arlberg** – et navn, der klinger som musik i ørerne på enhver skientusiast. St. Anton er hjemstedet for **moderne alpint skiløb**, og det er her, Hannes Schneider grundlagde sin berømte Arlberg-teknik i begyndelsen af det 20. århundrede.\n\nI dag er St. Anton en del af det kolossale **Ski Arlberg** skiområde – med over **300 km pister** og forbindelser til Lech, Zürs, Warth og Schröcken.\n\n## Pisterne – for de seriøse skiløbere\n\nSt. Anton er ikke for sarte sjæle. Resorten er bedst kendt for:\n\n- **Valluga** – toppen på 2.811 m med udsigt over tre lande\n- **Rendl** – en hemmelig perle med fantastisk powder og få gæster\n- **Nasserein og Gampen** – perfekte for familier og begyndere\n- Uendelige **off-piste ruter** for de vovede\n\n## Après-ski uden sidestykke\n\nNår solen begynder at gå ned bag bjergene, starter St. Antons virkelig berømte show – **après-skien**. Müsli Bar, Mooserwirt og Bar Austria er bare nogle af de steder, der er gået over i skihistorien.\n\n![Tre skiløbere tager selfie oppefra på snedækket skiområde](/uploads/79414158206__10D26378-F77F-4AF8-AD6C-CAFD850991BD (1).jpeg \"float:left|width:38%\")\n\nHer danser folk i skistøvler, drikker Jäger og synger med på de seneste hits – en oplevelse, der er helt unikt østrigsk.\n\n## Praktisk info\n\n- **Sæson:** December – april\n- **Adgang:** Direkte togforbindelse fra Zürich og Innsbruck til St. Anton Bahnhof\n- **Overnatning:** Fra hyggelige B&B til luksus boutique-hoteller\n- **Niveau:** Primært mellemøvet og ekspert\n\nSt. Anton er ikke bare et skibesøg – det er en kulturrejse til skisportens rødder. Kom og oplev hvorfor dette sted har fascineret skiløbere i over 100 år.",
+    "_seo": {
+      "metaTitle": "St. Anton Østrig – Ski Arlberg & Après-ski",
+      "metaDescription": "St. Anton am Arlberg er legendens hjemsted for alpint skiløb. Oplev 300 km pister, Valluga-toppen og verdens bedste après-ski kultur i Østrig.",
+      "keywords": [
+        "St. Anton",
+        "Ski Arlberg",
+        "après-ski",
+        "alpint skiløb Østrig",
+        "Valluga"
+      ],
+      "ogImage": "/uploads/og/skiferie-st-anton-oestrig.jpg",
+      "robots": "index,follow",
+      "score": 88,
+      "scoreDetails": [
+        {
+          "rule": "meta-title",
+          "label": "Meta title",
+          "status": "pass",
+          "message": "Meta title length is good (42/60 characters)"
+        },
+        {
+          "rule": "meta-desc",
+          "label": "Meta description",
+          "status": "pass",
+          "message": "Meta description length is good (142/160 characters)"
+        },
+        {
+          "rule": "keyword-title",
+          "label": "Keyword in title",
+          "status": "pass",
+          "message": "Keyword \"St. Anton\" found in meta title"
+        },
+        {
+          "rule": "keyword-desc",
+          "label": "Keyword in description",
+          "status": "pass",
+          "message": "Keyword \"St. Anton\" found in meta description"
+        },
+        {
+          "rule": "content-length",
+          "label": "Content length",
+          "status": "warn",
+          "message": "Content is 266 words. Write 34 more words to reach 300 (recommended minimum)."
+        },
+        {
+          "rule": "headings",
+          "label": "Heading structure",
+          "status": "pass",
+          "message": "Content uses H2 headings for structure"
+        },
+        {
+          "rule": "img-alt",
+          "label": "Image alt text",
+          "status": "pass",
+          "message": "All 2 images have alt text"
+        },
+        {
+          "rule": "og-image",
+          "label": "Social image",
+          "status": "pass",
+          "message": "Social sharing image (OG) is set"
+        },
+        {
+          "rule": "keyword-slug",
+          "label": "Keyword in URL",
+          "status": "warn",
+          "message": "The keyword \"St. Anton\" is not in the URL slug (skiferie-st-anton-oestrig). Consider renaming the slug in Properties."
+        },
+        {
+          "rule": "internal-links",
+          "label": "Internal links",
+          "status": "pass",
+          "message": "Content links to other pages on the site"
+        },
+        {
+          "rule": "title",
+          "label": "Page title",
+          "status": "pass",
+          "message": "Page has a title"
+        },
+        {
+          "rule": "readability",
+          "label": "Readability",
+          "status": "warn",
+          "message": "Readability score is 45/100 — consider shorter sentences and simpler words"
+        }
+      ],
+      "lastOptimized": "2026-03-28T16:39:24.301Z"
+    },
+    "date": "2026-03-28"
+  },
+  "_fieldMeta": {},
+  "createdAt": "2026-03-28T16:39:22.445Z",
+  "updatedAt": "2026-03-28T16:40:36.779Z"
+}

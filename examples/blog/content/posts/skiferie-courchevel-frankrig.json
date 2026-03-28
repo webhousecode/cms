@@ -1,0 +1,105 @@
+{
+  "id": "dVuDrJQ8YL0nWxtgKYIt2",
+  "slug": "skiferie-courchevel-frankrig",
+  "collection": "posts",
+  "status": "published",
+  "data": {
+    "title": "Courchevel, Frankrig – luksus og verdensklasse ski i Les Trois Vallées",
+    "excerpt": "Courchevel er synonymt med luksus, prestige og fremragende skiløb i det største sammenkædede skiområde i verden – Les Trois Vallées.",
+    "author": "Redaktionen",
+    "content": "![Gruppe skiløbere på snedækket piste med bjerge](/uploads/FullSizeRender-4.jpg \"float:right|width:40%\")\n\n## Courchevel – kronen på Les Trois Vallées\n\n**Courchevel** i Savoie, Frankrig, er en destination, der siger mere end blot skiferie – det er en livsstil. Som en del af det gigantiske **Les Trois Vallées** skiområde med over **600 km pister**, er Courchevel selve kronjuvelen i et af verdens mest ambitiøse skisystemer.\n\nResorten består af fire landsbyer i forskellige højder:\n\n- **Courchevel 1850** – den mest eksklusive og velkendte\n- **Courchevel 1650 (Moriond)** – lidt mere afslappet, men stadig i topklasse\n- **Courchevel 1550** – familievenlig og hyggelig\n- **Le Praz (1300)** – autentisk savojardisk charme\n\n## Pisterne – noget for alle\n\nMed direkte adgang til hele Trois Vallées-netværket er mulighederne nærmest ubegrænsede:\n\n- Brede, velpreparerede pister til familierne\n- Udfordrende røde og sorte pister til de erfarne\n- Forbindelser til Méribel og Val Thorens\n\n## Luksus i verdensklasse\n\nCourchevel 1850 er hjemsted for et overraskende antal **michelin-stjernede restauranter** for en skiresort. Her finder du:\n\n- Gastronomiske restauranter i høj klasse\n- Designer boutiques og eksklusive smykkebutikker\n- Privatfly-lufthavn direkte i resorten (det berømte altiport)\n- Spa og wellness til de mest kræsne gæster\n\n![Varm chokolade med flødeskum i mønstret glas](/uploads/IMG_0113.jpeg \"float:left|width:32%\")\n\n## Familievenlig og alsidig\n\nTrods sin luksuriøse profil er Courchevel også en fremragende destination for **familier**. Skiskolerne er i topklasse, og de lavere landsbyer byder på et roligt og trygt miljø for børn.\n\n**Sæson:** December – april | **Nærmeste lufthavn:** Chambéry eller Genève\n\nCourchevel er for dem, der vil have det hele – verdens bedste skiløb og en luksusoplevelse, der gør rejsen fuldkommen.",
+    "_seo": {
+      "metaTitle": "Courchevel Frankrig – Luksus Ski i Les Trois Vallées",
+      "metaDescription": "Courchevel er kronjuvelen i Les Trois Vallées. Luksus, michelin-stjernede restauranter og 600 km pister venter. Perfekt for familier og erfarne skiløbere.",
+      "keywords": [
+        "Courchevel",
+        "Les Trois Vallées",
+        "skiresort Frankrig",
+        "luksus skiferie",
+        "Savoie ski"
+      ],
+      "ogImage": "/uploads/og/skiferie-courchevel-frankrig.jpg",
+      "robots": "index,follow",
+      "score": 88,
+      "scoreDetails": [
+        {
+          "rule": "meta-title",
+          "label": "Meta title",
+          "status": "pass",
+          "message": "Meta title length is good (52/60 characters)"
+        },
+        {
+          "rule": "meta-desc",
+          "label": "Meta description",
+          "status": "pass",
+          "message": "Meta description length is good (154/160 characters)"
+        },
+        {
+          "rule": "keyword-title",
+          "label": "Keyword in title",
+          "status": "pass",
+          "message": "Keyword \"Courchevel\" found in meta title"
+        },
+        {
+          "rule": "keyword-desc",
+          "label": "Keyword in description",
+          "status": "pass",
+          "message": "Keyword \"Courchevel\" found in meta description"
+        },
+        {
+          "rule": "content-length",
+          "label": "Content length",
+          "status": "warn",
+          "message": "Content is 243 words. Write 57 more words to reach 300 (recommended minimum)."
+        },
+        {
+          "rule": "headings",
+          "label": "Heading structure",
+          "status": "pass",
+          "message": "Content uses H2 headings for structure"
+        },
+        {
+          "rule": "img-alt",
+          "label": "Image alt text",
+          "status": "pass",
+          "message": "All 2 images have alt text"
+        },
+        {
+          "rule": "og-image",
+          "label": "Social image",
+          "status": "pass",
+          "message": "Social sharing image (OG) is set"
+        },
+        {
+          "rule": "keyword-slug",
+          "label": "Keyword in URL",
+          "status": "pass",
+          "message": "Keyword \"Courchevel\" found in the URL"
+        },
+        {
+          "rule": "internal-links",
+          "label": "Internal links",
+          "status": "pass",
+          "message": "Content links to other pages on the site"
+        },
+        {
+          "rule": "title",
+          "label": "Page title",
+          "status": "pass",
+          "message": "Page has a title"
+        },
+        {
+          "rule": "readability",
+          "label": "Readability",
+          "status": "fail",
+          "message": "Readability score is 0/100 — text is very hard to read. Use shorter sentences and simpler words."
+        }
+      ],
+      "lastOptimized": "2026-03-28T16:39:27.969Z"
+    },
+    "date": "2026-03-28"
+  },
+  "_fieldMeta": {},
+  "createdAt": "2026-03-28T16:39:26.334Z",
+  "updatedAt": "2026-03-28T16:40:36.795Z"
+}

@@ -1,0 +1,105 @@
+{
+  "id": "iBF_LRvWVVISS5mgkJHA3",
+  "slug": "skiferie-zermatt-schweiz",
+  "collection": "posts",
+  "status": "published",
+  "data": {
+    "title": "Zermatt, Schweiz – skiferie under det ikoniske Matterhorn",
+    "excerpt": "Zermatt er en bilfri drøm i de schweiziske alper – med årets-rundt-ski, spektakulær udsigt til Matterhorn og en stemning der er ren magi.",
+    "author": "Redaktionen",
+    "content": "![Kvinde med skihjelm og solbriller holder skiudstyr på piste](/uploads/IMG_0102.jpeg \"float:left|width:40%\")\n\n## Zermatt – verdens mest fotogene skidestination\n\nDet er svært at forestille sig en mere dramatisk kulisse for en skiferie end **Zermatt** i Wallis, Schweiz. Her rejser det ikoniske **Matterhorn** (4.478 m) sig som en gigantisk tand mod den blå himmel og danner baggrund for en af verdens mest elskede skiresorts.\n\nZermatt er en **bilfri by** – kun elektriske taxaer og hestevogne må køre i gaderne. Det giver en ro og en særlig stemning, som er svær at finde andre steder.\n\n## Skiområdet Matterhorn Glacier Paradise\n\nZermatt byder på over **360 km pister** fordelt på tre hovedområder:\n\n- **Rothorn/Sunnegga** – solrige pister og fantastisk udsigt\n- **Gornergrat** – kør til 3.089 m og se Monte Rosa-massivet\n- **Klein Matterhorn** – Europas højestliggende kabelbane (3.883 m) og helårsskiing\n\nDen grænseoverskridende forbindelse til **Cervinia i Italien** giver mulighed for at skiløbe i to lande på én dag!\n\n## Zermatt by – luksus og charme\n\nNedenom Matterhorn finder du en by, der kombinerer schweizisk præcision med en varm, alpin charme:\n\n- Luksusbutikker og haute cuisine restauranter\n- Hyggelige raclette- og fonduerestauranter i træbygninger\n- Verdensklasse wellness og spa-oplevelser\n\n![Hånd holder rosa cocktail ved vindue med snelandskab](/uploads/IMG_0063.jpeg \"float:right|width:35%\")\n\n## Helårsdestination\n\nEn af Zermatt's store fordele er, at det er **åbent hele året**. Selv om sommeren kan du skiløbe på Klein Matterhorn-gletscheren. Men vintermånederne december til april byder på de bedste forhold.\n\n**Sæson:** Hele året (ski december–april er bedst) | **Adgang:** Tog fra Visp eller Täsch (ingen biler tilladt i Zermatt)\n\nZermatt er drømmedestinationen for dem, der søger perfektion – i landskabet, på pisterne og i glasset.",
+    "_seo": {
+      "metaTitle": "Zermatt, Schweiz – Skiferie under Matterhorn",
+      "metaDescription": "Oplev Zermatt under det ikoniske Matterhorn. 360 km pister, bilfri by og gletskerskiing hele året. Schweiz' mest fotogene skidestination.",
+      "keywords": [
+        "Zermatt",
+        "skiferie Schweiz",
+        "Matterhorn",
+        "skiløb",
+        "Alpine Resort"
+      ],
+      "ogImage": "/uploads/og/skiferie-zermatt-schweiz.jpg",
+      "robots": "index,follow",
+      "score": 88,
+      "scoreDetails": [
+        {
+          "rule": "meta-title",
+          "label": "Meta title",
+          "status": "pass",
+          "message": "Meta title length is good (44/60 characters)"
+        },
+        {
+          "rule": "meta-desc",
+          "label": "Meta description",
+          "status": "pass",
+          "message": "Meta description length is good (137/160 characters)"
+        },
+        {
+          "rule": "keyword-title",
+          "label": "Keyword in title",
+          "status": "pass",
+          "message": "Keyword \"Zermatt\" found in meta title"
+        },
+        {
+          "rule": "keyword-desc",
+          "label": "Keyword in description",
+          "status": "pass",
+          "message": "Keyword \"Zermatt\" found in meta description"
+        },
+        {
+          "rule": "content-length",
+          "label": "Content length",
+          "status": "warn",
+          "message": "Content is 249 words. Write 51 more words to reach 300 (recommended minimum)."
+        },
+        {
+          "rule": "headings",
+          "label": "Heading structure",
+          "status": "pass",
+          "message": "Content uses H2 headings for structure"
+        },
+        {
+          "rule": "img-alt",
+          "label": "Image alt text",
+          "status": "pass",
+          "message": "All 2 images have alt text"
+        },
+        {
+          "rule": "og-image",
+          "label": "Social image",
+          "status": "pass",
+          "message": "Social sharing image (OG) is set"
+        },
+        {
+          "rule": "keyword-slug",
+          "label": "Keyword in URL",
+          "status": "pass",
+          "message": "Keyword \"Zermatt\" found in the URL"
+        },
+        {
+          "rule": "internal-links",
+          "label": "Internal links",
+          "status": "pass",
+          "message": "Content links to other pages on the site"
+        },
+        {
+          "rule": "title",
+          "label": "Page title",
+          "status": "pass",
+          "message": "Page has a title"
+        },
+        {
+          "rule": "readability",
+          "label": "Readability",
+          "status": "fail",
+          "message": "Readability score is 17/100 — text is very hard to read. Use shorter sentences and simpler words."
+        }
+      ],
+      "lastOptimized": "2026-03-28T16:39:26.329Z"
+    },
+    "date": "2026-03-28"
+  },
+  "_fieldMeta": {},
+  "createdAt": "2026-03-28T16:39:24.308Z",
+  "updatedAt": "2026-03-28T16:40:36.787Z"
+}
