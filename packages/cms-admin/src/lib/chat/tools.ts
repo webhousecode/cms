@@ -609,11 +609,35 @@ export async function buildChatTools(): Promise<ToolPair[]> {
                 if (mdMatch) ogImage = mdMatch[1];
               }
 
-              const seoData = {
+              // Calculate SEO score
+              const { calculateSeoScore } = await import("@/lib/seo/score");
+              const seoFields = {
                 metaTitle: parsed.metaTitle,
                 metaDescription: parsed.metaDescription,
                 keywords: parsed.keywords,
                 ...(ogImage ? { ogImage } : {}),
+                robots: "index,follow",
+              };
+              const { score, details } = calculateSeoScore({ slug, data }, seoFields);
+
+              // Auto-generate OG image if source image available
+              let generatedOgImage = ogImage;
+              if (ogImage) {
+                try {
+                  const { generateOgImage } = await import("@/lib/seo/og-image");
+                  const ogUrl = await generateOgImage(ogImage, parsed.metaTitle || docTitle, slug);
+                  if (ogUrl) generatedOgImage = ogUrl;
+                } catch { /* non-fatal */ }
+              }
+
+              const seoData = {
+                metaTitle: parsed.metaTitle,
+                metaDescription: parsed.metaDescription,
+                keywords: parsed.keywords,
+                ogImage: generatedOgImage || undefined,
+                robots: "index,follow",
+                score,
+                scoreDetails: details,
                 lastOptimized: new Date().toISOString(),
               };
               await cms.content.update(collection, doc.id, {

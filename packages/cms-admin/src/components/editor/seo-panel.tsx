@@ -438,7 +438,12 @@ Rules:
                   }
                   const tmpl = JSON_LD_TEMPLATES.find((t) => t.id === templateId);
                   if (tmpl) {
-                    const auto = autoFillFields(tmpl, doc.data);
+                    // Merge doc data with current SEO state for auto-fill
+                    const enrichedData = {
+                      ...doc.data,
+                      _seo: { metaTitle, metaDescription: metaDesc, ogImage, keywords },
+                    };
+                    const auto = autoFillFields(tmpl, enrichedData);
                     const merged = { ...auto, ...jsonLdValues };
                     setJsonLdValues(merged);
                     setJsonLd(generateJsonLd(tmpl, merged));
@@ -452,9 +457,15 @@ Rules:
               {jsonLdTemplate && (() => {
                 const tmpl = JSON_LD_TEMPLATES.find((t) => t.id === jsonLdTemplate);
                 if (!tmpl) return null;
+                const visibleFields = tmpl.fields.filter((f) => !f.hidden);
                 return (
                   <div style={{ marginTop: "0.5rem", display: "flex", flexDirection: "column", gap: "0.375rem" }}>
-                    {tmpl.fields.map((f) => (
+                    {visibleFields.length === 0 && (
+                      <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: 0 }}>
+                        All fields auto-filled from document + SEO data above.
+                      </p>
+                    )}
+                    {visibleFields.map((f) => (
                       <div key={f.key}>
                         <p style={{ fontSize: "0.6rem", color: "var(--muted-foreground)", margin: "0 0 0.15rem", fontWeight: 500 }}>
                           {f.label}{f.required ? " *" : ""}

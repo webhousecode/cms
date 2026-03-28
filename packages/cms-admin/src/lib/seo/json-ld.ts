@@ -20,6 +20,8 @@ export interface JsonLdFieldDef {
   /** Auto-fill from document data key (e.g. "title", "date", "slug") */
   autoFrom?: string;
   required?: boolean;
+  /** Hidden fields are auto-filled from SEO/doc data but not shown in UI */
+  hidden?: boolean;
 }
 
 export const JSON_LD_TEMPLATES: JsonLdTemplate[] = [
@@ -28,12 +30,12 @@ export const JSON_LD_TEMPLATES: JsonLdTemplate[] = [
     label: "Article",
     description: "Blog post or news article",
     fields: [
-      { key: "headline", label: "Headline", placeholder: "Article title", autoFrom: "title", required: true },
-      { key: "description", label: "Description", placeholder: "Short summary", autoFrom: "_seo.metaDescription" },
+      { key: "headline", label: "Headline", placeholder: "Article title", autoFrom: "title", required: true, hidden: true },
+      { key: "description", label: "Description", placeholder: "Short summary", autoFrom: "_seo.metaDescription", hidden: true },
       { key: "datePublished", label: "Published", placeholder: "2026-01-15", autoFrom: "date" },
       { key: "dateModified", label: "Modified", placeholder: "2026-01-20", autoFrom: "updatedAt" },
       { key: "authorName", label: "Author", placeholder: "Author name", autoFrom: "author" },
-      { key: "image", label: "Image URL", placeholder: "/uploads/...", autoFrom: "_seo.ogImage" },
+      { key: "image", label: "Image URL", placeholder: "/uploads/...", autoFrom: "_seo.ogImage", hidden: true },
     ],
     generate: (v) => ({
       "@context": "https://schema.org",
@@ -51,7 +53,7 @@ export const JSON_LD_TEMPLATES: JsonLdTemplate[] = [
     label: "FAQ",
     description: "Frequently asked questions",
     fields: [
-      { key: "headline", label: "Page title", placeholder: "FAQ page title", autoFrom: "title" },
+      { key: "headline", label: "Page title", placeholder: "FAQ page title", autoFrom: "title", hidden: true },
     ],
     generate: (v) => ({
       "@context": "https://schema.org",
@@ -65,9 +67,9 @@ export const JSON_LD_TEMPLATES: JsonLdTemplate[] = [
     label: "Product",
     description: "Product listing with price",
     fields: [
-      { key: "name", label: "Product name", placeholder: "Product title", autoFrom: "title", required: true },
-      { key: "description", label: "Description", placeholder: "Product description", autoFrom: "_seo.metaDescription" },
-      { key: "image", label: "Image URL", placeholder: "/uploads/...", autoFrom: "_seo.ogImage" },
+      { key: "name", label: "Product name", placeholder: "Product title", autoFrom: "title", required: true, hidden: true },
+      { key: "description", label: "Description", placeholder: "Product description", autoFrom: "_seo.metaDescription", hidden: true },
+      { key: "image", label: "Image URL", placeholder: "/uploads/...", autoFrom: "_seo.ogImage", hidden: true },
       { key: "price", label: "Price", placeholder: "99.00" },
       { key: "currency", label: "Currency", placeholder: "DKK" },
       { key: "availability", label: "Availability", placeholder: "InStock" },
@@ -91,13 +93,13 @@ export const JSON_LD_TEMPLATES: JsonLdTemplate[] = [
     label: "Event",
     description: "Event with date and location",
     fields: [
-      { key: "name", label: "Event name", placeholder: "Event title", autoFrom: "title", required: true },
-      { key: "description", label: "Description", placeholder: "Event description", autoFrom: "_seo.metaDescription" },
+      { key: "name", label: "Event name", placeholder: "Event title", autoFrom: "title", required: true, hidden: true },
+      { key: "description", label: "Description", placeholder: "Event description", autoFrom: "_seo.metaDescription", hidden: true },
       { key: "startDate", label: "Start date", placeholder: "2026-06-15T19:00", autoFrom: "date" },
       { key: "endDate", label: "End date", placeholder: "2026-06-15T22:00" },
       { key: "locationName", label: "Venue", placeholder: "Venue name" },
       { key: "locationAddress", label: "Address", placeholder: "Street, City" },
-      { key: "image", label: "Image URL", placeholder: "/uploads/...", autoFrom: "_seo.ogImage" },
+      { key: "image", label: "Image URL", placeholder: "/uploads/...", autoFrom: "_seo.ogImage", hidden: true },
     ],
     generate: (v) => ({
       "@context": "https://schema.org",
@@ -119,10 +121,10 @@ export const JSON_LD_TEMPLATES: JsonLdTemplate[] = [
     label: "Person",
     description: "Person profile page",
     fields: [
-      { key: "name", label: "Name", placeholder: "Full name", autoFrom: "title", required: true },
+      { key: "name", label: "Name", placeholder: "Full name", autoFrom: "title", required: true, hidden: true },
       { key: "jobTitle", label: "Job title", placeholder: "Software Engineer" },
-      { key: "description", label: "Description", placeholder: "Bio", autoFrom: "_seo.metaDescription" },
-      { key: "image", label: "Image URL", placeholder: "/uploads/...", autoFrom: "_seo.ogImage" },
+      { key: "description", label: "Description", placeholder: "Bio", autoFrom: "_seo.metaDescription", hidden: true },
+      { key: "image", label: "Image URL", placeholder: "/uploads/...", autoFrom: "_seo.ogImage", hidden: true },
       { key: "url", label: "Website", placeholder: "https://..." },
     ],
     generate: (v) => ({
@@ -140,8 +142,8 @@ export const JSON_LD_TEMPLATES: JsonLdTemplate[] = [
     label: "Organization",
     description: "Company or organization",
     fields: [
-      { key: "name", label: "Name", placeholder: "Organization name", autoFrom: "title", required: true },
-      { key: "description", label: "Description", placeholder: "About", autoFrom: "_seo.metaDescription" },
+      { key: "name", label: "Name", placeholder: "Organization name", autoFrom: "title", required: true, hidden: true },
+      { key: "description", label: "Description", placeholder: "About", autoFrom: "_seo.metaDescription", hidden: true },
       { key: "url", label: "Website", placeholder: "https://..." },
       { key: "logo", label: "Logo URL", placeholder: "/uploads/logo.png" },
     ],
@@ -159,14 +161,14 @@ export const JSON_LD_TEMPLATES: JsonLdTemplate[] = [
     label: "Local Business",
     description: "Local business with address",
     fields: [
-      { key: "name", label: "Business name", placeholder: "Business name", autoFrom: "title", required: true },
-      { key: "description", label: "Description", placeholder: "About", autoFrom: "_seo.metaDescription" },
+      { key: "name", label: "Business name", placeholder: "Business name", autoFrom: "title", required: true, hidden: true },
+      { key: "description", label: "Description", placeholder: "About", autoFrom: "_seo.metaDescription", hidden: true },
       { key: "streetAddress", label: "Street", placeholder: "123 Main St" },
       { key: "city", label: "City", placeholder: "Aalborg" },
       { key: "postalCode", label: "Postal code", placeholder: "9000" },
       { key: "country", label: "Country", placeholder: "DK" },
       { key: "phone", label: "Phone", placeholder: "+45..." },
-      { key: "image", label: "Image URL", placeholder: "/uploads/...", autoFrom: "_seo.ogImage" },
+      { key: "image", label: "Image URL", placeholder: "/uploads/...", autoFrom: "_seo.ogImage", hidden: true },
     ],
     generate: (v) => ({
       "@context": "https://schema.org",
