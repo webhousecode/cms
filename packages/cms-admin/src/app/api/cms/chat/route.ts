@@ -69,8 +69,8 @@ export async function POST(request: NextRequest) {
 
   // Read configurable limits from site config (inherits from org)
   const siteConfig = await readSiteConfig();
-  const chatMaxTokens = siteConfig.aiChatMaxTokens || 8192;
-  const chatMaxIterations = siteConfig.aiChatMaxToolIterations || 25;
+  const chatMaxTokens = Math.min(siteConfig.aiChatMaxTokens || 8192, 32768);
+  const chatMaxIterations = Math.min(siteConfig.aiChatMaxToolIterations || 25, 50);
 
   // Resolve model: request param → site config → code default
   const defaultModel = siteConfig.aiChatModel || await getModel("code");
