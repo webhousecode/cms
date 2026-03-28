@@ -263,7 +263,11 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
   useEffect(() => {
     if (view !== "grid") return;
     async function resolve() {
-      // 1. Try sirv (static sites with dist/)
+      // 1. Build with drafts included so unpublished docs appear in dist/
+      try {
+        await fetch("/api/preview-build", { method: "POST" });
+      } catch { /* build not available — serve existing dist/ */ }
+      // 2. Try sirv (static sites with dist/)
       try {
         const r = await fetch("/api/preview-serve", { method: "POST" });
         if (r.ok) {
@@ -271,7 +275,7 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
           if (d?.url) { setPreviewBase(d.url); return; }
         }
       } catch { /* sirv not available */ }
-      // 2. Fall back to previewSiteUrl from site config (Next.js dev server etc.)
+      // 3. Fall back to previewSiteUrl from site config (Next.js dev server etc.)
       try {
         const r = await fetch("/api/admin/site-config");
         if (r.ok) {
