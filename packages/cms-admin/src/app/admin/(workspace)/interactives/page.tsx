@@ -31,6 +31,12 @@ interface InteractiveMeta {
 
 type ViewMode = "grid" | "list";
 
+const thStyle: React.CSSProperties = {
+  padding: "0.5rem 0.75rem", textAlign: "left", fontWeight: 500,
+  fontSize: "0.75rem", color: "var(--muted-foreground)",
+  borderBottom: "1px solid var(--border)", whiteSpace: "nowrap",
+};
+
 /* ─── Helpers ────────────────────────────────────────────────── */
 function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -388,55 +394,56 @@ export default function InteractivesPage() {
           ))}
         </div>
       ) : (
-        /* ─── List View — Pitch Vault style with thumbnails ─── */
-        <div style={{ display: "flex", flexDirection: "column" }}>
-          {filtered.map((item) => (
-            <div
-              key={item.id}
-              className="group hover:bg-accent/30 cursor-pointer"
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "1rem",
-                padding: "0.625rem 1rem",
-                borderBottom: "1px solid var(--border)",
-                transition: "background 150ms",
-              }}
-              onClick={() => router.push(`/admin/interactives/${item.id}`)}
-            >
-              {/* Thumbnail */}
-              <div style={{
-                width: "72px", height: "48px", borderRadius: "6px",
-                overflow: "hidden", background: "var(--muted)", flexShrink: 0,
-                border: "1px solid var(--border)",
-              }}>
-                <iframe
-                  src={`/api/interactives/${item.id}/preview`}
-                  title={item.name}
-                  sandbox="allow-scripts allow-same-origin"
-                  style={{ width: "360px", height: "240px", border: "none", transform: "scale(0.2)", transformOrigin: "top left", pointerEvents: "none" }}
-                />
-              </div>
-
-              {/* Name + description */}
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                  <span className="text-sm font-semibold text-foreground truncate">{item.name}</span>
-                  <StatusBadge status={item.status} />
-                  {item.locale && <span style={{ fontSize: "0.6rem", fontWeight: 600, padding: "0 4px", borderRadius: "3px", background: "rgba(247,187,46,0.12)", color: "#F7BB2E" }}>{item.locale.toUpperCase()}</span>}
-                  <span style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", fontFamily: "monospace", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)" }}>HTML</span>
-                </div>
-                <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", fontFamily: "monospace", marginTop: "0.15rem" }}>
-                  {formatSize(item.size)} &middot; {formatDate(item.updatedAt)}
-                </p>
-              </div>
-
-              {/* Actions */}
-              <div onClick={(e) => e.stopPropagation()}>
-                <ItemDropdown item={item} onEdit={() => router.push(`/admin/interactives/${item.id}`)} onTogglePublish={() => togglePublish(item)} onClone={() => cloneItem(item)} onTrash={() => setConfirmTrash(item)} />
-              </div>
-            </div>
-          ))}
+        /* ─── List View — Table matching collection-list style ─── */
+        <div style={{ border: "1px solid var(--border)", borderRadius: "10px", overflowX: "auto" }}>
+          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "600px" }}>
+            <thead>
+              <tr>
+                <th style={thStyle}>Name</th>
+                <th style={thStyle}>Status</th>
+                <th style={thStyle}>Size</th>
+                <th style={thStyle}>Updated</th>
+                <th style={{ ...thStyle, width: "2.5rem" }} />
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.map((item, i) => (
+                <tr
+                  key={item.id}
+                  style={{ borderTop: i === 0 ? "none" : "1px solid var(--border)", transition: "background 120ms", cursor: "pointer" }}
+                  className="hover:bg-secondary/50"
+                  onClick={() => router.push(`/admin/interactives/${item.id}`)}
+                >
+                  <td style={{ padding: "0.625rem 0.75rem", maxWidth: "22rem" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                      <div style={{ width: 6, height: 6, borderRadius: "50%", flexShrink: 0, background: item.status === "published" ? "rgb(74 222 128)" : "rgb(234 179 8)" }} />
+                      <div style={{ minWidth: 0 }}>
+                        <p style={{ fontSize: "0.85rem", fontWeight: 500, color: "var(--foreground)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {item.name}
+                        </p>
+                        <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", fontFamily: "monospace", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          {item.id}
+                        </p>
+                      </div>
+                      {item.locale && <span style={{ fontSize: "0.6rem", fontWeight: 600, padding: "0 4px", borderRadius: "3px", background: "rgba(247,187,46,0.12)", color: "#F7BB2E", flexShrink: 0 }}>{item.locale.toUpperCase()}</span>}
+                    </div>
+                  </td>
+                  <td style={{ padding: "0.625rem 0.75rem", whiteSpace: "nowrap" }}>
+                    <StatusBadge status={item.status} />
+                  </td>
+                  <td style={{ padding: "0.625rem 0.75rem", fontSize: "0.8rem", color: "var(--muted-foreground)", fontFamily: "monospace", whiteSpace: "nowrap" }}>
+                    {formatSize(item.size)}
+                  </td>
+                  <td style={{ padding: "0.625rem 0.75rem", fontSize: "0.8rem", color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>
+                    {formatDate(item.updatedAt)}
+                  </td>
+                  <td style={{ padding: "0.625rem 0.5rem", textAlign: "right" }} onClick={(e) => e.stopPropagation()}>
+                    <ItemDropdown item={item} onEdit={() => router.push(`/admin/interactives/${item.id}`)} onTogglePublish={() => togglePublish(item)} onClone={() => cloneItem(item)} onTrash={() => setConfirmTrash(item)} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
 
