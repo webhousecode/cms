@@ -26,13 +26,14 @@ export async function GET(req: NextRequest) {
 
     for (const col of config.collections) {
       const { documents } = await cms.content.findMany(col.name, {});
-      const prefix = col.urlPrefix?.replace(/\/$/, "") ?? "";
+      const prefix = (col.urlPrefix ?? `/${col.name}`).replace(/\/$/, "");
 
       for (const doc of documents) {
         const title = String(
           doc.data?.title ?? doc.data?.name ?? doc.data?.label ?? doc.slug
         );
-        const url = prefix ? `${prefix}/${doc.slug}` : `/${doc.slug}`;
+        const isHomepage = (prefix === "" || prefix === "/") && (doc.slug === "home" || doc.slug === "index");
+        const url = isHomepage ? "/" : `${prefix}/${doc.slug}`;
 
         if (q) {
           const haystack = `${title} ${doc.slug} ${url}`.toLowerCase();
