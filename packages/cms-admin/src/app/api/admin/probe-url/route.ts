@@ -10,6 +10,11 @@ export async function GET(req: NextRequest) {
   const url = req.nextUrl.searchParams.get("url");
   if (!url) return NextResponse.json({ ok: false });
 
+  // Only allow http/https — block file://, data://, etc.
+  if (!url.startsWith("http://") && !url.startsWith("https://")) {
+    return NextResponse.json({ ok: false });
+  }
+
   try {
     const res = await fetch(url, {
       method: "HEAD",

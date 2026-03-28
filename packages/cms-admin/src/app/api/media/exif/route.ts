@@ -5,7 +5,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { getActiveSitePaths } from "@/lib/site-paths";
 import { extractExif } from "@/lib/media/image-processor";
 
@@ -15,9 +15,13 @@ export async function GET(req: NextRequest) {
 
   try {
     const sitePaths = await getActiveSitePaths();
-    // Resolve /uploads/x.jpg → absolute path
+    // Resolve /uploads/x.jpg → absolute path (with traversal guard)
     const relativePath = fileUrl.replace(/^\/uploads\//, "");
-    const fullPath = join(sitePaths.uploadDir, relativePath);
+    const fullPath = resolve(join(sitePaths.uploadDir, relativePath));
+
+    if (!fullPath.startsWith(resolve(sitePaths.uploadDir) + "/")) {
+      return NextResponse.json({ error: "Invalid path" }, { status: 400 });
+    }
 
     if (!existsSync(fullPath)) {
       return NextResponse.json({ error: "File not found" }, { status: 404 });

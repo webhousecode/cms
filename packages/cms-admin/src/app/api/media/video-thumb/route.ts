@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getActiveSitePaths } from "@/lib/site-paths";
 import { existsSync, mkdirSync, readFileSync } from "node:fs";
-import { execSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { createHash } from "node:crypto";
 
@@ -18,18 +18,22 @@ export async function GET(req: NextRequest) {
 
   const { projectDir, dataDir } = await getActiveSitePaths();
 
-  // Resolve the actual file path from the URL
-  // /uploads/folder/file.mov → {projectDir}/public/uploads/folder/file.mov
-  // or {uploadDir}/folder/file.mov
+  // Resolve the actual file path from the URL (with traversal guard)
+  const publicDir = path.resolve(path.join(projectDir, "public"));
   let filePath = "";
   if (fileUrl.startsWith("/uploads/")) {
-    filePath = path.join(projectDir, "public", fileUrl);
+    filePath = path.resolve(path.join(projectDir, "public", fileUrl));
     if (!existsSync(filePath)) {
       // Try without /public/
-      filePath = path.join(projectDir, fileUrl);
+      filePath = path.resolve(path.join(projectDir, fileUrl));
     }
   } else {
-    filePath = path.join(projectDir, "public", fileUrl);
+    filePath = path.resolve(path.join(projectDir, "public", fileUrl));
+  }
+
+  // Ensure resolved path stays within the project directory
+  if (!filePath.startsWith(path.resolve(projectDir) + "/")) {
+    return new NextResponse(null, { status: 400 });
   }
 
   if (!existsSync(filePath)) {
@@ -51,19 +55,23 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  // Generate thumbnail with ffmpeg — extract frame at 1 second
+  // Generate thumbnail with ffmpeg — execFileSync avoids shell injection
   try {
-    execSync(
-      `ffmpeg -y -i ${JSON.stringify(filePath)} -ss 00:00:01 -frames:v 1 -vf "scale=320:-1" -q:v 3 ${JSON.stringify(thumbPath)}`,
-      { timeout: 10000, stdio: "pipe" },
-    );
+    execFileSync("ffmpeg", [
+      "-y", "-i", filePath,
+      "-ss", "00:00:01", "-frames:v", "1",
+      "-vf", "scale=320:-1", "-q:v", "3",
+      thumbPath,
+    ], { timeout: 10000, stdio: "pipe" });
   } catch {
     // Try frame at 0 seconds if video is shorter than 1s
     try {
-      execSync(
-        `ffmpeg -y -i ${JSON.stringify(filePath)} -frames:v 1 -vf "scale=320:-1" -q:v 3 ${JSON.stringify(thumbPath)}`,
-        { timeout: 10000, stdio: "pipe" },
-      );
+      execFileSync("ffmpeg", [
+        "-y", "-i", filePath,
+        "-frames:v", "1",
+        "-vf", "scale=320:-1", "-q:v", "3",
+        thumbPath,
+      ], { timeout: 10000, stdio: "pipe" });
     } catch {
       return new NextResponse(null, { status: 500 });
     }

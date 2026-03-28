@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminConfig } from "@/lib/cms";
 import { getActiveSitePaths } from "@/lib/site-paths";
+import { getSiteRole } from "@/lib/require-role";
 import { readFileSync, writeFileSync, readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 
@@ -14,6 +15,11 @@ import { join } from "node:path";
  * (cms.content.update merges data, which doesn't support field deletion).
  */
 export async function POST(req: NextRequest) {
+  const role = await getSiteRole();
+  if (!role || role === "viewer") {
+    return NextResponse.json({ error: "No write access" }, { status: 403 });
+  }
+
   try {
     const { collection, fields } = (await req.json()) as { collection?: string; fields?: string[] };
     if (!collection || !fields?.length) {
