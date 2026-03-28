@@ -1542,12 +1542,20 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
                   </p>
                   {(field.type === "richtext" || field.type === "htmldoc") ? (
                     <div
-                      className="prose prose-sm dark:prose-invert"
                       style={{ fontSize: "0.85rem", lineHeight: 1.6, color: "var(--foreground)", maxWidth: "none" }}
-                      dangerouslySetInnerHTML={{ __html: (() => {
+                      ref={(el) => {
+                        if (!el) return;
                         const raw = String(val);
-                        return /<(?:p|h[1-6]|div|ul|ol|table|blockquote)\b/i.test(raw) ? raw : miniMarkdownToHtml(raw);
-                      })() }}
+                        const html = /<(?:p|h[1-6]|div|ul|ol|table|blockquote)\b/i.test(raw) ? raw : miniMarkdownToHtml(raw);
+                        if (el.innerHTML !== html) el.innerHTML = html;
+                        // Style headings inline since prose classes may not be loaded
+                        el.querySelectorAll("h1").forEach(h => { h.style.fontSize = "1.5rem"; h.style.fontWeight = "700"; h.style.margin = "0 0 0.5rem"; });
+                        el.querySelectorAll("h2").forEach(h => { h.style.fontSize = "1.25rem"; h.style.fontWeight = "600"; h.style.margin = "0 0 0.5rem"; });
+                        el.querySelectorAll("h3").forEach(h => { h.style.fontSize = "1.1rem"; h.style.fontWeight = "600"; h.style.margin = "0 0 0.5rem"; });
+                        el.querySelectorAll("a").forEach(a => { (a as HTMLElement).style.color = "var(--primary)"; (a as HTMLElement).style.textDecoration = "underline"; });
+                        el.querySelectorAll("code").forEach(c => { (c as HTMLElement).style.background = "rgba(255,255,255,0.08)"; (c as HTMLElement).style.padding = "1px 4px"; (c as HTMLElement).style.borderRadius = "3px"; (c as HTMLElement).style.fontSize = "0.8rem"; });
+                        el.querySelectorAll("p").forEach(p => { p.style.margin = "0 0 0.75rem"; });
+                      }}
                     />
                   ) : field.type === "image" ? (
                     <img src={String(val)} alt="" style={{ maxWidth: "100%", borderRadius: "6px" }} />
