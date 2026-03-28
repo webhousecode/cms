@@ -32,15 +32,15 @@ export async function GET(req: NextRequest) {
       org.sites.map(async (site) => {
         let url = site.previewUrl;
         let liveUrl = "";
-        if (!url) {
-          try {
-            const cfg = await readSiteConfigForSite(activeOrgId, site.id);
-            liveUrl = cfg?.deployCustomDomain
-              ? `https://${cfg.deployCustomDomain}`
-              : cfg?.deployProductionUrl || "";
-            url = liveUrl;
-          } catch { /* no config */ }
-        }
+        try {
+          const cfg = await readSiteConfigForSite(activeOrgId, site.id);
+          liveUrl = cfg?.deployCustomDomain
+            ? `https://${cfg.deployCustomDomain}`
+            : cfg?.deployProductionUrl || "";
+        } catch { /* no config */ }
+        // Use previewUrl as fallback for live URL
+        if (!liveUrl && site.previewUrl) liveUrl = site.previewUrl;
+        if (!url) url = liveUrl;
         if (liveUrl) urls[site.id] = liveUrl;
         if (!url) { results[site.id] = "no-preview"; return; }
         results[site.id] = await checkUrl(url);
