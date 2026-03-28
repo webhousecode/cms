@@ -1196,6 +1196,20 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
             </Button>
           )}
 
+          {translationOf && (
+            <Button
+              variant={sideBySide ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setSideBySide(!sideBySide)}
+              className="gap-1.5"
+              title="Show source document side-by-side"
+              style={sideBySide ? { background: "#F7BB2E", color: "#0D0D0D" } : undefined}
+            >
+              <Languages className="w-3.5 h-3.5" />
+              {sideBySide ? "Close source" : "Side-by-side"}
+            </Button>
+          )}
+
           {!readOnly && (
             <Button
               variant="ghost"
@@ -1477,33 +1491,6 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
           >
             <Sparkles size={11} /> Re-translate with AI
           </button>
-        </div>
-      )}
-
-      {/* Side-by-side toggle for translation documents */}
-      {translationOf && (
-        <div style={{
-          display: "flex", alignItems: "center", gap: "0.5rem",
-          padding: "0.35rem 1rem",
-          background: sideBySide ? "rgb(247 187 46 / 0.06)" : "transparent",
-          borderBottom: "1px solid var(--border)",
-          fontSize: "0.75rem",
-        }}>
-          <button
-            type="button"
-            onClick={() => setSideBySide(!sideBySide)}
-            style={{
-              display: "inline-flex", alignItems: "center", gap: "0.35rem",
-              padding: "0.2rem 0.6rem", borderRadius: "4px",
-              border: sideBySide ? "1px solid rgb(247 187 46 / 0.4)" : "1px solid var(--border)",
-              background: sideBySide ? "rgb(247 187 46 / 0.1)" : "transparent",
-              color: sideBySide ? "#F7BB2E" : "var(--muted-foreground)",
-              fontSize: "0.7rem", cursor: "pointer", fontWeight: 500,
-            }}
-          >
-            {sideBySide ? "✕ Close" : "⇔ Side-by-side"}
-          </button>
-          {sideBySide && <span style={{ color: "var(--muted-foreground)" }}>Source document (read-only) shown on the left</span>}
         </div>
       )}
 
