@@ -1,6 +1,23 @@
 import type { Document } from '../storage/types.js';
 import type { CollectionConfig } from '../schema/types.js';
 
+/**
+ * Returns a locale-prefixed URL for documents in multi-locale sites.
+ * Default-locale documents keep their original URL (no prefix).
+ */
+export function getLocalizedDocumentUrl(
+  doc: Document,
+  collection: CollectionConfig,
+  config: { defaultLocale?: string; locales?: string[] },
+  allDocs?: Map<string, Document>,
+): string {
+  const baseUrl = getDocumentUrl(doc, collection, allDocs);
+  const docLocale = doc.locale;
+  if (!docLocale || !config.locales || config.locales.length <= 1) return baseUrl;
+  if (docLocale === (config.defaultLocale || config.locales[0])) return baseUrl;
+  return `/${docLocale}${baseUrl}`;
+}
+
 export function getDocumentUrl(
   doc: Document,
   collection: CollectionConfig,
