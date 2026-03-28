@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
+import { useState, useTransition, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Search, Copy, Clock, MoreHorizontal, Pencil, Globe, FileX, ArrowUpDown } from "lucide-react";
@@ -107,21 +107,39 @@ function RowMenu({ doc, collection, onClone, onToggle, onTrash, cloning }: {
 }) {
   const [open, setOpen] = useState(false);
   const [confirmTrash, setConfirmTrash] = useState(false);
+  const btnRef = useRef<HTMLButtonElement>(null);
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+
+  function openMenu(e: React.MouseEvent) {
+    e.preventDefault(); e.stopPropagation();
+    if (open) { setOpen(false); return; }
+    if (btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect();
+      const menuH = 180; // approx menu height
+      const spaceBelow = window.innerHeight - r.bottom;
+      const top = spaceBelow < menuH ? r.top - menuH : r.bottom + 4;
+      setPos({ top, left: r.right - 160 }); // 160 ≈ minWidth 10rem
+    }
+    setOpen(true);
+  }
+
   return (
     <div style={{ position: "relative" }}>
       <button
+        ref={btnRef}
         type="button"
-        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setOpen((v) => !v); }}
-        style={{ padding: "0.25rem", borderRadius: "5px", border: "none", background: "transparent", color: "var(--muted-foreground)", cursor: "pointer", display: "flex", alignItems: "center" }}
+        onClick={openMenu}
+        style={{ padding: "0.25rem", borderRadius: "5px", border: "1px solid var(--border)", background: "var(--card)", color: "var(--muted-foreground)", cursor: "pointer", display: "flex", alignItems: "center" }}
+        className="hover:bg-secondary hover:text-foreground"
         onBlur={() => setTimeout(() => setOpen(false), 150)}
       >
         <MoreHorizontal style={{ width: "0.9rem", height: "0.9rem" }} />
       </button>
-      {open && (
+      {open && pos && (
         <div style={{
-          position: "absolute", right: 0, top: "100%", zIndex: 50, minWidth: "10rem",
+          position: "fixed", top: pos.top, left: pos.left, zIndex: 9999, minWidth: "10rem",
           background: "var(--popover)", border: "1px solid var(--border)", borderRadius: "8px",
-          boxShadow: "0 4px 20px rgba(0,0,0,0.3)", padding: "0.25rem", marginTop: "0.25rem",
+          boxShadow: "0 4px 20px rgba(0,0,0,0.3)", padding: "0.25rem",
         }}>
           <Link
             href={`/admin/${collection}/${doc.slug}`}
