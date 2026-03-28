@@ -34,6 +34,8 @@ export async function PUT(
       content: body.content,
       name: body.name,
       status: body.status,
+      locale: body.locale,
+      translationOf: body.translationOf,
     });
     if (!updated) return NextResponse.json({ error: "Not found" }, { status: 404 });
     return NextResponse.json(updated);

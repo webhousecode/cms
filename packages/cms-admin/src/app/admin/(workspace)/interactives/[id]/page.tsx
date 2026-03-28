@@ -28,6 +28,8 @@ interface InteractiveDetail {
   createdAt: string;
   updatedAt: string;
   content: string;
+  locale?: string;
+  translationOf?: string;
 }
 
 type EditMode = "preview" | "visual" | "code" | "ai-edit";
@@ -321,6 +323,10 @@ export default function InteractiveDetailPage() {
   const [confirmTrash, setConfirmTrash] = useState(false);
   const [propertiesOpen, setPropertiesOpen] = useState(false);
   const [editName, setEditName] = useState("");
+  const [siteLocales, setSiteLocales] = useState<string[]>([]);
+  const [defaultLocale, setDefaultLocale] = useState("en");
+  const [siblings, setSiblings] = useState<Array<{ id: string; name: string; locale?: string; translationOf?: string }>>([]);
+  const [translating, setTranslating] = useState(false);
   const [originalContent, setOriginalContent] = useState("");
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const { setTabTitle } = useTabs();
@@ -349,6 +355,31 @@ export default function InteractiveDetailPage() {
   useEffect(() => {
     if (detail?.name) setTabTitle(detail.name);
   }, [detail?.name, setTabTitle]);
+
+  // Fetch site locales + sibling translations
+  useEffect(() => {
+    fetch("/api/admin/site-config", { cache: "no-store" })
+      .then(r => r.json())
+      .then(cfg => {
+        setSiteLocales(cfg.locales ?? []);
+        setDefaultLocale(cfg.defaultLocale ?? "en");
+      })
+      .catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!detail) return;
+    fetch("/api/interactives")
+      .then(r => r.json())
+      .then((all: Array<{ id: string; name: string; locale?: string; translationOf?: string }>) => {
+        const sourceId = detail.translationOf ?? detail.id;
+        setSiblings(all.filter(i =>
+          i.id !== detail.id &&
+          (i.translationOf === sourceId || i.id === sourceId)
+        ));
+      })
+      .catch(() => {});
+  }, [detail?.id, detail?.translationOf]);
 
   /* Close panels and dialogs on Escape */
   useEffect(() => {
@@ -661,6 +692,94 @@ export default function InteractiveDetailPage() {
         <ActionBarBreadcrumb items={["interactives", detail.name]} />
         <span className="text-xs text-muted-foreground font-mono">{formatSize(detail.size)}</span>
       </ActionBar>
+
+      {/* Translations bar — same pattern as document editor */}
+      {siteLocales.length > 1 && (
+        <div style={{
+          display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap",
+          padding: "0.35rem 1rem",
+          borderBottom: "1px solid var(--border)",
+          fontSize: "0.75rem",
+        }}>
+          <span style={{ fontWeight: 600, fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted-foreground)" }}>
+            TRANSLATIONS
+          </span>
+          {/* Locale badge */}
+          <span style={{
+            fontSize: "0.65rem", fontWeight: 600, padding: "1px 6px",
+            borderRadius: "3px", background: "rgba(247,187,46,0.12)", color: "#F7BB2E",
+          }}>
+            {(detail.locale || defaultLocale).toUpperCase()}
+          </span>
+          {/* Sibling translations */}
+          {siblings.map(s => (
+            <Link
+              key={s.id}
+              href={`/admin/interactives/${s.id}`}
+              style={{
+                fontSize: "0.65rem", fontWeight: 500, padding: "1px 6px",
+                borderRadius: "3px", border: "1px solid var(--border)",
+                color: "var(--muted-foreground)", textDecoration: "none",
+              }}
+            >
+              {(s.locale || "?").toUpperCase()} {s.name}
+            </Link>
+          ))}
+          {/* Add translation button — only on source docs */}
+          {!detail.translationOf && (() => {
+            const existingLocales = [detail.locale || defaultLocale, ...siblings.map(s => s.locale).filter(Boolean)];
+            const available = siteLocales.filter(l => !existingLocales.includes(l));
+            if (available.length === 0) return null;
+            return available.map(locale => (
+              <button
+                key={locale}
+                type="button"
+                disabled={translating}
+                onClick={async () => {
+                  setTranslating(true);
+                  try {
+                    // Set locale on source if not set
+                    if (!detail.locale) {
+                      await fetch(`/api/interactives/${id}`, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ locale: defaultLocale }),
+                      });
+                    }
+                    // Create translated copy via AI
+                    const res = await fetch(`/api/interactives/${id}/translate`, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ targetLocale: locale }),
+                    });
+                    if (res.ok) {
+                      const result = await res.json();
+                      // Set locale + translationOf on the new interactive
+                      await fetch(`/api/interactives/${result.id}`, {
+                        method: "PUT",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ locale, translationOf: id }),
+                      });
+                      router.push(`/admin/interactives/${result.id}`);
+                    }
+                  } finally {
+                    setTranslating(false);
+                  }
+                }}
+                style={{
+                  fontSize: "0.65rem", fontWeight: 500, padding: "1px 8px",
+                  borderRadius: "3px", border: "1px solid rgb(247 187 46 / 0.3)",
+                  background: "rgb(247 187 46 / 0.08)", color: "#F7BB2E",
+                  cursor: translating ? "wait" : "pointer",
+                  display: "inline-flex", alignItems: "center", gap: "0.25rem",
+                }}
+              >
+                {translating ? "Translating..." : `+ ${locale.toUpperCase()}`}
+              </button>
+            ));
+          })()}
+        </div>
+      )}
 
       {/* Properties panel — right sidebar, same as document editor */}
       {propertiesOpen && (

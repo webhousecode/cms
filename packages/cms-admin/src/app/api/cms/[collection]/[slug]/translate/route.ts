@@ -218,37 +218,26 @@ Return ONLY a JSON object with the translated fields. No explanation, no preambl
       console.error("[translate] Alt-text localization failed (non-fatal):", err);
     }
 
-    // Translate referenced interactives in richtext fields (!!INTERACTIVE[slug|...])
+    // Replace !!INTERACTIVE[slug] refs with translated interactive slug if translation exists
     try {
       const richtextFields = translatableFields.filter((f) => f.type === "richtext");
       for (const field of richtextFields) {
         const html = mergedData[field.name];
         if (typeof html !== "string" || !html.includes("INTERACTIVE[")) continue;
-        const interactiveRefs = html.match(/!!INTERACTIVE\[([^\]]+)\]/g) ?? [];
-        for (const ref of interactiveRefs) {
-          const parts = ref.match(/!!INTERACTIVE\[([^|\]]+)/);
-          if (!parts) continue;
-          const intSlug = parts[1];
-          const translatedIntSlug = `${intSlug}-${targetLocale}`;
-          // Trigger interactive translation (fire-and-forget)
-          const baseUrl = process.env.NEXTAUTH_URL || `http://localhost:${process.env.PORT || 3010}`;
-          const serviceToken = process.env.CMS_JWT_SECRET;
-          try {
-            await fetch(`${baseUrl}/api/interactives/${intSlug}/translate`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json", "x-cms-service-token": serviceToken || "" },
-              body: JSON.stringify({ targetLocale }),
-            });
-          } catch { /* non-fatal */ }
-          // Replace reference in the translated document
-          mergedData[field.name] = (mergedData[field.name] as string).replace(
-            new RegExp(`!!INTERACTIVE\\[${intSlug.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}([^\\]]*)\\]`, "g"),
-            `!!INTERACTIVE[${translatedIntSlug}$1]`,
-          );
-        }
+        // Check which interactive translations exist
+        const adapter = await (await import("@/lib/media")).getMediaAdapter();
+        const allInts = await adapter.listInteractives();
+        mergedData[field.name] = html.replace(
+          /!!INTERACTIVE\[([^|\]]+)([^\]]*)\]/g,
+          (_match, intSlug, rest) => {
+            const translatedId = `${intSlug}-${targetLocale}`;
+            const exists = allInts.some(i => i.id === translatedId);
+            return exists ? `!!INTERACTIVE[${translatedId}${rest}]` : _match;
+          },
+        );
       }
     } catch (err) {
-      console.error("[translate] Interactive translation failed (non-fatal):", err);
+      console.error("[translate] Interactive ref replacement failed (non-fatal):", err);
     }
 
     // Check if translation already exists
