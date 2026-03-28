@@ -58,7 +58,7 @@
 | F39 | [Interactives Engine](#f39-interactives-engine) | Done | [docs/features/F39-interactives-engine.md](features/F39-interactives-engine.md) |
 | F40 | [Drag and Drop Tab Reordering](#f40-drag-drop-tabs) | Planned | [docs/features/F40-drag-drop-tabs.md](features/F40-drag-drop-tabs.md) |
 | F41 | [GitHub Site Auto-Sync & Webhook Revalidation](#f41-github-site-sync) | Done | [docs/features/F41-github-site-sync.md](features/F41-github-site-sync.md) |
-| F42 | [Framework Boilerplates](#f42-framework-boilerplates) | Planned | [docs/features/F42-framework-boilerplates.md](features/F42-framework-boilerplates.md) |
+| F42 | [Framework Boilerplates](#f42-framework-boilerplates) | Done | [docs/features/F42-framework-boilerplates.md](features/F42-framework-boilerplates.md) |
 | F43 | [Persist User State](#f43-persist-user-state) | Done | [docs/features/F43-persist-user-state.md](features/F43-persist-user-state.md) |
 | F44 | [Media Processing Pipeline](#f44-media-processing-pipeline) | ✅ Done | [docs/features/F44-media-processing.md](features/F44-media-processing.md) |
 | F45 | [AI Image Generation](#f45-ai-image-generation) | Planned | [docs/features/F45-ai-image-generation.md](features/F45-ai-image-generation.md) |
