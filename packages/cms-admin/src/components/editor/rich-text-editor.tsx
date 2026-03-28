@@ -2007,7 +2007,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
   const imagePickerRef = useRef<HTMLDivElement>(null);
   const audioPickerRef = useRef<HTMLDivElement>(null);
   const [showMediaDropdown, setShowMediaDropdown] = useState(false);
-  const [mediaSubMenu, setMediaSubMenu] = useState<"image" | "audio" | null>(null);
+  const [mediaSubMenu, setMediaSubMenu] = useState<"image" | "audio" | "map" | null>(null);
   const mediaDropdownRef = useRef<HTMLDivElement>(null);
   const [showSource, setShowSource] = useState(false);
   const [sourceText, setSourceText] = useState("");
@@ -2695,6 +2695,23 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                     >
                       <IconAttachment />File attachment
                     </button>
+                    {/* Map embed */}
+                    <button type="button" style={{
+                      display: "flex", alignItems: "center", gap: "0.5rem",
+                      width: "100%", padding: "0.5rem 0.75rem", border: "none",
+                      background: "transparent", color: "var(--foreground)",
+                      fontSize: "0.8rem", cursor: "pointer", textAlign: "left",
+                    }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(255,255,255,0.07)"; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
+                      onClick={() => setMediaSubMenu("map")}
+                    >
+                      <span style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+                        Map
+                      </span>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                    </button>
                   </>)}
 
                   {/* Image sub-menu */}
@@ -2779,6 +2796,56 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                     >
                       Browse Media
                     </button>
+                  </>)}
+
+                  {/* Map sub-menu */}
+                  {mediaSubMenu === "map" && (<>
+                    <button type="button" style={{
+                      display: "flex", alignItems: "center", gap: "0.5rem",
+                      width: "100%", padding: "0.4rem 0.75rem", border: "none",
+                      background: "transparent", color: "var(--muted-foreground)",
+                      fontSize: "0.7rem", cursor: "pointer", textAlign: "left",
+                    }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(255,255,255,0.07)"; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; }}
+                      onClick={() => setMediaSubMenu(null)}
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                      Map
+                    </button>
+                    <div style={{ height: "1px", background: "var(--border)", margin: "2px 0" }} />
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        const input = (e.currentTarget.elements.namedItem("mapAddress") as HTMLInputElement);
+                        const addr = input?.value.trim();
+                        if (addr) {
+                          setShowMediaDropdown(false);
+                          setMediaSubMenu(null);
+                          editor.chain().focus().insertContent(`\n\n!!MAP[${addr}|14]\n\n`).run();
+                        }
+                      }}
+                      style={{ padding: "0.375rem 0.75rem", display: "flex", gap: "0.25rem" }}
+                    >
+                      <input
+                        name="mapAddress"
+                        type="text"
+                        placeholder="Address or place..."
+                        autoFocus
+                        style={{
+                          flex: 1, padding: "0.3rem 0.5rem", fontSize: "0.75rem", borderRadius: "4px",
+                          border: "1px solid var(--border)", background: "var(--background)",
+                          color: "var(--foreground)", outline: "none",
+                        }}
+                      />
+                      <button type="submit" style={{
+                        padding: "0.3rem 0.5rem", borderRadius: "4px", border: "none",
+                        background: "#F7BB2E", color: "#0D0D0D", fontSize: "0.7rem",
+                        fontWeight: 600, cursor: "pointer",
+                      }}>
+                        Insert
+                      </button>
+                    </form>
                   </>)}
                 </div>
               )}
