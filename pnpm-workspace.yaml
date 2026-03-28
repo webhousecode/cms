@@ -1,4 +1,5 @@
 packages:
   - 'packages/*'
-  - 'examples/*'
+  - 'examples/blog'
   - 'examples/static/*'
+  # Boilerplates excluded — they're standalone projects with their own deps
