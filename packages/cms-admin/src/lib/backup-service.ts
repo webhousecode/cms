@@ -215,14 +215,15 @@ export async function restoreBackup(id: string): Promise<{ restored: number; err
   const { contentDir, dataDir } = await getActiveSitePaths();
 
   // Use unzip via child_process (avoid extra dependency)
-  const { execSync } = await import("node:child_process");
+  const { execFileSync } = await import("node:child_process");
+  const { cpSync } = await import("node:fs");
 
   // Create a temp directory for extraction
   const tmpDir = path.join(path.dirname(filePath), `_restore-${Date.now()}`);
   mkdirSync(tmpDir, { recursive: true });
 
   try {
-    execSync(`unzip -o "${filePath}" -d "${tmpDir}"`, { stdio: "pipe" });
+    execFileSync("unzip", ["-o", filePath, "-d", tmpDir], { stdio: "pipe" });
 
     let restored = 0;
 
@@ -232,7 +233,8 @@ export async function restoreBackup(id: string): Promise<{ restored: number; err
       // Ensure content dir exists
       if (!existsSync(contentDir)) mkdirSync(contentDir, { recursive: true });
       // Copy files recursively
-      execSync(`cp -R "${extractedContent}/"* "${contentDir}/" 2>/dev/null || true`, { stdio: "pipe" });
+      // Copy content files recursively (Node.js native, no shell)
+      cpSync(extractedContent, contentDir, { recursive: true, force: true });
       // Count restored documents
       for (const entry of readdirSync(extractedContent)) {
         const full = path.join(extractedContent, entry);
@@ -249,7 +251,7 @@ export async function restoreBackup(id: string): Promise<{ restored: number; err
         if (entry === "backups") continue;
         const src = path.join(extractedData, entry);
         const dest = path.join(dataDir, entry);
-        execSync(`cp -R "${src}" "${dest}"`, { stdio: "pipe" });
+        cpSync(src, dest, { recursive: true, force: true });
       }
     }
 

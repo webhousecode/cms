@@ -7,7 +7,7 @@
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { existsSync, readdirSync, statSync, readFileSync, rmSync, mkdirSync, writeFileSync, cpSync } from "node:fs";
 import path from "node:path";
-import { execSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 import { getActiveSitePaths, getActiveSiteEntry } from "./site-paths";
 import { readSiteConfig, writeSiteConfig } from "./site-config";
 import { resolveToken } from "./site-pool";
@@ -398,7 +398,7 @@ async function flyioBuildAndDeploy(token: string, appName: string, orgSlug?: str
 
   // Check flyctl is available
   try {
-    execSync("flyctl version", { stdio: "pipe", timeout: 5000 });
+    execFileSync("flyctl", ["version"], { stdio: "pipe", timeout: 5000 });
   } catch {
     throw new Error("flyctl CLI not found. Install it: curl -L https://fly.io/install.sh | sh");
   }
@@ -416,7 +416,7 @@ async function flyioBuildAndDeploy(token: string, appName: string, orgSlug?: str
   // Build with root paths — Fly serves at root, not under a subpath
   console.log(`[deploy] Running build.ts in ${sitePaths.projectDir} (Fly.io, root paths, out=deploy/)...`);
   try {
-    execSync("npx tsx build.ts", {
+    execFileSync("npx", ["tsx", "build.ts"], {
       cwd: sitePaths.projectDir,
       timeout: 60000,
       env: { ...process.env, NODE_ENV: "production", BASE_PATH: "", BUILD_OUT_DIR: "deploy" },
@@ -515,7 +515,7 @@ primary_region = "arn"
   let org = orgSlug;
   if (!org) {
     try {
-      const orgOutput = execSync("flyctl orgs list --json", {
+      const orgOutput = execFileSync("flyctl", ["orgs", "list", "--json"], {
         env: { ...process.env, FLY_API_TOKEN: token },
         timeout: 10000,
         stdio: "pipe",
@@ -535,7 +535,7 @@ primary_region = "arn"
   // Create Fly app if it doesn't exist
   console.log(`[deploy] Ensuring Fly app "${appName}" exists (org: ${org})...`);
   try {
-    execSync(`flyctl status --app ${appName}`, {
+    execFileSync("flyctl", ["status", "--app", appName], {
       env: { ...process.env, FLY_API_TOKEN: token },
       timeout: 10000,
       stdio: "pipe",
@@ -544,7 +544,7 @@ primary_region = "arn"
   } catch {
     console.log(`[deploy] Creating Fly app ${appName} in org ${org}...`);
     try {
-      execSync(`flyctl apps create ${appName} --org ${org}`, {
+      execFileSync("flyctl", ["apps", "create", appName, "--org", org], {
         env: { ...process.env, FLY_API_TOKEN: token },
         timeout: 15000,
         stdio: "pipe",
@@ -559,7 +559,7 @@ primary_region = "arn"
   // 5. Deploy via flyctl (remote build on Fly's builders)
   console.log(`[deploy] Deploying ${files.length} files to Fly.io (${appName})...`);
   try {
-    execSync(`flyctl deploy --remote-only --ha=false`, {
+    execFileSync("flyctl", ["deploy", "--remote-only", "--ha=false"], {
       cwd: tmpDir,
       env: { ...process.env, FLY_API_TOKEN: token },
       timeout: 180000, // 3 min for remote build
@@ -576,7 +576,7 @@ primary_region = "arn"
   if (customDomain) {
     console.log(`[deploy] Adding custom domain: ${customDomain}...`);
     try {
-      execSync(`flyctl certs add ${customDomain} --app ${appName}`, {
+      execFileSync("flyctl", ["certs", "add", customDomain, "--app", appName], {
         env: { ...process.env, FLY_API_TOKEN: token },
         timeout: 15000,
         stdio: "pipe",
@@ -643,7 +643,7 @@ async function githubPagesBuildAndDeploy(token: string, repo: string): Promise<s
 
   console.log(`[deploy] Running build.ts in ${sitePaths.projectDir} (BASE_PATH=${basePath || "(root)"}, out=deploy/)...`);
   try {
-    execSync("npx tsx build.ts", {
+    execFileSync("npx", ["tsx", "build.ts"], {
       cwd: sitePaths.projectDir,
       timeout: 60000,
       env: { ...process.env, NODE_ENV: "production", BASE_PATH: basePath, BUILD_OUT_DIR: "deploy" },
