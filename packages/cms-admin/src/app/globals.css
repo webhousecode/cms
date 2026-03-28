@@ -269,6 +269,7 @@
   height: 0;
 }
 
+html { scrollbar-gutter: stable; }
 ::-webkit-scrollbar { width: 5px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: oklch(1 0 0 / 12%); border-radius: 3px; }
