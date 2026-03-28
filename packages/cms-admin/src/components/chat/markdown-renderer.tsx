@@ -369,24 +369,58 @@ function renderBlock(block: Block, key: number): React.ReactNode {
 
 // ── Inline rendering ─────────────────────────────────────
 
-/** Small pill link for document actions */
-function DocPill({ href, label, variant }: { href: string; label: string; variant: "edit" | "view" }) {
+/** Resolve sirv preview base URL (cached) */
+let _previewBase: string | null = null;
+async function getPreviewBase(): Promise<string> {
+  if (_previewBase) return _previewBase;
+  try {
+    const r = await fetch("/api/preview-serve", { method: "POST" });
+    if (r.ok) {
+      const d = await r.json() as { url?: string };
+      if (d?.url) { _previewBase = d.url; return _previewBase; }
+    }
+  } catch { /* sirv not available */ }
+  try {
+    const r = await fetch("/api/admin/site-config");
+    if (r.ok) {
+      const d = await r.json();
+      if (d?.previewSiteUrl) { _previewBase = d.previewSiteUrl; return _previewBase; }
+    }
+  } catch { /* no config */ }
+  return "";
+}
+
+/** Small pill button for document actions */
+function DocPill({ collection, slug, variant }: { collection: string; slug: string; variant: "edit" | "view" }) {
+  const label = variant === "edit" ? "Edit" : "View";
   return (
-    <a
-      href={href}
-      target={variant === "view" ? "_blank" : undefined}
-      rel={variant === "view" ? "noopener noreferrer" : undefined}
+    <button
+      type="button"
+      onClick={async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (variant === "edit") {
+          window.open(`/admin/${collection}/${slug}`, "_blank");
+        } else {
+          const base = await getPreviewBase();
+          if (base) {
+            window.open(`${base}/${collection}/${slug}`, "_blank");
+          } else {
+            window.open(`/${collection}/${slug}`, "_blank");
+          }
+        }
+      }}
       style={{
         display: "inline-flex", alignItems: "center", gap: "3px",
         padding: "1px 7px", borderRadius: "4px", fontSize: "0.65rem", fontWeight: 500,
-        textDecoration: "none", lineHeight: "1.5", marginLeft: "3px",
+        textDecoration: "none", lineHeight: "1.5", marginLeft: "3px", cursor: "pointer",
         background: variant === "edit" ? "color-mix(in srgb, var(--primary) 15%, transparent)" : "color-mix(in srgb, var(--foreground) 10%, transparent)",
         color: variant === "edit" ? "var(--primary)" : "var(--muted-foreground)",
         border: `1px solid ${variant === "edit" ? "color-mix(in srgb, var(--primary) 30%, transparent)" : "var(--border)"}`,
       }}
     >
       {label}
-    </a>
+    </button>
   );
 }
 
@@ -436,8 +470,8 @@ function InlineRich({ text }: { text: string }) {
         const [, col, slug] = docMatch;
         parts.push(
           <span key={match.index} style={{ whiteSpace: "nowrap" }}>
-            <DocPill href={`/admin/${col}/${slug}`} label="Edit" variant="edit" />
-            <DocPill href={`/${col}/${slug}`} label="View" variant="view" />
+            <DocPill collection={col} slug={slug} variant="edit" />
+            <DocPill collection={col} slug={slug} variant="view" />
           </span>
         );
       }
