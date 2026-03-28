@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Search, Sparkles, Loader2, ChevronDown, ChevronUp } from "lucide-react";
+import { Search, Sparkles, Loader2, ChevronDown, ChevronUp, Code2 } from "lucide-react";
 import { calculateSeoScore, type SeoFields, type SeoScoreResult } from "@/lib/seo/score";
+import { JSON_LD_TEMPLATES, autoFillFields, generateJsonLd, type JsonLdTemplate } from "@/lib/seo/json-ld";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { toast } from "sonner";
 
@@ -22,6 +23,9 @@ export function SeoPanel({ collection, doc, onUpdate, onSave, onClose }: Props) 
   const [keywordInput, setKeywordInput] = useState("");
   const [ogImage, setOgImage] = useState(seo.ogImage ?? "");
   const [robots, setRobots] = useState(seo.robots ?? "index,follow");
+  const [jsonLd, setJsonLd] = useState<Record<string, unknown> | null>(seo.jsonLd ?? null);
+  const [jsonLdTemplate, setJsonLdTemplate] = useState<string>(seo.jsonLdTemplate ?? "");
+  const [jsonLdValues, setJsonLdValues] = useState<Record<string, string>>(seo.jsonLdValues ?? {});
   const [lastOptimized, setLastOptimized] = useState(seo.lastOptimized ?? "");
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
@@ -59,11 +63,14 @@ export function SeoPanel({ collection, doc, onUpdate, onSave, onClose }: Props) 
         score: score?.score,
         scoreDetails: score?.details,
         lastOptimized: lastOptimized || undefined,
+        jsonLd: jsonLd ?? undefined,
+        jsonLdTemplate: jsonLdTemplate || undefined,
+        jsonLdValues: Object.keys(jsonLdValues).length > 0 ? jsonLdValues : undefined,
       });
     }, 300);
     return () => clearTimeout(timer);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [metaTitle, metaDesc, keywords, ogImage, robots, score]);
+  }, [metaTitle, metaDesc, keywords, ogImage, robots, score, jsonLd, jsonLdTemplate, jsonLdValues]);
 
   function addKeyword() {
     const kw = keywordInput.trim().toLowerCase();
@@ -305,6 +312,77 @@ Return ONLY the JSON, no explanation.`,
                   { value: "noindex,nofollow", label: "noindex, nofollow" },
                 ]}
               />
+            </div>
+
+            {/* JSON-LD Structured Data */}
+            <div>
+              <p style={{ ...lbl, display: "flex", alignItems: "center", gap: "0.25rem" }}>
+                <Code2 style={{ width: 10, height: 10 }} /> Structured data (JSON-LD)
+              </p>
+              <CustomSelect
+                value={jsonLdTemplate}
+                onChange={(templateId) => {
+                  setJsonLdTemplate(templateId);
+                  if (!templateId) {
+                    setJsonLd(null);
+                    setJsonLdValues({});
+                    return;
+                  }
+                  const tmpl = JSON_LD_TEMPLATES.find((t) => t.id === templateId);
+                  if (tmpl) {
+                    const auto = autoFillFields(tmpl, doc.data);
+                    const merged = { ...auto, ...jsonLdValues };
+                    setJsonLdValues(merged);
+                    setJsonLd(generateJsonLd(tmpl, merged));
+                  }
+                }}
+                options={[
+                  { value: "", label: "None" },
+                  ...JSON_LD_TEMPLATES.map((t) => ({ value: t.id, label: `${t.label} — ${t.description}` })),
+                ]}
+              />
+              {jsonLdTemplate && (() => {
+                const tmpl = JSON_LD_TEMPLATES.find((t) => t.id === jsonLdTemplate);
+                if (!tmpl) return null;
+                return (
+                  <div style={{ marginTop: "0.5rem", display: "flex", flexDirection: "column", gap: "0.375rem" }}>
+                    {tmpl.fields.map((f) => (
+                      <div key={f.key}>
+                        <p style={{ fontSize: "0.6rem", color: "var(--muted-foreground)", margin: "0 0 0.15rem", fontWeight: 500 }}>
+                          {f.label}{f.required ? " *" : ""}
+                        </p>
+                        <input
+                          type="text"
+                          value={jsonLdValues[f.key] ?? ""}
+                          placeholder={f.placeholder}
+                          onChange={(e) => {
+                            const next = { ...jsonLdValues, [f.key]: e.target.value };
+                            setJsonLdValues(next);
+                            setJsonLd(generateJsonLd(tmpl, next));
+                          }}
+                          style={{ ...input, fontSize: "0.72rem", padding: "0.25rem 0.4rem" }}
+                        />
+                      </div>
+                    ))}
+                    {/* Preview */}
+                    {jsonLd && (
+                      <details style={{ marginTop: "0.25rem" }}>
+                        <summary style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", cursor: "pointer" }}>
+                          Preview JSON-LD
+                        </summary>
+                        <pre style={{
+                          fontSize: "0.6rem", padding: "0.5rem", background: "var(--background)",
+                          borderRadius: "4px", border: "1px solid var(--border)",
+                          overflow: "auto", maxHeight: 150, margin: "0.25rem 0 0",
+                          whiteSpace: "pre-wrap", wordBreak: "break-word",
+                        }}>
+                          {JSON.stringify(jsonLd, null, 2)}
+                        </pre>
+                      </details>
+                    )}
+                  </div>
+                );
+              })()}
             </div>
           </div>
         )}

@@ -17,6 +17,12 @@ export interface SeoFields {
   score?: number;
   scoreDetails?: SeoScoreDetail[];
   lastOptimized?: string;
+  /** JSON-LD structured data output */
+  jsonLd?: Record<string, unknown>;
+  /** Selected JSON-LD template ID */
+  jsonLdTemplate?: string;
+  /** User-filled values for the JSON-LD template fields */
+  jsonLdValues?: Record<string, string>;
 }
 
 export interface SeoScoreDetail {
