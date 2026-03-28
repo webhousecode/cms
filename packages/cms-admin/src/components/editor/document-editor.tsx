@@ -20,30 +20,34 @@ import { isTranslationStale, LOCALE_LABELS } from "@/lib/locale";
 
 /** Minimal markdown→HTML converter for side-by-side source pane (no external deps) */
 function miniMarkdownToHtml(md: string): string {
-  return md
-    .replace(/^### (.+)$/gm, "<h3>$1</h3>")
-    .replace(/^## (.+)$/gm, "<h2>$1</h2>")
-    .replace(/^# (.+)$/gm, "<h1>$1</h1>")
-    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-    .replace(/\*(.+?)\*/g, "<em>$1</em>")
-    .replace(/`([^`]+)`/g, "<code>$1</code>")
-    .replace(/!\[([^\]]*)\]\((\S+?)(?:\s+"([^"]*)")?\)/g, (_m, alt, src, title) => {
-      // Parse TipTap-style title for styling: "float:right|width:287px"
-      let style = "max-width:100%;border-radius:6px;margin:0.5rem 0";
-      if (title) {
-        for (const part of title.split("|")) {
-          const [k, v] = part.split(":");
-          if (k === "float") style += `;float:${v};margin:${v === "right" ? "0 0 0.5rem 0.75rem" : "0 0.75rem 0.5rem 0"}`;
-          else if (k === "width") style += `;width:${v};max-width:${v}`;
+  // Split into paragraphs, convert each
+  return md.split(/\n{2,}/).map((block) => {
+    let b = block.trim();
+    if (!b) return "";
+    // Headings
+    if (b.startsWith("### ")) return `<h3>${b.slice(4)}</h3>`;
+    if (b.startsWith("## ")) return `<h3>${b.slice(3)}</h3>`;
+    if (b.startsWith("# ")) return `<h1>${b.slice(2)}</h1>`;
+    // Inline formatting
+    b = b
+      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+      .replace(/\*(.+?)\*/g, "<em>$1</em>")
+      .replace(/`([^`]+)`/g, "<code>$1</code>")
+      .replace(/!\[([^\]]*)\]\((\S+?)(?:\s+"([^"]*)")?\)/g, (_m, alt, src, title) => {
+        let style = "max-width:100%;border-radius:6px;margin:0.5rem 0";
+        if (title) {
+          for (const part of title.split("|")) {
+            const [k, v] = part.split(":");
+            if (k === "float") style += `;float:${v};margin:${v === "right" ? "0 0 0.5rem 0.75rem" : "0 0.75rem 0.5rem 0"}`;
+            else if (k === "width") style += `;width:${v};max-width:${v}`;
+          }
         }
-      }
-      return `<img src="${src}" alt="${alt}" style="${style}" />`;
-    })
-    .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" style="color:var(--primary);text-decoration:underline">$1</a>')
-    .replace(/\n{2,}/g, "</p><p>")
-    .replace(/^(?!<[h|p|i|a|u|o|d])/, "<p>")
-    .concat("</p>")
-    .replace(/<p><\/p>/g, "");
+        return `<img src="${src}" alt="${alt}" style="${style}" />`;
+      })
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" style="color:var(--primary);text-decoration:underline">$1</a>')
+      .replace(/\n/g, "<br>");
+    return `<p>${b}</p>`;
+  }).join("\n");
 }
 
 // Fallback to env vars for backwards compatibility — overridden by props from server
@@ -1523,15 +1527,17 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
             padding: "2rem 1.5rem", overflowY: "auto",
             background: "var(--muted)", fontSize: "0.85rem",
           }}>
-            <p style={{ fontSize: "0.65rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted-foreground)", marginBottom: "1.5rem" }}>
+            <p style={{ fontSize: "0.65rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted-foreground)", marginBottom: "1rem" }}>
               Source ({(initialDoc as any).translationOf})
             </p>
+            {/* Spacer to align with the right pane's metadata bar + field chrome */}
+            <div style={{ height: "2.5rem" }} />
             {colConfig.fields.map((field) => {
               const val = sourceDoc[field.name];
               if (val === undefined || val === null || val === "") return null;
               return (
-                <div key={field.name} style={{ marginBottom: "1.5rem" }}>
-                  <p style={{ fontSize: "0.65rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted-foreground)", marginBottom: "0.35rem" }}>
+                <div key={field.name} style={{ marginBottom: "2rem" }}>
+                  <p style={{ fontSize: "0.65rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted-foreground)", marginBottom: "0.5rem" }}>
                     {field.label || field.name}
                   </p>
                   {(field.type === "richtext" || field.type === "htmldoc") ? (
