@@ -13,7 +13,7 @@ export function Footer({ footerText, siteTitle }: FooterProps) {
           <p className="text-sm text-muted">
             {year} {siteTitle}
           </p>
-          {footerText && <p className="text-sm text-muted">{footerText}</p>}
+          {footerText && <p className="text-sm text-muted" dangerouslySetInnerHTML={{ __html: footerText }} />}
         </div>
       </div>
     </footer>

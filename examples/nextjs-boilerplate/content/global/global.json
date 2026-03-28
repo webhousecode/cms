@@ -9,7 +9,7 @@
       { "label": "About", "href": "/about" },
       { "label": "Contact", "href": "/contact" }
     ],
-    "footerText": "Built with webhouse.app"
+    "footerText": "Built with <a href=\"https://webhouse.app\">webhouse.app</a>"
   },
   "id": "global",
   "_fieldMeta": {}
