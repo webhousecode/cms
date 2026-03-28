@@ -693,52 +693,50 @@ export default function InteractiveDetailPage() {
         <span className="text-xs text-muted-foreground font-mono">{formatSize(detail.size)}</span>
       </ActionBar>
 
-      {/* Translations bar — same pattern as document editor */}
-      {siteLocales.length > 1 && (
+      {/* Translations bar — matches document editor exactly */}
+      {(siblings.length > 0 || (siteLocales.length > 1)) && (
         <div style={{
-          display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap",
-          padding: "0.35rem 1rem",
-          borderBottom: "1px solid var(--border)",
-          fontSize: "0.75rem",
+          display: "flex", alignItems: "center", gap: "0.5rem",
+          padding: "0.35rem 1rem", borderBottom: "1px solid var(--border)",
+          backgroundColor: "var(--background)", flexWrap: "wrap",
+          position: "sticky", top: 132, zIndex: 20,
         }}>
-          <span style={{ fontWeight: 600, fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted-foreground)" }}>
-            TRANSLATIONS
+          <span style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.06em" }}>
+            Translations
           </span>
-          {/* Locale badge */}
-          <span style={{
-            fontSize: "0.65rem", fontWeight: 600, padding: "1px 6px",
-            borderRadius: "3px", background: "rgba(247,187,46,0.12)", color: "#F7BB2E",
-          }}>
-            {(detail.locale || defaultLocale).toUpperCase()}
-          </span>
-          {/* Sibling translations */}
           {siblings.map(s => (
             <Link
               key={s.id}
               href={`/admin/interactives/${s.id}`}
               style={{
-                fontSize: "0.65rem", fontWeight: 500, padding: "1px 6px",
-                borderRadius: "3px", border: "1px solid var(--border)",
-                color: "var(--muted-foreground)", textDecoration: "none",
+                display: "inline-flex", alignItems: "center", gap: "0.3rem",
+                padding: "0.15rem 0.5rem", borderRadius: "4px",
+                border: "1px solid var(--border)", fontSize: "0.7rem",
+                fontFamily: "monospace", color: "var(--foreground)",
+                background: "var(--card)", textDecoration: "none",
               }}
             >
-              {(s.locale || "?").toUpperCase()} {s.name}
+              {s.locale && <span style={{ fontWeight: 600 }}>{s.locale.toUpperCase()}</span>}
+              <span style={{ color: "var(--muted-foreground)" }}>{s.name}</span>
+              <span style={{
+                width: "6px", height: "6px", borderRadius: "50%", flexShrink: 0,
+                backgroundColor: "rgb(74 222 128)",
+              }} />
             </Link>
           ))}
-          {/* Add translation button — only on source docs */}
+          {/* Add translation — only on source interactives */}
           {!detail.translationOf && (() => {
             const existingLocales = [detail.locale || defaultLocale, ...siblings.map(s => s.locale).filter(Boolean)];
             const available = siteLocales.filter(l => !existingLocales.includes(l));
             if (available.length === 0) return null;
-            return available.map(locale => (
+            return (
               <button
-                key={locale}
                 type="button"
                 disabled={translating}
                 onClick={async () => {
+                  const locale = available[0];
                   setTranslating(true);
                   try {
-                    // Set locale on source if not set
                     if (!detail.locale) {
                       await fetch(`/api/interactives/${id}`, {
                         method: "PUT",
@@ -746,7 +744,6 @@ export default function InteractiveDetailPage() {
                         body: JSON.stringify({ locale: defaultLocale }),
                       });
                     }
-                    // Create translated copy via AI
                     const res = await fetch(`/api/interactives/${id}/translate`, {
                       method: "POST",
                       headers: { "Content-Type": "application/json" },
@@ -754,7 +751,6 @@ export default function InteractiveDetailPage() {
                     });
                     if (res.ok) {
                       const result = await res.json();
-                      // Set locale + translationOf on the new interactive
                       await fetch(`/api/interactives/${result.id}`, {
                         method: "PUT",
                         headers: { "Content-Type": "application/json" },
@@ -767,16 +763,16 @@ export default function InteractiveDetailPage() {
                   }
                 }}
                 style={{
-                  fontSize: "0.65rem", fontWeight: 500, padding: "1px 8px",
-                  borderRadius: "3px", border: "1px solid rgb(247 187 46 / 0.3)",
-                  background: "rgb(247 187 46 / 0.08)", color: "#F7BB2E",
-                  cursor: translating ? "wait" : "pointer",
-                  display: "inline-flex", alignItems: "center", gap: "0.25rem",
+                  display: "inline-flex", alignItems: "center", gap: "0.3rem",
+                  padding: "0.15rem 0.5rem", borderRadius: "4px",
+                  border: "1px dashed var(--border)", fontSize: "0.7rem",
+                  fontFamily: "monospace", color: "var(--muted-foreground)",
+                  background: "transparent", cursor: translating ? "wait" : "pointer",
                 }}
               >
-                {translating ? "Translating..." : `+ ${locale.toUpperCase()}`}
+                {translating ? "Translating..." : "+ Add translation"}
               </button>
-            ));
+            );
           })()}
         </div>
       )}
