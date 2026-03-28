@@ -21,6 +21,7 @@ export interface StoredConversation {
   messages: ChatMessage[];
   createdAt: string;
   updatedAt: string;
+  starred?: boolean;
 }
 
 async function getConversationsDir(userId: string): Promise<string> {
@@ -49,6 +50,7 @@ export async function listConversations(userId: string): Promise<Omit<StoredConv
           title: conv.title,
           createdAt: conv.createdAt,
           updatedAt: conv.updatedAt,
+          starred: conv.starred,
         });
       } catch { /* skip corrupted files */ }
     }

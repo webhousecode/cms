@@ -4,7 +4,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { MessageList, type ChatMessageUI, type ToolCall } from "./message-list";
 import { ChatInput } from "./chat-input";
 import { WelcomeScreen } from "./welcome-screen";
-import { Pencil, Check, X, Trash2 } from "lucide-react";
+import { Pencil, Check, X, Trash2, MoreHorizontal, Star } from "lucide-react";
 
 interface ChatInterfaceProps {
   collections: Array<{ name: string; label: string }>;
@@ -16,6 +16,7 @@ interface ConversationMeta {
   id: string;
   title: string;
   updatedAt: string;
+  starred?: boolean;
 }
 
 export function ChatInterface({ collections, activeSiteId, visible }: ChatInterfaceProps) {
@@ -299,6 +300,27 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
     } catch { /* ignore */ }
   }
 
+  async function toggleStar(id: string) {
+    const conv = conversations.find((c) => c.id === id);
+    if (!conv) return;
+    const newStarred = !conv.starred;
+    // Optimistic update
+    setConversations((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, starred: newStarred } : c))
+    );
+    try {
+      const res = await fetch(`/api/cms/chat/conversations/${id}`);
+      if (!res.ok) return;
+      const { conversation } = await res.json();
+      conversation.starred = newStarred;
+      await fetch("/api/cms/chat/conversations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(conversation),
+      });
+    } catch { /* ignore */ }
+  }
+
   async function deleteConversation(id: string) {
     try {
       await fetch(`/api/cms/chat/conversations/${id}`, { method: "DELETE" });
@@ -377,7 +399,7 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
                   No previous conversations
                 </div>
               ) : (
-                conversations.map((c) => (
+                [...conversations].sort((a, b) => (b.starred ? 1 : 0) - (a.starred ? 1 : 0)).map((c) => (
                   <HistoryItem
                     key={c.id}
                     id={c.id}
@@ -385,8 +407,10 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
                     updatedAt={c.updatedAt}
                     isActive={c.id === conversationId}
                     onLoad={() => loadConversation(c.id)}
+                    starred={c.starred}
                     onRename={(newTitle) => renameConversation(c.id, newTitle)}
                     onDelete={() => deleteConversation(c.id)}
+                    onStar={() => toggleStar(c.id)}
                   />
                 ))
               )}
@@ -413,18 +437,33 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
   );
 }
 
-function HistoryItem({ id, title, updatedAt, isActive, onLoad, onRename, onDelete }: {
-  id: string; title: string; updatedAt: string; isActive: boolean;
-  onLoad: () => void; onRename: (t: string) => void; onDelete: () => void;
+function HistoryItem({ id, title, updatedAt, isActive, starred, onLoad, onRename, onDelete, onStar }: {
+  id: string; title: string; updatedAt: string; isActive: boolean; starred?: boolean;
+  onLoad: () => void; onRename: (t: string) => void; onDelete: () => void; onStar: () => void;
 }) {
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState(title);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (editing) inputRef.current?.focus();
   }, [editing]);
+
+  // Close menu on outside click
+  useEffect(() => {
+    if (!menuOpen) return;
+    function onClickOutside(e: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+        setConfirmDelete(false);
+      }
+    }
+    document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, [menuOpen]);
 
   if (editing) {
     return (
@@ -461,19 +500,29 @@ function HistoryItem({ id, title, updatedAt, isActive, onLoad, onRename, onDelet
     );
   }
 
+  const menuItemStyle = {
+    display: "flex", alignItems: "center", gap: "8px", width: "100%",
+    padding: "7px 12px", border: "none", background: "transparent",
+    color: "var(--foreground)", cursor: "pointer", fontSize: "0.75rem",
+    borderRadius: "4px", textAlign: "left" as const,
+  };
+
   return (
     <div
       style={{
-        display: "flex", alignItems: "center",
+        display: "flex", alignItems: "center", position: "relative",
         borderBottom: "1px solid var(--border)",
         backgroundColor: isActive ? "var(--muted)" : "transparent",
       }}
       className="hover:bg-muted transition-colors"
     >
+      {starred && (
+        <Star style={{ width: "10px", height: "10px", color: "#F7BB2E", fill: "#F7BB2E", flexShrink: 0, marginLeft: "10px" }} />
+      )}
       <button
         onClick={onLoad}
         style={{
-          flex: 1, textAlign: "left", padding: "10px 16px",
+          flex: 1, textAlign: "left", padding: starred ? "10px 8px 10px 6px" : "10px 16px",
           border: "none", backgroundColor: "transparent",
           cursor: "pointer", color: "var(--foreground)",
         }}
@@ -485,47 +534,75 @@ function HistoryItem({ id, title, updatedAt, isActive, onLoad, onRename, onDelet
           {new Date(updatedAt).toLocaleString("da-DK", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
         </div>
       </button>
-      {confirmDelete ? (
-        <div style={{ display: "flex", alignItems: "center", gap: "4px", padding: "0 8px", flexShrink: 0 }}>
-          <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Delete?</span>
-          <button onClick={(e) => { e.stopPropagation(); onDelete(); }}
-            style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
-              border: "none", background: "var(--destructive)", color: "#fff",
-              cursor: "pointer", lineHeight: 1 }}>Yes</button>
-          <button onClick={(e) => { e.stopPropagation(); setConfirmDelete(false); }}
-            style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
-              border: "1px solid var(--border)", background: "transparent",
-              color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
+
+      {/* More button */}
+      <button
+        onClick={(e) => { e.stopPropagation(); setMenuOpen(!menuOpen); setConfirmDelete(false); }}
+        style={{
+          background: "none", border: "none", cursor: "pointer",
+          color: "var(--muted-foreground)", padding: "8px 10px",
+          opacity: menuOpen ? 1 : 0.4, flexShrink: 0,
+          transition: "opacity 150ms",
+        }}
+        onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }}
+        onMouseLeave={(e) => { if (!menuOpen) e.currentTarget.style.opacity = "0.4"; }}
+      >
+        <MoreHorizontal style={{ width: "14px", height: "14px" }} />
+      </button>
+
+      {/* Dropdown menu */}
+      {menuOpen && (
+        <div
+          ref={menuRef}
+          style={{
+            position: "absolute", top: "100%", right: "8px", zIndex: 10,
+            background: "var(--card)", border: "1px solid var(--border)",
+            borderRadius: "8px", padding: "4px", minWidth: "140px",
+            boxShadow: "0 4px 16px rgba(0,0,0,0.3)",
+          }}
+        >
+          <button
+            onClick={(e) => { e.stopPropagation(); onStar(); setMenuOpen(false); }}
+            style={menuItemStyle}
+            onMouseEnter={(e) => { e.currentTarget.style.background = "var(--muted)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+          >
+            <Star style={{ width: "13px", height: "13px", ...(starred ? { color: "#F7BB2E", fill: "#F7BB2E" } : {}) }} />
+            {starred ? "Unstar" : "Star"}
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); setMenuOpen(false); setEditing(true); }}
+            style={menuItemStyle}
+            onMouseEnter={(e) => { e.currentTarget.style.background = "var(--muted)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+          >
+            <Pencil style={{ width: "13px", height: "13px" }} />
+            Rename
+          </button>
+          {confirmDelete ? (
+            <div style={{ display: "flex", alignItems: "center", gap: "4px", padding: "5px 12px" }}>
+              <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Delete?</span>
+              <button onClick={(e) => { e.stopPropagation(); onDelete(); setMenuOpen(false); }}
+                style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
+                  border: "none", background: "var(--destructive)", color: "#fff",
+                  cursor: "pointer", lineHeight: 1 }}>Yes</button>
+              <button onClick={(e) => { e.stopPropagation(); setConfirmDelete(false); }}
+                style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
+                  border: "1px solid var(--border)", background: "transparent",
+                  color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
+            </div>
+          ) : (
+            <button
+              onClick={(e) => { e.stopPropagation(); setConfirmDelete(true); }}
+              style={{ ...menuItemStyle, color: "var(--destructive)" }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(239,68,68,0.1)"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+            >
+              <Trash2 style={{ width: "13px", height: "13px" }} />
+              Delete
+            </button>
+          )}
         </div>
-      ) : (
-        <>
-          <button
-            onClick={(e) => { e.stopPropagation(); setEditing(true); }}
-            title="Rename"
-            style={{
-              background: "none", border: "none", cursor: "pointer",
-              color: "var(--muted-foreground)", padding: "8px 6px",
-              opacity: 0.5,
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.5"; }}
-          >
-            <Pencil style={{ width: "12px", height: "12px" }} />
-          </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); setConfirmDelete(true); }}
-            title="Delete"
-            style={{
-              background: "none", border: "none", cursor: "pointer",
-              color: "var(--muted-foreground)", padding: "8px 6px",
-              opacity: 0.5,
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }}
-            onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.5"; }}
-          >
-            <Trash2 style={{ width: "12px", height: "12px" }} />
-          </button>
-        </>
       )}
     </div>
   );
