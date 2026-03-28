@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Map</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; }
+    #map { width: 100%; height: 100%; min-height: 300px; }
+    .leaflet-popup-content { font-family: system-ui, -apple-system, sans-serif; font-size: 14px; line-height: 1.4; }
+    .leaflet-popup-content h3 { margin: 0 0 4px; font-size: 15px; }
+    .leaflet-popup-content p { margin: 0; color: #555; }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    /**
+     * F96 — Map Interactive Template (OSM + Leaflet)
+     *
+     * Configure via data attributes on the embedding element or via props:
+     *   data-lat="55.676"  data-lng="12.568"  data-zoom="14"
+     *   data-address="Nyhavn, Copenhagen"
+     *   data-markers='[{"lat":55.676,"lng":12.568,"title":"Office","address":"Nyhavn 1"}]'
+     *   data-style="default" | "dark" | "minimal"
+     */
+    (function() {
+      // Read config from parent iframe or data attributes
+      const params = new URLSearchParams(window.location.search);
+      const lat = parseFloat(params.get('lat') || '55.676');
+      const lng = parseFloat(params.get('lng') || '12.568');
+      const zoom = parseInt(params.get('zoom') || '14', 10);
+      const style = params.get('style') || 'default';
+      const markersJson = params.get('markers') || '';
+
+      // Tile layers
+      const tiles = {
+        default: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        dark: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+        minimal: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+      };
+
+      const map = L.map('map').setView([lat, lng], zoom);
+      L.tileLayer(tiles[style] || tiles.default, {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        maxZoom: 19,
+      }).addTo(map);
+
+      // Parse markers
+      let markers = [];
+      try {
+        if (markersJson) markers = JSON.parse(markersJson);
+      } catch(e) {}
+
+      if (markers.length === 0) {
+        // Single pin at center
+        L.marker([lat, lng]).addTo(map);
+      } else {
+        // Multiple markers with popups
+        const bounds = [];
+        markers.forEach(function(m) {
+          const marker = L.marker([m.lat, m.lng]).addTo(map);
+          bounds.push([m.lat, m.lng]);
+          if (m.title || m.address) {
+            let html = '';
+            if (m.title) html += '<h3>' + m.title + '</h3>';
+            if (m.address) html += '<p>' + m.address + '</p>';
+            if (m.phone) html += '<p>' + m.phone + '</p>';
+            if (m.hours) html += '<p>' + m.hours + '</p>';
+            marker.bindPopup(html);
+          }
+        });
+        if (bounds.length > 1) {
+          map.fitBounds(bounds, { padding: [30, 30] });
+        }
+      }
+
+      // Notify parent of height for auto-resize
+      function sendHeight() {
+        window.parent.postMessage({ type: 'resize', height: document.body.scrollHeight }, '*');
+      }
+      sendHeight();
+      map.on('load', sendHeight);
+    })();
+  </script>
+</body>
+</html>

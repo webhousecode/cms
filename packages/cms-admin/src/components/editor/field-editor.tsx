@@ -7,6 +7,7 @@ import { RichTextEditor } from "./rich-text-editor";
 import { TagsInput } from "./tags-input";
 import { ImageGalleryEditor } from "./image-gallery-editor";
 import { HtmlDocEditor } from "./htmldoc-editor";
+import { MapEditor, type MapValue } from "./map-editor";
 import type { GalleryImage } from "./image-gallery-editor";
 import { BlocksEditor } from "./blocks-editor";
 import { StructuredArrayEditor } from "./structured-array-editor";
@@ -1280,6 +1281,17 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
           field={field}
           value={strVal}
           onChange={(html) => onChange(html)}
+          locked={locked}
+        />
+      );
+
+    case "map":
+      return (
+        <MapEditor
+          value={(value as MapValue) ?? null}
+          onChange={(val) => onChange(val)}
+          defaultCenter={field.mapDefaultCenter}
+          defaultZoom={field.mapDefaultZoom}
           locked={locked}
         />
       );

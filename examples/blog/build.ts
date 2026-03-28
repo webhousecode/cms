@@ -197,6 +197,25 @@ function renderContent(raw: unknown): string {
       </a>`;
     },
   );
+  // Render !!MAP[address|zoom|style] embeds as Leaflet OSM maps
+  html = html.replace(
+    /!!MAP\[([^\]]+)\]/g,
+    (_match, inner) => {
+      const parts = inner.split("|");
+      const address = parts[0]?.trim();
+      const zoom = parts[1]?.trim() || "14";
+      const style = parts[2]?.trim() || "default";
+      if (!address) return "";
+      return `<div class="map-embed" style="margin: 1.5rem 0; border-radius: var(--radius); overflow: hidden; border: 1px solid var(--color-border);">
+        <iframe src="https://www.openstreetmap.org/export/embed.html?bbox=&layer=mapnik&marker="
+          data-map-address="${esc(address)}" data-map-zoom="${zoom}" data-map-style="${style}"
+          style="width:100%; height:350px; border:none;" loading="lazy" title="Map: ${esc(address)}"></iframe>
+        <div style="padding: 0.5rem 0.75rem; font-size: 0.75rem; color: var(--color-fg-muted); background: var(--color-bg-subtle);">
+          📍 ${esc(address)}
+        </div>
+      </div>`;
+    },
+  );
   return html;
 }
 

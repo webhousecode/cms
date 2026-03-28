@@ -80,7 +80,7 @@ Every document in `content/{collection}/{slug}.json`:
 
 ### Field types
 
-`text` `textarea` `richtext` `number` `boolean` `date` `image` `image-gallery` `video` `audio` `htmldoc` `file` `interactive` `column-slots` `select` `tags` `relation` `array` `object` `blocks`
+`text` `textarea` `richtext` `number` `boolean` `date` `image` `image-gallery` `video` `audio` `htmldoc` `file` `interactive` `column-slots` `map` `select` `tags` `relation` `array` `object` `blocks`
 
 ### Defining a collection
 

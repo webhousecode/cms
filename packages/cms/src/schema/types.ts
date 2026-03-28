@@ -18,7 +18,8 @@ export type FieldType =
   | 'htmldoc'
   | 'file'
   | 'interactive'
-  | 'column-slots';
+  | 'column-slots'
+  | 'map';
 
 export interface FieldConfig {
   name: string;
@@ -43,6 +44,9 @@ export interface FieldConfig {
   // Available: bold, italic, strike, code, heading, bulletList, orderedList, blockquote,
   //   horizontalRule, link, table, image, video, audio, file, interactive, callout, codeBlock
   features?: string[];
+  // map
+  mapDefaultZoom?: number;
+  mapDefaultCenter?: { lat: number; lng: number };
   // AI hints
   ai?: {
     hint?: string;

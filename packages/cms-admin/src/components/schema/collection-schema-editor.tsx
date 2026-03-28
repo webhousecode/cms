@@ -16,7 +16,7 @@ const FIELD_TYPES = [
   "text", "textarea", "richtext", "htmldoc", "number", "boolean",
   "date", "select", "tags", "array", "object", "relation",
   "image", "image-gallery", "video", "audio", "file", "blocks",
-  "interactive", "column-slots",
+  "interactive", "column-slots", "map",
 ] as const;
 
 function newField(): FieldConfig {

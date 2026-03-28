@@ -121,6 +121,14 @@ Reference to an Interactive (standalone HTML component managed in the Interactiv
 { name: 'chart', type: 'interactive', label: 'Interactive Chart' }
 ```
 
+#### map
+Interactive map with OpenStreetMap. Stores `{ lat, lng, address, zoom }`. Admin shows Leaflet map with draggable pin + Nominatim address search (free, no API key).
+```typescript
+{ name: 'location', type: 'map', label: 'Location' }
+// Optional: default center + zoom
+{ name: 'office', type: 'map', label: 'Office', mapDefaultCenter: { lat: 57.048, lng: 9.919 }, mapDefaultZoom: 15 }
+```
+
 #### column-slots
 Multi-column layout with configurable slot count. Each slot contains nested fields.
 ```typescript
