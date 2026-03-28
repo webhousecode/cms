@@ -105,7 +105,7 @@
 | F86 | [Action Bar](#f86-action-bar) | Done | [docs/features/F86-action-bar.md](features/F86-action-bar.md) |
 | F87 | [Org-Level Global Settings](#f87-org-level-global-settings) | Planned | [docs/features/F87-org-level-settings.md](features/F87-org-level-settings.md) |
 | F88 | [MCP Server Validation](#f88-mcp-server-validation) | Planned | [docs/features/F88-mcp-server-validation.md](features/F88-mcp-server-validation.md) |
-| F89 | [Post-Build Enrichment](#f89-post-build-enrichment) | Planned | [docs/features/F89-post-build-enrichment.md](features/F89-post-build-enrichment.md) |
+| F89 | [Post-Build Enrichment](#f89-post-build-enrichment) | Done | [docs/features/F89-post-build-enrichment.md](features/F89-post-build-enrichment.md) |
 | F90 | [Marketing Content Bank](#f90-marketing-content-bank) | In progress | [docs/features/F90-marketing-content-bank.md](features/F90-marketing-content-bank.md) |
 | F91 | [Login with GitHub](#f91-login-with-github) | Planned | [docs/features/F91-login-with-github.md](features/F91-login-with-github.md) |
 | F92 | [Desktop PWA](#f92-desktop-pwa) | Planned | [docs/features/F92-desktop-pwa.md](features/F92-desktop-pwa.md) |
