@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Clock, Calendar, Image, Zap, Search } from "lucide-react";
 import { calculateSeoScore, type SeoFields } from "@/lib/seo/score";
+import { readKeywordStore, analyzeKeywords } from "@/lib/seo/keywords";
 import { getMediaAdapter } from "@/lib/media";
 import { SiteIntroCard } from "@/components/site-intro-card";
 
@@ -84,6 +85,34 @@ export default async function AdminDashboard() {
     }
   }
   const seoAvgScore = seoTotal > 0 ? Math.round(seoScoreSum / seoTotal) : 0;
+
+  // Keyword coverage
+  let keywordCoverage = 0;
+  let keywordCount = 0;
+  try {
+    const store = await readKeywordStore();
+    if (store.keywords.length > 0) {
+      const kwDocs = allResults.flatMap(({ col, documents }) =>
+        documents
+          .filter((d) => (d.status as string) !== "trashed")
+          .map((d) => {
+            const data = (d as { data?: Record<string, unknown> }).data ?? {};
+            const content = String(data.content ?? data.body ?? "")
+              .replace(/<[^>]+>/g, " ").replace(/[#*_~`>]/g, "").trim();
+            return {
+              collection: col.name, slug: d.slug,
+              title: String(data.title ?? d.slug), content,
+              seo: (data._seo as SeoFields) ?? {},
+            };
+          }),
+      );
+      const analyses = analyzeKeywords(store.keywords, kwDocs);
+      keywordCount = analyses.length;
+      keywordCoverage = keywordCount > 0
+        ? Math.round(analyses.reduce((sum, a) => sum + a.coverage, 0) / keywordCount)
+        : 0;
+    }
+  } catch { /* no keywords file */ }
 
   // Sort upcoming by date
   upcomingItems.sort((a, b) => {
@@ -223,6 +252,14 @@ export default async function AdminDashboard() {
             <div className="h-1 rounded-full mt-2" style={{ background: "var(--border)" }}>
               <div className="h-full rounded-full" style={{ width: `${seoAvgScore}%`, background: seoAvgScore >= 80 ? "#4ade80" : seoAvgScore >= 50 ? "#F7BB2E" : "#f87171" }} />
             </div>
+            {keywordCount > 0 && (
+              <div className="flex items-center gap-2 mt-2 pt-2" style={{ borderTop: "1px solid var(--border)" }}>
+                <span className="font-mono" style={{ fontWeight: 600, color: keywordCoverage >= 50 ? "#4ade80" : keywordCoverage >= 20 ? "#F7BB2E" : "#f87171" }}>
+                  {keywordCoverage}%
+                </span>
+                <span>keyword coverage ({keywordCount} tracked)</span>
+              </div>
+            )}
           </div>
         </Link>
       </div>

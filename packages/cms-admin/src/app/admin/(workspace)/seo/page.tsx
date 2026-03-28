@@ -34,6 +34,9 @@ export default function SeoPage() {
   const [optimizing, setOptimizing] = useState(false);
   const [optimizeProgress, setOptimizeProgress] = useState({ done: 0, total: 0 });
 
+  // Sub-tab state
+  const [activeTab, setActiveTab] = useState<"documents" | "keywords">("documents");
+
   // Keyword tracker state
   const [keywordData, setKeywordData] = useState<{ analyses: KeywordAnalysis[] } | null>(null);
   const [keywordLoading, setKeywordLoading] = useState(true);
@@ -262,174 +265,188 @@ export default function SeoPage() {
             </div>
           </div>
 
-          {/* Keyword Tracker */}
-          <div style={{ marginBottom: "1.5rem" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "0.75rem" }}>
-              <h3 style={{ margin: 0, fontSize: "0.85rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "0.375rem" }}>
-                <Tag style={{ width: 14, height: 14, color: "var(--muted-foreground)" }} />
-                Keyword Tracker
-              </h3>
-              <form
-                onSubmit={(e) => { e.preventDefault(); handleAddKeyword(); }}
-                style={{ display: "flex", gap: "0.375rem", alignItems: "center" }}
+          {/* Sub-tabs: Documents | Keywords */}
+          <div style={{ display: "flex", gap: 0, borderBottom: "1px solid var(--border)", marginBottom: "1rem" }}>
+            {(["documents", "keywords"] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                style={{
+                  padding: "0.5rem 1rem", border: "none", background: "none", cursor: "pointer",
+                  fontSize: "0.8rem", fontWeight: activeTab === tab ? 600 : 400,
+                  color: activeTab === tab ? "var(--foreground)" : "var(--muted-foreground)",
+                  borderBottom: activeTab === tab ? "2px solid #F7BB2E" : "2px solid transparent",
+                  marginBottom: "-1px",
+                }}
               >
-                <input
-                  type="text"
-                  value={newKeyword}
-                  onChange={(e) => setNewKeyword(e.target.value)}
-                  placeholder="Add keyword..."
-                  style={{
-                    padding: "0.25rem 0.5rem", fontSize: "0.75rem", borderRadius: "4px",
-                    border: "1px solid var(--border)", background: "var(--background)",
-                    color: "var(--foreground)", width: 160, outline: "none",
-                  }}
-                />
-                <button
-                  type="submit"
-                  disabled={addingKeyword || !newKeyword.trim()}
-                  style={{
-                    display: "inline-flex", alignItems: "center", gap: "0.2rem",
-                    padding: "0.25rem 0.5rem", borderRadius: "4px", border: "none",
-                    background: newKeyword.trim() ? "#F7BB2E" : "var(--border)",
-                    color: newKeyword.trim() ? "#0D0D0D" : "var(--muted-foreground)",
-                    cursor: newKeyword.trim() ? "pointer" : "default",
-                    fontSize: "0.7rem", fontWeight: 600,
-                  }}
-                >
-                  <Plus style={{ width: 12, height: 12 }} /> Add
-                </button>
-              </form>
-            </div>
-
-            {keywordLoading ? (
-              <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)" }}>Loading keywords...</p>
-            ) : !keywordData?.analyses?.length ? (
-              <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", padding: "0.5rem 0" }}>
-                No tracked keywords yet. Add keywords above to track coverage across your content.
-              </p>
-            ) : (
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem" }}>
-                <thead>
-                  <tr style={{ borderBottom: "1px solid var(--border)" }}>
-                    <th style={{ textAlign: "left", padding: "0.5rem 0.75rem", color: "var(--muted-foreground)", fontWeight: 500, fontSize: "0.72rem" }}>Keyword</th>
-                    <th style={{ textAlign: "center", padding: "0.5rem", color: "var(--muted-foreground)", fontWeight: 500, fontSize: "0.72rem", width: 60 }}>Type</th>
-                    <th style={{ textAlign: "center", padding: "0.5rem", color: "var(--muted-foreground)", fontWeight: 500, fontSize: "0.72rem", width: 60 }}>Docs</th>
-                    <th style={{ textAlign: "center", padding: "0.5rem", color: "var(--muted-foreground)", fontWeight: 500, fontSize: "0.72rem", width: 100 }}>Coverage</th>
-                    <th style={{ textAlign: "right", padding: "0.5rem 0.75rem", width: 80 }}></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {keywordData.analyses.map((kw) => (
-                    <>
-                      <tr
-                        key={kw.keyword}
-                        style={{ borderBottom: "1px solid var(--border)", cursor: "pointer" }}
-                        onClick={() => setExpandedKeyword(expandedKeyword === kw.keyword ? null : kw.keyword)}
-                      >
-                        <td style={{ padding: "0.625rem 0.75rem", fontWeight: 500 }}>
-                          {kw.keyword}
-                        </td>
-                        <td style={{ textAlign: "center", padding: "0.5rem" }}>
-                          <span style={{
-                            fontSize: "0.6rem", padding: "0.15rem 0.4rem", borderRadius: "3px",
-                            background: kw.target === "primary" ? "rgba(247,187,46,0.2)" : kw.target === "secondary" ? "rgba(74,222,128,0.15)" : "rgba(168,139,250,0.15)",
-                            color: kw.target === "primary" ? "#F7BB2E" : kw.target === "secondary" ? "#4ade80" : "#a78bfa",
-                            fontWeight: 600, textTransform: "uppercase",
-                          }}>
-                            {kw.target}
-                          </span>
-                        </td>
-                        <td style={{ textAlign: "center", padding: "0.5rem", fontFamily: "monospace" }}>
-                          {kw.documents.length}
-                        </td>
-                        <td style={{ textAlign: "center", padding: "0.5rem" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: "0.375rem", justifyContent: "center" }}>
-                            <div style={{ width: 60, height: 6, borderRadius: 3, background: "var(--border)", overflow: "hidden" }}>
-                              <div style={{
-                                height: "100%", width: `${kw.coverage}%`, borderRadius: 3,
-                                background: kw.coverage >= 50 ? "#4ade80" : kw.coverage >= 20 ? "#F7BB2E" : "#f87171",
-                              }} />
-                            </div>
-                            <span style={{ fontSize: "0.72rem", fontFamily: "monospace", fontWeight: 600, color: "var(--foreground)" }}>
-                              {kw.coverage}%
-                            </span>
-                          </div>
-                        </td>
-                        <td style={{ textAlign: "right", padding: "0.5rem 0.75rem" }}>
-                          {confirmRemove === kw.keyword ? (
-                            <span style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
-                              <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
-                              <button
-                                onClick={(e) => { e.stopPropagation(); handleRemoveKeyword(kw.keyword); }}
-                                style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}
-                              >Yes</button>
-                              <button
-                                onClick={(e) => { e.stopPropagation(); setConfirmRemove(null); }}
-                                style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}
-                              >No</button>
-                            </span>
-                          ) : (
-                            <button
-                              onClick={(e) => { e.stopPropagation(); setConfirmRemove(kw.keyword); }}
-                              style={{
-                                display: "inline-flex", alignItems: "center", padding: "0.2rem",
-                                borderRadius: "3px", border: "none", background: "transparent",
-                                color: "var(--muted-foreground)", cursor: "pointer",
-                              }}
-                            >
-                              <X style={{ width: 12, height: 12 }} />
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                      {/* Expanded keyword detail rows */}
-                      {expandedKeyword === kw.keyword && kw.documents.length > 0 && (
-                        <tr key={`${kw.keyword}-detail`}>
-                          <td colSpan={5} style={{ padding: "0 0.75rem 0.75rem", background: "var(--card)" }}>
-                            <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.72rem" }}>
-                              <thead>
-                                <tr>
-                                  <th style={{ textAlign: "left", padding: "0.375rem 0.5rem", color: "var(--muted-foreground)", fontWeight: 500 }}>Document</th>
-                                  <th style={{ textAlign: "center", padding: "0.375rem 0.25rem", color: "var(--muted-foreground)", fontWeight: 500, width: 50 }}>Title</th>
-                                  <th style={{ textAlign: "center", padding: "0.375rem 0.25rem", color: "var(--muted-foreground)", fontWeight: 500, width: 50 }}>Desc</th>
-                                  <th style={{ textAlign: "center", padding: "0.375rem 0.25rem", color: "var(--muted-foreground)", fontWeight: 500, width: 50 }}>Content</th>
-                                  <th style={{ textAlign: "center", padding: "0.375rem 0.25rem", color: "var(--muted-foreground)", fontWeight: 500, width: 70 }}>Density</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {kw.documents.map((d) => (
-                                  <tr key={`${d.collection}/${d.slug}`} style={{ borderTop: "1px solid var(--border)" }}>
-                                    <td style={{ padding: "0.375rem 0.5rem" }}>
-                                      <a href={`/admin/${d.collection}/${d.slug}`} style={{ color: "var(--foreground)", textDecoration: "none" }}>
-                                        {d.title}
-                                      </a>
-                                    </td>
-                                    <td style={{ textAlign: "center", padding: "0.375rem 0.25rem" }}>{d.inTitle ? "✅" : "❌"}</td>
-                                    <td style={{ textAlign: "center", padding: "0.375rem 0.25rem" }}>{d.inDescription ? "✅" : "❌"}</td>
-                                    <td style={{ textAlign: "center", padding: "0.375rem 0.25rem" }}>{d.inContent ? "✅" : "❌"}</td>
-                                    <td style={{ textAlign: "center", padding: "0.375rem 0.25rem" }}>
-                                      <span style={{ fontFamily: "monospace", fontWeight: 600, color: densityColor(d.density) }}>
-                                        {d.density}%
-                                      </span>
-                                    </td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </td>
-                        </tr>
-                      )}
-                    </>
-                  ))}
-                </tbody>
-              </table>
-            )}
+                {tab === "documents" ? `Documents (${data.total})` : `Keywords (${keywordData?.analyses?.length ?? 0})`}
+              </button>
+            ))}
           </div>
 
-          {/* Documents table */}
-          <h3 style={{ margin: "0 0 0.5rem", fontSize: "0.85rem", fontWeight: 600 }}>
-            Per-Document SEO
-          </h3>
+          {/* Keywords tab */}
+          {activeTab === "keywords" && (
+            <div>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
+                <form
+                  onSubmit={(e) => { e.preventDefault(); handleAddKeyword(); }}
+                  style={{ display: "flex", gap: "0.375rem", alignItems: "center" }}
+                >
+                  <input
+                    type="text"
+                    value={newKeyword}
+                    onChange={(e) => setNewKeyword(e.target.value)}
+                    placeholder="Add keyword..."
+                    style={{
+                      padding: "0.25rem 0.5rem", fontSize: "0.75rem", borderRadius: "4px",
+                      border: "1px solid var(--border)", background: "var(--background)",
+                      color: "var(--foreground)", width: 200, outline: "none",
+                    }}
+                  />
+                  <button
+                    type="submit"
+                    disabled={addingKeyword || !newKeyword.trim()}
+                    style={{
+                      display: "inline-flex", alignItems: "center", gap: "0.2rem",
+                      padding: "0.25rem 0.5rem", borderRadius: "4px", border: "none",
+                      background: newKeyword.trim() ? "#F7BB2E" : "var(--border)",
+                      color: newKeyword.trim() ? "#0D0D0D" : "var(--muted-foreground)",
+                      cursor: newKeyword.trim() ? "pointer" : "default",
+                      fontSize: "0.7rem", fontWeight: 600,
+                    }}
+                  >
+                    <Plus style={{ width: 12, height: 12 }} /> Add
+                  </button>
+                </form>
+              </div>
+
+              {keywordLoading ? (
+                <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)" }}>Loading keywords...</p>
+              ) : !keywordData?.analyses?.length ? (
+                <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", padding: "0.5rem 0" }}>
+                  No tracked keywords yet. Add keywords above to track coverage across your content.
+                </p>
+              ) : (
+                <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem" }}>
+                  <thead>
+                    <tr style={{ borderBottom: "1px solid var(--border)" }}>
+                      <th style={{ textAlign: "left", padding: "0.5rem 0.75rem", color: "var(--muted-foreground)", fontWeight: 500, fontSize: "0.72rem" }}>Keyword</th>
+                      <th style={{ textAlign: "center", padding: "0.5rem", color: "var(--muted-foreground)", fontWeight: 500, fontSize: "0.72rem", width: 80 }}>Type</th>
+                      <th style={{ textAlign: "center", padding: "0.5rem", color: "var(--muted-foreground)", fontWeight: 500, fontSize: "0.72rem", width: 60 }}>Docs</th>
+                      <th style={{ textAlign: "center", padding: "0.5rem", color: "var(--muted-foreground)", fontWeight: 500, fontSize: "0.72rem", width: 120 }}>Coverage</th>
+                      <th style={{ textAlign: "right", padding: "0.5rem 0.75rem", width: 80 }}></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {keywordData.analyses.map((kw) => (
+                      <>
+                        <tr
+                          key={kw.keyword}
+                          style={{ borderBottom: "1px solid var(--border)", cursor: kw.documents.length > 0 ? "pointer" : "default" }}
+                          onClick={() => kw.documents.length > 0 && setExpandedKeyword(expandedKeyword === kw.keyword ? null : kw.keyword)}
+                        >
+                          <td style={{ padding: "0.625rem 0.75rem", fontWeight: 500 }}>
+                            {kw.keyword}
+                          </td>
+                          <td style={{ textAlign: "center", padding: "0.5rem" }}>
+                            <span style={{
+                              fontSize: "0.6rem", padding: "0.15rem 0.4rem", borderRadius: "3px",
+                              background: kw.target === "primary" ? "rgba(247,187,46,0.2)" : kw.target === "secondary" ? "rgba(74,222,128,0.15)" : "rgba(168,139,250,0.15)",
+                              color: kw.target === "primary" ? "#F7BB2E" : kw.target === "secondary" ? "#4ade80" : "#a78bfa",
+                              fontWeight: 600, textTransform: "uppercase",
+                            }}>
+                              {kw.target}
+                            </span>
+                          </td>
+                          <td style={{ textAlign: "center", padding: "0.5rem", fontFamily: "monospace" }}>
+                            {kw.documents.length}
+                          </td>
+                          <td style={{ textAlign: "center", padding: "0.5rem" }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: "0.375rem", justifyContent: "center" }}>
+                              <div style={{ width: 60, height: 6, borderRadius: 3, background: "var(--border)", overflow: "hidden" }}>
+                                <div style={{
+                                  height: "100%", width: `${kw.coverage}%`, borderRadius: 3,
+                                  background: kw.coverage >= 50 ? "#4ade80" : kw.coverage >= 20 ? "#F7BB2E" : "#f87171",
+                                }} />
+                              </div>
+                              <span style={{ fontSize: "0.72rem", fontFamily: "monospace", fontWeight: 600, color: "var(--foreground)" }}>
+                                {kw.coverage}%
+                              </span>
+                            </div>
+                          </td>
+                          <td style={{ textAlign: "right", padding: "0.5rem 0.75rem" }}>
+                            {confirmRemove === kw.keyword ? (
+                              <span style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
+                                <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); handleRemoveKeyword(kw.keyword); }}
+                                  style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}
+                                >Yes</button>
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setConfirmRemove(null); }}
+                                  style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}
+                                >No</button>
+                              </span>
+                            ) : (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); setConfirmRemove(kw.keyword); }}
+                                style={{
+                                  display: "inline-flex", alignItems: "center", padding: "0.2rem",
+                                  borderRadius: "3px", border: "none", background: "transparent",
+                                  color: "var(--muted-foreground)", cursor: "pointer",
+                                }}
+                              >
+                                <X style={{ width: 12, height: 12 }} />
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                        {expandedKeyword === kw.keyword && kw.documents.length > 0 && (
+                          <tr key={`${kw.keyword}-detail`}>
+                            <td colSpan={5} style={{ padding: "0 0.75rem 0.75rem", background: "var(--card)" }}>
+                              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.72rem" }}>
+                                <thead>
+                                  <tr>
+                                    <th style={{ textAlign: "left", padding: "0.375rem 0.5rem", color: "var(--muted-foreground)", fontWeight: 500 }}>Document</th>
+                                    <th style={{ textAlign: "center", padding: "0.375rem 0.25rem", color: "var(--muted-foreground)", fontWeight: 500, width: 50 }}>Title</th>
+                                    <th style={{ textAlign: "center", padding: "0.375rem 0.25rem", color: "var(--muted-foreground)", fontWeight: 500, width: 50 }}>Desc</th>
+                                    <th style={{ textAlign: "center", padding: "0.375rem 0.25rem", color: "var(--muted-foreground)", fontWeight: 500, width: 50 }}>Content</th>
+                                    <th style={{ textAlign: "center", padding: "0.375rem 0.25rem", color: "var(--muted-foreground)", fontWeight: 500, width: 70 }}>Density</th>
+                                  </tr>
+                                </thead>
+                                <tbody>
+                                  {kw.documents.map((d) => (
+                                    <tr key={`${d.collection}/${d.slug}`} style={{ borderTop: "1px solid var(--border)" }}>
+                                      <td style={{ padding: "0.375rem 0.5rem" }}>
+                                        <a href={`/admin/${d.collection}/${d.slug}`} style={{ color: "var(--foreground)", textDecoration: "none" }}>
+                                          {d.title}
+                                        </a>
+                                      </td>
+                                      <td style={{ textAlign: "center", padding: "0.375rem 0.25rem" }}>{d.inTitle ? "✅" : "❌"}</td>
+                                      <td style={{ textAlign: "center", padding: "0.375rem 0.25rem" }}>{d.inDescription ? "✅" : "❌"}</td>
+                                      <td style={{ textAlign: "center", padding: "0.375rem 0.25rem" }}>{d.inContent ? "✅" : "❌"}</td>
+                                      <td style={{ textAlign: "center", padding: "0.375rem 0.25rem" }}>
+                                        <span style={{ fontFamily: "monospace", fontWeight: 600, color: densityColor(d.density) }}>
+                                          {d.density}%
+                                        </span>
+                                      </td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </td>
+                          </tr>
+                        )}
+                      </>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          )}
+
+          {/* Documents tab */}
+          {activeTab === "documents" && (
           <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem" }}>
             <thead>
               <tr style={{ borderBottom: "1px solid var(--border)" }}>
@@ -491,6 +508,7 @@ export default function SeoPage() {
               ))}
             </tbody>
           </table>
+          )}
         </div>
       )}
     </>
