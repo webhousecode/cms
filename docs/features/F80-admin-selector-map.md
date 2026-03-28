@@ -207,3 +207,12 @@ Reads `cms.config.ts` for the active site and generates the field selector map w
 ## Effort Estimate
 
 **Medium** — 4-5 days. Most work is adding `data-testid` attributes across the admin UI components (mechanical but thorough). Test helpers and CLI are straightforward once the attributes exist.
+
+---
+
+> **Testing (F99):** This feature MUST include tests using the [F99 Test Infrastructure](F99-e2e-testing-suite.md).
+> - **Unit tests** → `packages/cms-admin/src/lib/__tests__/{feature}.test.ts` or `packages/cms/src/__tests__/{feature}.test.ts`
+> - **API tests** → `packages/cms-admin/tests/api/{feature}.test.ts`
+> - **E2E tests** → `packages/cms-admin/e2e/suites/{nn}-{feature}.spec.ts`
+> - Use shared fixtures: `auth.ts` (JWT login), `mock-llm.ts` (intercept AI), `test-data.ts` (seed/cleanup)
+> - Tests are written BEFORE implementation. All tests must pass before merge.

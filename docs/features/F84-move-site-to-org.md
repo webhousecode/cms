@@ -189,3 +189,12 @@ These files import from `site-registry.ts` but are **NOT modified** — they rea
 **Small** — 1 day
 
 The backend is trivial (splice + push in registry JSON). The effort is in the UI — org dropdown, confirmation dialog, and post-move state refresh.
+
+---
+
+> **Testing (F99):** This feature MUST include tests using the [F99 Test Infrastructure](F99-e2e-testing-suite.md).
+> - **Unit tests** → `packages/cms-admin/src/lib/__tests__/{feature}.test.ts` or `packages/cms/src/__tests__/{feature}.test.ts`
+> - **API tests** → `packages/cms-admin/tests/api/{feature}.test.ts`
+> - **E2E tests** → `packages/cms-admin/e2e/suites/{nn}-{feature}.spec.ts`
+> - Use shared fixtures: `auth.ts` (JWT login), `mock-llm.ts` (intercept AI), `test-data.ts` (seed/cleanup)
+> - Tests are written BEFORE implementation. All tests must pass before merge.

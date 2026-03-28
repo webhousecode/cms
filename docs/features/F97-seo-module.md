@@ -398,3 +398,12 @@ Site-wide keyword tracker: `_data/seo-keywords.json`
 - Days 3-4: AI integration (optimize, suggest keywords, auto-generate)
 - Days 4-6: Dashboard, keyword tracker, bulk optimize
 - Days 6-7: JSON-LD templates, F89 integration, testing
+
+---
+
+> **Testing (F99):** This feature MUST include tests using the [F99 Test Infrastructure](F99-e2e-testing-suite.md).
+> - **Unit tests** → `packages/cms-admin/src/lib/__tests__/{feature}.test.ts` or `packages/cms/src/__tests__/{feature}.test.ts`
+> - **API tests** → `packages/cms-admin/tests/api/{feature}.test.ts`
+> - **E2E tests** → `packages/cms-admin/e2e/suites/{nn}-{feature}.spec.ts`
+> - Use shared fixtures: `auth.ts` (JWT login), `mock-llm.ts` (intercept AI), `test-data.ts` (seed/cleanup)
+> - Tests are written BEFORE implementation. All tests must pass before merge.

@@ -297,3 +297,12 @@ Naming: `{collection}-{slug}.png`. Overwrites on re-capture (no versioning — l
 - Day 2: API routes + SSE progress + metadata storage
 - Day 3: Admin UI — Tools page with tabs, screenshot grid, progress bar
 - Day 4: Polish — stale detection, selective capture, error handling, sidebar update
+
+---
+
+> **Testing (F99):** This feature MUST include tests using the [F99 Test Infrastructure](F99-e2e-testing-suite.md).
+> - **Unit tests** → `packages/cms-admin/src/lib/__tests__/{feature}.test.ts` or `packages/cms/src/__tests__/{feature}.test.ts`
+> - **API tests** → `packages/cms-admin/tests/api/{feature}.test.ts`
+> - **E2E tests** → `packages/cms-admin/e2e/suites/{nn}-{feature}.spec.ts`
+> - Use shared fixtures: `auth.ts` (JWT login), `mock-llm.ts` (intercept AI), `test-data.ts` (seed/cleanup)
+> - Tests are written BEFORE implementation. All tests must pass before merge.

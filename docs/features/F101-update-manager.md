@@ -564,3 +564,12 @@ Ingen. Rent additivt — nye filer, nye endpoints, ny banner-komponent i layout.
 - Dag 2: API routes + UpdateBanner + admin layout integration
 - Dag 3: System Settings panel + changelog fetch + deployment detection
 - Dag 4: CLI `cms update` kommando + test + polish
+
+---
+
+> **Testing (F99):** This feature MUST include tests using the [F99 Test Infrastructure](F99-e2e-testing-suite.md).
+> - **Unit tests** → `packages/cms-admin/src/lib/__tests__/{feature}.test.ts` or `packages/cms/src/__tests__/{feature}.test.ts`
+> - **API tests** → `packages/cms-admin/tests/api/{feature}.test.ts`
+> - **E2E tests** → `packages/cms-admin/e2e/suites/{nn}-{feature}.spec.ts`
+> - Use shared fixtures: `auth.ts` (JWT login), `mock-llm.ts` (intercept AI), `test-data.ts` (seed/cleanup)
+> - Tests are written BEFORE implementation. All tests must pass before merge.
