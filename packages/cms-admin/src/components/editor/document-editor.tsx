@@ -1399,21 +1399,25 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
               </Link>
             );
           })}
-          {locales && locales.length > 0 && (
-            <button
-              type="button"
-              onClick={() => setCreateTranslationOpen(true)}
-              style={{
-                display: "inline-flex", alignItems: "center", gap: "0.3rem",
-                padding: "0.15rem 0.5rem", borderRadius: "4px",
-                border: "1px dashed var(--border)", fontSize: "0.7rem",
-                fontFamily: "monospace", color: "var(--muted-foreground)",
-                background: "transparent", cursor: "pointer",
-              }}
-            >
-              + Add translation
-            </button>
-          )}
+          {(() => {
+            const existingLocs = [locale || defaultLocale || null, ...translations.map(t => t.locale)];
+            const available = (locales ?? []).filter(l => !existingLocs.includes(l));
+            return available.length > 0 ? (
+              <button
+                type="button"
+                onClick={() => setCreateTranslationOpen(true)}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: "0.3rem",
+                  padding: "0.15rem 0.5rem", borderRadius: "4px",
+                  border: "1px dashed var(--border)", fontSize: "0.7rem",
+                  fontFamily: "monospace", color: "var(--muted-foreground)",
+                  background: "transparent", cursor: "pointer",
+                }}
+              >
+                + Add translation
+              </button>
+            ) : null;
+          })()}
         </div>
       )}
 
