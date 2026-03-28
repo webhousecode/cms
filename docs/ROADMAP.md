@@ -129,6 +129,7 @@ _Makes us stand out. Customers expect these from a modern CMS._
 | ~~18k~~ | ~~**F106 TipTap v3 Upgrade**~~ | ~~Done~~ | ~~Shipped 2026-03-27. v2.27→v3.20, Floating UI, consolidated packages, toolbar reactivity fix, save stale closure fix.~~ |
 | ~~18l~~ | ~~**F108 Rich Text Editor Enhancements**~~ | ~~Done~~ | ~~Shipped 2026-03-27. Underline, super/subscript, alignment, highlight, zoom, AI proofread.~~ |
 | 18m | **F109 Inline Proofreading** | Medium | ProseMirror decorations for inline corrections — strikethrough + green suggestion, accept/reject, navigation. 2-3 dage. |
+| 18n | **F111 External Publishing** | Medium | Cross-post articles to Dev.to, Hashnode, Medium (draft), LinkedIn. Platform adapter pattern, canonical URLs, analytics sync. |
 
 ### Tier 3 — Differentiation (v1.3+)
 

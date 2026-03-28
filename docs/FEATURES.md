@@ -127,6 +127,7 @@
 | F108 | [Rich Text Editor Enhancements](#f108-rich-text-editor-enhancements) | ✅ Done | [docs/features/F108-richtext-editor-enhancements.md](features/F108-richtext-editor-enhancements.md) |
 | F109 | [Inline Proofreading](#f109-inline-proofreading) | Planned | [docs/features/F109-inline-proofreading.md](features/F109-inline-proofreading.md) |
 | F110 | [Digital Island Apps](#f110-digital-island-apps) | Planned | [docs/features/F110-digital-island-apps.md](features/F110-digital-island-apps.md) |
+| F111 | [External Publishing](#f111-external-publishing) | Planned | [docs/features/F111-external-publishing.md](features/F111-external-publishing.md) |
 
 ---
 
@@ -468,3 +469,6 @@ TipTap-native inline spelling/grammar corrections using ProseMirror Decorations.
 
 ## F110 — Digital Island Apps
 AI-generated sandboxed micro-apps built via chat, saved as Interactives, embeddable on any site page. Users say "make me a price calculator" in chat — AI generates self-contained HTML, shows live preview in an artifact card (sandboxed iframe), user can interact, request changes, save to CMS Interactives library, or download as .html. Sandbox security: allow-scripts only, no allow-same-origin, srcdoc (no network access). Future: postMessage bridge for theme inheritance and data passing. Extends F39 (Interactives Engine) with AI generation via F107 (Chat with Your Site).
+
+## F111 — External Publishing
+Publish CMS articles to Dev.to, Hashnode, Medium (draft), and LinkedIn with one click. Platform adapter pattern with format conversion, image re-upload, canonical URL management, and analytics sync back to CMS. CMS is master — platforms are distribution channels. Complements F69 (Social Media) which targets FB/IG/LinkedIn SoMe posts, while F111 cross-posts full articles to developer/writing platforms.
