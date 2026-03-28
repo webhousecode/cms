@@ -1293,6 +1293,7 @@ function LightboxAIPanel({ imageUrl }: { imageUrl: string }) {
   const [analyzing, setAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const hasAiData = meta && (meta.caption || meta.alt || (meta.tags && meta.tags.length > 0));
 
   useEffect(() => {
     setLoading(true);
@@ -1350,7 +1351,7 @@ function LightboxAIPanel({ imageUrl }: { imageUrl: string }) {
         <span style={{ fontSize: "0.8rem", fontWeight: 600, color: "rgba(255,255,255,0.9)", display: "flex", alignItems: "center", gap: "0.375rem" }}>
           <Sparkles style={{ width: 14, height: 14 }} /> AI Analysis
         </span>
-        {meta && !analyzing && (
+        {hasAiData && !analyzing && (
           <button type="button" title="Re-analyze" onClick={runAnalysis}
             style={{ display: "flex", alignItems: "center", border: "none", background: "transparent", cursor: "pointer", color: "rgba(255,255,255,0.4)" }}>
             <RefreshCw style={{ width: 12, height: 12 }} />
@@ -1364,7 +1365,7 @@ function LightboxAIPanel({ imageUrl }: { imageUrl: string }) {
         </div>
       )}
 
-      {!loading && !meta && !analyzing && (
+      {!loading && !hasAiData && !analyzing && (
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.75rem", paddingTop: "2rem" }}>
           <p style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.4)" }}>No AI analysis yet.</p>
           <button type="button" onClick={runAnalysis}
@@ -1382,7 +1383,7 @@ function LightboxAIPanel({ imageUrl }: { imageUrl: string }) {
 
       {error && <p style={{ fontSize: "0.75rem", color: "#f87171", marginBottom: "0.5rem" }}>{error}</p>}
 
-      {meta && (
+      {hasAiData && meta && (
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           {/* Caption */}
           <div>
@@ -1543,16 +1544,34 @@ function LightboxExifPanel({ imageUrl }: { imageUrl: string }) {
     focalLength?: number; lens?: string; width?: number; height?: number;
   } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [geoName, setGeoName] = useState<string | null>(null);
 
   useEffect(() => {
     setLoading(true);
     setExif(null);
+    setGeoName(null);
     fetch(`/api/media/exif?file=${encodeURIComponent(imageUrl)}`)
       .then((r) => r.ok ? r.json() : null)
       .then((d) => { if (d?.exif) setExif(d.exif); })
       .catch(() => {})
       .finally(() => setLoading(false));
   }, [imageUrl]);
+
+  // Reverse geocode GPS coordinates
+  useEffect(() => {
+    if (!exif?.gpsLat || !exif?.gpsLon) return;
+    fetch(`https://nominatim.openstreetmap.org/reverse?lat=${exif.gpsLat}&lon=${exif.gpsLon}&format=json&zoom=14&addressdetails=1`, {
+      headers: { "Accept-Language": "en" },
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        const a = d.address;
+        if (!a) return;
+        const parts = [a.town || a.city || a.village || a.municipality, a.state || a.county, a.country].filter(Boolean);
+        if (parts.length > 0) setGeoName(parts.join(", "));
+      })
+      .catch(() => {});
+  }, [exif?.gpsLat, exif?.gpsLon]);
 
   if (loading) return null;
   if (!exif) return null;
@@ -1592,18 +1611,26 @@ function LightboxExifPanel({ imageUrl }: { imageUrl: string }) {
           <div style={row}><span style={lbl}>Focal length</span><span style={val}>{exif.focalLength}mm</span></div>
         )}
         {exif.gpsLat != null && exif.gpsLon != null && (
-          <div style={row}>
-            <span style={lbl}>GPS</span>
-            <a
-              href={`https://maps.google.com/?q=${exif.gpsLat},${exif.gpsLon}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{ ...val, color: "var(--primary)", textDecoration: "none", fontSize: "0.68rem" }}
-            >
-              {exif.gpsLat.toFixed(4)}°, {exif.gpsLon.toFixed(4)}°
-              {exif.gpsAlt != null ? ` (${Math.round(exif.gpsAlt)}m)` : ""}
-            </a>
-          </div>
+          <>
+            <div style={row}>
+              <span style={lbl}>GPS</span>
+              <a
+                href={`https://maps.google.com/?q=${exif.gpsLat},${exif.gpsLon}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ ...val, color: "var(--primary)", textDecoration: "none", fontSize: "0.68rem" }}
+              >
+                {exif.gpsLat.toFixed(4)}°, {exif.gpsLon.toFixed(4)}°
+                {exif.gpsAlt != null ? ` (${Math.round(exif.gpsAlt)}m)` : ""}
+              </a>
+            </div>
+            {geoName && (
+              <div style={row}>
+                <span style={lbl}>Location</span>
+                <span style={{ ...val, fontSize: "0.68rem" }}>{geoName}</span>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
