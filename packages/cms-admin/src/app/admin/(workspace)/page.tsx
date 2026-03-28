@@ -59,7 +59,11 @@ export default async function AdminDashboard() {
     mediaAdapter.listMedia().catch(() => []),
     mediaAdapter.listInteractives().catch(() => []),
   ]);
-  const mediaCount = mediaFiles.filter((m) => (m as any).status !== "trashed").length;
+  const mediaCount = mediaFiles.filter((m) =>
+    (m as any).status !== "trashed" &&
+    !/-\d+w\.webp$/i.test(m.name) &&
+    !m.name.startsWith(".")
+  ).length;
   const intsCount = intsList.filter((m) => m.status !== "trashed").length;
 
   // SEO stats
