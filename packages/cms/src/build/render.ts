@@ -21,7 +21,10 @@ async function renderDocument(doc: Document, context: SiteContext): Promise<stri
   const title = String(doc.data['title'] ?? doc.slug);
   const content = String(doc.data['content'] ?? doc.data['body'] ?? '');
   const excerpt = String(doc.data['excerpt'] ?? '');
-  const date = doc.data['date'] ? formatDate(String(doc.data['date'])) : formatDate(doc.createdAt);
+  const docLocale = doc.locale ?? context.config.defaultLocale ?? 'en';
+  const dateLocaleMap: Record<string, string> = { da: 'da-DK', en: 'en-US', de: 'de-DE', fr: 'fr-FR', es: 'es-ES', sv: 'sv-SE', nb: 'nb-NO', nl: 'nl-NL' };
+  const dateFmtLocale = dateLocaleMap[docLocale] ?? `${docLocale}-${docLocale.toUpperCase()}`;
+  const date = doc.data['date'] ? formatDate(String(doc.data['date']), dateFmtLocale) : formatDate(doc.createdAt, dateFmtLocale);
 
   const rendered = content ? await marked(content, { gfm: true }) : '';
 
@@ -50,7 +53,10 @@ function renderCollectionIndex(
   const cards = documents.map(doc => {
     const title = String(doc.data['title'] ?? doc.slug);
     const excerpt = String(doc.data['excerpt'] ?? '');
-    const date = doc.data['date'] ? formatDate(String(doc.data['date'])) : formatDate(doc.createdAt);
+    const itemLocale = doc.locale ?? context.config.defaultLocale ?? 'en';
+    const itemDateLocaleMap: Record<string, string> = { da: 'da-DK', en: 'en-US', de: 'de-DE', fr: 'fr-FR', es: 'es-ES', sv: 'sv-SE', nb: 'nb-NO', nl: 'nl-NL' };
+    const itemDateFmtLocale = itemDateLocaleMap[itemLocale] ?? `${itemLocale}-${itemLocale.toUpperCase()}`;
+    const date = doc.data['date'] ? formatDate(String(doc.data['date']), itemDateFmtLocale) : formatDate(doc.createdAt, itemDateFmtLocale);
     const href = collectionConfig
       ? getDocumentUrl(doc, collectionConfig, allDocsMap)
       : `/${collectionName}/${doc.slug}/`;

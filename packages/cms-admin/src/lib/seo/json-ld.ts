@@ -224,7 +224,12 @@ export function autoFillFields(
 export function generateJsonLd(
   template: JsonLdTemplate,
   values: Record<string, string>,
+  locale?: string,
 ): Record<string, unknown> {
   const raw = template.generate(values);
-  return JSON.parse(JSON.stringify(raw)); // strips undefined
+  const result: Record<string, unknown> = JSON.parse(JSON.stringify(raw)); // strips undefined
+  if (locale) {
+    result["inLanguage"] = locale;
+  }
+  return result;
 }

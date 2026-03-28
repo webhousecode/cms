@@ -30,7 +30,7 @@ export { runBuild } from './build/pipeline.js';
 export type { BuildResult, BuildOptions } from './build/pipeline.js';
 
 // Routing
-export { getDocumentUrl, getCollectionIndexUrl } from './routing/resolver.js';
+export { getDocumentUrl, getCollectionIndexUrl, getLocalizedDocumentUrl } from './routing/resolver.js';
 
 // Template
 export { html, raw } from './template/engine.js';

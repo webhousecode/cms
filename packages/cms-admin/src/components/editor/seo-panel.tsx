@@ -446,7 +446,7 @@ Rules:
                     const auto = autoFillFields(tmpl, enrichedData);
                     const merged = { ...auto, ...jsonLdValues };
                     setJsonLdValues(merged);
-                    setJsonLd(generateJsonLd(tmpl, merged));
+                    setJsonLd(generateJsonLd(tmpl, merged, doc.data.locale as string | undefined));
                   }
                 }}
                 options={[
@@ -477,7 +477,7 @@ Rules:
                           onChange={(e) => {
                             const next = { ...jsonLdValues, [f.key]: e.target.value };
                             setJsonLdValues(next);
-                            setJsonLd(generateJsonLd(tmpl, next));
+                            setJsonLd(generateJsonLd(tmpl, next, doc.data.locale as string | undefined));
                           }}
                           style={{ ...input, fontSize: "0.72rem", padding: "0.25rem 0.4rem" }}
                         />
