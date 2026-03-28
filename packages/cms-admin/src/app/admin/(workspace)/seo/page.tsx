@@ -128,7 +128,7 @@ export default function SeoPage() {
       ) : !data ? (
         <div style={{ padding: "3rem", textAlign: "center", color: "var(--muted-foreground)" }}>Failed to load SEO data</div>
       ) : (
-        <div style={{ flex: 1, overflowY: "auto", padding: "1.25rem" }}>
+        <div style={{ padding: "1.25rem" }}>
           {/* Summary cards */}
           <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(160px, 1fr))", gap: "1rem", marginBottom: "1.5rem" }}>
             <div style={{ padding: "1rem", background: "var(--card)", border: "1px solid var(--border)", borderRadius: "8px" }}>
