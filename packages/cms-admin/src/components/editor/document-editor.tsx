@@ -914,6 +914,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
   const [generateOpen, setGenerateOpen] = useState(false);
   const [cloning, setCloning] = useState(false);
   const [retranslating, setRetranslating] = useState(false);
+  const [staleDismissed, setStaleDismissed] = useState(false);
   const [confirmTrash, setConfirmTrash] = useState(false);
   const [locale, setLocale] = useState(initialDoc.locale ?? "");
   const [translationOf] = useState(initialDoc.translationOf ?? "");
@@ -1473,7 +1474,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
       )}
 
       {/* Stale translation banner */}
-      {(translationOf || translationGroup) && sourceUpdatedAt && isTranslationStale(sourceUpdatedAt, initialDoc.updatedAt) && (
+      {!staleDismissed && (translationOf || translationGroup) && sourceUpdatedAt && isTranslationStale(sourceUpdatedAt, initialDoc.updatedAt) && (
         <div style={{
           display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap",
           padding: "0.5rem 1rem",
@@ -1498,8 +1499,13 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
                   body: JSON.stringify({ targetLocale: locale }),
                 });
                 if (res.ok) {
+                  // Reload the doc data without a full page refresh
+                  const updated = await fetch(`/api/cms/${collection}/${doc.slug}`).then(r => r.json());
+                  if (updated?.data) {
+                    setDoc(prev => ({ ...prev, data: updated.data, updatedAt: updated.updatedAt ?? prev.updatedAt }));
+                  }
                   toast.success("Translation updated from source");
-                  router.refresh();
+                  setStaleDismissed(true);
                 } else {
                   const body = await res.json().catch(() => ({ error: "Failed" }));
                   toast.error(body.error ?? "Re-translation failed");
@@ -1520,6 +1526,19 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
           >
             {retranslating ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} />}
             {retranslating ? "Re-translating…" : "Re-translate with AI"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setStaleDismissed(true)}
+            title="Dismiss"
+            style={{
+              marginLeft: "auto", padding: "0.1rem 0.3rem", borderRadius: "3px",
+              border: "none", background: "transparent",
+              color: "rgb(234 179 8 / 0.6)", fontSize: "0.8rem", cursor: "pointer",
+              lineHeight: 1,
+            }}
+          >
+            ×
           </button>
         </div>
       )}
