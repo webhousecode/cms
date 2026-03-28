@@ -8,6 +8,7 @@ export interface SeoDocSummary {
   slug: string;
   title: string;
   status: string;
+  locale?: string;
   score: number;
   hasTitle: boolean;
   hasDesc: boolean;
@@ -59,6 +60,7 @@ export async function GET() {
         hasDesc: !!(seo.metaDescription),
         hasOgImage: !!(seo.ogImage),
         hasKeywords: !!(seo.keywords?.length),
+        locale: (data.locale as string) || undefined,
         optimized: !!(seo.lastOptimized),
         publishAt: (doc as any).publishAt ?? undefined,
       });
