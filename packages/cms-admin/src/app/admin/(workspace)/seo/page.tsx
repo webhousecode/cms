@@ -114,6 +114,7 @@ export default function SeoPage() {
         <ActionBarBreadcrumb items={["Tools", "SEO"]} />
         <div style={{ flex: 1 }} />
         <ActionButton
+          variant="primary"
           onClick={optimizeAll}
           disabled={optimizing || !data || data.optimized === data.total}
           icon={optimizing ? <Loader2 style={{ width: 14, height: 14, animation: "spin 1s linear infinite" }} /> : <Sparkles style={{ width: 14, height: 14 }} />}
