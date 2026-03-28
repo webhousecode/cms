@@ -100,7 +100,7 @@
 | F81 | [Homepage Designation](#f81-homepage-designation) | Planned | [docs/features/F81-homepage-designation.md](features/F81-homepage-designation.md) |
 | F82 | [Loaders & Spinners](#f82-loaders--spinners) | Planned | [docs/features/F82-loaders-and-spinners.md](features/F82-loaders-and-spinners.md) |
 | F83 | [Vibe Site Builder](#f83-vibe-site-builder) | Planned | [docs/features/F83-vibe-site-builder.md](features/F83-vibe-site-builder.md) |
-| F84 | [Move Site to Org](#f84-move-site-to-org) | Planned | [docs/features/F84-move-site-to-org.md](features/F84-move-site-to-org.md) |
+| F84 | [Move Site to Org](#f84-move-site-to-org) | Done | [docs/features/F84-move-site-to-org.md](features/F84-move-site-to-org.md) |
 | F85 | [CC Hooks & Quality Gates](#f85-cc-hooks-quality-gates) | Planned | [docs/features/F85-cc-hooks-quality-gates.md](features/F85-cc-hooks-quality-gates.md) |
 | F86 | [Action Bar](#f86-action-bar) | Done | [docs/features/F86-action-bar.md](features/F86-action-bar.md) |
 | F87 | [Org-Level Global Settings](#f87-org-level-global-settings) | Done | [docs/features/F87-org-level-settings.md](features/F87-org-level-settings.md) |

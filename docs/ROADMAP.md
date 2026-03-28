@@ -92,7 +92,7 @@ _Makes us stand out. Customers expect these from a modern CMS._
 |----------|---------|------|----------------|
 | 9a | **F83 Vibe Site Builder** | Large | THE differentiator. "Describe → Generate → Manage." AI site gen with CMS built in. Only platform with AI gen + CMS + code ownership. |
 | 9b | **F63 Shared Components** | Medium | Design tokens, shared UI components, API helpers. Makes all future features faster + consistent. |
-| 9c | **F84 Move Site to Org** | Small | Transfer site between orgs. Atomic registry move. Essential for agency org restructuring. |
+| ~~9c~~ | ~~**F84 Move Site to Org**~~ | ~~Done~~ | ~~Shipped. API route, registry move, settings UI, 15 unit tests.~~ |
 | 10 | ~~**F48 i18n**~~ | ~~Medium~~ | ~~Moved to Tier 1~~ |
 | 11 | **F38 Environment Manager** | Medium | Dev/Staging/Prod. Professional workflow for agencies. |
 | 12 | **F02 Import Engine** | Medium | Migrating FROM another CMS is the #1 adoption barrier. |
