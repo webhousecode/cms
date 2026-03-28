@@ -18,38 +18,6 @@ import { SeoPanel } from "./seo-panel";
 import { GenerateDocumentDialog } from "@/components/generate-document-dialog";
 import { isTranslationStale, LOCALE_LABELS } from "@/lib/locale";
 
-/** Minimal markdown→HTML converter for side-by-side source pane (no external deps) */
-function miniMarkdownToHtml(md: string): string {
-  // Split into paragraphs, convert each
-  return md.split(/\n{2,}/).map((block) => {
-    let b = block.trim();
-    if (!b) return "";
-    // Headings
-    if (b.startsWith("### ")) return `<h3>${b.slice(4)}</h3>`;
-    if (b.startsWith("## ")) return `<h3>${b.slice(3)}</h3>`;
-    if (b.startsWith("# ")) return `<h1>${b.slice(2)}</h1>`;
-    // Inline formatting
-    b = b
-      .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-      .replace(/\*(.+?)\*/g, "<em>$1</em>")
-      .replace(/`([^`]+)`/g, "<code>$1</code>")
-      .replace(/!\[([^\]]*)\]\((\S+?)(?:\s+"([^"]*)")?\)/g, (_m, alt, src, title) => {
-        let style = "max-width:100%;border-radius:6px;margin:0.5rem 0";
-        if (title) {
-          for (const part of title.split("|")) {
-            const [k, v] = part.split(":");
-            if (k === "float") style += `;float:${v};margin:${v === "right" ? "0 0 0.5rem 0.75rem" : "0 0.75rem 0.5rem 0"}`;
-            else if (k === "width") style += `;width:${v};max-width:${v}`;
-          }
-        }
-        return `<img src="${src}" alt="${alt}" style="${style}" />`;
-      })
-      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" style="color:var(--primary);text-decoration:underline">$1</a>')
-      .replace(/\n/g, "<br>");
-    return `<p>${b}</p>`;
-  }).join("\n");
-}
-
 // Fallback to env vars for backwards compatibility — overridden by props from server
 const PREVIEW_SITE_URL_DEFAULT = process.env.NEXT_PUBLIC_PREVIEW_SITE_URL ?? "";
 const PREVIEW_IN_IFRAME_DEFAULT = process.env.NEXT_PUBLIC_PREVIEW_IN_IFRAME === "true";
@@ -1520,61 +1488,26 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
 
       {/* Editor body */}
       <div style={sideBySide && sourceDoc ? { display: "flex", gap: 0 } : undefined}>
-        {/* Source document pane (read-only) */}
+        {/* Source document pane (read-only) — mirrors the editor with locked fields */}
         {sideBySide && sourceDoc && (
-          <div style={{
+          <div className="doc-editor-body" style={{
             flex: "0 0 50%", maxWidth: "50%", borderRight: "2px solid var(--border)",
-            padding: "2rem 1.5rem", overflowY: "auto",
-            background: "var(--muted)", fontSize: "0.85rem",
+            overflowY: "auto", opacity: 0.85,
           }}>
-            <p style={{ fontSize: "0.65rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted-foreground)", marginBottom: "1rem" }}>
-              Source ({(initialDoc as any).translationOf})
-            </p>
-            {/* Spacer to align with the right pane's metadata bar + field chrome */}
-            <div style={{ height: "2.5rem" }} />
-            {colConfig.fields.map((field) => {
-              const val = sourceDoc[field.name];
-              if (val === undefined || val === null || val === "") return null;
-              return (
-                <div key={field.name} style={{ marginBottom: "2rem" }}>
-                  <p style={{ fontSize: "0.65rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted-foreground)", marginBottom: "0.5rem" }}>
-                    {field.label || field.name}
-                  </p>
-                  {(field.type === "richtext" || field.type === "htmldoc") ? (
-                    <div
-                      style={{ fontSize: "0.85rem", lineHeight: 1.6, color: "var(--foreground)", maxWidth: "none" }}
-                      ref={(el) => {
-                        if (!el) return;
-                        const raw = String(val);
-                        const html = /<(?:p|h[1-6]|div|ul|ol|table|blockquote)\b/i.test(raw) ? raw : miniMarkdownToHtml(raw);
-                        if (el.innerHTML !== html) el.innerHTML = html;
-                        // Style headings inline since prose classes may not be loaded
-                        el.querySelectorAll("h1").forEach(h => { h.style.fontSize = "1.5rem"; h.style.fontWeight = "700"; h.style.margin = "0 0 0.5rem"; });
-                        el.querySelectorAll("h2").forEach(h => { h.style.fontSize = "1.25rem"; h.style.fontWeight = "600"; h.style.margin = "0 0 0.5rem"; });
-                        el.querySelectorAll("h3").forEach(h => { h.style.fontSize = "1.1rem"; h.style.fontWeight = "600"; h.style.margin = "0 0 0.5rem"; });
-                        el.querySelectorAll("a").forEach(a => { (a as HTMLElement).style.color = "var(--primary)"; (a as HTMLElement).style.textDecoration = "underline"; });
-                        el.querySelectorAll("code").forEach(c => { (c as HTMLElement).style.background = "rgba(255,255,255,0.08)"; (c as HTMLElement).style.padding = "1px 4px"; (c as HTMLElement).style.borderRadius = "3px"; (c as HTMLElement).style.fontSize = "0.8rem"; });
-                        el.querySelectorAll("p").forEach(p => { p.style.margin = "0 0 0.75rem"; });
-                      }}
-                    />
-                  ) : field.type === "image" ? (
-                    <img src={String(val)} alt="" style={{ maxWidth: "100%", borderRadius: "6px" }} />
-                  ) : field.type === "textarea" ? (
-                    <p style={{ fontSize: "0.85rem", color: "var(--foreground)", margin: 0, whiteSpace: "pre-wrap", lineHeight: 1.6 }}>
-                      {String(val)}
-                    </p>
-                  ) : typeof val === "object" ? (
-                    <pre style={{ fontSize: "0.75rem", color: "var(--foreground)", margin: 0, whiteSpace: "pre-wrap", fontFamily: "monospace", opacity: 0.7 }}>
-                      {JSON.stringify(val, null, 2)}
-                    </pre>
-                  ) : (
-                    <p style={{ fontSize: "0.9rem", color: "var(--foreground)", margin: 0 }}>
-                      {String(val)}
-                    </p>
-                  )}
-                </div>
-              );
-            })}
+            <div className="flex gap-6 text-xs text-muted-foreground font-mono pb-8 border-b border-border">
+              <span>Source: {(initialDoc as any).translationOf}</span>
+            </div>
+            {colConfig.fields.map((field) => (
+              <div key={field.name} className="space-y-1.5" style={{ paddingTop: "2rem" }}>
+                <FieldEditor
+                  field={field}
+                  value={sourceDoc[field.name]}
+                  onChange={() => {}}
+                  locked={true}
+                  blocksConfig={blocksConfig}
+                />
+              </div>
+            ))}
           </div>
         )}
         <div style={sideBySide && sourceDoc ? { flex: "0 0 50%", maxWidth: "50%" } : undefined}>
