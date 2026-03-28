@@ -4,7 +4,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { MessageList, type ChatMessageUI, type ToolCall } from "./message-list";
 import { ChatInput } from "./chat-input";
 import { WelcomeScreen } from "./welcome-screen";
-import { Pencil, Check, X } from "lucide-react";
+import { Pencil, Check, X, Trash2 } from "lucide-react";
 
 interface ChatInterfaceProps {
   collections: Array<{ name: string; label: string }>;
@@ -299,6 +299,17 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
     } catch { /* ignore */ }
   }
 
+  async function deleteConversation(id: string) {
+    try {
+      await fetch(`/api/cms/chat/conversations/${id}`, { method: "DELETE" });
+      setConversations((prev) => prev.filter((c) => c.id !== id));
+      // If we deleted the active conversation, start fresh
+      if (id === conversationId) {
+        handleNewConversation();
+      }
+    } catch { /* ignore */ }
+  }
+
   const handleSuggestionClick = useCallback(
     (message: string) => {
       // If the suggestion ends with a space (e.g. "Search my content for "),
@@ -375,6 +386,7 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
                     isActive={c.id === conversationId}
                     onLoad={() => loadConversation(c.id)}
                     onRename={(newTitle) => renameConversation(c.id, newTitle)}
+                    onDelete={() => deleteConversation(c.id)}
                   />
                 ))
               )}
@@ -401,12 +413,13 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
   );
 }
 
-function HistoryItem({ id, title, updatedAt, isActive, onLoad, onRename }: {
+function HistoryItem({ id, title, updatedAt, isActive, onLoad, onRename, onDelete }: {
   id: string; title: string; updatedAt: string; isActive: boolean;
-  onLoad: () => void; onRename: (t: string) => void;
+  onLoad: () => void; onRename: (t: string) => void; onDelete: () => void;
 }) {
   const [editing, setEditing] = useState(false);
   const [editValue, setEditValue] = useState(title);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -472,20 +485,48 @@ function HistoryItem({ id, title, updatedAt, isActive, onLoad, onRename }: {
           {new Date(updatedAt).toLocaleString("da-DK", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
         </div>
       </button>
-      <button
-        onClick={(e) => { e.stopPropagation(); setEditing(true); }}
-        title="Rename"
-        style={{
-          background: "none", border: "none", cursor: "pointer",
-          color: "var(--muted-foreground)", padding: "8px 12px",
-          opacity: 0.5,
-        }}
-        className="hover:opacity-100"
-        onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }}
-        onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.5"; }}
-      >
-        <Pencil style={{ width: "12px", height: "12px" }} />
-      </button>
+      {confirmDelete ? (
+        <div style={{ display: "flex", alignItems: "center", gap: "4px", padding: "0 8px", flexShrink: 0 }}>
+          <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Delete?</span>
+          <button onClick={(e) => { e.stopPropagation(); onDelete(); }}
+            style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
+              border: "none", background: "var(--destructive)", color: "#fff",
+              cursor: "pointer", lineHeight: 1 }}>Yes</button>
+          <button onClick={(e) => { e.stopPropagation(); setConfirmDelete(false); }}
+            style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
+              border: "1px solid var(--border)", background: "transparent",
+              color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
+        </div>
+      ) : (
+        <>
+          <button
+            onClick={(e) => { e.stopPropagation(); setEditing(true); }}
+            title="Rename"
+            style={{
+              background: "none", border: "none", cursor: "pointer",
+              color: "var(--muted-foreground)", padding: "8px 6px",
+              opacity: 0.5,
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.5"; }}
+          >
+            <Pencil style={{ width: "12px", height: "12px" }} />
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); setConfirmDelete(true); }}
+            title="Delete"
+            style={{
+              background: "none", border: "none", cursor: "pointer",
+              color: "var(--muted-foreground)", padding: "8px 6px",
+              opacity: 0.5,
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.5"; }}
+          >
+            <Trash2 style={{ width: "12px", height: "12px" }} />
+          </button>
+        </>
+      )}
     </div>
   );
 }
