@@ -20,7 +20,16 @@ interface Doc {
   slug: string;
   data: Record<string, unknown>;
   status?: string;
+  locale?: string;
+  translationOf?: string;
 }
+
+// ── i18n config ────────────────────────────────────────────
+
+const DEFAULT_LOCALE = "da";
+const LOCALES = ["da", "en"];
+const LOCALE_LABELS: Record<string, string> = { da: "Dansk", en: "English" };
+const LOCALE_FLAGS: Record<string, string> = { da: "🇩🇰", en: "🇬🇧" };
 
 // ── Read content ────────────────────────────────────────────
 
@@ -31,15 +40,38 @@ function readCollection(name: string): Doc[] {
     .filter((f) => f.endsWith(".json"))
     .map((f) => {
       const raw = JSON.parse(readFileSync(join(dir, f), "utf-8"));
-      return { slug: f.replace(/\.json$/, ""), data: raw.data ?? raw, status: raw.status };
+      return {
+        slug: f.replace(/\.json$/, ""),
+        data: raw.data ?? raw,
+        status: raw.status,
+        locale: raw.locale,
+        translationOf: raw.translationOf,
+      };
     })
     .filter((d) => d.status !== "draft" || INCLUDE_DRAFTS);
 }
 
-const posts = readCollection("posts").sort((a, b) =>
-  String(b.data.date ?? "").localeCompare(String(a.data.date ?? ""))
-);
-const pages = readCollection("pages");
+const allPosts = readCollection("posts");
+const allPages = readCollection("pages");
+
+/** Get docs for a specific locale (source docs in that locale + translations into it) */
+function getLocalized(docs: Doc[], locale: string): Doc[] {
+  return docs.filter((d) => {
+    const docLocale = d.locale || DEFAULT_LOCALE;
+    return docLocale === locale;
+  });
+}
+
+/** Find the alternate-locale version of a doc */
+function getAlternate(doc: Doc, targetLocale: string, allDocs: Doc[]): Doc | undefined {
+  if (doc.translationOf) {
+    // This is a translation — find siblings or source
+    if (targetLocale === DEFAULT_LOCALE) return allDocs.find(d => d.slug === doc.translationOf);
+    return allDocs.find(d => d.translationOf === doc.translationOf && d.locale === targetLocale);
+  }
+  // This is a source — find translation
+  return allDocs.find(d => d.translationOf === doc.slug && d.locale === targetLocale);
+}
 
 // ── Shared CSS (extracted from existing dist) ───────────────
 
@@ -99,9 +131,24 @@ const DRAFT_BADGE = `<span style="display:inline-block;background:#F7BB2E;color:
 
 function bp(p: string): string { return `${BASE_PATH}${p}`; }
 
-function layout(title: string, content: string, description?: string): string {
+/** Get the URL prefix for a locale (default locale = no prefix) */
+function localePrefix(locale: string): string {
+  return locale === DEFAULT_LOCALE ? "" : `/${locale}`;
+}
+
+function layout(title: string, content: string, locale: string, alternateUrl?: string, description?: string): string {
+  const prefix = localePrefix(locale);
+  const altLocale = locale === "da" ? "en" : "da";
+  const altFlag = LOCALE_FLAGS[altLocale] ?? altLocale.toUpperCase();
+  const altLabel = LOCALE_LABELS[altLocale] ?? altLocale;
+  const altHref = alternateUrl ?? `${bp(localePrefix(altLocale))}/`;
+  const navLabels = locale === "da"
+    ? { posts: "Blog Posts", about: "Om os" }
+    : { posts: "Blog Posts", about: "About" };
+  const dateLocale = locale === "da" ? "da-DK" : "en-US";
+
   return `<!DOCTYPE html>
-<html lang="da">
+<html lang="${locale}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -110,15 +157,20 @@ function layout(title: string, content: string, description?: string): string {
   <meta property="og:title" content="${esc(title)} — Simple Blog">
   ${description ? `<meta property="og:description" content="${esc(description)}">` : ""}
   <meta property="og:type" content="website">
+  ${alternateUrl ? `<link rel="alternate" hreflang="${altLocale}" href="${altHref}">` : ""}
+  <link rel="alternate" hreflang="${locale}" href="${bp(prefix)}/">
   <style>${CSS}</style>
 </head>
 <body>
   <header>
     <div class="container">
       <nav>
-        <a href="${bp("/")}" class="site-title">Simple Blog</a>
-        <a href="${bp("/posts/")}" class="nav-link">Blog Posts</a>
-        <a href="${bp("/about/")}" class="nav-link">About</a>
+        <a href="${bp(prefix)}/" class="site-title">Simple Blog</a>
+        <a href="${bp(prefix)}/posts/" class="nav-link">${navLabels.posts}</a>
+        <a href="${bp(prefix === "" ? "/om-os/" : `${prefix}/about/`)}" class="nav-link">${navLabels.about}</a>
+        <a href="${altHref}" class="nav-link" style="margin-left:auto; font-size:0.8rem; border:1px solid var(--color-border); padding:0.2rem 0.6rem; border-radius:4px;" title="${altLabel}">
+          ${altFlag} ${altLocale.toUpperCase()}
+        </a>
       </nav>
     </div>
   </header>
@@ -138,9 +190,10 @@ function esc(s: unknown): string {
   return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
-function formatDate(d: unknown): string {
+function formatDate(d: unknown, locale = "da"): string {
   if (!d) return "";
-  try { return new Date(String(d)).toLocaleDateString("da-DK", { year: "numeric", month: "long", day: "numeric" }); }
+  const loc = locale === "da" ? "da-DK" : locale === "en" ? "en-US" : `${locale}-${locale.toUpperCase()}`;
+  try { return new Date(String(d)).toLocaleDateString(loc, { year: "numeric", month: "long", day: "numeric" }); }
   catch { return String(d); }
 }
 
@@ -266,70 +319,94 @@ function write(relPath: string, html: string): void {
   console.log(`  ${relPath}`);
 }
 
-// ── Build pages ─────────────────────────────────────────────
+// ── Build pages (per locale) ────────────────────────────────
 
 console.log(`Building Simple Blog → ${OUT_DIR}/\n`);
+console.log(`Locales: ${LOCALES.map(l => `${LOCALE_FLAGS[l]} ${l.toUpperCase()}`).join(" · ")}\n`);
 
-// Homepage — latest posts
-write("index.html", layout("Home", `
-  <div class="prose">
-    <h1>Simple Blog</h1>
-    <p>A test site for webhouse.app with ${posts.length} posts and ${pages.length} pages.</p>
-  </div>
-  <h2 style="font-size: 1.25rem; font-weight: 700; margin: 2rem 0 1rem;">Latest Posts</h2>
-  <div class="card-grid">
-    ${posts.slice(0, 12).map((p) => `
-      <div class="card">
-        <h2><a href="${bp(`/posts/${p.slug}/`)}">${esc(p.data.title)}</a>${p.status === "draft" ? DRAFT_BADGE : ""}</h2>
-        <div class="meta">${formatDate(p.data.date)}${p.data.author ? ` · ${esc(p.data.author)}` : ""}</div>
-        ${p.data.excerpt ? `<div class="excerpt">${esc(p.data.excerpt)}</div>` : ""}
-      </div>
-    `).join("")}
-  </div>
-`, `Simple Blog — ${posts.length} posts`));
+for (const locale of LOCALES) {
+  const prefix = localePrefix(locale);
+  const outPrefix = prefix ? prefix.slice(1) + "/" : ""; // "en/" or ""
+  const posts = getLocalized(allPosts, locale).sort((a, b) =>
+    String(b.data.date ?? "").localeCompare(String(a.data.date ?? ""))
+  );
+  const pages = getLocalized(allPages, locale);
+  const altLocale = locale === "da" ? "en" : "da";
 
-// Posts index
-write("posts/index.html", layout("All Posts", `
-  <div class="prose"><h1>All Posts</h1></div>
-  <div class="card-grid">
-    ${posts.map((p) => `
-      <div class="card">
-        <h2><a href="${bp(`/posts/${p.slug}/`)}">${esc(p.data.title)}</a>${p.status === "draft" ? DRAFT_BADGE : ""}</h2>
-        <div class="meta">${formatDate(p.data.date)}${p.data.author ? ` · ${esc(p.data.author)}` : ""}</div>
-        ${p.data.excerpt ? `<div class="excerpt">${esc(p.data.excerpt)}</div>` : ""}
-      </div>
-    `).join("")}
-  </div>
-`, `All ${posts.length} blog posts`));
+  console.log(`  ${LOCALE_FLAGS[locale]} ${locale.toUpperCase()}: ${posts.length} posts, ${pages.length} pages`);
 
-// Individual posts
-for (const post of posts) {
-  const isDraft = post.status === "draft";
-  write(`posts/${post.slug}/index.html`, layout(String(post.data.title), `
-    ${isDraft ? DRAFT_BANNER : ""}
-    <article>
-      <div class="post-header">
-        <h1>${esc(post.data.title)}</h1>
-        <div class="post-meta">${formatDate(post.data.date)}${post.data.author ? ` · ${esc(post.data.author)}` : ""}</div>
-      </div>
-      <div class="prose">${renderContent(post.data.content)}</div>
-    </article>
-    <p style="margin-top: 3rem;"><a href="${bp("/posts/")}">← All posts</a></p>
-  `, String(post.data.excerpt ?? "")));
-}
+  // Homepage — latest posts
+  const homeAlt = `${bp(localePrefix(altLocale))}/`;
+  const homeTitle = locale === "da" ? "Hjem" : "Home";
+  const postsLabel = locale === "da" ? "Seneste indlæg" : "Latest Posts";
+  write(`${outPrefix}index.html`, layout(homeTitle, `
+    <div class="prose">
+      <h1>Simple Blog</h1>
+      <p>${locale === "da"
+        ? `Et testsite for webhouse.app med ${posts.length} indlæg og ${pages.length} sider.`
+        : `A test site for webhouse.app with ${posts.length} posts and ${pages.length} pages.`}</p>
+    </div>
+    <h2 style="font-size: 1.25rem; font-weight: 700; margin: 2rem 0 1rem;">${postsLabel}</h2>
+    <div class="card-grid">
+      ${posts.slice(0, 12).map((p) => `
+        <div class="card">
+          <h2><a href="${bp(`${prefix}/posts/${p.slug}/`)}">${esc(p.data.title)}</a>${p.status === "draft" ? DRAFT_BADGE : ""}</h2>
+          <div class="meta">${formatDate(p.data.date, locale)}${p.data.author ? ` · ${esc(p.data.author)}` : ""}</div>
+          ${p.data.excerpt ? `<div class="excerpt">${esc(p.data.excerpt)}</div>` : ""}
+        </div>
+      `).join("")}
+    </div>
+  `, locale, homeAlt, `Simple Blog — ${posts.length} posts`));
 
-// Pages
-for (const page of pages) {
-  const isDraft = page.status === "draft";
-  const slug = page.slug === "home" ? "" : page.slug;
-  const path = slug ? `${slug}/index.html` : "about/index.html";
-  write(path, layout(String(page.data.title), `
-    ${isDraft ? DRAFT_BANNER : ""}
-    <article class="prose">
-      <h1>${esc(page.data.title)}</h1>
-      ${renderContent(page.data.content)}
-    </article>
-  `));
+  // Posts index
+  const allPostsTitle = locale === "da" ? "Alle indlæg" : "All Posts";
+  write(`${outPrefix}posts/index.html`, layout(allPostsTitle, `
+    <div class="prose"><h1>${allPostsTitle}</h1></div>
+    <div class="card-grid">
+      ${posts.map((p) => `
+        <div class="card">
+          <h2><a href="${bp(`${prefix}/posts/${p.slug}/`)}">${esc(p.data.title)}</a>${p.status === "draft" ? DRAFT_BADGE : ""}</h2>
+          <div class="meta">${formatDate(p.data.date, locale)}${p.data.author ? ` · ${esc(p.data.author)}` : ""}</div>
+          ${p.data.excerpt ? `<div class="excerpt">${esc(p.data.excerpt)}</div>` : ""}
+        </div>
+      `).join("")}
+    </div>
+  `, locale, `${bp(localePrefix(altLocale))}/posts/`, `${allPostsTitle} — ${posts.length}`));
+
+  // Individual posts
+  for (const post of posts) {
+    const isDraft = post.status === "draft";
+    const alt = getAlternate(post, altLocale, allPosts);
+    const altUrl = alt ? `${bp(localePrefix(altLocale))}/posts/${alt.slug}/` : undefined;
+    const backLabel = locale === "da" ? "← Alle indlæg" : "← All posts";
+    write(`${outPrefix}posts/${post.slug}/index.html`, layout(String(post.data.title), `
+      ${isDraft ? DRAFT_BANNER : ""}
+      <article>
+        <div class="post-header">
+          <h1>${esc(post.data.title)}</h1>
+          <div class="post-meta">${formatDate(post.data.date, locale)}${post.data.author ? ` · ${esc(post.data.author)}` : ""}</div>
+        </div>
+        <div class="prose">${renderContent(post.data.content)}</div>
+      </article>
+      <p style="margin-top: 3rem;"><a href="${bp(`${prefix}/posts/`)}">${backLabel}</a></p>
+    `, locale, altUrl, String(post.data.excerpt ?? "")));
+  }
+
+  // Pages
+  for (const page of pages) {
+    const isDraft = page.status === "draft";
+    const slug = page.slug === "home" ? "" : page.slug;
+    const path = slug ? `${outPrefix}${slug}/index.html` : `${outPrefix}about/index.html`;
+    const alt = getAlternate(page, altLocale, allPages);
+    const altUrl = alt ? `${bp(localePrefix(altLocale))}/${alt.slug === "home" ? "about" : alt.slug}/` : undefined;
+    write(path, layout(String(page.data.title), `
+      ${isDraft ? DRAFT_BANNER : ""}
+      <article class="prose">
+        <h1>${esc(page.data.title)}</h1>
+        ${renderContent(page.data.content)}
+      </article>
+    `, locale, altUrl));
+  }
 }
 
 // Copy uploads to dist (so images work in built site)
@@ -341,4 +418,4 @@ if (existsSync(uploadsDir)) {
   console.log(`  uploads/ (${count} files copied)`);
 }
 
-console.log(`\nDone! ${posts.length} posts, ${pages.length} pages → ${OUT_DIR}/`);
+console.log(`\nDone! ${LOCALES.length} locales × content → ${OUT_DIR}/`);
