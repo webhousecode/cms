@@ -141,6 +141,19 @@ export async function addSite(orgId: string, site: SiteEntry): Promise<void> {
   await saveRegistry(registry);
 }
 
+export async function updateSite(orgId: string, siteId: string, updates: Partial<Pick<SiteEntry, "name" | "previewUrl">>): Promise<SiteEntry | null> {
+  const registry = await loadRegistry();
+  if (!registry) throw new Error("No registry");
+  const org = findOrg(registry, orgId);
+  if (!org) return null;
+  const site = org.sites.find((s) => s.id === siteId);
+  if (!site) return null;
+  if (updates.name !== undefined) site.name = updates.name;
+  if (updates.previewUrl !== undefined) site.previewUrl = updates.previewUrl;
+  await saveRegistry(registry);
+  return site;
+}
+
 export async function removeSite(orgId: string, siteId: string): Promise<void> {
   const registry = await loadRegistry();
   if (!registry) throw new Error("No registry");
