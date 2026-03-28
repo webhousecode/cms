@@ -1,0 +1,34 @@
+{
+  "slug": "home",
+  "status": "published",
+  "data": {
+    "title": "Welcome",
+    "sections": [
+      {
+        "_block": "hero",
+        "tagline": "Build Fast. Ship Today.",
+        "description": "A production-ready static site boilerplate powered by webhouse.app CMS. Edit content in the admin, build with one command.",
+        "ctas": [
+          { "label": "Get Started", "href": "/blog/" },
+          { "label": "Learn More", "href": "/about/" }
+        ]
+      },
+      {
+        "_block": "features",
+        "title": "Why This Stack",
+        "items": [
+          { "icon": "⚡", "title": "Zero JavaScript", "description": "Pure static HTML + CSS. No framework, no hydration, no bundle size." },
+          { "icon": "✏️", "title": "CMS-Managed", "description": "Edit content in webhouse.app admin. Richtext, blocks, media, SEO — all built in." },
+          { "icon": "🗺️", "title": "Maps Included", "description": "OpenStreetMap integration with Leaflet. No API key required." },
+          { "icon": "🚀", "title": "Deploy Anywhere", "description": "Static HTML deploys to GitHub Pages, Netlify, Vercel, Fly.io, or any web server." }
+        ]
+      }
+    ],
+    "_seo": {
+      "metaTitle": "My Site — Build Fast, Ship Today",
+      "metaDescription": "A production-ready static site boilerplate powered by webhouse.app CMS."
+    }
+  },
+  "id": "home",
+  "_fieldMeta": {}
+}

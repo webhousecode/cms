@@ -1,0 +1,18 @@
+{
+  "slug": "getting-started",
+  "status": "published",
+  "data": {
+    "title": "Getting Started with the Static Boilerplate",
+    "excerpt": "Everything you need to know to start building with this static site boilerplate.",
+    "content": "## Quick Start\n\n```bash\nnpm install\nnpx tsx build.ts\n```\n\nThat's it. Your site is now in `dist/` — open `dist/index.html` in a browser.\n\n## Project Structure\n\n- `cms.config.ts` — collection and field definitions\n- `build.ts` — static site generator\n- `content/` — JSON content files (one per document)\n- `public/uploads/` — media files (images, PDFs, etc.)\n- `dist/` — build output (deploy this folder)\n\n## Adding Content\n\nYou can edit content in two ways:\n\n1. **CMS Admin** — run `npx @webhouse/cms-admin-cli` and edit visually\n2. **JSON files** — edit `content/posts/*.json` directly\n\n## Adding a New Post\n\nCreate a new file in `content/posts/`:\n\n```json\n{\n  \"slug\": \"my-new-post\",\n  \"status\": \"published\",\n  \"data\": {\n    \"title\": \"My New Post\",\n    \"excerpt\": \"A short summary.\",\n    \"content\": \"## Hello\\n\\nThis is my post.\",\n    \"date\": \"2026-03-28\",\n    \"author\": \"Your Name\"\n  },\n  \"id\": \"my-new-post\",\n  \"_fieldMeta\": {}\n}\n```\n\nThen rebuild: `npx tsx build.ts`",
+    "date": "2026-03-28",
+    "author": "webhouse.app",
+    "tags": ["getting-started", "tutorial"],
+    "_seo": {
+      "metaTitle": "Getting Started with the Static Boilerplate",
+      "metaDescription": "Everything you need to know to start building with the webhouse.app static site boilerplate."
+    }
+  },
+  "id": "getting-started",
+  "_fieldMeta": {}
+}

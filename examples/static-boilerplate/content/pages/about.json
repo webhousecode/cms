@@ -1,0 +1,14 @@
+{
+  "slug": "about",
+  "status": "published",
+  "data": {
+    "title": "About",
+    "content": "## About This Site\n\nThis is a static site built with the **webhouse.app** CMS boilerplate. It demonstrates:\n\n- Richtext content with markdown\n- Block-based page sections (hero, features, CTA)\n- Blog posts with tags, excerpts, and cover images\n- OpenStreetMap embeds\n- SEO metadata and JSON-LD structured data\n- Dark mode support via `prefers-color-scheme`\n- WebP image optimization\n\n## How It Works\n\n1. Content is stored as JSON files in `content/`\n2. `build.ts` reads the JSON and generates static HTML\n3. Run `npx tsx build.ts` to build\n4. Deploy the `dist/` folder anywhere\n\n## Stack\n\n| Component | Technology |\n|-----------|------------|\n| CMS | webhouse.app |\n| Build | TypeScript (tsx) |\n| Styling | Inline CSS (no framework) |\n| Maps | OpenStreetMap + Leaflet |\n| Images | WebP variants via Sharp |",
+    "_seo": {
+      "metaTitle": "About — My Site",
+      "metaDescription": "Learn about this static site built with the webhouse.app CMS boilerplate."
+    }
+  },
+  "id": "about",
+  "_fieldMeta": {}
+}
