@@ -63,7 +63,8 @@ export default function InteractivesPage() {
   const [uploading, setUploading] = useState(false);
   const [confirmTrash, setConfirmTrash] = useState<InteractiveMeta | null>(null);
   const [query, setQuery] = useState("");
-  const [view, setView] = useState<ViewMode>("grid");
+  const [view, setViewRaw] = useState<ViewMode>("grid");
+  const setView = (v: ViewMode) => { setViewRaw(v); localStorage.setItem("cms-interactives-view", v); };
   const [statusFilter, setStatusFilter] = useState<"all" | "published" | "draft">("all");
   const [sortKey, setSortKey] = useState<"name" | "status" | "size" | "updatedAt">("updatedAt");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
@@ -82,6 +83,10 @@ export default function InteractivesPage() {
   }, []);
 
   useEffect(() => { loadItems(); }, [loadItems]);
+  useEffect(() => {
+    const saved = localStorage.getItem("cms-interactives-view") as ViewMode | null;
+    if (saved === "list" || saved === "grid") setViewRaw(saved);
+  }, []);
 
   useEffect(() => {
     if (!confirmTrash) return;
