@@ -370,18 +370,20 @@ export default function InteractivesPage() {
                 />
               </div>
 
-              {/* Info */}
-              <div style={{ padding: "0.625rem 0.75rem" }}>
-                <p className="text-xs font-semibold text-foreground truncate mb-1" title={item.name}>{item.name}</p>
-                <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", fontFamily: "monospace", display: "flex", alignItems: "center", gap: "0.35rem", flexWrap: "wrap" }}>
-                  {formatSize(item.size)} &middot; {formatDate(item.updatedAt)}
-                  <StatusBadge status={item.status} />
-                  {item.locale && <span style={{ fontSize: "0.6rem", fontWeight: 600, padding: "0 4px", borderRadius: "3px", background: "rgba(247,187,46,0.12)", color: "#F7BB2E" }}>{item.locale.toUpperCase()}</span>}
-                </p>
+              {/* Info + actions */}
+              <div style={{ padding: "0.625rem 0.75rem", display: "flex", alignItems: "flex-start", justifyContent: "space-between" }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p className="text-xs font-semibold text-foreground truncate mb-1" title={item.name}>{item.name}</p>
+                  <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", fontFamily: "monospace", display: "flex", alignItems: "center", gap: "0.35rem", flexWrap: "wrap" }}>
+                    {formatSize(item.size)} &middot; {formatDate(item.updatedAt)}
+                    <StatusBadge status={item.status} />
+                    {item.locale && <span style={{ fontSize: "0.6rem", fontWeight: 600, padding: "0 4px", borderRadius: "3px", background: "rgba(247,187,46,0.12)", color: "#F7BB2E" }}>{item.locale.toUpperCase()}</span>}
+                  </p>
+                </div>
+                <div onClick={(e) => e.stopPropagation()}>
+                  <ItemDropdown item={item} onEdit={() => router.push(`/admin/interactives/${item.id}`)} onTogglePublish={() => togglePublish(item)} onClone={() => cloneItem(item)} onTrash={() => setConfirmTrash(item)} />
+                </div>
               </div>
-
-              {/* Actions menu */}
-              <ActionsMenu item={item} onEdit={() => router.push(`/admin/interactives/${item.id}`)} onTogglePublish={() => togglePublish(item)} onClone={() => cloneItem(item)} onTrash={() => setConfirmTrash(item)} />
             </div>
           ))}
         </div>
