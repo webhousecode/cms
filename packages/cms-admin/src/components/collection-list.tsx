@@ -448,10 +448,10 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" style={{ gridAutoRows: "minmax(10rem, auto)" }}>
           {filtered.map((doc) => {
             const title = String(doc.data[titleField] ?? doc.data["title"] ?? doc.slug);
-            // Only build preview URL if collection has a urlPrefix (meaning it renders pages)
+            // Build preview URL — use urlPrefix if defined, otherwise guess /<collection>/<slug>
             let previewUrl = "";
-            if (urlPrefix && previewBase) {
-              const prefix = urlPrefix.replace(/\/$/, "");
+            if (previewBase) {
+              const prefix = (urlPrefix ?? `/${collection}`).replace(/\/$/, "");
               const isHomepage = (prefix === "" || prefix === "/") && (doc.slug === "home" || doc.slug === "index");
               const category = typeof doc.data.category === "string" ? doc.data.category : "";
               const prefixBase = prefix.split("/").pop() ?? "";
