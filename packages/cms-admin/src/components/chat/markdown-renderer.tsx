@@ -369,10 +369,31 @@ function renderBlock(block: Block, key: number): React.ReactNode {
 
 // ── Inline rendering ─────────────────────────────────────
 
-/** Render inline markdown: bold, italic, code, links, strikethrough */
+/** Small pill link for document actions */
+function DocPill({ href, label, variant }: { href: string; label: string; variant: "edit" | "view" }) {
+  return (
+    <a
+      href={href}
+      target={variant === "view" ? "_blank" : undefined}
+      rel={variant === "view" ? "noopener noreferrer" : undefined}
+      style={{
+        display: "inline-flex", alignItems: "center", gap: "3px",
+        padding: "1px 7px", borderRadius: "4px", fontSize: "0.65rem", fontWeight: 500,
+        textDecoration: "none", lineHeight: "1.5", marginLeft: "3px",
+        background: variant === "edit" ? "color-mix(in srgb, var(--primary) 15%, transparent)" : "color-mix(in srgb, var(--foreground) 10%, transparent)",
+        color: variant === "edit" ? "var(--primary)" : "var(--muted-foreground)",
+        border: `1px solid ${variant === "edit" ? "color-mix(in srgb, var(--primary) 30%, transparent)" : "var(--border)"}`,
+      }}
+    >
+      {label}
+    </a>
+  );
+}
+
+/** Render inline markdown: bold, italic, code, links, strikethrough, doc refs */
 function InlineRich({ text }: { text: string }) {
-  // Split on: `code`, **bold**, *italic*, ~~strike~~, [link](url)
-  const regex = /(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*|~~[^~]+~~|\[[^\]]+\]\([^)]+\))/g;
+  // Split on: `code`, **bold**, *italic*, ~~strike~~, [link](url), [doc:col/slug|Title]
+  const regex = /(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*|~~[^~]+~~|\[doc:[^\]]+\]|\[[^\]]+\]\([^)]+\))/g;
   const parts: React.ReactNode[] = [];
   let lastIndex = 0;
   let match: RegExpExecArray | null;
@@ -408,6 +429,18 @@ function InlineRich({ text }: { text: string }) {
       parts.push(<em key={match.index}>{m.slice(1, -1)}</em>);
     } else if (m.startsWith("~~") && m.endsWith("~~")) {
       parts.push(<s key={match.index} style={{ opacity: 0.6 }}>{m.slice(2, -2)}</s>);
+    } else if (m.startsWith("[doc:")) {
+      // [doc:collection/slug] or [doc:collection/slug|Title]
+      const docMatch = m.match(/^\[doc:([^/]+)\/([^|\]]+)(?:\|([^\]]*))?\]$/);
+      if (docMatch) {
+        const [, col, slug] = docMatch;
+        parts.push(
+          <span key={match.index} style={{ whiteSpace: "nowrap" }}>
+            <DocPill href={`/admin/${col}/${slug}`} label="Edit" variant="edit" />
+            <DocPill href={`/${col}/${slug}`} label="View" variant="view" />
+          </span>
+        );
+      }
     } else if (m.startsWith("[")) {
       const linkMatch = m.match(/\[([^\]]+)\]\(([^)]+)\)/);
       if (linkMatch) {

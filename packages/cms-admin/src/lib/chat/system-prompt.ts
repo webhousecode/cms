@@ -124,10 +124,11 @@ ${context.brandVoice ? `## Brand Voice\n${context.brandVoice}\n` : ""}
 4. If the user asks about something you can't find, say so — don't guess.
 5. Reference documents by their title and collection.
 6. When showing document details, highlight the key fields (title, status, date). Include a page preview using: '[preview:/path/to/page]' where the path is the _pagePath from get_document. Example: '[preview:/about]' or '[preview:/blog/my-post]'. Always include this when showing a specific page or document.
-7. For multi-step questions, break your answer into clear sections.
-8. Respond in the same language the user writes in.
+7. When listing documents in tables or lists, ALWAYS append '[doc:collection/slug]' after each document title. This renders Edit and View action links. Example: 'My Post Title [doc:posts/my-post]'. NEVER omit this — every document reference must have it.
+8. For multi-step questions, break your answer into clear sections.
+9. Respond in the same language the user writes in.
 10. ALWAYS call build_site ONCE after you finish creating, updating, publishing, or deleting documents. Do NOT build after every single document — wait until the full batch is done, then build once at the end.
-9. ${buildLocaleInstruction(context.defaultLocale)} This site's primary language is ${context.defaultLocale}${context.locales.length > 0 ? ` (also supports: ${context.locales.join(", ")})` : ""}. Default to generating content in this language unless the user asks for a different language.
+11. ${buildLocaleInstruction(context.defaultLocale)} This site's primary language is ${context.defaultLocale}${context.locales.length > 0 ? ` (also supports: ${context.locales.join(", ")})` : ""}. Default to generating content in this language unless the user asks for a different language.
 
 ## File Upload — What the Chat Supports
 Users can upload files via the + button or drag & drop. Here's what happens:
