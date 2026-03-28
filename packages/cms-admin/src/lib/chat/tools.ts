@@ -571,26 +571,57 @@ export async function buildChatTools(): Promise<ToolPair[]> {
         const existing = await cms.content.findBySlug(collection, slug).catch(() => null);
         if (existing) return `Error: Document with slug "${slug}" already exists in ${collection}.`;
 
-        // Auto-generate _seo from content
-        const title = String(data.title ?? data.name ?? "");
-        const content = String(data.content ?? data.body ?? "");
-        if (title && !data._seo) {
-          const desc = content.replace(/[#*_\[\]()>]/g, "").trim().slice(0, 155);
-          data._seo = {
-            metaTitle: title.slice(0, 60),
-            metaDescription: desc.length > 120 ? desc : undefined,
-            keywords: [],
-            lastOptimized: new Date().toISOString(),
-          };
-        }
-
         const doc = await cms.content.create(collection, {
           slug,
           data,
           status: "draft",
         });
 
-        return `Created "${data.title ?? slug}" in ${collection} (draft).\nSlug: ${doc.slug}\nStatus: draft\nSEO: meta title and description auto-generated.`;
+        // Auto-generate _seo with AI (non-blocking — update after creation)
+        try {
+          const docTitle = String(data.title ?? data.name ?? "");
+          const docContent = String(data.content ?? data.body ?? "").slice(0, 2000);
+          if (docTitle) {
+            const { getApiKey: getKey } = await import("@/lib/ai-config");
+            const Anthropic = (await import("@anthropic-ai/sdk")).default;
+            const seoApiKey = await getKey("anthropic");
+            if (seoApiKey) {
+              const seoClient = new Anthropic({ apiKey: seoApiKey });
+              const seoRes = await seoClient.messages.create({
+                model: "claude-haiku-4-5-20251001",
+                max_tokens: 512,
+                system: "You generate SEO metadata. Return ONLY a JSON object, no explanation.",
+                messages: [{ role: "user", content: `Generate SEO for this page:\nTitle: ${docTitle}\nContent: ${docContent}\n\nReturn JSON:\n{\n  "metaTitle": "SEO title (30-60 chars)",\n  "metaDescription": "description (130-155 chars)",\n  "keywords": ["kw1", "kw2", "kw3", "kw4", "kw5"]\n}` }],
+              });
+              const raw = (seoRes.content[0] as { text: string }).text.trim();
+              const parsed = JSON.parse(raw.replace(/^```json?\n?/, "").replace(/\n?```$/, ""));
+
+              // Auto-extract OG image from content or image fields
+              const rawContent = String(data.content ?? data.body ?? "");
+              const fieldImg = String(data.heroImage ?? data.coverImage ?? data.image ?? "");
+              let ogImage = "";
+              if (fieldImg && fieldImg.startsWith("/uploads/")) {
+                ogImage = fieldImg;
+              } else {
+                const mdMatch = rawContent.match(/!\[[^\]]*\]\((\/uploads\/[^\s"]+)/);
+                if (mdMatch) ogImage = mdMatch[1];
+              }
+
+              const seoData = {
+                metaTitle: parsed.metaTitle,
+                metaDescription: parsed.metaDescription,
+                keywords: parsed.keywords,
+                ...(ogImage ? { ogImage } : {}),
+                lastOptimized: new Date().toISOString(),
+              };
+              await cms.content.update(collection, doc.id, {
+                data: { ...data, _seo: seoData },
+              });
+            }
+          }
+        } catch { /* SEO generation failed — non-fatal */ }
+
+        return `Created "${data.title ?? slug}" in ${collection} (draft).\nSlug: ${doc.slug}\nStatus: draft\nSEO: auto-optimized with AI.`;
       },
     },
 
