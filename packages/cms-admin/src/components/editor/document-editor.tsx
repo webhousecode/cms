@@ -914,7 +914,15 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
   const [generateOpen, setGenerateOpen] = useState(false);
   const [cloning, setCloning] = useState(false);
   const [retranslating, setRetranslating] = useState(false);
-  const [staleDismissed, setStaleDismissed] = useState(false);
+  // Dismiss key includes sourceUpdatedAt so a NEW source edit resets the dismiss
+  const staleDismissKey = `stale-dismissed-${initialDoc.id}-${sourceUpdatedAt ?? ""}`;
+  const [staleDismissed, setStaleDismissed] = useState(() => {
+    try { return localStorage.getItem(staleDismissKey) === "1"; } catch { return false; }
+  });
+  const dismissStale = useCallback(() => {
+    setStaleDismissed(true);
+    try { localStorage.setItem(staleDismissKey, "1"); } catch {}
+  }, [staleDismissKey]);
   const [confirmTrash, setConfirmTrash] = useState(false);
   const [locale, setLocale] = useState(initialDoc.locale ?? "");
   const [translationOf] = useState(initialDoc.translationOf ?? "");
@@ -1526,7 +1534,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
           </button>
           <button
             type="button"
-            onClick={() => setStaleDismissed(true)}
+            onClick={dismissStale}
             title="Dismiss"
             style={{
               marginLeft: "auto", padding: "0.1rem 0.3rem", borderRadius: "3px",

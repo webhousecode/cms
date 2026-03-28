@@ -41,17 +41,15 @@ export default async function DocumentPage({ params, searchParams }: Props) {
           .map(d => ({ slug: d.slug, locale: d.locale ?? null, status: d.status, updatedAt: d.updatedAt }));
       })();
 
-  // Find the most recently updated sibling — only flag stale if a sibling is NEWER than this doc
-  const newestSibling = groupId
-    ? (allDocs as any[])
-        .filter(d => d.translationGroup === groupId && d.id !== doc.id && d.status !== "trashed")
-        .sort((a: any, b: any) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())[0] ?? null
-    : (doc as any).translationOf
-      ? allDocs.find(d => d.slug === (doc as any).translationOf)
-      : null;
-  // Only pass sourceUpdatedAt if a sibling is actually newer (otherwise no stale banner)
-  const sourceDoc = newestSibling && new Date(newestSibling.updatedAt) > new Date(doc.updatedAt)
-    ? newestSibling
+  // Stale detection: only show on non-default-locale docs.
+  // Default locale is the "source of truth" — it's never stale from a translation update.
+  // This prevents the flip-flop loop where re-translate makes the other doc appear stale.
+  const docLocale = (doc as any).locale || siteConfig.defaultLocale || "en";
+  const isDefaultLocale = docLocale === (siteConfig.defaultLocale || "en");
+  const defaultLocaleSibling = isDefaultLocale ? null
+    : translations.find(t => t.locale === (siteConfig.defaultLocale || "en"));
+  const sourceDoc = defaultLocaleSibling
+    ? allDocs.find(d => d.slug === defaultLocaleSibling.slug) ?? null
     : null;
 
   const docTitle = String(doc.data?.title ?? doc.data?.name ?? doc.data?.label ?? doc.slug);
