@@ -40,6 +40,16 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
     };
   });
 
+  // ESC closes history drawer
+  useEffect(() => {
+    if (!showHistory) return;
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setShowHistory(false);
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [showHistory]);
+
   // Fetch site name
   useEffect(() => {
     fetch("/api/admin/site-config")
@@ -359,7 +369,7 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
         backgroundColor: "var(--background)",
       }}
     >
-      {/* History drawer — left side panel */}
+      {/* History drawer — left side panel (ESC to close) */}
       {showHistory && (
         <>
           {/* Backdrop */}
