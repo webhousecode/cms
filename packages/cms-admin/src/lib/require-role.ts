@@ -57,6 +57,11 @@ export async function getSessionWithSiteRole(): Promise<{
   const session = await getSessionUser(cookieStore);
   if (!session) return null;
 
+  // Dev/API token users carry their role in the JWT — no team lookup needed
+  if (session.sub === "dev-token") {
+    return { userId: session.sub, email: session.email, name: session.name, siteRole: session.role };
+  }
+
   const members = await getTeamMembers();
   const membership = members.find((m) => m.userId === session.sub);
   return {
