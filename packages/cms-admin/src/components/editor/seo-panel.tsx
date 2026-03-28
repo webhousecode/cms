@@ -7,13 +7,14 @@ import { CustomSelect } from "@/components/ui/custom-select";
 import { toast } from "sonner";
 
 interface Props {
+  collection: string;
   doc: { slug: string; data: Record<string, unknown> };
   onUpdate: (seo: SeoFields) => void;
   onSave: () => void;
   onClose: () => void;
 }
 
-export function SeoPanel({ doc, onUpdate, onSave, onClose }: Props) {
+export function SeoPanel({ collection, doc, onUpdate, onSave, onClose }: Props) {
   const seo: SeoFields = (doc.data._seo as SeoFields) ?? {};
   const [metaTitle, setMetaTitle] = useState(seo.metaTitle ?? "");
   const [metaDesc, setMetaDesc] = useState(seo.metaDescription ?? "");
@@ -97,32 +98,19 @@ Return ONLY the JSON, no explanation.`,
           if (parsed.metaTitle) setMetaTitle(parsed.metaTitle);
           if (parsed.metaDescription) setMetaDesc(parsed.metaDescription);
           if (parsed.keywords?.length) setKeywords(parsed.keywords);
-          // Auto-fill OG image from content (always re-extract on optimize)
-          {
-            const rawContent = String(doc.data.content ?? doc.data.body ?? "");
-            // Try dedicated image fields first (cleanest source)
-            const fieldImg = String(doc.data.heroImage ?? doc.data.coverImage ?? doc.data.image ?? "");
-            let picked = "";
-            if (fieldImg && fieldImg.startsWith("/uploads/")) {
-              picked = fieldImg;
-            } else {
-              // Extract from markdown: ![alt](/uploads/file.jpg "title") — capture only the path
-              const mdMatch = rawContent.match(/!\[[^\]]*\]\((\/uploads\/[^\s"]+)/);
-              if (mdMatch) picked = mdMatch[1];
-              else {
-                // Extract from HTML: <img src="/uploads/file.jpg">
-                const htmlMatch = rawContent.match(/<img[^>]+src="(\/uploads\/[^"]+)"/);
-                if (htmlMatch) picked = htmlMatch[1];
-              }
-            }
-            // Only set if it's a valid /uploads/ path
-            if (picked && picked.startsWith("/uploads/")) {
-              setOgImage(picked);
-            }
-          }
+          // Auto-generate OG image via server
+          try {
+            const ogRes = await fetch("/api/admin/seo/og-image", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ collection, slug: doc.slug }),
+            });
+            const ogData = await ogRes.json();
+            if (ogData.url) setOgImage(ogData.url);
+          } catch { /* non-fatal */ }
+
           setLastOptimized(new Date().toISOString());
           setConfirmReoptimize(false);
-          // Auto-save after a short delay to let state propagate
           setTimeout(() => onSave(), 500);
           toast.success("SEO optimized and saved");
         } catch {

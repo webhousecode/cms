@@ -1,7 +1,8 @@
 import { getAdminCms, getAdminConfig, getActiveSiteInfo, EmptyOrgError } from "@/lib/cms";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Clock, Calendar, Image, Zap } from "lucide-react";
+import { Clock, Calendar, Image, Zap, Search } from "lucide-react";
+import { calculateSeoScore, type SeoFields } from "@/lib/seo/score";
 import { getMediaAdapter } from "@/lib/media";
 import { SiteIntroCard } from "@/components/site-intro-card";
 
@@ -60,6 +61,25 @@ export default async function AdminDashboard() {
   ]);
   const mediaCount = mediaFiles.filter((m) => (m as any).status !== "trashed").length;
   const intsCount = intsList.filter((m) => m.status !== "trashed").length;
+
+  // SEO stats
+  let seoTotal = 0;
+  let seoScoreSum = 0;
+  let seoOptimized = 0;
+  let seoIssues = 0;
+  for (const { documents } of allResults) {
+    for (const doc of documents) {
+      if ((doc.status as string) === "trashed") continue;
+      const data = (doc as { data?: Record<string, unknown> }).data ?? {};
+      const seo = (data._seo as SeoFields) ?? {};
+      const { score } = calculateSeoScore({ slug: doc.slug, data }, seo);
+      seoTotal++;
+      seoScoreSum += score;
+      if (seo.lastOptimized) seoOptimized++;
+      if (score < 80) seoIssues++;
+    }
+  }
+  const seoAvgScore = seoTotal > 0 ? Math.round(seoScoreSum / seoTotal) : 0;
 
   // Sort upcoming by date
   upcomingItems.sort((a, b) => {
@@ -169,6 +189,37 @@ export default async function AdminDashboard() {
             Interactives
           </p>
           <p className="text-xs text-muted-foreground">Charts, demos, calculators</p>
+        </Link>
+        {/* SEO card */}
+        <Link
+          href="/admin/seo"
+          className="group block p-5 rounded-xl border border-border bg-card hover:border-primary/40 hover:bg-secondary transition-all duration-200"
+        >
+          <div className="flex items-start justify-between mb-4">
+            <p className="font-mono text-xs text-muted-foreground tracking-widest uppercase">seo</p>
+            <span className="text-2xl font-bold" style={{ color: seoAvgScore >= 80 ? "#4ade80" : seoAvgScore >= 50 ? "#F7BB2E" : "#f87171" }}>
+              {seoAvgScore}
+            </span>
+          </div>
+          <p className="font-semibold text-foreground mb-3 group-hover:text-primary transition-colors flex items-center gap-2">
+            <Search className="w-4 h-4" />
+            SEO Health
+          </p>
+          <div className="space-y-1 text-xs text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <span className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: "#4ade80" }} />
+                {seoOptimized} optimized
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full inline-block" style={{ background: "#f87171" }} />
+                {seoIssues} need attention
+              </span>
+            </div>
+            <div className="h-1 rounded-full mt-2" style={{ background: "var(--border)" }}>
+              <div className="h-full rounded-full" style={{ width: `${seoAvgScore}%`, background: seoAvgScore >= 80 ? "#4ade80" : seoAvgScore >= 50 ? "#F7BB2E" : "#f87171" }} />
+            </div>
+          </div>
         </Link>
       </div>
     </div>

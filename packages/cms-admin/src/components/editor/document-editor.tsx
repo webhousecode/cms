@@ -1563,6 +1563,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
 
       {seoPanelOpen && (
         <SeoPanel
+          collection={collection}
           doc={doc}
           onUpdate={(seo) => {
             updateField("_seo", seo);
