@@ -269,12 +269,13 @@
   height: 0;
 }
 
-[data-slot="sidebar-inset"] { overflow-y: scroll; }
-[data-slot="sidebar-inset"]::-webkit-scrollbar { width: 0; }
-[data-slot="sidebar-inset"] { scrollbar-width: none; }
-::-webkit-scrollbar { width: 5px; }
+/* Thin overlay-style scrollbar — never shifts layout */
+::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: oklch(1 0 0 / 12%); border-radius: 3px; }
+::-webkit-scrollbar-thumb { background: transparent; border-radius: 3px; }
+*:hover::-webkit-scrollbar-thumb { background: oklch(1 0 0 / 15%); }
+* { scrollbar-width: thin; scrollbar-color: transparent transparent; }
+*:hover { scrollbar-color: oklch(1 0 0 / 15%) transparent; }
 
 /* Calendar: hide scrollbar completely */
 .calendar-scroll { scrollbar-width: none; -ms-overflow-style: none; }
