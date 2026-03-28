@@ -1,160 +1,123 @@
 # F27 — Backup & Restore
 
-> Automated content backup with scheduled snapshots and point-in-time restore.
+> Automated content backup with scheduled snapshots, point-in-time restore, and config preservation.
 
-## Problem
+## Status: In Progress
 
-There is no backup system. If content is accidentally deleted, corrupted, or lost, there is no way to restore it. The trash system only covers soft-deleted documents. A filesystem or Git error could cause data loss.
+**Done:**
+- Backup creation (zip with all content + `_data/`)
+- Backup scheduling (daily/weekly via tools-scheduler, iterates all sites)
+- Backup manifest with snapshot metadata
+- Backup pruning (retention-based)
+- Filesystem restore (unzip → overwrite content + _data)
+- Webhook notifications on backup completion/failure (F13)
+- Backup download API
+- Settings UI (schedule, retention, webhooks)
+- `cms.config.ts` included in backup (filesystem sites: raw file, GitHub sites: JSON schema snapshot)
+- Feature markers on snapshots (`i18n`, `webhooks`, `deploy`) for restore compatibility
 
-## Solution
+**Remaining:**
+- GitHub-backed site restore (content lives in repo, not local filesystem)
+- Restore UI improvements (collection selector, dry-run preview)
+- Pre-destructive auto-backup (before trash purge, bulk delete)
 
-Automated backup snapshots of the entire content directory. Scheduled daily backups. Backup to local filesystem, S3, or Supabase Storage. Point-in-time restore. Automatic backup before destructive operations (trash purge, bulk delete). Export as zip for migration.
+## What Gets Backed Up
+
+Each snapshot is a zip containing:
+```
+{sitename}_{date}_{id}.zip
+  cms.config.ts              # Site schema (filesystem sites)
+  cms.config.json            # Site schema as JSON (GitHub sites)
+  content/
+    {collection}/
+      {slug}.json            # Full document incl. locale, translationOf, translationGroup
+      ...
+  _data/
+    site-config.json         # Settings incl. defaultLocale, locales, webhooks, deploy config
+    media-meta.json          # Media metadata
+    interactives.json        # Interactives (incl. locale fields)
+    agents/                  # Agent configs
+    brand-voice.json         # Brand voice
+    ...
+```
+
+Excluded: `backups/` (self), `user-state/` (ephemeral)
+
+## i18n Compatibility (F48)
+
+Backups taken after F48 include:
+- Documents with `locale`, `translationOf`, `translationGroup` fields
+- `site-config.json` with `defaultLocale`, `locales`, `localeStrategy`
+- `cms.config.ts` with collection-level `sourceLocale` settings
+- Interactives with locale/translationOf
+
+**Restoring a pre-i18n backup:** Documents will lack locale fields. CMS defaults to `defaultLocale: "en"`. Translation relationships won't exist. The `features` array on the snapshot will NOT contain `"i18n"`, which the restore UI can use to warn the user.
+
+**Restoring an i18n backup:** Full locale state is preserved including all translation links and config.
 
 ## Technical Design
 
-### Backup Configuration
+### BackupSnapshot Interface
 
 ```typescript
-// packages/cms-admin/src/lib/backup/types.ts
-
-export interface BackupConfig {
-  enabled: boolean;
-  schedule: 'daily' | 'weekly' | 'manual';
-  time: string;              // HH:MM
-  retention: number;         // days to keep backups, default: 30
-  destination: 'local' | 's3' | 'supabase';
-  local?: { dir: string };   // default: <dataDir>/backups
-  s3?: { bucket: string; prefix: string; region: string };
-  supabase?: { bucket: string; prefix: string };
-  beforeDestructive: boolean; // auto-backup before purge/bulk-delete
-}
-
-export interface BackupSnapshot {
+interface BackupSnapshot {
   id: string;
   timestamp: string;
-  trigger: 'scheduled' | 'manual' | 'pre-destructive';
+  trigger: "manual" | "scheduled";
   sizeBytes: number;
   documentCount: number;
-  collections: Record<string, number>;  // collection -> doc count
-  filePath: string;           // path to zip file
-  status: 'creating' | 'complete' | 'failed';
+  collections: Record<string, number>;
+  fileName: string;
+  status: "creating" | "complete" | "failed";
+  error?: string;
+  features?: string[];  // e.g. ["i18n", "webhooks", "deploy"]
 }
-```
-
-### Backup Service
-
-```typescript
-// packages/cms-admin/src/lib/backup/service.ts
-
-export class BackupService {
-  /** Create a snapshot of all content */
-  async createSnapshot(trigger: BackupSnapshot['trigger']): Promise<BackupSnapshot>;
-
-  /** Restore from a snapshot */
-  async restore(snapshotId: string, options?: {
-    collections?: string[];  // restore specific collections only
-    dryRun?: boolean;         // preview what would change
-  }): Promise<{ documentsRestored: number; documentsSkipped: number }>;
-
-  /** List available snapshots */
-  async listSnapshots(): Promise<BackupSnapshot[]>;
-
-  /** Delete old snapshots beyond retention period */
-  async pruneSnapshots(): Promise<number>;
-
-  /** Export as downloadable zip */
-  async exportZip(snapshotId?: string): Promise<Buffer>;
-}
-```
-
-### Backup Contents
-
-Each snapshot is a zip file containing:
-```
-backup-2026-03-15T10-00-00Z.zip
-  manifest.json              # BackupSnapshot metadata
-  content/
-    posts/
-      hello-world.json
-      ...
-    pages/
-      ...
-  data/
-    users.json
-    agents/
-    site-config.json
-    ...
 ```
 
 ### API Endpoints
 
-| Method | Path | Description |
-|--------|------|-------------|
-| `POST` | `/api/admin/backups/create` | Create manual snapshot |
-| `GET` | `/api/admin/backups` | List snapshots |
-| `POST` | `/api/admin/backups/[id]/restore` | Restore from snapshot |
-| `GET` | `/api/admin/backups/[id]/download` | Download zip |
-| `DELETE` | `/api/admin/backups/[id]` | Delete snapshot |
+| Method | Path | Description | Status |
+|--------|------|-------------|--------|
+| `POST` | `/api/admin/backups` | Create backup | Done |
+| `GET` | `/api/admin/backups` | List snapshots | Done |
+| `POST` | `/api/admin/backups/[id]/restore` | Restore from snapshot | Done (filesystem only) |
+| `GET` | `/api/admin/backups/[id]/download` | Download zip | Done |
+| `DELETE` | `/api/admin/backups/[id]` | Delete snapshot | Done |
 
-### Admin UI
+### GitHub Restore (TODO)
 
-- Backup settings page: schedule, retention, destination
-- Snapshot list with size, document count, timestamp
-- "Create Backup Now" button
-- "Restore" button with collection selector and dry-run preview
-- "Download" button for zip export
+For GitHub-backed sites, restore needs to:
+1. Unzip backup to temp directory
+2. For each document in `content/`, use GitHub API to create/update the file in the repo
+3. Restore `_data/` to local cache directory
+4. Optionally restore `cms.config.ts` via GitHub API (with user confirmation — schema changes are dangerous)
 
 ## Impact Analysis
 
 ### Files affected
-- `packages/cms-admin/src/lib/backup/types.ts` — new backup types
-- `packages/cms-admin/src/lib/backup/service.ts` — new backup service
-- `packages/cms-admin/src/app/api/admin/backups/` — new API routes
-- `packages/cms-admin/src/app/admin/settings/backups/page.tsx` — new settings page
-- `packages/cms-admin/package.json` — add `archiver`, `unzipper` dependencies
-
-### Blast radius
-- Restore overwrites content files — destructive operation needs careful confirmation
-- Pre-destructive backup hooks into trash purge and bulk delete
+- `packages/cms-admin/src/lib/backup-service.ts` — backup creation + restore
+- `packages/cms-admin/src/app/api/admin/backups/route.ts` — API routes
+- `packages/cms-admin/src/lib/tools-scheduler.ts` — scheduled backups + webhook dispatch
 
 ### Breaking changes
-- None
+- None. New `features` field on BackupSnapshot is optional.
 
-### Test plan
+## Test Plan
+- [ ] Backup includes cms.config.ts for filesystem sites
+- [ ] Backup includes cms.config.json for GitHub sites
+- [ ] Backup snapshot has features array with correct flags
+- [ ] Restore preserves locale/translationOf fields on documents
+- [ ] Restore preserves site-config.json locale settings
+- [ ] Restore of pre-i18n backup works (documents lack locale fields, CMS defaults apply)
 - [ ] TypeScript compiles: `npx tsc --noEmit`
-- [ ] Snapshot creates valid zip with all content
-- [ ] Restore from snapshot overwrites content correctly
-- [ ] Retention-based pruning deletes old snapshots
-- [ ] Pre-destructive backup triggers before trash purge
-
-## Implementation Steps
-
-1. Create `packages/cms-admin/src/lib/backup/types.ts`
-2. Create `packages/cms-admin/src/lib/backup/service.ts` with zip creation using `archiver` npm package
-3. Create restore logic that unpacks zip and overwrites content files
-4. Add backup scheduling hook in existing scheduler
-5. Create API routes at `packages/cms-admin/src/app/api/admin/backups/`
-6. Build backup settings page at `packages/cms-admin/src/app/admin/settings/backups/page.tsx`
-7. Build snapshot list and restore UI
-8. Hook pre-destructive backup into trash purge and bulk delete actions
-9. Add S3 upload adapter for remote backup storage
-10. Implement retention-based pruning in scheduler
 
 ## Dependencies
-
-- `archiver` npm package for zip creation
-- `unzipper` npm package for restore
-- F25 (Storage Buckets) — optional, for remote backup storage
+- F48 (i18n) — backup must capture locale state
+- F13 (Notification Channels) — webhook dispatch on backup completion (done)
 
 ## Effort Estimate
-
-**Medium** — 3-4 days
+**Remaining:** Small — 1 day for GitHub restore, 0.5 day for pre-destructive auto-backup.
 
 ---
 
 > **Testing (F99):** This feature MUST include tests using the [F99 Test Infrastructure](F99-e2e-testing-suite.md).
-> - **Unit tests** → `packages/cms-admin/src/lib/__tests__/{feature}.test.ts` or `packages/cms/src/__tests__/{feature}.test.ts`
-> - **API tests** → `packages/cms-admin/tests/api/{feature}.test.ts`
-> - **E2E tests** → `packages/cms-admin/e2e/suites/{nn}-{feature}.spec.ts`
-> - Use shared fixtures: `auth.ts` (JWT login), `mock-llm.ts` (intercept AI), `test-data.ts` (seed/cleanup)
-> - Tests are written BEFORE implementation. All tests must pass before merge.

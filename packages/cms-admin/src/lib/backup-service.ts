@@ -23,6 +23,8 @@ export interface BackupSnapshot {
   fileName: string;
   status: "creating" | "complete" | "failed";
   error?: string;
+  /** Feature flags active at backup time — helps restore know what to expect */
+  features?: string[];
 }
 
 interface BackupManifest {
@@ -56,7 +58,8 @@ async function saveManifest(manifest: BackupManifest): Promise<void> {
 // ── Create Backup ────────────────────────────────────────────
 
 export async function createBackup(trigger: "manual" | "scheduled" = "manual"): Promise<BackupSnapshot> {
-  const { dataDir } = await getActiveSitePaths();
+  const sitePaths = await getActiveSitePaths();
+  const { dataDir } = sitePaths;
   const siteEntry = await getActiveSiteEntry();
   const dir = await backupDir();
   const manifest = await loadManifest();
@@ -130,6 +133,22 @@ export async function createBackup(trigger: "manual" | "scheduled" = "manual"): 
         }
       }
 
+      // Add cms.config.ts (site schema definition — critical for restore)
+      const { configPath } = sitePaths;
+      if (!configPath.startsWith("github://") && existsSync(configPath)) {
+        // Filesystem site — include the local config file
+        archive.file(configPath, { name: `cms.config.ts` });
+      } else if (configPath.startsWith("github://")) {
+        // GitHub site — fetch config content via the already-loaded config object
+        // Store as JSON representation since we can't fetch the raw .ts file here
+        const configJson = JSON.stringify(
+          { collections: config.collections.map((c: any) => ({ name: c.name, fields: c.fields, sourceLocale: c.sourceLocale, locales: c.locales })) },
+          null,
+          2,
+        );
+        archive.append(configJson, { name: "cms.config.json" });
+      }
+
       // Add _data/ directory (local metadata — agents, settings, etc.)
       if (existsSync(dataDir)) {
         const dataEntries = readdirSync(dataDir);
@@ -152,6 +171,17 @@ export async function createBackup(trigger: "manual" | "scheduled" = "manual"): 
     const stat = statSync(zipPath);
     snapshot.sizeBytes = stat.size;
     snapshot.status = "complete";
+
+    // Detect active features for restore compatibility
+    const features: string[] = [];
+    try {
+      const { readSiteConfig } = await import("./site-config");
+      const siteConfig = await readSiteConfig();
+      if (siteConfig.locales?.length > 0) features.push("i18n");
+      if (siteConfig.backupWebhooks?.length > 0 || siteConfig.publishWebhooks?.length > 0) features.push("webhooks");
+      if (siteConfig.deployProvider && siteConfig.deployProvider !== "off") features.push("deploy");
+    } catch { /* non-critical */ }
+    snapshot.features = features;
   } catch (err) {
     snapshot.status = "failed";
     snapshot.error = err instanceof Error ? err.message : String(err);
