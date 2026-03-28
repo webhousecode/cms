@@ -20,6 +20,7 @@ const PUBLIC_PREFIXES_ADMIN = [
 
 const PUBLIC_PREFIXES = [
   "/api/auth/",
+  "/api/admin/invitations/", // Invite accept flow (user not yet logged in)
   "/api/cms/scheduled/calendar.ics", // Auth via ?token= query param
   "/_next/",
   "/favicon",
@@ -38,10 +39,13 @@ export async function proxy(request: NextRequest) {
   if (PUBLIC_PREFIXES.some((p) => pathname.startsWith(p))) return NextResponse.next();
   if (PUBLIC_PREFIXES_ADMIN.some((p) => pathname.startsWith(p))) return NextResponse.next();
 
-  // Only protect admin pages and CMS API routes
+  // Only protect admin pages and API routes
   const isAdminPath = pathname.startsWith("/admin");
   const isCmsApi = pathname.startsWith("/api/cms");
-  if (!isAdminPath && !isCmsApi) return NextResponse.next();
+  const isAdminApi = pathname.startsWith("/api/admin");
+  const isMediaApi = pathname.startsWith("/api/media");
+  const isPreviewApi = pathname.startsWith("/api/preview-");
+  if (!isAdminPath && !isCmsApi && !isAdminApi && !isMediaApi && !isPreviewApi) return NextResponse.next();
 
   // Allow internal service calls with X-CMS-Service-Token header (matches CMS_JWT_SECRET)
   const serviceToken = request.headers.get("x-cms-service-token");
@@ -52,8 +56,10 @@ export async function proxy(request: NextRequest) {
 
   const token = request.cookies.get(COOKIE_NAME)?.value;
 
+  const isApi = isCmsApi || isAdminApi || isMediaApi || isPreviewApi;
+
   if (!token) {
-    if (isCmsApi) {
+    if (isApi) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     // RSC prefetch requests (from sidebar links etc.) should not redirect
@@ -76,7 +82,7 @@ export async function proxy(request: NextRequest) {
     if (isRsc && isAdminPath) {
       return new NextResponse(null, { status: 204 });
     }
-    const response = isCmsApi
+    const response = isApi
       ? NextResponse.json({ error: "Unauthorized" }, { status: 401 })
       : NextResponse.redirect(new URL("/admin/login", request.url));
 
@@ -87,5 +93,5 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/admin/:path*", "/api/cms/:path*"],
+  matcher: ["/", "/admin/:path*", "/api/cms/:path*", "/api/admin/:path*", "/api/media/:path*", "/api/preview-:path*"],
 };
