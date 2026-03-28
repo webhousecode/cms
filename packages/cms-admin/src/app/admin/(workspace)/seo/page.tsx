@@ -192,12 +192,15 @@ export default function SeoPage() {
                   <td style={{ padding: "0.625rem 0.75rem" }}>
                     <a
                       href={`/admin/${doc.collection}/${doc.slug}`}
-                      style={{ color: "var(--foreground)", textDecoration: "none", fontWeight: 500, display: "flex", alignItems: "center", gap: "0.375rem" }}
+                      style={{ color: "var(--foreground)", textDecoration: "none", fontWeight: 500, display: "flex", alignItems: "center", gap: "0.5rem" }}
                     >
+                      <span style={{
+                        width: 8, height: 8, borderRadius: "50%", flexShrink: 0,
+                        background: doc.status === "published" ? "#4ade80" : doc.status === "draft" ? "#F7BB2E" : "#a78bfa",
+                      }} />
                       {doc.title}
-                      <ExternalLink style={{ width: 10, height: 10, color: "var(--muted-foreground)", flexShrink: 0 }} />
                     </a>
-                    <span style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", fontFamily: "monospace" }}>
+                    <span style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", fontFamily: "monospace", paddingLeft: "1.25rem" }}>
                       {doc.collectionLabel} / {doc.slug}
                     </span>
                   </td>
