@@ -213,7 +213,8 @@ export async function buildChatTools(): Promise<ToolPair[]> {
         if (!col) return `Collection not found: ${collection}`;
 
         const fields = (col.fields ?? []).map((f: any) => {
-          const parts = [`${f.label ?? f.name} (${f.type})`];
+          const lbl = f.label && f.label !== f.name ? ` — ${f.label}` : "";
+          const parts = [`\`${f.name}\` (${f.type})${lbl}`];
           if (f.required) parts.push("*required");
           if (f.options) parts.push(`options: ${JSON.stringify(f.options)}`);
           if (f.defaultValue !== undefined) parts.push(`default: ${JSON.stringify(f.defaultValue)}`);

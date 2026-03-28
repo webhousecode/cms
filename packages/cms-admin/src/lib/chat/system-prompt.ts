@@ -82,7 +82,10 @@ export function buildChatSystemPrompt(context: SiteContext): string {
   const collectionDescriptions = context.collections
     .map((c) => {
       const fieldList = c.fields
-        .map((f) => `    - ${f.label ?? f.name} (${f.type})${f.required ? " *required" : ""}`)
+        .map((f) => {
+          const lbl = f.label && f.label !== f.name ? ` — ${f.label}` : "";
+          return `    - \`${f.name}\` (${f.type})${f.required ? " *required" : ""}${lbl}`;
+        })
         .join("\n");
       return `  ### ${c.label} ('${c.name}') — ${c.documentCount} documents\n${fieldList}`;
     })

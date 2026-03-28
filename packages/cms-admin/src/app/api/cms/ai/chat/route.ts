@@ -60,7 +60,10 @@ export async function POST(request: NextRequest) {
       systemPrompt = `${buildLocaleInstruction(locale)}\n${customSystem}`;
     } else {
       const fieldDescriptions = fields
-        ?.map((f) => `- ${f.label ?? f.name} (${f.type})`)
+        ?.map((f) => {
+          const lbl = f.label && f.label !== f.name ? ` — ${f.label}` : "";
+          return `- \`${f.name}\` (${f.type})${lbl}`;
+        })
         .join("\n");
 
       const contentContext = await buildContentContext().catch(() => "");
