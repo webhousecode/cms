@@ -97,7 +97,7 @@ export function CollectionListPage({
                   </Link>
                 )}
                 <GenerateDocumentButton collection={collection} collectionLabel={collectionLabel} />
-                <NewDocumentButton collection={collection} titleField={titleField} defaultLocale={defaultLocale} />
+                <NewDocumentButton collection={collection} titleField={titleField} defaultLocale={defaultLocale} siteLocales={siteLocales} />
               </>
             )}
           </div>

@@ -1108,19 +1108,63 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
 
           {/* Locale selector */}
           {locales && locales.length > 1 && (locale || defaultLocale) && (
-            <span
-              title={`Document language: ${(locale || defaultLocale || "").toUpperCase()}`}
-              style={{
-                display: "inline-flex", alignItems: "center", gap: "0.3rem",
-                padding: "0.2rem 0.5rem", borderRadius: "6px",
-                border: "1px solid var(--border)", background: "transparent",
-                color: "var(--muted-foreground)",
-                fontSize: "0.75rem", fontFamily: "monospace",
-              }}
-            >
-              <Languages style={{ width: "0.8rem", height: "0.8rem" }} />
-              {(locale || defaultLocale || "").toUpperCase()}
-            </span>
+            <div style={{ position: "relative" }} ref={localeRef}>
+              <button
+                type="button"
+                onClick={() => translations.length > 0 ? setLocaleOpen(o => !o) : undefined}
+                title={translations.length > 0 ? "Switch between translations" : `Document language: ${(locale || defaultLocale || "").toUpperCase()}`}
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: "0.3rem",
+                  padding: "0.2rem 0.5rem", borderRadius: "6px",
+                  border: "1px solid var(--border)", background: "transparent",
+                  color: "var(--muted-foreground)",
+                  fontSize: "0.75rem", fontFamily: "monospace",
+                  cursor: translations.length > 0 ? "pointer" : "default",
+                }}
+              >
+                <Languages style={{ width: "0.8rem", height: "0.8rem" }} />
+                {(locale || defaultLocale || "").toUpperCase()}
+                {translations.length > 0 && <span style={{ fontSize: "0.6rem", opacity: 0.5 }}>▾</span>}
+              </button>
+              {localeOpen && translations.length > 0 && (
+                <div style={{
+                  position: "absolute", top: "calc(100% + 4px)", right: 0, zIndex: 50,
+                  background: "var(--popover)", border: "1px solid var(--border)",
+                  borderRadius: "8px", boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
+                  minWidth: "140px", overflow: "hidden",
+                }}>
+                  {/* Current doc */}
+                  <div style={{
+                    padding: "0.4rem 0.75rem", fontSize: "0.8rem", fontFamily: "monospace",
+                    background: "var(--accent)", color: "var(--foreground)", fontWeight: 600,
+                  }}>
+                    {(locale || defaultLocale || "").toUpperCase()} — current
+                  </div>
+                  {/* Sibling translations */}
+                  {translations.map(t => (
+                    <Link
+                      key={t.slug}
+                      href={`/admin/${collection}/${t.slug}`}
+                      onClick={() => setLocaleOpen(false)}
+                      style={{
+                        display: "flex", alignItems: "center", gap: "0.4rem",
+                        padding: "0.4rem 0.75rem", fontSize: "0.8rem",
+                        color: "var(--foreground)", textDecoration: "none",
+                        fontFamily: "monospace",
+                      }}
+                      className="hover:bg-accent"
+                    >
+                      <span style={{ fontWeight: 600 }}>{(t.locale ?? "?").toUpperCase()}</span>
+                      <span style={{ color: "var(--muted-foreground)", fontSize: "0.7rem" }}>{t.slug}</span>
+                      <span style={{
+                        width: "6px", height: "6px", borderRadius: "50%", marginLeft: "auto",
+                        backgroundColor: t.status === "published" ? "rgb(74 222 128)" : "rgb(234 179 8)",
+                      }} />
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
           )}
 
           {!readOnly && (

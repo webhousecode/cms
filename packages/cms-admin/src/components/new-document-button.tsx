@@ -6,9 +6,17 @@ import { Plus, X } from "lucide-react";
 import { slugify } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CustomSelect } from "@/components/ui/custom-select";
+import { LOCALE_FLAGS } from "@/lib/locale";
 
-export function NewDocumentButton({ collection, titleField = "title", defaultLocale }: { collection: string; titleField?: string; defaultLocale?: string }) {
+export function NewDocumentButton({ collection, titleField = "title", defaultLocale, siteLocales }: {
+  collection: string;
+  titleField?: string;
+  defaultLocale?: string;
+  siteLocales?: string[];
+}) {
   const [open, setOpen] = useState(false);
+  const hasMultipleLocales = siteLocales && siteLocales.length > 1;
 
   /* ── "n" key shortcut → open new item form ──────────────── */
   useEffect(() => {
@@ -24,6 +32,7 @@ export function NewDocumentButton({ collection, titleField = "title", defaultLoc
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, []);
   const [title, setTitle] = useState("");
+  const [locale, setLocale] = useState(defaultLocale || "");
   const [saving, setSaving] = useState(false);
   const router = useRouter();
 
@@ -34,7 +43,7 @@ export function NewDocumentButton({ collection, titleField = "title", defaultLoc
     const res = await fetch(`/api/cms/${collection}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ slug, data: { [titleField]: title }, locale: defaultLocale }),
+      body: JSON.stringify({ slug, data: { [titleField]: title }, locale: locale || defaultLocale }),
     });
     if (res.ok) {
       router.push(`/admin/${collection}/${slug}`);
@@ -69,6 +78,17 @@ export function NewDocumentButton({ collection, titleField = "title", defaultLoc
         placeholder="Item title…"
         className="w-56"
       />
+      {hasMultipleLocales && (
+        <CustomSelect
+          value={locale || defaultLocale || ""}
+          onChange={(v) => setLocale(v)}
+          options={siteLocales!.map(l => ({
+            value: l,
+            label: `${LOCALE_FLAGS[l] ?? ""} ${l.toUpperCase()}`,
+          }))}
+          style={{ minWidth: "90px" }}
+        />
+      )}
       <Button
         variant="default"
         onClick={create}
