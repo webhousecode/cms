@@ -41,12 +41,18 @@ export default async function DocumentPage({ params, searchParams }: Props) {
           .map(d => ({ slug: d.slug, locale: d.locale ?? null, status: d.status, updatedAt: d.updatedAt }));
       })();
 
-  // Find source document's updatedAt for staleness check (any sibling with an earlier locale)
-  const sourceDoc = groupId
-    ? (allDocs as any[]).find(d => d.translationGroup === groupId && d.id !== doc.id)
+  // Find the most recently updated sibling — only flag stale if a sibling is NEWER than this doc
+  const newestSibling = groupId
+    ? (allDocs as any[])
+        .filter(d => d.translationGroup === groupId && d.id !== doc.id && d.status !== "trashed")
+        .sort((a: any, b: any) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime())[0] ?? null
     : (doc as any).translationOf
       ? allDocs.find(d => d.slug === (doc as any).translationOf)
       : null;
+  // Only pass sourceUpdatedAt if a sibling is actually newer (otherwise no stale banner)
+  const sourceDoc = newestSibling && new Date(newestSibling.updatedAt) > new Date(doc.updatedAt)
+    ? newestSibling
+    : null;
 
   const docTitle = String(doc.data?.title ?? doc.data?.name ?? doc.data?.label ?? doc.slug);
 
