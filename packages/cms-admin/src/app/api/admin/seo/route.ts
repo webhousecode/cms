@@ -26,6 +26,8 @@ export async function GET() {
     const [cms, config] = await Promise.all([getAdminCms(), getAdminConfig()]);
     const results: SeoDocSummary[] = [];
 
+    // First pass: collect all meta titles for duplicate detection
+    const allDocs: Array<{ col: typeof config.collections[0]; doc: any; data: Record<string, unknown>; seo: SeoFields }> = [];
     for (const col of config.collections) {
       try {
         const { documents } = await cms.content.findMany(col.name, {});
@@ -33,26 +35,33 @@ export async function GET() {
           if ((doc.status as string) === "trashed") continue;
           const data = (doc as { data?: Record<string, unknown> }).data ?? {};
           const seo = (data._seo as SeoFields) ?? {};
-          const { score } = calculateSeoScore(
-            { slug: doc.slug, data },
-            seo,
-          );
-          results.push({
-            collection: col.name,
-            collectionLabel: col.label ?? col.name,
-            slug: doc.slug,
-            title: String(data.title ?? data.name ?? doc.slug),
-            status: doc.status as string,
-            score,
-            hasTitle: !!(seo.metaTitle),
-            hasDesc: !!(seo.metaDescription),
-            hasOgImage: !!(seo.ogImage),
-            hasKeywords: !!(seo.keywords?.length),
-            optimized: !!(seo.lastOptimized),
-            publishAt: (doc as any).publishAt ?? undefined,
-          });
+          allDocs.push({ col, doc, data, seo });
         }
       } catch { /* skip broken collections */ }
+    }
+
+    const allTitles = allDocs.map((d) => d.seo.metaTitle ?? "").filter(Boolean);
+
+    for (const { col, doc, data, seo } of allDocs) {
+      const { score } = calculateSeoScore(
+        { slug: doc.slug, data },
+        seo,
+        allTitles,
+      );
+      results.push({
+        collection: col.name,
+        collectionLabel: col.label ?? col.name,
+        slug: doc.slug,
+        title: String(data.title ?? data.name ?? doc.slug),
+        status: doc.status as string,
+        score,
+        hasTitle: !!(seo.metaTitle),
+        hasDesc: !!(seo.metaDescription),
+        hasOgImage: !!(seo.ogImage),
+        hasKeywords: !!(seo.keywords?.length),
+        optimized: !!(seo.lastOptimized),
+        publishAt: (doc as any).publishAt ?? undefined,
+      });
     }
 
     // Sort by score ascending (worst first)
