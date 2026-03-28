@@ -1487,31 +1487,28 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
             type="button"
             disabled={retranslating}
             onClick={async () => {
-              // Find source sibling slug (the one that was updated)
+              // Find source sibling slug (the one that was updated more recently)
               const sourceSibling = translations.find(t => t.updatedAt && new Date(t.updatedAt) > new Date(initialDoc.updatedAt));
               const sourceSlug = sourceSibling?.slug || translationOf;
+              const targetLoc = locale || defaultLocale || "en";
               if (!sourceSlug) { toast.error("Cannot find source document"); return; }
               setRetranslating(true);
               try {
                 const res = await fetch(`/api/cms/${collection}/${sourceSlug}/translate`, {
                   method: "POST",
                   headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ targetLocale: locale }),
+                  body: JSON.stringify({ targetLocale: targetLoc }),
                 });
                 if (res.ok) {
-                  // Reload the doc data without a full page refresh
-                  const updated = await fetch(`/api/cms/${collection}/${doc.slug}`).then(r => r.json());
-                  if (updated?.data) {
-                    setDoc(prev => ({ ...prev, data: updated.data, updatedAt: updated.updatedAt ?? prev.updatedAt }));
-                  }
-                  toast.success("Translation updated from source");
-                  setStaleDismissed(true);
+                  toast.success("Translation updated from source — reloading…");
+                  // AI re-translate overwrites all translatable fields, so a full reload is appropriate
+                  startTransition(() => router.refresh());
                 } else {
-                  const body = await res.json().catch(() => ({ error: "Failed" }));
+                  const body = await res.json().catch(() => ({ error: "Unknown error" }));
                   toast.error(body.error ?? "Re-translation failed");
                 }
-              } catch {
-                toast.error("Re-translation failed");
+              } catch (err: any) {
+                toast.error(`Re-translation failed: ${err?.message ?? "network error"}`);
               } finally {
                 setRetranslating(false);
               }
