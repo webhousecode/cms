@@ -108,7 +108,7 @@ export default function SeoPage() {
   };
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+    <>
       <TabTitle value="SEO" />
       <ActionBar actions={
         <ActionButton
@@ -235,6 +235,6 @@ export default function SeoPage() {
           </table>
         </div>
       )}
-    </div>
+    </>
   );
 }
