@@ -102,6 +102,60 @@ export async function activateBrandVoiceVersion(id: string): Promise<boolean> {
   return true;
 }
 
+/**
+ * Get brand voice for a specific locale.
+ * If locale matches the brand voice language, return as-is.
+ * Otherwise, check for a cached translation, or auto-translate and cache.
+ */
+export async function getBrandVoiceForLocale(locale: string): Promise<BrandVoice | null> {
+  const defaultVoice = await readBrandVoice();
+  if (!defaultVoice) return null;
+  // If brand voice is already in the requested locale, return it
+  if (defaultVoice.language === locale) return defaultVoice;
+  // Check cache
+  const cached = await readCachedBrandVoice(locale);
+  if (cached) return cached;
+  // Auto-translate via the brand-voice translate API (internal call)
+  try {
+    const { LOCALE_LABELS } = await import("./locale");
+    const targetLang = LOCALE_LABELS[locale] ?? locale;
+    const baseUrl = process.env.NEXTAUTH_URL || `http://localhost:${process.env.PORT || 3010}`;
+    const serviceToken = process.env.CMS_JWT_SECRET;
+    const res = await fetch(`${baseUrl}/api/cms/brand-voice/translate`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-cms-service-token": serviceToken || "" },
+      body: JSON.stringify({ brandVoice: defaultVoice, targetLanguage: targetLang }),
+    });
+    if (!res.ok) return defaultVoice; // fallback to default
+    const translated = await res.json() as BrandVoice;
+    await cacheBrandVoice(locale, translated);
+    console.log(`[brand-voice] Auto-translated to ${locale}, cached.`);
+    return translated;
+  } catch {
+    return defaultVoice; // fallback
+  }
+}
+
+async function getCachePath(locale: string): Promise<string> {
+  const { dataDir } = await getActiveSitePaths();
+  return path.join(dataDir, `brand-voice-${locale}.json`);
+}
+
+async function readCachedBrandVoice(locale: string): Promise<BrandVoice | null> {
+  try {
+    const raw = await fs.readFile(await getCachePath(locale), "utf-8");
+    return JSON.parse(raw) as BrandVoice;
+  } catch {
+    return null;
+  }
+}
+
+async function cacheBrandVoice(locale: string, bv: BrandVoice): Promise<void> {
+  const p = await getCachePath(locale);
+  await fs.mkdir(path.dirname(p), { recursive: true });
+  await fs.writeFile(p, JSON.stringify(bv, null, 2));
+}
+
 /** Returns a condensed system-prompt injection for agents */
 export function brandVoiceToPromptContext(bv: BrandVoice): string {
   return [

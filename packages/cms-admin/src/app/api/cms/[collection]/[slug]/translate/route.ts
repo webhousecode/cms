@@ -61,8 +61,8 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   const sourceLang = LOCALE_LABELS[sourceLocale] ?? sourceLocale;
   const targetLang = LOCALE_LABELS[targetLocale] ?? targetLocale;
 
-  // Collect translatable fields (text, richtext, textarea, slug)
-  const TRANSLATABLE_TYPES = new Set(["text", "richtext", "textarea", "slug"]);
+  // Collect translatable fields (text, richtext, textarea, slug, htmldoc, interactive)
+  const TRANSLATABLE_TYPES = new Set(["text", "richtext", "textarea", "slug", "htmldoc", "interactive"]);
   const translatableFields = colConfig.fields.filter((f) =>
     TRANSLATABLE_TYPES.has(f.type),
   );

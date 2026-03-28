@@ -88,6 +88,8 @@ export interface SiteConfig {
   locales: string[];
   /** F48 i18n — URL strategy for locale prefixes */
   localeStrategy: "none" | "prefix-other" | "prefix-all";
+  /** F48 i18n — auto-retranslate stale translations when source doc is updated */
+  autoRetranslateOnUpdate: boolean;
 }
 
 async function getConfigPath(): Promise<string> {
@@ -145,6 +147,7 @@ async function defaults(): Promise<SiteConfig> {
     defaultLocale: "en",
     locales: [],
     localeStrategy: "prefix-other",
+    autoRetranslateOnUpdate: false,
   };
 }
 

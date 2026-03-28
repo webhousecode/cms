@@ -32,6 +32,7 @@ export function CollectionSchemaEditor({ collection, isNew }: Props) {
   const [name, setName] = useState(collection?.name ?? "");
   const [label, setLabel] = useState(collection?.label ?? "");
   const [urlPrefix, setUrlPrefix] = useState(collection?.urlPrefix ?? "");
+  const [translatable, setTranslatable] = useState(collection?.translatable !== false);
   const [fields, setFields] = useState<FieldConfig[]>(collection?.fields ?? []);
   const [saving, setSaving] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -67,6 +68,7 @@ export function CollectionSchemaEditor({ collection, isNew }: Props) {
       name: name.trim(),
       label: label.trim() || undefined,
       urlPrefix: urlPrefix.trim() || undefined,
+      translatable,
       fields,
     };
 
@@ -136,6 +138,27 @@ export function CollectionSchemaEditor({ collection, isNew }: Props) {
               placeholder="e.g. /blog"
               className="font-mono"
             />
+          </div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: "0.5rem" }}>
+            <div>
+              <Label>Translatable</Label>
+              <p className="text-xs text-muted-foreground">Allow translation of documents in this collection</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setTranslatable(!translatable)}
+              style={{
+                width: 40, height: 22, borderRadius: 11, border: "none", cursor: "pointer",
+                background: translatable ? "#F7BB2E" : "var(--muted)",
+                position: "relative", transition: "background 0.2s", flexShrink: 0,
+              }}
+            >
+              <span style={{
+                position: "absolute", top: 2, left: translatable ? 20 : 2,
+                width: 18, height: 18, borderRadius: "50%", background: "#fff",
+                transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
+              }} />
+            </button>
           </div>
         </div>
       </div>

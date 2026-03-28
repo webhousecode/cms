@@ -33,6 +33,8 @@ export async function POST(req: NextRequest) {
   const toTranslate: { collection: string; slug: string; title: string; data: Record<string, unknown>; locale: string }[] = [];
 
   for (const col of config.collections) {
+    // Skip collections explicitly marked as non-translatable
+    if (col.translatable === false) continue;
     const { documents } = await cms.content.findMany(col.name, {});
     for (const doc of documents) {
       const d = doc as any;
@@ -65,7 +67,7 @@ export async function POST(req: NextRequest) {
       controller.enqueue(encoder.encode(JSON.stringify({ type: "start", total, targetLocale }) + "\n"));
 
       const client = new Anthropic({ apiKey });
-      const TRANSLATABLE_TYPES = new Set(["text", "richtext", "textarea", "slug"]);
+      const TRANSLATABLE_TYPES = new Set(["text", "richtext", "textarea", "slug", "htmldoc", "interactive"]);
       let done = 0;
 
       for (const item of toTranslate) {

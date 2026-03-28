@@ -36,6 +36,9 @@ export { getDocumentUrl, getCollectionIndexUrl, getLocalizedDocumentUrl } from '
 export { html, raw } from './template/engine.js';
 export type { TemplateContext, BlockRenderer, PageTemplate, LayoutTemplate } from './template/types.js';
 
+// i18n
+export { generateI18nStaticParams, getLocalizedDocument, getHreflangAlternates, isTranslationStale } from './i18n/helpers.js';
+
 // Utils
 export { generateId } from './utils/id.js';
 export { generateSlug } from './utils/slug.js';

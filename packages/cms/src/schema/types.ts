@@ -79,6 +79,8 @@ export interface CollectionConfig {
   urlPrefix?: string;
   parentField?: string;
   fields: FieldConfig[];
+  /** Whether this collection supports translations. Defaults to true for multi-locale sites. */
+  translatable?: boolean;
   /** The locale items in this collection are normally authored in, e.g. "en" */
   sourceLocale?: string;
   /** Locales this collection can be translated to. Empty = no i18n. */

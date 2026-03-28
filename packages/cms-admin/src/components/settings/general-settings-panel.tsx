@@ -301,6 +301,7 @@ function SiteSection() {
 		defaultLocale: "en",
 		locales: [] as string[],
 		localeStrategy: "prefix-other",
+		autoRetranslateOnUpdate: false,
 	});
 	const [saving, setSaving] = useState(false);
 	const [saved, setSaved] = useState(false);
@@ -518,7 +519,7 @@ import { LOCALE_LABELS, LOCALE_FLAGS } from "@/lib/locale";
 const AVAILABLE_LOCALES = Object.keys(LOCALE_LABELS);
 
 function LanguageSection({ cfg, setCfg }: {
-	cfg: { defaultLocale: string; locales: string[]; localeStrategy: string };
+	cfg: { defaultLocale: string; locales: string[]; localeStrategy: string; autoRetranslateOnUpdate: boolean };
 	setCfg: (fn: (c: any) => any) => void;
 }) {
 	const [adding, setAdding] = useState(false);
@@ -681,6 +682,30 @@ function LanguageSection({ cfg, setCfg }: {
 									{ value: "none", label: "No prefix — /posts/slug/ (all locales)" },
 								]}
 							/>
+						</div>
+						{/* Auto-retranslate on update */}
+						<div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.75rem 0", borderTop: "1px solid var(--border)" }}>
+							<div>
+								<p style={{ fontSize: "0.875rem", fontWeight: 500, margin: 0 }}>Auto-retranslate on update</p>
+								<p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", margin: "0.15rem 0 0" }}>
+									Automatically re-translate stale translations when the source document is updated.
+								</p>
+							</div>
+							<button
+								type="button"
+								onClick={() => setCfg((c: any) => ({ ...c, autoRetranslateOnUpdate: !c.autoRetranslateOnUpdate }))}
+								style={{
+									width: 40, height: 22, borderRadius: 11, border: "none", cursor: "pointer",
+									background: cfg.autoRetranslateOnUpdate ? "#F7BB2E" : "var(--muted)",
+									position: "relative", transition: "background 0.2s", flexShrink: 0,
+								}}
+							>
+								<span style={{
+									position: "absolute", top: 2, left: cfg.autoRetranslateOnUpdate ? 20 : 2,
+									width: 18, height: 18, borderRadius: "50%", background: "#fff",
+									transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
+								}} />
+							</button>
 						</div>
 					</>
 				)}

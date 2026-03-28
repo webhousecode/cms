@@ -904,10 +904,21 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
   const [translationOf] = useState(initialDoc.translationOf ?? "");
   const [localeOpen, setLocaleOpen] = useState(false);
   const [createTranslationOpen, setCreateTranslationOpen] = useState(false);
+  const [sideBySide, setSideBySide] = useState(false);
+  const [sourceDoc, setSourceDoc] = useState<Record<string, unknown> | null>(null);
   const localeRef = useRef<HTMLDivElement>(null);
   const [, startTransition] = useTransition();
   const router = useRouter();
   const { openTab, setTabStatus } = useTabs();
+
+  // Fetch source document when side-by-side is toggled on a translation
+  useEffect(() => {
+    if (!sideBySide || !translationOf) { setSourceDoc(null); return; }
+    fetch(`/api/cms/${collection}/${translationOf}`)
+      .then(r => r.json())
+      .then(d => setSourceDoc(d.data ?? d))
+      .catch(() => setSourceDoc(null));
+  }, [sideBySide, translationOf, collection]);
 
   // Sync document status to active tab (for the colored dot)
   useEffect(() => {
@@ -1469,8 +1480,71 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
         </div>
       )}
 
+      {/* Side-by-side toggle for translation documents */}
+      {translationOf && (
+        <div style={{
+          display: "flex", alignItems: "center", gap: "0.5rem",
+          padding: "0.35rem 1rem",
+          background: sideBySide ? "rgb(247 187 46 / 0.06)" : "transparent",
+          borderBottom: "1px solid var(--border)",
+          fontSize: "0.75rem",
+        }}>
+          <button
+            type="button"
+            onClick={() => setSideBySide(!sideBySide)}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: "0.35rem",
+              padding: "0.2rem 0.6rem", borderRadius: "4px",
+              border: sideBySide ? "1px solid rgb(247 187 46 / 0.4)" : "1px solid var(--border)",
+              background: sideBySide ? "rgb(247 187 46 / 0.1)" : "transparent",
+              color: sideBySide ? "#F7BB2E" : "var(--muted-foreground)",
+              fontSize: "0.7rem", cursor: "pointer", fontWeight: 500,
+            }}
+          >
+            {sideBySide ? "✕ Close" : "⇔ Side-by-side"}
+          </button>
+          {sideBySide && <span style={{ color: "var(--muted-foreground)" }}>Source document (read-only) shown on the left</span>}
+        </div>
+      )}
+
       {/* Editor body */}
-      <div>
+      <div style={sideBySide && sourceDoc ? { display: "flex", gap: 0 } : undefined}>
+        {/* Source document pane (read-only) */}
+        {sideBySide && sourceDoc && (
+          <div style={{
+            flex: "0 0 50%", maxWidth: "50%", borderRight: "2px solid var(--border)",
+            padding: "2rem 1.5rem", overflowY: "auto", opacity: 0.7,
+            background: "var(--muted)", fontSize: "0.85rem",
+          }}>
+            <p style={{ fontSize: "0.65rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted-foreground)", marginBottom: "1rem" }}>
+              Source ({(initialDoc as any).translationOf})
+            </p>
+            {colConfig.fields.map((field) => {
+              const val = sourceDoc[field.name];
+              if (val === undefined || val === null || val === "") return null;
+              return (
+                <div key={field.name} style={{ marginBottom: "1.25rem" }}>
+                  <p style={{ fontSize: "0.65rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted-foreground)", marginBottom: "0.25rem" }}>
+                    {field.label || field.name}
+                  </p>
+                  {field.type === "richtext" ? (
+                    <div
+                      style={{ fontSize: "0.85rem", lineHeight: 1.6, color: "var(--foreground)" }}
+                      dangerouslySetInnerHTML={{ __html: String(val) }}
+                    />
+                  ) : field.type === "image" ? (
+                    <img src={String(val)} alt="" style={{ maxWidth: "100%", borderRadius: "6px" }} />
+                  ) : (
+                    <p style={{ fontSize: "0.85rem", color: "var(--foreground)", margin: 0, whiteSpace: "pre-wrap" }}>
+                      {typeof val === "object" ? JSON.stringify(val, null, 2) : String(val)}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+        <div style={sideBySide && sourceDoc ? { flex: "0 0 50%", maxWidth: "50%" } : undefined}>
         <div className="doc-editor-body space-y-10">
           <div className="flex gap-6 text-xs text-muted-foreground font-mono pb-8 border-b border-border flex-wrap">
             <span>Created {formatDate(doc.createdAt)}</span>
@@ -1622,6 +1696,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
             );
           })}
         </div>
+      </div>
       </div>
 
       {confirmTrash && (
