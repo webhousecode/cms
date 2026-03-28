@@ -33,6 +33,8 @@ export interface OrgSettings {
   aiInteractivesMaxTokens?: number;
   aiContentModel?: string;
   aiContentMaxTokens?: number;
+  aiCodeModel?: string;
+  aiPremiumModel?: string;
   aiChatModel?: string;
   aiChatMaxTokens?: number;
   aiChatMaxToolIterations?: number;
@@ -85,6 +87,8 @@ export const INHERITABLE_FIELDS = [
   "aiInteractivesMaxTokens",
   "aiContentModel",
   "aiContentMaxTokens",
+  "aiCodeModel",
+  "aiPremiumModel",
   "aiChatModel",
   "aiChatMaxTokens",
   "aiChatMaxToolIterations",

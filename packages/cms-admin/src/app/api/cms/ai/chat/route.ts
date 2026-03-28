@@ -3,6 +3,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import { getApiKey } from "@/lib/ai-config";
 import { buildContentContext } from "@/lib/content-context";
 import { readSiteConfig } from "@/lib/site-config";
+import { getModel } from "@/lib/ai/model-resolver";
 
 // Allow long-running streaming responses (Sonnet + large context can take 2+ minutes)
 export const maxDuration = 300;
@@ -95,7 +96,7 @@ ${contentContext}`;
     // Resolve model: caller override → site config default → hardcoded fallback
     const resolvedModel = (requestedModel && ALLOWED_MODELS.includes(requestedModel as typeof ALLOWED_MODELS[number]))
       ? requestedModel
-      : (ALLOWED_MODELS.includes(defaultModel as typeof ALLOWED_MODELS[number]) ? defaultModel : "claude-haiku-4-5-20251001");
+      : (ALLOWED_MODELS.includes(defaultModel as typeof ALLOWED_MODELS[number]) ? defaultModel : await getModel("content"));
     const resolvedMaxTokens = Math.min(Math.max(maxTokens ?? defaultMaxTokens, 256), 16384);
 
     const stream = await client.messages.stream({

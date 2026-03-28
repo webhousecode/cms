@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { getApiKey } from "@/lib/ai-config";
+import { getModel } from "@/lib/ai/model-resolver";
 
 export async function POST(request: NextRequest) {
   const apiKey = await getApiKey("anthropic");
@@ -18,8 +19,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "text and instruction required" }, { status: 400 });
     }
 
+    const contentModel = await getModel("content");
     const message = await client.messages.create({
-      model: "claude-haiku-4-5-20251001",
+      model: contentModel,
       max_tokens: 2048,
       system:
         "You are a professional content editor. Rewrite the provided text according to the instruction. Return ONLY the rewritten text — no explanation, no quotes, no preamble.",

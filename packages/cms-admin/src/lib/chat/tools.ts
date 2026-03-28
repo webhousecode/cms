@@ -586,9 +586,8 @@ export async function buildChatTools(): Promise<ToolPair[]> {
             const Anthropic = (await import("@anthropic-ai/sdk")).default;
             const seoApiKey = await getKey("anthropic");
             if (seoApiKey) {
-              const { readSiteConfig: readCfg } = await import("@/lib/site-config");
-              const cfg = await readCfg();
-              const seoModel = cfg.aiContentModel || "claude-haiku-4-5-20251001";
+              const { getModel } = await import("@/lib/ai/model-resolver");
+              const seoModel = await getModel("content");
               const seoClient = new Anthropic({ apiKey: seoApiKey });
               const seoRes = await seoClient.messages.create({
                 model: seoModel,
@@ -804,8 +803,10 @@ export async function buildChatTools(): Promise<ToolPair[]> {
         else if (fieldType === "textarea") constraint = "Output a short paragraph. No markdown headings.";
         else constraint = "Markdown formatting is allowed.";
 
+        const { getModel: getM } = await import("@/lib/ai/model-resolver");
+        const genModel = await getM("code");
         const response = await client.messages.create({
-          model: "claude-sonnet-4-6",
+          model: genModel,
           max_tokens: 2048,
           system: `You are a content writer. Generate content for the "${fieldDef?.label ?? field}" field. ${constraint}\nExisting document: ${JSON.stringify(doc.data, null, 2)}`,
           messages: [{ role: "user", content: prompt }],
@@ -862,9 +863,11 @@ export async function buildChatTools(): Promise<ToolPair[]> {
         const apiKey = await getApiKey("anthropic");
         if (!apiKey) return "Error: Anthropic API key not configured.";
 
+        const { getModel: getM2 } = await import("@/lib/ai/model-resolver");
+        const rwModel = await getM2("code");
         const client = new Anthropic({ apiKey });
         const response = await client.messages.create({
-          model: "claude-sonnet-4-6",
+          model: rwModel,
           max_tokens: 2048,
           system: "You are a content rewriter. Output ONLY the rewritten content. No preamble, no explanation.",
           messages: [{
@@ -937,9 +940,11 @@ DESIGN GUIDELINES:
 - Subtle shadows and transitions for polish
 - Minimum touch target: 44px for interactive elements`;
 
+        const { getModel: getM3 } = await import("@/lib/ai/model-resolver");
+        const intModel = await getM3("code");
         const client = new Anthropic({ apiKey });
         const response = await client.messages.create({
-          model: "claude-sonnet-4-6",
+          model: intModel,
           max_tokens: 8192,
           system: systemPrompt,
           messages: [{ role: "user", content: `Create: ${title}\n\n${description}` }],

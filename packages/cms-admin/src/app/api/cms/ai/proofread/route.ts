@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { getApiKey } from "@/lib/ai-config";
+import { getModel } from "@/lib/ai/model-resolver";
 
 export async function POST(request: NextRequest) {
   const apiKey = await getApiKey("anthropic");
@@ -15,8 +16,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "text required" }, { status: 400 });
     }
 
+    const contentModel = await getModel("content");
     const message = await client.messages.create({
-      model: "claude-haiku-4-5-20251001",
+      model: contentModel,
       max_tokens: 4096,
       system: `You are a professional proofreader. Auto-detect the language of the text and check for spelling, grammar, and style errors.
 

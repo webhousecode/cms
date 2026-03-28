@@ -5,6 +5,7 @@ import { gatherSiteContext, buildChatSystemPrompt } from "@/lib/chat/system-prom
 import { buildChatTools } from "@/lib/chat/tools";
 import { getSiteRole } from "@/lib/require-role";
 import { readSiteConfig } from "@/lib/site-config";
+import { getModel } from "@/lib/ai/model-resolver";
 
 export const maxDuration = 300;
 
@@ -71,8 +72,8 @@ export async function POST(request: NextRequest) {
   const chatMaxTokens = siteConfig.aiChatMaxTokens || 8192;
   const chatMaxIterations = siteConfig.aiChatMaxToolIterations || 25;
 
-  // Resolve model: request param → site config → default
-  const defaultModel = siteConfig.aiChatModel || "claude-sonnet-4-6";
+  // Resolve model: request param → site config → code default
+  const defaultModel = siteConfig.aiChatModel || await getModel("code");
   const resolvedModel =
     requestedModel && ALLOWED_MODELS.includes(requestedModel as any)
       ? requestedModel

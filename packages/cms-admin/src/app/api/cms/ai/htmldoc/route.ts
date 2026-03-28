@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { getApiKey } from "@/lib/ai-config";
+import { getModel } from "@/lib/ai/model-resolver";
 
 export async function POST(request: NextRequest) {
   const apiKey = await getApiKey("anthropic");
@@ -33,8 +34,9 @@ Rules:
 - Return valid, well-formed HTML
 - If the instruction is unclear, make your best interpretation and apply it`;
 
+    const contentModel = await getModel("content");
     const stream = await client.messages.stream({
-      model: "claude-haiku-4-5-20251001",
+      model: contentModel,
       max_tokens: 16384,
       system: systemPrompt,
       messages: [

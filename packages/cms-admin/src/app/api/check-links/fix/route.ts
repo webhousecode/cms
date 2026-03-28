@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminCms, getAdminConfig } from "@/lib/cms";
 import Anthropic from "@anthropic-ai/sdk";
+import { getModel } from "@/lib/ai/model-resolver";
 
 export async function POST(req: NextRequest) {
   const body = await req.json() as {
@@ -67,8 +68,9 @@ export async function POST(req: NextRequest) {
   const anthropic = new Anthropic({ apiKey });
   const urlList = availableUrls.map((u) => `${u.url} — ${u.title} (${u.collection})`).join("\n");
 
+  const contentModel = await getModel("content");
   const msg = await anthropic.messages.create({
-    model: "claude-haiku-4-5-20251001",
+    model: contentModel,
     max_tokens: 256,
     messages: [
       {
