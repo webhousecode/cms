@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Upload, Sparkles, Trash2, Zap, MoreHorizontal, Pencil, Globe, Copy, FileText, LayoutGrid, List, Search, X, AlertTriangle, Loader2, Download } from "lucide-react";
+import { Upload, Sparkles, Trash2, Zap, MoreVertical, Pencil, Globe, Copy, FileText, LayoutGrid, List, Search, X, AlertTriangle, Loader2, Download } from "lucide-react";
 import { ActionBar, ActionBarBreadcrumb } from "@/components/action-bar";
 import {
   DropdownMenu,
@@ -589,8 +589,11 @@ function ItemDropdown({ item, onEdit, onTogglePublish, onClone, onTrash }: {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="flex items-center justify-center w-7 h-7 rounded-full border border-white/15 bg-black/60 backdrop-blur cursor-pointer text-white hover:bg-black/80 focus-visible:outline-none">
-        <MoreHorizontal style={{ width: "0.875rem", height: "0.875rem" }} />
+      <DropdownMenuTrigger
+        onClick={(e) => e.stopPropagation()}
+        className="p-1 rounded-md hover:bg-accent transition-colors focus-visible:outline-none bg-transparent border-0 cursor-pointer"
+      >
+        <MoreVertical style={{ width: "0.875rem", height: "0.875rem", color: "var(--muted-foreground)" }} />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-44">
         <DropdownMenuItem onClick={onEdit}>
