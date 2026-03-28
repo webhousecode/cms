@@ -203,13 +203,73 @@ The CMS does not manage provider env vars — that's the provider's responsibili
 
 > **NOTE — F107 Chat Integration:** When this feature introduces new API routes, tools, or admin actions, ensure they are also exposed as tool-use functions in F107 (Chat with Your Site). The chat interface must be able to perform any action the traditional admin UI can. See `docs/features/F107-chat-with-your-site.md`.
 
+## Phase 2 — OAuth Provider Integration (Seamless Deploy)
+
+### Problem with Current Approach
+
+The current deploy hook flow is manual: user must go to Vercel/Netlify dashboard, create a deploy hook, copy the URL, paste it in CMS admin. Competing CMS'er (Sanity, Contentful, Strapi) har "Connect Vercel" knapper der gør alt automatisk via OAuth.
+
+### Solution: OAuth Integration per Provider
+
+Same pattern as our GitHub OAuth (F91). Flowet:
+
+1. Bruger klikker **"Connect Vercel"** i CMS admin Deploy Settings
+2. OAuth popup → bruger godkender adgang til sin Vercel/Netlify konto
+3. CMS får et API token tilbage
+4. CMS kan nu via API: oprette projekter, linke repos, sætte deploy hooks, trigge builds — alt automatisk
+
+### Vercel Integration
+
+**Registration:** [vercel.com/docs/integrations](https://vercel.com/docs/integrations) — registrer en Vercel Integration (OAuth app), få client ID/secret.
+
+**API capabilities med token:**
+- `POST /v10/projects` — opret nyt Vercel projekt fra GitHub repo
+- `POST /v1/integrations/deploy/:id` — trigger deploy programmatisk
+- `GET /v6/deployments` — poll build status
+- `POST /v1/projects/:id/env` — sæt environment variables
+- `GET /v6/projects` — list brugerens projekter (for "link existing project" flow)
+
+**UI flow:**
+1. "Connect Vercel" → OAuth popup → token gemt i site config
+2. "Create Project" → vælg repo fra dropdown → Vercel projekt oprettet + deploy hook sat automatisk
+3. "Deploy" → et klik, ingen URL at paste
+
+### Netlify Integration
+
+**Registration:** [docs.netlify.com/api](https://docs.netlify.com/api/) — OAuth app registration.
+
+**API capabilities med token:**
+- `POST /api/v1/sites` — opret nyt site fra repo
+- `POST /api/v1/sites/:id/builds` — trigger build
+- `GET /api/v1/sites/:id/deploys` — poll status
+- `POST /api/v1/sites/:id/build_hooks` — opret build hook programmatisk
+
+### Implementation
+
+```
+packages/cms-admin/src/
+  app/api/auth/vercel/           # OAuth callback (same pattern as GitHub)
+  app/api/auth/netlify/          # OAuth callback
+  lib/vercel-api.ts              # Vercel API wrapper
+  lib/netlify-api.ts             # Netlify API wrapper
+  components/settings/
+    deploy-settings-panel.tsx    # Add "Connect Vercel/Netlify" buttons
+```
+
+### Effort Estimate
+
+**Large** — 4-5 days per provider. OAuth registration, token management, API integration, project creation flow, error handling. Reuses patterns from F91 (GitHub OAuth).
+
+---
+
 ## Dependencies
 
 - F12 One-Click Publish (in progress — deploy hooks already built in deploy-service.ts)
 - F41 GitHub Site Auto-Sync (done — revalidation webhook is the preferred path for content-only changes)
+- F91 Login with GitHub (done — OAuth pattern to reuse)
 
 ## Effort Estimate
 
-**Medium** — 2-3 days
+**Phase 1 (deploy hooks):** Medium — 2-3 days. Infrastructure exists, needs testing + status polling.
 
-The deploy hook infrastructure exists and works (`postHook()`, `flyDeploy()`). Main work is testing with real provider endpoints, adding status polling APIs, and wiring auto-deploy-on-save. No new UI patterns — extends existing deploy settings panel.
+**Phase 2 (OAuth integration):** Large — 4-5 days per provider. Full OAuth flow + API integration.
