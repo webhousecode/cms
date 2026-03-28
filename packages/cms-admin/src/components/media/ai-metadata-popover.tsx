@@ -116,7 +116,9 @@ export function AIMetadataPopover({ imageUrl, variant = "button", onAnalyzed, on
         alt: result.alt,
         tags: result.tags,
         analyzedAt: new Date().toISOString(),
-        provider: "gemini-2.0-flash",
+        provider: result.provider ?? "unknown",
+        captions: result.captions ?? null,
+        alts: result.alts ?? null,
       };
       setMeta(newMeta);
       onAnalyzed?.(newMeta);
