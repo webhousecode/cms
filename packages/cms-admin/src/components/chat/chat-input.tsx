@@ -369,9 +369,9 @@ export function ChatInput({ onSend, disabled, placeholder, visible, lastUserMess
             disabled={disabled || uploading}
             title="Upload files"
             style={{
-              width: "28px",
-              height: "28px",
-              borderRadius: "8px",
+              width: "32px",
+              height: "32px",
+              borderRadius: "50%",
               border: "1px solid var(--border)",
               display: "flex",
               alignItems: "center",
@@ -406,8 +406,8 @@ export function ChatInput({ onSend, disabled, placeholder, visible, lastUserMess
             onClick={handleSend}
             disabled={disabled || (!value.trim() && uploads.length === 0)}
             style={{
-              width: "40px",
-              height: "40px",
+              width: "32px",
+              height: "32px",
               borderRadius: "50%",
               border: "none",
               display: "flex",
@@ -421,7 +421,7 @@ export function ChatInput({ onSend, disabled, placeholder, visible, lastUserMess
               flexShrink: 0,
             }}
           >
-            <Send style={{ width: "18px", height: "18px" }} />
+            <Send style={{ width: "16px", height: "16px" }} />
           </button>
         </div>
       </div>
