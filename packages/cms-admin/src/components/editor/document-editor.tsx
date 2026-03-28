@@ -686,7 +686,14 @@ function PropertiesPanel({ doc, collection, onClose, onSaved }: {
 
       <div style={{ flex: 1, overflowY: "auto", padding: "1rem", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
         {/* ID */}
-        <CopyField label="ID" value={doc.id} labelStyle={labelStyle} valueStyle={{ ...valueStyle, color: "var(--muted-foreground)", fontSize: "0.72rem" }} />
+        <div>
+          <p style={labelStyle}>ID</p>
+          <p
+            style={{ ...valueStyle, color: "var(--muted-foreground)", fontSize: "0.72rem", cursor: "pointer" }}
+            title="Click to copy"
+            onClick={() => { navigator.clipboard.writeText(doc.id); }}
+          >{doc.id}</p>
+        </div>
 
         {/* Slug — editable */}
         <div>
