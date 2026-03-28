@@ -1578,7 +1578,7 @@ function LightboxExifPanel({ imageUrl }: { imageUrl: string }) {
 
   const lbl: React.CSSProperties = { fontSize: "0.65rem", color: "rgba(255,255,255,0.35)", textTransform: "uppercase", letterSpacing: "0.05em" };
   const val: React.CSSProperties = { fontSize: "0.75rem", color: "rgba(255,255,255,0.8)", fontFamily: "monospace" };
-  const row: React.CSSProperties = { display: "flex", justifyContent: "space-between", alignItems: "baseline" };
+  const row: React.CSSProperties = { display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: "0.75rem" };
 
   return (
     <div style={{ padding: "1rem 1.25rem", borderTop: "1px solid rgba(255,255,255,0.08)" }}>
