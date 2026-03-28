@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { getApiKey } from "@/lib/ai-config";
+import { getModel } from "@/lib/ai/model-resolver";
 
 export async function POST(request: NextRequest) {
   const apiKey = await getApiKey("anthropic");
@@ -24,8 +25,9 @@ export async function POST(request: NextRequest) {
 
     const client = new Anthropic({ apiKey });
 
+    const contentModel = await getModel("content");
     const msg = await client.messages.create({
-      model: "claude-haiku-4-5-20251001",
+      model: contentModel,
       max_tokens: 1024,
       system:
         "You are a CMS configuration assistant. Generate a concise, professional system prompt for an AI content agent. The prompt should define the agent's role, tone, constraints, and output format. Write in English. Return only the system prompt text — no explanations or markdown.",

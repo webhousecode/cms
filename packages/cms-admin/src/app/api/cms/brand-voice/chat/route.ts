@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { getApiKey } from "@/lib/ai-config";
+import { getModel } from "@/lib/ai/model-resolver";
 
 const SYSTEM = `You are a senior brand strategist conducting a discovery interview to define a website's Brand Voice & Goals document. This document will be the foundation for all future AI-generated content on the site — every agent will read it before writing anything.
 
@@ -91,8 +92,9 @@ async function runWithTools(
   let messages = [...apiMessages];
 
   for (let i = 0; i < 10; i++) {
+    const premiumModel = await getModel("premium");
     const response = await client.messages.create({
-      model: "claude-opus-4-6",
+      model: premiumModel,
       max_tokens: 1024,
       system: SYSTEM,
       tools: [FETCH_URL_TOOL],

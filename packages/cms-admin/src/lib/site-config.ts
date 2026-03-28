@@ -11,14 +11,18 @@ export interface SiteConfig {
   schemaEditEnabled: boolean;
   devInspector: boolean;
   showCloseAllTabs: boolean;
-  /** Default AI model for interactive generation/editing */
+  /** Default AI model for interactive generation/editing (legacy alias for aiCodeModel) */
   aiInteractivesModel: string;
   /** Default max tokens for interactive generation/editing */
   aiInteractivesMaxTokens: number;
-  /** Default AI model for content writing */
+  /** Default AI model for content writing (SEO, rewrite, proofread) */
   aiContentModel: string;
   /** Default max tokens for content writing */
   aiContentMaxTokens: number;
+  /** Default AI model for code/smart tasks (chat, interactives, generate) */
+  aiCodeModel: string;
+  /** Default AI model for premium tasks (brand voice) */
+  aiPremiumModel: string;
   /** Default AI model for chat conversations */
   aiChatModel: string;
   /** Default max tokens per chat response */
@@ -99,6 +103,8 @@ async function defaults(): Promise<SiteConfig> {
     aiInteractivesMaxTokens: 16384,
     aiContentModel: "claude-haiku-4-5-20251001",
     aiContentMaxTokens: 4096,
+    aiCodeModel: "claude-sonnet-4-6",
+    aiPremiumModel: "claude-opus-4-6",
     aiChatModel: "claude-sonnet-4-6",
     aiChatMaxTokens: 8192,
     aiChatMaxToolIterations: 25,

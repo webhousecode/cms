@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { getApiKey } from "@/lib/ai-config";
+import { getModel } from "@/lib/ai/model-resolver";
 
 const SYSTEM = `You are an AI agent configurator for a headless CMS. Given a natural language description of a desired content agent, return a single valid JSON object — no markdown, no explanation, no code fences.
 
@@ -55,8 +56,9 @@ export async function POST(request: NextRequest) {
   const client = new Anthropic({ apiKey });
 
   try {
+    const codeModel = await getModel("code");
     const message = await client.messages.create({
-      model: "claude-sonnet-4-6",
+      model: codeModel,
       max_tokens: 1024,
       system: SYSTEM,
       messages: [{ role: "user", content: description.trim() }],

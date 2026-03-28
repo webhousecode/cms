@@ -4,6 +4,7 @@ import { getApiKey } from "@/lib/ai-config";
 import { getAdminConfig } from "@/lib/cms";
 import { readBrandVoice, brandVoiceToPromptContext } from "@/lib/brand-voice";
 import { readCockpit, addCost } from "@/lib/cockpit";
+import { getModel } from "@/lib/ai/model-resolver";
 import { buildContentContext } from "@/lib/content-context";
 import { buildToolRegistry, type ToolDefinition, type ToolHandler } from "@/lib/tools";
 
@@ -153,7 +154,7 @@ export async function POST(request: NextRequest) {
       : prompt;
 
     const cockpit = await readCockpit();
-    const model = cockpit.primaryModel || "claude-sonnet-4-6";
+    const model = cockpit.primaryModel || await getModel("code");
 
     const client = new Anthropic({ apiKey });
 

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { getApiKey } from "@/lib/ai-config";
+import { getModel } from "@/lib/ai/model-resolver";
 import type { BrandVoice } from "@/lib/brand-voice";
 
 export async function POST(request: NextRequest) {
@@ -14,8 +15,9 @@ export async function POST(request: NextRequest) {
 
   const client = new Anthropic({ apiKey });
 
+  const premiumModel = await getModel("premium");
   const response = await client.messages.create({
-    model: "claude-opus-4-6",
+    model: premiumModel,
     max_tokens: 2048,
     messages: [
       {
