@@ -360,7 +360,7 @@ export default function InteractivesPage() {
       />
 
       {/* Search + Filters — matching collection-list pattern */}
-      <div style={{ padding: "1.25rem 1.25rem 0" }}>
+      <div style={{ padding: "2rem 2rem 0", maxWidth: "88rem" }}>
         <div style={{ display: "flex", gap: "0.75rem", marginBottom: "1rem", alignItems: "center", flexWrap: "wrap" }}>
           <div style={{ position: "relative", flex: 1, minWidth: "180px" }}>
             <Search style={{ position: "absolute", left: "0.625rem", top: "50%", transform: "translateY(-50%)", width: "0.8rem", height: "0.8rem", color: "var(--muted-foreground)", pointerEvents: "none" }} />
@@ -413,7 +413,7 @@ export default function InteractivesPage() {
         </div>
       ) : view === "grid" ? (
         /* ─── Grid View ─── */
-        <div style={{ padding: "1.25rem", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "1rem" }}>
+        <div style={{ padding: "0 2rem 2rem", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "1rem" }}>
           {filtered.map((item) => (
             <div
               key={item.id}
@@ -450,7 +450,7 @@ export default function InteractivesPage() {
         </div>
       ) : (
         /* ─── List View — Table matching collection-list style ─── */
-        <div style={{ padding: "0 1.25rem 1.25rem", }}>
+        <div style={{ padding: "0 2rem 2rem" }}>
         <div style={{ border: "1px solid var(--border)", borderRadius: "10px", overflowX: "auto" }}>
           <table style={{ width: "100%", borderCollapse: "collapse", minWidth: "600px" }}>
             <thead>
