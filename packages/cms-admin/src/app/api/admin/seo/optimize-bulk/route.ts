@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
   } catch { /* no body = all */ }
 
   // Collect docs to optimize
-  const toOptimize: Array<{ collection: string; slug: string; title: string; content: string; data: Record<string, unknown> }> = [];
+  const toOptimize: Array<{ collection: string; slug: string; id: string; title: string; content: string; data: Record<string, unknown> }> = [];
 
   for (const col of config.collections) {
     try {
@@ -45,6 +45,7 @@ export async function POST(req: NextRequest) {
         toOptimize.push({
           collection: col.name,
           slug: doc.slug,
+          id: doc.id,
           title: String(data.title ?? data.name ?? doc.slug),
           content: String(data.content ?? data.body ?? "").slice(0, 2000),
           data,
@@ -105,7 +106,7 @@ Return JSON:
 
           // Save to document
           const existing = (doc.data._seo as Record<string, unknown>) ?? {};
-          await cms.content.update(doc.collection, doc.slug, {
+          await cms.content.update(doc.collection, doc.id, {
             data: { ...doc.data, _seo: { ...existing, ...seoUpdate } },
           });
 
