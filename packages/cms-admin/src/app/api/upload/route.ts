@@ -64,24 +64,47 @@ export async function POST(req: NextRequest) {
         }
 
         // AI analysis (caption, alt-text, tags) — runs async, non-blocking
+        // Uses multi-locale when site has >1 locale configured
         try {
-          const { analyzeImage } = await import("@/lib/ai/image-analysis");
           const ext = filename.split(".").pop()?.toLowerCase() ?? "jpeg";
           const mimeType = ext === "png" ? "image/png" : ext === "webp" ? "image/webp" : "image/jpeg";
-          analyzeImage(buffer, mimeType).then(async (analysis) => {
-            if (analysis) {
+          const siteLocales = siteConfig.locales?.length ? siteConfig.locales : [];
+          const metaKey = folder ? `${folder}/${filename}` : filename;
+
+          if (siteLocales.length > 1) {
+            const { analyzeImageMultiLocale } = await import("@/lib/ai/image-analysis");
+            analyzeImageMultiLocale(buffer, mimeType, siteLocales).then(async (result) => {
+              const firstLocale = siteLocales[0];
               const { appendMediaMeta: append } = await import("@/lib/media/media-meta");
-              await append(folder ? `${folder}/${filename}` : filename, {
-                aiCaption: analysis.caption,
-                aiAlt: analysis.alt,
-                aiTags: analysis.tags,
+              await append(metaKey, {
+                aiCaption: result.captions[firstLocale] ?? Object.values(result.captions)[0] ?? "",
+                aiAlt: result.alts[firstLocale] ?? Object.values(result.alts)[0] ?? "",
+                aiTags: result.tags,
                 aiAnalyzedAt: new Date().toISOString(),
-              });
-              console.log(`[upload] AI analyzed ${filename}: "${analysis.alt}"`);
-            }
-          }).catch((err) => {
-            console.error(`[upload] AI analysis failed for ${filename}:`, err instanceof Error ? err.message : err);
-          });
+                aiCaptions: result.captions,
+                aiAlts: result.alts,
+              } as any);
+              console.log(`[upload] AI analyzed ${filename} (${siteLocales.join("+")}): ${Object.entries(result.alts).map(([l,a]) => `${l}="${a}"`).join(", ")}`);
+            }).catch((err) => {
+              console.error(`[upload] AI multi-locale analysis failed for ${filename}:`, err instanceof Error ? err.message : err);
+            });
+          } else {
+            const { analyzeImage } = await import("@/lib/ai/image-analysis");
+            analyzeImage(buffer, mimeType).then(async (analysis) => {
+              if (analysis) {
+                const { appendMediaMeta: append } = await import("@/lib/media/media-meta");
+                await append(metaKey, {
+                  aiCaption: analysis.caption,
+                  aiAlt: analysis.alt,
+                  aiTags: analysis.tags,
+                  aiAnalyzedAt: new Date().toISOString(),
+                });
+                console.log(`[upload] AI analyzed ${filename}: "${analysis.alt}"`);
+              }
+            }).catch((err) => {
+              console.error(`[upload] AI analysis failed for ${filename}:`, err instanceof Error ? err.message : err);
+            });
+          }
         } catch { /* AI not configured — skip */ }
       } catch (err) {
         // Non-fatal — upload succeeded, variants/exif are bonus
