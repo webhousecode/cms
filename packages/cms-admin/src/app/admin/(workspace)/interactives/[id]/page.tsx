@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { ArrowLeft, Eye, MousePointer2, Code, Save, Loader2, Copy, History, Settings2, Trash2, Globe, FileText, AlertTriangle, Sparkles, Pencil, ChevronDown } from "lucide-react";
+import { ArrowLeft, Eye, MousePointer2, Code, Save, Loader2, Copy, History, Settings2, Trash2, Globe, FileText, AlertTriangle, Sparkles, Pencil, ChevronDown, Languages } from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { useTabs } from "@/lib/tabs-context";
@@ -327,6 +327,7 @@ export default function InteractiveDetailPage() {
   const [defaultLocale, setDefaultLocale] = useState("en");
   const [siblings, setSiblings] = useState<Array<{ id: string; name: string; locale?: string; translationOf?: string }>>([]);
   const [translating, setTranslating] = useState(false);
+  const [localeDropdownOpen, setLocaleDropdownOpen] = useState(false);
   const [originalContent, setOriginalContent] = useState("");
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const { setTabTitle } = useTabs();
@@ -542,6 +543,58 @@ export default function InteractiveDetailPage() {
               <Globe className="w-3 h-3" />
               {detail.status ?? "draft"}
             </span>
+
+            {/* Locale selector — matches document editor */}
+            {siteLocales.length > 1 && (detail.locale || defaultLocale) && (
+              <div style={{ position: "relative" }}>
+                <button
+                  type="button"
+                  onClick={() => siblings.length > 0 ? setLocaleDropdownOpen(o => !o) : undefined}
+                  title={siblings.length > 0 ? "Switch between translations" : `Language: ${(detail.locale || defaultLocale).toUpperCase()}`}
+                  style={{
+                    display: "inline-flex", alignItems: "center", gap: "0.3rem",
+                    padding: "0.2rem 0.5rem", borderRadius: "6px",
+                    border: "1px solid var(--border)", background: "transparent",
+                    color: "var(--muted-foreground)",
+                    fontSize: "0.75rem", fontFamily: "monospace",
+                    cursor: siblings.length > 0 ? "pointer" : "default",
+                  }}
+                >
+                  <Languages className="w-3.5 h-3.5" />
+                  {(detail.locale || defaultLocale).toUpperCase()}
+                  {siblings.length > 0 && <span style={{ fontSize: "0.6rem", opacity: 0.5 }}>▾</span>}
+                </button>
+                {localeDropdownOpen && siblings.length > 0 && (
+                  <div style={{
+                    position: "absolute", top: "calc(100% + 4px)", right: 0, zIndex: 50,
+                    background: "var(--popover)", border: "1px solid var(--border)",
+                    borderRadius: "8px", boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
+                    minWidth: "140px", overflow: "hidden",
+                  }}>
+                    <div style={{
+                      padding: "0.4rem 0.75rem", fontSize: "0.8rem", fontFamily: "monospace",
+                      background: "var(--accent)", color: "var(--foreground)", fontWeight: 600,
+                    }}>
+                      {(detail.locale || defaultLocale).toUpperCase()} — current
+                    </div>
+                    {siblings.map(s => (
+                      <Link
+                        key={s.id}
+                        href={`/admin/interactives/${s.id}`}
+                        onClick={() => setLocaleDropdownOpen(false)}
+                        style={{
+                          display: "block", padding: "0.4rem 0.75rem", fontSize: "0.8rem",
+                          fontFamily: "monospace", color: "var(--foreground)",
+                          textDecoration: "none", borderTop: "1px solid var(--border)",
+                        }}
+                      >
+                        {(s.locale || "?").toUpperCase()} — {s.name}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Clone */}
             {!readOnly && (

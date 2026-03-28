@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Upload, Sparkles, Trash2, Zap, MoreHorizontal, Pencil, Globe, Copy, FileText, LayoutGrid, List, Search, X, AlertTriangle, Loader2 } from "lucide-react";
+import { Upload, Sparkles, Trash2, Zap, MoreHorizontal, Pencil, Globe, Copy, FileText, LayoutGrid, List, Search, X, AlertTriangle, Loader2, Download } from "lucide-react";
 import { ActionBar, ActionBarBreadcrumb } from "@/components/action-bar";
 import {
   DropdownMenu,
@@ -571,6 +571,20 @@ function ActionsMenu({ item, onEdit, onTogglePublish, onClone, onTrash }: {
 function ItemDropdown({ item, onEdit, onTogglePublish, onClone, onTrash }: {
   item: InteractiveMeta; onEdit: () => void; onTogglePublish: () => void; onClone: () => void; onTrash: () => void;
 }) {
+  async function downloadItem() {
+    try {
+      const res = await fetch(`/api/interactives/${item.id}`);
+      const data = await res.json();
+      const blob = new Blob([data.content ?? ""], { type: "text/html" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = item.filename || `${item.name}.html`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch { /* ignore */ }
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger className="flex items-center justify-center w-7 h-7 rounded-full border border-white/15 bg-black/60 backdrop-blur cursor-pointer text-white hover:bg-black/80 focus-visible:outline-none">
@@ -591,6 +605,10 @@ function ItemDropdown({ item, onEdit, onTogglePublish, onClone, onTrash }: {
         <DropdownMenuItem onClick={onClone}>
           <Copy className="mr-2 h-4 w-4 text-muted-foreground" />
           Clone
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={downloadItem}>
+          <Download className="mr-2 h-4 w-4 text-muted-foreground" />
+          Download
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={onTrash} className="text-destructive focus:text-destructive">
