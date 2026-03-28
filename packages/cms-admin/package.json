@@ -7,7 +7,12 @@
     "dev": "next dev --port 3010",
     "build": "next build",
     "start": "next start --port 3010",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "test:api": "vitest run tests/api/",
+    "test:all": "vitest run && playwright test"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.64",
