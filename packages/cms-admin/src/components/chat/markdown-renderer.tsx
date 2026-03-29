@@ -415,7 +415,9 @@ function DocPill({ collection, slug, variant }: { collection: string; slug: stri
         e.preventDefault();
         e.stopPropagation();
         if (variant === "edit") {
-          window.open(`/admin/${collection}/${slug}`, "_blank");
+          // Navigate to document — ?mode=admin ensures admin UI shows (not chat)
+          window.location.href = `/admin/${collection}/${slug}?mode=admin`;
+          return;
         } else {
           // Resolve the exact preview URL — fetch doc + collection schema
           const base = await getPreviewBase();
