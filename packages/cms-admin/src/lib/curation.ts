@@ -83,10 +83,16 @@ export async function approveQueueItem(id: string, asDraft = false): Promise<Que
   const cms = await getAdminCms();
   const status = asDraft ? "draft" : "published" as const;
 
-  const input: { slug: string; status: "draft" | "published"; data: Record<string, unknown> } = {
+  // Resolve locale for the new document
+  const { readSiteConfig } = await import("@/lib/site-config");
+  const siteConfig = await readSiteConfig();
+  const docLocale = siteConfig.defaultLocale || "en";
+
+  const input: { slug: string; status: "draft" | "published"; data: Record<string, unknown>; locale?: string } = {
     slug: item.slug,
     status,
     data: item.contentData,
+    locale: docLocale,
   };
 
   try {

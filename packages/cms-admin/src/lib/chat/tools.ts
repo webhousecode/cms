@@ -635,16 +635,16 @@ export async function buildChatTools(): Promise<ToolPair[]> {
         const existing = await cms.content.findBySlug(collection, slug).catch(() => null);
         if (existing) return `Error: Document with slug "${slug}" already exists in ${collection}.`;
 
-        // Set locale on creation for multi-locale sites
+        // Always set locale — even single-locale sites use defaultLocale
         const { readSiteConfig } = await import("@/lib/site-config");
         const siteConfig = await readSiteConfig();
-        const docLocale = siteConfig.locales?.length > 1 ? (siteConfig.defaultLocale || "en") : undefined;
+        const docLocale = siteConfig.defaultLocale || "en";
 
         const doc = await cms.content.create(collection, {
           slug,
           data: cleanData,
           status: "draft",
-          ...(docLocale && { locale: docLocale }),
+          locale: docLocale,
         });
 
         // Auto-generate _seo with AI (non-blocking — update after creation)
@@ -1426,7 +1426,7 @@ DESIGN GUIDELINES:
           existing = await cms.content.findBySlug(collection, newSlug).catch(() => null);
           n++;
         }
-        const cloned = await cms.content.create(collection, { slug: newSlug, status: "draft", data: { ...doc.data } });
+        const cloned = await cms.content.create(collection, { slug: newSlug, status: "draft", data: { ...doc.data }, ...(doc.locale ? { locale: doc.locale } : {}) });
         return `Cloned **${doc.data.title ?? slug}** → ${collection}/${newSlug} (draft)`;
       },
     },

@@ -86,6 +86,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
         slug: newSlug,
         status: "draft",
         data: { ...original.data },
+        ...(original.locale ? { locale: original.locale } : {}),
       });
       return NextResponse.json(cloned);
     }
