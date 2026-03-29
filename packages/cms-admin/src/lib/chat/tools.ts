@@ -147,16 +147,24 @@ export async function buildChatTools(): Promise<ToolPair[]> {
           }
         }
 
-        // Build page path — check for category field that adds a segment to the URL
+        // Build page path — locale prefix + category
         const col = config.collections.find((c) => c.name === collection);
-        const prefix = col?.urlPrefix ?? `/${collection}`;
-        const cleanPrefix = prefix.endsWith("/") ? prefix.slice(0, -1) : prefix;
+        const { readSiteConfig: readSC2 } = await import("@/lib/site-config");
+        const sc2 = await readSC2();
+        const docLoc = (doc as any).locale || sc2.defaultLocale || "en";
+        const defLoc = sc2.defaultLocale || "en";
+        const localeStrategy = sc2.localeStrategy || "prefix-other";
+        // Locale prefix: "prefix-other" = default locale has no prefix, others get /{locale}
+        const locPrefix = (localeStrategy === "prefix-all" || docLoc !== defLoc) ? `/${docLoc}` : "";
+
+        const urlPrefix = col?.urlPrefix ?? `/${collection}`;
+        const cleanPrefix = urlPrefix.endsWith("/") ? urlPrefix.slice(0, -1) : urlPrefix;
         // If collection has a "category" select field, insert its value into the path
         const categoryField = col?.fields.find(f => f.name === "category" && f.type === "select");
         const categoryValue = categoryField ? String(doc.data.category ?? "") : "";
         const pagePath = categoryValue
-          ? `${cleanPrefix}/${categoryValue}/${slug}/`
-          : `${cleanPrefix}/${slug}/`;
+          ? `${locPrefix}${cleanPrefix}/${categoryValue}/${slug}/`
+          : `${locPrefix}${cleanPrefix}/${slug}/`;
 
         return JSON.stringify(
           { slug: doc.slug, status: doc.status, _pagePath: pagePath, ...data },
