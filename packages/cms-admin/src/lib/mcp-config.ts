@@ -1,5 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
+import crypto from "crypto";
 import { getActiveSitePaths } from "./site-paths";
 
 export interface McpApiKey {
@@ -85,4 +86,74 @@ export async function getMcpApiKeys(): Promise<McpApiKey[]> {
     keys.push({ key: single, label: "Default", scopes: ["read", "write", "publish", "deploy", "ai"] });
   }
   return keys;
+}
+
+// ── Site-scoped key resolution ─────────────────────────────────
+
+export interface ResolvedMcpKey {
+  orgId: string;
+  siteId: string;
+  label: string;
+  scopes: string[];
+}
+
+/**
+ * Resolve an API key to a specific org+site by scanning ALL sites' mcp-config.json.
+ *
+ * This is the ONLY safe way to authenticate MCP requests from external clients
+ * (Claude Desktop, Cursor, etc.) that don't send cookies. The API key uniquely
+ * identifies a site — no cookie fallback, no default site ambiguity.
+ *
+ * Uses timing-safe comparison to prevent timing attacks.
+ */
+export async function resolveApiKeyToSite(bearerHeader: string | null): Promise<ResolvedMcpKey | null> {
+  if (!bearerHeader?.startsWith("Bearer ")) return null;
+  const token = bearerHeader.slice(7).trim();
+  if (!token) return null;
+
+  const tokenBuf = Buffer.from(token);
+
+  // Try multi-site mode first (registry with orgs → sites)
+  try {
+    const { loadRegistry } = await import("./site-registry");
+    const { getSitePathsFor } = await import("./site-paths");
+    const registry = await loadRegistry();
+
+    if (registry) {
+      for (const org of registry.orgs) {
+        for (const site of org.sites) {
+          const paths = await getSitePathsFor(org.id, site.id);
+          if (!paths) continue;
+
+          const configPath = path.join(paths.dataDir, "mcp-config.json");
+          try {
+            const raw = await fs.readFile(configPath, "utf-8");
+            const config = JSON.parse(raw) as McpConfig;
+            for (const key of config.keys) {
+              const keyBuf = Buffer.from(key.key);
+              if (keyBuf.length === tokenBuf.length && crypto.timingSafeEqual(keyBuf, tokenBuf)) {
+                return { orgId: org.id, siteId: site.id, label: key.label, scopes: key.scopes };
+              }
+            }
+          } catch {
+            // No mcp-config.json for this site — skip
+          }
+        }
+      }
+      return null; // Key not found in any site
+    }
+  } catch {
+    // No registry — single-site mode
+  }
+
+  // Single-site mode: validate against active site keys
+  const keys = await getMcpApiKeys();
+  for (const key of keys) {
+    const keyBuf = Buffer.from(key.key);
+    if (keyBuf.length === tokenBuf.length && crypto.timingSafeEqual(keyBuf, tokenBuf)) {
+      return { orgId: "default", siteId: "default", label: key.label, scopes: key.scopes };
+    }
+  }
+
+  return null;
 }

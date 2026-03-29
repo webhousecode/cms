@@ -1,15 +1,14 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { getTransportSession } from "@webhouse/cms-mcp-client";
-import { validateApiKey } from "@webhouse/cms-mcp-server";
-import { getMcpApiKeys } from "@/lib/mcp-config";
+import { resolveApiKeyToSite } from "@/lib/mcp-config";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(request: NextRequest) {
-  const keys = await getMcpApiKeys();
-  const auth = validateApiKey(request.headers.get("authorization"), keys);
-  if (!auth.authenticated) {
-    return NextResponse.json({ error: auth.error }, { status: 401 });
+  // Validate API key (site-scoped — same key that opened the SSE session)
+  const resolved = await resolveApiKeyToSite(request.headers.get("authorization"));
+  if (!resolved) {
+    return NextResponse.json({ error: "Invalid API key" }, { status: 401 });
   }
 
   const sessionId = request.nextUrl.searchParams.get("sessionId");
