@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Eye, MousePointer2, Code, Save, Loader2, Copy, History, Settings2, Trash2, Globe, FileText, AlertTriangle, Sparkles, Pencil, ChevronDown, Languages } from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import { toast } from "sonner";
 import { useTabs } from "@/lib/tabs-context";
 import { Button } from "@/components/ui/button";
 import { ActionBar, ActionBarBreadcrumb } from "@/components/action-bar";
@@ -832,7 +833,13 @@ export default function InteractiveDetailPage() {
                     });
                     if (res.ok) {
                       const result = await res.json();
+                      toast.success("Translation created");
                       router.push(`/admin/interactives/${result.id}`);
+                    } else {
+                      const body = await res.json().catch(() => ({ error: "Translation failed" }));
+                      toast.error(body.error ?? "Translation failed");
+                      // Reload to pick up any locale corrections
+                      loadDetail();
                     }
                   } finally {
                     setTranslating(false);
