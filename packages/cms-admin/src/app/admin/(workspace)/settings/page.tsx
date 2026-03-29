@@ -13,6 +13,7 @@ import { TeamPanel } from "@/components/settings/team-panel";
 import { EmailSettingsPanel } from "@/components/settings/email-settings-panel";
 import { ToolsSettingsPanel } from "@/components/settings/tools-settings-panel";
 import { DeploySettingsPanel } from "@/components/settings/deploy-settings-panel";
+import { GeoSettingsPanel } from "@/components/settings/geo-settings-panel";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { readSiteConfig } from "@/lib/site-config";
 import { readBrandVoice } from "@/lib/brand-voice";
@@ -54,6 +55,7 @@ export default async function SettingsPage({
     { id: "brand-voice", label: "Brand Voice" },
     { id: "deploy",      label: "Deploy" },
     { id: "tools",       label: "Automation" },
+    { id: "geo",         label: "GEO" },
     { id: "mcp",         label: "MCP" },
     ...(globals.length > 0 ? [{ id: "globals", label: "Globals" }] : []),
     ...(siteConfig.schemaEditEnabled ? [{ id: "schema", label: "Schema" }] : []),
@@ -264,6 +266,13 @@ export default async function SettingsPage({
         {tab === "tools" && (
           <div className="max-w-lg" data-testid="settings-panel-tools">
             <ToolsSettingsPanel />
+          </div>
+        )}
+
+        {/* GEO tab — AI visibility settings */}
+        {tab === "geo" && (
+          <div className="max-w-lg" data-testid="settings-panel-geo">
+            <GeoSettingsPanel />
           </div>
         )}
 
