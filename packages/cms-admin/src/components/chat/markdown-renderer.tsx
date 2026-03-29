@@ -369,10 +369,19 @@ function renderBlock(block: Block, key: number): React.ReactNode {
 
 // ── Inline rendering ─────────────────────────────────────
 
-/** Resolve sirv preview base URL (cached) */
+/** Resolve preview base URL — previewSiteUrl first, sirv as fallback */
 let _previewBase: string | null = null;
 async function getPreviewBase(): Promise<string> {
   if (_previewBase) return _previewBase;
+  // Prefer configured previewSiteUrl
+  try {
+    const r = await fetch("/api/admin/site-config", { cache: "no-store" });
+    if (r.ok) {
+      const d = await r.json();
+      if (d?.previewSiteUrl) { _previewBase = d.previewSiteUrl.replace(/\/$/, ""); return _previewBase; }
+    }
+  } catch { /* no config */ }
+  // Fallback: sirv
   try {
     const r = await fetch("/api/preview-serve", { method: "POST" });
     if (r.ok) {
@@ -380,13 +389,6 @@ async function getPreviewBase(): Promise<string> {
       if (d?.url) { _previewBase = d.url; return _previewBase; }
     }
   } catch { /* sirv not available */ }
-  try {
-    const r = await fetch("/api/admin/site-config");
-    if (r.ok) {
-      const d = await r.json();
-      if (d?.previewSiteUrl) { _previewBase = d.previewSiteUrl; return _previewBase; }
-    }
-  } catch { /* no config */ }
   return "";
 }
 
@@ -400,13 +402,21 @@ function DocPill({ collection, slug, variant }: { collection: string; slug: stri
         e.preventDefault();
         e.stopPropagation();
         if (variant === "edit") {
-          window.open(`/admin/${collection}/${slug}?mode=admin`, "_blank");
+          window.open(`/admin/${collection}/${slug}`, "_blank");
         } else {
+          // Open in preview site — resolve locale prefix + urlPrefix
           const base = await getPreviewBase();
-          if (base) {
-            window.open(`${base}/${collection}/${slug}`, "_blank");
-          } else {
-            window.open(`/${collection}/${slug}`, "_blank");
+          try {
+            const cfgRes = await fetch("/api/admin/site-config", { cache: "no-store" });
+            const cfg = cfgRes.ok ? await cfgRes.json() : {};
+            const configRes = await fetch("/api/cms/config");
+            const siteConfig = configRes.ok ? await configRes.json() : { collections: [] };
+            const col = siteConfig.collections?.find((c: any) => c.name === collection);
+            const urlPrefix = col?.urlPrefix ?? `/${collection}`;
+            const docLocale = ""; // We don't have doc locale here — fall back to simple URL
+            window.open(`${base}${urlPrefix}/${slug}/`, "_blank");
+          } catch {
+            window.open(`${base}/${collection}/${slug}/`, "_blank");
           }
         }
       }}
