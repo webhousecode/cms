@@ -313,6 +313,19 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
     }
   }
 
+  async function searchChats() {
+    try {
+      const url = convSearch.trim()
+        ? `/api/cms/chat/conversations?q=${encodeURIComponent(convSearch.trim())}`
+        : "/api/cms/chat/conversations";
+      const res = await fetch(url);
+      if (res.ok) {
+        const { conversations: convs } = await res.json();
+        setConversations(convs ?? []);
+      }
+    } catch { /* ignore */ }
+  }
+
   async function loadConversation(id: string) {
     try {
       const res = await fetch(`/api/cms/chat/conversations/${id}`);
@@ -514,7 +527,7 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
                       transition: "all 150ms",
                     }}
                   >
-                    Conversations
+                    Chats
                   </button>
                   <button
                     onClick={() => { setDrawerTab("memory"); loadMemories(); }}
@@ -552,7 +565,7 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
             <div style={{ flex: 1, overflowY: "auto" }}>
               {drawerTab === "conversations" ? (
                 <>
-                  {/* Search conversations */}
+                  {/* Search chats */}
                   <div style={{ padding: "10px 16px 6px" }}>
                     <div style={{
                       display: "flex", alignItems: "center", gap: "6px",
@@ -563,7 +576,8 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
                       <input
                         value={convSearch}
                         onChange={(e) => setConvSearch(e.target.value)}
-                        placeholder="Search conversations..."
+                        onKeyDown={(e) => { if (e.key === "Enter") searchChats(); }}
+                        placeholder="Search chats..."
                         style={{
                           flex: 1, border: "none", outline: "none", background: "transparent",
                           fontSize: "0.75rem", color: "var(--foreground)", fontFamily: "inherit",
@@ -571,7 +585,11 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
                       />
                       {convSearch && (
                         <button
-                          onClick={() => setConvSearch("")}
+                          onClick={async () => {
+                            setConvSearch("");
+                            const res = await fetch("/api/cms/chat/conversations");
+                            if (res.ok) { const { conversations: convs } = await res.json(); setConversations(convs ?? []); }
+                          }}
                           style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0" }}
                         >
                           <X style={{ width: "12px", height: "12px" }} />
@@ -580,15 +598,13 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
                     </div>
                   </div>
                   {(() => {
-                    const filtered = conversations
-                      .filter((c) => !convSearch.trim() || c.title.toLowerCase().includes(convSearch.toLowerCase()))
-                      .sort((a, b) => (b.starred ? 1 : 0) - (a.starred ? 1 : 0));
-                    return filtered.length === 0 ? (
+                    const sorted = [...conversations].sort((a, b) => (b.starred ? 1 : 0) - (a.starred ? 1 : 0));
+                    return sorted.length === 0 ? (
                       <div style={{ padding: "20px", textAlign: "center", fontSize: "0.8rem", color: "var(--muted-foreground)" }}>
-                        {convSearch.trim() ? "No conversations match your search" : "No previous conversations"}
+                        {convSearch.trim() ? "No chats match your search" : "No previous chats"}
                       </div>
                     ) : (
-                      filtered.map((c) => (
+                      sorted.map((c) => (
                         <HistoryItem
                           key={c.id}
                           id={c.id}

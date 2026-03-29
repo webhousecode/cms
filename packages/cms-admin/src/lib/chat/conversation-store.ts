@@ -64,6 +64,50 @@ export async function listConversations(userId: string): Promise<Omit<StoredConv
   }
 }
 
+/** Search conversations by matching query against title + all message content */
+export async function searchConversations(
+  userId: string,
+  query: string
+): Promise<Omit<StoredConversation, "messages">[]> {
+  const dir = await getConversationsDir(userId);
+  const q = query.toLowerCase();
+  const results: Omit<StoredConversation, "messages">[] = [];
+
+  try {
+    const files = await fs.readdir(dir);
+    for (const file of files) {
+      if (!file.endsWith(".json")) continue;
+      try {
+        const raw = await fs.readFile(path.join(dir, file), "utf-8");
+        const conv = JSON.parse(raw) as StoredConversation;
+
+        // Search title + all messages
+        const haystack = [
+          conv.title,
+          ...conv.messages.map((m) => m.content),
+        ].join(" ").toLowerCase();
+
+        if (haystack.includes(q)) {
+          results.push({
+            id: conv.id,
+            userId: conv.userId,
+            title: conv.title,
+            createdAt: conv.createdAt,
+            updatedAt: conv.updatedAt,
+            starred: conv.starred,
+          });
+        }
+      } catch { /* skip */ }
+    }
+  } catch {
+    return [];
+  }
+
+  return results.sort(
+    (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+  );
+}
+
 export async function getConversation(userId: string, id: string): Promise<StoredConversation | null> {
   const dir = await getConversationsDir(userId);
   try {
