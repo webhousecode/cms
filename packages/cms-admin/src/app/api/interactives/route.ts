@@ -29,7 +29,15 @@ export async function POST(req: NextRequest) {
     const adapter = await getMediaAdapter();
     const entry = await adapter.createInteractive(file.name, buffer);
 
-    return NextResponse.json(entry, { status: 201 });
+    // Auto-set locale: detect from HTML lang attribute, fallback to site default
+    const html = buffer.toString("utf-8");
+    const langMatch = html.match(/<html[^>]*\slang=["']([^"']+)["']/i);
+    const { readSiteConfig } = await import("@/lib/site-config");
+    const siteConfig = await readSiteConfig();
+    const locale = langMatch?.[1]?.toLowerCase() || siteConfig.defaultLocale || "en";
+    await adapter.updateInteractive(entry.id, { locale });
+
+    return NextResponse.json({ ...entry, locale }, { status: 201 });
   } catch (err) {
     console.error("[interactives] upload error:", err);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });

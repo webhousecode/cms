@@ -1215,7 +1215,6 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
                       className="hover:bg-accent"
                     >
                       <span style={{ fontWeight: 600 }}>{(t.locale ?? "?").toUpperCase()}</span>
-                      <span style={{ color: "var(--muted-foreground)", fontSize: "0.7rem" }}>{t.slug}</span>
                       <span style={{
                         width: "6px", height: "6px", borderRadius: "50%", marginLeft: "auto",
                         backgroundColor: t.status === "published" ? "rgb(74 222 128)" : "rgb(234 179 8)",
