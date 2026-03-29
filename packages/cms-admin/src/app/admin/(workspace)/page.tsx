@@ -1,8 +1,8 @@
 import { getAdminCms, getAdminConfig, getActiveSiteInfo, EmptyOrgError } from "@/lib/cms";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Clock, Calendar, Image, Zap, Search } from "lucide-react";
-import { calculateSeoScore, type SeoFields } from "@/lib/seo/score";
+import { Clock, Calendar, Image, Zap, Search, Eye } from "lucide-react";
+import { calculateSeoScore, calculateGeoScore, type SeoFields } from "@/lib/seo/score";
 import { readKeywordStore, analyzeKeywords } from "@/lib/seo/keywords";
 import { getMediaAdapter } from "@/lib/media";
 import { SiteIntroCard } from "@/components/site-intro-card";
@@ -67,9 +67,10 @@ export default async function AdminDashboard() {
   ).length;
   const intsCount = intsList.filter((m) => m.status !== "trashed").length;
 
-  // SEO stats
+  // SEO + GEO stats
   let seoTotal = 0;
   let seoScoreSum = 0;
+  let geoScoreSum = 0;
   let seoOptimized = 0;
   let seoIssues = 0;
   for (const { documents } of allResults) {
@@ -78,13 +79,17 @@ export default async function AdminDashboard() {
       const data = (doc as { data?: Record<string, unknown> }).data ?? {};
       const seo = (data._seo as SeoFields) ?? {};
       const { score } = calculateSeoScore({ slug: doc.slug, data }, seo);
+      const geo = calculateGeoScore({ slug: doc.slug, data, updatedAt: (doc as any).updatedAt }, seo);
       seoTotal++;
       seoScoreSum += score;
+      geoScoreSum += geo.score;
       if (seo.lastOptimized) seoOptimized++;
       if (score < 80) seoIssues++;
     }
   }
   const seoAvgScore = seoTotal > 0 ? Math.round(seoScoreSum / seoTotal) : 0;
+  const geoAvgScore = seoTotal > 0 ? Math.round(geoScoreSum / seoTotal) : 0;
+  const visibilityScore = Math.round((seoAvgScore * 0.5) + (geoAvgScore * 0.5));
 
   // Keyword coverage
   let keywordCoverage = 0;
@@ -260,6 +265,42 @@ export default async function AdminDashboard() {
                 <span>keyword coverage ({keywordCount} tracked)</span>
               </div>
             )}
+          </div>
+        </Link>
+        {/* Visibility card */}
+        <Link
+          href="/admin/visibility"
+          className="group block p-5 rounded-xl border border-border bg-card hover:border-primary/40 hover:bg-secondary transition-all duration-200"
+        >
+          <div className="flex items-start justify-between mb-4">
+            <p className="font-mono text-xs text-muted-foreground tracking-widest uppercase">visibility</p>
+            <span className="text-2xl font-bold" style={{ color: visibilityScore >= 80 ? "#4ade80" : visibilityScore >= 50 ? "#F7BB2E" : "#f87171" }}>
+              {visibilityScore}
+            </span>
+          </div>
+          <p className="font-semibold text-foreground mb-3 group-hover:text-primary transition-colors flex items-center gap-2">
+            <Eye className="w-4 h-4" />
+            Visibility
+          </p>
+          <div className="space-y-1 text-xs text-muted-foreground">
+            <div className="flex items-center gap-3">
+              <span className="flex items-center gap-1.5">
+                <span className="font-mono" style={{ fontWeight: 600, color: seoAvgScore >= 80 ? "#4ade80" : seoAvgScore >= 50 ? "#F7BB2E" : "#f87171" }}>
+                  {seoAvgScore}
+                </span>
+                SEO
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="font-mono" style={{ fontWeight: 600, color: geoAvgScore >= 80 ? "#4ade80" : geoAvgScore >= 50 ? "#F7BB2E" : "#f87171" }}>
+                  {geoAvgScore}
+                </span>
+                GEO
+              </span>
+            </div>
+            <div className="h-1 rounded-full mt-2" style={{ background: "var(--border)" }}>
+              <div className="h-full rounded-full" style={{ width: `${visibilityScore}%`, background: visibilityScore >= 80 ? "#4ade80" : visibilityScore >= 50 ? "#F7BB2E" : "#f87171" }} />
+            </div>
+            <p className="mt-1">Search engines + AI platforms</p>
           </div>
         </Link>
       </div>
