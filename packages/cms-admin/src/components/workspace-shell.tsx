@@ -6,6 +6,7 @@ import { CommandPaletteProvider } from "@/components/command-palette";
 import { TabsProvider } from "@/lib/tabs-context";
 import { TabBar } from "@/components/tab-bar";
 import { AdminHeader } from "@/components/admin-header";
+import { useRouter } from "next/navigation";
 import { DevInspector } from "@/components/dev-inspector";
 import { SchedulerNotifier } from "@/components/scheduler-notifier";
 import { ChatInterface } from "@/components/chat/chat-interface";
@@ -21,7 +22,7 @@ interface WorkspaceShellProps {
 }
 
 export function WorkspaceShell({ collections, globals, activeSiteId, devInspector, children }: WorkspaceShellProps) {
-  const { mode, toggle } = useAdminMode();
+  const { mode, toggle, setMode } = useAdminMode();
   const isChat = mode === "chat";
 
   // Keyboard shortcut: Ctrl+Shift+C or Cmd+Shift+. to toggle mode
@@ -35,6 +36,18 @@ export function WorkspaceShell({ collections, globals, activeSiteId, devInspecto
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [toggle]);
+
+  // Listen for navigate-to-doc events from chat (Edit pill)
+  const router = useRouter();
+  useEffect(() => {
+    function onNavigate(e: Event) {
+      const { path } = (e as CustomEvent).detail;
+      setMode("traditional");
+      router.push(path);
+    }
+    window.addEventListener("cms:navigate-to-doc", onNavigate);
+    return () => window.removeEventListener("cms:navigate-to-doc", onNavigate);
+  }, [setMode, router]);
 
   // Render BOTH modes, hide the inactive one with CSS.
   // This keeps the traditional workspace mounted (tabs, sidebar, state preserved)
