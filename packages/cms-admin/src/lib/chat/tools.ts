@@ -567,6 +567,7 @@ export async function buildChatTools(): Promise<ToolPair[]> {
           properties: {
             collection: { type: "string", description: "Collection name (e.g. 'posts', 'pages')" },
             slug: { type: "string", description: "URL slug for the document (lowercase, hyphens). If omitted, generated from title." },
+            locale: { type: "string", description: "Document locale (e.g. 'en', 'da', 'de'). Defaults to site default locale. Set this when creating content in a specific language." },
             data: {
               type: "object",
               description: "Document fields as key-value pairs. Must match the collection schema. E.g. { title: '...', body: '...', tags: ['a','b'] }",
@@ -639,10 +640,10 @@ export async function buildChatTools(): Promise<ToolPair[]> {
         const existing = await cms.content.findBySlug(collection, slug).catch(() => null);
         if (existing) return `Error: Document with slug "${slug}" already exists in ${collection}.`;
 
-        // Always set locale — even single-locale sites use defaultLocale
+        // Set locale — explicit from AI, or fall back to site default
         const { readSiteConfig } = await import("@/lib/site-config");
         const siteConfig = await readSiteConfig();
-        const docLocale = siteConfig.defaultLocale || "en";
+        const docLocale = input.locale ? String(input.locale) : (siteConfig.defaultLocale || "en");
 
         const doc = await cms.content.create(collection, {
           slug,
