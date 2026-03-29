@@ -7,7 +7,7 @@ import { renderSite } from './render.js';
 import { writeOutput } from './output.js';
 import { generateSitemap } from './sitemap.js';
 import { applyAutolinks } from './autolink.js';
-import { generateLlmsTxt } from './llms.js';
+import { generateLlmsTxt, generateLlmsFullTxt, generateMarkdownPages } from './llms.js';
 import { generateAiPlugin } from './ai-plugin.js';
 import { generateRobotsTxt } from './robots.js';
 
@@ -67,7 +67,19 @@ export async function runBuild(
   if (!existsSync(wellKnownDir)) mkdirSync(wellKnownDir, { recursive: true });
   writeFileSync(join(wellKnownDir, 'ai-plugin.json'), generateAiPlugin(context, baseUrl), 'utf-8');
 
-  // Phase 7: robots.txt — AI-optimized crawler rules
+  // Phase 7: llms-full.txt + per-page .md files
+  const llmsFullTxt = generateLlmsFullTxt(context, baseUrl);
+  writeFileSync(join(outDir, 'llms-full.txt'), llmsFullTxt, 'utf-8');
+
+  const mdPages = generateMarkdownPages(context, baseUrl);
+  for (const pg of mdPages) {
+    const mdPath = join(outDir, pg.path);
+    const mdDir = mdPath.substring(0, mdPath.lastIndexOf('/'));
+    if (!existsSync(mdDir)) mkdirSync(mdDir, { recursive: true });
+    writeFileSync(mdPath, pg.content, 'utf-8');
+  }
+
+  // Phase 8: robots.txt — AI-optimized crawler rules
   const robotsTxt = generateRobotsTxt(config.build?.robots ?? {}, baseUrl);
   writeFileSync(join(outDir, 'robots.txt'), robotsTxt, 'utf-8');
 
