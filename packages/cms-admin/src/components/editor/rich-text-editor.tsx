@@ -3180,23 +3180,23 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
             <div style={{ flex: 1 }} />
 
             {/* Zoom */}
-            <div style={{ display: "flex", alignItems: "center", gap: "2px", marginRight: "0.25rem" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "4px", marginRight: "0.25rem" }}>
               <button type="button" title="Zoom out"
                 onMouseDown={(e) => { e.preventDefault(); setZoom(z => Math.max(50, z - 10)); }}
                 disabled={zoom <= 50}
-                style={{ width: 24, height: 24, borderRadius: 4, border: "none", background: "transparent", cursor: zoom <= 50 ? "not-allowed" : "pointer", color: "var(--muted-foreground)", display: "flex", alignItems: "center", justifyContent: "center", opacity: zoom <= 50 ? 0.3 : 1 }}>
-                <IconZoomOut />
+                style={{ width: 28, height: 28, borderRadius: 4, border: "none", background: "transparent", cursor: zoom <= 50 ? "not-allowed" : "pointer", color: "var(--muted-foreground)", display: "flex", alignItems: "center", justifyContent: "center", opacity: zoom <= 50 ? 0.3 : 1, fontSize: "1rem" }}>
+                −
               </button>
               <button type="button" title="Reset zoom"
                 onMouseDown={(e) => { e.preventDefault(); setZoom(100); }}
-                style={{ fontSize: "0.65rem", fontFamily: "monospace", color: zoom === 100 ? "var(--muted-foreground)" : "var(--foreground)", background: "transparent", border: "none", cursor: "pointer", padding: "0 2px", minWidth: "2rem", textAlign: "center" }}>
+                style={{ fontSize: "0.75rem", fontFamily: "monospace", color: zoom === 100 ? "var(--muted-foreground)" : "var(--foreground)", background: "transparent", border: "none", cursor: "pointer", padding: "0 4px", minWidth: "2.5rem", textAlign: "center", fontWeight: 500 }}>
                 {zoom}%
               </button>
               <button type="button" title="Zoom in"
                 onMouseDown={(e) => { e.preventDefault(); setZoom(z => Math.min(200, z + 10)); }}
                 disabled={zoom >= 200}
-                style={{ width: 24, height: 24, borderRadius: 4, border: "none", background: "transparent", cursor: zoom >= 200 ? "not-allowed" : "pointer", color: "var(--muted-foreground)", display: "flex", alignItems: "center", justifyContent: "center", opacity: zoom >= 200 ? 0.3 : 1 }}>
-                <IconZoomIn />
+                style={{ width: 28, height: 28, borderRadius: 4, border: "none", background: "transparent", cursor: zoom >= 200 ? "not-allowed" : "pointer", color: "var(--muted-foreground)", display: "flex", alignItems: "center", justifyContent: "center", opacity: zoom >= 200 ? 0.3 : 1, fontSize: "1rem" }}>
+                +
               </button>
             </div>
 
