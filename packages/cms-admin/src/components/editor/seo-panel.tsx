@@ -6,6 +6,7 @@ import { calculateSeoScore, calculateGeoScore, calculateReadability, type SeoFie
 import { JSON_LD_TEMPLATES, autoFillFields, generateJsonLd, type JsonLdTemplate } from "@/lib/seo/json-ld";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { toast } from "sonner";
+import { HelpCard } from "@/components/ui/help-card";
 
 interface Props {
   collection: string;
@@ -251,6 +252,8 @@ Rules:
             </div>
           </div>
         </div>
+
+        <HelpCard articleId="seo-meta-fields" variant="compact" />
 
         {/* Meta title */}
         <div>
