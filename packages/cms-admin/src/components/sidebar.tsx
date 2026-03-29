@@ -23,6 +23,7 @@ import {
   ChevronRight,
   Wrench,
   HardDrive,
+  Eye,
 } from "lucide-react";
 import {
   Sidebar,
@@ -362,12 +363,23 @@ export function AppSidebar({ collections }: Props) {
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     isActive={pathname === "/admin/performance"}
-                    tooltip="Performance"
-                    render={<Link href="/admin/performance" data-testid="nav-link-performance" />}
+                    tooltip="AI Analytics"
+                    render={<Link href="/admin/performance" data-testid="nav-link-ai-analytics" />}
                     style={{ paddingLeft: "1.75rem" }}
                   >
                     <BarChart2 className="!w-5 !h-5" />
-                    <span>Performance</span>
+                    <span>AI Analytics</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    isActive={pathname === "/admin/visibility"}
+                    tooltip="Visibility"
+                    render={<Link href="/admin/visibility" data-testid="nav-link-visibility" />}
+                    style={{ paddingLeft: "1.75rem" }}
+                  >
+                    <Eye className="!w-5 !h-5" />
+                    <span>Visibility</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               </SidebarMenu>

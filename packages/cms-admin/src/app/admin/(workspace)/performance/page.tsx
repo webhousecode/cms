@@ -138,7 +138,7 @@ export default function PerformancePage() {
         </ActionButton>
       }
     >
-      <ActionBarBreadcrumb items={["Tools", "Performance"]} />
+      <ActionBarBreadcrumb items={["Tools", "AI Analytics"]} />
     </ActionBar>
     <div className="p-8 max-w-6xl">
 
