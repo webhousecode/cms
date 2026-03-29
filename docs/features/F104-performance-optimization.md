@@ -203,7 +203,7 @@ export function debouncedWrite(path: string, data: unknown, delayMs = 1000) {
 - `packages/cms-admin/src/lib/auth.ts` — use cachedRead for users.json
 - `packages/cms-admin/src/lib/site-registry.ts` — use cachedRead for registry.json
 - `packages/cms-admin/src/app/api/media/route.ts` — add pagination params
-- `packages/cms-admin/src/app/admin/(workspace)/media/page.tsx` — paginated API, lazy dialogs
+- `packages/cms-admin/src/app/admin/(workspace)/media/page.tsx` — paginated API, lazy dialogs, virtualized grid, thumbnail variants, parallel bulk ops, sidebar memo
 - `packages/cms-admin/src/components/editor/rich-text-editor.tsx` — dynamic imports for dialogs
 
 ### Downstream dependents
@@ -245,6 +245,12 @@ export function debouncedWrite(path: string, data: unknown, delayMs = 1000) {
 - [ ] Regression: media upload, rename, delete, trash fungerer
 - [ ] Regression: AI analyse virker med SQLite backend
 - [ ] Regression: site switching opdaterer cache korrekt
+- [ ] Grid view renderer kun synlige celler (check DOM node count)
+- [ ] Grid thumbnails bruger WebP varianter (check network tab)
+- [ ] Bulk delete 20+ filer tager <5s (parallel)
+- [ ] Sidebar counts opdateres uden flicker
+- [ ] Batch analyze dialog forbliver responsiv ved 100+ filer
+- [ ] Lightbox EXIF cache virker ved arrow-navigation
 
 ## Implementation Steps
 
@@ -276,6 +282,21 @@ export function debouncedWrite(path: string, data: unknown, delayMs = 1000) {
 17. Log rotation for scheduler-log.jsonl
 18. Cleanup af gamle link-check results
 
+### Fase 6: Frontend Media UI Performance (2 dage)
+19. **Grid virtualisering** — Installer `@tanstack/react-virtual`. Kun synlige grid-celler renderes (typisk 12-16 i viewport). Reducerer DOM nodes fra 48 til ~16, eliminerer image decoder bottleneck.
+20. **Optimerede thumbnails i grid** — Brug eksisterende WebP-varianter (`-400w.webp`) som grid thumbnails i stedet for originale 10MB JPEGs. Fallback til original hvis variant ikke eksisterer.
+21. **Parallel bulk operations** — Bulk delete/analyze bruger `Promise.all` i chunks af 5-10 parallelle requests i stedet for sekventiel `for/await`. Progress bar med procent.
+22. **Sidebar counts i ét pass** — Beregn folder/type/AI/tag counts i ét `useMemo` loop over `allFiles` i stedet for separate `.filter()` kald per kategori. O(n) i stedet for O(n × categories).
+23. **Batch log virtualisering** — Batch analyze dialog bruger `useRef` for log og renderer kun seneste 20 entries. Forhindrer 400+ re-renders ved store batches.
+24. **Lightbox EXIF cache** — Cache EXIF data per imageUrl (samme pattern som AI metadata cache) så arrow-navigation ikke refetcher.
+
+**Allerede implementeret (quick wins):**
+- ✅ `useMemo` på filtered/sorted/paginated/folders/folderCounts
+- ✅ Debounced search (200ms) — input instant, filter delayed
+- ✅ `loading="lazy"` på alle grid/list thumbnails
+- ✅ Blob URL cleanup i VideoThumb (`revokeObjectURL` on unmount)
+- ✅ AI metadata cache i lightbox (Map-baseret, invalideres ved analyse)
+
 ## Benchmarks (current baseline)
 
 | Operation | Current (estimated) | Target |
@@ -298,13 +319,15 @@ export function debouncedWrite(path: string, data: unknown, delayMs = 1000) {
 
 ## Effort Estimate
 
-**Medium** — 5-7 dage
+**Medium-Large** — 7-9 dage
 
 - Dag 1: Config cache + benchmarking baseline
 - Dag 2-4: SQLite media metadata + migration + API updates
 - Dag 5: API pagination (media + collections)
 - Dag 6: Bundle splitting + lazy loading
-- Dag 7: Debounced writes + log rotation + final benchmarks
+- Dag 7: Debounced writes + log rotation
+- Dag 8-9: Frontend media UI — grid virtualisering, thumbnail variants, parallel bulk ops, sidebar memo
+- Quick wins (useMemo, debounce, lazy images, blob cleanup, AI cache) — ✅ DONE
 
 ---
 
