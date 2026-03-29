@@ -190,7 +190,7 @@ export function MessageList({ messages, isThinking, thinkingText, thinkingStartT
   useEffect(() => {
     fetch("/api/auth/me")
       .then((r) => r.ok ? r.json() : null)
-      .then((d) => { if (d?.gravatarUrl) setUserAvatar(d.gravatarUrl); })
+      .then((d) => { if (d?.user?.gravatarUrl) setUserAvatar(d.user.gravatarUrl); })
       .catch(() => {});
   }, []);
 
