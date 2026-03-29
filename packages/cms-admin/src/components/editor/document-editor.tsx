@@ -822,6 +822,12 @@ function PropertiesPanel({ doc, collection, locales, onClose, onSaved }: {
   };
 
   return (
+    <>
+    {/* Backdrop — click outside to close */}
+    <div
+      style={{ position: "fixed", inset: 0, zIndex: 99 }}
+      onClick={onClose}
+    />
     <div style={{
       position: "fixed", top: 0, right: 0, bottom: 0, width: "340px", zIndex: 100,
       background: "var(--card)", borderLeft: "1px solid var(--border)",
@@ -989,6 +995,7 @@ function PropertiesPanel({ doc, collection, locales, onClose, onSaved }: {
         </div>
       </div>
     </div>
+    </>
   );
 }
 
