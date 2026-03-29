@@ -147,18 +147,16 @@ export async function buildChatTools(): Promise<ToolPair[]> {
           }
         }
 
-        // Build page path using the same routing resolver as the build system
+        // Build page path — check for category field that adds a segment to the URL
         const col = config.collections.find((c) => c.name === collection);
-        const { getDocumentUrl } = await import("@webhouse/cms");
-        // Build allDocs map so getDocumentUrl can resolve parent chains (categories etc.)
-        let allDocsMap: Map<string, typeof doc> | undefined;
-        if (col?.parentField) {
-          const { documents } = await cms.content.findMany(collection, {});
-          allDocsMap = new Map(documents.map(d => [d.id, d]));
-        }
-        const pagePath = col
-          ? getDocumentUrl(doc, col as any, allDocsMap)
-          : `/${collection}/${slug}/`;
+        const prefix = col?.urlPrefix ?? `/${collection}`;
+        const cleanPrefix = prefix.endsWith("/") ? prefix.slice(0, -1) : prefix;
+        // If collection has a "category" select field, insert its value into the path
+        const categoryField = col?.fields.find(f => f.name === "category" && f.type === "select");
+        const categoryValue = categoryField ? String(doc.data.category ?? "") : "";
+        const pagePath = categoryValue
+          ? `${cleanPrefix}/${categoryValue}/${slug}/`
+          : `${cleanPrefix}/${slug}/`;
 
         return JSON.stringify(
           { slug: doc.slug, status: doc.status, _pagePath: pagePath, ...data },
