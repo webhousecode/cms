@@ -52,15 +52,32 @@ export function PagePreviewCard({ pagePath }: PagePreviewCardProps) {
     let cancelled = false;
     setStatus("building");
 
-    ensureBuiltAndServing().then((url) => {
-      if (cancelled) return;
-      if (url) {
-        setPreviewUrl(url);
-        setStatus("ready");
-      } else {
-        setStatus("error");
-      }
-    });
+    // Check if previewSiteUrl is configured — use it directly, skip sirv
+    fetch("/api/admin/site-config", { cache: "no-store" })
+      .then(r => r.json())
+      .then(cfg => {
+        if (cancelled) return;
+        if (cfg.previewSiteUrl) {
+          setPreviewUrl(cfg.previewSiteUrl.replace(/\/$/, ""));
+          setStatus("ready");
+        } else {
+          // No preview URL configured — fall back to build + sirv
+          ensureBuiltAndServing().then((url) => {
+            if (cancelled) return;
+            if (url) { setPreviewUrl(url); setStatus("ready"); }
+            else setStatus("error");
+          });
+        }
+      })
+      .catch(() => {
+        if (cancelled) return;
+        // Config fetch failed — try sirv anyway
+        ensureBuiltAndServing().then((url) => {
+          if (cancelled) return;
+          if (url) { setPreviewUrl(url); setStatus("ready"); }
+          else setStatus("error");
+        });
+      });
 
     return () => { cancelled = true; };
   }, [pagePath]);
