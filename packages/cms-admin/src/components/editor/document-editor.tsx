@@ -1104,7 +1104,9 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
     const prefixBase = prefix.split("/").pop() ?? "";
     const useCategory = category && category !== prefixBase;
     const slugPath = useCategory ? `${category}/${doc.slug}` : doc.slug;
-    const pagePath = isHomepage ? "/" : `${prefix}/${slugPath}`;
+    // Add locale prefix for non-default locales (prefix-other strategy)
+    const locPrefix = locale && locale !== defaultLocale ? `/${locale}` : "";
+    const pagePath = isHomepage ? "/" : `${locPrefix}${prefix}/${slugPath}`;
 
     if (PREVIEW_SITE_URL) {
       const url = `${PREVIEW_SITE_URL}${pagePath}`;
