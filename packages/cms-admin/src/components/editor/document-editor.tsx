@@ -1477,7 +1477,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
             overflowY: "auto", opacity: 0.85,
           }}>
             <div className="flex gap-6 text-xs text-muted-foreground font-mono pb-8 border-b border-border">
-              <span>Source document</span>
+              <span>{translations[0]?.locale?.toUpperCase() ?? "Partner"} — {translations[0]?.slug ?? "translation"}</span>
             </div>
             {colConfig.fields.map((field) => (
               <div key={field.name} className="space-y-1.5" style={{ paddingTop: "2rem" }}>

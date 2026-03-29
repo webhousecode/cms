@@ -66,15 +66,7 @@ export default async function DocumentPage({ params, searchParams }: Props) {
           updatedAt: doc.updatedAt,
         }}
         translations={translations}
-        sourceData={(() => {
-          // Side-by-side: show default-locale sibling's data as "source" (only useful on non-default docs)
-          const docLocale = (doc as any).locale || siteConfig.defaultLocale || "en";
-          const defLocale = siteConfig.defaultLocale || "en";
-          if (docLocale === defLocale) return undefined; // this IS the source
-          const sourceSibling = translations.find(t => t.locale === defLocale);
-          if (!sourceSibling) return undefined;
-          return (allDocs.find(d => d.slug === sourceSibling.slug) as any)?.data;
-        })()}
+        sourceData={translations[0] ? (allDocs.find(d => d.slug === translations[0].slug) as any)?.data : undefined}
         previewSiteUrl={siteConfig.previewSiteUrl}
         previewInIframe={siteConfig.previewInIframe}
         backHref={from === "curation" ? "/admin/curation" : undefined}
