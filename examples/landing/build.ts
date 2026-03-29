@@ -313,52 +313,6 @@ const html = `<!DOCTYPE html>
     }
 
     a { color: var(--gold); text-decoration: none; }
-
-    /* ------------------------------------------------------------------ */
-    /* Navbar                                                              */
-    /* ------------------------------------------------------------------ */
-    .site-nav {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      background: rgba(13, 13, 13, 0.85);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--dark-border);
-      padding: 0 1.5rem;
-      height: 3.5rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      max-width: 100%;
-    }
-    .site-nav .nav-logo {
-      font-weight: 700;
-      font-size: 1.1rem;
-      color: var(--gold);
-      font-family: var(--font-mono);
-      letter-spacing: -0.02em;
-    }
-    .site-nav .nav-logo span { color: var(--text-muted); font-weight: 400; }
-    .site-nav .nav-links {
-      display: flex;
-      align-items: center;
-      gap: 1.5rem;
-    }
-    .site-nav .nav-links a {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      transition: color 0.15s;
-    }
-    .site-nav .nav-links a:hover { color: var(--text); }
-    .site-nav .nav-links a.nav-cta {
-      color: var(--dark);
-      background: var(--gold);
-      padding: 0.35rem 0.85rem;
-      border-radius: 6px;
-      font-weight: 600;
-      font-size: 0.8rem;
-    }
-    .site-nav .nav-links a.nav-cta:hover { background: var(--gold-dim); }
     a:hover { text-decoration: underline; }
 
     /* ------------------------------------------------------------------ */
@@ -707,21 +661,10 @@ const html = `<!DOCTYPE html>
   </style>
 </head>
 <body>
-  <nav class="site-nav">
-    <a href="/" class="nav-logo">webhouse<span>.app</span></a>
-    <div class="nav-links">
-      <a href="#features">Features</a>
-      <a href="#architecture">Architecture</a>
-      <a href="#mcp">MCP</a>
-      <a href="https://docs.webhouse.app" target="_blank">Docs</a>
-      <a href="https://github.com/webhousecode/cms" target="_blank">GitHub</a>
-      <a href="/admin/login" class="nav-cta">Log In</a>
-    </div>
-  </nav>
 ${sectionsHtml}
   <footer>
     <div class="container">
-      <p>Built with <a href="https://github.com/webhousecode/cms">@webhouse/cms</a> · <a href="https://docs.webhouse.app">Documentation</a></p>
+      <p>Built with <a href="https://github.com/webhousecode/cms">@webhouse/cms</a></p>
     </div>
   </footer>
 </body>
