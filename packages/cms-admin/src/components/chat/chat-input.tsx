@@ -63,9 +63,10 @@ interface ChatInputProps {
   placeholder?: string;
   visible?: boolean;
   lastUserMessage?: string;
+  children?: React.ReactNode;
 }
 
-export function ChatInput({ onSend, disabled, placeholder, visible, lastUserMessage }: ChatInputProps) {
+export function ChatInput({ onSend, disabled, placeholder, visible, lastUserMessage, children }: ChatInputProps) {
   const [value, setValue] = useState("");
   const [uploads, setUploads] = useState<UploadedFile[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -433,9 +434,13 @@ export function ChatInput({ onSend, disabled, placeholder, visible, lastUserMess
           fontSize: "0.65rem",
           color: "var(--muted-foreground)",
           opacity: 0.6,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
         }}
       >
-        Press Enter to send, Shift+Enter for new line{dragOver ? " — Drop to upload" : ""}
+        <span>Press Enter to send, Shift+Enter for new line{dragOver ? " — Drop to upload" : ""}</span>
+        {children && <span style={{ marginLeft: "auto" }}>{children}</span>}
       </div>
       {rejectedMsg && (
         <div

@@ -27,6 +27,10 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
   const [conversationId, setConversationId] = useState(() => crypto.randomUUID());
   const [siteName, setSiteName] = useState("your site");
   const [showHistory, setShowHistory] = useState(false);
+  const [showThinking, setShowThinking] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("cms-chat-show-thinking") === "true";
+  });
   const [conversations, setConversations] = useState<ConversationMeta[]>([]);
   const abortRef = useRef<AbortController | null>(null);
   const messagesRef = useRef(messages);
@@ -447,6 +451,7 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
           isThinking={isThinking}
           thinkingText={thinkingText}
           thinkingStartTime={thinkingStartTime}
+          showThinking={showThinking}
         />
       ) : (
         <WelcomeScreen siteName={siteName} onSuggestionClick={handleSuggestionClick} />
@@ -458,7 +463,23 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
         disabled={isThinking}
         visible={visible}
         lastUserMessage={messages.filter((m) => m.role === "user").pop()?.content}
-      />
+      >
+        <button
+          type="button"
+          onClick={() => { const next = !showThinking; setShowThinking(next); localStorage.setItem("cms-chat-show-thinking", String(next)); }}
+          title={showThinking ? "Hide thinking process" : "Show thinking process"}
+          style={{
+            display: "inline-flex", alignItems: "center", gap: "4px",
+            padding: "2px 8px", borderRadius: "4px", fontSize: "0.65rem",
+            border: "1px solid var(--border)", cursor: "pointer",
+            background: showThinking ? "color-mix(in srgb, var(--primary) 12%, transparent)" : "transparent",
+            color: showThinking ? "var(--primary)" : "var(--muted-foreground)",
+            fontWeight: 500, transition: "all 150ms",
+          }}
+        >
+          <span style={{ fontSize: "0.7rem" }}>💭</span> Thinking
+        </button>
+      </ChatInput>
     </div>
   );
 }
