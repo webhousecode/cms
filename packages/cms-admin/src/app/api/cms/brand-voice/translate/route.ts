@@ -4,6 +4,7 @@ import { getApiKey } from "@/lib/ai-config";
 import { getModel } from "@/lib/ai/model-resolver";
 import type { BrandVoice } from "@/lib/brand-voice";
 import { denyViewers } from "@/lib/require-role";
+import { buildLocaleInstruction } from "@/lib/ai/locale-prompt";
 
 export async function POST(request: NextRequest) {
   const denied = await denyViewers(); if (denied) return denied;
@@ -21,6 +22,7 @@ export async function POST(request: NextRequest) {
   const response = await client.messages.create({
     model: premiumModel,
     max_tokens: 2048,
+    system: buildLocaleInstruction(targetLanguage),
     messages: [
       {
         role: "user",

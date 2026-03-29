@@ -5,6 +5,7 @@ import { getModel } from "@/lib/ai/model-resolver";
 import { denyViewers } from "@/lib/require-role";
 import { readSiteConfig } from "@/lib/site-config";
 import { LOCALE_LABELS } from "@/lib/locale";
+import { buildLocaleInstruction } from "@/lib/ai/locale-prompt";
 
 const SYSTEM = `You are an AI agent configurator for a headless CMS. Given a natural language description of a desired content agent, return a single valid JSON object — no markdown, no explanation, no code fences.
 
@@ -61,9 +62,10 @@ export async function POST(request: NextRequest) {
   const client = new Anthropic({ apiKey });
   const siteConfig = await readSiteConfig();
   const langName = LOCALE_LABELS[siteConfig.defaultLocale] ?? siteConfig.defaultLocale;
-  const systemPrompt = SYSTEM
+  const localeInstr = buildLocaleInstruction(siteConfig.defaultLocale || "en");
+  const systemPrompt = `${localeInstr}\n\n${SYSTEM
     .replace("{{SITE_LOCALE}}", `${langName} (${siteConfig.defaultLocale})`)
-    .replace("{{SITE_LANG}}", langName);
+    .replace("{{SITE_LANG}}", langName)}`;
 
   try {
     const codeModel = await getModel("code");
