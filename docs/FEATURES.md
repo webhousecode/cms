@@ -132,6 +132,7 @@
 | F113 | [Service Role Keys](#f113-service-role-keys) | Planned | [docs/features/F113-service-role-keys.md](features/F113-service-role-keys.md) |
 | F114 | [Chat Memory & Cross-Conversation Intelligence](#f114-chat-memory) | Planned | [docs/features/F114-chat-memory.md](features/F114-chat-memory.md) |
 | F115 | [CMS Help Chat](#f115-help-chat) | Planned | [docs/features/F115-help-chat.md](features/F115-help-chat.md) |
+| F116 | [Contextual Help (HelpCard)](#f116-contextual-help) | Planned | [docs/features/F116-contextual-help.md](features/F116-contextual-help.md) |
 
 ---
 
