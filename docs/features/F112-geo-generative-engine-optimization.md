@@ -35,6 +35,15 @@ This plan extends the existing SEO module (F97) with GEO-specific capabilities. 
 | OG meta tags in `<head>` | `layout.ts` | ✅ Done |
 | Canonical URL + hreflang | `layout.ts` | ✅ Done |
 | Autolinks (internal linking) | `cms/src/build/autolink.ts` | ✅ Done |
+| RSS feed (build) | `cms/src/build/rss.ts` | ✅ Done |
+| llms-full.txt (build) | `cms/src/build/llms.ts` | ✅ Done |
+| Per-page .md endpoints (build) | `cms/src/build/llms.ts` | ✅ Done |
+| robots.txt (4 strategies) | `cms/src/build/robots.ts` | ✅ Done |
+| GEO Score (8 rules) | `cms-admin/src/lib/seo/score.ts` | ✅ Done |
+| Dual SEO+GEO score in panel | `cms-admin/src/components/editor/seo-panel.tsx` | ✅ Done |
+| JSON-LD templates (12 types) | `cms-admin/src/lib/seo/json-ld.ts` | ✅ Done |
+| GEO Optimizer agent | `cms-admin/src/lib/agents.ts` | ✅ Done |
+| GEO Settings panel | `cms-admin/src/components/settings/geo-settings-panel.tsx` | ✅ Done |
 
 ---
 
