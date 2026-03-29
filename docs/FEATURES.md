@@ -131,6 +131,7 @@
 | F112 | [GEO — Generative Engine Optimization](#f112-geo-generative-engine-optimization) | Planned | [docs/features/F112-geo-generative-engine-optimization.md](features/F112-geo-generative-engine-optimization.md) |
 | F113 | [Service Role Keys](#f113-service-role-keys) | Planned | [docs/features/F113-service-role-keys.md](features/F113-service-role-keys.md) |
 | F114 | [Chat Memory & Cross-Conversation Intelligence](#f114-chat-memory) | Planned | [docs/features/F114-chat-memory.md](features/F114-chat-memory.md) |
+| F115 | [CMS Help Chat](#f115-help-chat) | Planned | [docs/features/F115-help-chat.md](features/F115-help-chat.md) |
 
 ---
 
@@ -484,3 +485,6 @@ Server-to-server API authentication for external integrations. Machine-scoped ke
 
 ## F114 — Chat Memory & Cross-Conversation Intelligence
 Mini-RAG system that extracts knowledge from past chat conversations and injects relevant context into new conversations. After each conversation, Haiku extracts structured facts (preferences, decisions, patterns, corrections) into a site-scoped memory store. MiniSearch (BM25+) indexes all memories for fast keyword retrieval. On new conversations, top-15 relevant memories are injected into the system prompt (500-1500 tokens). Memory management UI in history drawer. AI tools for search/add/forget. Inspired by Claude Desktop's cross-session memory and Claude Code's file-based MEMORY.md system. Self-contained: no vector DB, no external services — just MiniSearch (7KB) + Haiku extraction + JSON storage.
+
+## F115 — CMS Help Chat (Product Knowledge Base)
+Built-in support chat that knows everything about CMS admin — features, UI, API, shortcuts, troubleshooting. Build-time script crawls all docs (CLAUDE.md, feature plans, FEATURES.md, ROADMAP.md) and serializes a MiniSearch index. At runtime, help context is auto-injected into the system prompt when the user asks product questions. Also adds a `search_help` tool so the AI can explicitly look up documentation. Same MiniSearch engine as F114, different data source: product docs instead of user conversations. Always available — ships with every install.
