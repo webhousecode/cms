@@ -130,10 +130,10 @@
 | F111 | [External Publishing](#f111-external-publishing) | Planned | [docs/features/F111-external-publishing.md](features/F111-external-publishing.md) |
 | F112 | [GEO — Generative Engine Optimization](#f112-geo-generative-engine-optimization) | Planned | [docs/features/F112-geo-generative-engine-optimization.md](features/F112-geo-generative-engine-optimization.md) |
 | F113 | [Service Role Keys](#f113-service-role-keys) | Planned | [docs/features/F113-service-role-keys.md](features/F113-service-role-keys.md) |
-| F114 | [Chat Memory & Cross-Conversation Intelligence](#f114-chat-memory) | Planned | [docs/features/F114-chat-memory.md](features/F114-chat-memory.md) |
+| F114 | [Chat Memory & Cross-Conversation Intelligence](#f114-chat-memory) | **Done** | [docs/features/F114-chat-memory.md](features/F114-chat-memory.md) |
 | F115 | [CMS Help Chat](#f115-help-chat) | Planned | [docs/features/F115-help-chat.md](features/F115-help-chat.md) |
 | F116 | [Contextual Help (HelpCard)](#f116-contextual-help) | Planned | [docs/features/F116-contextual-help.md](features/F116-contextual-help.md) |
-| F117 | [MCP ↔ Chat Tool Parity](#f117-mcp-chat-parity) | Planned | [docs/features/F117-mcp-chat-parity.md](features/F117-mcp-chat-parity.md) |
+| F117 | [MCP ↔ Chat Tool Parity](#f117-mcp-chat-parity) | **Done** | [docs/features/F117-mcp-chat-parity.md](features/F117-mcp-chat-parity.md) |
 
 ---
 
@@ -485,8 +485,8 @@ Optimize content so AI platforms (ChatGPT, Claude, Perplexity, Gemini) cite and 
 ## F113 — Service Role Keys
 Server-to-server API authentication for external integrations. Machine-scoped keys with configurable permissions, separate from user sessions.
 
-## F114 — Chat Memory & Cross-Conversation Intelligence
-Mini-RAG system that extracts knowledge from past chat conversations and injects relevant context into new conversations. After each conversation, Haiku extracts structured facts (preferences, decisions, patterns, corrections) into a site-scoped memory store. MiniSearch (BM25+) indexes all memories for fast keyword retrieval. On new conversations, top-15 relevant memories are injected into the system prompt (500-1500 tokens). Memory management UI in history drawer. AI tools for search/add/forget. Inspired by Claude Desktop's cross-session memory and Claude Code's file-based MEMORY.md system. Self-contained: no vector DB, no external services — just MiniSearch (7KB) + Haiku extraction + JSON storage.
+## F114 — Chat Memory & Cross-Conversation Intelligence ✅
+Mini-RAG system: Haiku extracts facts from past conversations → MiniSearch BM25+ indexes → top-15 injected into system prompt. 3 AI tools (search/add/forget). Memory tab in history drawer (search, add, delete, category badges). Full export/import as ZIP (chats + memories) with dry-run preview. Master memory with product identity. Default aiChatMaxTokens bumped 8192→16384. 27 unit tests.
 
 ## F115 — CMS Help Chat (Product Knowledge Base)
 Built-in support chat that knows everything about CMS admin — features, UI, API, shortcuts, troubleshooting. Build-time script crawls all docs (CLAUDE.md, feature plans, FEATURES.md, ROADMAP.md) and serializes a MiniSearch index. At runtime, help context is auto-injected into the system prompt when the user asks product questions. Also adds a `search_help` tool so the AI can explicitly look up documentation. Same MiniSearch engine as F114, different data source: product docs instead of user conversations. Always available — ships with every install.
@@ -494,5 +494,5 @@ Built-in support chat that knows everything about CMS admin — features, UI, AP
 ## F116 — Contextual Help (HelpCard)
 Inline contextual help cards throughout the CMS admin UI.
 
-## F117 — MCP ↔ Chat Tool Parity
-Full tool parity between MCP admin server and inline chat. Shared tool registry eliminates duplication — one tool definition, two consumers (chat + MCP). Brings MCP from 15 to 40+ tools in 3 phases. Claude Desktop, Cursor, and any MCP client gets full CMS management: media, agents, scheduling, bulk operations, trash, backups, translation, deploy. Plus `get_chat_context` tool that gives MCP clients the same schema/memory awareness as inline chat.
+## F117 — MCP ↔ Chat Tool Parity ✅
+MCP admin server expanded from 15 to 43 tools — feature parity with inline chat. 28 new tools: media (list/search), trash (list/restore/empty), bulk (publish/update), scheduling, agents, curation queue, deploy, translate, generate interactive, backup, link check, site config, content stats, revisions. All tools have scope-based RBAC and audit logging. AdminServices interface bridges admin-only imports to MCP server package. Chat kept separate and untouched.
