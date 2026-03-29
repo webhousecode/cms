@@ -9,6 +9,7 @@ import { generateSitemap } from './sitemap.js';
 import { applyAutolinks } from './autolink.js';
 import { generateLlmsTxt } from './llms.js';
 import { generateAiPlugin } from './ai-plugin.js';
+import { generateRobotsTxt } from './robots.js';
 
 export interface BuildOptions {
   outDir?: string;
@@ -65,6 +66,10 @@ export async function runBuild(
   const wellKnownDir = join(outDir, '.well-known');
   if (!existsSync(wellKnownDir)) mkdirSync(wellKnownDir, { recursive: true });
   writeFileSync(join(wellKnownDir, 'ai-plugin.json'), generateAiPlugin(context, baseUrl), 'utf-8');
+
+  // Phase 7: robots.txt — AI-optimized crawler rules
+  const robotsTxt = generateRobotsTxt(config.build?.robots ?? {}, baseUrl);
+  writeFileSync(join(outDir, 'robots.txt'), robotsTxt, 'utf-8');
 
   return {
     pages: pages.length,

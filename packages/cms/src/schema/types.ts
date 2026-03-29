@@ -92,6 +92,15 @@ export interface CollectionConfig {
 export interface BuildConfig {
   outDir?: string;
   baseUrl?: string;
+  /** robots.txt generation strategy for AI crawler access */
+  robots?: {
+    /** "maximum" (default) = allow all, "balanced" = allow search/block training, "restrictive" = block all AI, "custom" = user rules */
+    strategy?: "maximum" | "balanced" | "restrictive" | "custom";
+    /** Raw robots.txt lines for "custom" strategy */
+    customRules?: string[];
+    /** Paths to disallow for all bots (default: ["/admin/", "/api/"]) */
+    disallowPaths?: string[];
+  };
 }
 
 export interface AutolinkConfig {
