@@ -1280,20 +1280,20 @@ function Lightbox({ files, index, onNavigate, onClose, onCopy, copied, onDelete,
           {copied === file.url ? <Check style={{ width: "0.875rem", height: "0.875rem" }} /> : <Copy style={{ width: "0.875rem", height: "0.875rem" }} />}
         </button>
         {file.mediaType !== "video" && (
-          <>
-            <button type="button" title="Rotate left (↺)" disabled={rotating} onClick={(e) => { e.stopPropagation(); rotateImage(-90); }}
-              style={{ display: "flex", alignItems: "center", padding: "0.3rem", borderRadius: "6px", color: "rgba(255,255,255,0.5)", border: "none", background: "transparent", cursor: rotating ? "wait" : "pointer", opacity: rotating ? 0.4 : 1 }}
-              className="hover:text-white hover:bg-white/10 transition-colors"
+          <div style={{ display: "flex", alignItems: "center", gap: "2px", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "6px", padding: "1px" }}>
+            <button type="button" title="Rotate left" disabled={rotating} onClick={(e) => { e.stopPropagation(); rotateImage(-90); }}
+              style={{ display: "flex", alignItems: "center", padding: "0.3rem", borderRadius: "4px", color: "rgba(255,255,255,0.7)", border: "none", background: "transparent", cursor: rotating ? "wait" : "pointer", opacity: rotating ? 0.4 : 1 }}
+              className="hover:text-white hover:bg-white/15 transition-colors"
             >
               <RotateCcw style={{ width: "0.875rem", height: "0.875rem" }} />
             </button>
-            <button type="button" title="Rotate right (↻)" disabled={rotating} onClick={(e) => { e.stopPropagation(); rotateImage(90); }}
-              style={{ display: "flex", alignItems: "center", padding: "0.3rem", borderRadius: "6px", color: "rgba(255,255,255,0.5)", border: "none", background: "transparent", cursor: rotating ? "wait" : "pointer", opacity: rotating ? 0.4 : 1 }}
-              className="hover:text-white hover:bg-white/10 transition-colors"
+            <button type="button" title="Rotate right" disabled={rotating} onClick={(e) => { e.stopPropagation(); rotateImage(90); }}
+              style={{ display: "flex", alignItems: "center", padding: "0.3rem", borderRadius: "4px", color: "rgba(255,255,255,0.7)", border: "none", background: "transparent", cursor: rotating ? "wait" : "pointer", opacity: rotating ? 0.4 : 1 }}
+              className="hover:text-white hover:bg-white/15 transition-colors"
             >
               <RotateCw style={{ width: "0.875rem", height: "0.875rem" }} />
             </button>
-          </>
+          </div>
         )}
         <button type="button" title="Delete" onClick={(e) => { e.stopPropagation(); onDelete(file); }}
           style={{ display: "flex", alignItems: "center", padding: "0.3rem", borderRadius: "6px", color: "rgba(255,255,255,0.4)", border: "none", background: "transparent", cursor: "pointer" }}
