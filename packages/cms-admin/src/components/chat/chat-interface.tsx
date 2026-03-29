@@ -4,7 +4,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { MessageList, type ChatMessageUI, type ToolCall } from "./message-list";
 import { ChatInput } from "./chat-input";
 import { WelcomeScreen } from "./welcome-screen";
-import { Pencil, Check, X, Trash2, MoreHorizontal, Star, Copy } from "lucide-react";
+import { Pencil, Check, X, Trash2, MoreHorizontal, Star, Copy, Brain, Plus, Search } from "lucide-react";
 
 interface ChatInterfaceProps {
   collections: Array<{ name: string; label: string }>;
@@ -19,6 +19,19 @@ interface ConversationMeta {
   starred?: boolean;
 }
 
+interface MemoryItem {
+  id: string;
+  fact: string;
+  category: "preference" | "decision" | "pattern" | "correction" | "fact";
+  entities: string[];
+  createdAt: string;
+  updatedAt: string;
+  confidence: number;
+  hitCount: number;
+}
+
+type DrawerTab = "conversations" | "memory";
+
 export function ChatInterface({ collections, activeSiteId, visible }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<ChatMessageUI[]>([]);
   const [isThinking, setIsThinking] = useState(false);
@@ -32,6 +45,10 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
     try { if (localStorage.getItem("cms-chat-show-thinking") === "true") setShowThinking(true); } catch {}
   }, []);
   const [conversations, setConversations] = useState<ConversationMeta[]>([]);
+  const [drawerTab, setDrawerTab] = useState<DrawerTab>("conversations");
+  const [memories, setMemories] = useState<MemoryItem[]>([]);
+  const [memorySearch, setMemorySearch] = useState("");
+  const [memoryCount, setMemoryCount] = useState(0);
   const abortRef = useRef<AbortController | null>(null);
   const messagesRef = useRef(messages);
   messagesRef.current = messages;
@@ -106,7 +123,7 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
         const response = await fetch("/api/cms/chat", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ messages: apiMessages }),
+          body: JSON.stringify({ messages: apiMessages, conversationId }),
           signal: abort.signal,
         });
 
@@ -279,10 +296,17 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
     setShowHistory((v) => !v);
     if (!showHistory) {
       try {
-        const res = await fetch("/api/cms/chat/conversations");
-        if (res.ok) {
-          const { conversations: convs } = await res.json();
+        const [convRes, memRes] = await Promise.all([
+          fetch("/api/cms/chat/conversations"),
+          fetch("/api/cms/chat/memory"),
+        ]);
+        if (convRes.ok) {
+          const { conversations: convs } = await convRes.json();
           setConversations(convs ?? []);
+        }
+        if (memRes.ok) {
+          const data = await memRes.json();
+          setMemoryCount(data.memories?.length ?? 0);
         }
       } catch { /* ignore */ }
     }
@@ -357,6 +381,39 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
     } catch { /* ignore */ }
   }
 
+  async function loadMemories() {
+    try {
+      const url = memorySearch.trim()
+        ? `/api/cms/chat/memory/search?q=${encodeURIComponent(memorySearch.trim())}`
+        : "/api/cms/chat/memory";
+      const res = await fetch(url);
+      if (res.ok) {
+        const data = await res.json();
+        setMemories(data.memories ?? []);
+        if (!memorySearch.trim()) setMemoryCount(data.memories?.length ?? 0);
+      }
+    } catch { /* ignore */ }
+  }
+
+  async function addManualMemory(fact: string) {
+    try {
+      const res = await fetch("/api/cms/chat/memory", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fact, category: "fact" }),
+      });
+      if (res.ok) loadMemories();
+    } catch { /* ignore */ }
+  }
+
+  async function deleteMemoryItem(id: string) {
+    try {
+      await fetch(`/api/cms/chat/memory/${id}`, { method: "DELETE" });
+      setMemories((prev) => prev.filter((m) => m.id !== id));
+      setMemoryCount((c) => Math.max(0, c - 1));
+    } catch { /* ignore */ }
+  }
+
   const handleSuggestionClick = useCallback(
     (message: string) => {
       // If the suggestion ends with a space (e.g. "Search my content for "),
@@ -404,40 +461,91 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
               display: "flex", flexDirection: "column",
             }}
           >
-            {/* Header */}
-            <div style={{
-              display: "flex", alignItems: "center", justifyContent: "space-between",
-              padding: "12px 16px", borderBottom: "1px solid var(--border)",
-            }}>
-              <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>Conversations</span>
-              <button
-                onClick={() => setShowHistory(false)}
-                style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "4px" }}
-              >
-                <X style={{ width: "16px", height: "16px" }} />
-              </button>
-            </div>
-            {/* List */}
-            <div style={{ flex: 1, overflowY: "auto" }}>
-              {conversations.length === 0 ? (
-                <div style={{ padding: "20px", textAlign: "center", fontSize: "0.8rem", color: "var(--muted-foreground)" }}>
-                  No previous conversations
+            {/* Header with tabs */}
+            <div style={{ borderBottom: "1px solid var(--border)" }}>
+              <div style={{
+                display: "flex", alignItems: "center", justifyContent: "space-between",
+                padding: "12px 16px 0",
+              }}>
+                <div style={{ display: "flex", gap: "0" }}>
+                  <button
+                    onClick={() => setDrawerTab("conversations")}
+                    style={{
+                      background: "none", border: "none", cursor: "pointer", padding: "6px 12px 10px",
+                      fontSize: "0.8rem", fontWeight: 600,
+                      color: drawerTab === "conversations" ? "var(--foreground)" : "var(--muted-foreground)",
+                      borderBottom: drawerTab === "conversations" ? "2px solid var(--primary)" : "2px solid transparent",
+                      transition: "all 150ms",
+                    }}
+                  >
+                    Conversations
+                  </button>
+                  <button
+                    onClick={() => { setDrawerTab("memory"); loadMemories(); }}
+                    style={{
+                      background: "none", border: "none", cursor: "pointer", padding: "6px 12px 10px",
+                      fontSize: "0.8rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "6px",
+                      color: drawerTab === "memory" ? "var(--foreground)" : "var(--muted-foreground)",
+                      borderBottom: drawerTab === "memory" ? "2px solid var(--primary)" : "2px solid transparent",
+                      transition: "all 150ms",
+                    }}
+                  >
+                    <Brain style={{ width: "14px", height: "14px" }} />
+                    Memory
+                    {memoryCount > 0 && (
+                      <span style={{
+                        fontSize: "0.6rem", padding: "1px 5px", borderRadius: "8px",
+                        backgroundColor: "var(--muted)", color: "var(--muted-foreground)",
+                        fontWeight: 500, lineHeight: 1.4,
+                      }}>
+                        {memoryCount}
+                      </span>
+                    )}
+                  </button>
                 </div>
+                <button
+                  onClick={() => setShowHistory(false)}
+                  style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "4px" }}
+                >
+                  <X style={{ width: "16px", height: "16px" }} />
+                </button>
+              </div>
+            </div>
+
+            {/* Tab content */}
+            <div style={{ flex: 1, overflowY: "auto" }}>
+              {drawerTab === "conversations" ? (
+                <>
+                  {conversations.length === 0 ? (
+                    <div style={{ padding: "20px", textAlign: "center", fontSize: "0.8rem", color: "var(--muted-foreground)" }}>
+                      No previous conversations
+                    </div>
+                  ) : (
+                    [...conversations].sort((a, b) => (b.starred ? 1 : 0) - (a.starred ? 1 : 0)).map((c) => (
+                      <HistoryItem
+                        key={c.id}
+                        id={c.id}
+                        title={c.title}
+                        updatedAt={c.updatedAt}
+                        isActive={c.id === conversationId}
+                        onLoad={() => loadConversation(c.id)}
+                        starred={c.starred}
+                        onRename={(newTitle) => renameConversation(c.id, newTitle)}
+                        onDelete={() => deleteConversation(c.id)}
+                        onStar={() => toggleStar(c.id)}
+                      />
+                    ))
+                  )}
+                </>
               ) : (
-                [...conversations].sort((a, b) => (b.starred ? 1 : 0) - (a.starred ? 1 : 0)).map((c) => (
-                  <HistoryItem
-                    key={c.id}
-                    id={c.id}
-                    title={c.title}
-                    updatedAt={c.updatedAt}
-                    isActive={c.id === conversationId}
-                    onLoad={() => loadConversation(c.id)}
-                    starred={c.starred}
-                    onRename={(newTitle) => renameConversation(c.id, newTitle)}
-                    onDelete={() => deleteConversation(c.id)}
-                    onStar={() => toggleStar(c.id)}
-                  />
-                ))
+                <MemoryPanel
+                  memories={memories}
+                  search={memorySearch}
+                  onSearchChange={(q) => { setMemorySearch(q); }}
+                  onSearch={loadMemories}
+                  onAdd={addManualMemory}
+                  onDelete={deleteMemoryItem}
+                />
               )}
             </div>
           </div>
@@ -660,6 +768,201 @@ function HistoryItem({ id, title, updatedAt, isActive, starred, onLoad, onRename
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+// ── Memory Panel ──────────────────────────────────────────────────
+
+const CATEGORY_COLORS: Record<string, string> = {
+  correction: "#ef4444",
+  preference: "#8b5cf6",
+  decision: "#3b82f6",
+  pattern: "#f59e0b",
+  fact: "#6b7280",
+};
+
+function MemoryPanel({ memories, search, onSearchChange, onSearch, onAdd, onDelete }: {
+  memories: MemoryItem[];
+  search: string;
+  onSearchChange: (q: string) => void;
+  onSearch: () => void;
+  onAdd: (fact: string) => void;
+  onDelete: (id: string) => void;
+}) {
+  const [addMode, setAddMode] = useState(false);
+  const [addValue, setAddValue] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (addMode) inputRef.current?.focus();
+  }, [addMode]);
+
+  return (
+    <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+      {/* Search */}
+      <div style={{ padding: "10px 16px 6px", display: "flex", gap: "6px" }}>
+        <div style={{
+          flex: 1, display: "flex", alignItems: "center", gap: "6px",
+          padding: "5px 10px", borderRadius: "6px",
+          border: "1px solid var(--border)", backgroundColor: "var(--background)",
+        }}>
+          <Search style={{ width: "12px", height: "12px", color: "var(--muted-foreground)", flexShrink: 0 }} />
+          <input
+            value={search}
+            onChange={(e) => onSearchChange(e.target.value)}
+            onKeyDown={(e) => { if (e.key === "Enter") onSearch(); }}
+            placeholder="Search memories..."
+            style={{
+              flex: 1, border: "none", outline: "none", background: "transparent",
+              fontSize: "0.75rem", color: "var(--foreground)", fontFamily: "inherit",
+            }}
+          />
+        </div>
+        <button
+          onClick={() => setAddMode(true)}
+          title="Add memory"
+          style={{
+            display: "flex", alignItems: "center", justifyContent: "center",
+            width: "30px", height: "30px", borderRadius: "6px",
+            border: "1px solid var(--border)", background: "transparent",
+            cursor: "pointer", color: "var(--muted-foreground)", flexShrink: 0,
+          }}
+        >
+          <Plus style={{ width: "14px", height: "14px" }} />
+        </button>
+      </div>
+
+      {/* Add memory input */}
+      {addMode && (
+        <div style={{ padding: "4px 16px 8px", display: "flex", gap: "6px" }}>
+          <input
+            ref={inputRef}
+            value={addValue}
+            onChange={(e) => setAddValue(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && addValue.trim()) {
+                onAdd(addValue.trim());
+                setAddValue("");
+                setAddMode(false);
+              }
+              if (e.key === "Escape") { setAddValue(""); setAddMode(false); }
+            }}
+            placeholder="Type a fact to remember..."
+            style={{
+              flex: 1, fontSize: "0.75rem", padding: "5px 8px", borderRadius: "6px",
+              border: "1px solid var(--primary)", backgroundColor: "var(--background)",
+              color: "var(--foreground)", outline: "none", fontFamily: "inherit",
+            }}
+          />
+          <button
+            onClick={() => {
+              if (addValue.trim()) {
+                onAdd(addValue.trim());
+                setAddValue("");
+                setAddMode(false);
+              }
+            }}
+            style={{
+              background: "var(--primary)", color: "var(--primary-foreground)",
+              border: "none", borderRadius: "6px", padding: "4px 10px",
+              fontSize: "0.7rem", fontWeight: 500, cursor: "pointer",
+            }}
+          >
+            Save
+          </button>
+          <button
+            onClick={() => { setAddValue(""); setAddMode(false); }}
+            style={{
+              background: "transparent", border: "1px solid var(--border)",
+              borderRadius: "6px", padding: "4px 8px",
+              fontSize: "0.7rem", cursor: "pointer", color: "var(--muted-foreground)",
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      )}
+
+      {/* Memory list */}
+      <div style={{ flex: 1, overflowY: "auto" }}>
+        {memories.length === 0 ? (
+          <div style={{ padding: "20px", textAlign: "center", fontSize: "0.8rem", color: "var(--muted-foreground)" }}>
+            {search.trim() ? "No memories match your search" : "No memories yet. Chat will learn over time."}
+          </div>
+        ) : (
+          memories.map((m) => (
+            <MemoryRow key={m.id} memory={m} onDelete={() => onDelete(m.id)} />
+          ))
+        )}
+      </div>
+    </div>
+  );
+}
+
+function MemoryRow({ memory, onDelete }: { memory: MemoryItem; onDelete: () => void }) {
+  const [confirm, setConfirm] = useState(false);
+
+  return (
+    <div
+      style={{
+        padding: "10px 16px", borderBottom: "1px solid var(--border)",
+        fontSize: "0.8rem", lineHeight: 1.5,
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "3px" }}>
+            <span style={{
+              fontSize: "0.6rem", padding: "1px 6px", borderRadius: "4px",
+              fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.03em",
+              color: "#fff",
+              backgroundColor: CATEGORY_COLORS[memory.category] ?? "#6b7280",
+            }}>
+              {memory.category}
+            </span>
+            {memory.hitCount > 0 && (
+              <span style={{ fontSize: "0.6rem", color: "var(--muted-foreground)" }}>
+                {memory.hitCount}x used
+              </span>
+            )}
+          </div>
+          <div style={{ color: "var(--foreground)" }}>{memory.fact}</div>
+          {memory.entities.length > 0 && (
+            <div style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", marginTop: "2px" }}>
+              {memory.entities.join(", ")}
+            </div>
+          )}
+        </div>
+        <div style={{ flexShrink: 0 }}>
+          {confirm ? (
+            <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
+              <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
+              <button onClick={onDelete}
+                style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
+                  border: "none", background: "var(--destructive)", color: "#fff",
+                  cursor: "pointer", lineHeight: 1 }}>Yes</button>
+              <button onClick={() => setConfirm(false)}
+                style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
+                  border: "1px solid var(--border)", background: "transparent",
+                  color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setConfirm(true)}
+              style={{
+                background: "none", border: "none", cursor: "pointer",
+                color: "var(--muted-foreground)", padding: "2px", opacity: 0.5,
+                transition: "opacity 150ms",
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.opacity = "1"; }}
+              onMouseLeave={(e) => { e.currentTarget.style.opacity = "0.5"; }}
+            >
+              <X style={{ width: "12px", height: "12px" }} />
+            </button>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

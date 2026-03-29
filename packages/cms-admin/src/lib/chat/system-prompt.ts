@@ -3,6 +3,8 @@ import { readBrandVoice, brandVoiceToPromptContext } from "@/lib/brand-voice";
 import { loadRegistry, findSite } from "@/lib/site-registry";
 import { readSiteConfig } from "@/lib/site-config";
 import { buildLocaleInstruction } from "@/lib/ai/locale-prompt";
+import { queryMemories } from "@/lib/chat/memory-search";
+import { bumpMemoryHits } from "@/lib/chat/memory-store";
 import { cookies } from "next/headers";
 
 export interface SiteContext {
@@ -202,5 +204,34 @@ When creating or editing content that needs images:
 16. For translation: ALWAYS use translate_document — NEVER create two separate documents for different languages manually. translate_document automatically links the documents as translation partners (translationGroup). Translations are created as drafts by default. Always confirm the target language with the user before bulk-translating.
 18. IMPORTANT — Multi-locale sites: This site has ${context.locales.length > 1 ? `${context.locales.length} languages configured (${context.locales.join(", ")})` : "only one language"}. ${context.locales.length > 1 ? (context.autoTranslate ? `Auto-translate is ON — translations to ${context.locales.filter(l => l !== context.defaultLocale).join(", ")} are created automatically when you create a document. No need to ask the user.` : `Auto-translate is OFF. After creating content, ask the user: "Skal jeg også oprette en ${context.locales.filter(l => l !== context.defaultLocale).join("/")} version?" — if yes, use translate_document for each target locale.`) : ""}
 19. CRITICAL — When user asks for content in multiple languages (e.g. "make a post in English and German"): create ONE document with create_document in the first language, then use translate_document for each additional language. NEVER call create_document twice for the same content in different languages — that creates unlinked documents.
-17. For scheduling: use ISO 8601 format for dates (e.g. '2026-03-29T09:00:00'). The scheduler checks every 60 seconds. When the user says "publish tomorrow at 9" or "publicer i morgen kl 09", convert to the correct ISO datetime.`;
+17. For scheduling: use ISO 8601 format for dates (e.g. '2026-03-29T09:00:00'). The scheduler checks every 60 seconds. When the user says "publish tomorrow at 9" or "publicer i morgen kl 09", convert to the correct ISO datetime.
+20. You have memory from previous conversations. When the user says "remember this" or "don't forget", use the add_memory tool. When they say "forget that", use forget_memory. Use search_memories to check what you know when relevant.`;
+}
+
+/**
+ * Retrieve relevant memories for the user's message and inject them
+ * into the system prompt. Returns the memory section string and
+ * the IDs of injected memories (for hit tracking).
+ */
+export async function getMemoryContext(
+  userMessage: string
+): Promise<{ section: string; memoryIds: string[] }> {
+  try {
+    const results = await queryMemories(userMessage, 15);
+    if (results.length === 0) return { section: "", memoryIds: [] };
+
+    const lines = results.map(
+      (r) => `- [${r.memory.category}] ${r.memory.fact}`
+    );
+
+    const section = `\n\n## Memory (from previous conversations)\nThese are facts learned from past conversations with this site's users:\n${lines.join("\n")}`;
+    const memoryIds = results.map((r) => r.memory.id);
+
+    // Bump hit counts in background (don't await)
+    bumpMemoryHits(memoryIds).catch(() => {});
+
+    return { section, memoryIds };
+  } catch {
+    return { section: "", memoryIds: [] };
+  }
 }

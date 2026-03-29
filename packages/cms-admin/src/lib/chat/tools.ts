@@ -1928,5 +1928,96 @@ DESIGN GUIDELINES:
         });
       },
     },
+
+    // ── Memory tools (F114) ────────────────────────────────────
+    {
+      definition: {
+        name: "search_memories",
+        description:
+          "Search your memory of past conversations. Use this to recall what you know about the user's preferences, decisions, and patterns.",
+        input_schema: {
+          type: "object",
+          properties: {
+            query: {
+              type: "string",
+              description: "Search query — keywords about what you want to recall",
+            },
+          },
+          required: ["query"],
+        },
+      },
+      handler: async (input: any) => {
+        const { queryMemories } = await import("@/lib/chat/memory-search");
+        const results = await queryMemories(input.query, 15);
+        if (results.length === 0) return "No memories found for that query.";
+        return results
+          .map((r) => `- [${r.memory.category}] ${r.memory.fact} (confidence: ${r.memory.confidence})`)
+          .join("\n");
+      },
+    },
+    {
+      definition: {
+        name: "add_memory",
+        description:
+          'Save a fact to memory for future conversations. Use when the user says "remember this", "don\'t forget", etc.',
+        input_schema: {
+          type: "object",
+          properties: {
+            fact: {
+              type: "string",
+              description: "The fact, preference, or instruction to remember",
+            },
+            category: {
+              type: "string",
+              enum: ["preference", "decision", "pattern", "correction", "fact"],
+              description: "Classification of the memory",
+            },
+            entities: {
+              type: "array",
+              items: { type: "string" },
+              description: "Related names, collections, or topics",
+            },
+          },
+          required: ["fact", "category"],
+        },
+      },
+      handler: async (input: any) => {
+        const { addMemory } = await import("@/lib/chat/memory-store");
+        const memory = await addMemory({
+          fact: input.fact,
+          category: input.category,
+          entities: input.entities ?? [],
+          sourceConversationId: "chat-tool",
+          confidence: 1.0,
+        });
+        return `Remembered: "${memory.fact}" [${memory.category}]`;
+      },
+    },
+    {
+      definition: {
+        name: "forget_memory",
+        description:
+          'Delete a specific memory. Use when the user says "forget that", "that\'s no longer true", etc. Search first to find the memory ID.',
+        input_schema: {
+          type: "object",
+          properties: {
+            query: {
+              type: "string",
+              description: "Search query to find the memory to delete",
+            },
+          },
+          required: ["query"],
+        },
+      },
+      handler: async (input: any) => {
+        const { queryMemories } = await import("@/lib/chat/memory-search");
+        const { deleteMemory } = await import("@/lib/chat/memory-store");
+        const results = await queryMemories(input.query, 1);
+        if (results.length === 0) return "No matching memory found to forget.";
+        const mem = results[0].memory;
+        await deleteMemory(mem.id);
+        return `Forgotten: "${mem.fact}" [${mem.category}]`;
+      },
+    },
   ];
 }

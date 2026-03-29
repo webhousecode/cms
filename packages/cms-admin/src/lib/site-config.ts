@@ -134,7 +134,7 @@ async function defaults(): Promise<SiteConfig> {
     aiCodeModel: "claude-sonnet-4-6",
     aiPremiumModel: "claude-opus-4-6",
     aiChatModel: "claude-sonnet-4-6",
-    aiChatMaxTokens: 8192,
+    aiChatMaxTokens: 16384,
     aiChatMaxToolIterations: 25,
     resendApiKey: "",
     emailFrom: "",

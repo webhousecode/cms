@@ -56,7 +56,7 @@ export function AIDefaultsPanel() {
     aiInteractivesMaxTokens: 16384,
     aiPremiumModel: "claude-opus-4-6",
     aiChatModel: "claude-sonnet-4-6",
-    aiChatMaxTokens: 8192,
+    aiChatMaxTokens: 16384,
     aiChatMaxToolIterations: 25,
   });
   const [loading, setLoading] = useState(true);

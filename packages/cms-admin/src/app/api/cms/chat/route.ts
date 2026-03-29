@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { getApiKey } from "@/lib/ai-config";
-import { gatherSiteContext, buildChatSystemPrompt } from "@/lib/chat/system-prompt";
+import { gatherSiteContext, buildChatSystemPrompt, getMemoryContext } from "@/lib/chat/system-prompt";
 import { buildChatTools } from "@/lib/chat/tools";
-import { getSiteRole } from "@/lib/require-role";
+import { extractMemories } from "@/lib/chat/memory-extractor";
+import { getConversation } from "@/lib/chat/conversation-store";
+import { getSessionWithSiteRole } from "@/lib/require-role";
 import { readSiteConfig } from "@/lib/site-config";
 import { getModel } from "@/lib/ai/model-resolver";
 
@@ -23,8 +25,8 @@ interface ChatRequestMessage {
 }
 
 export async function POST(request: NextRequest) {
-  const role = await getSiteRole();
-  if (!role) return NextResponse.json({ error: "No access" }, { status: 403 });
+  const session = await getSessionWithSiteRole();
+  if (!session) return NextResponse.json({ error: "No access" }, { status: 403 });
 
   const apiKey = await getApiKey("anthropic");
   if (!apiKey) {
@@ -34,9 +36,10 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const { messages, model: requestedModel } = (await request.json()) as {
+  const { messages, model: requestedModel, conversationId } = (await request.json()) as {
     messages: ChatRequestMessage[];
     model?: string;
+    conversationId?: string;
   };
 
   if (!messages || messages.length === 0) {
@@ -45,7 +48,7 @@ export async function POST(request: NextRequest) {
 
   const client = new Anthropic({ apiKey });
 
-  // Build system prompt with full site context
+  // Build system prompt with full site context + memory injection
   let siteContext;
   let systemPrompt: string;
   let toolPairs;
@@ -53,6 +56,13 @@ export async function POST(request: NextRequest) {
     siteContext = await gatherSiteContext();
     systemPrompt = buildChatSystemPrompt(siteContext);
     toolPairs = await buildChatTools();
+
+    // Inject relevant memories from past conversations
+    const lastUserMsg = messages.filter((m) => m.role === "user").pop();
+    if (lastUserMsg) {
+      const { section } = await getMemoryContext(lastUserMsg.content);
+      if (section) systemPrompt += section;
+    }
   } catch (initErr) {
     console.error("[chat] Init error:", initErr instanceof Error ? initErr.stack : initErr);
     return NextResponse.json(
@@ -69,7 +79,7 @@ export async function POST(request: NextRequest) {
 
   // Read configurable limits from site config (inherits from org)
   const siteConfig = await readSiteConfig();
-  const chatMaxTokens = Math.min(siteConfig.aiChatMaxTokens || 8192, 32768);
+  const chatMaxTokens = Math.min(siteConfig.aiChatMaxTokens || 16384, 32768);
   const chatMaxIterations = Math.min(siteConfig.aiChatMaxToolIterations || 25, 50);
 
   // Resolve model: request param → site config → code default
@@ -183,6 +193,13 @@ export async function POST(request: NextRequest) {
         }
 
         sendEvent("done", {});
+
+        // Extract memories in background after conversation ends
+        if (conversationId) {
+          getConversation(session.userId, conversationId)
+            .then((conv) => conv && extractMemories(conv))
+            .catch(() => {});
+        }
       } catch (err) {
         sendEvent("error", {
           message: err instanceof Error ? err.message : "Chat error",

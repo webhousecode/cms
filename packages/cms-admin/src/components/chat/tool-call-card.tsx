@@ -1,6 +1,6 @@
 "use client";
 
-import { Wrench, Check, AlertCircle, Plus, Pencil, Send, Undo2, Trash2, Sparkles, RotateCcw, Search } from "lucide-react";
+import { Wrench, Check, AlertCircle, Plus, Pencil, Send, Undo2, Trash2, Sparkles, RotateCcw, Search, Brain } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 interface ToolMeta {
@@ -61,6 +61,10 @@ const TOOL_META: Record<string, ToolMeta> = {
   // Translation
   translate_document:{ label: "Translating document", icon: Sparkles },
   translate_site:    { label: "Translating site", icon: Sparkles },
+  // Memory (F114)
+  search_memories:   { label: "Searching memory", icon: Brain },
+  add_memory:        { label: "Remembering", icon: Brain },
+  forget_memory:     { label: "Forgetting", icon: Brain },
 };
 
 interface ToolCallCardProps {
