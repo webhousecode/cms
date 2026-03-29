@@ -13,24 +13,44 @@ import type { AdminToolName } from "./tools.js";
 export interface AiGenerator {
   generate(intent: string, collectionName: string): Promise<{ fields: Record<string, string>; slug: string }>;
   rewriteField(collection: string, slug: string, field: string, instruction: string, currentValue: string): Promise<string>;
+  generateContent(collection: string, slug: string, field: string, prompt: string): Promise<string>;
+  generateInteractive(title: string, description: string): Promise<string>;
+}
+
+/** Service callbacks injected by the host (Next.js app router) for admin-only operations */
+export interface AdminServices {
+  readSiteConfig(): Promise<any>;
+  writeSiteConfig(patch: Record<string, unknown>): Promise<any>;
+  listMedia(type: string, limit: number): Promise<string>;
+  searchMedia(query: string, type: string, limit: number): Promise<string>;
+  listAgents(): Promise<any[]>;
+  createAgent(opts: Record<string, unknown>): Promise<any>;
+  runAgent(agentId: string, prompt: string, collection?: string): Promise<any>;
+  listCurationQueue(status?: string): Promise<{ items: any[]; stats: Record<string, number> }>;
+  approveQueueItem(id: string, asDraft: boolean): Promise<any>;
+  rejectQueueItem(id: string, feedback: string): Promise<any>;
+  triggerDeploy(): Promise<any>;
+  listDeploys(): Promise<any[]>;
+  listRevisions(collection: string, slug: string): Promise<any[]>;
+  readLinkCheckResult(): Promise<any>;
+  createBackup(): Promise<any>;
+  translateDocument(collection: string, slug: string, targetLocale: string, publish: boolean): Promise<any>;
+  translateSite(targetLocale: string, publish: boolean): Promise<any>;
 }
 
 export interface AdminServerOptions {
   content: ContentService;
   config: CmsConfig;
-  /** Resolved scopes for this session — determined by auth middleware before connect */
   scopes: string[];
-  /** Label identifying the API key / user for audit log */
   actor: string;
-  /** Optional AI generator — if not provided, AI tools return a "not configured" error */
   ai?: AiGenerator;
-  /** Called when a write tool needs to trigger a build */
+  services?: AdminServices;
   onBuild?: (mode: "full" | "incremental") => Promise<{ ok: boolean; message: string }>;
 }
 
 export function createAdminMcpServer(opts: AdminServerOptions): Server {
   const reader = new ContentReader(opts.content, opts.config);
-  const { content, config, scopes, actor, ai, onBuild } = opts;
+  const { content, config, scopes, actor, ai, services, onBuild } = opts;
 
   const server = new Server(
     { name: "cms-admin", version: "1.0.0" },
@@ -118,10 +138,7 @@ export function createAdminMcpServer(opts: AdminServerOptions): Server {
           const slug = String(a["slug"] ?? "");
           const fields = (a["fields"] as Record<string, unknown>) ?? {};
           const existing = await content.findBySlug(col, slug);
-          if (!existing) {
-            result = { error: `Document "${slug}" not found in "${col}"` };
-            break;
-          }
+          if (!existing) { result = { error: `Document "${slug}" not found in "${col}"` }; break; }
           const { document: updated, skippedFields } = await content.updateWithContext(
             col, existing.id, { data: fields }, { actor: "ai", aiModel: "mcp" }
           );
@@ -156,9 +173,68 @@ export function createAdminMcpServer(opts: AdminServerOptions): Server {
           break;
         }
 
+        case "trash_document": {
+          const col = String(a["collection"] ?? "");
+          const slug = String(a["slug"] ?? "");
+          const existing = await content.findBySlug(col, slug);
+          if (!existing) { result = { error: `Document "${slug}" not found` }; break; }
+          await content.update(col, existing.id, {
+            status: "trashed" as any,
+            data: { ...existing.data, _trashedAt: new Date().toISOString() },
+          });
+          result = { slug, status: "trashed" };
+          audit("success", `${col}/${slug}`);
+          break;
+        }
+
+        case "clone_document": {
+          const col = String(a["collection"] ?? "");
+          const slug = String(a["slug"] ?? "");
+          const existing = await content.findBySlug(col, slug);
+          if (!existing) { result = { error: `Document "${slug}" not found` }; break; }
+          let newSlug = `${slug}-copy`;
+          let dup = await content.findBySlug(col, newSlug).catch(() => null);
+          let n = 2;
+          while (dup) { newSlug = `${slug}-copy-${n}`; dup = await content.findBySlug(col, newSlug).catch(() => null); n++; }
+          const cloned = await content.create(col, { slug: newSlug, status: "draft", data: { ...existing.data }, ...(existing.locale ? { locale: existing.locale } : {}) });
+          result = { slug: cloned.slug, collection: col, clonedFrom: slug };
+          audit("success", `${col}/${cloned.slug}`);
+          break;
+        }
+
+        case "restore_from_trash": {
+          const col = String(a["collection"] ?? "");
+          const slug = String(a["slug"] ?? "");
+          const existing = await content.findBySlug(col, slug);
+          if (!existing) { result = { error: `Document "${slug}" not found` }; break; }
+          if ((existing.status as string) !== "trashed") { result = { error: `Document is not trashed (status: ${existing.status})` }; break; }
+          const data = { ...existing.data };
+          delete data._trashedAt;
+          await content.update(col, existing.id, { status: "draft", data });
+          result = { slug, status: "draft", restored: true };
+          audit("success", `${col}/${slug}`);
+          break;
+        }
+
+        case "empty_trash": {
+          let deleted = 0;
+          for (const col of config.collections) {
+            const { documents } = await content.findMany(col.name, {}).catch(() => ({ documents: [] as any[] }));
+            for (const d of documents) {
+              if ((d.status as string) === "trashed") {
+                await content.delete(col.name, d.id);
+                deleted++;
+              }
+            }
+          }
+          result = { deleted };
+          audit("success", undefined, `Deleted ${deleted} items`);
+          break;
+        }
+
         // ── AI tools ─────────────────────────────────────────────
         case "generate_with_ai": {
-          if (!ai) { result = { error: "AI provider not configured on this server" }; break; }
+          if (!ai) { result = { error: "AI provider not configured" }; break; }
           const col = String(a["collection"] ?? "");
           const intent = String(a["intent"] ?? "");
           const status = (a["status"] as "draft" | "published") ?? "draft";
@@ -170,22 +246,19 @@ export function createAdminMcpServer(opts: AdminServerOptions): Server {
         }
 
         case "rewrite_field": {
-          if (!ai) { result = { error: "AI provider not configured on this server" }; break; }
+          if (!ai) { result = { error: "AI provider not configured" }; break; }
           const col = String(a["collection"] ?? "");
           const slug = String(a["slug"] ?? "");
           const field = String(a["field"] ?? "");
           const instruction = String(a["instruction"] ?? "");
           const existing = await content.findBySlug(col, slug);
           if (!existing) { result = { error: `Document "${slug}" not found` }; break; }
-
-          // Check AI lock
           const { isFieldLocked } = await import("@webhouse/cms");
           if (isFieldLocked(existing._fieldMeta ?? {}, field)) {
-            result = { error: `FIELD_LOCKED: Field '${field}' is AI-locked and cannot be modified by agents` };
+            result = { error: `FIELD_LOCKED: Field '${field}' is AI-locked` };
             audit("error", `${col}/${slug}`, "FIELD_LOCKED");
             break;
           }
-
           const currentValue = String(existing.data[field] ?? "");
           const rewritten = await ai.rewriteField(col, slug, field, instruction, currentValue);
           await content.updateWithContext(col, existing.id, { data: { ...existing.data, [field]: rewritten } }, { actor: "ai", aiModel: "mcp-rewrite" });
@@ -194,30 +267,165 @@ export function createAdminMcpServer(opts: AdminServerOptions): Server {
           break;
         }
 
-        // ── Build tools ──────────────────────────────────────────
+        case "generate_content": {
+          if (!ai) { result = { error: "AI provider not configured" }; break; }
+          const col = String(a["collection"] ?? "");
+          const slug = String(a["slug"] ?? "");
+          const field = String(a["field"] ?? "");
+          const prompt = String(a["prompt"] ?? "");
+          const existing = await content.findBySlug(col, slug);
+          if (!existing) { result = { error: `Document "${slug}" not found` }; break; }
+          const generated = await ai.generateContent(col, slug, field, prompt);
+          await content.updateWithContext(col, existing.id, { data: { ...existing.data, [field]: generated } }, { actor: "ai", aiModel: "mcp-generate" });
+          result = { slug, field, preview: generated.slice(0, 300) };
+          audit("success", `${col}/${slug}`);
+          break;
+        }
+
+        case "generate_interactive": {
+          if (!ai) { result = { error: "AI provider not configured" }; break; }
+          const title = String(a["title"] ?? "");
+          const desc = String(a["description"] ?? "");
+          const html = await ai.generateInteractive(title, desc);
+          result = { title, html: html.slice(0, 200) + "...", fullLength: html.length };
+          audit("success");
+          break;
+        }
+
+        // ── Translation tools ────────────────────────────────────
+        case "translate_document": {
+          if (!services) { result = { error: "Services not configured" }; break; }
+          const col = String(a["collection"] ?? "");
+          const slug = String(a["slug"] ?? "");
+          const targetLocale = String(a["targetLocale"] ?? "");
+          const publish = a["publish"] === true;
+          result = await services.translateDocument(col, slug, targetLocale, publish);
+          audit("success", `${col}/${slug}`);
+          break;
+        }
+
+        case "translate_site": {
+          if (!services) { result = { error: "Services not configured" }; break; }
+          const targetLocale = String(a["targetLocale"] ?? "");
+          const publish = a["publish"] === true;
+          result = await services.translateSite(targetLocale, publish);
+          audit("success");
+          break;
+        }
+
+        // ── Build & Deploy ───────────────────────────────────────
         case "trigger_build": {
-          if (!onBuild) { result = { error: "Build not configured on this server" }; break; }
+          if (!onBuild) { result = { error: "Build not configured" }; break; }
           const mode = (a["mode"] as "full" | "incremental") ?? "incremental";
           result = await onBuild(mode);
           audit("success");
           break;
         }
 
-        // ── Draft tools ──────────────────────────────────────────
+        case "trigger_deploy": {
+          if (!services) { result = { error: "Services not configured" }; break; }
+          result = await services.triggerDeploy();
+          audit("success");
+          break;
+        }
+
+        case "list_deploy_history": {
+          if (!services) { result = { error: "Services not configured" }; break; }
+          const deploys = await services.listDeploys();
+          result = { deploys: deploys.slice(0, 10) };
+          break;
+        }
+
+        // ── Bulk operations ──────────────────────────────────────
+        case "bulk_publish": {
+          const targetCol = a["collection"] ? String(a["collection"]) : null;
+          const collections = targetCol
+            ? config.collections.filter((c) => c.name === targetCol)
+            : config.collections.filter((c) => c.name !== "global");
+          if (targetCol && collections.length === 0) { result = { error: `Collection "${targetCol}" not found` }; break; }
+          const published: string[] = [];
+          for (const col of collections) {
+            const { documents } = await content.findMany(col.name, {}).catch(() => ({ documents: [] as any[] }));
+            for (const d of documents) {
+              if (d.status === "draft") {
+                await content.update(col.name, d.id, { status: "published" });
+                published.push(`${col.name}/${d.slug}`);
+              }
+            }
+          }
+          result = { published: published.length, documents: published };
+          audit("success", undefined, `Published ${published.length} documents`);
+          break;
+        }
+
+        case "bulk_update": {
+          const col = String(a["collection"] ?? "");
+          const field = String(a["field"] ?? "");
+          const value = a["value"];
+          const mode = String(a["mode"] ?? "set");
+          const filter = (a["filter"] ?? {}) as { status?: string; slugs?: string[] };
+          const colDef = config.collections.find((c) => c.name === col);
+          if (!colDef) { result = { error: `Collection "${col}" not found` }; break; }
+          const { documents } = await content.findMany(col, {}).catch(() => ({ documents: [] as any[] }));
+          let targets = documents.filter((d: any) => d.status !== "trashed");
+          if (filter.status) targets = targets.filter((d: any) => d.status === filter.status);
+          if (filter.slugs?.length) { const s = new Set(filter.slugs); targets = targets.filter((d: any) => s.has(d.slug)); }
+          const updated: string[] = [];
+          for (const d of targets) {
+            let newValue = value;
+            if (mode === "append" && Array.isArray(value)) {
+              const existing = Array.isArray(d.data[field]) ? d.data[field] : [];
+              newValue = [...existing, ...value.filter((v: any) => !existing.includes(v))];
+            }
+            await content.update(col, d.id, { data: { ...d.data, [field]: newValue } });
+            updated.push(d.slug);
+          }
+          result = { updated: updated.length, slugs: updated, field, mode };
+          audit("success", undefined, `Updated ${updated.length} documents`);
+          break;
+        }
+
+        // ── Scheduling ───────────────────────────────────────────
+        case "schedule_publish": {
+          const col = String(a["collection"] ?? "");
+          const slug = String(a["slug"] ?? "");
+          const existing = await content.findBySlug(col, slug);
+          if (!existing) { result = { error: `Document "${slug}" not found` }; break; }
+          const update: Record<string, unknown> = {};
+          if (a["publishAt"] !== undefined) update.publishAt = a["publishAt"] === "null" || a["publishAt"] === null ? null : String(a["publishAt"]);
+          if (a["unpublishAt"] !== undefined) update.unpublishAt = a["unpublishAt"] === "null" || a["unpublishAt"] === null ? null : String(a["unpublishAt"]);
+          if (Object.keys(update).length === 0) { result = { error: "Provide publishAt and/or unpublishAt" }; break; }
+          await content.update(col, existing.id, update);
+          result = { slug, ...update };
+          audit("success", `${col}/${slug}`);
+          break;
+        }
+
+        case "list_scheduled": {
+          const items: Array<{ title: string; collection: string; slug: string; status: string; publishAt?: string; unpublishAt?: string }> = [];
+          for (const col of config.collections) {
+            if (col.name === "global") continue;
+            const { documents } = await content.findMany(col.name, {}).catch(() => ({ documents: [] as any[] }));
+            for (const d of documents) {
+              if (d.publishAt || d.unpublishAt) {
+                items.push({ title: String(d.data.title ?? d.slug), collection: col.name, slug: d.slug, status: d.status, publishAt: d.publishAt, unpublishAt: d.unpublishAt });
+              }
+            }
+          }
+          result = { total: items.length, items };
+          break;
+        }
+
+        // ── Drafts ───────────────────────────────────────────────
         case "list_drafts": {
           const collections = a["collection"]
             ? [String(a["collection"])]
             : config.collections.map((c) => c.name);
-          const drafts = [];
+          const drafts: Array<{ collection: string; slug: string; title: string; updatedAt: string }> = [];
           for (const col of collections) {
             const { documents } = await content.findMany(col, { status: "draft", limit: 100 });
             for (const doc of documents) {
-              drafts.push({
-                collection: col,
-                slug: doc.slug,
-                title: String(doc.data["title"] ?? doc.data["name"] ?? doc.slug),
-                updatedAt: doc.updatedAt,
-              });
+              drafts.push({ collection: col, slug: doc.slug, title: String(doc.data["title"] ?? doc.data["name"] ?? doc.slug), updatedAt: doc.updatedAt });
             }
           }
           result = { total: drafts.length, drafts };
@@ -225,11 +433,143 @@ export function createAdminMcpServer(opts: AdminServerOptions): Server {
         }
 
         case "get_version_history": {
+          if (!services) {
+            result = { note: "Version history requires services" };
+            break;
+          }
           const col = String(a["collection"] ?? "");
           const slug = String(a["slug"] ?? "");
-          const doc = await content.findBySlug(col, slug);
-          if (!doc) { result = { error: `Document "${slug}" not found` }; break; }
-          result = { collection: col, slug, id: doc.id, note: "Version history is stored in _data/revisions/ by the admin UI" };
+          const revisions = await services.listRevisions(col, slug);
+          result = { collection: col, slug, revisions };
+          break;
+        }
+
+        // ── Config & Stats ───────────────────────────────────────
+        case "get_site_config": {
+          if (!services) { result = { error: "Services not configured" }; break; }
+          result = await services.readSiteConfig();
+          break;
+        }
+
+        case "update_site_settings": {
+          if (!services) { result = { error: "Services not configured" }; break; }
+          const patch = (a["settings"] as Record<string, unknown>) ?? {};
+          const blocked = ["anthropicApiKey", "openaiApiKey", "geminiApiKey", "braveApiKey", "tavilyApiKey", "resendApiKey", "deployApiToken", "calendarSecret"];
+          const attempted = Object.keys(patch).filter((k) => blocked.includes(k));
+          if (attempted.length > 0) { result = { error: `Cannot update sensitive fields: ${attempted.join(", ")}` }; break; }
+          result = await services.writeSiteConfig(patch);
+          audit("success");
+          break;
+        }
+
+        case "content_stats": {
+          let totalDocs = 0, totalWords = 0, published = 0, drafts = 0;
+          for (const col of config.collections) {
+            if (col.name === "global") continue;
+            const { documents } = await content.findMany(col.name, {}).catch(() => ({ documents: [] as any[] }));
+            for (const d of documents) {
+              if (d.status === "trashed") continue;
+              totalDocs++;
+              if (d.status === "published") published++;
+              if (d.status === "draft") drafts++;
+              totalWords += String(d.data.content ?? d.data.body ?? "").split(/\s+/).filter(Boolean).length;
+            }
+          }
+          result = { totalDocuments: totalDocs, published, drafts, totalWords };
+          break;
+        }
+
+        // ── Media ────────────────────────────────────────────────
+        case "list_media": {
+          if (!services) { result = { error: "Services not configured" }; break; }
+          const text = await services.listMedia(String(a["type"] ?? "all"), Number(a["limit"] ?? 50));
+          result = text;
+          break;
+        }
+
+        case "search_media": {
+          if (!services) { result = { error: "Services not configured" }; break; }
+          const text = await services.searchMedia(String(a["query"] ?? ""), String(a["type"] ?? "image"), Number(a["limit"] ?? 10));
+          result = text;
+          break;
+        }
+
+        // ── Trash ────────────────────────────────────────────────
+        case "list_trash": {
+          const items: Array<{ title: string; collection: string; slug: string; trashedAt?: string }> = [];
+          for (const col of config.collections) {
+            const { documents } = await content.findMany(col.name, {}).catch(() => ({ documents: [] as any[] }));
+            for (const d of documents) {
+              if ((d.status as string) === "trashed") {
+                items.push({ title: String(d.data.title ?? d.slug), collection: col.name, slug: d.slug, trashedAt: d.data._trashedAt as string });
+              }
+            }
+          }
+          result = { total: items.length, items };
+          break;
+        }
+
+        // ── Agents & Curation ────────────────────────────────────
+        case "list_agents": {
+          if (!services) { result = { error: "Services not configured" }; break; }
+          result = await services.listAgents();
+          break;
+        }
+
+        case "create_agent": {
+          if (!services) { result = { error: "Services not configured" }; break; }
+          result = await services.createAgent(a);
+          audit("success");
+          break;
+        }
+
+        case "run_agent": {
+          if (!services) { result = { error: "Services not configured" }; break; }
+          result = await services.runAgent(String(a["agentId"]), String(a["prompt"]), a["collection"] ? String(a["collection"]) : undefined);
+          audit("success");
+          break;
+        }
+
+        case "list_curation_queue": {
+          if (!services) { result = { error: "Services not configured" }; break; }
+          result = await services.listCurationQueue(a["status"] ? String(a["status"]) : undefined);
+          break;
+        }
+
+        case "approve_queue_item": {
+          if (!services) { result = { error: "Services not configured" }; break; }
+          result = await services.approveQueueItem(String(a["id"]), a["asDraft"] === true);
+          audit("success");
+          break;
+        }
+
+        case "reject_queue_item": {
+          if (!services) { result = { error: "Services not configured" }; break; }
+          result = await services.rejectQueueItem(String(a["id"]), String(a["feedback"]));
+          audit("success");
+          break;
+        }
+
+        // ── Maintenance ──────────────────────────────────────────
+        case "list_revisions": {
+          if (!services) { result = { error: "Services not configured" }; break; }
+          const col = String(a["collection"] ?? "");
+          const slug = String(a["slug"] ?? "");
+          result = await services.listRevisions(col, slug);
+          break;
+        }
+
+        case "run_link_check": {
+          if (!services) { result = { error: "Services not configured" }; break; }
+          result = await services.readLinkCheckResult();
+          if (!result) result = { note: "No link check results yet" };
+          break;
+        }
+
+        case "create_backup": {
+          if (!services) { result = { error: "Services not configured" }; break; }
+          result = await services.createBackup();
+          audit("success");
           break;
         }
 
