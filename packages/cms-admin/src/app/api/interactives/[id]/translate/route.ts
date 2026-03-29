@@ -31,15 +31,30 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   }
 
   const siteConfig = await readSiteConfig();
-  const sourceLocale = source.meta.locale || siteConfig.defaultLocale || "en";
+  // Detect actual language from HTML lang attribute (more reliable than metadata)
+  const htmlLangMatch = source.content.match(/<html[^>]*\slang=["']([^"']+)["']/i);
+  const detectedLocale = htmlLangMatch?.[1]?.toLowerCase();
+  const sourceLocale = detectedLocale || source.meta.locale || siteConfig.defaultLocale || "en";
   const sourceLang = LOCALE_LABELS[sourceLocale] ?? sourceLocale;
   const targetLang = LOCALE_LABELS[targetLocale] ?? targetLocale;
 
-  // Ensure source has a translationGroup
+  // If source content is already in the target language, reject
+  if (sourceLocale === targetLocale) {
+    return NextResponse.json(
+      { error: `Content is already in ${targetLang} (detected from HTML lang attribute)` },
+      { status: 400 },
+    );
+  }
+
+  // Ensure source has a translationGroup + correct locale from detection
   const sourceGroup = source.meta.translationGroup;
   const translationGroupId = sourceGroup || `int-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-  if (!sourceGroup) {
-    await adapter.updateInteractive(id, { translationGroup: translationGroupId });
+  const needsUpdate = !sourceGroup || (detectedLocale && source.meta.locale !== detectedLocale);
+  if (needsUpdate) {
+    await adapter.updateInteractive(id, {
+      translationGroup: translationGroupId,
+      ...(detectedLocale && { locale: detectedLocale }),
+    });
   }
 
   // Check if translation already exists (by translationGroup + locale, or legacy ID pattern)
