@@ -12,24 +12,12 @@ function PreviewFrame() {
   const [buildResult, setBuildResult] = useState<{ ok?: boolean; error?: string; output?: string } | null>(null);
   const [liveUrl, setLiveUrl] = useState(rawUrl);
 
-  // Auto-start preview server if URL points to localhost (server may have died on restart)
+  // Auto-start sirv preview server ONLY when no previewSiteUrl is configured (rawUrl is empty)
   useEffect(() => {
-    if (!rawUrl || !/localhost:\d+/.test(rawUrl)) return;
+    if (rawUrl) return; // previewSiteUrl is set — use it directly, don't start sirv
     fetch("/api/preview-serve", { method: "POST" })
       .then((r) => r.ok ? r.json() as Promise<{ url: string }> : null)
-      .then((d) => {
-        if (!d?.url) return;
-        // Preserve the path from the original URL, only replace the base (host:port)
-        try {
-          const orig = new URL(rawUrl);
-          const fresh = new URL(d.url);
-          if (orig.host !== fresh.host) {
-            fresh.pathname = orig.pathname;
-            fresh.search = orig.search;
-            setLiveUrl(fresh.toString());
-          }
-        } catch { /* invalid URL, skip */ }
-      })
+      .then((d) => { if (d?.url) setLiveUrl(d.url); })
       .catch(() => {});
   }, [rawUrl]);
 
