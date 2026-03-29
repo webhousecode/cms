@@ -299,7 +299,10 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
   const extraColumns = buildColumns(fields, titleField);
 
   // Resolve preview base URL for grid view thumbnails
-  const [previewBase, setPreviewBase] = useState("");
+  const [previewBase, setPreviewBase] = useState(() => {
+    if (typeof window === "undefined") return "";
+    return sessionStorage.getItem("cms-preview-base") ?? "";
+  });
   useEffect(() => {
     async function resolve() {
       // Build with drafts only in grid view (thumbnails need it)
@@ -313,7 +316,7 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
         const r = await fetch("/api/preview-serve", { method: "POST" });
         if (r.ok) {
           const d = await r.json() as { url?: string };
-          if (d?.url) { setPreviewBase(d.url); return; }
+          if (d?.url) { setPreviewBase(d.url); sessionStorage.setItem("cms-preview-base", d.url); return; }
         }
       } catch { /* sirv not available */ }
       // 3. Fall back to previewSiteUrl from site config (Next.js dev server etc.)
@@ -321,7 +324,7 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
         const r = await fetch("/api/admin/site-config");
         if (r.ok) {
           const data = await r.json();
-          if (data?.previewSiteUrl) { setPreviewBase(data.previewSiteUrl); return; }
+          if (data?.previewSiteUrl) { setPreviewBase(data.previewSiteUrl); sessionStorage.setItem("cms-preview-base", data.previewSiteUrl); return; }
         }
       } catch { /* no config */ }
     }
@@ -559,34 +562,32 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
                 >
                   {/* Preview thumbnail */}
                   <PreviewThumb previewUrl={previewUrl} title={title} />
-                  {/* Title + status footer */}
-                  <div style={{ padding: "0.6rem 0.75rem", borderTop: "1px solid var(--border)" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-                      <StatusDot status={doc.status} publishAt={doc.publishAt} />
+                </Link>
+                {/* Title bar with context menu */}
+                <div style={{ padding: "0.6rem 0.75rem", borderTop: "1px solid var(--border)" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                    <StatusDot status={doc.status} publishAt={doc.publishAt} />
+                    <Link href={`/admin/${collection}/${doc.slug}`} style={{ textDecoration: "none", flex: 1, minWidth: 0 }}>
                       <p style={{
                         fontSize: "0.8rem", fontWeight: 500, color: "var(--foreground)",
                         overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                        flex: 1, minWidth: 0,
                       }} className="group-hover:text-primary transition-colors">
                         {title}
                       </p>
-                    </div>
+                    </Link>
+                    {!readOnly && (
+                      <RowMenu
+                        doc={doc}
+                        collection={collection}
+                        onClone={(e) => cloneDoc(e, doc)}
+                        onToggle={(e) => toggleStatus(e, doc)}
+                        onTrash={(e) => trashDoc(e, doc)}
+                        cloning={cloningSlug === doc.slug}
+                        previewUrl={previewUrl}
+                      />
+                    )}
                   </div>
-                </Link>
-                {/* Context menu */}
-                {!readOnly && (
-                  <div style={{ position: "absolute", top: "0.5rem", right: "0.5rem", zIndex: 2 }} className="opacity-0 group-hover:opacity-100 transition-opacity">
-                    <RowMenu
-                      doc={doc}
-                      collection={collection}
-                      onClone={(e) => cloneDoc(e, doc)}
-                      onToggle={(e) => toggleStatus(e, doc)}
-                      onTrash={(e) => trashDoc(e, doc)}
-                      cloning={cloningSlug === doc.slug}
-                      previewUrl={previewUrl}
-                    />
-                  </div>
-                )}
+                </div>
               </div>
             );
           })}
