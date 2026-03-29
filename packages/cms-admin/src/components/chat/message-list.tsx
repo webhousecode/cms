@@ -51,6 +51,7 @@ interface MessageListProps {
   isThinking: boolean;
   thinkingText?: string;
   thinkingStartTime?: number | null;
+  showThinking?: boolean;
 }
 
 function MessageCopyButton({ text }: { text: string }) {
@@ -182,7 +183,7 @@ function MessageBubble({ message, userAvatarUrl }: { message: ChatMessageUI; use
   );
 }
 
-export function MessageList({ messages, isThinking, thinkingText, thinkingStartTime }: MessageListProps) {
+export function MessageList({ messages, isThinking, thinkingText, thinkingStartTime, showThinking }: MessageListProps) {
   const [thinkingExpanded, setThinkingExpanded] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const [userAvatar, setUserAvatar] = useState<string | null>(() => {
@@ -250,7 +251,7 @@ export function MessageList({ messages, isThinking, thinkingText, thinkingStartT
                     color: "var(--muted-foreground)",
                     opacity: 0.5,
                     transition: "transform 0.15s",
-                    transform: thinkingExpanded ? "rotate(90deg)" : "rotate(0deg)",
+                    transform: (thinkingExpanded || showThinking) ? "rotate(90deg)" : "rotate(0deg)",
                   }}
                 >
                   ▶
@@ -258,7 +259,7 @@ export function MessageList({ messages, isThinking, thinkingText, thinkingStartT
               )}
               <ThinkingAnimation label="Thinking..." startTime={thinkingStartTime} />
             </div>
-            {thinkingExpanded && thinkingText && (
+            {(thinkingExpanded || showThinking) && thinkingText && (
               <div
                 style={{
                   marginLeft: "40px",
