@@ -401,6 +401,7 @@ function injectJsonLd(html: string, info: PageInfo, config: EnrichmentConfig): s
           name: config.siteName,
           url: config.baseUrl + config.basePath + "/",
           description: config.siteDescription,
+          inLanguage: config.lang ?? "en",
         };
         break;
 
@@ -411,6 +412,7 @@ function injectJsonLd(html: string, info: PageInfo, config: EnrichmentConfig): s
           headline: info.title,
           description: info.description,
           url: canonicalUrl,
+          inLanguage: config.lang ?? "en",
           publisher: {
             "@type": "Organization",
             name: config.siteName,
@@ -428,6 +430,7 @@ function injectJsonLd(html: string, info: PageInfo, config: EnrichmentConfig): s
           name: info.title,
           url: canonicalUrl,
           description: info.description,
+          inLanguage: config.lang ?? "en",
           isPartOf: {
             "@type": "WebSite",
             name: config.siteName,

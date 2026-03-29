@@ -98,34 +98,39 @@ export function calculateSeoScore(
   doc: { slug: string; data: Record<string, unknown> },
   seo: SeoFields,
   allTitles?: string[],
+  locale?: string,
 ): SeoScoreResult {
   const details: SeoScoreDetail[] = [];
   const content = stripToText(String(doc.data.content ?? doc.data.body ?? ""));
   const title = String(doc.data.title ?? "");
   const keywords = seo.keywords ?? [];
 
-  // 1. Meta title length (30-60 chars)
+  // Locale-aware character limits
+  const { getSeoLimits } = require("@/lib/ai/locale-prompt");
+  const limits = getSeoLimits(locale ?? "en");
+
+  // 1. Meta title length
   const mt = seo.metaTitle ?? "";
   if (!mt) {
-    details.push({ rule: "meta-title", label: "Meta title", status: "fail", message: "Meta title is missing. Write a title for search results (30-60 characters)." });
-  } else if (mt.length < 30) {
-    details.push({ rule: "meta-title", label: "Meta title", status: "warn", message: `Meta title is too short (${mt.length} characters). Add more words to reach 30-60 characters.` });
-  } else if (mt.length > 60) {
-    details.push({ rule: "meta-title", label: "Meta title", status: "warn", message: `Meta title is too long (${mt.length} characters). Google cuts off after 60. Shorten it.` });
+    details.push({ rule: "meta-title", label: "Meta title", status: "fail", message: `Meta title is missing. Write a title for search results (${limits.titleMin}-${limits.titleMax} characters).` });
+  } else if (mt.length < limits.titleMin) {
+    details.push({ rule: "meta-title", label: "Meta title", status: "warn", message: `Meta title is too short (${mt.length} characters). Add more words to reach ${limits.titleMin}-${limits.titleMax} characters.` });
+  } else if (mt.length > limits.titleMax) {
+    details.push({ rule: "meta-title", label: "Meta title", status: "warn", message: `Meta title is too long (${mt.length} characters). Google cuts off after ${limits.titleMax}. Shorten it.` });
   } else {
-    details.push({ rule: "meta-title", label: "Meta title", status: "pass", message: `Meta title length is good (${mt.length}/60 characters)` });
+    details.push({ rule: "meta-title", label: "Meta title", status: "pass", message: `Meta title length is good (${mt.length}/${limits.titleMax} characters)` });
   }
 
-  // 2. Meta description length (120-160 chars)
+  // 2. Meta description length
   const md = seo.metaDescription ?? "";
   if (!md) {
-    details.push({ rule: "meta-desc", label: "Meta description", status: "fail", message: "Meta description is missing. Write a description for search results (120-160 characters)." });
-  } else if (md.length < 120) {
-    details.push({ rule: "meta-desc", label: "Meta description", status: "warn", message: `Meta description is too short (${md.length} characters). Add ${120 - md.length} more characters to reach 120.` });
-  } else if (md.length > 160) {
-    details.push({ rule: "meta-desc", label: "Meta description", status: "warn", message: `Meta description is too long (${md.length} characters). Google cuts off after 160. Remove ${md.length - 160} characters.` });
+    details.push({ rule: "meta-desc", label: "Meta description", status: "fail", message: `Meta description is missing. Write a description for search results (${limits.descMin}-${limits.descMax} characters).` });
+  } else if (md.length < limits.descMin) {
+    details.push({ rule: "meta-desc", label: "Meta description", status: "warn", message: `Meta description is too short (${md.length} characters). Add ${limits.descMin - md.length} more characters to reach ${limits.descMin}.` });
+  } else if (md.length > limits.descMax) {
+    details.push({ rule: "meta-desc", label: "Meta description", status: "warn", message: `Meta description is too long (${md.length} characters). Google cuts off after ${limits.descMax}. Remove ${md.length - limits.descMax} characters.` });
   } else {
-    details.push({ rule: "meta-desc", label: "Meta description", status: "pass", message: `Meta description length is good (${md.length}/160 characters)` });
+    details.push({ rule: "meta-desc", label: "Meta description", status: "pass", message: `Meta description length is good (${md.length}/${limits.descMax} characters)` });
   }
 
   // 3. Keyword in meta title
