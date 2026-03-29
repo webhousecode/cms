@@ -284,7 +284,11 @@ function PreviewThumb({ previewUrl, title }: { previewUrl: string; title: string
 export function CollectionList({ collection, titleField, fields, initialDocs, readOnly, view = "list", urlPrefix, defaultLocale, siteLocales }: Props) {
   const [docs, setDocs] = useState(initialDocs);
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [statusFilter, setStatusFilterRaw] = useState<StatusFilter>(() => {
+    if (typeof window === "undefined") return "all";
+    return (localStorage.getItem(`cms-filter-${collection}`) as StatusFilter) || "all";
+  });
+  const setStatusFilter = (v: StatusFilter) => { setStatusFilterRaw(v); localStorage.setItem(`cms-filter-${collection}`, v); };
   const [localeFilter, setLocaleFilter] = useState<string>("all");
   const [sortKey, setSortKey] = useState<SortKey>("updatedAt");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
