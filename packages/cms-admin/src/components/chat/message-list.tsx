@@ -185,14 +185,14 @@ function MessageBubble({ message, userAvatarUrl }: { message: ChatMessageUI; use
 export function MessageList({ messages, isThinking, thinkingText, thinkingStartTime }: MessageListProps) {
   const [thinkingExpanded, setThinkingExpanded] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
-  const [userAvatar, setUserAvatar] = useState<string | null>(null);
-
-  useEffect(() => {
-    fetch("/api/auth/me")
-      .then((r) => r.ok ? r.json() : null)
-      .then((d) => { if (d?.user?.gravatarUrl) setUserAvatar(d.user.gravatarUrl); })
-      .catch(() => {});
-  }, []);
+  const [userAvatar, setUserAvatar] = useState<string | null>(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      const cached = sessionStorage.getItem("cms-session-user");
+      if (cached) return (JSON.parse(cached) as { gravatarUrl?: string }).gravatarUrl ?? null;
+    } catch { /* ignore */ }
+    return null;
+  });
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
