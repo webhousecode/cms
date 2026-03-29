@@ -918,7 +918,13 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
   const [translationGroup] = useState(initialDoc.translationGroup ?? "");
   const [localeOpen, setLocaleOpen] = useState(false);
   const [createTranslationOpen, setCreateTranslationOpen] = useState(false);
-  const [sideBySide, setSideBySide] = useState(false);
+  const [sideBySide, setSideBySideRaw] = useState(() => {
+    try { return localStorage.getItem("cms-side-by-side") === "1"; } catch { return false; }
+  });
+  const setSideBySide = useCallback((v: boolean) => {
+    setSideBySideRaw(v);
+    try { localStorage.setItem("cms-side-by-side", v ? "1" : "0"); } catch {}
+  }, []);
   const sourceDoc = sourceDataProp ?? null;
   const localeRef = useRef<HTMLDivElement>(null);
   const [, startTransition] = useTransition();
