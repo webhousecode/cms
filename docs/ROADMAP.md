@@ -114,6 +114,7 @@ _Makes us stand out. Customers expect these from a modern CMS._
 | 18h | **F98 Lighthouse Audit** | Medium | PSI API + local Lighthouse. Dashboard scores + trend, scheduled scans, per-page audits, alerts on drop. |
 | 18i | **F114 Chat Memory** | Medium | Cross-conversation intelligence. MiniSearch BM25+ over extracted memories. Haiku extracts facts/preferences/corrections after each conversation. Top-15 memories injected into system prompt. Chat gets smarter over time. |
 | 18j | **F115 CMS Help Chat** | Small | Product knowledge base — build-time index of all docs/features/CLAUDE.md. Auto-injects relevant help into system prompt. `search_help` tool. Same MiniSearch engine as F114. |
+| 18k | **F117 MCP ↔ Chat Parity** | Medium | Shared tool registry + 40+ tools via MCP. Claude Desktop/Cursor gets full CMS management. `get_chat_context` for schema awareness. |
 | 19 | **F49 Incremental Builds** | Small | Performance. Only matters at scale (100+ pages). |
 | ~~20~~ | ~~**F107 Chat with Your Site**~~ | ~~Done~~ | ~~Shipped. 40 tools, SSE streaming, conversation history, thinking toggle + timer, artifact cards, inline forms, bulk tools, AI SEO on create. Supersedes F51.~~ |
 | ~~20~~ | ~~**F51 Admin AI Assistant**~~ | ~~Superseded~~ | ~~Absorbed into F107 Chat with Your Site~~ |
