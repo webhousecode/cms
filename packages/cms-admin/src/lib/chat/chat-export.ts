@@ -99,9 +99,94 @@ export async function buildExportZip(
   return zip.generateAsync({ type: "nodebuffer" }) as Promise<Buffer>;
 }
 
+export interface ImportPreview {
+  manifest: ExportManifest | null;
+  chats: { total: number; new: number; existing: number };
+  memories: { total: number; new: number; existing: number };
+}
+
 export interface ImportResult {
   chats: { imported: number; skipped: number };
   memories: { added: number; skipped: number };
+}
+
+/**
+ * Preview what an import would do without actually writing anything.
+ * Shows how many chats/memories are new vs already existing.
+ */
+export async function previewImport(
+  zipBuffer: Buffer,
+  userId: string
+): Promise<ImportPreview> {
+  const zip = await JSZip.loadAsync(zipBuffer);
+
+  // Read manifest
+  let manifest: ExportManifest | null = null;
+  const manifestFile = zip.file("manifest.json");
+  if (manifestFile) {
+    try {
+      manifest = JSON.parse(await manifestFile.async("text"));
+    } catch { /* ignore */ }
+  }
+
+  // Preview memories
+  const memPreview = { total: 0, new: 0, existing: 0 };
+  const memoriesFile = zip.file("memories.txt");
+  if (memoriesFile) {
+    const text = await memoriesFile.async("text");
+    const lines = text.split("\n").filter((l) => l.trim() && !l.startsWith("#") && !l.startsWith("//"));
+    memPreview.total = lines.length;
+
+    const { memories: existingMems } = await readMemories();
+    const existingFacts = new Set(existingMems.map((m) => m.fact.toLowerCase()));
+
+    for (const line of lines) {
+      // Strip [category] prefix, (date), and | entities suffix to get the fact
+      let fact = line.trim();
+      const catMatch = fact.match(/^\[(preference|decision|pattern|correction|fact)]\s*/i);
+      if (catMatch) fact = fact.slice(catMatch[0].length);
+      const dateMatch = fact.match(/^\(\d{4}-\d{2}-\d{2}\)\s*/);
+      if (dateMatch) fact = fact.slice(dateMatch[0].length);
+      const pipeIdx = fact.lastIndexOf(" | ");
+      if (pipeIdx > 0) fact = fact.slice(0, pipeIdx);
+
+      if (existingFacts.has(fact.trim().toLowerCase())) {
+        memPreview.existing++;
+      } else {
+        memPreview.new++;
+      }
+    }
+  }
+
+  // Preview chats
+  const chatPreview = { total: 0, new: 0, existing: 0 };
+  const chatFiles = Object.keys(zip.files).filter(
+    (f) => f.startsWith("chats/") && f.endsWith(".json")
+  );
+  chatPreview.total = chatFiles.length;
+
+  if (chatFiles.length > 0) {
+    const existing = await listConversations(userId);
+    const existingIds = new Set(existing.map((c) => c.id));
+
+    for (const path of chatFiles) {
+      const file = zip.file(path);
+      if (!file) continue;
+      try {
+        const text = await file.async("text");
+        const chat = JSON.parse(text) as ExportedChat;
+        if (existingIds.has(chat.id)) {
+          chatPreview.existing++;
+        } else {
+          chatPreview.new++;
+        }
+      } catch {
+        chatPreview.existing++; // count parse errors as skippable
+      }
+    }
+  }
+
+  return { manifest, chats: chatPreview, memories: memPreview };
 }
 
 /**

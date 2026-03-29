@@ -162,6 +162,12 @@ export async function importMemories(
         fact = fact.slice(catMatch[0].length);
       }
 
+      // Strip optional (date) prefix: (2026-03-29)
+      const dateMatch = fact.match(/^\(\d{4}-\d{2}-\d{2}\)\s*/);
+      if (dateMatch) {
+        fact = fact.slice(dateMatch[0].length);
+      }
+
       // Parse trailing | entities
       const pipeIdx = fact.lastIndexOf(" | ");
       if (pipeIdx > 0) {
@@ -220,12 +226,13 @@ export function exportMemories(memories: ChatMemory[]): string {
   const lines: string[] = [
     `# Chat Memory Export`,
     `# ${memories.length} memories — ${new Date().toISOString().split("T")[0]}`,
-    `# Format: [category] fact | entities`,
+    `# Format: [category] (date) fact | entities`,
     ``,
   ];
 
   for (const m of memories) {
-    let line = `[${m.category}] ${m.fact}`;
+    const date = m.updatedAt.split("T")[0];
+    let line = `[${m.category}] (${date}) ${m.fact}`;
     if (m.entities.length > 0) {
       line += ` | ${m.entities.join(", ")}`;
     }

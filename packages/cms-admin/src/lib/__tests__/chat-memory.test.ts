@@ -301,32 +301,33 @@ describe("Chat Memory — Export format", () => {
     const lines: string[] = [
       `# Chat Memory Export`,
       `# ${memories.length} memories — ${new Date().toISOString().split("T")[0]}`,
-      `# Format: [category] fact | entities`,
+      `# Format: [category] (date) fact | entities`,
       ``,
     ];
     for (const m of memories) {
-      let line = `[${m.category}] ${m.fact}`;
+      const date = m.updatedAt.split("T")[0];
+      let line = `[${m.category}] (${date}) ${m.fact}`;
       if (m.entities.length > 0) line += ` | ${m.entities.join(", ")}`;
       lines.push(line);
     }
     return lines.join("\n") + "\n";
   }
 
-  it("exports memories in text format with category and entities", () => {
+  it("exports memories in text format with category, date, and entities", () => {
     const mems = [
-      createTestMemory({ fact: "User prefers Norwegian", category: "preference", entities: ["language"] }),
-      createTestMemory({ fact: "Never use exclamation marks", category: "correction", entities: ["style", "headlines"] }),
+      createTestMemory({ fact: "User prefers Norwegian", category: "preference", entities: ["language"], updatedAt: "2026-03-29T10:00:00Z" }),
+      createTestMemory({ fact: "Never use exclamation marks", category: "correction", entities: ["style", "headlines"], updatedAt: "2026-03-28T12:00:00Z" }),
     ];
     const text = exportMemories(mems);
     expect(text).toContain("# Chat Memory Export");
-    expect(text).toContain("[preference] User prefers Norwegian | language");
-    expect(text).toContain("[correction] Never use exclamation marks | style, headlines");
+    expect(text).toContain("[preference] (2026-03-29) User prefers Norwegian | language");
+    expect(text).toContain("[correction] (2026-03-28) Never use exclamation marks | style, headlines");
   });
 
   it("exports without entities suffix when empty", () => {
-    const mems = [createTestMemory({ fact: "Simple fact", category: "fact", entities: [] })];
+    const mems = [createTestMemory({ fact: "Simple fact", category: "fact", entities: [], updatedAt: "2026-03-29T10:00:00Z" })];
     const text = exportMemories(mems);
-    expect(text).toContain("[fact] Simple fact\n");
+    expect(text).toContain("[fact] (2026-03-29) Simple fact\n");
     // The data line should not have a pipe separator (header comment has one, that's fine)
     const dataLines = text.split("\n").filter((l) => !l.startsWith("#") && l.trim());
     expect(dataLines.every((l) => !l.includes("|"))).toBe(true);
@@ -352,6 +353,9 @@ describe("Chat Memory — Import format", () => {
         category = catMatch[1].toLowerCase();
         fact = fact.slice(catMatch[0].length);
       }
+      // Strip optional (date) prefix
+      const dateMatch = fact.match(/^\(\d{4}-\d{2}-\d{2}\)\s*/);
+      if (dateMatch) fact = fact.slice(dateMatch[0].length);
       const pipeIdx = fact.lastIndexOf(" | ");
       if (pipeIdx > 0) {
         entities = fact.slice(pipeIdx + 3).split(",").map((e) => e.trim()).filter(Boolean);
@@ -394,10 +398,10 @@ describe("Chat Memory — Import format", () => {
   it("handles mixed format (export round-trip)", () => {
     const exported = `# Chat Memory Export
 # 2 memories — 2026-03-29
-# Format: [category] fact | entities
+# Format: [category] (date) fact | entities
 
-[preference] User prefers Norwegian | language
-[correction] Never use exclamation marks | style, headlines`;
+[preference] (2026-03-29) User prefers Norwegian | language
+[correction] (2026-03-28) Never use exclamation marks | style, headlines`;
 
     const entries = parseImportText(exported);
     expect(entries).toHaveLength(2);
@@ -407,6 +411,13 @@ describe("Chat Memory — Import format", () => {
     expect(entries[1].fact).toBe("Never use exclamation marks");
     expect(entries[1].category).toBe("correction");
     expect(entries[1].entities).toEqual(["style", "headlines"]);
+  });
+
+  it("strips (date) prefix during import", () => {
+    const entries = parseImportText("[preference] (2026-03-29) User likes dark mode");
+    expect(entries).toHaveLength(1);
+    expect(entries[0].fact).toBe("User likes dark mode");
+    expect(entries[0].category).toBe("preference");
   });
 
   it("parses JSON array format", () => {

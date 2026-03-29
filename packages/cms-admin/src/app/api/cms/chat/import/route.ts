@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionWithSiteRole } from "@/lib/require-role";
-import { importExportZip } from "@/lib/chat/chat-export";
+import { importExportZip, previewImport } from "@/lib/chat/chat-export";
 
-/** POST /api/cms/chat/import — import full chat export ZIP */
+/** POST /api/cms/chat/import — import or preview a chat export ZIP */
 export async function POST(request: NextRequest) {
   const session = await getSessionWithSiteRole();
   if (!session) return NextResponse.json({ error: "No access" }, { status: 403 });
 
+  const isPreview = request.nextUrl.searchParams.get("preview") === "true";
   const contentType = request.headers.get("content-type") ?? "";
 
   let zipBuffer: Buffer;
@@ -27,6 +28,11 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    if (isPreview) {
+      const preview = await previewImport(zipBuffer, session.userId);
+      return NextResponse.json(preview);
+    }
+
     const result = await importExportZip(zipBuffer, session.userId);
     return NextResponse.json(result);
   } catch (err) {

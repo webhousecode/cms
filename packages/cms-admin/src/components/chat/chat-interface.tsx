@@ -51,6 +51,12 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
   const [memorySearch, setMemorySearch] = useState("");
   const [memoryCount, setMemoryCount] = useState(0);
   const [importResult, setImportResult] = useState<{ chats: { imported: number; skipped: number }; memories: { added: number; skipped: number } } | null>(null);
+  const [importPreview, setImportPreview] = useState<{
+    manifest: { siteName: string; exportedAt: string; counts: { chats: number; memories: number } } | null;
+    chats: { total: number; new: number; existing: number };
+    memories: { total: number; new: number; existing: number };
+  } | null>(null);
+  const pendingImportFile = useRef<File | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const messagesRef = useRef(messages);
   messagesRef.current = messages;
@@ -487,35 +493,61 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
     input.onchange = async () => {
       const file = input.files?.[0];
       if (!file) return;
+      pendingImportFile.current = file;
       try {
+        // Step 1: Preview what the import will do
         const formData = new FormData();
         formData.append("file", file);
-        const res = await fetch("/api/cms/chat/import", {
+        const res = await fetch("/api/cms/chat/import?preview=true", {
           method: "POST",
           body: formData,
         });
         if (res.ok) {
-          const result = await res.json();
-          // Reload drawer data
-          const [convRes, memRes] = await Promise.all([
-            fetch("/api/cms/chat/conversations"),
-            fetch("/api/cms/chat/memory"),
-          ]);
-          if (convRes.ok) {
-            const { conversations: convs } = await convRes.json();
-            setConversations(convs ?? []);
-          }
-          if (memRes.ok) {
-            const data = await memRes.json();
-            setMemories(data.memories ?? []);
-            setMemoryCount(data.memories?.length ?? 0);
-          }
-          setImportResult(result);
-          setTimeout(() => setImportResult(null), 5000);
+          const preview = await res.json();
+          setImportPreview(preview);
         }
       } catch { /* ignore */ }
     };
     input.click();
+  }
+
+  async function confirmImport() {
+    const file = pendingImportFile.current;
+    if (!file) return;
+    pendingImportFile.current = null;
+    setImportPreview(null);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/cms/chat/import", {
+        method: "POST",
+        body: formData,
+      });
+      if (res.ok) {
+        const result = await res.json();
+        // Reload drawer data
+        const [convRes, memRes] = await Promise.all([
+          fetch("/api/cms/chat/conversations"),
+          fetch("/api/cms/chat/memory"),
+        ]);
+        if (convRes.ok) {
+          const { conversations: convs } = await convRes.json();
+          setConversations(convs ?? []);
+        }
+        if (memRes.ok) {
+          const data = await memRes.json();
+          setMemories(data.memories ?? []);
+          setMemoryCount(data.memories?.length ?? 0);
+        }
+        setImportResult(result);
+        setTimeout(() => setImportResult(null), 5000);
+      }
+    } catch { /* ignore */ }
+  }
+
+  function cancelImport() {
+    pendingImportFile.current = null;
+    setImportPreview(null);
   }
 
   const handleSuggestionClick = useCallback(
@@ -695,6 +727,59 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
               borderTop: "1px solid var(--border)", padding: "10px 16px",
               display: "flex", flexDirection: "column", gap: "6px",
             }}>
+              {/* Import preview confirmation */}
+              {importPreview && (
+                <div style={{
+                  fontSize: "0.72rem", padding: "10px 12px", borderRadius: "6px",
+                  border: "1px solid var(--border)", backgroundColor: "var(--muted)",
+                }}>
+                  <div style={{ fontWeight: 600, marginBottom: "6px" }}>
+                    Import from {importPreview.manifest?.siteName ?? "unknown site"}
+                  </div>
+                  <div style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", marginBottom: "8px" }}>
+                    {importPreview.manifest?.exportedAt
+                      ? `Exported ${new Date(importPreview.manifest.exportedAt).toLocaleDateString("da-DK", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}`
+                      : ""}
+                  </div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: "3px", fontSize: "0.7rem", marginBottom: "8px" }}>
+                    <div>
+                      <strong>{importPreview.chats.new}</strong> new chats
+                      {importPreview.chats.existing > 0 && (
+                        <span style={{ color: "var(--muted-foreground)" }}> ({importPreview.chats.existing} already exist, will skip)</span>
+                      )}
+                    </div>
+                    <div>
+                      <strong>{importPreview.memories.new}</strong> new memories
+                      {importPreview.memories.existing > 0 && (
+                        <span style={{ color: "var(--muted-foreground)" }}> ({importPreview.memories.existing} duplicates, will skip)</span>
+                      )}
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: "6px" }}>
+                    <button
+                      onClick={confirmImport}
+                      style={{
+                        flex: 1, padding: "6px 12px", borderRadius: "6px", fontSize: "0.7rem", fontWeight: 600,
+                        border: "none", background: "var(--primary)", color: "var(--primary-foreground)",
+                        cursor: "pointer",
+                      }}
+                    >
+                      Merge {importPreview.chats.new + importPreview.memories.new} items
+                    </button>
+                    <button
+                      onClick={cancelImport}
+                      style={{
+                        padding: "6px 12px", borderRadius: "6px", fontSize: "0.7rem",
+                        border: "1px solid var(--border)", background: "transparent",
+                        color: "var(--muted-foreground)", cursor: "pointer",
+                      }}
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+              {/* Import result toast */}
               {importResult && (
                 <div style={{
                   fontSize: "0.7rem", padding: "6px 10px", borderRadius: "6px",
@@ -706,32 +791,35 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
                     ` (skipped ${importResult.chats.skipped + importResult.memories.skipped} duplicates)`}
                 </div>
               )}
-              <div style={{ display: "flex", gap: "6px" }}>
-                <button
-                  onClick={exportAll}
-                  style={{
-                    flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
-                    padding: "7px 12px", borderRadius: "6px", fontSize: "0.72rem", fontWeight: 500,
-                    border: "1px solid var(--border)", background: "transparent",
-                    color: "var(--foreground)", cursor: "pointer",
-                  }}
-                >
-                  <Download style={{ width: "13px", height: "13px" }} />
-                  Export all
-                </button>
-                <button
-                  onClick={importAll}
-                  style={{
-                    flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
-                    padding: "7px 12px", borderRadius: "6px", fontSize: "0.72rem", fontWeight: 500,
-                    border: "1px solid var(--border)", background: "transparent",
-                    color: "var(--foreground)", cursor: "pointer",
-                  }}
-                >
-                  <Upload style={{ width: "13px", height: "13px" }} />
-                  Import .zip
-                </button>
-              </div>
+              {/* Export/Import buttons */}
+              {!importPreview && (
+                <div style={{ display: "flex", gap: "6px" }}>
+                  <button
+                    onClick={exportAll}
+                    style={{
+                      flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
+                      padding: "7px 12px", borderRadius: "6px", fontSize: "0.72rem", fontWeight: 500,
+                      border: "1px solid var(--border)", background: "transparent",
+                      color: "var(--foreground)", cursor: "pointer",
+                    }}
+                  >
+                    <Download style={{ width: "13px", height: "13px" }} />
+                    Export all
+                  </button>
+                  <button
+                    onClick={importAll}
+                    style={{
+                      flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
+                      padding: "7px 12px", borderRadius: "6px", fontSize: "0.72rem", fontWeight: 500,
+                      border: "1px solid var(--border)", background: "transparent",
+                      color: "var(--foreground)", cursor: "pointer",
+                    }}
+                  >
+                    <Upload style={{ width: "13px", height: "13px" }} />
+                    Import .zip
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </>
