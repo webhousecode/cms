@@ -79,7 +79,7 @@ _Without these, we cannot build and deliver professional sites on the platform._
 | ~~8j~~ | ~~**F102 Schema Drift Detection**~~ | ~~Done~~ | ~~Shipped 2026-03-27. Yellow banner on collection list, 8 unit tests, API endpoint.~~ |
 | ~~8k~~ | ~~**F103 AI Image Analysis**~~ | ~~Done~~ | ~~Shipped 2026-03-25. Claude caption + alt-text + tags. Batch analyze. Auto-fill alt in editor. Auto-analyze on upload.~~ |
 | 8l | **F48 Internationalization (i18n)** | Large | Full multi-language CMS. AI auto-translates all content + SEO + metadata. Locale-aware AI prompts, build pipeline, translation UI, bulk translate, auto-translate on publish. Must ship before codebase grows more — every new feature needs locale hooks. |
-| 8m | **F112 GEO (Generative Engine Optimization)** | In progress | G01 robots.txt ✅, G02 GEO score (8 rules) ✅, G03 llms-full.txt + .md ✅, G04 JSON-LD (12 templates) ✅, G07 GEO Agent ✅. Remaining: G05 Visibility Monitor, G06 Index Checker, G08 Settings panel. |
+| ~~8m~~ | ~~**F112 GEO (Generative Engine Optimization)**~~ | ~~Done~~ | ~~Shipped 2026-03-29. robots.txt (4 strategies), GEO score (8 rules), llms-full.txt + .md endpoints, RSS feed, JSON-LD (12 templates), Visibility dashboard, GEO Agent, GEO Settings. Build pipeline Phase 1-9.~~ |
 | 9 | **F31 Documentation Site** | Medium | Can't ship without docs. Last because it documents everything above. |
 | ~~9b~~ | ~~**F90 Marketing Content Bank**~~ | ~~Done~~ | ~~Shipped. 5 messaging frameworks, talking points, badge/shield suggestions, deploy targets.~~ |
 | ~~9c~~ | ~~**F96 Embeddable Maps**~~ | ~~Done~~ | ~~Shipped. OSM/Leaflet map block, richtext embed, field type.~~ |
