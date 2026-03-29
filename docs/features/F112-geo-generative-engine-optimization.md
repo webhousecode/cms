@@ -544,7 +544,11 @@ New page: `/admin/visibility` (or sub-tab of existing `/admin/seo`)
 
 ---
 
-## Phase 6 — Search Index Checker (G06)
+## ~~Phase 6 — Search Index Checker (G06)~~ → Absorbed into G05
+
+G06's external checks (Google/Bing indexing, DNS/HTTPS, brand recall, Knowledge Graph) are folded into G05 Visibility Monitor. The internal file checks (robots.txt exists, sitemap valid) are guaranteed by the build pipeline and need no runtime validation.
+
+## Phase 6 (ARCHIVED) — Search Index Checker (G06)
 
 **Priority:** High — complementary to Visibility Monitor
 **Size:** M (6-8 hours)
