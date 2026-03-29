@@ -913,16 +913,6 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
   const [seoPanelOpen, setSeoPanelOpen] = useState(false);
   const [generateOpen, setGenerateOpen] = useState(false);
   const [cloning, setCloning] = useState(false);
-  const [retranslating, setRetranslating] = useState(false);
-  // Dismiss key includes sourceUpdatedAt so a NEW source edit resets the dismiss
-  const staleDismissKey = `stale-dismissed-${initialDoc.id}-${sourceUpdatedAt ?? ""}`;
-  const [staleDismissed, setStaleDismissed] = useState(() => {
-    try { return localStorage.getItem(staleDismissKey) === "1"; } catch { return false; }
-  });
-  const dismissStale = useCallback(() => {
-    setStaleDismissed(true);
-    try { localStorage.setItem(staleDismissKey, "1"); } catch {}
-  }, [staleDismissKey]);
   const [confirmTrash, setConfirmTrash] = useState(false);
   const [locale, setLocale] = useState(initialDoc.locale ?? "");
   const [translationOf] = useState(initialDoc.translationOf ?? "");
@@ -1481,72 +1471,9 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
         </div>
       )}
 
-      {/* Stale translation banner */}
-      {!staleDismissed && (translationOf || translationGroup) && sourceUpdatedAt && isTranslationStale(sourceUpdatedAt, initialDoc.updatedAt) && (
-        <div style={{
-          display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap",
-          padding: "0.5rem 1rem",
-          background: "rgb(234 179 8 / 0.08)", borderBottom: "1px solid rgb(234 179 8 / 0.25)",
-          fontSize: "0.75rem", color: "rgb(234 179 8)",
-        }}>
-          <span>&#9888;&#65039;</span>
-          <span>Source document was updated — this translation may be outdated.</span>
-          <button
-            type="button"
-            disabled={retranslating}
-            onClick={async () => {
-              // Find source sibling slug (the one that was updated more recently)
-              const sourceSibling = translations.find(t => t.updatedAt && new Date(t.updatedAt) > new Date(initialDoc.updatedAt));
-              const sourceSlug = sourceSibling?.slug || translationOf;
-              const targetLoc = locale || defaultLocale || "en";
-              if (!sourceSlug) { toast.error("Cannot find source document"); return; }
-              setRetranslating(true);
-              try {
-                const res = await fetch(`/api/cms/${collection}/${sourceSlug}/translate`, {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({ targetLocale: targetLoc }),
-                });
-                if (res.ok) {
-                  toast.success("Translation updated from source — reloading…");
-                  // AI re-translate overwrites all translatable fields, so a full reload is appropriate
-                  startTransition(() => router.refresh());
-                } else {
-                  const body = await res.json().catch(() => ({ error: "Unknown error" }));
-                  toast.error(body.error ?? "Re-translation failed");
-                }
-              } catch (err: any) {
-                toast.error(`Re-translation failed: ${err?.message ?? "network error"}`);
-              } finally {
-                setRetranslating(false);
-              }
-            }}
-            style={{
-              padding: "0.2rem 0.5rem", borderRadius: "4px",
-              border: "1px solid rgb(234 179 8 / 0.4)", background: "rgb(234 179 8 / 0.1)",
-              color: "rgb(234 179 8)", fontSize: "0.7rem", cursor: "pointer",
-              display: "inline-flex", alignItems: "center", gap: "0.3rem",
-              opacity: retranslating ? 0.6 : 1,
-            }}
-          >
-            {retranslating ? <Loader2 size={11} className="animate-spin" /> : <Sparkles size={11} />}
-            {retranslating ? "Re-translating…" : "Re-translate with AI"}
-          </button>
-          <button
-            type="button"
-            onClick={dismissStale}
-            title="Dismiss"
-            style={{
-              marginLeft: "auto", padding: "0.1rem 0.3rem", borderRadius: "3px",
-              border: "none", background: "transparent",
-              color: "rgb(234 179 8 / 0.6)", fontSize: "0.8rem", cursor: "pointer",
-              lineHeight: 1,
-            }}
-          >
-            ×
-          </button>
-        </div>
-      )}
+      {/* Stale translation banner — removed, caused flip-flop loops.
+          Feature gated behind showStaleTranslations (default: off).
+          Will be re-implemented properly in a future iteration. */}
 
       {/* Editor body */}
       <div style={sideBySide && sourceDoc ? { display: "flex", gap: 0 } : undefined}>

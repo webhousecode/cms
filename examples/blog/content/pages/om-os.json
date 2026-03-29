@@ -4,29 +4,29 @@
   "collection": "pages",
   "status": "published",
   "data": {
-    "title": "Om os",
-    "content": "This site is built with **@webhouse/cms** — an AI-native CMS engine.\n\n## Egenskaber\n\n- Schema-driven content\n- Static site generation\n- AI content generation\n- Hierarchical URLs\n- Dette er tilføjet af en AI\n- Dette er tilføjet af mig, og det gemmer også eller hvad? ",
+    "title": "Om Os",
+    "content": "Denne side er bygget med **@webhouse/cms** — en AI-native CMS-engine.\n\n## Funktioner\n\n- Skema-drevet indhold\n- Statisk sitegenerering\n- AI-indholdsgenerering\n- Hierarkiske URLs\n- Dette blev tilføjet af en AI\n- Dette blev tilføjet af mig, og det gemmer også eller hvad?",
     "_lastEditedBy": {
-      "userId": "dev-token",
-      "name": "Dev Token",
-      "email": "dev@localhost",
-      "at": "2026-03-28T19:45:56.195Z"
+      "userId": "fb4eda6a-bc5c-4dec-8cb6-c77c9fb74cd9",
+      "name": "Christian Broberg",
+      "email": "cb@webhouse.dk",
+      "at": "2026-03-28T23:59:50.071Z"
     },
     "_seo": {
-      "metaTitle": "About Us - AI-Native CMS Engine @webhouse/cms",
-      "metaDescription": "Learn about @webhouse/cms, an AI-native CMS engine featuring schema-driven content, static site generation, and intelligent content creation capabilities.",
+      "metaTitle": "Om Os - AI-Native CMS-Engine @webhouse/cms",
+      "metaDescription": "Lær om @webhouse/cms, en AI-native CMS-engine med skema-drevet indhold, statisk sitegenerering og intelligent indholdsgenerering.",
       "keywords": [
         "AI-native CMS",
         "@webhouse/cms",
-        "static site generation",
-        "schema-driven content",
-        "AI content generation"
+        "statisk sitegenerering",
+        "skema-drevet indhold",
+        "AI-indholdsgenerering"
       ],
       "lastOptimized": "2026-03-28T00:47:55.220Z"
     }
   },
   "createdAt": "2026-03-09T00:00:00.000Z",
-  "updatedAt": "2026-03-28T19:45:56.196Z",
+  "updatedAt": "2026-03-28T23:59:50.072Z",
   "_fieldMeta": {},
   "locale": "da",
   "translationGroup": "qyB-DowbO8CNU3f2B_RgK"

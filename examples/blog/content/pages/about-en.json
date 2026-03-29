@@ -4,13 +4,13 @@
   "collection": "pages",
   "status": "published",
   "data": {
-    "title": "About us",
-    "content": "This site is built with **@webhouse/cms** — an AI-native CMS engine.\n\n## Features\n\n- Schema-driven content\n- Static site generation\n- AI content generation\n- Hierarchical URLs\n- This was added by an AI\n- This was added by me, and does it also save or what? ",
+    "title": "About Us",
+    "content": "This site is built with **@webhouse/cms** — an AI-native CMS engine.\n\n## Features\n\n- Schema-driven content\n- Static site generation\n- AI content generation\n- Hierarchical URLs\n- This was added by an AI\n- This was added by me, and it also saves or what?",
     "_lastEditedBy": {
       "userId": "fb4eda6a-bc5c-4dec-8cb6-c77c9fb74cd9",
       "name": "Christian Broberg",
       "email": "cb@webhouse.dk",
-      "at": "2026-03-28T19:35:38.103Z"
+      "at": "2026-03-29T00:01:00.551Z"
     },
     "_seo": {
       "metaTitle": "About Us - AI-Native CMS Engine @webhouse/cms",
@@ -27,7 +27,7 @@
   },
   "_fieldMeta": {},
   "createdAt": "2026-03-28T19:35:33.800Z",
-  "updatedAt": "2026-03-28T19:35:38.103Z",
+  "updatedAt": "2026-03-29T00:01:00.552Z",
   "locale": "en",
   "translationOf": "om-os",
   "translationGroup": "qyB-DowbO8CNU3f2B_RgK"

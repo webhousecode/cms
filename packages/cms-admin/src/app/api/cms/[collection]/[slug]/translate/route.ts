@@ -235,9 +235,11 @@ Return ONLY a JSON object with the translated fields. No explanation, no preambl
       allDocs.find(d => (d as any).translationGroup === translationGroupId && d.locale === targetLocale && d.id !== sourceDoc.id);
 
     if (existingTranslation) {
+      // Preserve existing status when re-translating (don't force to draft)
+      const keepStatus = publish ? "published" : (existingTranslation.status ?? "draft");
       await cms.content.update(collection, existingTranslation.id, {
         data: mergedData,
-        status: publish ? "published" : "draft",
+        status: keepStatus as "draft" | "published" | "archived",
         locale: targetLocale,
         translationGroup: translationGroupId,
       });
