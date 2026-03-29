@@ -187,6 +187,9 @@ None. All changes are additive. Existing MCP clients get more tools. Existing ch
 ## Dependencies
 
 - **F107 Chat with Your Site** — Done (provides the 40+ tools to share)
+- **F48 Internationalization (i18n)** — MUST be done before MCP can ship. Translation tools (translate_document, translate_site, set translationGroup) are essential for multi-language sites. MCP without locale support is incomplete.
+
+> **SHIP GATE:** MCP admin server is NOT production-ready until F48 + F117 are both done. The shared tool registry must include all translation/locale tools before external clients (Claude Desktop, Cursor) can be trusted with multi-language content management.
 - **F48 i18n** — for translate tools (Phase 3, not blocking)
 - **F114 Chat Memory** — for memory tools (Phase 3, not blocking)
 
