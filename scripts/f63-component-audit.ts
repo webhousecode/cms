@@ -286,7 +286,7 @@ async function main() {
       svgParts.push(`<rect x="${p.x - 2}" y="${p.y - 2}" width="${p.displayWidth + 4}" height="${p.displayHeight + 4}" rx="6" fill="none" stroke="#F7BB2E" stroke-width="1.5" opacity="0.6"/>`);
 
       // Image
-      svgParts.push(`<image x="${p.x}" y="${p.y}" width="${p.displayWidth}" height="${p.displayHeight}" href="data:image/png;base64,${b64}" preserveAspectRatio="xMidYMid meet"/>`);
+      svgParts.push(`<image x="${p.x}" y="${p.y}" width="${p.displayWidth}" height="${p.displayHeight}" xlink:href="data:image/png;base64,${b64}" preserveAspectRatio="xMidYMid meet"/>`);
 
       // Number badge
       svgParts.push(`<circle cx="${p.x + 14}" cy="${p.y + 14}" r="14" fill="#F7BB2E"/>`);
