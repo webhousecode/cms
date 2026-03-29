@@ -24,12 +24,29 @@ interface Doc {
   translationOf?: string;
 }
 
-// ── i18n config ────────────────────────────────────────────
+// ── i18n config — read from site config, fall back to defaults ──
 
-const DEFAULT_LOCALE = "da";
-const LOCALES = ["da", "en"];
-const LOCALE_LABELS: Record<string, string> = { da: "Dansk", en: "English" };
-const LOCALE_FLAGS: Record<string, string> = { da: "🇩🇰", en: "🇬🇧" };
+let DEFAULT_LOCALE = "da";
+let LOCALES = ["da", "en"];
+try {
+  const cfgPath = join(import.meta.dirname, "_data", "site-config.json");
+  if (existsSync(cfgPath)) {
+    const cfg = JSON.parse(readFileSync(cfgPath, "utf-8"));
+    if (cfg.defaultLocale) DEFAULT_LOCALE = cfg.defaultLocale;
+    if (cfg.locales?.length) LOCALES = cfg.locales;
+  }
+} catch { /* use defaults */ }
+
+const LOCALE_LABELS: Record<string, string> = {
+  da: "Dansk", en: "English", de: "Deutsch", fr: "Français",
+  es: "Español", sv: "Svenska", nb: "Norsk", nl: "Nederlands",
+  fi: "Suomi", it: "Italiano", pt: "Português", pl: "Polski",
+};
+const LOCALE_FLAGS: Record<string, string> = {
+  da: "🇩🇰", en: "🇬🇧", de: "🇩🇪", fr: "🇫🇷",
+  es: "🇪🇸", sv: "🇸🇪", nb: "🇳🇴", nl: "🇳🇱",
+  fi: "🇫🇮", it: "🇮🇹", pt: "🇵🇹", pl: "🇵🇱",
+};
 
 // ── Read content ────────────────────────────────────────────
 
