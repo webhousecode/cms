@@ -49,19 +49,23 @@ export async function POST(req: NextRequest, { params }: Ctx) {
     });
   }
 
-  // If source content is already in the target language, reject
+  // If source content is already in the target language, flip direction
+  // e.g. user clicks "translate to EN" but content is already EN → translate to default locale instead
+  let actualTarget = targetLocale;
   if (sourceLocale === targetLocale) {
-    return NextResponse.json(
-      { error: `Content is already in ${targetLang} (detected from HTML lang attribute). Locale has been corrected — reload and try again.` },
-      { status: 400 },
-    );
+    const fallback = siteConfig.locales?.find((l: string) => l !== sourceLocale) || siteConfig.defaultLocale || "da";
+    if (fallback === sourceLocale) {
+      return NextResponse.json({ error: "No other locale available to translate to" }, { status: 400 });
+    }
+    actualTarget = fallback;
   }
+  const actualTargetLang = LOCALE_LABELS[actualTarget] ?? actualTarget;
 
-  // Check if translation already exists (by translationGroup + locale, or legacy ID pattern)
+  // Check if translation already exists (by translationGroup + locale)
   const allInteractives = await adapter.listInteractives();
-  const translatedId = `${id}-${targetLocale}`;
+  const translatedId = `${id}-${actualTarget}`;
   const existing = allInteractives.find(i =>
-    (i.translationGroup === translationGroupId && i.locale === targetLocale && i.id !== id) ||
+    (i.translationGroup === translationGroupId && i.locale === actualTarget && i.id !== id) ||
     i.id === translatedId
   );
 
@@ -69,12 +73,12 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   const model = await getModel("content");
   const client = new Anthropic();
 
-  const systemPrompt = `You are a professional translator. Translate the text content in this HTML document from ${sourceLang} to ${targetLang}.
-${buildLocaleInstruction(targetLocale)}
+  const systemPrompt = `You are a professional translator. Translate the text content in this HTML document from ${sourceLang} to ${actualTargetLang}.
+${buildLocaleInstruction(actualTarget)}
 
 CRITICAL RULES:
 - Translate ALL visible text: headings, paragraphs, labels, button text, titles, alt attributes, placeholder attributes, aria-labels
-- Change the lang attribute on <html> from "${sourceLocale}" to "${targetLocale}"
+- Change the lang attribute on <html> from "${sourceLocale}" to "${actualTarget}"
 - Translate the <title> tag content
 - PRESERVE EXACTLY: all HTML tags, CSS styles, JavaScript code, class names, IDs, data attributes, URLs, image paths
 - Do NOT modify any JavaScript logic, CSS, or structural HTML
@@ -85,7 +89,7 @@ CRITICAL RULES:
       model,
       max_tokens: 16384,
       system: systemPrompt,
-      messages: [{ role: "user", content: `Translate this HTML interactive from ${sourceLang} to ${targetLang}:\n\n${source.content}` }],
+      messages: [{ role: "user", content: `Translate this HTML interactive from ${sourceLang} to ${actualTargetLang}:\n\n${source.content}` }],
     });
 
     const translatedHtml = response.content.find(c => c.type === "text")?.text ?? "";
@@ -98,14 +102,14 @@ CRITICAL RULES:
 
     if (existing) {
       // Update existing translation
-      await adapter.updateInteractive(existing.id, { content: cleanHtml, locale: targetLocale, translationGroup: translationGroupId });
+      await adapter.updateInteractive(existing.id, { content: cleanHtml, locale: actualTarget, translationGroup: translationGroupId });
       return NextResponse.json({ id: existing.id, action: "updated" });
     } else {
       // Create new interactive with translated content
       const buffer = Buffer.from(cleanHtml, "utf-8");
       const created = await adapter.createInteractive(`${translatedId}.html`, buffer);
       // Set locale + translationGroup on the new interactive
-      await adapter.updateInteractive(created.id, { locale: targetLocale, translationGroup: translationGroupId });
+      await adapter.updateInteractive(created.id, { locale: actualTarget, translationGroup: translationGroupId });
       return NextResponse.json({ id: created.id, action: "created" });
     }
   } catch (err) {
