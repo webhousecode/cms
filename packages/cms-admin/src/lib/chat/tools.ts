@@ -692,7 +692,40 @@ export async function buildChatTools(): Promise<ToolPair[]> {
           }
         } catch { /* SEO generation failed — non-fatal */ }
 
-        return `Created "${data.title ?? slug}" in ${collection} (draft).\nSlug: ${doc.slug}\nStatus: draft\nSEO: auto-optimized with AI.`;
+        // Auto-translate to all other configured locales (F48 i18n)
+        const translatedSlugs: string[] = [];
+        try {
+          const siteConfig = await readSiteConfig();
+          const docLocale = siteConfig.defaultLocale || "en";
+          const targetLocales = (siteConfig.locales || []).filter((l: string) => l !== docLocale);
+          if (targetLocales.length > 0 && col.translatable !== false) {
+            // Set locale on source doc
+            const { generateId } = await import("@webhouse/cms");
+            const translationGroupId = generateId();
+            await cms.content.update(collection, doc.id, { locale: docLocale, translationGroup: translationGroupId });
+
+            const baseUrl = process.env.NEXTAUTH_URL || `http://localhost:${process.env.PORT || 3010}`;
+            const serviceToken = process.env.CMS_JWT_SECRET;
+            for (const targetLocale of targetLocales) {
+              try {
+                const res = await fetch(`${baseUrl}/api/cms/${collection}/${doc.slug}/translate`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json", "x-cms-service-token": serviceToken || "" },
+                  body: JSON.stringify({ targetLocale, publish: false }),
+                });
+                if (res.ok) {
+                  const result = await res.json();
+                  translatedSlugs.push(`${targetLocale}: ${result.slug}`);
+                }
+              } catch { /* non-fatal */ }
+            }
+          }
+        } catch { /* translation failed — non-fatal */ }
+
+        const translationInfo = translatedSlugs.length > 0
+          ? `\nTranslations: ${translatedSlugs.join(", ")}`
+          : "";
+        return `Created "${data.title ?? slug}" in ${collection} (draft).\nSlug: ${doc.slug}\nStatus: draft\nSEO: auto-optimized with AI.${translationInfo}`;
       },
     },
 
