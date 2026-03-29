@@ -518,10 +518,12 @@ import { LOCALE_LABELS, LOCALE_FLAGS } from "@/lib/locale";
 
 const AVAILABLE_LOCALES = Object.keys(LOCALE_LABELS);
 
-function LanguageSection({ cfg, setCfg }: {
+function LanguageSection({ cfg, setCfg: _setCfg }: {
 	cfg: { defaultLocale: string; locales: string[]; localeStrategy: string; autoRetranslateOnUpdate: boolean };
 	setCfg: (fn: (c: any) => any) => void;
 }) {
+	// Wrap setCfg to always dispatch dirty (buttons don't trigger form onChange)
+	const setCfg: typeof _setCfg = (fn) => { _setCfg(fn); window.dispatchEvent(new CustomEvent("cms:settings-dirty")); };
 	const [adding, setAdding] = useState(false);
 
 	function addLocale(locale: string) {
