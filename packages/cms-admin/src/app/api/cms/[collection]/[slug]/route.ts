@@ -179,9 +179,10 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
           ? siteConfig.locales.filter((l: string) => l !== docLocale)
           : [];
         if (targetLocales.length > 0) {
+          const isFirstPublish = nextStatus === "published" && doc.status !== "published";
           const shouldTranslate =
-            nextStatus === "published" || // auto-translate on publish
-            (body.data && doc.status === "published" && siteConfig.autoRetranslateOnUpdate); // re-translate on update
+            isFirstPublish || // auto-translate on FIRST publish only (draft → published)
+            (body.data && doc.status === "published" && siteConfig.autoRetranslateOnUpdate); // re-translate on update (opt-in)
           if (shouldTranslate) {
             const baseUrl = process.env.NEXTAUTH_URL || `http://localhost:${process.env.PORT || 3010}`;
             const serviceToken = process.env.CMS_JWT_SECRET;

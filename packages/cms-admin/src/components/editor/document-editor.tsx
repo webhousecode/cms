@@ -1420,25 +1420,18 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
           <span style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.06em" }}>
             Translations
           </span>
-          {translations.map(t => {
-            // With translationGroup, docs are equal partners — check staleness bidirectionally
-            const stale = t.updatedAt
-              ? isTranslationStale(doc.updatedAt, t.updatedAt)
-              : false;
-            return (
+          {translations.map(t => (
               <Link
                 key={t.slug}
                 href={`/admin/${collection}/${t.slug}`}
-                title={stale ? "Source updated — translation may be outdated" : undefined}
                 style={{
                   display: "inline-flex", alignItems: "center", gap: "0.3rem",
                   padding: "0.15rem 0.5rem", borderRadius: "4px",
-                  border: `1px solid ${stale ? "rgb(234 179 8 / 0.4)" : "var(--border)"}`, fontSize: "0.7rem",
+                  border: "1px solid var(--border)", fontSize: "0.7rem",
                   fontFamily: "monospace", color: "var(--foreground)",
                   background: "var(--card)", textDecoration: "none",
                 }}
               >
-                {stale && <span title="Source updated — translation may be outdated" style={{ fontSize: "0.7rem", lineHeight: 1 }}>&#9888;&#65039;</span>}
                 {t.locale && <span style={{ fontWeight: 600 }}>{t.locale.toUpperCase()}</span>}
                 <span style={{ color: t.locale ? "var(--muted-foreground)" : "var(--foreground)" }}>{t.slug}</span>
                 <span style={{
@@ -1446,8 +1439,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
                   backgroundColor: t.status === "published" ? "rgb(74 222 128)" : "rgb(234 179 8)",
                 }} />
               </Link>
-            );
-          })}
+          ))}
           {(() => {
             // Any doc in a translation group can create new translations (equal partners)
             const existingLocs = [locale || defaultLocale || null, ...translations.map(t => t.locale)];
