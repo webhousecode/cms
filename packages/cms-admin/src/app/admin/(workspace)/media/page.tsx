@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { Trash2, Copy, Check, Upload, LayoutGrid, List, FolderOpen, Folder, ChevronLeft, ChevronRight, Search, X, ZoomIn, ExternalLink, FileWarning, Music, Video, FileText, Code, File, Pencil, Sparkles, RefreshCw, Loader2, CheckSquare, Zap, RotateCw, RotateCcw } from "lucide-react";
+import { Trash2, Copy, Check, Upload, LayoutGrid, List, FolderOpen, Folder, ChevronLeft, ChevronRight, Search, X, ZoomIn, ExternalLink, FileWarning, Music, Video, FileText, Code, File, Pencil, Sparkles, RefreshCw, Loader2, CheckSquare, Zap, RotateCw, RotateCcw, MoreVertical } from "lucide-react";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
 import type { UsageRef } from "@/app/api/cms/media/usage/route";
 import { cn } from "@/lib/utils";
@@ -1067,27 +1068,39 @@ function GridView({ files, copied, deleting, usageMap, aiAnalyzedSet, onCopy, on
               </p>
             </div>
 
-            {/* Hover overlay */}
-            <div className="absolute inset-0 bg-black/55 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2"
-              style={{ pointerEvents: "none" }}
-            >
-              <div style={{ pointerEvents: "auto", display: "flex", gap: "0.5rem" }}>
-                {file.isImage && (
-                  <ActionBtn title="View full size" onClick={() => onOpen(file)}>
-                    <ZoomIn style={{ width: "0.875rem", height: "0.875rem" }} />
-                  </ActionBtn>
-                )}
-                <ActionBtn title="Rename" onClick={() => onRename(file)}>
-                  <Pencil style={{ width: "0.875rem", height: "0.875rem" }} />
-                </ActionBtn>
-                <ActionBtn title="Copy URL" onClick={() => onCopy(file.url)}>
-                  {copied === file.url ? <Check style={{ width: "0.875rem", height: "0.875rem", color: "#4ade80" }} /> : <Copy style={{ width: "0.875rem", height: "0.875rem" }} />}
-                </ActionBtn>
-                <ActionBtn title="Delete" onClick={() => onDelete(file)} disabled={deleting === file.url} destructive>
-                  <Trash2 style={{ width: "0.875rem", height: "0.875rem" }} />
-                </ActionBtn>
+            {/* Context menu (⋮) */}
+            {!selecting && (
+              <div className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    className="p-1 rounded-md hover:bg-accent transition-colors focus-visible:outline-none bg-black/50 backdrop-blur border-0 cursor-pointer"
+                  >
+                    <MoreVertical style={{ width: "0.875rem", height: "0.875rem", color: "white" }} />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-40">
+                    {(file.isImage || file.mediaType === "video") && (
+                      <DropdownMenuItem onClick={() => onOpen(file)}>
+                        <ZoomIn className="mr-2 h-4 w-4 text-muted-foreground" />
+                        View
+                      </DropdownMenuItem>
+                    )}
+                    <DropdownMenuItem onClick={() => onRename(file)}>
+                      <Pencil className="mr-2 h-4 w-4 text-muted-foreground" />
+                      Rename
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onCopy(file.url)}>
+                      {copied === file.url ? <Check className="mr-2 h-4 w-4 text-green-400" /> : <Copy className="mr-2 h-4 w-4 text-muted-foreground" />}
+                      Copy URL
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => onDelete(file)} disabled={deleting === file.url} className="text-destructive focus:text-destructive">
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
-            </div>
+            )}
           </div>
         );
       })}
@@ -1266,15 +1279,15 @@ function Lightbox({ files, index, onNavigate, onClose, onCopy, copied, onDelete,
         >
           {copied === file.url ? <Check style={{ width: "0.875rem", height: "0.875rem" }} /> : <Copy style={{ width: "0.875rem", height: "0.875rem" }} />}
         </button>
-        {(file.isImage || /\.(jpe?g|png|gif|webp|avif)$/i.test(file.name)) && (
+        {file.mediaType !== "video" && (
           <>
-            <button type="button" title="Rotate left" disabled={rotating} onClick={(e) => { e.stopPropagation(); rotateImage(-90); }}
+            <button type="button" title="Rotate left (↺)" disabled={rotating} onClick={(e) => { e.stopPropagation(); rotateImage(-90); }}
               style={{ display: "flex", alignItems: "center", padding: "0.3rem", borderRadius: "6px", color: "rgba(255,255,255,0.5)", border: "none", background: "transparent", cursor: rotating ? "wait" : "pointer", opacity: rotating ? 0.4 : 1 }}
               className="hover:text-white hover:bg-white/10 transition-colors"
             >
               <RotateCcw style={{ width: "0.875rem", height: "0.875rem" }} />
             </button>
-            <button type="button" title="Rotate right" disabled={rotating} onClick={(e) => { e.stopPropagation(); rotateImage(90); }}
+            <button type="button" title="Rotate right (↻)" disabled={rotating} onClick={(e) => { e.stopPropagation(); rotateImage(90); }}
               style={{ display: "flex", alignItems: "center", padding: "0.3rem", borderRadius: "6px", color: "rgba(255,255,255,0.5)", border: "none", background: "transparent", cursor: rotating ? "wait" : "pointer", opacity: rotating ? 0.4 : 1 }}
               className="hover:text-white hover:bg-white/10 transition-colors"
             >
