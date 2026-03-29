@@ -67,7 +67,10 @@ export default async function DocumentPage({ params, searchParams }: Props) {
           updatedAt: doc.updatedAt,
         }}
         translations={translations}
-        sourceData={translations[0] ? (allDocs.find(d => d.slug === translations[0].slug) as any)?.data : undefined}
+        siblingData={translations.map(t => {
+          const d = allDocs.find(x => x.slug === t.slug);
+          return d ? { locale: t.locale ?? "", slug: t.slug, data: (d as any).data } : null;
+        }).filter(Boolean) as Array<{ locale: string; slug: string; data: Record<string, unknown> }>}
         previewSiteUrl={siteConfig.previewSiteUrl}
         previewInIframe={siteConfig.previewInIframe}
         backHref={from === "curation" ? "/admin/curation" : undefined}
