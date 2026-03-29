@@ -133,6 +133,7 @@
 | F114 | [Chat Memory & Cross-Conversation Intelligence](#f114-chat-memory) | Planned | [docs/features/F114-chat-memory.md](features/F114-chat-memory.md) |
 | F115 | [CMS Help Chat](#f115-help-chat) | Planned | [docs/features/F115-help-chat.md](features/F115-help-chat.md) |
 | F116 | [Contextual Help (HelpCard)](#f116-contextual-help) | Planned | [docs/features/F116-contextual-help.md](features/F116-contextual-help.md) |
+| F117 | [MCP ↔ Chat Tool Parity](#f117-mcp-chat-parity) | Planned | [docs/features/F117-mcp-chat-parity.md](features/F117-mcp-chat-parity.md) |
 
 ---
 
@@ -489,3 +490,9 @@ Mini-RAG system that extracts knowledge from past chat conversations and injects
 
 ## F115 — CMS Help Chat (Product Knowledge Base)
 Built-in support chat that knows everything about CMS admin — features, UI, API, shortcuts, troubleshooting. Build-time script crawls all docs (CLAUDE.md, feature plans, FEATURES.md, ROADMAP.md) and serializes a MiniSearch index. At runtime, help context is auto-injected into the system prompt when the user asks product questions. Also adds a `search_help` tool so the AI can explicitly look up documentation. Same MiniSearch engine as F114, different data source: product docs instead of user conversations. Always available — ships with every install.
+
+## F116 — Contextual Help (HelpCard)
+Inline contextual help cards throughout the CMS admin UI.
+
+## F117 — MCP ↔ Chat Tool Parity
+Full tool parity between MCP admin server and inline chat. Shared tool registry eliminates duplication — one tool definition, two consumers (chat + MCP). Brings MCP from 15 to 40+ tools in 3 phases. Claude Desktop, Cursor, and any MCP client gets full CMS management: media, agents, scheduling, bulk operations, trash, backups, translation, deploy. Plus `get_chat_context` tool that gives MCP clients the same schema/memory awareness as inline chat.
