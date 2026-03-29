@@ -2,7 +2,7 @@
   "id": "6P5Zg69mNFxBckh4uHUka",
   "slug": "skiferie-meribel-frankrig",
   "collection": "posts",
-  "status": "draft",
+  "status": "published",
   "data": {
     "title": "Méribel, Frankrig – hjertet af Les Trois Vallées",
     "excerpt": "Méribel ligger midt i verdens største skiområde og byder på 600 km pister, strålende solskin og legendarisk après-ski. Her er alt, du skal vide før turen.",
@@ -101,7 +101,6 @@
   },
   "_fieldMeta": {},
   "createdAt": "2026-03-27T23:51:48.882Z",
-  "updatedAt": "2026-03-28T18:36:58.219Z",
-  "publishAt": "2026-03-29T09:00:00",
+  "updatedAt": "2026-03-29T07:00:14.765Z",
   "locale": "da"
 }

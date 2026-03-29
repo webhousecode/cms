@@ -97,11 +97,17 @@
         }
       ],
       "lastOptimized": "2026-03-29T14:19:32.523Z"
+    },
+    "_lastEditedBy": {
+      "userId": "fb4eda6a-bc5c-4dec-8cb6-c77c9fb74cd9",
+      "name": "Christian Broberg",
+      "email": "cb@webhouse.dk",
+      "at": "2026-03-29T15:59:04.002Z"
     }
   },
   "_fieldMeta": {},
   "createdAt": "2026-03-29T14:19:30.789Z",
-  "updatedAt": "2026-03-29T15:40:48.199Z",
+  "updatedAt": "2026-03-29T15:59:04.002Z",
   "locale": "de",
   "translationGroup": "LTv2dKudCYMNx1jNJ54eX"
 }
