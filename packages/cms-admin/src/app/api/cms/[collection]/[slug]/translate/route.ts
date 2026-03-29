@@ -218,6 +218,33 @@ Return ONLY a JSON object with the translated fields. No explanation, no preambl
       console.error("[translate] Alt-text localization failed (non-fatal):", err);
     }
 
+    // Replace interactive IDs with locale-specific versions
+    try {
+      const { getMediaAdapter } = await import("@/lib/media");
+      const adapter = await getMediaAdapter();
+      const allInteractives = await adapter.listInteractives();
+      const richtextFields = translatableFields.filter((f) => f.type === "richtext");
+      for (const field of richtextFields) {
+        const val = mergedData[field.name];
+        if (typeof val !== "string" || !val.includes("!!INTERACTIVE[")) continue;
+        mergedData[field.name] = val.replace(
+          /!!INTERACTIVE\[([^\]|]+)/g,
+          (match, id) => {
+            const source = allInteractives.find(i => i.id === id);
+            if (!source) return match;
+            // Find locale sibling via translationGroup
+            const groupId = (source as any).translationGroup;
+            if (!groupId) return match;
+            const sibling = allInteractives.find(i => (i as any).translationGroup === groupId && (i as any).locale === targetLocale && i.id !== id);
+            if (!sibling) return match;
+            return `!!INTERACTIVE[${sibling.id}`;
+          },
+        );
+      }
+    } catch (err) {
+      console.error("[translate] Interactive locale swap failed (non-fatal):", err);
+    }
+
     // ── translationGroup: bidirectional ID linking ──────────────
     // Ensure source has a translationGroup; create one if missing
     const sourceGroup = (sourceDoc as any).translationGroup as string | undefined;

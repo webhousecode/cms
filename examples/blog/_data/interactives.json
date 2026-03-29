@@ -1,0 +1,33 @@
+[
+  {
+    "id": "ski-vinter-slideshow",
+    "name": "ski-vinter-slideshow",
+    "filename": "ski-vinter-slideshow.html",
+    "size": 20510,
+    "status": "published",
+    "createdAt": "2026-03-27T21:26:54.036Z",
+    "updatedAt": "2026-03-28T22:25:05.174Z",
+    "locale": "da",
+    "translationGroup": "int-ski-vinter-grp"
+  },
+  {
+    "id": "ski-vinter-slideshow-en",
+    "name": "ski-vinter-slideshow-en",
+    "filename": "ski-vinter-slideshow-en.html",
+    "size": 20490,
+    "status": "published",
+    "createdAt": "2026-03-28T22:25:46.277Z",
+    "updatedAt": "2026-03-28T22:26:25.952Z",
+    "locale": "en",
+    "translationGroup": "int-ski-vinter-grp"
+  },
+  {
+    "id": "pricing-calculator-with-sliders",
+    "name": "pricing-calculator-with-sliders",
+    "filename": "pricing-calculator-with-sliders.html",
+    "size": 15673,
+    "status": "published",
+    "createdAt": "2026-03-28T22:43:20.643Z",
+    "updatedAt": "2026-03-28T22:44:07.930Z"
+  }
+]
