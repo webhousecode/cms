@@ -1,0 +1,637 @@
+{
+  "version": "1.0.0",
+  "generated": "2026-03-29T01:24:03.065Z",
+  "navigation": [
+    {
+      "testId": "sidebar",
+      "selector": "[data-testid=\"sidebar\"]",
+      "description": "Main sidebar container"
+    },
+    {
+      "testId": "site-switcher",
+      "selector": "[data-testid=\"site-switcher\"]",
+      "description": "Site switcher dropdown"
+    },
+    {
+      "testId": "org-switcher",
+      "selector": "[data-testid=\"org-switcher\"]",
+      "description": "Organization switcher dropdown"
+    },
+    {
+      "testId": "nav-link-sites",
+      "selector": "[data-testid=\"nav-link-sites\"]",
+      "description": "Sites page link"
+    },
+    {
+      "testId": "nav-link-dashboard",
+      "selector": "[data-testid=\"nav-link-dashboard\"]",
+      "description": "Dashboard link"
+    },
+    {
+      "testId": "nav-link-cockpit",
+      "selector": "[data-testid=\"nav-link-cockpit\"]",
+      "description": "AI Cockpit link"
+    },
+    {
+      "testId": "nav-link-agents",
+      "selector": "[data-testid=\"nav-link-agents\"]",
+      "description": "Agents link"
+    },
+    {
+      "testId": "nav-link-curation",
+      "selector": "[data-testid=\"nav-link-curation\"]",
+      "description": "Curation queue link"
+    },
+    {
+      "testId": "nav-link-calendar",
+      "selector": "[data-testid=\"nav-link-calendar\"]",
+      "description": "Calendar link"
+    },
+    {
+      "testId": "nav-link-content",
+      "selector": "[data-testid=\"nav-link-content\"]",
+      "description": "Content section toggle"
+    },
+    {
+      "testId": "nav-link-interactives",
+      "selector": "[data-testid=\"nav-link-interactives\"]",
+      "description": "Interactives link"
+    },
+    {
+      "testId": "nav-link-media",
+      "selector": "[data-testid=\"nav-link-media\"]",
+      "description": "Media library link"
+    },
+    {
+      "testId": "nav-link-tools",
+      "selector": "[data-testid=\"nav-link-tools\"]",
+      "description": "Tools section toggle"
+    },
+    {
+      "testId": "nav-link-link-checker",
+      "selector": "[data-testid=\"nav-link-link-checker\"]",
+      "description": "Link checker link"
+    },
+    {
+      "testId": "nav-link-seo",
+      "selector": "[data-testid=\"nav-link-seo\"]",
+      "description": "SEO dashboard link"
+    },
+    {
+      "testId": "nav-link-backup",
+      "selector": "[data-testid=\"nav-link-backup\"]",
+      "description": "Backup link"
+    },
+    {
+      "testId": "nav-link-search",
+      "selector": "[data-testid=\"nav-link-search\"]",
+      "description": "Search trigger"
+    },
+    {
+      "testId": "nav-link-settings",
+      "selector": "[data-testid=\"nav-link-settings\"]",
+      "description": "Settings link"
+    },
+    {
+      "testId": "nav-link-trash",
+      "selector": "[data-testid=\"nav-link-trash\"]",
+      "description": "Trash link"
+    }
+  ],
+  "actions": [
+    {
+      "testId": "action-bar",
+      "selector": "[data-testid=\"action-bar\"]",
+      "description": "Action bar container"
+    },
+    {
+      "testId": "btn-save",
+      "selector": "[data-testid=\"btn-save\"]",
+      "description": "Save button"
+    },
+    {
+      "testId": "btn-create",
+      "selector": "[data-testid=\"btn-create\"]",
+      "description": "Create new document button"
+    },
+    {
+      "testId": "btn-publish",
+      "selector": "[data-testid=\"btn-publish\"]",
+      "description": "Publish button"
+    },
+    {
+      "testId": "btn-delete",
+      "selector": "[data-testid=\"btn-delete\"]",
+      "description": "Delete button"
+    },
+    {
+      "testId": "btn-trash",
+      "selector": "[data-testid=\"btn-trash\"]",
+      "description": "Trash button"
+    }
+  ],
+  "fields": [
+    {
+      "testId": "field-text-title",
+      "selector": "[data-testid=\"field-text-title\"]",
+      "description": "services.title (text)"
+    },
+    {
+      "testId": "field-textarea-description",
+      "selector": "[data-testid=\"field-textarea-description\"]",
+      "description": "services.description (textarea)"
+    },
+    {
+      "testId": "field-array-features",
+      "selector": "[data-testid=\"field-array-features\"]",
+      "description": "services.features (array)"
+    },
+    {
+      "testId": "field-text-price",
+      "selector": "[data-testid=\"field-text-price\"]",
+      "description": "services.price (text)"
+    },
+    {
+      "testId": "field-boolean-popular",
+      "selector": "[data-testid=\"field-boolean-popular\"]",
+      "description": "services.popular (boolean)"
+    },
+    {
+      "testId": "field-text-name",
+      "selector": "[data-testid=\"field-text-name\"]",
+      "description": "testimonials.name (text)"
+    },
+    {
+      "testId": "field-text-role",
+      "selector": "[data-testid=\"field-text-role\"]",
+      "description": "testimonials.role (text)"
+    },
+    {
+      "testId": "field-text-company",
+      "selector": "[data-testid=\"field-text-company\"]",
+      "description": "testimonials.company (text)"
+    },
+    {
+      "testId": "field-textarea-quote",
+      "selector": "[data-testid=\"field-textarea-quote\"]",
+      "description": "testimonials.quote (textarea)"
+    },
+    {
+      "testId": "field-image-photo",
+      "selector": "[data-testid=\"field-image-photo\"]",
+      "description": "testimonials.photo (image)"
+    },
+    {
+      "testId": "field-textarea-excerpt",
+      "selector": "[data-testid=\"field-textarea-excerpt\"]",
+      "description": "posts.excerpt (textarea)"
+    },
+    {
+      "testId": "field-richtext-content",
+      "selector": "[data-testid=\"field-richtext-content\"]",
+      "description": "posts.content (richtext)"
+    },
+    {
+      "testId": "field-date-date",
+      "selector": "[data-testid=\"field-date-date\"]",
+      "description": "posts.date (date)"
+    },
+    {
+      "testId": "field-image-coverImage",
+      "selector": "[data-testid=\"field-image-coverImage\"]",
+      "description": "posts.coverImage (image)"
+    },
+    {
+      "testId": "field-textarea-metaDescription",
+      "selector": "[data-testid=\"field-textarea-metaDescription\"]",
+      "description": "pages.metaDescription (textarea)"
+    },
+    {
+      "testId": "field-text-jobTitle",
+      "selector": "[data-testid=\"field-text-jobTitle\"]",
+      "description": "pages.jobTitle (text)"
+    },
+    {
+      "testId": "field-textarea-heroTagline",
+      "selector": "[data-testid=\"field-textarea-heroTagline\"]",
+      "description": "pages.heroTagline (textarea)"
+    },
+    {
+      "testId": "field-text-heroCta1",
+      "selector": "[data-testid=\"field-text-heroCta1\"]",
+      "description": "pages.heroCta1 (text)"
+    },
+    {
+      "testId": "field-text-heroCta2",
+      "selector": "[data-testid=\"field-text-heroCta2\"]",
+      "description": "pages.heroCta2 (text)"
+    },
+    {
+      "testId": "field-text-trustLabel",
+      "selector": "[data-testid=\"field-text-trustLabel\"]",
+      "description": "pages.trustLabel (text)"
+    },
+    {
+      "testId": "field-array-trustCompanies",
+      "selector": "[data-testid=\"field-array-trustCompanies\"]",
+      "description": "pages.trustCompanies (array)"
+    },
+    {
+      "testId": "field-text-servicesLabel",
+      "selector": "[data-testid=\"field-text-servicesLabel\"]",
+      "description": "pages.servicesLabel (text)"
+    },
+    {
+      "testId": "field-text-servicesTitle",
+      "selector": "[data-testid=\"field-text-servicesTitle\"]",
+      "description": "pages.servicesTitle (text)"
+    },
+    {
+      "testId": "field-textarea-servicesDesc",
+      "selector": "[data-testid=\"field-textarea-servicesDesc\"]",
+      "description": "pages.servicesDesc (textarea)"
+    },
+    {
+      "testId": "field-text-testimonialsLabel",
+      "selector": "[data-testid=\"field-text-testimonialsLabel\"]",
+      "description": "pages.testimonialsLabel (text)"
+    },
+    {
+      "testId": "field-text-testimonialsTitle",
+      "selector": "[data-testid=\"field-text-testimonialsTitle\"]",
+      "description": "pages.testimonialsTitle (text)"
+    },
+    {
+      "testId": "field-textarea-testimonialsDesc",
+      "selector": "[data-testid=\"field-textarea-testimonialsDesc\"]",
+      "description": "pages.testimonialsDesc (textarea)"
+    },
+    {
+      "testId": "field-text-blogLabel",
+      "selector": "[data-testid=\"field-text-blogLabel\"]",
+      "description": "pages.blogLabel (text)"
+    },
+    {
+      "testId": "field-text-blogTitle",
+      "selector": "[data-testid=\"field-text-blogTitle\"]",
+      "description": "pages.blogTitle (text)"
+    },
+    {
+      "testId": "field-textarea-blogDesc",
+      "selector": "[data-testid=\"field-textarea-blogDesc\"]",
+      "description": "pages.blogDesc (textarea)"
+    },
+    {
+      "testId": "field-text-ctaTitle",
+      "selector": "[data-testid=\"field-text-ctaTitle\"]",
+      "description": "pages.ctaTitle (text)"
+    },
+    {
+      "testId": "field-textarea-ctaDesc",
+      "selector": "[data-testid=\"field-textarea-ctaDesc\"]",
+      "description": "pages.ctaDesc (textarea)"
+    },
+    {
+      "testId": "field-text-ctaButton",
+      "selector": "[data-testid=\"field-text-ctaButton\"]",
+      "description": "pages.ctaButton (text)"
+    },
+    {
+      "testId": "field-textarea-footerDesc",
+      "selector": "[data-testid=\"field-textarea-footerDesc\"]",
+      "description": "pages.footerDesc (textarea)"
+    },
+    {
+      "testId": "field-array-footerColumns",
+      "selector": "[data-testid=\"field-array-footerColumns\"]",
+      "description": "pages.footerColumns (array)"
+    },
+    {
+      "testId": "field-text-navCta",
+      "selector": "[data-testid=\"field-text-navCta\"]",
+      "description": "pages.navCta (text)"
+    },
+    {
+      "testId": "field-array-navLinks",
+      "selector": "[data-testid=\"field-array-navLinks\"]",
+      "description": "pages.navLinks (array)"
+    },
+    {
+      "testId": "field-array-socialLinks",
+      "selector": "[data-testid=\"field-array-socialLinks\"]",
+      "description": "pages.socialLinks (array)"
+    },
+    {
+      "testId": "field-text-copyrightSuffix",
+      "selector": "[data-testid=\"field-text-copyrightSuffix\"]",
+      "description": "pages.copyrightSuffix (text)"
+    },
+    {
+      "testId": "field-text-pricingLabel",
+      "selector": "[data-testid=\"field-text-pricingLabel\"]",
+      "description": "pages.pricingLabel (text)"
+    },
+    {
+      "testId": "field-text-pricingTitle",
+      "selector": "[data-testid=\"field-text-pricingTitle\"]",
+      "description": "pages.pricingTitle (text)"
+    },
+    {
+      "testId": "field-textarea-pricingDesc",
+      "selector": "[data-testid=\"field-textarea-pricingDesc\"]",
+      "description": "pages.pricingDesc (textarea)"
+    },
+    {
+      "testId": "field-text-popularBadge",
+      "selector": "[data-testid=\"field-text-popularBadge\"]",
+      "description": "pages.popularBadge (text)"
+    },
+    {
+      "testId": "field-text-cardButton",
+      "selector": "[data-testid=\"field-text-cardButton\"]",
+      "description": "pages.cardButton (text)"
+    },
+    {
+      "testId": "field-text-sectionLabel",
+      "selector": "[data-testid=\"field-text-sectionLabel\"]",
+      "description": "pages.sectionLabel (text)"
+    },
+    {
+      "testId": "field-text-heading",
+      "selector": "[data-testid=\"field-text-heading\"]",
+      "description": "pages.heading (text)"
+    },
+    {
+      "testId": "field-array-contactDetails",
+      "selector": "[data-testid=\"field-array-contactDetails\"]",
+      "description": "pages.contactDetails (array)"
+    },
+    {
+      "testId": "field-array-formFields",
+      "selector": "[data-testid=\"field-array-formFields\"]",
+      "description": "pages.formFields (array)"
+    },
+    {
+      "testId": "field-text-submitButton",
+      "selector": "[data-testid=\"field-text-submitButton\"]",
+      "description": "pages.submitButton (text)"
+    },
+    {
+      "testId": "field-text-listingLabel",
+      "selector": "[data-testid=\"field-text-listingLabel\"]",
+      "description": "pages.listingLabel (text)"
+    },
+    {
+      "testId": "field-text-listingTitle",
+      "selector": "[data-testid=\"field-text-listingTitle\"]",
+      "description": "pages.listingTitle (text)"
+    },
+    {
+      "testId": "field-textarea-listingDesc",
+      "selector": "[data-testid=\"field-textarea-listingDesc\"]",
+      "description": "pages.listingDesc (textarea)"
+    },
+    {
+      "testId": "field-text-postCtaTitle",
+      "selector": "[data-testid=\"field-text-postCtaTitle\"]",
+      "description": "pages.postCtaTitle (text)"
+    },
+    {
+      "testId": "field-textarea-postCtaDesc",
+      "selector": "[data-testid=\"field-textarea-postCtaDesc\"]",
+      "description": "pages.postCtaDesc (textarea)"
+    },
+    {
+      "testId": "field-text-postCtaButton",
+      "selector": "[data-testid=\"field-text-postCtaButton\"]",
+      "description": "pages.postCtaButton (text)"
+    },
+    {
+      "testId": "field-text-backToList",
+      "selector": "[data-testid=\"field-text-backToList\"]",
+      "description": "pages.backToList (text)"
+    }
+  ],
+  "collections": [
+    {
+      "testId": "nav-link-collection-services",
+      "selector": "[data-testid=\"nav-link-collection-services\"]",
+      "description": "Nav: services collection"
+    },
+    {
+      "testId": "collection-list-services",
+      "selector": "[data-testid=\"collection-list-services\"]",
+      "description": "Document list: services"
+    },
+    {
+      "testId": "nav-link-collection-testimonials",
+      "selector": "[data-testid=\"nav-link-collection-testimonials\"]",
+      "description": "Nav: testimonials collection"
+    },
+    {
+      "testId": "collection-list-testimonials",
+      "selector": "[data-testid=\"collection-list-testimonials\"]",
+      "description": "Document list: testimonials"
+    },
+    {
+      "testId": "nav-link-collection-posts",
+      "selector": "[data-testid=\"nav-link-collection-posts\"]",
+      "description": "Nav: posts collection"
+    },
+    {
+      "testId": "collection-list-posts",
+      "selector": "[data-testid=\"collection-list-posts\"]",
+      "description": "Document list: posts"
+    },
+    {
+      "testId": "nav-link-collection-pages",
+      "selector": "[data-testid=\"nav-link-collection-pages\"]",
+      "description": "Nav: pages collection"
+    },
+    {
+      "testId": "collection-list-pages",
+      "selector": "[data-testid=\"collection-list-pages\"]",
+      "description": "Document list: pages"
+    }
+  ],
+  "settings": [
+    {
+      "testId": "settings-tab-general",
+      "selector": "[data-testid=\"settings-tab-general\"]",
+      "description": "Settings tab: general"
+    },
+    {
+      "testId": "settings-panel-general",
+      "selector": "[data-testid=\"settings-panel-general\"]",
+      "description": "Settings panel: general"
+    },
+    {
+      "testId": "panel-general",
+      "selector": "[data-testid=\"panel-general\"]",
+      "description": "Panel component: general"
+    },
+    {
+      "testId": "settings-tab-team",
+      "selector": "[data-testid=\"settings-tab-team\"]",
+      "description": "Settings tab: team"
+    },
+    {
+      "testId": "settings-panel-team",
+      "selector": "[data-testid=\"settings-panel-team\"]",
+      "description": "Settings panel: team"
+    },
+    {
+      "testId": "panel-team",
+      "selector": "[data-testid=\"panel-team\"]",
+      "description": "Panel component: team"
+    },
+    {
+      "testId": "settings-tab-email",
+      "selector": "[data-testid=\"settings-tab-email\"]",
+      "description": "Settings tab: email"
+    },
+    {
+      "testId": "settings-panel-email",
+      "selector": "[data-testid=\"settings-panel-email\"]",
+      "description": "Settings panel: email"
+    },
+    {
+      "testId": "panel-email",
+      "selector": "[data-testid=\"panel-email\"]",
+      "description": "Panel component: email"
+    },
+    {
+      "testId": "settings-tab-ai",
+      "selector": "[data-testid=\"settings-tab-ai\"]",
+      "description": "Settings tab: ai"
+    },
+    {
+      "testId": "settings-panel-ai",
+      "selector": "[data-testid=\"settings-panel-ai\"]",
+      "description": "Settings panel: ai"
+    },
+    {
+      "testId": "panel-ai",
+      "selector": "[data-testid=\"panel-ai\"]",
+      "description": "Panel component: ai"
+    },
+    {
+      "testId": "settings-tab-deploy",
+      "selector": "[data-testid=\"settings-tab-deploy\"]",
+      "description": "Settings tab: deploy"
+    },
+    {
+      "testId": "settings-panel-deploy",
+      "selector": "[data-testid=\"settings-panel-deploy\"]",
+      "description": "Settings panel: deploy"
+    },
+    {
+      "testId": "panel-deploy",
+      "selector": "[data-testid=\"panel-deploy\"]",
+      "description": "Panel component: deploy"
+    },
+    {
+      "testId": "settings-tab-tools",
+      "selector": "[data-testid=\"settings-tab-tools\"]",
+      "description": "Settings tab: tools"
+    },
+    {
+      "testId": "settings-panel-tools",
+      "selector": "[data-testid=\"settings-panel-tools\"]",
+      "description": "Settings panel: tools"
+    },
+    {
+      "testId": "panel-tools",
+      "selector": "[data-testid=\"panel-tools\"]",
+      "description": "Panel component: tools"
+    },
+    {
+      "testId": "settings-tab-mcp",
+      "selector": "[data-testid=\"settings-tab-mcp\"]",
+      "description": "Settings tab: mcp"
+    },
+    {
+      "testId": "settings-panel-mcp",
+      "selector": "[data-testid=\"settings-panel-mcp\"]",
+      "description": "Settings panel: mcp"
+    },
+    {
+      "testId": "panel-mcp",
+      "selector": "[data-testid=\"panel-mcp\"]",
+      "description": "Panel component: mcp"
+    },
+    {
+      "testId": "settings-tab-brand-voice",
+      "selector": "[data-testid=\"settings-tab-brand-voice\"]",
+      "description": "Settings tab: brand-voice"
+    },
+    {
+      "testId": "settings-panel-brand-voice",
+      "selector": "[data-testid=\"settings-panel-brand-voice\"]",
+      "description": "Settings panel: brand-voice"
+    },
+    {
+      "testId": "panel-brand-voice",
+      "selector": "[data-testid=\"panel-brand-voice\"]",
+      "description": "Panel component: brand-voice"
+    },
+    {
+      "testId": "settings-tab-globals",
+      "selector": "[data-testid=\"settings-tab-globals\"]",
+      "description": "Settings tab: globals"
+    },
+    {
+      "testId": "settings-panel-globals",
+      "selector": "[data-testid=\"settings-panel-globals\"]",
+      "description": "Settings panel: globals"
+    },
+    {
+      "testId": "panel-globals",
+      "selector": "[data-testid=\"panel-globals\"]",
+      "description": "Panel component: globals"
+    },
+    {
+      "testId": "settings-tab-schema",
+      "selector": "[data-testid=\"settings-tab-schema\"]",
+      "description": "Settings tab: schema"
+    },
+    {
+      "testId": "settings-panel-schema",
+      "selector": "[data-testid=\"settings-panel-schema\"]",
+      "description": "Settings panel: schema"
+    },
+    {
+      "testId": "panel-schema",
+      "selector": "[data-testid=\"panel-schema\"]",
+      "description": "Panel component: schema"
+    },
+    {
+      "testId": "settings-tab-prompts",
+      "selector": "[data-testid=\"settings-tab-prompts\"]",
+      "description": "Settings tab: prompts"
+    },
+    {
+      "testId": "settings-panel-prompts",
+      "selector": "[data-testid=\"settings-panel-prompts\"]",
+      "description": "Settings panel: prompts"
+    },
+    {
+      "testId": "panel-prompts",
+      "selector": "[data-testid=\"panel-prompts\"]",
+      "description": "Panel component: prompts"
+    }
+  ],
+  "media": [],
+  "layout": [
+    {
+      "testId": "document-editor",
+      "selector": "[data-testid=\"document-editor\"]",
+      "description": "Document editor wrapper"
+    },
+    {
+      "testId": "media-library",
+      "selector": "[data-testid=\"media-library\"]",
+      "description": "Media library container"
+    }
+  ]
+}

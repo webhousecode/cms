@@ -71,7 +71,7 @@ _Without these, we cannot build and deliver professional sites on the platform._
 | ~~8b~~ | ~~**F75 AI Site Builder Guide**~~ | ~~Done~~ | ~~Shipped 2026-03-23. 2383→137 lines, 20 modules.~~ |
 | ~~8c~~ | ~~**F78 Bundled Preview Server**~~ | ~~Done~~ | ~~Shipped 2026-03-19~~ |
 | ~~8d~~ | ~~**F79 Site Config Validator**~~ | ~~Done~~ | ~~Shipped. Validates cms.config.ts + content/ with friendly errors.~~ |
-| 8e | **F80 Admin Selector Map** | Medium | `data-testid` on all admin UI elements + auto-generated selector map. Foundation for Playwright E2E tests of content editing and site roundtrips. |
+| ~~8e~~ | ~~**F80 Admin Selector Map**~~ | ~~Done~~ | ~~Shipped 2026-03-29. 65 data-testid attributes across 17 files. Fields, nav, buttons, lists, settings, media, switchers. Selector map + Playwright helpers included.~~ |
 | ~~8f~~ | ~~**F83 Vibe Site Builder**~~ | ~~Large~~ | ~~Moved to Tier 2 top~~ |
 | ~~8g~~ | ~~**F86 Action Bar**~~ | ~~Done~~ | ~~All pages migrated. Shipped 2026-03-20~~ |
 | ~~8h~~ | ~~**F97 SEO Module**~~ | ~~Done~~ | ~~Shipped. 13 rules, keyword tracker, AI optimize, SERP preview, score dashboard, JSON-LD, bulk optimize, export.~~ |
