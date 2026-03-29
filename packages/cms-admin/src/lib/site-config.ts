@@ -90,6 +90,25 @@ export interface SiteConfig {
   localeStrategy: "none" | "prefix-other" | "prefix-all";
   /** F48 i18n — auto-retranslate stale translations when source doc is updated */
   autoRetranslateOnUpdate: boolean;
+
+  /** F112 GEO — robots.txt strategy */
+  geoRobotsStrategy: string;
+  /** F112 GEO — custom robots.txt rules (for "custom" strategy) */
+  geoRobotsCustomRules: string;
+  /** F112 GEO — comma-separated disallow paths */
+  geoRobotsDisallowPaths: string;
+  /** F112 GEO — Perplexity API key for visibility probes */
+  geoPerplexityApiKey: string;
+  /** F112 GEO — Google Custom Search API key */
+  geoGoogleSearchApiKey: string;
+  /** F112 GEO — Google Custom Search Engine ID */
+  geoGoogleSearchCx: string;
+  /** F112 GEO — Organization name for JSON-LD */
+  geoOrganizationName: string;
+  /** F112 GEO — Organization URL */
+  geoOrganizationUrl: string;
+  /** F112 GEO — Organization logo URL */
+  geoOrganizationLogo: string;
 }
 
 async function getConfigPath(): Promise<string> {
@@ -148,6 +167,15 @@ async function defaults(): Promise<SiteConfig> {
     locales: [],
     localeStrategy: "prefix-other",
     autoRetranslateOnUpdate: false,
+    geoRobotsStrategy: "maximum",
+    geoRobotsCustomRules: "",
+    geoRobotsDisallowPaths: "/admin/, /api/",
+    geoPerplexityApiKey: "",
+    geoGoogleSearchApiKey: "",
+    geoGoogleSearchCx: "",
+    geoOrganizationName: "",
+    geoOrganizationUrl: "",
+    geoOrganizationLogo: "",
   };
 }
 
