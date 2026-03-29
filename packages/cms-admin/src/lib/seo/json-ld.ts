@@ -186,6 +186,121 @@ export const JSON_LD_TEMPLATES: JsonLdTemplate[] = [
       image: v.image || undefined,
     }),
   },
+  // ── F112 G04 — New templates ─────────────────────────────
+  {
+    id: "howto",
+    label: "HowTo",
+    description: "Step-by-step guide or tutorial",
+    fields: [
+      { key: "name", label: "Guide title", placeholder: "How to...", autoFrom: "title", required: true, hidden: true },
+      { key: "description", label: "Description", placeholder: "What this guide teaches", autoFrom: "_seo.metaDescription", hidden: true },
+      { key: "totalTime", label: "Total time", placeholder: "PT30M (30 min)" },
+      { key: "image", label: "Image URL", placeholder: "/uploads/...", autoFrom: "_seo.ogImage", hidden: true },
+    ],
+    generate: (v) => ({
+      "@context": "https://schema.org",
+      "@type": "HowTo",
+      name: v.name || undefined,
+      description: v.description || undefined,
+      totalTime: v.totalTime || undefined,
+      image: v.image || undefined,
+    }),
+  },
+  {
+    id: "service",
+    label: "Service",
+    description: "Professional service offering",
+    fields: [
+      { key: "name", label: "Service name", placeholder: "Web Development", autoFrom: "title", required: true, hidden: true },
+      { key: "description", label: "Description", placeholder: "What the service includes", autoFrom: "_seo.metaDescription", hidden: true },
+      { key: "provider", label: "Provider name", placeholder: "Company name" },
+      { key: "areaServed", label: "Area served", placeholder: "Denmark" },
+      { key: "image", label: "Image URL", placeholder: "/uploads/...", autoFrom: "_seo.ogImage", hidden: true },
+    ],
+    generate: (v) => ({
+      "@context": "https://schema.org",
+      "@type": "Service",
+      name: v.name || undefined,
+      description: v.description || undefined,
+      provider: v.provider ? { "@type": "Organization", name: v.provider } : undefined,
+      areaServed: v.areaServed || undefined,
+      image: v.image || undefined,
+    }),
+  },
+  {
+    id: "software",
+    label: "Software",
+    description: "Software application or SaaS product",
+    fields: [
+      { key: "name", label: "App name", placeholder: "App name", autoFrom: "title", required: true, hidden: true },
+      { key: "description", label: "Description", placeholder: "What the app does", autoFrom: "_seo.metaDescription", hidden: true },
+      { key: "applicationCategory", label: "Category", placeholder: "DeveloperApplication" },
+      { key: "operatingSystem", label: "OS", placeholder: "Web, macOS, Windows" },
+      { key: "price", label: "Price", placeholder: "0 (free) or 29.00" },
+      { key: "currency", label: "Currency", placeholder: "USD" },
+      { key: "image", label: "Image URL", placeholder: "/uploads/...", autoFrom: "_seo.ogImage", hidden: true },
+    ],
+    generate: (v) => ({
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      name: v.name || undefined,
+      description: v.description || undefined,
+      applicationCategory: v.applicationCategory || undefined,
+      operatingSystem: v.operatingSystem || undefined,
+      offers: v.price !== undefined ? {
+        "@type": "Offer",
+        price: v.price,
+        priceCurrency: v.currency || "USD",
+      } : undefined,
+      image: v.image || undefined,
+    }),
+  },
+  {
+    id: "breadcrumb",
+    label: "Breadcrumb",
+    description: "Navigation breadcrumb trail (auto-generated from URL)",
+    fields: [
+      { key: "item1Name", label: "Level 1", placeholder: "Home", autoFrom: "_breadcrumb.1" },
+      { key: "item1Url", label: "Level 1 URL", placeholder: "/", autoFrom: "_breadcrumb.1url" },
+      { key: "item2Name", label: "Level 2", placeholder: "Blog", autoFrom: "_breadcrumb.2" },
+      { key: "item2Url", label: "Level 2 URL", placeholder: "/posts/", autoFrom: "_breadcrumb.2url" },
+      { key: "item3Name", label: "Level 3 (current)", placeholder: "Article title", autoFrom: "title" },
+    ],
+    generate: (v) => {
+      const items: Record<string, unknown>[] = [];
+      if (v.item1Name) items.push({ "@type": "ListItem", position: 1, name: v.item1Name, item: v.item1Url || undefined });
+      if (v.item2Name) items.push({ "@type": "ListItem", position: 2, name: v.item2Name, item: v.item2Url || undefined });
+      if (v.item3Name) items.push({ "@type": "ListItem", position: items.length + 1, name: v.item3Name });
+      return {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        itemListElement: items,
+      };
+    },
+  },
+  {
+    id: "website",
+    label: "WebSite",
+    description: "Site-level schema with search action (use on homepage)",
+    fields: [
+      { key: "name", label: "Site name", placeholder: "My Website", autoFrom: "title", required: true },
+      { key: "url", label: "Site URL", placeholder: "https://example.com" },
+      { key: "description", label: "Description", placeholder: "Site description", autoFrom: "_seo.metaDescription", hidden: true },
+      { key: "searchUrl", label: "Search URL template", placeholder: "https://example.com/search?q={search_term}" },
+    ],
+    generate: (v) => ({
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      name: v.name || undefined,
+      url: v.url || undefined,
+      description: v.description || undefined,
+      potentialAction: v.searchUrl ? {
+        "@type": "SearchAction",
+        target: { "@type": "EntryPoint", urlTemplate: v.searchUrl },
+        "query-input": "required name=search_term",
+      } : undefined,
+    }),
+  },
 ];
 
 /**
