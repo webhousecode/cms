@@ -4,7 +4,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { MessageList, type ChatMessageUI, type ToolCall } from "./message-list";
 import { ChatInput } from "./chat-input";
 import { WelcomeScreen } from "./welcome-screen";
-import { Pencil, Check, X, Trash2, MoreHorizontal, Star, Copy, Brain, Plus, Search, Download, Upload } from "lucide-react";
+import { Pencil, Check, X, Trash2, MoreHorizontal, Star, Copy, Brain, Plus, Search, Download, Upload, Package } from "lucide-react";
 
 interface ChatInterfaceProps {
   collections: Array<{ name: string; label: string }>;
@@ -50,6 +50,7 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
   const [memories, setMemories] = useState<MemoryItem[]>([]);
   const [memorySearch, setMemorySearch] = useState("");
   const [memoryCount, setMemoryCount] = useState(0);
+  const [importResult, setImportResult] = useState<{ chats: { imported: number; skipped: number }; memories: { added: number; skipped: number } } | null>(null);
   const abortRef = useRef<AbortController | null>(null);
   const messagesRef = useRef(messages);
   messagesRef.current = messages;
@@ -463,6 +464,60 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
     input.click();
   }
 
+  async function exportAll() {
+    try {
+      const res = await fetch("/api/cms/chat/export");
+      if (!res.ok) return;
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      const disposition = res.headers.get("content-disposition") ?? "";
+      const match = disposition.match(/filename="(.+)"/);
+      a.download = match?.[1] ?? `webhouse-chat-export-${new Date().toISOString().split("T")[0]}.zip`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch { /* ignore */ }
+  }
+
+  async function importAll() {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".zip";
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        const res = await fetch("/api/cms/chat/import", {
+          method: "POST",
+          body: formData,
+        });
+        if (res.ok) {
+          const result = await res.json();
+          // Reload drawer data
+          const [convRes, memRes] = await Promise.all([
+            fetch("/api/cms/chat/conversations"),
+            fetch("/api/cms/chat/memory"),
+          ]);
+          if (convRes.ok) {
+            const { conversations: convs } = await convRes.json();
+            setConversations(convs ?? []);
+          }
+          if (memRes.ok) {
+            const data = await memRes.json();
+            setMemories(data.memories ?? []);
+            setMemoryCount(data.memories?.length ?? 0);
+          }
+          setImportResult(result);
+          setTimeout(() => setImportResult(null), 5000);
+        }
+      } catch { /* ignore */ }
+    };
+    input.click();
+  }
+
   const handleSuggestionClick = useCallback(
     (message: string) => {
       // If the suggestion ends with a space (e.g. "Search my content for "),
@@ -633,6 +688,50 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
                   onImport={importFromFile}
                 />
               )}
+            </div>
+
+            {/* Footer — full export/import */}
+            <div style={{
+              borderTop: "1px solid var(--border)", padding: "10px 16px",
+              display: "flex", flexDirection: "column", gap: "6px",
+            }}>
+              {importResult && (
+                <div style={{
+                  fontSize: "0.7rem", padding: "6px 10px", borderRadius: "6px",
+                  backgroundColor: "color-mix(in srgb, rgb(74 222 128) 10%, transparent)",
+                  color: "rgb(74 222 128)",
+                }}>
+                  Imported {importResult.chats.imported} chats, {importResult.memories.added} memories
+                  {(importResult.chats.skipped > 0 || importResult.memories.skipped > 0) &&
+                    ` (skipped ${importResult.chats.skipped + importResult.memories.skipped} duplicates)`}
+                </div>
+              )}
+              <div style={{ display: "flex", gap: "6px" }}>
+                <button
+                  onClick={exportAll}
+                  style={{
+                    flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
+                    padding: "7px 12px", borderRadius: "6px", fontSize: "0.72rem", fontWeight: 500,
+                    border: "1px solid var(--border)", background: "transparent",
+                    color: "var(--foreground)", cursor: "pointer",
+                  }}
+                >
+                  <Download style={{ width: "13px", height: "13px" }} />
+                  Export all
+                </button>
+                <button
+                  onClick={importAll}
+                  style={{
+                    flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
+                    padding: "7px 12px", borderRadius: "6px", fontSize: "0.72rem", fontWeight: 500,
+                    border: "1px solid var(--border)", background: "transparent",
+                    color: "var(--foreground)", cursor: "pointer",
+                  }}
+                >
+                  <Upload style={{ width: "13px", height: "13px" }} />
+                  Import .zip
+                </button>
+              </div>
             </div>
           </div>
         </>
