@@ -17,6 +17,7 @@ export interface SiteContext {
   brandVoice?: string;
   defaultLocale: string;
   locales: string[];
+  autoTranslate: boolean;
 }
 
 /** Gather full site context for the chat system prompt */
@@ -74,6 +75,7 @@ export async function gatherSiteContext(): Promise<SiteContext> {
     brandVoice: brandContext ?? undefined,
     defaultLocale: siteConfig.defaultLocale || "en",
     locales: siteConfig.locales || [],
+    autoTranslate: !!siteConfig.autoRetranslateOnUpdate,
   };
 }
 
@@ -193,5 +195,6 @@ When creating or editing content that needs images:
 14. For field data: match the schema types exactly — use arrays for tags, ISO dates for date fields, exact option values for select fields.
 15. For BULK operations (bulk_publish, bulk_update), describe what will happen and the number of affected documents BEFORE executing. These affect multiple documents at once.
 16. For translation: use translate_document for a single doc, translate_site for bulk. Translations are created as drafts by default. Always confirm the target language with the user before bulk-translating.
+18. IMPORTANT — Multi-locale sites: This site has ${context.locales.length > 1 ? `${context.locales.length} languages configured (${context.locales.join(", ")})` : "only one language"}. ${context.locales.length > 1 ? (context.autoTranslate ? `Auto-translate is ON — translations to ${context.locales.filter(l => l !== context.defaultLocale).join(", ")} are created automatically when you create a document. No need to ask the user.` : `Auto-translate is OFF. After creating content, ask the user: "Skal jeg også oprette en ${context.locales.filter(l => l !== context.defaultLocale).join("/")} version?" — if yes, use translate_document for each target locale.`) : ""}
 17. For scheduling: use ISO 8601 format for dates (e.g. '2026-03-29T09:00:00'). The scheduler checks every 60 seconds. When the user says "publish tomorrow at 9" or "publicer i morgen kl 09", convert to the correct ISO datetime.`;
 }
