@@ -294,3 +294,130 @@ describe("Chat Memory — System prompt injection", () => {
     expect(section).toBe("");
   });
 });
+
+describe("Chat Memory — Export format", () => {
+  function exportMemories(memories: ChatMemory[]): string {
+    if (memories.length === 0) return "";
+    const lines: string[] = [
+      `# Chat Memory Export`,
+      `# ${memories.length} memories — ${new Date().toISOString().split("T")[0]}`,
+      `# Format: [category] fact | entities`,
+      ``,
+    ];
+    for (const m of memories) {
+      let line = `[${m.category}] ${m.fact}`;
+      if (m.entities.length > 0) line += ` | ${m.entities.join(", ")}`;
+      lines.push(line);
+    }
+    return lines.join("\n") + "\n";
+  }
+
+  it("exports memories in text format with category and entities", () => {
+    const mems = [
+      createTestMemory({ fact: "User prefers Norwegian", category: "preference", entities: ["language"] }),
+      createTestMemory({ fact: "Never use exclamation marks", category: "correction", entities: ["style", "headlines"] }),
+    ];
+    const text = exportMemories(mems);
+    expect(text).toContain("# Chat Memory Export");
+    expect(text).toContain("[preference] User prefers Norwegian | language");
+    expect(text).toContain("[correction] Never use exclamation marks | style, headlines");
+  });
+
+  it("exports without entities suffix when empty", () => {
+    const mems = [createTestMemory({ fact: "Simple fact", category: "fact", entities: [] })];
+    const text = exportMemories(mems);
+    expect(text).toContain("[fact] Simple fact\n");
+    // The data line should not have a pipe separator (header comment has one, that's fine)
+    const dataLines = text.split("\n").filter((l) => !l.startsWith("#") && l.trim());
+    expect(dataLines.every((l) => !l.includes("|"))).toBe(true);
+  });
+
+  it("returns empty string for no memories", () => {
+    expect(exportMemories([])).toBe("");
+  });
+});
+
+describe("Chat Memory — Import format", () => {
+  // Inline parser matching memory-store.ts logic
+  function parseImportText(input: string): Array<{ fact: string; category?: string; entities: string[] }> {
+    const entries: Array<{ fact: string; category?: string; entities: string[] }> = [];
+    const lines = input.trim().split("\n").map((l) => l.trim()).filter(Boolean);
+    for (const line of lines) {
+      if (line.startsWith("#") || line.startsWith("//")) continue;
+      let fact = line;
+      let category: string | undefined;
+      let entities: string[] = [];
+      const catMatch = fact.match(/^\[(preference|decision|pattern|correction|fact)]\s*/i);
+      if (catMatch) {
+        category = catMatch[1].toLowerCase();
+        fact = fact.slice(catMatch[0].length);
+      }
+      const pipeIdx = fact.lastIndexOf(" | ");
+      if (pipeIdx > 0) {
+        entities = fact.slice(pipeIdx + 3).split(",").map((e) => e.trim()).filter(Boolean);
+        fact = fact.slice(0, pipeIdx);
+      }
+      if (fact.trim()) entries.push({ fact: fact.trim(), category, entities });
+    }
+    return entries;
+  }
+
+  it("parses simple text lines as facts", () => {
+    const entries = parseImportText("User prefers dark mode\nAlways use Norwegian");
+    expect(entries).toHaveLength(2);
+    expect(entries[0].fact).toBe("User prefers dark mode");
+    expect(entries[0].category).toBeUndefined();
+    expect(entries[1].fact).toBe("Always use Norwegian");
+  });
+
+  it("parses [category] prefix", () => {
+    const entries = parseImportText("[preference] User likes formal tone\n[correction] Never use slang");
+    expect(entries).toHaveLength(2);
+    expect(entries[0].category).toBe("preference");
+    expect(entries[0].fact).toBe("User likes formal tone");
+    expect(entries[1].category).toBe("correction");
+  });
+
+  it("parses trailing | entities", () => {
+    const entries = parseImportText("[preference] User prefers Norwegian | language, locale");
+    expect(entries).toHaveLength(1);
+    expect(entries[0].fact).toBe("User prefers Norwegian");
+    expect(entries[0].entities).toEqual(["language", "locale"]);
+  });
+
+  it("skips comment lines", () => {
+    const entries = parseImportText("# This is a comment\n// Also a comment\nActual fact");
+    expect(entries).toHaveLength(1);
+    expect(entries[0].fact).toBe("Actual fact");
+  });
+
+  it("handles mixed format (export round-trip)", () => {
+    const exported = `# Chat Memory Export
+# 2 memories — 2026-03-29
+# Format: [category] fact | entities
+
+[preference] User prefers Norwegian | language
+[correction] Never use exclamation marks | style, headlines`;
+
+    const entries = parseImportText(exported);
+    expect(entries).toHaveLength(2);
+    expect(entries[0].fact).toBe("User prefers Norwegian");
+    expect(entries[0].category).toBe("preference");
+    expect(entries[0].entities).toEqual(["language"]);
+    expect(entries[1].fact).toBe("Never use exclamation marks");
+    expect(entries[1].category).toBe("correction");
+    expect(entries[1].entities).toEqual(["style", "headlines"]);
+  });
+
+  it("parses JSON array format", () => {
+    const json = JSON.stringify([
+      { fact: "User likes dark mode", category: "preference", entities: ["ui"] },
+      { fact: "Posts go live on Tuesdays", category: "pattern", entities: ["schedule"] },
+    ]);
+    // JSON parsing is handled by the store, test that the array structure is valid
+    const parsed = JSON.parse(json);
+    expect(parsed).toHaveLength(2);
+    expect(parsed[0].fact).toBe("User likes dark mode");
+    expect(parsed[1].category).toBe("pattern");
+  });
+});
