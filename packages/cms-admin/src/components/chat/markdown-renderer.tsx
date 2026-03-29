@@ -415,8 +415,8 @@ function DocPill({ collection, slug, variant }: { collection: string; slug: stri
         e.preventDefault();
         e.stopPropagation();
         if (variant === "edit") {
-          // Navigate to document — ?mode=admin ensures admin UI shows (not chat)
-          window.location.href = `/admin/${collection}/${slug}?mode=admin`;
+          // Switch to admin mode + navigate within SPA (preserves chat state)
+          window.dispatchEvent(new CustomEvent("cms:navigate-to-doc", { detail: { path: `/admin/${collection}/${slug}` } }));
           return;
         } else {
           // Resolve the exact preview URL — fetch doc + collection schema
