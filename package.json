@@ -19,7 +19,8 @@
     "ship:status": "gh run list --workflow=deploy.yml --repo webhousecode/cms --limit=5",
     "ship:watch": "gh run watch --repo webhousecode/cms",
     "test:e2e": "cd packages/cms-admin && pnpm test:e2e",
-    "test:all": "pnpm -r run test && cd packages/cms-admin && pnpm test:e2e"
+    "test:all": "pnpm -r run test && cd packages/cms-admin && pnpm test:e2e",
+    "clean": "pnpm --filter @webhouse/cms-admin clean"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.12",
