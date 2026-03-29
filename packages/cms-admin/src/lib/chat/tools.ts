@@ -382,6 +382,7 @@ export async function buildChatTools(): Promise<ToolPair[]> {
           properties: {
             query: { type: "string", description: "Search query — matches against AI captions, AI tags, user tags, and filenames" },
             type: { type: "string", description: "Filter by type: 'image', 'video', 'audio', 'all' (default: 'image')" },
+            locale: { type: "string", description: "Locale for alt-text/captions (e.g. 'en', 'da'). Defaults to site default locale." },
             limit: { type: "number", description: "Max results (default: 10)" },
           },
           required: ["query"],
@@ -402,6 +403,11 @@ export async function buildChatTools(): Promise<ToolPair[]> {
 
         const metaMap = new Map(meta.map((m) => [m.key, m]));
 
+        // Resolve document locale for locale-aware alt/caption
+        const { readSiteConfig: readSC } = await import("@/lib/site-config");
+        const sc = await readSC();
+        const contentLocale = String(input.locale ?? sc.defaultLocale ?? "en");
+
         // Score each file by relevance
         const scored = files
           .filter((f) => !/-\d+w\.webp$/i.test(f.name))
@@ -411,10 +417,22 @@ export async function buildChatTools(): Promise<ToolPair[]> {
             const m = metaMap.get(key);
             let score = 0;
 
-            // Match against various fields
+            // Match against various fields (legacy + per-locale)
             if (f.name.toLowerCase().includes(query)) score += 3;
             if (m?.aiCaption?.toLowerCase().includes(query)) score += 5;
             if (m?.aiAlt?.toLowerCase().includes(query)) score += 4;
+            // Per-locale captions/alts
+            const mAny = m as any;
+            if (mAny?.aiCaptions) {
+              for (const v of Object.values(mAny.aiCaptions) as string[]) {
+                if (v?.toLowerCase().includes(query)) { score += 5; break; }
+              }
+            }
+            if (mAny?.aiAlts) {
+              for (const v of Object.values(mAny.aiAlts) as string[]) {
+                if (v?.toLowerCase().includes(query)) { score += 4; break; }
+              }
+            }
             if (m?.aiTags?.some((t) => t.toLowerCase().includes(query))) score += 4;
             if (m?.tags?.some((t) => t.toLowerCase().includes(query))) score += 4;
 
@@ -437,10 +455,15 @@ export async function buildChatTools(): Promise<ToolPair[]> {
 
         return scored
           .map(({ file: f, meta: m }) => {
+            const mAny = m as any;
             const parts = [`- **${f.name}** (${f.mediaType})`];
             parts.push(`  URL: ${f.url}`);
-            if (m?.aiCaption) parts.push(`  Caption: ${m.aiCaption}`);
-            if (m?.aiAlt) parts.push(`  Alt: ${m.aiAlt}`);
+            // Use locale-specific alt/caption, fall back to legacy
+            const caption = mAny?.aiCaptions?.[contentLocale] ?? m?.aiCaption;
+            const alt = mAny?.aiAlts?.[contentLocale] ?? m?.aiAlt;
+            if (caption) parts.push(`  Caption: ${caption}`);
+            if (alt) parts.push(`  Alt: ${alt}`);
+            parts.push(`  Use this markdown: ![${alt ?? f.name}](${f.url})`);
             if (m?.aiTags?.length) parts.push(`  Tags: ${m.aiTags.join(", ")}`);
             if (m?.exif) {
               const e = m.exif;
