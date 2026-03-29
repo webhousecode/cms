@@ -47,6 +47,7 @@ export default async function DocumentPage({ params, searchParams }: Props) {
     <>
       <TabTitle value={docTitle} />
       <DocumentEditor
+        key={doc.id}
         collection={collection}
         colConfig={colConfig}
         blocksConfig={[...builtinBlocks, ...(config.blocks ?? [])]}
