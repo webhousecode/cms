@@ -1447,7 +1447,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
               }}
             >
               <Languages size={11} />
-              {sideBySide ? "Close" : "Side-by-side"}
+              Side-by-side
             </button>
           )}
           {(() => {
