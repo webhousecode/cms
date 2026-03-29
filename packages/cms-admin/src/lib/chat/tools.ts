@@ -179,11 +179,11 @@ export async function buildChatTools(): Promise<ToolPair[]> {
       definition: {
         name: "search_content",
         description:
-          "Search across all content on the site. Returns matching documents with titles, collections, and excerpts.",
+          "Search across ALL content on the site — documents, pages, AND media files (by AI tags, user tags, captions, filenames). Returns matching documents and media with their details.",
         input_schema: {
           type: "object",
           properties: {
-            query: { type: "string", description: "Search query" },
+            query: { type: "string", description: "Search query — matches document text, tags, media tags, AI captions, filenames" },
             limit: { type: "number", description: "Max results (default: 20)" },
           },
           required: ["query"],
@@ -191,16 +191,60 @@ export async function buildChatTools(): Promise<ToolPair[]> {
       },
       handler: async (input) => {
         const query = String(input.query);
+        const q = query.toLowerCase();
         const limit = Math.min(Number(input.limit ?? 20), 50);
 
+        // 1. Search documents
         const cms = await getAdminCms();
-        const results = await cms.content.search(query, { limit });
+        const docResults = await cms.content.search(query, { limit });
+        const parts: string[] = [];
 
-        if (results.length === 0) return `No results for "${query}".`;
+        if (docResults.length > 0) {
+          parts.push("**Documents:**");
+          for (const r of docResults as any[]) {
+            parts.push(`- "${r.title}" (${r.collectionLabel}) ${r.url} — ${r.excerpt ?? ""}`);
+          }
+        }
 
-        return results
-          .map((r: any) => `- "${r.title}" (${r.collectionLabel}) ${r.url} — ${r.excerpt ?? ""}`)
-          .join("\n");
+        // 2. Search media (tags, captions, filenames)
+        try {
+          const { readMediaMeta } = await import("@/lib/media/media-meta");
+          const { getMediaAdapter } = await import("@/lib/media");
+          const [files, meta] = await Promise.all([
+            getMediaAdapter().then((a) => a.listMedia()),
+            readMediaMeta(),
+          ]);
+          const metaMap = new Map(meta.map((m) => [m.key, m]));
+
+          const mediaHits = files
+            .filter((f) => !/-\d+w\.webp$/i.test(f.name))
+            .map((f) => {
+              const key = f.folder ? `${f.folder}/${f.name}` : f.name;
+              const m = metaMap.get(key);
+              let score = 0;
+              if (f.name.toLowerCase().includes(q)) score += 3;
+              if (m?.aiCaption?.toLowerCase().includes(q)) score += 5;
+              if (m?.aiAlt?.toLowerCase().includes(q)) score += 4;
+              if (m?.aiTags?.some((t) => t.toLowerCase().includes(q))) score += 4;
+              if (m?.tags?.some((t) => t.toLowerCase().includes(q))) score += 6; // user tags high priority
+              return { file: f, meta: m, score };
+            })
+            .filter((s) => s.score > 0)
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 10);
+
+          if (mediaHits.length > 0) {
+            parts.push("\n**Media files:**");
+            for (const { file: f, meta: m } of mediaHits) {
+              const tags = [...(m?.tags ?? []), ...(m?.aiTags ?? [])].join(", ");
+              const caption = m?.aiCaption ?? "";
+              parts.push(`- **${f.name}** (${f.mediaType}) URL: ${f.url}${tags ? ` Tags: ${tags}` : ""}${caption ? ` Caption: ${caption}` : ""}`);
+            }
+          }
+        } catch { /* media search failed — non-fatal */ }
+
+        if (parts.length === 0) return `No results for "${query}".`;
+        return parts.join("\n");
       },
     },
 

@@ -134,6 +134,11 @@ ${context.brandVoice ? `## Brand Voice\n${context.brandVoice}\n` : ""}
 10. ALWAYS call build_site ONCE after you finish creating, updating, publishing, or deleting documents. Do NOT build after every single document — wait until the full batch is done, then build once at the end.
 11. ${buildLocaleInstruction(context.defaultLocale)} This site's primary language is ${context.defaultLocale}${context.locales.length > 0 ? ` (also supports: ${context.locales.join(", ")})` : ""}. Default to generating content in this language unless the user asks for a different language.
 
+## Searching
+- **search_content** searches EVERYTHING — documents (title, body, excerpt) AND media files (AI tags, user tags, captions, filenames). Use this as your primary search tool.
+- **search_media** is specialized for finding images by visual content, GPS, camera info — use when the user specifically needs to find images to insert into content.
+- When the user says "search for X", "find X", "is there anything about X" → use **search_content** first. It covers all content types including tagged media.
+
 ## File Upload — What the Chat Supports
 Users can upload files via the + button or drag & drop. Here's what happens:
 
