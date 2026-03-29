@@ -36,8 +36,6 @@ export interface UserState {
   intsView: "grid" | "list";
   /** Show Close All button in tab bar */
   showCloseAllTabs: boolean;
-  /** F116 — dismissed help card IDs */
-  dismissedHelp: string[];
   /** Last update */
   updatedAt: string;
 }
@@ -53,7 +51,6 @@ const DEFAULTS: UserState = {
   mediaView: "grid",
   intsView: "grid",
   showCloseAllTabs: false,
-  dismissedHelp: [],
   updatedAt: new Date().toISOString(),
 };
 
