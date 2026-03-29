@@ -404,23 +404,22 @@ function DocPill({ collection, slug, variant }: { collection: string; slug: stri
         if (variant === "edit") {
           window.open(`/admin/${collection}/${slug}`, "_blank");
         } else {
-          // Resolve the exact preview URL — fetch doc + config to build correct path
+          // Resolve the exact preview URL — fetch doc + collection schema
           const base = await getPreviewBase();
           try {
-            const [cfgRes, configRes, docRes] = await Promise.all([
+            const [cfgRes, schemaRes, docRes] = await Promise.all([
               fetch("/api/admin/site-config", { cache: "no-store" }),
-              fetch("/api/cms/config"),
+              fetch(`/api/cms/collections/${collection}/schema`),
               fetch(`/api/cms/${collection}/${slug}`),
             ]);
             const cfg = cfgRes.ok ? await cfgRes.json() : {};
-            const siteConfig = configRes.ok ? await configRes.json() : { collections: [] };
+            const schema = schemaRes.ok ? await schemaRes.json() : null;
             const doc = docRes.ok ? await docRes.json() : null;
-            const col = siteConfig.collections?.find((c: any) => c.name === collection);
-            const urlPrefix = (col?.urlPrefix ?? `/${collection}`).replace(/\/$/, "");
+            const urlPrefix = (schema?.urlPrefix ?? `/${collection}`).replace(/\/$/, "");
             const docLocale = doc?.locale || cfg.defaultLocale || "";
             const defLocale = cfg.defaultLocale || "en";
             const locPrefix = docLocale && docLocale !== defLocale ? `/${docLocale}` : "";
-            const category = col?.fields?.find((f: any) => f.name === "category" && f.type === "select") && doc?.data?.category ? `/${doc.data.category}` : "";
+            const category = doc?.data?.category ? `/${doc.data.category}` : "";
             window.open(`${base}${locPrefix}${urlPrefix}${category}/${slug}/`, "_blank");
           } catch {
             window.open(`${base}/${collection}/${slug}/`, "_blank");
