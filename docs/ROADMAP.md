@@ -112,6 +112,7 @@ _Makes us stand out. Customers expect these from a modern CMS._
 | 18f | **F94 Favorites** | Small | Heart-toggle on any page/document. Sidebar section + Command Palette priority. Per-user persistence. |
 | 18g | **F95 Cloud Backup Providers** | Medium | pCloud, Scaleway (75GB free), R2, B2, Hetzner. S3 + pCloud + WebDAV adapters. Extends F27. |
 | 18h | **F98 Lighthouse Audit** | Medium | PSI API + local Lighthouse. Dashboard scores + trend, scheduled scans, per-page audits, alerts on drop. |
+| 18i | **F114 Chat Memory** | Medium | Cross-conversation intelligence. MiniSearch BM25+ over extracted memories. Haiku extracts facts/preferences/corrections after each conversation. Top-15 memories injected into system prompt. Chat gets smarter over time. |
 | 19 | **F49 Incremental Builds** | Small | Performance. Only matters at scale (100+ pages). |
 | ~~20~~ | ~~**F107 Chat with Your Site**~~ | ~~Done~~ | ~~Shipped. 40 tools, SSE streaming, conversation history, thinking toggle + timer, artifact cards, inline forms, bulk tools, AI SEO on create. Supersedes F51.~~ |
 | ~~20~~ | ~~**F51 Admin AI Assistant**~~ | ~~Superseded~~ | ~~Absorbed into F107 Chat with Your Site~~ |

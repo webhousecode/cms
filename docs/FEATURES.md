@@ -130,6 +130,7 @@
 | F111 | [External Publishing](#f111-external-publishing) | Planned | [docs/features/F111-external-publishing.md](features/F111-external-publishing.md) |
 | F112 | [GEO — Generative Engine Optimization](#f112-geo-generative-engine-optimization) | Planned | [docs/features/F112-geo-generative-engine-optimization.md](features/F112-geo-generative-engine-optimization.md) |
 | F113 | [Service Role Keys](#f113-service-role-keys) | Planned | [docs/features/F113-service-role-keys.md](features/F113-service-role-keys.md) |
+| F114 | [Chat Memory & Cross-Conversation Intelligence](#f114-chat-memory) | Planned | [docs/features/F114-chat-memory.md](features/F114-chat-memory.md) |
 
 ---
 
@@ -477,3 +478,9 @@ Publish CMS articles to Dev.to, Hashnode, Medium (draft), and LinkedIn with one 
 
 ## F112 — GEO (Generative Engine Optimization)
 Optimize content so AI platforms (ChatGPT, Claude, Perplexity, Gemini) cite and recommend your brand. 8 phases: smart robots.txt generator, GEO score extension (8 new rules), llms-full.txt + markdown endpoints, enhanced JSON-LD with @graph linking, AI visibility monitor (probe system tracking brand mentions across LLMs), search index checker, GEO agent for automatic content optimization, and admin settings panel. Extends F89 (Post-Build Enrichment) and F97 (SEO Module). First CMS with built-in AI visibility tools.
+
+## F113 — Service Role Keys
+Server-to-server API authentication for external integrations. Machine-scoped keys with configurable permissions, separate from user sessions.
+
+## F114 — Chat Memory & Cross-Conversation Intelligence
+Mini-RAG system that extracts knowledge from past chat conversations and injects relevant context into new conversations. After each conversation, Haiku extracts structured facts (preferences, decisions, patterns, corrections) into a site-scoped memory store. MiniSearch (BM25+) indexes all memories for fast keyword retrieval. On new conversations, top-15 relevant memories are injected into the system prompt (500-1500 tokens). Memory management UI in history drawer. AI tools for search/add/forget. Inspired by Claude Desktop's cross-session memory and Claude Code's file-based MEMORY.md system. Self-contained: no vector DB, no external services — just MiniSearch (7KB) + Haiku extraction + JSON storage.
