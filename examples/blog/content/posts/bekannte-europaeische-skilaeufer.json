@@ -1,0 +1,107 @@
+{
+  "id": "YPAgifpXukxl4mBvlyDhj",
+  "slug": "bekannte-europaeische-skilaeufer",
+  "collection": "posts",
+  "status": "published",
+  "data": {
+    "title": "5 berühmte Skiläufer aus Europa",
+    "excerpt": "Von den Schweizer Alpen bis zu den norwegischen Bergen — fünf der größten Skiläufer, die Europa je hervorgebracht hat.",
+    "date": "2025-06-10",
+    "author": "Simple Blog",
+    "content": "![Gruppe af skiløbere i farverige skijakker poserer på snedækkede pister med Dolomiterne i baggrunden](/uploads/og/skiferie-cortina-dampezzo-italien.jpg \"width:100%\")\n\n# 5 berühmte Skiläufer aus Europa\n\nEuropa hat einige der größten Skiläufer der Geschichte hervorgebracht. Von den vereisten Hängen Österreichs bis zu den steilen Abfahrten der Schweiz haben diese Athleten den Weltcup und das olympische Podium dominiert. Hier sind fünf Legenden des europäischen Alpinskilaufs.\n\n---\n\n## 1. Marcel Hirscher (Österreich)\n\nMarcel Hirscher gilt weithin als der größte Slalom- und Riesenslalom-Skifahrer aller Zeiten. Der Österreicher dominierte den FIS-Alpinen Ski-Weltcup acht Saisons in Folge (2011–2018) und gewann den Gesamttitel jedes einzelne Jahr — ein Rekord, der bis heute Bestand hat. Bei den Olympischen Winterspielen 2018 in Pyeongchang holte er zudem zwei Goldmedaillen.\n\n---\n\n## 2. Ingemar Stenmark (Schweden)\n\nIngemar Stenmark ist eine schwedische Skilegende, der unglaubliche 86 Weltcuprennen gewann — ein Rekord, der jahrzehntelang Bestand hatte. Bekannt für seine außergewöhnliche Technik im Slalom und Riesenslalom, gewann Stenmark bei den Olympischen Winterspielen 1980 in Lake Placid zwei Goldmedaillen. Er gilt als einer der größten Skiläufer aller Zeiten.\n\n---\n\n## 3. Pirmin Zurbriggen (Schweiz)\n\nPirmin Zurbriggen war einer der vielseitigsten Skiläufer der 1980er Jahre. Der Schweizer Athlet gewann den Gesamtweltcup viermal und holte bei den Olympischen Winterspielen 1988 in Calgary eine Goldmedaille in der Abfahrt. Seine Fähigkeit, in allen Disziplinen zu konkurrieren, machte ihn zu einem echten Allrounder.\n\n---\n\n## 4. Aksel Lund Svindal (Norwegen)\n\nAksel Lund Svindal ist Norwegens erfolgreichster alpiner Skifahrer. Er gewann zwei olympische Goldmedaillen, darunter einen dramatischen Abfahrtssieg bei den Olympischen Winterspielen 2018 in Pyeongchang im Alter von 35 Jahren. Svindal war bekannt für seine Geschwindigkeit, Kraft und bemerkenswerten Comebacks nach schweren Verletzungen.\n\n![Skiløber laver omvendt hop i sne på Trysil, Norge](/uploads/og/skiferie-trysil-norge.jpg \"float:right|width:45%\")\n\n## 5. Tina Maze (Slowenien)\n\nTina Maze ist eine der erfolgreichsten Skiläuferinnen der Geschichte. Die slowenische Ausnahmeathletin hatte ihre beste Karrieresaison 2012/13, als sie den Gesamtweltcuptitel mit einem Rekordsvorsprung gewann. Bei den Olympischen Winterspielen 2014 in Sotschi holte sie zwei Goldmedaillen — im Riesenslalom und in der Abfahrt — und wurde damit zur größten Wintersportlerin Sloweniens aller Zeiten.\n\n---\n\n## Ein bleibendes Erbe auf den Pisten\n\nDiese fünf Athleten verkörpern das Beste des europäischen Alpinskilaufs. Ihre Rekorde, Medaillen und ihr unbändiger Wille haben Millionen von Skifahrern weltweit inspiriert — und ihr Vermächtnis wird noch Generationen überdauern.",
+    "_seo": {
+      "metaTitle": "5 berühmte Skiläufer aus Europa | Legenden des Alpinskilaufs",
+      "metaDescription": "Entdecken Sie die 5 größten Skiläufer Europas: Marcel Hirscher, Ingemar Stenmark und weitere Legenden des Alpinskilaufs mit olympischen Erfolgen.",
+      "keywords": [
+        "berühmte Skiläufer Europa",
+        "Alpinskilauf Legenden",
+        "Marcel Hirscher",
+        "Weltcup Skifahrer",
+        "olympische Skimedallilist"
+      ],
+      "ogImage": "/uploads/og/bekannte-europaeische-skilaeufer.jpg",
+      "robots": "index,follow",
+      "score": 83,
+      "scoreDetails": [
+        {
+          "rule": "meta-title",
+          "label": "Meta title",
+          "status": "pass",
+          "message": "Meta title length is good (60/60 characters)"
+        },
+        {
+          "rule": "meta-desc",
+          "label": "Meta description",
+          "status": "pass",
+          "message": "Meta description length is good (145/155 characters)"
+        },
+        {
+          "rule": "keyword-title",
+          "label": "Keyword in title",
+          "status": "warn",
+          "message": "Add the keyword \"berühmte Skiläufer Europa\" to the meta title field above."
+        },
+        {
+          "rule": "keyword-desc",
+          "label": "Keyword in description",
+          "status": "pass",
+          "message": "Keyword \"berühmte Skiläufer Europa\" found in meta description"
+        },
+        {
+          "rule": "content-length",
+          "label": "Content length",
+          "status": "pass",
+          "message": "Content is 342 words (300+ is good)"
+        },
+        {
+          "rule": "headings",
+          "label": "Heading structure",
+          "status": "pass",
+          "message": "Content uses H2 headings for structure"
+        },
+        {
+          "rule": "img-alt",
+          "label": "Image alt text",
+          "status": "pass",
+          "message": "All 2 images have alt text"
+        },
+        {
+          "rule": "og-image",
+          "label": "Social image",
+          "status": "pass",
+          "message": "Social sharing image (OG) is set"
+        },
+        {
+          "rule": "keyword-slug",
+          "label": "Keyword in URL",
+          "status": "warn",
+          "message": "The keyword \"berühmte Skiläufer Europa\" is not in the URL slug (bekannte-europaeische-skilaeufer). Consider renaming the slug in Properties."
+        },
+        {
+          "rule": "internal-links",
+          "label": "Internal links",
+          "status": "pass",
+          "message": "Content links to other pages on the site"
+        },
+        {
+          "rule": "title",
+          "label": "Page title",
+          "status": "pass",
+          "message": "Page has a title"
+        },
+        {
+          "rule": "readability",
+          "label": "Readability",
+          "status": "fail",
+          "message": "Readability score is 22/100 — text is very hard to read. Use shorter sentences and simpler words."
+        }
+      ],
+      "lastOptimized": "2026-03-29T14:19:32.523Z"
+    }
+  },
+  "_fieldMeta": {},
+  "createdAt": "2026-03-29T14:19:30.789Z",
+  "updatedAt": "2026-03-29T15:40:48.199Z",
+  "locale": "de",
+  "translationGroup": "LTv2dKudCYMNx1jNJ54eX"
+}
