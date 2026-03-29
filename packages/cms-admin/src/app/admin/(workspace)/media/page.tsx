@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { Trash2, Copy, Check, Upload, LayoutGrid, List, FolderOpen, Folder, ChevronLeft, ChevronRight, Search, X, ZoomIn, ExternalLink, FileWarning, Music, Video, FileText, Code, File, Pencil, Sparkles, RefreshCw, Loader2, CheckSquare, Zap } from "lucide-react";
+import { Trash2, Copy, Check, Upload, LayoutGrid, List, FolderOpen, Folder, ChevronLeft, ChevronRight, Search, X, ZoomIn, ExternalLink, FileWarning, Music, Video, FileText, Code, File, Pencil, Sparkles, RefreshCw, Loader2, CheckSquare, Zap, RotateCw, RotateCcw } from "lucide-react";
 import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
 import type { UsageRef } from "@/app/api/cms/media/usage/route";
 import { cn } from "@/lib/utils";
@@ -1174,6 +1174,24 @@ function Lightbox({ files, index, onNavigate, onClose, onCopy, copied, onDelete,
   const file = files[index];
   const hasPrev = index > 0;
   const hasNext = index < files.length - 1;
+  const [rotating, setRotating] = useState(false);
+  const [imgKey, setImgKey] = useState(0); // force image reload after rotate
+
+  async function rotateImage(angle: 90 | -90) {
+    if (rotating) return;
+    setRotating(true);
+    try {
+      const res = await fetch("/api/media/rotate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ file: file.url, angle }),
+      });
+      if (res.ok) {
+        setImgKey((k) => k + 1); // bust browser cache
+      }
+    } catch { /* ignore */ }
+    setRotating(false);
+  }
 
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
@@ -1220,6 +1238,22 @@ function Lightbox({ files, index, onNavigate, onClose, onCopy, copied, onDelete,
         >
           {copied === file.url ? <Check style={{ width: "0.875rem", height: "0.875rem" }} /> : <Copy style={{ width: "0.875rem", height: "0.875rem" }} />}
         </button>
+        {file.isImage && (
+          <>
+            <button type="button" title="Rotate left" disabled={rotating} onClick={(e) => { e.stopPropagation(); rotateImage(-90); }}
+              style={{ display: "flex", alignItems: "center", padding: "0.3rem", borderRadius: "6px", color: "rgba(255,255,255,0.5)", border: "none", background: "transparent", cursor: rotating ? "wait" : "pointer", opacity: rotating ? 0.4 : 1 }}
+              className="hover:text-white hover:bg-white/10 transition-colors"
+            >
+              <RotateCcw style={{ width: "0.875rem", height: "0.875rem" }} />
+            </button>
+            <button type="button" title="Rotate right" disabled={rotating} onClick={(e) => { e.stopPropagation(); rotateImage(90); }}
+              style={{ display: "flex", alignItems: "center", padding: "0.3rem", borderRadius: "6px", color: "rgba(255,255,255,0.5)", border: "none", background: "transparent", cursor: rotating ? "wait" : "pointer", opacity: rotating ? 0.4 : 1 }}
+              className="hover:text-white hover:bg-white/10 transition-colors"
+            >
+              <RotateCw style={{ width: "0.875rem", height: "0.875rem" }} />
+            </button>
+          </>
+        )}
         <button type="button" title="Delete" onClick={(e) => { e.stopPropagation(); onDelete(file); }}
           style={{ display: "flex", alignItems: "center", padding: "0.3rem", borderRadius: "6px", color: "rgba(255,255,255,0.4)", border: "none", background: "transparent", cursor: "pointer" }}
           className="hover:text-red-400 hover:bg-white/10 transition-colors"
@@ -1258,7 +1292,7 @@ function Lightbox({ files, index, onNavigate, onClose, onCopy, copied, onDelete,
           ) : (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={file.url}
+              src={imgKey ? `${file.url}?v=${imgKey}` : file.url}
               alt={file.name}
               style={{ maxWidth: "calc(100% - 8rem)", maxHeight: "100%", objectFit: "contain", borderRadius: "4px", boxShadow: "0 8px 40px rgba(0,0,0,0.6)" }}
               onClick={(e) => e.stopPropagation()}
