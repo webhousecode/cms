@@ -37,6 +37,8 @@ import {
 import { Image as LucideImage, Zap, MessageSquareWarning } from "lucide-react";
 import { toast } from "sonner";
 import { AIMetadataPopover } from "@/components/media/ai-metadata-popover";
+import { ProofreadPlugin, proofreadKey, textOffsetToPos } from "./proofread-plugin";
+import type { ProofreadMatch } from "./proofread-plugin";
 
 interface Props {
   value: string;
@@ -2233,6 +2235,12 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
   const [showSource, setShowSource] = useState(false);
   const [sourceText, setSourceText] = useState("");
 
+  // ── F109 Inline Proofreading state ──
+  const [proofreadActive, setProofreadActive] = useState(false);
+  const [proofreadMatches, setProofreadMatches] = useState<ProofreadMatch[]>([]);
+  const [proofreadIndex, setProofreadIndex] = useState(0);
+  const [proofreadLoading, setProofreadLoading] = useState(false);
+
   const editor = useEditor({
     immediatelyRender: false,
     shouldRerenderOnTransaction: false,
@@ -2262,6 +2270,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
       TableHeader,
       TableCell,
       Markdown.configure({ html: true, transformPastedText: true }),
+      ProofreadPlugin,
     ],
     content: value || "",
     editable: !disabled,
@@ -3194,11 +3203,19 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
             <Sep />
 
             {/* Proofread */}
-            <Btn tooltip="Proofread" onClick={async () => {
+            <Btn tooltip={proofreadActive ? "Close proofread" : "Proofread"} active={proofreadActive} onClick={async () => {
               if (!editor) return;
+              if (proofreadActive) {
+                // Close proofread mode
+                editor.view.dispatch(editor.state.tr.setMeta(proofreadKey, { type: "clear" }));
+                setProofreadActive(false);
+                setProofreadMatches([]);
+                setProofreadIndex(0);
+                return;
+              }
               const text = editor.getText();
               if (!text.trim()) return;
-              const toastId = toast.loading("Proofreading...");
+              setProofreadLoading(true);
               try {
                 const res = await fetch("/api/cms/ai/proofread", {
                   method: "POST",
@@ -3206,19 +3223,32 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                   body: JSON.stringify({ text }),
                 });
                 const data = await res.json();
-                if (!res.ok) { toast.error(data.error ?? "Proofread failed", { id: toastId }); return; }
+                if (!res.ok) { toast.error(data.error ?? "Proofread failed"); return; }
                 const corrections = data.corrections ?? [];
                 if (corrections.length === 0) {
-                  toast.success(`No errors found (${data.language})`, { id: toastId });
-                } else {
-                  toast.success(`${corrections.length} issue${corrections.length > 1 ? "s" : ""} found (${data.language})`, { id: toastId, duration: 8000,
-                    description: corrections.map((c: { original: string; suggestion: string; reason: string; type: string }) =>
-                      `${c.type}: "${c.original}" → "${c.suggestion}" — ${c.reason}`
-                    ).join("\n"),
-                  });
+                  toast.success(`No errors found (${data.language})`);
+                  return;
                 }
-              } catch { toast.error("Proofread failed", { id: toastId }); }
-            }}>
+                // Map API offsets to ProseMirror positions
+                const matches: ProofreadMatch[] = corrections.map((c: { original: string; suggestion: string; reason: string; type: "spelling" | "grammar" | "style"; offset: number; length: number }, i: number) => {
+                  const from = textOffsetToPos(editor.state.doc, c.offset);
+                  const to = textOffsetToPos(editor.state.doc, c.offset + c.length);
+                  return { id: `pf-${i}`, from, to, original: c.original, suggestion: c.suggestion, reason: c.reason, type: c.type };
+                });
+                // Dispatch to plugin
+                editor.view.dispatch(editor.state.tr.setMeta(proofreadKey, { type: "set", matches }));
+                setProofreadMatches(matches);
+                setProofreadIndex(0);
+                setProofreadActive(true);
+                // Scroll to first
+                const first = matches[0];
+                if (first) {
+                  const dom = editor.view.domAtPos(first.from);
+                  (dom.node as HTMLElement).scrollIntoView?.({ behavior: "smooth", block: "center" });
+                }
+              } catch { toast.error("Proofread failed"); }
+              finally { setProofreadLoading(false); }
+            }} disabled={proofreadLoading}>
               <IconProofread />
             </Btn>
 
@@ -3426,11 +3456,118 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
             }}
           />
         ) : (
-          <div className="rte-body" style={zoom !== 100 ? { fontSize: `${zoom}%` } : undefined}>
+          <div className="rte-body" style={zoom !== 100 ? { zoom: zoom / 100 } : undefined}>
             <EditorContent editor={editor} />
             {editor && <AIBubbleMenu editor={editor} />}
           </div>
         )}
+
+        {/* ── F109 Proofread correction toolbar ── */}
+        {proofreadActive && proofreadMatches.length > 0 && editor && (() => {
+          const current = proofreadMatches[proofreadIndex];
+          const scrollTo = (m: ProofreadMatch) => {
+            try {
+              const dom = editor.view.domAtPos(m.from);
+              (dom.node as HTMLElement).scrollIntoView?.({ behavior: "smooth", block: "center" });
+            } catch { /* pos may be stale */ }
+          };
+          const navigate = (dir: -1 | 1) => {
+            const next = (proofreadIndex + dir + proofreadMatches.length) % proofreadMatches.length;
+            setProofreadIndex(next);
+            const m = proofreadMatches[next];
+            editor.view.dispatch(editor.state.tr.setMeta(proofreadKey, { type: "activate", id: m.id }));
+            scrollTo(m);
+          };
+          const accept = (match: ProofreadMatch) => {
+            editor.chain().focus().command(({ tr }) => {
+              tr.replaceWith(match.from, match.to, editor.schema.text(match.suggestion));
+              tr.setMeta(proofreadKey, { type: "remove", id: match.id });
+              return true;
+            }).run();
+            const remaining = proofreadMatches.filter(m => m.id !== match.id);
+            setProofreadMatches(remaining);
+            if (remaining.length === 0) { setProofreadActive(false); setProofreadIndex(0); return; }
+            const nextIdx = Math.min(proofreadIndex, remaining.length - 1);
+            setProofreadIndex(nextIdx);
+            editor.view.dispatch(editor.state.tr.setMeta(proofreadKey, { type: "activate", id: remaining[nextIdx].id }));
+          };
+          const reject = (match: ProofreadMatch) => {
+            editor.view.dispatch(editor.state.tr.setMeta(proofreadKey, { type: "remove", id: match.id }));
+            const remaining = proofreadMatches.filter(m => m.id !== match.id);
+            setProofreadMatches(remaining);
+            if (remaining.length === 0) { setProofreadActive(false); setProofreadIndex(0); return; }
+            const nextIdx = Math.min(proofreadIndex, remaining.length - 1);
+            setProofreadIndex(nextIdx);
+            editor.view.dispatch(editor.state.tr.setMeta(proofreadKey, { type: "activate", id: remaining[nextIdx].id }));
+          };
+          const acceptAll = () => {
+            // Apply from end to start to preserve positions
+            const sorted = [...proofreadMatches].sort((a, b) => b.from - a.from);
+            editor.chain().focus().command(({ tr }) => {
+              for (const m of sorted) tr.replaceWith(m.from, m.to, editor.schema.text(m.suggestion));
+              tr.setMeta(proofreadKey, { type: "clear" });
+              return true;
+            }).run();
+            setProofreadMatches([]);
+            setProofreadActive(false);
+            setProofreadIndex(0);
+          };
+          const rejectAll = () => {
+            editor.view.dispatch(editor.state.tr.setMeta(proofreadKey, { type: "clear" }));
+            setProofreadMatches([]);
+            setProofreadActive(false);
+            setProofreadIndex(0);
+          };
+          const close = () => {
+            editor.view.dispatch(editor.state.tr.setMeta(proofreadKey, { type: "clear" }));
+            setProofreadActive(false);
+            setProofreadMatches([]);
+            setProofreadIndex(0);
+          };
+          const btnStyle: React.CSSProperties = {
+            fontSize: "0.7rem", padding: "0.25rem 0.5rem", borderRadius: "4px",
+            border: "1px solid var(--border)", background: "transparent",
+            color: "var(--foreground)", cursor: "pointer", whiteSpace: "nowrap",
+          };
+          return (
+            <div style={{
+              display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.375rem 0.75rem",
+              borderTop: "1px solid var(--border)", backgroundColor: "var(--background)",
+              borderRadius: "0 0 0.5rem 0.5rem", flexWrap: "wrap",
+              position: "sticky", bottom: 0, zIndex: 20,
+            }}>
+              <button type="button" style={{ ...btnStyle, color: "var(--destructive)" }} onClick={rejectAll}>Reject all</button>
+              <button type="button" style={{ ...btnStyle, color: "#4ade80" }} onClick={acceptAll}>Accept all</button>
+
+              <div style={{ display: "flex", alignItems: "center", gap: "0.25rem", margin: "0 0.25rem" }}>
+                <button type="button" style={{ ...btnStyle, padding: "0.25rem 0.375rem" }} onClick={() => navigate(-1)}>←</button>
+                <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", minWidth: "3rem", textAlign: "center" }}>
+                  {proofreadIndex + 1} / {proofreadMatches.length}
+                </span>
+                <button type="button" style={{ ...btnStyle, padding: "0.25rem 0.375rem" }} onClick={() => navigate(1)}>→</button>
+              </div>
+
+              {current && (
+                <span style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
+                  title={`${current.type}: ${current.reason}`}>
+                  <span style={{ color: "#f87171", fontWeight: 500 }}>{current.original}</span>
+                  {" → "}
+                  <span style={{ color: "#4ade80", fontWeight: 500 }}>{current.suggestion}</span>
+                  {" — "}{current.reason}
+                </span>
+              )}
+
+              {current && (
+                <div style={{ display: "flex", gap: "0.25rem", marginLeft: "auto" }}>
+                  <button type="button" style={{ ...btnStyle, color: "var(--destructive)" }} onClick={() => reject(current)}>✕ Reject</button>
+                  <button type="button" style={{ ...btnStyle, color: "#4ade80", borderColor: "#4ade80" }} onClick={() => accept(current)}>✓ Accept</button>
+                </div>
+              )}
+
+              <button type="button" style={{ ...btnStyle, padding: "0.25rem 0.375rem", marginLeft: current ? "0" : "auto" }} onClick={close} title="Close proofread">✕</button>
+            </div>
+          );
+        })()}
       </div>
 
       {/* ── Interactive Picker dialog ── */}
