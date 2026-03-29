@@ -111,7 +111,7 @@ function MessageBubble({ message }: { message: ChatMessageUI }) {
           alignItems: "center",
           justifyContent: "center",
           flexShrink: 0,
-          marginTop: isUser ? "-2px" : "2px",
+          marginTop: isUser ? "-2px" : (!isUser && message.toolCalls?.length) ? "7px" : "2px",
           backgroundColor: isUser ? "var(--primary)" : "var(--muted)",
           color: isUser ? "var(--primary-foreground)" : "var(--foreground)",
         }}
