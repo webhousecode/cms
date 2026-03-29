@@ -2193,6 +2193,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
   // Feature check: if features whitelist is set, only show those toolbar items
   const has = (feature: string) => !features || features.includes(feature);
   const creatingRef = useRef(true); // suppress onChange during onCreate
+  const lastValueRef = useRef(value || ""); // track last value to skip no-op onChange
   const [headingOpen, setHeadingOpen] = useState(false);
   const [hoveredKey, setHoveredKey] = useState<string | null>(null);
   const [linkOpen, setLinkOpen] = useState(false);
@@ -2301,8 +2302,11 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
       requestAnimationFrame(() => { creatingRef.current = false; });
     },
     onUpdate: ({ editor }) => {
-      if (creatingRef.current) return; // skip onChange during initial setup
-      onChange((editor.storage as any).markdown.getMarkdown());
+      if (creatingRef.current) return;
+      const md = (editor.storage as any).markdown.getMarkdown();
+      if (md === lastValueRef.current) return; // skip if content didn't actually change
+      lastValueRef.current = md;
+      onChange(md);
     },
     editorProps: {
       attributes: {
