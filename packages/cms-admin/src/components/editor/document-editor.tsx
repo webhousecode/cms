@@ -1471,9 +1471,18 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
         </div>
       )}
 
-      {/* Stale translation banner — removed, caused flip-flop loops.
-          Feature gated behind showStaleTranslations (default: off).
-          Will be re-implemented properly in a future iteration. */}
+      {/* Stale translation banner — opt-in via showStaleTranslations, server only sends sourceUpdatedAt for non-default-locale docs */}
+      {sourceUpdatedAt && isTranslationStale(sourceUpdatedAt, initialDoc.updatedAt) && (
+        <div style={{
+          display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap",
+          padding: "0.5rem 1rem",
+          background: "rgb(234 179 8 / 0.08)", borderBottom: "1px solid rgb(234 179 8 / 0.25)",
+          fontSize: "0.75rem", color: "rgb(234 179 8)",
+        }}>
+          <span>&#9888;&#65039;</span>
+          <span>Source document was updated — this translation may be outdated.</span>
+        </div>
+      )}
 
       {/* Editor body */}
       <div style={sideBySide && sourceDoc ? { display: "flex", gap: 0 } : undefined}>
