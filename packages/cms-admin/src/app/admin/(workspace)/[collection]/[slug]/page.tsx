@@ -41,16 +41,18 @@ export default async function DocumentPage({ params, searchParams }: Props) {
           .map(d => ({ slug: d.slug, locale: d.locale ?? null, status: d.status, updatedAt: d.updatedAt }));
       })();
 
-  // Stale detection: only show on non-default-locale docs.
-  // Default locale is the "source of truth" — it's never stale from a translation update.
-  // This prevents the flip-flop loop where re-translate makes the other doc appear stale.
-  const docLocale = (doc as any).locale || siteConfig.defaultLocale || "en";
-  const isDefaultLocale = docLocale === (siteConfig.defaultLocale || "en");
-  const defaultLocaleSibling = isDefaultLocale ? null
-    : translations.find(t => t.locale === (siteConfig.defaultLocale || "en"));
-  const sourceDoc = defaultLocaleSibling
-    ? allDocs.find(d => d.slug === defaultLocaleSibling.slug) ?? null
-    : null;
+  // Stale detection: opt-in via showStaleTranslations, only on non-default-locale docs.
+  let sourceDoc: any = null;
+  if (siteConfig.showStaleTranslations) {
+    const docLocale = (doc as any).locale || siteConfig.defaultLocale || "en";
+    const isDefaultLocale = docLocale === (siteConfig.defaultLocale || "en");
+    if (!isDefaultLocale) {
+      const defaultLocaleSibling = translations.find(t => t.locale === (siteConfig.defaultLocale || "en"));
+      sourceDoc = defaultLocaleSibling
+        ? allDocs.find(d => d.slug === defaultLocaleSibling.slug) ?? null
+        : null;
+    }
+  }
 
   const docTitle = String(doc.data?.title ?? doc.data?.name ?? doc.data?.label ?? doc.slug);
 
