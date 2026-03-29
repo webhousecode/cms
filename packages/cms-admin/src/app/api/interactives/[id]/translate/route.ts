@@ -38,15 +38,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   const sourceLang = LOCALE_LABELS[sourceLocale] ?? sourceLocale;
   const targetLang = LOCALE_LABELS[targetLocale] ?? targetLocale;
 
-  // If source content is already in the target language, reject
-  if (sourceLocale === targetLocale) {
-    return NextResponse.json(
-      { error: `Content is already in ${targetLang} (detected from HTML lang attribute)` },
-      { status: 400 },
-    );
-  }
-
-  // Ensure source has a translationGroup + correct locale from detection
+  // Auto-correct locale from detection + ensure translationGroup BEFORE rejection
   const sourceGroup = source.meta.translationGroup;
   const translationGroupId = sourceGroup || `int-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
   const needsUpdate = !sourceGroup || (detectedLocale && source.meta.locale !== detectedLocale);
@@ -55,6 +47,14 @@ export async function POST(req: NextRequest, { params }: Ctx) {
       translationGroup: translationGroupId,
       ...(detectedLocale && { locale: detectedLocale }),
     });
+  }
+
+  // If source content is already in the target language, reject
+  if (sourceLocale === targetLocale) {
+    return NextResponse.json(
+      { error: `Content is already in ${targetLang} (detected from HTML lang attribute). Locale has been corrected — reload and try again.` },
+      { status: 400 },
+    );
   }
 
   // Check if translation already exists (by translationGroup + locale, or legacy ID pattern)
