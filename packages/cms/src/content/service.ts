@@ -282,7 +282,7 @@ export class ContentService {
         const title = String(doc.data['title'] ?? doc.data['name'] ?? doc.data['label'] ?? doc.slug).toLowerCase();
         const slug = doc.slug.toLowerCase();
         const excerpt = String(doc.data['excerpt'] ?? doc.data['description'] ?? '').toLowerCase();
-        const rawContent = String(doc.data['content'] ?? '');
+        const rawContent = String(doc.data['content'] ?? doc.data['body'] ?? '');
         const content = rawContent.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').toLowerCase();
 
         let score = 0;
@@ -293,6 +293,19 @@ export class ContentService {
         else if (title.includes(q)) score = 30;
         else if (excerpt.includes(q)) score = 20;
         else if (content.includes(q)) score = 10;
+
+        // Search ALL data fields (tags, author, category, custom fields)
+        if (score === 0) {
+          for (const [key, val] of Object.entries(doc.data)) {
+            if (key.startsWith('_')) continue; // skip meta fields
+            if (Array.isArray(val)) {
+              // Tags, array fields — match any element
+              if (val.some(v => String(v).toLowerCase().includes(q))) { score = 15; break; }
+            } else if (typeof val === 'string' && val.toLowerCase().includes(q)) {
+              score = 10; break;
+            }
+          }
+        }
 
         if (score === 0) continue;
 
