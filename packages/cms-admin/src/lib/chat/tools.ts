@@ -612,10 +612,16 @@ export async function buildChatTools(): Promise<ToolPair[]> {
         const existing = await cms.content.findBySlug(collection, slug).catch(() => null);
         if (existing) return `Error: Document with slug "${slug}" already exists in ${collection}.`;
 
+        // Set locale on creation for multi-locale sites
+        const { readSiteConfig } = await import("@/lib/site-config");
+        const siteConfig = await readSiteConfig();
+        const docLocale = siteConfig.locales?.length > 1 ? (siteConfig.defaultLocale || "en") : undefined;
+
         const doc = await cms.content.create(collection, {
           slug,
           data: cleanData,
           status: "draft",
+          ...(docLocale && { locale: docLocale }),
         });
 
         // Auto-generate _seo with AI (non-blocking — update after creation)
@@ -695,9 +701,7 @@ export async function buildChatTools(): Promise<ToolPair[]> {
         // Auto-translate to all other configured locales (F48 i18n)
         const translatedSlugs: string[] = [];
         try {
-          const siteConfig = await readSiteConfig();
-          const docLocale = siteConfig.defaultLocale || "en";
-          const targetLocales = (siteConfig.locales || []).filter((l: string) => l !== docLocale);
+          const targetLocales = (siteConfig.locales || []).filter((l: string) => l !== (siteConfig.defaultLocale || "en"));
           if (targetLocales.length > 0 && col.translatable !== false && siteConfig.autoRetranslateOnUpdate) {
             // Set locale on source doc
             const { generateId } = await import("@webhouse/cms");
