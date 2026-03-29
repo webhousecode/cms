@@ -228,103 +228,122 @@ async function main() {
   await browser.close();
 
   // ═══════════════════════════════════════════════════════════
-  // GENERATE SVG
+  // GENERATE PNG BILLBOARD with Sharp
   // ═══════════════════════════════════════════════════════════
-  console.log("\n🎨 Generating SVG\n");
+  console.log("\n🎨 Generating PNG billboard\n");
 
-  // Group crops by category
   const grouped: Record<string, CropDef[]> = {};
   for (const c of crops) {
     (grouped[c.category] ??= []).push(c);
   }
 
-  const COL_MAX = 1380;
-  const PAD = 30;
-  const CAT_GAP = 60;
-  const IMG_GAP = 20;
-  const LABEL_H = 36;
+  const CANVAS_W = 2400;
+  const PAD = 50;
+  const CAT_GAP = 80;
+  const IMG_GAP = 30;
+  const LABEL_H = 50;
+  const HDR_H = 50;
 
-  // Layout calculation
-  let currentY = 90; // after title
-  const placements: { crop: CropDef; x: number; y: number; dw: number; dh: number }[] = [];
+  // Layout pass — calculate positions
+  let currentY = 120; // after title
+  const placements: { crop: CropDef; x: number; y: number; dw: number; dh: number; catHeaderY?: number }[] = [];
 
   for (const [category, items] of Object.entries(grouped)) {
     currentY += CAT_GAP;
-    const catY = currentY;
-    currentY += 35; // header height
+    const catHeaderY = currentY;
+    currentY += HDR_H;
 
     let rowX = PAD;
     let rowMaxH = 0;
 
     for (const c of items) {
-      // Scale to max 600px wide
-      const scale = Math.min(1, 600 / c.width);
+      const maxW = 900;
+      const scale = Math.min(1, maxW / c.width);
       const dw = Math.round(c.width * scale);
       const dh = Math.round(c.height * scale);
 
-      // New row?
-      if (rowX + dw + PAD > COL_MAX && rowX > PAD) {
+      if (rowX + dw + PAD > CANVAS_W && rowX > PAD) {
         currentY += rowMaxH + LABEL_H + IMG_GAP;
         rowX = PAD;
         rowMaxH = 0;
       }
 
-      placements.push({ crop: c, x: rowX, y: currentY, dw, dh });
+      placements.push({ crop: c, x: rowX, y: currentY, dw, dh, catHeaderY: rowX === PAD && items[0] === c ? catHeaderY : undefined });
       rowMaxH = Math.max(rowMaxH, dh);
       rowX += dw + IMG_GAP;
     }
     currentY += rowMaxH + LABEL_H + IMG_GAP;
   }
 
-  const SVG_W = 1440;
-  const SVG_H = currentY + PAD;
+  const CANVAS_H = currentY + PAD;
 
-  const svg: string[] = [];
-  svg.push(`<?xml version="1.0" encoding="UTF-8"?>`);
-  svg.push(`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${SVG_W}" height="${SVG_H}" viewBox="0 0 ${SVG_W} ${SVG_H}">`);
-  svg.push(`<rect width="${SVG_W}" height="${SVG_H}" fill="#0D0D0D"/>`);
+  // Create canvas
+  const composites: sharp.OverlayOptions[] = [];
+
+  // Render SVG text elements as overlays (Sharp supports SVG buffers)
+  function svgText(text: string, opts: { fontSize: number; fill: string; fontWeight?: string; x?: number; y?: number; width?: number }): Buffer {
+    const w = opts.width ?? CANVAS_W;
+    const esc = text.replace(/&/g, "&amp;").replace(/</g, "&lt;");
+    return Buffer.from(`<svg width="${w}" height="${opts.fontSize + 10}"><text x="${opts.x ?? 0}" y="${opts.fontSize}" font-family="Helvetica, Arial, sans-serif" font-size="${opts.fontSize}" font-weight="${opts.fontWeight ?? 'normal'}" fill="${opts.fill}">${esc}</text></svg>`);
+  }
 
   // Title
-  svg.push(`<text x="${SVG_W / 2}" y="40" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="28" font-weight="700" fill="#F7BB2E">F63 Component Audit — Visual Reference</text>`);
-  svg.push(`<text x="${SVG_W / 2}" y="65" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#888">webhouse.app CMS Admin · ${new Date().toISOString().slice(0, 10)} · ${crops.length} components</text>`);
+  composites.push({ input: svgText("F63 Component Audit — Visual Reference", { fontSize: 36, fill: "#F7BB2E", fontWeight: "bold", width: CANVAS_W }), left: CANVAS_W / 2 - 450, top: 30 });
+  composites.push({ input: svgText(`webhouse.app CMS Admin · ${new Date().toISOString().slice(0, 10)} · ${crops.length} components`, { fontSize: 18, fill: "#888" }), left: CANVAS_W / 2 - 300, top: 75 });
 
-  // Category headers + images
-  let lastCat = "";
+  // Category headers
+  const drawnCats = new Set<string>();
   for (const p of placements) {
-    // Category header
-    if (p.crop.category !== lastCat) {
-      lastCat = p.crop.category;
-      const firstInCat = placements.find((pp) => pp.crop.category === lastCat)!;
-      const hdrY = firstInCat.y - 25;
-      svg.push(`<text x="${PAD}" y="${hdrY}" font-family="Helvetica, Arial, sans-serif" font-size="18" font-weight="700" fill="#F7BB2E" letter-spacing="0.06em">${lastCat.toUpperCase()}</text>`);
-      svg.push(`<line x1="${PAD}" y1="${hdrY + 6}" x2="${SVG_W - PAD}" y2="${hdrY + 6}" stroke="#333" stroke-width="1"/>`);
+    if (p.catHeaderY !== undefined && !drawnCats.has(p.crop.category)) {
+      drawnCats.add(p.crop.category);
+      composites.push({ input: svgText(p.crop.category.toUpperCase(), { fontSize: 22, fill: "#F7BB2E", fontWeight: "bold" }), left: PAD, top: p.catHeaderY });
+      // Separator line
+      const lineH = 2;
+      composites.push({
+        input: await sharp({ create: { width: CANVAS_W - PAD * 2, height: lineH, channels: 4, background: { r: 51, g: 51, b: 51, alpha: 255 } } }).png().toBuffer(),
+        left: PAD, top: p.catHeaderY + 30,
+      });
     }
+  }
 
+  // Images + labels + number badges
+  for (const p of placements) {
     const cropFile = path.join(CROPS_DIR, p.crop.file);
     if (!fs.existsSync(cropFile)) continue;
 
-    // Gold border
-    svg.push(`<rect x="${p.x - 2}" y="${p.y - 2}" width="${p.dw + 4}" height="${p.dh + 4}" rx="4" fill="none" stroke="#F7BB2E" stroke-width="1.5" opacity="0.5"/>`);
-    // Linked image
-    svg.push(`<image x="${p.x}" y="${p.y}" width="${p.dw}" height="${p.dh}" xlink:href="crops/${p.crop.file}" preserveAspectRatio="xMidYMid meet"/>`);
+    // Resize crop to display size
+    const resized = await sharp(cropFile).resize(p.dw, p.dh, { fit: "inside" }).png().toBuffer();
+    composites.push({ input: resized, left: p.x, top: p.y });
+
+    // Gold border (4px)
+    const borderW = p.dw + 6;
+    const borderH = p.dh + 6;
+    const borderSvg = Buffer.from(`<svg width="${borderW}" height="${borderH}"><rect x="1" y="1" width="${borderW - 2}" height="${borderH - 2}" rx="4" fill="none" stroke="#F7BB2E" stroke-width="2" opacity="0.6"/></svg>`);
+    composites.push({ input: borderSvg, left: p.x - 3, top: p.y - 3 });
+
     // Number badge
-    svg.push(`<circle cx="${p.x + 12}" cy="${p.y + 12}" r="12" fill="#F7BB2E"/>`);
-    svg.push(`<text x="${p.x + 12}" y="${p.y + 16}" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="700" fill="#0D0D0D">${p.crop.id}</text>`);
+    const badgeSize = 28;
+    const badgeSvg = Buffer.from(`<svg width="${badgeSize}" height="${badgeSize}"><circle cx="${badgeSize / 2}" cy="${badgeSize / 2}" r="${badgeSize / 2}" fill="#F7BB2E"/><text x="${badgeSize / 2}" y="${badgeSize / 2 + 5}" text-anchor="middle" font-family="Helvetica" font-size="14" font-weight="bold" fill="#0D0D0D">${p.crop.id}</text></svg>`);
+    composites.push({ input: badgeSvg, left: p.x + 4, top: p.y + 4 });
+
     // Label
-    svg.push(`<text x="${p.x}" y="${p.y + p.dh + 14}" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="600" fill="#ccc">#${p.crop.id} ${p.crop.name}</text>`);
-    svg.push(`<text x="${p.x}" y="${p.y + p.dh + 26}" font-family="Helvetica, Arial, sans-serif" font-size="9" fill="#666">${p.crop.page}</text>`);
+    composites.push({ input: svgText(`#${p.crop.id} ${p.crop.name}`, { fontSize: 14, fill: "#cccccc", fontWeight: "600" }), left: p.x, top: p.y + p.dh + 6 });
+    composites.push({ input: svgText(p.crop.page, { fontSize: 11, fill: "#666666" }), left: p.x, top: p.y + p.dh + 24 });
   }
 
-  svg.push(`</svg>`);
+  // Compose final image
+  const outPath = path.join(OUT, "f63-component-audit.png");
+  await sharp({ create: { width: CANVAS_W, height: CANVAS_H, channels: 4, background: { r: 13, g: 13, b: 13, alpha: 255 } } })
+    .composite(composites)
+    .png({ quality: 90 })
+    .toFile(outPath);
 
-  const svgPath = path.join(OUT, "f63-component-audit.svg");
-  fs.writeFileSync(svgPath, svg.join("\n"));
-
+  const stat = fs.statSync(outPath);
   console.log(`✅ Done!`);
-  console.log(`   Full screenshots: ${fs.readdirSync(OUT).filter((f) => f.endsWith(".png")).length}`);
+  console.log(`   Full screenshots: ${fs.readdirSync(OUT).filter((f) => f.match(/^\d+-.*\.png$/)).length}`);
   console.log(`   Component crops: ${crops.length}`);
-  console.log(`   SVG: ${svgPath}`);
-  console.log(`   SVG size: ${(fs.statSync(svgPath).size / 1024).toFixed(0)} KB`);
+  console.log(`   Billboard: ${outPath}`);
+  console.log(`   Size: ${(stat.size / 1024 / 1024).toFixed(1)} MB`);
 }
 
 main().catch((err) => {
