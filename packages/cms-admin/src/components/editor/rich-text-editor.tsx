@@ -2192,6 +2192,7 @@ function LinkPopup({ onConfirm, onRemove, onClose, initial }: {
 function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, features }: Props) {
   // Feature check: if features whitelist is set, only show those toolbar items
   const has = (feature: string) => !features || features.includes(feature);
+  const creatingRef = useRef(true); // suppress onChange during onCreate
   const [headingOpen, setHeadingOpen] = useState(false);
   const [hoveredKey, setHoveredKey] = useState<string | null>(null);
   const [linkOpen, setLinkOpen] = useState(false);
@@ -2264,6 +2265,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
     content: value || "",
     editable: !disabled,
     onCreate: ({ editor }) => {
+      creatingRef.current = true;
       // Fallback: scan for paragraphs containing !!INTERACTIVE[...] or !!FILE[...]
       // text that survived markdown parsing, and convert them to proper embed nodes.
       // Collect replacements from end to start to preserve positions.
@@ -2295,8 +2297,11 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
         }
         editor.view.dispatch(tr);
       }
+      // Allow onUpdate to fire normally after onCreate completes
+      requestAnimationFrame(() => { creatingRef.current = false; });
     },
     onUpdate: ({ editor }) => {
+      if (creatingRef.current) return; // skip onChange during initial setup
       onChange((editor.storage as any).markdown.getMarkdown());
     },
     editorProps: {
