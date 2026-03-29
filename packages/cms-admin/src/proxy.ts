@@ -22,7 +22,7 @@ const PUBLIC_PREFIXES = [
   "/api/auth/",
   "/api/admin/invitations/", // Invite accept flow (user not yet logged in)
   "/api/cms/scheduled/calendar.ics", // Auth via ?token= query param
-  "/api/mcp/",              // MCP servers have their own auth (Bearer token)
+  "/api/mcp",               // MCP servers have their own auth (Bearer token)
   "/api/publish-scheduled", // Called by cron/instrumentation, no user session
   "/_next/",
   "/favicon",

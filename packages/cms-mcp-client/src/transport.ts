@@ -61,14 +61,26 @@ export class NextSSETransport {
 }
 
 // ── In-memory session store ───────────────────────────────────────
+// Use globalThis to survive Next.js hot-reload in dev mode.
+// Module-level `const sessions = new Map()` gets lost when the module
+// is re-evaluated during HMR, breaking SSE ↔ POST session pairing.
 
-const sessions = new Map<string, NextSSETransport>();
+const GLOBAL_KEY = "__mcp_transport_sessions__" as const;
+
+function getSessions(): Map<string, NextSSETransport> {
+  const g = globalThis as Record<string, unknown>;
+  if (!g[GLOBAL_KEY]) {
+    g[GLOBAL_KEY] = new Map<string, NextSSETransport>();
+  }
+  return g[GLOBAL_KEY] as Map<string, NextSSETransport>;
+}
 
 export function getTransportSession(id: string): NextSSETransport | undefined {
-  return sessions.get(id);
+  return getSessions().get(id);
 }
 
 export function registerTransportSession(t: NextSSETransport): void {
+  const sessions = getSessions();
   sessions.set(t.sessionId, t);
   t.onclose = () => sessions.delete(t.sessionId);
 }
