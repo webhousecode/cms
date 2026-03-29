@@ -1202,7 +1202,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
             </Button>
           )}
 
-          {(translationOf || (translationGroup && sourceDoc)) && (
+          {sourceDoc && (
             <Button
               variant={sideBySide ? "default" : "ghost"}
               size="sm"
