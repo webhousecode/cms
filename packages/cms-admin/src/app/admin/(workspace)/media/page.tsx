@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Trash2, Copy, Check, Upload, LayoutGrid, List, FolderOpen, Folder, ChevronLeft, ChevronRight, Search, X, ZoomIn, ExternalLink, FileWarning, Music, Video, FileText, Code, File, Pencil, Sparkles, RefreshCw, Loader2, CheckSquare, Zap } from "lucide-react";
 import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
 import type { UsageRef } from "@/app/api/cms/media/usage/route";
@@ -62,6 +62,14 @@ export default function MediaPage() {
     }
     return q;
   });
+  const [debouncedQuery, setDebouncedQuery] = useState(query);
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const setQueryDebounced = useCallback((v: string) => {
+    setQuery(v);
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => setDebouncedQuery(v), 200);
+  }, []);
+
   const [page, setPage] = useState(1);
   const [copied, setCopied] = useState<string | null>(null);
   const [deleting, setDeleting] = useState<string | null>(null);
@@ -132,10 +140,15 @@ export default function MediaPage() {
     loadTags();
   }, [loadFiles, loadUsage, loadAiAnalyzed, loadTags]);
 
-  /* ── Derived state ────────────────────────────────────────── */
-  const folders = Array.from(new Set(allFiles.map((f) => f.folder).filter(Boolean))).sort();
+  /* ── Derived state (memoized) ─────────────────────────────── */
+  const folders = useMemo(() => Array.from(new Set(allFiles.map((f) => f.folder).filter(Boolean))).sort(), [allFiles]);
+  const folderCounts = useMemo(() => {
+    const m: Record<string, number> = {};
+    for (const f of allFiles) { if (f.folder) m[f.folder] = (m[f.folder] ?? 0) + 1; }
+    return m;
+  }, [allFiles]);
 
-  const filtered = allFiles.filter((f) => {
+  const filtered = useMemo(() => allFiles.filter((f) => {
     if (folder !== "" && f.folder !== folder) return false;
     if (typeFilter && f.mediaType !== typeFilter) return false;
     const aiKey = f.folder ? `${f.folder}/${f.name}` : f.name;
@@ -148,12 +161,11 @@ export default function MediaPage() {
       const ai = aiMetaMap[aiKey];
       if (!ai?.userTags?.includes(tagFilter)) return false;
     }
-    if (query) {
-      const q = query.toLowerCase();
+    if (debouncedQuery) {
+      const q = debouncedQuery.toLowerCase();
       const qNoExt = q.replace(/\.[^.]+$/, "");
       const fLower = f.name.toLowerCase();
       if (fLower.includes(q) || fLower.includes(qNoExt) || f.folder.toLowerCase().includes(q)) return true;
-      // Search in AI + user metadata
       const ai = aiMetaMap[aiKey];
       if (ai) {
         if (ai.caption?.toLowerCase().includes(q)) return true;
@@ -164,10 +176,9 @@ export default function MediaPage() {
       return false;
     }
     return true;
-  });
+  }), [allFiles, folder, typeFilter, aiFilter, aiAnalyzedSet, tagFilter, aiMetaMap, debouncedQuery]);
 
-  // Sort
-  const sorted = [...filtered].sort((a, b) => {
+  const sorted = useMemo(() => [...filtered].sort((a, b) => {
     switch (sortBy) {
       case "newest": return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
       case "oldest": return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
@@ -175,15 +186,15 @@ export default function MediaPage() {
       case "size": return b.size - a.size;
       default: return 0;
     }
-  });
+  }), [filtered, sortBy]);
 
   const pageSize = view === "grid" ? PAGE_SIZE_GRID : PAGE_SIZE_LIST;
   const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize));
   const currentPage = Math.min(page, totalPages);
-  const paginated = sorted.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+  const paginated = useMemo(() => sorted.slice((currentPage - 1) * pageSize, currentPage * pageSize), [sorted, currentPage, pageSize]);
 
   /* Reset page when filters change */
-  useEffect(() => { setPage(1); }, [folder, query, view, sortBy, tagFilter]);
+  useEffect(() => { setPage(1); }, [folder, debouncedQuery, view, sortBy, tagFilter]);
 
   /* ── Upload ───────────────────────────────────────────────── */
   async function uploadFiles(fileList: FileList | null | File[]) {
@@ -542,7 +553,7 @@ export default function MediaPage() {
             <FolderBtn
               key={f}
               label={f}
-              count={allFiles.filter((fi) => fi.folder === f).length}
+              count={folderCounts[f] ?? 0}
               active={folder === f}
               icon={<FolderOpen style={{ width: "0.875rem", height: "0.875rem" }} />}
               onClick={() => setFolder(folder === f ? "" : f)}
@@ -731,7 +742,7 @@ export default function MediaPage() {
                 <input
                   type="text"
                   value={query}
-                  onChange={(e) => setQuery(e.target.value)}
+                  onChange={(e) => setQueryDebounced(e.target.value)}
                   placeholder="Search…"
                   style={{ width: "100%", paddingLeft: "2rem", paddingRight: query ? "2rem" : "0.75rem", paddingTop: "0.375rem", paddingBottom: "0.375rem", borderRadius: "8px", border: "1px solid var(--border)", background: "var(--card)", fontSize: "0.8rem", color: "var(--foreground)", outline: "none", boxSizing: "border-box" }}
                 />
@@ -872,13 +883,15 @@ function VideoThumb({ file }: { file: MediaFile }) {
   const [src, setSrc] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
   useEffect(() => {
+    let blobUrl: string | null = null;
     fetch(`/api/media/video-thumb?file=${encodeURIComponent(file.url)}`)
       .then((r) => r.ok ? r.blob() : null)
       .then((blob) => {
-        if (blob) setSrc(URL.createObjectURL(blob));
+        if (blob) { blobUrl = URL.createObjectURL(blob); setSrc(blobUrl); }
         else setFailed(true);
       })
       .catch(() => setFailed(true));
+    return () => { if (blobUrl) URL.revokeObjectURL(blobUrl); };
   }, [file.url]);
 
   if (failed || !src) {
@@ -986,7 +999,7 @@ function GridView({ files, copied, deleting, usageMap, aiAnalyzedSet, onCopy, on
             >
               {file.isImage ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={file.url} alt={file.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                <img src={file.url} alt={file.name} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               ) : file.mediaType === "video" ? (
                 <VideoThumb file={file} />
               ) : (
@@ -1088,7 +1101,7 @@ function ListView({ files, copied, deleting, usageMap, aiAnalyzedSet, onCopy, on
                 <td style={{ padding: "0.5rem 1rem", display: "flex", alignItems: "center", gap: "0.625rem" }}>
                   {file.isImage ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={file.url} alt="" onClick={() => onOpen(file)} style={{ width: "2rem", height: "2rem", objectFit: "cover", borderRadius: "4px", flexShrink: 0, background: "var(--muted)", cursor: "zoom-in" }} />
+                    <img src={file.url} alt="" loading="lazy" onClick={() => onOpen(file)} style={{ width: "2rem", height: "2rem", objectFit: "cover", borderRadius: "4px", flexShrink: 0, background: "var(--muted)", cursor: "zoom-in" }} />
                   ) : (
                     <span style={{ width: "2rem", height: "2rem", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                       <MediaIcon mediaType={file.mediaType} size="1.25rem" />
@@ -1299,6 +1312,8 @@ interface LightboxAIMeta {
   alts?: Record<string, string> | null;
 }
 
+const aiMetaCache = new Map<string, LightboxAIMeta>();
+
 function LightboxAIPanel({ imageUrl }: { imageUrl: string }) {
   const [meta, setMeta] = useState<LightboxAIMeta | null>(null);
   const [loading, setLoading] = useState(true);
@@ -1309,13 +1324,15 @@ function LightboxAIPanel({ imageUrl }: { imageUrl: string }) {
   const hasAiData = meta && (meta.caption || meta.alt || (meta.tags && meta.tags.length > 0));
 
   useEffect(() => {
-    setLoading(true);
-    setMeta(null);
     setError(null);
     setActiveLocale(null);
+    const cached = aiMetaCache.get(imageUrl);
+    if (cached) { setMeta(cached); setLoading(false); return; }
+    setLoading(true);
+    setMeta(null);
     fetch(`/api/media/ai-meta?file=${encodeURIComponent(imageUrl)}`)
       .then((r) => r.json())
-      .then((data) => { setMeta(data); setLoading(false); })
+      .then((data) => { aiMetaCache.set(imageUrl, data); setMeta(data); setLoading(false); })
       .catch(() => setLoading(false));
   }, [imageUrl]);
 
@@ -1339,11 +1356,13 @@ function LightboxAIPanel({ imageUrl }: { imageUrl: string }) {
         return;
       }
       const result = await res.json();
-      setMeta({
+      const updated: LightboxAIMeta = {
         caption: result.caption, alt: result.alt, tags: result.tags,
         analyzedAt: new Date().toISOString(), provider: result.provider ?? "unknown",
         captions: result.captions ?? null, alts: result.alts ?? null,
-      });
+      };
+      aiMetaCache.set(imageUrl, updated);
+      setMeta(updated);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Analysis failed");
     }
@@ -1575,7 +1594,7 @@ function LightboxTagPanel({ fileKey, onTagsChanged }: { fileKey: string; onTagsC
               }}
             />
             {input.trim() && (
-              <button onClick={addTag}
+              <button onClick={() => addTag()}
                 style={{ padding: "0.25rem 0.5rem", borderRadius: "5px", border: "none", background: "#F7BB2E", color: "#0D0D0D", fontSize: "0.7rem", fontWeight: 600, cursor: "pointer" }}>
                 +
               </button>
