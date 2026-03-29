@@ -329,6 +329,9 @@ export default function InteractiveDetailPage() {
   const [siblings, setSiblings] = useState<Array<{ id: string; name: string; locale?: string; translationGroup?: string }>>([]);
   const [translating, setTranslating] = useState(false);
   const [localeDropdownOpen, setLocaleDropdownOpen] = useState(false);
+  const [sideBySide, setSideBySide] = useState(() => {
+    try { return localStorage.getItem("cms-side-by-side") === "1"; } catch { return false; }
+  });
   const [originalContent, setOriginalContent] = useState("");
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const { setTabTitle } = useTabs();
@@ -784,6 +787,24 @@ export default function InteractiveDetailPage() {
               }} />
             </Link>
           ))}
+          {siblings.length > 0 && (
+            <button
+              type="button"
+              onClick={() => { const v = !sideBySide; setSideBySide(v); try { localStorage.setItem("cms-side-by-side", v ? "1" : "0"); } catch {} }}
+              style={{
+                display: "inline-flex", alignItems: "center", gap: "0.3rem",
+                padding: "0.15rem 0.5rem", borderRadius: "4px",
+                border: sideBySide ? "1px solid #F7BB2E" : "1px solid var(--border)",
+                fontSize: "0.7rem", fontFamily: "monospace",
+                color: sideBySide ? "#0D0D0D" : "var(--foreground)",
+                background: sideBySide ? "#F7BB2E" : "var(--card)",
+                cursor: "pointer", textDecoration: "none",
+              }}
+            >
+              <Languages size={11} />
+              Side-by-side
+            </button>
+          )}
           {/* Add translation — any interactive in a group can add (equal partners) */}
           {(() => {
             const existingLocales = [detail.locale || defaultLocale, ...siblings.map(s => s.locale).filter(Boolean)];
@@ -918,8 +939,23 @@ export default function InteractiveDetailPage() {
         </div>
       )}
 
-      {/* Content area — fills remaining space, same padding as document editor */}
-      <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", padding: "0 1rem", minHeight: 0 }}>
+      {/* Content area — fills remaining space */}
+      <div style={{ flex: 1, overflow: "hidden", display: "flex", minHeight: 0 }}>
+        {/* Side-by-side: sibling preview */}
+        {sideBySide && siblings.length > 0 && (
+          <div style={{ flex: "0 0 50%", maxWidth: "50%", borderRight: "2px solid var(--border)", display: "flex", flexDirection: "column" }}>
+            <div style={{ padding: "0.5rem 1rem", fontSize: "0.7rem", fontFamily: "monospace", color: "var(--muted-foreground)", borderBottom: "1px solid var(--border)" }}>
+              {siblings[0].locale?.toUpperCase() ?? ""} — {siblings[0].name}
+            </div>
+            <iframe
+              src={`/api/interactives/${siblings[0].id}/preview?t=${Date.now()}`}
+              title={siblings[0].name}
+              sandbox="allow-scripts allow-same-origin"
+              style={{ width: "100%", flex: 1, border: "none", background: "white" }}
+            />
+          </div>
+        )}
+        <div style={{ flex: 1, overflow: "hidden", display: "flex", flexDirection: "column", padding: "0 1rem" }}>
         {/* Preview mode */}
         {mode === "preview" && (
           <iframe
@@ -998,6 +1034,7 @@ export default function InteractiveDetailPage() {
             </div>
           </div>
         )}
+        </div>
       </div>
 
       {/* Trash confirmation dialog */}
