@@ -614,9 +614,10 @@ function slugifyTitle(title: string): string {
     .slice(0, 80);
 }
 
-function PropertiesPanel({ doc, collection, onClose, onSaved }: {
+function PropertiesPanel({ doc, collection, locales, onClose, onSaved }: {
   doc: DocSnapshot;
   collection: string;
+  locales: string[];
   onClose: () => void;
   onSaved: (updated: DocSnapshot) => void;
 }) {
@@ -624,6 +625,7 @@ function PropertiesPanel({ doc, collection, onClose, onSaved }: {
   const [slug, setSlug] = useState(doc.slug);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [docLocale, setDocLocale] = useState(doc.locale ?? "");
 
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
@@ -785,11 +787,40 @@ function PropertiesPanel({ doc, collection, onClose, onSaved }: {
           <p style={valueStyle}>{collection}</p>
         </div>
 
-        {/* Locale */}
-        {doc.locale && (
+        {/* Locale — force change */}
+        {locales.length > 0 && (
           <div>
             <p style={labelStyle}>Locale</p>
-            <p style={valueStyle}>{doc.locale}</p>
+            <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: "0.15rem 0 0.4rem" }}>Change locale</p>
+            <select
+              value={docLocale}
+              onChange={async (e) => {
+                const newLocale = e.target.value;
+                setDocLocale(newLocale);
+                try {
+                  const res = await fetch(`/api/cms/${collection}/${doc.slug}`, {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ data: {}, locale: newLocale || undefined }),
+                  });
+                  if (res.ok) {
+                    const updated = await res.json();
+                    onSaved(updated);
+                  }
+                } catch {}
+              }}
+              style={{
+                width: "100%", padding: "0.35rem 0.5rem", borderRadius: "5px",
+                border: "1px solid var(--border)", background: "var(--background)",
+                color: "var(--foreground)", fontSize: "0.8rem", fontFamily: "monospace",
+                outline: "none", cursor: "pointer",
+              }}
+            >
+              <option value="">No locale</option>
+              {locales.map(l => (
+                <option key={l} value={l}>{l.toUpperCase()} — {LOCALE_LABELS[l] ?? l}</option>
+              ))}
+            </select>
           </div>
         )}
 
@@ -1136,23 +1167,23 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
           </span>
 
           {/* Locale selector */}
-          {locales && locales.length > 1 && (locale || defaultLocale) && (
+          {locales && locales.length > 1 && (
             <div style={{ position: "relative" }} ref={localeRef}>
               <button
                 type="button"
                 onClick={() => translations.length > 0 ? setLocaleOpen(o => !o) : undefined}
-                title={translations.length > 0 ? "Switch between translations" : `Document language: ${(locale || defaultLocale || "").toUpperCase()}`}
+                title={translations.length > 0 ? "Switch between translations" : locale ? `Document language: ${locale.toUpperCase()}` : "No locale set — use Properties to assign"}
                 style={{
                   display: "inline-flex", alignItems: "center", gap: "0.3rem",
                   padding: "0.2rem 0.5rem", borderRadius: "6px",
                   border: "1px solid var(--border)", background: "transparent",
-                  color: "var(--muted-foreground)",
+                  color: locale ? "var(--muted-foreground)" : "rgb(234 179 8 / 0.7)",
                   fontSize: "0.75rem", fontFamily: "monospace",
                   cursor: translations.length > 0 ? "pointer" : "default",
                 }}
               >
                 <Languages style={{ width: "0.8rem", height: "0.8rem" }} />
-                {(locale || defaultLocale || "").toUpperCase()}
+                {locale ? locale.toUpperCase() : "No locale"}
                 {translations.length > 0 && <span style={{ fontSize: "0.6rem", opacity: 0.5 }}>▾</span>}
               </button>
               {localeOpen && translations.length > 0 && (
@@ -1693,10 +1724,11 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
         <PropertiesPanel
           doc={doc}
           collection={collection}
+          locales={locales ?? []}
           onClose={() => setPropertiesOpen(false)}
           onSaved={(updated) => {
-            setDoc(updated);
-            setPropertiesOpen(false);
+            setDoc(prev => ({ ...prev, ...updated, data: updated.data ?? prev.data }));
+            setLocale(updated.locale ?? "");
           }}
         />
       )}
