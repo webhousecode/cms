@@ -299,7 +299,8 @@ function CreateTranslationDialog({
 
         <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem" }}>
           <button type="button" onClick={onClose} style={{ padding: "0.4rem 0.875rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", fontSize: "0.8rem", cursor: "pointer" }}>Cancel</button>
-          <button type="button" onClick={create} disabled={creating} style={{ padding: "0.4rem 0.875rem", borderRadius: "6px", border: "none", background: "var(--primary)", color: "var(--primary-foreground)", fontSize: "0.8rem", cursor: creating ? "wait" : "pointer" }}>
+          <button type="button" onClick={create} disabled={creating} style={{ padding: "0.4rem 0.875rem", borderRadius: "6px", border: "none", background: "var(--primary)", color: "var(--primary-foreground)", fontSize: "0.8rem", cursor: creating ? "wait" : "pointer", display: "inline-flex", alignItems: "center", gap: "0.4rem" }}>
+            {creating && <Loader2 size={14} className="animate-spin" />}
             {creating ? (useAi ? "Translating…" : "Creating…") : (useAi ? "Translate & create" : "Create translation")}
           </button>
         </div>
