@@ -58,7 +58,7 @@ export function WorkspaceShell({ collections, globals, activeSiteId, devInspecto
         <AppSidebarClient collections={collections} globals={globals} />
       </div>
       <SidebarInset>
-        <TabsProvider siteId={activeSiteId}>
+        <TabsProvider key={activeSiteId ?? "no-site"} siteId={activeSiteId}>
           {/* ── Chat mode (shown/hidden via CSS) ── */}
           <div
             style={{

@@ -34,15 +34,20 @@ Return a JSON object with this exact structure:
   "language": "detected language name",
   "corrections": [
     {
-      "original": "the problematic word or phrase",
+      "original": "the exact problematic word or phrase as it appears in the text",
       "suggestion": "the corrected version",
       "reason": "brief explanation",
-      "type": "spelling" | "grammar" | "style"
+      "type": "spelling" | "grammar" | "style",
+      "offset": 42,
+      "length": 5
     }
   ]
 }
 
 Rules:
+- "offset" is the 0-based character position where "original" starts in the plain text input
+- "length" is the character count of "original" (must equal original.length)
+- Offsets must be exact — the substring at [offset, offset+length) must match "original" exactly
 - Only flag ACTUAL errors — not style preferences or regional spelling variants
 - Preserve the author's voice and tone
 - If no errors found, return empty corrections array
@@ -56,6 +61,29 @@ Rules:
     // Parse JSON from response (may be wrapped in ```json...```)
     const jsonStr = raw.replace(/^```json?\n?/, "").replace(/\n?```$/, "").trim();
     const result = JSON.parse(jsonStr);
+
+    // Validate offsets — AI may hallucinate positions, so verify and fix
+    if (Array.isArray(result.corrections)) {
+      for (const c of result.corrections) {
+        const hasValidOffset =
+          typeof c.offset === "number" &&
+          typeof c.length === "number" &&
+          text.substring(c.offset, c.offset + c.length) === c.original;
+
+        if (!hasValidOffset) {
+          // Fallback: search for the original text in the input
+          const idx = text.indexOf(c.original);
+          if (idx !== -1) {
+            c.offset = idx;
+            c.length = c.original.length;
+          } else {
+            // Can't locate — mark for removal
+            c._invalid = true;
+          }
+        }
+      }
+      result.corrections = result.corrections.filter((c: { _invalid?: boolean }) => !c._invalid);
+    }
 
     return NextResponse.json(result);
   } catch (err) {

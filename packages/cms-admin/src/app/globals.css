@@ -397,3 +397,27 @@
 [data-collapsible="offcanvas"] [data-slot="sidebar-container"] {
   width: 0;
 }
+
+/* ─── F109 Inline Proofreading ─────────────────────────────────── */
+
+.proofread-error {
+  color: #f87171;
+  font-size: 1.05em;
+  background: rgba(248, 113, 113, 0.08);
+  border-radius: 2px;
+  cursor: pointer;
+}
+.proofread-error.proofread-active {
+  background: rgba(248, 113, 113, 0.2);
+  outline: 2px solid rgba(248, 113, 113, 0.4);
+  outline-offset: 1px;
+}
+.proofread-suggestion {
+  color: #4ade80;
+  font-weight: 500;
+  cursor: pointer;
+}
+.proofread-suggestion.proofread-active {
+  background: rgba(74, 222, 128, 0.12);
+  border-radius: 2px;
+}
