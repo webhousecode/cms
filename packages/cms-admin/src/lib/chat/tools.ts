@@ -150,8 +150,14 @@ export async function buildChatTools(): Promise<ToolPair[]> {
         // Build page path using the same routing resolver as the build system
         const col = config.collections.find((c) => c.name === collection);
         const { getDocumentUrl } = await import("@webhouse/cms");
+        // Build allDocs map so getDocumentUrl can resolve parent chains (categories etc.)
+        let allDocsMap: Map<string, typeof doc> | undefined;
+        if (col?.parentField) {
+          const { documents } = await cms.content.findMany(collection, {});
+          allDocsMap = new Map(documents.map(d => [d.id, d]));
+        }
         const pagePath = col
-          ? getDocumentUrl(doc, col as any)
+          ? getDocumentUrl(doc, col as any, allDocsMap)
           : `/${collection}/${slug}/`;
 
         return JSON.stringify(
