@@ -794,7 +794,7 @@ export default function MediaPage() {
           ) : (
             <>
               {view === "grid" ? (
-                <GridView files={paginated} copied={copied} deleting={deleting} onCopy={copyUrl} onDelete={readOnly ? () => {} : handleDelete} onOpen={openLightbox} onRename={readOnly ? () => {} : setRenaming} usageMap={usageMap} aiAnalyzedSet={aiAnalyzedSet} selecting={selecting} selected={selected} onToggleSelect={toggleSelect} />
+                <GridView files={paginated} copied={copied} deleting={deleting} onCopy={copyUrl} onDelete={readOnly ? () => {} : handleDelete} onOpen={openLightbox} onRename={readOnly ? () => {} : setRenaming} usageMap={usageMap} aiAnalyzedSet={aiAnalyzedSet} selecting={selecting} selected={selected} onToggleSelect={toggleSelect} thumbMinWidth={thumbMinWidth} />
               ) : (
                 <ListView files={paginated} copied={copied} deleting={deleting} onCopy={copyUrl} onDelete={readOnly ? () => {} : handleDelete} onOpen={openLightbox} onRename={readOnly ? () => {} : setRenaming} usageMap={usageMap} aiAnalyzedSet={aiAnalyzedSet} selecting={selecting} selected={selected} onToggleSelect={toggleSelect} />
               )}
@@ -988,9 +988,10 @@ type ViewProps = {
   selecting?: boolean;
   selected?: Set<string>;
   onToggleSelect?: (file: MediaFile) => void;
+  thumbMinWidth?: string;
 };
 
-function GridView({ files, copied, deleting, usageMap, aiAnalyzedSet, onCopy, onDelete, onOpen, onRename, selecting, selected, onToggleSelect }: ViewProps) {
+function GridView({ files, copied, deleting, usageMap, aiAnalyzedSet, onCopy, onDelete, onOpen, onRename, selecting, selected, onToggleSelect, thumbMinWidth = "180px" }: ViewProps) {
   return (
     <div style={{ padding: "1.25rem", display: "grid", gridTemplateColumns: `repeat(auto-fill, minmax(${thumbMinWidth}, 1fr))`, gap: "0.875rem" }}>
       {files.map((file) => {
@@ -1265,7 +1266,7 @@ function Lightbox({ files, index, onNavigate, onClose, onCopy, copied, onDelete,
         >
           {copied === file.url ? <Check style={{ width: "0.875rem", height: "0.875rem" }} /> : <Copy style={{ width: "0.875rem", height: "0.875rem" }} />}
         </button>
-        {file.isImage && (
+        {(file.isImage || /\.(jpe?g|png|gif|webp|avif)$/i.test(file.name)) && (
           <>
             <button type="button" title="Rotate left" disabled={rotating} onClick={(e) => { e.stopPropagation(); rotateImage(-90); }}
               style={{ display: "flex", alignItems: "center", padding: "0.3rem", borderRadius: "6px", color: "rgba(255,255,255,0.5)", border: "none", background: "transparent", cursor: rotating ? "wait" : "pointer", opacity: rotating ? 0.4 : 1 }}
