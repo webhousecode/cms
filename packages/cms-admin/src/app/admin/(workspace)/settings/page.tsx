@@ -73,6 +73,7 @@ export default async function SettingsPage({
             <Link
               key={t.id}
               href={`/admin/settings?tab=${t.id}`}
+              data-testid={`settings-tab-${t.id}`}
               className={`px-4 py-2 text-sm font-medium -mb-px transition-colors whitespace-nowrap ${
                 tab === t.id
                   ? "border-b-2 border-primary text-primary"
@@ -86,21 +87,21 @@ export default async function SettingsPage({
 
         {/* General tab — site-specific settings */}
         {tab === "general" && (
-          <div className="max-w-lg">
+          <div className="max-w-lg" data-testid="settings-panel-general">
             <SiteGeneralSettingsPanel />
           </div>
         )}
 
         {/* Team tab */}
         {tab === "team" && (
-          <div className="max-w-2xl">
+          <div className="max-w-2xl" data-testid="settings-panel-team">
             <TeamPanel />
           </div>
         )}
 
         {/* Email tab */}
         {tab === "email" && (
-          <div className="max-w-lg">
+          <div className="max-w-lg" data-testid="settings-panel-email">
             <SectionHeading>Email</SectionHeading>
             <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "-0.5rem", marginBottom: "1.25rem" }}>
               Configure transactional email for invitations and notifications.
@@ -234,7 +235,7 @@ export default async function SettingsPage({
 
         {/* AI tab */}
         {tab === "ai" && (
-          <div className="max-w-lg">
+          <div className="max-w-lg" data-testid="settings-panel-ai">
             <SectionHeading>AI Providers</SectionHeading>
             <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "-0.5rem", marginBottom: "1.25rem" }}>
               Configure API keys for AI-powered content generation and rewriting.
@@ -254,21 +255,21 @@ export default async function SettingsPage({
 
         {/* Deploy tab */}
         {tab === "deploy" && (
-          <div className="max-w-lg">
+          <div className="max-w-lg" data-testid="settings-panel-deploy">
             <DeploySettingsPanel />
           </div>
         )}
 
         {/* Tools tab — backup & link checker scheduling */}
         {tab === "tools" && (
-          <div className="max-w-lg">
+          <div className="max-w-lg" data-testid="settings-panel-tools">
             <ToolsSettingsPanel />
           </div>
         )}
 
         {/* MCP tab */}
         {tab === "mcp" && (
-          <div className="max-w-lg">
+          <div className="max-w-lg" data-testid="settings-panel-mcp">
             <SectionHeading>Model Context Protocol</SectionHeading>
             <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "-0.5rem", marginBottom: "1.25rem" }}>
               Connect Claude iOS, Cursor, or any MCP-compatible AI client to read and manage content on this site.

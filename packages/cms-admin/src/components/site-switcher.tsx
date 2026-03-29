@@ -130,7 +130,7 @@ export function SiteSwitcher() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-md hover:bg-accent transition-colors focus-visible:outline-none bg-transparent border-0 cursor-pointer">
+      <DropdownMenuTrigger data-testid="site-switcher" className="flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-md hover:bg-accent transition-colors focus-visible:outline-none bg-transparent border-0 cursor-pointer">
         <HealthDot status={healthMap[activeSiteId]} />
         <span className="max-w-[140px] truncate">{activeSite?.name ?? "Select site"}</span>
         <ChevronDown className="h-3 w-3 text-muted-foreground" />
@@ -206,7 +206,7 @@ export function OrgSwitcher() {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-md hover:bg-accent transition-colors focus-visible:outline-none bg-transparent border-0 cursor-pointer">
+      <DropdownMenuTrigger data-testid="org-switcher" className="flex items-center gap-2 text-sm font-medium px-3 py-1.5 rounded-md hover:bg-accent transition-colors focus-visible:outline-none bg-transparent border-0 cursor-pointer">
         <Building2 className="h-4 w-4 text-muted-foreground" />
         <span className="max-w-[120px] truncate">{activeOrg?.name ?? "Select org"}</span>
         <ChevronDown className="h-3 w-3 text-muted-foreground" />

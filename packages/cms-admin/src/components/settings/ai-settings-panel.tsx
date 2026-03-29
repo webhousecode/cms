@@ -133,7 +133,7 @@ export function AISettingsPanel() {
   }
 
   return (
-    <form ref={aiFormRef} onSubmit={handleSave} onChange={() => window.dispatchEvent(new CustomEvent("cms:settings-dirty"))}>
+    <form ref={aiFormRef} onSubmit={handleSave} onChange={() => window.dispatchEvent(new CustomEvent("cms:settings-dirty"))} data-testid="panel-ai">
       <SettingsCard>
       {/* Default provider */}
       <div style={{ marginBottom: "1.5rem" }}>

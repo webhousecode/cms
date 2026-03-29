@@ -114,7 +114,7 @@ export function ToolsSettingsPanel() {
   const webhookLabel = { display: "block", fontSize: "0.75rem", fontWeight: 500, marginBottom: "0.35rem", marginTop: "0.75rem" } as const;
 
   return (
-    <div>
+    <div data-testid="panel-tools">
       {/* ── Backup ─────────────────────────────────────────── */}
       <SectionHeading>Backup</SectionHeading>
       <SettingsCard>

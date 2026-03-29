@@ -144,7 +144,7 @@ export function MCPSettingsPanel() {
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+    <div data-testid="panel-mcp" style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
 
       {/* Endpoints */}
       <section>

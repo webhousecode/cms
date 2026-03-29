@@ -225,7 +225,7 @@ export function TeamPanel() {
   }
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+    <div data-testid="panel-team" style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
       {/* Invite form */}
       <div>
         <SectionHeading>Invite a team member</SectionHeading>

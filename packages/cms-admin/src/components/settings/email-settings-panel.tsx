@@ -166,7 +166,7 @@ export function EmailSettingsPanel() {
   ] as const;
 
   return (
-    <form ref={emailFormRef} onSubmit={handleSave} onChange={() => window.dispatchEvent(new CustomEvent("cms:settings-dirty"))}>
+    <form ref={emailFormRef} onSubmit={handleSave} onChange={() => window.dispatchEvent(new CustomEvent("cms:settings-dirty"))} data-testid="panel-email">
       <SettingsCard>
         {FIELDS.map((f) => {
           const currentValue = config[f.id as keyof EmailConfig];

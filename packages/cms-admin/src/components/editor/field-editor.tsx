@@ -317,12 +317,14 @@ function textWidth(fieldName: string): string | undefined {
 
 export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Props) {
   const strVal = String(value ?? "");
+  const testId = `field-${field.type}-${field.name}`;
 
   switch (field.type) {
     case "text": {
       const w = textWidth(field.name);
       return (
         <Input
+          data-testid={testId}
           type="text"
           value={strVal}
           onChange={(e) => onChange(e.target.value)}
@@ -335,6 +337,7 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
     case "textarea":
       return (
         <Textarea
+          data-testid={testId}
           value={strVal}
           onChange={(e) => onChange(e.target.value)}
           disabled={locked}
@@ -344,7 +347,7 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
       );
 
     case "richtext":
-      return <RichTextEditor value={strVal} onChange={onChange} disabled={locked} features={field.features} />;
+      return <div data-testid={testId}><RichTextEditor value={strVal} onChange={onChange} disabled={locked} features={field.features} /></div>;
 
     case "relation":
       if (!field.collection) return <Input type="text" value={strVal} onChange={(e) => onChange(e.target.value)} disabled={locked} />;
@@ -357,6 +360,7 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
     case "date":
       return (
         <Input
+          data-testid={testId}
           type="date"
           value={strVal}
           onChange={(e) => onChange(e.target.value)}
@@ -367,7 +371,7 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
 
     case "boolean":
       return (
-        <label className="flex items-center gap-3 cursor-pointer w-fit">
+        <label data-testid={testId} className="flex items-center gap-3 cursor-pointer w-fit">
           <div
             onClick={() => !locked && onChange(!value)}
             className={cn(
@@ -390,6 +394,7 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
     case "select":
       return (
         <CustomSelect
+          data-testid={testId}
           options={[
             { value: "", label: "— Select —" },
             ...(field.options ?? []).map((opt) => ({ value: opt.value, label: opt.label })),
@@ -402,20 +407,24 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
 
     case "tags":
       return (
+        <div data-testid={testId}>
         <TagsInput
           value={Array.isArray(value) ? (value as string[]) : []}
           onChange={onChange}
           disabled={locked}
         />
+        </div>
       );
 
     case "image-gallery":
       return (
+        <div data-testid={testId}>
         <ImageGalleryEditor
           value={Array.isArray(value) ? (value as GalleryImage[]) : []}
           onChange={onChange}
           disabled={locked}
         />
+        </div>
       );
 
     case "image": {
@@ -466,7 +475,7 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
       }
 
       return (
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+        <div data-testid={testId} style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
           {/* Thumbnail preview */}
           {strVal && (
             <div style={{ position: "relative", width: "fit-content" }}>
@@ -679,7 +688,7 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
     case "video": {
       const embedSrc = getVideoEmbedSrc(strVal);
       return (
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+        <div data-testid={testId} style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
           <Input
             type="url"
             value={strVal}
@@ -753,7 +762,7 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
       }
 
       return (
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
+        <div data-testid={testId} style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
           {/* Player preview */}
           {strVal && (
             <div style={{ position: "relative" }}>
@@ -1135,7 +1144,7 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
       // Structured array with field definitions → StructuredArrayEditor
       if (field.fields && field.fields.length > 0) {
         const arrVal = Array.isArray(value) ? (value as Record<string, unknown>[]) : [];
-        return (
+        return (<div data-testid={testId}>
           <StructuredArrayEditor
             field={field}
             value={arrVal}
@@ -1143,7 +1152,7 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
             locked={locked}
             blocksConfig={blocksConfig}
           />
-        );
+        </div>);
       }
       // Simple string array (no sub-fields defined) → line-by-line editor
       // But if items are objects, fall through to JSON textarea
@@ -1235,7 +1244,7 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
 
     case "blocks": {
       const blocksVal = Array.isArray(value) ? (value as Record<string, unknown>[]) : [];
-      return (
+      return (<div data-testid={testId}>
         <BlocksEditor
           field={field}
           value={blocksVal}
@@ -1243,14 +1252,14 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
           locked={locked}
           blocksConfig={blocksConfig}
         />
-      );
+      </div>);
     }
 
     case "object": {
       if (field.fields && field.fields.length > 0) {
         const objVal = (typeof value === "object" && value !== null && !Array.isArray(value))
           ? (value as Record<string, unknown>) : {};
-        return (
+        return (<div data-testid={testId}>
           <StructuredObjectEditor
             field={field}
             value={objVal}
@@ -1258,11 +1267,12 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
             locked={locked}
             blocksConfig={blocksConfig}
           />
-        );
+        </div>);
       }
       const jsonStr = typeof value === "string" ? value : JSON.stringify(value ?? {}, null, 2);
       return (
         <Textarea
+          data-testid={testId}
           value={jsonStr}
           onChange={(e) => {
             try { onChange(JSON.parse(e.target.value)); } catch { onChange(e.target.value); }
@@ -1276,17 +1286,17 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
     }
 
     case "htmldoc":
-      return (
+      return (<div data-testid={testId}>
         <HtmlDocEditor
           field={field}
           value={strVal}
           onChange={(html) => onChange(html)}
           locked={locked}
         />
-      );
+      </div>);
 
     case "map":
-      return (
+      return (<div data-testid={testId}>
         <MapEditor
           value={(value as MapValue) ?? null}
           onChange={(val) => onChange(val)}
@@ -1294,7 +1304,7 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
           defaultZoom={field.mapDefaultZoom}
           locked={locked}
         />
-      );
+      </div>);
 
     default:
       return (

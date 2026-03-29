@@ -152,7 +152,7 @@ export function DeploySettingsPanel() {
   };
 
   return (
-    <>
+    <div data-testid="panel-deploy">
       {/* ── Provider config ─────────────────────────────── */}
       <SectionHeading first>Provider</SectionHeading>
       <SettingsCard>
@@ -444,7 +444,7 @@ export function DeploySettingsPanel() {
         )}
       </SettingsCard>
       </>}
-    </>
+    </div>
   );
 }
 

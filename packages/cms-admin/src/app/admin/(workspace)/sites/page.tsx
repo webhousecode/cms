@@ -216,6 +216,7 @@ export default function SitesDashboard() {
         }).map((site) => (
           <div
             key={site.id}
+            data-testid={`site-card-${site.id}`}
             style={{
               background: "var(--card)",
               border: "1px solid var(--border)",

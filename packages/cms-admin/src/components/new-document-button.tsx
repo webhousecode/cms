@@ -58,6 +58,7 @@ export function NewDocumentButton({ collection, titleField = "title", defaultLoc
         variant="default"
         onClick={() => setOpen(true)}
         className="gap-2"
+        data-testid="btn-create"
       >
         <Plus className="w-4 h-4" />
         New document

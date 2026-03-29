@@ -1495,7 +1495,7 @@ function SchedulerNotificationsSection() {
 
 export function SiteGeneralSettingsPanel() {
 	return (
-		<div>
+		<div data-testid="panel-general">
 			<SiteSection />
 			<RevalidationSection />
 			<DangerZone />

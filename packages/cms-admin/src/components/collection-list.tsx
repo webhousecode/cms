@@ -443,7 +443,7 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
   }
 
   return (
-    <div>
+    <div data-testid={`collection-list-${collection}`}>
       {/* Toolbar */}
       <div style={{ display: "flex", gap: "0.75rem", marginBottom: "1rem", alignItems: "center", flexWrap: "wrap" }}>
         <div style={{ position: "relative", flex: "1", minWidth: "180px" }}>
@@ -532,6 +532,7 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
             return (
               <Link
                 key={doc.id ?? doc.slug}
+                data-testid={`collection-item-${doc.slug}`}
                 href={`/admin/${collection}/${doc.slug}`}
                 className="group block rounded-xl border border-border bg-card hover:border-primary/40 transition-all duration-200 overflow-hidden"
                 style={{ textDecoration: "none", display: "flex", flexDirection: "column" }}
@@ -581,6 +582,7 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
                 return (
                   <tr
                     key={doc.id ?? doc.slug}
+                    data-testid={`collection-item-${doc.slug}`}
                     style={{ borderTop: i === 0 ? "none" : "1px solid var(--border)", transition: "background 120ms" }}
                     className="hover:bg-secondary/50"
                   >

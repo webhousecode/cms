@@ -131,7 +131,7 @@ export function AppSidebar({ collections }: Props) {
       : "bg-green-500";
 
   return (
-    <Sidebar collapsible="offcanvas">
+    <Sidebar collapsible="offcanvas" data-testid="sidebar">
       {/* Header: stacked logo */}
       <SidebarHeader className="p-0">
         <Link href="/admin" className={`flex flex-col gap-2 px-3 ${showLogoIcon ? "items-center" : "items-start"}`} style={{ marginRight: "auto", marginLeft: "0.5rem", paddingTop: showLogoIcon ? "1.25rem" : "0.75rem", paddingBottom: showLogoIcon ? "1.25rem" : "0.75rem", textDecoration: "none" }}>
@@ -163,7 +163,7 @@ export function AppSidebar({ collections }: Props) {
               <SidebarMenuButton
                 isActive={pathname === "/admin/sites"}
                 tooltip="Sites"
-                render={<Link href="/admin/sites" />}
+                render={<Link href="/admin/sites" data-testid="nav-link-sites" />}
               >
                 <Boxes className="!w-5 !h-5" />
                 <span>Sites</span>
@@ -173,7 +173,7 @@ export function AppSidebar({ collections }: Props) {
               <SidebarMenuButton
                 isActive={pathname === "/admin"}
                 tooltip="Dashboard"
-                render={<Link href="/admin" />}
+                render={<Link href="/admin" data-testid="nav-link-dashboard" />}
               >
                 <LayoutDashboard className="!w-5 !h-5" />
                 <span>Dashboard</span>
@@ -189,7 +189,7 @@ export function AppSidebar({ collections }: Props) {
               <SidebarMenuButton
                 isActive={pathname === "/admin/command"}
                 tooltip="Cockpit"
-                render={<Link href="/admin/command" />}
+                render={<Link href="/admin/command" data-testid="nav-link-cockpit" />}
               >
                 <Cpu className="!w-5 !h-5" />
                 <span>Cockpit</span>
@@ -199,7 +199,7 @@ export function AppSidebar({ collections }: Props) {
               <SidebarMenuButton
                 isActive={pathname.startsWith("/admin/agents")}
                 tooltip="Agents"
-                render={<Link href="/admin/agents" />}
+                render={<Link href="/admin/agents" data-testid="nav-link-agents" />}
               >
                 <Bot className="!w-5 !h-5" />
                 <span>Agents</span>
@@ -209,7 +209,7 @@ export function AppSidebar({ collections }: Props) {
               <SidebarMenuButton
                 isActive={pathname === "/admin/curation"}
                 tooltip="Curation Queue"
-                render={<Link href="/admin/curation" />}
+                render={<Link href="/admin/curation" data-testid="nav-link-curation" />}
               >
                 <Inbox className="!w-5 !h-5" />
                 <span className="flex-1">Curation Queue</span>
@@ -224,7 +224,7 @@ export function AppSidebar({ collections }: Props) {
               <SidebarMenuButton
                 isActive={pathname === "/admin/scheduled"}
                 tooltip="Calendar"
-                render={<Link href="/admin/scheduled" />}
+                render={<Link href="/admin/scheduled" data-testid="nav-link-calendar" />}
               >
                 <Calendar className="!w-5 !h-5" />
                 <span>Calendar</span>
@@ -243,7 +243,7 @@ export function AppSidebar({ collections }: Props) {
               <SidebarMenuButton
                 tooltip="Content"
                 onClick={() => setContentOpen((o) => { const next = !o; localStorage.setItem("cms-sidebar-content-open", String(next)); fetch("/api/admin/user-state", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sidebarContentOpen: next }) }).catch(() => {}); return next; })}
-                render={<button type="button" />}
+                render={<button type="button" data-testid="nav-link-content" />}
               >
                 <FolderOpen className="!w-5 !h-5" />
                 <span className="flex-1 text-left">Content</span>
@@ -263,7 +263,7 @@ export function AppSidebar({ collections }: Props) {
                     <SidebarMenuButton
                       isActive={pathname.startsWith(`/admin/${col.name}`)}
                       tooltip={col.label}
-                      render={<Link href={`/admin/${col.name}`} />}
+                      render={<Link href={`/admin/${col.name}`} data-testid={`nav-link-collection-${col.name}`} />}
                       style={{ paddingLeft: "1.75rem" }}
                     >
                       <span>{col.label}</span>
@@ -282,7 +282,7 @@ export function AppSidebar({ collections }: Props) {
               <SidebarMenuButton
                 isActive={pathname.startsWith("/admin/interactives")}
                 tooltip="Interactives"
-                render={<Link href="/admin/interactives" />}
+                render={<Link href="/admin/interactives" data-testid="nav-link-interactives" />}
               >
                 <Zap className="!w-5 !h-5" />
                 <span>Interactives</span>
@@ -292,7 +292,7 @@ export function AppSidebar({ collections }: Props) {
               <SidebarMenuButton
                 isActive={pathname === "/admin/media"}
                 tooltip="Media library"
-                render={<Link href="/admin/media" />}
+                render={<Link href="/admin/media" data-testid="nav-link-media" />}
               >
                 <Image className="!w-5 !h-5" />
                 <span>Media</span>
@@ -311,7 +311,7 @@ export function AppSidebar({ collections }: Props) {
               <SidebarMenuButton
                 tooltip="Tools"
                 onClick={() => setToolsOpen((o) => { const next = !o; localStorage.setItem("cms-sidebar-tools-open", String(next)); fetch("/api/admin/user-state", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sidebarToolsOpen: next }) }).catch(() => {}); return next; })}
-                render={<button type="button" />}
+                render={<button type="button" data-testid="nav-link-tools" />}
               >
                 <Wrench className="!w-5 !h-5" />
                 <span className="flex-1 text-left">Tools</span>
@@ -330,7 +330,7 @@ export function AppSidebar({ collections }: Props) {
                   <SidebarMenuButton
                     isActive={pathname === "/admin/link-checker"}
                     tooltip="Link Checker"
-                    render={<Link href="/admin/link-checker" />}
+                    render={<Link href="/admin/link-checker" data-testid="nav-link-link-checker" />}
                     style={{ paddingLeft: "1.75rem" }}
                   >
                     <Link2 className="!w-5 !h-5" />
@@ -341,7 +341,7 @@ export function AppSidebar({ collections }: Props) {
                   <SidebarMenuButton
                     isActive={pathname === "/admin/seo"}
                     tooltip="SEO"
-                    render={<Link href="/admin/seo" />}
+                    render={<Link href="/admin/seo" data-testid="nav-link-seo" />}
                     style={{ paddingLeft: "1.75rem" }}
                   >
                     <Search className="!w-5 !h-5" />
@@ -352,7 +352,7 @@ export function AppSidebar({ collections }: Props) {
                   <SidebarMenuButton
                     isActive={pathname === "/admin/backup"}
                     tooltip="Backup & Restore"
-                    render={<Link href="/admin/backup" />}
+                    render={<Link href="/admin/backup" data-testid="nav-link-backup" />}
                     style={{ paddingLeft: "1.75rem" }}
                   >
                     <HardDrive className="!w-5 !h-5" />
@@ -363,7 +363,7 @@ export function AppSidebar({ collections }: Props) {
                   <SidebarMenuButton
                     isActive={pathname === "/admin/performance"}
                     tooltip="Performance"
-                    render={<Link href="/admin/performance" />}
+                    render={<Link href="/admin/performance" data-testid="nav-link-performance" />}
                     style={{ paddingLeft: "1.75rem" }}
                   >
                     <BarChart2 className="!w-5 !h-5" />
@@ -390,7 +390,7 @@ export function AppSidebar({ collections }: Props) {
                     })
                   )
                 }
-                render={<button type="button" />}
+                render={<button type="button" data-testid="nav-link-search" />}
               >
                 <Search className="!w-5 !h-5" />
                 <span className="flex-1 text-left">Search</span>
@@ -437,7 +437,7 @@ export function AppSidebar({ collections }: Props) {
                 <SidebarMenuButton
                   isActive={pathname.startsWith("/admin/settings")}
                   tooltip="Site Settings"
-                  render={<Link href="/admin/settings" />}
+                  render={<Link href="/admin/settings" data-testid="nav-link-settings" />}
                 >
                   <Settings2 className="!w-5 !h-5" />
                   <span>Site Settings</span>
@@ -449,7 +449,7 @@ export function AppSidebar({ collections }: Props) {
                 <SidebarMenuButton
                   isActive={pathname === "/admin/trash"}
                   tooltip="Trash"
-                  render={<Link href="/admin/trash" />}
+                  render={<Link href="/admin/trash" data-testid="nav-link-trash" />}
                 >
                   <Trash2 className="!w-5 !h-5" />
                   <span>Trash</span>

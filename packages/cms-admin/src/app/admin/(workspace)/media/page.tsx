@@ -336,6 +336,7 @@ export default function MediaPage() {
     <TooltipProvider>
     <div
       ref={pageRef}
+      data-testid="media-library"
       className="flex flex-col relative"
       onDragEnter={!readOnly ? onDragEnter : undefined}
       onDragLeave={!readOnly ? onDragLeave : undefined}
@@ -960,6 +961,7 @@ function GridView({ files, copied, deleting, usageMap, aiAnalyzedSet, onCopy, on
         return (
           <div
             key={file.url}
+            data-testid={`media-item-${file.name}`}
             className="group relative rounded-lg border bg-card"
             style={{ aspectRatio: "1 / 1.15", borderColor: isSelected ? "var(--primary)" : "var(--border)", boxShadow: isSelected ? "0 0 0 1px var(--primary)" : "none" }}
             onClick={selecting ? () => onToggleSelect?.(file) : undefined}
@@ -1070,7 +1072,7 @@ function ListView({ files, copied, deleting, usageMap, aiAnalyzedSet, onCopy, on
             const aiKey = file.folder ? `${file.folder}/${file.name}` : file.name;
             const isAiAnalyzed = aiAnalyzedSet.has(aiKey);
             return (
-              <tr key={file.url} className="group" style={{ borderBottom: "1px solid var(--border)", cursor: selecting ? "pointer" : undefined }} onClick={selecting ? () => onToggleSelect?.(file) : undefined}>
+              <tr key={file.url} data-testid={`media-item-${file.name}`} className="group" style={{ borderBottom: "1px solid var(--border)", cursor: selecting ? "pointer" : undefined }} onClick={selecting ? () => onToggleSelect?.(file) : undefined}>
                 {selecting && (
                   <td style={{ padding: "0.5rem 0.5rem 0.5rem 1rem", width: "2rem" }}>
                     <div style={{

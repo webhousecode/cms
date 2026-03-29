@@ -15,7 +15,7 @@ interface ActionBarProps {
  */
 export function ActionBar({ children, actions }: ActionBarProps) {
   return (
-    <div style={{
+    <div data-testid="action-bar" style={{
       position: "sticky",
       top: 84, // header 48px + tab bar 36px
       zIndex: 29,
@@ -74,6 +74,7 @@ interface ActionButtonProps {
   children: ReactNode;
   title?: string;
   icon?: ReactNode;
+  testId?: string;
 }
 
 const VARIANT_STYLES = {
@@ -98,13 +99,15 @@ const VARIANT_STYLES = {
  * Standardized action button — 28px height, consistent padding.
  * Use inside ActionBar's `actions` slot.
  */
-export function ActionButton({ onClick, disabled, variant = "secondary", children, title, icon }: ActionButtonProps) {
+export function ActionButton({ onClick, disabled, variant = "secondary", children, title, icon, testId }: ActionButtonProps) {
+  const derivedTestId = testId ?? (typeof children === "string" ? `btn-${children.toLowerCase().replace(/\s+/g, "-")}` : undefined);
   return (
     <button
       type="button"
       onClick={onClick}
       disabled={disabled}
       title={title}
+      data-testid={derivedTestId}
       style={{
         ...VARIANT_STYLES[variant],
         height: "28px",

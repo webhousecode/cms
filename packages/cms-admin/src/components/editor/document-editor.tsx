@@ -1111,7 +1111,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
   const isExpired = doc.status === "expired";
 
   return (
-    <div className="flex flex-col" data-doc-locale={doc.locale || defaultLocale}>
+    <div className="flex flex-col" data-testid="document-editor" data-doc-locale={doc.locale || defaultLocale}>
       {/* Top bar — sticky */}
       <ActionBar
         actions={
@@ -1371,6 +1371,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
                 onClick={() => save()}
                 disabled={saving || !dirty}
                 className="gap-1.5"
+                data-testid="btn-save"
                 title={dirty ? "Save changes (⌘S)" : "No unsaved changes"}
               >
                 {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
