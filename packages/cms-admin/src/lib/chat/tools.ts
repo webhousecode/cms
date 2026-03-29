@@ -636,8 +636,7 @@ export async function buildChatTools(): Promise<ToolPair[]> {
               const { getModel } = await import("@/lib/ai/model-resolver");
               const seoModel = await getModel("content");
               const seoClient = new Anthropic({ apiKey: seoApiKey });
-              const seoLocaleConfig = await readSiteConfig();
-              const seoLocale = seoLocaleConfig.defaultLocale || "en";
+              const seoLocale = docLocale || siteConfig.defaultLocale || "en";
               const seoLimits = getSeoLimits(seoLocale);
               const seoLocaleInstr = buildLocaleInstruction(seoLocale);
               const seoRes = await seoClient.messages.create({
