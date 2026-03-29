@@ -302,7 +302,6 @@ function SiteSection() {
 		locales: [] as string[],
 		localeStrategy: "prefix-other",
 		autoRetranslateOnUpdate: false,
-		showStaleTranslations: false,
 	});
 	const [saving, setSaving] = useState(false);
 	const [saved, setSaved] = useState(false);
@@ -520,7 +519,7 @@ import { LOCALE_LABELS, LOCALE_FLAGS } from "@/lib/locale";
 const AVAILABLE_LOCALES = Object.keys(LOCALE_LABELS);
 
 function LanguageSection({ cfg, setCfg }: {
-	cfg: { defaultLocale: string; locales: string[]; localeStrategy: string; autoRetranslateOnUpdate: boolean; showStaleTranslations: boolean };
+	cfg: { defaultLocale: string; locales: string[]; localeStrategy: string; autoRetranslateOnUpdate: boolean };
 	setCfg: (fn: (c: any) => any) => void;
 }) {
 	const [adding, setAdding] = useState(false);
@@ -709,30 +708,6 @@ function LanguageSection({ cfg, setCfg }: {
 							</button>
 						</div>
 
-						{/* Show stale translations toggle */}
-						<div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem" }}>
-							<div>
-								<p style={{ fontSize: "0.875rem", fontWeight: 500, margin: 0 }}>Check for stale translations</p>
-								<p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", margin: "0.15rem 0 0" }}>
-									Show a banner when a translation may be outdated because the source was edited.
-								</p>
-							</div>
-							<button
-								type="button"
-								onClick={() => setCfg((c: any) => ({ ...c, showStaleTranslations: !c.showStaleTranslations }))}
-								style={{
-									width: 40, height: 22, borderRadius: 11, border: "none", cursor: "pointer",
-									background: cfg.showStaleTranslations ? "#F7BB2E" : "var(--muted)",
-									position: "relative", transition: "background 0.2s", flexShrink: 0,
-								}}
-							>
-								<span style={{
-									position: "absolute", top: 2, left: cfg.showStaleTranslations ? 20 : 2,
-									width: 18, height: 18, borderRadius: "50%", background: "#fff",
-									transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
-								}} />
-							</button>
-						</div>
 					</>
 				)}
 			</Card>

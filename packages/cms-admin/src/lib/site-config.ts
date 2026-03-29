@@ -90,8 +90,6 @@ export interface SiteConfig {
   localeStrategy: "none" | "prefix-other" | "prefix-all";
   /** F48 i18n — auto-retranslate stale translations when source doc is updated */
   autoRetranslateOnUpdate: boolean;
-  /** F48 i18n — show stale translation banner when source doc is newer */
-  showStaleTranslations: boolean;
 }
 
 async function getConfigPath(): Promise<string> {
@@ -150,7 +148,6 @@ async function defaults(): Promise<SiteConfig> {
     locales: [],
     localeStrategy: "prefix-other",
     autoRetranslateOnUpdate: false,
-    showStaleTranslations: false,
   };
 }
 

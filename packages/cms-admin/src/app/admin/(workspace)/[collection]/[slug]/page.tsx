@@ -41,19 +41,6 @@ export default async function DocumentPage({ params, searchParams }: Props) {
           .map(d => ({ slug: d.slug, locale: d.locale ?? null, status: d.status, updatedAt: d.updatedAt }));
       })();
 
-  // Stale detection: opt-in via showStaleTranslations, only on non-default-locale docs.
-  let sourceDoc: any = null;
-  if (siteConfig.showStaleTranslations) {
-    const docLocale = (doc as any).locale || siteConfig.defaultLocale || "en";
-    const isDefaultLocale = docLocale === (siteConfig.defaultLocale || "en");
-    if (!isDefaultLocale) {
-      const defaultLocaleSibling = translations.find(t => t.locale === (siteConfig.defaultLocale || "en"));
-      sourceDoc = defaultLocaleSibling
-        ? allDocs.find(d => d.slug === defaultLocaleSibling.slug) ?? null
-        : null;
-    }
-  }
-
   const docTitle = String(doc.data?.title ?? doc.data?.name ?? doc.data?.label ?? doc.slug);
 
   return (
@@ -79,8 +66,7 @@ export default async function DocumentPage({ params, searchParams }: Props) {
           updatedAt: doc.updatedAt,
         }}
         translations={translations}
-        sourceUpdatedAt={sourceDoc?.updatedAt}
-        sourceData={sourceDoc?.data}
+        sourceData={translations[0] ? (allDocs.find(d => d.slug === translations[0].slug) as any)?.data : undefined}
         previewSiteUrl={siteConfig.previewSiteUrl}
         previewInIframe={siteConfig.previewInIframe}
         backHref={from === "curation" ? "/admin/curation" : undefined}

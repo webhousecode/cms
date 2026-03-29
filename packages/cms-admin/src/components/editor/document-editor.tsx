@@ -16,7 +16,7 @@ import { useTabs } from "@/lib/tabs-context";
 import { AIPanel } from "./ai-panel";
 import { SeoPanel } from "./seo-panel";
 import { GenerateDocumentDialog } from "@/components/generate-document-dialog";
-import { isTranslationStale, LOCALE_LABELS } from "@/lib/locale";
+import { LOCALE_LABELS } from "@/lib/locale";
 
 // Fallback to env vars for backwards compatibility — overridden by props from server
 const PREVIEW_SITE_URL_DEFAULT = process.env.NEXT_PUBLIC_PREVIEW_SITE_URL ?? "";
@@ -853,7 +853,6 @@ interface Props {
   defaultLocale?: string;
   initialDoc: DocSnapshot;
   translations?: { slug: string; locale: string | null; status: string; updatedAt?: string }[];
-  sourceUpdatedAt?: string;
   sourceData?: Record<string, unknown>;
   previewSiteUrl?: string;
   previewInIframe?: boolean;
@@ -867,7 +866,7 @@ const G = globalThis as unknown as { __docCache?: Map<string, DocSnapshot> };
 if (!G.__docCache) G.__docCache = new Map();
 const docStateCache = G.__docCache;
 
-export function DocumentEditor({ collection, colConfig, blocksConfig = [], locales = [], defaultLocale = "en", initialDoc, translations = [], sourceUpdatedAt, sourceData: sourceDataProp, previewSiteUrl, previewInIframe, backHref, readOnly = false }: Props) {
+export function DocumentEditor({ collection, colConfig, blocksConfig = [], locales = [], defaultLocale = "en", initialDoc, translations = [], sourceData: sourceDataProp, previewSiteUrl, previewInIframe, backHref, readOnly = false }: Props) {
   const PREVIEW_SITE_URL = previewSiteUrl ?? PREVIEW_SITE_URL_DEFAULT;
   const PREVIEW_IN_IFRAME = previewInIframe ?? PREVIEW_IN_IFRAME_DEFAULT;
   const cacheKey = `${collection}/${initialDoc.slug}`;
@@ -1463,18 +1462,6 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
         </div>
       )}
 
-      {/* Stale translation banner — opt-in via showStaleTranslations, server only sends sourceUpdatedAt for non-default-locale docs */}
-      {sourceUpdatedAt && isTranslationStale(sourceUpdatedAt, initialDoc.updatedAt) && (
-        <div style={{
-          display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap",
-          padding: "0.5rem 1rem",
-          background: "rgb(234 179 8 / 0.08)", borderBottom: "1px solid rgb(234 179 8 / 0.25)",
-          fontSize: "0.75rem", color: "rgb(234 179 8)",
-        }}>
-          <span>&#9888;&#65039;</span>
-          <span>Source document was updated — this translation may be outdated.</span>
-        </div>
-      )}
 
       {/* Editor body */}
       <div style={sideBySide && sourceDoc ? { display: "flex", gap: 0 } : undefined}>
