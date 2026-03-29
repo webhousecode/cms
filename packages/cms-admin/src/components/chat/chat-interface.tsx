@@ -4,7 +4,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { MessageList, type ChatMessageUI, type ToolCall } from "./message-list";
 import { ChatInput } from "./chat-input";
 import { WelcomeScreen } from "./welcome-screen";
-import { Pencil, Check, X, Trash2, MoreHorizontal, Star, Copy, Brain, Plus, Search } from "lucide-react";
+import { Pencil, Check, X, Trash2, MoreHorizontal, Star, Copy, Brain, Plus, Search, Download, Upload } from "lucide-react";
 
 interface ChatInterfaceProps {
   collections: Array<{ name: string; label: string }>;
@@ -46,6 +46,7 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
   }, []);
   const [conversations, setConversations] = useState<ConversationMeta[]>([]);
   const [drawerTab, setDrawerTab] = useState<DrawerTab>("conversations");
+  const [convSearch, setConvSearch] = useState("");
   const [memories, setMemories] = useState<MemoryItem[]>([]);
   const [memorySearch, setMemorySearch] = useState("");
   const [memoryCount, setMemoryCount] = useState(0);
@@ -414,6 +415,41 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
     } catch { /* ignore */ }
   }
 
+  async function exportAllMemories() {
+    try {
+      const res = await fetch("/api/cms/chat/memory/export");
+      if (!res.ok) return;
+      const text = await res.text();
+      const blob = new Blob([text], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `chat-memories-${new Date().toISOString().split("T")[0]}.txt`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch { /* ignore */ }
+  }
+
+  async function importFromFile() {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = ".txt,.json";
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      const text = await file.text();
+      try {
+        const res = await fetch("/api/cms/chat/memory/import", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ text }),
+        });
+        if (res.ok) loadMemories();
+      } catch { /* ignore */ }
+    };
+    input.click();
+  }
+
   const handleSuggestionClick = useCallback(
     (message: string) => {
       // If the suggestion ends with a space (e.g. "Search my content for "),
@@ -516,26 +552,58 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
             <div style={{ flex: 1, overflowY: "auto" }}>
               {drawerTab === "conversations" ? (
                 <>
-                  {conversations.length === 0 ? (
-                    <div style={{ padding: "20px", textAlign: "center", fontSize: "0.8rem", color: "var(--muted-foreground)" }}>
-                      No previous conversations
-                    </div>
-                  ) : (
-                    [...conversations].sort((a, b) => (b.starred ? 1 : 0) - (a.starred ? 1 : 0)).map((c) => (
-                      <HistoryItem
-                        key={c.id}
-                        id={c.id}
-                        title={c.title}
-                        updatedAt={c.updatedAt}
-                        isActive={c.id === conversationId}
-                        onLoad={() => loadConversation(c.id)}
-                        starred={c.starred}
-                        onRename={(newTitle) => renameConversation(c.id, newTitle)}
-                        onDelete={() => deleteConversation(c.id)}
-                        onStar={() => toggleStar(c.id)}
+                  {/* Search conversations */}
+                  <div style={{ padding: "10px 16px 6px" }}>
+                    <div style={{
+                      display: "flex", alignItems: "center", gap: "6px",
+                      padding: "5px 10px", borderRadius: "6px",
+                      border: "1px solid var(--border)", backgroundColor: "var(--background)",
+                    }}>
+                      <Search style={{ width: "12px", height: "12px", color: "var(--muted-foreground)", flexShrink: 0 }} />
+                      <input
+                        value={convSearch}
+                        onChange={(e) => setConvSearch(e.target.value)}
+                        placeholder="Search conversations..."
+                        style={{
+                          flex: 1, border: "none", outline: "none", background: "transparent",
+                          fontSize: "0.75rem", color: "var(--foreground)", fontFamily: "inherit",
+                        }}
                       />
-                    ))
-                  )}
+                      {convSearch && (
+                        <button
+                          onClick={() => setConvSearch("")}
+                          style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0" }}
+                        >
+                          <X style={{ width: "12px", height: "12px" }} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  {(() => {
+                    const filtered = conversations
+                      .filter((c) => !convSearch.trim() || c.title.toLowerCase().includes(convSearch.toLowerCase()))
+                      .sort((a, b) => (b.starred ? 1 : 0) - (a.starred ? 1 : 0));
+                    return filtered.length === 0 ? (
+                      <div style={{ padding: "20px", textAlign: "center", fontSize: "0.8rem", color: "var(--muted-foreground)" }}>
+                        {convSearch.trim() ? "No conversations match your search" : "No previous conversations"}
+                      </div>
+                    ) : (
+                      filtered.map((c) => (
+                        <HistoryItem
+                          key={c.id}
+                          id={c.id}
+                          title={c.title}
+                          updatedAt={c.updatedAt}
+                          isActive={c.id === conversationId}
+                          onLoad={() => loadConversation(c.id)}
+                          starred={c.starred}
+                          onRename={(newTitle) => renameConversation(c.id, newTitle)}
+                          onDelete={() => deleteConversation(c.id)}
+                          onStar={() => toggleStar(c.id)}
+                        />
+                      ))
+                    );
+                  })()}
                 </>
               ) : (
                 <MemoryPanel
@@ -545,6 +613,8 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
                   onSearch={loadMemories}
                   onAdd={addManualMemory}
                   onDelete={deleteMemoryItem}
+                  onExport={exportAllMemories}
+                  onImport={importFromFile}
                 />
               )}
             </div>
@@ -782,13 +852,15 @@ const CATEGORY_COLORS: Record<string, string> = {
   fact: "#6b7280",
 };
 
-function MemoryPanel({ memories, search, onSearchChange, onSearch, onAdd, onDelete }: {
+function MemoryPanel({ memories, search, onSearchChange, onSearch, onAdd, onDelete, onExport, onImport }: {
   memories: MemoryItem[];
   search: string;
   onSearchChange: (q: string) => void;
   onSearch: () => void;
   onAdd: (fact: string) => void;
   onDelete: (id: string) => void;
+  onExport: () => void;
+  onImport: () => void;
 }) {
   const [addMode, setAddMode] = useState(false);
   const [addValue, setAddValue] = useState("");
@@ -830,6 +902,30 @@ function MemoryPanel({ memories, search, onSearchChange, onSearch, onAdd, onDele
           }}
         >
           <Plus style={{ width: "14px", height: "14px" }} />
+        </button>
+        <button
+          onClick={onImport}
+          title="Import memories"
+          style={{
+            display: "flex", alignItems: "center", justifyContent: "center",
+            width: "30px", height: "30px", borderRadius: "6px",
+            border: "1px solid var(--border)", background: "transparent",
+            cursor: "pointer", color: "var(--muted-foreground)", flexShrink: 0,
+          }}
+        >
+          <Upload style={{ width: "14px", height: "14px" }} />
+        </button>
+        <button
+          onClick={onExport}
+          title="Export memories"
+          style={{
+            display: "flex", alignItems: "center", justifyContent: "center",
+            width: "30px", height: "30px", borderRadius: "6px",
+            border: "1px solid var(--border)", background: "transparent",
+            cursor: "pointer", color: "var(--muted-foreground)", flexShrink: 0,
+          }}
+        >
+          <Download style={{ width: "14px", height: "14px" }} />
         </button>
       </div>
 
