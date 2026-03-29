@@ -3,7 +3,7 @@
 import { useState, useTransition, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, Copy, Clock, MoreHorizontal, Pencil, Globe, FileX, ArrowUpDown, Languages } from "lucide-react";
+import { Search, Copy, Clock, MoreHorizontal, Pencil, Globe, FileX, ArrowUpDown, Languages, ExternalLink } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
 import { LOCALE_FLAGS } from "@/lib/locale";
@@ -104,12 +104,13 @@ function StatusDot({ status, publishAt }: { status: string; publishAt?: string }
   return <span style={{ width: "0.45rem", height: "0.45rem", borderRadius: "9999px", background: "rgb(234 179 8)", display: "inline-block", flexShrink: 0 }} />;
 }
 
-function RowMenu({ doc, collection, onClone, onToggle, onTrash, cloning }: {
+function RowMenu({ doc, collection, onClone, onToggle, onTrash, cloning, previewUrl }: {
   doc: Doc; collection: string;
   onClone: (e: React.MouseEvent) => void;
   onToggle: (e: React.MouseEvent) => void;
   onTrash: (e: React.MouseEvent) => void;
   cloning: boolean;
+  previewUrl?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [confirmTrash, setConfirmTrash] = useState(false);
@@ -155,6 +156,16 @@ function RowMenu({ doc, collection, onClone, onToggle, onTrash, cloning }: {
           >
             <Pencil style={{ width: "0.8rem", height: "0.8rem" }} /> Edit
           </Link>
+          {previewUrl && (
+            <button
+              type="button"
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(previewUrl, "_blank"); setOpen(false); }}
+              style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.4rem 0.6rem", borderRadius: "5px", fontSize: "0.8rem", color: "var(--foreground)", background: "none", border: "none", cursor: "pointer", width: "100%" }}
+              className="hover:bg-secondary"
+            >
+              <ExternalLink style={{ width: "0.8rem", height: "0.8rem" }} /> Preview
+            </button>
+          )}
           <button
             type="button"
             onClick={(e) => { onToggle(e); setOpen(false); }}
@@ -442,6 +453,18 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
     );
   }
 
+  function docPreviewUrl(doc: Doc): string {
+    if (!previewBase) return "";
+    const prefix = (urlPrefix ?? `/${collection}`).replace(/\/$/, "");
+    const isHomepage = (prefix === "" || prefix === "/") && (doc.slug === "home" || doc.slug === "index");
+    const category = typeof doc.data.category === "string" ? doc.data.category : "";
+    const prefixBase = prefix.split("/").pop() ?? "";
+    const useCategory = category && category !== prefixBase;
+    const slugPath = useCategory ? `${category}/${doc.slug}` : doc.slug;
+    const pagePath = isHomepage ? "/" : `${prefix}/${slugPath}`;
+    return `${previewBase}${pagePath}`;
+  }
+
   return (
     <div data-testid={`collection-list-${collection}`}>
       {/* Toolbar */}
@@ -516,43 +539,50 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" style={{ gridAutoRows: "minmax(10rem, auto)" }}>
           {filtered.map((doc) => {
             const title = String(doc.data[titleField] ?? doc.data["title"] ?? doc.slug);
-            // Build preview URL — use urlPrefix if defined, otherwise guess /<collection>/<slug>
-            let previewUrl = "";
-            if (previewBase) {
-              const prefix = (urlPrefix ?? `/${collection}`).replace(/\/$/, "");
-              const isHomepage = (prefix === "" || prefix === "/") && (doc.slug === "home" || doc.slug === "index");
-              const category = typeof doc.data.category === "string" ? doc.data.category : "";
-              const prefixBase = prefix.split("/").pop() ?? "";
-              const useCategory = category && category !== prefixBase;
-              const slugPath = useCategory ? `${category}/${doc.slug}` : doc.slug;
-              const pagePath = isHomepage ? "/" : `${prefix}/${slugPath}`;
-              previewUrl = `${previewBase}${pagePath}`;
-            }
+            const previewUrl = docPreviewUrl(doc);
 
             return (
-              <Link
+              <div
                 key={doc.id ?? doc.slug}
-                data-testid={`collection-item-${doc.slug}`}
-                href={`/admin/${collection}/${doc.slug}`}
-                className="group block rounded-xl border border-border bg-card hover:border-primary/40 transition-all duration-200 overflow-hidden"
-                style={{ textDecoration: "none", display: "flex", flexDirection: "column" }}
+                className="group relative rounded-xl border border-border bg-card hover:border-primary/40 transition-all duration-200 overflow-hidden"
+                style={{ display: "flex", flexDirection: "column" }}
               >
-                {/* Preview thumbnail */}
-                <PreviewThumb previewUrl={previewUrl} title={title} />
-                {/* Title + status footer */}
-                <div style={{ padding: "0.6rem 0.75rem", borderTop: "1px solid var(--border)" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-                    <StatusDot status={doc.status} publishAt={doc.publishAt} />
-                    <p style={{
-                      fontSize: "0.8rem", fontWeight: 500, color: "var(--foreground)",
-                      overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                      flex: 1, minWidth: 0,
-                    }} className="group-hover:text-primary transition-colors">
-                      {title}
-                    </p>
+                <Link
+                  data-testid={`collection-item-${doc.slug}`}
+                  href={`/admin/${collection}/${doc.slug}`}
+                  style={{ textDecoration: "none", display: "flex", flexDirection: "column", flex: 1 }}
+                >
+                  {/* Preview thumbnail */}
+                  <PreviewThumb previewUrl={previewUrl} title={title} />
+                  {/* Title + status footer */}
+                  <div style={{ padding: "0.6rem 0.75rem", borderTop: "1px solid var(--border)" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                      <StatusDot status={doc.status} publishAt={doc.publishAt} />
+                      <p style={{
+                        fontSize: "0.8rem", fontWeight: 500, color: "var(--foreground)",
+                        overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                        flex: 1, minWidth: 0,
+                      }} className="group-hover:text-primary transition-colors">
+                        {title}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              </Link>
+                </Link>
+                {/* Context menu */}
+                {!readOnly && (
+                  <div style={{ position: "absolute", top: "0.5rem", right: "0.5rem", zIndex: 2 }} className="opacity-0 group-hover:opacity-100 transition-opacity">
+                    <RowMenu
+                      doc={doc}
+                      collection={collection}
+                      onClone={(e) => cloneDoc(e, doc)}
+                      onToggle={(e) => toggleStatus(e, doc)}
+                      onTrash={(e) => trashDoc(e, doc)}
+                      cloning={cloningSlug === doc.slug}
+                      previewUrl={previewUrl}
+                    />
+                  </div>
+                )}
+              </div>
             );
           })}
         </div>
@@ -669,6 +699,7 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
                           onToggle={(e) => toggleStatus(e, doc)}
                           onTrash={(e) => trashDoc(e, doc)}
                           cloning={cloningSlug === doc.slug}
+                          previewUrl={docPreviewUrl(doc)}
                         />
                       )}
                     </td>
