@@ -250,9 +250,13 @@ Return ONLY a JSON object with the translated fields. No explanation, no preambl
     const sourceGroup = (sourceDoc as any).translationGroup as string | undefined;
     const translationGroupId = sourceGroup || generateId();
 
-    // Stamp translationGroup on source if it didn't have one yet
-    if (!sourceGroup) {
-      await cms.content.update(collection, sourceDoc.id, { translationGroup: translationGroupId });
+    // Stamp translationGroup + locale on source if missing
+    const sourceNeedsUpdate = !sourceGroup || !(sourceDoc as any).locale;
+    if (sourceNeedsUpdate) {
+      await cms.content.update(collection, sourceDoc.id, {
+        ...(!sourceGroup ? { translationGroup: translationGroupId } : {}),
+        ...(!(sourceDoc as any).locale ? { locale: sourceLocale } : {}),
+      });
     }
 
     // Check if translation already exists (by slug OR by translationGroup + locale)
