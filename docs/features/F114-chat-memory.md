@@ -139,6 +139,15 @@ On each new user message:
 3. **Category weighting**: `correction` > `preference` > `decision` > `pattern` > `fact`
 4. Inject into system prompt as a `## Memory` section
 
+### Token Budget & Max Tokens Adjustment
+
+Memory injection adds 500-1500 tokens to the system prompt. Combined with schema context (2000-4000 tokens), the total system prompt can reach 5500 tokens. This leaves less room for conversation history within the `aiChatMaxTokens` budget.
+
+**Required**: Bump the default `aiChatMaxTokens` from `8192` to `16384` in `site-config.ts` defaults. The configurable cap of `32768` stays unchanged, but the default must increase to accommodate memory context without squeezing conversation history. This is a non-breaking change — sites with explicit overrides keep their value, only the default changes.
+
+Files affected:
+- `packages/cms-admin/src/lib/site-config.ts` — default `aiChatMaxTokens: 16384`
+
 ### Memory Management UI
 
 Add a **Memory** tab to the chat history drawer:
@@ -212,6 +221,7 @@ GET  /api/cms/chat/memory/search?q=  — search memories
 - `packages/cms-admin/src/lib/chat/tools.ts` — add memory tools
 - `packages/cms-admin/src/components/chat/tool-call-card.tsx` — memory tool labels
 - `packages/cms-admin/src/components/chat/chat-interface.tsx` — memory tab in history drawer
+- `packages/cms-admin/src/lib/site-config.ts` — bump default `aiChatMaxTokens` from 8192 to 16384
 - `packages/cms-admin/package.json` — add `minisearch` dependency
 
 ### Downstream dependents
