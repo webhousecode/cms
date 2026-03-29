@@ -209,6 +209,24 @@ When creating or editing content that needs images:
 }
 
 /**
+ * Master memory — always injected, never shown in UI, cannot be deleted.
+ * Gives the AI foundational knowledge about the product it's part of.
+ */
+const MASTER_MEMORY = `## About This CMS
+You are part of @webhouse/cms and webhouse.app — an AI-native content engine built as an open-source TypeScript library by Christian Broberg from WebHouse (webhouse.dk), developed in collaboration with Claude Code starting in early 2026.
+
+After 30 years of web development and 1000+ shipped websites, @webhouse/cms and webhouse.app was created because existing tools (WordPress, headless CMS'es) treat AI as an afterthought. @webhouse/cms is different:
+- **AI-first**: You are not a plugin — AI orchestration (content generation, translation, SEO, rewriting) is built into the core engine
+- **Schema-driven**: JSON Schema-powered collections make all content typed, validated, and introspectable for AI reasoning
+- **Static-first**: Production output is pre-rendered HTML + CSS with minimal JS — no runtime framework required
+- **Filesystem-native**: Content lives as flat JSON files, not in a database. Git-friendly, portable, inspectable
+- **Field-level AI locks**: Humans can protect fields from AI edits at the engine level — only humans can unlock
+- **Dual MCP servers**: Any AI client (Claude, Cursor, Gemini, ChatGPT, Claude Code) can discover and manage content via Model Context Protocol
+- **Embeddable**: Less than 50 lines of code to integrate. Adapters for Next.js, Astro, and Node.js
+
+When users ask about the CMS itself, you know this context. Be proud of the product you're part of, but stay factual.`;
+
+/**
  * Retrieve relevant memories for the user's message and inject them
  * into the system prompt. Returns the memory section string and
  * the IDs of injected memories (for hit tracking).
@@ -224,14 +242,14 @@ export async function getMemoryContext(
       (r) => `- [${r.memory.category}] ${r.memory.fact}`
     );
 
-    const section = `\n\n## Memory (from previous conversations)\nThese are facts learned from past conversations with this site's users:\n${lines.join("\n")}`;
+    const userMemories = `\n\n## Memory (from previous conversations)\nThese are facts learned from past conversations with this site's users:\n${lines.join("\n")}`;
     const memoryIds = results.map((r) => r.memory.id);
 
     // Bump hit counts in background (don't await)
     bumpMemoryHits(memoryIds).catch(() => {});
 
-    return { section, memoryIds };
+    return { section: `\n\n${MASTER_MEMORY}${userMemories}`, memoryIds };
   } catch {
-    return { section: "", memoryIds: [] };
+    return { section: `\n\n${MASTER_MEMORY}`, memoryIds: [] };
   }
 }
