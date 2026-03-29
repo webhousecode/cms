@@ -50,6 +50,11 @@ export default function MediaPage() {
   const [allFiles, setAllFiles] = useState<MediaFile[]>([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<ViewMode>("grid");
+  const [thumbSize, setThumbSize] = useState<"S" | "M" | "L">(() => {
+    if (typeof window === "undefined") return "M";
+    return (localStorage.getItem("cms-media-thumb-size") as "S" | "M" | "L") || "M";
+  });
+  const thumbMinWidth = { S: "120px", M: "180px", L: "260px" }[thumbSize];
   const [folder, setFolder] = useState<string>(""); // "" = all / root
   const [query, setQuery] = useState(() => {
     if (typeof window === "undefined") return "";
@@ -491,6 +496,28 @@ export default function MediaPage() {
               </button>
             ))}
           </div>
+
+          {/* Thumbnail size (grid only) */}
+          {view === "grid" && (
+            <div style={{ display: "flex", border: "1px solid var(--border)", borderRadius: "6px", overflow: "hidden" }}>
+              {(["S", "M", "L"] as const).map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  onClick={() => { setThumbSize(s); localStorage.setItem("cms-media-thumb-size", s); }}
+                  style={{
+                    padding: "0.25rem 0.45rem", fontSize: "0.65rem", fontWeight: 600,
+                    background: thumbSize === s ? "var(--accent)" : "transparent",
+                    border: "none", cursor: "pointer",
+                    color: thumbSize === s ? "var(--foreground)" : "var(--muted-foreground)",
+                  }}
+                  title={`${s === "S" ? "Small" : s === "M" ? "Medium" : "Large"} thumbnails`}
+                >
+                  {s}
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* Upload button */}
           {!readOnly && (
@@ -965,7 +992,7 @@ type ViewProps = {
 
 function GridView({ files, copied, deleting, usageMap, aiAnalyzedSet, onCopy, onDelete, onOpen, onRename, selecting, selected, onToggleSelect }: ViewProps) {
   return (
-    <div style={{ padding: "1.25rem", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))", gap: "0.875rem" }}>
+    <div style={{ padding: "1.25rem", display: "grid", gridTemplateColumns: `repeat(auto-fill, minmax(${thumbMinWidth}, 1fr))`, gap: "0.875rem" }}>
       {files.map((file) => {
         const usages = usageMap[file.url] ?? [];
         const aiKey = file.folder ? `${file.folder}/${file.name}` : file.name;
