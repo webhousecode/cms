@@ -301,12 +301,13 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
   // Resolve preview base URL for grid view thumbnails
   const [previewBase, setPreviewBase] = useState("");
   useEffect(() => {
-    if (view !== "grid") return;
     async function resolve() {
-      // 1. Build with drafts included so unpublished docs appear in dist/
-      try {
-        await fetch("/api/preview-build", { method: "POST" });
-      } catch { /* build not available — serve existing dist/ */ }
+      // Build with drafts only in grid view (thumbnails need it)
+      if (view === "grid") {
+        try {
+          await fetch("/api/preview-build", { method: "POST" });
+        } catch { /* build not available — serve existing dist/ */ }
+      }
       // 2. Try sirv (static sites with dist/)
       try {
         const r = await fetch("/api/preview-serve", { method: "POST" });
