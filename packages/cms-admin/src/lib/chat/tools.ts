@@ -520,7 +520,8 @@ export async function buildChatTools(): Promise<ToolPair[]> {
             if (caption) parts.push(`  Caption: ${caption}`);
             if (alt) parts.push(`  Alt: ${alt}`);
             parts.push(`  Use this markdown: ![${alt ?? f.name}](${f.url})`);
-            if (m?.aiTags?.length) parts.push(`  Tags: ${m.aiTags.join(", ")}`);
+            if (m?.tags?.length) parts.push(`  User tags: ${m.tags.join(", ")}`);
+            if (m?.aiTags?.length) parts.push(`  AI tags: ${m.aiTags.join(", ")}`);
             if (m?.exif) {
               const e = m.exif;
               if (e.gpsLat != null && e.gpsLon != null) parts.push(`  GPS: ${e.gpsLat.toFixed(5)}, ${e.gpsLon.toFixed(5)}`);
