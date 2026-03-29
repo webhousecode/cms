@@ -918,12 +918,14 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
   const [translationGroup] = useState(initialDoc.translationGroup ?? "");
   const [localeOpen, setLocaleOpen] = useState(false);
   const [createTranslationOpen, setCreateTranslationOpen] = useState(false);
-  const [sideBySide, setSideBySideRaw] = useState(() => {
-    try { return localStorage.getItem("cms-side-by-side") === "1"; } catch { return false; }
-  });
+  const [sideBySide, setSideBySideRaw] = useState(false);
   const setSideBySide = useCallback((v: boolean) => {
     setSideBySideRaw(v);
     try { localStorage.setItem("cms-side-by-side", v ? "1" : "0"); } catch {}
+  }, []);
+  // Restore after hydration to avoid SSR mismatch
+  useEffect(() => {
+    try { if (localStorage.getItem("cms-side-by-side") === "1") setSideBySideRaw(true); } catch {}
   }, []);
   const sourceDoc = sourceDataProp ?? null;
   const localeRef = useRef<HTMLDivElement>(null);
