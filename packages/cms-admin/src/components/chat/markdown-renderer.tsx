@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useState, useCallback } from "react";
+import { Fragment, useState, useEffect, useCallback } from "react";
 import { Copy, Check } from "lucide-react";
 import { PagePreviewCard } from "./page-preview-card";
 
@@ -393,6 +393,19 @@ async function getPreviewBase(): Promise<string> {
 }
 
 /** Small pill button for document actions */
+/** View pill that only renders when collection is previewable */
+function DocPillView({ collection, slug }: { collection: string; slug: string }) {
+  const [show, setShow] = useState(true); // optimistic, hide if not previewable
+  useEffect(() => {
+    fetch(`/api/cms/collections/${collection}/schema`)
+      .then(r => r.ok ? r.json() : null)
+      .then(schema => { if (schema?.previewable === false) setShow(false); })
+      .catch(() => {});
+  }, [collection]);
+  if (!show) return null;
+  return <DocPill collection={collection} slug={slug} variant="view" />;
+}
+
 function DocPill({ collection, slug, variant }: { collection: string; slug: string; variant: "edit" | "view" }) {
   const label = variant === "edit" ? "Edit" : "View";
   return (
@@ -487,7 +500,7 @@ function InlineRich({ text }: { text: string }) {
         parts.push(
           <span key={match.index} style={{ whiteSpace: "nowrap" }}>
             <DocPill collection={col} slug={slug} variant="edit" />
-            <DocPill collection={col} slug={slug} variant="view" />
+            <DocPillView collection={col} slug={slug} />
           </span>
         );
       }

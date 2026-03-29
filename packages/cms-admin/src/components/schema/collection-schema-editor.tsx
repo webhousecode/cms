@@ -33,6 +33,7 @@ export function CollectionSchemaEditor({ collection, isNew }: Props) {
   const [label, setLabel] = useState(collection?.label ?? "");
   const [urlPrefix, setUrlPrefix] = useState(collection?.urlPrefix ?? "");
   const [translatable, setTranslatable] = useState(collection?.translatable !== false);
+  const [previewable, setPreviewable] = useState(collection?.previewable !== false);
   const [fields, setFields] = useState<FieldConfig[]>(collection?.fields ?? []);
   const [saving, setSaving] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -69,6 +70,7 @@ export function CollectionSchemaEditor({ collection, isNew }: Props) {
       label: label.trim() || undefined,
       urlPrefix: urlPrefix.trim() || undefined,
       translatable,
+      previewable,
       fields,
     };
 
@@ -155,6 +157,27 @@ export function CollectionSchemaEditor({ collection, isNew }: Props) {
             >
               <span style={{
                 position: "absolute", top: 2, left: translatable ? 20 : 2,
+                width: 18, height: 18, borderRadius: "50%", background: "#fff",
+                transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
+              }} />
+            </button>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: "0.5rem" }}>
+            <div>
+              <Label>Previewable</Label>
+              <p className="text-xs text-muted-foreground">Documents have individual pages on the site</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setPreviewable(!previewable)}
+              style={{
+                width: 40, height: 22, borderRadius: 11, border: "none", cursor: "pointer",
+                background: previewable ? "#F7BB2E" : "var(--muted)",
+                position: "relative", transition: "background 0.2s", flexShrink: 0,
+              }}
+            >
+              <span style={{
+                position: "absolute", top: 2, left: previewable ? 20 : 2,
                 width: 18, height: 18, borderRadius: "50%", background: "#fff",
                 transition: "left 0.2s", boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
               }} />

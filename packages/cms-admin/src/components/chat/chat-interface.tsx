@@ -4,7 +4,7 @@ import { useState, useCallback, useRef, useEffect } from "react";
 import { MessageList, type ChatMessageUI, type ToolCall } from "./message-list";
 import { ChatInput } from "./chat-input";
 import { WelcomeScreen } from "./welcome-screen";
-import { Pencil, Check, X, Trash2, MoreHorizontal, Star } from "lucide-react";
+import { Pencil, Check, X, Trash2, MoreHorizontal, Star, Copy } from "lucide-react";
 
 interface ChatInterfaceProps {
   collections: Array<{ name: string; label: string }>;
@@ -616,6 +616,15 @@ function HistoryItem({ id, title, updatedAt, isActive, starred, onLoad, onRename
           >
             <Star style={{ width: "13px", height: "13px", ...(starred ? { color: "#F7BB2E", fill: "#F7BB2E" } : {}) }} />
             {starred ? "Unstar" : "Star"}
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(id); setMenuOpen(false); }}
+            style={menuItemStyle}
+            onMouseEnter={(e) => { e.currentTarget.style.background = "var(--muted)"; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
+          >
+            <Copy style={{ width: "13px", height: "13px" }} />
+            Copy ID
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); setMenuOpen(false); setEditing(true); }}

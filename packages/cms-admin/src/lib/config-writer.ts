@@ -6,6 +6,7 @@ export interface CollectionDef {
   label?: string;
   urlPrefix?: string;
   translatable?: boolean;
+  previewable?: boolean;
   fields: FieldConfig[];
 }
 
@@ -29,6 +30,7 @@ function serializeCollection(col: CollectionDef): string {
   if (col.label) lines.push(`      label: ${JSON.stringify(col.label)},`);
   if (col.urlPrefix) lines.push(`      urlPrefix: ${JSON.stringify(col.urlPrefix)},`);
   if (col.translatable === false) lines.push(`      translatable: false,`);
+  if (col.previewable === false) lines.push(`      previewable: false,`);
   lines.push(`      fields: [`);
   for (const f of col.fields) {
     lines.push(serializeField(f) + ',');
