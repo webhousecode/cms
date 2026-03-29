@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAdminCms, getAdminConfig } from "@/lib/cms";
-import { calculateSeoScore, type SeoFields } from "@/lib/seo/score";
+import { calculateSeoScore, calculateGeoScore, type SeoFields } from "@/lib/seo/score";
 
 export interface SeoDocSummary {
   collection: string;
@@ -10,6 +10,7 @@ export interface SeoDocSummary {
   status: string;
   locale?: string;
   score: number;
+  geoScore: number;
   hasTitle: boolean;
   hasDesc: boolean;
   hasOgImage: boolean;
@@ -49,6 +50,10 @@ export async function GET() {
         seo,
         allTitles,
       );
+      const geo = calculateGeoScore(
+        { slug: doc.slug, data, updatedAt: (doc as any).updatedAt },
+        seo,
+      );
       results.push({
         collection: col.name,
         collectionLabel: col.label ?? col.name,
@@ -56,6 +61,7 @@ export async function GET() {
         title: String(data.title ?? data.name ?? doc.slug),
         status: doc.status as string,
         score,
+        geoScore: geo.score,
         hasTitle: !!(seo.metaTitle),
         hasDesc: !!(seo.metaDescription),
         hasOgImage: !!(seo.ogImage),
@@ -72,6 +78,7 @@ export async function GET() {
     const total = results.length;
     const optimized = results.filter((r) => r.optimized).length;
     const avgScore = total > 0 ? Math.round(results.reduce((s, r) => s + r.score, 0) / total) : 0;
+    const avgGeoScore = total > 0 ? Math.round(results.reduce((s, r) => s + r.geoScore, 0) / total) : 0;
     const missingTitle = results.filter((r) => !r.hasTitle).length;
     const missingDesc = results.filter((r) => !r.hasDesc).length;
     const missingOg = results.filter((r) => !r.hasOgImage).length;
@@ -80,6 +87,7 @@ export async function GET() {
       total,
       optimized,
       avgScore,
+      avgGeoScore,
       issues: { missingTitle, missingDesc, missingOg },
       documents: results,
     });

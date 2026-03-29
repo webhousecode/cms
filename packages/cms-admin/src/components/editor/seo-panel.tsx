@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Search, Sparkles, Loader2, ChevronDown, ChevronUp, Code2, RefreshCw } from "lucide-react";
-import { calculateSeoScore, calculateReadability, type SeoFields, type SeoScoreResult } from "@/lib/seo/score";
+import { calculateSeoScore, calculateGeoScore, calculateReadability, type SeoFields, type SeoScoreResult, type GeoScoreResult } from "@/lib/seo/score";
 import { JSON_LD_TEMPLATES, autoFillFields, generateJsonLd, type JsonLdTemplate } from "@/lib/seo/json-ld";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { toast } from "sonner";
@@ -38,6 +38,7 @@ export function SeoPanel({ collection, doc, onUpdate, onSave, onClose }: Props) 
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [score, setScore] = useState<SeoScoreResult | null>(null);
+  const [geoScore, setGeoScore] = useState<GeoScoreResult | null>(null);
 
   // Escape to close
   useEffect(() => {
@@ -48,10 +49,12 @@ export function SeoPanel({ collection, doc, onUpdate, onSave, onClose }: Props) 
 
   // Calculate score whenever fields change
   const recalc = useCallback(() => {
-    const current: SeoFields = { metaTitle, metaDescription: metaDesc, keywords, ogImage, robots };
+    const current: SeoFields = { metaTitle, metaDescription: metaDesc, keywords, ogImage, robots, jsonLd: jsonLd ?? undefined, jsonLdTemplate: jsonLdTemplate || undefined };
     const result = calculateSeoScore(doc, current);
     setScore(result);
-  }, [doc, metaTitle, metaDesc, keywords, ogImage, robots]);
+    const geo = calculateGeoScore(doc as { slug: string; data: Record<string, unknown>; updatedAt?: string }, current);
+    setGeoScore(geo);
+  }, [doc, metaTitle, metaDesc, keywords, ogImage, robots, jsonLd, jsonLdTemplate]);
 
   useEffect(() => { recalc(); }, [recalc]);
 
@@ -180,6 +183,8 @@ Rules:
   const readabilityScore = plainText.split(/\s+/).length >= 100 ? calculateReadability(plainText) : null;
 
   const scoreColor = (score?.score ?? 0) >= 80 ? "#4ade80" : (score?.score ?? 0) >= 50 ? "#F7BB2E" : "#f87171";
+  const geoColor = (geoScore?.score ?? 0) >= 80 ? "#4ade80" : (geoScore?.score ?? 0) >= 50 ? "#F7BB2E" : "#f87171";
+  const combinedScore = Math.round(((score?.score ?? 0) * 0.5) + ((geoScore?.score ?? 0) * 0.5));
   const title = String(doc.data.title ?? "");
   const siteUrl = "example.com";
 
@@ -196,11 +201,14 @@ Rules:
       {/* Header */}
       <div style={{ padding: "0.75rem 1rem", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
         <span style={{ display: "flex", alignItems: "center", gap: "0.375rem", fontWeight: 600, fontSize: "0.85rem" }}>
-          <Search style={{ width: 14, height: 14 }} /> SEO
+          <Search style={{ width: 14, height: 14 }} /> Visibility
         </span>
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <span style={{ fontSize: "0.8rem", fontWeight: 700, fontFamily: "monospace", color: scoreColor }}>
-            {score?.score ?? 0}
+          <span title="SEO Score" style={{ fontSize: "0.65rem", fontWeight: 600, fontFamily: "monospace", color: scoreColor }}>
+            SEO {score?.score ?? 0}
+          </span>
+          <span title="GEO Score" style={{ fontSize: "0.65rem", fontWeight: 600, fontFamily: "monospace", color: geoColor }}>
+            GEO {geoScore?.score ?? 0}
           </span>
           <button type="button" disabled={saving}
             onClick={async () => {
@@ -228,10 +236,19 @@ Rules:
 
       <div style={{ flex: 1, overflowY: "auto", padding: "1rem", display: "flex", flexDirection: "column", gap: "1rem" }}>
 
-        {/* Score bar */}
-        <div>
-          <div style={{ height: 6, borderRadius: 3, background: "var(--border)", overflow: "hidden" }}>
-            <div style={{ height: "100%", width: `${score?.score ?? 0}%`, background: scoreColor, borderRadius: 3, transition: "width 0.3s" }} />
+        {/* Score bars */}
+        <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
+            <span style={{ fontSize: "0.55rem", color: "var(--muted-foreground)", width: "2rem", textAlign: "right" }}>SEO</span>
+            <div style={{ flex: 1, height: 5, borderRadius: 3, background: "var(--border)", overflow: "hidden" }}>
+              <div style={{ height: "100%", width: `${score?.score ?? 0}%`, background: scoreColor, borderRadius: 3, transition: "width 0.3s" }} />
+            </div>
+          </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
+            <span style={{ fontSize: "0.55rem", color: "var(--muted-foreground)", width: "2rem", textAlign: "right" }}>GEO</span>
+            <div style={{ flex: 1, height: 5, borderRadius: 3, background: "var(--border)", overflow: "hidden" }}>
+              <div style={{ height: "100%", width: `${geoScore?.score ?? 0}%`, background: geoColor, borderRadius: 3, transition: "width 0.3s" }} />
+            </div>
           </div>
         </div>
 
@@ -554,12 +571,29 @@ Rules:
           </div>
         )}
 
-        {/* Score details */}
+        {/* SEO Checks */}
         {score && score.details.length > 0 && (
           <div>
-            <p style={lbl}>Checks</p>
+            <p style={lbl}>SEO Checks</p>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
               {score.details.map((d) => (
+                <div key={d.rule} style={{ display: "flex", alignItems: "flex-start", gap: "0.375rem", fontSize: "0.72rem" }}>
+                  <span style={{ flexShrink: 0, marginTop: 1 }}>
+                    {d.status === "pass" ? "🟢" : d.status === "warn" ? "🟡" : "🔴"}
+                  </span>
+                  <span style={{ color: "var(--muted-foreground)" }}>{d.message}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* GEO Checks */}
+        {geoScore && geoScore.details.length > 0 && (
+          <div>
+            <p style={lbl}>GEO Checks (AI Visibility)</p>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
+              {geoScore.details.map((d) => (
                 <div key={d.rule} style={{ display: "flex", alignItems: "flex-start", gap: "0.375rem", fontSize: "0.72rem" }}>
                   <span style={{ flexShrink: 0, marginTop: 1 }}>
                     {d.status === "pass" ? "🟢" : d.status === "warn" ? "🟡" : "🔴"}
