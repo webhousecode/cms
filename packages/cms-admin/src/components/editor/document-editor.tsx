@@ -1202,20 +1202,6 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
             </Button>
           )}
 
-          {sourceDoc && (
-            <Button
-              variant={sideBySide ? "default" : "ghost"}
-              size="sm"
-              onClick={() => setSideBySide(!sideBySide)}
-              className="gap-1.5"
-              title="Show source document side-by-side"
-              style={sideBySide ? { background: "#F7BB2E", color: "#0D0D0D" } : undefined}
-            >
-              <Languages className="w-3.5 h-3.5" />
-              {sideBySide ? "Close source" : "Side-by-side"}
-            </Button>
-          )}
-
           {!readOnly && (
             <Button
               variant="ghost"
@@ -1439,6 +1425,25 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
                 }} />
               </Link>
           ))}
+          {sourceDoc && (
+            <button
+              type="button"
+              onClick={() => setSideBySide(!sideBySide)}
+              title="Show source document side-by-side"
+              style={{
+                display: "inline-flex", alignItems: "center", gap: "0.25rem",
+                padding: "0.15rem 0.45rem", borderRadius: "4px",
+                border: sideBySide ? "1px solid #F7BB2E" : "1px solid var(--border)",
+                fontSize: "0.65rem", fontFamily: "monospace",
+                color: sideBySide ? "#0D0D0D" : "var(--muted-foreground)",
+                background: sideBySide ? "#F7BB2E" : "transparent",
+                cursor: "pointer", lineHeight: 1,
+              }}
+            >
+              <Languages size={11} />
+              {sideBySide ? "Close" : "Side-by-side"}
+            </button>
+          )}
           {(() => {
             // Any doc in a translation group can create new translations (equal partners)
             const existingLocs = [locale || defaultLocale || null, ...translations.map(t => t.locale)];
