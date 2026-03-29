@@ -1,0 +1,112 @@
+{
+  "id": "miDQukEvr1AQpQEjoz0_Y",
+  "slug": "god-dokumentation-i-cms",
+  "collection": "posts",
+  "status": "published",
+  "data": {
+    "title": "Derfor er god dokumentation afgørende i din CMS-løsning",
+    "excerpt": "God dokumentation er rygraden i enhver succesfuld CMS-løsning. Læs her, hvorfor det betaler sig at investere tid i dokumentation – og hvad du risikerer, hvis du ikke gør.",
+    "date": "2025-06-13",
+    "author": "Redaktionen",
+    "content": "![Skærmbillede af CMS blogredaktør med kodevisning ved siden af](/uploads/IMG_7962-cw3v.JPG \"float:right|width:45%\")\n\nNår man arbejder med en CMS-løsning (Content Management System), er der mange ting, der skal fungere: design, indhold, integrationer og brugervenlighed. Men én ting overses alt for ofte – **dokumentationen**.\n\nGod dokumentation er ikke bare en nice-to-have. Det er fundamentet, der holder hele løsningen sammen over tid.\n\n## Hvad er CMS-dokumentation?\n\nDokumentation i en CMS-løsning dækker over alt fra tekniske opsætningsvejledninger til redaktionelle retningslinjer. Det kan være:\n\n- Beskrivelse af feltstrukturer og samlinger\n- Vejledninger til redaktører om, hvordan indhold oprettes og publiceres\n- Teknisk dokumentation til udviklere om integrationer og konfiguration\n- Processer for godkendelse og publicering af indhold\n\n## Hvorfor er det så vigtigt?\n\n### 1. Onboarding bliver langt nemmere\n\nNår en ny redaktør eller udvikler starter, er god dokumentation det første, de skal have adgang til. Uden det bruger de timer – måske dage – på at finde ud af, hvordan systemet fungerer. Med klar dokumentation er de produktive fra dag ét.\n\n### 2. Færre fejl og misforståelser\n\nUdokumenterede systemer fører til gætterier. Redaktører er usikre på, hvilke felter der er obligatoriske, hvilken billedstørrelse der kræves, eller hvordan en kategori adskiller sig fra en tag. Det resulterer i inkonsistent indhold og tekniske problemer.\n\n### 3. Løsningen kan vedligeholdes af andre\n\nHvad sker der, hvis den person, der byggede løsningen, forlader projektet? Uden dokumentation er man afhængig af én persons hukommelse. Med dokumentation kan enhver overtage og videreudvikle systemet.\n\n### 4. Hurtigere fejlfinding\n\nNår noget går galt – og det gør det altid på et tidspunkt – er dokumentation guld værd. En klar oversigt over, hvordan systemet er sat op, gør det muligt at lokalisere og løse problemer på en brøkdel af den tid, det ellers ville tage.\n\n### 5. Tillid og professionalisme\n\nEn velstruktureret dokumentation signalerer professionalisme over for kunder og samarbejdspartnere. Det viser, at løsningen er bygget til at holde – ikke kun til at virke i dag.\n\n## Hvad bør god dokumentation indeholde?\n\nGod CMS-dokumentation behøver ikke være et romanlignende dokument. Det vigtigste er, at den er:\n\n- **Opdateret** – Forældet dokumentation er næsten værre end ingen dokumentation.\n- **Overskuelig** – Brug overskrifter, lister og eksempler til at gøre det nemt at navigere i.\n- **Tilgængelig** – Alle, der arbejder med systemet, skal kunne finde og bruge den.\n- **Kontekstuel** – Forklar ikke bare *hvad*, men også *hvorfor*.\n\n## Kom i gang i dag\n\nHvis din CMS-løsning ikke har dokumentation endnu, er det aldrig for sent at starte. Begynd med det vigtigste: en oversigt over indholdstyperne, felterne og de redaktionelle processer. Selv en simpel README-fil kan gøre en enorm forskel.\n\nInvestér tid i dokumentation nu – det sparer dig for mange frustrationer senere. 📝",
+    "_seo": {
+      "metaTitle": "God CMS-dokumentation: Afgørende for dit system",
+      "metaDescription": "Lær hvorfor dokumentation er essentielt i din CMS-løsning. Bedre onboarding, færre fejl og lettere vedligeholdelse af dit indholdsystem.",
+      "keywords": [
+        "CMS dokumentation",
+        "dokumentation best practices",
+        "content management system",
+        "CMS onboarding",
+        "teknisk dokumentation"
+      ],
+      "ogImage": "/uploads/og/god-dokumentation-i-cms.jpg",
+      "robots": "index,follow",
+      "score": 79,
+      "scoreDetails": [
+        {
+          "rule": "meta-title",
+          "label": "Meta title",
+          "status": "pass",
+          "message": "Meta title length is good (47/60 characters)"
+        },
+        {
+          "rule": "meta-desc",
+          "label": "Meta description",
+          "status": "pass",
+          "message": "Meta description length is good (136/160 characters)"
+        },
+        {
+          "rule": "keyword-title",
+          "label": "Keyword in title",
+          "status": "warn",
+          "message": "Add the keyword \"CMS dokumentation\" to the meta title field above."
+        },
+        {
+          "rule": "keyword-desc",
+          "label": "Keyword in description",
+          "status": "warn",
+          "message": "Add the keyword \"CMS dokumentation\" to the meta description field above."
+        },
+        {
+          "rule": "content-length",
+          "label": "Content length",
+          "status": "pass",
+          "message": "Content is 430 words (300+ is good)"
+        },
+        {
+          "rule": "headings",
+          "label": "Heading structure",
+          "status": "pass",
+          "message": "Content uses H2 headings for structure"
+        },
+        {
+          "rule": "img-alt",
+          "label": "Image alt text",
+          "status": "pass",
+          "message": "All 1 images have alt text"
+        },
+        {
+          "rule": "og-image",
+          "label": "Social image",
+          "status": "pass",
+          "message": "Social sharing image (OG) is set"
+        },
+        {
+          "rule": "keyword-slug",
+          "label": "Keyword in URL",
+          "status": "warn",
+          "message": "The keyword \"CMS dokumentation\" is not in the URL slug (god-dokumentation-i-cms). Consider renaming the slug in Properties."
+        },
+        {
+          "rule": "internal-links",
+          "label": "Internal links",
+          "status": "pass",
+          "message": "Content links to other pages on the site"
+        },
+        {
+          "rule": "title",
+          "label": "Page title",
+          "status": "pass",
+          "message": "Page has a title"
+        },
+        {
+          "rule": "readability",
+          "label": "Readability",
+          "status": "fail",
+          "message": "Readability score is 25/100 — text is very hard to read. Use shorter sentences and simpler words."
+        }
+      ],
+      "lastOptimized": "2026-03-29T02:06:28.649Z"
+    },
+    "_lastEditedBy": {
+      "userId": "fb4eda6a-bc5c-4dec-8cb6-c77c9fb74cd9",
+      "name": "Christian Broberg",
+      "email": "cb@webhouse.dk",
+      "at": "2026-03-29T02:08:20.715Z"
+    }
+  },
+  "_fieldMeta": {},
+  "createdAt": "2026-03-29T02:06:26.701Z",
+  "updatedAt": "2026-03-29T02:08:38.630Z",
+  "translationGroup": "c6P0xlpLgC9en61pqQPxS"
+}

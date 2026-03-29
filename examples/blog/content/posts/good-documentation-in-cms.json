@@ -1,0 +1,113 @@
+{
+  "id": "nANHfn9UNP7d-XUEKASwF",
+  "slug": "good-documentation-in-cms",
+  "collection": "posts",
+  "status": "draft",
+  "data": {
+    "title": "Why Good Documentation is Critical in Your CMS Solution",
+    "excerpt": "Good documentation is the backbone of any successful CMS solution. Read here why it pays to invest time in documentation – and what you risk if you don't.",
+    "date": "2025-06-13",
+    "author": "Editorial Team",
+    "content": "![Screenshot of CMS blog editor with code view beside it](/uploads/IMG_7962-cw3v.JPG \"float:right|width:45%\")\n\nWhen working with a CMS solution (Content Management System), there are many things that need to work: design, content, integrations, and user-friendliness. But one thing is overlooked far too often – **documentation**.\n\nGood documentation is not just a nice-to-have. It is the foundation that holds the entire solution together over time.\n\n## What is CMS Documentation?\n\nDocumentation in a CMS solution covers everything from technical setup guides to editorial guidelines. It can include:\n\n- Description of field structures and collections\n- Guides for editors on how to create and publish content\n- Technical documentation for developers on integrations and configuration\n- Processes for content approval and publishing\n\n## Why is it so important?\n\n### 1. Onboarding becomes much easier\n\nWhen a new editor or developer starts, good documentation should be the first thing they have access to. Without it, they spend hours – perhaps days – figuring out how the system works. With clear documentation, they are productive from day one.\n\n### 2. Fewer errors and misunderstandings\n\nUndocumented systems lead to guessing. Editors are unsure about which fields are mandatory, what image size is required, or how a category differs from a tag. This results in inconsistent content and technical problems.\n\n### 3. The solution can be maintained by others\n\nWhat happens if the person who built the solution leaves the project? Without documentation, you are dependent on one person's memory. With documentation, anyone can take over and further develop the system.\n\n### 4. Faster troubleshooting\n\nWhen something goes wrong – and it always does at some point – documentation is worth its weight in gold. A clear overview of how the system is set up makes it possible to locate and resolve problems in a fraction of the time it would otherwise take.\n\n### 5. Trust and professionalism\n\nWell-structured documentation signals professionalism to customers and partners. It shows that the solution is built to last – not just to work today.\n\n## What should good documentation contain?\n\nGood CMS documentation doesn't need to be a novel-like document. The important thing is that it is:\n\n- **Up-to-date** – Outdated documentation is almost worse than no documentation.\n- **Clear** – Use headings, lists, and examples to make it easy to navigate.\n- **Accessible** – Everyone working with the system should be able to find and use it.\n- **Contextual** – Explain not just *what*, but also *why*.\n\n## Get started today\n\nIf your CMS solution doesn't have documentation yet, it's never too late to start. Begin with the essentials: an overview of content types, fields, and editorial processes. Even a simple README file can make a huge difference.\n\nInvest time in documentation now – it will save you many frustrations later. 📝",
+    "_seo": {
+      "metaTitle": "Good CMS Documentation: Critical for Your System",
+      "metaDescription": "Learn why documentation is essential in your CMS solution. Better onboarding, fewer errors, and easier maintenance.",
+      "keywords": [
+        "CMS documentation",
+        "documentation best practices",
+        "content management system",
+        "CMS onboarding",
+        "technical documentation"
+      ],
+      "ogImage": "/uploads/og/god-dokumentation-i-cms.jpg",
+      "robots": "index,follow",
+      "score": 79,
+      "scoreDetails": [
+        {
+          "rule": "meta-title",
+          "label": "Meta title",
+          "status": "pass",
+          "message": "Meta title length is good (47/60 characters)"
+        },
+        {
+          "rule": "meta-desc",
+          "label": "Meta description",
+          "status": "pass",
+          "message": "Meta description length is good (136/160 characters)"
+        },
+        {
+          "rule": "keyword-title",
+          "label": "Keyword in title",
+          "status": "warn",
+          "message": "Add the keyword \"CMS dokumentation\" to the meta title field above."
+        },
+        {
+          "rule": "keyword-desc",
+          "label": "Keyword in description",
+          "status": "warn",
+          "message": "Add the keyword \"CMS dokumentation\" to the meta description field above."
+        },
+        {
+          "rule": "content-length",
+          "label": "Content length",
+          "status": "pass",
+          "message": "Content is 430 words (300+ is good)"
+        },
+        {
+          "rule": "headings",
+          "label": "Heading structure",
+          "status": "pass",
+          "message": "Content uses H2 headings for structure"
+        },
+        {
+          "rule": "img-alt",
+          "label": "Image alt text",
+          "status": "pass",
+          "message": "All 1 images have alt text"
+        },
+        {
+          "rule": "og-image",
+          "label": "Social image",
+          "status": "pass",
+          "message": "Social sharing image (OG) is set"
+        },
+        {
+          "rule": "keyword-slug",
+          "label": "Keyword in URL",
+          "status": "warn",
+          "message": "The keyword \"CMS dokumentation\" is not in the URL slug (god-dokumentation-i-cms). Consider renaming the slug in Properties."
+        },
+        {
+          "rule": "internal-links",
+          "label": "Internal links",
+          "status": "pass",
+          "message": "Content links to other pages on the site"
+        },
+        {
+          "rule": "title",
+          "label": "Page title",
+          "status": "pass",
+          "message": "Page has a title"
+        },
+        {
+          "rule": "readability",
+          "label": "Readability",
+          "status": "fail",
+          "message": "Readability score is 25/100 — text is very hard to read. Use shorter sentences and simpler words."
+        }
+      ],
+      "lastOptimized": "2026-03-29T02:06:28.649Z"
+    },
+    "_lastEditedBy": {
+      "userId": "fb4eda6a-bc5c-4dec-8cb6-c77c9fb74cd9",
+      "name": "Christian Broberg",
+      "email": "cb@webhouse.dk",
+      "at": "2026-03-29T02:08:20.715Z"
+    }
+  },
+  "_fieldMeta": {},
+  "createdAt": "2026-03-29T02:08:38.638Z",
+  "updatedAt": "2026-03-29T02:08:38.638Z",
+  "locale": "en",
+  "translationGroup": "c6P0xlpLgC9en61pqQPxS"
+}
