@@ -698,7 +698,7 @@ export async function buildChatTools(): Promise<ToolPair[]> {
           const siteConfig = await readSiteConfig();
           const docLocale = siteConfig.defaultLocale || "en";
           const targetLocales = (siteConfig.locales || []).filter((l: string) => l !== docLocale);
-          if (targetLocales.length > 0 && col.translatable !== false) {
+          if (targetLocales.length > 0 && col.translatable !== false && siteConfig.autoRetranslateOnUpdate) {
             // Set locale on source doc
             const { generateId } = await import("@webhouse/cms");
             const translationGroupId = generateId();

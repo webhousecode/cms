@@ -685,12 +685,12 @@ function LanguageSection({ cfg, setCfg: _setCfg }: {
 								]}
 							/>
 						</div>
-						{/* Auto-retranslate on update */}
+						{/* Auto-translate */}
 						<div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.75rem 0", borderTop: "1px solid var(--border)" }}>
 							<div>
-								<p style={{ fontSize: "0.875rem", fontWeight: 500, margin: 0 }}>Auto-retranslate on update</p>
+								<p style={{ fontSize: "0.875rem", fontWeight: 500, margin: 0 }}>Auto-translate</p>
 								<p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", margin: "0.15rem 0 0" }}>
-									Automatically re-translate stale translations when the source document is updated.
+									Automatically translate new and updated content to all configured languages.
 								</p>
 							</div>
 							<button
