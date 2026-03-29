@@ -30,6 +30,18 @@ async function dispatchAutoDeployOnSave() {
 
 type Ctx = { params: Promise<{ collection: string; slug: string }> };
 
+export async function GET(_req: NextRequest, { params }: Ctx) {
+  try {
+    const { collection, slug } = await params;
+    const cms = await getAdminCms();
+    const doc = await cms.content.findBySlug(collection, slug);
+    if (!doc) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    return NextResponse.json(doc);
+  } catch {
+    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+  }
+}
+
 export async function POST(req: NextRequest, { params }: Ctx) {
   const postSession = await getSessionWithSiteRole();
   if (!postSession || !postSession.siteRole || postSession.siteRole === "viewer") {
