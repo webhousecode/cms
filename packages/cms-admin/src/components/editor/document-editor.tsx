@@ -884,7 +884,7 @@ interface Props {
   defaultLocale?: string;
   initialDoc: DocSnapshot;
   translations?: { slug: string; locale: string | null; status: string; updatedAt?: string }[];
-  sourceData?: Record<string, unknown>;
+  siblingData?: Array<{ locale: string; slug: string; data: Record<string, unknown> }>;
   previewSiteUrl?: string;
   previewInIframe?: boolean;
   backHref?: string;
@@ -897,7 +897,7 @@ const G = globalThis as unknown as { __docCache?: Map<string, DocSnapshot> };
 if (!G.__docCache) G.__docCache = new Map();
 const docStateCache = G.__docCache;
 
-export function DocumentEditor({ collection, colConfig, blocksConfig = [], locales = [], defaultLocale = "en", initialDoc, translations = [], sourceData: sourceDataProp, previewSiteUrl, previewInIframe, backHref, readOnly = false }: Props) {
+export function DocumentEditor({ collection, colConfig, blocksConfig = [], locales = [], defaultLocale = "en", initialDoc, translations = [], siblingData: siblingDataProp, previewSiteUrl, previewInIframe, backHref, readOnly = false }: Props) {
   const PREVIEW_SITE_URL = previewSiteUrl ?? PREVIEW_SITE_URL_DEFAULT;
   const PREVIEW_IN_IFRAME = previewInIframe ?? PREVIEW_IN_IFRAME_DEFAULT;
   const cacheKey = `${collection}/${initialDoc.slug}`;
@@ -958,7 +958,10 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
   useEffect(() => {
     try { if (localStorage.getItem("cms-side-by-side") === "1") setSideBySideRaw(true); } catch {}
   }, []);
-  const sourceDoc = sourceDataProp ?? null;
+  const siblings = siblingDataProp ?? [];
+  const [sbsLocale, setSbsLocale] = useState(siblings[0]?.locale ?? "");
+  const activeSibling = siblings.find(s => s.locale === sbsLocale) ?? siblings[0] ?? null;
+  const sourceDoc = activeSibling?.data ?? null;
   const localeRef = useRef<HTMLDivElement>(null);
   const [, startTransition] = useTransition();
   const router = useRouter();
@@ -1515,8 +1518,28 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
             flex: "0 0 50%", maxWidth: "50%", borderRight: "2px solid var(--border)",
             overflowY: "auto", opacity: 0.85,
           }}>
-            <div className="flex gap-6 text-xs text-muted-foreground font-mono pb-8 border-b border-border">
-              <span>{translations[0]?.locale?.toUpperCase() ?? "Partner"} — {translations[0]?.slug ?? "translation"}</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 0, fontSize: "0.7rem", fontFamily: "monospace", borderBottom: "1px solid var(--border)", marginBottom: "0.5rem" }}>
+              {siblings.length > 1 ? siblings.map(s => (
+                <button
+                  key={s.locale}
+                  type="button"
+                  onClick={() => setSbsLocale(s.locale)}
+                  style={{
+                    padding: "0.4rem 0.75rem", border: "none", cursor: "pointer",
+                    background: s.locale === sbsLocale ? "var(--accent)" : "transparent",
+                    color: s.locale === sbsLocale ? "var(--foreground)" : "var(--muted-foreground)",
+                    fontWeight: s.locale === sbsLocale ? 600 : 400,
+                    fontFamily: "monospace", fontSize: "0.7rem",
+                    borderBottom: s.locale === sbsLocale ? "2px solid var(--foreground)" : "2px solid transparent",
+                  }}
+                >
+                  {s.locale.toUpperCase()}
+                </button>
+              )) : (
+                <span style={{ padding: "0.4rem 0.75rem", color: "var(--muted-foreground)" }}>
+                  {activeSibling?.locale?.toUpperCase() ?? ""}
+                </span>
+              )}
             </div>
             {colConfig.fields.map((field) => (
               <div key={field.name} className="space-y-1.5" style={{ paddingTop: "2rem" }}>
