@@ -615,6 +615,140 @@ function slugifyTitle(title: string): string {
     .slice(0, 80);
 }
 
+/* ─── Translation group link tool ─────────────────────────── */
+function TranslationGroupSection({ doc, collection, onSaved, labelStyle, valueStyle }: {
+  doc: DocSnapshot;
+  collection: string;
+  onSaved: (updated: DocSnapshot) => void;
+  labelStyle: React.CSSProperties;
+  valueStyle: React.CSSProperties;
+}) {
+  const [linking, setLinking] = useState(false);
+  const [search, setSearch] = useState("");
+  const [results, setResults] = useState<Array<{ slug: string; locale?: string; title: string }>>([]);
+  const groupId = (doc as any).translationGroup ?? "";
+
+  async function searchDocs(q: string) {
+    if (!q.trim()) { setResults([]); return; }
+    try {
+      const res = await fetch(`/api/cms/${collection}?search=${encodeURIComponent(q)}`);
+      if (!res.ok) {
+        // Fallback: fetch all and filter client-side
+        const allRes = await fetch(`/api/cms/${collection}`);
+        if (!allRes.ok) return;
+        const allData = await allRes.json();
+        const docs = (allData.documents ?? allData ?? []) as any[];
+        setResults(docs
+          .filter((d: any) => d.slug !== doc.slug && d.id !== doc.id)
+          .filter((d: any) => {
+            const title = String(d.data?.title ?? d.slug).toLowerCase();
+            return title.includes(q.toLowerCase()) || d.slug.includes(q.toLowerCase());
+          })
+          .slice(0, 8)
+          .map((d: any) => ({ slug: d.slug, locale: d.locale, title: String(d.data?.title ?? d.slug) }))
+        );
+        return;
+      }
+      const data = await res.json();
+      setResults((data.documents ?? data ?? [])
+        .filter((d: any) => d.slug !== doc.slug)
+        .slice(0, 8)
+        .map((d: any) => ({ slug: d.slug, locale: d.locale, title: String(d.data?.title ?? d.slug) }))
+      );
+    } catch {}
+  }
+
+  async function linkDoc(targetSlug: string) {
+    const newGroupId = groupId || crypto.randomUUID().replace(/-/g, "").slice(0, 21);
+    try {
+      // Set translationGroup on this doc
+      await fetch(`/api/cms/${collection}/${doc.slug}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ data: {}, translationGroup: newGroupId }),
+      });
+      // Set translationGroup on target doc
+      await fetch(`/api/cms/${collection}/${targetSlug}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ data: {}, translationGroup: newGroupId }),
+      });
+      const updated = { ...doc, translationGroup: newGroupId } as any;
+      onSaved(updated);
+      setLinking(false);
+      setSearch("");
+      setResults([]);
+    } catch {}
+  }
+
+  return (
+    <div>
+      <p style={labelStyle}>Translation group</p>
+      {groupId ? (
+        <p style={valueStyle} title={groupId}>{groupId.slice(0, 8)}…</p>
+      ) : (
+        <p style={{ ...valueStyle, color: "var(--muted-foreground)", fontSize: "0.7rem" }}>Not linked</p>
+      )}
+      {!linking ? (
+        <button
+          type="button"
+          onClick={() => setLinking(true)}
+          style={{
+            marginTop: "0.35rem", padding: "0.2rem 0.5rem", borderRadius: "4px",
+            border: "1px solid var(--border)", background: "transparent",
+            color: "var(--muted-foreground)", fontSize: "0.68rem", cursor: "pointer",
+            display: "flex", alignItems: "center", gap: "0.3rem",
+          }}
+        >
+          <Languages size={11} /> Link to translation
+        </button>
+      ) : (
+        <div style={{ marginTop: "0.4rem", display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+          <input
+            type="text"
+            value={search}
+            onChange={(e) => { setSearch(e.target.value); searchDocs(e.target.value); }}
+            placeholder="Search by title or slug…"
+            autoFocus
+            style={{
+              padding: "0.3rem 0.5rem", borderRadius: "5px",
+              border: "1px solid var(--border)", background: "var(--background)",
+              color: "var(--foreground)", fontSize: "0.75rem", outline: "none",
+            }}
+          />
+          {results.map(r => (
+            <button
+              key={r.slug}
+              type="button"
+              onClick={() => linkDoc(r.slug)}
+              style={{
+                display: "flex", alignItems: "center", gap: "0.4rem", textAlign: "left",
+                padding: "0.3rem 0.5rem", borderRadius: "4px",
+                border: "1px solid var(--border)", background: "var(--card)",
+                color: "var(--foreground)", fontSize: "0.7rem", cursor: "pointer",
+              }}
+            >
+              {r.locale && <span style={{ fontWeight: 600, fontSize: "0.6rem", opacity: 0.7 }}>{r.locale.toUpperCase()}</span>}
+              <span style={{ flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.title}</span>
+            </button>
+          ))}
+          <button
+            type="button"
+            onClick={() => { setLinking(false); setSearch(""); setResults([]); }}
+            style={{
+              padding: "0.2rem 0.5rem", borderRadius: "4px",
+              border: "none", background: "transparent",
+              color: "var(--muted-foreground)", fontSize: "0.65rem", cursor: "pointer",
+            }}
+          >
+            Cancel
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function PropertiesPanel({ doc, collection, locales, onClose, onSaved }: {
   doc: DocSnapshot;
   collection: string;
@@ -825,13 +959,8 @@ function PropertiesPanel({ doc, collection, locales, onClose, onSaved }: {
           </div>
         )}
 
-        {/* Translation group */}
-        {(doc as any).translationGroup && (
-          <div>
-            <p style={labelStyle}>Translation group</p>
-            <p style={valueStyle} title={(doc as any).translationGroup}>{(doc as any).translationGroup.slice(0, 8)}…</p>
-          </div>
-        )}
+        {/* Translation group — link/unlink */}
+        <TranslationGroupSection doc={doc} collection={collection} onSaved={onSaved} labelStyle={labelStyle} valueStyle={valueStyle} />
 
         {/* Scheduled */}
         {doc.publishAt && (
