@@ -1,11 +1,10 @@
 /**
- * F63 Component Audit — Visual screenshot + crop + SVG generator
+ * F63 Component Audit — Visual screenshot + SVG generator
  *
- * 1. Takes full-page Playwright screenshots of key admin surfaces
- * 2. Crops specific component areas with Sharp
- * 3. Generates a large SVG document with numbered, labeled crops
+ * Uses data-testid selectors (F80) to capture precise element screenshots.
+ * Generates a large SVG with linked PNGs, numbered and labeled.
  */
-import { chromium } from "playwright";
+import { chromium, type Page, type Locator } from "playwright";
 import sharp from "sharp";
 import fs from "fs";
 import path from "path";
@@ -13,21 +12,15 @@ import path from "path";
 const BASE = "http://localhost:3010";
 const OUT = path.join(process.cwd(), "docs/f63-audit");
 const CROPS_DIR = path.join(OUT, "crops");
-const DEV_TOKEN = "6b2bd97c4d457e83ec5eb000439e3f083c9dacac39e4ef18b2dd9ab8cdd21610";
-
-// Sites/orgs to visit for variety
-const CONTEXTS = [
-  { org: "examples", site: "freelancer", label: "Freelancer" },
-  { org: "webhouse", site: "webhouse-site", label: "WebHouse" },
-];
 
 interface CropDef {
   id: number;
   name: string;
   category: string;
   page: string;
-  screenshot: string;
-  region: { left: number; top: number; width: number; height: number };
+  file: string;
+  width: number;
+  height: number;
 }
 
 async function main() {
@@ -36,156 +29,208 @@ async function main() {
   const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({
     viewport: { width: 1440, height: 900 },
-    storageState: undefined,
+    colorScheme: "dark",
   });
 
-  // Login
-  const loginPage = await context.newPage();
-  await loginPage.goto(`${BASE}/api/auth/callback/credentials?token=${DEV_TOKEN}`, { waitUntil: "networkidle" });
-  await loginPage.close();
-
+  // Login via API
   const page = await context.newPage();
+  console.log("  🔑 Logging in via API...");
+  const loginRes = await page.request.post(`${BASE}/api/auth/login`, {
+    data: { email: "cb@webhouse.dk", password: "NewAmaliesbh2711!" },
+  });
+  if (!loginRes.ok()) throw new Error(`Login failed: ${loginRes.status()}`);
+  console.log("  ✅ Logged in");
 
-  // Set cookies for site context
   async function switchSite(org: string, site: string) {
     await context.addCookies([
       { name: "cms-active-org", value: org, domain: "localhost", path: "/" },
       { name: "cms-active-site", value: site, domain: "localhost", path: "/" },
     ]);
+    // Navigate to admin root so server picks up the new cookies
+    await page.goto(`${BASE}/admin`, { waitUntil: "domcontentloaded", timeout: 20000 });
+    await page.waitForTimeout(2000);
+    console.log(`  🔄 Switched to ${org}/${site} — at: ${page.url()}`);
   }
 
-  const screenshots: Record<string, string> = {};
   const crops: CropDef[] = [];
   let cropId = 1;
 
-  // Helper: take screenshot
-  async function takeScreenshot(name: string, url: string, opts?: { fullPage?: boolean; waitFor?: string; delay?: number }) {
-    console.log(`  📸 ${name}: ${url}`);
-    await page.goto(url, { waitUntil: "networkidle", timeout: 15000 }).catch(() => {});
-    if (opts?.waitFor) await page.waitForSelector(opts.waitFor, { timeout: 5000 }).catch(() => {});
-    if (opts?.delay) await page.waitForTimeout(opts.delay);
+  // Navigate and wait for content
+  async function go(url: string, waitMs = 2000) {
+    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 20000 });
+    await page.waitForTimeout(waitMs);
+  }
+
+  // Take full-page screenshot
+  async function fullScreenshot(name: string) {
     const filePath = path.join(OUT, `${name}.png`);
-    await page.screenshot({ path: filePath, fullPage: opts?.fullPage ?? true });
-    screenshots[name] = filePath;
+    await page.screenshot({ path: filePath, fullPage: true });
     return filePath;
   }
 
-  // Helper: crop region
-  async function crop(def: Omit<CropDef, "id">): Promise<CropDef> {
-    const entry: CropDef = { ...def, id: cropId++ };
-    const srcPath = screenshots[def.screenshot];
-    if (!srcPath || !fs.existsSync(srcPath)) {
-      console.warn(`  ⚠️  Missing screenshot: ${def.screenshot}`);
-      return entry;
-    }
-    const outPath = path.join(CROPS_DIR, `${String(entry.id).padStart(2, "0")}-${def.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}.png`);
+  // Capture a specific element by data-testid
+  async function captureTestId(testId: string, name: string, category: string, pageName: string): Promise<CropDef | null> {
+    const loc = page.locator(`[data-testid="${testId}"]`).first();
     try {
-      const meta = await sharp(srcPath).metadata();
-      const r = def.region;
-      // Clamp to image bounds
-      const left = Math.min(r.left, (meta.width ?? 1440) - 1);
-      const top = Math.min(r.top, (meta.height ?? 900) - 1);
-      const width = Math.min(r.width, (meta.width ?? 1440) - left);
-      const height = Math.min(r.height, (meta.height ?? 900) - top);
-      await sharp(srcPath).extract({ left, top, width, height }).toFile(outPath);
-      entry.screenshot = outPath;
-    } catch (err) {
-      console.warn(`  ⚠️  Crop failed for ${def.name}:`, err);
+      await loc.waitFor({ state: "visible", timeout: 3000 });
+    } catch {
+      console.warn(`    ⚠️  ${testId} not visible on ${pageName}`);
+      return null;
     }
+    const file = `${String(cropId).padStart(2, "0")}-${name.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}.png`;
+    const filePath = path.join(CROPS_DIR, file);
+    await loc.screenshot({ path: filePath });
+    const meta = await sharp(filePath).metadata();
+    const entry: CropDef = { id: cropId++, name, category, page: pageName, file, width: meta.width ?? 300, height: meta.height ?? 100 };
     crops.push(entry);
+    console.log(`    ✂️  #${entry.id} ${name} (${meta.width}x${meta.height})`);
+    return entry;
+  }
+
+  // Capture by CSS selector (for elements without testid)
+  async function captureSelector(selector: string, name: string, category: string, pageName: string): Promise<CropDef | null> {
+    const loc = page.locator(selector).first();
+    try {
+      await loc.waitFor({ state: "visible", timeout: 3000 });
+    } catch {
+      console.warn(`    ⚠️  ${selector} not visible on ${pageName}`);
+      return null;
+    }
+    const file = `${String(cropId).padStart(2, "0")}-${name.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}.png`;
+    const filePath = path.join(CROPS_DIR, file);
+    await loc.screenshot({ path: filePath });
+    const meta = await sharp(filePath).metadata();
+    const entry: CropDef = { id: cropId++, name, category, page: pageName, file, width: meta.width ?? 300, height: meta.height ?? 100 };
+    crops.push(entry);
+    console.log(`    ✂️  #${entry.id} ${name} (${meta.width}x${meta.height})`);
     return entry;
   }
 
   // ═══════════════════════════════════════════════════════════
-  // PHASE 1: Take all screenshots
+  // SCREENSHOTS — Freelancer site
   // ═══════════════════════════════════════════════════════════
-  console.log("\n🔍 Phase 1: Screenshots\n");
-
-  // Freelancer context
+  console.log("\n🔍 Freelancer site\n");
   await switchSite("examples", "freelancer");
 
-  await takeScreenshot("01-collection-list", `${BASE}/admin/content/services`, { delay: 1500 });
-  await takeScreenshot("02-document-editor", `${BASE}/admin/content/services/starter-package`, { delay: 1500 });
-  await takeScreenshot("03-pages-editor", `${BASE}/admin/content/pages/home`, { delay: 1500 });
-  await takeScreenshot("04-settings-general", `${BASE}/admin/settings?tab=general`, { delay: 1500 });
-  await takeScreenshot("05-settings-tools", `${BASE}/admin/settings?tab=tools`, { delay: 1500 });
-  await takeScreenshot("06-settings-ai", `${BASE}/admin/settings?tab=ai`, { delay: 1500 });
-  await takeScreenshot("07-settings-deploy", `${BASE}/admin/settings?tab=deploy`, { delay: 1500 });
-  await takeScreenshot("08-settings-team", `${BASE}/admin/settings?tab=team`, { delay: 1500 });
-  await takeScreenshot("09-media", `${BASE}/admin/media`, { delay: 2000 });
-  await takeScreenshot("10-calendar", `${BASE}/admin/calendar`, { delay: 1500 });
-  await takeScreenshot("11-sites", `${BASE}/admin/sites`, { delay: 1500 });
-  await takeScreenshot("12-seo", `${BASE}/admin/seo`, { delay: 1500 });
-
-  // WebHouse context (for more variety — chat, agents, etc.)
-  await switchSite("webhouse", "webhouse-site");
-  await takeScreenshot("13-agents", `${BASE}/admin/agents`, { delay: 1500 });
-  await takeScreenshot("14-chat", `${BASE}/admin/chat`, { delay: 2000 });
-  await takeScreenshot("15-analytics", `${BASE}/admin/analytics`, { delay: 1500 });
-  await takeScreenshot("16-tools-linkchecker", `${BASE}/admin/tools`, { delay: 1500 });
-  await takeScreenshot("17-settings-mcp", `${BASE}/admin/settings?tab=mcp`, { delay: 1500 });
-  await takeScreenshot("18-settings-email", `${BASE}/admin/settings?tab=email`, { delay: 1500 });
-
-  // ═══════════════════════════════════════════════════════════
-  // PHASE 2: Crop specific components
-  // ═══════════════════════════════════════════════════════════
-  console.log("\n✂️  Phase 2: Cropping components\n");
-
-  // --- CARDS ---
-  await crop({ name: "SettingsCard", category: "Cards", page: "Settings/General", screenshot: "04-settings-general", region: { left: 30, top: 120, width: 560, height: 250 } });
-  await crop({ name: "SiteCard", category: "Cards", page: "Sites", screenshot: "11-sites", region: { left: 30, top: 80, width: 700, height: 300 } });
-
-  // --- SECTION HEADERS ---
-  await crop({ name: "SectionHeading-Backup", category: "Section Headers", page: "Settings/Tools", screenshot: "05-settings-tools", region: { left: 20, top: 80, width: 560, height: 60 } });
-  await crop({ name: "SectionHeading-Deploy", category: "Section Headers", page: "Settings/Deploy", screenshot: "07-settings-deploy", region: { left: 20, top: 80, width: 560, height: 60 } });
-
-  // --- LISTS ---
-  await crop({ name: "CollectionList", category: "Lists", page: "Content/Services", screenshot: "01-collection-list", region: { left: 200, top: 80, width: 1200, height: 400 } });
-  await crop({ name: "AgentsList", category: "Lists", page: "Agents", screenshot: "13-agents", region: { left: 200, top: 80, width: 1200, height: 400 } });
-
-  // --- BUTTONS ---
-  await crop({ name: "ActionBar", category: "Buttons", page: "Document Editor", screenshot: "02-document-editor", region: { left: 200, top: 40, width: 1200, height: 55 } });
-  await crop({ name: "ActionBar-Pages", category: "Buttons", page: "Pages Editor", screenshot: "03-pages-editor", region: { left: 200, top: 40, width: 1200, height: 55 } });
-
-  // --- INPUTS ---
-  await crop({ name: "SettingsInput", category: "Inputs", page: "Settings/General", screenshot: "04-settings-general", region: { left: 30, top: 250, width: 560, height: 200 } });
-  await crop({ name: "WebhookInput", category: "Inputs", page: "Settings/Tools", screenshot: "05-settings-tools", region: { left: 30, top: 180, width: 560, height: 120 } });
-
-  // --- SELECTS ---
-  await crop({ name: "CustomSelect-AI", category: "Selects", page: "Settings/AI", screenshot: "06-settings-ai", region: { left: 30, top: 120, width: 560, height: 250 } });
-
-  // --- BADGES / TAGS ---
-  await crop({ name: "StatusBadges", category: "Badges", page: "Content/Services", screenshot: "01-collection-list", region: { left: 800, top: 80, width: 400, height: 300 } });
-
   // --- SIDEBAR ---
-  await crop({ name: "Sidebar-Nav", category: "Sidebar", page: "Content", screenshot: "01-collection-list", region: { left: 0, top: 0, width: 200, height: 900 } });
+  console.log("  📍 Sidebar");
+  await go(`${BASE}/admin/services`);
+  await fullScreenshot("01-collection-list");
+  await captureTestId("sidebar", "Sidebar", "Navigation", "Content/Services");
+
+  // --- COLLECTION LIST ---
+  console.log("  📍 Collection list");
+  await captureTestId("collection-list-services", "CollectionList-Services", "Lists", "Content/Services");
+  await captureTestId("collection-item-starter-package", "CollectionItem", "Lists", "Content/Services");
+
+  // --- DOCUMENT EDITOR ---
+  console.log("  📍 Document editor");
+  await go(`${BASE}/admin/services/starter-package`);
+  await fullScreenshot("02-document-editor");
+  await captureTestId("document-editor", "DocumentEditor", "Editors", "Services/starter-package");
+  await captureTestId("action-bar", "ActionBar", "Buttons", "Services/starter-package");
+  await captureTestId("btn-save", "BtnSave", "Buttons", "Services/starter-package");
+
+  // --- FIELD TYPES ---
+  console.log("  📍 Field types");
+  await captureTestId("field-text-title", "Field-Text", "Fields", "Services/starter-package");
+  await captureTestId("field-textarea-description", "Field-Textarea", "Fields", "Services/starter-package");
+  await captureTestId("field-boolean-popular", "Field-Boolean", "Fields", "Services/starter-package");
+  await captureTestId("field-text-price", "Field-Text-Short", "Fields", "Services/starter-package");
+
+  // Pages editor — more field types
+  await go(`${BASE}/admin/pages/home`);
+  await fullScreenshot("03-pages-editor");
+  await captureTestId("field-text-title", "Field-Text-Title", "Fields", "Pages/home");
+  await captureTestId("field-textarea-heroTagline", "Field-Textarea-Long", "Fields", "Pages/home");
+
+  // Posts — richtext + date + image
+  await go(`${BASE}/admin/posts/building-a-data-driven-culture`);
+  await fullScreenshot("04-post-editor");
+  await captureTestId("field-richtext-content", "Field-Richtext", "Fields", "Posts/building-data");
+  await captureTestId("field-date-date", "Field-Date", "Fields", "Posts/building-data");
+  await captureTestId("field-image-coverImage", "Field-Image", "Fields", "Posts/building-data");
+
+  // --- SETTINGS ---
+  console.log("  📍 Settings");
+  await go(`${BASE}/admin/settings?tab=general`);
+  await fullScreenshot("05-settings-general");
+  await captureTestId("panel-general", "Panel-General", "Settings", "Settings/General");
+
+  await go(`${BASE}/admin/settings?tab=tools`);
+  await fullScreenshot("06-settings-tools");
+  await captureTestId("panel-tools", "Panel-Tools", "Settings", "Settings/Tools");
+
+  await go(`${BASE}/admin/settings?tab=ai`);
+  await fullScreenshot("07-settings-ai");
+  await captureTestId("panel-ai", "Panel-AI", "Settings", "Settings/AI");
+
+  await go(`${BASE}/admin/settings?tab=deploy`);
+  await fullScreenshot("08-settings-deploy");
+  await captureTestId("panel-deploy", "Panel-Deploy", "Settings", "Settings/Deploy");
+
+  await go(`${BASE}/admin/settings?tab=team`);
+  await fullScreenshot("09-settings-team");
+  await captureTestId("panel-team", "Panel-Team", "Settings", "Settings/Team");
+
+  await go(`${BASE}/admin/settings?tab=mcp`);
+  await fullScreenshot("10-settings-mcp");
+  await captureTestId("panel-mcp", "Panel-MCP", "Settings", "Settings/MCP");
+
+  await go(`${BASE}/admin/settings?tab=email`);
+  await fullScreenshot("11-settings-email");
+  await captureTestId("panel-email", "Panel-Email", "Settings", "Settings/Email");
 
   // --- MEDIA ---
-  await crop({ name: "MediaGrid", category: "Media", page: "Media Library", screenshot: "09-media", region: { left: 200, top: 80, width: 1200, height: 500 } });
+  console.log("  📍 Media");
+  await go(`${BASE}/admin/media`, 2500);
+  await fullScreenshot("12-media");
+  await captureTestId("media-library", "MediaLibrary", "Media", "Media");
 
-  // --- EMPTY STATES ---
-  await crop({ name: "Calendar-View", category: "Layout", page: "Calendar", screenshot: "10-calendar", region: { left: 200, top: 80, width: 1200, height: 500 } });
-  await crop({ name: "SEO-Dashboard", category: "Layout", page: "SEO", screenshot: "12-seo", region: { left: 200, top: 80, width: 1200, height: 500 } });
-  await crop({ name: "Analytics-Dashboard", category: "Layout", page: "Analytics", screenshot: "15-analytics", region: { left: 200, top: 80, width: 1200, height: 500 } });
+  // --- SITES ---
+  console.log("  📍 Sites");
+  await go(`${BASE}/admin/sites`);
+  await fullScreenshot("13-sites");
+  await captureTestId("site-card-freelancer", "SiteCard-Freelancer", "Cards", "Sites");
 
-  // --- CHAT ---
-  await crop({ name: "Chat-Interface", category: "Chat", page: "Chat", screenshot: "14-chat", region: { left: 200, top: 0, width: 1200, height: 900 } });
+  // --- MISC PAGES ---
+  console.log("  📍 Other pages");
+  await go(`${BASE}/admin/calendar`);
+  await fullScreenshot("14-calendar");
+  await go(`${BASE}/admin/seo`);
+  await fullScreenshot("15-seo");
 
-  // --- TEAM ---
-  await crop({ name: "TeamPanel", category: "Panels", page: "Settings/Team", screenshot: "08-settings-team", region: { left: 20, top: 80, width: 560, height: 400 } });
+  // --- WEBHOUSE SITE (for agents, chat, analytics) ---
+  console.log("\n🔍 WebHouse site\n");
+  await switchSite("webhouse", "webhouse-site");
 
-  // --- DEPLOY ---
-  await crop({ name: "DeployPanel", category: "Panels", page: "Settings/Deploy", screenshot: "07-settings-deploy", region: { left: 20, top: 80, width: 560, height: 500 } });
+  await go(`${BASE}/admin/agents`);
+  await fullScreenshot("16-agents");
 
-  // --- MCP ---
-  await crop({ name: "MCPSettings", category: "Panels", page: "Settings/MCP", screenshot: "17-settings-mcp", region: { left: 20, top: 80, width: 560, height: 400 } });
+  await go(`${BASE}/admin/chat`, 3000);
+  await fullScreenshot("17-chat");
+
+  await go(`${BASE}/admin/analytics`);
+  await fullScreenshot("18-analytics");
+
+  await go(`${BASE}/admin/tools`);
+  await fullScreenshot("19-tools");
+
+  // --- SWITCHERS ---
+  console.log("  📍 Switchers");
+  await captureTestId("site-switcher", "SiteSwitcher", "Navigation", "Tools");
+  await captureTestId("org-switcher", "OrgSwitcher", "Navigation", "Tools");
+
+  // --- CREATE BUTTON ---
+  await go(`${BASE}/admin/posts`);
+  await captureTestId("btn-create", "BtnCreate", "Buttons", "Content/Posts");
 
   await browser.close();
 
   // ═══════════════════════════════════════════════════════════
-  // PHASE 3: Generate SVG
+  // GENERATE SVG
   // ═══════════════════════════════════════════════════════════
-  console.log("\n🎨 Phase 3: Generating SVG\n");
+  console.log("\n🎨 Generating SVG\n");
 
   // Group crops by category
   const grouped: Record<string, CropDef[]> = {};
@@ -193,121 +238,93 @@ async function main() {
     (grouped[c.category] ??= []).push(c);
   }
 
-  const COL_WIDTH = 620;
-  const PADDING = 30;
-  const HEADER_HEIGHT = 60;
-  const LABEL_HEIGHT = 40;
+  const COL_MAX = 1380;
+  const PAD = 30;
+  const CAT_GAP = 60;
   const IMG_GAP = 20;
-  const CATEGORY_GAP = 50;
+  const LABEL_H = 36;
 
-  // Calculate layout
-  let currentY = PADDING;
-  const placements: { crop: CropDef; x: number; y: number; displayWidth: number; displayHeight: number }[] = [];
+  // Layout calculation
+  let currentY = 90; // after title
+  const placements: { crop: CropDef; x: number; y: number; dw: number; dh: number }[] = [];
 
   for (const [category, items] of Object.entries(grouped)) {
-    // Category header
-    currentY += CATEGORY_GAP;
-    const categoryY = currentY;
-    currentY += HEADER_HEIGHT;
+    currentY += CAT_GAP;
+    const catY = currentY;
+    currentY += 35; // header height
 
-    let colX = PADDING;
-    let rowMaxHeight = 0;
+    let rowX = PAD;
+    let rowMaxH = 0;
 
     for (const c of items) {
-      // Read actual crop dimensions
-      let imgW = c.region.width;
-      let imgH = c.region.height;
-      try {
-        const cropPath = path.join(CROPS_DIR, `${String(c.id).padStart(2, "0")}-${c.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}.png`);
-        if (fs.existsSync(cropPath)) {
-          const meta = await sharp(cropPath).metadata();
-          imgW = meta.width ?? imgW;
-          imgH = meta.height ?? imgH;
-        }
-      } catch {}
+      // Scale to max 600px wide
+      const scale = Math.min(1, 600 / c.width);
+      const dw = Math.round(c.width * scale);
+      const dh = Math.round(c.height * scale);
 
-      // Scale to fit column
-      const scale = Math.min(1, (COL_WIDTH - 20) / imgW);
-      const displayWidth = Math.round(imgW * scale);
-      const displayHeight = Math.round(imgH * scale);
-
-      // New row if doesn't fit
-      if (colX + displayWidth + PADDING > 1400) {
-        colX = PADDING;
-        currentY += rowMaxHeight + LABEL_HEIGHT + IMG_GAP;
-        rowMaxHeight = 0;
+      // New row?
+      if (rowX + dw + PAD > COL_MAX && rowX > PAD) {
+        currentY += rowMaxH + LABEL_H + IMG_GAP;
+        rowX = PAD;
+        rowMaxH = 0;
       }
 
-      placements.push({ crop: c, x: colX, y: currentY, displayWidth, displayHeight });
-      rowMaxHeight = Math.max(rowMaxHeight, displayHeight);
-      colX += displayWidth + IMG_GAP;
+      placements.push({ crop: c, x: rowX, y: currentY, dw, dh });
+      rowMaxH = Math.max(rowMaxH, dh);
+      rowX += dw + IMG_GAP;
     }
-
-    currentY += rowMaxHeight + LABEL_HEIGHT + IMG_GAP;
+    currentY += rowMaxH + LABEL_H + IMG_GAP;
   }
 
-  const SVG_WIDTH = 1440;
-  const SVG_HEIGHT = currentY + PADDING;
+  const SVG_W = 1440;
+  const SVG_H = currentY + PAD;
 
-  // Build SVG with embedded base64 images
-  let svgParts: string[] = [];
-  svgParts.push(`<?xml version="1.0" encoding="UTF-8"?>`);
-  svgParts.push(`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${SVG_WIDTH}" height="${SVG_HEIGHT}" viewBox="0 0 ${SVG_WIDTH} ${SVG_HEIGHT}">`);
-
-  // Background
-  svgParts.push(`<rect width="${SVG_WIDTH}" height="${SVG_HEIGHT}" fill="#0D0D0D"/>`);
+  const svg: string[] = [];
+  svg.push(`<?xml version="1.0" encoding="UTF-8"?>`);
+  svg.push(`<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="${SVG_W}" height="${SVG_H}" viewBox="0 0 ${SVG_W} ${SVG_H}">`);
+  svg.push(`<rect width="${SVG_W}" height="${SVG_H}" fill="#0D0D0D"/>`);
 
   // Title
-  svgParts.push(`<text x="${SVG_WIDTH / 2}" y="45" text-anchor="middle" font-family="system-ui, sans-serif" font-size="28" font-weight="700" fill="#F7BB2E">F63 Component Audit — Visual Reference</text>`);
-  svgParts.push(`<text x="${SVG_WIDTH / 2}" y="72" text-anchor="middle" font-family="system-ui, sans-serif" font-size="14" fill="#888">webhouse.app CMS Admin · ${new Date().toISOString().slice(0, 10)}</text>`);
+  svg.push(`<text x="${SVG_W / 2}" y="40" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="28" font-weight="700" fill="#F7BB2E">F63 Component Audit — Visual Reference</text>`);
+  svg.push(`<text x="${SVG_W / 2}" y="65" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="14" fill="#888">webhouse.app CMS Admin · ${new Date().toISOString().slice(0, 10)} · ${crops.length} components</text>`);
 
-  // Category headers
-  let lastCategory = "";
+  // Category headers + images
+  let lastCat = "";
   for (const p of placements) {
-    if (p.crop.category !== lastCategory) {
-      lastCategory = p.crop.category;
-      // Find the y of the first item in this category
-      const catItems = placements.filter((pp) => pp.crop.category === lastCategory);
-      const catY = (catItems[0]?.y ?? p.y) - HEADER_HEIGHT + 10;
-      svgParts.push(`<text x="${PADDING}" y="${catY + 20}" font-family="system-ui, sans-serif" font-size="20" font-weight="700" fill="#F7BB2E" letter-spacing="0.05em">${lastCategory.toUpperCase()}</text>`);
-      svgParts.push(`<line x1="${PADDING}" y1="${catY + 28}" x2="${SVG_WIDTH - PADDING}" y2="${catY + 28}" stroke="#333" stroke-width="1"/>`);
+    // Category header
+    if (p.crop.category !== lastCat) {
+      lastCat = p.crop.category;
+      const firstInCat = placements.find((pp) => pp.crop.category === lastCat)!;
+      const hdrY = firstInCat.y - 25;
+      svg.push(`<text x="${PAD}" y="${hdrY}" font-family="Helvetica, Arial, sans-serif" font-size="18" font-weight="700" fill="#F7BB2E" letter-spacing="0.06em">${lastCat.toUpperCase()}</text>`);
+      svg.push(`<line x1="${PAD}" y1="${hdrY + 6}" x2="${SVG_W - PAD}" y2="${hdrY + 6}" stroke="#333" stroke-width="1"/>`);
     }
+
+    const cropFile = path.join(CROPS_DIR, p.crop.file);
+    if (!fs.existsSync(cropFile)) continue;
+
+    // Gold border
+    svg.push(`<rect x="${p.x - 2}" y="${p.y - 2}" width="${p.dw + 4}" height="${p.dh + 4}" rx="4" fill="none" stroke="#F7BB2E" stroke-width="1.5" opacity="0.5"/>`);
+    // Linked image
+    svg.push(`<image x="${p.x}" y="${p.y}" width="${p.dw}" height="${p.dh}" xlink:href="crops/${p.crop.file}" preserveAspectRatio="xMidYMid meet"/>`);
+    // Number badge
+    svg.push(`<circle cx="${p.x + 12}" cy="${p.y + 12}" r="12" fill="#F7BB2E"/>`);
+    svg.push(`<text x="${p.x + 12}" y="${p.y + 16}" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="700" fill="#0D0D0D">${p.crop.id}</text>`);
+    // Label
+    svg.push(`<text x="${p.x}" y="${p.y + p.dh + 14}" font-family="Helvetica, Arial, sans-serif" font-size="11" font-weight="600" fill="#ccc">#${p.crop.id} ${p.crop.name}</text>`);
+    svg.push(`<text x="${p.x}" y="${p.y + p.dh + 26}" font-family="Helvetica, Arial, sans-serif" font-size="9" fill="#666">${p.crop.page}</text>`);
   }
 
-  // Images + labels
-  for (const p of placements) {
-    const cropFile = path.join(CROPS_DIR, `${String(p.crop.id).padStart(2, "0")}-${p.crop.name.replace(/[^a-z0-9]+/gi, "-").toLowerCase()}.png`);
-
-    if (fs.existsSync(cropFile)) {
-      const imgBuf = fs.readFileSync(cropFile);
-      const b64 = imgBuf.toString("base64");
-
-      // Border
-      svgParts.push(`<rect x="${p.x - 2}" y="${p.y - 2}" width="${p.displayWidth + 4}" height="${p.displayHeight + 4}" rx="6" fill="none" stroke="#F7BB2E" stroke-width="1.5" opacity="0.6"/>`);
-
-      // Image
-      svgParts.push(`<image x="${p.x}" y="${p.y}" width="${p.displayWidth}" height="${p.displayHeight}" xlink:href="data:image/png;base64,${b64}" preserveAspectRatio="xMidYMid meet"/>`);
-
-      // Number badge
-      svgParts.push(`<circle cx="${p.x + 14}" cy="${p.y + 14}" r="14" fill="#F7BB2E"/>`);
-      svgParts.push(`<text x="${p.x + 14}" y="${p.y + 19}" text-anchor="middle" font-family="system-ui, sans-serif" font-size="12" font-weight="700" fill="#0D0D0D">${p.crop.id}</text>`);
-
-      // Label
-      svgParts.push(`<text x="${p.x}" y="${p.y + p.displayHeight + 16}" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#ccc">#${p.crop.id} ${p.crop.name}</text>`);
-      svgParts.push(`<text x="${p.x}" y="${p.y + p.displayHeight + 30}" font-family="system-ui, sans-serif" font-size="10" fill="#666">${p.crop.page}</text>`);
-    }
-  }
-
-  svgParts.push(`</svg>`);
+  svg.push(`</svg>`);
 
   const svgPath = path.join(OUT, "f63-component-audit.svg");
-  fs.writeFileSync(svgPath, svgParts.join("\n"));
+  fs.writeFileSync(svgPath, svg.join("\n"));
 
-  console.log(`\n✅ Done!`);
-  console.log(`   Screenshots: ${Object.keys(screenshots).length}`);
-  console.log(`   Crops: ${crops.length}`);
+  console.log(`✅ Done!`);
+  console.log(`   Full screenshots: ${fs.readdirSync(OUT).filter((f) => f.endsWith(".png")).length}`);
+  console.log(`   Component crops: ${crops.length}`);
   console.log(`   SVG: ${svgPath}`);
-  console.log(`   Size: ${(fs.statSync(svgPath).size / 1024 / 1024).toFixed(1)} MB`);
+  console.log(`   SVG size: ${(fs.statSync(svgPath).size / 1024).toFixed(0)} KB`);
 }
 
 main().catch((err) => {
