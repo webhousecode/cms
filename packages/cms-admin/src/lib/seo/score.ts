@@ -1,8 +1,9 @@
 /**
- * F97 — SEO Score Calculator
+ * F97 + F112 — SEO & GEO Score Calculator
  *
- * Evaluates a document's SEO health against 13 rules.
- * Returns a 0-100 score with per-rule pass/warn/fail details.
+ * SEO: 13 classic rules for search engine visibility.
+ * GEO: 8 rules for AI/generative engine citation-friendliness.
+ * Combined "Visibility Score" weights both equally.
  */
 
 export interface SeoFields {
@@ -35,6 +36,17 @@ export interface SeoScoreDetail {
 export interface SeoScoreResult {
   score: number;
   details: SeoScoreDetail[];
+}
+
+export interface GeoScoreResult {
+  score: number;
+  details: SeoScoreDetail[];
+}
+
+export interface VisibilityScoreResult {
+  seo: SeoScoreResult;
+  geo: GeoScoreResult;
+  combined: number; // (seo × 0.5) + (geo × 0.5)
 }
 
 /** Extract plain text from markdown/HTML content */
@@ -249,4 +261,135 @@ export function calculateSeoScore(
   const score = Math.round((scored / total) * 100);
 
   return { score, details };
+}
+
+// ── GEO Score (F112 G02) ───────────────────────────────────
+
+/**
+ * Calculate GEO score — 8 rules for AI/generative engine visibility.
+ * These check how citation-friendly the content is for AI platforms.
+ */
+export function calculateGeoScore(
+  doc: { slug: string; data: Record<string, unknown>; updatedAt?: string },
+  seo: SeoFields,
+): GeoScoreResult {
+  const details: SeoScoreDetail[] = [];
+  const rawContent = String(doc.data.content ?? doc.data.body ?? "");
+  const content = stripToText(rawContent);
+  const wc = wordCount(content);
+
+  // G1: Answer-first — first 200 words should contain a direct answer
+  if (wc >= 100) {
+    const first200 = content.split(/\s+/).slice(0, 200).join(" ");
+    // Heuristic: first paragraph contains a fact (number, percentage, or definitive statement)
+    const hasNumber = /\d+/.test(first200);
+    const hasDefinitive = /\b(is|are|was|were|means|provides|offers|er|har|giver|betyder|kan)\b/i.test(first200);
+    const startsWithQuestion = /^(what|how|why|when|where|who|which|hvad|hvordan|hvorfor|hvornår|hvor|hvem)\b/i.test(first200);
+
+    if (hasNumber && hasDefinitive && !startsWithQuestion) {
+      details.push({ rule: "geo-answer-first", label: "🤖 Answer-first", status: "pass", message: "First 200 words contain a direct answer with facts" });
+    } else if (hasDefinitive) {
+      details.push({ rule: "geo-answer-first", label: "🤖 Answer-first", status: "warn", message: "Opening is OK but could lead with a stronger factual answer. Add a number or statistic in the first paragraph." });
+    } else {
+      details.push({ rule: "geo-answer-first", label: "🤖 Answer-first", status: "fail", message: "Opening doesn't provide a direct answer. Restructure so the first paragraph answers the page's main question." });
+    }
+  }
+
+  // G2: Question headers — at least 30% of H2s should be questions
+  const h2Matches = rawContent.match(/#{2}\s+[^\n]+|<h2[^>]*>[^<]+<\/h2>/gi) ?? [];
+  if (h2Matches.length >= 2) {
+    const questionH2s = h2Matches.filter((h) => /\?/.test(h)).length;
+    const ratio = questionH2s / h2Matches.length;
+    if (ratio >= 0.3) {
+      details.push({ rule: "geo-question-headers", label: "🤖 Question headers", status: "pass", message: `${questionH2s}/${h2Matches.length} headings are questions (${Math.round(ratio * 100)}% — AI platforms match these to user queries)` });
+    } else {
+      details.push({ rule: "geo-question-headers", label: "🤖 Question headers", status: "warn", message: `Only ${questionH2s}/${h2Matches.length} headings are questions. Rephrase some H2s as questions (e.g. "How does X work?") — AI platforms match these to queries.` });
+    }
+  }
+
+  // G3: Statistics present — content contains numbers/percentages/data
+  if (wc >= 100) {
+    const statsPattern = /\b\d+[.,]?\d*\s*(%|percent|procent|million|mio|billion|mia|kr|USD|EUR)/i;
+    const hasStats = statsPattern.test(content);
+    const hasPlainNumbers = (content.match(/\b\d{2,}\b/g) ?? []).length >= 3;
+    if (hasStats) {
+      details.push({ rule: "geo-statistics", label: "🤖 Statistics", status: "pass", message: "Content includes specific statistics — AI platforms prefer citing data-backed claims" });
+    } else if (hasPlainNumbers) {
+      details.push({ rule: "geo-statistics", label: "🤖 Statistics", status: "warn", message: "Content has numbers but no clear statistics. Add percentages, costs, or measurable data points." });
+    } else {
+      details.push({ rule: "geo-statistics", label: "🤖 Statistics", status: "fail", message: "No statistics found. Add specific numbers, percentages, or data points — AI systems strongly prefer citable facts." });
+    }
+  }
+
+  // G4: Citations/sources — references external sources
+  const hasExternalLink = /https?:\/\/(?!localhost|127\.0\.0\.1)[^\s"'<>]+/.test(rawContent);
+  const hasAttribution = /\b(according to|source:|kilde:|ifølge|research by|study by|data from)\b/i.test(content);
+  if (hasExternalLink || hasAttribution) {
+    details.push({ rule: "geo-citations", label: "🤖 Citations", status: "pass", message: "Content references external sources — adds credibility for AI citation" });
+  } else if (wc >= 200) {
+    details.push({ rule: "geo-citations", label: "🤖 Citations", status: "warn", message: "No external sources cited. Add references to research, data sources, or authoritative sites to boost AI trust." });
+  }
+
+  // G5: Content freshness — updated within 90 days
+  if (doc.updatedAt) {
+    const daysSinceUpdate = Math.floor((Date.now() - new Date(doc.updatedAt).getTime()) / 86400000);
+    if (daysSinceUpdate <= 90) {
+      details.push({ rule: "geo-freshness", label: "🤖 Freshness", status: "pass", message: `Updated ${daysSinceUpdate} days ago — AI platforms have strong recency bias` });
+    } else if (daysSinceUpdate <= 180) {
+      details.push({ rule: "geo-freshness", label: "🤖 Freshness", status: "warn", message: `Updated ${daysSinceUpdate} days ago. Content older than 90 days gets less AI citation. Refresh key facts.` });
+    } else {
+      details.push({ rule: "geo-freshness", label: "🤖 Freshness", status: "fail", message: `Updated ${daysSinceUpdate} days ago. Stale content is rarely cited by AI. Update with current information.` });
+    }
+  }
+
+  // G6: JSON-LD configured — structured data helps AI understand content
+  if (seo.jsonLd && Object.keys(seo.jsonLd).length > 0) {
+    details.push({ rule: "geo-jsonld", label: "🤖 Structured data", status: "pass", message: "JSON-LD structured data is configured — helps AI systems understand page content" });
+  } else if (seo.jsonLdTemplate) {
+    details.push({ rule: "geo-jsonld", label: "🤖 Structured data", status: "warn", message: "JSON-LD template selected but not fully configured. Fill in the fields to help AI understand this content." });
+  } else {
+    details.push({ rule: "geo-jsonld", label: "🤖 Structured data", status: "warn", message: "No JSON-LD structured data. Select a template (Article, FAQ, HowTo) in the Advanced section to help AI categorize this content." });
+  }
+
+  // G7: Author attribution — E-E-A-T signal
+  const author = doc.data.author ?? doc.data.authorName ?? doc.data.by;
+  if (author && String(author).trim().length > 0) {
+    details.push({ rule: "geo-author", label: "🤖 Author", status: "pass", message: `Author "${String(author)}" attributed — builds E-E-A-T trust signals for AI` });
+  } else {
+    details.push({ rule: "geo-author", label: "🤖 Author", status: "warn", message: "No author attributed. Add an author name — AI platforms trust content with clear authorship (E-E-A-T)." });
+  }
+
+  // G8: Content depth — AI prefers comprehensive content
+  if (wc >= 800) {
+    details.push({ rule: "geo-depth", label: "🤖 Content depth", status: "pass", message: `${wc} words — comprehensive enough for AI to cite as an authoritative source` });
+  } else if (wc >= 400) {
+    details.push({ rule: "geo-depth", label: "🤖 Content depth", status: "warn", message: `${wc} words — add more depth (800+ words) for AI platforms to consider this an authoritative source` });
+  } else if (wc >= 100) {
+    details.push({ rule: "geo-depth", label: "🤖 Content depth", status: "fail", message: `Only ${wc} words. AI platforms rarely cite thin content. Aim for 800+ words with comprehensive coverage.` });
+  }
+
+  // Calculate score
+  const total = details.length;
+  if (total === 0) return { score: 0, details };
+
+  const weights = { pass: 1, warn: 0.5, fail: 0 };
+  const scored = details.reduce((sum, d) => sum + weights[d.status], 0);
+  const score = Math.round((scored / total) * 100);
+
+  return { score, details };
+}
+
+/**
+ * Calculate combined Visibility Score — SEO + GEO weighted equally.
+ */
+export function calculateVisibilityScore(
+  doc: { slug: string; data: Record<string, unknown>; updatedAt?: string },
+  seo: SeoFields,
+  allTitles?: string[],
+  locale?: string,
+): VisibilityScoreResult {
+  const seoResult = calculateSeoScore(doc, seo, allTitles, locale);
+  const geoResult = calculateGeoScore(doc, seo);
+  const combined = Math.round((seoResult.score * 0.5) + (geoResult.score * 0.5));
+  return { seo: seoResult, geo: geoResult, combined };
 }
