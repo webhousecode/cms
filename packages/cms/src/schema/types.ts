@@ -81,6 +81,8 @@ export interface CollectionConfig {
   fields: FieldConfig[];
   /** Whether this collection supports translations. Defaults to true for multi-locale sites. */
   translatable?: boolean;
+  /** Whether documents in this collection have individual preview pages. Defaults to true. Set false for collections rendered as cards/sections on other pages. */
+  previewable?: boolean;
   /** The locale items in this collection are normally authored in, e.g. "en" */
   sourceLocale?: string;
   /** Locales this collection can be translated to. Empty = no i18n. */
@@ -92,6 +94,19 @@ export interface CollectionConfig {
 export interface BuildConfig {
   outDir?: string;
   baseUrl?: string;
+  /** RSS feed config. Generates /feed.xml. */
+  rss?: {
+    /** Feed title. Defaults to site title. */
+    title?: string;
+    /** Feed description. */
+    description?: string;
+    /** Language code (e.g. "en", "da"). */
+    language?: string;
+    /** Limit to specific collection names. Empty = all. */
+    collections?: string[];
+    /** Max items. Default: 50. */
+    maxItems?: number;
+  };
   /** robots.txt generation strategy for AI crawler access */
   robots?: {
     /** "maximum" (default) = allow all, "balanced" = allow search/block training, "restrictive" = block all AI, "custom" = user rules */

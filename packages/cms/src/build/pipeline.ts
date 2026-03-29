@@ -10,6 +10,7 @@ import { applyAutolinks } from './autolink.js';
 import { generateLlmsTxt, generateLlmsFullTxt, generateMarkdownPages } from './llms.js';
 import { generateAiPlugin } from './ai-plugin.js';
 import { generateRobotsTxt } from './robots.js';
+import { generateRssFeed } from './rss.js';
 
 export interface BuildOptions {
   outDir?: string;
@@ -82,6 +83,10 @@ export async function runBuild(
   // Phase 8: robots.txt — AI-optimized crawler rules
   const robotsTxt = generateRobotsTxt(config.build?.robots ?? {}, baseUrl);
   writeFileSync(join(outDir, 'robots.txt'), robotsTxt, 'utf-8');
+
+  // Phase 9: RSS feed
+  const rssFeed = generateRssFeed(context, baseUrl, config.build?.rss);
+  writeFileSync(join(outDir, 'feed.xml'), rssFeed, 'utf-8');
 
   return {
     pages: pages.length,
