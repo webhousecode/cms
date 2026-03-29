@@ -27,10 +27,10 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
   const [conversationId, setConversationId] = useState(() => crypto.randomUUID());
   const [siteName, setSiteName] = useState("your site");
   const [showHistory, setShowHistory] = useState(false);
-  const [showThinking, setShowThinking] = useState(() => {
-    if (typeof window === "undefined") return false;
-    return localStorage.getItem("cms-chat-show-thinking") === "true";
-  });
+  const [showThinking, setShowThinking] = useState(false);
+  useEffect(() => {
+    try { if (localStorage.getItem("cms-chat-show-thinking") === "true") setShowThinking(true); } catch {}
+  }, []);
   const [conversations, setConversations] = useState<ConversationMeta[]>([]);
   const abortRef = useRef<AbortController | null>(null);
   const messagesRef = useRef(messages);
