@@ -6,7 +6,7 @@ import { ThinkingAnimation } from "./thinking-animation";
 import { MarkdownRenderer } from "./markdown-renderer";
 import { InlineForm } from "./inline-form";
 import { ArtifactCard } from "./artifact-card";
-import { User, Bot, Copy, Check } from "lucide-react";
+import { Bot, Copy, Check } from "lucide-react";
 
 export interface ToolCall {
   tool: string;
@@ -89,8 +89,11 @@ function MessageCopyButton({ text }: { text: string }) {
   );
 }
 
-function MessageBubble({ message }: { message: ChatMessageUI }) {
+const AVATAR_SIZE = 34;
+
+function MessageBubble({ message, userAvatarUrl }: { message: ChatMessageUI; userAvatarUrl?: string | null }) {
   const isUser = message.role === "user";
+  const [imgError, setImgError] = useState(false);
 
   return (
     <div
@@ -101,25 +104,29 @@ function MessageBubble({ message }: { message: ChatMessageUI }) {
         alignItems: "flex-start",
       }}
     >
-      {/* Avatar — aligned with first content element (tool card or text) */}
+      {/* Avatar */}
       <div
         style={{
-          width: "28px",
-          height: "28px",
+          width: `${AVATAR_SIZE}px`,
+          height: `${AVATAR_SIZE}px`,
           borderRadius: "50%",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           flexShrink: 0,
-          marginTop: isUser ? "-2px" : (!isUser && message.toolCalls?.length) ? "7px" : "2px",
+          marginTop: isUser ? "-2px" : (!isUser && message.toolCalls?.length) ? "5px" : "0px",
           backgroundColor: isUser ? "var(--primary)" : "var(--muted)",
           color: isUser ? "var(--primary-foreground)" : "var(--foreground)",
+          overflow: "hidden",
         }}
       >
-        {isUser ? (
-          <User style={{ width: "14px", height: "14px" }} />
+        {isUser && userAvatarUrl && !imgError ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={userAvatarUrl} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} onError={() => setImgError(true)} />
+        ) : isUser ? (
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         ) : (
-          <Bot style={{ width: "14px", height: "14px" }} />
+          <Bot style={{ width: "18px", height: "18px" }} />
         )}
       </div>
 
@@ -178,6 +185,14 @@ function MessageBubble({ message }: { message: ChatMessageUI }) {
 export function MessageList({ messages, isThinking, thinkingText, thinkingStartTime }: MessageListProps) {
   const [thinkingExpanded, setThinkingExpanded] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const [userAvatar, setUserAvatar] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { if (d?.gravatarUrl) setUserAvatar(d.gravatarUrl); })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -199,7 +214,7 @@ export function MessageList({ messages, isThinking, thinkingText, thinkingStartT
 
       <div style={{ maxWidth: "768px", margin: "0 auto", padding: "0 16px" }}>
         {messages.map((msg) => (
-          <MessageBubble key={msg.id} message={msg} />
+          <MessageBubble key={msg.id} message={msg} userAvatarUrl={userAvatar} />
         ))}
 
         {isThinking && (
