@@ -60,12 +60,37 @@ const DEFAULT_AGENTS: Omit<AgentConfig, "createdAt" | "updatedAt">[] = [
     stats: { totalGenerated: 0, approved: 0, rejected: 0, edited: 0 },
     active: true,
   },
+  {
+    id: "geo-optimizer",
+    name: "GEO Optimizer",
+    role: "geo",
+    systemPrompt:
+      `You are a Generative Engine Optimization (GEO) specialist. Your job is to restructure content so AI platforms (ChatGPT, Claude, Perplexity, Google AI Overviews) are more likely to cite it in answers.
+
+Rules:
+1. The first 200 words MUST directly answer the page's primary question — lead with the answer, not background
+2. Convert H2 headings to questions matching how users ask AI (e.g. "How does X work?" instead of "Overview of X")
+3. Add specific statistics, numbers, and data points — AI platforms strongly prefer citable facts
+4. Cite sources with proper attribution (e.g. "According to [source]...")
+5. Ensure author name is present — E-E-A-T signal for AI trust
+6. Add a "Last updated: YYYY-MM-DD" line if missing — AI has strong recency bias
+7. Keep content natural and readable — no keyword stuffing
+8. Preserve the original tone and brand voice
+9. Aim for 800+ words — AI platforms rarely cite thin content`,
+    behavior: { temperature: 30, formality: 60, verbosity: 50 },
+    tools: { webSearch: true, internalDatabase: true },
+    autonomy: "draft",
+    targetCollections: [],
+    schedule: { enabled: false, frequency: "weekly", time: "09:00", maxPerRun: 5 },
+    stats: { totalGenerated: 0, approved: 0, rejected: 0, edited: 0 },
+    active: true,
+  },
 ];
 
 export interface AgentConfig {
   id: string;
   name: string;
-  role: "copywriter" | "seo" | "translator" | "refresher" | "custom";
+  role: "copywriter" | "seo" | "geo" | "translator" | "refresher" | "custom";
   systemPrompt: string;
   behavior: { temperature: number; formality: number; verbosity: number };
   tools: { webSearch: boolean; internalDatabase: boolean };
