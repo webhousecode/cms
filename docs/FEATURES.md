@@ -135,6 +135,7 @@
 | F116 | [Contextual Help (HelpCard)](#f116-contextual-help) | Planned | [docs/features/F116-contextual-help.md](features/F116-contextual-help.md) |
 | F117 | [MCP ↔ Chat Tool Parity](#f117-mcp-chat-parity) | **Done** | [docs/features/F117-mcp-chat-parity.md](features/F117-mcp-chat-parity.md) |
 | F119 | [One-Click Docker Deploy](#f119-one-click-docker-deploy) | Planned | [docs/features/F119-one-click-docker-deploy.md](features/F119-one-click-docker-deploy.md) |
+| F120 | [Onboarding](#f120-onboarding) | **Tier 1** | [docs/features/F120-onboarding.md](features/F120-onboarding.md) |
 
 ---
 
@@ -501,3 +502,7 @@ Deploy a complete CMS-powered site to Fly.io (or any Docker host) with a few cli
 
 ## F117 — MCP ↔ Chat Tool Parity ✅
 MCP admin server expanded from 15 to 43 tools — feature parity with inline chat. 28 new tools: media (list/search), trash (list/restore/empty), bulk (publish/update), scheduling, agents, curation queue, deploy, translate, generate interactive, backup, link check, site config, content stats, revisions. All tools have scope-based RBAC and audit logging. AdminServices interface bridges admin-only imports to MCP server package. Chat kept separate and untouched.
+
+## F120 — Onboarding
+
+Guided product tour from webhouse.app landing to first published content. Tooltip-style walkthrough with progressive disclosure. Two paths: Hub (hosted) and self-hosted. Milestone-based tours: Welcome → First Document → Deploy → SEO → Media AI → Agents. Uses data-testid selectors (F80) for tooltip anchoring and UserState (F43) for progress persistence. Connects to HelpCards (F116) for ongoing post-tour guidance.
