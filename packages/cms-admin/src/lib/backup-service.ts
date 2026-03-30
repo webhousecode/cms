@@ -283,7 +283,10 @@ export async function restoreBackup(id: string): Promise<{ restored: number; err
   const filePath = await getBackupFilePath(id);
   if (!filePath) return { restored: 0, error: "Backup file not found" };
 
-  const { contentDir, dataDir } = await getActiveSitePaths();
+  const sitePaths = await getActiveSitePaths();
+  const { configPath, dataDir } = sitePaths;
+  const siteEntry = await getActiveSiteEntry();
+  const isGitHub = configPath.startsWith("github://") || siteEntry?.adapter === "github";
 
   // Use unzip via child_process (avoid extra dependency)
   const { execFileSync } = await import("node:child_process");
@@ -301,23 +304,27 @@ export async function restoreBackup(id: string): Promise<{ restored: number; err
     // Restore content/
     const extractedContent = path.join(tmpDir, "content");
     if (existsSync(extractedContent)) {
-      // Ensure content dir exists
-      if (!existsSync(contentDir)) mkdirSync(contentDir, { recursive: true });
-      // Copy files recursively
-      // Copy content files recursively (Node.js native, no shell)
-      cpSync(extractedContent, contentDir, { recursive: true, force: true });
-      // Count restored documents
-      for (const entry of readdirSync(extractedContent)) {
-        const full = path.join(extractedContent, entry);
-        if (statSync(full).isDirectory()) {
-          restored += readdirSync(full).filter((f) => f.endsWith(".json")).length;
+      if (isGitHub && siteEntry?.github) {
+        // ── GitHub restore: push each document to the repo ──
+        restored = await restoreContentToGitHub(extractedContent, siteEntry);
+      } else {
+        // ── Filesystem restore: copy files locally ──
+        const { contentDir } = sitePaths;
+        if (!existsSync(contentDir)) mkdirSync(contentDir, { recursive: true });
+        cpSync(extractedContent, contentDir, { recursive: true, force: true });
+        for (const entry of readdirSync(extractedContent)) {
+          const full = path.join(extractedContent, entry);
+          if (statSync(full).isDirectory()) {
+            restored += readdirSync(full).filter((f) => f.endsWith(".json")).length;
+          }
         }
       }
     }
 
-    // Restore _data/ (excluding backups)
+    // Restore _data/ (excluding backups) — always local, even for GitHub sites
     const extractedData = path.join(tmpDir, "_data");
     if (existsSync(extractedData)) {
+      if (!existsSync(dataDir)) mkdirSync(dataDir, { recursive: true });
       for (const entry of readdirSync(extractedData)) {
         if (entry === "backups") continue;
         const src = path.join(extractedData, entry);
@@ -332,6 +339,80 @@ export async function restoreBackup(id: string): Promise<{ restored: number; err
   } finally {
     rmSync(tmpDir, { recursive: true, force: true });
   }
+}
+
+// ── GitHub content restore ──────────────────────────────────
+
+async function restoreContentToGitHub(
+  extractedContentDir: string,
+  siteEntry: NonNullable<Awaited<ReturnType<typeof getActiveSiteEntry>>>,
+): Promise<number> {
+  const gh = siteEntry.github;
+  if (!gh) throw new Error("GitHub config missing on site entry");
+
+  const { resolveToken } = await import("./site-pool");
+  const token = await resolveToken(gh.token);
+  const owner = gh.owner;
+  const repo = gh.repo;
+  const branch = gh.branch ?? "main";
+  const contentDir = gh.contentDir ?? "content";
+  const baseUrl = "https://api.github.com";
+
+  const headers: Record<string, string> = {
+    Authorization: `Bearer ${token}`,
+    Accept: "application/vnd.github+json",
+    "X-GitHub-Api-Version": "2022-11-28",
+    "Content-Type": "application/json",
+  };
+
+  let restored = 0;
+
+  for (const collection of readdirSync(extractedContentDir)) {
+    const colDir = path.join(extractedContentDir, collection);
+    if (!statSync(colDir).isDirectory()) continue;
+
+    const files = readdirSync(colDir).filter((f) => f.endsWith(".json"));
+    for (const file of files) {
+      const filePath = path.join(colDir, file);
+      const content = await readFile(filePath, "utf-8");
+      const ghPath = `${contentDir}/${collection}/${file}`;
+
+      // Get current SHA (needed for update)
+      let sha: string | undefined;
+      try {
+        const getRes = await fetch(
+          `${baseUrl}/repos/${owner}/${repo}/contents/${ghPath}?ref=${branch}`,
+          { headers },
+        );
+        if (getRes.ok) {
+          const data = (await getRes.json()) as { sha: string };
+          sha = data.sha;
+        }
+      } catch { /* file doesn't exist yet */ }
+
+      const body: Record<string, unknown> = {
+        message: `cms: restore ${collection}/${file.replace(".json", "")}`,
+        content: Buffer.from(content, "utf-8").toString("base64"),
+        branch,
+      };
+      if (sha) body.sha = sha;
+
+      const putRes = await fetch(
+        `${baseUrl}/repos/${owner}/${repo}/contents/${ghPath}`,
+        { method: "PUT", headers, body: JSON.stringify(body) },
+      );
+
+      if (!putRes.ok) {
+        const errText = await putRes.text().catch(() => "");
+        console.error(`[restore] GitHub PUT failed for ${ghPath}: ${putRes.status} ${errText}`);
+        continue;
+      }
+
+      restored++;
+    }
+  }
+
+  return restored;
 }
 
 // ── Prune old backups ────────────────────────────────────────
