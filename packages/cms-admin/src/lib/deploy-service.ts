@@ -616,14 +616,25 @@ async function flyioDockerfileDeploy(
 ): Promise<string> {
   console.log(`[deploy] Dockerfile detected — deploying Next.js/SSR site from ${projectDir}`);
 
-  // Generate fly.toml if the site doesn't already have one
-  const flyTomlPath = path.join(projectDir, "fly.toml");
-  if (!existsSync(flyTomlPath)) {
-    console.log(`[deploy] No fly.toml found — generating one for Next.js (port 3000, region arn)`);
+  // Detect build context from Dockerfile comment: "# Build context: /path/to/dir"
+  // Some Dockerfiles need a parent directory as context (e.g. monorepo with workspace deps)
+  const dockerfileContent = readFileSync(path.join(projectDir, "Dockerfile"), "utf-8");
+  const contextMatch = dockerfileContent.match(/^#\s*Build context:\s*(.+)/m);
+  const buildContext = contextMatch ? contextMatch[1].trim() : projectDir;
+  const dockerfilePath = path.join(projectDir, "Dockerfile");
+
+  // fly.toml always lives in the build context directory (flyctl reads it from cwd)
+  const flyTomlPath = path.join(buildContext, "fly.toml");
+  const flyTomlCreated = !existsSync(flyTomlPath);
+  if (flyTomlCreated) {
+    // Build section references the Dockerfile relative to build context
+    const relDockerfile = path.relative(buildContext, dockerfilePath);
+    console.log(`[deploy] Generating fly.toml in ${buildContext} (dockerfile: ${relDockerfile}, region: arn)`);
     writeFileSync(flyTomlPath, `app = "${appName}"
 primary_region = "arn"
 
 [build]
+  dockerfile = "${relDockerfile}"
 
 [http_service]
   internal_port = 3000
@@ -637,21 +648,28 @@ primary_region = "arn"
   memory = "512mb"
 `);
   } else {
-    console.log(`[deploy] Using existing fly.toml from site directory`);
+    console.log(`[deploy] Using existing fly.toml from ${buildContext}`);
   }
 
-  // Deploy from project dir via flyctl (remote build on Fly's builders)
-  console.log(`[deploy] Deploying to Fly.io (${appName}) via remote Docker build...`);
+  // Deploy from build context dir via flyctl (remote build on Fly's builders)
+  console.log(`[deploy] Deploying to Fly.io (${appName}) via remote Docker build (context: ${buildContext})...`);
   try {
     execFileSync("flyctl", ["deploy", "--remote-only", "--ha=false"], {
-      cwd: projectDir,
+      cwd: buildContext,
       env: { ...process.env, FLY_API_TOKEN: token },
       timeout: 300000, // 5 min — Next.js builds are heavier than static
       stdio: "pipe",
     });
   } catch (err) {
-    const msg = err instanceof Error ? (err as Error & { stderr?: Buffer }).stderr?.toString().slice(0, 300) || err.message : "Deploy failed";
+    const msg = err instanceof Error ? (err as Error & { stderr?: Buffer }).stderr?.toString().slice(0, 500) || err.message : "Deploy failed";
+    // Clean up generated fly.toml on failure so it doesn't litter the context dir
+    if (flyTomlCreated) try { rmSync(flyTomlPath); } catch { /* */ }
     throw new Error(`Fly.io deploy failed: ${msg}`);
+  }
+
+  // Clean up fly.toml from context dir if we generated it (keep project dir clean)
+  if (flyTomlCreated && buildContext !== projectDir) {
+    try { rmSync(flyTomlPath); } catch { /* */ }
   }
 
   // Custom domain
