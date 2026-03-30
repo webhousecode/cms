@@ -73,6 +73,7 @@ export default async function DocumentPage({ params, searchParams }: Props) {
         }).filter(Boolean) as Array<{ locale: string; slug: string; data: Record<string, unknown> }>}
         previewSiteUrl={siteConfig.previewSiteUrl}
         previewInIframe={siteConfig.previewInIframe}
+        localeStrategy={siteConfig.localeStrategy ?? "prefix-other"}
         backHref={from === "curation" ? "/admin/curation" : undefined}
         readOnly={siteRole === "viewer"}
       />

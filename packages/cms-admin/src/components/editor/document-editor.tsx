@@ -1024,6 +1024,7 @@ interface Props {
   siblingData?: Array<{ locale: string; slug: string; data: Record<string, unknown> }>;
   previewSiteUrl?: string;
   previewInIframe?: boolean;
+  localeStrategy?: string;
   backHref?: string;
   readOnly?: boolean;
 }
@@ -1034,7 +1035,7 @@ const G = globalThis as unknown as { __docCache?: Map<string, DocSnapshot> };
 if (!G.__docCache) G.__docCache = new Map();
 const docStateCache = G.__docCache;
 
-export function DocumentEditor({ collection, colConfig, blocksConfig = [], locales = [], defaultLocale = "en", initialDoc, translations = [], siblingData: siblingDataProp, previewSiteUrl, previewInIframe, backHref, readOnly = false }: Props) {
+export function DocumentEditor({ collection, colConfig, blocksConfig = [], locales = [], defaultLocale = "en", initialDoc, translations = [], siblingData: siblingDataProp, previewSiteUrl, previewInIframe, localeStrategy = "prefix-other", backHref, readOnly = false }: Props) {
   const PREVIEW_SITE_URL = previewSiteUrl ?? PREVIEW_SITE_URL_DEFAULT;
   const PREVIEW_IN_IFRAME = previewInIframe ?? PREVIEW_IN_IFRAME_DEFAULT;
   const cacheKey = `${collection}/${initialDoc.slug}`;
@@ -1248,8 +1249,14 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
       });
     }
 
-    // Add locale prefix for non-default locales (prefix-other strategy)
-    const locPrefix = locale && locale !== defaultLocale ? `/${locale}` : "";
+    // Add locale prefix only when localeStrategy uses prefixes
+    let locPrefix = "";
+    if (localeStrategy === "prefix-all" && locale) {
+      locPrefix = `/${locale}`;
+    } else if (localeStrategy === "prefix-other" && locale && locale !== defaultLocale) {
+      locPrefix = `/${locale}`;
+    }
+    // "none" = no prefix (locale is in slug or not used)
     const pagePath = isHomepage ? "/" : `${locPrefix}${prefix}/${slugPath}`;
 
     if (PREVIEW_SITE_URL) {
