@@ -1,6 +1,6 @@
 {
   "name": "@webhouse/cms-cli",
-  "version": "0.2.13",
+  "version": "0.2.14",
   "description": "CLI for @webhouse/cms — init, dev, build, and AI content tools",
   "type": "module",
   "license": "MIT",
