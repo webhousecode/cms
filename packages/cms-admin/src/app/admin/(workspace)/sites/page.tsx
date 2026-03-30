@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Globe, MoreVertical, Settings2, Plus, Copy, Eye, ExternalLink, Pencil } from "lucide-react";
+import { Globe, MoreVertical, Settings2, Plus, Copy, Eye, ExternalLink, Pencil, LayoutGrid, List } from "lucide-react";
 import { useSiteRole } from "@/hooks/use-site-role";
 import { useTabs } from "@/lib/tabs-context";
 import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
@@ -61,6 +61,10 @@ export default function SitesDashboard() {
   const [siteFilter, setSiteFilter] = useState<"all" | "local" | "github" | "live">("all");
   const [renamingSiteId, setRenamingSiteId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
+  const [viewMode, setViewMode] = useState<"grid" | "list">(() => {
+    if (typeof window !== "undefined") return (localStorage.getItem("cms-sites-view") as "grid" | "list") ?? "grid";
+    return "grid";
+  });
 
   const loadSites = useCallback(() => {
     setLoaded(false);
@@ -199,10 +203,69 @@ export default function SitesDashboard() {
     </ActionBar>
     <div className="p-8 max-w-5xl">
 
-      {/* Filter tabs */}
-      <SiteFilters sites={visibleSites} liveUrls={liveUrls} filter={siteFilter} onFilter={setSiteFilter} />
+      {/* View toggle + Filter tabs */}
+      <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.5rem" }}>
+        <div style={{ display: "flex", border: "1px solid var(--border)", borderRadius: "6px", overflow: "hidden" }}>
+          <button
+            type="button"
+            title="Grid view"
+            onClick={() => { setViewMode("grid"); localStorage.setItem("cms-sites-view", "grid"); }}
+            style={{
+              padding: "0.35rem 0.5rem", border: "none", cursor: "pointer",
+              background: viewMode === "grid" ? "var(--secondary)" : "transparent",
+              color: viewMode === "grid" ? "var(--foreground)" : "var(--muted-foreground)",
+              display: "flex", alignItems: "center",
+            }}
+          >
+            <LayoutGrid style={{ width: "0.875rem", height: "0.875rem" }} />
+          </button>
+          <button
+            type="button"
+            title="List view"
+            onClick={() => { setViewMode("list"); localStorage.setItem("cms-sites-view", "list"); }}
+            style={{
+              padding: "0.35rem 0.5rem", border: "none", cursor: "pointer",
+              background: viewMode === "list" ? "var(--secondary)" : "transparent",
+              color: viewMode === "list" ? "var(--foreground)" : "var(--muted-foreground)",
+              display: "flex", alignItems: "center",
+              borderLeft: "1px solid var(--border)",
+            }}
+          >
+            <List style={{ width: "0.875rem", height: "0.875rem" }} />
+          </button>
+        </div>
+        <SiteFilters sites={visibleSites} liveUrls={liveUrls} filter={siteFilter} onFilter={setSiteFilter} />
+      </div>
 
-      {/* Site cards grid */}
+      {viewMode === "list" ? (
+        <SiteListView
+          sites={visibleSites.filter((s) => {
+            if (siteFilter === "local") return s.adapter === "filesystem";
+            if (siteFilter === "github") return s.adapter === "github";
+            if (siteFilter === "live") return !!liveUrls[s.id];
+            return true;
+          })}
+          stats={stats}
+          healthMap={healthMap}
+          liveUrls={liveUrls}
+          onEnter={enterSite}
+          onSettings={goToSiteSettings}
+          onRename={(site) => { setRenameValue(site.name); setRenamingSiteId(site.id); }}
+          onPreview={async (site) => {
+            persistSiteChoice(site.id);
+            if (site.previewUrl) {
+              openTab(previewPath(site.previewUrl), `Preview: ${site.name}`);
+            } else {
+              const res = await fetch("/api/preview-serve", { method: "POST" });
+              if (res.ok) {
+                const { url } = await res.json() as { url: string };
+                openTab(previewPath(url), `Preview: ${site.name}`);
+              }
+            }
+          }}
+          onCopyId={(id) => navigator.clipboard.writeText(id)}
+        />
+      ) : (
       <div style={{
         display: "grid",
         gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
@@ -346,6 +409,7 @@ export default function SitesDashboard() {
           </div>
         ))}
       </div>
+      )}
     </div>
 
     {/* Rename modal */}
@@ -401,6 +465,128 @@ export default function SitesDashboard() {
   );
 }
 
+function SiteListView({ sites, stats, healthMap, liveUrls, onEnter, onSettings, onRename, onPreview, onCopyId }: {
+  sites: SiteEntry[];
+  stats: Record<string, { pages: number; collections: number }>;
+  healthMap: Record<string, "up" | "down" | "no-preview">;
+  liveUrls: Record<string, string>;
+  onEnter: (site: SiteEntry) => void;
+  onSettings: (site: SiteEntry) => void;
+  onRename: (site: SiteEntry) => void;
+  onPreview: (site: SiteEntry) => void;
+  onCopyId: (id: string) => void;
+}) {
+  return (
+    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem" }}>
+      <thead>
+        <tr style={{ borderBottom: "1px solid var(--border)" }}>
+          <th style={{ textAlign: "left", padding: "0.5rem 0.75rem", fontWeight: 500, color: "var(--muted-foreground)", fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Name</th>
+          <th style={{ textAlign: "left", padding: "0.5rem 0.75rem", fontWeight: 500, color: "var(--muted-foreground)", fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Type</th>
+          <th style={{ textAlign: "left", padding: "0.5rem 0.75rem", fontWeight: 500, color: "var(--muted-foreground)", fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Pages</th>
+          <th style={{ textAlign: "left", padding: "0.5rem 0.75rem", fontWeight: 500, color: "var(--muted-foreground)", fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Collections</th>
+          <th style={{ textAlign: "left", padding: "0.5rem 0.75rem", fontWeight: 500, color: "var(--muted-foreground)", fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Status</th>
+          <th style={{ textAlign: "right", padding: "0.5rem 0.75rem", fontWeight: 500, color: "var(--muted-foreground)", fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.05em" }}></th>
+        </tr>
+      </thead>
+      <tbody>
+        {sites.map((site) => (
+          <tr
+            key={site.id}
+            onClick={() => onEnter(site)}
+            style={{ borderBottom: "1px solid var(--border)", cursor: "pointer", transition: "background 0.15s" }}
+            className="hover:bg-accent/50"
+          >
+            <td style={{ padding: "0.6rem 0.75rem" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                <span style={{
+                  width: "0.45rem", height: "0.45rem", borderRadius: "50%", flexShrink: 0,
+                  background: healthMap[site.id] === "up" ? "rgb(74 222 128)" : healthMap[site.id] === "down" ? "var(--destructive)" : "var(--muted-foreground)",
+                }} />
+                <span style={{ fontWeight: 500 }}>{site.name}</span>
+              </div>
+            </td>
+            <td style={{ padding: "0.6rem 0.75rem", color: "var(--muted-foreground)" }}>
+              {site.adapter === "github" ? "GitHub" : "Filesystem"}
+            </td>
+            <td style={{ padding: "0.6rem 0.75rem", color: "var(--muted-foreground)" }}>
+              {stats[site.id]?.pages ?? "—"}
+            </td>
+            <td style={{ padding: "0.6rem 0.75rem", color: "var(--muted-foreground)" }}>
+              {stats[site.id]?.collections ?? "—"}
+            </td>
+            <td style={{ padding: "0.6rem 0.75rem" }}>
+              <div style={{ display: "flex", gap: "0.375rem", alignItems: "center" }}>
+                {liveUrls[site.id] && (
+                  <a
+                    href={liveUrls[site.id]}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    style={{
+                      fontSize: "0.65rem", fontWeight: 600, letterSpacing: "0.03em",
+                      padding: "0.15rem 0.4rem", borderRadius: "4px",
+                      background: "color-mix(in srgb, #22c55e 15%, transparent)",
+                      color: "#22c55e", textTransform: "uppercase", textDecoration: "none",
+                    }}
+                  >
+                    Live
+                  </a>
+                )}
+                <span style={{
+                  fontSize: "0.65rem", fontWeight: 600, letterSpacing: "0.03em",
+                  padding: "0.15rem 0.4rem", borderRadius: "4px",
+                  background: "var(--muted)",
+                  color: "var(--muted-foreground)", textTransform: "uppercase",
+                }}>
+                  {site.adapter === "github" ? "GitHub" : "Local"}
+                </span>
+              </div>
+            </td>
+            <td style={{ padding: "0.6rem 0.75rem", textAlign: "right" }}>
+              <div style={{ display: "flex", gap: "0.25rem", justifyContent: "flex-end", alignItems: "center" }}>
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); onPreview(site); }}
+                  style={{
+                    padding: "0.25rem 0.5rem", borderRadius: "4px", border: "1px solid var(--border)",
+                    background: "transparent", color: "var(--muted-foreground)", cursor: "pointer",
+                    fontSize: "0.7rem", display: "inline-flex", alignItems: "center", gap: "0.25rem",
+                  }}
+                >
+                  <Eye style={{ width: "0.7rem", height: "0.7rem" }} />
+                  Preview
+                </button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger
+                    onClick={(e) => e.stopPropagation()}
+                    className="p-1 rounded-md hover:bg-accent transition-colors focus-visible:outline-none bg-transparent border-0 cursor-pointer"
+                  >
+                    <MoreVertical style={{ width: "0.8rem", height: "0.8rem", color: "var(--muted-foreground)" }} />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-44">
+                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onRename(site); }}>
+                      <Pencil className="mr-2 h-4 w-4 text-muted-foreground" />
+                      Rename
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onCopyId(site.id); }}>
+                      <Copy className="mr-2 h-4 w-4 text-muted-foreground" />
+                      Copy site ID
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onSettings(site); }}>
+                      <Settings2 className="mr-2 h-4 w-4 text-muted-foreground" />
+                      Settings
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
 function SiteFilters({ sites, liveUrls, filter, onFilter }: {
   sites: SiteEntry[];
   liveUrls: Record<string, string>;
@@ -415,7 +601,7 @@ function SiteFilters({ sites, liveUrls, filter, onFilter }: {
     { key: "live" as const, label: "Live", count: liveCount },
   ];
   return (
-    <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.5rem" }}>
+    <div style={{ display: "flex", gap: "0.5rem" }}>
       {tabs.map((t) => (
         <button
           key={t.key}
