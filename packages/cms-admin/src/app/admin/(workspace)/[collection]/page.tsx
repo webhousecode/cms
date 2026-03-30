@@ -63,6 +63,7 @@ export default async function CollectionPage({ params }: Props) {
         initialDocs={sorted}
         readOnly={!canWrite}
         urlPrefix={colConfig.urlPrefix}
+        urlPattern={(colConfig as any).urlPattern}
         schemaEnabled={schemaEnabled}
         defaultLocale={siteConfig.defaultLocale || config.defaultLocale}
         siteLocales={siteConfig.locales?.length ? siteConfig.locales : config.locales}

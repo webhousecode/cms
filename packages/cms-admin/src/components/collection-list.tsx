@@ -40,6 +40,7 @@ interface Props {
   readOnly?: boolean;
   view?: ViewMode;
   urlPrefix?: string;
+  urlPattern?: string;
   defaultLocale?: string;
   siteLocales?: string[];
 }
@@ -281,7 +282,7 @@ function PreviewThumb({ previewUrl, title }: { previewUrl: string; title: string
 
 /* ─── Main component ──────────────────────────────────────────── */
 
-export function CollectionList({ collection, titleField, fields, initialDocs, readOnly, view = "list", urlPrefix, defaultLocale, siteLocales }: Props) {
+export function CollectionList({ collection, titleField, fields, initialDocs, readOnly, view = "list", urlPrefix, urlPattern, defaultLocale, siteLocales }: Props) {
   const [docs, setDocs] = useState(initialDocs);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilterRaw] = useState<StatusFilter>(() => {
@@ -465,10 +466,18 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
     if (!previewBase) return "";
     const prefix = (urlPrefix ?? `/${collection}`).replace(/\/$/, "");
     const isHomepage = (prefix === "" || prefix === "/") && (doc.slug === "home" || doc.slug === "index");
-    const category = typeof doc.data.category === "string" ? doc.data.category : "";
-    const prefixBase = prefix.split("/").pop() ?? "";
-    const useCategory = category && category !== prefixBase;
-    const slugPath = useCategory ? `${category}/${doc.slug}` : doc.slug;
+
+    // Build slug path from urlPattern (if configured) or plain slug (default)
+    let slugPath = doc.slug;
+    const pattern = urlPattern;
+    if (pattern) {
+      slugPath = pattern.replace(/^\//, "").replace(/:([a-zA-Z_]+)/g, (_m, field) => {
+        if (field === "slug") return doc.slug;
+        const val = doc.data?.[field];
+        return typeof val === "string" ? val : "";
+      });
+    }
+
     const pagePath = isHomepage ? "/" : `${prefix}/${slugPath}`;
     return `${previewBase}${pagePath}`;
   }
