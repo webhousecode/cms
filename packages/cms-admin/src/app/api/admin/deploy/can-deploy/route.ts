@@ -31,19 +31,24 @@ export async function GET() {
       return NextResponse.json({ canDeploy: false, hasGitHubToken });
     }
 
-    // Check if site has a build.ts (static site that can deploy to GitHub Pages)
+    // Check if site has a build.ts (static site) or Dockerfile (Next.js/SSR)
     const sitePaths = await getActiveSitePaths();
     const buildFile = path.join(sitePaths.projectDir, "build.ts");
+    const dockerFile = path.join(sitePaths.projectDir, "Dockerfile");
     const hasBuildTs = existsSync(buildFile);
+    const hasDockerfile = existsSync(dockerFile);
 
     if (hasBuildTs) {
       // Static site with build.ts → can auto-deploy to GitHub Pages
       return NextResponse.json({ canDeploy: true, provider: "github-pages", hasGitHubToken });
     }
 
-    // No build.ts (e.g. Next.js site) → needs explicit deploy config
-    // Return canDeploy: false so the rocket button prompts to configure
+    if (hasDockerfile) {
+      // Next.js/SSR site with Dockerfile → can deploy to Fly.io
+      return NextResponse.json({ canDeploy: true, provider: "flyio", hasGitHubToken });
+    }
 
+    // No build.ts or Dockerfile → needs explicit deploy config
     return NextResponse.json({ canDeploy: false, hasGitHubToken });
   } catch {
     return NextResponse.json({ canDeploy: false, hasGitHubToken: false });
