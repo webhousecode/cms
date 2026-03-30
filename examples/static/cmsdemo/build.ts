@@ -146,6 +146,27 @@ function findTranslation<T>(docs: Doc<T>[], doc: Doc<T>): Doc<T> | undefined {
 
 const t = (locale: string, en: string, da: string) => locale === 'da' ? da : en;
 
+function tagUrl(tag: string, locale: string): string {
+  const prefix = locale === 'da' ? '/da' : '';
+  return `${BASE}${prefix}/tags/${tag}/`;
+}
+
+function renderTagLink(tag: string, locale: string): string {
+  return `<a href="${tagUrl(tag, locale)}" class="post-tag">#${escapeHtml(tag)}</a>`;
+}
+
+function collectAllTags(posts: Doc<PostData>[]): Map<string, Doc<PostData>[]> {
+  const map = new Map<string, Doc<PostData>[]>();
+  for (const post of posts) {
+    for (const tag of post.data.tags || []) {
+      const list = map.get(tag) || [];
+      list.push(post);
+      map.set(tag, list);
+    }
+  }
+  return map;
+}
+
 // ---------------------------------------------------------------------------
 // CSS — the entire design system
 // ---------------------------------------------------------------------------
@@ -277,11 +298,11 @@ body::before {
 
 /* ── Hero ───────────────────────────────────────────────────────── */
 .hero {
-  min-height: 100vh;
+  min-height: auto;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 8rem 2rem 4rem;
+  padding: 7rem 2rem 4rem;
   position: relative;
   overflow: hidden;
 }
@@ -845,18 +866,59 @@ body::before {
 }
 .post-tags {
   display: flex;
-  gap: 0.4rem;
+  gap: 0.5rem;
   margin-top: 1.2rem;
   flex-wrap: wrap;
 }
 .post-tag {
   font-family: var(--font-mono);
-  font-size: 0.6rem;
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  background: transparent;
+  padding: 0.35rem 0.8rem;
+  border-radius: 100px;
+  border: 1px solid var(--dark-border);
+  text-decoration: none;
+  transition: all 0.2s;
+  display: inline-block;
+}
+a.post-tag:hover {
+  color: var(--gold);
+  border-color: rgba(247, 187, 46, 0.4);
+  background: var(--gold-glow);
+}
+
+/* ── Tags pages ─────────────────────────────────────────────────── */
+.tags-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+.tag-pill {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  background: var(--dark-card);
+  border: 1px solid var(--dark-border);
+  padding: 0.5rem 1.2rem;
+  border-radius: 100px;
+  text-decoration: none;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.tag-pill:hover {
+  color: var(--gold);
+  border-color: rgba(247, 187, 46, 0.3);
+  background: var(--gold-glow);
+}
+.tag-count {
+  font-size: 0.65rem;
   color: var(--text-dimmer);
-  background: rgba(255,255,255,0.04);
-  padding: 0.2rem 0.5rem;
-  border-radius: 3px;
-  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.06);
+  padding: 0.1rem 0.4rem;
+  border-radius: 100px;
 }
 
 /* ── Blog detail ────────────────────────────────────────────────── */
@@ -1075,6 +1137,7 @@ function layout(opts: {
   <meta property="og:title" content="${escapeHtml(title)}">
   <meta property="og:description" content="${escapeHtml(description)}">
   <meta property="og:type" content="website">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64' width='64' height='64'%3E%3Cpath fill='%232a2a3e' d='M32,0C16.8,0,1.5,9.1,1.5,27.3s9.1,32.2,21.3,36.5c6.1,1.8,9.1-1.8,9.1-7.9'/%3E%3Cpath fill='%23212135' d='M1.5,27.3c-3,9.1-1.2,22.5,4.9,29.8,4.9,4.9,12.2,7.3,16.4,6.7'/%3E%3Cpath fill='%23f7bb2e' d='M32,0c15.2,0,30.4,9.1,30.4,27.3s-9.1,32.2-21.3,36.5c-6.1,1.8-9.1-1.8-9.1-7.9'/%3E%3Cpath fill='%23d9a11a' d='M62.3,27.3c3,9.1,1.2,22.5-4.9,29.8-4.9,4.9-12.2,7.3-16.4,6.7'/%3E%3Cpath fill='%23fff' d='M10,30.4c7.3-11.3,14.6-17,21.9-17s14.6,5.7,21.9,17c-7.3,11.3-14.6,17-21.9,17s-14.6-5.7-21.9-17Z'/%3E%3Ccircle fill='%23f7bb2e' cx='32' cy='30.4' r='9.1'/%3E%3Ccircle fill='%230d0d0d' cx='32' cy='30.4' r='4'/%3E%3Ccircle fill='%23fff' opacity='.9' cx='34.4' cy='27.9' r='1.7'/%3E%3Ccircle fill='%23fff' opacity='.3' cx='30' cy='32.5' r='.8'/%3E%3C/svg%3E">
   ${hreflang}
   <style>${CSS}</style>
 </head>
@@ -1351,19 +1414,18 @@ function buildBlogIndex(
           ? `${BASE}/da/blog/${post.slug.replace(/-da$/, '')}/`
           : `${BASE}/blog/${post.slug}/`;
         return `
-      <a href="${href}" class="post-card" style="text-decoration:none">
+      <div class="post-card">
         <div class="post-meta">
           <span>${formatDate(post.data.date, locale)}</span>
           <span>·</span>
           <span>${post.data.readTime}</span>
         </div>
-        <h3>${escapeHtml(post.data.title)}</h3>
+        <h3><a href="${href}" style="color:inherit;text-decoration:none">${escapeHtml(post.data.title)}</a></h3>
         <p>${escapeHtml(post.data.excerpt)}</p>
         <div class="post-tags">
-          ${(post.data.tags || []).map(tag =>
-            `<span class="post-tag">${escapeHtml(tag)}</span>`).join('')}
+          ${(post.data.tags || []).map(tag => renderTagLink(tag, locale)).join('')}
         </div>
-      </a>`;
+      </div>`;
       }).join('')}
     </div>
   </section>`;
@@ -1403,9 +1465,11 @@ function buildPostDetail(
     <div class="article-body">
       ${markdownToHtml(post.data.content)}
     </div>
-    <div class="post-tags" style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--dark-border);">
-      ${(post.data.tags || []).map(tag =>
-        `<span class="post-tag">${escapeHtml(tag)}</span>`).join('')}
+    <div class="post-tags" style="margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--dark-border); gap: 0.5rem;">
+      ${(post.data.tags || []).map(tag => renderTagLink(tag, locale)).join('')}
+    </div>
+    <div style="margin-top: 2rem;">
+      <a href="${BASE}${locale === 'da' ? '/da' : ''}/blog/" style="font-family: var(--font-mono); font-size: 0.8rem; color: var(--text-dimmer); text-transform: uppercase; letter-spacing: 0.08em;">← ${t(locale, 'More from Blog', 'Mere fra Blog')}</a>
     </div>
   </article>`;
 
@@ -1417,6 +1481,94 @@ function buildPostDetail(
     globals,
     altUrl,
     altLocale,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Tag pages
+// ---------------------------------------------------------------------------
+
+function buildTagsIndex(
+  tags: Map<string, Doc<PostData>[]>,
+  globals: GlobalData,
+  locale: string,
+): string {
+  const sorted = [...tags.entries()].sort((a, b) => b[1].length - a[1].length);
+
+  const body = `
+  <div class="page-hero">
+    <span class="hero-badge">${t(locale, 'Browse by topic', 'Gennemse efter emne')}</span>
+    <h1>${t(locale, 'Tags', 'Tags')}</h1>
+    <p>${t(locale,
+      `${sorted.length} tags across ${[...new Set(sorted.flatMap(([, posts]) => posts.map(p => p.slug)))].length} posts`,
+      `${sorted.length} tags på tværs af ${[...new Set(sorted.flatMap(([, posts]) => posts.map(p => p.slug)))].length} indlæg`)}</p>
+  </div>
+  <section class="section">
+    <div class="tags-grid">
+      ${sorted.map(([tag, posts]) =>
+        `<a href="${tagUrl(tag, locale)}" class="tag-pill">${escapeHtml(tag)} <span class="tag-count">${posts.length}</span></a>`
+      ).join('')}
+    </div>
+  </section>`;
+
+  return layout({
+    title: t(locale, 'Tags', 'Tags'),
+    description: t(locale, 'Browse all topics', 'Gennemse alle emner'),
+    locale,
+    body,
+    globals,
+    altUrl: locale === 'da' ? '/tags/' : '/da/tags/',
+    altLocale: locale === 'da' ? 'en' : 'da',
+  });
+}
+
+function buildTagDetail(
+  tag: string,
+  posts: Doc<PostData>[],
+  globals: GlobalData,
+  locale: string,
+): string {
+  const sorted = [...posts].sort((a, b) =>
+    new Date(b.data.date).getTime() - new Date(a.data.date).getTime());
+
+  const body = `
+  <div class="page-hero">
+    <span class="hero-badge">Tag</span>
+    <h1>${escapeHtml(tag)}</h1>
+    <p>${sorted.length} ${t(locale, 'posts', 'indlæg')}</p>
+  </div>
+  <section class="section">
+    <div class="blog-grid">
+      ${sorted.map(post => {
+        const cleanSlug = post.slug.replace(/-da$/, '');
+        const href = locale === 'da'
+          ? `${BASE}/da/blog/${cleanSlug}/`
+          : `${BASE}/blog/${post.slug}/`;
+        return `
+      <div class="post-card">
+        <div class="post-meta">
+          <span>${formatDate(post.data.date, locale)}</span>
+          <span>·</span>
+          <span>${post.data.readTime}</span>
+        </div>
+        <h3><a href="${href}" style="color:inherit;text-decoration:none">${escapeHtml(post.data.title)}</a></h3>
+        <p>${escapeHtml(post.data.excerpt)}</p>
+        <div class="post-tags">
+          ${(post.data.tags || []).map(t => renderTagLink(t, locale)).join('')}
+        </div>
+      </div>`;
+      }).join('')}
+    </div>
+  </section>`;
+
+  return layout({
+    title: `${tag} — ${t(locale, 'Tags', 'Tags')}`,
+    description: `${t(locale, 'Posts tagged', 'Indlæg tagget med')} "${tag}"`,
+    locale,
+    body,
+    globals,
+    altUrl: locale === 'da' ? `/tags/${tag}/` : `/da/tags/${tag}/`,
+    altLocale: locale === 'da' ? 'en' : 'da',
   });
 }
 
@@ -1491,10 +1643,41 @@ function build() {
       writeFile(path.join(DIST, locale === 'en' ? `blog/${post.slug}/index.html` : `${locale}/blog/${cleanSlug}/index.html`), html);
       console.log(`  ✓ ${prefix}/blog/${cleanSlug}/`);
     }
+
+    // ── Tag pages ──
+    const tags = collectAllTags(posts);
+    const tagsIndexHtml = buildTagsIndex(tags, globals, locale);
+    writeFile(path.join(DIST, locale === 'en' ? 'tags/index.html' : `${locale}/tags/index.html`), tagsIndexHtml);
+    console.log(`  ✓ ${prefix}/tags/`);
+
+    for (const [tag, tagPosts] of tags) {
+      const tagHtml = buildTagDetail(tag, tagPosts, globals, locale);
+      writeFile(path.join(DIST, locale === 'en' ? `tags/${tag}/index.html` : `${locale}/tags/${tag}/index.html`), tagHtml);
+      console.log(`  ✓ ${prefix}/tags/${tag}/`);
+    }
   }
 
-  // ── Redirect /da/ slugs that have -da suffix ──
-  // (Not needed — we use clean slugs for DA)
+  // ── CMS Preview redirects ──
+  // CMS admin constructs preview URLs as: urlPrefix + "/" + slug
+  // DA docs have slugs like "about-da" so CMS previews at /about-da/
+  // but the actual page is at /da/about/. Write redirect files.
+  const allPublishedPages = published(allPages).filter(p => p.locale === 'da');
+  const allPublishedPosts = published(allPosts).filter(p => p.locale === 'da');
+
+  for (const page of allPublishedPages) {
+    if (page.slug === 'home-da') continue;
+    const cleanSlug = page.slug.replace(/-da$/, '');
+    const target = `${BASE}/da/${cleanSlug}/`;
+    writeFile(path.join(DIST, `${page.slug}/index.html`),
+      `<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=${target}"><link rel="canonical" href="${target}"></head><body>Redirecting to <a href="${target}">${target}</a></body></html>`);
+  }
+
+  for (const post of allPublishedPosts) {
+    const cleanSlug = post.slug.replace(/-da$/, '');
+    const target = `${BASE}/da/blog/${cleanSlug}/`;
+    writeFile(path.join(DIST, `blog/${post.slug}/index.html`),
+      `<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=${target}"><link rel="canonical" href="${target}"></head><body>Redirecting to <a href="${target}">${target}</a></body></html>`);
+  }
 
   const totalFiles = countFiles(DIST);
   console.log(`\n✓ Build complete: ${totalFiles} HTML files`);

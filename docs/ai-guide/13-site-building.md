@@ -52,6 +52,10 @@ Instead, use a `blocks` field with content blocks (text-block, image-block, quot
     ```
     Use `imgUrl()` for ALL image src attributes. This handles `/uploads/x` (with slash), `uploads/x` (without), and `https://...` (external) correctly.
 
+12. **Reserved collection names** — NEVER name or label a collection `site-settings`, `settings`, `config`, `admin`, `media`, or `interactives`. These conflict with CMS admin's built-in UI panels and confuse editors. For site-wide settings, use `globals` as the collection name.
+
+13. **i18n preview redirects** — For multilingual static sites with locale URL prefixes (`/da/`, `/en/`), CMS admin constructs preview URLs as `urlPrefix + "/" + slug` (e.g. `/blog/my-post-da`). The build.ts MUST output redirect HTML files at these CMS-expected paths that redirect to the actual locale URL (`/da/blog/my-post/`). Without this, preview shows 404 for all non-default-locale documents.
+
 ## MANDATORY: Content File Requirements
 
 **CRITICAL — READ THIS BEFORE BUILDING ANY SITE.**

@@ -116,6 +116,8 @@ export default defineConfig({
 6. **`_fieldMeta` is required** in document JSON (can be empty `{}`)
 7. **Slug must match filename** — `hello-world.json` must have `"slug": "hello-world"`
 8. **Never use CDN scripts** (Tailwind, Bootstrap, etc.) — static sites must use inline CSS only
+9. **Never name a collection `site-settings`, `settings`, `config`, `admin`, `media`, or `interactives`** — these conflict with CMS admin's built-in UI. Use `globals` for site-wide settings.
+10. **i18n preview redirects** — for multilingual sites with locale prefixes (`/da/`, `/en/`), output redirect HTML at the CMS-expected slug path (e.g. `/blog/my-post-da/` → `/da/blog/my-post/`) so CMS preview works.
 
 ### Reading content in Next.js
 

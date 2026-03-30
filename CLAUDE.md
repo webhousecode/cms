@@ -9,6 +9,17 @@
 - Default (no urlPattern): `urlPrefix + "/" + slug` — NEVER inject category or other fields automatically
 - Test preview for ALL monitored sites after any change to URL construction: cms-docs, webhouse-site, maurseth, SproutLake, all examples
 
+## Hard Rule: Reserved Collection Names
+
+**NEVER name or label a collection with any of these reserved names:**
+`site-settings`, `site settings`, `settings`, `config`, `admin`, `media`, `interactives`
+
+These conflict with CMS admin's built-in UI panels and confuse editors. Use `globals` for site-wide settings. The site validator (`Validate site` button) now warns about this.
+
+## Hard Rule: i18n Preview Redirects
+
+For bilingual/multilingual static sites with `/da/`, `/en/` locale prefixes, CMS admin still constructs preview URLs as `urlPrefix + "/" + slug` (e.g. `/blog/my-post-da`). The build.ts MUST output redirect HTML files at the CMS-expected slug paths that redirect to the actual locale URL (e.g. `/da/blog/my-post/`). Without this, preview gives 404 for all non-default-locale documents.
+
 ## Project Structure
 
 pnpm monorepo with 8 publishable npm packages:

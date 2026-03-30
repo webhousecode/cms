@@ -7,7 +7,7 @@ export default defineConfig({
   collections: [
     defineCollection({
       name: 'globals',
-      label: 'Site Settings',
+      label: 'Globals',
       slug: 'globals',
       urlPrefix: '/',
       translatable: true,

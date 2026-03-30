@@ -99,6 +99,20 @@ export function validateSiteConfig(config: unknown): ValidationResult {
     }
     collectionNames.add(colName);
 
+    // Reserved collection names/labels — conflict with CMS admin built-in UI
+    const RESERVED_NAMES = ['site-settings', 'site settings', 'settings', 'config', 'admin', 'media', 'interactives'];
+    const colLabel = (col.label as string || '').toLowerCase();
+    if (RESERVED_NAMES.includes(colName.toLowerCase()) || RESERVED_NAMES.includes(colLabel)) {
+      const badName = RESERVED_NAMES.includes(colName.toLowerCase()) ? colName : col.label as string;
+      warnings.push({
+        level: 'warning',
+        category: 'config',
+        path: `${colPath}.name`,
+        message: `Collection "${badName}" uses a reserved name that conflicts with CMS admin's built-in "${badName}" panel. This will confuse editors.`,
+        suggestion: `Rename to "globals" (for site-wide settings) or another non-reserved name. Reserved names: ${RESERVED_NAMES.join(', ')}.`,
+      });
+    }
+
     // Invalid name characters
     if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?$/.test(colName)) {
       errors.push({ level: 'error', category: 'config', path: `${colPath}.name`, message: `Collection name "${colName}" contains invalid characters. Use lowercase letters, numbers, and hyphens.`, suggestion: colName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') });
