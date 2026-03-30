@@ -14,6 +14,7 @@ import { EmailSettingsPanel } from "@/components/settings/email-settings-panel";
 import { ToolsSettingsPanel } from "@/components/settings/tools-settings-panel";
 import { DeploySettingsPanel } from "@/components/settings/deploy-settings-panel";
 import { GeoSettingsPanel } from "@/components/settings/geo-settings-panel";
+import { BackupSettingsPanel } from "@/components/settings/backup-settings-panel";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { readSiteConfig } from "@/lib/site-config";
 import { readBrandVoice } from "@/lib/brand-voice";
@@ -54,6 +55,7 @@ export default async function SettingsPage({
     { id: "ai",          label: "AI" },
     { id: "brand-voice", label: "Brand Voice" },
     { id: "deploy",      label: "Deploy" },
+    { id: "backup",      label: "Backup" },
     { id: "tools",       label: "Automation" },
     { id: "geo",         label: "GEO" },
     { id: "mcp",         label: "MCP" },
@@ -262,7 +264,14 @@ export default async function SettingsPage({
           </div>
         )}
 
-        {/* Tools tab — backup & link checker scheduling */}
+        {/* Backup tab — schedule, retention, cloud provider */}
+        {tab === "backup" && (
+          <div className="max-w-lg" data-testid="settings-panel-backup">
+            <BackupSettingsPanel />
+          </div>
+        )}
+
+        {/* Tools tab — link checker, webhooks, media */}
         {tab === "tools" && (
           <div className="max-w-lg" data-testid="settings-panel-tools">
             <ToolsSettingsPanel />
