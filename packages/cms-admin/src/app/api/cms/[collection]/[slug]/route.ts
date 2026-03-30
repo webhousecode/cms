@@ -183,8 +183,9 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
     const newSlug = body.slug ?? slug;
     const updated = await cms.content.findBySlug(collection, newSlug);
 
-    // Dispatch revalidation for sites with revalidateUrl configured
+    // Dispatch revalidation for sites with revalidateUrl configured (Instant Content Deployment)
     const site = await getActiveSiteEntry().catch(() => null);
+    let revalidationOk = false;
     if (site?.revalidateUrl) {
       const config = await getAdminConfig();
       const col = config.collections.find((c) => c.name === collection);
@@ -194,7 +195,8 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
       if (newSlug !== slug) {
         dispatchRevalidation(site, { collection, slug, action: "deleted" }, urlPrefix).catch(() => {});
       }
-      dispatchRevalidation(site, { collection, slug: newSlug, action, document: updated }, urlPrefix).catch(() => {});
+      const result = await dispatchRevalidation(site, { collection, slug: newSlug, action, document: updated }, urlPrefix).catch(() => ({ ok: false }));
+      revalidationOk = result.ok;
     }
 
     // Auto-translate on publish / auto-retranslate on update (fire-and-forget)
@@ -229,10 +231,9 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
     }
 
     // Auto-deploy on save (fire-and-forget)
-    // If revalidation webhook was dispatched, content is already live — skip full deploy
-    const revalidationDispatched = !!site?.revalidateUrl;
-    const willDeploy = revalidationDispatched ? false : await checkDeployOnSave();
-    dispatchAutoDeployOnSave(revalidationDispatched).catch(() => {});
+    // If revalidation webhook succeeded, content is already live — skip full deploy
+    const willDeploy = revalidationOk ? false : await checkDeployOnSave();
+    dispatchAutoDeployOnSave(revalidationOk).catch(() => {});
 
     return NextResponse.json({ ...updated, _deployTriggered: willDeploy });
   } catch (err) {
