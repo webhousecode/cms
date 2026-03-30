@@ -96,3 +96,121 @@ CMD ["npm", "start"]
 - [ ] Test social sharing preview with [opengraph.xyz](https://opengraph.xyz)
 - [ ] Confirm images load correctly (no broken image icons)
 - [ ] If using on-demand revalidation, test the webhook endpoint
+
+---
+
+## Instant Content Deployment (ICD)
+
+ICD pushes content changes to deployed Next.js sites via a signed webhook instead of triggering a full Docker rebuild. Typical latency: **~2 seconds** vs ~73 seconds for a full deploy.
+
+ICD only applies to **Next.js / SSR sites** with a persistent filesystem (e.g., Fly.io with volumes, self-hosted Docker). It does not apply to static builds (Vercel, Netlify, GitHub Pages) where content is baked at build time.
+
+### How it works
+
+1. User saves content in CMS admin
+2. CMS sends the document JSON as an HMAC-SHA256 signed POST to the site's `/api/revalidate` endpoint
+3. The endpoint writes the document to disk and calls `revalidatePath()`
+4. Next.js serves fresh content on the next request
+5. Full Docker deploy is skipped when the revalidation webhook succeeds
+
+### 1. Add the `/api/revalidate` endpoint to your site
+
+Create `app/api/revalidate/route.ts`:
+
+```typescript
+import { revalidatePath } from "next/cache";
+import { NextRequest, NextResponse } from "next/server";
+import crypto from "node:crypto";
+import { writeFileSync, mkdirSync, unlinkSync, existsSync } from "node:fs";
+import { join, dirname } from "node:path";
+
+const SECRET = process.env.REVALIDATE_SECRET;
+const CONTENT_DIR = process.env.CONTENT_DIR ?? join(process.cwd(), "content");
+
+export async function POST(request: NextRequest) {
+  const signature = request.headers.get("x-cms-signature");
+  const body = await request.text();
+
+  if (SECRET) {
+    if (!signature) {
+      return NextResponse.json({ error: "Missing signature" }, { status: 401 });
+    }
+    const expected =
+      "sha256=" +
+      crypto.createHmac("sha256", SECRET).update(body).digest("hex");
+    const sigBuf = Buffer.from(signature);
+    const expBuf = Buffer.from(expected);
+    if (
+      sigBuf.length !== expBuf.length ||
+      !crypto.timingSafeEqual(sigBuf, expBuf)
+    ) {
+      return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+    }
+  }
+
+  const payload = JSON.parse(body) as {
+    paths?: string[];
+    collection?: string;
+    slug?: string;
+    action?: string;
+    document?: Record<string, unknown> | null;
+  };
+
+  if (payload.collection && payload.slug) {
+    const filePath = join(CONTENT_DIR, payload.collection, `${payload.slug}.json`);
+    if (payload.action === "deleted") {
+      if (existsSync(filePath)) unlinkSync(filePath);
+    } else if (payload.document) {
+      mkdirSync(dirname(filePath), { recursive: true });
+      writeFileSync(filePath, JSON.stringify(payload.document, null, 2), "utf-8");
+    }
+  }
+
+  const paths: string[] = payload.paths ?? ["/"];
+  for (const p of paths) {
+    revalidatePath(p);
+  }
+
+  return NextResponse.json({
+    revalidated: true,
+    paths,
+    collection: payload.collection,
+    slug: payload.slug,
+    timestamp: new Date().toISOString(),
+  });
+}
+```
+
+### 2. Set the environment variable on the deployed site
+
+Generate a secret and set it as an environment variable:
+
+```bash
+# Generate secret
+openssl rand -hex 32
+
+# Set on Fly.io
+fly secrets set REVALIDATE_SECRET=<generated-secret>
+
+# Or in .env for Docker
+REVALIDATE_SECRET=<generated-secret>
+```
+
+### 3. Configure CMS admin (site registry)
+
+In the CMS admin Site Settings, set these fields on the site registry entry:
+
+```json
+{
+  "revalidateUrl": "https://your-site.fly.dev/api/revalidate",
+  "revalidateSecret": "<same-secret-as-REVALIDATE_SECRET>"
+}
+```
+
+### When ICD is used vs full deploy
+
+| Scenario | What happens |
+|---|---|
+| Content save (create/update/delete) | ICD webhook fires, ~2s |
+| Config change, code change, dependency update | Full Docker deploy required |
+| Webhook fails (site down, auth error) | CMS falls back to full deploy |

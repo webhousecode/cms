@@ -153,3 +153,99 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
   );
 }
 ```
+
+---
+
+## Instant Content Deployment (ICD)
+
+ICD lets the CMS push content changes directly to a deployed Next.js site via a signed webhook, bypassing full Docker rebuilds. Content updates arrive in ~2 seconds.
+
+This only works for **Next.js SSR sites with a persistent filesystem** (Fly.io with volumes, self-hosted Docker). Static export sites (Vercel, Netlify, GitHub Pages) require a full rebuild.
+
+### Setup
+
+**1. Create `app/api/revalidate/route.ts`:**
+
+```typescript
+import { revalidatePath } from "next/cache";
+import { NextRequest, NextResponse } from "next/server";
+import crypto from "node:crypto";
+import { writeFileSync, mkdirSync, unlinkSync, existsSync } from "node:fs";
+import { join, dirname } from "node:path";
+
+const SECRET = process.env.REVALIDATE_SECRET;
+const CONTENT_DIR = process.env.CONTENT_DIR ?? join(process.cwd(), "content");
+
+export async function POST(request: NextRequest) {
+  const signature = request.headers.get("x-cms-signature");
+  const body = await request.text();
+
+  if (SECRET) {
+    if (!signature) {
+      return NextResponse.json({ error: "Missing signature" }, { status: 401 });
+    }
+    const expected =
+      "sha256=" +
+      crypto.createHmac("sha256", SECRET).update(body).digest("hex");
+    const sigBuf = Buffer.from(signature);
+    const expBuf = Buffer.from(expected);
+    if (
+      sigBuf.length !== expBuf.length ||
+      !crypto.timingSafeEqual(sigBuf, expBuf)
+    ) {
+      return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+    }
+  }
+
+  const payload = JSON.parse(body) as {
+    paths?: string[];
+    collection?: string;
+    slug?: string;
+    action?: string;
+    document?: Record<string, unknown> | null;
+  };
+
+  if (payload.collection && payload.slug) {
+    const filePath = join(CONTENT_DIR, payload.collection, `${payload.slug}.json`);
+    if (payload.action === "deleted") {
+      if (existsSync(filePath)) unlinkSync(filePath);
+    } else if (payload.document) {
+      mkdirSync(dirname(filePath), { recursive: true });
+      writeFileSync(filePath, JSON.stringify(payload.document, null, 2), "utf-8");
+    }
+  }
+
+  const paths: string[] = payload.paths ?? ["/"];
+  for (const p of paths) {
+    revalidatePath(p);
+  }
+
+  return NextResponse.json({
+    revalidated: true,
+    paths,
+    collection: payload.collection,
+    slug: payload.slug,
+    timestamp: new Date().toISOString(),
+  });
+}
+```
+
+**2. Set the environment variable on the deployed site:**
+
+```bash
+openssl rand -hex 32
+# Set the output as REVALIDATE_SECRET in your deployment environment
+```
+
+**3. Configure CMS admin site registry:**
+
+In CMS admin Site Settings, add `revalidateUrl` and `revalidateSecret` to the site entry:
+
+```json
+{
+  "revalidateUrl": "https://your-site.fly.dev/api/revalidate",
+  "revalidateSecret": "<same-secret-as-REVALIDATE_SECRET>"
+}
+```
+
+The CMS will send content changes as signed POST requests. If the webhook fails, deployment falls back to a full Docker build.
