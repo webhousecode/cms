@@ -50,7 +50,10 @@ site-name.beam
 │   ├── agents/             # Agent configurations
 │   ├── brand-voice.json    # Brand voice settings
 │   ├── ai-config.json      # AI provider config (keys stripped)
-│   └── mcp-keys.json       # MCP API keys (keys stripped, labels kept)
+│   ├── mcp-keys.json       # MCP API keys (keys stripped, labels kept)
+│   ├── chat-history/       # All chat conversations (site knowledge)
+│   ├── chat-memories/      # Extracted facts and memories (F114)
+│   └── user-state/         # Tabs, preferences, onboarding progress
 └── registry-entry.json     # SiteEntry for importing into target registry
 ```
 
@@ -265,7 +268,9 @@ npx cms beam push --site my-blog \
 | **Brand voice** | `_data/brand-voice.json` | No |
 | **AI config** | `_data/ai-config.json` | Yes — provider keys stripped |
 | **MCP keys** | `_data/mcp-keys.json` | Yes — keys stripped, labels kept |
-| **User state** | `_data/user-state/*.json` | Excluded (per-user, not portable) |
+| **Chat history** | `_data/chat-history/*.json` | No (conversations are site knowledge) |
+| **Chat memories** | `_data/chat-memories/*.json` | No (extracted facts about the site) |
+| **User state** | `_data/user-state/*.json` | No (tabs, prefs, onboarding progress) |
 | **Backups** | `_data/backups/` | Excluded (too large, recreatable) |
 | **Registry entry** | Generated `registry-entry.json` | Token stripped |
 
