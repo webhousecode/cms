@@ -4,7 +4,7 @@
 
 ---
 
-## Done (36 milestones)
+## Done (37 milestones)
 
 | # | Milestone | Completed |
 |---|-----------|-----------|
@@ -42,6 +42,7 @@
 | 34 | **Login with GitHub** — OAuth sign-in, JIT provisioning, account linking, GitHub avatar (F91) | 2026-03-23 |
 | 35 | **AI Site Builder Guide** — 2383→137 lines, 20 modular on-demand docs (F75) | 2026-03-23 |
 | 36 | **Inline Proofreading** — ProseMirror decorations, accept/reject, sticky toolbar (F109) | 2026-03-29 |
+| 37 | **Backup & Restore** — filesystem + GitHub restore, scheduled backups, retention, webhooks (F27) | 2026-03-30 |
 
 ---
 
@@ -66,7 +67,7 @@ _Without these, we cannot build and deliver professional sites on the platform._
 | ~~4d~~ | ~~**F76 Create New Organization**~~ | ~~Done~~ | ~~Shipped 2026-03-19~~ |
 | ~~4e~~ | ~~**F77 Middleware→Proxy**~~ | ~~Done~~ | ~~Shipped 2026-03-20~~ |
 | ~~5~~ | ~~**F12 One-Click Publish**~~ | ~~Done~~ | ~~Shipped. All providers: GH Pages, Fly.io, Vercel, Netlify, Cloudflare. Deploy history, auto-deploy on save, deploy tab, custom domains.~~ |
-| 6 | **F27 Backup & Restore** | In progress | Backup working. Scheduler now iterates ALL sites. GitHub restore not yet implemented. |
+| ~~6~~ | ~~**F27 Backup & Restore**~~ | ~~Done~~ | ~~Shipped 2026-03-30. Backup + restore for filesystem and GitHub-backed sites. Scheduled backups, retention pruning, webhook notifications.~~ |
 | ~~7~~ | ~~**F44 Media Processing Pipeline**~~ | ~~Done~~ | ~~Sharp WebP variant generation on upload + batch, EXIF extraction, build-time `<picture>` upgrade, AI image analysis. Configurable variant widths + quality in Settings.~~ |
 | ~~8~~ | ~~**F42 Framework Boilerplates**~~ | ~~Done~~ | ~~Shipped. 3 boilerplates (static, nextjs, nextjs-github) + Claude Code skills/hooks/agents.~~ |
 | ~~8b~~ | ~~**F75 AI Site Builder Guide**~~ | ~~Done~~ | ~~Shipped 2026-03-23. 2383→137 lines, 20 modules.~~ |
