@@ -306,21 +306,7 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
   });
   useEffect(() => {
     async function resolve() {
-      // Build with drafts only in grid view (thumbnails need it)
-      if (view === "grid") {
-        try {
-          await fetch("/api/preview-build", { method: "POST" });
-        } catch { /* build not available — serve existing dist/ */ }
-      }
-      // 2. Try sirv (static sites with dist/)
-      try {
-        const r = await fetch("/api/preview-serve", { method: "POST" });
-        if (r.ok) {
-          const d = await r.json() as { url?: string };
-          if (d?.url) { setPreviewBase(d.url); sessionStorage.setItem("cms-preview-base", d.url); return; }
-        }
-      } catch { /* sirv not available */ }
-      // 3. Fall back to previewSiteUrl from site config (Next.js dev server etc.)
+      // 1. FIRST: check previewSiteUrl from site config (Next.js dev server, custom URL)
       try {
         const r = await fetch("/api/admin/site-config");
         if (r.ok) {
@@ -328,6 +314,20 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
           if (data?.previewSiteUrl) { setPreviewBase(data.previewSiteUrl); sessionStorage.setItem("cms-preview-base", data.previewSiteUrl); return; }
         }
       } catch { /* no config */ }
+      // 2. Build with drafts only in grid view (thumbnails need it) — only for static sites
+      if (view === "grid") {
+        try {
+          await fetch("/api/preview-build", { method: "POST" });
+        } catch { /* build not available — serve existing dist/ */ }
+      }
+      // 3. Fall back to sirv (static sites with dist/)
+      try {
+        const r = await fetch("/api/preview-serve", { method: "POST" });
+        if (r.ok) {
+          const d = await r.json() as { url?: string };
+          if (d?.url) { setPreviewBase(d.url); sessionStorage.setItem("cms-preview-base", d.url); return; }
+        }
+      } catch { /* sirv not available */ }
     }
     resolve();
   }, [view]);
