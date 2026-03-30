@@ -136,6 +136,7 @@
 | F117 | [MCP ↔ Chat Tool Parity](#f117-mcp-chat-parity) | **Done** | [docs/features/F117-mcp-chat-parity.md](features/F117-mcp-chat-parity.md) |
 | F119 | [One-Click Docker Deploy](#f119-one-click-docker-deploy) | Planned | [docs/features/F119-one-click-docker-deploy.md](features/F119-one-click-docker-deploy.md) |
 | F120 | [Onboarding](#f120-onboarding) | **Tier 1** | [docs/features/F120-onboarding.md](features/F120-onboarding.md) |
+| F121 | [Snippet Embeds](#f121-snippet-embeds) | Planned | [docs/features/F121-snippet-embeds.md](features/F121-snippet-embeds.md) |
 | F122 | [Beam — Site Teleportation](#f122-beam) | Planned | [docs/features/F122-beam.md](features/F122-beam.md) |
 
 ---
@@ -496,6 +497,10 @@ Built-in support chat that knows everything about CMS admin — features, UI, AP
 
 ## F116 — Contextual Help (HelpCard)
 Inline contextual help cards throughout the CMS admin UI.
+
+## F121 — Snippet Embeds
+
+TipTap node extension that renders `{{snippet:slug}}` tokens as visual pill/badge in the richtext editor. Inline preview shows snippet title, language badge, and code preview. Click to expand. Insert via toolbar button or /snippet slash command. Resolves from content/snippets/ collection. Reusable code blocks stored once, embedded everywhere.
 
 ## F119 — One-Click Docker Deploy
 
