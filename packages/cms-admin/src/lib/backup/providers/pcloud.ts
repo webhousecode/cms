@@ -1,126 +1,128 @@
 /**
- * pCloud Backup Provider
+ * pCloud Backup Provider — WebDAV
  *
- * Uses pCloud REST API — zero npm dependencies.
- * EU region: eapi.pcloud.com (Luxembourg), US region: api.pcloud.com
+ * Uses pCloud's WebDAV interface — requires only email + password.
+ * EU: ewebdav.pcloud.com (Luxembourg), US: webdav.pcloud.com
  * Free tier: 10 GB storage.
  */
 
-import type { BackupProvider, CloudBackupFile, PCloudConfig } from "./types";
+import type { BackupProvider, CloudBackupFile } from "./types";
+
+export interface PCloudWebDAVConfig {
+  email: string;
+  password: string;
+  /** true = ewebdav.pcloud.com (EU/Luxembourg), false = webdav.pcloud.com (US) */
+  euRegion: boolean;
+}
 
 export class PCloudBackupProvider implements BackupProvider {
   readonly id = "pcloud";
   readonly name = "pCloud";
   private baseUrl: string;
-  private token: string;
-  private folderId: number;
+  private authHeader: string;
+  private folder = "/CMS Backups";
 
-  constructor(private config: PCloudConfig) {
+  constructor(private config: PCloudWebDAVConfig) {
     this.baseUrl = config.euRegion
-      ? "https://eapi.pcloud.com"
-      : "https://api.pcloud.com";
-    this.token = config.accessToken;
-    this.folderId = config.folderId ?? 0; // 0 = root
+      ? "https://ewebdav.pcloud.com"
+      : "https://webdav.pcloud.com";
+    this.authHeader = "Basic " + Buffer.from(`${config.email}:${config.password}`).toString("base64");
+  }
+
+  private headers(): Record<string, string> {
+    return { Authorization: this.authHeader };
   }
 
   async upload(filename: string, data: Buffer): Promise<{ url: string; size: number }> {
-    // Ensure backup folder exists
-    const folderId = await this.ensureFolder();
+    await this.ensureFolder();
 
-    // Upload via uploadfile endpoint
-    const formData = new FormData();
-    formData.append("file", new Blob([new Uint8Array(data)]), filename);
+    const res = await fetch(`${this.baseUrl}${this.folder}/${filename}`, {
+      method: "PUT",
+      headers: { ...this.headers(), "Content-Type": "application/zip" },
+      body: new Uint8Array(data),
+    });
 
-    const res = await fetch(
-      `${this.baseUrl}/uploadfile?folderid=${folderId}&filename=${encodeURIComponent(filename)}&nopartial=1&auth=${this.token}`,
-      { method: "POST", body: formData },
-    );
-
-    const result = await res.json() as { result: number; metadata?: Array<{ path: string; size: number }> };
-    if (result.result !== 0) {
-      throw new Error(`pCloud upload failed: error ${result.result}`);
+    if (!res.ok) {
+      throw new Error(`pCloud upload failed: ${res.status} ${res.statusText}`);
     }
 
-    return {
-      url: result.metadata?.[0]?.path ?? filename,
-      size: data.length,
-    };
+    return { url: `${this.folder}/${filename}`, size: data.length };
   }
 
   async list(): Promise<CloudBackupFile[]> {
-    const folderId = this.folderId || await this.findFolder();
-    if (!folderId) return [];
+    const res = await fetch(`${this.baseUrl}${this.folder}/`, {
+      method: "PROPFIND",
+      headers: { ...this.headers(), Depth: "1", "Content-Type": "application/xml" },
+      body: `<?xml version="1.0" encoding="utf-8"?>
+<D:propfind xmlns:D="DAV:">
+  <D:prop>
+    <D:displayname/>
+    <D:getcontentlength/>
+    <D:getlastmodified/>
+  </D:prop>
+</D:propfind>`,
+    });
 
-    const res = await fetch(
-      `${this.baseUrl}/listfolder?folderid=${folderId}&auth=${this.token}`,
-    );
-    const data = await res.json() as {
-      result: number;
-      metadata?: { contents?: Array<{ name: string; size: number; modified: string; isfolder: boolean }> };
-    };
+    if (res.status === 404) return [];
+    if (!res.ok) return [];
 
-    if (data.result !== 0 || !data.metadata?.contents) return [];
-
-    return data.metadata.contents
-      .filter((f) => !f.isfolder && f.name.endsWith(".zip"))
-      .map((f) => ({
-        filename: f.name,
-        size: f.size,
-        lastModified: f.modified,
-      }));
+    const xml = await res.text();
+    return this.parsePropfind(xml);
   }
 
   async download(filename: string): Promise<Buffer> {
-    const folderId = this.folderId || await this.findFolder();
-    if (!folderId) throw new Error("Backup folder not found on pCloud");
+    const res = await fetch(`${this.baseUrl}${this.folder}/${filename}`, {
+      method: "GET",
+      headers: this.headers(),
+    });
 
-    // Get file link
-    const res = await fetch(
-      `${this.baseUrl}/getfilelink?path=${encodeURIComponent(`/CMS Backups/${filename}`)}&auth=${this.token}`,
-    );
-    const data = await res.json() as { result: number; hosts?: string[]; path?: string };
-    if (data.result !== 0 || !data.hosts?.length || !data.path) {
-      throw new Error(`pCloud getfilelink failed: ${data.result}`);
-    }
-
-    const fileRes = await fetch(`https://${data.hosts[0]}${data.path}`);
-    if (!fileRes.ok) throw new Error(`pCloud download failed: ${fileRes.status}`);
-
-    const arrayBuffer = await fileRes.arrayBuffer();
+    if (!res.ok) throw new Error(`pCloud download failed: ${res.status}`);
+    const arrayBuffer = await res.arrayBuffer();
     return Buffer.from(arrayBuffer);
   }
 
   async delete(filename: string): Promise<void> {
-    const res = await fetch(
-      `${this.baseUrl}/deletefile?path=${encodeURIComponent(`/CMS Backups/${filename}`)}&auth=${this.token}`,
-    );
-    const data = await res.json() as { result: number };
-    if (data.result !== 0 && data.result !== 2009 /* file not found */) {
-      throw new Error(`pCloud delete failed: ${data.result}`);
+    const res = await fetch(`${this.baseUrl}${this.folder}/${filename}`, {
+      method: "DELETE",
+      headers: this.headers(),
+    });
+
+    if (!res.ok && res.status !== 404) {
+      throw new Error(`pCloud delete failed: ${res.status}`);
     }
   }
 
   async test(): Promise<{ ok: boolean; message: string; freeSpace?: number }> {
     try {
-      const res = await fetch(`${this.baseUrl}/userinfo?auth=${this.token}`);
-      const data = await res.json() as {
-        result: number;
-        email?: string;
-        quota?: number;
-        usedquota?: number;
-        error?: string;
-      };
+      // PROPFIND on root to verify credentials
+      const res = await fetch(`${this.baseUrl}/`, {
+        method: "PROPFIND",
+        headers: { ...this.headers(), Depth: "0", "Content-Type": "application/xml" },
+        body: `<?xml version="1.0" encoding="utf-8"?>
+<D:propfind xmlns:D="DAV:">
+  <D:prop>
+    <D:quota-available-bytes/>
+    <D:quota-used-bytes/>
+  </D:prop>
+</D:propfind>`,
+      });
 
-      if (data.result !== 0) {
-        return { ok: false, message: data.error ?? `Error code: ${data.result}` };
+      if (res.status === 401) {
+        return { ok: false, message: "Invalid email or password" };
+      }
+      if (!res.ok) {
+        return { ok: false, message: `Connection failed: ${res.status}` };
       }
 
-      const freeBytes = (data.quota ?? 0) - (data.usedquota ?? 0);
-      const freeGB = (freeBytes / (1024 * 1024 * 1024)).toFixed(1);
+      const xml = await res.text();
+      const freeMatch = xml.match(/<D:quota-available-bytes>(\d+)<\/D:quota-available-bytes>/i)
+        ?? xml.match(/<quota-available-bytes>(\d+)<\/quota-available-bytes>/i);
+      const freeBytes = freeMatch ? parseInt(freeMatch[1], 10) : undefined;
+      const freeGB = freeBytes ? (freeBytes / (1024 * 1024 * 1024)).toFixed(1) : "?";
 
       return {
         ok: true,
-        message: `Connected as ${data.email} — ${freeGB} GB free`,
+        message: `Connected — ${freeGB} GB free`,
         freeSpace: freeBytes,
       };
     } catch (err) {
@@ -128,56 +130,42 @@ export class PCloudBackupProvider implements BackupProvider {
     }
   }
 
-  /** Find or create the "CMS Backups" folder */
-  private async ensureFolder(): Promise<number> {
-    if (this.folderId) return this.folderId;
-
-    // Try to find existing
-    const existing = await this.findFolder();
-    if (existing) {
-      this.folderId = existing;
-      return existing;
+  /** Ensure the backup folder exists */
+  private async ensureFolder(): Promise<void> {
+    const res = await fetch(`${this.baseUrl}${this.folder}/`, {
+      method: "MKCOL",
+      headers: this.headers(),
+    });
+    // 201 = created, 405 = already exists — both fine
+    if (!res.ok && res.status !== 405) {
+      throw new Error(`pCloud MKCOL failed: ${res.status}`);
     }
-
-    // Create folder in root
-    const res = await fetch(
-      `${this.baseUrl}/createfolder?folderid=0&name=${encodeURIComponent("CMS Backups")}&auth=${this.token}`,
-    );
-    const data = await res.json() as { result: number; metadata?: { folderid: number } };
-    if (data.result !== 0 && data.result !== 2004 /* already exists */) {
-      throw new Error(`pCloud createfolder failed: ${data.result}`);
-    }
-
-    if (data.metadata?.folderid) {
-      this.folderId = data.metadata.folderid;
-      return data.metadata.folderid;
-    }
-
-    // If "already exists" error, find it
-    const found = await this.findFolder();
-    if (found) {
-      this.folderId = found;
-      return found;
-    }
-
-    throw new Error("Could not create or find CMS Backups folder");
   }
 
-  /** Find the "CMS Backups" folder in root */
-  private async findFolder(): Promise<number | null> {
-    const res = await fetch(
-      `${this.baseUrl}/listfolder?folderid=0&auth=${this.token}`,
-    );
-    const data = await res.json() as {
-      result: number;
-      metadata?: { contents?: Array<{ name: string; folderid: number; isfolder: boolean }> };
-    };
+  /** Parse PROPFIND XML response into file list */
+  private parsePropfind(xml: string): CloudBackupFile[] {
+    const files: CloudBackupFile[] = [];
+    // Match each <D:response> or <response> block
+    const responseRegex = /<(?:D:)?response>([\s\S]*?)<\/(?:D:)?response>/gi;
+    let match;
+    while ((match = responseRegex.exec(xml)) !== null) {
+      const block = match[1];
 
-    if (data.result !== 0) return null;
+      const hrefMatch = block.match(/<(?:D:)?href>([^<]+)<\/(?:D:)?href>/i);
+      if (!hrefMatch) continue;
+      const href = decodeURIComponent(hrefMatch[1]);
+      if (!href.endsWith(".zip")) continue;
 
-    const folder = data.metadata?.contents?.find(
-      (f) => f.isfolder && f.name === "CMS Backups",
-    );
-    return folder?.folderid ?? null;
+      const filename = href.split("/").pop() ?? "";
+      const sizeMatch = block.match(/<(?:D:)?getcontentlength>(\d+)<\/(?:D:)?getcontentlength>/i);
+      const dateMatch = block.match(/<(?:D:)?getlastmodified>([^<]+)<\/(?:D:)?getlastmodified>/i);
+
+      files.push({
+        filename,
+        size: sizeMatch ? parseInt(sizeMatch[1], 10) : 0,
+        lastModified: dateMatch?.[1] ?? "",
+      });
+    }
+    return files;
   }
 }

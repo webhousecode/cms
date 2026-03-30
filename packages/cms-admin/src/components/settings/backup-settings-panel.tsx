@@ -5,15 +5,14 @@ import { SectionHeading } from "@/components/ui/section-heading";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { SettingsCard } from "./settings-card";
 import { WebhookList, type WebhookEntry } from "./webhook-list";
-import { ExternalLink } from "lucide-react";
-
 interface BackupConfig {
   backupSchedule: "off" | "daily" | "weekly";
   backupTime: string;
   backupRetentionDays: number;
   backupWebhooks: WebhookEntry[];
   backupProvider: "off" | "pcloud" | "s3" | "webdav";
-  backupPcloudToken: string;
+  backupPcloudEmail: string;
+  backupPcloudPassword: string;
   backupPcloudEu: boolean;
 }
 
@@ -23,7 +22,8 @@ const DEFAULTS: BackupConfig = {
   backupRetentionDays: 30,
   backupWebhooks: [],
   backupProvider: "off",
-  backupPcloudToken: "",
+  backupPcloudEmail: "",
+  backupPcloudPassword: "",
   backupPcloudEu: true,
 };
 
@@ -48,7 +48,8 @@ export function BackupSettingsPanel() {
           backupRetentionDays: data.backupRetentionDays ?? 30,
           backupWebhooks: data.backupWebhooks ?? [],
           backupProvider: data.backupProvider ?? "off",
-          backupPcloudToken: data.backupPcloudToken ?? "",
+          backupPcloudEmail: data.backupPcloudEmail ?? "",
+          backupPcloudPassword: data.backupPcloudPassword ?? "",
           backupPcloudEu: data.backupPcloudEu ?? true,
         });
       })
@@ -79,7 +80,8 @@ export function BackupSettingsPanel() {
       const body: Record<string, unknown> = { type: config.backupProvider };
       if (config.backupProvider === "pcloud") {
         body.pcloud = {
-          accessToken: config.backupPcloudToken,
+          email: config.backupPcloudEmail,
+          password: config.backupPcloudPassword,
           euRegion: config.backupPcloudEu,
         };
       }
@@ -188,22 +190,23 @@ export function BackupSettingsPanel() {
         {config.backupProvider === "pcloud" && (
           <>
             <div>
-              <div style={{ display: "flex", alignItems: "center", marginBottom: "0.35rem" }}>
-                <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Access Token</label>
-                <a
-                  href="https://docs.pcloud.com/methods/oauth_2.0/authorize.html"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", display: "flex", alignItems: "center", gap: "0.2rem", marginLeft: "auto" }}
-                >
-                  Get key <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} />
-                </a>
-              </div>
+              <label style={labelStyle}>Email</label>
+              <input
+                type="email"
+                value={config.backupPcloudEmail}
+                onChange={(e) => updateConfig((c) => ({ ...c, backupPcloudEmail: e.target.value }))}
+                placeholder="Your pCloud email"
+                style={inputStyle}
+              />
+            </div>
+
+            <div>
+              <label style={labelStyle}>Password</label>
               <input
                 type="password"
-                value={config.backupPcloudToken}
-                onChange={(e) => updateConfig((c) => ({ ...c, backupPcloudToken: e.target.value }))}
-                placeholder="Paste your pCloud access token"
+                value={config.backupPcloudPassword}
+                onChange={(e) => updateConfig((c) => ({ ...c, backupPcloudPassword: e.target.value }))}
+                placeholder="Your pCloud password"
                 style={inputStyle}
               />
             </div>
@@ -222,12 +225,12 @@ export function BackupSettingsPanel() {
               <button
                 type="button"
                 onClick={testConnection}
-                disabled={testing || !config.backupPcloudToken}
+                disabled={testing || !config.backupPcloudEmail || !config.backupPcloudPassword}
                 style={{
                   fontSize: "0.75rem", padding: "0.35rem 0.75rem", borderRadius: "6px",
                   border: "1px solid var(--border)", background: "var(--card)",
-                  color: "var(--foreground)", cursor: testing || !config.backupPcloudToken ? "not-allowed" : "pointer",
-                  opacity: testing || !config.backupPcloudToken ? 0.5 : 1,
+                  color: "var(--foreground)", cursor: testing || !config.backupPcloudEmail || !config.backupPcloudPassword ? "not-allowed" : "pointer",
+                  opacity: testing || !config.backupPcloudEmail || !config.backupPcloudPassword ? 0.5 : 1,
                 }}
               >
                 {testing ? "Testing..." : "Test connection"}

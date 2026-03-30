@@ -220,14 +220,15 @@ export async function createBackup(trigger: "manual" | "scheduled" = "manual"): 
 }
 
 /** Build provider config from site config fields */
-function buildProviderConfig(siteConfig: { backupProvider: string; backupPcloudToken?: string; backupPcloudEu?: boolean }) {
+function buildProviderConfig(siteConfig: { backupProvider: string; backupPcloudEmail?: string; backupPcloudPassword?: string; backupPcloudEu?: boolean }) {
   switch (siteConfig.backupProvider) {
     case "pcloud":
-      if (!siteConfig.backupPcloudToken) return null;
+      if (!siteConfig.backupPcloudEmail || !siteConfig.backupPcloudPassword) return null;
       return {
         type: "pcloud" as const,
         pcloud: {
-          accessToken: siteConfig.backupPcloudToken,
+          email: siteConfig.backupPcloudEmail,
+          password: siteConfig.backupPcloudPassword,
           euRegion: siteConfig.backupPcloudEu ?? true,
         },
       };

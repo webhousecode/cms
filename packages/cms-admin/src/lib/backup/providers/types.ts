@@ -41,9 +41,9 @@ export interface BackupProviderConfig {
 }
 
 export interface PCloudConfig {
-  accessToken: string;
-  folderId?: number;
-  /** true = eapi.pcloud.com (EU/Luxembourg), false = api.pcloud.com (US) */
+  email: string;
+  password: string;
+  /** true = ewebdav.pcloud.com (EU/Luxembourg), false = webdav.pcloud.com (US) */
   euRegion: boolean;
 }
 

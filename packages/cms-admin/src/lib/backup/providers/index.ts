@@ -14,7 +14,11 @@ export async function createBackupProvider(config: BackupProviderConfig): Promis
     case "pcloud": {
       if (!config.pcloud) throw new Error("pCloud config missing");
       const { PCloudBackupProvider } = await import("./pcloud");
-      return new PCloudBackupProvider(config.pcloud);
+      return new PCloudBackupProvider({
+        email: config.pcloud.email,
+        password: config.pcloud.password,
+        euRegion: config.pcloud.euRegion,
+      });
     }
 
     // Future: S3 and WebDAV adapters

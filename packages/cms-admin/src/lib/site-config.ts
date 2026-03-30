@@ -84,8 +84,10 @@ export interface SiteConfig {
 
   /** F95 Cloud Backup — provider config */
   backupProvider: "off" | "pcloud" | "s3" | "webdav";
-  /** F95 pCloud access token */
-  backupPcloudToken: string;
+  /** F95 pCloud email */
+  backupPcloudEmail: string;
+  /** F95 pCloud password */
+  backupPcloudPassword: string;
   /** F95 pCloud EU region (Luxembourg) */
   backupPcloudEu: boolean;
 
@@ -161,7 +163,8 @@ async function defaults(): Promise<SiteConfig> {
     backupTime: "03:00",
     backupRetentionDays: 30,
     backupProvider: "off",
-    backupPcloudToken: "",
+    backupPcloudEmail: "",
+    backupPcloudPassword: "",
     backupPcloudEu: true,
     linkCheckSchedule: "off",
     linkCheckTime: "04:00",
