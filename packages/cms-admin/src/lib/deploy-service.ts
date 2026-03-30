@@ -902,12 +902,20 @@ async function githubPagesBuildAndDeploy(token: string, repo: string): Promise<s
       if (enableRes.status === 422 && body.includes("plan does not support")) {
         throw new Error("GitHub Pages is not available for private repos on the Free plan. Make the repo public or upgrade your plan.");
       }
-      if (enableRes.status !== 422) {
+      // GitHub API sometimes returns 500 when Pages is already enabled (race condition)
+      // or 409/422 for other conflicts — treat as non-fatal, Pages may already be active
+      if (enableRes.status === 500 || enableRes.status === 409) {
+        console.log(`[deploy] Pages enable returned ${enableRes.status} — may already be active, continuing...`);
+      } else if (enableRes.status !== 422) {
         throw new Error(`Failed to enable GitHub Pages: ${enableRes.status}`);
       }
     } else {
       const data = await enableRes.json() as { html_url?: string };
       pagesUrl = data.html_url;
+    }
+    // If we didn't get a URL from enable, construct it
+    if (!pagesUrl) {
+      pagesUrl = `https://${repo.split("/")[0]}.github.io/${repo.split("/")[1]}`;
     }
   } else if (checkRes.ok) {
     const data = await checkRes.json() as { html_url?: string; source?: { branch?: string } };
