@@ -1235,11 +1235,19 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
     const prefix = colConfig.urlPrefix.replace(/\/$/, "");
     // Homepage: slug "home" or "index" with urlPrefix "/" maps to root
     const isHomepage = (prefix === "" || prefix === "/") && (doc.slug === "home" || doc.slug === "index");
-    // Include category segment if present AND different from urlPrefix (e.g. /blog/{category}/{slug})
-    const category = typeof doc.data?.category === "string" ? doc.data.category : "";
-    const prefixBase = prefix.split("/").pop() ?? "";
-    const useCategory = category && category !== prefixBase;
-    const slugPath = useCategory ? `${category}/${doc.slug}` : doc.slug;
+
+    // Build slug path from urlPattern (if configured) or plain slug (default)
+    let slugPath = doc.slug;
+    const pattern = (colConfig as { urlPattern?: string }).urlPattern;
+    if (pattern) {
+      // Replace :fieldName placeholders with actual field values
+      slugPath = pattern.replace(/^\//, "").replace(/:([a-zA-Z_]+)/g, (_m, field) => {
+        if (field === "slug") return doc.slug;
+        const val = doc.data?.[field];
+        return typeof val === "string" ? val : "";
+      });
+    }
+
     // Add locale prefix for non-default locales (prefix-other strategy)
     const locPrefix = locale && locale !== defaultLocale ? `/${locale}` : "";
     const pagePath = isHomepage ? "/" : `${locPrefix}${prefix}/${slugPath}`;

@@ -89,6 +89,12 @@ export interface CollectionConfig {
   locales?: string[];
   /** Lifecycle hooks for this collection. Functions called during create/update/delete. */
   hooks?: import('../content/hooks.js').CollectionHooks;
+  /**
+   * URL pattern for preview URLs. Uses `:fieldName` placeholders.
+   * Default: `/:slug` (appended after urlPrefix).
+   * Example: `/:category/:slug` for category-based routing.
+   */
+  urlPattern?: string;
 }
 
 export interface BuildConfig {

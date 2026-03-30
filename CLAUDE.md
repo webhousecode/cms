@@ -1,5 +1,14 @@
 # @webhouse/cms — Development Instructions
 
+## Hard Rule: Preview MUST Always Work
+
+**EVERY site built with @webhouse/cms MUST have working preview — both locally and deployed. No exceptions.**
+
+- CMS admin constructs preview URLs as: `previewSiteUrl + urlPrefix + "/" + slug`
+- If a collection uses category-based URLs, it MUST set `urlPattern: "/:category/:slug"` in cms.config.ts
+- Default (no urlPattern): `urlPrefix + "/" + slug` — NEVER inject category or other fields automatically
+- Test preview for ALL monitored sites after any change to URL construction: cms-docs, webhouse-site, maurseth, SproutLake, all examples
+
 ## Project Structure
 
 pnpm monorepo with 8 publishable npm packages:
