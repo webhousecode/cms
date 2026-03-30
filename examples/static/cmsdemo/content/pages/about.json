@@ -1,0 +1,48 @@
+{
+  "slug": "about",
+  "status": "published",
+  "locale": "en",
+  "translationGroup": "a65e8177-93bc-4f47-a10f-350b0b64ab6f",
+  "id": "page-about-en",
+  "_fieldMeta": {},
+  "data": {
+    "title": "About",
+    "description": "30 years of CMS heritage. 1,000+ websites shipped. One lesson: complexity kills.",
+    "sections": [
+      {
+        "_block": "hero",
+        "badge": "Est. 1995 — Denmark",
+        "headline": "1,000+ websites. One lesson.",
+        "subline": "Complexity kills. Every CMS we've ever run has eventually buckled under the weight of plugins, updates, security patches, and architectural debt. @webhouse/cms is our answer: start clean, stay simple, never compromise on the developer experience.",
+        "ctaPrimary": "",
+        "ctaSecondary": ""
+      },
+      {
+        "_block": "text-section",
+        "heading": "Why we built this",
+        "body": "We're WebHouse — a Danish software agency founded in 1995. We've shipped over 1,000 websites, 50+ mobile apps, and a decade of enterprise platforms.\n\nOur first CMS was built in-house in the late 90s. It evolved into ODEUM CMS, which powered hundreds of Danish websites through the 2000s and 2010s. We've seen every CMS trend come and go: monolithic, headless, JAMstack, composable, AI-assisted.\n\nThe one constant? Complexity always wins eventually. Plugins break. Updates cascade. Security patches arrive on Friday at 5pm. And the developer experience degrades with every abstraction layer.\n\n@webhouse/cms is our answer. Everything we know, rebuilt from scratch. Developer-first. AI-native. Static-first. No plugins. No update treadmill. Just a clean engine that does exactly what you need.",
+        "variant": "default"
+      },
+      {
+        "_block": "timeline",
+        "heading": "30 years of building",
+        "items": "[{\"year\":\"1995\",\"text\":\"WebHouse founded. First CMS built in-house.\"},{\"year\":\"2000s\",\"text\":\"ODEUM CMS ships. Becomes the backbone of 1,000+ Danish websites.\"},{\"year\":\"2010s\",\"text\":\"Mobile + API era. CMS evolves to headless-first.\"},{\"year\":\"2024\",\"text\":\"@webhouse/cms development begins. Everything we know, rebuilt from scratch.\"},{\"year\":\"2025\",\"text\":\"AI-native features land. Admin dashboard. Framework adapters. Public beta.\"},{\"year\":\"2026\",\"text\":\"Full i18n, MCP protocol, multi-site admin. Production release.\"}]"
+      },
+      {
+        "_block": "features",
+        "heading": "What makes us different",
+        "subheading": "",
+        "items": "[{\"title\":\"Senior-Only Team\",\"description\":\"No juniors, no outsourcing. Every line of code is written by engineers with 10+ years of experience.\",\"icon\":\"👨‍💻\",\"tag\":\"Team\"},{\"title\":\"Danish Engineering\",\"description\":\"Built in Denmark with Scandinavian design principles: simplicity, functionality, and attention to detail.\",\"icon\":\"🇩🇰\",\"tag\":\"Denmark\"},{\"title\":\"Battle-Tested\",\"description\":\"Every architectural decision is informed by 30 years of production experience. We've seen the edge cases.\",\"icon\":\"🛡\",\"tag\":\"Experience\"},{\"title\":\"Open Source\",\"description\":\"MIT licensed. Fully open. No vendor lock-in. Fork it, modify it, ship it.\",\"icon\":\"📖\",\"tag\":\"MIT\"}]"
+      },
+      {
+        "_block": "cta",
+        "heading": "Let's build something.",
+        "subheading": "30 years of experience. Modern stack. No fluff.",
+        "buttonText": "Get Started",
+        "buttonUrl": "/quick-start/",
+        "secondaryText": "Contact Us",
+        "secondaryUrl": "mailto:info@webhouse.dk"
+      }
+    ]
+  }
+}

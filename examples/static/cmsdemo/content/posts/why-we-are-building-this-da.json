@@ -1,0 +1,17 @@
+{
+  "slug": "why-we-are-building-this-da",
+  "status": "published",
+  "locale": "da",
+  "translationGroup": "0229aebf-3bba-4d40-83d1-1beeb7037862",
+  "id": "post-why-da",
+  "_fieldMeta": {},
+  "data": {
+    "title": "Hvorfor vi bygger dette",
+    "excerpt": "Et CMS er ikke en produktbeslutning. Det er en filosofisk. Vi har leveret over 1.000 websites. Her er hvorfor vi bygger et nyt meningsfuldt CMS alligevel.",
+    "content": "## Problemet\n\nEthvert CMS vi nogensinde har brugt har til sidst svigtet os. Ikke fordi de var dårlige — WordPress, Contentful, Sanity, Strapi — de løser alle reelle problemer. Men de deler alle den samme grundlæggende fejl: **de antager at udvikleren er sekundær.**\n\nIndholdsredaktører får drag-and-drop. Udviklere får dokumentationssider og plugin-økosystemer. Og når de plugins bryder (og det gør de altid), sidder udvikleren og debugger andres abstraktion.\n\n## Hvad vi ville have\n\nEt CMS hvor:\n\n1. **Skemaet er kode.** Ikke en web-UI. Ikke en databasemigrering. En TypeScript-fil der definerer præcis hvordan indhold ser ud.\n2. **AI er native, ikke boltet på.** Ikke et plugin. Ikke et API-kald du selv kobler op. AI-agenter der forstår din indholdsmodel og kan generere, omskrive, oversætte og optimere.\n3. **Outputtet er statisk.** HTML + CSS. Ingen runtime. Ingen server. Ingen angrebsflade. CMS'et forsvinder efter build.\n4. **Indhold er i git.** JSON-filer. Diff-bare. Reviewbare. Branch-bare. Din indholdshistorik er din git-historik.\n\n## Hvad vi byggede\n\n@webhouse/cms. En TypeScript-native, AI-først, statisk-output CMS-motor. Den er meningsfuld. Den er minimal. Den gør præcis hvad vi har brug for og intet mere.\n\nVi har bygget CMS-platforme siden 1995. Denne er anderledes fordi vi endelig holdt op med at prøve at være alt for alle.",
+    "date": "2026-01-15",
+    "tags": ["filosofi", "arkitektur", "cms"],
+    "author": "Christian Broberg",
+    "readTime": "5 min"
+  }
+}

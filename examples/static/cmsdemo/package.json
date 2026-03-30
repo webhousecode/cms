@@ -1,0 +1,17 @@
+{
+  "name": "@webhouse/cms-example-cmsdemo",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsx build.ts",
+    "preview": "npx sirv dist --port 3051"
+  },
+  "devDependencies": {
+    "sirv-cli": "^3.0.1",
+    "tsx": "^4.0.0"
+  },
+  "dependencies": {
+    "@webhouse/cms": "workspace:*"
+  }
+}

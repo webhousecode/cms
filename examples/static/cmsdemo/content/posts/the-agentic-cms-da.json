@@ -1,0 +1,17 @@
+{
+  "slug": "the-agentic-cms-da",
+  "status": "published",
+  "locale": "da",
+  "translationGroup": "dd850239-dd0c-4adf-a5f1-f57e4af4700a",
+  "id": "post-agentic-da",
+  "_fieldMeta": {},
+  "data": {
+    "title": "Det agentiske CMS' tidsalder er her",
+    "excerpt": "CMS-landskabet gennemgår sit største skifte siden WordPress. Her er hvad der sker — og hvorfor vi byggede @webhouse/cms fra bunden for at møde dette øjeblik.",
+    "content": "## Skiftet\n\nI to årtier har CMS-platforme optimeret for én ting: at gøre det nemt for mennesker at skrive indhold ind i formularer. WordPress klarede det i 2003. Contentful forfinede det til API'er. Sanity gjorde det real-time.\n\nMen paradigmet skifter. Spørgsmålet er ikke længere \"hvordan gør jeg det nemt for et menneske at udfylde en formular?\" Det er \"hvordan gør jeg det nemt for en AI-agent at producere, oversætte, optimere og publicere indhold — mens mennesker bevarer kontrollen?\"\n\n## Hvad et agentisk CMS har brug for\n\n1. **Et skema AI'en kan læse.** Ikke en web-UI. Ikke dokumentation. Et maskinlæsbart skema der fortæller AI'en præcis hvilke felter der findes, hvilke typer de har, og hvilke begrænsninger der gælder.\n\n2. **Native AI-operationer.** Generér indhold fra en prompt. Omskriv et felt. Oversæt til et andet sprog. Optimér SEO. Disse er ikke plugins — de er kernefunktioner.\n\n3. **Menneskelig override på alle niveauer.** AI Lock: feltbeskyttelse. AI genererer, mennesket godkender. Menneskelige redigeringer er hellige — AI overskriver dem aldrig.\n\n4. **MCP-protokol.** Model Context Protocol er hvordan AI-agenter opdager og interagerer med eksterne systemer. Hvert @webhouse/cms site eksponerer to MCP-servere: én offentlig til opdagelse, én autentificeret til produktion.\n\n## Hvad vi byggede\n\n40+ chat-værktøjer. AI-agenter til indhold, SEO, oversættelse og interactives. En medie-pipeline der auto-genererer billedtekster og alt-tekst. Et build-system der outputter maskinlæsbart indhold (llms.txt, per-side .md filer).\n\nOg AI Lock-systemet — den kritiske innovation. Når et menneske redigerer et felt, låser det. AI kan foreslå ændringer, men kun mennesker kan acceptere dem. Dette er tillids-laget der gør agentisk indholdsproduktion mulig.\n\n## Fremtiden\n\nFremtidens CMS er ikke en indholdseditor. Det er en indholdsorkestrerer. Mennesker sætter strategien. AI eksekverer. CMS'et er kontrolplanet.",
+    "date": "2026-03-01",
+    "tags": ["ai", "mcp", "agentisk", "arkitektur"],
+    "author": "Christian Broberg",
+    "readTime": "12 min"
+  }
+}

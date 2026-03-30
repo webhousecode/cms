@@ -1,0 +1,55 @@
+{
+  "slug": "home-da",
+  "status": "published",
+  "locale": "da",
+  "translationGroup": "4af72842-eb10-48e2-b774-08f6914242d2",
+  "id": "page-home-da",
+  "_fieldMeta": {},
+  "data": {
+    "title": "Forside",
+    "description": "CMS'et hvor du beskriver hvad du vil have og får et produktionsklart website.",
+    "sections": [
+      {
+        "_block": "hero",
+        "badge": "Open Source — MIT Licens",
+        "headline": "AI-native indholdsmotor",
+        "subline": "Skemadrevet indhold. AI-drevet produktion. Statisk output.\nBeskriv hvad du vil have og få et produktionsklart website.",
+        "terminalCode": "$ npx @webhouse/cms init\n✓ cms.config.ts oprettet\n✓ Skemadefinitioner klar\n✓ AI-agenter konfigureret\n✓ Admin dashboard på localhost:3000/admin\n→ Klar på 847ms",
+        "ctaPrimary": "Kom i gang gratis",
+        "ctaSecondary": "Se på GitHub"
+      },
+      {
+        "_block": "stats",
+        "items": "[{\"value\":\"<3min\",\"label\":\"AI opsætningstid\"},{\"value\":\"<50\",\"label\":\"Linjer konfiguration\"},{\"value\":\"95+\",\"label\":\"Lighthouse score\"},{\"value\":\"0\",\"label\":\"Runtime JS\"}]"
+      },
+      {
+        "_block": "features",
+        "heading": "Alt det AI'en ikke skal genopfinde.",
+        "subheading": "En komplet CMS-motor — så dine AI-agenter kan fokusere på indhold, ikke infrastruktur.",
+        "items": "[{\"title\":\"AI Agent-orkestrering\",\"description\":\"Provider-agnostiske agenter til indholdsgenerering, omskrivning, oversættelse, SEO-optimering og design-tokens. Skift mellem Anthropic, OpenAI eller lokale modeller.\",\"icon\":\"⚡\",\"tag\":\"@webhouse/cms-ai\"},{\"title\":\"Skemadrevet indhold\",\"description\":\"JSON Schema-drevne collections og blokke. Alt indhold er typet, valideret og introspekterbart — så AI-agenter kan ræsonnere over struktur.\",\"icon\":\"◆\",\"tag\":\"cms.config.ts\"},{\"title\":\"Statisk-først output\",\"description\":\"Produktionsartefakten er altid præ-renderet HTML + CSS + minimal JS. Ingen runtime-framework medmindre du vælger det.\",\"icon\":\"▲\",\"tag\":\"npx cms build\"},{\"title\":\"Framework-adaptere\",\"description\":\"Førsteklasses integration med Next.js (App Router, Server Components, ISR), Astro og generisk Node.js/Express.\",\"icon\":\"⬡\",\"tag\":\"Adaptere\"},{\"title\":\"Medie-pipeline\",\"description\":\"Sharp-baseret billedbehandling med AI-generering, responsive varianter, WebP/AVIF-konvertering, blur hashes og auto alt-tekst.\",\"icon\":\"◉\",\"tag\":\"@webhouse/cms-media\"},{\"title\":\"AI Lock-system\",\"description\":\"Feltbeskyttelse håndhævet på motorniveau. AI-agenter kan aldrig låse felter op — kun mennesker kan.\",\"icon\":\"🔒\",\"tag\":\"AI-LOCK\"}]"
+      },
+      {
+        "_block": "code-showcase",
+        "heading": "Definer dit skema i TypeScript",
+        "description": "Type-sikre collections, felter og blokke. Hele din indholdsmodel i én fil.",
+        "code": "import { defineConfig, defineCollection } from '@webhouse/cms';\n\nexport default defineConfig({\n  defaultLocale: 'en',\n  locales: ['en', 'da'],\n  collections: [\n    defineCollection({\n      name: 'posts',\n      label: 'Blogindlæg',\n      urlPrefix: '/blog',\n      translatable: true,\n      fields: [\n        { name: 'title', type: 'text', required: true },\n        { name: 'content', type: 'richtext' },\n        { name: 'date', type: 'date' },\n        { name: 'tags', type: 'tags' },\n      ],\n    }),\n  ],\n});",
+        "language": "typescript"
+      },
+      {
+        "_block": "mcp-section",
+        "heading": "Hvert site taler med enhver AI.",
+        "subheading": "To MCP-servere — én offentlig til opdagelse, én autentificeret til produktion. Dit indhold er AI-tilgængeligt fra dag ét.",
+        "cards": "[{\"title\":\"cms-mcp-client\",\"badge\":\"OFFENTLIG · LÆSE-ADGANG\",\"description\":\"Medfølger hvert site. Enhver AI-agent kan opdage og søge i publiceret indhold — ingen API-nøgler, ingen dokumentation nødvendig.\",\"tools\":[\"get_site_summary\",\"list_collection\",\"search_content\",\"get_page\",\"get_schema\",\"export_all\"]},{\"title\":\"cms-mcp-server\",\"badge\":\"AUTENTIFICERET · LÆSE+SKRIVE\",\"description\":\"Fuld indholdsproduktion fra Claude iOS, Claude.ai, Cursor eller Claude Code. Opret, redigér, publicér og deploy.\",\"tools\":[\"create_document\",\"update_document\",\"publish\",\"generate_with_ai\",\"rewrite_field\",\"trigger_build\"]}]"
+      },
+      {
+        "_block": "cta",
+        "heading": "Beskriv hvad du vil have. Få et produktionsklart website.",
+        "subheading": "Fortsæt med at iterere med AI eller manuelt.",
+        "buttonText": "Opret gratis konto",
+        "buttonUrl": "https://webhouse.app/signup",
+        "secondaryText": "Se på GitHub",
+        "secondaryUrl": "https://github.com/webhousecode/cms"
+      }
+    ]
+  }
+}

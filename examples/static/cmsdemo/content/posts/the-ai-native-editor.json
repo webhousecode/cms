@@ -1,0 +1,17 @@
+{
+  "slug": "the-ai-native-editor",
+  "status": "published",
+  "locale": "en",
+  "translationGroup": "a3a353b2-1256-4aa5-a4b7-e0af07a7f7da",
+  "id": "post-editor-en",
+  "_fieldMeta": {},
+  "data": {
+    "title": "CMS Chronicle #12: The AI-Native Editor",
+    "excerpt": "748 commits in 11 days. We shipped a conversational CMS interface, upgraded the richtext editor to TipTap v3, built a media processing pipeline, and discovered a save bug that had been hiding since day one.",
+    "content": "## The sprint\n\n748 commits. 11 days. It sounds absurd, and it was. But when you're building with Claude Code, the bottleneck shifts from typing to thinking. Every commit is a decision. Every decision is tested. The velocity is real.\n\n## What shipped\n\n### Conversational CMS interface\n\nThe chat interface now has 40+ tools. You can create documents, rewrite fields, optimize SEO, manage media, run agents, check links, and deploy — all from a single conversation. It's not a chatbot sitting next to the CMS. It *is* the CMS.\n\n### TipTap v3 richtext editor\n\nWe upgraded from TipTap v2 to v3. The migration was non-trivial — `immediatelyRender: false` is now required for SSR, and `shouldRerenderOnTransaction: false` prevents per-keystroke flushSync calls. But the result is a significantly faster, more stable editor.\n\n### Media pipeline\n\nSharp-based image processing: WebP conversion, responsive variants (400w, 800w, 1200w, 1600w), EXIF metadata extraction, and AI image analysis that generates captions and alt-text in all configured locales.\n\n### The save bug\n\nA bug that had been hiding since the first week of development: the TipTap `onUpdate` handler was firing on mount, marking documents as dirty before the user had changed anything. It took three days to find because the symptoms were subtle — phantom saves, stale content, and occasional data loss.\n\nThe fix was a two-line guard: skip the first `onUpdate` call after mount. Simple. Obvious in hindsight. But it required understanding the entire save pipeline from editor state to API to storage adapter.",
+    "date": "2026-03-20",
+    "tags": ["chronicle", "editor", "tiptap", "ai"],
+    "author": "Christian Broberg",
+    "readTime": "6 min"
+  }
+}

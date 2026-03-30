@@ -1,0 +1,49 @@
+{
+  "slug": "features-da",
+  "status": "published",
+  "locale": "da",
+  "translationGroup": "30ec919f-f707-4527-aa19-a87521e2b0f5",
+  "id": "page-features-da",
+  "_fieldMeta": {},
+  "data": {
+    "title": "Features",
+    "description": "Alt hvad @webhouse/cms kan — fra AI-agenter til statiske builds.",
+    "sections": [
+      {
+        "_block": "hero",
+        "badge": "Feature-oversigt",
+        "headline": "Bygget anderledes. Med vilje.",
+        "subline": "Ikke WordPress. Ikke headless for dets egen skyld. Et meningsfuldt, udvikler-først CMS bygget af ingeniører der har leveret over 1.000 websites.",
+        "ctaPrimary": "Kom i gang",
+        "ctaSecondary": ""
+      },
+      {
+        "_block": "features",
+        "heading": "Kernemotor",
+        "subheading": "Fundamentet der gør alt andet muligt.",
+        "items": "[{\"title\":\"Udvikler-først API\",\"description\":\"TypeScript-native. Fuldt typede skemadefinitioner. Ingen web-UI nødvendig — definer din indholdsmodel i kode.\",\"icon\":\"⌨\",\"tag\":\"TypeScript\"},{\"title\":\"AI-native indholdsworkflows\",\"description\":\"Indbyggede AI-agenter. Generér, omskriv, oversæt, korrekturlæs og SEO-optimér indhold med én kommando.\",\"icon\":\"⚡\",\"tag\":\"AI-agenter\"},{\"title\":\"Statisk-først output\",\"description\":\"Kompilerer til ren HTML + CSS. 95-100 Lighthouse-score ud af boksen. Ingen runtime-framework. Ingen CMS-formet angrebsflade.\",\"icon\":\"▲\",\"tag\":\"Statisk\"},{\"title\":\"Git-versioneret indhold\",\"description\":\"Filesystem-adapteren gemmer indhold som JSON. Hele dit site — kode og indhold — bor i ét git-repository.\",\"icon\":\"◇\",\"tag\":\"Git\"},{\"title\":\"Flersprog (i18n)\",\"description\":\"translationGroup UUID forbinder alle sprogversioner. Side-by-side redigering. AI auto-oversættelse. Hreflang i sitemap.\",\"icon\":\"🌐\",\"tag\":\"i18n\"},{\"title\":\"SEO & GEO-modul\",\"description\":\"13-regel SEO-scoring, keyword-tracking, JSON-LD-skemaer, OG-billeder, AI-optimeret robots.txt, llms.txt til AI-opdagelse.\",\"icon\":\"📈\",\"tag\":\"SEO\"}]"
+      },
+      {
+        "_block": "features",
+        "heading": "Indholdsproduktion",
+        "subheading": "AI-agenter der faktisk leverer indhold — ikke bare foreslår det.",
+        "items": "[{\"title\":\"Chat-interface\",\"description\":\"40+ værktøjer. Opret dokumenter, omskriv felter, optimér SEO, administrér medier — alt fra en samtalebaseret grænseflade.\",\"icon\":\"💬\",\"tag\":\"Chat\"},{\"title\":\"Interactives Engine\",\"description\":\"AI-genererede lommeregnere, quizzer, grafer og interaktive widgets. Indlejret inline i richtext-indhold.\",\"icon\":\"🎯\",\"tag\":\"Ints\"},{\"title\":\"Mediebehandling\",\"description\":\"Sharp WebP-konvertering, EXIF-udtræk, AI-billedanalyse med per-locale billedtekster og alt-tekst.\",\"icon\":\"🖼\",\"tag\":\"Medier\"},{\"title\":\"Indholdsplanlægning\",\"description\":\"Planlæg indlæg til fremtidig publicering. Automatisk publicering på det konfigurerede tidspunkt.\",\"icon\":\"📅\",\"tag\":\"Planlægger\"},{\"title\":\"Link Checker\",\"description\":\"Automatisk linkvalidering på tværs af hele dit site. AI-drevne fix-forslag til brudte links.\",\"icon\":\"🔗\",\"tag\":\"Links\"},{\"title\":\"Backup & Gendan\",\"description\":\"Fuld site-backup efter tidsplan. Gendannelse til et vilkårligt tidspunkt. Versionshistorik for hvert dokument.\",\"icon\":\"💾\",\"tag\":\"Backup\"}]"
+      },
+      {
+        "_block": "features",
+        "heading": "Infrastruktur",
+        "subheading": "Deploy hvor som helst. Gem indhold som du vil.",
+        "items": "[{\"title\":\"4 Storage-adaptere\",\"description\":\"Filesystem (lokal JSON), GitHub (bidirektionel synk), SQLite (enkelt fil), Supabase (serverless + real-time).\",\"icon\":\"🗄\",\"tag\":\"Storage\"},{\"title\":\"4 Deploy-mål\",\"description\":\"Ét-klik deploy til GitHub Pages, Vercel, Netlify eller Fly.io. CI/CD med GitHub Actions.\",\"icon\":\"🚀\",\"tag\":\"Deploy\"},{\"title\":\"Multi-site admin\",\"description\":\"Administrér flere sites fra ét admin-dashboard. Organisation-niveau indstillingsarv.\",\"icon\":\"🏢\",\"tag\":\"Multi-site\"},{\"title\":\"MCP-protokol\",\"description\":\"To MCP-servere — offentlig read-only til AI-opdagelse, autentificeret til fuld indholdsproduktion.\",\"icon\":\"🔌\",\"tag\":\"MCP\"}]"
+      },
+      {
+        "_block": "cta",
+        "heading": "Klar til at bygge?",
+        "subheading": "Én kommando til opsætning. Under 50 linjer konfiguration. 95+ Lighthouse-score ud af boksen.",
+        "buttonText": "Kom i gang",
+        "buttonUrl": "/da/kom-i-gang/",
+        "secondaryText": "Se kildekode",
+        "secondaryUrl": "https://github.com/webhousecode/cms"
+      }
+    ]
+  }
+}

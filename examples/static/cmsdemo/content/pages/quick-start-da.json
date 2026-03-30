@@ -1,0 +1,58 @@
+{
+  "slug": "quick-start-da",
+  "status": "published",
+  "locale": "da",
+  "translationGroup": "e91f11b8-d8de-49cd-84ca-7f5999b42078",
+  "id": "page-quickstart-da",
+  "_fieldMeta": {},
+  "data": {
+    "title": "Kom i gang",
+    "description": "Opret et nyt projekt og hav et CMS-drevet site kørende på under 5 minutter.",
+    "sections": [
+      {
+        "_block": "hero",
+        "badge": "Kom i gang",
+        "headline": "Kørende på under 5 minutter.",
+        "subline": "Én kommando til opsætning. Installér. Byg. Deploy. Det er det.",
+        "ctaPrimary": "",
+        "ctaSecondary": ""
+      },
+      {
+        "_block": "code-showcase",
+        "heading": "1. Opret et nyt projekt",
+        "description": "Scaffolderen opretter et komplet projekt med skema, eksempelindhold og AI-konfiguration.",
+        "code": "$ npx @webhouse/cms init my-site\n\nmy-site/\n  cms.config.ts          # Collection + feltdefinitioner\n  package.json           # Afhængigheder\n  .env                   # AI-providernøgler\n  content/\n    posts/\n      hello-world.json   # Eksempeldokument",
+        "language": "bash"
+      },
+      {
+        "_block": "code-showcase",
+        "heading": "2. Installér og kør",
+        "description": "Start dev-serveren og admin-UI'et. Indholdsændringer live-genindlæses.",
+        "code": "$ cd my-site\n$ npm install\n$ npx cms dev\n\n✓ Admin UI → http://localhost:3000/admin\n✓ Dev server → http://localhost:3000\n✓ Overvåger ændringer...",
+        "language": "bash"
+      },
+      {
+        "_block": "code-showcase",
+        "heading": "3. Byg til produktion",
+        "description": "Build-pipelinen genererer optimeret statisk HTML med SEO, sitemaps, RSS og AI-opdagelsesfiler.",
+        "code": "$ npx cms build\n\n✓ 12 sider renderet\n✓ sitemap.xml genereret\n✓ robots.txt genereret\n✓ llms.txt + llms-full.txt genereret\n✓ feed.xml RSS feed genereret\n✓ Per-side .md filer til AI\n→ Build færdig på 1.2s",
+        "language": "bash"
+      },
+      {
+        "_block": "text-section",
+        "heading": "Hvad du får",
+        "body": "Hvert build genererer et komplet statisk site med:\n\n- **HTML-sider** for alle publicerede dokumenter\n- **sitemap.xml** til søgemaskiner (med hreflang for i18n)\n- **robots.txt** med AI-optimerede crawler-regler\n- **llms.txt** og **llms-full.txt** til AI-opdagelse\n- **feed.xml** RSS feed\n- **Per-side .md filer** til AI-forbrug\n- **JSON-LD** struktureret data på hver side\n- **OG metadata** til deling på sociale medier",
+        "variant": "default"
+      },
+      {
+        "_block": "cta",
+        "heading": "Næste skridt",
+        "subheading": "Definer dine egne collections. Tilføj AI-agenter. Deploy til produktion.",
+        "buttonText": "Læs dokumentationen",
+        "buttonUrl": "https://docs.webhouse.app",
+        "secondaryText": "Se eksempler",
+        "secondaryUrl": "https://github.com/webhousecode/cms/tree/main/examples"
+      }
+    ]
+  }
+}

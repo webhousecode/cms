@@ -1,0 +1,17 @@
+{
+  "slug": "the-agentic-cms",
+  "status": "published",
+  "locale": "en",
+  "translationGroup": "dd850239-dd0c-4adf-a5f1-f57e4af4700a",
+  "id": "post-agentic-en",
+  "_fieldMeta": {},
+  "data": {
+    "title": "The Age of the Agentic CMS Is Here",
+    "excerpt": "The CMS landscape is undergoing its biggest shift since WordPress. Here's what's happening — and why we built @webhouse/cms from scratch to meet this moment.",
+    "content": "## The shift\n\nFor two decades, CMS platforms optimized for one thing: making it easy for humans to type content into forms. WordPress nailed it in 2003. Contentful refined it for APIs. Sanity made it real-time.\n\nBut the paradigm is shifting. The question is no longer \"how do I make it easy for a human to fill in a form?\" It's \"how do I make it easy for an AI agent to produce, translate, optimize, and publish content — while keeping humans in control?\"\n\n## What an agentic CMS needs\n\n1. **A schema the AI can read.** Not a web UI. Not documentation. A machine-readable schema that tells the AI exactly what fields exist, what types they are, and what constraints apply.\n\n2. **Native AI operations.** Generate content from a prompt. Rewrite a field. Translate to another language. Optimize SEO. These aren't plugins — they're core operations.\n\n3. **Human override at every level.** AI Lock: field-level protection. AI generates, human approves. Human edits are sacred — AI never overwrites them.\n\n4. **MCP protocol.** The Model Context Protocol is how AI agents discover and interact with external systems. Every @webhouse/cms site exposes two MCP servers: one public for discovery, one authenticated for production.\n\n## What we built\n\n40+ chat tools. AI agents for content, SEO, translation, and interactives. A media pipeline that auto-generates captions and alt-text. A build system that outputs machine-readable content (llms.txt, per-page .md files).\n\nAnd the AI Lock system — the critical innovation. When a human edits a field, it locks. AI can suggest changes, but only humans can accept them. This is the trust layer that makes agentic content production viable.\n\n## The future\n\nThe CMS of the future isn't a content editor. It's a content orchestrator. Humans set the strategy. AI executes. The CMS is the control plane.",
+    "date": "2026-03-01",
+    "tags": ["ai", "mcp", "agentic", "architecture"],
+    "author": "Christian Broberg",
+    "readTime": "12 min"
+  }
+}

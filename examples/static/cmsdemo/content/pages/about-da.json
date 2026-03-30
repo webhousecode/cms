@@ -1,0 +1,48 @@
+{
+  "slug": "about-da",
+  "status": "published",
+  "locale": "da",
+  "translationGroup": "a65e8177-93bc-4f47-a10f-350b0b64ab6f",
+  "id": "page-about-da",
+  "_fieldMeta": {},
+  "data": {
+    "title": "Om os",
+    "description": "30 års CMS-arv. 1.000+ websites leveret. Én lektie: kompleksitet dræber.",
+    "sections": [
+      {
+        "_block": "hero",
+        "badge": "Grundlagt 1995 — Danmark",
+        "headline": "1.000+ websites. Én lektie.",
+        "subline": "Kompleksitet dræber. Ethvert CMS vi har drevet har til sidst bukket under for vægten af plugins, opdateringer, sikkerhedsrettelser og arkitektonisk gæld. @webhouse/cms er vores svar: start rent, hold det simpelt, gå aldrig på kompromis med udvikleroplevelsen.",
+        "ctaPrimary": "",
+        "ctaSecondary": ""
+      },
+      {
+        "_block": "text-section",
+        "heading": "Hvorfor vi byggede dette",
+        "body": "Vi er WebHouse — et dansk softwarebureau grundlagt i 1995. Vi har leveret over 1.000 websites, 50+ mobilapps og et årti med enterprise-platforme.\n\nVores første CMS blev bygget in-house i slutningen af 90'erne. Det udviklede sig til ODEUM CMS, som drev hundredvis af danske websites gennem 00'erne og 10'erne. Vi har set hver eneste CMS-trend komme og gå: monolitisk, headless, JAMstack, composable, AI-assisteret.\n\nDen ene konstant? Kompleksitet vinder altid til sidst. Plugins bryder. Opdateringer kaskaderer. Sikkerhedsrettelser ankommer fredag kl. 17. Og udvikleroplevelsen forringes med hvert abstraktionslag.\n\n@webhouse/cms er vores svar. Alt vi ved, genopbygget fra bunden. Udvikler-først. AI-native. Statisk-først. Ingen plugins. Ingen opdateringsmølle. Bare en ren motor der gør præcis hvad du har brug for.",
+        "variant": "default"
+      },
+      {
+        "_block": "timeline",
+        "heading": "30 års erfaring",
+        "items": "[{\"year\":\"1995\",\"text\":\"WebHouse grundlagt. Første CMS bygget in-house.\"},{\"year\":\"2000'erne\",\"text\":\"ODEUM CMS lanceres. Bliver rygraden i 1.000+ danske websites.\"},{\"year\":\"2010'erne\",\"text\":\"Mobil + API-æra. CMS udvikler sig til headless-first.\"},{\"year\":\"2024\",\"text\":\"@webhouse/cms-udvikling begynder. Alt vi ved, genopbygget fra bunden.\"},{\"year\":\"2025\",\"text\":\"AI-native features lander. Admin dashboard. Framework-adaptere. Offentlig beta.\"},{\"year\":\"2026\",\"text\":\"Fuld i18n, MCP-protokol, multi-site admin. Produktionsudgivelse.\"}]"
+      },
+      {
+        "_block": "features",
+        "heading": "Hvad gør os anderledes",
+        "subheading": "",
+        "items": "[{\"title\":\"Kun seniorer\",\"description\":\"Ingen juniorer, ingen outsourcing. Hver linje kode er skrevet af ingeniører med 10+ års erfaring.\",\"icon\":\"👨‍💻\",\"tag\":\"Team\"},{\"title\":\"Dansk ingeniørkunst\",\"description\":\"Bygget i Danmark med skandinaviske designprincipper: enkelhed, funktionalitet og opmærksomhed på detaljer.\",\"icon\":\"🇩🇰\",\"tag\":\"Danmark\"},{\"title\":\"Kamptestet\",\"description\":\"Hver arkitekturbeslutning er informeret af 30 års produktionserfaring. Vi har set edge cases.\",\"icon\":\"🛡\",\"tag\":\"Erfaring\"},{\"title\":\"Open source\",\"description\":\"MIT-licenseret. Fuldt åbent. Ingen vendor lock-in. Fork det, modificér det, ship det.\",\"icon\":\"📖\",\"tag\":\"MIT\"}]"
+      },
+      {
+        "_block": "cta",
+        "heading": "Lad os bygge noget.",
+        "subheading": "30 års erfaring. Moderne stack. Ingen fluff.",
+        "buttonText": "Kom i gang",
+        "buttonUrl": "/da/kom-i-gang/",
+        "secondaryText": "Kontakt os",
+        "secondaryUrl": "mailto:info@webhouse.dk"
+      }
+    ]
+  }
+}

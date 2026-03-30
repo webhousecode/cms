@@ -1,0 +1,19 @@
+{
+  "slug": "site",
+  "status": "published",
+  "locale": "en",
+  "translationGroup": "1bbd63a0-d9df-4d26-bf0f-ce731518a3be",
+  "id": "globals-site-en",
+  "_fieldMeta": {},
+  "data": {
+    "siteTitle": "@webhouse/cms",
+    "tagline": "AI-native content engine",
+    "metaDescription": "The CMS where you describe what you want and get a production-ready site. Schema-driven content. AI-powered authoring. Static-first output.",
+    "heroHeadline": "AI-native content engine",
+    "heroSubline": "Describe what you want. Get a production-ready site. Then keep iterating with AI or by hand.",
+    "ctaPrimary": "Get Started",
+    "ctaSecondary": "View on GitHub",
+    "footerText": "© 2026 WebHouse — webhouse.app",
+    "navItems": "Features,About,Quick Start,Blog"
+  }
+}

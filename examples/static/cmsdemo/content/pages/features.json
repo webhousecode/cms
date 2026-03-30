@@ -1,0 +1,49 @@
+{
+  "slug": "features",
+  "status": "published",
+  "locale": "en",
+  "translationGroup": "30ec919f-f707-4527-aa19-a87521e2b0f5",
+  "id": "page-features-en",
+  "_fieldMeta": {},
+  "data": {
+    "title": "Features",
+    "description": "Everything @webhouse/cms can do — from AI agents to static builds.",
+    "sections": [
+      {
+        "_block": "hero",
+        "badge": "Feature Overview",
+        "headline": "Built different. By design.",
+        "subline": "Not WordPress. Not headless-for-the-sake-of-it. An opinionated, developer-first CMS built by engineers who've shipped over 1,000 websites.",
+        "ctaPrimary": "Get Started",
+        "ctaSecondary": ""
+      },
+      {
+        "_block": "features",
+        "heading": "Core Engine",
+        "subheading": "The foundation that makes everything else possible.",
+        "items": "[{\"title\":\"Developer-First API\",\"description\":\"TypeScript-native. Fully typed schema definitions. No web UI required — define your content model in code.\",\"icon\":\"⌨\",\"tag\":\"TypeScript\"},{\"title\":\"AI-Native Content Workflows\",\"description\":\"Built-in AI Agents. Generate, rewrite, translate, proofread, and SEO-optimize content with a single command.\",\"icon\":\"⚡\",\"tag\":\"AI Agents\"},{\"title\":\"Static-First Output\",\"description\":\"Compiles to clean HTML + CSS. 95-100 Lighthouse scores out of the box. No runtime framework. No CMS-shaped attack surface.\",\"icon\":\"▲\",\"tag\":\"Static\"},{\"title\":\"Git-Committable Content\",\"description\":\"Filesystem adapter stores content as JSON. Your entire site — code and content — lives in a single git repository.\",\"icon\":\"◇\",\"tag\":\"Git\"},{\"title\":\"Multi-Language (i18n)\",\"description\":\"translationGroup UUID links all locale versions. Side-by-side editing. AI auto-translation. Hreflang in sitemap. Locale routing.\",\"icon\":\"🌐\",\"tag\":\"i18n\"},{\"title\":\"SEO & GEO Module\",\"description\":\"13-rule SEO scoring, keyword tracking, JSON-LD schemas, OG images, AI-optimized robots.txt, llms.txt for AI discovery.\",\"icon\":\"📈\",\"tag\":\"SEO\"}]"
+      },
+      {
+        "_block": "features",
+        "heading": "Content Production",
+        "subheading": "AI agents that actually ship content — not just suggest it.",
+        "items": "[{\"title\":\"Chat Interface\",\"description\":\"40+ tools. Create documents, rewrite fields, optimize SEO, manage media — all from a conversational interface.\",\"icon\":\"💬\",\"tag\":\"Chat\"},{\"title\":\"Interactives Engine\",\"description\":\"AI-generated calculators, quizzes, charts, and interactive widgets. Embedded inline in richtext content.\",\"icon\":\"🎯\",\"tag\":\"Ints\"},{\"title\":\"Media Processing\",\"description\":\"Sharp WebP conversion, EXIF extraction, AI image analysis with per-locale captions and alt-text.\",\"icon\":\"🖼\",\"tag\":\"Media\"},{\"title\":\"Content Scheduling\",\"description\":\"Schedule posts for future publication. Automated publishing at the configured time.\",\"icon\":\"📅\",\"tag\":\"Scheduler\"},{\"title\":\"Link Checker\",\"description\":\"Automated link validation across your entire site. AI-powered fix suggestions for broken links.\",\"icon\":\"🔗\",\"tag\":\"Links\"},{\"title\":\"Backup & Restore\",\"description\":\"Full site backups on schedule. Point-in-time restore. Version history for every document.\",\"icon\":\"💾\",\"tag\":\"Backup\"}]"
+      },
+      {
+        "_block": "features",
+        "heading": "Infrastructure",
+        "subheading": "Deploy anywhere. Store content however you want.",
+        "items": "[{\"title\":\"4 Storage Adapters\",\"description\":\"Filesystem (local JSON), GitHub (bidirectional sync), SQLite (single file), Supabase (serverless + real-time).\",\"icon\":\"🗄\",\"tag\":\"Storage\"},{\"title\":\"4 Deploy Targets\",\"description\":\"One-click deploy to GitHub Pages, Vercel, Netlify, or Fly.io. CI/CD with GitHub Actions.\",\"icon\":\"🚀\",\"tag\":\"Deploy\"},{\"title\":\"Multi-Site Admin\",\"description\":\"Manage multiple sites from a single admin dashboard. Org-level settings inheritance.\",\"icon\":\"🏢\",\"tag\":\"Multi-Site\"},{\"title\":\"MCP Protocol\",\"description\":\"Two MCP servers — public read-only for AI discovery, authenticated for full content production.\",\"icon\":\"🔌\",\"tag\":\"MCP\"}]"
+      },
+      {
+        "_block": "cta",
+        "heading": "Ready to build?",
+        "subheading": "One command to scaffold. Under 50 lines of config. 95+ Lighthouse score out of the box.",
+        "buttonText": "Get Started",
+        "buttonUrl": "/quick-start/",
+        "secondaryText": "View Source",
+        "secondaryUrl": "https://github.com/webhousecode/cms"
+      }
+    ]
+  }
+}
