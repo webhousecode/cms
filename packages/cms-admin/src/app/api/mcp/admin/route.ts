@@ -260,6 +260,22 @@ export async function GET(request: NextRequest) {
       const errors = lines.filter((l: any) => l.type === "error");
       return { translated: results.length, errors: errors.length, details: results.map((r: any) => `${r.collection}/${r.slug}`) };
     },
+    async listTrashedMedia() {
+      const { getMediaAdapter } = await import("@/lib/media");
+      const adapter = await getMediaAdapter();
+      return await adapter.listTrashed();
+    },
+    async deleteTrashedMedia() {
+      const { getMediaAdapter } = await import("@/lib/media");
+      const adapter = await getMediaAdapter();
+      const trashed = await adapter.listTrashed();
+      let deleted = 0;
+      for (const m of trashed) {
+        await adapter.deleteFile(m.folder, m.name);
+        deleted++;
+      }
+      return deleted;
+    },
   };
 
   const sessionId = crypto.randomUUID();

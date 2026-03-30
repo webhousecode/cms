@@ -36,6 +36,8 @@ export interface AdminServices {
   createBackup(): Promise<any>;
   translateDocument(collection: string, slug: string, targetLocale: string, publish: boolean): Promise<any>;
   translateSite(targetLocale: string, publish: boolean): Promise<any>;
+  listTrashedMedia(): Promise<Array<{ name: string; folder?: string; trashedAt?: string }>>;
+  deleteTrashedMedia(): Promise<number>;
 }
 
 export interface AdminServerOptions {
@@ -226,6 +228,10 @@ export function createAdminMcpServer(opts: AdminServerOptions): Server {
                 deleted++;
               }
             }
+          }
+          // Also delete trashed media
+          if (services) {
+            try { deleted += await services.deleteTrashedMedia(); } catch { /* ignore */ }
           }
           result = { deleted };
           audit("success", undefined, `Deleted ${deleted} items`);
@@ -496,16 +502,25 @@ export function createAdminMcpServer(opts: AdminServerOptions): Server {
 
         // ── Trash ────────────────────────────────────────────────
         case "list_trash": {
-          const items: Array<{ title: string; collection: string; slug: string; trashedAt?: string }> = [];
+          const trashItems: Array<{ title: string; type: string; collection?: string; slug?: string; trashedAt?: string }> = [];
           for (const col of config.collections) {
             const { documents } = await content.findMany(col.name, {}).catch(() => ({ documents: [] as any[] }));
             for (const d of documents) {
               if ((d.status as string) === "trashed") {
-                items.push({ title: String(d.data.title ?? d.slug), collection: col.name, slug: d.slug, trashedAt: d.data._trashedAt as string });
+                trashItems.push({ title: String(d.data.title ?? d.slug), type: "document", collection: col.name, slug: d.slug, trashedAt: d.data._trashedAt as string });
               }
             }
           }
-          result = { total: items.length, items };
+          // Media trash
+          if (services) {
+            try {
+              const trashedMedia = await services.listTrashedMedia();
+              for (const m of trashedMedia) {
+                trashItems.push({ title: m.name, type: "media", trashedAt: m.trashedAt ?? "" });
+              }
+            } catch { /* media trash not available */ }
+          }
+          result = { total: trashItems.length, items: trashItems };
           break;
         }
 
