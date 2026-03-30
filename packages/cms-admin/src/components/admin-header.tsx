@@ -186,6 +186,16 @@ function DeployButton() {
       });
       return;
     }
+
+    // Check if "skip dialog" is set — if so, deploy directly (legacy flow)
+    const skipDialog = localStorage.getItem("cms-deploy-skip-dialog") === "true";
+    if (!skipDialog) {
+      // Open the deploy settings page with modal — let the user see progress
+      router.push("/admin/settings?tab=deploy&deploy=1");
+      return;
+    }
+
+    // Direct deploy (skip dialog mode)
     setDeploying(true);
     setLastResult(null);
     try {
@@ -199,7 +209,6 @@ function DeployButton() {
           duration: 10000,
           action: { label: "Open", onClick: () => window.open(data.url, "_blank") },
         });
-        // Re-trigger preview button to pick up new deploy URL
         window.dispatchEvent(new CustomEvent("cms-site-change", { detail: {} }));
       } else if (data.status === "error") {
         toast.error("Deploy failed", { description: data.error, duration: 8000 });
