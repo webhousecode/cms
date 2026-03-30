@@ -83,7 +83,8 @@ _Without these, we cannot build and deliver professional sites on the platform._
 | ~~8l~~ | ~~**F48 Internationalization (i18n)**~~ | ~~Done~~ | ~~Shipped 2026-03-29. Locale fields, translationGroup, AI auto-translate, per-locale SEO/media, build pipeline hreflang, translation UI, bulk translate, locale switcher.~~ |
 | ~~8m~~ | ~~**F112 GEO (Generative Engine Optimization)**~~ | ~~Done~~ | ~~Shipped 2026-03-29. robots.txt (4 strategies), GEO score (8 rules), llms-full.txt + .md endpoints, RSS feed, JSON-LD (12 templates), Visibility dashboard, GEO Agent, GEO Settings. Build pipeline Phase 1-9.~~ |
 | 9 | **F31 Documentation Site** | Medium | Can't ship without docs. Last because it documents everything above. |
-| 10 | **F120 Onboarding** | Medium | Can't convert users without guided first experience. Tooltip tour from landing to first publish. |
+| 10 | **F121 Next.js CMS Helpers** | Medium | Next.js sites get 0 SEO without this. Drop-in sitemap, robots, llms.txt, metadata, JSON-LD, OG images. Fly.io deploy for Dockerfile sites. |
+| 11 | **F120 Onboarding** | Medium | Can't convert users without guided first experience. Tooltip tour from landing to first publish. |
 | ~~9b~~ | ~~**F90 Marketing Content Bank**~~ | ~~Done~~ | ~~Shipped. 5 messaging frameworks, talking points, badge/shield suggestions, deploy targets.~~ |
 | ~~9c~~ | ~~**F96 Embeddable Maps**~~ | ~~Done~~ | ~~Shipped. OSM/Leaflet map block, richtext embed, field type.~~ |
 
