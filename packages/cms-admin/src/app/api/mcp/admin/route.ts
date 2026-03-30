@@ -10,8 +10,10 @@ export async function GET(request: NextRequest) {
   // Resolve API key → specific org+site (no cookie dependency)
   const resolved = await resolveApiKeyToSite(request.headers.get("authorization"));
   if (!resolved) {
+    console.warn(`[MCP] Rejected: invalid API key (prefix: ${request.headers.get("authorization")?.slice(7, 15) ?? "none"})`);
     return NextResponse.json({ error: "Invalid API key" }, { status: 401 });
   }
+  console.log(`[MCP] Session: ${resolved.orgId}/${resolved.siteId} key="${resolved.label}" scopes=[${resolved.scopes}]`);
 
   // Load CMS instance for the resolved site (not the cookie-active site)
   const { getOrCreateInstance } = await import("@/lib/site-pool");
