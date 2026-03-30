@@ -7,10 +7,6 @@ import { SettingsCard } from "./settings-card";
 import { WebhookList, type WebhookEntry } from "./webhook-list";
 
 interface AutomationConfig {
-  backupSchedule: "off" | "daily" | "weekly";
-  backupTime: string;
-  backupRetentionDays: number;
-  backupWebhooks: WebhookEntry[];
   linkCheckSchedule: "off" | "daily" | "weekly";
   linkCheckTime: string;
   linkCheckWebhooks: WebhookEntry[];
@@ -23,10 +19,6 @@ interface AutomationConfig {
 }
 
 const DEFAULTS: AutomationConfig = {
-  backupSchedule: "off",
-  backupTime: "03:00",
-  backupRetentionDays: 30,
-  backupWebhooks: [],
   linkCheckSchedule: "off",
   linkCheckTime: "04:00",
   linkCheckWebhooks: [],
@@ -53,10 +45,6 @@ export function ToolsSettingsPanel() {
       .then((data) => {
         if (!data) return;
         setConfig({
-          backupSchedule: data.backupSchedule ?? "off",
-          backupTime: data.backupTime ?? "03:00",
-          backupRetentionDays: data.backupRetentionDays ?? 30,
-          backupWebhooks: data.backupWebhooks ?? [],
           linkCheckSchedule: data.linkCheckSchedule ?? "off",
           linkCheckTime: data.linkCheckTime ?? "04:00",
           linkCheckWebhooks: data.linkCheckWebhooks ?? [],
@@ -101,72 +89,12 @@ export function ToolsSettingsPanel() {
     { value: "weekly", label: "Weekly (Mondays)" },
   ];
 
-  const retentionOptions = [
-    { value: "7", label: "7 days" },
-    { value: "14", label: "14 days" },
-    { value: "30", label: "30 days" },
-    { value: "60", label: "60 days" },
-    { value: "90", label: "90 days" },
-  ];
-
   const labelStyle = { display: "block", fontSize: "0.75rem", fontWeight: 500, marginBottom: "0.35rem" } as const;
   const descStyle = { fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "-0.5rem", marginBottom: "1.25rem" } as const;
   const webhookLabel = { display: "block", fontSize: "0.75rem", fontWeight: 500, marginBottom: "0.35rem", marginTop: "0.75rem" } as const;
 
   return (
     <div data-testid="panel-tools">
-      {/* ── Backup ─────────────────────────────────────────── */}
-      <SectionHeading>Backup</SectionHeading>
-      <SettingsCard>
-        <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>
-          Automatic backups of all content and site data. Scheduled backups appear in the Calendar.
-        </p>
-
-        <div>
-          <label style={labelStyle}>Frequency</label>
-          <CustomSelect
-            value={config.backupSchedule}
-            onChange={(v) => updateConfig((c) => ({ ...c, backupSchedule: v as AutomationConfig["backupSchedule"] }))}
-            options={scheduleOptions}
-          />
-        </div>
-
-        {config.backupSchedule !== "off" && (
-          <>
-            <div>
-              <label style={labelStyle}>Time</label>
-              <input
-                type="time"
-                value={config.backupTime}
-                onChange={(e) => updateConfig((c) => ({ ...c, backupTime: e.target.value }))}
-                style={{
-                  padding: "0.4rem 0.6rem", borderRadius: "0.375rem",
-                  border: "1px solid var(--border)", background: "var(--background)",
-                  color: "var(--foreground)", fontSize: "0.8125rem",
-                }}
-              />
-            </div>
-            <div>
-              <label style={labelStyle}>Retention</label>
-              <CustomSelect
-                value={String(config.backupRetentionDays)}
-                onChange={(v) => updateConfig((c) => ({ ...c, backupRetentionDays: parseInt(v, 10) }))}
-                options={retentionOptions}
-              />
-            </div>
-          </>
-        )}
-
-        <label style={webhookLabel}>Webhooks</label>
-        <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: "-0.5rem 0 0" }}>
-          Called in order when a backup completes. Discord, Slack, or any URL that accepts JSON POST.
-        </p>
-        <WebhookList
-          webhooks={config.backupWebhooks}
-          onChange={(w) => updateConfig((c) => ({ ...c, backupWebhooks: w }))}
-        />
-      </SettingsCard>
-
       {/* ── Link Checker ───────────────────────────────────── */}
       <SectionHeading>Link Checker</SectionHeading>
       <SettingsCard>

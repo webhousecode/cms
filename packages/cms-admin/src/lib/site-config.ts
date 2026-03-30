@@ -82,6 +82,13 @@ export interface SiteConfig {
   publishWebhooks: { id: string; url: string }[];
   agentDefaultWebhooks: { id: string; url: string }[];
 
+  /** F95 Cloud Backup — provider config */
+  backupProvider: "off" | "pcloud" | "s3" | "webdav";
+  /** F95 pCloud access token */
+  backupPcloudToken: string;
+  /** F95 pCloud EU region (Luxembourg) */
+  backupPcloudEu: boolean;
+
   /** F48 i18n — default language for the site (BCP 47, e.g. "da", "en") */
   defaultLocale: string;
   /** F48 i18n — all locales the site supports (empty = single-locale site) */
@@ -153,6 +160,9 @@ async function defaults(): Promise<SiteConfig> {
     backupSchedule: "off",
     backupTime: "03:00",
     backupRetentionDays: 30,
+    backupProvider: "off",
+    backupPcloudToken: "",
+    backupPcloudEu: true,
     linkCheckSchedule: "off",
     linkCheckTime: "04:00",
     aiImageOverwrite: "ask",

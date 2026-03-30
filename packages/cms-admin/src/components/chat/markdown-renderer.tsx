@@ -370,7 +370,7 @@ function renderBlock(block: Block, key: number): React.ReactNode {
 // ── Inline rendering ─────────────────────────────────────
 
 /** Resolve preview base URL — previewSiteUrl first, sirv as fallback */
-let _previewBase: string | null = null;
+let _previewBase = "";
 async function getPreviewBase(): Promise<string> {
   if (_previewBase) return _previewBase;
   // Prefer configured previewSiteUrl

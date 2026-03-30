@@ -25,6 +25,10 @@ export interface BackupSnapshot {
   error?: string;
   /** Feature flags active at backup time — helps restore know what to expect */
   features?: string[];
+  /** F95: Cloud provider that received this backup */
+  cloudProvider?: string;
+  /** F95: Cloud upload error (non-fatal — local backup still exists) */
+  cloudError?: string;
 }
 
 interface BackupManifest {
@@ -182,6 +186,26 @@ export async function createBackup(trigger: "manual" | "scheduled" = "manual"): 
       if (siteConfig.deployProvider && siteConfig.deployProvider !== "off") features.push("deploy");
     } catch { /* non-critical */ }
     snapshot.features = features;
+
+    // F95: Upload to cloud provider if configured
+    try {
+      const { readSiteConfig } = await import("./site-config");
+      const siteConfig = await readSiteConfig();
+      if (siteConfig.backupProvider && siteConfig.backupProvider !== "off") {
+        const { createBackupProvider } = await import("./backup/providers");
+        const providerConfig = buildProviderConfig(siteConfig);
+        if (providerConfig) {
+          const provider = await createBackupProvider(providerConfig);
+          const zipData = await readFile(zipPath);
+          await provider.upload(fileName, Buffer.from(zipData));
+          snapshot.cloudProvider = siteConfig.backupProvider;
+        }
+      }
+    } catch (cloudErr) {
+      // Cloud upload failure is non-fatal — local backup still exists
+      console.error("[backup] Cloud upload failed:", cloudErr);
+      snapshot.cloudError = cloudErr instanceof Error ? cloudErr.message : String(cloudErr);
+    }
   } catch (err) {
     snapshot.status = "failed";
     snapshot.error = err instanceof Error ? err.message : String(err);
@@ -193,6 +217,23 @@ export async function createBackup(trigger: "manual" | "scheduled" = "manual"): 
   await saveManifest(manifest);
 
   return snapshot;
+}
+
+/** Build provider config from site config fields */
+function buildProviderConfig(siteConfig: { backupProvider: string; backupPcloudToken?: string; backupPcloudEu?: boolean }) {
+  switch (siteConfig.backupProvider) {
+    case "pcloud":
+      if (!siteConfig.backupPcloudToken) return null;
+      return {
+        type: "pcloud" as const,
+        pcloud: {
+          accessToken: siteConfig.backupPcloudToken,
+          euRegion: siteConfig.backupPcloudEu ?? true,
+        },
+      };
+    default:
+      return null;
+  }
 }
 
 // ── List Backups ─────────────────────────────────────────────

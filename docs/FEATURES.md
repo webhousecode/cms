@@ -134,6 +134,7 @@
 | F115 | [CMS Help Chat](#f115-help-chat) | Planned | [docs/features/F115-help-chat.md](features/F115-help-chat.md) |
 | F116 | [Contextual Help (HelpCard)](#f116-contextual-help) | Planned | [docs/features/F116-contextual-help.md](features/F116-contextual-help.md) |
 | F117 | [MCP ↔ Chat Tool Parity](#f117-mcp-chat-parity) | **Done** | [docs/features/F117-mcp-chat-parity.md](features/F117-mcp-chat-parity.md) |
+| F119 | [One-Click Docker Deploy](#f119-one-click-docker-deploy) | Planned | [docs/features/F119-one-click-docker-deploy.md](features/F119-one-click-docker-deploy.md) |
 
 ---
 
@@ -493,6 +494,10 @@ Built-in support chat that knows everything about CMS admin — features, UI, AP
 
 ## F116 — Contextual Help (HelpCard)
 Inline contextual help cards throughout the CMS admin UI.
+
+## F119 — One-Click Docker Deploy
+
+Deploy a complete CMS-powered site to Fly.io (or any Docker host) with a few clicks from webhouse.app. Two models: Combined (CMS admin + site in one container) and Split (admin and site as separate containers with webhook content push). Auto-generates Dockerfile, fly.toml, sets secrets, creates admin account. Supports all boilerplates and examples. Targets: Fly.io (with user's API token), Railway, or "Download Dockerfile" for self-hosting.
 
 ## F117 — MCP ↔ Chat Tool Parity ✅
 MCP admin server expanded from 15 to 43 tools — feature parity with inline chat. 28 new tools: media (list/search), trash (list/restore/empty), bulk (publish/update), scheduling, agents, curation queue, deploy, translate, generate interactive, backup, link check, site config, content stats, revisions. All tools have scope-based RBAC and audit logging. AdminServices interface bridges admin-only imports to MCP server package. Chat kept separate and untouched.
