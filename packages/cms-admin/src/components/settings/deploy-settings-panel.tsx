@@ -5,6 +5,7 @@ import { SectionHeading } from "@/components/ui/section-heading";
 import { SettingsCard } from "./settings-card";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { Rocket, ExternalLink, Check, X, Loader2, RefreshCw, Copy } from "lucide-react";
+import { DeployModal } from "@/components/deploy-modal";
 
 type DeployProvider = "off" | "vercel" | "netlify" | "flyio" | "cloudflare" | "github-pages" | "custom";
 
@@ -47,6 +48,19 @@ export function DeploySettingsPanel() {
   const [deploys, setDeploys] = useState<DeployEntry[]>([]);
   const [deploying, setDeploying] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showDeployModal, setShowDeployModal] = useState(false);
+
+  // Auto-open modal when navigated with ?deploy=1 (from header button)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("deploy") === "1") {
+      setShowDeployModal(true);
+      // Clean up URL param
+      const url = new URL(window.location.href);
+      url.searchParams.delete("deploy");
+      window.history.replaceState({}, "", url.toString());
+    }
+  }, []);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -304,7 +318,7 @@ export function DeploySettingsPanel() {
               </div>
               <button
                 type="button"
-                onClick={handleDeploy}
+                onClick={() => setShowDeployModal(true)}
                 disabled={deploying}
                 style={{
                   display: "flex", alignItems: "center", gap: "0.4rem",
@@ -444,6 +458,17 @@ export function DeploySettingsPanel() {
         )}
       </SettingsCard>
       </>}
+
+      {/* Deploy modal with progress */}
+      <DeployModal
+        open={showDeployModal}
+        onClose={() => { setShowDeployModal(false); loadData(); }}
+        configured={effectiveProvider !== "off"}
+        providerLabel={providerLabel[effectiveProvider] ?? effectiveProvider}
+        appName={config.deployAppName || undefined}
+        productionUrl={config.deployProductionUrl || undefined}
+        deployOnSave={config.deployOnSave}
+      />
     </div>
   );
 }
