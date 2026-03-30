@@ -32,5 +32,5 @@ export async function resolveSite(config: CmsConfig, storage: StorageAdapter, op
     }
   }
 
-  return { config, collections, includeDrafts: options.includeDrafts };
+  return { config, collections, includeDrafts: options.includeDrafts ?? false };
 }
