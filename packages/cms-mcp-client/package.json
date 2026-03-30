@@ -1,6 +1,6 @@
 {
   "name": "@webhouse/cms-mcp-client",
-  "version": "0.2.13",
+  "version": "0.2.14",
   "description": "Public read-only MCP server for @webhouse/cms sites",
   "type": "module",
   "license": "MIT",
