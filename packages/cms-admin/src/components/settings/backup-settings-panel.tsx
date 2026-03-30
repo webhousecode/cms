@@ -5,6 +5,7 @@ import { SectionHeading } from "@/components/ui/section-heading";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { SettingsCard } from "./settings-card";
 import { WebhookList, type WebhookEntry } from "./webhook-list";
+import { ExternalLink } from "lucide-react";
 
 interface BackupConfig {
   backupSchedule: "off" | "daily" | "weekly";
@@ -187,7 +188,17 @@ export function BackupSettingsPanel() {
         {config.backupProvider === "pcloud" && (
           <>
             <div>
-              <label style={labelStyle}>Access Token</label>
+              <div style={{ display: "flex", alignItems: "center", marginBottom: "0.35rem" }}>
+                <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Access Token</label>
+                <a
+                  href="https://docs.pcloud.com/methods/oauth_2.0/authorize.html"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", display: "flex", alignItems: "center", gap: "0.2rem", marginLeft: "auto" }}
+                >
+                  Get key <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} />
+                </a>
+              </div>
               <input
                 type="password"
                 value={config.backupPcloudToken}
@@ -195,13 +206,6 @@ export function BackupSettingsPanel() {
                 placeholder="Paste your pCloud access token"
                 style={inputStyle}
               />
-              <p style={{ ...descStyle, marginTop: "0.25rem" }}>
-                Generate at{" "}
-                <a href="https://docs.pcloud.com/methods/oauth_2.0/authorize.html" target="_blank" rel="noopener noreferrer"
-                  style={{ color: "var(--primary)", textDecoration: "underline" }}>
-                  pCloud Developer Portal
-                </a>
-              </p>
             </div>
 
             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginTop: "0.25rem" }}>
