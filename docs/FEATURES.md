@@ -506,3 +506,7 @@ MCP admin server expanded from 15 to 43 tools — feature parity with inline cha
 ## F120 — Onboarding
 
 Guided product tour from webhouse.app landing to first published content. Tooltip-style walkthrough with progressive disclosure. Two paths: Hub (hosted) and self-hosted. Milestone-based tours: Welcome → First Document → Deploy → SEO → Media AI → Agents. Uses data-testid selectors (F80) for tooltip anchoring and UserState (F43) for progress persistence. Connects to HelpCards (F116) for ongoing post-tour guidance.
+
+## F121 — Next.js CMS Helpers
+
+Drop-in route handlers and metadata utilities for Next.js sites using @webhouse/cms. Sitemap, robots.txt, llms.txt, JSON-LD, OG images, geo meta, SEO metadata — all auto-generated from CMS content and _seo fields. Shipped as `@webhouse/cms/next` sub-path export. Updates both Next.js boilerplates and adds Fly.io deploy support for Dockerfile-based sites.
