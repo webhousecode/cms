@@ -389,11 +389,14 @@ async function postHook(url: string): Promise<void> {
  * 7. Return the app URL
  */
 async function flyioBuildAndDeploy(token: string, appName: string, orgSlug?: string): Promise<string | undefined> {
-  // 1. Build site
   const sitePaths = await getActiveSitePaths();
   const buildFile = path.join(sitePaths.projectDir, "build.ts");
-  if (!existsSync(buildFile)) {
-    throw new Error("No build.ts found — this site doesn't support static builds. For Next.js/SSR apps, use a deploy hook URL instead.");
+  const dockerFile = path.join(sitePaths.projectDir, "Dockerfile");
+  const hasBuildTs = existsSync(buildFile);
+  const hasDockerfile = existsSync(dockerFile);
+
+  if (!hasBuildTs && !hasDockerfile) {
+    throw new Error("No build.ts or Dockerfile found — this site can't be deployed to Fly.io. Add a build.ts (static) or Dockerfile (Next.js/SSR) to the project root.");
   }
 
   // Check flyctl is available
@@ -405,6 +408,57 @@ async function flyioBuildAndDeploy(token: string, appName: string, orgSlug?: str
 
   const config = await readSiteConfig();
   const customDomain = config.deployCustomDomain || "";
+  const appUrl = customDomain ? `https://${customDomain}` : `https://${appName}.fly.dev`;
+
+  // ── Resolve org — used by both paths ──
+  let org = orgSlug;
+  if (!org) {
+    try {
+      const orgOutput = execFileSync("flyctl", ["orgs", "list", "--json"], {
+        env: { ...process.env, FLY_API_TOKEN: token },
+        timeout: 10000,
+        stdio: "pipe",
+      }).toString();
+      const orgsMap = JSON.parse(orgOutput) as Record<string, string>;
+      const slugs = Object.keys(orgsMap);
+      org = slugs.find((s) => s !== "personal") ?? slugs[0] ?? "personal";
+      console.log(`[deploy] Auto-detected Fly org: ${org} (${orgsMap[org]})`);
+    } catch {
+      org = "personal";
+      console.log("[deploy] Could not detect org, falling back to personal");
+    }
+  }
+
+  // ── Ensure Fly app exists — used by both paths ──
+  console.log(`[deploy] Ensuring Fly app "${appName}" exists (org: ${org})...`);
+  try {
+    execFileSync("flyctl", ["status", "--app", appName], {
+      env: { ...process.env, FLY_API_TOKEN: token },
+      timeout: 10000,
+      stdio: "pipe",
+    });
+    console.log(`[deploy] App ${appName} already exists`);
+  } catch {
+    console.log(`[deploy] Creating Fly app ${appName} in org ${org}...`);
+    try {
+      execFileSync("flyctl", ["apps", "create", appName, "--org", org], {
+        env: { ...process.env, FLY_API_TOKEN: token },
+        timeout: 15000,
+        stdio: "pipe",
+      });
+      console.log(`[deploy] Created Fly app ${appName}`);
+    } catch (err) {
+      const msg = err instanceof Error ? (err as Error & { stderr?: Buffer }).stderr?.toString().slice(0, 200) || err.message : "Failed";
+      throw new Error(`Failed to create Fly app "${appName}" in org "${org}": ${msg}`);
+    }
+  }
+
+  // ── Case B: Dockerfile deploy (Next.js / SSR) ──
+  if (hasDockerfile && !hasBuildTs) {
+    return flyioDockerfileDeploy(token, appName, appUrl, customDomain, sitePaths.projectDir);
+  }
+
+  // ── Case A: build.ts deploy (static site via Caddy) ──
 
   // Clean deploy dir
   const deployDir = path.join(sitePaths.projectDir, "deploy");
@@ -431,8 +485,7 @@ async function flyioBuildAndDeploy(token: string, appName: string, orgSlug?: str
     throw new Error("Build completed but no deploy/ directory was created.");
   }
 
-  // 2. F89 enrichment
-  const appUrl = customDomain ? `https://${customDomain}` : `https://${appName}.fly.dev`;
+  // F89 enrichment
   try {
     const { enrichDist } = await import("./post-build-enrich");
     const siteEntry = await getActiveSiteEntry();
@@ -459,7 +512,7 @@ async function flyioBuildAndDeploy(token: string, appName: string, orgSlug?: str
   const files = collectFiles(deployDir, deployDir);
   console.log(`[deploy] Collected ${files.length} files from deploy/`);
 
-  // 3. Create temp deploy context with Dockerfile + fly.toml
+  // Create temp deploy context with Dockerfile + fly.toml
   const tmpDir = path.join("/tmp", `fly-deploy-${Date.now()}`);
   mkdirSync(tmpDir, { recursive: true });
   const publicDir = path.join(tmpDir, "public");
@@ -511,52 +564,7 @@ primary_region = "arn"
   memory = "256mb"
 `);
 
-  // 4. Resolve org — use explicit config, or auto-detect from token
-  let org = orgSlug;
-  if (!org) {
-    try {
-      const orgOutput = execFileSync("flyctl", ["orgs", "list", "--json"], {
-        env: { ...process.env, FLY_API_TOKEN: token },
-        timeout: 10000,
-        stdio: "pipe",
-      }).toString();
-      // flyctl returns { "slug": "name", ... } — pick first org (org tokens have exactly one)
-      const orgsMap = JSON.parse(orgOutput) as Record<string, string>;
-      const slugs = Object.keys(orgsMap);
-      // Prefer non-personal orgs (shared/team orgs)
-      org = slugs.find((s) => s !== "personal") ?? slugs[0] ?? "personal";
-      console.log(`[deploy] Auto-detected Fly org: ${org} (${orgsMap[org]})`);
-    } catch {
-      org = "personal";
-      console.log("[deploy] Could not detect org, falling back to personal");
-    }
-  }
-
-  // Create Fly app if it doesn't exist
-  console.log(`[deploy] Ensuring Fly app "${appName}" exists (org: ${org})...`);
-  try {
-    execFileSync("flyctl", ["status", "--app", appName], {
-      env: { ...process.env, FLY_API_TOKEN: token },
-      timeout: 10000,
-      stdio: "pipe",
-    });
-    console.log(`[deploy] App ${appName} already exists`);
-  } catch {
-    console.log(`[deploy] Creating Fly app ${appName} in org ${org}...`);
-    try {
-      execFileSync("flyctl", ["apps", "create", appName, "--org", org], {
-        env: { ...process.env, FLY_API_TOKEN: token },
-        timeout: 15000,
-        stdio: "pipe",
-      });
-      console.log(`[deploy] Created Fly app ${appName}`);
-    } catch (err) {
-      const msg = err instanceof Error ? (err as Error & { stderr?: Buffer }).stderr?.toString().slice(0, 200) || err.message : "Failed";
-      throw new Error(`Failed to create Fly app "${appName}" in org "${org}": ${msg}`);
-    }
-  }
-
-  // 5. Deploy via flyctl (remote build on Fly's builders)
+  // Deploy via flyctl (remote build on Fly's builders)
   console.log(`[deploy] Deploying ${files.length} files to Fly.io (${appName})...`);
   try {
     execFileSync("flyctl", ["deploy", "--remote-only", "--ha=false"], {
@@ -572,7 +580,7 @@ primary_region = "arn"
     throw new Error(`Fly.io deploy failed: ${msg}`);
   }
 
-  // 6. Custom domain
+  // Custom domain
   if (customDomain) {
     console.log(`[deploy] Adding custom domain: ${customDomain}...`);
     try {
@@ -587,8 +595,78 @@ primary_region = "arn"
     }
   }
 
-  // 7. Clean up temp dir
+  // Clean up temp dir
   try { rmSync(tmpDir, { recursive: true, force: true }); } catch { /* */ }
+
+  console.log(`[deploy] Fly.io deploy complete: ${appUrl}`);
+  return appUrl;
+}
+
+/**
+ * Fly.io deploy for sites with their own Dockerfile (Next.js / SSR).
+ * Deploys directly from the site's projectDir — no build.ts, no Caddy, no enrichment.
+ * Generates fly.toml only if the site doesn't already have one.
+ */
+async function flyioDockerfileDeploy(
+  token: string,
+  appName: string,
+  appUrl: string,
+  customDomain: string,
+  projectDir: string,
+): Promise<string> {
+  console.log(`[deploy] Dockerfile detected — deploying Next.js/SSR site from ${projectDir}`);
+
+  // Generate fly.toml if the site doesn't already have one
+  const flyTomlPath = path.join(projectDir, "fly.toml");
+  if (!existsSync(flyTomlPath)) {
+    console.log(`[deploy] No fly.toml found — generating one for Next.js (port 3000, region arn)`);
+    writeFileSync(flyTomlPath, `app = "${appName}"
+primary_region = "arn"
+
+[build]
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = "stop"
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
+`);
+  } else {
+    console.log(`[deploy] Using existing fly.toml from site directory`);
+  }
+
+  // Deploy from project dir via flyctl (remote build on Fly's builders)
+  console.log(`[deploy] Deploying to Fly.io (${appName}) via remote Docker build...`);
+  try {
+    execFileSync("flyctl", ["deploy", "--remote-only", "--ha=false"], {
+      cwd: projectDir,
+      env: { ...process.env, FLY_API_TOKEN: token },
+      timeout: 300000, // 5 min — Next.js builds are heavier than static
+      stdio: "pipe",
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? (err as Error & { stderr?: Buffer }).stderr?.toString().slice(0, 300) || err.message : "Deploy failed";
+    throw new Error(`Fly.io deploy failed: ${msg}`);
+  }
+
+  // Custom domain
+  if (customDomain) {
+    console.log(`[deploy] Adding custom domain: ${customDomain}...`);
+    try {
+      execFileSync("flyctl", ["certs", "add", customDomain, "--app", appName], {
+        env: { ...process.env, FLY_API_TOKEN: token },
+        timeout: 15000,
+        stdio: "pipe",
+      });
+    } catch {
+      console.log(`[deploy] Custom domain cert already exists or pending`);
+    }
+  }
 
   console.log(`[deploy] Fly.io deploy complete: ${appUrl}`);
   return appUrl;
