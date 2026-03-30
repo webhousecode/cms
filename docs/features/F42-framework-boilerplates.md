@@ -460,6 +460,62 @@ examples/
 - Day 3: Revalidation endpoint, sitemap, robots, CLAUDE.md, README
 - Day 4: Scaffolder integration (`--boilerplate` flag), testing, polish
 
+## Phase 2 — Universal Template Flag
+
+The scaffolder gains a `--template` flag that works with both boilerplates and examples:
+
+```bash
+# Boilerplates (framework starters)
+npm create @webhouse/cms my-site -- --template static
+npm create @webhouse/cms my-site -- --template nextjs
+npm create @webhouse/cms my-site -- --template nextjs-github
+
+# Examples (themed sites)
+npm create @webhouse/cms my-site -- --template blog
+npm create @webhouse/cms my-site -- --template agency
+npm create @webhouse/cms my-site -- --template freelancer
+npm create @webhouse/cms my-site -- --template portfolio
+npm create @webhouse/cms my-site -- --template studio
+npm create @webhouse/cms my-site -- --template boutique
+npm create @webhouse/cms my-site -- --template landing
+
+# npx shorthand (no -- needed)
+npx create-@webhouse/cms my-site --template nextjs
+npx @webhouse/cms-cli init my-site --template portfolio
+```
+
+### How it works
+
+1. Parse `--template <name>` from argv
+2. Check if template exists in `examples/<name>-boilerplate/` or `examples/<name>/` or `examples/static/<name>/`
+3. Download the template directory from GitHub via `tar` stream (no git clone needed):
+   ```typescript
+   const TAR_URL = `https://codeload.github.com/webhousecode/cms/tar.gz/main`;
+   // Extract only the relevant subdirectory
+   ```
+4. Copy files to project directory
+5. Update package.json name
+6. Run npm/pnpm install
+
+### Available templates
+
+| Flag | Source directory | Type |
+|------|----------------|------|
+| `static` | `examples/static-boilerplate/` | Boilerplate |
+| `nextjs` | `examples/nextjs-boilerplate/` | Boilerplate |
+| `nextjs-github` | `examples/nextjs-github-boilerplate/` | Boilerplate |
+| `blog` | `examples/blog/` | Example |
+| `landing` | `examples/landing/` | Example |
+| `agency` | `examples/static/agency/` | Static template |
+| `freelancer` | `examples/static/freelancer/` | Static template |
+| `portfolio` | `examples/static/portfolio/` | Static template |
+| `studio` | `examples/static/studio/` | Static template |
+| `boutique` | `examples/static/boutique/` | Static template |
+
+### Without --template (default)
+
+Current behavior preserved: generates minimal project with pages + posts collections, CLAUDE.md, and start.sh. No framework code.
+
 ---
 
 > **Testing (F99):** This feature MUST include tests using the [F99 Test Infrastructure](F99-e2e-testing-suite.md).
