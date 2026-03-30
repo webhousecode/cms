@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { SectionHeading } from "@/components/ui/section-heading";
+import { HelpCard } from "@/components/ui/help-card";
 
 interface TeamUser {
   id: string;
@@ -226,6 +227,7 @@ export function TeamPanel() {
 
   return (
     <div data-testid="panel-team" style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+      <HelpCard articleId="settings-team" variant="compact" />
       {/* Invite form */}
       <div>
         <SectionHeading>Invite a team member</SectionHeading>

@@ -13,6 +13,7 @@ import {
   Zap,
 } from "lucide-react";
 import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
+import { HelpCard } from "@/components/ui/help-card";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -141,6 +142,7 @@ export default function PerformancePage() {
       <ActionBarBreadcrumb items={["Tools", "AI Analytics"]} />
     </ActionBar>
     <div className="p-8 max-w-6xl">
+      <HelpCard articleId="performance-intro" variant="compact" />
 
       {!hasData && !loading ? (
         <div className="rounded-xl border border-border p-8 text-center text-muted-foreground">

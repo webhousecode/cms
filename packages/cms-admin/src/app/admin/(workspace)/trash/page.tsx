@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { Trash2, RotateCcw, X, Search, AlertTriangle } from "lucide-react";
 import { useTabs } from "@/lib/tabs-context";
 import { useSiteRole } from "@/hooks/use-site-role";
+import { HelpCard } from "@/components/ui/help-card";
 
 const RETENTION_DAYS = parseInt(process.env.NEXT_PUBLIC_TRASH_RETENTION_DAYS ?? "30");
 
@@ -170,6 +171,7 @@ export default function TrashPage() {
       </div>
 
       <div style={{ padding: "1.5rem" }}>
+        <HelpCard articleId="trash-intro" variant="compact" />
         {/* Search */}
         {items.length > 0 && (
           <div style={{ position: "relative", marginBottom: "1.25rem", maxWidth: "400px" }}>

@@ -6,6 +6,7 @@ import { SettingsCard } from "./settings-card";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { Rocket, ExternalLink, Check, X, Loader2, RefreshCw, Copy } from "lucide-react";
 import { DeployModal } from "@/components/deploy-modal";
+import { HelpCard } from "@/components/ui/help-card";
 
 type DeployProvider = "off" | "vercel" | "netlify" | "flyio" | "cloudflare" | "github-pages" | "custom";
 
@@ -354,6 +355,8 @@ export function DeploySettingsPanel() {
           </SettingsCard>
         </>
       )}
+
+      <HelpCard articleId="settings-deploy-icd" variant="compact" />
 
       {/* ── Custom domain ────────────────────────────────── */}
       {(effectiveProvider === "github-pages" || effectiveProvider === "flyio") && (

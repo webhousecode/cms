@@ -8,6 +8,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { TabTitle } from "@/lib/tabs-context";
 import { useSiteRole } from "@/hooks/use-site-role";
+import { HelpCard } from "@/components/ui/help-card";
 
 interface QueueItem {
   id: string;
@@ -214,6 +215,7 @@ export default function CurationPage() {
         </p>
         <h1 className="text-2xl font-bold text-foreground">Curation Queue</h1>
       </div>
+      <HelpCard articleId="curation-intro" variant="compact" />
 
       {/* Tabs */}
       <div className="flex gap-1 mb-6 border-b border-border">

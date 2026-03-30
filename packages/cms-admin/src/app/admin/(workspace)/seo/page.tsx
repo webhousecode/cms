@@ -8,6 +8,7 @@ import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/actio
 import { toast } from "sonner";
 import type { SeoDocSummary } from "@/app/api/admin/seo/route";
 import type { KeywordAnalysis } from "@/lib/seo/keywords";
+import { HelpCard } from "@/components/ui/help-card";
 
 interface SeoOverview {
   total: number;
@@ -227,6 +228,10 @@ export default function SeoPage() {
       }>
         <ActionBarBreadcrumb items={["Tools", "SEO"]} />
       </ActionBar>
+
+      <div style={{ padding: "0 1.25rem" }}>
+        <HelpCard articleId="seo-dashboard-intro" variant="compact" />
+      </div>
 
       {loading ? (
         <div style={{ padding: "3rem", textAlign: "center", color: "var(--muted-foreground)" }}>Loading SEO data...</div>

@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useSiteRole } from "@/hooks/use-site-role";
 import { toast } from "sonner";
+import { HelpCard } from "@/components/ui/help-card";
 
 /* ─── Types ──────────────────────────────────────────────────── */
 interface InteractiveMeta {
@@ -364,6 +365,10 @@ export default function InteractivesPage() {
         style={{ display: "none" }}
         onChange={(e) => handleUpload(e.target.files)}
       />
+
+      <div style={{ padding: "0 2rem" }}>
+        <HelpCard articleId="interactives-intro" variant="compact" />
+      </div>
 
       {/* Search + Filters — matching collection-list pattern */}
       <div style={{ padding: "2rem 2rem 0", maxWidth: "88rem" }}>

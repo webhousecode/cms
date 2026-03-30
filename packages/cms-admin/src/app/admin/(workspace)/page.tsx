@@ -6,6 +6,7 @@ import { calculateSeoScore, calculateGeoScore, type SeoFields } from "@/lib/seo/
 import { readKeywordStore, analyzeKeywords } from "@/lib/seo/keywords";
 import { getMediaAdapter } from "@/lib/media";
 import { SiteIntroCard } from "@/components/site-intro-card";
+import { HelpCard } from "@/components/ui/help-card";
 
 export default async function AdminDashboard() {
   // Multi-site with no site selected → go to sites dashboard
@@ -133,6 +134,7 @@ export default async function AdminDashboard() {
         <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">Dashboard</p>
         <h1 className="text-2xl font-bold text-foreground">Content Overview</h1>
       </div>
+      <HelpCard articleId="dashboard-intro" variant="compact" />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" style={{ gridAutoRows: "minmax(10rem, auto)" }}>
         <SiteIntroCard />

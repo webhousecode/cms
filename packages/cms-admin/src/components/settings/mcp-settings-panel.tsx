@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Check, Copy, Plus, Trash2, Key, RefreshCw, Server, Power, PowerOff, X, Pencil, Braces } from "lucide-react";
 import { toast } from "sonner";
 import { SectionHeading } from "@/components/ui/section-heading";
+import { HelpCard } from "@/components/ui/help-card";
 import { Checkbox } from "@/components/ui/checkbox-styled";
 
 interface McpApiKeyMasked {
@@ -145,6 +146,7 @@ export function MCPSettingsPanel() {
 
   return (
     <div data-testid="panel-mcp" style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+      <HelpCard articleId="settings-mcp" variant="compact" />
 
       {/* Endpoints */}
       <section>

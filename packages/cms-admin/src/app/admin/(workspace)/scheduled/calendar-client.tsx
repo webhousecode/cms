@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Calendar, ChevronLeft, ChevronRight, Globe, FileText, Check, HardDrive, Link2 } from "lucide-react";
 import { TabTitle } from "@/lib/tabs-context";
 import { PageHeader } from "@/components/page-header";
+import { HelpCard } from "@/components/ui/help-card";
 
 /* ─── Types ──────────────────────────────────────────────────── */
 
@@ -137,6 +138,7 @@ export function ScheduledCalendar({ events, calendarToken, orgId, siteId }: { ev
         <div style={{ marginBottom: "-17px" }}>
           <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">Schedule</p>
           <h1 className="text-2xl font-bold text-foreground">Calendar</h1>
+          <HelpCard articleId="scheduled-intro" variant="compact" />
         </div>
 
         {/* View selector + Subscribe — centered */}

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { HardDrive, Download, Trash2, RotateCcw, Plus, Clock, FileArchive } from "lucide-react";
 import { TabTitle } from "@/lib/tabs-context";
 import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
+import { HelpCard } from "@/components/ui/help-card";
 
 interface Snapshot {
   id: string;
@@ -124,6 +125,7 @@ export default function BackupPage() {
       </ActionBar>
 
       <div style={{ padding: "2rem 2.5rem", maxWidth: 900 }}>
+      <HelpCard articleId="backup-intro" variant="compact" />
 
       {loading ? (
         <p style={{ color: "var(--muted-foreground)", fontSize: "0.875rem" }}>Loading...</p>

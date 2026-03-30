@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { useTabs } from "@/lib/tabs-context";
 import { useSiteRole } from "@/hooks/use-site-role";
 import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
+import { HelpCard } from "@/components/ui/help-card";
 
 type RunState = "idle" | "running" | "done" | "error";
 type FixState = { loading: boolean; suggestion?: string | null; reason?: string; confidence?: string; applied?: boolean; error?: string };
@@ -319,6 +320,7 @@ export default function LinkCheckerPage() {
       </ActionBar>
 
       <div className="p-6 max-w-5xl">
+        <HelpCard articleId="linkchecker-intro" variant="compact" />
 
         {/* Last-run notice */}
         {checkedAt && state !== "running" && (

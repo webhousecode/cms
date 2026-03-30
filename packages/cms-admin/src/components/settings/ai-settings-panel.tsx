@@ -5,6 +5,7 @@ import { Sparkles, Check, ExternalLink } from "lucide-react";
 import { SettingsCard } from "./settings-card";
 import { toast } from "sonner";
 import { SectionHeading } from "@/components/ui/section-heading";
+import { HelpCard } from "@/components/ui/help-card";
 
 interface AiConfigMasked {
   defaultProvider: "anthropic" | "openai" | "gemini";
@@ -134,6 +135,7 @@ export function AISettingsPanel() {
 
   return (
     <form ref={aiFormRef} onSubmit={handleSave} onChange={() => window.dispatchEvent(new CustomEvent("cms:settings-dirty"))} data-testid="panel-ai">
+      <HelpCard articleId="settings-ai" variant="compact" />
       <SettingsCard>
       {/* Default provider */}
       <div style={{ marginBottom: "1.5rem" }}>
