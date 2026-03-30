@@ -136,6 +136,7 @@
 | F117 | [MCP ↔ Chat Tool Parity](#f117-mcp-chat-parity) | **Done** | [docs/features/F117-mcp-chat-parity.md](features/F117-mcp-chat-parity.md) |
 | F119 | [One-Click Docker Deploy](#f119-one-click-docker-deploy) | Planned | [docs/features/F119-one-click-docker-deploy.md](features/F119-one-click-docker-deploy.md) |
 | F120 | [Onboarding](#f120-onboarding) | **Tier 1** | [docs/features/F120-onboarding.md](features/F120-onboarding.md) |
+| F122 | [Beam — Site Teleportation](#f122-beam) | Planned | [docs/features/F122-beam.md](features/F122-beam.md) |
 
 ---
 
@@ -510,3 +511,7 @@ Guided product tour from webhouse.app landing to first published content. Toolti
 ## F121 — Next.js CMS Helpers
 
 Drop-in route handlers and metadata utilities for Next.js sites using @webhouse/cms. Sitemap, robots.txt, llms.txt, JSON-LD, OG images, geo meta, SEO metadata — all auto-generated from CMS content and _seo fields. Shipped as `@webhouse/cms/next` sub-path export. Updates both Next.js boilerplates and adds Fly.io deploy support for Dockerfile-based sites.
+
+## F122 — Beam — Site Teleportation
+
+"Beam me up, Scotty" — one-click site teleportation from localhost to cloud. Two modes: (1) Beam Archive (.beam file) for offline export/import. (2) Live Beam for direct CMS-to-CMS transfer over HTTPS with token auth and SSE progress. Transfers everything: content, media, cms.config.ts, agents, brand voice, site settings. Secrets auto-stripped, listed as required on import. CLI support: `cms beam export`, `cms beam import`, `cms beam push`. Solves the core workflow: develop locally, beam to production.

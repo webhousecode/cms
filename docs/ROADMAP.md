@@ -94,7 +94,8 @@ _Makes us stand out. Customers expect these from a modern CMS._
 
 | Priority | Feature | Size | Why it matters |
 |----------|---------|------|----------------|
-| 8g | **F119 One-Click Docker Deploy** | Medium | Deploy CMS + site to Fly.io with a few clicks. Combined or split model. Auto-Dockerfile, secrets, admin account. The "get live in 2 minutes" experience. |
+| 8g | **F122 Beam — Site Teleportation** | Medium | "Beam me up, Scotty" — one-click site migration from localhost to cloud. .beam archive + live CMS-to-CMS transfer. Core workflow enabler. |
+| 8h | **F119 One-Click Docker Deploy** | Medium | Deploy CMS + site to Fly.io with a few clicks. Combined or split model. Auto-Dockerfile, secrets, admin account. The "get live in 2 minutes" experience. |
 | 9a | **F83 Vibe Site Builder** | Large | THE differentiator. "Describe → Generate → Manage." AI site gen with CMS built in. Only platform with AI gen + CMS + code ownership. |
 | 9b | **F63 Shared Components** | Medium | Design tokens, shared UI components, API helpers. Makes all future features faster + consistent. |
 | ~~9c~~ | ~~**F84 Move Site to Org**~~ | ~~Done~~ | ~~Shipped. API route, registry move, settings UI, 15 unit tests.~~ |
