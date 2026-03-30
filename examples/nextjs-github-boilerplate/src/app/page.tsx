@@ -1,19 +1,16 @@
 import type { Metadata } from "next";
 import { getDocument, type PageData } from "@/lib/content";
+import { cmsMetadata } from "@webhouse/cms/next";
 import { BlockRenderer } from "@/components/block-renderer";
 import { ArticleBody } from "@/components/article-body";
 import { MapEmbed } from "@/components/map-embed";
 
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://example.com";
+
 export function generateMetadata(): Metadata {
   const doc = getDocument<PageData>("pages", "home");
   if (!doc) return {};
-
-  const seo = doc.data._seo;
-  return {
-    title: seo?.metaTitle ?? doc.data.title,
-    description: seo?.metaDescription ?? doc.data.metaDescription,
-    openGraph: seo?.ogImage ? { images: [seo.ogImage] } : undefined,
-  };
+  return cmsMetadata({ baseUrl, siteName: "My Site", doc, collection: "pages", urlPrefix: "/" }) as Metadata;
 }
 
 export default function HomePage() {

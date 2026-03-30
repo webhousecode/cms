@@ -18,6 +18,11 @@
       "import": "./dist/adapters/index.js",
       "require": "./dist/adapters/index.cjs"
     },
+    "./next": {
+      "types": "./dist/next/index.d.ts",
+      "import": "./dist/next/index.js",
+      "require": "./dist/next/index.cjs"
+    },
     "./static/*": "./static/*"
   },
   "files": [

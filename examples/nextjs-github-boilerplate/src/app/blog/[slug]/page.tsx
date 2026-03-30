@@ -2,7 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getCollection, getDocument, type PostData } from "@/lib/content";
+import { cmsMetadata, cmsJsonLd } from "@webhouse/cms/next";
 import { ArticleBody } from "@/components/article-body";
+
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://example.com";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -18,25 +21,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const doc = getDocument<PostData>("posts", slug);
   if (!doc) return {};
-
-  const seo = doc.data._seo;
-  const title = seo?.metaTitle ?? doc.data.title;
-  const description = seo?.metaDescription ?? doc.data.excerpt;
-
-  return {
-    title,
-    description,
-    openGraph: {
-      title,
-      description,
-      type: "article",
-      publishedTime: doc.data.date,
-      ...(seo?.ogImage ? { images: [seo.ogImage] } : {}),
-    },
-    other: seo?.jsonLd
-      ? undefined
-      : undefined,
-  };
+  return cmsMetadata({ baseUrl, siteName: "My Site", doc, collection: "posts", urlPrefix: "/blog" }) as Metadata;
 }
 
 export default async function BlogPostPage({ params }: Props) {
@@ -45,10 +30,8 @@ export default async function BlogPostPage({ params }: Props) {
   if (!doc || doc.status !== "published") notFound();
 
   const { data } = doc;
-  const seo = data._seo;
-
-  // JSON-LD structured data
-  const jsonLd = seo?.jsonLd ?? {
+  // JSON-LD: use _seo.jsonLd if set, otherwise generate BlogPosting schema
+  const jsonLd = cmsJsonLd(doc) ?? {
     "@context": "https://schema.org",
     "@type": "BlogPosting",
     headline: data.title,

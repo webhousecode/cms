@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { getCollection, getDocument, type PageData } from "@/lib/content";
+import { cmsMetadata, cmsJsonLd } from "@webhouse/cms/next";
 import { BlockRenderer } from "@/components/block-renderer";
 import { ArticleBody } from "@/components/article-body";
 import { MapEmbed } from "@/components/map-embed";
+
+const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://example.com";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -19,13 +22,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const doc = getDocument<PageData>("pages", slug);
   if (!doc) return {};
-
-  const seo = doc.data._seo;
-  return {
-    title: seo?.metaTitle ?? doc.data.title,
-    description: seo?.metaDescription ?? doc.data.metaDescription,
-    openGraph: seo?.ogImage ? { images: [seo.ogImage] } : undefined,
-  };
+  return cmsMetadata({ baseUrl, siteName: "My Site", doc, collection: "pages", urlPrefix: "/" }) as Metadata;
 }
 
 export default async function DynamicPage({ params }: Props) {
@@ -39,8 +36,8 @@ export default async function DynamicPage({ params }: Props) {
 
   const { data } = doc;
 
-  // JSON-LD for pages
-  const jsonLd = data._seo?.jsonLd ?? {
+  // JSON-LD: use _seo.jsonLd if set, otherwise generate WebPage schema
+  const jsonLd = cmsJsonLd(doc) ?? {
     "@context": "https://schema.org",
     "@type": "WebPage",
     name: data.title,
