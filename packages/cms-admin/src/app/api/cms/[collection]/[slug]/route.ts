@@ -17,13 +17,30 @@ async function checkDeployOnSave(): Promise<boolean> {
   } catch { return false; }
 }
 
-/** Fire-and-forget: trigger deploy if deployOnSave is enabled */
-async function dispatchAutoDeployOnSave() {
+/**
+ * Fire-and-forget: auto-deploy on save.
+ *
+ * Instant Content Deployment: if the site has a revalidateUrl AND
+ * the revalidation webhook succeeded, skip the full deploy pipeline.
+ * Content is already live via ISR in ~2 seconds.
+ *
+ * Only triggers a full deploy (Docker build etc.) when:
+ * - No revalidateUrl is configured, OR
+ * - The revalidation webhook failed/wasn't dispatched
+ */
+async function dispatchAutoDeployOnSave(revalidationDispatched: boolean) {
   const { readSiteConfig } = await import("@/lib/site-config");
   const config = await readSiteConfig();
   if (!config.deployOnSave) return;
+
+  // If content was already pushed via revalidation webhook → skip full deploy
+  if (revalidationDispatched) {
+    console.log("[auto-deploy] Skipped — content pushed via Instant Content Deployment (revalidation webhook)");
+    return;
+  }
+
   const { triggerDeploy } = await import("@/lib/deploy-service");
-  console.log("[auto-deploy] Triggering deploy on save...");
+  console.log("[auto-deploy] No revalidation endpoint — triggering full deploy...");
   const result = await triggerDeploy();
   console.log(`[auto-deploy] ${result.status}${result.error ? ` — ${result.error}` : ""}`);
 }
@@ -212,8 +229,10 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
     }
 
     // Auto-deploy on save (fire-and-forget)
-    const willDeploy = await checkDeployOnSave();
-    dispatchAutoDeployOnSave().catch(() => {});
+    // If revalidation webhook was dispatched, content is already live — skip full deploy
+    const revalidationDispatched = !!site?.revalidateUrl;
+    const willDeploy = revalidationDispatched ? false : await checkDeployOnSave();
+    dispatchAutoDeployOnSave(revalidationDispatched).catch(() => {});
 
     return NextResponse.json({ ...updated, _deployTriggered: willDeploy });
   } catch (err) {
