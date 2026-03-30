@@ -229,9 +229,13 @@ export function createAdminMcpServer(opts: AdminServerOptions): Server {
               }
             }
           }
-          // Also delete trashed media
+          // Also delete trashed media (with timeout)
           if (services) {
-            try { deleted += await services.deleteTrashedMedia(); } catch { /* ignore */ }
+            try {
+              const delPromise = services.deleteTrashedMedia();
+              const delTimeout = new Promise<never>((_, reject) => setTimeout(() => reject(new Error("timeout")), 10000));
+              deleted += await Promise.race([delPromise, delTimeout]);
+            } catch { /* ignore */ }
           }
           result = { deleted };
           audit("success", undefined, `Deleted ${deleted} items`);
@@ -511,14 +515,16 @@ export function createAdminMcpServer(opts: AdminServerOptions): Server {
               }
             }
           }
-          // Media trash
+          // Media trash (with timeout — adapter may not be available for this site)
           if (services) {
             try {
-              const trashedMedia = await services.listTrashedMedia();
+              const mediaPromise = services.listTrashedMedia();
+              const timeout = new Promise<never>((_, reject) => setTimeout(() => reject(new Error("timeout")), 5000));
+              const trashedMedia = await Promise.race([mediaPromise, timeout]);
               for (const m of trashedMedia) {
                 trashItems.push({ title: m.name, type: "media", trashedAt: m.trashedAt ?? "" });
               }
-            } catch { /* media trash not available */ }
+            } catch { /* media trash not available or timed out */ }
           }
           result = { total: trashItems.length, items: trashItems };
           break;
