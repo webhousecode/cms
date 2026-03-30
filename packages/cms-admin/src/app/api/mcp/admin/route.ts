@@ -3,6 +3,8 @@ import { NextSSETransport, registerTransportSession } from "@webhouse/cms-mcp-cl
 import { createAdminMcpServer, initAuditLog, type AiGenerator, type AdminServices } from "@webhouse/cms-mcp-server";
 import { getApiKey } from "@/lib/ai-config";
 import { resolveApiKeyToSite } from "@/lib/mcp-config";
+import fs from "fs/promises";
+import path from "path";
 
 export const dynamic = "force-dynamic";
 
@@ -17,54 +19,67 @@ export async function GET(request: NextRequest) {
 
   // Load CMS instance for the resolved site (not the cookie-active site)
   const { getOrCreateInstance } = await import("@/lib/site-pool");
-  const { loadRegistry } = await import("@/lib/site-registry");
-  const { findSite } = await import("@/lib/site-registry");
-  const { getSiteDataDir } = await import("@/lib/site-paths");
+  const { loadRegistry, findSite } = await import("@/lib/site-registry");
+  const { getSiteDataDir, getSitePathsFor } = await import("@/lib/site-paths");
 
   let cms: Awaited<ReturnType<typeof import("@webhouse/cms").createCms>>;
   let config: import("@webhouse/cms").CmsConfig;
   let dataDir: string;
+  let uploadDir: string;
+  let projectDir: string;
 
   if (resolved.orgId === "default" && resolved.siteId === "default") {
-    // Single-site mode — use standard resolution
     const { getAdminCms, getAdminConfig } = await import("@/lib/cms");
     const { getActiveSitePaths } = await import("@/lib/site-paths");
     cms = await getAdminCms();
     config = await getAdminConfig();
     const paths = await getActiveSitePaths();
     dataDir = paths.dataDir;
+    uploadDir = paths.uploadDir;
+    projectDir = paths.projectDir;
   } else {
-    // Multi-site mode — load the specific site the key belongs to
     const registry = await loadRegistry();
-    if (!registry) {
-      return NextResponse.json({ error: "Registry not found" }, { status: 500 });
-    }
+    if (!registry) return NextResponse.json({ error: "Registry not found" }, { status: 500 });
     const site = findSite(registry, resolved.orgId, resolved.siteId);
-    if (!site) {
-      return NextResponse.json({ error: "Site not found" }, { status: 404 });
-    }
+    if (!site) return NextResponse.json({ error: "Site not found" }, { status: 404 });
     const instance = await getOrCreateInstance(resolved.orgId, site);
     cms = instance.cms;
     config = instance.config;
-    const dir = await getSiteDataDir(resolved.orgId, resolved.siteId);
-    if (!dir) {
-      return NextResponse.json({ error: "Site data dir not found" }, { status: 500 });
-    }
-    dataDir = dir;
+    const paths = await getSitePathsFor(resolved.orgId, resolved.siteId);
+    if (!paths) return NextResponse.json({ error: "Site paths not found" }, { status: 500 });
+    dataDir = paths.dataDir;
+    uploadDir = paths.uploadDir;
+    projectDir = paths.projectDir;
   }
 
-  // Init audit log in the resolved site's _data dir
   initAuditLog(dataDir);
 
-  // Build AI generator if Anthropic API key is configured
+  // ── Helper: read JSON from dataDir ──────────────────────────────
+  async function readJson<T>(relativePath: string): Promise<T | null> {
+    try {
+      const raw = await fs.readFile(path.join(dataDir, relativePath), "utf-8");
+      return JSON.parse(raw) as T;
+    } catch { return null; }
+  }
+
+  async function writeJson(relativePath: string, data: unknown): Promise<void> {
+    const filePath = path.join(dataDir, relativePath);
+    await fs.mkdir(path.dirname(filePath), { recursive: true });
+    await fs.writeFile(filePath, JSON.stringify(data, null, 2));
+  }
+
+  // ── AI Generator ────────────────────────────────────────────────
   let ai: AiGenerator | undefined;
   const anthropicKey = await getApiKey("anthropic");
   if (anthropicKey) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const cmsAi = await import("@webhouse/cms-ai" as any);
     const Anthropic = (await import("@anthropic-ai/sdk")).default;
     const provider = new cmsAi.AnthropicProvider({ apiKey: anthropicKey });
     const agent = new cmsAi.ContentAgent(provider);
+
+    // Read locale from resolved site config (not cookies)
+    const siteConfigData = await readJson<Record<string, unknown>>("site-config.json");
+    const siteLocale = String(siteConfigData?.defaultLocale ?? "en");
 
     ai = {
       async generate(intent: string, collectionName: string) {
@@ -79,28 +94,22 @@ export async function GET(request: NextRequest) {
         return result.fields[field] ?? currentValue;
       },
       async generateContent(collection: string, slug: string, field: string, prompt: string) {
-        const { getModel } = await import("@/lib/ai/model-resolver");
         const { buildLocaleInstruction } = await import("@/lib/ai/locale-prompt");
-        const { readSiteConfig } = await import("@/lib/site-config");
-        const model = await getModel("code");
-        const sc = await readSiteConfig();
-        const locale = sc.defaultLocale || "en";
+        const model = "claude-sonnet-4-6"; // Use code model directly — no cookie-dependent getModel()
         const client = new Anthropic({ apiKey: anthropicKey });
         const doc = await cms.content.findBySlug(collection, slug);
         const response = await client.messages.create({
           model,
           max_tokens: 2048,
-          system: `${buildLocaleInstruction(locale)}\nYou are a content writer. Generate content for the "${field}" field.\nExisting document: ${JSON.stringify(doc?.data ?? {}, null, 2)}`,
+          system: `${buildLocaleInstruction(siteLocale)}\nYou are a content writer. Generate content for the "${field}" field.\nExisting document: ${JSON.stringify(doc?.data ?? {}, null, 2)}`,
           messages: [{ role: "user", content: prompt }],
         });
         return response.content.filter((b: any) => b.type === "text").map((b: any) => b.text).join("");
       },
       async generateInteractive(title: string, description: string) {
-        const { getModel } = await import("@/lib/ai/model-resolver");
-        const model = await getModel("code");
         const client = new Anthropic({ apiKey: anthropicKey });
         const response = await client.messages.create({
-          model,
+          model: "claude-sonnet-4-6",
           max_tokens: 8192,
           system: `You are an expert HTML/CSS/JavaScript developer. Generate a COMPLETE, self-contained HTML document. ALL CSS inline in <style>, ALL JS inline in <script>. NO external dependencies. Responsive, dark mode support. Start with <!DOCTYPE html>, end with </html>.`,
           messages: [{ role: "user", content: `Create: ${title}\n\n${description}` }],
@@ -115,23 +124,42 @@ export async function GET(request: NextRequest) {
     };
   }
 
-  // Build admin services — wires admin-only imports to MCP server
+  // ── Admin Services (ALL cookie-free — use resolved dataDir) ─────
+  const { FilesystemMediaAdapter } = await import("@/lib/media/filesystem");
+
+  function createMediaAdapter() {
+    return new FilesystemMediaAdapter(uploadDir, dataDir);
+  }
+
+  async function readMediaMetaDirect(): Promise<Array<{ key: string; aiCaption?: string; aiAlt?: string; aiTags?: string[]; tags?: string[]; exif?: any; [k: string]: any }>> {
+    const data = await readJson<any[]>("media-meta.json");
+    return data ?? [];
+  }
+
   const services: AdminServices = {
+    // ── Site Config (direct file I/O) ────────────────────────────
     async readSiteConfig() {
-      const { readSiteConfig } = await import("@/lib/site-config");
-      const sc = await readSiteConfig();
-      const safe = { ...sc } as Record<string, unknown>;
+      const stored = await readJson<Record<string, unknown>>("site-config.json");
+      const safe = { ...stored } as Record<string, unknown>;
       delete safe.anthropicApiKey; delete safe.openaiApiKey;
+      delete safe.geminiApiKey; delete safe.braveApiKey;
+      delete safe.tavilyApiKey; delete safe.resendApiKey;
+      delete safe.deployApiToken; delete safe.calendarSecret;
       return safe;
     },
+
     async writeSiteConfig(patch: Record<string, unknown>) {
-      const { writeSiteConfig } = await import("@/lib/site-config");
-      return await writeSiteConfig(patch as any);
+      const existing = await readJson<Record<string, unknown>>("site-config.json") ?? {};
+      const next = { ...existing, ...patch };
+      await writeJson("site-config.json", next);
+      return next;
     },
+
+    // ── Media (direct adapter — no getActiveSitePaths) ───────────
     async listMedia(type: string, limit: number) {
-      const { getMediaAdapter } = await import("@/lib/media");
-      const { readMediaMeta } = await import("@/lib/media/media-meta");
-      const [files, meta] = await Promise.all([getMediaAdapter().then(a => a.listMedia()), readMediaMeta()]);
+      const adapter = createMediaAdapter();
+      const meta = await readMediaMetaDirect();
+      const files = await adapter.listMedia();
       const metaMap = new Map(meta.map(m => [m.key, m]));
       let filtered = files.filter(f => !/-\d+w\.webp$/i.test(f.name));
       if (type !== "all") filtered = filtered.filter(f => f.mediaType === type);
@@ -147,10 +175,11 @@ export async function GET(request: NextRequest) {
         return parts.join("\n");
       }).join("\n\n");
     },
+
     async searchMedia(query: string, type: string, limit: number) {
-      const { getMediaAdapter } = await import("@/lib/media");
-      const { readMediaMeta } = await import("@/lib/media/media-meta");
-      const [files, meta] = await Promise.all([getMediaAdapter().then(a => a.listMedia()), readMediaMeta()]);
+      const adapter = createMediaAdapter();
+      const meta = await readMediaMetaDirect();
+      const files = await adapter.listMedia();
       const metaMap = new Map(meta.map(m => [m.key, m]));
       const q = query.toLowerCase();
       const scored = files
@@ -162,8 +191,8 @@ export async function GET(request: NextRequest) {
           let score = 0;
           if (f.name.toLowerCase().includes(q)) score += 3;
           if (m?.aiCaption?.toLowerCase().includes(q)) score += 5;
-          if (m?.aiTags?.some(t => t.toLowerCase().includes(q))) score += 4;
-          if (m?.tags?.some(t => t.toLowerCase().includes(q))) score += 6;
+          if (m?.aiTags?.some((t: string) => t.toLowerCase().includes(q))) score += 4;
+          if (m?.tags?.some((t: string) => t.toLowerCase().includes(q))) score += 6;
           return { file: f, meta: m, score };
         })
         .filter(s => s.score > 0)
@@ -178,15 +207,51 @@ export async function GET(request: NextRequest) {
         return parts.join("\n");
       }).join("\n\n");
     },
-    async listAgents() {
-      const { listAgents } = await import("@/lib/agents");
-      return await listAgents();
+
+    async listTrashedMedia() {
+      const adapter = createMediaAdapter();
+      return await adapter.listTrashed();
     },
+
+    async deleteTrashedMedia() {
+      const adapter = createMediaAdapter();
+      const trashed = await adapter.listTrashed();
+      let deleted = 0;
+      for (const m of trashed) {
+        await adapter.deleteFile(m.folder, m.name);
+        deleted++;
+      }
+      return deleted;
+    },
+
+    // ── Agents (direct file I/O) ─────────────────────────────────
+    async listAgents() {
+      const agentsDir = path.join(dataDir, "agents");
+      try {
+        const files = await fs.readdir(agentsDir);
+        const agents = [];
+        for (const f of files) {
+          if (!f.endsWith(".json")) continue;
+          try {
+            const raw = await fs.readFile(path.join(agentsDir, f), "utf-8");
+            agents.push(JSON.parse(raw));
+          } catch { /* skip */ }
+        }
+        return agents.sort((a: any, b: any) => (b.updatedAt ?? "").localeCompare(a.updatedAt ?? ""));
+      } catch {
+        return [];
+      }
+    },
+
     async createAgent(opts: Record<string, unknown>) {
-      const { createAgent } = await import("@/lib/agents");
-      return await createAgent({
+      const agentsDir = path.join(dataDir, "agents");
+      await fs.mkdir(agentsDir, { recursive: true });
+      const id = crypto.randomUUID();
+      const now = new Date().toISOString();
+      const agent = {
+        id,
         name: String(opts.name ?? ""),
-        role: String(opts.role ?? "custom") as any,
+        role: String(opts.role ?? "custom"),
         systemPrompt: String(opts.systemPrompt ?? ""),
         targetCollections: (opts.targetCollections as string[]) ?? ["posts"],
         active: true,
@@ -195,45 +260,117 @@ export async function GET(request: NextRequest) {
         autonomy: "draft",
         schedule: { enabled: false, frequency: "manual", time: "09:00", maxPerRun: 1 },
         fieldDefaults: {},
-      } as any);
+        createdAt: now,
+        updatedAt: now,
+      };
+      await fs.writeFile(path.join(agentsDir, `${id}.json`), JSON.stringify(agent, null, 2));
+      return agent;
     },
+
     async runAgent(agentId: string, prompt: string, collection?: string) {
-      const { runAgent } = await import("@/lib/agent-runner");
-      return await runAgent(agentId, prompt, collection);
+      // runAgent is complex (calls AI APIs) — use internal HTTP endpoint
+      const baseUrl = process.env.NEXTAUTH_URL || `http://localhost:${process.env.PORT || 3010}`;
+      const serviceToken = process.env.CMS_JWT_SECRET ?? "";
+      const res = await fetch(`${baseUrl}/api/cms/agents/${agentId}/run`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-cms-service-token": serviceToken },
+        body: JSON.stringify({ prompt, collection }),
+      });
+      if (!res.ok) throw new Error("Agent run failed");
+      return await res.json();
     },
+
+    // ── Curation Queue (direct file I/O) ─────────────────────────
     async listCurationQueue(status?: string) {
-      const { listQueueItems, getQueueStats } = await import("@/lib/curation");
-      const [items, stats] = await Promise.all([listQueueItems(status as any), getQueueStats()]);
-      return { items, stats };
+      const queue = await readJson<any[]>("curation-queue.json") ?? [];
+      const filtered = status ? queue.filter((i: any) => i.status === status) : queue;
+      const stats: Record<string, number> = {};
+      for (const item of queue) {
+        const s = item.status ?? "ready";
+        stats[s] = (stats[s] ?? 0) + 1;
+      }
+      return { items: filtered, stats };
     },
+
     async approveQueueItem(id: string, asDraft: boolean) {
-      const { approveQueueItem } = await import("@/lib/curation");
-      return await approveQueueItem(id, asDraft);
+      const queue = await readJson<any[]>("curation-queue.json") ?? [];
+      const item = queue.find((i: any) => i.id === id);
+      if (!item) throw new Error("Queue item not found");
+      item.status = asDraft ? "approved" : "published";
+      item.reviewedAt = new Date().toISOString();
+      await writeJson("curation-queue.json", queue);
+
+      // Create document in CMS
+      if (item.data && item.collection) {
+        await cms.content.create(item.collection, {
+          data: item.data,
+          slug: item.slug,
+          status: asDraft ? "draft" : "published",
+        });
+      }
+      return item;
     },
+
     async rejectQueueItem(id: string, feedback: string) {
-      const { rejectQueueItem } = await import("@/lib/curation");
-      return await rejectQueueItem(id, feedback);
+      const queue = await readJson<any[]>("curation-queue.json") ?? [];
+      const item = queue.find((i: any) => i.id === id);
+      if (!item) throw new Error("Queue item not found");
+      item.status = "rejected";
+      item.feedback = feedback;
+      item.reviewedAt = new Date().toISOString();
+      await writeJson("curation-queue.json", queue);
+      return item;
     },
+
+    // ── Deploy (direct file I/O for history, internal API for trigger) ─
     async triggerDeploy() {
-      const { triggerDeploy } = await import("@/lib/deploy-service");
-      return await triggerDeploy();
+      // Deploy is very complex (Fly.io, Vercel, Netlify, GH Pages) — use internal HTTP
+      const baseUrl = process.env.NEXTAUTH_URL || `http://localhost:${process.env.PORT || 3010}`;
+      const serviceToken = process.env.CMS_JWT_SECRET ?? "";
+      const res = await fetch(`${baseUrl}/api/admin/deploy`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-cms-service-token": serviceToken },
+      });
+      if (!res.ok) throw new Error("Deploy failed");
+      return await res.json();
     },
+
     async listDeploys() {
-      const { listDeploys } = await import("@/lib/deploy-service");
-      return await listDeploys();
+      const log = await readJson<any[]>("deploy-log.json");
+      return log ?? [];
     },
+
+    // ── Revisions (direct file I/O) ──────────────────────────────
     async listRevisions(collection: string, slug: string) {
-      const { listRevisions } = await import("@/lib/revisions");
-      return await listRevisions(collection, slug);
+      const revPath = path.join(projectDir, "_revisions", collection, `${slug}.json`);
+      try {
+        const raw = await fs.readFile(revPath, "utf-8");
+        return JSON.parse(raw);
+      } catch {
+        return [];
+      }
     },
+
+    // ── Link Check (direct file I/O) ─────────────────────────────
     async readLinkCheckResult() {
-      const { readLinkCheckResult } = await import("@/lib/link-check-store");
-      return await readLinkCheckResult();
+      return await readJson("link-check-result.json");
     },
+
+    // ── Backup (direct file I/O for create) ──────────────────────
     async createBackup() {
-      const { createBackup } = await import("@/lib/backup-service");
-      return await createBackup("manual");
+      // Backup is complex (zip creation) — use internal HTTP
+      const baseUrl = process.env.NEXTAUTH_URL || `http://localhost:${process.env.PORT || 3010}`;
+      const serviceToken = process.env.CMS_JWT_SECRET ?? "";
+      const res = await fetch(`${baseUrl}/api/admin/backup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "x-cms-service-token": serviceToken },
+        body: JSON.stringify({ trigger: "manual" }),
+      });
+      if (!res.ok) throw new Error("Backup failed");
+      return await res.json();
     },
+
+    // ── Translation (internal HTTP — these endpoints handle their own site resolution) ─
     async translateDocument(collection: string, slug: string, targetLocale: string, publish: boolean) {
       const baseUrl = process.env.NEXTAUTH_URL || `http://localhost:${process.env.PORT || 3010}`;
       const serviceToken = process.env.CMS_JWT_SECRET ?? "";
@@ -245,6 +382,7 @@ export async function GET(request: NextRequest) {
       if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error ?? "Translation failed"); }
       return await res.json();
     },
+
     async translateSite(targetLocale: string, publish: boolean) {
       const baseUrl = process.env.NEXTAUTH_URL || `http://localhost:${process.env.PORT || 3010}`;
       const serviceToken = process.env.CMS_JWT_SECRET ?? "";
@@ -259,22 +397,6 @@ export async function GET(request: NextRequest) {
       const results = lines.filter((l: any) => l.type === "result");
       const errors = lines.filter((l: any) => l.type === "error");
       return { translated: results.length, errors: errors.length, details: results.map((r: any) => `${r.collection}/${r.slug}`) };
-    },
-    async listTrashedMedia() {
-      const { getMediaAdapter } = await import("@/lib/media");
-      const adapter = await getMediaAdapter();
-      return await adapter.listTrashed();
-    },
-    async deleteTrashedMedia() {
-      const { getMediaAdapter } = await import("@/lib/media");
-      const adapter = await getMediaAdapter();
-      const trashed = await adapter.listTrashed();
-      let deleted = 0;
-      for (const m of trashed) {
-        await adapter.deleteFile(m.folder, m.name);
-        deleted++;
-      }
-      return deleted;
     },
   };
 
