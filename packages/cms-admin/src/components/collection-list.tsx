@@ -41,6 +41,7 @@ interface Props {
   view?: ViewMode;
   urlPrefix?: string;
   urlPattern?: string;
+  localeStrategy?: string;
   defaultLocale?: string;
   siteLocales?: string[];
 }
@@ -282,7 +283,7 @@ function PreviewThumb({ previewUrl, title }: { previewUrl: string; title: string
 
 /* ─── Main component ──────────────────────────────────────────── */
 
-export function CollectionList({ collection, titleField, fields, initialDocs, readOnly, view = "list", urlPrefix, urlPattern, defaultLocale, siteLocales }: Props) {
+export function CollectionList({ collection, titleField, fields, initialDocs, readOnly, view = "list", urlPrefix, urlPattern, localeStrategy = "prefix-other", defaultLocale, siteLocales }: Props) {
   const [docs, setDocs] = useState(initialDocs);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilterRaw] = useState<StatusFilter>(() => {
@@ -465,20 +466,43 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
   function docPreviewUrl(doc: Doc): string {
     if (!previewBase) return "";
     const prefix = (urlPrefix ?? `/${collection}`).replace(/\/$/, "");
-    const isHomepage = (prefix === "" || prefix === "/") && (doc.slug === "home" || doc.slug === "index");
+    const docLocale = (doc as any).locale ?? "";
 
-    // Build slug path from urlPattern (if configured) or plain slug (default)
-    let slugPath = doc.slug;
-    const pattern = urlPattern;
-    if (pattern) {
-      slugPath = pattern.replace(/^\//, "").replace(/:([a-zA-Z_]+)/g, (_m, field) => {
-        if (field === "slug") return doc.slug;
+    // Determine if locale prefix is used
+    const usesLocalePrefix =
+      (localeStrategy === "prefix-all" && !!docLocale) ||
+      (localeStrategy === "prefix-other" && !!docLocale && docLocale !== (defaultLocale ?? "en"));
+
+    // Strip locale suffix from slug when using prefix strategy
+    let baseSlug = doc.slug;
+    if (usesLocalePrefix && docLocale && docLocale !== (defaultLocale ?? "en")) {
+      const suffix = `-${docLocale}`;
+      if (baseSlug.endsWith(suffix)) {
+        baseSlug = baseSlug.slice(0, -suffix.length);
+      }
+    }
+
+    const isHomepage = (prefix === "" || prefix === "/") && (baseSlug === "home" || baseSlug === "index");
+
+    let slugPath = baseSlug;
+    if (urlPattern) {
+      slugPath = urlPattern.replace(/^\//, "").replace(/:([a-zA-Z_]+)/g, (_m, field) => {
+        if (field === "slug") return baseSlug;
         const val = doc.data?.[field];
         return typeof val === "string" ? val : "";
       });
     }
 
-    const pagePath = isHomepage ? "/" : `${prefix}/${slugPath}`;
+    const locPrefix = usesLocalePrefix ? `/${docLocale}` : "";
+
+    // For "none" strategy, use original slug (locale baked in)
+    if (localeStrategy === "none") {
+      slugPath = doc.slug;
+    }
+
+    const pagePath = isHomepage
+      ? (locPrefix ? `${locPrefix}/` : "/")
+      : `${locPrefix}${prefix}/${slugPath}`;
     return `${previewBase}${pagePath}`;
   }
 

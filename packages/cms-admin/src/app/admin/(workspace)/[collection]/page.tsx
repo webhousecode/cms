@@ -64,6 +64,7 @@ export default async function CollectionPage({ params }: Props) {
         readOnly={!canWrite}
         urlPrefix={colConfig.urlPrefix}
         urlPattern={(colConfig as any).urlPattern}
+        localeStrategy={siteConfig.localeStrategy ?? "prefix-other"}
         schemaEnabled={schemaEnabled}
         defaultLocale={siteConfig.defaultLocale || config.defaultLocale}
         siteLocales={siteConfig.locales?.length ? siteConfig.locales : config.locales}

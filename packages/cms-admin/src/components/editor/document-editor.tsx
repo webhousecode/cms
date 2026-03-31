@@ -1234,30 +1234,48 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
   async function openPreview() {
     if (!colConfig.urlPrefix) return;
     const prefix = colConfig.urlPrefix.replace(/\/$/, "");
-    // Homepage: slug "home" or "index" with urlPrefix "/" maps to root
-    const isHomepage = (prefix === "" || prefix === "/") && (doc.slug === "home" || doc.slug === "index");
+
+    // Determine if locale prefix is used in URLs
+    const usesLocalePrefix =
+      (localeStrategy === "prefix-all" && !!locale) ||
+      (localeStrategy === "prefix-other" && !!locale && locale !== defaultLocale);
+
+    // Base slug: strip locale suffix when locale prefix is used in URLs
+    // e.g. "home-da" → "home" (because URL will be /da/home, not /home-da)
+    let baseSlug = doc.slug;
+    if (usesLocalePrefix && locale && locale !== defaultLocale) {
+      const suffix = `-${locale}`;
+      if (baseSlug.endsWith(suffix)) {
+        baseSlug = baseSlug.slice(0, -suffix.length);
+      }
+    }
+
+    // Homepage: slug "home" or "index" (or their locale variants) with urlPrefix "/"
+    const isHomepage = (prefix === "" || prefix === "/") && (baseSlug === "home" || baseSlug === "index");
 
     // Build slug path from urlPattern (if configured) or plain slug (default)
-    let slugPath = doc.slug;
+    let slugPath = baseSlug;
     const pattern = (colConfig as { urlPattern?: string }).urlPattern;
     if (pattern) {
-      // Replace :fieldName placeholders with actual field values
       slugPath = pattern.replace(/^\//, "").replace(/:([a-zA-Z_]+)/g, (_m, field) => {
-        if (field === "slug") return doc.slug;
+        if (field === "slug") return baseSlug;
         const val = doc.data?.[field];
         return typeof val === "string" ? val : "";
       });
     }
 
-    // Add locale prefix only when localeStrategy uses prefixes
-    let locPrefix = "";
-    if (localeStrategy === "prefix-all" && locale) {
-      locPrefix = `/${locale}`;
-    } else if (localeStrategy === "prefix-other" && locale && locale !== defaultLocale) {
-      locPrefix = `/${locale}`;
+    // Build locale prefix
+    const locPrefix = usesLocalePrefix ? `/${locale}` : "";
+
+    // For "none" strategy, use full slug (locale baked in)
+    if (localeStrategy === "none" || !localeStrategy) {
+      slugPath = doc.slug; // use original slug with locale suffix
     }
-    // "none" = no prefix (locale is in slug or not used)
-    const pagePath = isHomepage ? "/" : `${locPrefix}${prefix}/${slugPath}`;
+
+    // Homepage with locale prefix → /da/ (not /da/home)
+    const pagePath = isHomepage
+      ? (locPrefix ? `${locPrefix}/` : "/")
+      : `${locPrefix}${prefix}/${slugPath}`;
 
     if (PREVIEW_SITE_URL) {
       const url = `${PREVIEW_SITE_URL}${pagePath}`;
