@@ -138,6 +138,7 @@
 | F120 | [Onboarding](#f120-onboarding) | **Tier 1** | [docs/features/F120-onboarding.md](features/F120-onboarding.md) |
 | F121 | [Snippet Embeds](#f121-snippet-embeds) | Planned | [docs/features/F121-snippet-embeds.md](features/F121-snippet-embeds.md) |
 | F122 | [Beam — Site Teleportation](#f122-beam) | Planned | [docs/features/F122-beam.md](features/F122-beam.md) |
+| F123 | [Providers / Integrations Tab](#f123-providers-tab) | Planned | [docs/features/F123-providers-tab.md](features/F123-providers-tab.md) |
 
 ---
 
