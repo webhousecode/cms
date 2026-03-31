@@ -170,4 +170,30 @@ export function startSchedulers() {
     setTimeout(linkCheckTick, 5 * 60_000);
     setInterval(linkCheckTick, 60 * 60_000);
   }
+
+  // ── Auto-setup: create admin account on first boot ──────────
+  if (process.env.ADMIN_EMAIL) {
+    (async () => {
+      try {
+        const { getUsers, createUser } = await import("./lib/auth");
+        const users = await getUsers();
+        if (users.length > 0) return;
+
+        const email = process.env.ADMIN_EMAIL!;
+        const crypto = await import("crypto");
+        const password = process.env.ADMIN_PASSWORD || crypto.randomBytes(16).toString("hex");
+        const name = email.split("@")[0].replace(/[._-]/g, " ").replace(/\b\w/g, c => c.toUpperCase());
+        await createUser(email, password, name, { role: "admin", source: "local" });
+        console.log(`\n  ✓ Admin account created`);
+        console.log(`    Email: ${email}`);
+        if (!process.env.ADMIN_PASSWORD) {
+          console.log(`    Password: ${password}`);
+          console.log(`    ⚠ Change this after first login!`);
+        }
+        console.log(``);
+      } catch (err) {
+        console.error("[auto-setup] Failed to create admin:", err);
+      }
+    })();
+  }
 }
