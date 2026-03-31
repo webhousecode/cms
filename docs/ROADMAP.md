@@ -4,7 +4,7 @@
 
 ---
 
-## Done (37 milestones)
+## Done (38 milestones)
 
 | # | Milestone | Completed |
 |---|-----------|-----------|
@@ -43,6 +43,7 @@
 | 35 | **AI Site Builder Guide** — 2383→137 lines, 20 modular on-demand docs (F75) | 2026-03-23 |
 | 36 | **Inline Proofreading** — ProseMirror decorations, accept/reject, sticky toolbar (F109) | 2026-03-29 |
 | 37 | **Backup & Restore** — filesystem + GitHub restore, scheduled backups, retention, webhooks (F27) | 2026-03-30 |
+| 38 | **Cloud Backup Providers** — pCloud WebDAV, S3 (R2/B2/Scaleway), quota management, cloud badges (F95) | 2026-03-31 |
 
 ---
 
@@ -117,7 +118,7 @@ _Makes us stand out. Customers expect these from a modern CMS._
 | 18d | **F82 Loaders & Spinners** | Medium | Shimmer skeletons, inline spinners, progress bars, top-loader bar. Branded with webhouse gold. Premium feel. |
 | 18e | **F92 Desktop PWA** | Small | Install CMS admin as desktop app. Standalone window, dock icon, no browser chrome. Half-day of work. |
 | 18f | **F94 Favorites** | Small | Heart-toggle on any page/document. Sidebar section + Command Palette priority. Per-user persistence. |
-| 18g | **F95 Cloud Backup Providers** | Medium | pCloud, Scaleway (75GB free), R2, B2, Hetzner. S3 + pCloud + WebDAV adapters. Extends F27. |
+| ~~18g~~ | ~~**F95 Cloud Backup Providers**~~ | ~~Done~~ | ~~Shipped 2026-03-31. pCloud (WebDAV), S3-compatible (R2, B2, Scaleway, Hetzner, AWS). Storage quota management, auto-prune, cloud badges. Verified on Cloudflare R2.~~ |
 | 18h | **F98 Lighthouse Audit** | Medium | PSI API + local Lighthouse. Dashboard scores + trend, scheduled scans, per-page audits, alerts on drop. |
 | ~~18i~~ | ~~**F114 Chat Memory**~~ | ~~Done~~ | ~~Shipped 2026-03-29. Mini-RAG: Haiku extraction, MiniSearch BM25+, top-15 injection, 3 AI tools, memory UI, ZIP export/import, master memory. 27 tests.~~ |
 | 18j | **F115 CMS Help Chat** | Small | Product knowledge base — build-time index of all docs/features/CLAUDE.md. Auto-injects relevant help into system prompt. `search_help` tool. Same MiniSearch engine as F114. |
