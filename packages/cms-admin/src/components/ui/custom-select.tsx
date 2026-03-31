@@ -58,14 +58,23 @@ export function CustomSelect({
     }
   }, [open, direction, options.length]);
 
-  // Close on outside click
+  // Close on outside click or scroll
   useEffect(() => {
     if (!open) return;
-    function handler(e: MouseEvent) {
+    function handleClick(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
     }
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
+    function handleScroll(e: Event) {
+      // Don't close if scrolling inside the dropdown itself
+      if (ref.current?.contains(e.target as Node)) return;
+      setOpen(false);
+    }
+    document.addEventListener("mousedown", handleClick);
+    document.addEventListener("scroll", handleScroll, true);
+    return () => {
+      document.removeEventListener("mousedown", handleClick);
+      document.removeEventListener("scroll", handleScroll, true);
+    };
   }, [open]);
 
   function toggle() {
