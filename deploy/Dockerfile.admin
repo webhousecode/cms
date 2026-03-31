@@ -60,8 +60,17 @@ COPY --from=builder /app/packages/cms-admin/.next/standalone ./
 COPY --from=builder /app/packages/cms-admin/.next/static     ./packages/cms-admin/.next/static
 COPY --from=builder /app/packages/cms-admin/public            ./packages/cms-admin/public
 
+# Seed: bundle CMS Demo site so first boot has content out of the box
+COPY --from=builder /app/examples/static/cmsdemo/cms.config.ts  ./seed/cms.config.ts
+COPY --from=builder /app/examples/static/cmsdemo/content        ./seed/content
+COPY --from=builder /app/examples/static/cmsdemo/_data           ./seed/_data
+
+# Startup script: seeds /site from /seed on first boot if empty
+COPY deploy/docker-entrypoint.sh /docker-entrypoint.sh
+
 # Create writable directories for cache and data
-RUN mkdir -p /app/.cache /site \
+RUN chmod +x /docker-entrypoint.sh \
+ && mkdir -p /app/.cache /site \
  && addgroup --system --gid 1001 nodejs \
  && adduser  --system --uid 1001 nextjs \
  && chown -R nextjs:nodejs /app /site
@@ -70,12 +79,8 @@ USER nextjs
 
 EXPOSE 3010
 
-# Mount your site at /site:
-#   docker run -p 3010:3010 -v $(pwd):/site ghcr.io/webhousecode/cms-admin
+# First boot: seeds CMS Demo site if /site is empty, then starts server
 #
-# Or use environment variables for GitHub-backed sites:
-#   docker run -p 3010:3010 \
-#     -e ADMIN_EMAIL=you@example.com \
-#     -e ADMIN_PASSWORD=your-password \
-#     ghcr.io/webhousecode/cms-admin
-CMD ["node", "packages/cms-admin/server.js"]
+# Option A (zero-config): docker run -p 3010:3010 ghcr.io/webhousecode/cms-admin
+# Option B (your site):   docker run -p 3010:3010 -v $(pwd):/site ghcr.io/webhousecode/cms-admin
+ENTRYPOINT ["/docker-entrypoint.sh"]
