@@ -244,16 +244,32 @@ export async function createBackup(trigger: "manual" | "scheduled" = "manual"): 
 }
 
 /** Build provider config from site config fields */
-function buildProviderConfig(siteConfig: { backupProvider: string; backupPcloudEmail?: string; backupPcloudPassword?: string; backupPcloudEu?: boolean }) {
-  switch (siteConfig.backupProvider) {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function buildProviderConfig(siteConfig: any) {
+  const provider = siteConfig.backupProvider as string;
+  switch (provider) {
     case "pcloud":
       if (!siteConfig.backupPcloudEmail || !siteConfig.backupPcloudPassword) return null;
       return {
         type: "pcloud" as const,
         pcloud: {
-          email: siteConfig.backupPcloudEmail,
-          password: siteConfig.backupPcloudPassword,
-          euRegion: siteConfig.backupPcloudEu ?? true,
+          email: siteConfig.backupPcloudEmail as string,
+          password: siteConfig.backupPcloudPassword as string,
+          euRegion: (siteConfig.backupPcloudEu as boolean) ?? true,
+        },
+      };
+    case "s3":
+      if (!siteConfig.backupS3Bucket || !siteConfig.backupS3AccessKeyId || !siteConfig.backupS3SecretAccessKey) return null;
+      return {
+        type: "s3" as const,
+        s3: {
+          provider: (siteConfig.backupS3Provider || "custom") as "scaleway" | "r2" | "b2" | "hetzner" | "s3" | "custom",
+          endpoint: siteConfig.backupS3Endpoint as string,
+          region: siteConfig.backupS3Region as string,
+          bucket: siteConfig.backupS3Bucket as string,
+          accessKeyId: siteConfig.backupS3AccessKeyId as string,
+          secretAccessKey: siteConfig.backupS3SecretAccessKey as string,
+          prefix: (siteConfig.backupS3Prefix as string) || "cms-backups/",
         },
       };
     default:

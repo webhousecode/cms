@@ -90,6 +90,20 @@ export interface SiteConfig {
   backupPcloudPassword: string;
   /** F95 pCloud EU region (Luxembourg) */
   backupPcloudEu: boolean;
+  /** F95 S3 provider preset */
+  backupS3Provider: string;
+  /** F95 S3 endpoint */
+  backupS3Endpoint: string;
+  /** F95 S3 region */
+  backupS3Region: string;
+  /** F95 S3 bucket name */
+  backupS3Bucket: string;
+  /** F95 S3 access key ID */
+  backupS3AccessKeyId: string;
+  /** F95 S3 secret access key */
+  backupS3SecretAccessKey: string;
+  /** F95 S3 prefix (folder) */
+  backupS3Prefix: string;
 
   /** F48 i18n — default language for the site (BCP 47, e.g. "da", "en") */
   defaultLocale: string;
@@ -166,6 +180,13 @@ async function defaults(): Promise<SiteConfig> {
     backupPcloudEmail: "",
     backupPcloudPassword: "",
     backupPcloudEu: true,
+    backupS3Provider: "",
+    backupS3Endpoint: "",
+    backupS3Region: "",
+    backupS3Bucket: "",
+    backupS3AccessKeyId: "",
+    backupS3SecretAccessKey: "",
+    backupS3Prefix: "cms-backups/",
     linkCheckSchedule: "off",
     linkCheckTime: "04:00",
     aiImageOverwrite: "ask",
