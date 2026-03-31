@@ -15,7 +15,6 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useSiteRole } from "@/hooks/use-site-role";
 import { toast } from "sonner";
-import { HelpCard } from "@/components/ui/help-card";
 
 /* ─── Types ──────────────────────────────────────────────────── */
 interface InteractiveMeta {
@@ -304,7 +303,7 @@ export default function InteractivesPage() {
       onDrop={handleDrop}
       style={dragging ? { outline: "2px dashed var(--primary)", outlineOffset: "-4px" } : undefined}
     >
-      <ActionBar
+      <ActionBar helpArticleId="interactives-intro"
         actions={<>
           {/* View toggle */}
           <div style={{ display: "flex", border: "1px solid var(--border)", borderRadius: "6px", overflow: "hidden" }}>
@@ -354,8 +353,7 @@ export default function InteractivesPage() {
           )}
         </>}
       >
-        <ActionBarBreadcrumb items={["Interactives"]} />
-      </ActionBar>
+        <ActionBarBreadcrumb items={["Interactives"]} /></ActionBar>
 
       <input
         ref={inputRef}
@@ -365,10 +363,6 @@ export default function InteractivesPage() {
         style={{ display: "none" }}
         onChange={(e) => handleUpload(e.target.files)}
       />
-
-      <div style={{ padding: "0 2rem" }}>
-        <HelpCard articleId="interactives-intro" variant="compact" />
-      </div>
 
       {/* Search + Filters — matching collection-list pattern */}
       <div style={{ padding: "2rem 2rem 0", maxWidth: "88rem" }}>

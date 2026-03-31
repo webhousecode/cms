@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { Lightbulb, ChevronDown, ChevronUp, ExternalLink, BookOpen, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { Lightbulb, ChevronDown, ChevronUp, ExternalLink } from "lucide-react";
 import { getHelpArticle, type HelpArticle } from "@/lib/help/articles";
 
 interface HelpCardProps {
@@ -74,22 +74,6 @@ function renderInline(text: string): React.ReactNode {
 export function HelpCard({ articleId, variant = "inline" }: HelpCardProps) {
   const article = getHelpArticle(articleId);
   const [expanded, setExpanded] = useState(variant === "inline");
-  const [docsContent, setDocsContent] = useState<string | null>(null);
-  const [docsLoading, setDocsLoading] = useState(false);
-  const [docsExpanded, setDocsExpanded] = useState(false);
-
-  const fetchDocsContent = useCallback(async () => {
-    if (docsContent || !article?.docsRef) return;
-    setDocsLoading(true);
-    try {
-      const res = await fetch(`https://docs.webhouse.app/api/help?ref=${encodeURIComponent(article.docsRef)}`);
-      if (res.ok) {
-        const data = await res.json() as { content?: string };
-        setDocsContent(data.content ?? null);
-      }
-    } catch { /* docs unavailable */ }
-    setDocsLoading(false);
-  }, [article?.docsRef, docsContent]);
 
   if (!article) return null;
 
@@ -140,54 +124,19 @@ export function HelpCard({ articleId, variant = "inline" }: HelpCardProps) {
             </div>
           )}
 
-          {/* Expanded docs content */}
-          {docsExpanded && docsContent && (
-            <div style={{
-              marginTop: "0.5rem", padding: "0.6rem 0.75rem", borderRadius: "6px",
-              background: "var(--background)", border: "1px solid var(--border)",
-              fontSize: "0.72rem", color: "var(--muted-foreground)", lineHeight: 1.6,
-              maxHeight: "200px", overflowY: "auto",
-            }}>
-              {renderMarkdown(docsContent)}
-            </div>
-          )}
-
-          {/* Actions row: Read more + Learn more link */}
-          <div style={{ marginTop: "0.75rem", display: "flex", alignItems: "center", gap: "0.75rem" }}>
-            {article.docsRef && (
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (docsExpanded) { setDocsExpanded(false); return; }
-                  setDocsExpanded(true);
-                  fetchDocsContent();
-                }}
-                style={{
-                  display: "inline-flex", alignItems: "center", gap: "0.25rem",
-                  fontSize: "0.7rem", color: "var(--muted-foreground)",
-                  background: "none", border: "none", cursor: "pointer", padding: 0,
-                }}
-              >
-                {docsLoading ? (
-                  <Loader2 className="animate-spin" style={{ width: 10, height: 10 }} />
-                ) : (
-                  <BookOpen style={{ width: 10, height: 10 }} />
-                )}
-                {docsExpanded ? "Collapse" : "Read more"}
-              </button>
-            )}
-            {article.learnMorePath && (
+          {/* Learn more link */}
+          {article.learnMorePath && (
+            <div style={{ marginTop: "0.75rem" }}>
               <a
                 href={`https://docs.webhouse.app${article.learnMorePath}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 style={{ fontSize: "0.7rem", color: "#F7BB2E", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}
               >
-                Full docs <ExternalLink style={{ width: 10, height: 10 }} />
+                Learn more at docs <ExternalLink style={{ width: 10, height: 10 }} />
               </a>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       )}
     </div>

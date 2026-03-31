@@ -4,7 +4,6 @@ import { useEffect, useState, useRef } from "react";
 import { Trash2, RotateCcw, X, Search, AlertTriangle } from "lucide-react";
 import { useTabs } from "@/lib/tabs-context";
 import { useSiteRole } from "@/hooks/use-site-role";
-import { HelpCard } from "@/components/ui/help-card";
 
 const RETENTION_DAYS = parseInt(process.env.NEXT_PUBLIC_TRASH_RETENTION_DAYS ?? "30");
 
@@ -146,8 +145,7 @@ export default function TrashPage() {
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem 1.5rem", borderBottom: "1px solid var(--border)", position: "sticky", top: 84, zIndex: 30, backgroundColor: "var(--card)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.625rem" }}>
           <Trash2 style={{ width: "16px", height: "16px", color: "var(--muted-foreground)" }} />
-          <span style={{ fontWeight: 600, fontSize: "0.9rem" }}>Trash</span>
-          {!loading && items.length > 0 && (
+          <span style={{ fontWeight: 600, fontSize: "0.9rem" }}>Trash</span>{!loading && items.length > 0 && (
             <span style={{ fontSize: "0.7rem", fontFamily: "monospace", color: "var(--muted-foreground)", background: "var(--muted)", borderRadius: "999px", padding: "0.1rem 0.5rem" }}>
               {items.length}
             </span>
@@ -171,7 +169,6 @@ export default function TrashPage() {
       </div>
 
       <div style={{ padding: "1.5rem" }}>
-        <HelpCard articleId="trash-intro" variant="compact" />
         {/* Search */}
         {items.length > 0 && (
           <div style={{ position: "relative", marginBottom: "1.25rem", maxWidth: "400px" }}>

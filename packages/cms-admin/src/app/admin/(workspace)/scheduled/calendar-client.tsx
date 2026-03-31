@@ -5,7 +5,6 @@ import Link from "next/link";
 import { Calendar, ChevronLeft, ChevronRight, Globe, FileText, Check, HardDrive, Link2 } from "lucide-react";
 import { TabTitle } from "@/lib/tabs-context";
 import { PageHeader } from "@/components/page-header";
-import { HelpCard } from "@/components/ui/help-card";
 
 /* ─── Types ──────────────────────────────────────────────────── */
 
@@ -30,7 +29,6 @@ const EVENT_COLORS: Record<EventType, string> = {
 };
 
 const COLLECTION_COLORS = ["rgb(251 146 60)", "rgb(74 222 128)", "rgb(244 114 182)", "rgb(96 165 250)", "rgb(168 85 247)", "rgb(234 179 8)", "rgb(45 212 191)"];
-
 
 const WEEKDAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -138,7 +136,6 @@ export function ScheduledCalendar({ events, calendarToken, orgId, siteId }: { ev
         <div style={{ marginBottom: "-17px" }}>
           <p className="text-muted-foreground font-mono text-xs tracking-widest uppercase mb-1">Schedule</p>
           <h1 className="text-2xl font-bold text-foreground">Calendar</h1>
-          <HelpCard articleId="scheduled-intro" variant="compact" />
         </div>
 
         {/* View selector + Subscribe — centered */}

@@ -1,19 +1,22 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { HelpButton } from "@/components/ui/help-button";
 
 /* ─── ActionBar ─────────────────────────────────────────────── */
 
 interface ActionBarProps {
   children?: ReactNode;   // Left side: breadcrumb, title, status
   actions?: ReactNode;    // Right side: buttons
+  /** Help article ID — shows a 💡 icon after the breadcrumb */
+  helpArticleId?: string;
 }
 
 /**
  * Standardized action bar — sticky below tabs (top: 48px header + 36px tab bar = 84px).
  * Fixed 40px height. Left: breadcrumb/context. Right: action buttons.
  */
-export function ActionBar({ children, actions }: ActionBarProps) {
+export function ActionBar({ children, actions, helpArticleId }: ActionBarProps) {
   return (
     <div data-testid="action-bar" style={{
       position: "sticky",
@@ -30,6 +33,7 @@ export function ActionBar({ children, actions }: ActionBarProps) {
     }}>
       <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", overflow: "hidden", minWidth: 0 }}>
         {children}
+        {helpArticleId && <HelpButton articleId={helpArticleId} />}
       </div>
       {actions && (
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexShrink: 0 }}>

@@ -61,7 +61,7 @@ export function CollectionListPage({
 
   return (
     <>
-      <ActionBar
+      <ActionBar helpArticleId="collection-list-intro"
         actions={
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             {/* View toggle */}

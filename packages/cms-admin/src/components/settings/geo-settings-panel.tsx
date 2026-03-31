@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { SettingsCard, SettingsInput } from "./settings-card";
 import { SectionHeading } from "@/components/ui/section-heading";
-import { HelpCard } from "@/components/ui/help-card";
 import { CustomSelect } from "@/components/ui/custom-select";
 
 const STRATEGIES = [
@@ -90,8 +89,7 @@ export function GeoSettingsPanel() {
 
   return (
     <div data-testid="panel-geo" style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
-      <HelpCard articleId="robots-strategy" variant="compact" />
-      {/* robots.txt Strategy */}
+{/* robots.txt Strategy */}
       <div>
         <SectionHeading>robots.txt Strategy</SectionHeading>
         <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "-0.5rem", marginBottom: "1rem" }}>

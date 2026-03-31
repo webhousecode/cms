@@ -9,7 +9,6 @@ import { cn } from "@/lib/utils";
 import { Tooltip, TooltipTrigger, TooltipContent, TooltipProvider } from "@/components/ui/tooltip";
 import { useSiteRole } from "@/hooks/use-site-role";
 import { toast } from "sonner";
-import { HelpCard } from "@/components/ui/help-card";
 
 /* ─── Types ──────────────────────────────────────────────────── */
 type MediaType = "image" | "audio" | "video" | "document" | "interactive" | "other";
@@ -379,7 +378,7 @@ export default function MediaPage() {
       )}
 
       {/* ── Action bar ── */}
-      <ActionBar
+      <ActionBar helpArticleId="media-library-intro"
         actions={<>
           {/* Multi-select toggle + bulk actions */}
           {!readOnly && selecting ? (
@@ -544,13 +543,7 @@ export default function MediaPage() {
           )}
         </>}
       >
-        <ActionBarBreadcrumb items={["Media"]} />
-      </ActionBar>
-
-      <div style={{ padding: "0 1.25rem" }}>
-        <HelpCard articleId="media-library-intro" variant="compact" />
-        <HelpCard articleId="media-ai-analysis" variant="compact" />
-      </div>
+        <ActionBarBreadcrumb items={["Media"]} /></ActionBar>
 
       {/* ── Body: sidebar + content ── */}
       <div style={{ display: "flex", flex: 1 }}>

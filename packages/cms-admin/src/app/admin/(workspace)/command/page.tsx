@@ -6,7 +6,6 @@ import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/actio
 import { CustomSelect } from "@/components/ui/custom-select";
 import { Checkbox } from "@/components/ui/checkbox-styled";
 import { useSiteRole } from "@/hooks/use-site-role";
-import { HelpCard } from "@/components/ui/help-card";
 
 interface CockpitParams {
   temperature: number;
@@ -98,7 +97,7 @@ export default function CommandPage() {
 
   return (
     <>
-    <ActionBar
+    <ActionBar helpArticleId="cockpit-intro"
       actions={!readOnly ? (
         <ActionButton variant="primary" onClick={handleSave} disabled={saving}
           icon={saving ? <Loader2 style={{ width: 14, height: 14 }} className="animate-spin" /> : <Save style={{ width: 14, height: 14 }} />}>
@@ -106,10 +105,8 @@ export default function CommandPage() {
         </ActionButton>
       ) : undefined}
     >
-      <ActionBarBreadcrumb items={["AI", "Cockpit"]} />
-    </ActionBar>
+      <ActionBarBreadcrumb items={["AI", "Cockpit"]} /></ActionBar>
     <div className="p-8 max-w-5xl">
-      <HelpCard articleId="cockpit-intro" variant="compact" />
 
       <fieldset disabled={readOnly} style={{ border: "none", padding: 0, margin: 0, opacity: readOnly ? 0.7 : 1 }}>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

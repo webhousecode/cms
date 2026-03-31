@@ -13,7 +13,6 @@ import {
   Zap,
 } from "lucide-react";
 import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
-import { HelpCard } from "@/components/ui/help-card";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -132,17 +131,15 @@ export default function PerformancePage() {
 
   return (
     <>
-    <ActionBar
+    <ActionBar helpArticleId="performance-intro"
       actions={
         <ActionButton variant="primary" onClick={fetchAll} disabled={loading} icon={<RefreshCw style={{ width: 14, height: 14 }} className={loading ? "animate-spin" : ""} />}>
           Refresh
         </ActionButton>
       }
     >
-      <ActionBarBreadcrumb items={["Tools", "AI Analytics"]} />
-    </ActionBar>
+      <ActionBarBreadcrumb items={["Tools", "AI Analytics"]} /></ActionBar>
     <div className="p-8 max-w-6xl">
-      <HelpCard articleId="performance-intro" variant="compact" />
 
       {!hasData && !loading ? (
         <div className="rounded-xl border border-border p-8 text-center text-muted-foreground">

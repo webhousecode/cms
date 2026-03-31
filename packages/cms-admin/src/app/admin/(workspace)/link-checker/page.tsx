@@ -8,7 +8,6 @@ import { cn } from "@/lib/utils";
 import { useTabs } from "@/lib/tabs-context";
 import { useSiteRole } from "@/hooks/use-site-role";
 import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
-import { HelpCard } from "@/components/ui/help-card";
 
 type RunState = "idle" | "running" | "done" | "error";
 type FixState = { loading: boolean; suggestion?: string | null; reason?: string; confidence?: string; applied?: boolean; error?: string };
@@ -293,7 +292,7 @@ export default function LinkCheckerPage() {
   return (
     <fieldset disabled={readOnly} style={{ border: "none", padding: 0, margin: 0 }}>
     <div className="flex flex-col">
-      <ActionBar
+      <ActionBar helpArticleId="linkchecker-intro"
         actions={<>
           {state === "done" && allBroken.length > 0 && (
             <ActionButton variant="secondary" onClick={exportReport} icon={<Download style={{ width: 14, height: 14 }} />}>
@@ -311,8 +310,7 @@ export default function LinkCheckerPage() {
           )}
         </>}
       >
-        <ActionBarBreadcrumb items={["Tools", "Link Checker"]} />
-        {state === "done" && (
+        <ActionBarBreadcrumb items={["Tools", "Link Checker"]} />{state === "done" && (
           <span style={{ fontSize: "0.75rem", color: "var(--muted-foreground)" }}>
             · {results.length} checked · {broken.length} broken links · {brokenImages.length} broken images · {redirects.length} redirects
           </span>
@@ -320,8 +318,6 @@ export default function LinkCheckerPage() {
       </ActionBar>
 
       <div className="p-6 max-w-5xl">
-        <HelpCard articleId="linkchecker-intro" variant="compact" />
-
         {/* Last-run notice */}
         {checkedAt && state !== "running" && (
           <p className="text-xs text-muted-foreground mb-4 font-mono">

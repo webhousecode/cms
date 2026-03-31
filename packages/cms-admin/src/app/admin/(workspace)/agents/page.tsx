@@ -12,7 +12,7 @@ export default async function AgentsPage() {
   return (
     <>
       <TabTitle value="Agents" />
-      <ActionBar
+      <ActionBar helpArticleId="agents-intro"
         actions={siteRole !== "viewer" ? (
           <Link href="/admin/agents/new">
             <ActionButton variant="primary" icon={<Plus style={{ width: 14, height: 14 }} />}>
