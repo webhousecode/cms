@@ -143,6 +143,7 @@ _Makes us stand out. Customers expect these from a modern CMS._
 | ~~18l~~ | ~~**F108 Rich Text Editor Enhancements**~~ | ~~Done~~ | ~~Shipped 2026-03-27. Underline, super/subscript, alignment, highlight, zoom, AI proofread.~~ |
 | ~~18m~~ | ~~**F109 Inline Proofreading**~~ | ~~Done~~ | ~~Shipped 2026-03-29. Inline ProseMirror decorations, accept/reject per correction, sticky toolbar, offset-validated API.~~ |
 | 18n | **F111 External Publishing** | Medium | Cross-post articles to Dev.to, Hashnode, Medium (draft), LinkedIn. Platform adapter pattern, canonical URLs, analytics sync. |
+| 18o | **F123 Providers / Integrations Tab** | Medium | Centralized credentials for external services (Cloudflare, GitHub, Resend, pCloud). One place for all API keys, reused by Backup, Deploy, Email, AI. |
 
 ### Tier 3 — Differentiation (v1.3+)
 
