@@ -124,7 +124,6 @@ export const HELP_ARTICLES: HelpArticle[] = [
     learnMorePath: "/docs/agents",
     body: "AI agents generate content based on your brand voice and configuration. Each agent has a role:\n\n**Content Writer** — creates new blog posts, pages, descriptions\n\n**SEO Optimizer** — improves meta fields, keywords, heading structure\n\n**GEO Optimizer** — restructures content for AI citation (answer-first, statistics, sources)\n\n**Translator** — translates content to other languages\n\n**Content Refresher** — updates stale content with current information\n\nAgents produce drafts that land in the **Curation Queue** for your review. They respect **AI Lock** — fields you've edited by hand won't be overwritten.",
     actions: [
-      { label: "Create or configure agents", href: "/admin/agents" },
       { label: "Review generated content in Curation Queue", href: "/admin/curation" },
     ],
     context: ["agents"],
