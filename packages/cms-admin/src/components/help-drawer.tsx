@@ -12,8 +12,8 @@ import {
 const ICON_SIZE = { width: "1rem", height: "1rem" };
 
 const HELP_LINKS = [
-  { label: "Documentation", icon: <BookOpen style={ICON_SIZE} />, href: "https://webhouse.app/docs" },
-  { label: "Troubleshooting", icon: <Wrench style={ICON_SIZE} />, href: "https://webhouse.app/docs/troubleshooting" },
+  { label: "Documentation", icon: <BookOpen style={ICON_SIZE} />, href: "https://docs.webhouse.app" },
+  { label: "Troubleshooting", icon: <Wrench style={ICON_SIZE} />, href: "https://docs.webhouse.app/docs/troubleshooting" },
   { label: "System status", icon: <Activity style={ICON_SIZE} />, href: "https://status.webhouse.app" },
   { label: "Contact support", icon: <Mail style={ICON_SIZE} />, href: "mailto:cms@webhouse.dk" },
 ];
