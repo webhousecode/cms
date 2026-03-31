@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { HardDrive, Download, Trash2, RotateCcw, Plus, Clock, FileArchive } from "lucide-react";
+import { HardDrive, Download, Trash2, RotateCcw, Plus, Clock, FileArchive, Cloud } from "lucide-react";
 import { TabTitle } from "@/lib/tabs-context";
 import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
 
@@ -15,6 +15,8 @@ interface Snapshot {
   fileName: string;
   status: "creating" | "complete" | "failed";
   error?: string;
+  cloudProvider?: string;
+  cloudError?: string;
 }
 
 function formatBytes(bytes: number): string {
@@ -164,6 +166,35 @@ export default function BackupPage() {
                     }}>
                       {snap.trigger}
                     </span>
+                    {snap.cloudProvider && (
+                      <span style={{
+                        fontSize: "0.65rem", padding: "0.1rem 0.4rem", borderRadius: "4px",
+                        background: "color-mix(in srgb, rgb(147 130 220) 15%, transparent)",
+                        color: "rgb(167 150 240)",
+                        display: "flex", alignItems: "center", gap: "0.2rem",
+                      }}>
+                        <Cloud style={{ width: 10, height: 10 }} />
+                        {snap.cloudProvider}
+                      </span>
+                    )}
+                    {!snap.cloudProvider && (
+                      <span style={{
+                        fontSize: "0.65rem", padding: "0.1rem 0.4rem", borderRadius: "4px",
+                        background: "color-mix(in srgb, var(--muted-foreground) 10%, transparent)",
+                        color: "var(--muted-foreground)",
+                      }}>
+                        local
+                      </span>
+                    )}
+                    {snap.cloudError && (
+                      <span style={{
+                        fontSize: "0.65rem", padding: "0.1rem 0.4rem", borderRadius: "4px",
+                        background: "color-mix(in srgb, rgb(251 191 36) 15%, transparent)",
+                        color: "rgb(251 191 36)",
+                      }} title={snap.cloudError}>
+                        cloud failed
+                      </span>
+                    )}
                     {snap.status === "failed" && (
                       <span style={{
                         fontSize: "0.65rem", padding: "0.1rem 0.4rem", borderRadius: "4px",
