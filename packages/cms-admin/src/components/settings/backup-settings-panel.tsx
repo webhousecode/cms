@@ -21,6 +21,7 @@ interface BackupConfig {
   backupS3AccessKeyId: string;
   backupS3SecretAccessKey: string;
   backupS3Prefix: string;
+  backupMaxStorageGB: number;
 }
 
 const DEFAULTS: BackupConfig = {
@@ -39,6 +40,7 @@ const DEFAULTS: BackupConfig = {
   backupS3AccessKeyId: "",
   backupS3SecretAccessKey: "",
   backupS3Prefix: "cms-backups/",
+  backupMaxStorageGB: 0,
 };
 
 export function BackupSettingsPanel() {
@@ -72,6 +74,7 @@ export function BackupSettingsPanel() {
           backupS3AccessKeyId: data.backupS3AccessKeyId ?? "",
           backupS3SecretAccessKey: data.backupS3SecretAccessKey ?? "",
           backupS3Prefix: data.backupS3Prefix ?? "cms-backups/",
+          backupMaxStorageGB: data.backupMaxStorageGB ?? 0,
         });
       })
       .catch(() => {});
@@ -221,6 +224,26 @@ export function BackupSettingsPanel() {
                 onChange={(v) => updateConfig((c) => ({ ...c, backupRetentionDays: parseInt(v, 10) }))}
                 options={retentionOptions}
               />
+            </div>
+
+            <div>
+              <label style={labelStyle}>Max storage (GB)</label>
+              <input
+                type="number"
+                min={0}
+                step={1}
+                value={config.backupMaxStorageGB || ""}
+                onChange={(e) => updateConfig((c) => ({ ...c, backupMaxStorageGB: parseFloat(e.target.value) || 0 }))}
+                placeholder="0 = unlimited"
+                style={{
+                  width: "100%", padding: "0.4rem 0.6rem", borderRadius: "0.375rem",
+                  border: "1px solid var(--border)", background: "var(--background)",
+                  color: "var(--foreground)", fontSize: "0.8125rem",
+                }}
+              />
+              <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", marginTop: "0.25rem" }}>
+                Oldest backups are automatically deleted when this limit is exceeded. Set to 9 for free-tier providers (10 GB).
+              </p>
             </div>
           </>
         )}

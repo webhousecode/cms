@@ -240,6 +240,19 @@ export async function createBackup(trigger: "manual" | "scheduled" = "manual"): 
   if (idx >= 0) manifest.snapshots[idx] = snapshot;
   await saveManifest(manifest);
 
+  // F95: Prune by storage limit if configured
+  if (snapshot.status === "complete") {
+    try {
+      const { readSiteConfig } = await import("./site-config");
+      const cfg = await readSiteConfig();
+      if (cfg.backupMaxStorageGB > 0) {
+        const maxBytes = cfg.backupMaxStorageGB * 1024 * 1024 * 1024;
+        const pruned = await pruneByStorageLimit(maxBytes);
+        if (pruned > 0) console.log(`[backup] Pruned ${pruned} old backup(s) to stay under ${cfg.backupMaxStorageGB} GB limit`);
+      }
+    } catch { /* non-critical */ }
+  }
+
   return snapshot;
 }
 
@@ -476,5 +489,54 @@ export async function pruneBackups(retentionDays: number = 30): Promise<number> 
 
   manifest.snapshots = keep;
   await saveManifest(manifest);
+  return pruned;
+}
+
+// ── Prune by storage limit ──────────────────────────────────
+
+/**
+ * Delete oldest backups until total storage is under maxBytes.
+ * Called after every backup when backupMaxStorageGB > 0.
+ * Always keeps at least the most recent backup.
+ */
+export async function pruneByStorageLimit(maxBytes: number): Promise<number> {
+  if (maxBytes <= 0) return 0;
+
+  const manifest = await loadManifest();
+  const dir = await backupDir();
+
+  // Sort oldest first (manifest is newest-first)
+  const sorted = [...manifest.snapshots].reverse();
+
+  // Calculate total size
+  let totalSize = sorted.reduce((sum, s) => sum + (s.sizeBytes || 0), 0);
+
+  let pruned = 0;
+  // Delete oldest until under limit — always keep at least 1
+  while (totalSize > maxBytes && sorted.length > 1) {
+    const oldest = sorted.shift()!;
+    totalSize -= oldest.sizeBytes || 0;
+    const zipPath = path.join(dir, oldest.fileName);
+    if (existsSync(zipPath)) rmSync(zipPath);
+
+    // Also try to delete from cloud provider
+    try {
+      const { readSiteConfig } = await import("./site-config");
+      const siteConfig = await readSiteConfig();
+      if (siteConfig.backupProvider && siteConfig.backupProvider !== "off") {
+        const { createBackupProvider } = await import("./backup/providers");
+        const providerConfig = buildProviderConfig(siteConfig);
+        if (providerConfig) {
+          const provider = await createBackupProvider(providerConfig);
+          await provider.delete(oldest.fileName).catch(() => {});
+        }
+      }
+    } catch { /* best effort */ }
+
+    manifest.snapshots = manifest.snapshots.filter((s) => s.id !== oldest.id);
+    pruned++;
+  }
+
+  if (pruned > 0) await saveManifest(manifest);
   return pruned;
 }
