@@ -303,11 +303,12 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
 
   /* Navigate to item */
   const navigateItem = useCallback((item: PaletteItem) => {
-    onClose();
-    if (item.action) { setTimeout(() => item.action!(), 50); return; }
+    if (item.action) { onClose(); setTimeout(() => item.action!(), 50); return; }
     if (item.href) {
-      if (item.newTab) { window.open(item.href, "_blank"); }
-      else { router.push(item.href); }
+      if (item.newTab) { window.open(item.href, "_blank"); onClose(); }
+      else { router.push(item.href); setTimeout(onClose, 50); }
+    } else {
+      onClose();
     }
   }, [router, onClose]);
 
