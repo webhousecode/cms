@@ -21,9 +21,11 @@ export async function createBackupProvider(config: BackupProviderConfig): Promis
       });
     }
 
-    // Future: S3 and WebDAV adapters
-    // case "s3": { ... }
-    // case "webdav": { ... }
+    case "s3": {
+      if (!config.s3) throw new Error("S3 config missing");
+      const { S3BackupProvider } = await import("./s3");
+      return new S3BackupProvider(config.s3);
+    }
 
     default:
       throw new Error(`Unknown backup provider: ${config.type}`);
