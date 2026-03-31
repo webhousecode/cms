@@ -7,6 +7,10 @@ on:
         description: "Image tag (e.g. latest, 0.2.15, beta)"
         required: true
         default: "latest"
+      no_cache:
+        description: "Build without cache"
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -37,6 +41,7 @@ jobs:
           tags: |
             ghcr.io/webhousecode/cms-admin:${{ inputs.tag }}
             ghcr.io/webhousecode/cms-admin:latest
+          no-cache: ${{ inputs.no_cache }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
           platforms: linux/amd64
