@@ -102,7 +102,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     learnMorePath: "/docs/backup",
     body: "Set a backup schedule to automatically snapshot all your content, settings, and site config. Backups include everything needed to restore your site to a previous state.\n\nRecommended: **Daily** with 30-day retention. Backups are small (typically under 1 MB) and stored locally. You can also download them as zip files.",
     actions: [
-      { label: "Configure schedule in Settings → Automation", href: "/admin/settings?tab=tools" },
+      { label: "Configure backup schedule", href: "/admin/settings?tab=backup" },
     ],
     context: ["settings-tools", "backup"],
   },
@@ -250,9 +250,9 @@ export const HELP_ARTICLES: HelpArticle[] = [
     title: "Backups and restore",
     learnMorePath: "/docs/backup",
     docsRef: "help:backup-intro",
-    body: "Backups snapshot all your content, settings, and site config as a zip file. You can restore to any previous snapshot with one click.\n\nBackups include: all documents, media metadata, site config, agent configs, and deploy settings. Media files themselves are not included (they live in uploads/).\n\nSet up **automatic daily backups** in Settings → Automation for peace of mind.",
+    body: "Backups snapshot all your content, settings, and site config as a zip file. You can restore to any previous snapshot with one click.\n\nBackups include: all documents, media metadata, site config, agent configs, and deploy settings. Media files themselves are not included (they live in uploads/).",
     actions: [
-      { label: "Configure automatic backups", href: "/admin/settings?tab=tools" },
+      { label: "Configure automatic backup schedule", href: "/admin/settings?tab=backup" },
     ],
     context: ["backup"],
     priority: 1,
