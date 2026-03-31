@@ -203,8 +203,32 @@ export async function createBackup(trigger: "manual" | "scheduled" = "manual"): 
       }
     } catch (cloudErr) {
       // Cloud upload failure is non-fatal — local backup still exists
-      console.error("[backup] Cloud upload failed:", cloudErr);
-      snapshot.cloudError = cloudErr instanceof Error ? cloudErr.message : String(cloudErr);
+      const cloudErrMsg = cloudErr instanceof Error ? cloudErr.message : String(cloudErr);
+      console.error("[backup] Cloud upload failed:", cloudErrMsg);
+      snapshot.cloudError = cloudErrMsg;
+
+      // Notify via webhooks if cloud backup fails (quota, auth, etc.)
+      try {
+        const { readSiteConfig } = await import("./site-config");
+        const cfg = await readSiteConfig();
+        if (cfg.backupWebhooks?.length > 0) {
+          const payload = {
+            event: "backup.cloud_error",
+            timestamp: new Date().toISOString(),
+            backup: { id: snapshot.id, fileName: snapshot.fileName },
+            error: cloudErrMsg,
+            message: `Cloud backup failed: ${cloudErrMsg}`,
+          };
+          for (const wh of cfg.backupWebhooks) {
+            fetch(wh.url, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify(payload),
+              signal: AbortSignal.timeout(10000),
+            }).catch(() => {});
+          }
+        }
+      } catch { /* webhook dispatch is best-effort */ }
     }
   } catch (err) {
     snapshot.status = "failed";

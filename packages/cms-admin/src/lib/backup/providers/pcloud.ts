@@ -34,6 +34,14 @@ export class PCloudBackupProvider implements BackupProvider {
   }
 
   async upload(filename: string, data: Buffer): Promise<{ url: string; size: number }> {
+    // Pre-flight: check quota before uploading
+    const quota = await this.checkQuota();
+    if (quota && quota.freeBytes < data.length * 2) {
+      const freeMB = Math.round(quota.freeBytes / (1024 * 1024));
+      const needMB = Math.round(data.length / (1024 * 1024));
+      throw new Error(`pCloud storage nearly full: ${freeMB} MB free, need ${needMB} MB. Free up space or upgrade your pCloud plan.`);
+    }
+
     await this.ensureFolder();
 
     const res = await fetch(`${this.baseUrl}${this.folder}/${filename}`, {
@@ -42,11 +50,46 @@ export class PCloudBackupProvider implements BackupProvider {
       body: new Uint8Array(data),
     });
 
+    if (res.status === 401) {
+      throw new Error("pCloud authentication failed — check email and password in Settings → Backup.");
+    }
+    if (res.status === 507 || res.status === 413) {
+      throw new Error("pCloud storage quota exceeded. Free up space or upgrade your pCloud plan.");
+    }
     if (!res.ok) {
-      throw new Error(`pCloud upload failed: ${res.status} ${res.statusText}`);
+      const body = await res.text().catch(() => "");
+      throw new Error(`pCloud upload failed: ${res.status} ${res.statusText}${body ? ` — ${body.slice(0, 200)}` : ""}`);
     }
 
     return { url: `${this.folder}/${filename}`, size: data.length };
+  }
+
+  /** Check available quota. Returns null if quota can't be determined. */
+  private async checkQuota(): Promise<{ freeBytes: number; usedBytes: number } | null> {
+    try {
+      const res = await fetch(`${this.baseUrl}/`, {
+        method: "PROPFIND",
+        headers: { ...this.headers(), Depth: "0", "Content-Type": "application/xml" },
+        body: `<?xml version="1.0" encoding="utf-8"?>
+<D:propfind xmlns:D="DAV:">
+  <D:prop>
+    <D:quota-available-bytes/>
+    <D:quota-used-bytes/>
+  </D:prop>
+</D:propfind>`,
+      });
+      if (!res.ok) return null;
+      const xml = await res.text();
+      const freeMatch = xml.match(/<(?:D:)?quota-available-bytes>(\d+)<\/(?:D:)?quota-available-bytes>/i);
+      const usedMatch = xml.match(/<(?:D:)?quota-used-bytes>(\d+)<\/(?:D:)?quota-used-bytes>/i);
+      if (!freeMatch) return null;
+      return {
+        freeBytes: parseInt(freeMatch[1], 10),
+        usedBytes: usedMatch ? parseInt(usedMatch[1], 10) : 0,
+      };
+    } catch {
+      return null;
+    }
   }
 
   async list(): Promise<CloudBackupFile[]> {
