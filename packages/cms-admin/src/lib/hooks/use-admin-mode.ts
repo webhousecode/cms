@@ -19,6 +19,17 @@ export function useAdminMode() {
     }
     const stored = localStorage.getItem(STORAGE_KEY) as AdminMode | null;
     if (stored === "chat") setMode("chat");
+
+    // Listen for external mode changes (e.g. from command palette)
+    function onModeChange(e: Event) {
+      const detail = (e as CustomEvent).detail as AdminMode;
+      if (detail === "chat" || detail === "traditional") {
+        localStorage.setItem(STORAGE_KEY, detail);
+        setMode(detail);
+      }
+    }
+    window.addEventListener("cms:set-admin-mode", onModeChange);
+    return () => window.removeEventListener("cms:set-admin-mode", onModeChange);
   }, []);
 
   const toggle = useCallback(() => {
