@@ -49,6 +49,7 @@
     "drizzle-orm": "^0.38.4",
     "jiti": "^2.6.1",
     "jose": "^6.2.1",
+    "jszip": "^3.10.1",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.577.0",
     "mammoth": "^1.12.0",

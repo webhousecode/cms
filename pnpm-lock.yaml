@@ -303,6 +303,9 @@ importers:
       jose:
         specifier: ^6.2.1
         version: 6.2.1
+      jszip:
+        specifier: ^3.10.1
+        version: 3.10.1
       leaflet:
         specifier: ^1.9.4
         version: 1.9.4
