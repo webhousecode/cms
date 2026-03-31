@@ -1,5 +1,15 @@
 # @webhouse/cms — Development Instructions
 
+## HARD RULE: NEVER touch localhost:3010
+
+**Port 3010 is the live CMS admin dev server. NEVER kill, restart, bind, or interfere with it in any way.**
+
+- NEVER run `docker run -p 3010:3010` — use a different port (e.g. 3019, 4010)
+- NEVER `kill`/`pkill` processes on port 3010
+- NEVER `lsof -i :3010` + kill
+- If you need to test a Docker image, use a vacant port from Code Launcher: `GET https://cl.broberg.dk/api/vacant-port`
+- Disrupting port 3010 risks data loss and breaks the active development session
+
 ## Hard Rule: Preview MUST Always Work
 
 **EVERY site built with @webhouse/cms MUST have working preview — both locally and deployed. No exceptions.**
