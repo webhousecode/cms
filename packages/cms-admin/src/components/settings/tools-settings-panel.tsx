@@ -182,6 +182,7 @@ export function ToolsSettingsPanel() {
         </div>
       </SettingsCard>
 
+      <div id="media-processing" />
       <SectionHeading>Media Processing</SectionHeading>
       <SettingsCard>
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>

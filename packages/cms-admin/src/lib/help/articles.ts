@@ -31,7 +31,6 @@ export const HELP_ARTICLES: HelpArticle[] = [
     docsRef: "help:visibility-intro",
     learnMorePath: "/docs/visibility",
     body: "Visibility measures how easy it is for people AND AI to find your content. It combines two scores:\n\n**SEO Score** — how well search engines (Google, Bing) can index and rank your pages.\n\n**GEO Score** — how likely AI platforms (ChatGPT, Claude, Perplexity) are to cite your content when users ask questions.\n\nA high Visibility score means your content reaches more people through more channels.",
-    learnMorePath: "/docs/seo",
     actions: [
       { label: "Open a document and click the SEO panel to start optimizing", href: "/admin/seo" },
       { label: "Run Optimize All from the SEO dashboard for a quick boost", href: "/admin/seo" },
@@ -143,9 +142,9 @@ export const HELP_ARTICLES: HelpArticle[] = [
     title: "Media library",
     learnMorePath: "/docs/media",
     docsRef: "help:media-library-intro",
-    body: "Upload images, videos, audio, and files. The library auto-generates **WebP variants** at 4 sizes (400, 800, 1200, 1600px) and extracts **EXIF metadata** including GPS coordinates.\n\nOrganize with **folders** and **user tags**. Search finds files by name, AI caption, alt text, and tags. Drag and drop to upload, or paste from clipboard.",
+    body: "Upload images, videos, audio, and files. The library auto-generates optimized **WebP variants** and extracts **EXIF metadata** including GPS coordinates.\n\nOrganize with **folders** and **user tags**. Search finds files by name, AI caption, alt text, and tags. Drag and drop to upload, or paste from clipboard.",
     actions: [
-      { label: "Configure WebP quality and variant sizes in Settings → General", href: "/admin/settings?tab=general" },
+      { label: "Configure WebP quality and variant sizes", href: "/admin/settings?tab=tools#media-processing" },
     ],
     context: ["media"],
     priority: 1,
