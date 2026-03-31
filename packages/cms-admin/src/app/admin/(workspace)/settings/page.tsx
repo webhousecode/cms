@@ -22,6 +22,7 @@ import { cookies } from "next/headers";
 import { getSessionUser } from "@/lib/auth";
 import { getTeamMembers } from "@/lib/team";
 import { redirect } from "next/navigation";
+import { SettingsAnchorScroll } from "@/components/settings/settings-anchor";
 
 export default async function SettingsPage({
   searchParams,
@@ -66,6 +67,7 @@ export default async function SettingsPage({
 
   return (
     <>
+      <SettingsAnchorScroll />
       <ActionBar actions={<SettingsSaveButton />}>
         <ActionBarBreadcrumb items={["Site Settings"]} />
       </ActionBar>
