@@ -12,7 +12,6 @@ if [ ! -f /site/cms.config.ts ] && [ -d /app/seed/content ]; then
   echo "  ✦ First boot — seeding CMS Demo site..."
   cp /app/seed/cms.config.ts /site/cms.config.ts
   cp -r /app/seed/content /site/content
-  cp -r /app/seed/_data /site/_data 2>/dev/null || true
   echo "  ✓ CMS Demo site ready (18 documents, EN + DA)"
   echo "  ✓ Open http://localhost:${PORT:-3010} to get started"
   echo ""
