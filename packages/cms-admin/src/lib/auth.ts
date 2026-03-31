@@ -20,6 +20,7 @@ export interface User {
   lastActiveOrg?: string; // last active org ID (persists across devices)
   lastActiveSite?: string; // last active site ID (persists across devices)
   showLogoIcon?: boolean; // false = wordmark (default), true = eye icon
+  showCloseAllTabs?: boolean; // show "Close all" pill in tab bar (global pref)
 }
 
 export interface SessionPayload {
@@ -114,7 +115,7 @@ export async function createToken(user: User): Promise<string> {
 
 export async function updateUser(
   id: string,
-  patch: { name?: string; email?: string; password?: string; zoom?: number; role?: UserRole; lastActiveOrg?: string; lastActiveSite?: string; showLogoIcon?: boolean },
+  patch: { name?: string; email?: string; password?: string; zoom?: number; role?: UserRole; lastActiveOrg?: string; lastActiveSite?: string; showLogoIcon?: boolean; showCloseAllTabs?: boolean },
   /** Fallback email for lookup if id doesn't match (stale JWT) */
   fallbackEmail?: string,
 ): Promise<User> {
@@ -135,6 +136,7 @@ export async function updateUser(
   if (patch.lastActiveOrg !== undefined) user.lastActiveOrg = patch.lastActiveOrg;
   if (patch.lastActiveSite !== undefined) user.lastActiveSite = patch.lastActiveSite;
   if (patch.showLogoIcon !== undefined) user.showLogoIcon = patch.showLogoIcon;
+  if (patch.showCloseAllTabs !== undefined) user.showCloseAllTabs = patch.showCloseAllTabs;
 
   users[idx] = user;
   const filePath = await getUsersFilePath();

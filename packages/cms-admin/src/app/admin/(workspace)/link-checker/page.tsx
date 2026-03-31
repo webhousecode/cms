@@ -310,14 +310,15 @@ export default function LinkCheckerPage() {
           )}
         </>}
       >
-        <ActionBarBreadcrumb items={["Tools", "Link Checker"]} />{state === "done" && (
-          <span style={{ fontSize: "0.75rem", color: "var(--muted-foreground)" }}>
-            · {results.length} checked · {broken.length} broken links · {brokenImages.length} broken images · {redirects.length} redirects
-          </span>
-        )}
+        <ActionBarBreadcrumb items={["Tools", "Link Checker"]} />
       </ActionBar>
 
       <div className="p-6 max-w-5xl">
+        {state === "done" && (
+          <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", margin: "0 0 1rem", fontFamily: "monospace" }}>
+            {results.length} checked · {broken.length} broken links · {brokenImages.length} broken images · {redirects.length} redirects
+          </p>
+        )}
         {/* Last-run notice */}
         {checkedAt && state !== "running" && (
           <p className="text-xs text-muted-foreground mb-4 font-mono">

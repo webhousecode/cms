@@ -12,7 +12,8 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({
     name: user.name,
     email: user.email,
-    showLogoIcon: user.showLogoIcon ?? false, // default: wordmark
+    showLogoIcon: user.showLogoIcon ?? false,
+    showCloseAllTabs: user.showCloseAllTabs ?? false,
   });
 }
 
@@ -24,7 +25,7 @@ export async function POST(request: NextRequest) {
     const payload = await verifyToken(token);
     if (!payload) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const { name, email, currentPassword, newPassword, zoom, lastActiveOrg, lastActiveSite, showLogoIcon } = (await request.json()) as {
+    const { name, email, currentPassword, newPassword, zoom, lastActiveOrg, lastActiveSite, showLogoIcon, showCloseAllTabs } = (await request.json()) as {
       name?: string;
       email?: string;
       currentPassword?: string;
@@ -33,6 +34,7 @@ export async function POST(request: NextRequest) {
       lastActiveOrg?: string;
       lastActiveSite?: string;
       showLogoIcon?: boolean;
+      showCloseAllTabs?: boolean;
     };
 
     // Password change requires current password verification
@@ -57,6 +59,7 @@ export async function POST(request: NextRequest) {
       ...(lastActiveOrg !== undefined ? { lastActiveOrg } : {}),
       ...(lastActiveSite !== undefined ? { lastActiveSite } : {}),
       ...(showLogoIcon !== undefined ? { showLogoIcon } : {}),
+      ...(showCloseAllTabs !== undefined ? { showCloseAllTabs } : {}),
     }, payload.email);
 
     // Re-issue JWT with updated name/email

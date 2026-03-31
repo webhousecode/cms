@@ -1212,17 +1212,27 @@ function UserPreferencesSection() {
 	const [showCloseAll, setShowCloseAll] = useState(false);
 
 	useEffect(() => {
+		// Load view prefs from user-state (per-site)
 		fetch("/api/admin/user-state").then((r) => r.ok ? r.json() : null).then((state) => {
 			if (state?.calendarView) setCalendarView(state.calendarView);
 			if (state?.agentsView) setAgentsView(state.agentsView);
 			if (state?.mediaView) setMediaView(state.mediaView);
 			if (state?.intsView) setIntsView(state.intsView);
-			if (state?.showCloseAllTabs !== undefined) setShowCloseAll(state.showCloseAllTabs);
+		}).catch(() => {});
+		// Load global UI prefs from profile (cross-site)
+		fetch("/api/admin/profile").then((r) => r.ok ? r.json() : null).then((profile) => {
+			if (profile?.showCloseAllTabs !== undefined) setShowCloseAll(profile.showCloseAllTabs);
 		}).catch(() => {});
 	}, []);
 
 	function savePref(patch: Record<string, unknown>) {
 		fetch("/api/admin/user-state", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(patch) })
+			.then(() => window.dispatchEvent(new CustomEvent("cms:user-state-updated", { detail: patch })))
+			.catch(() => {});
+	}
+
+	function saveProfilePref(patch: Record<string, unknown>) {
+		fetch("/api/admin/profile", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(patch) })
 			.then(() => window.dispatchEvent(new CustomEvent("cms:user-state-updated", { detail: patch })))
 			.catch(() => {});
 	}
@@ -1267,7 +1277,7 @@ function UserPreferencesSection() {
 						label="Show Close All in tab bar"
 						description="Adds a 'Close all' pill next to the new-tab button."
 						checked={showCloseAll}
-						onChange={(v) => { setShowCloseAll(v); savePref({ showCloseAllTabs: v }); }}
+						onChange={(v) => { setShowCloseAll(v); saveProfilePref({ showCloseAllTabs: v }); }}
 					/>
 				</Card>
 			</div>
