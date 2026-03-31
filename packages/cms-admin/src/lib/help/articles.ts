@@ -8,6 +8,8 @@
 export interface HelpAction {
   label: string;
   href?: string;
+  /** Inline Settings Update component ID — renders an inline settings form in the popover */
+  isu?: string;
 }
 
 export interface HelpArticle {
@@ -144,7 +146,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     docsRef: "help:media-library-intro",
     body: "Upload images, videos, audio, and files. The library auto-generates optimized **WebP variants** and extracts **EXIF metadata** including GPS coordinates.\n\nOrganize with **folders** and **user tags**. Search finds files by name, AI caption, alt text, and tags. Drag and drop to upload, or paste from clipboard.",
     actions: [
-      { label: "Configure WebP quality and variant sizes", href: "/admin/settings?tab=tools#media-processing" },
+      { label: "Configure WebP quality and variant sizes", isu: "media-processing" },
     ],
     context: ["media"],
     priority: 1,

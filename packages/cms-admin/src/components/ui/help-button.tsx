@@ -1,9 +1,23 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, lazy, Suspense, type ComponentType } from "react";
 import { createPortal } from "react-dom";
-import { Lightbulb, ExternalLink, X } from "lucide-react";
+import { Lightbulb, ExternalLink, X, Settings2, Loader2 } from "lucide-react";
 import { getHelpArticle } from "@/lib/help/articles";
+
+/** Registry of ISU (Inline Settings Update) components */
+const ISU_COMPONENTS: Record<string, ComponentType> = {};
+
+// Lazy-load ISU components on demand
+function getISUComponent(id: string): ComponentType | null {
+  if (ISU_COMPONENTS[id]) return ISU_COMPONENTS[id];
+  if (id === "media-processing") {
+    const Comp = lazy(() => import("./isu-media-processing").then((m) => ({ default: m.ISUMediaProcessing })));
+    ISU_COMPONENTS[id] = Comp;
+    return Comp;
+  }
+  return null;
+}
 
 interface HelpButtonProps {
   articleId: string;
@@ -59,6 +73,7 @@ function renderInline(text: string): React.ReactNode {
 export function HelpButton({ articleId }: HelpButtonProps) {
   const article = getHelpArticle(articleId);
   const [open, setOpen] = useState(false);
+  const [activeISU, setActiveISU] = useState<string | null>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const popoverRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState({ top: 0, left: 0 });
@@ -134,16 +149,48 @@ export function HelpButton({ articleId }: HelpButtonProps) {
 
           {article.actions && article.actions.length > 0 && (
             <div style={{ marginTop: "0.5rem", display: "flex", flexDirection: "column", gap: "0.25rem" }}>
-              {article.actions.map((action, i) => (
-                <div key={i} style={{ display: "flex", alignItems: "center", gap: "0.375rem", fontSize: "0.72rem" }}>
-                  <span style={{ color: "#F7BB2E" }}>→</span>
-                  {action.href ? (
-                    <a href={action.href} onClick={() => setOpen(false)} style={{ color: "var(--foreground)", textDecoration: "none" }}>{action.label}</a>
-                  ) : (
-                    <span style={{ color: "var(--foreground)" }}>{action.label}</span>
-                  )}
-                </div>
-              ))}
+              {article.actions.map((action, i) => {
+                // ISU action — toggle inline settings form
+                if (action.isu) {
+                  const ISUComp = getISUComponent(action.isu);
+                  return (
+                    <div key={i}>
+                      <button
+                        type="button"
+                        onClick={() => setActiveISU(activeISU === action.isu ? null : action.isu!)}
+                        style={{
+                          display: "flex", alignItems: "center", gap: "0.375rem", fontSize: "0.72rem",
+                          background: "none", border: "none", cursor: "pointer", padding: 0,
+                          color: activeISU === action.isu ? "#F7BB2E" : "var(--foreground)",
+                        }}
+                      >
+                        <Settings2 style={{ width: "0.7rem", height: "0.7rem", color: "#F7BB2E" }} />
+                        {action.label}
+                      </button>
+                      {activeISU === action.isu && ISUComp && (
+                        <Suspense fallback={
+                          <div style={{ padding: "0.5rem 0", display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.7rem", color: "var(--muted-foreground)" }}>
+                            <Loader2 className="animate-spin" style={{ width: "0.65rem", height: "0.65rem" }} /> Loading...
+                          </div>
+                        }>
+                          <ISUComp />
+                        </Suspense>
+                      )}
+                    </div>
+                  );
+                }
+                // Regular action
+                return (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: "0.375rem", fontSize: "0.72rem" }}>
+                    <span style={{ color: "#F7BB2E" }}>→</span>
+                    {action.href ? (
+                      <a href={action.href} onClick={() => setOpen(false)} style={{ color: "var(--foreground)", textDecoration: "none" }}>{action.label}</a>
+                    ) : (
+                      <span style={{ color: "var(--foreground)" }}>{action.label}</span>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
 
