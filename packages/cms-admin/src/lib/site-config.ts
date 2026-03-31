@@ -104,6 +104,8 @@ export interface SiteConfig {
   backupS3SecretAccessKey: string;
   /** F95 S3 prefix (folder) */
   backupS3Prefix: string;
+  /** F95 Max backup storage in GB (0 = unlimited). Oldest backups pruned when exceeded. */
+  backupMaxStorageGB: number;
 
   /** F48 i18n — default language for the site (BCP 47, e.g. "da", "en") */
   defaultLocale: string;
@@ -187,6 +189,7 @@ async function defaults(): Promise<SiteConfig> {
     backupS3AccessKeyId: "",
     backupS3SecretAccessKey: "",
     backupS3Prefix: "cms-backups/",
+    backupMaxStorageGB: 0,
     linkCheckSchedule: "off",
     linkCheckTime: "04:00",
     aiImageOverwrite: "ask",
