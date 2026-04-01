@@ -17,5 +17,11 @@ if [ ! -f /site/cms.config.ts ] && [ -d /app/seed/content ]; then
   echo ""
 fi
 
+# Ensure @webhouse/cms is resolvable from /site (cms.config.ts imports it)
+if [ ! -d /site/node_modules/@webhouse ]; then
+  mkdir -p /site/node_modules/@webhouse
+  ln -sf /app/packages/cms /site/node_modules/@webhouse/cms
+fi
+
 # Start CMS admin
 exec node /app/packages/cms-admin/server.js
