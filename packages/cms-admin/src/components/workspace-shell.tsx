@@ -22,10 +22,11 @@ interface WorkspaceShellProps {
   devInspector?: boolean;
   onboarding?: OnboardingState;
   locale?: string;
+  forceOnboarding?: boolean;
   children: React.ReactNode;
 }
 
-export function WorkspaceShell({ collections, globals, activeSiteId, devInspector, onboarding, locale, children }: WorkspaceShellProps) {
+export function WorkspaceShell({ collections, globals, activeSiteId, devInspector, onboarding, locale, forceOnboarding, children }: WorkspaceShellProps) {
   const { mode, toggle, setMode } = useAdminMode();
   const isChat = mode === "chat";
 
@@ -89,6 +90,7 @@ export function WorkspaceShell({ collections, globals, activeSiteId, devInspecto
               <TourProvider
                 initialOnboarding={onboarding ?? { tourCompleted: true, completedSteps: [], activeTour: null, firstLoginAt: null }}
                 locale={locale ?? "en"}
+                forceOnboarding={forceOnboarding}
               >
                 {children}
               </TourProvider>

@@ -29,13 +29,15 @@ interface TourProviderProps {
   initialOnboarding: OnboardingState;
   /** Site locale for tour text */
   locale: string;
+  /** Force tour to show regardless of state (dev mode) */
+  forceOnboarding?: boolean;
 }
 
 /**
  * Tour orchestrator — manages active tour, step navigation, and state persistence.
  * Renders the spotlight overlay + tooltip when a tour is active.
  */
-export function TourProvider({ children, initialOnboarding, locale }: TourProviderProps) {
+export function TourProvider({ children, initialOnboarding, locale, forceOnboarding }: TourProviderProps) {
   const [onboarding, setOnboarding] = useState<OnboardingState>(initialOnboarding);
   const [activeTour, setActiveTour] = useState<Tour | null>(null);
   const [stepIndex, setStepIndex] = useState(0);
@@ -43,6 +45,15 @@ export function TourProvider({ children, initialOnboarding, locale }: TourProvid
 
   // On mount: check if we should start the welcome tour
   useEffect(() => {
+    // ONBOARDING=true → always start fresh
+    if (forceOnboarding) {
+      const timer = setTimeout(() => {
+        setActiveTour(WELCOME_TOUR);
+        setStepIndex(0);
+      }, 800);
+      return () => clearTimeout(timer);
+    }
+
     if (onboarding.tourCompleted) return;
     if (onboarding.activeTour) {
       // Resume a tour that was in progress

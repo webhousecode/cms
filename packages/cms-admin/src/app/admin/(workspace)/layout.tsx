@@ -127,6 +127,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   // Read onboarding state for the current user (F120)
   const userId = session?.sub ?? "anonymous";
   const userState = await readUserState(userId);
+  const forceOnboarding = process.env.ONBOARDING === "true";
 
   return (
     <WorkspaceShell
@@ -136,6 +137,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       devInspector={siteConfig.devInspector}
       onboarding={userState.onboarding}
       locale={siteConfig.defaultLocale || config.defaultLocale || "en"}
+      forceOnboarding={forceOnboarding}
     >
       {children}
     </WorkspaceShell>
