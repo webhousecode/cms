@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, createContext, useContext } from "react";
+import { useEffect, useState, useCallback, useRef, createContext, useContext } from "react";
 import { WELCOME_TOUR, FIRST_DOCUMENT_TOUR, getTour } from "@/lib/onboarding/tours";
 import type { Tour, TourStep } from "@/lib/onboarding/tours";
 import type { OnboardingState } from "@/lib/user-state";
@@ -34,6 +34,27 @@ interface TourProviderProps {
 }
 
 /**
+ * Expand collapsed sidebar sections so tour targets become visible.
+ * Clicks the "Content" and "Tools" collapsible buttons if they're collapsed.
+ */
+function ensureSidebarExpanded() {
+  // Content section
+  const contentBtn = document.querySelector('[data-testid="nav-link-content"]') as HTMLElement | null;
+  if (contentBtn) {
+    // If the next sibling collection links are NOT visible, the section is collapsed
+    const chevron = contentBtn.closest("[data-slot='sidebar-menu-button']")?.querySelector(".lucide-chevron-right");
+    if (chevron) contentBtn.click();
+  }
+
+  // Tools section
+  const toolsBtn = document.querySelector('[data-testid="nav-link-tools"]') as HTMLElement | null;
+  if (toolsBtn) {
+    const chevron = toolsBtn.closest("[data-slot='sidebar-menu-button']")?.querySelector(".lucide-chevron-right");
+    if (chevron) toolsBtn.click();
+  }
+}
+
+/**
  * Tour orchestrator — manages active tour, step navigation, and state persistence.
  * Renders the spotlight overlay + tooltip when a tour is active.
  */
@@ -42,12 +63,14 @@ export function TourProvider({ children, initialOnboarding, locale, forceOnboard
   const [activeTour, setActiveTour] = useState<Tour | null>(null);
   const [stepIndex, setStepIndex] = useState(0);
   const [targetEl, setTargetEl] = useState<HTMLElement | null>(null);
+  const skipCountRef = useRef(0);
 
   // On mount: check if we should start the welcome tour
   useEffect(() => {
     // ONBOARDING=true → always start fresh
     if (forceOnboarding) {
       const timer = setTimeout(() => {
+        ensureSidebarExpanded();
         setActiveTour(WELCOME_TOUR);
         setStepIndex(0);
       }, 800);
@@ -56,19 +79,18 @@ export function TourProvider({ children, initialOnboarding, locale, forceOnboard
 
     if (onboarding.tourCompleted) return;
     if (onboarding.activeTour) {
-      // Resume a tour that was in progress
       const tour = getTour(onboarding.activeTour);
       if (tour) {
+        ensureSidebarExpanded();
         setActiveTour(tour);
-        // Find the first uncompleted step
         const idx = tour.steps.findIndex((s) => !onboarding.completedSteps.includes(s.id));
         setStepIndex(idx >= 0 ? idx : 0);
         return;
       }
     }
-    // First login — start welcome tour after a short delay for UI to settle
     if (!onboarding.firstLoginAt) {
       const timer = setTimeout(() => {
+        ensureSidebarExpanded();
         doStartTour(WELCOME_TOUR.id);
       }, 800);
       return () => clearTimeout(timer);
@@ -84,17 +106,35 @@ export function TourProvider({ children, initialOnboarding, locale, forceOnboard
     const step = activeTour.steps[stepIndex];
     if (!step) return;
 
-    // Wait for element to be in DOM (e.g. after navigation)
+    // Reset target for new step
+    setTargetEl(null);
+    skipCountRef.current = 0;
+
     let attempts = 0;
     const interval = setInterval(() => {
       const el = document.querySelector(step.target) as HTMLElement | null;
       if (el) {
-        setTargetEl(el);
         clearInterval(interval);
-      } else if (++attempts > 20) {
-        // Element not found after 2s — skip this step
+        el.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        // Small delay after scroll for layout to settle
+        setTimeout(() => setTargetEl(el), 50);
+      } else if (++attempts > 30) {
+        // Element not found after 3s — advance to next step via state
         clearInterval(interval);
-        handleNext();
+        skipCountRef.current++;
+        // Safety: if we've skipped 3+ consecutive steps, stop the tour
+        if (skipCountRef.current >= 3) {
+          setActiveTour(null);
+          setTargetEl(null);
+          return;
+        }
+        // Move to next step
+        if (stepIndex + 1 < activeTour.steps.length) {
+          setStepIndex(stepIndex + 1);
+        } else {
+          setActiveTour(null);
+          setTargetEl(null);
+        }
       }
     }, 100);
 
@@ -111,7 +151,7 @@ export function TourProvider({ children, initialOnboarding, locale, forceOnboard
         body: JSON.stringify({ onboarding: updated }),
       });
     } catch {
-      // Silent fail — state persists next time
+      // Silent fail
     }
   }, [onboarding]);
 
@@ -128,6 +168,7 @@ export function TourProvider({ children, initialOnboarding, locale, forceOnboard
 
   function handleNext() {
     if (!activeTour) return;
+    skipCountRef.current = 0; // Reset skip counter on manual advance
 
     const currentStep = activeTour.steps[stepIndex];
     const newCompleted = currentStep
@@ -135,7 +176,6 @@ export function TourProvider({ children, initialOnboarding, locale, forceOnboard
       : onboarding.completedSteps;
 
     if (stepIndex + 1 >= activeTour.steps.length) {
-      // Tour complete
       setActiveTour(null);
       setTargetEl(null);
       const isWelcome = activeTour.id === "welcome";
@@ -145,7 +185,6 @@ export function TourProvider({ children, initialOnboarding, locale, forceOnboard
         tourCompleted: isWelcome ? true : onboarding.tourCompleted,
       });
     } else {
-      // Next step
       setTargetEl(null);
       setStepIndex(stepIndex + 1);
       persistState({
@@ -159,13 +198,16 @@ export function TourProvider({ children, initialOnboarding, locale, forceOnboard
     if (!activeTour) return;
     setActiveTour(null);
     setTargetEl(null);
-    persistState({
-      activeTour: null,
-      tourCompleted: true,
-    });
+    if (!forceOnboarding) {
+      persistState({
+        activeTour: null,
+        tourCompleted: true,
+      });
+    }
   }
 
   const startTour = useCallback((tourId: string) => {
+    ensureSidebarExpanded();
     doStartTour(tourId);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 

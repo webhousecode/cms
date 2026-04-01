@@ -39,29 +39,22 @@ export function TourTooltip({
     ? locale === "da" ? "Lad os gå!" : "Let's go!"
     : locale === "da" ? "Forstået" : "Got it";
 
+  // Recalculate position from target selector (provider already ensured it exists)
   useEffect(() => {
+    setVisible(false);
     const el = document.querySelector(step.target) as HTMLElement | null;
-    if (!el) {
-      // Target not found — skip step gracefully
-      onNext();
-      return;
-    }
+    if (!el) return;
 
-    // Scroll into view if needed
-    el.scrollIntoView({ behavior: "smooth", block: "nearest" });
-
-    // Wait for scroll + layout, then calculate position
     const timer = setTimeout(() => {
       setTargetRect(el.getBoundingClientRect());
-      // Trigger fade-in
       requestAnimationFrame(() => setVisible(true));
-    }, 150);
+    }, 100);
 
     return () => {
       clearTimeout(timer);
       setVisible(false);
     };
-  }, [step.target]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [step.target]);
 
   if (!targetRect) return null;
 
