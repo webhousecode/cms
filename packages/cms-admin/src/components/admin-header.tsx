@@ -448,6 +448,7 @@ function ModeToggle({ mode, onToggle }: { mode: AdminMode; onToggle: () => void 
       ]).map(({ value, label, icon: Icon }) => (
         <button
           key={value}
+          data-testid={`mode-toggle-${value}`}
           onClick={(e) => { e.stopPropagation(); if (mode !== value) onToggle(); }}
           style={{
             display: "flex",

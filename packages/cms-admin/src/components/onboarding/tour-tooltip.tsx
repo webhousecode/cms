@@ -59,7 +59,7 @@ export function TourTooltip({
   if (!targetRect) return null;
 
   // Calculate tooltip position based on placement
-  const pos = calculatePosition(targetRect, step.placement);
+  const pos = calculatePosition(targetRect, step.placement, tooltipRef.current);
 
   return (
     <div
@@ -81,9 +81,8 @@ export function TourTooltip({
         style={{
           background: "#0D0D0D",
           borderRadius: 12,
-          border: "1px solid rgba(247, 187, 46, 0.2)",
-          borderTop: "2px solid #F7BB2E",
-          boxShadow: "0 8px 32px rgba(0,0,0,0.4), 0 0 0 1px rgba(255,255,255,0.05)",
+          border: "1px solid rgba(255, 255, 255, 0.08)",
+          boxShadow: "0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04), inset 0 1px 0 rgba(247, 187, 46, 0.3)",
           padding: "1rem 1.25rem",
           position: "relative",
         }}
@@ -181,20 +180,23 @@ export function TourTooltip({
 function calculatePosition(
   rect: DOMRect,
   placement: TourStep["placement"],
+  tooltipEl: HTMLDivElement | null,
 ): { left: number; top: number } {
   const cx = rect.left + rect.width / 2;
   const cy = rect.top + rect.height / 2;
+  // Use actual tooltip height if available, otherwise estimate
+  const tooltipHeight = tooltipEl?.offsetHeight ?? 160;
 
   switch (placement) {
     case "right":
       return {
         left: rect.right + GAP,
-        top: cy - 60, // Vertically center-ish (offset for typical card height)
+        top: Math.max(8, cy - tooltipHeight / 2),
       };
     case "left":
       return {
         left: rect.left - TOOLTIP_WIDTH - GAP,
-        top: cy - 60,
+        top: Math.max(8, cy - tooltipHeight / 2),
       };
     case "bottom":
       return {
@@ -204,7 +206,7 @@ function calculatePosition(
     case "top":
       return {
         left: Math.max(8, cx - TOOLTIP_WIDTH / 2),
-        top: rect.top - GAP - 180, // Approximate card height
+        top: Math.max(8, rect.top - GAP - tooltipHeight),
       };
   }
 }

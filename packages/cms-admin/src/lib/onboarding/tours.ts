@@ -57,12 +57,12 @@ export const WELCOME_TOUR: Tour = {
     },
     {
       id: "welcome-chat",
-      target: '[data-testid="nav-link-cockpit"]',
+      target: '[data-testid="mode-toggle-chat"]',
       title: "Chat with your site",
       titleDa: "Chat med dit site",
       body: "Generate pages, translate content, optimize SEO, or manage your entire site through natural conversation. 47 tools at your fingertips.",
       bodyDa: "Generér sider, oversæt indhold, optimér SEO eller administrér hele dit site via naturlig samtale. 47 værktøjer til rådighed.",
-      placement: "right",
+      placement: "bottom",
     },
     {
       id: "welcome-agents",
