@@ -139,3 +139,23 @@ function getDocument(collection: string, slug: string) {
   return JSON.parse(readFileSync(join(CONTENT, collection, `${slug}.json`), 'utf-8'));
 }
 ```
+
+### Next.js SEO helpers: `@webhouse/cms/next`
+
+Drop-in sitemap, robots, metadata, JSON-LD, RSS, llms.txt:
+
+```typescript
+// app/sitemap.ts
+import { cmsSitemap } from '@webhouse/cms/next';
+export default cmsSitemap({ baseUrl: 'https://example.com', collections: [{ name: 'posts', urlPrefix: '/blog' }] });
+
+// app/robots.ts
+import { cmsRobots } from '@webhouse/cms/next';
+export default cmsRobots({ baseUrl: 'https://example.com', strategy: 'maximum' });
+
+// In generateMetadata():
+import { cmsMetadata } from '@webhouse/cms/next';
+return cmsMetadata({ baseUrl: 'https://example.com', siteName: 'My Site', doc, urlPrefix: '/blog' });
+```
+
+Full reference: `docs/ai-guide/15-seo.md`

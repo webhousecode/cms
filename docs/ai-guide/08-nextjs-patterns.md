@@ -156,6 +156,38 @@ export default async function Page({ params }: { params: Promise<{ slug: string 
 
 ---
 
+## SEO Helpers: `@webhouse/cms/next`
+
+The `@webhouse/cms/next` sub-path export provides drop-in SEO for Next.js sites:
+
+```typescript
+import { cmsSitemap, cmsRobots, cmsMetadata, cmsJsonLd, cmsFeed, cmsLlmsTxt, cmsGenerateStaticParams } from '@webhouse/cms/next';
+```
+
+| Helper | File | Purpose |
+|--------|------|---------|
+| `cmsSitemap()` | `app/sitemap.ts` | Sitemap with hreflang alternates |
+| `cmsRobots()` | `app/robots.ts` | robots.txt with AI bot strategies |
+| `cmsLlmsTxt()` | `app/llms.txt/route.ts` | AI-readable site index |
+| `cmsMetadata()` | Page `generateMetadata()` | Full metadata from `_seo` fields |
+| `cmsJsonLd()` | Page component | JSON-LD structured data |
+| `cmsFeed()` | `app/feed.xml/route.ts` | RSS 2.0 feed |
+| `cmsGenerateStaticParams()` | Page files | Slug list for static generation |
+
+See `docs/ai-guide/15-seo.md` for full usage examples.
+
+## Fly.io Deployment
+
+Next.js boilerplates include a production-ready `Dockerfile` for Fly.io:
+
+```bash
+flyctl deploy --remote-only --ha=false
+```
+
+Or use CMS admin → Deploy tab (auto-detects Dockerfile). The Dockerfile uses `output: "standalone"` for minimal image size. Content files are included in the image for `fs`-based reads.
+
+---
+
 ## Instant Content Deployment (ICD)
 
 ICD lets the CMS push content changes directly to a deployed Next.js site via a signed webhook, bypassing full Docker rebuilds. Content updates arrive in ~2 seconds.
