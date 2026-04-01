@@ -65,7 +65,7 @@ COPY --from=builder /app/packages/cms/dist              ./packages/cms/dist
 COPY --from=builder /app/packages/cms/package.json      ./packages/cms/package.json
 
 # Install @webhouse/cms runtime deps (needed when jiti loads cms.config.ts)
-RUN npm install --no-save zod jiti nanoid marked 2>/dev/null || true
+RUN cd /app && echo '{}' > /tmp/pkg.json && cd /tmp && npm install --prefix /app zod jiti nanoid marked
 
 # Seed: bundle CMS Demo site so first boot has content out of the box
 COPY --from=builder /app/examples/static/cmsdemo/cms.config.ts  ./seed/cms.config.ts
