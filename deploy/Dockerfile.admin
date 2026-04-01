@@ -60,6 +60,12 @@ COPY --from=builder /app/packages/cms-admin/.next/standalone ./
 COPY --from=builder /app/packages/cms-admin/.next/static     ./packages/cms-admin/.next/static
 COPY --from=builder /app/packages/cms-admin/public            ./packages/cms-admin/public
 
+# Copy @webhouse/cms package + its peer deps (needed for cms.config.ts resolution)
+COPY --from=builder /app/packages/cms/dist              ./packages/cms/dist
+COPY --from=builder /app/packages/cms/package.json      ./packages/cms/package.json
+COPY --from=builder /app/node_modules/zod               ./node_modules/zod
+COPY --from=builder /app/node_modules/jiti              ./node_modules/jiti
+
 # Seed: bundle CMS Demo site so first boot has content out of the box
 COPY --from=builder /app/examples/static/cmsdemo/cms.config.ts  ./seed/cms.config.ts
 COPY --from=builder /app/examples/static/cmsdemo/content        ./seed/content
