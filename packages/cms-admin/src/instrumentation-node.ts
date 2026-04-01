@@ -183,7 +183,14 @@ export function startSchedulers() {
         const crypto = await import("crypto");
         const password = process.env.ADMIN_PASSWORD || crypto.randomBytes(16).toString("hex");
         const name = email.split("@")[0].replace(/[._-]/g, " ").replace(/\b\w/g, c => c.toUpperCase());
-        await createUser(email, password, name, { role: "admin", source: "local" });
+        const user = await createUser(email, password, name, { role: "admin", source: "local" });
+
+        // Also add to team.json so RBAC grants write access
+        try {
+          const { addTeamMember } = await import("./lib/team");
+          await addTeamMember(user.id, "admin");
+        } catch { /* team.ts may not be available in all contexts */ }
+
         console.log(`\n  ✓ Admin account created`);
         console.log(`    Email: ${email}`);
         if (!process.env.ADMIN_PASSWORD) {
