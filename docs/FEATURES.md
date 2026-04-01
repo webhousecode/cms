@@ -136,9 +136,10 @@
 | F117 | [MCP ↔ Chat Tool Parity](#f117-mcp-chat-parity) | **Done** | [docs/features/F117-mcp-chat-parity.md](features/F117-mcp-chat-parity.md) |
 | F119 | [One-Click Docker Deploy](#f119-one-click-docker-deploy) | Planned | [docs/features/F119-one-click-docker-deploy.md](features/F119-one-click-docker-deploy.md) |
 | F120 | [Onboarding](#f120-onboarding) | **Tier 1** | [docs/features/F120-onboarding.md](features/F120-onboarding.md) |
-| F121 | [Snippet Embeds](#f121-snippet-embeds) | Planned | [docs/features/F121-snippet-embeds.md](features/F121-snippet-embeds.md) |
+| F121 | [Next.js CMS Helpers](#f121-nextjs-cms-helpers) | **Done** | [docs/features/F121-nextjs-cms-helpers.md](features/F121-nextjs-cms-helpers.md) |
 | F122 | [Beam — Site Teleportation](#f122-beam) | Planned | [docs/features/F122-beam.md](features/F122-beam.md) |
 | F123 | [Providers / Integrations Tab](#f123-providers-tab) | Planned | [docs/features/F123-providers-tab.md](features/F123-providers-tab.md) |
+| F124 | [Snippet Embeds](#f124-snippet-embeds) | Planned | [docs/features/F124-snippet-embeds.md](features/F124-snippet-embeds.md) |
 
 ---
 
@@ -499,10 +500,6 @@ Built-in support chat that knows everything about CMS admin — features, UI, AP
 ## F116 — Contextual Help (HelpCard)
 Inline contextual help cards throughout the CMS admin UI.
 
-## F121 — Snippet Embeds
-
-TipTap node extension that renders `{{snippet:slug}}` tokens as visual pill/badge in the richtext editor. Inline preview shows snippet title, language badge, and code preview. Click to expand. Insert via toolbar button or /snippet slash command. Resolves from content/snippets/ collection. Reusable code blocks stored once, embedded everywhere.
-
 ## F119 — One-Click Docker Deploy
 
 Deploy a complete CMS-powered site to Fly.io (or any Docker host) with a few clicks from webhouse.app. Two models: Combined (CMS admin + site in one container) and Split (admin and site as separate containers with webhook content push). Auto-generates Dockerfile, fly.toml, sets secrets, creates admin account. Supports all boilerplates and examples. Targets: Fly.io (with user's API token), Railway, or "Download Dockerfile" for self-hosting.
@@ -514,9 +511,13 @@ MCP admin server expanded from 15 to 43 tools — feature parity with inline cha
 
 Guided product tour from webhouse.app landing to first published content. Tooltip-style walkthrough with progressive disclosure. Two paths: Hub (hosted) and self-hosted. Milestone-based tours: Welcome → First Document → Deploy → SEO → Media AI → Agents. Uses data-testid selectors (F80) for tooltip anchoring and UserState (F43) for progress persistence. Connects to HelpCards (F116) for ongoing post-tour guidance.
 
-## F121 — Next.js CMS Helpers
+## F121 — Next.js CMS Helpers ✅
 
-Drop-in route handlers and metadata utilities for Next.js sites using @webhouse/cms. Sitemap, robots.txt, llms.txt, JSON-LD, OG images, geo meta, SEO metadata — all auto-generated from CMS content and _seo fields. Shipped as `@webhouse/cms/next` sub-path export. Updates both Next.js boilerplates and adds Fly.io deploy support for Dockerfile-based sites.
+Drop-in route handlers and metadata utilities for Next.js sites using @webhouse/cms. Sitemap, robots.txt, llms.txt, JSON-LD, OG images, geo meta, SEO metadata — all auto-generated from CMS content and _seo fields. Shipped as `@webhouse/cms/next` sub-path export. Both Next.js boilerplates updated with all helpers. Fly.io deploy via Dockerfile included. Docs at docs.webhouse.app/docs/nextjs-helpers.
+
+## F124 — Snippet Embeds
+
+TipTap node extension that renders `{{snippet:slug}}` tokens as visual pill/badge in the richtext editor. Inline preview shows snippet title, language badge, and code preview. Click to expand. Insert via toolbar button or /snippet slash command. Resolves from content/snippets/ collection. Reusable code blocks stored once, embedded everywhere.
 
 ## F122 — Beam — Site Teleportation
 

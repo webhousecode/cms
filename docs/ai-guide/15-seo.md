@@ -170,7 +170,60 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 ```
 
-### Sitemap Generation (app/sitemap.ts)
+### Drop-in Helpers: `@webhouse/cms/next`
+
+Instead of writing SEO boilerplate manually, use the drop-in helpers:
+
+```typescript
+// app/sitemap.ts
+import { cmsSitemap } from '@webhouse/cms/next';
+export default cmsSitemap({
+  baseUrl: 'https://example.com',
+  collections: [
+    { name: 'pages', urlPrefix: '/' },
+    { name: 'posts', urlPrefix: '/blog' },
+  ],
+});
+
+// app/robots.ts
+import { cmsRobots } from '@webhouse/cms/next';
+export default cmsRobots({ baseUrl: 'https://example.com', strategy: 'maximum' });
+
+// app/llms.txt/route.ts
+import { cmsLlmsTxt } from '@webhouse/cms/next';
+export const GET = cmsLlmsTxt({
+  baseUrl: 'https://example.com',
+  siteTitle: 'My Site',
+  collections: [{ name: 'posts', label: 'Blog', urlPrefix: '/blog' }],
+});
+
+// app/feed.xml/route.ts
+import { cmsFeed } from '@webhouse/cms/next';
+export const GET = cmsFeed({
+  baseUrl: 'https://example.com',
+  title: 'My Blog',
+  collections: [{ name: 'posts', urlPrefix: '/blog' }],
+});
+```
+
+For metadata, replace manual `generateMetadata()` with:
+
+```typescript
+import { cmsMetadata, cmsJsonLd } from '@webhouse/cms/next';
+
+export async function generateMetadata({ params }: Props): Promise<Metadata> {
+  const { slug } = await params;
+  const doc = getDocument('posts', slug);
+  if (!doc) return { title: 'Not Found' };
+  return cmsMetadata({ baseUrl: 'https://example.com', siteName: 'My Site', doc, urlPrefix: '/blog' });
+}
+
+// In the page component:
+const jsonLd = cmsJsonLd(doc);
+{jsonLd && <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />}
+```
+
+### Manual Sitemap (if you need full control)
 
 ```typescript
 // app/sitemap.ts
@@ -184,7 +237,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: BASE_URL, lastModified: new Date(), changeFrequency: 'weekly', priority: 1 },
   ];
 
-  // Blog posts
   for (const post of getCollection('posts')) {
     entries.push({
       url: `${BASE_URL}/blog/${post.slug}`,
@@ -194,31 +246,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
     });
   }
 
-  // Pages
-  for (const page of getCollection('pages')) {
-    entries.push({
-      url: `${BASE_URL}/${page.slug}`,
-      lastModified: new Date(page.updatedAt),
-      changeFrequency: 'monthly',
-      priority: 0.9,
-    });
-  }
-
-  // Case studies
-  for (const work of getCollection('work')) {
-    entries.push({
-      url: `${BASE_URL}/work/${work.slug}`,
-      lastModified: new Date(work.updatedAt),
-      changeFrequency: 'yearly',
-      priority: 0.6,
-    });
-  }
-
   return entries;
 }
 ```
 
-### robots.txt
+### Manual robots.txt
 
 ```typescript
 // app/robots.ts

@@ -4,7 +4,7 @@
 
 ---
 
-## Done (38 milestones)
+## Done (40 milestones)
 
 | # | Milestone | Completed |
 |---|-----------|-----------|
@@ -44,6 +44,8 @@
 | 36 | **Inline Proofreading** — ProseMirror decorations, accept/reject, sticky toolbar (F109) | 2026-03-29 |
 | 37 | **Backup & Restore** — filesystem + GitHub restore, scheduled backups, retention, webhooks (F27) | 2026-03-30 |
 | 38 | **Cloud Backup Providers** — pCloud WebDAV, S3 (R2/B2/Scaleway), quota management, cloud badges (F95) | 2026-03-31 |
+| 39 | **Documentation Site** — docs.webhouse.app, 89 pages EN/DA, Shiki, snippets, JSON API, GHA deploy (F31) | 2026-04-01 |
+| 40 | **Next.js CMS Helpers** — `@webhouse/cms/next` — 8 drop-in SEO helpers + Fly.io Dockerfile deploy (F121) | 2026-04-01 |
 
 ---
 
@@ -83,8 +85,8 @@ _Without these, we cannot build and deliver professional sites on the platform._
 | ~~8k~~ | ~~**F103 AI Image Analysis**~~ | ~~Done~~ | ~~Shipped 2026-03-25. Claude caption + alt-text + tags. Batch analyze. Auto-fill alt in editor. Auto-analyze on upload.~~ |
 | ~~8l~~ | ~~**F48 Internationalization (i18n)**~~ | ~~Done~~ | ~~Shipped 2026-03-29. Locale fields, translationGroup, AI auto-translate, per-locale SEO/media, build pipeline hreflang, translation UI, bulk translate, locale switcher.~~ |
 | ~~8m~~ | ~~**F112 GEO (Generative Engine Optimization)**~~ | ~~Done~~ | ~~Shipped 2026-03-29. robots.txt (4 strategies), GEO score (8 rules), llms-full.txt + .md endpoints, RSS feed, JSON-LD (12 templates), Visibility dashboard, GEO Agent, GEO Settings. Build pipeline Phase 1-9.~~ |
-| 9 | **F31 Documentation Site** | Medium | Can't ship without docs. Last because it documents everything above. |
-| 10 | **F121 Next.js CMS Helpers** | Medium | Next.js sites get 0 SEO without this. Drop-in sitemap, robots, llms.txt, metadata, JSON-LD, OG images. Fly.io deploy for Dockerfile sites. |
+| ~~9~~ | ~~**F31 Documentation Site**~~ | ~~Done~~ | ~~Shipped 2026-04-01. docs.webhouse.app — 89 pages EN/DA, Shiki code blocks, shared snippets, JSON API, GHA auto-deploy.~~ |
+| ~~10~~ | ~~**F121 Next.js CMS Helpers**~~ | ~~Done~~ | ~~Shipped 2026-04-01. 8 helpers in `@webhouse/cms/next` (sitemap, robots, llms.txt, metadata, JSON-LD, feed, static-params). Boilerplates updated. Fly.io Dockerfile deploy. Docs at docs.webhouse.app.~~ |
 | 11 | **F120 Onboarding** | Medium | Can't convert users without guided first experience. Tooltip tour from landing to first publish. |
 | ~~9b~~ | ~~**F90 Marketing Content Bank**~~ | ~~Done~~ | ~~Shipped. 5 messaging frameworks, talking points, badge/shield suggestions, deploy targets.~~ |
 | ~~9c~~ | ~~**F96 Embeddable Maps**~~ | ~~Done~~ | ~~Shipped. OSM/Leaflet map block, richtext embed, field type.~~ |
@@ -97,7 +99,7 @@ _Makes us stand out. Customers expect these from a modern CMS._
 |----------|---------|------|----------------|
 | 8g | **F122 Beam — Site Teleportation** | Medium | "Beam me up, Scotty" — one-click site migration from localhost to cloud. .beam archive + live CMS-to-CMS transfer. Core workflow enabler. |
 | 8h | **F119 One-Click Docker Deploy** | Medium | Deploy CMS + site to Fly.io with a few clicks. Combined or split model. Auto-Dockerfile, secrets, admin account. The "get live in 2 minutes" experience. |
-| 8i | **F121 Snippet Embeds** | Small | TipTap node for `{{snippet:slug}}` — visual pill in editor, toolbar insert, slash command. Reusable code blocks across pages. |
+| 8i | **F124 Snippet Embeds** | Small | TipTap node for `{{snippet:slug}}` — visual pill in editor, toolbar insert, slash command. Reusable code blocks across pages. |
 | 9a | **F83 Vibe Site Builder** | Large | THE differentiator. "Describe → Generate → Manage." AI site gen with CMS built in. Only platform with AI gen + CMS + code ownership. |
 | 9b | **F63 Shared Components** | Medium | Design tokens, shared UI components, API helpers. Makes all future features faster + consistent. |
 | ~~9c~~ | ~~**F84 Move Site to Org**~~ | ~~Done~~ | ~~Shipped. API route, registry move, settings UI, 15 unit tests.~~ |
