@@ -83,12 +83,12 @@ export const WELCOME_TOUR: Tour = {
       placement: "right",
     },
     {
-      id: "welcome-seo",
-      target: '[data-testid="nav-link-seo"]',
-      title: "SEO & Visibility",
-      titleDa: "SEO & synlighed",
-      body: "See how findable your content is — for both search engines and AI platforms like ChatGPT and Claude.",
-      bodyDa: "Se hvor synligt dit indhold er — for både søgemaskiner og AI-platforme som ChatGPT og Claude.",
+      id: "welcome-tools",
+      target: '[data-testid="nav-link-tools"]',
+      title: "Tools & SEO",
+      titleDa: "Værktøjer & SEO",
+      body: "SEO scoring, link checker, backup, AI analytics, and visibility dashboard — everything to keep your site healthy and findable.",
+      bodyDa: "SEO-score, linkchecker, backup, AI-analyse og synligheds-dashboard — alt for at holde dit site sundt og synligt.",
       placement: "right",
     },
     {
