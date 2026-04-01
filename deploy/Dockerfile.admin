@@ -60,11 +60,12 @@ COPY --from=builder /app/packages/cms-admin/.next/standalone ./
 COPY --from=builder /app/packages/cms-admin/.next/static     ./packages/cms-admin/.next/static
 COPY --from=builder /app/packages/cms-admin/public            ./packages/cms-admin/public
 
-# Copy @webhouse/cms package + its peer deps (needed for cms.config.ts resolution)
+# Copy @webhouse/cms package (needed for cms.config.ts resolution via jiti)
 COPY --from=builder /app/packages/cms/dist              ./packages/cms/dist
 COPY --from=builder /app/packages/cms/package.json      ./packages/cms/package.json
-COPY --from=builder /app/node_modules/zod               ./node_modules/zod
-COPY --from=builder /app/node_modules/jiti              ./node_modules/jiti
+
+# Install peer deps that cms.config.ts needs at runtime (zod, jiti)
+RUN npm install --no-save zod jiti 2>/dev/null || true
 
 # Seed: bundle CMS Demo site so first boot has content out of the box
 COPY --from=builder /app/examples/static/cmsdemo/cms.config.ts  ./seed/cms.config.ts
