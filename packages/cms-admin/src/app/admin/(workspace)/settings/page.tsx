@@ -15,6 +15,7 @@ import { ToolsSettingsPanel } from "@/components/settings/tools-settings-panel";
 import { DeploySettingsPanel } from "@/components/settings/deploy-settings-panel";
 import { GeoSettingsPanel } from "@/components/settings/geo-settings-panel";
 import { BackupSettingsPanel } from "@/components/settings/backup-settings-panel";
+import { BeamSettingsPanel } from "@/components/settings/beam-settings-panel";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { readSiteConfig } from "@/lib/site-config";
 import { readBrandVoice } from "@/lib/brand-voice";
@@ -46,6 +47,7 @@ export default async function SettingsPage({
     readBrandVoice(),
   ]);
   const { tab = "general" } = await searchParams;
+  const activeOrgId = cookieStore.get("cms-active-org")?.value ?? "default";
 
   const globals = config.collections.filter((c) => c.name === "global");
 
@@ -60,6 +62,7 @@ export default async function SettingsPage({
     { id: "tools",       label: "Automation" },
     { id: "geo",         label: "GEO" },
     { id: "mcp",         label: "MCP" },
+    { id: "beam",        label: "Beam" },
     ...(globals.length > 0 ? [{ id: "globals", label: "Globals" }] : []),
     ...(siteConfig.schemaEditEnabled ? [{ id: "schema", label: "Schema" }] : []),
     { id: "prompts", label: "AI Prompts" },
@@ -295,6 +298,17 @@ export default async function SettingsPage({
               Connect Claude iOS, Cursor, or any MCP-compatible AI client to read and manage content on this site.
             </p>
             <MCPSettingsPanel />
+          </div>
+        )}
+
+        {/* Beam tab — site teleportation */}
+        {tab === "beam" && (
+          <div className="max-w-lg" data-testid="settings-panel-beam">
+            <SectionHeading>Beam — Site Teleportation</SectionHeading>
+            <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "-0.5rem", marginBottom: "1.25rem" }}>
+              Export your complete site as a portable .beam archive, or import one from another CMS instance.
+            </p>
+            <BeamSettingsPanel orgId={activeOrgId} />
           </div>
         )}
 
