@@ -15,6 +15,17 @@ export interface UserTab {
   status?: string;
 }
 
+export interface OnboardingState {
+  /** Has user completed the main welcome tour? */
+  tourCompleted: boolean;
+  /** Step IDs that have been seen/dismissed */
+  completedSteps: string[];
+  /** Currently active tour ID (null = no tour running) */
+  activeTour: string | null;
+  /** Timestamp of first login (set once) */
+  firstLoginAt: string | null;
+}
+
 export interface UserState {
   /** Open editor tabs */
   tabs: UserTab[];
@@ -36,9 +47,18 @@ export interface UserState {
   intsView: "grid" | "list";
   /** Show Close All button in tab bar */
   showCloseAllTabs: boolean;
+  /** Onboarding tour progress (F120) */
+  onboarding: OnboardingState;
   /** Last update */
   updatedAt: string;
 }
+
+const ONBOARDING_DEFAULTS: OnboardingState = {
+  tourCompleted: false,
+  completedSteps: [],
+  activeTour: null,
+  firstLoginAt: null,
+};
 
 const DEFAULTS: UserState = {
   tabs: [],
@@ -51,6 +71,7 @@ const DEFAULTS: UserState = {
   mediaView: "grid",
   intsView: "grid",
   showCloseAllTabs: false,
+  onboarding: ONBOARDING_DEFAULTS,
   updatedAt: new Date().toISOString(),
 };
 
@@ -70,7 +91,12 @@ export async function readUserState(userId: string): Promise<UserState> {
     const filePath = await getStatePath(userId);
     const raw = await fs.readFile(filePath, "utf-8");
     const stored = JSON.parse(raw) as Partial<UserState>;
-    return { ...DEFAULTS, ...stored };
+    return {
+      ...DEFAULTS,
+      ...stored,
+      // Deep-merge onboarding so existing users get defaults for new fields
+      onboarding: { ...ONBOARDING_DEFAULTS, ...(stored.onboarding ?? {}) },
+    };
   } catch {
     return { ...DEFAULTS };
   }

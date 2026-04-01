@@ -10,18 +10,22 @@ import { useRouter } from "next/navigation";
 import { DevInspector } from "@/components/dev-inspector";
 import { SchedulerNotifier } from "@/components/scheduler-notifier";
 import { ChatInterface } from "@/components/chat/chat-interface";
+import { TourProvider } from "@/components/onboarding/tour-provider";
 import { useAdminMode } from "@/lib/hooks/use-admin-mode";
 import { useEffect } from "react";
+import type { OnboardingState } from "@/lib/user-state";
 
 interface WorkspaceShellProps {
   collections: Array<{ name: string; label: string }>;
   globals: Array<{ name: string; label: string }>;
   activeSiteId: string;
   devInspector?: boolean;
+  onboarding?: OnboardingState;
+  locale?: string;
   children: React.ReactNode;
 }
 
-export function WorkspaceShell({ collections, globals, activeSiteId, devInspector, children }: WorkspaceShellProps) {
+export function WorkspaceShell({ collections, globals, activeSiteId, devInspector, onboarding, locale, children }: WorkspaceShellProps) {
   const { mode, toggle, setMode } = useAdminMode();
   const isChat = mode === "chat";
 
@@ -82,7 +86,12 @@ export function WorkspaceShell({ collections, globals, activeSiteId, devInspecto
             <AdminHeader mode={mode} onToggleMode={toggle} />
             <TabBar />
             <CommandPaletteProvider>
-              {children}
+              <TourProvider
+                initialOnboarding={onboarding ?? { tourCompleted: true, completedSteps: [], activeTour: null, firstLoginAt: null }}
+                locale={locale ?? "en"}
+              >
+                {children}
+              </TourProvider>
             </CommandPaletteProvider>
             {devInspector && <DevInspector />}
             <SchedulerNotifier />

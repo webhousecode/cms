@@ -15,6 +15,7 @@ import { NoAccessGate, ConnectGitHubGate, SiteRedirectGate, GitHubErrorGate } fr
 import { OrgSidebar } from "@/components/org-sidebar";
 import { redirect } from "next/navigation";
 import { loadRegistry, findSite } from "@/lib/site-registry";
+import { readUserState } from "@/lib/user-state";
 import type { Metadata } from "next";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -123,12 +124,18 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     .sort((a, b) => a.label.localeCompare(b.label));
   const globals = allCollections.filter((c) => c.name === "global");
 
+  // Read onboarding state for the current user (F120)
+  const userId = session?.sub ?? "anonymous";
+  const userState = await readUserState(userId);
+
   return (
     <WorkspaceShell
       collections={collections}
       globals={globals}
       activeSiteId={activeSiteId}
       devInspector={siteConfig.devInspector}
+      onboarding={userState.onboarding}
+      locale={siteConfig.defaultLocale || config.defaultLocale || "en"}
     >
       {children}
     </WorkspaceShell>
