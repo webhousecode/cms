@@ -58,8 +58,9 @@ export function DeployWizard() {
           <StepTemplate
             selected={state.template}
             onSelect={(id) => {
-              const appName = id.replace(/\//g, "-").replace(/[^a-z0-9-]/g, "") + "-site";
-              update({ template: id, appName });
+              const base = id.startsWith("site:") ? id.slice(5) : id;
+              const appName = base.replace(/\//g, "-").replace(/[^a-z0-9-]/g, "");
+              update({ template: id, appName: appName.endsWith("-site") ? appName : appName + "-site" });
             }}
           />
         )}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, Globe } from "lucide-react";
 import { TemplateCard } from "./template-card";
 import { SectionHeading } from "@/components/ui/section-heading";
 
@@ -15,6 +15,12 @@ interface Template {
   hasContent: boolean;
 }
 
+interface OrgSite {
+  id: string;
+  name: string;
+  adapter: string;
+}
+
 interface Props {
   selected: string | null;
   onSelect: (id: string) => void;
@@ -22,36 +28,94 @@ interface Props {
 
 export function StepTemplate({ selected, onSelect }: Props) {
   const [templates, setTemplates] = useState<Template[]>([]);
+  const [sites, setSites] = useState<OrgSite[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/admin/deploy/templates")
-      .then((r) => r.json())
-      .then((data) => setTemplates(data.templates ?? []))
-      .catch(() => {})
-      .finally(() => setLoading(false));
+    Promise.all([
+      fetch("/api/admin/deploy/templates").then((r) => r.json()).catch(() => ({ templates: [] })),
+      fetch("/api/cms/registry").then((r) => r.json()).catch(() => ({ registry: null })),
+    ]).then(([tmplData, regData]) => {
+      setTemplates(tmplData.templates ?? []);
+      // Extract sites from all orgs
+      if (regData.registry?.orgs) {
+        const allSites: OrgSite[] = [];
+        for (const org of regData.registry.orgs) {
+          for (const site of org.sites ?? []) {
+            allSites.push({ id: site.id, name: site.name, adapter: site.adapter });
+          }
+        }
+        setSites(allSites);
+      }
+    }).finally(() => setLoading(false));
   }, []);
 
   if (loading) {
     return (
       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "3rem", color: "var(--muted-foreground)" }}>
         <Loader2 className="animate-spin" style={{ width: 20, height: 20, marginRight: "0.5rem" }} />
-        Loading templates...
+        Loading...
       </div>
     );
   }
 
-  // Group by category
   const withContent = templates.filter((t) => t.hasContent);
   const boilerplates = templates.filter((t) => !t.hasContent);
 
   return (
     <div>
-      <SectionHeading>Choose a template</SectionHeading>
+      <SectionHeading>What do you want to deploy?</SectionHeading>
       <p style={{ fontSize: "0.78rem", color: "var(--muted-foreground)", marginTop: "-0.5rem", marginBottom: "1.5rem" }}>
-        Pick a site template to deploy. Each includes a CMS schema and sample content.
+        Deploy an existing site from your CMS, or start fresh with a template.
       </p>
 
+      {/* ── Existing sites ── */}
+      {sites.length > 0 && (
+        <>
+          <h3 style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.75rem" }}>
+            Your Sites
+          </h3>
+          <div style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
+            gap: "0.75rem",
+            marginBottom: "2rem",
+          }}>
+            {sites.map((site) => (
+              <button
+                key={site.id}
+                type="button"
+                onClick={() => onSelect(`site:${site.id}`)}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.6rem",
+                  padding: "0.75rem 1rem",
+                  borderRadius: 8,
+                  border: selected === `site:${site.id}` ? "2px solid #F7BB2E" : "1px solid var(--border)",
+                  background: "var(--card)",
+                  cursor: "pointer",
+                  textAlign: "left",
+                  boxShadow: selected === `site:${site.id}` ? "0 0 0 3px rgba(247, 187, 46, 0.15)" : "none",
+                }}
+              >
+                <Globe style={{ width: 18, height: 18, color: selected === `site:${site.id}` ? "#F7BB2E" : "var(--muted-foreground)", flexShrink: 0 }} />
+                <div>
+                  <div style={{ fontSize: "0.82rem", fontWeight: 600, color: "var(--foreground)" }}>{site.name}</div>
+                  <div style={{ fontSize: "0.68rem", color: "var(--muted-foreground)" }}>
+                    {site.adapter} · {site.id}
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+
+      {/* ── Templates ── */}
+      <h3 style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: "0.75rem" }}>
+        Templates
+      </h3>
       <div style={{
         display: "grid",
         gridTemplateColumns: "repeat(auto-fill, minmax(200px, 1fr))",
