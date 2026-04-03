@@ -24,6 +24,7 @@ const PUBLIC_PREFIXES = [
   "/api/cms/scheduled/calendar.ics", // Auth via ?token= query param
   "/api/mcp",               // MCP servers have their own auth (Bearer token)
   "/api/publish-scheduled", // Called by cron/instrumentation, no user session
+  "/api/beam/receive/",     // Live Beam receive — token-authenticated (not session)
   "/_next/",
   "/favicon",
 ];

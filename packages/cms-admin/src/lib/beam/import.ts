@@ -47,9 +47,9 @@ export async function importBeamArchive(
   const siteId = options?.newSiteId ?? manifest.site.id ?? randomUUID();
   const siteName = manifest.site.name ?? "Imported Site";
 
-  // Find a place for the site. Use CMS admin's working directory as base.
-  const cmsAdminDir = process.cwd();
-  const sitesBaseDir = path.join(cmsAdminDir, ".beam-sites");
+  // Find a place for the site under the active project directory
+  const { getBeamSitesDir } = await import("./paths");
+  const sitesBaseDir = await getBeamSitesDir();
   const siteDir = path.join(sitesBaseDir, siteId);
 
   // Check for existing site
