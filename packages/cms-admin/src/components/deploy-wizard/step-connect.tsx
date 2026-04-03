@@ -118,10 +118,9 @@ export function StepConnect({ flyToken, flyOrg, onUpdate }: Props) {
             href="https://fly.io/dashboard/personal/tokens"
             target="_blank"
             rel="noopener noreferrer"
-            style={{ fontSize: "0.68rem", color: "var(--muted-foreground)", display: "inline-flex", alignItems: "center", gap: "0.25rem", marginTop: "0.35rem" }}
+            style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", display: "inline-flex", alignItems: "center", gap: "0.3rem", marginTop: "0.5rem" }}
           >
-            Get a token at fly.io/dashboard
-            <ExternalLink style={{ width: 10, height: 10 }} />
+            Get key <ExternalLink style={{ width: 11, height: 11 }} />
           </a>
         </div>
 
