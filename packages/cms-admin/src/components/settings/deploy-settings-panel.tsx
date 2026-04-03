@@ -167,6 +167,40 @@ export function DeploySettingsPanel() {
 
   return (
     <div data-testid="panel-deploy">
+      {/* ── Docker Deploy wizard link ───────────────────── */}
+      <div style={{
+        padding: "0.75rem 1rem",
+        borderRadius: 8,
+        border: "1px solid var(--border)",
+        background: "color-mix(in srgb, #F7BB2E 5%, var(--card))",
+        marginBottom: "1.5rem",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+      }}>
+        <div>
+          <div style={{ fontSize: "0.8rem", fontWeight: 600 }}>Docker Deploy Wizard</div>
+          <div style={{ fontSize: "0.7rem", color: "var(--muted-foreground)" }}>
+            Deploy a new site to Fly.io with a few clicks — pick a template, configure, and go.
+          </div>
+        </div>
+        <a
+          href="/admin/deploy/docker"
+          style={{
+            padding: "0.35rem 0.8rem",
+            borderRadius: 6,
+            background: "#F7BB2E",
+            color: "#0D0D0D",
+            fontSize: "0.75rem",
+            fontWeight: 600,
+            textDecoration: "none",
+            whiteSpace: "nowrap",
+          }}
+        >
+          Open Wizard
+        </a>
+      </div>
+
       {/* ── Provider config ─────────────────────────────── */}
       <SectionHeading first>Provider</SectionHeading>
       <SettingsCard>
