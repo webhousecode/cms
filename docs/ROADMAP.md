@@ -48,6 +48,7 @@
 | 40 | **Next.js CMS Helpers** — `@webhouse/cms/next` — 8 drop-in SEO helpers + Fly.io Dockerfile deploy (F121) | 2026-04-01 |
 | 41 | **Beam — Site Teleportation** — .beam archive export/import + Live Beam CMS-to-CMS transfer, token auth, SSE progress, secret stripping (F122) | 2026-04-03 |
 | 42 | **One-Click Docker Deploy** — Wizard UI, template picker (12 templates), Fly.io Machines API, SSE deploy progress, download ZIP self-host (F119) | 2026-04-03 |
+| 43 | **Snippet Embeds** — TipTap node for `{{snippet:slug}}`, visual pill with code preview, toolbar picker, markdown roundtrip, auto-hidden without collection (F124) | 2026-04-06 |
 
 ---
 
@@ -101,7 +102,7 @@ _Makes us stand out. Customers expect these from a modern CMS._
 |----------|---------|------|----------------|
 | ~~8g~~ | ~~**F122 Beam — Site Teleportation**~~ | ~~Done~~ | ~~Shipped 2026-04-03. .beam archive export/import + Live Beam CMS-to-CMS streaming. Token auth (single-use, 1hr), SHA-256 checksums, secret stripping, SSE progress. 7/7 E2E tests.~~ |
 | ~~8h~~ | ~~**F119 One-Click Docker Deploy**~~ | ~~Done~~ | ~~Shipped 2026-04-03. GHCR image, auto-setup, demo seeding (Phase 1). Deploy wizard UI with template picker, Fly.io Machines API, SSE progress, download ZIP (Phase 2-4). 12 templates, 4-step wizard.~~ |
-| 8i | **F124 Snippet Embeds** | Small | TipTap node for `{{snippet:slug}}` — visual pill in editor, toolbar insert, slash command. Reusable code blocks across pages. |
+| ~~8i~~ | ~~**F124 Snippet Embeds**~~ | ~~Done~~ | ~~Shipped 2026-04-06. TipTap SnippetEmbed node — visual pill with expand/collapse, toolbar picker (Braces icon), markdown roundtrip `{{snippet:slug}}`, snippets API. Auto-hidden when no snippets collection.~~ |
 | 9a | **F83 Vibe Site Builder** | Large | THE differentiator. "Describe → Generate → Manage." AI site gen with CMS built in. Only platform with AI gen + CMS + code ownership. |
 | 9b | **F63 Shared Components** | Medium | Design tokens, shared UI components, API helpers. Makes all future features faster + consistent. |
 | ~~9c~~ | ~~**F84 Move Site to Org**~~ | ~~Done~~ | ~~Shipped. API route, registry move, settings UI, 15 unit tests.~~ |

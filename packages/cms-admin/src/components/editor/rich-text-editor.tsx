@@ -34,7 +34,7 @@ import {
   IconUnderline, IconSuperscript, IconSubscript, IconHighlight,
   IconZoomIn, IconZoomOut, IconProofread,
 } from "./editor-icons";
-import { Image as LucideImage, Zap, MessageSquareWarning } from "lucide-react";
+import { Image as LucideImage, Zap, MessageSquareWarning, Code2, ChevronDown, Braces } from "lucide-react";
 import { toast } from "sonner";
 import { AIMetadataPopover } from "@/components/media/ai-metadata-popover";
 import { ProofreadPlugin, proofreadKey, textOffsetToPos } from "./proofread-plugin";
@@ -2018,6 +2018,162 @@ const Callout = TipTapNode.create({
   },
 });
 
+/* ─── Snippet embed node + NodeView ─────────────────────────── */
+function SnippetNodeView({ node, selected, deleteNode }: NodeViewProps) {
+  const { slug, title, lang, code } = node.attrs as { slug: string; title: string; lang: string; code: string };
+  const [expanded, setExpanded] = useState(false);
+  const del = useConfirmDelete(deleteNode);
+
+  return (
+    <NodeViewWrapper draggable style={{ margin: "0.5rem 0", position: "relative" }}>
+      <DragHandle />
+      <div
+        style={{
+          borderRadius: 8,
+          border: selected ? "2px solid var(--primary)" : "1px solid var(--border)",
+          background: "var(--card)",
+          overflow: "hidden",
+        }}
+      >
+        <div
+          onClick={() => setExpanded(!expanded)}
+          style={{
+            padding: "0.5rem 0.75rem",
+            display: "flex",
+            alignItems: "center",
+            gap: "0.5rem",
+            cursor: "pointer",
+            fontSize: "0.78rem",
+          }}
+        >
+          <Code2 style={{ width: 14, height: 14, color: "#F7BB2E", flexShrink: 0 }} />
+          <span style={{ fontWeight: 500, color: "var(--foreground)" }}>{title || slug}</span>
+          {lang && (
+            <span style={{
+              fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: 3,
+              background: "rgba(247, 187, 46, 0.12)", color: "#F7BB2E", fontWeight: 600,
+            }}>{lang}</span>
+          )}
+          <span style={{ flex: 1 }} />
+          <ChevronDown style={{
+            width: 12, height: 12, color: "var(--muted-foreground)",
+            transition: "transform 0.15s",
+            transform: expanded ? "rotate(180deg)" : "",
+          }} />
+          {del.confirming ? (
+            <span style={{ display: "flex", alignItems: "center", gap: "0.2rem" }}>
+              <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
+              <button type="button" onClick={(e) => { e.stopPropagation(); del.confirm(); }}
+                style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
+              <button type="button" onClick={(e) => { e.stopPropagation(); del.cancel(); }}
+                style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
+            </span>
+          ) : (
+            <button type="button" onClick={(e) => { e.stopPropagation(); del.request(); }}
+              style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0 2px", fontSize: "0.7rem", lineHeight: 1 }}>×</button>
+          )}
+        </div>
+        {expanded && code && (
+          <pre style={{
+            margin: 0, padding: "0.6rem 0.75rem", fontSize: "0.72rem",
+            background: "var(--background)", borderTop: "1px solid var(--border)",
+            overflow: "auto", maxHeight: 300, fontFamily: "monospace",
+            color: "var(--foreground)", lineHeight: 1.5,
+          }}><code>{code}</code></pre>
+        )}
+      </div>
+    </NodeViewWrapper>
+  );
+}
+
+const SnippetEmbed = TipTapNode.create({
+  name: "snippetEmbed",
+  group: "block",
+  atom: true,
+  draggable: true,
+
+  addAttributes() {
+    return {
+      slug: { default: "" },
+      title: { default: "" },
+      lang: { default: "" },
+      code: { default: "" },
+    };
+  },
+
+  parseHTML() {
+    return [
+      { tag: "cms-snippet[data-slug]", getAttrs: (el) => ({
+        slug: (el as Element).getAttribute("data-slug") ?? "",
+        title: (el as Element).getAttribute("data-title") ?? "",
+        lang: (el as Element).getAttribute("data-lang") ?? "",
+        code: (el as Element).getAttribute("data-code") ?? "",
+      }) },
+    ];
+  },
+
+  renderHTML({ node }) {
+    return ["cms-snippet", {
+      "data-slug": node.attrs.slug,
+      "data-title": node.attrs.title || undefined,
+      "data-lang": node.attrs.lang || undefined,
+      "data-code": node.attrs.code || undefined,
+    }];
+  },
+
+  addStorage() {
+    return {
+      markdown: {
+        serialize(state: { write: (s: string) => void; closeBlock: (node: unknown) => void }, node: { attrs: Record<string, unknown> }) {
+          state.write(`{{snippet:${node.attrs.slug}}}`);
+          state.closeBlock(node);
+        },
+        parse: {
+          updateDOM(dom: Element) {
+            dom.querySelectorAll("p").forEach((p) => {
+              const text = (p.textContent ?? "").trim();
+              const m = text.match(/^\{\{snippet:([a-z0-9-]+)\}\}$/);
+              if (!m) return;
+              const el = document.createElement("cms-snippet");
+              el.setAttribute("data-slug", m[1]);
+              p.parentNode?.replaceChild(el, p);
+            });
+          },
+        },
+      },
+    };
+  },
+
+  addKeyboardShortcuts() {
+    return {
+      ArrowDown: ({ editor }) => {
+        const { selection, doc } = editor.state;
+        const node = doc.nodeAt(selection.from);
+        if (node?.type.name !== "snippetEmbed") return false;
+        const end = selection.from + node.nodeSize;
+        if (end >= doc.content.size) {
+          editor.chain().insertContentAt(end, { type: "paragraph" }).setTextSelection(end + 1).run();
+          return true;
+        }
+        editor.commands.setTextSelection(end + 1);
+        return true;
+      },
+      Enter: ({ editor }) => {
+        const { selection, doc } = editor.state;
+        const node = doc.nodeAt(selection.from);
+        if (node?.type.name !== "snippetEmbed") return false;
+        const end = selection.from + node.nodeSize;
+        editor.chain().insertContentAt(end, { type: "paragraph" }).setTextSelection(end + 1).run();
+        return true;
+      },
+    };
+  },
+
+  addNodeView() {
+    return ReactNodeViewRenderer(SnippetNodeView);
+  },
+});
+
 /* ─── Toolbar button ─────────────────────────────────────────── */
 function Btn({
   tooltip, active, disabled, onClick, children,
@@ -2208,11 +2364,16 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
   const [availableBlocks, setAvailableBlocks] = useState<{ slug: string; label: string; blockType: string }[]>([]);
   const [blocksLoading, setBlocksLoading] = useState(false);
   const [showInteractivePicker, setShowInteractivePicker] = useState(false);
+  const [showSnippetPicker, setShowSnippetPicker] = useState(false);
   const [showVideoDialog, setShowVideoDialog] = useState(false);
   const [videoUrl, setVideoUrl] = useState("");
   const [intSearch, setIntSearch] = useState("");
+  const [snippetSearch, setSnippetSearch] = useState("");
   const [availableInteractives, setAvailableInteractives] = useState<{ id: string; title: string }[]>([]);
   const [interactivesLoading, setInteractivesLoading] = useState(false);
+  const [availableSnippets, setAvailableSnippets] = useState<{ slug: string; title: string; lang: string; code: string }[]>([]);
+  const [snippetsLoading, setSnippetsLoading] = useState(false);
+  const [hasSnippetsCollection, setHasSnippetsCollection] = useState(false);
   const headingRef = useRef<HTMLDivElement>(null);
   const linkRef = useRef<HTMLDivElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -2263,6 +2424,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
       FileAttachment,
       MapEmbed,
       InteractiveEmbed,
+      SnippetEmbed,
       Callout,
       TextDragDrop,
       Table.configure({ resizable: false }),
@@ -2297,6 +2459,12 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
           }
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           replacements.push({ pos, end: pos + node.nodeSize, node: editor.schema.nodes.interactiveEmbed.create({ interactiveId: id, title, align: alignVal, width: widthVal, height: heightVal }) as any });
+        }
+        // {{snippet:slug}} fallback
+        const snippetMatch = text.match(/^\{\{snippet:([a-z0-9-]+)\}\}$/);
+        if (snippetMatch) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          replacements.push({ pos, end: pos + node.nodeSize, node: editor.schema.nodes.snippetEmbed.create({ slug: snippetMatch[1] }) as any });
         }
       });
       if (replacements.length > 0) {
@@ -2418,6 +2586,26 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [showInteractivePicker]);
+
+  // Fetch snippets on mount (lightweight, only checks if collection exists)
+  useEffect(() => {
+    fetch("/api/cms/snippets").then((r) => r.json()).then((data) => {
+      setHasSnippetsCollection(data.hasCollection ?? false);
+      setAvailableSnippets(data.snippets ?? []);
+    }).catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    if (!showSnippetPicker) return;
+    // Re-fetch when picker opens
+    setSnippetsLoading(true);
+    fetch("/api/cms/snippets").then((r) => r.json()).then((data) => {
+      setAvailableSnippets(data.snippets ?? []);
+    }).catch(() => {}).finally(() => setSnippetsLoading(false));
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setShowSnippetPicker(false); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [showSnippetPicker]);
 
   useEffect(() => {
     if (!showImageMediaBrowser) return;
@@ -3176,6 +3364,13 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
               <Zap className="w-[18px] h-[18px]" />
             </Btn>}
 
+            {hasSnippetsCollection && <Btn tooltip="Insert snippet" onClick={() => {
+              setShowSnippetPicker(true);
+              setSnippetSearch("");
+            }}>
+              <Braces className="w-[18px] h-[18px]" />
+            </Btn>}
+
             {/* Spacer to push right-side controls to the right */}
             <div style={{ flex: 1 }} />
 
@@ -3639,6 +3834,85 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                     <span style={{ fontSize: "1.25rem", flexShrink: 0, color: "#F7BB2E" }}>⚡</span>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <p style={{ fontSize: "0.875rem", fontWeight: 500, color: "var(--foreground)", margin: 0 }}>{item.title}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ── Snippet picker ── */}
+      {showSnippetPicker && (() => {
+        const filtered = snippetSearch.trim()
+          ? availableSnippets.filter(s =>
+              s.title.toLowerCase().includes(snippetSearch.toLowerCase()) ||
+              s.slug.toLowerCase().includes(snippetSearch.toLowerCase()))
+          : availableSnippets;
+        return (
+          <div style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0,0,0,0.5)" }}
+            onMouseDown={() => setShowSnippetPicker(false)}>
+            <div onMouseDown={(e) => e.stopPropagation()} style={{
+              width: "100%", maxWidth: "480px", maxHeight: "28rem",
+              backgroundColor: "var(--card)", border: "1px solid var(--border)",
+              borderRadius: "1rem", boxShadow: "0 24px 48px rgba(0,0,0,0.5)",
+              display: "flex", flexDirection: "column", overflow: "hidden",
+            }}>
+              {/* Header */}
+              <div style={{ padding: "1rem 1.25rem 0.75rem", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  <Braces style={{ width: 16, height: 16, color: "#F7BB2E" }} />
+                  <span style={{ fontSize: "0.95rem", fontWeight: 600 }}>Insert Snippet</span>
+                </div>
+                <button type="button" onClick={() => setShowSnippetPicker(false)}
+                  style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1.1rem" }}>×</button>
+              </div>
+              {/* Search */}
+              <div style={{ padding: "0 1.25rem 0.5rem" }}>
+                <input type="text" value={snippetSearch} onChange={(e) => setSnippetSearch(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Escape") { e.stopPropagation(); setShowSnippetPicker(false); } }}
+                  placeholder="Search snippets…" autoFocus
+                  style={{
+                    width: "100%", padding: "0.4rem 0.625rem", borderRadius: "6px",
+                    border: "1px solid var(--border)", background: "var(--background)",
+                    color: "var(--foreground)", fontSize: "0.85rem", outline: "none",
+                  }}
+                />
+              </div>
+              {/* List */}
+              <div style={{ flex: 1, overflow: "auto", padding: "0.5rem 1.25rem 1rem", display: "flex", flexDirection: "column", gap: "0.4rem" }}>
+                {snippetsLoading && (
+                  <p style={{ fontSize: "0.85rem", color: "var(--muted-foreground)", padding: "1rem 0", textAlign: "center" }}>Loading…</p>
+                )}
+                {!snippetsLoading && filtered.length === 0 && (
+                  <p style={{ fontSize: "0.85rem", color: "var(--muted-foreground)", padding: "1rem 0", textAlign: "center" }}>
+                    {snippetSearch ? `No snippets matching "${snippetSearch}"` : "No snippets found. Create a snippets collection first."}
+                  </p>
+                )}
+                {filtered.map(item => (
+                  <button
+                    key={item.slug}
+                    type="button"
+                    onClick={() => {
+                      editor?.chain().focus().insertContent({ type: "snippetEmbed", attrs: { slug: item.slug, title: item.title, lang: item.lang, code: item.code } }).run();
+                      setShowSnippetPicker(false);
+                      setSnippetSearch("");
+                    }}
+                    style={{
+                      display: "flex", alignItems: "center", gap: "0.6rem", padding: "0.6rem 0.75rem",
+                      borderRadius: "8px", border: "1px solid var(--border)", backgroundColor: "transparent",
+                      cursor: "pointer", textAlign: "left", transition: "border-color 120ms, background 120ms",
+                    }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(255,255,255,0.05)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "#F7BB2E"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--border)"; }}
+                  >
+                    <Code2 style={{ width: 16, height: 16, color: "#F7BB2E", flexShrink: 0 }} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontSize: "0.82rem", fontWeight: 500, color: "var(--foreground)", margin: 0 }}>{item.title || item.slug}</p>
+                      <p style={{ fontSize: "0.68rem", color: "var(--muted-foreground)", margin: 0, fontFamily: "monospace" }}>
+                        {item.slug}{item.lang ? ` · ${item.lang}` : ""}
+                      </p>
                     </div>
                   </button>
                 ))}
