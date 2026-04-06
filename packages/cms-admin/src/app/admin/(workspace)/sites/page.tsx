@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Globe, MoreVertical, Settings2, Plus, Copy, Eye, ExternalLink, Pencil, LayoutGrid, List } from "lucide-react";
+import { Globe, MoreVertical, Settings2, Plus, Copy, Eye, ExternalLink, Pencil, LayoutGrid, List, FileStack, Loader2 } from "lucide-react";
 import { useSiteRole } from "@/hooks/use-site-role";
 import { useTabs } from "@/lib/tabs-context";
 import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
@@ -61,6 +61,35 @@ export default function SitesDashboard() {
   const [siteFilter, setSiteFilter] = useState<"all" | "local" | "github" | "live">("all");
   const [renamingSiteId, setRenamingSiteId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState("");
+  const [cloningSite, setCloningSite] = useState<SiteEntry | null>(null);
+  const [cloneName, setCloneName] = useState("");
+  const [cloneInProgress, setCloneInProgress] = useState(false);
+  const [cloneError, setCloneError] = useState("");
+
+  async function handleClone() {
+    if (!cloningSite || !cloneName.trim()) return;
+    setCloneInProgress(true);
+    setCloneError("");
+    try {
+      const res = await fetch("/api/admin/sites/clone", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          sourceSiteId: cloningSite.id,
+          newName: cloneName.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Clone failed");
+      setCloningSite(null);
+      setCloneName("");
+      loadSites();
+    } catch (err) {
+      setCloneError(err instanceof Error ? err.message : "Clone failed");
+    } finally {
+      setCloneInProgress(false);
+    }
+  }
   const [viewMode, setViewMode] = useState<"grid" | "list">(() => {
     if (typeof window !== "undefined") return (localStorage.getItem("cms-sites-view") as "grid" | "list") ?? "grid";
     return "grid";
@@ -251,6 +280,7 @@ export default function SitesDashboard() {
           onEnter={enterSite}
           onSettings={goToSiteSettings}
           onRename={(site) => { setRenameValue(site.name); setRenamingSiteId(site.id); }}
+          onClone={(site) => { setCloningSite(site); setCloneName(`${site.name} (Clone)`); setCloneError(""); }}
           onPreview={async (site) => {
             persistSiteChoice(site.id);
             if (site.previewUrl) {
@@ -317,6 +347,17 @@ export default function SitesDashboard() {
                     <Copy className="mr-2 h-4 w-4 text-muted-foreground" />
                     Copy site ID
                   </DropdownMenuItem>
+                  {site.adapter === "filesystem" && (
+                    <DropdownMenuItem onClick={(e) => {
+                      e.stopPropagation();
+                      setCloningSite(site);
+                      setCloneName(`${site.name} (Clone)`);
+                      setCloneError("");
+                    }}>
+                      <FileStack className="mr-2 h-4 w-4 text-muted-foreground" />
+                      Clone site
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem onClick={(e) => { e.stopPropagation(); goToSiteSettings(site); }}>
                     <Settings2 className="mr-2 h-4 w-4 text-muted-foreground" />
                     Settings
@@ -461,11 +502,87 @@ export default function SitesDashboard() {
         </div>
       </div>
     )}
+
+    {/* Clone modal */}
+    {cloningSite && (
+      <div
+        style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.5)" }}
+        onClick={() => !cloneInProgress && setCloningSite(null)}
+      >
+        <div
+          style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "12px", padding: "1.5rem", width: "26rem", boxShadow: "0 8px 30px rgba(0,0,0,0.4)" }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.5rem" }}>
+            <FileStack style={{ width: 18, height: 18, color: "#F7BB2E" }} />
+            <h3 style={{ fontSize: "0.95rem", fontWeight: 600, margin: 0 }}>Clone Site</h3>
+          </div>
+          <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", margin: "0 0 1rem", lineHeight: 1.5 }}>
+            Creates a complete copy of <strong>{cloningSite.name}</strong> — content, media, config, agents, and brand voice.
+            Secrets (API keys, deploy tokens) are stripped from the copy.
+          </p>
+          <label style={{ display: "block", fontSize: "0.72rem", fontWeight: 600, color: "var(--muted-foreground)", marginBottom: "0.35rem" }}>
+            New site name
+          </label>
+          <input
+            autoFocus
+            value={cloneName}
+            onChange={(e) => setCloneName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !cloneInProgress) handleClone();
+              if (e.key === "Escape" && !cloneInProgress) setCloningSite(null);
+            }}
+            disabled={cloneInProgress}
+            style={{
+              width: "100%", padding: "0.5rem 0.75rem", borderRadius: "8px",
+              border: "1px solid var(--input)", background: "transparent",
+              color: "var(--foreground)", fontSize: "0.875rem", outline: "none",
+              boxSizing: "border-box",
+            }}
+          />
+          {cloneError && (
+            <p style={{
+              marginTop: "0.75rem", padding: "0.5rem 0.75rem", borderRadius: 6,
+              background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)",
+              color: "#ef4444", fontSize: "0.75rem", margin: "0.75rem 0 0",
+            }}>{cloneError}</p>
+          )}
+          <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end", marginTop: "1rem" }}>
+            <button
+              type="button"
+              onClick={() => setCloningSite(null)}
+              disabled={cloneInProgress}
+              style={{
+                padding: "0.4rem 0.875rem", borderRadius: "6px", fontSize: "0.8rem",
+                border: "1px solid var(--border)", background: "transparent",
+                color: "var(--foreground)", cursor: cloneInProgress ? "not-allowed" : "pointer",
+                opacity: cloneInProgress ? 0.5 : 1,
+              }}
+            >Cancel</button>
+            <button
+              type="button"
+              onClick={handleClone}
+              disabled={cloneInProgress || !cloneName.trim()}
+              style={{
+                padding: "0.4rem 0.875rem", borderRadius: "6px", fontSize: "0.8rem",
+                border: "none", background: "#F7BB2E", color: "#0D0D0D",
+                cursor: cloneInProgress || !cloneName.trim() ? "not-allowed" : "pointer",
+                fontWeight: 600, display: "inline-flex", alignItems: "center", gap: "0.35rem",
+                opacity: cloneInProgress || !cloneName.trim() ? 0.5 : 1,
+              }}
+            >
+              {cloneInProgress && <Loader2 className="animate-spin" style={{ width: 13, height: 13 }} />}
+              {cloneInProgress ? "Cloning…" : "Clone"}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
     </>
   );
 }
 
-function SiteListView({ sites, stats, healthMap, liveUrls, onEnter, onSettings, onRename, onPreview, onCopyId }: {
+function SiteListView({ sites, stats, healthMap, liveUrls, onEnter, onSettings, onRename, onPreview, onCopyId, onClone }: {
   sites: SiteEntry[];
   stats: Record<string, { pages: number; collections: number }>;
   healthMap: Record<string, "up" | "down" | "no-preview">;
@@ -475,6 +592,7 @@ function SiteListView({ sites, stats, healthMap, liveUrls, onEnter, onSettings, 
   onRename: (site: SiteEntry) => void;
   onPreview: (site: SiteEntry) => void;
   onCopyId: (id: string) => void;
+  onClone?: (site: SiteEntry) => void;
 }) {
   return (
     <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem" }}>
@@ -572,6 +690,12 @@ function SiteListView({ sites, stats, healthMap, liveUrls, onEnter, onSettings, 
                       <Copy className="mr-2 h-4 w-4 text-muted-foreground" />
                       Copy site ID
                     </DropdownMenuItem>
+                    {site.adapter === "filesystem" && onClone && (
+                      <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onClone(site); }}>
+                        <FileStack className="mr-2 h-4 w-4 text-muted-foreground" />
+                        Clone site
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onSettings(site); }}>
                       <Settings2 className="mr-2 h-4 w-4 text-muted-foreground" />
                       Settings
