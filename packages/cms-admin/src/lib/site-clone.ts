@@ -162,7 +162,7 @@ export async function cloneSite(options: CloneOptions): Promise<CloneResult> {
     } catch { /* non-fatal — user can run pnpm install in target dir */ }
   }
 
-  // ── 4. Strip secrets in _data ──
+  // ── 4. Strip secrets + reset deploy/preview state in _data ──
   const targetDataDir = path.join(targetDir, "_data");
   if (existsSync(targetDataDir)) {
     for (const [filename, fields] of Object.entries(SECRET_FIELDS)) {
@@ -183,6 +183,27 @@ export async function cloneSite(options: CloneOptions): Promise<CloneResult> {
         }
         writeFileSync(filePath, JSON.stringify(obj, null, 2));
       } catch { /* not JSON, skip */ }
+    }
+
+    // Reset deploy + preview state so the clone doesn't accidentally
+    // publish to the source's GitHub repo / production URL.
+    const siteCfgPath = path.join(targetDataDir, "site-config.json");
+    if (existsSync(siteCfgPath)) {
+      try {
+        const sc = JSON.parse(readFileSync(siteCfgPath, "utf-8")) as Record<string, unknown>;
+        sc.deployOnSave = false;
+        sc.deployProvider = "off";
+        sc.deployHookUrl = "";
+        sc.deployAppName = "";
+        sc.deployApiToken = "";
+        sc.deployFlyOrg = "";
+        sc.deployProductionUrl = "";
+        sc.deployCustomDomain = "";
+        sc.previewSiteUrl = "";
+        // Drop calendar secret so each clone gets its own
+        delete sc.calendarSecret;
+        writeFileSync(siteCfgPath, JSON.stringify(sc, null, 2));
+      } catch { /* non-fatal */ }
     }
   }
 
