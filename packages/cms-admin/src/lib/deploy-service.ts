@@ -117,6 +117,12 @@ export async function triggerDeploy(): Promise<DeployEntry> {
 
   const start = Date.now();
 
+  // F35 — fire deploy.started webhook
+  {
+    const { fireDeployEvent } = await import("./webhook-events");
+    fireDeployEvent("started", provider).catch(() => {});
+  }
+
   try {
     switch (provider) {
       case "vercel":
@@ -207,6 +213,16 @@ export async function triggerDeploy(): Promise<DeployEntry> {
   const log = await readLog();
   log.deploys.unshift(entry);
   await writeLog(log);
+
+  // F35 — fire deploy.success / deploy.failed webhook
+  {
+    const { fireDeployEvent } = await import("./webhook-events");
+    if (entry.status === "success") {
+      fireDeployEvent("success", provider, { url: entry.url, durationMs: entry.duration }).catch(() => {});
+    } else if (entry.status === "error") {
+      fireDeployEvent("failed", provider, { durationMs: entry.duration, error: entry.error }).catch(() => {});
+    }
+  }
 
   return entry;
 }

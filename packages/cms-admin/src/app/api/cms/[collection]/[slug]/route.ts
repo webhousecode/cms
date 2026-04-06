@@ -4,6 +4,7 @@ import { removeQueueItemsBySlug } from "@/lib/curation";
 import { dispatchRevalidation } from "@/lib/revalidation";
 import { getActiveSiteEntry } from "@/lib/site-paths";
 import { getSiteRole, getSessionWithSiteRole } from "@/lib/require-role";
+import { fireContentEvent } from "@/lib/webhook-events";
 import { GitHubStorageAdapter } from "@webhouse/cms";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
@@ -94,6 +95,9 @@ export async function POST(req: NextRequest, { params }: Ctx) {
         dispatchRevalidation(site, { collection, slug, action: "updated", document: updated }, urlPrefix).catch(() => {});
       }
 
+      // F35 — fire content webhook
+      fireContentEvent("restored", collection, slug, updated ?? undefined, `user:${postSession.email}`).catch(() => {});
+
       return NextResponse.json(updated);
     }
 
@@ -117,6 +121,10 @@ export async function POST(req: NextRequest, { params }: Ctx) {
         data: { ...original.data },
         ...(original.locale ? { locale: original.locale } : {}),
       });
+
+      // F35 — fire content webhook
+      fireContentEvent("cloned", collection, newSlug, cloned, `user:${postSession.email}`).catch(() => {});
+
       return NextResponse.json(cloned);
     }
 
@@ -235,6 +243,16 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
     const willDeploy = revalidationOk ? false : await checkDeployOnSave();
     dispatchAutoDeployOnSave(revalidationOk).catch(() => {});
 
+    // F35 — fire content lifecycle webhook
+    {
+      const previousStatus = doc.status;
+      let action: "updated" | "published" | "unpublished" | "trashed" = "updated";
+      if (nextStatus === "published" && previousStatus !== "published") action = "published";
+      else if (nextStatus === "trashed") action = "trashed";
+      else if (previousStatus === "published" && nextStatus === "draft") action = "unpublished";
+      fireContentEvent(action, collection, newSlug, updated ?? undefined, `user:${session.email}`).catch(() => {});
+    }
+
     return NextResponse.json({ ...updated, _deployTriggered: willDeploy });
   } catch (err) {
     console.error(err);
@@ -274,6 +292,9 @@ export async function DELETE(req: NextRequest, { params }: Ctx) {
       const urlPrefix = (col as { urlPrefix?: string })?.urlPrefix;
       dispatchRevalidation(site, { collection, slug, action: "deleted" }, urlPrefix).catch(() => {});
     }
+
+    // F35 — fire content webhook
+    fireContentEvent(permanent ? "trashed" : "trashed", collection, slug, doc, `user:${delSession.email}`).catch(() => {});
 
     return NextResponse.json({ ok: true });
   } catch (err) {

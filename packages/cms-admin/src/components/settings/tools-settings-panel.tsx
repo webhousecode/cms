@@ -12,6 +12,9 @@ interface AutomationConfig {
   linkCheckWebhooks: WebhookEntry[];
   publishWebhooks: WebhookEntry[];
   agentDefaultWebhooks: WebhookEntry[];
+  contentWebhooks: WebhookEntry[];
+  deployWebhooks: WebhookEntry[];
+  mediaWebhooks: WebhookEntry[];
   aiImageOverwrite: "ask" | "skip" | "overwrite";
   mediaAutoOptimize: boolean;
   mediaVariantWidths: number[];
@@ -24,6 +27,9 @@ const DEFAULTS: AutomationConfig = {
   linkCheckWebhooks: [],
   publishWebhooks: [],
   agentDefaultWebhooks: [],
+  contentWebhooks: [],
+  deployWebhooks: [],
+  mediaWebhooks: [],
   aiImageOverwrite: "ask",
   mediaAutoOptimize: true,
   mediaVariantWidths: [400, 800, 1200, 1600],
@@ -50,6 +56,9 @@ export function ToolsSettingsPanel() {
           linkCheckWebhooks: data.linkCheckWebhooks ?? [],
           publishWebhooks: data.publishWebhooks ?? [],
           agentDefaultWebhooks: data.agentDefaultWebhooks ?? [],
+          contentWebhooks: data.contentWebhooks ?? [],
+          deployWebhooks: data.deployWebhooks ?? [],
+          mediaWebhooks: data.mediaWebhooks ?? [],
           aiImageOverwrite: data.aiImageOverwrite ?? "ask",
           mediaAutoOptimize: data.mediaAutoOptimize ?? true,
           mediaVariantWidths: data.mediaVariantWidths ?? [400, 800, 1200, 1600],
@@ -154,10 +163,51 @@ export function ToolsSettingsPanel() {
       <SettingsCard>
         <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>
           Default webhooks for all agents. Individual agents can override with their own webhooks.
+          Fires <code style={{ fontSize: "0.7rem" }}>agent.started</code>, <code style={{ fontSize: "0.7rem" }}>agent.completed</code>, <code style={{ fontSize: "0.7rem" }}>agent.failed</code>.
         </p>
         <WebhookList
           webhooks={config.agentDefaultWebhooks}
           onChange={(w) => updateConfig((c) => ({ ...c, agentDefaultWebhooks: w }))}
+        />
+      </SettingsCard>
+
+      {/* ── F35 Content Lifecycle ──────────────────────────── */}
+      <SectionHeading>Content Lifecycle (F35)</SectionHeading>
+      <SettingsCard>
+        <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>
+          Notified on every content change — create, update, publish, unpublish, trash, restore, clone.
+          Fires <code style={{ fontSize: "0.7rem" }}>content.published</code>, <code style={{ fontSize: "0.7rem" }}>content.updated</code>, <code style={{ fontSize: "0.7rem" }}>content.trashed</code>, etc.
+          Generic webhooks include HMAC-SHA256 signature when a secret is set.
+        </p>
+        <WebhookList
+          webhooks={config.contentWebhooks}
+          onChange={(w) => updateConfig((c) => ({ ...c, contentWebhooks: w }))}
+        />
+      </SettingsCard>
+
+      {/* ── F35 Deploy Lifecycle ───────────────────────────── */}
+      <SectionHeading>Deploy Lifecycle (F35)</SectionHeading>
+      <SettingsCard>
+        <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>
+          Notified when deploys start, succeed, or fail.
+          Fires <code style={{ fontSize: "0.7rem" }}>deploy.started</code>, <code style={{ fontSize: "0.7rem" }}>deploy.success</code>, <code style={{ fontSize: "0.7rem" }}>deploy.failed</code>.
+        </p>
+        <WebhookList
+          webhooks={config.deployWebhooks}
+          onChange={(w) => updateConfig((c) => ({ ...c, deployWebhooks: w }))}
+        />
+      </SettingsCard>
+
+      {/* ── F35 Media Lifecycle ────────────────────────────── */}
+      <SectionHeading>Media Lifecycle (F35)</SectionHeading>
+      <SettingsCard>
+        <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>
+          Notified when media files are uploaded or deleted.
+          Fires <code style={{ fontSize: "0.7rem" }}>media.uploaded</code>, <code style={{ fontSize: "0.7rem" }}>media.deleted</code>.
+        </p>
+        <WebhookList
+          webhooks={config.mediaWebhooks}
+          onChange={(w) => updateConfig((c) => ({ ...c, mediaWebhooks: w }))}
         />
       </SettingsCard>
 

@@ -207,6 +207,12 @@ export async function runAgent(agentId: string, userPrompt: string, overrideColl
   if (!agent) throw new Error(`Agent ${agentId} not found`);
   if (!agent.active) throw new Error(`Agent ${agentId} is not active`);
 
+  // F35 — fire agent.started webhook
+  {
+    const { fireAgentEvent } = await import("./webhook-events");
+    fireAgentEvent("started", agent.name ?? agentId).catch(() => {});
+  }
+
   const apiKey = await getApiKey("anthropic");
   if (!apiKey) throw new Error("Anthropic API key not configured");
 
@@ -374,6 +380,16 @@ export async function runAgent(agentId: string, userPrompt: string, overrideColl
     model,
     status: "success",
   }).catch(() => {});
+
+  // F35 — fire agent.completed webhook
+  {
+    const { fireAgentEvent } = await import("./webhook-events");
+    fireAgentEvent("completed", agent.name ?? agentId, {
+      targetCollection,
+      documentsCreated: 1,
+      costUsd: totalCost,
+    }).catch(() => {});
+  }
 
   // Record AI content edit for each field produced
   const fieldNames = Object.keys(contentData);

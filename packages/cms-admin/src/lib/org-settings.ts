@@ -53,11 +53,17 @@ export interface OrgSettings {
   linkCheckSchedule?: "off" | "daily" | "weekly";
   linkCheckTime?: string;
 
-  // Default webhooks
-  publishWebhooks?: { id: string; url: string }[];
-  backupWebhooks?: { id: string; url: string }[];
-  linkCheckWebhooks?: { id: string; url: string }[];
-  agentDefaultWebhooks?: { id: string; url: string }[];
+  // Default webhooks (F13 + F35)
+  publishWebhooks?: { id: string; url: string; secret?: string; label?: string }[];
+  backupWebhooks?: { id: string; url: string; secret?: string; label?: string }[];
+  linkCheckWebhooks?: { id: string; url: string; secret?: string; label?: string }[];
+  agentDefaultWebhooks?: { id: string; url: string; secret?: string; label?: string }[];
+  /** F35 — Content lifecycle webhooks */
+  contentWebhooks?: { id: string; url: string; secret?: string; label?: string }[];
+  /** F35 — Deploy lifecycle webhooks */
+  deployWebhooks?: { id: string; url: string; secret?: string; label?: string }[];
+  /** F35 — Media lifecycle webhooks */
+  mediaWebhooks?: { id: string; url: string; secret?: string; label?: string }[];
 
   // MCP Servers (shared across all sites)
   mcpServers?: { name: string; command: string; args?: string[]; env?: Record<string, string>; enabled?: boolean }[];

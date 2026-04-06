@@ -76,11 +76,18 @@ export interface SiteConfig {
   /** WebP quality (1-100) */
   mediaWebpQuality: number;
 
-  /** Webhook URLs per automation (ordered, multiple per type) */
-  backupWebhooks: { id: string; url: string }[];
-  linkCheckWebhooks: { id: string; url: string }[];
-  publishWebhooks: { id: string; url: string }[];
-  agentDefaultWebhooks: { id: string; url: string }[];
+  /** Webhook URLs per automation (ordered, multiple per type)
+   *  Each entry optionally has `secret` for HMAC-SHA256 signing (F35) */
+  backupWebhooks: { id: string; url: string; secret?: string; label?: string }[];
+  linkCheckWebhooks: { id: string; url: string; secret?: string; label?: string }[];
+  publishWebhooks: { id: string; url: string; secret?: string; label?: string }[];
+  agentDefaultWebhooks: { id: string; url: string; secret?: string; label?: string }[];
+  /** F35 — Content lifecycle webhooks (created, updated, published, unpublished, trashed, restored, cloned) */
+  contentWebhooks: { id: string; url: string; secret?: string; label?: string }[];
+  /** F35 — Deploy lifecycle webhooks (started, success, failed) */
+  deployWebhooks: { id: string; url: string; secret?: string; label?: string }[];
+  /** F35 — Media lifecycle webhooks (uploaded, deleted) */
+  mediaWebhooks: { id: string; url: string; secret?: string; label?: string }[];
 
   /** F95 Cloud Backup — provider config */
   backupProvider: "off" | "pcloud" | "s3" | "webdav";
@@ -200,6 +207,9 @@ async function defaults(): Promise<SiteConfig> {
     linkCheckWebhooks: [],
     publishWebhooks: [],
     agentDefaultWebhooks: [],
+    contentWebhooks: [],
+    deployWebhooks: [],
+    mediaWebhooks: [],
     defaultLocale: "en",
     locales: [],
     localeStrategy: "prefix-other",
