@@ -6,6 +6,7 @@ export async function GET() {
   const collections = config.collections.map((c) => ({
     name: c.name,
     label: c.label ?? c.name,
+    urlPrefix: (c as { urlPrefix?: string }).urlPrefix,
   }));
   return NextResponse.json({ collections });
 }

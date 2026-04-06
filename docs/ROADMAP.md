@@ -51,6 +51,7 @@
 | 43 | **Snippet Embeds** — TipTap node for `{{snippet:slug}}`, visual pill with code preview, toolbar picker, markdown roundtrip, auto-hidden without collection (F124) | 2026-04-06 |
 | 44 | **Desktop PWA** — Manifest, icons, service worker, Chrome/Edge "Install app" prompt, .beam file associations via file_handlers (F92) | 2026-04-06 |
 | 45 | **Favorites** — Heart toggle on ActionBar, collapsible sidebar Favorites section, Command Palette group at top, per-user persistence (F94) | 2026-04-06 |
+| 46 | **Homepage Designation** — Explicit homepage dropdown in Site Settings, Homepage badge in editor, slug convention fallback (F81) | 2026-04-06 |
 
 ---
 
@@ -121,7 +122,7 @@ _Makes us stand out. Customers expect these from a modern CMS._
 | 17c | **F53 Drag & Drop Blocks** | Medium | Drag blocks between columns with @dnd-kit. |
 | 18 | **F04 MCP Enhancements** | Small | Already in progress. More tools, better context. |
 | 18b | **F54 Local AI Tunnel** | Small | Zero-cost AI during dev via Claude Code subscription. Huge DX win. |
-| 18c | **F81 Homepage Designation** | Small | Explicit "Set as homepage" in Site Settings. Replaces fragile slug conventions. WordPress-style dropdown. |
+| ~~18c~~ | ~~**F81 Homepage Designation**~~ | ~~Done~~ | ~~Shipped 2026-04-06. Explicit homepageSlug + homepageCollection on SiteEntry, Site Settings dropdown, Homepage badge in document editor, backwards-compatible slug convention fallback, 18 unit tests.~~ |
 | 18d | **F82 Loaders & Spinners** | Medium | Shimmer skeletons, inline spinners, progress bars, top-loader bar. Branded with webhouse gold. Premium feel. |
 | ~~18e~~ | ~~**F92 Desktop PWA**~~ | ~~Done~~ | ~~Shipped 2026-04-06. manifest.json, PWA icons (192/512 + maskable + apple-touch), minimal pass-through service worker, file_handlers for .beam files, layout metadata. Chrome/Edge "Install app" ready.~~ |
 | ~~18f~~ | ~~**F94 Favorites**~~ | ~~Done~~ | ~~Shipped 2026-04-06. FavoriteToggle heart on ActionBar, sidebar Favorites section (collapsible, hidden when empty), Command Palette "Favorites" group at top, UserState persistence with localStorage fast-path + server sync.~~ |
