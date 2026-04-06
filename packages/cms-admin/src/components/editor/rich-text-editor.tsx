@@ -2468,12 +2468,16 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
         }
       });
       if (replacements.length > 0) {
-        const tr = editor.state.tr;
-        // Apply from end to start so positions stay valid
-        for (const r of replacements.reverse()) {
-          tr.replaceWith(r.pos, r.end, r.node);
-        }
-        editor.view.dispatch(tr);
+        // Defer dispatch to a microtask to avoid flushSync warnings when
+        // NodeViews mount during the initial editor render (React 19 + TipTap v3).
+        const reversed = replacements.reverse();
+        queueMicrotask(() => {
+          const tr = editor.state.tr;
+          for (const r of reversed) {
+            tr.replaceWith(r.pos, r.end, r.node);
+          }
+          editor.view.dispatch(tr);
+        });
       }
       // Allow onUpdate to fire normally after onCreate completes
       requestAnimationFrame(() => { creatingRef.current = false; });
@@ -2587,12 +2591,15 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
     return () => document.removeEventListener("keydown", onKey);
   }, [showInteractivePicker]);
 
-  // Fetch snippets on mount (lightweight, only checks if collection exists)
+  // Fetch snippets after initial mount (deferred to avoid flushSync during editor render)
   useEffect(() => {
-    fetch("/api/cms/snippets").then((r) => r.json()).then((data) => {
-      setHasSnippetsCollection(data.hasCollection ?? false);
-      setAvailableSnippets(data.snippets ?? []);
-    }).catch(() => {});
+    const timer = setTimeout(() => {
+      fetch("/api/cms/snippets").then((r) => r.json()).then((data) => {
+        setHasSnippetsCollection(data.hasCollection ?? false);
+        setAvailableSnippets(data.snippets ?? []);
+      }).catch(() => {});
+    }, 0);
+    return () => clearTimeout(timer);
   }, []);
 
   useEffect(() => {
