@@ -9,7 +9,7 @@
  * GitHub-backed sites are not supported (clone would require creating
  * a new repo, which is a more involved flow).
  */
-import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync, statSync, copyFileSync, rmSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync, statSync, copyFileSync, rmSync, symlinkSync } from "node:fs";
 import path from "node:path";
 import { randomUUID } from "node:crypto";
 import { loadRegistry, addSite, type SiteEntry } from "./site-registry";
@@ -149,6 +149,17 @@ export async function cloneSite(options: CloneOptions): Promise<CloneResult> {
     // Clean up partial copy on error
     try { rmSync(targetDir, { recursive: true, force: true }); } catch { /* ignore */ }
     throw err;
+  }
+
+  // Symlink node_modules from source so cms.config.ts imports resolve.
+  // This is necessary because jiti loads the cloned cms.config.ts which
+  // imports from "@webhouse/cms" — without node_modules the layout crashes.
+  const sourceNodeModules = path.join(sourceDir, "node_modules");
+  const targetNodeModules = path.join(targetDir, "node_modules");
+  if (existsSync(sourceNodeModules) && !existsSync(targetNodeModules)) {
+    try {
+      symlinkSync(sourceNodeModules, targetNodeModules, "dir");
+    } catch { /* non-fatal — user can run pnpm install in target dir */ }
   }
 
   // ── 4. Strip secrets in _data ──
