@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { approveQueueItem, getQueueItem } from "@/lib/curation";
 import { getAgent, updateAgent } from "@/lib/agents";
 import { denyViewers } from "@/lib/require-role";
+import { recordCorrectionsFromDiff } from "@/lib/agent-feedback";
 
 export async function POST(
   request: NextRequest,
@@ -14,12 +15,21 @@ export async function POST(
     const queueItem = await getQueueItem(id);
     const item = await approveQueueItem(id, body.asDraft ?? false);
 
-    // Increment agent approved stat
+    // Increment agent approved stat + record correction feedback for any
+    // fields the curator edited before approving.
     if (queueItem?.agentId) {
       const agent = await getAgent(queueItem.agentId);
       if (agent) {
         await updateAgent(agent.id, {
           stats: { ...agent.stats, approved: agent.stats.approved + 1 },
+        }).catch(() => {});
+      }
+      if (queueItem.originalContentData) {
+        await recordCorrectionsFromDiff({
+          agentId: queueItem.agentId,
+          queueItemId: queueItem.id,
+          original: queueItem.originalContentData,
+          corrected: item.contentData,
         }).catch(() => {});
       }
     }

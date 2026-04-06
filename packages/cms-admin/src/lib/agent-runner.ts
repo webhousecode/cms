@@ -8,8 +8,7 @@ import { buildContentContext } from "@/lib/content-context";
 import { buildLocaleInstruction } from "@/lib/ai/locale-prompt";
 import { readSiteConfig } from "@/lib/site-config";
 import { buildToolRegistry, type ToolDefinition, type ToolHandler } from "@/lib/tools";
-import fs from "fs/promises";
-import path from "path";
+import { loadFeedbackForPrompt } from "@/lib/agent-feedback";
 import { getActiveSitePaths } from "./site-paths";
 
 interface FeedbackExample {
@@ -24,21 +23,6 @@ export interface AgentRunResult {
   slug: string;
   costUsd: number;
   alternatives?: { model: string; contentData: Record<string, unknown>; costUsd: number }[];
-}
-
-async function getDataDir(): Promise<string> {
-  const { dataDir } = await getActiveSitePaths();
-  return dataDir;
-}
-
-async function loadFeedback(agentId: string): Promise<FeedbackExample[]> {
-  const feedbackPath = path.join(await getDataDir(), "agents", agentId, "feedback.json");
-  try {
-    const raw = await fs.readFile(feedbackPath, "utf-8");
-    return (JSON.parse(raw) as FeedbackExample[]).slice(-5);
-  } catch {
-    return [];
-  }
 }
 
 interface SelectOption { label: string; value: string }
@@ -225,7 +209,7 @@ export async function runAgent(agentId: string, userPrompt: string, overrideColl
   const [cockpit, brandVoice, feedback, contentContext, toolRegistry] = await Promise.all([
     readCockpit(),
     readBrandVoice(),
-    loadFeedback(agentId),
+    loadFeedbackForPrompt(agentId),
     buildContentContext().catch(() => ""),
     buildToolRegistry(agent),
   ]);

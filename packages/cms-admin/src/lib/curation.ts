@@ -12,6 +12,9 @@ export interface QueueItem {
   status: "ready" | "in_review" | "approved" | "rejected" | "published";
   generatedAt: string;
   contentData: Record<string, unknown>;
+  /** Snapshot of contentData at generation time. Used to diff curator
+   *  edits when approving so we can record per-field "correction" feedback. */
+  originalContentData?: Record<string, unknown>;
   alternatives?: {
     model: string;
     contentData: Record<string, unknown>;
@@ -50,6 +53,9 @@ export async function addQueueItem(
     ...data,
     id: `qi-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     generatedAt: new Date().toISOString(),
+    // Snapshot the AI's original output so curator edits can be diffed
+    // into "correction" feedback at approval time.
+    originalContentData: data.originalContentData ?? structuredClone(data.contentData),
   };
   items.unshift(item);
   await writeQueue(items);
