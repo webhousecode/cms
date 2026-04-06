@@ -308,6 +308,12 @@ function SiteSection() {
 	const [error, setError] = useState("");
 	const [configPath, setConfigPath] = useState("");
 	const [contentDir, setContentDir] = useState("");
+	// F81 — Homepage designation
+	const [homepageCollection, setHomepageCollection] = useState("");
+	const [homepageSlug, setHomepageSlug] = useState("");
+	const [rootCollections, setRootCollections] = useState<Array<{ name: string; label: string }>>([]);
+	const [homepagePages, setHomepagePages] = useState<Array<{ slug: string; title: string }>>([]);
+	const [homepageLoading, setHomepageLoading] = useState(false);
 
 	useEffect(() => {
 		let resolvedDir = "";
@@ -324,18 +330,66 @@ function SiteSection() {
 				const siteId = document.cookie.match(/(?:^|; )cms-active-site=([^;]*)/)?.[1];
 				if (orgId && siteId) {
 					const org = reg.registry.orgs.find((o) => o.id === decodeURIComponent(orgId));
-					const site = org?.sites.find((s) => s.id === decodeURIComponent(siteId));
+					const site = org?.sites.find((s) => s.id === decodeURIComponent(siteId)) as (Record<string, unknown> & { name: string; configPath?: string; homepageSlug?: string; homepageCollection?: string }) | undefined;
 					if (site) {
 						setSiteName(site.name);
 						setSiteNameOriginal(site.name);
 						setConfigPath(site.configPath ?? "");
+						if (site.homepageSlug) setHomepageSlug(site.homepageSlug);
+						if (site.homepageCollection) setHomepageCollection(site.homepageCollection);
 					}
 				}
 			}
 			// Prefer resolved full path, fall back to registry value
 			setContentDir(resolvedDir || "");
 		});
+
+		// Fetch collections to find ones with urlPrefix "/" (root)
+		fetch("/api/admin/site-config", { cache: "no-store" })
+			.then((r) => r.json())
+			.then(() => fetch("/api/cms/collections", { cache: "no-store" }))
+			.then((r) => (r.ok ? r.json() : null))
+			.then((data: { collections?: Array<{ name: string; label?: string; urlPrefix?: string }> } | null) => {
+				if (!data?.collections) return;
+				const roots = data.collections
+					.filter((c) => {
+						const prefix = (c.urlPrefix ?? "").replace(/\/+$/, "");
+						return prefix === "" || prefix === "/";
+					})
+					.map((c) => ({ name: c.name, label: c.label ?? c.name }));
+				setRootCollections(roots);
+				// Default homepageCollection to "pages" if it exists, else first root
+				if (!homepageCollection) {
+					const def = roots.find((c) => c.name === "pages")?.name ?? roots[0]?.name ?? "";
+					if (def) setHomepageCollection(def);
+				}
+			})
+			.catch(() => {});
+	// eslint-disable-next-line react-hooks/exhaustive-deps
 	}, []);
+
+	// Fetch pages whenever homepageCollection changes
+	useEffect(() => {
+		if (!homepageCollection) {
+			setHomepagePages([]);
+			return;
+		}
+		setHomepageLoading(true);
+		fetch(`/api/cms/${homepageCollection}`, { cache: "no-store" })
+			.then((r) => (r.ok ? r.json() : null))
+			.then((data: Array<{ slug: string; data?: { title?: string }; status?: string }> | null) => {
+				if (!Array.isArray(data)) { setHomepagePages([]); return; }
+				const pages = data
+					.filter((d) => d.status !== "trashed")
+					.map((d) => ({
+						slug: d.slug,
+						title: d.data?.title ?? d.slug,
+					}));
+				setHomepagePages(pages);
+			})
+			.catch(() => setHomepagePages([]))
+			.finally(() => setHomepageLoading(false));
+	}, [homepageCollection]);
 
 	async function handleSave(e: FormEvent) {
 		e.preventDefault();
@@ -362,6 +416,26 @@ function SiteSection() {
 						});
 						setSiteNameOriginal(siteName.trim());
 						window.dispatchEvent(new CustomEvent("cms-registry-change"));
+					}
+				}
+				// F81 — Persist homepage setting to registry
+				{
+					const orgId = document.cookie.match(/(?:^|; )cms-active-org=([^;]*)/)?.[1];
+					const siteId = document.cookie.match(/(?:^|; )cms-active-site=([^;]*)/)?.[1];
+					if (orgId && siteId) {
+						await fetch("/api/cms/registry", {
+							method: "POST",
+							headers: { "Content-Type": "application/json" },
+							body: JSON.stringify({
+								action: "update-site",
+								orgId: decodeURIComponent(orgId),
+								siteId: decodeURIComponent(siteId),
+								updates: {
+									homepageSlug: homepageSlug || "",
+									homepageCollection: homepageSlug ? (homepageCollection || "pages") : "",
+								},
+							}),
+						}).catch(() => {});
 					}
 				}
 				setSaved(true);
@@ -438,6 +512,50 @@ function SiteSection() {
 						checked={cfg.previewInIframe}
 						onChange={(v) => setCfg((c) => ({ ...c, previewInIframe: v }))}
 					/>
+				</Card>
+			</div>
+
+			{/* F81 — Homepage designation */}
+			<div>
+				<SectionHeading>Homepage</SectionHeading>
+				<Card>
+					<div style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
+						<div>
+							<p style={{ fontSize: "0.875rem", fontWeight: 500, margin: 0 }}>Homepage page</p>
+							<p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", margin: "0.15rem 0 0.625rem" }}>
+								Choose which document is served at <code style={{ fontSize: "0.72rem", padding: "1px 4px", borderRadius: 3, background: "var(--muted)" }}>/</code>.
+								Leave empty to use the default convention (a page with slug <code style={{ fontSize: "0.72rem", padding: "1px 4px", borderRadius: 3, background: "var(--muted)" }}>home</code> or <code style={{ fontSize: "0.72rem", padding: "1px 4px", borderRadius: 3, background: "var(--muted)" }}>index</code>).
+							</p>
+						</div>
+						{rootCollections.length > 1 && (
+							<div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+								<label style={{ fontSize: "0.78rem", color: "var(--muted-foreground)", minWidth: "5rem" }}>Collection</label>
+								<div style={{ flex: 1, maxWidth: "20rem" }}>
+									<CustomSelect
+										value={homepageCollection}
+										onChange={(v) => { setHomepageCollection(v); setHomepageSlug(""); }}
+										options={rootCollections.map((c) => ({ value: c.name, label: c.label }))}
+										placeholder="Select collection"
+									/>
+								</div>
+							</div>
+						)}
+						<div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+							<label style={{ fontSize: "0.78rem", color: "var(--muted-foreground)", minWidth: "5rem" }}>Page</label>
+							<div style={{ flex: 1, maxWidth: "20rem" }}>
+								<CustomSelect
+									value={homepageSlug}
+									onChange={(v) => setHomepageSlug(v)}
+									options={[
+										{ value: "", label: homepageLoading ? "Loading…" : "— Use convention (home / index) —" },
+										...homepagePages.map((p) => ({ value: p.slug, label: `${p.title} (${p.slug})` })),
+									]}
+									disabled={homepageLoading || !homepageCollection}
+									placeholder="Select homepage"
+								/>
+							</div>
+						</div>
+					</div>
 				</Card>
 			</div>
 

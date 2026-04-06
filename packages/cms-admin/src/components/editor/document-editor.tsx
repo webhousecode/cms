@@ -5,7 +5,7 @@ import { CustomSelect } from "@/components/ui/custom-select";
 import { useRouter } from "next/navigation";
 import type { CollectionConfig, BlockConfig } from "@webhouse/cms";
 import { FieldEditor } from "./field-editor";
-import { Save, Globe, FileText, Trash2, ArrowLeft, Lock, LockOpen, Copy, Clock, History, Eye, Languages, Sparkles, Settings2, Wand2, ChevronDown, ChevronRight, Loader2, Search as SearchIcon } from "lucide-react";
+import { Save, Globe, FileText, Trash2, ArrowLeft, Lock, LockOpen, Copy, Clock, History, Eye, Languages, Sparkles, Settings2, Wand2, ChevronDown, ChevronRight, Loader2, Search as SearchIcon, Home as HomeIcon } from "lucide-react";
 import Link from "next/link";
 import { ActionBar, ActionBarBreadcrumb } from "@/components/action-bar";
 import { formatDate, cn, previewPath } from "@/lib/utils";
@@ -1092,6 +1092,24 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
     setSideBySideRaw(v);
     try { localStorage.setItem("cms-side-by-side", v ? "1" : "0"); } catch {}
   }, []);
+  // F81 — active site homepage designation (loaded from registry)
+  const [siteHomepageSlug, setSiteHomepageSlug] = useState<string>("");
+  const [siteHomepageCollection, setSiteHomepageCollection] = useState<string>("");
+  useEffect(() => {
+    fetch("/api/cms/registry")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data: { registry?: { orgs: Array<{ id: string; sites: Array<{ id: string; homepageSlug?: string; homepageCollection?: string }> }> } } | null) => {
+        if (!data?.registry) return;
+        const orgId = document.cookie.match(/(?:^|; )cms-active-org=([^;]*)/)?.[1];
+        const siteId = document.cookie.match(/(?:^|; )cms-active-site=([^;]*)/)?.[1];
+        if (!orgId || !siteId) return;
+        const org = data.registry.orgs.find((o) => o.id === decodeURIComponent(orgId));
+        const site = org?.sites.find((s) => s.id === decodeURIComponent(siteId));
+        if (site?.homepageSlug) setSiteHomepageSlug(site.homepageSlug);
+        if (site?.homepageCollection) setSiteHomepageCollection(site.homepageCollection);
+      })
+      .catch(() => {});
+  }, []);
   // Restore after hydration to avoid SSR mismatch
   useEffect(() => {
     try { if (localStorage.getItem("cms-side-by-side") === "1") setSideBySideRaw(true); } catch {}
@@ -1250,8 +1268,11 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
       }
     }
 
-    // Homepage: slug "home" or "index" (or their locale variants) with urlPrefix "/"
-    const isHomepage = (prefix === "" || prefix === "/") && (baseSlug === "home" || baseSlug === "index");
+    // Homepage: explicit site setting takes priority, else fall back to
+    // slug conventions ("home" / "index") on a root-prefixed collection.
+    const isHomepage = siteHomepageSlug
+      ? (baseSlug === siteHomepageSlug && collection === (siteHomepageCollection || "pages"))
+      : ((prefix === "" || prefix === "/") && (baseSlug === "home" || baseSlug === "index"));
 
     // Build slug path from urlPattern (if configured) or plain slug (default)
     let slugPath = baseSlug;
@@ -1315,6 +1336,22 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
 
   const isPublished = doc.status === "published";
   const isExpired = doc.status === "expired";
+
+  // F81 — Is this document the designated homepage?
+  const isCurrentDocHomepage = (() => {
+    const docSlug = doc.slug;
+    const locale = doc.locale ?? defaultLocale;
+    let baseSlug = docSlug;
+    if (locale && locale !== defaultLocale) {
+      const suffix = `-${locale}`;
+      if (baseSlug.endsWith(suffix)) baseSlug = baseSlug.slice(0, -suffix.length);
+    }
+    if (siteHomepageSlug) {
+      return baseSlug === siteHomepageSlug && collection === (siteHomepageCollection || "pages");
+    }
+    const prefix = (colConfig as { urlPrefix?: string }).urlPrefix ?? `/${collection}`;
+    return (prefix === "" || prefix === "/") && (baseSlug === "home" || baseSlug === "index");
+  })();
 
   return (
     <div className="flex flex-col" data-testid="document-editor" data-doc-locale={doc.locale || defaultLocale}>
@@ -1609,6 +1646,22 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
           <ArrowLeft className="w-4 h-4" />
         </Link>
         <ActionBarBreadcrumb items={[backHref === "/admin/curation" ? "curation" : collection, doc.slug]} />
+        {isCurrentDocHomepage && (
+          <span
+            title="This document is served at /"
+            style={{
+              display: "inline-flex", alignItems: "center", gap: "0.25rem",
+              fontSize: "0.65rem", fontWeight: 600, padding: "0.1rem 0.45rem",
+              borderRadius: "9999px",
+              background: "color-mix(in srgb, #F7BB2E 14%, transparent)",
+              color: "#F7BB2E",
+              letterSpacing: "0.02em",
+            }}
+          >
+            <HomeIcon style={{ width: "0.7rem", height: "0.7rem" }} />
+            Homepage
+          </span>
+        )}
         {dirty && (
           <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-500/10 text-yellow-400 font-mono">
             unsaved

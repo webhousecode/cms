@@ -27,12 +27,14 @@ export async function GET() {
 /** POST /api/cms/registry — create/bootstrap registry or add org/site */
 export async function POST(request: NextRequest) {
   const body = await request.json() as {
-    action: "bootstrap" | "add-org" | "add-site" | "update-org";
+    action: "bootstrap" | "add-org" | "add-site" | "update-org" | "update-site";
     orgName?: string;
     orgId?: string;
+    siteId?: string;
     orgType?: string;
     orgPlan?: string;
     site?: SiteEntry;
+    updates?: Partial<SiteEntry>;
   };
 
   if (body.action === "bootstrap") {
@@ -65,6 +67,16 @@ export async function POST(request: NextRequest) {
     });
     if (!org) return NextResponse.json({ error: "Org not found" }, { status: 404 });
     return NextResponse.json({ ok: true, org });
+  }
+
+  if (body.action === "update-site") {
+    if (!body.orgId || !body.siteId) {
+      return NextResponse.json({ error: "orgId and siteId required" }, { status: 400 });
+    }
+    const { updateSite } = await import("@/lib/site-registry");
+    const site = await updateSite(body.orgId, body.siteId, body.updates ?? {});
+    if (!site) return NextResponse.json({ error: "Site not found" }, { status: 404 });
+    return NextResponse.json({ ok: true, site });
   }
 
   if (body.action === "add-site") {

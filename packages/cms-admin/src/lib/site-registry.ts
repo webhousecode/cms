@@ -28,6 +28,10 @@ export interface SiteEntry {
   github?: SiteGitHub;      // github adapter only
   revalidateUrl?: string;   // e.g. "https://example.com/api/revalidate"
   revalidateSecret?: string; // HMAC-SHA256 signing secret
+  /** F81 — Slug of the document that maps to "/" */
+  homepageSlug?: string;
+  /** F81 — Collection of the homepage document (default: first collection with urlPrefix "/") */
+  homepageCollection?: string;
 }
 
 export type OrgType = "personal" | "agency" | "company" | "nonprofit";
@@ -136,12 +140,17 @@ export async function addSite(orgId: string, site: SiteEntry): Promise<void> {
   if (!registry) throw new Error("No registry");
   const org = findOrg(registry, orgId);
   if (!org) throw new Error(`Org "${orgId}" not found`);
+  if (org.sites.some((s) => s.id === site.id)) return; // already exists
   org.sites.push(site);
   if (!registry.defaultSiteId) registry.defaultSiteId = site.id;
   await saveRegistry(registry);
 }
 
-export async function updateSite(orgId: string, siteId: string, updates: Partial<Pick<SiteEntry, "name" | "previewUrl">>): Promise<SiteEntry | null> {
+export async function updateSite(
+  orgId: string,
+  siteId: string,
+  updates: Partial<Pick<SiteEntry, "name" | "previewUrl" | "homepageSlug" | "homepageCollection">>,
+): Promise<SiteEntry | null> {
   const registry = await loadRegistry();
   if (!registry) throw new Error("No registry");
   const org = findOrg(registry, orgId);
@@ -150,6 +159,14 @@ export async function updateSite(orgId: string, siteId: string, updates: Partial
   if (!site) return null;
   if (updates.name !== undefined) site.name = updates.name;
   if (updates.previewUrl !== undefined) site.previewUrl = updates.previewUrl;
+  if (updates.homepageSlug !== undefined) {
+    if (updates.homepageSlug === "") delete site.homepageSlug;
+    else site.homepageSlug = updates.homepageSlug;
+  }
+  if (updates.homepageCollection !== undefined) {
+    if (updates.homepageCollection === "") delete site.homepageCollection;
+    else site.homepageCollection = updates.homepageCollection;
+  }
   await saveRegistry(registry);
   return site;
 }
