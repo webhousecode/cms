@@ -3462,11 +3462,15 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                   setSourceText((editor.storage as any).markdown.getMarkdown());
                   setShowSource(true);
                 } else {
-                  // Switch back to visual: defer setContent to avoid flushSync during render
+                  // Switch back to visual: defer setContent to avoid flushSync during render.
+                  // Uses requestAnimationFrame to push past React's current render+commit cycle.
                   setShowSource(false);
-                  queueMicrotask(() => {
+                  requestAnimationFrame(() => {
                     editor.commands.setContent(sourceText);
-                    onChange((editor.storage as any).markdown.getMarkdown());
+                    // Second frame: let NodeViews mount before calling onChange
+                    requestAnimationFrame(() => {
+                      onChange((editor.storage as any).markdown.getMarkdown());
+                    });
                   });
                 }
               }}>
