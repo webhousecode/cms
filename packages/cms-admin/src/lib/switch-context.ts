@@ -42,9 +42,15 @@ export function switchSite(siteId: string, orgId: string, destination = "/admin"
 
 /**
  * Switch to a different org. Sets the first site as active.
- * Navigates to /admin/sites (multi-site) or /admin (single site) via hard reload.
+ * Navigates to /admin/sites (multi-site) or /admin (single site) via hard reload,
+ * unless `destination` is specified.
  */
-export function switchOrg(orgId: string, firstSiteId: string | null, siteCount: number) {
+export function switchOrg(
+  orgId: string,
+  firstSiteId: string | null,
+  siteCount: number,
+  destination?: string,
+) {
   setCookie("cms-active-org", orgId);
   if (firstSiteId) {
     setCookie("cms-active-site", firstSiteId);
@@ -53,7 +59,7 @@ export function switchOrg(orgId: string, firstSiteId: string | null, siteCount: 
   }
   sessionStorage.setItem("org-switched", "1");
   persistProfile(orgId, firstSiteId);
-  window.location.href = siteCount <= 1 ? "/admin" : "/admin/sites";
+  window.location.href = destination ?? (siteCount <= 1 ? "/admin" : "/admin/sites");
 }
 
 /**

@@ -59,11 +59,11 @@ export default function OrganizationsPage() {
       .finally(() => setLoaded(true));
   }, []);
 
-  function switchToOrg(org: OrgEntry) {
+  function switchToOrg(org: OrgEntry, destination?: string) {
     if (org.sites.length === 0) {
       switchToNewOrg(org.id);
     } else {
-      switchOrg(org.id, org.sites[0].id, org.sites.length);
+      switchOrg(org.id, org.sites[0].id, org.sites.length, destination);
     }
   }
 
@@ -144,7 +144,7 @@ export default function OrganizationsPage() {
                   <MoreVertical style={{ width: "0.875rem", height: "0.875rem", color: "var(--muted-foreground)" }} />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-44">
-                  <DropdownMenuItem onClick={(e) => { e.stopPropagation(); switchToOrg(org); router.push("/admin/organizations/settings"); }}>
+                  <DropdownMenuItem onClick={(e) => { e.stopPropagation(); switchToOrg(org, "/admin/organizations/settings"); }}>
                     <Settings2 className="mr-2 h-4 w-4 text-muted-foreground" />
                     Settings
                   </DropdownMenuItem>
