@@ -25,7 +25,6 @@ import {
   HardDrive,
   Eye,
   Heart,
-  FileText,
 } from "lucide-react";
 import {
   Sidebar,
@@ -65,11 +64,6 @@ export function AppSidebar({ collections }: Props) {
     const saved = localStorage.getItem("cms-sidebar-tools-open");
     return saved !== null ? saved === "true" : false;
   });
-  const [favoritesOpen, setFavoritesOpen] = useState(() => {
-    if (typeof window === "undefined") return true;
-    const saved = localStorage.getItem("cms-sidebar-favorites-open");
-    return saved !== null ? saved === "true" : true;
-  });
   const [favorites, setFavorites] = useState<Array<{ id: string; type: string; label: string; path: string; icon?: string }>>(() => {
     if (typeof window === "undefined") return [];
     try {
@@ -95,7 +89,6 @@ export function AppSidebar({ collections }: Props) {
         if (!state) return;
         if (typeof state.sidebarContentOpen === "boolean") setContentOpen(state.sidebarContentOpen);
         if (typeof state.sidebarToolsOpen === "boolean") setToolsOpen(state.sidebarToolsOpen);
-        if (typeof state.sidebarFavoritesOpen === "boolean") setFavoritesOpen(state.sidebarFavoritesOpen);
         if (Array.isArray(state.favorites)) {
           setFavorites(state.favorites);
           try { localStorage.setItem("cms-favorites", JSON.stringify(state.favorites)); } catch {}
@@ -207,60 +200,21 @@ export function AppSidebar({ collections }: Props) {
                 <span>Dashboard</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroup>
-
-        {/* Favorites section (F94) — collapsible, hidden when empty */}
-        {favorites.length > 0 && (
-          <SidebarGroup style={{ padding: "0 0.5rem" }}>
-            <SidebarMenu>
+            {favorites.length > 0 && (
               <SidebarMenuItem>
                 <SidebarMenuButton
+                  isActive={pathname === "/admin/favorites"}
                   tooltip="Favorites"
-                  onClick={() => setFavoritesOpen((o) => {
-                    const next = !o;
-                    localStorage.setItem("cms-sidebar-favorites-open", String(next));
-                    fetch("/api/admin/user-state", {
-                      method: "PATCH",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ sidebarFavoritesOpen: next }),
-                    }).catch(() => {});
-                    return next;
-                  })}
-                  render={<button type="button" data-testid="nav-link-favorites" />}
+                  render={<Link href="/admin/favorites" data-testid="nav-link-favorites" />}
                 >
                   <Heart className="!w-5 !h-5" style={{ color: "#ef4444", fill: "#ef4444" }} />
-                  <span className="flex-1 text-left">Favorites</span>
-                  <span style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", marginRight: "0.25rem" }}>{favorites.length}</span>
-                  {favoritesOpen ? (
-                    <ChevronDown className="!w-4 !h-4" />
-                  ) : (
-                    <ChevronRight className="!w-4 !h-4" />
-                  )}
+                  <span className="flex-1">Favorites</span>
+                  <span style={{ fontSize: "0.65rem", color: "var(--muted-foreground)" }}>{favorites.length}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
-            </SidebarMenu>
-            {favoritesOpen && (
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {favorites.slice(0, 10).map((fav) => (
-                    <SidebarMenuItem key={fav.id}>
-                      <SidebarMenuButton
-                        size="sm"
-                        isActive={pathname === fav.path}
-                        tooltip={fav.label}
-                        render={<Link href={fav.path} />}
-                      >
-                        <FileText className="!w-4 !h-4" />
-                        <span className="truncate">{fav.label}</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
             )}
-          </SidebarGroup>
-        )}
+          </SidebarMenu>
+        </SidebarGroup>
 
         {/* AI Section */}
         <SidebarGroup style={{ padding: "0 0.5rem" }}>
