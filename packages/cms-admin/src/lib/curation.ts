@@ -19,6 +19,7 @@ export interface QueueItem {
     model: string;
     contentData: Record<string, unknown>;
     score?: number;
+    costUsd?: number;
   }[];
   seoScore?: number;
   costUsd: number;
