@@ -3,7 +3,8 @@
 import { useState, useTransition, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, Copy, Clock, MoreHorizontal, Pencil, Globe, FileX, ArrowUpDown, Languages, ExternalLink } from "lucide-react";
+import { Search, Copy, Clock, MoreHorizontal, Pencil, Globe, FileX, ArrowUpDown, Languages, ExternalLink, Heart } from "lucide-react";
+import { useFavorites } from "@/lib/hooks/use-favorites";
 import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
 import { LOCALE_FLAGS } from "@/lib/locale";
@@ -118,6 +119,10 @@ function RowMenu({ doc, collection, onClone, onToggle, onTrash, cloning, preview
   const [confirmTrash, setConfirmTrash] = useState(false);
   const btnRef = useRef<HTMLButtonElement>(null);
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+  const { isFavorite, toggle: toggleFavorite } = useFavorites();
+  const favPath = `/admin/${collection}/${doc.slug}`;
+  const isFav = isFavorite(favPath);
+  const docTitle = (doc.data as { title?: string })?.title ?? doc.slug;
 
   function openMenu(e: React.MouseEvent) {
     e.preventDefault(); e.stopPropagation();
@@ -185,6 +190,27 @@ function RowMenu({ doc, collection, onClone, onToggle, onTrash, cloning, preview
             className="hover:bg-secondary"
           >
             <Copy style={{ width: "0.8rem", height: "0.8rem" }} /> {cloning ? "Cloning…" : "Clone"}
+          </button>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              toggleFavorite({
+                type: "document",
+                label: docTitle,
+                path: favPath,
+                icon: "FileText",
+                collection,
+                slug: doc.slug,
+              });
+              setOpen(false);
+            }}
+            style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.4rem 0.6rem", borderRadius: "5px", fontSize: "0.8rem", color: isFav ? "#ef4444" : "var(--foreground)", background: "none", border: "none", cursor: "pointer", width: "100%" }}
+            className="hover:bg-secondary"
+          >
+            <Heart style={{ width: "0.8rem", height: "0.8rem" }} fill={isFav ? "#ef4444" : "none"} strokeWidth={isFav ? 0 : 1.75} />
+            {isFav ? "Remove from favorites" : "Add to favorites"}
           </button>
           <div style={{ height: "1px", background: "var(--border)", margin: "0.25rem 0" }} />
           <button
