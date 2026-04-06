@@ -15,6 +15,25 @@ export interface UserTab {
   status?: string;
 }
 
+export interface Favorite {
+  /** Unique ID (auto-generated) */
+  id: string;
+  /** Favorite type */
+  type: "document" | "collection" | "page" | "tool" | "interactive";
+  /** Display label */
+  label: string;
+  /** Admin route, used as unique key */
+  path: string;
+  /** Lucide icon name (optional) */
+  icon?: string;
+  /** For documents: which collection */
+  collection?: string;
+  /** For documents: which slug */
+  slug?: string;
+  /** ISO timestamp when added */
+  addedAt: string;
+}
+
 export interface OnboardingState {
   /** Has user completed the main welcome tour? */
   tourCompleted: boolean;
@@ -49,6 +68,10 @@ export interface UserState {
   showCloseAllTabs: boolean;
   /** Onboarding tour progress (F120) */
   onboarding: OnboardingState;
+  /** Favorites (F94) */
+  favorites: Favorite[];
+  /** Sidebar Favorites section collapsed state */
+  sidebarFavoritesOpen: boolean;
   /** Last update */
   updatedAt: string;
 }
@@ -72,6 +95,8 @@ const DEFAULTS: UserState = {
   intsView: "grid",
   showCloseAllTabs: false,
   onboarding: ONBOARDING_DEFAULTS,
+  favorites: [],
+  sidebarFavoritesOpen: true,
   updatedAt: new Date().toISOString(),
 };
 

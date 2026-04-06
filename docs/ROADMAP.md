@@ -50,6 +50,7 @@
 | 42 | **One-Click Docker Deploy** — Wizard UI, template picker (12 templates), Fly.io Machines API, SSE deploy progress, download ZIP self-host (F119) | 2026-04-03 |
 | 43 | **Snippet Embeds** — TipTap node for `{{snippet:slug}}`, visual pill with code preview, toolbar picker, markdown roundtrip, auto-hidden without collection (F124) | 2026-04-06 |
 | 44 | **Desktop PWA** — Manifest, icons, service worker, Chrome/Edge "Install app" prompt, .beam file associations via file_handlers (F92) | 2026-04-06 |
+| 45 | **Favorites** — Heart toggle on ActionBar, collapsible sidebar Favorites section, Command Palette group at top, per-user persistence (F94) | 2026-04-06 |
 
 ---
 
@@ -123,7 +124,7 @@ _Makes us stand out. Customers expect these from a modern CMS._
 | 18c | **F81 Homepage Designation** | Small | Explicit "Set as homepage" in Site Settings. Replaces fragile slug conventions. WordPress-style dropdown. |
 | 18d | **F82 Loaders & Spinners** | Medium | Shimmer skeletons, inline spinners, progress bars, top-loader bar. Branded with webhouse gold. Premium feel. |
 | ~~18e~~ | ~~**F92 Desktop PWA**~~ | ~~Done~~ | ~~Shipped 2026-04-06. manifest.json, PWA icons (192/512 + maskable + apple-touch), minimal pass-through service worker, file_handlers for .beam files, layout metadata. Chrome/Edge "Install app" ready.~~ |
-| 18f | **F94 Favorites** | Small | Heart-toggle on any page/document. Sidebar section + Command Palette priority. Per-user persistence. |
+| ~~18f~~ | ~~**F94 Favorites**~~ | ~~Done~~ | ~~Shipped 2026-04-06. FavoriteToggle heart on ActionBar, sidebar Favorites section (collapsible, hidden when empty), Command Palette "Favorites" group at top, UserState persistence with localStorage fast-path + server sync.~~ |
 | ~~18g~~ | ~~**F95 Cloud Backup Providers**~~ | ~~Done~~ | ~~Shipped 2026-03-31. pCloud (WebDAV), S3-compatible (R2, B2, Scaleway, Hetzner, AWS). Storage quota management, auto-prune, cloud badges. Verified on Cloudflare R2.~~ |
 | 18h | **F98 Lighthouse Audit** | Medium | PSI API + local Lighthouse. Dashboard scores + trend, scheduled scans, per-page audits, alerts on drop. |
 | ~~18i~~ | ~~**F114 Chat Memory**~~ | ~~Done~~ | ~~Shipped 2026-03-29. Mini-RAG: Haiku extraction, MiniSearch BM25+, top-15 injection, 3 AI tools, memory UI, ZIP export/import, master memory. 27 tests.~~ |

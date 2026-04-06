@@ -71,10 +71,13 @@ export default async function SettingsPage({
   return (
     <>
       <SettingsAnchorScroll />
-      <ActionBar actions={<SettingsSaveButton />}>
+      <ActionBar
+        actions={<SettingsSaveButton />}
+        favorite={{ type: "page", label: "Site Settings", path: "/admin/settings", icon: "Settings2" }}
+      >
         <ActionBarBreadcrumb items={["Site Settings"]} />
       </ActionBar>
-      <div className="p-8 max-w-4xl">
+      <div className="p-8">
 
         {/* Tab strip */}
         <div className="flex gap-1 mb-8 border-b border-border">
@@ -93,6 +96,8 @@ export default async function SettingsPage({
             </Link>
           ))}
         </div>
+
+        <div className="max-w-4xl">
 
         {/* General tab — site-specific settings */}
         {tab === "general" && (
@@ -318,6 +323,7 @@ export default async function SettingsPage({
             <AIPromptsPanel />
           </div>
         )}
+        </div>
       </div>
     </>
   );

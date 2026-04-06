@@ -2,6 +2,8 @@
 
 import type { ReactNode } from "react";
 import { HelpButton } from "@/components/ui/help-button";
+import { FavoriteToggle } from "@/components/favorite-toggle";
+import type { Favorite } from "@/lib/user-state";
 
 /* ─── ActionBar ─────────────────────────────────────────────── */
 
@@ -10,13 +12,15 @@ interface ActionBarProps {
   actions?: ReactNode;    // Right side: buttons
   /** Help article ID — shows a 💡 icon after the breadcrumb */
   helpArticleId?: string;
+  /** Optional favorite descriptor — renders a heart toggle next to breadcrumb */
+  favorite?: Omit<Favorite, "id" | "addedAt">;
 }
 
 /**
  * Standardized action bar — sticky below tabs (top: 48px header + 36px tab bar = 84px).
  * Fixed 40px height. Left: breadcrumb/context. Right: action buttons.
  */
-export function ActionBar({ children, actions, helpArticleId }: ActionBarProps) {
+export function ActionBar({ children, actions, helpArticleId, favorite }: ActionBarProps) {
   return (
     <div data-testid="action-bar" style={{
       position: "sticky",
@@ -34,6 +38,7 @@ export function ActionBar({ children, actions, helpArticleId }: ActionBarProps) 
       <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", overflow: "hidden", minWidth: 0 }}>
         {children}
         {helpArticleId && <HelpButton articleId={helpArticleId} />}
+        {favorite && <FavoriteToggle {...favorite} />}
       </div>
       {actions && (
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexShrink: 0 }}>

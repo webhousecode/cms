@@ -7,7 +7,7 @@ import {
   Search, FileText, Globe, X, LayoutDashboard, Image, Bot, Calendar,
   ListChecks, Terminal, Settings2, Sparkles, UserCircle, LogOut, Lock,
   Database, Link2, BarChart3, Trash2, Plus, Zap, Puzzle, ArrowRightLeft,
-  Building2, HelpCircle, HardDrive, Play, ExternalLink, Moon, Sun, RefreshCw,
+  Building2, HelpCircle, HardDrive, Play, ExternalLink, Moon, Sun, RefreshCw, Heart,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { switchSite, switchOrg } from "@/lib/switch-context";
@@ -18,7 +18,7 @@ interface QuickAction {
   id: string;
   label: string;
   sublabel: string;
-  category: "navigation" | "action" | "settings" | "account";
+  category: "favorites" | "navigation" | "action" | "settings" | "account";
   icon: React.ReactNode;
   href?: string;
   action?: () => void;
@@ -82,6 +82,7 @@ function buildQuickActions(logout: () => void): QuickAction[] {
 }
 
 const CATEGORY_LABELS: Record<string, string> = {
+  favorites: "Favorites",
   content: "Content",
   navigation: "Navigation",
   action: "Actions",
@@ -148,6 +149,21 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
   const [orgs, setOrgs] = useState<{ id: string; name: string; firstSiteId: string | null; siteCount: number }[]>([]);
   const [activeSiteId, setActiveSiteId] = useState<string>("");
   const [activeOrgId, setActiveOrgId] = useState<string>("");
+  const [favorites, setFavorites] = useState<Array<{ id: string; type: string; label: string; path: string }>>([]);
+
+  // Load favorites from localStorage on mount + listen for changes
+  useEffect(() => {
+    try {
+      const cached = localStorage.getItem("cms-favorites");
+      if (cached) setFavorites(JSON.parse(cached));
+    } catch { /* ignore */ }
+    function onChange(e: Event) {
+      const detail = (e as CustomEvent).detail;
+      if (Array.isArray(detail)) setFavorites(detail);
+    }
+    window.addEventListener("cms:favorites-changed", onChange);
+    return () => window.removeEventListener("cms:favorites-changed", onChange);
+  }, []);
 
   const quickActions = useMemo(() => {
     const actions = buildQuickActions(logout);
@@ -246,10 +262,26 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current); };
   }, [query]);
 
-  /* Build unified results: quick actions (filtered) + content results */
+  /* Build unified results: favorites + quick actions (filtered) + content results */
   const items: PaletteItem[] = useMemo(() => {
     const q = query.trim().toLowerCase();
     const result: PaletteItem[] = [];
+
+    // Favorites first (F94) — always shown, filtered by query
+    const matchedFavorites = favorites.filter((f) => {
+      if (!q) return true;
+      return f.label.toLowerCase().includes(q) || f.path.toLowerCase().includes(q);
+    });
+    for (const f of matchedFavorites) {
+      result.push({
+        id: `fav-${f.id}`,
+        label: f.label,
+        sublabel: f.path,
+        category: "favorites",
+        icon: <Heart style={{ ...ICON_SIZE, color: "#ef4444" }} fill="#ef4444" />,
+        href: f.path,
+      });
+    }
 
     // No query → show featured actions only (curated default view)
     // With query → filter all actions by search term
@@ -296,7 +328,7 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
     }
 
     return result;
-  }, [query, quickActions, contentResults]);
+  }, [query, quickActions, contentResults, favorites]);
 
   /* Reset selection when results change */
   useEffect(() => { setSelected(0); }, [items.length]);

@@ -1320,6 +1320,14 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
     <div className="flex flex-col" data-testid="document-editor" data-doc-locale={doc.locale || defaultLocale}>
       {/* Top bar — sticky */}
       <ActionBar
+        favorite={{
+          type: "document",
+          label: (doc.data as { title?: string })?.title ?? doc.slug,
+          path: `/admin/${collection}/${doc.slug}`,
+          icon: "FileText",
+          collection,
+          slug: doc.slug,
+        }}
         actions={
           <div className="flex items-center gap-2">
           {savedAt && !dirty && (
