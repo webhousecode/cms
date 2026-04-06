@@ -9,6 +9,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { TabTitle } from "@/lib/tabs-context";
 import { useSiteRole } from "@/hooks/use-site-role";
 
+interface AlternativeOutput {
+  model: string;
+  contentData: Record<string, unknown>;
+  costUsd?: number;
+  score?: number;
+}
+
 interface QueueItem {
   id: string;
   agentId: string;
@@ -19,9 +26,18 @@ interface QueueItem {
   status: "ready" | "in_review" | "approved" | "rejected" | "published";
   generatedAt: string;
   contentData: Record<string, unknown>;
+  alternatives?: AlternativeOutput[];
   seoScore?: number;
   costUsd: number;
   rejectionFeedback?: string;
+}
+
+/** Strip vendor/date suffixes so model badges fit on a chip. */
+function shortModelName(model: string): string {
+  return model
+    .replace(/^claude-/, "")
+    .replace(/-\d{8}$/, "")
+    .replace(/-latest$/, "");
 }
 
 type TabId = "ready" | "in_review" | "approved" | "rejected";
@@ -186,6 +202,20 @@ export default function CurationPage() {
     setEditingId(item.id);
   }
 
+  async function handlePickAlternative(item: QueueItem, altIndex: number) {
+    const res = await fetch(`/api/cms/curation/${item.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "pick-alternative", alternativeIndex: altIndex }),
+    });
+    if (res.ok) {
+      const updated = (await res.json()) as QueueItem;
+      setItems((prev) => prev.map((i) => (i.id === item.id ? updated : i)));
+      // If the field editor is open, refresh its draft to the swapped content
+      if (editingId === item.id) setEditDraft({ ...updated.contentData });
+    }
+  }
+
   async function handleSaveFields(item: QueueItem) {
     const res = await fetch(`/api/cms/curation/${item.id}`, {
       method: "PATCH",
@@ -345,6 +375,44 @@ export default function CurationPage() {
                   )}
                 </div>
               </div>
+
+              {/* Multi-model alternatives (Phase 3) — chip row to swap which
+                  model's output is the active one. The active output is always
+                  contentData; clicking another chip calls pickAlternative which
+                  swaps the picked alternative into contentData. */}
+              {item.alternatives && item.alternatives.length > 0 && (
+                <div className="mt-3 flex items-center gap-2 flex-wrap">
+                  <span className="text-[0.65rem] font-semibold uppercase tracking-wider text-muted-foreground">
+                    Models
+                  </span>
+                  {/* Active = primary contentData (always first chip) */}
+                  <button
+                    type="button"
+                    disabled
+                    className="px-2 py-1 rounded-md text-[0.7rem] font-mono border border-primary text-primary bg-primary/10 cursor-default"
+                    title="Currently selected"
+                  >
+                    ✓ active
+                  </button>
+                  {item.alternatives.map((alt, i) => (
+                    <button
+                      key={`${alt.model}-${i}`}
+                      type="button"
+                      onClick={() => handlePickAlternative(item, i)}
+                      disabled={readOnly || !(tab === "ready" || tab === "in_review")}
+                      title={`Swap to ${alt.model}${alt.costUsd ? ` ($${alt.costUsd.toFixed(4)})` : ""}`}
+                      className="px-2 py-1 rounded-md text-[0.7rem] font-mono border border-border hover:border-primary hover:bg-primary/5 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {shortModelName(alt.model)}
+                      {alt.costUsd != null && (
+                        <span className="ml-1 text-muted-foreground">
+                          ${alt.costUsd.toFixed(3)}
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
 
               {/* Reject feedback inline */}
               {rejectingId === item.id && (
