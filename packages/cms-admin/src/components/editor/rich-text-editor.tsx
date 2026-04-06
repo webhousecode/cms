@@ -3641,32 +3641,39 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
         )}
 
         {/* ── Body ── */}
-        {showSource ? (
-          <textarea
-            value={sourceText}
-            onChange={(e) => setSourceText(e.target.value)}
-            spellCheck={false}
-            style={{
-              width: "100%",
-              minHeight: "300px",
-              padding: "1rem",
-              fontFamily: "ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace",
-              fontSize: "0.8rem",
-              lineHeight: "1.6",
-              color: "var(--foreground)",
-              backgroundColor: "var(--background)",
-              border: "none",
-              outline: "none",
-              resize: "vertical",
-              tabSize: 2,
-            }}
-          />
-        ) : (
-          <div className="rte-body" style={zoom !== 100 ? { zoom: zoom / 100 } : undefined}>
-            <EditorContent editor={editor} />
-            {editor && <AIBubbleMenu editor={editor} />}
-          </div>
-        )}
+        {/* Source textarea and visual editor are both mounted — toggled via CSS.
+            This prevents EditorContent (and its React NodeViews) from unmounting
+            and remounting, which triggers flushSync warnings in React 19 + TipTap v3. */}
+        <textarea
+          value={sourceText}
+          onChange={(e) => setSourceText(e.target.value)}
+          spellCheck={false}
+          style={{
+            display: showSource ? "block" : "none",
+            width: "100%",
+            minHeight: "300px",
+            padding: "1rem",
+            fontFamily: "ui-monospace, SFMono-Regular, 'SF Mono', Menlo, monospace",
+            fontSize: "0.8rem",
+            lineHeight: "1.6",
+            color: "var(--foreground)",
+            backgroundColor: "var(--background)",
+            border: "none",
+            outline: "none",
+            resize: "vertical",
+            tabSize: 2,
+          }}
+        />
+        <div
+          className="rte-body"
+          style={{
+            display: showSource ? "none" : undefined,
+            ...(zoom !== 100 ? { zoom: zoom / 100 } : {}),
+          }}
+        >
+          <EditorContent editor={editor} />
+          {editor && <AIBubbleMenu editor={editor} />}
+        </div>
 
         {/* ── F109 Proofread correction toolbar ── */}
         {proofreadActive && proofreadMatches.length > 0 && editor && (() => {
