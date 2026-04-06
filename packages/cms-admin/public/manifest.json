@@ -1,0 +1,30 @@
+{
+  "name": "webhouse.app — AI-native content engine",
+  "short_name": "webhouse.app",
+  "description": "Content management admin UI",
+  "start_url": "/admin",
+  "display": "standalone",
+  "background_color": "#0D0D0D",
+  "theme_color": "#0D0D0D",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icons/icon-maskable-192.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "categories": ["productivity", "utilities"],
+  "orientation": "any",
+  "scope": "/",
+  "id": "webhouse-cms-admin",
+  "file_handlers": [
+    {
+      "action": "/admin/settings?tab=beam",
+      "accept": {
+        "application/x-beam": [".beam"]
+      },
+      "icons": [
+        { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }
+      ]
+    }
+  ]
+}
