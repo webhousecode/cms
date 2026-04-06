@@ -9,7 +9,6 @@ import { buildLocaleInstruction } from "@/lib/ai/locale-prompt";
 import { readSiteConfig } from "@/lib/site-config";
 import { buildToolRegistry, type ToolDefinition, type ToolHandler } from "@/lib/tools";
 import { loadFeedbackForPrompt } from "@/lib/agent-feedback";
-import { getActiveSitePaths } from "./site-paths";
 
 interface FeedbackExample {
   original: string;
@@ -390,24 +389,9 @@ export async function runAgent(agentId: string, userPrompt: string, overrideColl
     }).catch(() => {});
   }
 
-  // Dispatch agent completion webhooks (non-blocking)
-  const agentWebhooks = siteConfig.agentDefaultWebhooks ?? [];
-  if (agentWebhooks.length > 0) {
-    const { dispatchWebhooks } = await import("./webhook-dispatch");
-    const { dataDir } = await getActiveSitePaths();
-    dispatchWebhooks(agentWebhooks, {
-      event: "agent.completed",
-      title: `Agent Complete: ${agent.name}`,
-      message: `Generated **${title}** in \`${targetCollection}\`. Cost: $${totalCost.toFixed(4)}.`,
-      color: 0x4ade80,
-      fields: [
-        { name: "Agent", value: agent.name },
-        { name: "Collection", value: targetCollection },
-        { name: "Document", value: title },
-        { name: "Cost", value: `$${totalCost.toFixed(4)}` },
-      ],
-    }, dataDir).catch((err) => console.error("[agent-runner] webhook error:", err));
-  }
+  // (Legacy direct dispatchWebhooks block removed — fireAgentEvent("completed")
+  //  above already handles agent.completed via the F35 site+org resolver.
+  //  Keeping both produced duplicate Discord notifications.)
 
   return { queueItemId: queueItem.id, title, collection: targetCollection, slug, costUsd: totalCost, alternatives };
   } finally {
