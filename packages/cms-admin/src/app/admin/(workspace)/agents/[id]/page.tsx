@@ -84,6 +84,15 @@ export default function AgentDetailPage() {
     rejected: 0,
     edited: 0,
   });
+  const [feedback, setFeedback] = useState<{
+    id: string;
+    type: "correction" | "rejection" | "edit";
+    field?: string;
+    original?: string;
+    corrected?: string;
+    notes?: string;
+    createdAt: string;
+  }[]>([]);
 
   useEffect(() => {
     if (!showDelete) return;
@@ -91,6 +100,15 @@ export default function AgentDetailPage() {
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [showDelete]);
+
+  // Load recent feedback for this agent
+  useEffect(() => {
+    if (!id) return;
+    fetch(`/api/cms/agents/${id}/feedback?limit=5`)
+      .then((r) => (r.ok ? r.json() : { entries: [] }))
+      .then((d: { entries?: typeof feedback }) => setFeedback(d.entries ?? []))
+      .catch(() => {});
+  }, [id]);
 
   // Load available collections once
   useEffect(() => {
@@ -327,6 +345,54 @@ export default function AgentDetailPage() {
               <p className="text-xs text-muted-foreground">{s.label}</p>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Recent feedback (Phase 2) — last 5 corrections/rejections used by the agent next run */}
+      {feedback.length > 0 && (
+        <div className="mb-8">
+          <h3 className="text-xs font-semibold uppercase text-muted-foreground mb-2">
+            Recent feedback ({feedback.length})
+          </h3>
+          <div className="space-y-2">
+            {feedback.map((f) => {
+              const badgeColor =
+                f.type === "rejection" ? "#ef4444" :
+                f.type === "edit" ? "#3b82f6" : "#22c55e";
+              return (
+                <div
+                  key={f.id}
+                  className="rounded-lg border border-border p-3 text-xs"
+                  style={{ background: "var(--card)" }}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <span style={{
+                      fontSize: "0.6rem", fontWeight: 700, textTransform: "uppercase",
+                      padding: "0.1rem 0.4rem", borderRadius: "3px",
+                      background: `color-mix(in srgb, ${badgeColor} 15%, transparent)`,
+                      color: badgeColor,
+                    }}>{f.type}</span>
+                    {f.field && <span className="text-muted-foreground">field: <code>{f.field}</code></span>}
+                    <span className="text-muted-foreground ml-auto">
+                      {new Date(f.createdAt).toLocaleString()}
+                    </span>
+                  </div>
+                  {f.type === "rejection" && f.notes && (
+                    <p className="text-foreground">{f.notes}</p>
+                  )}
+                  {(f.type === "correction" || f.type === "edit") && f.original && f.corrected && (
+                    <div className="space-y-1">
+                      <p className="text-muted-foreground line-through truncate">{f.original}</p>
+                      <p className="text-foreground truncate">{f.corrected}</p>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+          <p className="text-xs text-muted-foreground mt-2">
+            The agent reads the last 5 corrections back into its system prompt on each run.
+          </p>
         </div>
       )}
 
