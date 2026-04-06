@@ -9,6 +9,7 @@ import { Checkbox, Radio } from "@/components/ui/checkbox-styled";
 const ROLES = [
   { value: "copywriter", label: "Content Writer" },
   { value: "seo", label: "SEO" },
+  { value: "geo", label: "GEO Optimizer" },
   { value: "translator", label: "Translator" },
   { value: "refresher", label: "Content Refresher" },
   { value: "custom", label: "Custom" },

@@ -230,6 +230,7 @@ export async function runAgent(agentId: string, userPrompt: string, overrideColl
     buildToolRegistry(agent),
   ]);
 
+  try {
   const brandContext = brandVoice ? brandVoiceToPromptContext(brandVoice) : null;
 
   const siteConfig = await readSiteConfig();
@@ -405,9 +406,6 @@ export async function runAgent(agentId: string, userPrompt: string, overrideColl
     }).catch(() => {});
   }
 
-  // Cleanup MCP connections
-  await toolRegistry.cleanup();
-
   // Dispatch agent completion webhooks (non-blocking)
   const agentWebhooks = siteConfig.agentDefaultWebhooks ?? [];
   if (agentWebhooks.length > 0) {
@@ -428,4 +426,10 @@ export async function runAgent(agentId: string, userPrompt: string, overrideColl
   }
 
   return { queueItemId: queueItem.id, title, collection: targetCollection, slug, costUsd: totalCost, alternatives };
+  } finally {
+    // Always cleanup MCP connections, even if the run throws.
+    await toolRegistry.cleanup().catch((err) => {
+      console.error("[agent-runner] MCP cleanup error:", err);
+    });
+  }
 }

@@ -43,18 +43,10 @@ export async function buildWebSearchTool(): Promise<ToolPair | null> {
   const config = await getWebSearchKey();
 
   if (!config) {
-    return {
-      definition: {
-        name: "web_search",
-        description: "Search the web. Note: not configured — add a web search API key in Settings → AI.",
-        input_schema: {
-          type: "object",
-          properties: { query: { type: "string", description: "Search query" } },
-          required: ["query"],
-        },
-      },
-      handler: async () => "Web search is not configured. Go to Settings → AI to add a Brave or Tavily API key.",
-    };
+    // Not configured — return null so buildToolRegistry skips it.
+    // Previously returned a dummy tool which the agent could still call,
+    // wasting tokens on an error message.
+    return null;
   }
 
   return {
