@@ -115,15 +115,16 @@ export async function fireAgentEvent(
 
   const color = action === "completed" ? 0x22c55e : action === "failed" ? 0xef4444 : 0xF7BB2E;
   const fields: { name: string; value: string }[] = [{ name: "Agent", value: agentName }];
-  if (details?.documentTitle) fields.push({ name: "Document", value: details.documentTitle });
   if (details?.targetCollection) fields.push({ name: "Collection", value: details.targetCollection });
   if (details?.documentSlug) fields.push({ name: "Slug", value: details.documentSlug });
   if (details?.documentsCreated !== undefined) fields.push({ name: "Documents", value: String(details.documentsCreated) });
   if (details?.costUsd !== undefined) fields.push({ name: "Cost", value: `$${details.costUsd.toFixed(4)}` });
-  if (details?.imageUrl) fields.push({ name: "Generated image", value: details.imageUrl });
   if (details?.error) fields.push({ name: "Error", value: details.error });
 
-  // Build a richer message body so the embed isn't just a price tag.
+  // Build a richer message body. We keep imageUrl out of `fields` because
+  // Discord will render it inline as embed.image when it can fetch it,
+  // and a redundant text field looks like clutter. Instead we put a small
+  // markdown link in the description as an accessible fallback.
   const messageParts: string[] = [];
   if (action === "failed" && details?.error) {
     messageParts.push(details.error);
@@ -136,6 +137,9 @@ export async function fireAgentEvent(
     }
     if (messageParts.length === 0) {
       messageParts.push(`Agent "${agentName}" ${action}`);
+    }
+    if (details?.imageUrl) {
+      messageParts.push(`\n[🖼 View generated image](${details.imageUrl})`);
     }
   }
 
