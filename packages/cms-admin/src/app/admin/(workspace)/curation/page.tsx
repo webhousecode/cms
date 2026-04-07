@@ -54,8 +54,15 @@ function renderMarkdown(md: string): string {
 
   function inline(s: string): string {
     return s
-      // images: ![alt](url)
-      .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" style="max-width:100%;border-radius:8px;margin:0.5rem 0;" />')
+      // images: ![alt](url) — guard against hallucinated URLs (anything that
+      // isn't an absolute http(s), a site-relative path, or a data: URI)
+      .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, (_m, alt, url) => {
+        const valid = /^(https?:\/\/|\/|data:)/i.test(url);
+        if (valid) {
+          return `<img src="${url}" alt="${alt}" style="max-width:100%;border-radius:8px;margin:0.5rem 0;" />`;
+        }
+        return `<span style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.4rem 0.7rem;margin:0.5rem 0;border:1px dashed var(--destructive);border-radius:6px;color:var(--destructive);font-size:0.75rem;">⚠ Invalid image URL <code style="opacity:0.7;">${url.slice(0, 60)}${url.length > 60 ? "…" : ""}</code></span>`;
+      })
       // links: [text](url)
       .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noreferrer" style="color:var(--primary);text-decoration:underline;">$1</a>')
       // bold
