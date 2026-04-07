@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, type FormEvent } from "react";
 import { useRouter, useParams } from "next/navigation";
-import { Loader2, Sparkles, Trash2, Play, CheckCircle, X, Plus, Copy, ChevronDown, ArrowLeft, Save } from "lucide-react";
+import { Loader2, Sparkles, Trash2, Play, CheckCircle, X, Plus, Copy, ChevronDown, ArrowLeft, Save, BookmarkPlus } from "lucide-react";
 import Link from "next/link";
 import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
 import { CustomSelect } from "@/components/ui/custom-select";
@@ -81,6 +81,8 @@ export default function AgentDetailPage() {
   const [targetCollections, setTargetCollections] = useState<string[]>([]);
   const [fieldDefaults, setFieldDefaults] = useState<{ key: string; value: string }[]>([]);
   const [cloning, setCloning] = useState(false);
+  const [savingTemplate, setSavingTemplate] = useState(false);
+  const [templateSaved, setTemplateSaved] = useState(false);
   const [confirmDeleteDefault, setConfirmDeleteDefault] = useState<number | null>(null);
   const [schemaFields, setSchemaFields] = useState<{ name: string; type: string; label?: string; options?: { value: string; label?: string }[] }[]>([]);
   const [availableCollections, setAvailableCollections] = useState<{ name: string; label: string }[]>([]);
@@ -287,6 +289,43 @@ export default function AgentDetailPage() {
     setRunning(false);
   }
 
+  async function handleSaveAsTemplate() {
+    setSavingTemplate(true);
+    setTemplateSaved(false);
+    setError("");
+    try {
+      const res = await fetch("/api/cms/agent-templates", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name,
+          description: `Template based on ${name}`,
+          payload: {
+            name,
+            role,
+            systemPrompt,
+            behavior: { temperature, formality, verbosity },
+            tools: { webSearch, internalDatabase, imageGeneration },
+            autonomy,
+            targetCollections,
+            fieldDefaults: Object.fromEntries(
+              fieldDefaults.filter((f) => f.key.trim()).map((f) => [f.key.trim(), f.value])
+            ),
+          },
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) setError(data.error ?? "Failed to save template");
+      else {
+        setTemplateSaved(true);
+        setTimeout(() => setTemplateSaved(false), 2500);
+      }
+    } catch {
+      setError("Network error");
+    }
+    setSavingTemplate(false);
+  }
+
   async function handleClone() {
     setCloning(true);
     try {
@@ -325,6 +364,21 @@ export default function AgentDetailPage() {
     <ActionBar
       actions={!readOnly ? (
         <>
+          <ActionButton
+            variant="secondary"
+            onClick={handleSaveAsTemplate}
+            disabled={savingTemplate}
+            title="Save this agent as a reusable template for the org"
+            icon={
+              templateSaved ? (
+                <CheckCircle style={{ width: "0.8rem", height: "0.8rem", color: "#22c55e" }} />
+              ) : (
+                <BookmarkPlus style={{ width: "0.8rem", height: "0.8rem" }} />
+              )
+            }
+          >
+            {savingTemplate ? "Saving..." : templateSaved ? "Saved!" : "Save as template"}
+          </ActionButton>
           <ActionButton
             variant="secondary"
             onClick={handleClone}

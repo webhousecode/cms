@@ -2,7 +2,9 @@
 
 import { useState, useRef, type FormEvent, type KeyboardEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Sparkles, Send, ChevronDown } from "lucide-react";
+import { Loader2, Sparkles, Send, ChevronDown, BookOpen, Globe, HardDrive } from "lucide-react";
+import { useEffect } from "react";
+import type { AgentTemplate } from "@/lib/agent-templates";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { Checkbox, Radio } from "@/components/ui/checkbox-styled";
 
@@ -65,6 +67,46 @@ export default function NewAgentPage() {
   const [time, setTime] = useState("06:00");
   const [maxPerRun, setMaxPerRun] = useState(3);
   const [active, setActive] = useState(true);
+
+  // Phase 6 — template library
+  const [localTemplates, setLocalTemplates] = useState<AgentTemplate[]>([]);
+  const [marketplaceTemplates, setMarketplaceTemplates] = useState<AgentTemplate[]>([]);
+  const [marketplaceError, setMarketplaceError] = useState<string | undefined>(undefined);
+  const [templatesLoading, setTemplatesLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/cms/agent-templates")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!data) return;
+        setLocalTemplates(data.local ?? []);
+        setMarketplaceTemplates(data.marketplace ?? []);
+        setMarketplaceError(data.marketplaceError);
+      })
+      .catch(() => {})
+      .finally(() => setTemplatesLoading(false));
+  }, []);
+
+  function applyTemplate(template: AgentTemplate) {
+    const p = template.payload as Record<string, unknown>;
+    if (typeof p.name === "string") setName(p.name);
+    if (typeof p.role === "string") setRole(p.role);
+    if (typeof p.systemPrompt === "string") setSystemPrompt(p.systemPrompt);
+    const beh = p.behavior as { temperature?: number; formality?: number; verbosity?: number } | undefined;
+    if (beh?.temperature !== undefined) setTemperature(beh.temperature);
+    if (beh?.formality !== undefined) setFormality(beh.formality);
+    if (beh?.verbosity !== undefined) setVerbosity(beh.verbosity);
+    const tools = p.tools as { webSearch?: boolean; internalDatabase?: boolean } | undefined;
+    if (tools?.webSearch !== undefined) setWebSearch(tools.webSearch);
+    if (tools?.internalDatabase !== undefined) setInternalDatabase(tools.internalDatabase);
+    if (p.autonomy === "draft" || p.autonomy === "full") setAutonomy(p.autonomy);
+    setFormFilled(true);
+    setFormCollapsed(false);
+    // Smooth scroll to the form so the user sees what was filled in
+    setTimeout(() => {
+      document.getElementById("agent-form-anchor")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 50);
+  }
 
   async function handleDescribe() {
     if (!description.trim()) return;
@@ -267,9 +309,94 @@ export default function NewAgentPage() {
         </div>
       </div>
 
+      {/* ── Template library (Phase 6) ──────────────────────────── */}
+      {!templatesLoading && (localTemplates.length > 0 || marketplaceTemplates.length > 0 || marketplaceError) && (
+        <div style={{ marginBottom: "2rem" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
+            <BookOpen style={{ width: "14px", height: "14px", color: "var(--muted-foreground)" }} />
+            <span style={{ fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted-foreground)" }}>
+              Start from a template
+            </span>
+          </div>
+
+          {localTemplates.length > 0 && (
+            <div style={{ marginBottom: "1rem" }}>
+              <p style={{ fontSize: "0.65rem", fontFamily: "monospace", color: "var(--muted-foreground)", marginBottom: "0.4rem", display: "flex", alignItems: "center", gap: "0.3rem" }}>
+                <HardDrive style={{ width: "10px", height: "10px" }} />
+                YOUR ORG ({localTemplates.length})
+              </p>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "0.625rem" }}>
+                {localTemplates.map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => applyTemplate(t)}
+                    style={{
+                      textAlign: "left", padding: "0.75rem 0.875rem", borderRadius: "8px",
+                      border: "1px solid var(--border)", background: "var(--card)",
+                      color: "var(--foreground)", cursor: "pointer", transition: "all 150ms",
+                    }}
+                    className="hover:border-primary hover:bg-primary/5"
+                  >
+                    <p style={{ fontSize: "0.85rem", fontWeight: 600, margin: 0, marginBottom: "0.2rem" }}>
+                      {t.icon ? `${t.icon} ` : ""}{t.name}
+                    </p>
+                    <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", margin: 0, lineHeight: 1.4 }}>
+                      {t.description || "Local template"}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {marketplaceTemplates.length > 0 && (
+            <div style={{ marginBottom: "1rem" }}>
+              <p style={{ fontSize: "0.65rem", fontFamily: "monospace", color: "var(--muted-foreground)", marginBottom: "0.4rem", display: "flex", alignItems: "center", gap: "0.3rem" }}>
+                <Globe style={{ width: "10px", height: "10px" }} />
+                MARKETPLACE ({marketplaceTemplates.length})
+              </p>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "0.625rem" }}>
+                {marketplaceTemplates.map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => applyTemplate(t)}
+                    style={{
+                      textAlign: "left", padding: "0.75rem 0.875rem", borderRadius: "8px",
+                      border: "1px solid var(--border)", background: "var(--card)",
+                      color: "var(--foreground)", cursor: "pointer", transition: "all 150ms",
+                    }}
+                    className="hover:border-primary hover:bg-primary/5"
+                  >
+                    <p style={{ fontSize: "0.85rem", fontWeight: 600, margin: 0, marginBottom: "0.2rem" }}>
+                      {t.icon ? `${t.icon} ` : ""}{t.name}
+                    </p>
+                    <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", margin: 0, lineHeight: 1.4 }}>
+                      {t.description || "Marketplace template"}
+                    </p>
+                    {t.category && (
+                      <span style={{ display: "inline-block", marginTop: "0.4rem", fontSize: "0.6rem", padding: "0.1rem 0.4rem", background: "var(--secondary)", color: "var(--secondary-foreground)", borderRadius: "9999px", textTransform: "uppercase", letterSpacing: "0.04em" }}>
+                        {t.category}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {marketplaceError && (
+            <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", fontStyle: "italic" }}>
+              Marketplace unavailable — {marketplaceError}
+            </p>
+          )}
+        </div>
+      )}
+
       {/* ── Manual form (collapsible after AI fill) ─────────────── */}
       {!formCollapsed && (
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form id="agent-form-anchor" onSubmit={handleSubmit} className="space-y-6">
         {/* Name */}
         <div>
           <label style={labelStyle}>Agent Name</label>
