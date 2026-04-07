@@ -420,17 +420,19 @@ export async function runAgent(agentId: string, userPrompt: string, overrideColl
         .filter((m) => m.generatedByAi && m.generatedAt && new Date(m.generatedAt).getTime() >= runStartTime)
         .sort((a, b) => new Date(b.generatedAt!).getTime() - new Date(a.generatedAt!).getTime());
       if (fresh[0]) {
-        const sc = await readSiteConfig().catch(() => null);
-        const previewBase = sc?.previewSiteUrl ?? "";
-        // media key is "<folder>/<filename>" — append to previewSiteUrl + /uploads/
-        generatedImageUrl = previewBase
-          ? `${previewBase.replace(/\/$/, "")}/uploads/${fresh[0].key}`
-          : `/uploads/${fresh[0].key}`;
+        // Resolve a public absolute URL: prefer previewSiteUrl, then
+        // deployProductionUrl. Only ship to the webhook when the result
+        // is absolute http(s) — Discord rejects relative URLs.
+        const publicBase = (siteConfig.previewSiteUrl || siteConfig.deployProductionUrl || "").trim();
+        if (/^https?:\/\//i.test(publicBase)) {
+          generatedImageUrl = `${publicBase.replace(/\/$/, "")}/uploads/${fresh[0].key}`;
+        }
       }
     } catch { /* non-fatal */ }
 
-    const previewLink = siteConfig.previewSiteUrl
-      ? `${siteConfig.previewSiteUrl.replace(/\/$/, "")}/${targetCollection === "posts" ? "blog" : targetCollection}/${slug}`
+    const docLinkBase = (siteConfig.previewSiteUrl || siteConfig.deployProductionUrl || "").trim();
+    const previewLink = /^https?:\/\//i.test(docLinkBase)
+      ? `${docLinkBase.replace(/\/$/, "")}/${targetCollection === "posts" ? "blog" : targetCollection}/${slug}`
       : undefined;
 
     fireAgentEvent("completed", agent.name ?? agentId, {

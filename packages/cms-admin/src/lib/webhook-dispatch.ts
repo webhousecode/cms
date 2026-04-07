@@ -71,8 +71,10 @@ function formatDiscord(evt: WebhookEvent): Record<string, unknown> {
     timestamp: new Date().toISOString(),
     footer: { text: `webhouse.app${evt.instanceUrl ? ` · ${evt.instanceUrl}` : ""}` },
   };
-  if (evt.linkUrl) embed.url = evt.linkUrl;
-  if (evt.imageUrl) embed.image = { url: evt.imageUrl };
+  // Discord requires absolute http(s) URLs for embed.url and embed.image —
+  // a relative path causes the entire dispatch to fail with HTTP 400.
+  if (evt.linkUrl && /^https?:\/\//i.test(evt.linkUrl)) embed.url = evt.linkUrl;
+  if (evt.imageUrl && /^https?:\/\//i.test(evt.imageUrl)) embed.image = { url: evt.imageUrl };
   if (evt.fields?.length) {
     embed.fields = evt.fields.map((f) => ({ name: f.name, value: f.value, inline: true }));
   }
