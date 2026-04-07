@@ -10,6 +10,7 @@ import { readSiteConfig } from "@/lib/site-config";
 import { buildToolRegistry, type ToolDefinition, type ToolHandler } from "@/lib/tools";
 import { loadFeedbackForPrompt } from "@/lib/agent-feedback";
 import { checkAgentBudget, budgetExceededMessage } from "@/lib/agent-budget";
+import { calculateSeoScore, type SeoFields } from "@/lib/seo/score";
 
 interface FeedbackExample {
   original: string;
@@ -339,6 +340,36 @@ export async function runAgent(agentId: string, userPrompt: string, overrideColl
     approvalRate > 0.95;
   const status = qualifiesFullAutonomy ? "approved" : "ready";
 
+  // Phase 5 — compute SEO score on the fresh draft so curators see a
+  // real number in the queue instead of the placeholder. Most agent
+  // outputs don't include explicit metaTitle/metaDescription/keywords,
+  // so we derive them from title/excerpt/tags as the published site
+  // would. Locale comes from siteConfig.defaultLocale.
+  let seoScore: number | undefined;
+  try {
+    const tags = Array.isArray(contentData["tags"])
+      ? (contentData["tags"] as unknown[]).filter((t): t is string => typeof t === "string")
+      : [];
+    const derivedSeo: SeoFields = {
+      metaTitle: typeof contentData["metaTitle"] === "string"
+        ? (contentData["metaTitle"] as string)
+        : (typeof contentData["title"] === "string" ? (contentData["title"] as string) : ""),
+      metaDescription: typeof contentData["metaDescription"] === "string"
+        ? (contentData["metaDescription"] as string)
+        : (typeof contentData["excerpt"] === "string" ? (contentData["excerpt"] as string) : ""),
+      keywords: tags,
+    };
+    const result = calculateSeoScore(
+      { slug, data: contentData },
+      derivedSeo,
+      undefined,
+      siteConfig.defaultLocale,
+    );
+    seoScore = result.score;
+  } catch (err) {
+    console.error("[agent-runner] SEO score computation failed:", err);
+  }
+
   // Write to curation queue
   const { addQueueItem } = await import("@/lib/curation");
   const queueItem = await addQueueItem({
@@ -350,6 +381,7 @@ export async function runAgent(agentId: string, userPrompt: string, overrideColl
     status,
     contentData,
     costUsd: totalCost,
+    ...(seoScore != null ? { seoScore } : {}),
     ...(alternatives && alternatives.length > 0 ? { alternatives } : {}),
   });
 
