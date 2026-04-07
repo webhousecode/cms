@@ -2,7 +2,7 @@ import { listAgents } from "@/lib/agents";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { TabTitle } from "@/lib/tabs-context";
-import { AgentsList } from "@/components/agents-list";
+import { AgentsTabs } from "@/components/agents-tabs";
 import { getSiteRole } from "@/lib/require-role";
 import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
 
@@ -24,7 +24,7 @@ export default async function AgentsPage() {
         <ActionBarBreadcrumb items={["AI", "Agents"]} />
       </ActionBar>
       <div className="p-8 max-w-5xl">
-        <AgentsList agents={agents} readOnly={siteRole === "viewer"} />
+        <AgentsTabs agents={agents} readOnly={siteRole === "viewer"} />
       </div>
     </>
   );
