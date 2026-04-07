@@ -49,11 +49,18 @@ export async function buildImageGenerationTool(): Promise<ToolPair | null> {
     definition: {
       name: "generate_image",
       description:
-        "Generate a new image using Google Gemini 2.5 Flash Image (Nano Banana). " +
+        "Generate a new image using Google Gemini Nano Banana. " +
         "Use this when the content you're producing benefits from a custom illustration, " +
-        "header image, or diagram. Returns a Markdown image tag (![alt](url)) you can " +
-        "embed directly in the article body. Every generated image is saved to the site " +
-        "media library, optimized into WebP variants, and labeled as AI-generated.",
+        "header image, or diagram. On success returns a Markdown image tag " +
+        "(![alt](url)) you can embed directly in the article body — every " +
+        "generated image is saved to the site media library, optimized into " +
+        "WebP variants, and labeled as AI-generated. " +
+        "STRICT FAILURE RULE: if this tool returns a string starting with " +
+        "\"Image generation failed\" you MUST omit images from your final " +
+        "output entirely. Do NOT invent a placeholder URL, do NOT insert " +
+        "\"image coming soon\" text, do NOT use a stock URL — just write " +
+        "the article without an image. A missing image is correct; a " +
+        "hallucinated one is not.",
       input_schema: {
         type: "object",
         properties: {
@@ -167,7 +174,10 @@ export async function buildImageGenerationTool(): Promise<ToolPair | null> {
           .join("\n");
       } catch (err) {
         const msg = err instanceof Error ? err.message : "unknown error";
-        return `Image generation failed: ${msg}`;
+        // Tool description tells the agent that any string starting with
+        // "Image generation failed" means: omit images entirely, do not
+        // hallucinate a placeholder URL.
+        return `Image generation failed: ${msg}. Per the tool description: do NOT include any image in your final output. Continue writing the article without an image.`;
       }
     },
   };
