@@ -12,7 +12,7 @@
  */
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { Plus, Trash2, HardDrive, Globe, Workflow, Play, Loader2, CheckCircle, ChevronRight } from "lucide-react";
+import { Plus, Trash2, HardDrive, Globe, Workflow, Play, Loader2, CheckCircle, ChevronRight, Pencil } from "lucide-react";
 import { AgentsList } from "@/components/agents-list";
 import type { AgentConfig } from "@/lib/agents";
 import type { AgentTemplate } from "@/lib/agent-templates";
@@ -249,6 +249,7 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
   const [workflows, setWorkflows] = useState<AgentWorkflow[]>([]);
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [newName, setNewName] = useState("");
   const [newSteps, setNewSteps] = useState<string[]>([]);
   const [newScheduleEnabled, setNewScheduleEnabled] = useState(false);
@@ -278,12 +279,38 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
 
   const agentNameById = (id: string) => agents.find((a) => a.id === id)?.name ?? id;
 
-  async function handleCreate() {
+  function resetForm() {
+    setNewName("");
+    setNewSteps([]);
+    setNewScheduleEnabled(false);
+    setNewFrequency("daily");
+    setNewTime("06:00");
+    setNewMaxPerRun(1);
+    setNewDefaultPrompt("");
+    setCreating(false);
+    setEditingId(null);
+  }
+
+  function startEdit(wf: AgentWorkflow) {
+    setEditingId(wf.id);
+    setNewName(wf.name);
+    setNewSteps(wf.steps.map((s) => s.agentId));
+    setNewScheduleEnabled(wf.schedule.enabled);
+    setNewFrequency(wf.schedule.frequency);
+    setNewTime(wf.schedule.time);
+    setNewMaxPerRun(wf.schedule.maxPerRun);
+    setNewDefaultPrompt(wf.defaultPrompt ?? "");
+    setCreating(true);
+  }
+
+  async function handleSave() {
     if (!newName.trim() || newSteps.length === 0) return;
     setError("");
+    const isEdit = editingId !== null;
+    const url = isEdit ? `/api/cms/workflows/${editingId}` : "/api/cms/workflows";
     try {
-      const res = await fetch("/api/cms/workflows", {
-        method: "POST",
+      const res = await fetch(url, {
+        method: isEdit ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: newName.trim(),
@@ -300,17 +327,10 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error ?? "Failed to create workflow");
+        setError(data.error ?? `Failed to ${isEdit ? "update" : "create"} workflow`);
         return;
       }
-      setNewName("");
-      setNewSteps([]);
-      setNewScheduleEnabled(false);
-      setNewFrequency("daily");
-      setNewTime("06:00");
-      setNewMaxPerRun(1);
-      setNewDefaultPrompt("");
-      setCreating(false);
+      resetForm();
       await load();
     } catch {
       setError("Network error");
@@ -390,7 +410,7 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
 
       {creating && (
         <div className="rounded-xl border border-primary/30 bg-primary/5 p-5 space-y-4">
-          <p className="text-sm font-semibold">New workflow</p>
+          <p className="text-sm font-semibold">{editingId ? "Edit workflow" : "New workflow"}</p>
           <div>
             <label className="text-xs font-semibold text-muted-foreground block mb-1">Name</label>
             <input
@@ -516,15 +536,15 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
           <div className="flex gap-2">
             <button
               type="button"
-              onClick={handleCreate}
+              onClick={handleSave}
               disabled={!newName.trim() || newSteps.length === 0}
               className="px-3 py-1.5 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50"
             >
-              Create
+              {editingId ? "Save changes" : "Create"}
             </button>
             <button
               type="button"
-              onClick={() => { setCreating(false); setNewName(""); setNewSteps([]); }}
+              onClick={resetForm}
               className="px-3 py-1.5 rounded-md text-xs border border-border hover:bg-secondary"
             >
               Cancel
@@ -581,14 +601,24 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
                       </button>
                     </div>
                   ) : (
-                    <button
-                      type="button"
-                      onClick={() => setConfirming(wf.id)}
-                      title="Delete workflow"
-                      className="p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    <div className="flex items-center gap-1 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => startEdit(wf)}
+                        title="Edit workflow"
+                        className="p-1 rounded hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setConfirming(wf.id)}
+                        title="Delete workflow"
+                        className="p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   )
                 )}
               </div>

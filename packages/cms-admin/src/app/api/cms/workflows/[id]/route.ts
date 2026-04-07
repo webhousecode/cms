@@ -27,7 +27,26 @@ export async function PUT(
   if (denied) return denied;
   const { id } = await params;
   try {
-    const body = await request.json();
+    const body = (await request.json()) as Record<string, unknown>;
+
+    // Normalise step shape the same way POST does — every step must
+    // have a stable id even if the client only sent agentId. Stats are
+    // never accepted from the client (would let curators reset their
+    // own counters), so strip them if present.
+    if (Array.isArray(body.steps)) {
+      body.steps = (body.steps as { id?: string; agentId?: string; overrideCollection?: string }[]).map((s, i) => {
+        if (!s.agentId) throw new Error(`Step ${i} is missing agentId`);
+        return {
+          id: s.id ?? `step-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 6)}`,
+          agentId: s.agentId,
+          ...(s.overrideCollection ? { overrideCollection: s.overrideCollection } : {}),
+        };
+      });
+    }
+    delete body.stats;
+    delete body.id;
+    delete body.createdAt;
+
     const updated = await updateWorkflow(id, body);
     return NextResponse.json(updated);
   } catch (err) {
