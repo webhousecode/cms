@@ -5,6 +5,7 @@ import { listAgents, type AgentConfig } from "@/lib/agents";
 import { readCockpit } from "@/lib/cockpit";
 import { runAgent } from "@/lib/agent-runner";
 import { buildContentContext } from "@/lib/content-context";
+import { checkAgentBudget } from "@/lib/agent-budget";
 
 interface SchedulerState {
   lastRuns: Record<string, string>; // agentId -> ISO timestamp
@@ -117,8 +118,18 @@ export async function runScheduledAgents(): Promise<{ ran: string[]; skipped: st
     for (const agent of agents) {
       if (!isDue(agent, state)) continue;
 
-      // Budget check per agent
+      // Global cockpit budget guard (legacy — flat 95% headroom)
       if (cockpit.currentMonthSpentUsd >= cockpit.monthlyBudgetUsd * 0.95) {
+        skipped.push(agent.id);
+        continue;
+      }
+
+      // Phase 4 — per-agent budget guard. Skip due agents that have
+      // hit their own daily/weekly/monthly cap, even if the global
+      // cockpit budget still has room.
+      const budget = await checkAgentBudget(agent);
+      if (budget.exceeded) {
+        console.log(`[scheduler] Agent ${agent.name} skipped — ${budget.period} budget exhausted ($${budget.spent?.toFixed(4)} of $${budget.cap?.toFixed(2)})`);
         skipped.push(agent.id);
         continue;
       }

@@ -9,6 +9,7 @@ import { buildLocaleInstruction } from "@/lib/ai/locale-prompt";
 import { readSiteConfig } from "@/lib/site-config";
 import { buildToolRegistry, type ToolDefinition, type ToolHandler } from "@/lib/tools";
 import { loadFeedbackForPrompt } from "@/lib/agent-feedback";
+import { checkAgentBudget, budgetExceededMessage } from "@/lib/agent-budget";
 
 interface FeedbackExample {
   original: string;
@@ -189,6 +190,14 @@ export async function runAgent(agentId: string, userPrompt: string, overrideColl
   const agent = await getAgent(agentId);
   if (!agent) throw new Error(`Agent ${agentId} not found`);
   if (!agent.active) throw new Error(`Agent ${agentId} is not active`);
+
+  // Phase 4 — per-agent budget pre-flight. Throws a clear error if the
+  // agent has hit its daily/weekly/monthly cap so manual + scheduled
+  // runs both bail before spending more on the LLM.
+  const budgetResult = await checkAgentBudget(agent);
+  if (budgetResult.exceeded) {
+    throw new Error(budgetExceededMessage(agent, budgetResult));
+  }
 
   // F35 — fire agent.started webhook
   {

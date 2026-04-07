@@ -103,6 +103,12 @@ export interface AgentConfig {
     time: string;
     maxPerRun: number;
   };
+  /** Phase 4 — per-agent cost guards. Each is optional; unset = no cap.
+   *  All caps are checked pre-flight against analytics spend (recordRun)
+   *  and apply to both manual and scheduled runs. */
+  dailyBudgetUsd?: number;
+  weeklyBudgetUsd?: number;
+  monthlyBudgetUsd?: number;
   stats: {
     totalGenerated: number;
     approved: number;

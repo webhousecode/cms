@@ -268,6 +268,41 @@ export async function getContentRatio(dateFrom?: string, dateTo?: string): Promi
   };
 }
 
+/**
+ * Phase 4 — sum the cost of an agent's successful runs within a rolling
+ * period. Used by per-agent budget guards in runAgent and the scheduler.
+ *
+ * - "day"   = since 00:00 today (local time)
+ * - "week"  = last 7 days, rolling
+ * - "month" = since the 1st of the current month (local time)
+ */
+export async function getAgentSpendInPeriod(
+  agentId: string,
+  period: "day" | "week" | "month",
+): Promise<number> {
+  const runs = await readRuns();
+  const now = new Date();
+  let cutoff: number;
+  if (period === "day") {
+    const start = new Date(now);
+    start.setHours(0, 0, 0, 0);
+    cutoff = start.getTime();
+  } else if (period === "week") {
+    cutoff = now.getTime() - 7 * 24 * 60 * 60 * 1000;
+  } else {
+    const start = new Date(now.getFullYear(), now.getMonth(), 1);
+    cutoff = start.getTime();
+  }
+
+  let total = 0;
+  for (const r of runs) {
+    if (r.agentId !== agentId) continue;
+    if (new Date(r.timestamp).getTime() < cutoff) continue;
+    total += r.costUsd;
+  }
+  return total;
+}
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function generateId(): string {

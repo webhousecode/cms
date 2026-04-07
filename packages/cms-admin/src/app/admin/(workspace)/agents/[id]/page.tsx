@@ -72,6 +72,9 @@ export default function AgentDetailPage() {
   const [time, setTime] = useState("06:00");
   const [maxPerRun, setMaxPerRun] = useState(3);
   const [active, setActive] = useState(true);
+  const [dailyBudgetUsd, setDailyBudgetUsd] = useState<string>("");
+  const [weeklyBudgetUsd, setWeeklyBudgetUsd] = useState<string>("");
+  const [monthlyBudgetUsd, setMonthlyBudgetUsd] = useState<string>("");
   const [targetCollections, setTargetCollections] = useState<string[]>([]);
   const [fieldDefaults, setFieldDefaults] = useState<{ key: string; value: string }[]>([]);
   const [cloning, setCloning] = useState(false);
@@ -138,6 +141,9 @@ export default function AgentDetailPage() {
         setTime(agent.schedule.time);
         setMaxPerRun(agent.schedule.maxPerRun);
         setActive(agent.active);
+        setDailyBudgetUsd(agent.dailyBudgetUsd != null ? String(agent.dailyBudgetUsd) : "");
+        setWeeklyBudgetUsd(agent.weeklyBudgetUsd != null ? String(agent.weeklyBudgetUsd) : "");
+        setMonthlyBudgetUsd(agent.monthlyBudgetUsd != null ? String(agent.monthlyBudgetUsd) : "");
         setTargetCollections(agent.targetCollections ?? []);
         setFieldDefaults(
           Object.entries(agent.fieldDefaults ?? {}).map(([key, value]) => ({
@@ -226,6 +232,9 @@ export default function AgentDetailPage() {
           ),
           schedule: { enabled: scheduleEnabled, frequency, time, maxPerRun },
           active,
+          dailyBudgetUsd: dailyBudgetUsd.trim() ? Number(dailyBudgetUsd) : undefined,
+          weeklyBudgetUsd: weeklyBudgetUsd.trim() ? Number(weeklyBudgetUsd) : undefined,
+          monthlyBudgetUsd: monthlyBudgetUsd.trim() ? Number(monthlyBudgetUsd) : undefined,
         }),
       });
       const data = await res.json();
@@ -641,6 +650,59 @@ export default function AgentDetailPage() {
               </div>
             </div>
           )}
+        </div>
+
+        {/* Phase 4 — Per-agent cost guards. All optional; blank = no cap.
+            Checked pre-flight in agent-runner and scheduler against the
+            agent's analytics spend. */}
+        <div className="rounded-lg border border-border p-4 space-y-3">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Cost guards (USD)
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Optional caps per period. Leave blank for no limit. Hitting a cap
+              blocks both manual and scheduled runs until the period resets.
+            </p>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label style={labelStyle}>Daily</label>
+              <input
+                type="number"
+                min={0}
+                step={0.01}
+                placeholder="—"
+                value={dailyBudgetUsd}
+                onChange={(e) => setDailyBudgetUsd(e.target.value)}
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>Weekly</label>
+              <input
+                type="number"
+                min={0}
+                step={0.01}
+                placeholder="—"
+                value={weeklyBudgetUsd}
+                onChange={(e) => setWeeklyBudgetUsd(e.target.value)}
+                style={inputStyle}
+              />
+            </div>
+            <div>
+              <label style={labelStyle}>Monthly</label>
+              <input
+                type="number"
+                min={0}
+                step={0.01}
+                placeholder="—"
+                value={monthlyBudgetUsd}
+                onChange={(e) => setMonthlyBudgetUsd(e.target.value)}
+                style={inputStyle}
+              />
+            </div>
+          </div>
         </div>
 
         {/* Active toggle */}
