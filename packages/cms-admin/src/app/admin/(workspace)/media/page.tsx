@@ -88,9 +88,10 @@ export default function MediaPage() {
   const [newFolder, setNewFolder] = useState("");
   const [typeFilter, setTypeFilter] = useState<string>(""); // "" = all
   const [sortBy, setSortBy] = useState<"newest" | "oldest" | "name" | "size">("newest");
-  const [aiFilter, setAiFilter] = useState<"" | "analyzed" | "not-analyzed">("");
+  const [aiFilter, setAiFilter] = useState<"" | "analyzed" | "not-analyzed" | "ai-generated">("");
   const [aiAnalyzedSet, setAiAnalyzedSet] = useState<Set<string>>(new Set());
-  const [aiMetaMap, setAiMetaMap] = useState<Record<string, { caption?: string; alt?: string; aiTags?: string[]; userTags?: string[] }>>({});
+  const [aiGeneratedSet, setAiGeneratedSet] = useState<Set<string>>(new Set());
+  const [aiMetaMap, setAiMetaMap] = useState<Record<string, { caption?: string; alt?: string; aiTags?: string[]; userTags?: string[]; generatedByAi?: boolean; generatedByModel?: string; generatedPrompt?: string }>>({});
   const [allTags, setAllTags] = useState<{ tag: string; count: number }[]>([]);
   const [tagFilter, setTagFilter] = useState("");
   const [showBatchAnalyze, setShowBatchAnalyze] = useState(false);
@@ -123,6 +124,7 @@ export default function MediaPage() {
       const data = await res.json();
       if (data && data.keys) {
         setAiAnalyzedSet(new Set(data.keys as string[]));
+        setAiGeneratedSet(new Set((data.genaiKeys as string[]) ?? []));
         setAiMetaMap(data.meta ?? {});
       } else {
         // Fallback for old response format (plain array)
@@ -160,8 +162,10 @@ export default function MediaPage() {
     const aiKey = f.folder ? `${f.folder}/${f.name}` : f.name;
     if (aiFilter) {
       const isAnalyzed = aiAnalyzedSet.has(aiKey);
+      const isGenerated = aiGeneratedSet.has(aiKey);
       if (aiFilter === "analyzed" && !isAnalyzed) return false;
       if (aiFilter === "not-analyzed" && isAnalyzed) return false;
+      if (aiFilter === "ai-generated" && !isGenerated) return false;
     }
     if (tagFilter) {
       const ai = aiMetaMap[aiKey];
@@ -182,7 +186,7 @@ export default function MediaPage() {
       return false;
     }
     return true;
-  }), [allFiles, folder, typeFilter, aiFilter, aiAnalyzedSet, tagFilter, aiMetaMap, debouncedQuery]);
+  }), [allFiles, folder, typeFilter, aiFilter, aiAnalyzedSet, aiGeneratedSet, tagFilter, aiMetaMap, debouncedQuery]);
 
   const sorted = useMemo(() => [...filtered].sort((a, b) => {
     switch (sortBy) {
@@ -657,12 +661,15 @@ export default function MediaPage() {
               { value: "" as const, label: "All" },
               { value: "analyzed" as const, label: "Analyzed" },
               { value: "not-analyzed" as const, label: "Not analyzed" },
+              { value: "ai-generated" as const, label: "AI generated" },
             ]).map((t) => {
               const count = t.value === ""
                 ? allFiles.filter((f) => f.isImage).length
                 : t.value === "analyzed"
                   ? allFiles.filter((f) => f.isImage && aiAnalyzedSet.has(f.folder ? `${f.folder}/${f.name}` : f.name)).length
-                  : allFiles.filter((f) => f.isImage && !aiAnalyzedSet.has(f.folder ? `${f.folder}/${f.name}` : f.name)).length;
+                  : t.value === "ai-generated"
+                    ? allFiles.filter((f) => f.isImage && aiGeneratedSet.has(f.folder ? `${f.folder}/${f.name}` : f.name)).length
+                    : allFiles.filter((f) => f.isImage && !aiAnalyzedSet.has(f.folder ? `${f.folder}/${f.name}` : f.name)).length;
               return (
                 <button
                   key={t.value}
@@ -679,6 +686,7 @@ export default function MediaPage() {
                 >
                   <span style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
                     {t.value === "analyzed" && <Sparkles style={{ width: 10, height: 10, color: "#F7BB2E" }} />}
+                    {t.value === "ai-generated" && <Zap style={{ width: 10, height: 10, color: "#a855f7" }} />}
                     {t.label}
                   </span>
                   <span style={{ fontSize: "0.7rem", opacity: 0.6 }}>{count}</span>
@@ -794,9 +802,9 @@ export default function MediaPage() {
           ) : (
             <>
               {view === "grid" ? (
-                <GridView files={paginated} copied={copied} deleting={deleting} onCopy={copyUrl} onDelete={readOnly ? () => {} : handleDelete} onOpen={openLightbox} onRename={readOnly ? () => {} : setRenaming} usageMap={usageMap} aiAnalyzedSet={aiAnalyzedSet} selecting={selecting} selected={selected} onToggleSelect={toggleSelect} thumbMinWidth={thumbMinWidth} />
+                <GridView files={paginated} copied={copied} deleting={deleting} onCopy={copyUrl} onDelete={readOnly ? () => {} : handleDelete} onOpen={openLightbox} onRename={readOnly ? () => {} : setRenaming} usageMap={usageMap} aiAnalyzedSet={aiAnalyzedSet} aiGeneratedSet={aiGeneratedSet} aiMetaMap={aiMetaMap} selecting={selecting} selected={selected} onToggleSelect={toggleSelect} thumbMinWidth={thumbMinWidth} />
               ) : (
-                <ListView files={paginated} copied={copied} deleting={deleting} onCopy={copyUrl} onDelete={readOnly ? () => {} : handleDelete} onOpen={openLightbox} onRename={readOnly ? () => {} : setRenaming} usageMap={usageMap} aiAnalyzedSet={aiAnalyzedSet} selecting={selecting} selected={selected} onToggleSelect={toggleSelect} />
+                <ListView files={paginated} copied={copied} deleting={deleting} onCopy={copyUrl} onDelete={readOnly ? () => {} : handleDelete} onOpen={openLightbox} onRename={readOnly ? () => {} : setRenaming} usageMap={usageMap} aiAnalyzedSet={aiAnalyzedSet} aiGeneratedSet={aiGeneratedSet} aiMetaMap={aiMetaMap} selecting={selecting} selected={selected} onToggleSelect={toggleSelect} />
               )}
 
               {/* ── Pagination ── */}
@@ -981,6 +989,8 @@ type ViewProps = {
   deleting: string | null;
   usageMap: Record<string, UsageRef[]>;
   aiAnalyzedSet: Set<string>;
+  aiGeneratedSet: Set<string>;
+  aiMetaMap: Record<string, { caption?: string; alt?: string; aiTags?: string[]; userTags?: string[]; generatedByAi?: boolean; generatedByModel?: string; generatedPrompt?: string }>;
   onCopy: (url: string) => void;
   onDelete: (file: MediaFile) => void;
   onOpen: (file: MediaFile) => void;
@@ -991,13 +1001,14 @@ type ViewProps = {
   thumbMinWidth?: string;
 };
 
-function GridView({ files, copied, deleting, usageMap, aiAnalyzedSet, onCopy, onDelete, onOpen, onRename, selecting, selected, onToggleSelect, thumbMinWidth = "180px" }: ViewProps) {
+function GridView({ files, copied, deleting, usageMap, aiAnalyzedSet, aiGeneratedSet, aiMetaMap, onCopy, onDelete, onOpen, onRename, selecting, selected, onToggleSelect, thumbMinWidth = "180px" }: ViewProps) {
   return (
     <div style={{ padding: "1.25rem", display: "grid", gridTemplateColumns: `repeat(auto-fill, minmax(${thumbMinWidth}, 1fr))`, gap: "0.875rem" }}>
       {files.map((file) => {
         const usages = usageMap[file.url] ?? [];
         const aiKey = file.folder ? `${file.folder}/${file.name}` : file.name;
         const isAiAnalyzed = aiAnalyzedSet.has(aiKey);
+        const isAiGenerated = aiGeneratedSet.has(aiKey);
         const isSelected = selecting && selected?.has(file.url);
         return (
           <div
@@ -1044,6 +1055,38 @@ function GridView({ files, copied, deleting, usageMap, aiAnalyzedSet, onCopy, on
                 width: "1.25rem", height: "1.25rem", borderRadius: "9999px", pointerEvents: "none",
               }}>
                 <Sparkles style={{ width: "0.6rem", height: "0.6rem" }} />
+              </span>
+            )}
+
+            {/* AI generated badge — distinct from "analyzed". Marks images
+                created by Gemini Nano Banana via the agent generate_image tool. */}
+            {isAiGenerated && file.isImage && (
+              <span
+                title={
+                  aiMetaMap[aiKey]?.generatedPrompt
+                    ? `AI generated — prompt: ${aiMetaMap[aiKey]?.generatedPrompt}`
+                    : "AI generated image"
+                }
+                style={{
+                  position: "absolute",
+                  top: "0.375rem",
+                  right: "0.375rem",
+                  background: "rgba(168, 85, 247, 0.92)",
+                  color: "#fff",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "0.2rem",
+                  padding: "2px 6px",
+                  fontSize: "0.6rem",
+                  fontWeight: 700,
+                  letterSpacing: "0.05em",
+                  textTransform: "uppercase",
+                  borderRadius: "9999px",
+                  pointerEvents: "none",
+                }}
+              >
+                <Zap style={{ width: "0.6rem", height: "0.6rem" }} />
+                AI
               </span>
             )}
 
@@ -1107,7 +1150,7 @@ function GridView({ files, copied, deleting, usageMap, aiAnalyzedSet, onCopy, on
   );
 }
 
-function ListView({ files, copied, deleting, usageMap, aiAnalyzedSet, onCopy, onDelete, onOpen, onRename, selecting, selected, onToggleSelect }: ViewProps) {
+function ListView({ files, copied, deleting, usageMap, aiAnalyzedSet, aiGeneratedSet, aiMetaMap, onCopy, onDelete, onOpen, onRename, selecting, selected, onToggleSelect }: ViewProps) {
   return (
     <div style={{ overflow: "auto" }}>
       <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem" }}>
@@ -1124,6 +1167,7 @@ function ListView({ files, copied, deleting, usageMap, aiAnalyzedSet, onCopy, on
             const usages = usageMap[file.url] ?? [];
             const aiKey = file.folder ? `${file.folder}/${file.name}` : file.name;
             const isAiAnalyzed = aiAnalyzedSet.has(aiKey);
+            const isAiGenerated = aiGeneratedSet.has(aiKey);
             return (
               <tr key={file.url} data-testid={`media-item-${file.name}`} className="group" style={{ borderBottom: "1px solid var(--border)", cursor: selecting ? "pointer" : undefined }} onClick={selecting ? () => onToggleSelect?.(file) : undefined}>
                 {selecting && (
@@ -1148,6 +1192,32 @@ function ListView({ files, copied, deleting, usageMap, aiAnalyzedSet, onCopy, on
                     </span>
                   )}
                   <span className="font-mono truncate" style={{ maxWidth: "260px" }} title={file.name}>{file.name}</span>
+                  {isAiGenerated && (
+                    <span
+                      title={
+                        aiMetaMap[aiKey]?.generatedPrompt
+                          ? `AI generated — prompt: ${aiMetaMap[aiKey]?.generatedPrompt}`
+                          : "AI generated image"
+                      }
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "0.2rem",
+                        padding: "1px 5px",
+                        background: "rgba(168, 85, 247, 0.92)",
+                        color: "#fff",
+                        fontSize: "0.55rem",
+                        fontWeight: 700,
+                        letterSpacing: "0.05em",
+                        textTransform: "uppercase",
+                        borderRadius: "9999px",
+                        flexShrink: 0,
+                      }}
+                    >
+                      <Zap style={{ width: "0.55rem", height: "0.55rem" }} />
+                      AI
+                    </span>
+                  )}
                 </td>
                 <td style={{ padding: "0.5rem 1rem", color: "var(--muted-foreground)", fontFamily: "monospace", fontSize: "0.75rem" }}>
                   {file.folder || <span style={{ opacity: 0.4 }}>—</span>}

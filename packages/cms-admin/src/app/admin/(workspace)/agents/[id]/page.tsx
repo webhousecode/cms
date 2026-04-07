@@ -64,6 +64,7 @@ export default function AgentDetailPage() {
   const [verbosity, setVerbosity] = useState(60);
   const [webSearch, setWebSearch] = useState(false);
   const [internalDatabase, setInternalDatabase] = useState(false);
+  const [imageGeneration, setImageGeneration] = useState(false);
   const [autonomy, setAutonomy] = useState<"draft" | "full">("draft");
   const [scheduleEnabled, setScheduleEnabled] = useState(false);
   const [frequency, setFrequency] = useState<"daily" | "weekly" | "manual">(
@@ -135,6 +136,7 @@ export default function AgentDetailPage() {
         setVerbosity(agent.behavior.verbosity);
         setWebSearch(agent.tools.webSearch);
         setInternalDatabase(agent.tools.internalDatabase);
+        setImageGeneration(agent.tools.imageGeneration ?? false);
         setAutonomy(agent.autonomy);
         setScheduleEnabled(agent.schedule.enabled);
         setFrequency(agent.schedule.frequency);
@@ -224,7 +226,7 @@ export default function AgentDetailPage() {
           role,
           systemPrompt,
           behavior: { temperature, formality, verbosity },
-          tools: { webSearch, internalDatabase },
+          tools: { webSearch, internalDatabase, imageGeneration },
           autonomy,
           targetCollections,
           fieldDefaults: Object.fromEntries(
@@ -487,6 +489,7 @@ export default function AgentDetailPage() {
           <div className="space-y-2">
             <Checkbox checked={webSearch} onChange={(v) => setWebSearch(v)} label="Web search" />
             <Checkbox checked={internalDatabase} onChange={(v) => setInternalDatabase(v)} label="Internal database" />
+            <Checkbox checked={imageGeneration} onChange={(v) => setImageGeneration(v)} label="Image generation (Gemini Nano Banana)" />
           </div>
         </div>
 

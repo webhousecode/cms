@@ -19,10 +19,12 @@ export async function GET(request: Request) {
 
     const analyzed = meta.filter((m) => m.aiAnalyzedAt);
     const keys = analyzed.map((m) => m.key as string);
+    // Keys for images that were *generated* by AI (not just analyzed).
+    const genaiKeys = meta.filter((m) => m.generatedByAi).map((m) => m.key as string);
 
     const url = new URL(request.url);
     if (url.searchParams.get("meta") === "1") {
-      const metaMap: Record<string, { caption?: string; alt?: string; aiTags?: string[]; userTags?: string[] }> = {};
+      const metaMap: Record<string, { caption?: string; alt?: string; aiTags?: string[]; userTags?: string[]; generatedByAi?: boolean; generatedByModel?: string; generatedPrompt?: string }> = {};
       // Include AI metadata from analyzed files
       for (const m of analyzed) {
         metaMap[m.key as string] = {
@@ -30,18 +32,31 @@ export async function GET(request: Request) {
           alt: (m.aiAlt as string) || undefined,
           aiTags: (m.aiTags as string[]) || undefined,
           userTags: (m.tags as string[]) || undefined,
+          generatedByAi: m.generatedByAi === true ? true : undefined,
+          generatedByModel: (m.generatedByModel as string) || undefined,
+          generatedPrompt: (m.generatedPrompt as string) || undefined,
         };
       }
-      // Also include user tags from non-analyzed files
+      // Also include user tags + generated marker from non-analyzed files
       for (const m of meta) {
-        if (!m.aiAnalyzedAt && m.tags && (m.tags as string[]).length > 0) {
-          metaMap[m.key as string] = {
-            ...metaMap[m.key as string],
-            userTags: m.tags as string[],
-          };
-        }
+        if (m.aiAnalyzedAt) continue;
+        const k = m.key as string;
+        const hasTags = m.tags && (m.tags as string[]).length > 0;
+        const isGenerated = m.generatedByAi === true;
+        if (!hasTags && !isGenerated) continue;
+        metaMap[k] = {
+          ...metaMap[k],
+          ...(hasTags ? { userTags: m.tags as string[] } : {}),
+          ...(isGenerated
+            ? {
+                generatedByAi: true,
+                generatedByModel: (m.generatedByModel as string) || undefined,
+                generatedPrompt: (m.generatedPrompt as string) || undefined,
+              }
+            : {}),
+        };
       }
-      return NextResponse.json({ keys, meta: metaMap });
+      return NextResponse.json({ keys, genaiKeys, meta: metaMap });
     }
 
     return NextResponse.json(keys);
