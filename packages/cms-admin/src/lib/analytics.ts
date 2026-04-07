@@ -53,6 +53,9 @@ export interface CostSummary {
   avgCostPerRun: number;
   costByModel: Record<string, number>;
   costByAgent: Record<string, { name: string; cost: number }>;
+  /** Phase 6 — total spend per target collection so curators can see
+   *  which collections their agents are pouring money into. */
+  costByCollection: Record<string, number>;
 }
 
 export interface ContentRatio {
@@ -220,6 +223,7 @@ export async function getCostSummary(dateFrom?: string, dateTo?: string): Promis
   const totalCostUsd = runs.reduce((s, r) => s + r.costUsd, 0);
   const costByModel: Record<string, number> = {};
   const costByAgent: Record<string, { name: string; cost: number }> = {};
+  const costByCollection: Record<string, number> = {};
 
   for (const run of runs) {
     costByModel[run.model] = (costByModel[run.model] ?? 0) + run.costUsd;
@@ -227,6 +231,9 @@ export async function getCostSummary(dateFrom?: string, dateTo?: string): Promis
       costByAgent[run.agentId] = { name: run.agentName, cost: 0 };
     }
     costByAgent[run.agentId].cost += run.costUsd;
+    if (run.collection) {
+      costByCollection[run.collection] = (costByCollection[run.collection] ?? 0) + run.costUsd;
+    }
   }
 
   return {
@@ -235,6 +242,7 @@ export async function getCostSummary(dateFrom?: string, dateTo?: string): Promis
     avgCostPerRun: runs.length > 0 ? totalCostUsd / runs.length : 0,
     costByModel,
     costByAgent,
+    costByCollection,
   };
 }
 

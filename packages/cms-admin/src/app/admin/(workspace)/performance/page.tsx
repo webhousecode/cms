@@ -48,6 +48,7 @@ interface CostSummary {
   avgCostPerRun: number;
   costByModel: Record<string, number>;
   costByAgent: Record<string, { name: string; cost: number }>;
+  costByCollection: Record<string, number>;
 }
 
 interface ContentRatio {
@@ -180,12 +181,36 @@ export default function PerformancePage() {
             />
           </div>
 
-          {/* ── AI vs Human content ratio ─────────────────────────── */}
+          {/* ── AI vs Human content ratio (Phase 6 — full breakdown) ── */}
           {ratio && ratio.totalEdits > 0 && (
             <div className="rounded-xl border border-border p-5">
               <h2 className="font-semibold text-foreground mb-4">
                 AI vs Human Content
               </h2>
+
+              {/* Four-up number grid so curators see the actual counts,
+                  not just the bar. */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+                <div className="rounded-lg border border-border p-3">
+                  <p className="text-[0.65rem] uppercase tracking-wider text-muted-foreground font-mono">Total edits</p>
+                  <p className="text-xl font-semibold">{ratio.totalEdits}</p>
+                </div>
+                <div className="rounded-lg border border-border p-3">
+                  <p className="text-[0.65rem] uppercase tracking-wider text-muted-foreground font-mono">AI fields</p>
+                  <p className="text-xl font-semibold text-primary">{ratio.aiEdits}</p>
+                </div>
+                <div className="rounded-lg border border-border p-3">
+                  <p className="text-[0.65rem] uppercase tracking-wider text-muted-foreground font-mono">Human edits</p>
+                  <p className="text-xl font-semibold">{ratio.humanEdits}</p>
+                </div>
+                <div className="rounded-lg border border-border p-3">
+                  <p className="text-[0.65rem] uppercase tracking-wider text-muted-foreground font-mono">AI accepted as-is</p>
+                  <p className={`text-xl font-semibold ${ratio.aiAcceptanceRate >= 80 ? "text-green-500" : ratio.aiAcceptanceRate >= 50 ? "text-yellow-500" : "text-red-500"}`}>
+                    {ratio.aiAcceptanceRate.toFixed(0)}%
+                  </p>
+                </div>
+              </div>
+
               <div className="space-y-3">
                 <div>
                   <div className="flex justify-between text-xs mb-1">
@@ -215,10 +240,11 @@ export default function PerformancePage() {
                     )}
                   </div>
                 </div>
-                {ratio.aiModifiedByHuman > 0 && (
+                {ratio.aiEdits > 0 && (
                   <p className="text-xs text-muted-foreground">
-                    {ratio.aiModifiedByHuman} AI-generated fields were modified
-                    by editors ({((ratio.aiModifiedByHuman / ratio.aiEdits) * 100).toFixed(0)}%)
+                    {ratio.aiModifiedByHuman > 0
+                      ? `${ratio.aiModifiedByHuman} of ${ratio.aiEdits} AI-generated fields were edited by curators (${((ratio.aiModifiedByHuman / ratio.aiEdits) * 100).toFixed(0)}%). Higher acceptance = less curator rework needed.`
+                      : `All ${ratio.aiEdits} AI-generated fields were accepted without curator changes.`}
                   </p>
                 )}
               </div>
@@ -319,6 +345,41 @@ export default function PerformancePage() {
                       <div key={model}>
                         <div className="flex justify-between text-xs mb-1">
                           <span className="font-mono">{model}</span>
+                          <span className="text-muted-foreground">
+                            {formatCost(cost)} ({pct.toFixed(0)}%)
+                          </span>
+                        </div>
+                        <div className="h-2 rounded-full bg-secondary overflow-hidden">
+                          <div
+                            className="h-full bg-primary rounded-full transition-all"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+            </div>
+          )}
+
+          {/* ── Cost by collection (Phase 6) ─────────────────────── */}
+          {costs && Object.keys(costs.costByCollection ?? {}).length > 0 && (
+            <div className="rounded-xl border border-border p-5">
+              <h2 className="font-semibold text-foreground mb-4">
+                Cost by Collection (this month)
+              </h2>
+              <div className="space-y-2">
+                {Object.entries(costs.costByCollection)
+                  .sort(([, a], [, b]) => b - a)
+                  .map(([collection, cost]) => {
+                    const pct =
+                      costs.totalCostUsd > 0
+                        ? (cost / costs.totalCostUsd) * 100
+                        : 0;
+                    return (
+                      <div key={collection}>
+                        <div className="flex justify-between text-xs mb-1">
+                          <span className="font-mono">{collection}</span>
                           <span className="text-muted-foreground">
                             {formatCost(cost)} ({pct.toFixed(0)}%)
                           </span>
