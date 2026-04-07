@@ -3,6 +3,7 @@
 import { useState, useEffect, FormEvent } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import { startAuthentication } from "@simplewebauthn/browser";
 
 function LoginForm() {
   const router = useRouter();
@@ -77,6 +78,42 @@ function LoginForm() {
       window.location.href = from;
     } catch {
       setError("Network error — try again");
+      setLoading(false);
+    }
+  }
+
+  async function handlePasskeyLogin() {
+    setError("");
+    setLoading(true);
+    try {
+      const optsRes = await fetch("/api/auth/passkey/login/options", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(email ? { email } : {}),
+      });
+      const options = await optsRes.json();
+      if (!optsRes.ok) {
+        setError((options as { error?: string }).error ?? "Passkey login failed");
+        setLoading(false);
+        return;
+      }
+      const assertion = await startAuthentication({ optionsJSON: options });
+      const verifyRes = await fetch("/api/auth/passkey/login/verify", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ response: assertion }),
+      });
+      const data = (await verifyRes.json()) as { error?: string };
+      if (!verifyRes.ok) {
+        setError(data.error ?? "Passkey verification failed");
+        setLoading(false);
+        return;
+      }
+      window.location.href = from;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Passkey login cancelled");
       setLoading(false);
     }
   }
@@ -208,6 +245,29 @@ function LoginForm() {
               }}
             >
               {loading ? "Signing in…" : "Sign in"}
+            </button>
+
+            <button
+              type="button"
+              onClick={handlePasskeyLogin}
+              disabled={loading}
+              style={{
+                padding: "0.55rem",
+                borderRadius: "7px",
+                border: "1px solid hsl(0 0% 20%)",
+                background: "hsl(0 0% 10%)",
+                color: "hsl(0 0% 85%)",
+                fontSize: "0.8rem",
+                fontWeight: 500,
+                cursor: loading ? "wait" : "pointer",
+                display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem",
+                transition: "border-color 150ms, color 150ms",
+              }}
+              onMouseEnter={(e) => { if (!loading) { e.currentTarget.style.borderColor = "hsl(0 0% 40%)"; e.currentTarget.style.color = "#fff"; } }}
+              onMouseLeave={(e) => { e.currentTarget.style.borderColor = "hsl(0 0% 20%)"; e.currentTarget.style.color = "hsl(0 0% 85%)"; }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="10" cy="12" r="4"/><path d="M14 12h8"/><path d="M18 12v4"/><path d="M22 12v2"/></svg>
+              Sign in with passkey
             </button>
           </form>
 

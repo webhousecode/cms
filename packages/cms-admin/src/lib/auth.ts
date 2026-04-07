@@ -6,6 +6,18 @@ import { getActiveSitePaths } from "./site-paths";
 
 export type UserRole = "admin" | "editor" | "viewer";
 
+export interface StoredPasskey {
+  id: string; // base64url credential ID
+  publicKey: string; // base64url-encoded public key bytes
+  counter: number;
+  deviceType: "singleDevice" | "multiDevice";
+  backedUp: boolean;
+  transports?: string[];
+  name: string; // user-given, e.g. "MacBook TouchID"
+  createdAt: string;
+  lastUsedAt?: string;
+}
+
 export interface User {
   id: string;
   email: string;
@@ -21,6 +33,8 @@ export interface User {
   lastActiveSite?: string; // last active site ID (persists across devices)
   showLogoIcon?: boolean; // false = wordmark (default), true = eye icon
   showCloseAllTabs?: boolean; // show "Close all" pill in tab bar (global pref)
+  passkeys?: StoredPasskey[]; // F59 WebAuthn credentials
+  webauthnChallenge?: string; // transient challenge for registration/login
 }
 
 export interface SessionPayload {
@@ -165,6 +179,26 @@ export async function deleteUser(id: string): Promise<void> {
   users.splice(idx, 1);
   const filePath = await getUsersFilePath();
   await fs.writeFile(filePath, JSON.stringify(users, null, 2));
+}
+
+/** Low-level: replace a user record (used by webauthn for passkey mutations). */
+export async function saveUser(updated: User): Promise<void> {
+  const users = await getUsers();
+  const idx = users.findIndex((u) => u.id === updated.id);
+  if (idx === -1) throw new Error("User not found");
+  users[idx] = updated;
+  const filePath = await getUsersFilePath();
+  await fs.writeFile(filePath, JSON.stringify(users, null, 2));
+}
+
+export async function getUserById(id: string): Promise<User | null> {
+  const users = await getUsers();
+  return users.find((u) => u.id === id) ?? null;
+}
+
+export async function getUserByEmail(email: string): Promise<User | null> {
+  const users = await getUsers();
+  return users.find((u) => u.email.toLowerCase() === email.toLowerCase()) ?? null;
 }
 
 /** Get current session from cookies (server-side). Returns null if not authenticated. */

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ActionBar, ActionBarBreadcrumb } from "@/components/action-bar";
 import { GeneralSettingsPanel, PasswordChangePanel } from "@/components/settings/general-settings-panel";
+import { PasskeysPanel } from "@/components/settings/passkeys-panel";
 import { SectionHeading } from "@/components/ui/section-heading";
 
 export default async function AccountPage({
@@ -59,6 +60,9 @@ export default async function AccountPage({
 
             {/* Change password — real form */}
             <PasswordChangePanel />
+
+            {/* Passkeys (F59) */}
+            <PasskeysPanel />
 
             {/* 2FA placeholder */}
             <div className="rounded-lg border border-border bg-card p-5 space-y-4">
