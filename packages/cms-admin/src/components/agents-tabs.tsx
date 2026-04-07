@@ -12,10 +12,11 @@
  */
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { Plus, Trash2, HardDrive, Globe, Workflow } from "lucide-react";
+import { Plus, Trash2, HardDrive, Globe, Workflow, Play, Loader2, CheckCircle, ChevronRight } from "lucide-react";
 import { AgentsList } from "@/components/agents-list";
 import type { AgentConfig } from "@/lib/agents";
 import type { AgentTemplate } from "@/lib/agent-templates";
+import type { AgentWorkflow } from "@/lib/agent-workflows";
 
 type TabId = "agents" | "templates" | "workflows";
 
@@ -71,7 +72,7 @@ export function AgentsTabs({ agents, readOnly }: { agents: AgentConfig[]; readOn
 
       {tab === "agents" && <AgentsList agents={agents} readOnly={readOnly} />}
       {tab === "templates" && <TemplatesTab readOnly={readOnly} />}
-      {tab === "workflows" && <WorkflowsPlaceholder />}
+      {tab === "workflows" && <WorkflowsTab agents={agents} readOnly={readOnly} />}
     </div>
   );
 }
@@ -244,16 +245,307 @@ function TemplatesTab({ readOnly }: { readOnly: boolean }) {
   );
 }
 
-function WorkflowsPlaceholder() {
+function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: boolean }) {
+  const [workflows, setWorkflows] = useState<AgentWorkflow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newSteps, setNewSteps] = useState<string[]>([]);
+  const [running, setRunning] = useState<string | null>(null);
+  const [runPrompt, setRunPrompt] = useState<Record<string, string>>({});
+  const [runningId, setRunningId] = useState<string | null>(null);
+  const [confirming, setConfirming] = useState<string | null>(null);
+  const [error, setError] = useState("");
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/cms/workflows");
+      if (res.ok) setWorkflows(await res.json());
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const agentNameById = (id: string) => agents.find((a) => a.id === id)?.name ?? id;
+
+  async function handleCreate() {
+    if (!newName.trim() || newSteps.length === 0) return;
+    setError("");
+    try {
+      const res = await fetch("/api/cms/workflows", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: newName.trim(),
+          steps: newSteps.map((agentId) => ({ agentId })),
+          active: true,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Failed to create workflow");
+        return;
+      }
+      setNewName("");
+      setNewSteps([]);
+      setCreating(false);
+      await load();
+    } catch {
+      setError("Network error");
+    }
+  }
+
+  async function handleDelete(id: string) {
+    setConfirming(null);
+    await fetch(`/api/cms/workflows/${id}`, { method: "DELETE" });
+    await load();
+  }
+
+  async function handleRun(id: string) {
+    const prompt = (runPrompt[id] ?? "").trim();
+    if (!prompt) return;
+    setRunningId(id);
+    setError("");
+    try {
+      const res = await fetch(`/api/cms/workflows/${id}/run`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "Workflow failed");
+        return;
+      }
+      setRunning(id);
+      setRunPrompt((p) => ({ ...p, [id]: "" }));
+      await load();
+      setTimeout(() => setRunning(null), 3000);
+    } catch {
+      setError("Network error");
+    } finally {
+      setRunningId(null);
+    }
+  }
+
+  function addStep(agentId: string) {
+    setNewSteps((s) => [...s, agentId]);
+  }
+  function removeStep(idx: number) {
+    setNewSteps((s) => s.filter((_, i) => i !== idx));
+  }
+  function moveStep(idx: number, dir: -1 | 1) {
+    setNewSteps((s) => {
+      const next = [...s];
+      const target = idx + dir;
+      if (target < 0 || target >= next.length) return next;
+      [next[idx], next[target]] = [next[target]!, next[idx]!];
+      return next;
+    });
+  }
+
+  if (loading) return <p className="text-sm text-muted-foreground">Loading workflows…</p>;
+
   return (
-    <div className="rounded-xl border border-dashed border-border p-12 text-center">
-      <Workflow className="w-10 h-10 mx-auto mb-3 text-muted-foreground/40" />
-      <p className="text-sm font-medium text-foreground mb-1">Workflows are coming next</p>
-      <p className="text-xs text-muted-foreground max-w-md mx-auto">
-        Chain multiple agents into a pipeline (e.g. Writer → SEO → Translator) so a single prompt
-        produces a fully-processed draft. Backend lands in the next chunk; this tab will become
-        the workflow editor.
-      </p>
+    <div className="space-y-6">
+      {error && <p className="text-sm text-destructive">{error}</p>}
+
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-mono uppercase tracking-wider text-muted-foreground">
+          Pipelines ({workflows.length})
+        </p>
+        {!readOnly && !creating && (
+          <button
+            type="button"
+            onClick={() => setCreating(true)}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:opacity-90"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            New workflow
+          </button>
+        )}
+      </div>
+
+      {creating && (
+        <div className="rounded-xl border border-primary/30 bg-primary/5 p-5 space-y-4">
+          <p className="text-sm font-semibold">New workflow</p>
+          <div>
+            <label className="text-xs font-semibold text-muted-foreground block mb-1">Name</label>
+            <input
+              type="text"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+              placeholder="e.g. Writer → SEO → Translator"
+              className="w-full px-3 py-2 rounded-md border border-border bg-background text-sm"
+            />
+          </div>
+
+          <div>
+            <label className="text-xs font-semibold text-muted-foreground block mb-2">Steps</label>
+            {newSteps.length === 0 ? (
+              <p className="text-xs text-muted-foreground italic mb-2">No steps yet — add agents below.</p>
+            ) : (
+              <div className="space-y-1.5 mb-3">
+                {newSteps.map((stepAgentId, idx) => (
+                  <div key={`${stepAgentId}-${idx}`} className="flex items-center gap-2 p-2 rounded-md border border-border bg-card">
+                    <span className="text-[0.65rem] font-mono text-muted-foreground w-6">#{idx + 1}</span>
+                    <span className="text-sm flex-1 font-medium">{agentNameById(stepAgentId)}</span>
+                    <button
+                      type="button"
+                      onClick={() => moveStep(idx, -1)}
+                      disabled={idx === 0}
+                      className="text-xs px-1.5 py-0.5 rounded border border-border disabled:opacity-30"
+                      title="Move up"
+                    >↑</button>
+                    <button
+                      type="button"
+                      onClick={() => moveStep(idx, 1)}
+                      disabled={idx === newSteps.length - 1}
+                      className="text-xs px-1.5 py-0.5 rounded border border-border disabled:opacity-30"
+                      title="Move down"
+                    >↓</button>
+                    <button
+                      type="button"
+                      onClick={() => removeStep(idx)}
+                      className="text-xs px-1.5 py-0.5 rounded text-destructive hover:bg-destructive/10"
+                    >×</button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <p className="text-[0.65rem] uppercase font-mono text-muted-foreground mb-1">Add agent</p>
+            <div className="flex flex-wrap gap-1.5">
+              {agents.filter((a) => a.active).map((a) => (
+                <button
+                  key={a.id}
+                  type="button"
+                  onClick={() => addStep(a.id)}
+                  className="text-xs px-2 py-1 rounded-md border border-border hover:border-primary hover:bg-primary/5"
+                >
+                  + {a.name}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={handleCreate}
+              disabled={!newName.trim() || newSteps.length === 0}
+              className="px-3 py-1.5 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50"
+            >
+              Create
+            </button>
+            <button
+              type="button"
+              onClick={() => { setCreating(false); setNewName(""); setNewSteps([]); }}
+              className="px-3 py-1.5 rounded-md text-xs border border-border hover:bg-secondary"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {workflows.length === 0 && !creating ? (
+        <div className="rounded-xl border border-dashed border-border p-12 text-center">
+          <Workflow className="w-10 h-10 mx-auto mb-3 text-muted-foreground/40" />
+          <p className="text-sm font-medium text-foreground mb-1">No workflows yet</p>
+          <p className="text-xs text-muted-foreground max-w-md mx-auto">
+            Chain multiple agents into a single pipeline (e.g. Writer → SEO → Translator).
+            One prompt in, one curation queue item out.
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {workflows.map((wf) => (
+            <div key={wf.id} className="rounded-lg border border-border bg-card p-4">
+              <div className="flex items-start gap-4">
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-sm">{wf.name}</p>
+                  <div className="flex items-center gap-1 mt-1.5 flex-wrap">
+                    {wf.steps.map((s, i) => (
+                      <span key={s.id} className="flex items-center gap-1">
+                        <span className="text-[0.65rem] font-mono px-1.5 py-0.5 rounded bg-secondary text-secondary-foreground">
+                          {agentNameById(s.agentId)}
+                        </span>
+                        {i < wf.steps.length - 1 && (
+                          <ChevronRight className="w-3 h-3 text-muted-foreground" />
+                        )}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="flex items-center gap-3 mt-2 text-[0.65rem] font-mono text-muted-foreground">
+                    <span>{wf.stats.totalRuns} runs</span>
+                    <span>${wf.stats.totalCostUsd.toFixed(4)} total</span>
+                    {wf.stats.lastRunAt && <span>last: {new Date(wf.stats.lastRunAt).toLocaleString()}</span>}
+                  </div>
+                </div>
+                {!readOnly && (
+                  confirming === wf.id ? (
+                    <div className="flex items-center gap-1 shrink-0">
+                      <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
+                      <button type="button" onClick={() => handleDelete(wf.id)}
+                        style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>
+                        Yes
+                      </button>
+                      <button type="button" onClick={() => setConfirming(null)}
+                        style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>
+                        No
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setConfirming(wf.id)}
+                      title="Delete workflow"
+                      className="p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )
+                )}
+              </div>
+
+              {!readOnly && wf.steps.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-border flex items-end gap-2">
+                  <div className="flex-1">
+                    <textarea
+                      value={runPrompt[wf.id] ?? ""}
+                      onChange={(e) => setRunPrompt((p) => ({ ...p, [wf.id]: e.target.value }))}
+                      rows={2}
+                      placeholder="Prompt to start the pipeline (sent to step 1)"
+                      className="w-full px-2.5 py-1.5 rounded-md border border-border bg-background text-xs resize-none"
+                      disabled={runningId === wf.id}
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleRun(wf.id)}
+                    disabled={runningId === wf.id || !(runPrompt[wf.id] ?? "").trim()}
+                    className="flex items-center gap-1.5 px-3 py-2 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50"
+                  >
+                    {runningId === wf.id ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : running === wf.id ? (
+                      <CheckCircle className="w-3.5 h-3.5" />
+                    ) : (
+                      <Play className="w-3.5 h-3.5" />
+                    )}
+                    {runningId === wf.id ? "Running…" : running === wf.id ? "Done" : "Run"}
+                  </button>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

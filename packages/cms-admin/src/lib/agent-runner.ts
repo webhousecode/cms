@@ -26,6 +26,25 @@ export interface AgentRunResult {
   alternatives?: { model: string; contentData: Record<string, unknown>; costUsd: number }[];
 }
 
+export interface AgentRawResult {
+  contentData: Record<string, unknown>;
+  costUsd: number;
+  model: string;
+  inputTokens: number;
+  outputTokens: number;
+  agent: AgentConfigForRaw;
+  /** Resolved at execution time so the caller can keep using it. */
+  agentLocale: string;
+  /** Computed schema-derived target collection. */
+  targetCollection: string;
+}
+
+// Workflows need a structural reference to AgentConfig without
+// re-importing it via the dynamic require chain.
+type AgentConfigForRaw = Awaited<ReturnType<typeof getAgent>> extends infer A
+  ? A extends null ? never : A
+  : never;
+
 interface SelectOption { label: string; value: string }
 interface FieldDef { name: string; type: string; required?: boolean; label?: string; options?: SelectOption[] }
 
@@ -439,10 +458,31 @@ export async function runAgent(agentId: string, userPrompt: string, overrideColl
     // been deployed yet, so the public URL would 404 until approved.
     // Approved items move out of "ready", so when status is already
     // "approved" (full-autonomy path) we link to the approved tab instead.
+    //
+    // Wrap with /admin/goto/[id] so the recipient lands in the correct
+    // org+site context regardless of which workspace they last had active.
     const adminBase = process.env.NEXTAUTH_URL || `http://localhost:${process.env.PORT || 3010}`;
-    const previewLink = /^https?:\/\//i.test(adminBase)
-      ? `${adminBase.replace(/\/$/, "")}/admin/curation?tab=${status === "approved" ? "approved" : "ready"}`
-      : undefined;
+    let previewLink: string | undefined;
+    if (/^https?:\/\//i.test(adminBase)) {
+      const adminPath = `/admin/curation?tab=${status === "approved" ? "approved" : "ready"}`;
+      try {
+        const { cookies } = await import("next/headers");
+        const cookieStore = await cookies();
+        const orgId = cookieStore.get("cms-active-org")?.value ?? null;
+        const { getActiveSiteEntry } = await import("./site-paths");
+        const siteEntry = await getActiveSiteEntry().catch(() => null);
+        const { buildAdminDeepLink } = await import("./goto-links");
+        previewLink = await buildAdminDeepLink({
+          base: adminBase,
+          path: adminPath,
+          orgId,
+          siteId: siteEntry?.id ?? null,
+          label: `agent.completed → ${title}`,
+        });
+      } catch {
+        previewLink = `${adminBase.replace(/\/$/, "")}${adminPath}`;
+      }
+    }
 
     fireAgentEvent("completed", agent.name ?? agentId, {
       targetCollection,
@@ -480,4 +520,142 @@ export async function runAgent(agentId: string, userPrompt: string, overrideColl
       console.error("[agent-runner] MCP cleanup error:", err);
     });
   }
+}
+
+/**
+ * Phase 6 — headless agent execution for the workflow runner.
+ *
+ * Same LLM logic as runAgent (system prompt building, tool registry,
+ * tool-use loop, contentData parsing) BUT with no side effects:
+ *  - does NOT write to the curation queue
+ *  - does NOT fire webhooks
+ *  - does NOT record analytics or update agent.stats
+ *  - does NOT charge addCost (caller decides)
+ *  - does NOT auto-cleanup MCP — caller must call result-bound cleanup
+ *
+ * The workflow runner chains multiple `executeAgentRaw` calls and
+ * writes ONE final queue item + ONE webhook + ONE analytics record at
+ * the end so curators don't see intermediate steps cluttering the queue.
+ *
+ * Pre-flight checks (active flag, budget guard) still run — they're
+ * per-agent invariants regardless of who's calling.
+ */
+export async function executeAgentRaw(
+  agentId: string,
+  userPrompt: string,
+  opts: { overrideCollection?: string } = {},
+): Promise<{ result: AgentRawResult; cleanup: () => Promise<void> }> {
+  const agent = await getAgent(agentId);
+  if (!agent) throw new Error(`Agent ${agentId} not found`);
+  if (!agent.active) throw new Error(`Agent ${agentId} is not active`);
+
+  const budgetResult = await checkAgentBudget(agent);
+  if (budgetResult.exceeded) {
+    throw new Error(budgetExceededMessage(agent, budgetResult));
+  }
+
+  const apiKey = await getApiKey("anthropic");
+  if (!apiKey) throw new Error("Anthropic API key not configured");
+
+  const targetCollection = opts.overrideCollection ?? agent.targetCollections[0] ?? "posts";
+  const cmsConfig = await getAdminConfig();
+  const collectionDef = cmsConfig.collections.find((c) => c.name === targetCollection);
+  const schemaFields: FieldDef[] = (collectionDef?.fields ?? []) as FieldDef[];
+
+  const [cockpit, brandVoice, feedback, contentContext, toolRegistry] = await Promise.all([
+    readCockpit(),
+    readBrandVoice(),
+    loadFeedbackForPrompt(agentId),
+    buildContentContext().catch(() => ""),
+    buildToolRegistry(agent),
+  ]);
+
+  const cleanup = async () => {
+    await toolRegistry.cleanup().catch((err) => {
+      console.error("[executeAgentRaw] MCP cleanup error:", err);
+    });
+  };
+
+  try {
+    const brandContext = brandVoice ? brandVoiceToPromptContext(brandVoice) : null;
+    const siteConfig = await readSiteConfig();
+    const agentLocale = agent.locale || siteConfig.defaultLocale;
+    const localeInstruction = buildLocaleInstruction(agentLocale);
+
+    let systemPrompt = `${localeInstruction}\n\n` + buildSystemPrompt(
+      agent.systemPrompt,
+      agent.behavior.temperature,
+      agent.behavior.formality,
+      agent.behavior.verbosity,
+      cockpit.seoWeight,
+      cockpit.promptDepth,
+      brandContext,
+      feedback,
+      schemaFields,
+    );
+    if (contentContext) systemPrompt += `\n\n${contentContext}`;
+
+    if (toolRegistry.definitions.length > 0) {
+      const toolNames = toolRegistry.definitions.map((t) => t.name).join(", ");
+      systemPrompt += `\n\n## Available tools\nYou have access to these tools: ${toolNames}. Use them when they help you produce better content. After using tools, return your final answer as the JSON object described above.`;
+    }
+
+    const model = selectModel(cockpit.primaryModel, cockpit.speedQuality);
+    const maxTokens = cockpit.speedQuality === "thorough" ? 4096 : 2048;
+    const client = new Anthropic({ apiKey });
+
+    const { rawText, totalInputTokens, totalOutputTokens } = await callModelWithTools({
+      client, model, systemPrompt, userPrompt, maxTokens,
+      tools: toolRegistry.definitions,
+      handlers: toolRegistry.handlers,
+    });
+
+    let contentData: Record<string, unknown>;
+    try {
+      contentData = JSON.parse(rawText.trim()) as Record<string, unknown>;
+    } catch {
+      const fenceMatch = rawText.match(/```(?:json)?\s*([\s\S]*?)```/);
+      if (fenceMatch) {
+        try { contentData = JSON.parse(fenceMatch[1].trim()) as Record<string, unknown>; }
+        catch { contentData = extractJsonRaw(rawText); }
+      } else {
+        contentData = extractJsonRaw(rawText);
+      }
+    }
+
+    if (agent.fieldDefaults && Object.keys(agent.fieldDefaults).length > 0) {
+      contentData = { ...contentData, ...agent.fieldDefaults };
+    }
+
+    const costUsd = estimateCost(model, totalInputTokens, totalOutputTokens);
+
+    return {
+      result: {
+        contentData,
+        costUsd,
+        model,
+        inputTokens: totalInputTokens,
+        outputTokens: totalOutputTokens,
+        agent: agent as AgentConfigForRaw,
+        agentLocale,
+        targetCollection,
+      },
+      cleanup,
+    };
+  } catch (err) {
+    // Ensure MCP cleanup on error path even though we return cleanup
+    // to the caller — they only get it on the success path.
+    await cleanup();
+    throw err;
+  }
+}
+
+function extractJsonRaw(text: string): Record<string, unknown> {
+  const start = text.indexOf("{");
+  const end = text.lastIndexOf("}");
+  if (start !== -1 && end > start) {
+    try { return JSON.parse(text.slice(start, end + 1)) as Record<string, unknown>; }
+    catch { /* fall through */ }
+  }
+  return { content: text };
 }
