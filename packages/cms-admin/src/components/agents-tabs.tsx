@@ -306,10 +306,13 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
     setEditingId(wf.id);
     setNewName(wf.name);
     setNewSteps(wf.steps.map((s) => ({ id: s.id, agentId: s.agentId })));
-    setNewScheduleEnabled(wf.schedule.enabled);
-    setNewFrequency(wf.schedule.frequency);
-    setNewTime(wf.schedule.time);
-    setNewMaxPerRun(wf.schedule.maxPerRun);
+    // Workflows created before chunk 2 don't have a schedule field — fall
+    // back to the same defaults the API uses for new workflows.
+    const sched = wf.schedule ?? { enabled: false, frequency: "manual" as const, time: "06:00", maxPerRun: 1 };
+    setNewScheduleEnabled(sched.enabled);
+    setNewFrequency(sched.frequency);
+    setNewTime(sched.time);
+    setNewMaxPerRun(sched.maxPerRun);
     setNewDefaultPrompt(wf.defaultPrompt ?? "");
     setCreating(true);
     setFormMode("ui");
