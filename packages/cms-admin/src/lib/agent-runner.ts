@@ -227,7 +227,10 @@ export async function runAgent(agentId: string, userPrompt: string, overrideColl
   const brandContext = brandVoice ? brandVoiceToPromptContext(brandVoice) : null;
 
   const siteConfig = await readSiteConfig();
-  const localeInstruction = buildLocaleInstruction(siteConfig.defaultLocale);
+  // Phase 6 — agent.locale overrides siteConfig.defaultLocale so a
+  // single multi-locale site can host EN + DA agents in parallel.
+  const agentLocale = agent.locale || siteConfig.defaultLocale;
+  const localeInstruction = buildLocaleInstruction(agentLocale);
 
   let systemPrompt = `${localeInstruction}\n\n` + buildSystemPrompt(
     agent.systemPrompt,
@@ -380,6 +383,7 @@ export async function runAgent(agentId: string, userPrompt: string, overrideColl
     title,
     status,
     contentData,
+    locale: agentLocale,
     costUsd: totalCost,
     ...(seoScore != null ? { seoScore } : {}),
     ...(alternatives && alternatives.length > 0 ? { alternatives } : {}),

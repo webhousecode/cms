@@ -76,6 +76,8 @@ export default function AgentDetailPage() {
   const [dailyBudgetUsd, setDailyBudgetUsd] = useState<string>("");
   const [weeklyBudgetUsd, setWeeklyBudgetUsd] = useState<string>("");
   const [monthlyBudgetUsd, setMonthlyBudgetUsd] = useState<string>("");
+  const [agentLocale, setAgentLocale] = useState<string>("");
+  const [siteLocales, setSiteLocales] = useState<{ locales: string[]; defaultLocale: string; autoTranslate: boolean }>({ locales: [], defaultLocale: "", autoTranslate: false });
   const [targetCollections, setTargetCollections] = useState<string[]>([]);
   const [fieldDefaults, setFieldDefaults] = useState<{ key: string; value: string }[]>([]);
   const [cloning, setCloning] = useState(false);
@@ -104,6 +106,22 @@ export default function AgentDetailPage() {
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [showDelete]);
+
+  // Load site locales for the locale picker (Phase 6)
+  useEffect(() => {
+    fetch("/api/admin/site-config")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((cfg) => {
+        if (cfg && Array.isArray(cfg.locales)) {
+          setSiteLocales({
+            locales: cfg.locales,
+            defaultLocale: cfg.defaultLocale ?? cfg.locales[0] ?? "",
+            autoTranslate: !!cfg.autoRetranslateOnUpdate,
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   // Load recent feedback for this agent
   useEffect(() => {
@@ -146,6 +164,7 @@ export default function AgentDetailPage() {
         setDailyBudgetUsd(agent.dailyBudgetUsd != null ? String(agent.dailyBudgetUsd) : "");
         setWeeklyBudgetUsd(agent.weeklyBudgetUsd != null ? String(agent.weeklyBudgetUsd) : "");
         setMonthlyBudgetUsd(agent.monthlyBudgetUsd != null ? String(agent.monthlyBudgetUsd) : "");
+        setAgentLocale(agent.locale ?? "");
         setTargetCollections(agent.targetCollections ?? []);
         setFieldDefaults(
           Object.entries(agent.fieldDefaults ?? {}).map(([key, value]) => ({
@@ -237,6 +256,7 @@ export default function AgentDetailPage() {
           dailyBudgetUsd: dailyBudgetUsd.trim() ? Number(dailyBudgetUsd) : undefined,
           weeklyBudgetUsd: weeklyBudgetUsd.trim() ? Number(weeklyBudgetUsd) : undefined,
           monthlyBudgetUsd: monthlyBudgetUsd.trim() ? Number(monthlyBudgetUsd) : undefined,
+          locale: agentLocale.trim() ? agentLocale : undefined,
         }),
       });
       const data = await res.json();
@@ -654,6 +674,34 @@ export default function AgentDetailPage() {
             </div>
           )}
         </div>
+
+        {/* Phase 6 — Output locale. Only render the picker on multi-locale
+            sites; on single-locale sites it's just noise. Blank value =
+            inherit siteConfig.defaultLocale (the existing behaviour). */}
+        {siteLocales.locales.length > 1 && (
+          <div className="rounded-lg border border-border p-4 space-y-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Output language
+              </p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                Which language this agent writes in. Defaults to the site
+                default ({siteLocales.defaultLocale.toUpperCase()}).
+                {siteLocales.autoTranslate
+                  ? " Auto-translate is ON — when a default-locale draft is approved, the other locales are filled in automatically."
+                  : " Auto-translate is OFF in site settings — only this locale will be created."}
+              </p>
+            </div>
+            <CustomSelect
+              options={[
+                { value: "", label: `Site default (${siteLocales.defaultLocale.toUpperCase()})` },
+                ...siteLocales.locales.map((l) => ({ value: l, label: l.toUpperCase() })),
+              ]}
+              value={agentLocale}
+              onChange={setAgentLocale}
+            />
+          </div>
+        )}
 
         {/* Phase 4 — Per-agent cost guards. All optional; blank = no cap.
             Checked pre-flight in agent-runner and scheduler against the

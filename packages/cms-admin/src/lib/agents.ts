@@ -109,6 +109,14 @@ export interface AgentConfig {
   dailyBudgetUsd?: number;
   weeklyBudgetUsd?: number;
   monthlyBudgetUsd?: number;
+  /** Phase 6 — primary locale this agent writes in. Overrides
+   *  siteConfig.defaultLocale for runs by this agent. Lets a
+   *  multi-locale site host e.g. one EN and one DA agent on the
+   *  same collection. Auto-translate (siteConfig.autoRetranslateOnUpdate)
+   *  still kicks in at approve time when the locale is the site
+   *  default — translating away from a non-default would clobber
+   *  the default version. */
+  locale?: string;
   stats: {
     totalGenerated: number;
     approved: number;
