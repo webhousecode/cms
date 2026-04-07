@@ -430,9 +430,14 @@ export async function runAgent(agentId: string, userPrompt: string, overrideColl
       }
     } catch { /* non-fatal */ }
 
-    const docLinkBase = (siteConfig.previewSiteUrl || siteConfig.deployProductionUrl || "").trim();
-    const previewLink = /^https?:\/\//i.test(docLinkBase)
-      ? `${docLinkBase.replace(/\/$/, "")}/${targetCollection === "posts" ? "blog" : targetCollection}/${slug}`
+    // Link the embed title to the curation queue (where the human action
+    // lives), not the preview URL — the freshly-generated draft hasn't
+    // been deployed yet, so the public URL would 404 until approved.
+    // Approved items move out of "ready", so when status is already
+    // "approved" (full-autonomy path) we link to the approved tab instead.
+    const adminBase = process.env.NEXTAUTH_URL || `http://localhost:${process.env.PORT || 3010}`;
+    const previewLink = /^https?:\/\//i.test(adminBase)
+      ? `${adminBase.replace(/\/$/, "")}/admin/curation?tab=${status === "approved" ? "approved" : "ready"}`
       : undefined;
 
     fireAgentEvent("completed", agent.name ?? agentId, {
