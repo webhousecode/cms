@@ -27,6 +27,8 @@ export async function POST(request: NextRequest) {
     description?: string;
     steps?: { id?: string; agentId?: string; overrideCollection?: string }[];
     active?: boolean;
+    schedule?: { enabled?: boolean; frequency?: "daily" | "weekly" | "manual"; time?: string; maxPerRun?: number };
+    defaultPrompt?: string;
   } | null;
 
   if (!body || !body.name || !Array.isArray(body.steps)) {
@@ -52,6 +54,13 @@ export async function POST(request: NextRequest) {
       description: body.description ?? "",
       steps,
       active: body.active ?? true,
+      schedule: {
+        enabled: body.schedule?.enabled ?? false,
+        frequency: body.schedule?.frequency ?? "manual",
+        time: body.schedule?.time ?? "06:00",
+        maxPerRun: body.schedule?.maxPerRun ?? 1,
+      },
+      ...(body.defaultPrompt ? { defaultPrompt: body.defaultPrompt } : {}),
     });
     return NextResponse.json(workflow);
   } catch (err) {

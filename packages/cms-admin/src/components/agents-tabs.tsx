@@ -251,6 +251,11 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState("");
   const [newSteps, setNewSteps] = useState<string[]>([]);
+  const [newScheduleEnabled, setNewScheduleEnabled] = useState(false);
+  const [newFrequency, setNewFrequency] = useState<"daily" | "weekly" | "manual">("daily");
+  const [newTime, setNewTime] = useState("06:00");
+  const [newMaxPerRun, setNewMaxPerRun] = useState(1);
+  const [newDefaultPrompt, setNewDefaultPrompt] = useState("");
   const [running, setRunning] = useState<string | null>(null);
   const [runPrompt, setRunPrompt] = useState<Record<string, string>>({});
   const [runningId, setRunningId] = useState<string | null>(null);
@@ -284,6 +289,13 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
           name: newName.trim(),
           steps: newSteps.map((agentId) => ({ agentId })),
           active: true,
+          schedule: {
+            enabled: newScheduleEnabled,
+            frequency: newFrequency,
+            time: newTime,
+            maxPerRun: newMaxPerRun,
+          },
+          defaultPrompt: newDefaultPrompt.trim() || undefined,
         }),
       });
       const data = await res.json();
@@ -293,6 +305,11 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
       }
       setNewName("");
       setNewSteps([]);
+      setNewScheduleEnabled(false);
+      setNewFrequency("daily");
+      setNewTime("06:00");
+      setNewMaxPerRun(1);
+      setNewDefaultPrompt("");
       setCreating(false);
       await load();
     } catch {
@@ -431,6 +448,69 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
                 </button>
               ))}
             </div>
+          </div>
+
+          {/* Schedule (optional) */}
+          <div className="rounded-md border border-border p-3 space-y-2">
+            <label className="flex items-center gap-2 text-xs font-semibold cursor-pointer">
+              <input
+                type="checkbox"
+                checked={newScheduleEnabled}
+                onChange={(e) => setNewScheduleEnabled(e.target.checked)}
+                className="accent-primary"
+              />
+              Run on a schedule
+            </label>
+            {newScheduleEnabled && (
+              <>
+                <div className="grid grid-cols-3 gap-2">
+                  <div>
+                    <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">Frequency</label>
+                    <select
+                      value={newFrequency}
+                      onChange={(e) => setNewFrequency(e.target.value as "daily" | "weekly" | "manual")}
+                      className="w-full px-2 py-1 rounded border border-border bg-background text-xs"
+                    >
+                      <option value="daily">Daily</option>
+                      <option value="weekly">Weekly (Mon)</option>
+                      <option value="manual">Manual</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">Time</label>
+                    <input
+                      type="time"
+                      value={newTime}
+                      onChange={(e) => setNewTime(e.target.value)}
+                      className="w-full px-2 py-1 rounded border border-border bg-background text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">Max per run</label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={10}
+                      value={newMaxPerRun}
+                      onChange={(e) => setNewMaxPerRun(Number(e.target.value))}
+                      className="w-full px-2 py-1 rounded border border-border bg-background text-xs"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">
+                    Default prompt (sent to step 1 on each scheduled run)
+                  </label>
+                  <textarea
+                    value={newDefaultPrompt}
+                    onChange={(e) => setNewDefaultPrompt(e.target.value)}
+                    rows={2}
+                    placeholder="e.g. Write a fresh blog post about a topic the site hasn't covered yet."
+                    className="w-full px-2 py-1.5 rounded border border-border bg-background text-xs resize-none"
+                  />
+                </div>
+              </>
+            )}
           </div>
 
           <div className="flex gap-2">

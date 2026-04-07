@@ -42,6 +42,7 @@ describe("agent workflows storage", () => {
         { id: "s-2", agentId: "seo-1" },
       ],
       active: true,
+      schedule: { enabled: false, frequency: "manual", time: "06:00", maxPerRun: 1 },
     });
     expect(wf.id).toMatch(/^wf-/);
     expect(wf.stats.totalRuns).toBe(0);
@@ -53,10 +54,10 @@ describe("agent workflows storage", () => {
   });
 
   it("lists workflows newest-first", async () => {
-    const a = await createWorkflow({ name: "A", steps: [], active: true });
+    const a = await createWorkflow({ name: "A", steps: [], active: true, schedule: { enabled: false, frequency: "manual", time: "06:00", maxPerRun: 1 } });
     // Force a measurable timestamp gap
     await new Promise((r) => setTimeout(r, 5));
-    const b = await createWorkflow({ name: "B", steps: [], active: true });
+    const b = await createWorkflow({ name: "B", steps: [], active: true, schedule: { enabled: false, frequency: "manual", time: "06:00", maxPerRun: 1 } });
     const list = await listWorkflows();
     expect(list).toHaveLength(2);
     expect(list[0].id).toBe(b.id);
@@ -68,11 +69,30 @@ describe("agent workflows storage", () => {
       name: "Round Trip",
       steps: [{ id: "s-1", agentId: "a-1", overrideCollection: "guides" }],
       active: true,
+      schedule: { enabled: true, frequency: "daily", time: "07:30", maxPerRun: 2 },
     });
     const fetched = await getWorkflow(wf.id);
     expect(fetched).not.toBeNull();
     expect(fetched!.name).toBe("Round Trip");
     expect(fetched!.steps[0].overrideCollection).toBe("guides");
+    // Schedule survives the round-trip
+    expect(fetched!.schedule.enabled).toBe(true);
+    expect(fetched!.schedule.frequency).toBe("daily");
+    expect(fetched!.schedule.time).toBe("07:30");
+    expect(fetched!.schedule.maxPerRun).toBe(2);
+  });
+
+  it("defaults schedule to disabled/manual when not specified by the route", async () => {
+    // The API route fills in defaults; here we just verify storage round-trips
+    // whatever shape it's given.
+    const wf = await createWorkflow({
+      name: "Defaults",
+      steps: [],
+      active: true,
+      schedule: { enabled: false, frequency: "manual", time: "06:00", maxPerRun: 1 },
+    });
+    expect(wf.schedule.enabled).toBe(false);
+    expect(wf.schedule.frequency).toBe("manual");
   });
 
   it("returns null for missing workflows", async () => {
@@ -80,7 +100,7 @@ describe("agent workflows storage", () => {
   });
 
   it("updates fields without allowing id changes", async () => {
-    const wf = await createWorkflow({ name: "Original", steps: [], active: true });
+    const wf = await createWorkflow({ name: "Original", steps: [], active: true, schedule: { enabled: false, frequency: "manual", time: "06:00", maxPerRun: 1 } });
     const updated = await updateWorkflow(wf.id, {
       name: "Renamed",
       id: "wf-hacker", // should be ignored
@@ -93,7 +113,7 @@ describe("agent workflows storage", () => {
   });
 
   it("delete removes the workflow", async () => {
-    const wf = await createWorkflow({ name: "Doomed", steps: [], active: true });
+    const wf = await createWorkflow({ name: "Doomed", steps: [], active: true, schedule: { enabled: false, frequency: "manual", time: "06:00", maxPerRun: 1 } });
     await deleteWorkflow(wf.id);
     expect(await getWorkflow(wf.id)).toBeNull();
     expect(await listWorkflows()).toEqual([]);

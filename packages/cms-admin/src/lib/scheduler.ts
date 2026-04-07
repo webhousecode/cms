@@ -6,6 +6,8 @@ import { readCockpit } from "@/lib/cockpit";
 import { runAgent } from "@/lib/agent-runner";
 import { buildContentContext } from "@/lib/content-context";
 import { checkAgentBudget } from "@/lib/agent-budget";
+import { listWorkflows, type AgentWorkflow } from "@/lib/agent-workflows";
+import { runWorkflow } from "@/lib/workflow-runner";
 
 interface SchedulerState {
   lastRuns: Record<string, string>; // agentId -> ISO timestamp
@@ -31,32 +33,32 @@ async function writeState(state: SchedulerState): Promise<void> {
   await fs.writeFile(filePath, JSON.stringify(state, null, 2));
 }
 
-function isDue(agent: AgentConfig, state: SchedulerState): boolean {
-  if (!agent.active || !agent.schedule.enabled) return false;
-  if (agent.schedule.frequency === "manual") return false;
+/** Generic schedule check used by both agents and workflows. */
+function isScheduleDue(
+  entry: {
+    active: boolean;
+    schedule: { enabled: boolean; frequency: "daily" | "weekly" | "manual"; time: string };
+  },
+  lastRunIso: string | undefined,
+): boolean {
+  if (!entry.active || !entry.schedule.enabled) return false;
+  if (entry.schedule.frequency === "manual") return false;
 
   const now = new Date();
-  const lastRun = state.lastRuns[agent.id];
-  const lastRunDate = lastRun ? new Date(lastRun) : null;
+  const lastRunDate = lastRunIso ? new Date(lastRunIso) : null;
 
-  // Parse scheduled time
-  const [hours, minutes] = agent.schedule.time.split(":").map(Number);
+  const [hours, minutes] = entry.schedule.time.split(":").map(Number);
   const scheduledToday = new Date(now);
   scheduledToday.setHours(hours, minutes, 0, 0);
-
-  // Not yet past scheduled time today
   if (now < scheduledToday) return false;
 
-  if (agent.schedule.frequency === "daily") {
-    // Already ran today?
+  if (entry.schedule.frequency === "daily") {
     if (lastRunDate && lastRunDate.toDateString() === now.toDateString()) return false;
     return true;
   }
 
-  if (agent.schedule.frequency === "weekly") {
-    // Run on Mondays
+  if (entry.schedule.frequency === "weekly") {
     if (now.getDay() !== 1) return false;
-    // Already ran this week?
     if (lastRunDate) {
       const weekStart = new Date(now);
       weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1);
@@ -67,6 +69,16 @@ function isDue(agent: AgentConfig, state: SchedulerState): boolean {
   }
 
   return false;
+}
+
+function isDue(agent: AgentConfig, state: SchedulerState): boolean {
+  return isScheduleDue(agent, state.lastRuns[agent.id]);
+}
+
+function isWorkflowDue(workflow: AgentWorkflow, state: SchedulerState): boolean {
+  // Workflow keys are namespaced under "wf:" so they don't collide
+  // with agent ids in the same lastRuns map.
+  return isScheduleDue(workflow, state.lastRuns[`wf:${workflow.id}`]);
 }
 
 /**
@@ -103,8 +115,9 @@ export async function runScheduledAgents(): Promise<{ ran: string[]; skipped: st
   const errors: string[] = [];
 
   try {
-    const [agents, cockpit, state] = await Promise.all([
+    const [agents, workflows, cockpit, state] = await Promise.all([
       listAgents(),
+      listWorkflows(),
       readCockpit(),
       readState(),
     ]);
@@ -150,6 +163,33 @@ export async function runScheduledAgents(): Promise<{ ran: string[]; skipped: st
         const msg = err instanceof Error ? err.message : "unknown";
         console.error(`[scheduler] Agent ${agent.name} failed:`, msg);
         errors.push(`${agent.id}: ${msg}`);
+      }
+    }
+
+    // ── Phase 6 — workflow pipelines ────────────────────────────
+    // Same loop pattern as agents but invokes runWorkflow per due
+    // workflow. The runner already enforces per-step agent budgets,
+    // so we only need the global cockpit guard here.
+    for (const workflow of workflows) {
+      if (!isWorkflowDue(workflow, state)) continue;
+      if (cockpit.currentMonthSpentUsd >= cockpit.monthlyBudgetUsd * 0.95) {
+        skipped.push(`wf:${workflow.id}`);
+        continue;
+      }
+      const prompt = workflow.defaultPrompt?.trim()
+        || `Generate new content for the "${workflow.name}" pipeline. Match the site's voice and add genuine value.`;
+      try {
+        const maxPerRun = workflow.schedule.maxPerRun ?? 1;
+        for (let i = 0; i < maxPerRun; i++) {
+          console.log(`[scheduler] Running workflow ${workflow.name} (${i + 1}/${maxPerRun})`);
+          await runWorkflow(workflow.id, prompt);
+        }
+        state.lastRuns[`wf:${workflow.id}`] = new Date().toISOString();
+        ran.push(`wf:${workflow.id}`);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : "unknown";
+        console.error(`[scheduler] Workflow ${workflow.name} failed:`, msg);
+        errors.push(`wf:${workflow.id}: ${msg}`);
       }
     }
 

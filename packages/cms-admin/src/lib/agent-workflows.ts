@@ -35,6 +35,18 @@ export interface AgentWorkflow {
   description?: string;
   /** Ordered list of steps. Empty workflow is allowed (no-op for now). */
   steps: WorkflowStep[];
+  /** Same shape as AgentConfig.schedule — the scheduler iterates workflows
+   *  the same way it iterates agents. Each scheduled run uses the workflow's
+   *  defaultPrompt as the input to step 1. */
+  schedule: {
+    enabled: boolean;
+    frequency: "daily" | "weekly" | "manual";
+    time: string;
+    maxPerRun: number;
+  };
+  /** Default prompt sent to step 1 when the scheduler triggers the
+   *  workflow. Manual runs always use the prompt the curator types. */
+  defaultPrompt?: string;
   /** Aggregate stats — bumped on each runWorkflow call */
   stats: {
     totalRuns: number;
