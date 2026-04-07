@@ -2,9 +2,10 @@
 
 import type { FieldConfig, BlockConfig } from "@webhouse/cms";
 import { FieldEditor } from "./field-editor";
-import { ChevronDown, ChevronRight, ArrowUp, ArrowDown, Plus, Code, LayoutList } from "lucide-react";
+import { ChevronDown, ChevronRight, ArrowUp, ArrowDown, Plus } from "lucide-react";
 import { useState, useRef } from "react";
 import { Textarea } from "@/components/ui/textarea";
+import { ModeToggle } from "@/components/ui/mode-toggle";
 
 interface Props {
   field: FieldConfig;
@@ -23,26 +24,6 @@ function getItemLabel(item: Record<string, unknown>, fields: FieldConfig[], inde
     }
   }
   return `Item ${index + 1}`;
-}
-
-function ModeToggle({ mode, onToggle }: { mode: "ui" | "json"; onToggle: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onToggle}
-      title={mode === "ui" ? "Switch to JSON" : "Switch to UI"}
-      style={{
-        display: "inline-flex", alignItems: "center", gap: "0.3rem",
-        background: "none", border: "1px solid var(--border)", borderRadius: "5px",
-        cursor: "pointer", color: "var(--muted-foreground)", fontSize: "0.7rem",
-        padding: "0.2rem 0.5rem",
-      }}
-      className="hover:border-primary hover:text-primary transition-colors"
-    >
-      {mode === "ui" ? <Code style={{ width: 12, height: 12 }} /> : <LayoutList style={{ width: 12, height: 12 }} />}
-      {mode === "ui" ? "JSON" : "UI"}
-    </button>
-  );
 }
 
 export function StructuredArrayEditor({ field, value, onChange, locked, blocksConfig }: Props) {

@@ -13,6 +13,8 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Plus, Trash2, HardDrive, Globe, Workflow, Play, Loader2, CheckCircle, ChevronRight, Pencil } from "lucide-react";
+import { SortableWorkflowSteps } from "@/components/sortable-workflow-steps";
+import { ModeToggle } from "@/components/ui/mode-toggle";
 import { AgentsList } from "@/components/agents-list";
 import type { AgentConfig } from "@/lib/agents";
 import type { AgentTemplate } from "@/lib/agent-templates";
@@ -251,12 +253,18 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
   const [creating, setCreating] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [newName, setNewName] = useState("");
-  const [newSteps, setNewSteps] = useState<string[]>([]);
+  // Each step carries a stable row id (independent of agentId) so DnD
+  // sorting works even when the same agent appears twice in a pipeline.
+  const [newSteps, setNewSteps] = useState<{ id: string; agentId: string }[]>([]);
   const [newScheduleEnabled, setNewScheduleEnabled] = useState(false);
   const [newFrequency, setNewFrequency] = useState<"daily" | "weekly" | "manual">("daily");
   const [newTime, setNewTime] = useState("06:00");
   const [newMaxPerRun, setNewMaxPerRun] = useState(1);
   const [newDefaultPrompt, setNewDefaultPrompt] = useState("");
+  // ui ↔ json toggle for the create/edit form
+  const [formMode, setFormMode] = useState<"ui" | "json">("ui");
+  const [jsonDraft, setJsonDraft] = useState<string>("");
+  const [jsonError, setJsonError] = useState<string>("");
   const [running, setRunning] = useState<string | null>(null);
   const [runPrompt, setRunPrompt] = useState<Record<string, string>>({});
   const [runningId, setRunningId] = useState<string | null>(null);
@@ -289,41 +297,102 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
     setNewDefaultPrompt("");
     setCreating(false);
     setEditingId(null);
+    setFormMode("ui");
+    setJsonDraft("");
+    setJsonError("");
   }
 
   function startEdit(wf: AgentWorkflow) {
     setEditingId(wf.id);
     setNewName(wf.name);
-    setNewSteps(wf.steps.map((s) => s.agentId));
+    setNewSteps(wf.steps.map((s) => ({ id: s.id, agentId: s.agentId })));
     setNewScheduleEnabled(wf.schedule.enabled);
     setNewFrequency(wf.schedule.frequency);
     setNewTime(wf.schedule.time);
     setNewMaxPerRun(wf.schedule.maxPerRun);
     setNewDefaultPrompt(wf.defaultPrompt ?? "");
     setCreating(true);
+    setFormMode("ui");
+    setJsonError("");
+  }
+
+  /** Build the workflow JSON body the form currently represents. */
+  function currentBody() {
+    return {
+      name: newName.trim(),
+      steps: newSteps.map((s) => ({ id: s.id, agentId: s.agentId })),
+      active: true,
+      schedule: {
+        enabled: newScheduleEnabled,
+        frequency: newFrequency,
+        time: newTime,
+        maxPerRun: newMaxPerRun,
+      },
+      defaultPrompt: newDefaultPrompt.trim() || undefined,
+    };
+  }
+
+  /** Switch between UI and JSON modes, syncing the JSON draft from
+   *  the form fields when entering JSON mode and parsing it back when
+   *  leaving. Bad JSON shows an error and keeps the user in JSON mode. */
+  function switchMode() {
+    if (formMode === "ui") {
+      setJsonDraft(JSON.stringify(currentBody(), null, 2));
+      setJsonError("");
+      setFormMode("json");
+    } else {
+      try {
+        const parsed = JSON.parse(jsonDraft);
+        if (typeof parsed.name !== "string") throw new Error("name must be a string");
+        if (!Array.isArray(parsed.steps)) throw new Error("steps must be an array");
+        setNewName(parsed.name ?? "");
+        setNewSteps(
+          (parsed.steps as { id?: string; agentId?: string }[]).map((s, i) => ({
+            id: s.id ?? `step-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 6)}`,
+            agentId: s.agentId ?? "",
+          })).filter((s) => s.agentId),
+        );
+        if (parsed.schedule) {
+          setNewScheduleEnabled(!!parsed.schedule.enabled);
+          if (parsed.schedule.frequency) setNewFrequency(parsed.schedule.frequency);
+          if (parsed.schedule.time) setNewTime(parsed.schedule.time);
+          if (parsed.schedule.maxPerRun) setNewMaxPerRun(parsed.schedule.maxPerRun);
+        }
+        if (typeof parsed.defaultPrompt === "string") setNewDefaultPrompt(parsed.defaultPrompt);
+        setJsonError("");
+        setFormMode("ui");
+      } catch (err) {
+        setJsonError(err instanceof Error ? err.message : "Invalid JSON");
+      }
+    }
   }
 
   async function handleSave() {
-    if (!newName.trim() || newSteps.length === 0) return;
     setError("");
+    // If the user is in JSON mode, parse it first so they can save
+    // straight from the editor without manually clicking the toggle.
+    let body: ReturnType<typeof currentBody>;
+    if (formMode === "json") {
+      try {
+        body = JSON.parse(jsonDraft);
+      } catch (err) {
+        setJsonError(err instanceof Error ? err.message : "Invalid JSON");
+        return;
+      }
+    } else {
+      body = currentBody();
+    }
+    if (!body.name?.trim() || !Array.isArray(body.steps) || body.steps.length === 0) {
+      setError("name and at least one step are required");
+      return;
+    }
     const isEdit = editingId !== null;
     const url = isEdit ? `/api/cms/workflows/${editingId}` : "/api/cms/workflows";
     try {
       const res = await fetch(url, {
         method: isEdit ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: newName.trim(),
-          steps: newSteps.map((agentId) => ({ agentId })),
-          active: true,
-          schedule: {
-            enabled: newScheduleEnabled,
-            frequency: newFrequency,
-            time: newTime,
-            maxPerRun: newMaxPerRun,
-          },
-          defaultPrompt: newDefaultPrompt.trim() || undefined,
-        }),
+        body: JSON.stringify(body),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -371,19 +440,13 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
   }
 
   function addStep(agentId: string) {
-    setNewSteps((s) => [...s, agentId]);
+    setNewSteps((s) => [
+      ...s,
+      { id: `step-${Date.now()}-${s.length}-${Math.random().toString(36).slice(2, 6)}`, agentId },
+    ]);
   }
-  function removeStep(idx: number) {
-    setNewSteps((s) => s.filter((_, i) => i !== idx));
-  }
-  function moveStep(idx: number, dir: -1 | 1) {
-    setNewSteps((s) => {
-      const next = [...s];
-      const target = idx + dir;
-      if (target < 0 || target >= next.length) return next;
-      [next[idx], next[target]] = [next[target]!, next[idx]!];
-      return next;
-    });
+  function removeStep(rowId: string) {
+    setNewSteps((s) => s.filter((step) => step.id !== rowId));
   }
 
   if (loading) return <p className="text-sm text-muted-foreground">Loading workflows…</p>;
@@ -410,7 +473,30 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
 
       {creating && (
         <div className="rounded-xl border border-primary/30 bg-primary/5 p-5 space-y-4">
-          <p className="text-sm font-semibold">{editingId ? "Edit workflow" : "New workflow"}</p>
+          <div className="flex items-center justify-between">
+            <p className="text-sm font-semibold">{editingId ? "Edit workflow" : "New workflow"}</p>
+            <ModeToggle mode={formMode} onToggle={switchMode} />
+          </div>
+
+          {formMode === "json" ? (
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground block mb-1">Workflow JSON</label>
+              <textarea
+                value={jsonDraft}
+                onChange={(e) => setJsonDraft(e.target.value)}
+                rows={18}
+                spellCheck={false}
+                className="w-full px-3 py-2 rounded-md border border-border bg-background font-mono text-xs"
+              />
+              {jsonError && (
+                <p className="text-xs text-destructive mt-1">⚠ {jsonError}</p>
+              )}
+              <p className="text-[0.65rem] text-muted-foreground mt-1">
+                Switch back to UI mode to validate, or click {editingId ? "Save changes" : "Create"} to save directly from JSON.
+              </p>
+            </div>
+          ) : (
+            <>
           <div>
             <label className="text-xs font-semibold text-muted-foreground block mb-1">Name</label>
             <input
@@ -424,37 +510,11 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
 
           <div>
             <label className="text-xs font-semibold text-muted-foreground block mb-2">Steps</label>
-            {newSteps.length === 0 ? (
-              <p className="text-xs text-muted-foreground italic mb-2">No steps yet — add agents below.</p>
-            ) : (
-              <div className="space-y-1.5 mb-3">
-                {newSteps.map((stepAgentId, idx) => (
-                  <div key={`${stepAgentId}-${idx}`} className="flex items-center gap-2 p-2 rounded-md border border-border bg-card">
-                    <span className="text-[0.65rem] font-mono text-muted-foreground w-6">#{idx + 1}</span>
-                    <span className="text-sm flex-1 font-medium">{agentNameById(stepAgentId)}</span>
-                    <button
-                      type="button"
-                      onClick={() => moveStep(idx, -1)}
-                      disabled={idx === 0}
-                      className="text-xs px-1.5 py-0.5 rounded border border-border disabled:opacity-30"
-                      title="Move up"
-                    >↑</button>
-                    <button
-                      type="button"
-                      onClick={() => moveStep(idx, 1)}
-                      disabled={idx === newSteps.length - 1}
-                      className="text-xs px-1.5 py-0.5 rounded border border-border disabled:opacity-30"
-                      title="Move down"
-                    >↓</button>
-                    <button
-                      type="button"
-                      onClick={() => removeStep(idx)}
-                      className="text-xs px-1.5 py-0.5 rounded text-destructive hover:bg-destructive/10"
-                    >×</button>
-                  </div>
-                ))}
-              </div>
-            )}
+            <SortableWorkflowSteps
+              steps={newSteps.map((s) => ({ id: s.id, agentId: s.agentId, agentName: agentNameById(s.agentId) }))}
+              onReorder={(reordered) => setNewSteps(reordered.map((s) => ({ id: s.id, agentId: s.agentId })))}
+              onRemove={removeStep}
+            />
             <p className="text-[0.65rem] uppercase font-mono text-muted-foreground mb-1">Add agent</p>
             <div className="flex flex-wrap gap-1.5">
               {agents.filter((a) => a.active).map((a) => (
@@ -532,12 +592,14 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
               </>
             )}
           </div>
+            </>
+          )}
 
           <div className="flex gap-2">
             <button
               type="button"
               onClick={handleSave}
-              disabled={!newName.trim() || newSteps.length === 0}
+              disabled={formMode === "ui" ? (!newName.trim() || newSteps.length === 0) : !jsonDraft.trim()}
               className="px-3 py-1.5 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50"
             >
               {editingId ? "Save changes" : "Create"}
