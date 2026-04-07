@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Inbox, Check, X, Pencil, Volume2, StopCircle, SlidersHorizontal } from "lucide-react";
+import { Inbox, Check, X, Pencil, Volume2, StopCircle, SlidersHorizontal, Eye } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox-styled";
 import Link from "next/link";
@@ -30,6 +30,71 @@ interface QueueItem {
   seoScore?: number;
   costUsd: number;
   rejectionFeedback?: string;
+}
+
+/** Tiny self-contained markdown → HTML for the curation Preview modal.
+ *  Not full CommonMark — covers the things agent-generated content actually
+ *  uses: headings, paragraphs, bold/italic, code, lists, links, images,
+ *  blockquotes. Output is escaped before substitution so curators can't
+ *  inject script tags via the AI's content. */
+function escapeHtml(s: string): string {
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function renderMarkdown(md: string): string {
+  if (!md) return "";
+  const escaped = escapeHtml(md);
+  const lines = escaped.split("\n");
+  const out: string[] = [];
+  let inList = false;
+  let inPara = false;
+
+  function closePara() { if (inPara) { out.push("</p>"); inPara = false; } }
+  function closeList() { if (inList) { out.push("</ul>"); inList = false; } }
+
+  function inline(s: string): string {
+    return s
+      // images: ![alt](url)
+      .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" style="max-width:100%;border-radius:8px;margin:0.5rem 0;" />')
+      // links: [text](url)
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noreferrer" style="color:var(--primary);text-decoration:underline;">$1</a>')
+      // bold
+      .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+      // italic
+      .replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, "<em>$1</em>")
+      // inline code
+      .replace(/`([^`]+)`/g, '<code style="background:var(--muted);padding:0.1rem 0.3rem;border-radius:3px;font-size:0.85em;">$1</code>');
+  }
+
+  for (const raw of lines) {
+    const line = raw;
+    if (line.trim() === "") { closePara(); closeList(); continue; }
+    const h3 = line.match(/^###\s+(.+)/);
+    const h2 = line.match(/^##\s+(.+)/);
+    const h1 = line.match(/^#\s+(.+)/);
+    const li = line.match(/^[-*]\s+(.+)/);
+    const bq = line.match(/^>\s+(.+)/);
+    if (h1) { closePara(); closeList(); out.push(`<h1 style="font-size:1.75rem;font-weight:700;margin:1.5rem 0 0.75rem;">${inline(h1[1])}</h1>`); continue; }
+    if (h2) { closePara(); closeList(); out.push(`<h2 style="font-size:1.35rem;font-weight:700;margin:1.5rem 0 0.5rem;">${inline(h2[1])}</h2>`); continue; }
+    if (h3) { closePara(); closeList(); out.push(`<h3 style="font-size:1.1rem;font-weight:600;margin:1.25rem 0 0.5rem;">${inline(h3[1])}</h3>`); continue; }
+    if (li) {
+      closePara();
+      if (!inList) { out.push('<ul style="padding-left:1.25rem;margin:0.5rem 0;list-style:disc;">'); inList = true; }
+      out.push(`<li style="margin:0.25rem 0;">${inline(li[1])}</li>`);
+      continue;
+    }
+    if (bq) {
+      closePara(); closeList();
+      out.push(`<blockquote style="border-left:3px solid var(--border);padding-left:0.75rem;margin:0.75rem 0;color:var(--muted-foreground);font-style:italic;">${inline(bq[1])}</blockquote>`);
+      continue;
+    }
+    closeList();
+    if (!inPara) { out.push('<p style="margin:0.75rem 0;line-height:1.7;">'); inPara = true; }
+    else { out.push("<br />"); }
+    out.push(inline(line));
+  }
+  closePara(); closeList();
+  return out.join("\n");
 }
 
 /** Strip vendor/date suffixes so model badges fit on a chip. */
@@ -105,6 +170,7 @@ export default function CurationPage() {
   const [rejectFeedback, setRejectFeedback] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState<Record<string, unknown>>({});
+  const [previewItem, setPreviewItem] = useState<QueueItem | null>(null);
   const [schemas, setSchemas] = useState<Record<string, { name: string; type: string; options?: { label: string; value: string }[] }[]>>({});
 
   const loadItems = useCallback(async () => {
@@ -322,6 +388,17 @@ export default function CurationPage() {
                   >
                     {speakingId === item.id ? <StopCircle className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
                   </button>
+                  {/* Preview is available in all tabs (not just ready) so
+                      curators can also see what was approved/rejected. */}
+                  <button
+                    type="button"
+                    onClick={() => setPreviewItem(item)}
+                    title="Preview rendered content"
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium border border-border hover:bg-secondary transition-colors"
+                  >
+                    <Eye className="w-3.5 h-3.5" />
+                    Preview
+                  </button>
                   {!readOnly && (tab === "ready" || tab === "in_review") && (
                     <>
                       <button
@@ -530,6 +607,89 @@ export default function CurationPage() {
         </div>
       )}
     </div>
+
+    {/* Preview modal — full rendered post for the selected queue item */}
+    {previewItem && (
+      <div
+        onClick={() => setPreviewItem(null)}
+        style={{
+          position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 100,
+          display: "flex", alignItems: "flex-start", justifyContent: "center",
+          padding: "3rem 1rem", overflowY: "auto",
+        }}
+      >
+        <div
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            background: "var(--card)", color: "var(--foreground)",
+            borderRadius: "12px", border: "1px solid var(--border)",
+            width: "100%", maxWidth: "780px", padding: "2rem 2.5rem",
+            position: "relative",
+          }}
+        >
+          <button
+            type="button"
+            onClick={() => setPreviewItem(null)}
+            title="Close preview"
+            style={{
+              position: "absolute", top: "0.75rem", right: "0.75rem",
+              background: "transparent", border: "none", cursor: "pointer",
+              padding: "0.4rem", color: "var(--muted-foreground)",
+              borderRadius: "6px",
+            }}
+            className="hover:bg-secondary"
+          >
+            <X className="w-4 h-4" />
+          </button>
+
+          {/* Meta header */}
+          <div style={{ marginBottom: "1.5rem", paddingBottom: "1rem", borderBottom: "1px solid var(--border)" }}>
+            <p style={{ fontSize: "0.65rem", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted-foreground)", fontFamily: "monospace", margin: 0 }}>
+              {previewItem.collection} · {previewItem.agentName} · {relativeTime(previewItem.generatedAt)}
+            </p>
+            <h1 style={{ fontSize: "2rem", fontWeight: 800, margin: "0.5rem 0 0", lineHeight: 1.15 }}>
+              {(previewItem.contentData.title as string) || previewItem.title}
+            </h1>
+            {typeof previewItem.contentData.excerpt === "string" && previewItem.contentData.excerpt && (
+              <p style={{ fontSize: "1.05rem", color: "var(--muted-foreground)", margin: "0.75rem 0 0", lineHeight: 1.5 }}>
+                {previewItem.contentData.excerpt}
+              </p>
+            )}
+            {Array.isArray(previewItem.contentData.tags) && (previewItem.contentData.tags as string[]).length > 0 && (
+              <div style={{ marginTop: "0.75rem", display: "flex", flexWrap: "wrap", gap: "0.35rem" }}>
+                {(previewItem.contentData.tags as string[]).map((t) => (
+                  <span key={t} style={{
+                    fontSize: "0.65rem", padding: "0.15rem 0.5rem", borderRadius: "9999px",
+                    background: "var(--secondary)", color: "var(--secondary-foreground)",
+                  }}>{t}</span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Body */}
+          <div
+            style={{ fontSize: "0.95rem", lineHeight: 1.7 }}
+            dangerouslySetInnerHTML={{
+              __html: renderMarkdown(
+                String(
+                  (previewItem.contentData.content as string) ??
+                  (previewItem.contentData.body as string) ??
+                  "",
+                ),
+              ),
+            }}
+          />
+
+          {/* Footer with cost / SEO chip */}
+          <div style={{ marginTop: "2rem", paddingTop: "1rem", borderTop: "1px solid var(--border)", display: "flex", gap: "1rem", fontSize: "0.7rem", color: "var(--muted-foreground)", fontFamily: "monospace" }}>
+            <span>Cost: ${previewItem.costUsd.toFixed(4)}</span>
+            {previewItem.seoScore != null && <span>SEO: {previewItem.seoScore}</span>}
+            <span>Slug: {previewItem.slug}</span>
+          </div>
+        </div>
+      </div>
+    )}
     </fieldset>
   );
 }
