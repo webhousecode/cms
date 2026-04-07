@@ -77,7 +77,7 @@ export async function listWorkflows(): Promise<AgentWorkflow[]> {
     if (!file.endsWith(".json")) continue;
     try {
       const raw = await fs.readFile(path.join(dir, file), "utf-8");
-      out.push(JSON.parse(raw) as AgentWorkflow);
+      out.push(migrate(JSON.parse(raw)));
     } catch {
       // Skip corrupt files
     }
@@ -91,10 +91,29 @@ export async function getWorkflow(id: string): Promise<AgentWorkflow | null> {
   const dir = await getWorkflowsDir();
   try {
     const raw = await fs.readFile(path.join(dir, `${id}.json`), "utf-8");
-    return JSON.parse(raw) as AgentWorkflow;
+    return migrate(JSON.parse(raw));
   } catch {
     return null;
   }
+}
+
+/** Backfill fields added after the first AgentWorkflow shape so older
+ *  files on disk don't crash newer code paths. Pure read-time fixup —
+ *  not persisted unless the caller subsequently writes the workflow. */
+function migrate(raw: unknown): AgentWorkflow {
+  const wf = raw as Partial<AgentWorkflow> & Record<string, unknown>;
+  return {
+    id: String(wf.id ?? ""),
+    name: String(wf.name ?? "Untitled"),
+    description: typeof wf.description === "string" ? wf.description : "",
+    steps: Array.isArray(wf.steps) ? (wf.steps as WorkflowStep[]) : [],
+    schedule: wf.schedule ?? { enabled: false, frequency: "manual", time: "06:00", maxPerRun: 1 },
+    defaultPrompt: typeof wf.defaultPrompt === "string" ? wf.defaultPrompt : undefined,
+    stats: wf.stats ?? { totalRuns: 0, totalCostUsd: 0, lastRunAt: null },
+    active: wf.active !== false,
+    createdAt: String(wf.createdAt ?? new Date().toISOString()),
+    updatedAt: String(wf.updatedAt ?? new Date().toISOString()),
+  };
 }
 
 export async function createWorkflow(

@@ -37,11 +37,12 @@ async function writeState(state: SchedulerState): Promise<void> {
 function isScheduleDue(
   entry: {
     active: boolean;
-    schedule: { enabled: boolean; frequency: "daily" | "weekly" | "manual"; time: string };
+    schedule?: { enabled: boolean; frequency: "daily" | "weekly" | "manual"; time: string };
   },
   lastRunIso: string | undefined,
 ): boolean {
-  if (!entry.active || !entry.schedule.enabled) return false;
+  // Workflows persisted before chunk 2 may have no schedule field at all
+  if (!entry.active || !entry.schedule || !entry.schedule.enabled) return false;
   if (entry.schedule.frequency === "manual") return false;
 
   const now = new Date();
@@ -179,7 +180,7 @@ export async function runScheduledAgents(): Promise<{ ran: string[]; skipped: st
       const prompt = workflow.defaultPrompt?.trim()
         || `Generate new content for the "${workflow.name}" pipeline. Match the site's voice and add genuine value.`;
       try {
-        const maxPerRun = workflow.schedule.maxPerRun ?? 1;
+        const maxPerRun = workflow.schedule?.maxPerRun ?? 1;
         for (let i = 0; i < maxPerRun; i++) {
           console.log(`[scheduler] Running workflow ${workflow.name} (${i + 1}/${maxPerRun})`);
           await runWorkflow(workflow.id, prompt);
