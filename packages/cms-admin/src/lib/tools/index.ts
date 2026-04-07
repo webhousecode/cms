@@ -1,6 +1,7 @@
 import type { AgentConfig } from "@/lib/agents";
 import { buildCmsTools } from "./cms-tools";
 import { buildWebSearchTool } from "./web-search";
+import { buildImageGenerationTool } from "./image-generation";
 import { buildMcpTools, disconnectAllMcpServers } from "./mcp-tools";
 
 export interface ToolDefinition {
@@ -43,6 +44,15 @@ export async function buildToolRegistry(agent: AgentConfig): Promise<ToolRegistr
     if (webTool) {
       definitions.push(webTool.definition);
       handlers.set(webTool.definition.name, webTool.handler);
+    }
+  }
+
+  // Image generation (Gemini Nano Banana)
+  if (agent.tools.imageGeneration) {
+    const imgTool = await buildImageGenerationTool();
+    if (imgTool) {
+      definitions.push(imgTool.definition);
+      handlers.set(imgTool.definition.name, imgTool.handler);
     }
   }
 

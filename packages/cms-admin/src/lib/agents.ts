@@ -93,7 +93,7 @@ export interface AgentConfig {
   role: "copywriter" | "seo" | "geo" | "translator" | "refresher" | "custom";
   systemPrompt: string;
   behavior: { temperature: number; formality: number; verbosity: number };
-  tools: { webSearch: boolean; internalDatabase: boolean };
+  tools: { webSearch: boolean; internalDatabase: boolean; imageGeneration?: boolean };
   autonomy: "draft" | "full";
   targetCollections: string[];
   fieldDefaults?: Record<string, unknown>;
