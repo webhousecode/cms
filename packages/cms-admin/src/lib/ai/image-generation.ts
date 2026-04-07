@@ -15,7 +15,12 @@ import { readAiConfig } from "@/lib/ai-config";
 /** Pricing snapshot — keep in sync with Google's published rate. */
 export const NANO_BANANA_COST_PER_IMAGE_USD = 0.039;
 
-const MODEL_ID = "gemini-2.5-flash-image-preview";
+// "Nano Banana 2" — Gemini 3 Pro Image. Verified live against the
+// Generative Language API on 2026-04-07. The previous "preview" suffix
+// on the 2.5 model is dead; the live IDs are gemini-2.5-flash-image
+// (stable, larger PNGs ~1.4MB) and gemini-3-pro-image-preview (newer,
+// smaller JPEGs ~550kb, better quality). We default to Nano Banana 2.
+const MODEL_ID = "gemini-3-pro-image-preview";
 const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_ID}:generateContent`;
 
 export interface GeneratedImage {

@@ -406,13 +406,41 @@ export async function runAgent(agentId: string, userPrompt: string, overrideColl
     status: "success",
   }).catch(() => {});
 
-  // F35 — fire agent.completed webhook
+  // F35 — fire agent.completed webhook with rich details so the embed
+  // shows the document + any generated image, not just a price.
   {
     const { fireAgentEvent } = await import("./webhook-events");
+    // Detect any AI-generated image produced during this run by scanning
+    // media-meta for entries created after runStartTime.
+    let generatedImageUrl: string | undefined;
+    try {
+      const { readMediaMeta } = await import("./media/media-meta");
+      const meta = await readMediaMeta();
+      const fresh = meta
+        .filter((m) => m.generatedByAi && m.generatedAt && new Date(m.generatedAt).getTime() >= runStartTime)
+        .sort((a, b) => new Date(b.generatedAt!).getTime() - new Date(a.generatedAt!).getTime());
+      if (fresh[0]) {
+        const sc = await readSiteConfig().catch(() => null);
+        const previewBase = sc?.previewSiteUrl ?? "";
+        // media key is "<folder>/<filename>" — append to previewSiteUrl + /uploads/
+        generatedImageUrl = previewBase
+          ? `${previewBase.replace(/\/$/, "")}/uploads/${fresh[0].key}`
+          : `/uploads/${fresh[0].key}`;
+      }
+    } catch { /* non-fatal */ }
+
+    const previewLink = siteConfig.previewSiteUrl
+      ? `${siteConfig.previewSiteUrl.replace(/\/$/, "")}/${targetCollection === "posts" ? "blog" : targetCollection}/${slug}`
+      : undefined;
+
     fireAgentEvent("completed", agent.name ?? agentId, {
       targetCollection,
       documentsCreated: 1,
       costUsd: totalCost,
+      documentTitle: title,
+      documentSlug: slug,
+      imageUrl: generatedImageUrl,
+      linkUrl: previewLink,
     }).catch(() => {});
   }
 

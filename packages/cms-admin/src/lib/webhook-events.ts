@@ -94,7 +94,20 @@ export async function fireContentEvent(
 export async function fireAgentEvent(
   action: "started" | "completed" | "failed",
   agentName: string,
-  details?: { targetCollection?: string; documentsCreated?: number; costUsd?: number; error?: string },
+  details?: {
+    targetCollection?: string;
+    documentsCreated?: number;
+    costUsd?: number;
+    error?: string;
+    /** Title of the document the agent produced (for richer embeds). */
+    documentTitle?: string;
+    /** Slug of the produced document (used to build a preview link). */
+    documentSlug?: string;
+    /** Public URL of any image the agent generated for this run. */
+    imageUrl?: string;
+    /** Public URL the embed title should link to (e.g. preview URL). */
+    linkUrl?: string;
+  },
   actor?: string,
 ): Promise<void> {
   const src = await loadSources("agent");
@@ -102,19 +115,42 @@ export async function fireAgentEvent(
 
   const color = action === "completed" ? 0x22c55e : action === "failed" ? 0xef4444 : 0xF7BB2E;
   const fields: { name: string; value: string }[] = [{ name: "Agent", value: agentName }];
+  if (details?.documentTitle) fields.push({ name: "Document", value: details.documentTitle });
   if (details?.targetCollection) fields.push({ name: "Collection", value: details.targetCollection });
+  if (details?.documentSlug) fields.push({ name: "Slug", value: details.documentSlug });
   if (details?.documentsCreated !== undefined) fields.push({ name: "Documents", value: String(details.documentsCreated) });
   if (details?.costUsd !== undefined) fields.push({ name: "Cost", value: `$${details.costUsd.toFixed(4)}` });
+  if (details?.imageUrl) fields.push({ name: "Generated image", value: details.imageUrl });
   if (details?.error) fields.push({ name: "Error", value: details.error });
+
+  // Build a richer message body so the embed isn't just a price tag.
+  const messageParts: string[] = [];
+  if (action === "failed" && details?.error) {
+    messageParts.push(details.error);
+  } else {
+    if (details?.documentTitle) {
+      messageParts.push(`**${details.documentTitle}**`);
+    }
+    if (details?.targetCollection) {
+      messageParts.push(`in \`${details.targetCollection}\``);
+    }
+    if (messageParts.length === 0) {
+      messageParts.push(`Agent "${agentName}" ${action}`);
+    }
+  }
 
   const evt: WebhookEvent = {
     event: `agent.${action}`,
-    title: `Agent ${action}: ${agentName}`,
-    message: action === "failed" && details?.error ? details.error : `Agent "${agentName}" ${action}`,
+    title: details?.documentTitle
+      ? `${agentName} → ${details.documentTitle}`
+      : `Agent ${action}: ${agentName}`,
+    message: messageParts.join(" "),
     color,
     fields,
     siteName: src.siteName,
     actor,
+    imageUrl: details?.imageUrl,
+    linkUrl: details?.linkUrl,
   };
 
   dispatchWebhooks(src.webhooks, evt, src.dataDir).catch(() => {});

@@ -90,7 +90,7 @@ describe("generateImage — happy path", () => {
     const result = await generateImage({ prompt: "a calm lake at dawn", fetchImpl: fetchMock as never });
     expect(result.mimeType).toBe("image/png");
     expect(result.buffer.length).toBeGreaterThan(0);
-    expect(result.provider).toMatch(/gemini-2\.5-flash-image/);
+    expect(result.provider).toMatch(/gemini-(2\.5-flash|3-pro)-image/);
     expect(result.costUsd).toBe(NANO_BANANA_COST_PER_IMAGE_USD);
     expect(fetchMock).toHaveBeenCalledOnce();
     const call = fetchMock.mock.calls[0] as unknown as [string, RequestInit];

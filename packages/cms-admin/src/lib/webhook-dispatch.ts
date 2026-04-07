@@ -37,6 +37,12 @@ export interface WebhookEvent {
   data?: Record<string, unknown>;
   /** Optional actor identifier (e.g. "user:admin@example.com") */
   actor?: string;
+  /** Optional absolute URL of an image to render in the embed (e.g. an
+   *  AI-generated header image). Discord renders this as embed.image. */
+  imageUrl?: string;
+  /** Optional URL the embed title should link to (e.g. the document
+   *  preview URL). Discord renders this as embed.url. */
+  linkUrl?: string;
 }
 
 export interface DispatchResult {
@@ -65,6 +71,8 @@ function formatDiscord(evt: WebhookEvent): Record<string, unknown> {
     timestamp: new Date().toISOString(),
     footer: { text: `webhouse.app${evt.instanceUrl ? ` · ${evt.instanceUrl}` : ""}` },
   };
+  if (evt.linkUrl) embed.url = evt.linkUrl;
+  if (evt.imageUrl) embed.image = { url: evt.imageUrl };
   if (evt.fields?.length) {
     embed.fields = evt.fields.map((f) => ({ name: f.name, value: f.value, inline: true }));
   }
