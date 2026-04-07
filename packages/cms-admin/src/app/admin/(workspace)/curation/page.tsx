@@ -171,6 +171,14 @@ export default function CurationPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState<Record<string, unknown>>({});
   const [previewItem, setPreviewItem] = useState<QueueItem | null>(null);
+
+  // ESC closes the preview modal
+  useEffect(() => {
+    if (!previewItem) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setPreviewItem(null); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [previewItem]);
   const [schemas, setSchemas] = useState<Record<string, { name: string; type: string; options?: { label: string; value: string }[] }[]>>({});
 
   const loadItems = useCallback(async () => {
