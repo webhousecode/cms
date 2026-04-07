@@ -11,6 +11,9 @@ export interface QueueItem {
   title: string;
   status: "ready" | "in_review" | "approved" | "rejected" | "published";
   generatedAt: string;
+  /** Locale the agent wrote in. Honoured at approve time so the doc
+   *  lands in the right language bucket on multi-locale sites. */
+  locale?: string;
   contentData: Record<string, unknown>;
   /** Snapshot of contentData at generation time. Used to diff curator
    *  edits when approving so we can record per-field "correction" feedback. */
@@ -90,10 +93,12 @@ export async function approveQueueItem(id: string, asDraft = false): Promise<Que
   const cms = await getAdminCms();
   const status = asDraft ? "draft" : "published" as const;
 
-  // Resolve locale for the new document
+  // Resolve locale for the new document. Phase 6: honour the locale
+  // the agent wrote in (stored on the queue item) before falling back
+  // to the site default.
   const { readSiteConfig } = await import("@/lib/site-config");
   const siteConfig = await readSiteConfig();
-  const docLocale = siteConfig.defaultLocale || "en";
+  const docLocale = item.locale || siteConfig.defaultLocale || "en";
 
   const input: { slug: string; status: "draft" | "published"; data: Record<string, unknown>; locale?: string } = {
     slug: item.slug,
@@ -114,6 +119,32 @@ export async function approveQueueItem(id: string, asDraft = false): Promise<Que
 
   item.status = asDraft ? "in_review" : "published";
   await writeQueue(items);
+
+  // Phase 6 — auto-translate to other locales if the site has it on
+  // and the doc is in the default locale (translating away from a
+  // non-default would overwrite the default version). Fire-and-forget.
+  if (
+    !asDraft &&
+    siteConfig.autoRetranslateOnUpdate &&
+    docLocale === (siteConfig.defaultLocale || siteConfig.locales?.[0]) &&
+    Array.isArray(siteConfig.locales) &&
+    siteConfig.locales.length > 1
+  ) {
+    const targets = siteConfig.locales.filter((l) => l !== docLocale);
+    if (targets.length > 0) {
+      const baseUrl = process.env.NEXTAUTH_URL || `http://localhost:${process.env.PORT || 3010}`;
+      const serviceToken = process.env.CMS_JWT_SECRET;
+      for (const targetLocale of targets) {
+        fetch(`${baseUrl}/api/cms/${item.collection}/${item.slug}/translate`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "x-cms-service-token": serviceToken || "" },
+          body: JSON.stringify({ targetLocale, publish: true }),
+        }).catch(() => {});
+      }
+      console.log(`[curation] Auto-translating ${item.collection}/${item.slug} → ${targets.join(", ")}`);
+    }
+  }
+
   return item;
 }
 
