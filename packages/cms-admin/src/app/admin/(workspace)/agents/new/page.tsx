@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, type FormEvent, type KeyboardEvent } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2, Sparkles, Send, ChevronDown, BookOpen, Globe, HardDrive } from "lucide-react";
 import { useEffect } from "react";
 import type { AgentTemplate } from "@/lib/agent-templates";
@@ -74,17 +74,30 @@ export default function NewAgentPage() {
   const [marketplaceError, setMarketplaceError] = useState<string | undefined>(undefined);
   const [templatesLoading, setTemplatesLoading] = useState(true);
 
+  const searchParams = useSearchParams();
+
   useEffect(() => {
     fetch("/api/cms/agent-templates")
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (!data) return;
-        setLocalTemplates(data.local ?? []);
-        setMarketplaceTemplates(data.marketplace ?? []);
+        const local = data.local ?? [];
+        const market = data.marketplace ?? [];
+        setLocalTemplates(local);
+        setMarketplaceTemplates(market);
         setMarketplaceError(data.marketplaceError);
+
+        // ?template=<id> deep link from the Command Palette / marketplace
+        // cards in the Templates tab. Find it in either pool and pre-fill.
+        const wantedId = searchParams.get("template");
+        if (wantedId) {
+          const found = [...local, ...market].find((t: AgentTemplate) => t.id === wantedId);
+          if (found) applyTemplate(found);
+        }
       })
       .catch(() => {})
       .finally(() => setTemplatesLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function applyTemplate(template: AgentTemplate) {
