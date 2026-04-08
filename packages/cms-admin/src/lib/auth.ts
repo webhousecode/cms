@@ -35,6 +35,16 @@ export interface User {
   showCloseAllTabs?: boolean; // show "Close all" pill in tab bar (global pref)
   passkeys?: StoredPasskey[]; // F59 WebAuthn credentials
   webauthnChallenge?: string; // transient challenge for registration/login
+  totp?: TotpConfig; // F59 phase 4 — Authenticator app 2FA
+  totpEnrollSecret?: string; // transient: secret pending verification during enrollment
+}
+
+export interface TotpConfig {
+  secret: string; // base32 — used by otpauth lib
+  createdAt: string;
+  lastUsedAt?: string;
+  /** Single-use recovery codes (hashed). User downloads plaintext at enroll time. */
+  backupCodeHashes: string[];
 }
 
 export interface SessionPayload {

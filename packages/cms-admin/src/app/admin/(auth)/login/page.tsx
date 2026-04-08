@@ -16,6 +16,8 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
   const [hasGitHub, setHasGitHub] = useState(true); // always show — GitHub OAuth is part of the platform
+  const [totpRequired, setTotpRequired] = useState(false);
+  const [totpCode, setTotpCode] = useState("");
   const [qrDataUrl, setQrDataUrl] = useState<string>("");
   const [qrSessionId, setQrSessionId] = useState<string>("");
   const [qrStatus, setQrStatus] = useState<"idle" | "pending" | "approved" | "claimed" | "rejected" | "expired">("idle");
@@ -107,9 +109,14 @@ function LoginForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
       });
-      const data = (await res.json()) as { error?: string };
+      const data = (await res.json()) as { error?: string; totpRequired?: boolean };
       if (!res.ok) {
         setError(data.error ?? "Login failed");
+        setLoading(false);
+        return;
+      }
+      if (data.totpRequired) {
+        setTotpRequired(true);
         setLoading(false);
         return;
       }
@@ -125,6 +132,30 @@ function LoginForm() {
       window.location.href = from;
     } catch {
       setError("Network error — try again");
+      setLoading(false);
+    }
+  }
+
+  async function handleTotpSubmit(e: FormEvent) {
+    e.preventDefault();
+    setError("");
+    setLoading(true);
+    try {
+      const res = await fetch("/api/auth/totp/verify", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: totpCode }),
+      });
+      const data = (await res.json()) as { error?: string };
+      if (!res.ok) {
+        setError(data.error ?? "Verification failed");
+        setLoading(false);
+        return;
+      }
+      window.location.href = from;
+    } catch {
+      setError("Network error");
       setLoading(false);
     }
   }
@@ -152,9 +183,14 @@ function LoginForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ response: assertion }),
       });
-      const data = (await verifyRes.json()) as { error?: string };
+      const data = (await verifyRes.json()) as { error?: string; totpRequired?: boolean };
       if (!verifyRes.ok) {
         setError(data.error ?? "Passkey verification failed");
+        setLoading(false);
+        return;
+      }
+      if (data.totpRequired) {
+        setTotpRequired(true);
         setLoading(false);
         return;
       }
@@ -215,6 +251,58 @@ function LoginForm() {
             <p style={{ fontSize: "0.8rem", color: "hsl(0 0% 50%)", margin: 0 }}>Sign in to continue</p>
           </div>
 
+          {totpRequired ? (
+            <form onSubmit={handleTotpSubmit} style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
+              <div>
+                <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "hsl(0 0% 70%)" }}>
+                  Authenticator code
+                </label>
+                <p style={{ fontSize: "0.7rem", color: "hsl(0 0% 50%)", margin: "0.25rem 0 0.5rem" }}>
+                  Enter the 6-digit code from your authenticator app, or a backup code.
+                </p>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  autoComplete="one-time-code"
+                  autoFocus
+                  value={totpCode}
+                  onChange={(e) => setTotpCode(e.target.value)}
+                  placeholder="123456"
+                  style={{
+                    padding: "0.6rem 0.75rem", borderRadius: "7px",
+                    border: "1px solid hsl(0 0% 20%)", background: "hsl(0 0% 10%)",
+                    color: "#fff", fontSize: "1rem", outline: "none", width: "100%",
+                    boxSizing: "border-box", textAlign: "center", letterSpacing: "0.2em",
+                  }}
+                />
+              </div>
+              {error && <p style={{ fontSize: "0.8rem", color: "hsl(0 70% 60%)", background: "hsl(0 50% 15% / 0.5)", padding: "0.5rem 0.75rem", borderRadius: "6px", margin: 0 }}>{error}</p>}
+              <button
+                type="submit"
+                disabled={loading}
+                style={{
+                  padding: "0.6rem", borderRadius: "7px", border: "none",
+                  background: loading ? "hsl(0 0% 25%)" : "hsl(38 92% 50%)",
+                  color: loading ? "hsl(0 0% 50%)" : "hsl(38 30% 10%)",
+                  fontSize: "0.875rem", fontWeight: 600, cursor: loading ? "wait" : "pointer",
+                }}
+              >
+                {loading ? "Verifying…" : "Verify"}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setTotpRequired(false); setTotpCode(""); setError(""); }}
+                style={{
+                  padding: "0.4rem", borderRadius: "7px", border: "none",
+                  background: "transparent", color: "hsl(0 0% 50%)",
+                  fontSize: "0.75rem", cursor: "pointer",
+                }}
+              >
+                ← Back
+              </button>
+            </form>
+          ) : (
+          <>
           <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
               <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "hsl(0 0% 70%)" }}>Email</label>
@@ -347,6 +435,8 @@ function LoginForm() {
                 Sign in with GitHub
               </a>
             </>
+          )}
+          </>
           )}
         </div>
 

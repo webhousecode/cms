@@ -1,8 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
+import { SignJWT } from "jose";
 import { COOKIE_NAME, createToken } from "@/lib/auth";
 import { confirmAuthentication, getRpFromRequest } from "@/lib/webauthn";
 
 const CHALLENGE_COOKIE = "cms-webauthn-challenge";
+const TOTP_PENDING_COOKIE = "cms-totp-pending";
+
+async function createTotpPendingToken(userId: string): Promise<string> {
+  const secret = new TextEncoder().encode(process.env.CMS_JWT_SECRET ?? "cms-dev-secret-change-me-in-production");
+  return new SignJWT({ sub: userId, stage: "totp-pending" })
+    .setProtectedHeader({ alg: "HS256" })
+    .setIssuedAt()
+    .setExpirationTime("5m")
+    .sign(secret);
+}
 
 export async function POST(req: NextRequest) {
   const body = (await req.json()) as { response: unknown };
@@ -17,6 +28,20 @@ export async function POST(req: NextRequest) {
       rp,
       challenge,
     );
+    if (user.totp) {
+      const pending = await createTotpPendingToken(user.id);
+      const r = NextResponse.json({ totpRequired: true });
+      r.cookies.set(TOTP_PENDING_COOKIE, pending, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 5 * 60,
+        path: "/",
+      });
+      r.cookies.set(CHALLENGE_COOKIE, "", { path: "/", maxAge: 0 });
+      return r;
+    }
+
     const token = await createToken(user);
     const res = NextResponse.json({ ok: true, email: user.email, name: user.name });
     res.cookies.set(COOKIE_NAME, token, {

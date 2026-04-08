@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ActionBar, ActionBarBreadcrumb } from "@/components/action-bar";
 import { GeneralSettingsPanel, PasswordChangePanel } from "@/components/settings/general-settings-panel";
 import { PasskeysPanel } from "@/components/settings/passkeys-panel";
+import { TotpPanel } from "@/components/settings/totp-panel";
 import { SectionHeading } from "@/components/ui/section-heading";
 
 export default async function AccountPage({
@@ -64,24 +65,8 @@ export default async function AccountPage({
             {/* Passkeys (F59) */}
             <PasskeysPanel />
 
-            {/* 2FA placeholder */}
-            <div className="rounded-lg border border-border bg-card p-5 space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-muted-foreground dark:text-white" style={{ fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", margin: 0 }}>Authenticator app</h3>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Generate one-time passwords via authenticator apps like 1Password, Authy, etc. as a second factor to verify your identity on sign-in.
-                  </p>
-                </div>
-                <span className="text-[10px] font-mono text-muted-foreground bg-muted px-2 py-0.5 rounded">0 APPS CONFIGURED</span>
-              </div>
-              <button
-                type="button"
-                className="text-xs px-3 py-1.5 rounded-md border border-border bg-card text-foreground hover:bg-accent transition-colors cursor-pointer"
-              >
-                Add new app
-              </button>
-            </div>
+            {/* TOTP — Authenticator app (F59 phase 4) */}
+            <TotpPanel />
           </div>
         )}
 
