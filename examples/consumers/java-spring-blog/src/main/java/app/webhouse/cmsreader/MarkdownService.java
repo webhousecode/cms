@@ -1,5 +1,6 @@
 package app.webhouse.cmsreader;
 
+import org.commonmark.Extension;
 import org.commonmark.ext.gfm.tables.TablesExtension;
 import org.commonmark.node.Node;
 import org.commonmark.parser.Parser;
@@ -19,7 +20,7 @@ public class MarkdownService {
     private final HtmlRenderer renderer;
 
     public MarkdownService() {
-        List<TablesExtension> extensions = List.of(TablesExtension.create());
+        List<Extension> extensions = List.of(TablesExtension.create());
         this.parser = Parser.builder().extensions(extensions).build();
         this.renderer = HtmlRenderer.builder().extensions(extensions).build();
     }

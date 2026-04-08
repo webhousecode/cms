@@ -1,9 +1,12 @@
 package app.webhouse.cmsreader;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.util.List;
@@ -45,17 +48,30 @@ public class BlogController {
 
     @GetMapping("/blog/{slug}")
     public ModelAndView post(@PathVariable String slug) {
-        Optional<WebhouseDocument> postOpt = cms.document("posts", slug);
-        if (postOpt.isEmpty()) {
-            return new ModelAndView("error/404", 404);
+        WebhouseDocument post;
+        try {
+            post = cms.document("posts", slug)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Post not found"));
+        } catch (IllegalArgumentException e) {
+            // Slug failed validation (path traversal attempt, etc.)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid slug");
         }
-        WebhouseDocument post = postOpt.get();
+
         Optional<WebhouseDocument> translation = cms.findTranslation(post, "posts");
 
         ModelAndView mv = new ModelAndView("post");
         mv.addObject("post", post);
         mv.addObject("contentHtml", markdown.render(post.getString("content")));
         mv.addObject("translation", translation.orElse(null));
+        return mv;
+    }
+
+    /** Render a friendly 404 page for missing routes/posts. */
+    @ExceptionHandler(ResponseStatusException.class)
+    public ModelAndView handleNotFound(ResponseStatusException ex) {
+        ModelAndView mv = new ModelAndView("error", ex.getStatusCode());
+        mv.addObject("statusCode", ex.getStatusCode().value());
+        mv.addObject("reason", ex.getReason() != null ? ex.getReason() : "Not found");
         return mv;
     }
 }

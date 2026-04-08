@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${statusCode} + ' — @webhouse/cms'">Error</title>
+    <style>
+        :root { --gold: #F7BB2E; --dark: #0D0D0D; --text: #e8e8e8; --text-dim: #888; --border: #222; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, sans-serif; background: var(--dark); color: var(--text); line-height: 1.7; max-width: 740px; margin: 0 auto; padding: 6rem 2rem; text-align: center; }
+        nav { display: flex; justify-content: space-between; padding-bottom: 2rem; border-bottom: 1px solid var(--border); margin-bottom: 4rem; text-align: left; }
+        nav .brand { font-family: monospace; color: var(--gold); font-weight: 600; text-decoration: none; }
+        nav a { color: var(--text-dim); text-decoration: none; margin-left: 1.5rem; font-size: 0.85rem; }
+        h1 { font-size: 5rem; color: var(--gold); margin-bottom: 1rem; font-family: monospace; }
+        h2 { font-size: 1.5rem; color: #fff; margin-bottom: 2rem; }
+        a { color: var(--gold); }
+        .home { display: inline-block; margin-top: 2rem; font-family: monospace; font-size: 0.85rem; }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="/" class="brand">@webhouse/cms · Spring Boot</a>
+        <div>
+            <a href="/">EN</a>
+            <a href="/da/">DA</a>
+        </div>
+    </nav>
+
+    <h1 th:text="${statusCode}">404</h1>
+    <h2 th:text="${reason}">Not found</h2>
+    <a href="/" class="home">← Back to all posts</a>
+</body>
+</html>
