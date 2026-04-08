@@ -1,0 +1,17 @@
+{
+  "id": "globals-site",
+  "slug": "site",
+  "collection": "globals",
+  "status": "published",
+  "data": {
+    "siteTitle": "Simple Blog",
+    "siteDescription": "A reference @webhouse/cms test site exercising every collection kind: page, snippet, data, form, and global.",
+    "footerText": "© 2026 Simple Blog — built with @webhouse/cms",
+    "twitterHandle": "@webhouseapp",
+    "githubUrl": "https://github.com/webhousecode/cms",
+    "analyticsId": ""
+  },
+  "_fieldMeta": {},
+  "createdAt": "2026-04-08T00:00:00.000Z",
+  "updatedAt": "2026-04-08T00:00:00.000Z"
+}

@@ -1,0 +1,16 @@
+{
+  "id": "contact-sample-inquiry",
+  "slug": "sample-inquiry",
+  "collection": "contact-submissions",
+  "status": "published",
+  "data": {
+    "name": "Alex Johnson",
+    "email": "alex.johnson@example.com",
+    "subject": "Question about your content strategy service",
+    "message": "Hi, I'm exploring options for our company's content strategy. Could we schedule a 30-minute call next week to discuss your approach and pricing?",
+    "submittedAt": "2026-04-08T09:15:00.000Z"
+  },
+  "_fieldMeta": {},
+  "createdAt": "2026-04-08T09:15:00.000Z",
+  "updatedAt": "2026-04-08T09:15:00.000Z"
+}

@@ -1,0 +1,13 @@
+{
+  "id": "snippet-author-bio-disclaimer",
+  "slug": "author-bio-disclaimer",
+  "collection": "snippets",
+  "status": "published",
+  "data": {
+    "title": "Author Bio Disclaimer",
+    "content": "*The views expressed in this article are those of the author and do not necessarily reflect the official policy or position of Simple Blog. For comments or corrections, please reach out via the contact form.*"
+  },
+  "_fieldMeta": {},
+  "createdAt": "2026-04-08T00:00:00.000Z",
+  "updatedAt": "2026-04-08T00:00:00.000Z"
+}

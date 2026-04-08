@@ -1,0 +1,16 @@
+{
+  "id": "testimonial-acme-corp",
+  "slug": "acme-corp",
+  "collection": "testimonials",
+  "status": "published",
+  "data": {
+    "quote": "Simple Blog helped us launch our content hub in days, not months. The AI tools save us hours every week and the team is responsive whenever we have questions.",
+    "author": "Sarah Mitchell",
+    "role": "Head of Marketing",
+    "company": "Acme Corp",
+    "rating": 5
+  },
+  "_fieldMeta": {},
+  "createdAt": "2026-04-08T00:00:00.000Z",
+  "updatedAt": "2026-04-08T00:00:00.000Z"
+}

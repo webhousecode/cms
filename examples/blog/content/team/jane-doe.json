@@ -1,0 +1,16 @@
+{
+  "id": "team-jane-doe",
+  "slug": "jane-doe",
+  "collection": "team",
+  "status": "published",
+  "data": {
+    "name": "Jane Doe",
+    "role": "Editor in Chief",
+    "bio": "Jane has been writing about content management and the open web for over a decade. She joined Simple Blog as Editor in Chief in 2026.",
+    "email": "jane@example.com",
+    "sortOrder": 1
+  },
+  "_fieldMeta": {},
+  "createdAt": "2026-04-08T00:00:00.000Z",
+  "updatedAt": "2026-04-08T00:00:00.000Z"
+}

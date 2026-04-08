@@ -1,0 +1,16 @@
+{
+  "id": "service-content-strategy",
+  "slug": "content-strategy",
+  "collection": "services",
+  "status": "published",
+  "data": {
+    "title": "Content Strategy",
+    "description": "We help you plan, structure, and govern content across your entire digital presence — from editorial calendars to taxonomy and tone of voice guidelines.",
+    "price": "From $2,500/month",
+    "icon": "📋",
+    "sortOrder": 1
+  },
+  "_fieldMeta": {},
+  "createdAt": "2026-04-08T00:00:00.000Z",
+  "updatedAt": "2026-04-08T00:00:00.000Z"
+}
