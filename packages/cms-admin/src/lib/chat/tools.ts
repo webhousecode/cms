@@ -2031,5 +2031,359 @@ DESIGN GUIDELINES:
         return `Forgotten: "${mem.fact}" [${mem.category}]`;
       },
     },
+
+    // ════════════════════════════════════════════════════════════
+    //  Phase 6 — workflows, templates, budgets, feedback
+    // ════════════════════════════════════════════════════════════
+
+    // ── list_workflows ────────────────────────────────────────
+    {
+      definition: {
+        name: "list_workflows",
+        description:
+          "List all agent workflows on this site. A workflow is an ordered chain of agents that runs as a single pipeline (e.g. Writer → SEO → Translator). Returns the workflow name, the chained agent ids, schedule status, and run stats.",
+        input_schema: { type: "object", properties: {} },
+      },
+      handler: async () => {
+        const { listWorkflows } = await import("@/lib/agent-workflows");
+        const workflows = await listWorkflows();
+        if (workflows.length === 0) return "No workflows configured.";
+        return workflows.map((w) =>
+          `- **${w.name}** (${w.steps.length} step${w.steps.length === 1 ? "" : "s"}) [${w.schedule.enabled ? w.schedule.frequency : "manual"}]\n` +
+          `  ID: \`${w.id}\` | Runs: ${w.stats.totalRuns} | Total: $${w.stats.totalCostUsd.toFixed(4)}\n` +
+          `  Steps: ${w.steps.map((s) => s.agentId).join(" → ")}`
+        ).join("\n");
+      },
+    },
+
+    // ── create_workflow ───────────────────────────────────────
+    {
+      definition: {
+        name: "create_workflow",
+        description:
+          "Create a new agent workflow — an ordered chain of agents. Each step takes the previous step's output as input. The first step receives the run prompt; only the final step's output lands in the curation queue.",
+        input_schema: {
+          type: "object",
+          properties: {
+            name: { type: "string", description: "Workflow display name (e.g. 'Writer → SEO → Translator')" },
+            agentIds: { type: "array", items: { type: "string" }, description: "Ordered list of agent ids the pipeline runs through. Use list_agents to find ids." },
+            scheduleEnabled: { type: "boolean", description: "Run on a schedule? Default false." },
+            frequency: { type: "string", description: "daily | weekly | manual | cron (default: manual)" },
+            time: { type: "string", description: "HH:MM scheduled time (default: 06:00)" },
+            cron: { type: "string", description: "Cron expression when frequency=cron, e.g. '0 9 * * 1-5' for weekdays at 9am" },
+            defaultPrompt: { type: "string", description: "Prompt sent to step 1 on each scheduled run. Manual runs use whatever prompt the curator provides." },
+          },
+          required: ["name", "agentIds"],
+        },
+      },
+      handler: async (input) => {
+        const { createWorkflow } = await import("@/lib/agent-workflows");
+        const agentIds = (input.agentIds as string[]) ?? [];
+        if (agentIds.length === 0) return "Workflow needs at least one agent in agentIds.";
+        const wf = await createWorkflow({
+          name: String(input.name),
+          steps: agentIds.map((agentId, i) => ({ id: `step-${Date.now()}-${i}-${Math.random().toString(36).slice(2, 6)}`, agentId })),
+          active: true,
+          schedule: {
+            enabled: input.scheduleEnabled === true,
+            frequency: (String(input.frequency ?? "manual")) as never,
+            time: String(input.time ?? "06:00"),
+            maxPerRun: 1,
+            ...(input.cron ? { cron: String(input.cron) } : {}),
+          },
+          ...(input.defaultPrompt ? { defaultPrompt: String(input.defaultPrompt) } : {}),
+        });
+        return `Created workflow **${wf.name}**\nID: \`${wf.id}\`\nSteps: ${wf.steps.map((s) => s.agentId).join(" → ")}`;
+      },
+    },
+
+    // ── run_workflow ──────────────────────────────────────────
+    {
+      definition: {
+        name: "run_workflow",
+        description:
+          "Run an agent workflow with a prompt. Each step's agent processes the previous step's output. Synchronous — blocks until the entire pipeline finishes (could take 1-2 minutes for a 3-step workflow). The final output lands as one curation queue item.",
+        input_schema: {
+          type: "object",
+          properties: {
+            workflowId: { type: "string", description: "Workflow ID (use list_workflows)" },
+            prompt: { type: "string", description: "Prompt for the first step" },
+          },
+          required: ["workflowId", "prompt"],
+        },
+      },
+      handler: async (input) => {
+        const { runWorkflow } = await import("@/lib/workflow-runner");
+        const result = await runWorkflow(String(input.workflowId), String(input.prompt));
+        const stepLines = result.steps.map((s, i) =>
+          `  ${i + 1}. ${s.agentName} (${s.model}) — $${s.costUsd.toFixed(4)}, ${(s.durationMs / 1000).toFixed(1)}s`
+        ).join("\n");
+        return `Workflow **${result.workflowName}** → **${result.title}**\n` +
+          `Queue item: \`${result.queueItemId}\` (${result.collection}/${result.slug})\n` +
+          `Total: $${result.costUsd.toFixed(4)} in ${(result.totalDurationMs / 1000).toFixed(1)}s\n${stepLines}`;
+      },
+    },
+
+    // ── delete_workflow ───────────────────────────────────────
+    {
+      definition: {
+        name: "delete_workflow",
+        description: "Permanently delete an agent workflow. The workflow's stored stats are lost. The agents themselves remain.",
+        input_schema: {
+          type: "object",
+          properties: {
+            workflowId: { type: "string", description: "Workflow ID" },
+          },
+          required: ["workflowId"],
+        },
+      },
+      handler: async (input) => {
+        const { deleteWorkflow, getWorkflow } = await import("@/lib/agent-workflows");
+        const wf = await getWorkflow(String(input.workflowId));
+        if (!wf) return `Workflow ${input.workflowId} not found.`;
+        await deleteWorkflow(wf.id);
+        return `Deleted workflow **${wf.name}**.`;
+      },
+    },
+
+    // ── list_agent_templates ──────────────────────────────────
+    {
+      definition: {
+        name: "list_agent_templates",
+        description:
+          "List agent templates the curator can start a new agent from. Returns both local org templates (saved from existing agents) and curated marketplace templates fetched from github.com/webhousecode/cms-agents.",
+        input_schema: {
+          type: "object",
+          properties: {
+            source: { type: "string", description: "Filter: local | marketplace | all (default)" },
+          },
+        },
+      },
+      handler: async (input) => {
+        const { cookies } = await import("next/headers");
+        const cookieStore = await cookies();
+        const orgId = cookieStore.get("cms-active-org")?.value ?? null;
+        const source = String(input.source ?? "all");
+
+        const { listLocalTemplates } = await import("@/lib/agent-templates");
+        const { fetchMarketplaceTemplates } = await import("@/lib/marketplace-templates");
+
+        const local = orgId && (source === "local" || source === "all") ? await listLocalTemplates(orgId) : [];
+        const market = (source === "marketplace" || source === "all") ? (await fetchMarketplaceTemplates()).templates : [];
+
+        if (local.length === 0 && market.length === 0) {
+          return "No templates available. Marketplace may be unreachable or you have no local templates yet.";
+        }
+
+        const lines: string[] = [];
+        if (local.length > 0) {
+          lines.push(`### Local org templates (${local.length})`);
+          for (const t of local) {
+            lines.push(`- **${t.name}**${t.category ? ` _(${t.category})_` : ""} — ${t.description || "no description"}\n  ID: \`${t.id}\``);
+          }
+        }
+        if (market.length > 0) {
+          lines.push(`\n### Marketplace (${market.length})`);
+          for (const t of market) {
+            lines.push(`- ${t.icon ?? ""} **${t.name}**${t.category ? ` _(${t.category})_` : ""} — ${t.description || "no description"}\n  ID: \`${t.id}\``);
+          }
+        }
+        return lines.join("\n");
+      },
+    },
+
+    // ── create_agent_from_template ────────────────────────────
+    {
+      definition: {
+        name: "create_agent_from_template",
+        description:
+          "Create a new agent by instantiating a template (local or marketplace). Looks up the template by id, applies its payload, then creates the agent. The new agent starts with autonomy='draft' and an inactive schedule — adjust afterwards via update_agent if needed.",
+        input_schema: {
+          type: "object",
+          properties: {
+            templateId: { type: "string", description: "Template ID from list_agent_templates" },
+            name: { type: "string", description: "Override the agent name (optional — defaults to template name)" },
+          },
+          required: ["templateId"],
+        },
+      },
+      handler: async (input) => {
+        const templateId = String(input.templateId);
+        const { cookies } = await import("next/headers");
+        const cookieStore = await cookies();
+        const orgId = cookieStore.get("cms-active-org")?.value ?? null;
+
+        // Try local first, then marketplace
+        let template = null as null | Awaited<ReturnType<typeof import("@/lib/agent-templates").getLocalTemplate>>;
+        if (orgId) {
+          const { getLocalTemplate } = await import("@/lib/agent-templates");
+          template = await getLocalTemplate(orgId, templateId);
+        }
+        if (!template) {
+          const { fetchMarketplaceTemplates } = await import("@/lib/marketplace-templates");
+          const { templates } = await fetchMarketplaceTemplates();
+          template = templates.find((t) => t.id === templateId) ?? null;
+        }
+        if (!template) return `Template ${templateId} not found in local org templates or marketplace.`;
+
+        const { templateToAgentInput } = await import("@/lib/agent-templates");
+        const agentInput = templateToAgentInput(template, { name: input.name ? String(input.name) : undefined });
+
+        const { createAgent } = await import("@/lib/agents");
+        const agent = await createAgent(agentInput as never);
+        return `Created agent **${agent.name}** from template "${template.name}"\nID: \`${agent.id}\`\nRole: ${agent.role}\nTools: ${Object.entries(agent.tools).filter(([, v]) => v).map(([k]) => k).join(", ") || "none"}`;
+      },
+    },
+
+    // ── save_agent_as_template ────────────────────────────────
+    {
+      definition: {
+        name: "save_agent_as_template",
+        description:
+          "Save an existing agent as a reusable local template for the active org. Strips per-instance fields (stats, schedule, budgets, locale, active) so the template represents the agent's BEHAVIOR, not the running instance.",
+        input_schema: {
+          type: "object",
+          properties: {
+            agentId: { type: "string", description: "Agent ID to template" },
+            name: { type: "string", description: "Template display name (optional — defaults to agent name)" },
+            description: { type: "string", description: "One-line summary shown on the template card" },
+          },
+          required: ["agentId"],
+        },
+      },
+      handler: async (input) => {
+        const { cookies } = await import("next/headers");
+        const cookieStore = await cookies();
+        const orgId = cookieStore.get("cms-active-org")?.value ?? null;
+        if (!orgId) return "No active org — cannot save template.";
+
+        const { getAgent } = await import("@/lib/agents");
+        const agent = await getAgent(String(input.agentId));
+        if (!agent) return `Agent ${input.agentId} not found.`;
+
+        const { agentToTemplatePayload, saveLocalTemplate } = await import("@/lib/agent-templates");
+        const tpl = await saveLocalTemplate(orgId, {
+          name: String(input.name ?? agent.name),
+          description: String(input.description ?? `Template based on ${agent.name}`),
+          payload: agentToTemplatePayload(agent),
+        });
+        return `Saved template **${tpl.name}** (\`${tpl.id}\`) for org \`${orgId}\``;
+      },
+    },
+
+    // ── set_agent_budget ──────────────────────────────────────
+    {
+      definition: {
+        name: "set_agent_budget",
+        description:
+          "Set per-agent cost guards. Each cap is checked pre-flight against analytics spend; runs that would exceed the cap are blocked with a clear error. Pass null or 0 to clear a cap. All caps are in USD.",
+        input_schema: {
+          type: "object",
+          properties: {
+            agentId: { type: "string", description: "Agent ID" },
+            dailyBudgetUsd: { type: "number", description: "Daily cap (resets at midnight). 0 or absent = no cap." },
+            weeklyBudgetUsd: { type: "number", description: "Rolling 7-day cap. 0 or absent = no cap." },
+            monthlyBudgetUsd: { type: "number", description: "Calendar-month cap (resets on the 1st). 0 or absent = no cap." },
+          },
+          required: ["agentId"],
+        },
+      },
+      handler: async (input) => {
+        const { getAgent, updateAgent } = await import("@/lib/agents");
+        const agent = await getAgent(String(input.agentId));
+        if (!agent) return `Agent ${input.agentId} not found.`;
+        const patch: Record<string, unknown> = {};
+        const set = (key: string, val: unknown) => {
+          if (val === undefined) return;
+          const n = Number(val);
+          patch[key] = n > 0 ? n : undefined;
+        };
+        set("dailyBudgetUsd", input.dailyBudgetUsd);
+        set("weeklyBudgetUsd", input.weeklyBudgetUsd);
+        set("monthlyBudgetUsd", input.monthlyBudgetUsd);
+        const updated = await updateAgent(agent.id, patch as never);
+        const fmt = (v?: number) => v != null && v > 0 ? `$${v.toFixed(2)}` : "—";
+        return `Budgets for **${updated.name}**: daily=${fmt(updated.dailyBudgetUsd)} weekly=${fmt(updated.weeklyBudgetUsd)} monthly=${fmt(updated.monthlyBudgetUsd)}`;
+      },
+    },
+
+    // ── set_agent_locale ──────────────────────────────────────
+    {
+      definition: {
+        name: "set_agent_locale",
+        description:
+          "Set the language an agent writes its primary output in. Use this on multi-locale sites to host parallel agents (e.g. one DA and one EN content writer on the same site). Pass an empty string to clear and inherit the site default. Approval-time auto-translate (if enabled in site settings) still flows from the default locale to the others.",
+        input_schema: {
+          type: "object",
+          properties: {
+            agentId: { type: "string", description: "Agent ID" },
+            locale: { type: "string", description: "Locale code (e.g. 'en', 'da', 'de'). Empty string = inherit site default." },
+          },
+          required: ["agentId", "locale"],
+        },
+      },
+      handler: async (input) => {
+        const { getAgent, updateAgent } = await import("@/lib/agents");
+        const agent = await getAgent(String(input.agentId));
+        if (!agent) return `Agent ${input.agentId} not found.`;
+        const locale = String(input.locale).trim();
+        const updated = await updateAgent(agent.id, { locale: locale || undefined } as never);
+        return `Locale for **${updated.name}**: ${updated.locale ?? "(inherit site default)"}`;
+      },
+    },
+
+    // ── enable_image_generation ───────────────────────────────
+    {
+      definition: {
+        name: "enable_image_generation",
+        description:
+          "Toggle the image-generation tool on or off for an agent. When enabled, the agent gains a generate_image tool that calls Google Gemini Nano Banana ($0.039 per image) and saves the result to the media library with full AI-generated provenance. Requires a Gemini API key on the site or org.",
+        input_schema: {
+          type: "object",
+          properties: {
+            agentId: { type: "string", description: "Agent ID" },
+            enabled: { type: "boolean", description: "true to enable, false to disable" },
+          },
+          required: ["agentId", "enabled"],
+        },
+      },
+      handler: async (input) => {
+        const { getAgent, updateAgent } = await import("@/lib/agents");
+        const agent = await getAgent(String(input.agentId));
+        if (!agent) return `Agent ${input.agentId} not found.`;
+        const updated = await updateAgent(agent.id, {
+          tools: { ...agent.tools, imageGeneration: input.enabled === true },
+        } as never);
+        return `Image generation for **${updated.name}**: ${updated.tools.imageGeneration ? "ENABLED" : "disabled"}`;
+      },
+    },
+
+    // ── list_agent_feedback ───────────────────────────────────
+    {
+      definition: {
+        name: "list_agent_feedback",
+        description:
+          "Show the most recent corrections and rejections recorded for an agent. The runner injects the last 5 corrections as few-shot examples and the last 5 rejection notes as 'things to avoid' on the agent's next run.",
+        input_schema: {
+          type: "object",
+          properties: {
+            agentId: { type: "string", description: "Agent ID" },
+            limit: { type: "number", description: "Max entries to return (default 10)" },
+          },
+          required: ["agentId"],
+        },
+      },
+      handler: async (input) => {
+        const { readFeedback } = await import("@/lib/agent-feedback");
+        const all = await readFeedback(String(input.agentId));
+        const limit = Number(input.limit ?? 10);
+        const recent = all.slice(-limit).reverse();
+        if (recent.length === 0) return "No feedback recorded for this agent yet.";
+        return recent.map((e) => {
+          if (e.type === "rejection") return `- **rejection** _(${new Date(e.createdAt).toLocaleDateString()})_: ${e.notes ?? "(no notes)"}`;
+          return `- **${e.type}** on \`${e.field ?? "?"}\`: \"${(e.original ?? "").slice(0, 60)}\" → \"${(e.corrected ?? "").slice(0, 60)}\"`;
+        }).join("\n");
+      },
+    },
   ];
 }
