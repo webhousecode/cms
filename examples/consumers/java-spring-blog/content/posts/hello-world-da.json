@@ -1,0 +1,18 @@
+{
+  "id": "post-hello-world-da",
+  "slug": "hello-world-da",
+  "status": "published",
+  "locale": "da",
+  "translationGroup": "9b5f5e6c-7c2d-4f0a-b8a4-3e1f2d8f9a01",
+  "_fieldMeta": {},
+  "data": {
+    "title": "Hej verden fra Spring Boot",
+    "excerpt": "Et blogindlæg gemt som JSON-fil i @webhouse/cms og renderet af en Spring Boot 3.4-controller.",
+    "content": "## Opsætningen\n\nDette indlæg ligger i `content/posts/hello-world-da.json`. Det er en flad JSON-fil i @webhouse/cms-format. **Spring Boot læser det direkte** via `WebhouseReader`-klassen — ingen API-kald, ingen database, bare `Files.list()`.\n\n## Hvorfor det er vigtigt\n\nIndholdet ligger i dit git-repository. Skemaet ligger i `cms.config.ts`. Renderingen er din Spring Boot-app. Der er ingen vendor lock-in: hvis du nogensinde vil udskifte @webhouse/cms admin, bliver dit indhold liggende.\n\n## Hvad du kan redigere\n\nÅbn CMS admin og peg den på denne mappe. Redigér titlen ovenfor. Gem. Genindlæs siden i din browser. Ændringen er live.\n\nDet er hele historien.",
+    "date": "2026-04-08",
+    "author": "Christian Broberg",
+    "tags": ["intro", "spring-boot", "java"]
+  },
+  "createdAt": "2026-04-08T12:00:00.000Z",
+  "updatedAt": "2026-04-08T12:00:00.000Z"
+}

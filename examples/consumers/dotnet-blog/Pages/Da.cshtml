@@ -1,0 +1,30 @@
+@page "/da"
+@model DaModel
+@{
+    ViewData["Title"] = "Blog (DA)";
+}
+
+<h1>Blog</h1>
+<p class="lead">
+    Indhold læst fra @@webhouse/cms JSON-filer af en ASP.NET Core 9 Razor Pages-app.
+</p>
+
+@if (!Model.Posts.Any())
+{
+    <p>Ingen publicerede indlæg endnu.</p>
+}
+else
+{
+    @foreach (var post in Model.Posts)
+    {
+        <a class="post-card" asp-page="/Blog/Post" asp-route-slug="@post.Slug">
+            <div class="meta">
+                <span>@post.GetStringOr("date", "")</span>
+                <span> · </span>
+                <span>@post.Locale</span>
+            </div>
+            <h3>@post.GetString("title")</h3>
+            <p>@post.GetString("excerpt")</p>
+        </a>
+    }
+}

@@ -1,0 +1,18 @@
+{
+  "id": "post-hello-world-da",
+  "slug": "hello-world-da",
+  "status": "published",
+  "locale": "da",
+  "translationGroup": "f1e2d3c4-b5a6-4d7e-8f9a-0b1c2d3e4f5a",
+  "_fieldMeta": {},
+  "data": {
+    "title": "Hej verden fra .NET 9",
+    "excerpt": "Et blogindlæg gemt som JSON-fil i @webhouse/cms og renderet af en ASP.NET Core 9 Razor Page.",
+    "content": "## Opsætningen\n\nDette indlæg ligger i `content/posts/hello-world-da.json`. Det er en flad JSON-fil i @webhouse/cms-format. **ASP.NET Core læser det direkte** via `WebhouseReader`-servicen — ingen API-kald, ingen database, bare `Directory.EnumerateFiles()`.\n\n## Hvorfor det er vigtigt\n\nIndholdet ligger i dit git-repository. Skemaet ligger i `cms.config.ts`. Renderingen er din .NET-app. Der er ingen vendor lock-in.\n\n## Hvad du kan redigere\n\nÅbn CMS admin og peg den på denne mappe. Redigér titlen ovenfor. Gem. Genindlæs siden i din browser. Ændringen er live.",
+    "date": "2026-04-08",
+    "author": "Christian Broberg",
+    "tags": ["intro", "dotnet", "razor-pages"]
+  },
+  "createdAt": "2026-04-08T12:00:00.000Z",
+  "updatedAt": "2026-04-08T12:00:00.000Z"
+}

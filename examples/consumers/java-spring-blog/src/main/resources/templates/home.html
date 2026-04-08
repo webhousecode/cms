@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="'Blog (' + ${locale} + ') — @webhouse/cms'">Blog</title>
+    <link rel="stylesheet" th:href="@{/style.css}">
+    <style>
+        :root { --gold: #F7BB2E; --dark: #0D0D0D; --text: #e8e8e8; --text-dim: #888; --border: #222; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, sans-serif; background: var(--dark); color: var(--text); line-height: 1.7; max-width: 740px; margin: 0 auto; padding: 3rem 2rem; }
+        nav { display: flex; justify-content: space-between; padding-bottom: 2rem; border-bottom: 1px solid var(--border); margin-bottom: 3rem; }
+        nav .brand { font-family: monospace; color: var(--gold); font-weight: 600; }
+        nav a { color: var(--text-dim); text-decoration: none; margin-left: 1.5rem; font-size: 0.85rem; }
+        nav a:hover { color: var(--gold); }
+        h1 { font-size: 2.5rem; color: #fff; margin-bottom: 1rem; }
+        .lead { color: var(--text-dim); margin-bottom: 3rem; }
+        .post-card { display: block; padding: 1.5rem; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 1rem; text-decoration: none; transition: border-color 0.2s; }
+        .post-card:hover { border-color: var(--gold); }
+        .post-card h3 { color: #fff; margin-bottom: 0.4rem; font-size: 1.2rem; }
+        .post-card p { color: var(--text-dim); font-size: 0.9rem; }
+        .post-card .meta { color: #555; font-size: 0.75rem; font-family: monospace; margin-bottom: 0.5rem; }
+        footer { margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border); color: var(--text-dim); font-size: 0.8rem; text-align: center; }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="/" class="brand">@webhouse/cms · Spring Boot</a>
+        <div>
+            <a href="/">EN</a>
+            <a href="/da/">DA</a>
+        </div>
+    </nav>
+
+    <h1 th:text="${locale == 'da' ? 'Blog' : 'Blog'}">Blog</h1>
+    <p class="lead" th:text="${locale == 'da' ? 'Indhold læst fra @webhouse/cms JSON-filer af en Spring Boot 3.4-app.' : 'Content read from @webhouse/cms JSON files by a Spring Boot 3.4 app.'}">Lead</p>
+
+    <div th:if="${posts.isEmpty()}">
+        <p>No published posts yet.</p>
+    </div>
+
+    <a th:each="post : ${posts}" th:href="@{'/blog/' + ${post.slug}}" class="post-card">
+        <div class="meta">
+            <span th:text="${post.getStringOr('date', '')}">date</span>
+            <span> · </span>
+            <span th:text="${post.locale}">locale</span>
+        </div>
+        <h3 th:text="${post.getString('title')}">title</h3>
+        <p th:text="${post.getString('excerpt')}">excerpt</p>
+    </a>
+
+    <footer>
+        Powered by @webhouse/cms — read by Spring Boot 3.4 / Java 21
+    </footer>
+</body>
+</html>

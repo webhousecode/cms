@@ -1,6 +1,8 @@
 # @webhouse/cms
 
-AI-native CMS engine built on Hono, Drizzle ORM, and SQLite. Define content schemas with Zod, get a full API and static site builder out of the box.
+The AI-native content engine. **Framework-agnostic file-based JSON content** with a TypeScript admin, AI agents, workflows, and a static build pipeline. Your content as flat JSON — render it with Next.js, Laravel, Django, Spring Boot, .NET, Rails, Hugo, or anything that reads files.
+
+> **Reader libraries planned for Phase 2:** PHP (Packagist), Python (PyPI), Ruby (RubyGems), Go (pkg.go.dev), Java (Maven Central), C#/.NET (NuGet). See `examples/consumers/` for reference implementations in Java (Spring Boot) and .NET (Razor Pages).
 
 ## Installation
 

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="${post.getString('title')} + ' — @webhouse/cms'">Post</title>
+    <style>
+        :root { --gold: #F7BB2E; --dark: #0D0D0D; --text: #e8e8e8; --text-dim: #888; --border: #222; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, sans-serif; background: var(--dark); color: var(--text); line-height: 1.7; max-width: 740px; margin: 0 auto; padding: 3rem 2rem; }
+        nav { display: flex; justify-content: space-between; padding-bottom: 2rem; border-bottom: 1px solid var(--border); margin-bottom: 3rem; }
+        nav .brand { font-family: monospace; color: var(--gold); font-weight: 600; }
+        nav a { color: var(--text-dim); text-decoration: none; margin-left: 1.5rem; font-size: 0.85rem; }
+        nav a:hover { color: var(--gold); }
+        h1 { font-size: 2rem; color: #fff; margin-bottom: 0.5rem; line-height: 1.2; }
+        h2 { font-size: 1.4rem; color: #fff; margin: 2rem 0 1rem; }
+        h3 { color: #fff; margin: 1.5rem 0 0.8rem; }
+        p { margin-bottom: 1rem; }
+        a { color: var(--gold); }
+        .meta { color: var(--text-dim); font-size: 0.85rem; margin-bottom: 2rem; font-family: monospace; }
+        article { font-size: 1rem; }
+        article p { color: #ccc; }
+        article strong { color: #fff; }
+        pre { background: #111; padding: 1rem; border-radius: 6px; overflow-x: auto; margin: 1rem 0; border: 1px solid var(--border); }
+        code { font-family: 'JetBrains Mono', monospace; background: rgba(247,187,46,0.1); color: var(--gold); padding: 0.1rem 0.4rem; border-radius: 3px; font-size: 0.9em; }
+        pre code { padding: 0; background: transparent; color: var(--text); }
+        .translation { margin-top: 3rem; padding: 1rem; border: 1px solid var(--border); border-radius: 6px; font-size: 0.85rem; color: var(--text-dim); }
+        .translation a { font-family: monospace; }
+        footer { margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border); color: var(--text-dim); font-size: 0.8rem; text-align: center; }
+        .back { display: inline-block; margin-top: 2rem; font-family: monospace; font-size: 0.85rem; }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="/" class="brand">@webhouse/cms · Spring Boot</a>
+        <div>
+            <a href="/">EN</a>
+            <a href="/da/">DA</a>
+        </div>
+    </nav>
+
+    <article>
+        <h1 th:text="${post.getString('title')}">Title</h1>
+        <div class="meta">
+            <span th:text="${post.getStringOr('author', 'Unknown')}">author</span>
+            <span> · </span>
+            <span th:text="${post.getStringOr('date', '')}">date</span>
+            <span> · </span>
+            <span th:text="${post.locale}">locale</span>
+        </div>
+        <div th:utext="${contentHtml}">content</div>
+
+        <div th:if="${translation != null}" class="translation">
+            <span th:text="${'This post is also available in ' + translation.locale + ': '}">Also available:</span>
+            <a th:href="@{'/blog/' + ${translation.slug}}" th:text="${translation.getString('title')}">Translated title</a>
+        </div>
+
+        <a href="/" class="back">← Back to all posts</a>
+    </article>
+
+    <footer>
+        Powered by @webhouse/cms — read by Spring Boot 3.4 / Java 21
+    </footer>
+</body>
+</html>

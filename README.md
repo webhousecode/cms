@@ -3,7 +3,11 @@
 </p>
 
 <p align="center">
-  <strong>AI-native content engine — open source</strong>
+  <strong>AI-native content engine — open source. Framework-agnostic JSON content with a TypeScript admin.</strong>
+</p>
+
+<p align="center">
+  Render with <strong>Next.js · Laravel · Django · Spring Boot · .NET · Rails · Hugo · or anything that reads files.</strong>
 </p>
 
 <p align="center">
@@ -14,7 +18,9 @@
 
 ---
 
-Define your content in TypeScript. Manage it visually. Let AI help write it. Deploy anywhere.
+Define your content schema once. Manage it visually. Let AI help write it. Render it from **any** framework. Deploy anywhere.
+
+Your content lives as flat JSON files in your git repo — readable by Next.js, Laravel, Django, Spring Boot, .NET, Rails, Hugo, or any other language. The CMS admin is a Next.js app, but the **content layer is universal**. See [examples/consumers/](./examples/consumers/) for working Java and .NET reference apps.
 
 ```bash
 npm create @webhouse/cms my-site

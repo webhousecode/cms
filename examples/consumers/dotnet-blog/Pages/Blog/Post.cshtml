@@ -1,0 +1,37 @@
+@page "/blog/{slug}"
+@model PostModel
+@{
+    ViewData["Title"] = Model.Post?.GetString("title") ?? "Post";
+}
+
+@if (Model.Post is null)
+{
+    <h1>404 — Post not found</h1>
+    <p><a asp-page="/Index">← Back to all posts</a></p>
+}
+else
+{
+    <article>
+        <h1>@Model.Post.GetString("title")</h1>
+        <div class="meta">
+            <span>@Model.Post.GetStringOr("author", "Unknown")</span>
+            <span> · </span>
+            <span>@Model.Post.GetStringOr("date", "")</span>
+            <span> · </span>
+            <span>@Model.Post.Locale</span>
+        </div>
+        @Html.Raw(Model.ContentHtml)
+
+        @if (Model.Translation is not null)
+        {
+            <div class="translation">
+                <span>This post is also available in @Model.Translation.Locale: </span>
+                <a asp-page="/Blog/Post" asp-route-slug="@Model.Translation.Slug">
+                    @Model.Translation.GetString("title")
+                </a>
+            </div>
+        }
+
+        <p><a class="back" asp-page="/Index">← Back to all posts</a></p>
+    </article>
+}

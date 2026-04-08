@@ -24,6 +24,7 @@ import { serveCommand } from './commands/serve.js';
 import { aiGenerateCommand, aiRewriteCommand, aiSeoCommand } from './commands/ai.js';
 import { mcpKeygenCommand, mcpTestCommand, mcpStatusCommand } from './commands/mcp.js';
 import { mcpServeCommand } from './commands/mcp-serve.js';
+import { exportSchemaCommand } from './commands/export-schema.js';
 
 const init = defineCommand({
   meta: { name: 'init', description: 'Initialize a new CMS project' },
@@ -156,13 +157,36 @@ const mcp = defineCommand({
   subCommands: { serve: mcpServe, keygen: mcpKeygen, test: mcpTest, status: mcpStatus },
 });
 
+const exportSchema = defineCommand({
+  meta: {
+    name: 'export-schema',
+    description: 'Export cms.config.ts as JSON Schema for non-TypeScript runtimes (F125)',
+  },
+  args: {
+    out: { type: 'string', description: 'Output file path (default: stdout)', required: false },
+    baseUrl: { type: 'string', description: 'Base URL for the schema $id field', required: false },
+    title: { type: 'string', description: 'Schema title', required: false },
+    pretty: { type: 'boolean', description: 'Pretty-print JSON output', default: true },
+    includeBlocks: { type: 'boolean', description: 'Include block definitions', default: true },
+  },
+  async run({ args }) {
+    await exportSchemaCommand({
+      out: args.out,
+      baseUrl: args.baseUrl,
+      title: args.title,
+      pretty: args.pretty,
+      includeBlocks: args.includeBlocks,
+    });
+  },
+});
+
 const main = defineCommand({
   meta: {
     name: 'cms',
     description: '@webhouse/cms — AI-native CMS engine',
     version: '0.1.1',
   },
-  subCommands: { init, dev, build, serve, ai, mcp },
+  subCommands: { init, dev, build, serve, ai, mcp, 'export-schema': exportSchema },
 });
 
 runMain(main);

@@ -1,0 +1,18 @@
+{
+  "id": "post-hello-world-en",
+  "slug": "hello-world",
+  "status": "published",
+  "locale": "en",
+  "translationGroup": "9b5f5e6c-7c2d-4f0a-b8a4-3e1f2d8f9a01",
+  "_fieldMeta": {},
+  "data": {
+    "title": "Hello, world from Spring Boot",
+    "excerpt": "A blog post stored as a JSON file in @webhouse/cms and rendered by a Spring Boot 3.4 controller.",
+    "content": "## The setup\n\nThis post lives at `content/posts/hello-world.json`. It's a flat JSON file in the @webhouse/cms format. **Spring Boot reads it directly** via the `WebhouseReader` class — no API calls, no database, just `Files.list()`.\n\n## Why this matters\n\nThe content is in your git repository. The schema is in `cms.config.ts`. The renderer is your Spring Boot app. There's no vendor lock-in: if you ever want to swap out @webhouse/cms admin, your content stays put.\n\n## What you can edit\n\nOpen CMS admin and point it at this folder. Edit the title above. Save. Reload this page in your browser. The change is live.\n\nThat's the whole story.",
+    "date": "2026-04-08",
+    "author": "Christian Broberg",
+    "tags": ["intro", "spring-boot", "java"]
+  },
+  "createdAt": "2026-04-08T12:00:00.000Z",
+  "updatedAt": "2026-04-08T12:00:00.000Z"
+}

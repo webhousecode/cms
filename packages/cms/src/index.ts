@@ -4,6 +4,8 @@ export { validateConfig, safeValidateConfig, VALID_FIELD_TYPES } from './schema/
 export { validateSiteConfig, validateContentDir, validateSite } from './schema/site-validator.js';
 export type { ValidationResult, ValidationIssue } from './schema/site-validator.js';
 export { collectionToJsonSchema, configToManifest } from './schema/introspect.js';
+export { toJsonSchema, fieldToSchema } from './schema/to-json-schema.js';
+export type { JsonSchemaOutput, ToJsonSchemaOptions } from './schema/to-json-schema.js';
 export { builtinBlocks } from './schema/builtin-blocks.js';
 export type { CmsConfig, CollectionConfig, FieldConfig, BlockConfig, FieldType, BuildConfig, AutolinkConfig } from './schema/types.js';
 

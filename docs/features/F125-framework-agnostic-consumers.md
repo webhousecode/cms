@@ -6,7 +6,7 @@
 **Created:** 2026-04-08
 **Related:** F126 (Framework-Agnostic Build Pipeline)
 
-> Reposition @webhouse/cms from "TypeScript CMS" to "universal JSON content platform." Ship schema export, 5 first-party reader libraries (PHP, Python, Ruby, Go, C#), 5 runnable example apps, 6+ bilingual docs pages, an updated homepage, and a migration guide. Make it genuinely safe for a Laravel or Django team to adopt @webhouse/cms without writing a single line of TypeScript.
+> Reposition @webhouse/cms from "TypeScript CMS" to "universal JSON content platform." Ship schema export, 6 first-party reader libraries (PHP, Python, Ruby, Go, Java, C#), 6 runnable example apps, 7+ bilingual docs pages, an updated homepage, and a migration guide. Make it genuinely safe for a Laravel, Django, or Spring Boot team to adopt @webhouse/cms without writing a single line of TypeScript.
 
 ---
 
@@ -127,11 +127,11 @@ A new CLI command that reads `cms.config.ts` and outputs a JSON Schema document 
 
 **Why `x-webhouse-*` extensions:** JSON Schema has no first-class concept of "richtext" or "tags" — we use `x-webhouse-field-type` so reader libs can use the hint without breaking JSON Schema compatibility.
 
-### 2. Reader Libraries (5 languages)
+### 2. Reader Libraries (6 languages)
 
 Each language gets a **thin** first-party reader library published to its native package registry. "Thin" means:
 
-- Zero dependencies outside the standard library
+- Zero dependencies outside the standard library (exception: Jackson for Java since the JDK has no built-in JSON)
 - Under 500 lines of code total per library
 - One file per feature (reader, locale helper, schema loader)
 - Documented in the native language's idiomatic docs format
@@ -144,6 +144,7 @@ Each language gets a **thin** first-party reader library published to its native
 | Python | PyPI | `webhouse-cms-reader` |
 | Ruby | RubyGems | `webhouse_cms` |
 | Go | pkg.go.dev | `github.com/webhousecode/cms-reader-go` |
+| Java | Maven Central | `app.webhouse:cms-reader` |
 | C# / .NET | NuGet | `Webhouse.Cms.Reader` |
 
 **Core API (consistent across languages):**
@@ -184,7 +185,7 @@ post = reader.document('posts', 'hello-world')
 translation = reader.find_translation(post, 'posts')
 ```
 
-### 3. Example Applications (5 runnable apps)
+### 3. Example Applications (6 runnable apps)
 
 Each example is a **minimal but complete** working application that reads @webhouse/cms content and renders a blog. Not stub code — actually runnable.
 
@@ -199,13 +200,14 @@ Every example includes:
 - Docker-compose file for one-command bring-up
 - A smoke test that verifies all pages load
 
-**The 5 examples:**
+**The 6 examples:**
 
 1. **`laravel-blog/`** — Laravel 11 monolith. Routes + Blade templates. Uses `webhouse/cms-reader` from Packagist.
 2. **`django-blog/`** — Django 5 app. Views + template tags + `django-markdownify`. Uses `webhouse-cms-reader` from PyPI.
 3. **`rails-blog/`** — Rails 7 app. Controllers + ERB views + `redcarpet`. Uses `webhouse_cms` from RubyGems.
 4. **`go-gin/`** — Gin web framework. HTML templates + markdown rendering. Uses `cms-reader-go` from pkg.go.dev.
-5. **`dotnet-blog/`** — ASP.NET Core 9 Razor Pages. `Markdig` for markdown. Uses `Webhouse.Cms.Reader` from NuGet.
+5. **`java-spring-blog/`** — Spring Boot 3.4 + Thymeleaf + Java 21. `commonmark-java` for markdown. Reader will publish as `app.webhouse:cms-reader` on Maven Central. **✅ Phase 1 — already shipped as reference implementation.**
+6. **`dotnet-blog/`** — ASP.NET Core 9 Razor Pages. `Markdig` for markdown. Uses `Webhouse.Cms.Reader` from NuGet. **✅ Phase 1 — already shipped as reference implementation.**
 
 **Shared test matrix:**
 - Home page lists 3 published posts sorted by date
@@ -216,7 +218,7 @@ Every example includes:
 - Image in `public/uploads/` loads correctly
 - Language switcher finds the translation via `translationGroup`
 
-### 4. Docs (6 bilingual pages + more)
+### 4. Docs (7 bilingual pages + more)
 
 **Already shipped in cms-docs:**
 
@@ -225,7 +227,8 @@ Every example includes:
 3. `consume-django` (EN+DA)
 4. `consume-rails` (EN+DA)
 5. `consume-go` (EN+DA)
-6. `consume-dotnet` (EN+DA)
+6. `consume-java` (EN+DA) — Spring Boot guide
+7. `consume-dotnet` (EN+DA)
 
 **New docs to add in Phase 2-4:**
 
@@ -250,7 +253,7 @@ Every example includes:
 - `packages/cms/CLAUDE.md` header
 
 **Tagline canon:**
-> "The AI-native content engine. Framework-agnostic file-based JSON content, visual admin UI, AI agents, workflows, and a static build pipeline. Your content as flat JSON — render it with Next.js, Laravel, Django, C#, Rails, or anything that reads files."
+> "The AI-native content engine. Framework-agnostic file-based JSON content, visual admin UI, AI agents, workflows, and a static build pipeline. Your content as flat JSON — render it with Next.js, Laravel, Django, Spring Boot, .NET, Rails, or anything that reads files."
 
 **Shorter variants:**
 - **15 words:** "JSON content platform with a TypeScript admin. Render from any language, any framework."
@@ -443,6 +446,22 @@ func (r *Reader) FindTranslation(doc *Document, collection string) (*Document, e
 ```
 
 **Minimum Go:** 1.22. Uses functional options pattern. Only stdlib.
+
+#### Java (`app.webhouse:cms-reader`)
+
+```java
+package app.webhouse.cmsreader;
+
+public final class WebhouseReader {
+    public WebhouseReader(String contentDir) { }
+
+    public List<WebhouseDocument> collection(String collection, String locale);
+    public Optional<WebhouseDocument> document(String collection, String slug);
+    public Optional<WebhouseDocument> findTranslation(WebhouseDocument doc, String collection);
+}
+```
+
+**Minimum Java:** 21 (LTS). Single dependency: Jackson (the JDK has no built-in JSON parser). Spring Boot integration via the `app.webhouse:cms-reader-spring` extension package which adds `@EnableWebhouseCms` autoconfiguration.
 
 #### C# / .NET (`Webhouse.Cms.Reader`)
 

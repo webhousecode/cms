@@ -1,7 +1,7 @@
 <!-- @webhouse/cms ai-guide v0.3.0 — last updated 2026-03-23 -->
 # @webhouse/cms — AI Site Builder Guide
 
-`@webhouse/cms` is a file-based, AI-native CMS engine for TypeScript projects. You define collections and fields in a `cms.config.ts` file, and the CMS stores content as flat JSON files in a `content/` directory (one file per document, organized by collection).
+`@webhouse/cms` is a **framework-agnostic** file-based, AI-native CMS engine. You define collections and fields in a `cms.config.ts` file, and the CMS stores content as flat JSON files in a `content/` directory (one file per document, organized by collection). The admin UI is TypeScript/Next.js, but the **content layer is universal** — Next.js, Laravel, Django, Spring Boot, .NET, Rails, Hugo, and any other framework can read the same JSON files. See `examples/consumers/` for working reference apps in Java and .NET.
 
 ## Modular Documentation
 

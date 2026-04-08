@@ -1,0 +1,18 @@
+{
+  "id": "post-why-java-da",
+  "slug": "why-java-da",
+  "status": "published",
+  "locale": "da",
+  "translationGroup": "c8a7b6d5-e4f3-4a2b-9c1d-8e7f6a5b4c3d",
+  "_fieldMeta": {},
+  "data": {
+    "title": "Hvorfor levere en Java-reader?",
+    "excerpt": "Java driver enterprise-webben. Spring Boot er den dominerende framework. Her er hvorfor @webhouse/cms leverer en førsteklasses Java-reader.",
+    "content": "## Java-publikummet\n\nFor hvert Next.js-startup er der ti Spring Boot enterprise-teams. Java har været enterprise-webbens arbejdshest siden 90'erne. TIOBE-indekset placerer Java i top 3 hvert år.\n\n## Hvorfor en reader, ikke et API?\n\nVi kunne have leveret et REST API. Det gør alle CMS'er. Men REST API'er tilføjer latency, kræver auth, fejler når netværket er nede, og tvinger dig til at skrive integrationstests for hvert kald.\n\nEn fil-reader er bare `Files.list()`. Det er øjeblikkeligt. Det virker offline. Det kan testes med almindelige fixtures. Det er et mønster Java-udviklere allerede kender.\n\n## Hvad der er i pakken\n\n- `WebhouseReader` — list collections, hent dokumenter, find oversættelser\n- `WebhouseDocument` — typed wrapper omkring JSON-formen\n- `MarkdownService` — konverterer richtext-felter til HTML for Thymeleaf\n- Path-validering mod `^[a-z0-9][a-z0-9-]*$` for at forhindre traversal-angreb\n\nDet er det. ~150 linjer Java. Ingen afhængigheder ud over Jackson (som Spring Boot allerede henter).\n\n## Resultatet\n\nDin Spring Boot-app læser de samme JSON-filer som CMS admin skriver. Redaktører får en smuk visuel editor. Du beholder Spring. Ingen skal gå på kompromis.",
+    "date": "2026-04-07",
+    "author": "Christian Broberg",
+    "tags": ["java", "spring-boot", "filosofi"]
+  },
+  "createdAt": "2026-04-07T12:00:00.000Z",
+  "updatedAt": "2026-04-07T12:00:00.000Z"
+}

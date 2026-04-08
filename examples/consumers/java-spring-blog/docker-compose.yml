@@ -1,0 +1,10 @@
+services:
+  blog:
+    build: .
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./content:/app/content:ro
+      - ./public:/app/public:ro
+    environment:
+      - SPRING_PROFILES_ACTIVE=production

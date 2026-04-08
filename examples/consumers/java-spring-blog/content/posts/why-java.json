@@ -1,0 +1,18 @@
+{
+  "id": "post-why-java",
+  "slug": "why-java",
+  "status": "published",
+  "locale": "en",
+  "translationGroup": "c8a7b6d5-e4f3-4a2b-9c1d-8e7f6a5b4c3d",
+  "_fieldMeta": {},
+  "data": {
+    "title": "Why ship a Java reader?",
+    "excerpt": "Java runs the enterprise web. Spring Boot is the dominant framework. Here's why @webhouse/cms ships a first-class Java reader.",
+    "content": "## The Java audience\n\nFor every Next.js startup there are ten Spring Boot enterprise teams. Java has been the workhorse of enterprise web since the 90s. The TIOBE index puts Java in the top 3 every year. Stack Overflow's developer survey: Java is the #4 most-used language professionally.\n\n## Why a reader, not an API?\n\nWe could have shipped a REST API. Every CMS does. But REST APIs add latency, require auth, fail when the network is down, and force you to write integration tests for every call.\n\nA file reader is just `Files.list()`. It's instant. It works offline. It's testable with regular fixtures. It's a pattern Java developers already know.\n\n## What's in the package\n\n- `WebhouseReader` — list collections, load documents, find translations\n- `WebhouseDocument` — typed wrapper around the JSON shape\n- `MarkdownService` — converts richtext fields to HTML for Thymeleaf\n- Path validation against `^[a-z0-9][a-z0-9-]*$` to prevent traversal attacks\n\nThat's it. ~150 lines of Java. Zero deps beyond Jackson (which Spring Boot already pulls in).\n\n## The result\n\nYour Spring Boot app reads the same JSON files that CMS admin writes. Editors get a beautiful visual editor. You keep Spring. Nobody has to compromise.",
+    "date": "2026-04-07",
+    "author": "Christian Broberg",
+    "tags": ["java", "spring-boot", "philosophy"]
+  },
+  "createdAt": "2026-04-07T12:00:00.000Z",
+  "updatedAt": "2026-04-07T12:00:00.000Z"
+}
