@@ -393,13 +393,18 @@ async function getPreviewBase(): Promise<string> {
 }
 
 /** Small pill button for document actions */
-/** View pill that only renders when collection is previewable */
+/** View pill that only renders when collection is previewable AND kind === "page" (F127) */
 function DocPillView({ collection, slug }: { collection: string; slug: string }) {
-  const [show, setShow] = useState(true); // optimistic, hide if not previewable
+  const [show, setShow] = useState(true); // optimistic, hide based on schema
   useEffect(() => {
     fetch(`/api/cms/collections/${collection}/schema`)
       .then(r => r.ok ? r.json() : null)
-      .then(schema => { if (schema?.previewable === false) setShow(false); })
+      .then(schema => {
+        if (!schema) return;
+        // F127 — hide View pill when collection is not a page or explicitly not previewable
+        if (schema.previewable === false) setShow(false);
+        if (schema.kind && schema.kind !== "page") setShow(false);
+      })
       .catch(() => {});
   }, [collection]);
   if (!show) return null;

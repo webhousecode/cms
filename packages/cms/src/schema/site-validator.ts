@@ -123,6 +123,31 @@ export function validateSiteConfig(config: unknown): ValidationResult {
       warnings.push({ level: 'warning', category: 'config', path: `${colPath}.urlPrefix`, message: `Collection "pages" has no urlPrefix. Pages won't be counted in the dashboard.`, suggestion: `Add urlPrefix: '/' to the pages collection.` });
     }
 
+    // F127 — kind validation and description warning
+    const VALID_KINDS = ['page', 'snippet', 'data', 'form', 'global'];
+    if (col.kind !== undefined) {
+      if (typeof col.kind !== 'string' || !VALID_KINDS.includes(col.kind as string)) {
+        errors.push({
+          level: 'error',
+          category: 'config',
+          path: `${colPath}.kind`,
+          message: `Collection "${colName}" has invalid kind "${col.kind}". Valid kinds: ${VALID_KINDS.join(', ')}.`,
+          suggestion: `Set kind to one of: ${VALID_KINDS.join(', ')}. Default is "page".`,
+        });
+      }
+    }
+
+    // F127 — soft warning when description is missing (advisory, not blocking)
+    if (!col.description || typeof col.description !== 'string' || (col.description as string).trim().length === 0) {
+      warnings.push({
+        level: 'warning',
+        category: 'config',
+        path: `${colPath}.description`,
+        message: `Collection "${colName}" has no description. AI tools (chat, Claude Code, Cursor) work better when each collection explains what it's for and how it's consumed.`,
+        suggestion: `Add a description like: "Team members. Rendered on /about and post bylines." See docs.webhouse.app/docs/collection-metadata for examples.`,
+      });
+    }
+
     // Fields
     if (!col.fields || !Array.isArray(col.fields)) {
       errors.push({ level: 'error', category: 'config', path: `${colPath}.fields`, message: `Collection "${colName}" has no fields array.` });

@@ -93,6 +93,8 @@ export default defineConfig({
       name: 'posts',
       label: 'Blog Posts',
       urlPrefix: '/blog',
+      kind: 'page',                                    // F127 — see below
+      description: 'Long-form blog articles. Each post has its own URL and appears in the RSS feed.',
       fields: [
         { name: 'title', type: 'text', required: true },
         { name: 'excerpt', type: 'textarea' },
@@ -105,6 +107,86 @@ export default defineConfig({
   ],
 });
 ```
+
+### Collection Metadata — REQUIRED for AI-friendly sites (F127)
+
+Every collection SHOULD have both `kind` and `description`. Without them, AI
+tools (chat, Claude Code, Cursor) have to guess what each collection is for
+and may generate content incorrectly — wasting tokens on SEO for collections
+that have no URL, showing broken View links, or remapping fields that don't
+exist.
+
+**`kind`** — one of five values:
+
+| Kind | When to use | AI behavior |
+|------|-------------|-------------|
+| `page` | Has its own URL, appears in sitemap (blog posts, landing pages). **Default.** | Full treatment: SEO, View pill, build |
+| `snippet` | Reusable fragment embedded via `{{snippet:slug}}`. No standalone URL. | No SEO, no View pill, still builds |
+| `data` | Records rendered on OTHER pages via loops (team, testimonials, FAQ, products). | No SEO, no View pill, no body/content remap |
+| `form` | Form submissions (contact, lead capture). Read-only from AI. | AI cannot create — users create via frontend |
+| `global` | Single-record site-wide configuration. | Treat as settings, no URL |
+
+**`description`** — plain-English prose explaining what the collection is and
+how it's consumed. This is the escape hatch for anything `kind` can't capture.
+
+Good descriptions answer:
+1. **What is this?** ("Team members.", "Customer testimonials.")
+2. **Where does it appear?** ("Rendered on /about.", "Looped on the homepage hero.")
+3. **What references it?** ("Referenced by posts.author field.")
+
+**Good examples:**
+
+```typescript
+defineCollection({
+  name: 'team',
+  label: 'Team Members',
+  kind: 'data',
+  description: 'Team members. Referenced by posts.author field. Rendered on /about and as bylines on posts.',
+  fields: [/* ... */],
+});
+
+defineCollection({
+  name: 'snippets',
+  label: 'Snippets',
+  kind: 'snippet',
+  description: 'Reusable text fragments embedded in posts via `{{snippet:slug}}`. Used for boilerplate disclaimers, CTAs, and author bios.',
+  fields: [/* ... */],
+});
+
+defineCollection({
+  name: 'contact-submissions',
+  label: 'Contact Form',
+  kind: 'form',
+  description: 'Submissions from the /contact form. Created by end users — never by AI or editors. Reviewed by sales team.',
+  fields: [/* ... */],
+});
+
+defineCollection({
+  name: 'site-settings',
+  label: 'Site Settings',
+  kind: 'global',
+  description: 'Site-wide configuration: footer text, social links, analytics IDs. Single record only.',
+  fields: [/* ... */],
+});
+```
+
+**Bad examples:**
+
+```typescript
+// ❌ Missing both
+defineCollection({ name: 'team', fields: [/* ... */] })
+
+// ❌ Missing description — chat can't tell if team members get rendered
+defineCollection({ name: 'team', kind: 'data', fields: [/* ... */] })
+
+// ❌ Description too vague
+defineCollection({ name: 'team', kind: 'data', description: 'Team stuff', fields: [/* ... */] })
+```
+
+When you scaffold a new site or add a new collection to an existing one,
+**always populate both fields**. Backwards compatible: undefined `kind` falls
+back to `"page"` behavior, but this is a fallback for legacy code — not a
+pattern to copy.
 
 ### Critical rules
 

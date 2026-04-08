@@ -97,7 +97,7 @@ _Without these, we cannot build and deliver professional sites on the platform._
 | 11 | **F120 Onboarding** | Medium | Can't convert users without guided first experience. Tooltip tour from landing to first publish. |
 | 12 | **F125 Framework-Agnostic Consumer Guides** | Medium | Positioning: @webhouse/cms as a universal JSON content platform. Schema export + reader examples for Laravel, Django, Rails, Go, .NET. Ships 6 bilingual docs pages. |
 | 13 | **F126 Framework-Agnostic Build Pipeline** | Large | Let CMS admin's Build button invoke ANY build system via `build.command` in cms.config.ts. Profiles, log streaming, security allowlist. Completes the framework-agnostic story alongside F125. |
-| 14 | **F127 Collection Purpose Metadata** | Small-Medium | Optional `kind` + `description` on CollectionConfig so chat/MCP/AI tools treat pages, snippets, data records, forms, and globals differently. Fixes SEO/View-pill/body-remap bugs for non-page collections. AI Builder Guide enforces usage. Backwards compatible. |
+| ~~14~~ | ~~**F127 Collection Purpose Metadata**~~ | ~~Done~~ | ~~Shipped 2026-04-08. Optional `kind` (page/snippet/data/form/global) + `description` on CollectionConfig. Chat skips SEO/View-pill/body-remap for non-page kinds. `form` kind blocks AI create. 32 unit tests. AI Builder Guide + docs site + boilerplates + F79 validator warning.~~ |
 | ~~9b~~ | ~~**F90 Marketing Content Bank**~~ | ~~Done~~ | ~~Shipped. 5 messaging frameworks, talking points, badge/shield suggestions, deploy targets.~~ |
 | ~~9c~~ | ~~**F96 Embeddable Maps**~~ | ~~Done~~ | ~~Shipped. OSM/Leaflet map block, richtext embed, field type.~~ |
 

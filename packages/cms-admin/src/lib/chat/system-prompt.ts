@@ -15,6 +15,11 @@ export interface SiteContext {
     label: string;
     fields: Array<{ name: string; type: string; label?: string; required?: boolean }>;
     documentCount: number;
+    /** F127 — what this collection is for */
+    kind?: "page" | "snippet" | "data" | "form" | "global";
+    /** F127 — plain-English purpose description */
+    description?: string;
+    previewable?: boolean;
   }>;
   brandVoice?: string;
   defaultLocale: string;
@@ -67,6 +72,9 @@ export async function gatherSiteContext(): Promise<SiteContext> {
         required: f.required,
       })),
       documentCount: documents.filter((d: any) => d.status !== "trashed").length,
+      kind: (col as any).kind,
+      description: (col as any).description,
+      previewable: (col as any).previewable,
     });
   }
 
@@ -91,9 +99,40 @@ export function buildChatSystemPrompt(context: SiteContext): string {
           return `    - \`${f.name}\` (${f.type})${f.required ? " *required" : ""}${lbl}`;
         })
         .join("\n");
-      return `  ### ${c.label} ('${c.name}') — ${c.documentCount} documents\n${fieldList}`;
+      // F127 — inject kind badge and description per collection
+      const kindLabel = c.kind ? ` · ${c.kind}` : "";
+      const headerLine = `  ### ${c.label} ('${c.name}')${kindLabel} — ${c.documentCount} documents`;
+      const descLine = c.description ? `  > ${c.description}\n` : "";
+      return `${headerLine}\n${descLine}${fieldList}`;
     })
     .join("\n\n");
+
+  // F127 — behavioral instructions derived from collection kinds present in this site
+  const kindsInUse = new Set(context.collections.map((c) => c.kind ?? "page"));
+  const kindInstructions: string[] = [];
+  if (kindsInUse.has("snippet")) {
+    kindInstructions.push(
+      "- `snippet` collections: reusable fragments embedded in other pages via `{{snippet:slug}}`. They have NO standalone URL. Do NOT generate SEO metadata. Do NOT include View pills — only Edit pills. You can still translate them."
+    );
+  }
+  if (kindsInUse.has("data")) {
+    kindInstructions.push(
+      "- `data` collections: records rendered on OTHER pages via loops (team, testimonials, FAQ, products). They have NO standalone URL. Do NOT generate SEO metadata. Do NOT include View pills — only Edit pills. Do NOT remap `body`/`content` to richtext — use the exact field names from the schema. Build is usually still needed so the host pages pick up the new data."
+    );
+  }
+  if (kindsInUse.has("form")) {
+    kindInstructions.push(
+      "- `form` collections: form submissions (contact, lead capture). READ-ONLY from your perspective. Do NOT create, update, or delete documents in form collections. You may list and search them."
+    );
+  }
+  if (kindsInUse.has("global")) {
+    kindInstructions.push(
+      "- `global` collections: site-wide configuration, usually a single record. No URL, no SEO, no View pill. Treat them as settings."
+    );
+  }
+  const kindSection = kindInstructions.length > 0
+    ? `\n## Collection Kinds — How to Handle Different Types\n${kindInstructions.join("\n")}\n`
+    : "";
 
   return `You are the AI assistant for "${context.siteName}", a website managed by webhouse CMS.
 You have full access to read and manage all content on this site through tools.
@@ -118,7 +157,7 @@ You have full access to read and manage all content on this site through tools.
 ## Site Schema
 
 ${collectionDescriptions}
-
+${kindSection}
 ## Storage Adapter
 ${context.adapter}
 
