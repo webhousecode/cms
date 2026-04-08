@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useRef, useEffect } from "react";
+import { safeUUID } from "@/lib/safe-uuid";
 import { MessageList, type ChatMessageUI, type ToolCall } from "./message-list";
 import { ChatInput } from "./chat-input";
 import { WelcomeScreen } from "./welcome-screen";
@@ -37,7 +38,7 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
   const [isThinking, setIsThinking] = useState(false);
   const [thinkingText, setThinkingText] = useState("");
   const [thinkingStartTime, setThinkingStartTime] = useState<number | null>(null);
-  const [conversationId, setConversationId] = useState(() => crypto.randomUUID());
+  const [conversationId, setConversationId] = useState(() => safeUUID());
   const [siteName, setSiteName] = useState("your site");
   const [showHistory, setShowHistory] = useState(false);
   const [showThinking, setShowThinking] = useState(false);
@@ -95,7 +96,7 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
     async (text: string) => {
       // Add user message
       const userMsg: ChatMessageUI = {
-        id: crypto.randomUUID(),
+        id: safeUUID(),
         role: "user",
         content: text,
       };
@@ -112,7 +113,7 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
       }));
 
       // Create assistant message placeholder
-      const assistantId = crypto.randomUUID();
+      const assistantId = safeUUID();
       const assistantMsg: ChatMessageUI = {
         id: assistantId,
         role: "assistant",
@@ -296,7 +297,7 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
 
   function handleNewConversation() {
     setMessages([]);
-    setConversationId(crypto.randomUUID());
+    setConversationId(safeUUID());
     setShowHistory(false);
   }
 
