@@ -1,0 +1,18 @@
+{
+  "id": "post-why-go-da",
+  "slug": "why-go-da",
+  "status": "published",
+  "locale": "da",
+  "translationGroup": "9e1b3d5c-8a2f-4c6e-b9d1-7f3a5b8c2e4d",
+  "_fieldMeta": {},
+  "data": {
+    "title": "Hvorfor en Go-reader?",
+    "excerpt": "Go driver moderne infrastruktur. Single-binary deploys. Ingen runtime. Hurtige cold starts. Her er hvorfor @webhouse/cms leverer en førsteklasses Go-reader.",
+    "content": "## Go-publikummet\n\nGo er stille blevet det dominerende sprog for infrastruktur-værktøjer, mikroservices og high-throughput API'er. Hugo, Caddy, Traefik, Docker, Kubernetes og Terraform er alle skrevet i Go. Cloudflare, Uber og Dropbox kører massive Go-flåder.\n\n## Hvorfor en reader, ikke et API?\n\nEn fil-reader er bare `os.ReadDir()` og `json.Unmarshal()`. Det er øjeblikkeligt. Det virker offline. Det kompilerer til en enkelt statisk binær. Der er ikke noget at deploye ved siden af.\n\n## Hvad der er i pakken\n\n- `Reader` — list collections, hent dokumenter, find oversættelser\n- `Document` — typed wrapper med hjælpefunktioner som `String()`, `StringOr()`, `StringSlice()`\n- Path-validering mod `^[a-z0-9][a-z0-9-]*$` for at forhindre traversal-angreb\n- `IsPublished()`, `Locale`, `TranslationGroup` — førsteklasses felter\n\nDet er det. ~150 linjer Go. Ingen afhængigheder ud over `gin-gonic/gin` og `goldmark` til eksempel-appen — selve reader'en bruger kun stdlib.\n\n## Resultatet\n\nDin Gin-app læser de samme JSON-filer som CMS admin skriver. Redaktører får en smuk visuel editor. Du beholder Go. Enkelt binær. Sub-millisekund læsninger. Statisk deploy.",
+    "date": "2026-04-08",
+    "author": "Christian Broberg",
+    "tags": ["go", "gin", "filosofi"]
+  },
+  "createdAt": "2026-04-08T00:00:00.000Z",
+  "updatedAt": "2026-04-08T00:00:00.000Z"
+}

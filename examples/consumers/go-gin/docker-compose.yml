@@ -1,0 +1,10 @@
+services:
+  blog:
+    build: .
+    ports:
+      - "8082:8080"
+    volumes:
+      - ./content:/app/content:ro
+      - ./public:/app/public:ro
+    environment:
+      - GIN_MODE=release
