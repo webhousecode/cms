@@ -21,7 +21,16 @@ public class PostModel : PageModel
 
     public IActionResult OnGet(string slug)
     {
-        Post = _cms.Document("posts", slug);
+        try
+        {
+            Post = _cms.Document("posts", slug);
+        }
+        catch (ArgumentException)
+        {
+            // Slug failed validation (path traversal attempt, invalid chars, etc.)
+            return BadRequest();
+        }
+
         if (Post is null) return NotFound();
 
         Translation = _cms.FindTranslation(Post, "posts");
