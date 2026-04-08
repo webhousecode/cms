@@ -157,6 +157,32 @@ describe("webauthn", () => {
     expect(pk?.lastUsedAt).toBeTruthy();
   });
 
+  it("passes requireUserVerification: false to verifiers (matches 'preferred')", async () => {
+    const server = await import("@simplewebauthn/server");
+    const { auth, webauthn } = await freshModules();
+    const user = await auth.getUserById("user-1");
+    await webauthn.buildRegistrationOptions(user!, { rpID: "localhost", rpName: "test" });
+
+    await webauthn.confirmRegistration(
+      "user-1",
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      {} as any,
+      { rpID: "localhost", origin: "http://localhost" },
+      "Key",
+    );
+    const regCall = (server.verifyRegistrationResponse as unknown as { mock: { calls: unknown[][] } }).mock.calls.at(-1)![0] as { requireUserVerification?: boolean };
+    expect(regCall.requireUserVerification).toBe(false);
+
+    await webauthn.confirmAuthentication(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      { id: "cred-1" } as any,
+      { rpID: "localhost", origin: "http://localhost" },
+      "auth-challenge-abc",
+    );
+    const authCall = (server.verifyAuthenticationResponse as unknown as { mock: { calls: unknown[][] } }).mock.calls.at(-1)![0] as { requireUserVerification?: boolean };
+    expect(authCall.requireUserVerification).toBe(false);
+  });
+
   it("removePasskey deletes the credential", async () => {
     const { auth, webauthn } = await freshModules();
     const user = await auth.getUserById("user-1");
