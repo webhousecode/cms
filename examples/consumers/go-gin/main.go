@@ -49,6 +49,11 @@ func main() {
 	r.LoadHTMLGlob("templates/*.html")
 	r.Static("/uploads", "./public/uploads")
 
+	// Health check (HEAD /) — used by CMS admin's site-health endpoint.
+	// Gin doesn't auto-route HEAD to GET handlers, so we register it explicitly.
+	r.HEAD("/", func(c *gin.Context) { c.Status(http.StatusOK) })
+	r.HEAD("/da/", func(c *gin.Context) { c.Status(http.StatusOK) })
+
 	r.GET("/", func(c *gin.Context) {
 		posts, err := cms.Collection("posts", "en")
 		if err != nil {
