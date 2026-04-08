@@ -43,6 +43,8 @@ export default defineConfig({
     defineCollection({
       name: 'global',
       label: 'Global Settings',
+      kind: 'global',
+      description: 'Site-wide configuration: title, meta description, navigation links, footer text. Single record.',
       fields: [
         { name: 'siteTitle', type: 'text', label: 'Site Title', required: true },
         { name: 'siteDescription', type: 'textarea', label: 'Meta Description' },
@@ -57,6 +59,8 @@ export default defineConfig({
       name: 'pages',
       label: 'Pages',
       urlPrefix: '/',
+      kind: 'page',
+      description: 'Top-level marketing pages built from blocks. Each page has its own URL under the site root. The page with slug "home" becomes the homepage.',
       fields: [
         { name: 'title', type: 'text', required: true },
         { name: 'metaDescription', type: 'textarea', label: 'Meta Description' },
@@ -69,6 +73,8 @@ export default defineConfig({
       name: 'posts',
       label: 'Blog Posts',
       urlPrefix: '/blog',
+      kind: 'page',
+      description: 'Long-form blog articles. Each post has its own URL under /blog and appears in the RSS feed.',
       fields: [
         { name: 'title', type: 'text', label: 'Title', required: true },
         { name: 'excerpt', type: 'textarea', label: 'Excerpt' },

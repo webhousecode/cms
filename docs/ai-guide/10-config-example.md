@@ -75,6 +75,8 @@ export default defineConfig({
     defineCollection({
       name: 'global',
       label: 'Global Settings',
+      kind: 'global',
+      description: 'Site-wide configuration: title, meta description, navigation, footer. Single record.',
       fields: [
         { name: 'siteTitle', type: 'text', label: 'Site Title' },
         { name: 'siteDescription', type: 'textarea', label: 'Meta Description' },
@@ -104,6 +106,8 @@ export default defineConfig({
       name: 'pages',
       label: 'Pages',
       urlPrefix: '/',
+      kind: 'page',
+      description: 'Top-level marketing pages built from blocks. Each page has its own URL under the site root.',
       fields: [
         { name: 'title', type: 'text', required: true },
         { name: 'metaDescription', type: 'textarea', label: 'Meta Description' },
@@ -116,6 +120,8 @@ export default defineConfig({
       name: 'posts',
       label: 'Blog Posts',
       urlPrefix: '/blog',
+      kind: 'page',
+      description: 'Long-form blog articles. Each post has its own URL under /blog and appears in the RSS feed.',
       sourceLocale: 'en',
       locales: ['en', 'da'],
       fields: [
@@ -141,6 +147,8 @@ export default defineConfig({
     defineCollection({
       name: 'team',
       label: 'Team Members',
+      kind: 'data',
+      description: 'Team members. Referenced by posts.author field. Rendered as a grid on /about and as bylines on posts.',
       fields: [
         { name: 'name', type: 'text', required: true },
         { name: 'role', type: 'text' },
@@ -154,6 +162,8 @@ export default defineConfig({
       name: 'work',
       label: 'Case Studies',
       urlPrefix: '/work',
+      kind: 'page',
+      description: 'Case studies showing client projects. Each case study has its own URL under /work.',
       fields: [
         { name: 'title', type: 'text', required: true },
         { name: 'client', type: 'text', required: true },

@@ -650,6 +650,12 @@ export async function buildChatTools(): Promise<ToolPair[]> {
         const col = config.collections.find((c) => c.name === collection);
         if (!col) return `Error: Collection "${collection}" not found.`;
 
+        // F127 — block form collections from being created via AI
+        const colKind = (col as any).kind as string | undefined;
+        if (colKind === "form") {
+          return `Error: Collection "${collection}" is a form collection (kind: form). Form submissions are read-only from AI — they are created by end users via frontend forms, not via chat.`;
+        }
+
         // Validate and fix field names — AI sometimes uses labels or common aliases
         const schemaFields = new Set(col.fields.map((f) => f.name));
         const labelToName = new Map<string, string>();
@@ -661,9 +667,11 @@ export async function buildChatTools(): Promise<ToolPair[]> {
             labelToName.set(f.label.toLowerCase().replace(/\s+/g, ""), f.name);
           }
         }
-        // Also map common field aliases
+        // Also map common field aliases — but NOT for data/form/global kinds where
+        // the schema is usually explicit and aliases cause more harm than good (F127)
+        const remapBodyContent = colKind !== "data" && colKind !== "form" && colKind !== "global";
         for (const f of col.fields) {
-          if (f.type === "richtext") {
+          if (f.type === "richtext" && remapBodyContent) {
             if (!schemaFields.has("body")) labelToName.set("body", f.name);
             if (!schemaFields.has("content")) labelToName.set("content", f.name);
           }
@@ -706,10 +714,12 @@ export async function buildChatTools(): Promise<ToolPair[]> {
         });
 
         // Auto-generate _seo with AI (non-blocking — update after creation)
+        // F127 — skip SEO generation for non-page kinds; they have no indexable URL
+        const needsSeo = (colKind ?? "page") === "page" && (col as any).previewable !== false;
         try {
           const docTitle = String(data.title ?? data.name ?? "");
           const docContent = String(data.content ?? data.body ?? "").slice(0, 2000);
-          if (docTitle) {
+          if (needsSeo && docTitle) {
             const { getApiKey: getKey } = await import("@/lib/ai-config");
             const Anthropic = (await import("@anthropic-ai/sdk")).default;
             const seoApiKey = await getKey("anthropic");
@@ -809,7 +819,9 @@ export async function buildChatTools(): Promise<ToolPair[]> {
         const translationInfo = translatedSlugs.length > 0
           ? `\nTranslations: ${translatedSlugs.join(", ")}`
           : "";
-        return `Created "${data.title ?? slug}" in ${collection} (draft).\nSlug: ${doc.slug}\nStatus: draft\nSEO: auto-optimized with AI.${translationInfo}`;
+        // F127 — only mention SEO when it was actually generated
+        const seoInfo = needsSeo ? "\nSEO: auto-optimized with AI." : "";
+        return `Created "${data.title ?? slug}" in ${collection} (draft).\nSlug: ${doc.slug}\nStatus: draft${seoInfo}${translationInfo}`;
       },
     },
 

@@ -1,4 +1,4 @@
-<!-- @webhouse/cms ai-guide v0.3.0 — last updated 2026-03-23 -->
+<!-- @webhouse/cms ai-guide v0.4.0 — last updated 2026-04-08 — F127 collection metadata -->
 # @webhouse/cms — AI Site Builder Guide
 
 > This is the index. Fetch individual modules as needed — don't load everything at once.
@@ -74,6 +74,27 @@ Common tasks → which modules to fetch:
 
 ### Content architecture tip
 **Use `blocks` fields for content-rich pages** (blog posts, articles, landing pages) instead of flat text/textarea fields. Blocks let editors compose content from reusable sections (text, images, quotes, code, videos). Fetch `04-blocks.md` for examples.
+
+### Collection metadata — REQUIRED for AI-friendly sites (F127)
+**Every collection you define MUST have `kind` and `description`** so chat, MCP, and scaffolding AI tools know what it's for.
+
+```typescript
+defineCollection({
+  name: 'team',
+  kind: 'data',     // "page" | "snippet" | "data" | "form" | "global"
+  description: 'Team members. Rendered on /about and as bylines on posts.',
+  fields: [/* ... */],
+});
+```
+
+Kinds:
+- `page` — has URL, SEO, preview (default for blog posts / landing pages)
+- `snippet` — reusable fragment embedded via `{{snippet:slug}}`
+- `data` — records rendered on OTHER pages (team, FAQ, testimonials)
+- `form` — read-only form submissions
+- `global` — single-record site-wide config
+
+Fetch `02-config-reference.md` for full examples.
 
 ### Static site build rules
 1. Read content from `content/{collection}/{slug}.json`

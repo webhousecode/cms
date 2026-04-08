@@ -72,6 +72,25 @@ export interface BlockConfig {
   propertyFields?: string[];
 }
 
+/**
+ * F127 — Collection Purpose Metadata
+ *
+ * What a collection is FOR, not just what fields it has. Drives AI tool
+ * behavior (chat, MCP, scaffolding agents) so they treat pages, snippets,
+ * data records, form submissions, and site-wide globals differently.
+ */
+export type CollectionKind =
+  /** Default. Has URL, produces indexable page, needs SEO. */
+  | "page"
+  /** Reusable fragment embedded in other pages (e.g. via `{{snippet:slug}}`). No standalone URL. */
+  | "snippet"
+  /** Records rendered on OTHER pages via loops (team, testimonials, FAQ, products). */
+  | "data"
+  /** Form submissions / read-only records (contact forms, lead capture). AI should not create these. */
+  | "form"
+  /** Site-wide configuration, usually a single record. */
+  | "global";
+
 export interface CollectionConfig {
   name: string;
   label?: string;
@@ -79,6 +98,24 @@ export interface CollectionConfig {
   urlPrefix?: string;
   parentField?: string;
   fields: FieldConfig[];
+  /**
+   * F127 — What this collection is for. Drives AI behavior:
+   * - `page` (default): full chat treatment (SEO, View pill, build_site)
+   * - `snippet`: no SEO, no View pill, still triggers build
+   * - `data`: no SEO, no View pill, no body/content remapping
+   * - `form`: read-only, AI cannot create
+   * - `global`: single-record mode
+   */
+  kind?: CollectionKind;
+  /**
+   * F127 — Plain-English explanation of what this collection is and how it's
+   * consumed. Injected into AI system prompts so chat knows WHY a collection
+   * exists, not just WHAT fields it has.
+   *
+   * Example: "Team members. Referenced by posts.author. Rendered on /about
+   * and as bylines on posts."
+   */
+  description?: string;
   /** Whether this collection supports translations. Defaults to true for multi-locale sites. */
   translatable?: boolean;
   /** Whether documents in this collection have individual preview pages. Defaults to true. Set false for collections rendered as cards/sections on other pages. */

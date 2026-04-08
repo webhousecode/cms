@@ -44,6 +44,8 @@ export default defineConfig({
     defineCollection({
       name: 'pages',
       label: 'Pages',
+      kind: 'page',
+      description: 'Top-level marketing pages (home, about, contact). Each page has its own URL under the site root.',
       fields: [
         { name: 'title', type: 'text', label: 'Title', required: true },
         { name: 'description', type: 'textarea', label: 'Description' },
@@ -53,6 +55,8 @@ export default defineConfig({
     defineCollection({
       name: 'posts',
       label: 'Blog Posts',
+      kind: 'page',
+      description: 'Long-form blog articles. Each post has its own URL and appears in the RSS feed.',
       fields: [
         { name: 'title', type: 'text', label: 'Title', required: true },
         { name: 'excerpt', type: 'textarea', label: 'Excerpt' },
