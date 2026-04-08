@@ -40,9 +40,12 @@ export interface AgentWorkflow {
    *  defaultPrompt as the input to step 1. */
   schedule: {
     enabled: boolean;
-    frequency: "daily" | "weekly" | "manual";
+    frequency: "daily" | "weekly" | "manual" | "cron";
     time: string;
     maxPerRun: number;
+    /** Cron expression. Only consulted when frequency === "cron".
+     *  See lib/cron.ts for the supported subset. */
+    cron?: string;
   };
   /** Default prompt sent to step 1 when the scheduler triggers the
    *  workflow. Manual runs always use the prompt the curator types. */

@@ -82,10 +82,10 @@ export async function appendFeedback(
 }
 
 /**
- * Returns the last N corrections/edits in the simple shape the
+ * Returns the last N correction/edit examples in the simple shape the
  * agent runner injects into the system prompt. Filters out rejections
- * (which have no corrected text) and entries without both sides of
- * the diff.
+ * (which have no corrected text) and entries without both sides of the
+ * diff.
  */
 export async function loadFeedbackForPrompt(
   agentId: string,
@@ -100,6 +100,29 @@ export async function loadFeedbackForPrompt(
     }
   }
   return examples.reverse();
+}
+
+/**
+ * Returns the last N rejection notes — short curator-written reasons
+ * the previous outputs were rejected. Used to populate a "things to
+ * avoid" section in the system prompt so agents stop repeating
+ * mistakes that didn't get a literal corrected example.
+ *
+ * Empty array when no rejections exist; the runner skips the section.
+ */
+export async function loadRejectionsForPrompt(
+  agentId: string,
+  limit = 5,
+): Promise<string[]> {
+  const all = await readFeedback(agentId);
+  const notes: string[] = [];
+  for (let i = all.length - 1; i >= 0 && notes.length < limit; i--) {
+    const e = all[i];
+    if (e.type === "rejection" && e.notes && e.notes.trim()) {
+      notes.push(e.notes.trim());
+    }
+  }
+  return notes.reverse();
 }
 
 /**

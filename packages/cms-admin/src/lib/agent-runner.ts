@@ -8,7 +8,7 @@ import { buildContentContext } from "@/lib/content-context";
 import { buildLocaleInstruction } from "@/lib/ai/locale-prompt";
 import { readSiteConfig } from "@/lib/site-config";
 import { buildToolRegistry, type ToolDefinition, type ToolHandler } from "@/lib/tools";
-import { loadFeedbackForPrompt } from "@/lib/agent-feedback";
+import { loadFeedbackForPrompt, loadRejectionsForPrompt } from "@/lib/agent-feedback";
 import { checkAgentBudget, budgetExceededMessage } from "@/lib/agent-budget";
 import { calculateSeoScore, type SeoFields } from "@/lib/seo/score";
 
@@ -80,6 +80,7 @@ function buildSystemPrompt(
   promptDepth: string,
   brandVoiceContext: string | null,
   feedbackExamples: FeedbackExample[],
+  rejectionNotes: string[],
   schemaFields: FieldDef[]
 ): string {
   const parts: string[] = [agentSystemPrompt];
@@ -106,6 +107,14 @@ function buildSystemPrompt(
     feedbackExamples.forEach((ex, i) => {
       parts.push(`Example ${i + 1}:\nOriginal: ${ex.original}\nCorrected: ${ex.corrected}`);
     });
+  }
+
+  if (rejectionNotes.length > 0) {
+    parts.push(`\n## Things to avoid (from past curator rejections)`);
+    rejectionNotes.forEach((note, i) => {
+      parts.push(`${i + 1}. ${note}`);
+    });
+    parts.push(`Read these carefully — outputs that ignore them will be rejected again.`);
   }
 
   parts.push(`\n${buildSchemaInstructions(schemaFields)}`);
@@ -234,10 +243,11 @@ export async function runAgent(agentId: string, userPrompt: string, overrideColl
   const collectionDef = cmsConfig.collections.find((c) => c.name === targetCollection);
   const schemaFields: FieldDef[] = (collectionDef?.fields ?? []) as FieldDef[];
 
-  const [cockpit, brandVoice, feedback, contentContext, toolRegistry] = await Promise.all([
+  const [cockpit, brandVoice, feedback, rejections, contentContext, toolRegistry] = await Promise.all([
     readCockpit(),
     readBrandVoice(),
     loadFeedbackForPrompt(agentId),
+    loadRejectionsForPrompt(agentId),
     buildContentContext().catch(() => ""),
     buildToolRegistry(agent),
   ]);
@@ -260,6 +270,7 @@ export async function runAgent(agentId: string, userPrompt: string, overrideColl
     cockpit.promptDepth,
     brandContext,
     feedback,
+    rejections,
     schemaFields
   );
   if (contentContext) systemPrompt += `\n\n${contentContext}`;
@@ -562,10 +573,11 @@ export async function executeAgentRaw(
   const collectionDef = cmsConfig.collections.find((c) => c.name === targetCollection);
   const schemaFields: FieldDef[] = (collectionDef?.fields ?? []) as FieldDef[];
 
-  const [cockpit, brandVoice, feedback, contentContext, toolRegistry] = await Promise.all([
+  const [cockpit, brandVoice, feedback, rejections, contentContext, toolRegistry] = await Promise.all([
     readCockpit(),
     readBrandVoice(),
     loadFeedbackForPrompt(agentId),
+    loadRejectionsForPrompt(agentId),
     buildContentContext().catch(() => ""),
     buildToolRegistry(agent),
   ]);
@@ -591,6 +603,7 @@ export async function executeAgentRaw(
       cockpit.promptDepth,
       brandContext,
       feedback,
+      rejections,
       schemaFields,
     );
     if (contentContext) systemPrompt += `\n\n${contentContext}`;

@@ -99,9 +99,13 @@ export interface AgentConfig {
   fieldDefaults?: Record<string, unknown>;
   schedule: {
     enabled: boolean;
-    frequency: "daily" | "weekly" | "manual";
+    frequency: "daily" | "weekly" | "manual" | "cron";
     time: string;
     maxPerRun: number;
+    /** Cron expression. Only consulted when frequency === "cron".
+     *  Standard 5-field syntax: "minute hour dom month dow".
+     *  See lib/cron.ts for the supported subset. */
+    cron?: string;
   };
   /** Phase 4 — per-agent cost guards. Each is optional; unset = no cap.
    *  All caps are checked pre-flight against analytics spend (recordRun)

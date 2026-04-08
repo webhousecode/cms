@@ -67,7 +67,7 @@ export default function AgentDetailPage() {
   const [imageGeneration, setImageGeneration] = useState(false);
   const [autonomy, setAutonomy] = useState<"draft" | "full">("draft");
   const [scheduleEnabled, setScheduleEnabled] = useState(false);
-  const [frequency, setFrequency] = useState<"daily" | "weekly" | "manual">(
+  const [frequency, setFrequency] = useState<"daily" | "weekly" | "manual" | "cron">(
     "daily"
   );
   const [time, setTime] = useState("06:00");
@@ -702,7 +702,7 @@ export default function AgentDetailPage() {
                     { value: "manual", label: "Manual" },
                   ]}
                   value={frequency}
-                  onChange={(v) => setFrequency(v as "daily" | "weekly" | "manual")}
+                  onChange={(v) => setFrequency(v as "daily" | "weekly" | "manual" | "cron")}
                 />
               </div>
               <div>

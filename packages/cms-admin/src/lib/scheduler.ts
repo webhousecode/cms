@@ -37,7 +37,12 @@ async function writeState(state: SchedulerState): Promise<void> {
 function isScheduleDue(
   entry: {
     active: boolean;
-    schedule?: { enabled: boolean; frequency: "daily" | "weekly" | "manual"; time: string };
+    schedule?: {
+      enabled: boolean;
+      frequency: "daily" | "weekly" | "manual" | "cron";
+      time: string;
+      cron?: string;
+    };
   },
   lastRunIso: string | undefined,
 ): boolean {
@@ -47,6 +52,20 @@ function isScheduleDue(
 
   const now = new Date();
   const lastRunDate = lastRunIso ? new Date(lastRunIso) : null;
+
+  // Cron path — uses lib/cron.ts. Window-aware so a 5-min tick still
+  // catches a cron that would have fired at minute 09:03.
+  if (entry.schedule.frequency === "cron") {
+    if (!entry.schedule.cron) return false;
+    const { cronMatchesWithinWindow } = require("./cron") as typeof import("./cron");
+    const windowStart = new Date(now.getTime() - 5 * 60_000);
+    if (!cronMatchesWithinWindow(entry.schedule.cron, windowStart, 5)) return false;
+    // Don't fire twice in the same window — keep a 4 minute dedup
+    // cushion so the next tick doesn't re-trigger if the cron resolves
+    // to multiple matching minutes within the 5-minute scheduler window.
+    if (lastRunDate && now.getTime() - lastRunDate.getTime() < 4 * 60_000) return false;
+    return true;
+  }
 
   const [hours, minutes] = entry.schedule.time.split(":").map(Number);
   const scheduledToday = new Date(now);

@@ -94,6 +94,9 @@ export async function runWorkflow(
   let totalCost = 0;
   const stepResults: WorkflowRunResult["steps"] = [];
 
+  // Lazy import once to keep the per-step cost low
+  const { recordRun } = await import("./analytics");
+
   for (let i = 0; i < workflow.steps.length; i++) {
     const step = workflow.steps[i]!;
     const stepStart = Date.now();
@@ -105,14 +108,33 @@ export async function runWorkflow(
       lastTargetCollection = result.targetCollection;
       lastAgentLocale = result.agentLocale;
       totalCost += result.costUsd;
+      const stepDuration = Date.now() - stepStart;
       stepResults.push({
         stepId: step.id,
         agentId: step.agentId,
         agentName: result.agent.name,
         model: result.model,
         costUsd: result.costUsd,
-        durationMs: Date.now() - stepStart,
+        durationMs: stepDuration,
       });
+
+      // Record one analytics row per step — this is what makes the
+      // cost-by-model and cost-by-agent dashboards aggregate correctly.
+      // Previously the runner emitted a single aggregated row at the
+      // end with model="A → B → C" which broke the model breakdown.
+      await recordRun({
+        agentId: step.agentId,
+        agentName: `${result.agent.name} (workflow: ${workflow.name})`,
+        timestamp: new Date().toISOString(),
+        collection: result.targetCollection,
+        documentsProcessed: 1,
+        tokensUsed: { input: result.inputTokens, output: result.outputTokens },
+        costUsd: result.costUsd,
+        durationMs: stepDuration,
+        model: result.model,
+        status: "success",
+      }).catch(() => {});
+
       // Build the next step's input from this step's output
       currentPrompt = renderPreviousAsPrompt(result.contentData);
     } finally {
@@ -183,22 +205,10 @@ export async function runWorkflow(
     },
   }).catch(() => {});
 
-  // ONE analytics record for the whole pipeline
-  try {
-    const { recordRun } = await import("./analytics");
-    await recordRun({
-      agentId: workflow.id,
-      agentName: `Workflow: ${workflow.name}`,
-      timestamp: new Date().toISOString(),
-      collection: lastTargetCollection,
-      documentsProcessed: 1,
-      tokensUsed: { input: 0, output: 0 }, // step-level tokens summed in stepResults
-      costUsd: totalCost,
-      durationMs: Date.now() - startedAt,
-      model: stepResults.map((s) => s.model).join(" → "),
-      status: "success",
-    });
-  } catch { /* non-fatal */ }
+  // (No aggregated workflow-level analytics row — each step records
+  //  its own row above so cost-by-model / cost-by-agent dashboards
+  //  aggregate correctly. The workflow's own stats object on the
+  //  workflow record holds the rollup.)
 
   // ONE webhook for the whole pipeline
   try {

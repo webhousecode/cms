@@ -255,12 +255,15 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
   const [newName, setNewName] = useState("");
   // Each step carries a stable row id (independent of agentId) so DnD
   // sorting works even when the same agent appears twice in a pipeline.
-  const [newSteps, setNewSteps] = useState<{ id: string; agentId: string }[]>([]);
+  // Phase 6 polish: optional overrideCollection lets the curator override
+  // the agent's default targetCollection for this specific step.
+  const [newSteps, setNewSteps] = useState<{ id: string; agentId: string; overrideCollection?: string }[]>([]);
   const [newScheduleEnabled, setNewScheduleEnabled] = useState(false);
-  const [newFrequency, setNewFrequency] = useState<"daily" | "weekly" | "manual">("daily");
+  const [newFrequency, setNewFrequency] = useState<"daily" | "weekly" | "manual" | "cron">("daily");
   const [newTime, setNewTime] = useState("06:00");
   const [newMaxPerRun, setNewMaxPerRun] = useState(1);
   const [newDefaultPrompt, setNewDefaultPrompt] = useState("");
+  const [newCron, setNewCron] = useState("");
   // ui ↔ json toggle for the create/edit form
   const [formMode, setFormMode] = useState<"ui" | "json">("ui");
   const [jsonDraft, setJsonDraft] = useState<string>("");
@@ -295,6 +298,7 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
     setNewTime("06:00");
     setNewMaxPerRun(1);
     setNewDefaultPrompt("");
+    setNewCron("");
     setCreating(false);
     setEditingId(null);
     setFormMode("ui");
@@ -305,7 +309,11 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
   function startEdit(wf: AgentWorkflow) {
     setEditingId(wf.id);
     setNewName(wf.name);
-    setNewSteps(wf.steps.map((s) => ({ id: s.id, agentId: s.agentId })));
+    setNewSteps(wf.steps.map((s) => ({
+      id: s.id,
+      agentId: s.agentId,
+      ...(s.overrideCollection ? { overrideCollection: s.overrideCollection } : {}),
+    })));
     // Workflows created before chunk 2 don't have a schedule field — fall
     // back to the same defaults the API uses for new workflows.
     const sched = wf.schedule ?? { enabled: false, frequency: "manual" as const, time: "06:00", maxPerRun: 1 };
@@ -313,6 +321,7 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
     setNewFrequency(sched.frequency);
     setNewTime(sched.time);
     setNewMaxPerRun(sched.maxPerRun);
+    setNewCron((sched as { cron?: string }).cron ?? "");
     setNewDefaultPrompt(wf.defaultPrompt ?? "");
     setCreating(true);
     setFormMode("ui");
@@ -323,13 +332,18 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
   function currentBody() {
     return {
       name: newName.trim(),
-      steps: newSteps.map((s) => ({ id: s.id, agentId: s.agentId })),
+      steps: newSteps.map((s) => ({
+        id: s.id,
+        agentId: s.agentId,
+        ...(s.overrideCollection?.trim() ? { overrideCollection: s.overrideCollection.trim() } : {}),
+      })),
       active: true,
       schedule: {
         enabled: newScheduleEnabled,
         frequency: newFrequency,
         time: newTime,
         maxPerRun: newMaxPerRun,
+        ...(newFrequency === "cron" && newCron.trim() ? { cron: newCron.trim() } : {}),
       },
       defaultPrompt: newDefaultPrompt.trim() || undefined,
     };
@@ -445,7 +459,11 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
   function addStep(agentId: string) {
     setNewSteps((s) => [
       ...s,
-      { id: `step-${Date.now()}-${s.length}-${Math.random().toString(36).slice(2, 6)}`, agentId },
+      {
+        id: `step-${Date.now()}-${s.length}-${Math.random().toString(36).slice(2, 6)}`,
+        agentId,
+        // overrideCollection left undefined; curator can fill in via the per-row input
+      },
     ]);
   }
   function removeStep(rowId: string) {
@@ -514,9 +532,21 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
           <div>
             <label className="text-xs font-semibold text-muted-foreground block mb-2">Steps</label>
             <SortableWorkflowSteps
-              steps={newSteps.map((s) => ({ id: s.id, agentId: s.agentId, agentName: agentNameById(s.agentId) }))}
-              onReorder={(reordered) => setNewSteps(reordered.map((s) => ({ id: s.id, agentId: s.agentId })))}
+              steps={newSteps.map((s) => ({
+                id: s.id,
+                agentId: s.agentId,
+                agentName: agentNameById(s.agentId),
+                overrideCollection: s.overrideCollection,
+              }))}
+              onReorder={(reordered) => setNewSteps(reordered.map((s) => ({
+                id: s.id,
+                agentId: s.agentId,
+                ...(s.overrideCollection ? { overrideCollection: s.overrideCollection } : {}),
+              })))}
               onRemove={removeStep}
+              onCollectionChange={(id, value) => setNewSteps((prev) => prev.map((s) =>
+                s.id === id ? { ...s, overrideCollection: value || undefined } : s
+              ))}
             />
             <p className="text-[0.65rem] uppercase font-mono text-muted-foreground mb-1">Add agent</p>
             <div className="flex flex-wrap gap-1.5">
@@ -551,12 +581,13 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
                     <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">Frequency</label>
                     <select
                       value={newFrequency}
-                      onChange={(e) => setNewFrequency(e.target.value as "daily" | "weekly" | "manual")}
+                      onChange={(e) => setNewFrequency(e.target.value as "daily" | "weekly" | "manual" | "cron")}
                       className="w-full px-2 py-1 rounded border border-border bg-background text-xs"
                     >
                       <option value="daily">Daily</option>
                       <option value="weekly">Weekly (Mon)</option>
                       <option value="manual">Manual</option>
+                      <option value="cron">Cron (advanced)</option>
                     </select>
                   </div>
                   <div>
@@ -565,7 +596,9 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
                       type="time"
                       value={newTime}
                       onChange={(e) => setNewTime(e.target.value)}
-                      className="w-full px-2 py-1 rounded border border-border bg-background text-xs"
+                      disabled={newFrequency === "cron"}
+                      title={newFrequency === "cron" ? "Time field ignored when frequency is cron" : undefined}
+                      className="w-full px-2 py-1 rounded border border-border bg-background text-xs disabled:opacity-50"
                     />
                   </div>
                   <div>
@@ -580,6 +613,31 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
                     />
                   </div>
                 </div>
+                {newFrequency === "cron" && (
+                  <div>
+                    <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">
+                      Cron expression
+                    </label>
+                    <input
+                      type="text"
+                      value={newCron}
+                      onChange={(e) => setNewCron(e.target.value)}
+                      placeholder="0 9 * * 1-5"
+                      spellCheck={false}
+                      className="w-full px-2 py-1 rounded border border-border bg-background text-xs font-mono"
+                    />
+                    <p className="text-[0.65rem] text-muted-foreground mt-1 leading-snug">
+                      5-field cron syntax: <code>min hour dom month dow</code>. The scheduler ticks every 5 minutes,
+                      so cron expressions finer than 5 minutes are silently coarsened. Examples:
+                      <br />
+                      <code>0 9 * * 1-5</code> — weekdays at 09:00
+                      &nbsp;·&nbsp;
+                      <code>0 */6 * * *</code> — every 6 hours
+                      &nbsp;·&nbsp;
+                      <code>0 8 1 * *</code> — 1st of each month at 08:00
+                    </p>
+                  </div>
+                )}
                 <div>
                   <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">
                     Default prompt (sent to step 1 on each scheduled run)

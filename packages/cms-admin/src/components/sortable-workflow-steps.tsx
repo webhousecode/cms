@@ -32,12 +32,15 @@ import { GripVertical, X } from "lucide-react";
 
 interface Props {
   /** Stable id per row — composite of agentId + index works fine since rows don't repeat in normal use */
-  steps: { id: string; agentId: string; agentName: string }[];
-  onReorder: (steps: { id: string; agentId: string; agentName: string }[]) => void;
+  steps: { id: string; agentId: string; agentName: string; overrideCollection?: string }[];
+  onReorder: (steps: { id: string; agentId: string; agentName: string; overrideCollection?: string }[]) => void;
   onRemove: (id: string) => void;
+  /** Phase 6 polish — let curators override the target collection per
+   *  step. Optional; pass undefined to hide the inline input entirely. */
+  onCollectionChange?: (id: string, value: string) => void;
 }
 
-export function SortableWorkflowSteps({ steps, onReorder, onRemove }: Props) {
+export function SortableWorkflowSteps({ steps, onReorder, onRemove, onCollectionChange }: Props) {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       // Require a small drag distance before starting so an accidental
@@ -74,7 +77,9 @@ export function SortableWorkflowSteps({ steps, onReorder, onRemove }: Props) {
               id={step.id}
               index={idx}
               agentName={step.agentName}
+              overrideCollection={step.overrideCollection}
               onRemove={() => onRemove(step.id)}
+              onCollectionChange={onCollectionChange ? (v) => onCollectionChange(step.id, v) : undefined}
             />
           ))}
         </div>
@@ -87,12 +92,16 @@ function SortableStep({
   id,
   index,
   agentName,
+  overrideCollection,
   onRemove,
+  onCollectionChange,
 }: {
   id: string;
   index: number;
   agentName: string;
+  overrideCollection?: string;
   onRemove: () => void;
+  onCollectionChange?: (value: string) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
 
@@ -121,6 +130,18 @@ function SortableStep({
       </button>
       <span className="text-[0.65rem] font-mono text-muted-foreground w-6">#{index + 1}</span>
       <span className="text-sm flex-1 font-medium">{agentName}</span>
+      {onCollectionChange && (
+        <input
+          type="text"
+          value={overrideCollection ?? ""}
+          onChange={(e) => onCollectionChange(e.target.value)}
+          placeholder="collection (optional)"
+          title="Override the agent's default target collection for this step"
+          className="text-[0.7rem] font-mono px-1.5 py-0.5 rounded border border-border bg-background"
+          style={{ width: "11rem" }}
+          onPointerDown={(e) => e.stopPropagation()}
+        />
+      )}
       <button
         type="button"
         onClick={onRemove}

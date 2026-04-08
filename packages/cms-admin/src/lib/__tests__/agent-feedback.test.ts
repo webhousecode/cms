@@ -20,6 +20,7 @@ import {
   appendFeedback,
   readFeedback,
   loadFeedbackForPrompt,
+  loadRejectionsForPrompt,
   recordCorrectionsFromDiff,
 } from "../agent-feedback";
 
@@ -104,6 +105,37 @@ describe("loadFeedbackForPrompt", () => {
     await appendFeedback("a", { type: "correction", field: "f", corrected: "y" });
     const out = await loadFeedbackForPrompt("a");
     expect(out).toHaveLength(0);
+  });
+});
+
+describe("loadRejectionsForPrompt", () => {
+  it("returns the most recent rejection notes in chronological order", async () => {
+    await appendFeedback("a", { type: "rejection", notes: "too dry" });
+    await appendFeedback("a", { type: "rejection", notes: "too long" });
+    await appendFeedback("a", { type: "rejection", notes: "missing examples" });
+    const out = await loadRejectionsForPrompt("a", 2);
+    expect(out).toHaveLength(2);
+    expect(out).toEqual(["too long", "missing examples"]);
+  });
+
+  it("skips corrections (no notes)", async () => {
+    await appendFeedback("a", { type: "correction", field: "f", original: "x", corrected: "y" });
+    await appendFeedback("a", { type: "rejection", notes: "tone is off" });
+    const out = await loadRejectionsForPrompt("a");
+    expect(out).toEqual(["tone is off"]);
+  });
+
+  it("skips rejections with empty notes", async () => {
+    await appendFeedback("a", { type: "rejection", notes: "" });
+    await appendFeedback("a", { type: "rejection", notes: "   " });
+    await appendFeedback("a", { type: "rejection", notes: "real note" });
+    const out = await loadRejectionsForPrompt("a");
+    expect(out).toEqual(["real note"]);
+  });
+
+  it("returns empty array when there are no rejections", async () => {
+    await appendFeedback("a", { type: "correction", field: "f", original: "x", corrected: "y" });
+    expect(await loadRejectionsForPrompt("a")).toEqual([]);
   });
 });
 

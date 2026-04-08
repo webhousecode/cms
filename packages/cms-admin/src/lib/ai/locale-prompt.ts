@@ -8,10 +8,17 @@ import { LOCALE_LABELS } from "../locale";
 /**
  * Build a locale instruction to prepend to any AI system prompt.
  * This ensures all generated content is in the correct language.
+ *
+ * Defaults to English when given an empty/undefined locale — otherwise
+ * the prompt would say "Write ALL output in undefined (undefined)"
+ * which the LLM helpfully ignores, producing nondeterministic
+ * language output. Caught during the Phase 6 polish run when a
+ * workflow's Translator step inherited an unset siteConfig.defaultLocale.
  */
-export function buildLocaleInstruction(locale: string): string {
-  const langName = LOCALE_LABELS[locale] ?? locale;
-  return `LANGUAGE: Write ALL output in ${langName} (${locale}). This is non-negotiable — every word of generated content must be in ${langName}.`;
+export function buildLocaleInstruction(locale: string | null | undefined): string {
+  const safeLocale = locale && locale.trim() ? locale : "en";
+  const langName = LOCALE_LABELS[safeLocale] ?? safeLocale;
+  return `LANGUAGE: Write ALL output in ${langName} (${safeLocale}). This is non-negotiable — every word of generated content must be in ${langName}.`;
 }
 
 /**
