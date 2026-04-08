@@ -1,0 +1,18 @@
+{
+  "id": "post-why-ruby-da",
+  "slug": "why-ruby-da",
+  "status": "published",
+  "locale": "da",
+  "translationGroup": "2c4e6f8a-1b3d-5e7f-9a0c-2b4d6e8f0a1c",
+  "_fieldMeta": {},
+  "data": {
+    "title": "Hvorfor en Ruby-reader (og Rails-kompatibilitet)?",
+    "excerpt": "Ruby driver stadig Shopify, GitHub, Airbnb, Stripe. Rails driver business-webbens lange hale. Her er hvorfor @webhouse/cms leverer en førsteklasses Ruby-reader.",
+    "content": "## Ruby-publikummet\n\nRuby on Rails er den framework der bragte MVC til masserne. Shopify, GitHub, Airbnb, Stripe, Zendesk, Basecamp — alle bygget på Rails. Ruby-fællesskabet er mindre end Python's men dybt engageret i developer happiness.\n\n## Sinatra vs Rails\n\nDette eksempel bruger **Sinatra** for hurtig opstart — ingen `rails new`, ingen asset pipeline, ingen Active Record. Bare en enkelt `app.rb`-fil og en `webhouse.rb`-reader. Det hele booter på under et sekund.\n\nMen reader'en virker **identisk** i Rails. Drop `webhouse.rb` ind i `app/lib/`, og i enhver controller:\n\n```ruby\nclass BlogController < ApplicationController\n  def index\n    cms = Webhouse::Reader.new(Rails.root.join('content'))\n    @posts = cms.collection('posts', locale: 'en')\n  end\nend\n```\n\nIngen andre ændringer nødvendige.\n\n## Hvad der er i pakken\n\n- `Webhouse::Reader#collection(name, locale:)` — list publicerede dokumenter\n- `Webhouse::Reader#document(collection, slug)` — hent ét dokument\n- `Webhouse::Reader#find_translation(doc, collection)` — søskende via translationGroup\n- `Webhouse::Reader#globals` — cached singleton site doc\n- `Webhouse.string(doc, key, default)` — sikker felt-accessor\n- Path traversal-beskyttelse via `SAFE_NAME` regex + expand_path prefix-tjek\n\n~100 linjer Ruby. Kun stdlib.",
+    "date": "2026-04-08",
+    "author": "Christian Broberg",
+    "tags": ["ruby", "rails", "sinatra", "filosofi"]
+  },
+  "createdAt": "2026-04-08T00:00:00.000Z",
+  "updatedAt": "2026-04-08T00:00:00.000Z"
+}

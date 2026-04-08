@@ -1,0 +1,18 @@
+{
+  "id": "post-hello-world-da",
+  "slug": "hello-world-da",
+  "status": "published",
+  "locale": "da",
+  "translationGroup": "5b7d9f1c-3a5e-4c7f-9b1d-6e8f0a2c4d5e",
+  "_fieldMeta": {},
+  "data": {
+    "title": "Hej verden fra Sinatra",
+    "excerpt": "Et blogindlæg gemt som JSON-fil i @webhouse/cms og renderet af en Sinatra route.",
+    "content": "## Opsætningen\n\nDette indlæg ligger i `content/posts/hello-world-da.json`. Det er en flad JSON-fil i @webhouse/cms-format. **Sinatra læser det direkte** via `Webhouse::Reader`-klassen — ingen API-kald, ingen database, bare `Pathname#glob` og `JSON.parse`.\n\n## Rails-kompatibel\n\n`webhouse.rb`-filen i dette eksempel er et drop-in modul. For at bruge det i en Rails-app, kopiér det til `app/lib/webhouse.rb` og kald `Webhouse::Reader.new(Rails.root.join('content'))` fra din controller. API'et er identisk.",
+    "date": "2026-04-09",
+    "author": "Christian Broberg",
+    "tags": ["intro", "ruby", "sinatra"]
+  },
+  "createdAt": "2026-04-09T00:00:00.000Z",
+  "updatedAt": "2026-04-09T00:00:00.000Z"
+}

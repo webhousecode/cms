@@ -1,0 +1,18 @@
+{
+  "id": "post-why-ruby-en",
+  "slug": "why-ruby",
+  "status": "published",
+  "locale": "en",
+  "translationGroup": "2c4e6f8a-1b3d-5e7f-9a0c-2b4d6e8f0a1c",
+  "_fieldMeta": {},
+  "data": {
+    "title": "Why a Ruby reader (and Rails compatibility)?",
+    "excerpt": "Ruby still runs Shopify, GitHub, Airbnb, Stripe. Rails powers the long tail of business web apps. Here's why @webhouse/cms ships a first-class Ruby reader.",
+    "content": "## The Ruby audience\n\nRuby on Rails is the framework that brought MVC to the masses. Shopify, GitHub, Airbnb, Stripe, Zendesk, Basecamp — all built on Rails. The Ruby community is smaller than Python's but deeply committed to developer happiness.\n\n## Sinatra vs Rails\n\nThis example uses **Sinatra** for fast bring-up — no `rails new`, no asset pipeline, no Active Record. Just a single `app.rb` file and a `webhouse.rb` reader. The whole thing boots in under a second.\n\nBut the reader works **identically** in Rails. Drop `webhouse.rb` into `app/lib/`, then in any controller:\n\n```ruby\nclass BlogController < ApplicationController\n  def index\n    cms = Webhouse::Reader.new(Rails.root.join('content'))\n    @posts = cms.collection('posts', locale: 'en')\n  end\nend\n```\n\nNo other changes needed.\n\n## What's in the package\n\n- `Webhouse::Reader#collection(name, locale:)` — list published documents\n- `Webhouse::Reader#document(collection, slug)` — load one document\n- `Webhouse::Reader#find_translation(doc, collection)` — sibling via translationGroup\n- `Webhouse::Reader#globals` — cached singleton site doc\n- `Webhouse.string(doc, key, default)` — safe field accessor\n- Path traversal protection via `SAFE_NAME` regex + expand_path prefix check\n\n~100 lines of Ruby. Stdlib only.",
+    "date": "2026-04-08",
+    "author": "Christian Broberg",
+    "tags": ["ruby", "rails", "sinatra", "philosophy"]
+  },
+  "createdAt": "2026-04-08T00:00:00.000Z",
+  "updatedAt": "2026-04-08T00:00:00.000Z"
+}
