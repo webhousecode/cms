@@ -16,6 +16,19 @@ export default defineConfig({
 
   collections: [
     defineCollection({
+      name: 'globals',
+      label: 'Globals',
+      slug: 'globals',
+      kind: 'global',
+      description: 'Site-wide settings rendered in the layout — brand text, footer, etc.',
+      previewable: false,
+      fields: [
+        { name: 'brandPrefix', type: 'text', label: 'Brand prefix', required: true },
+        { name: 'brandSuffix', type: 'text', label: 'Brand suffix', required: true },
+        { name: 'footerText', type: 'text', label: 'Footer text' },
+      ],
+    }),
+    defineCollection({
       name: 'posts',
       label: 'Blog Posts',
       slug: 'posts',

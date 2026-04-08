@@ -1,0 +1,13 @@
+{
+  "id": "globals-site",
+  "slug": "site",
+  "status": "published",
+  "_fieldMeta": {},
+  "data": {
+    "brandPrefix": "@webhouse/cms",
+    "brandSuffix": "Java · Spring Boot 3.4",
+    "footerText": "Powered by @webhouse/cms — read by Spring Boot 3.4 / Java 21"
+  },
+  "createdAt": "2026-04-09T00:00:00.000Z",
+  "updatedAt": "2026-04-09T00:00:00.000Z"
+}

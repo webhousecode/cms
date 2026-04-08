@@ -1,0 +1,169 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Webhouse Content Schema",
+  "x-webhouse-version": "0.3.0",
+  "x-generated-at": "2026-04-08T22:23:32.340Z",
+  "$defs": {
+    "Document": {
+      "type": "object",
+      "description": "Base document fields shared by every @webhouse/cms document",
+      "required": [
+        "slug",
+        "status",
+        "data"
+      ],
+      "properties": {
+        "slug": {
+          "type": "string",
+          "pattern": "^[a-z0-9]([a-z0-9-]*[a-z0-9])?$",
+          "description": "Document slug — must match the JSON filename without extension"
+        },
+        "status": {
+          "enum": [
+            "draft",
+            "published",
+            "archived",
+            "expired",
+            "trashed"
+          ],
+          "description": "Publication status. Readers should filter to \"published\" by default."
+        },
+        "locale": {
+          "type": "string",
+          "description": "BCP 47 locale tag (e.g. \"en\", \"da\", \"de-AT\"). Optional."
+        },
+        "translationGroup": {
+          "type": "string",
+          "format": "uuid",
+          "description": "Shared UUID linking all translations of this document"
+        },
+        "id": {
+          "type": "string",
+          "description": "Stable internal identifier"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "_fieldMeta": {
+          "type": "object",
+          "description": "Internal field metadata (locks, generation hints). Treat as opaque."
+        }
+      }
+    }
+  },
+  "collections": {
+    "globals": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Document"
+        }
+      ],
+      "x-webhouse-collection": {
+        "name": "globals",
+        "label": "Globals",
+        "kind": "global",
+        "translatable": true,
+        "previewable": false,
+        "description": "Site-wide settings rendered in the layout — brand text, footer, etc."
+      },
+      "properties": {
+        "data": {
+          "type": "object",
+          "properties": {
+            "brandPrefix": {
+              "x-webhouse-field-type": "text",
+              "description": "Brand prefix",
+              "type": "string"
+            },
+            "brandSuffix": {
+              "x-webhouse-field-type": "text",
+              "description": "Brand suffix",
+              "type": "string"
+            },
+            "footerText": {
+              "x-webhouse-field-type": "text",
+              "description": "Footer text",
+              "type": "string"
+            }
+          },
+          "required": [
+            "brandPrefix",
+            "brandSuffix"
+          ]
+        }
+      }
+    },
+    "posts": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/Document"
+        }
+      ],
+      "x-webhouse-collection": {
+        "name": "posts",
+        "label": "Blog Posts",
+        "kind": "page",
+        "urlPrefix": "/blog",
+        "translatable": true,
+        "previewable": true,
+        "sourceLocale": "en",
+        "locales": [
+          "en",
+          "da"
+        ],
+        "description": "Blog posts rendered by ASP.NET Core 9 Razor Pages at /blog/{slug}."
+      },
+      "properties": {
+        "data": {
+          "type": "object",
+          "properties": {
+            "title": {
+              "x-webhouse-field-type": "text",
+              "description": "Title",
+              "type": "string"
+            },
+            "excerpt": {
+              "x-webhouse-field-type": "textarea",
+              "description": "Excerpt",
+              "type": "string"
+            },
+            "content": {
+              "x-webhouse-field-type": "richtext",
+              "description": "Content",
+              "type": "string",
+              "contentMediaType": "text/markdown"
+            },
+            "date": {
+              "x-webhouse-field-type": "date",
+              "description": "Date",
+              "type": "string",
+              "format": "date"
+            },
+            "author": {
+              "x-webhouse-field-type": "text",
+              "description": "Author",
+              "type": "string"
+            },
+            "tags": {
+              "x-webhouse-field-type": "tags",
+              "description": "Tags",
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "title"
+          ]
+        }
+      }
+    }
+  },
+  "$id": "https://dotnet-blog.example.com/webhouse-schema.json"
+}

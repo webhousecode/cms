@@ -9,6 +9,8 @@ builder.Services.AddRazorPages();
 builder.Services.AddSingleton(new WebhouseReader(
     Path.Combine(builder.Environment.ContentRootPath, "content")
 ));
+// Globals service — loads content/globals/site.json once and exposes brand text, footer, etc.
+builder.Services.AddScoped<WebhouseGlobals>();
 
 var app = builder.Build();
 

@@ -1,9 +1,10 @@
+@inject DotnetBlog.Services.WebhouseGlobals Globals
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] — @@webhouse/cms · .NET 9 Blog</title>
+    <title>@ViewData["Title"] — @Globals.BrandPrefix · @Globals.BrandSuffix</title>
     <style>
         :root {
             --gold: #F7BB2E;
@@ -118,7 +119,7 @@
 </head>
 <body>
     <nav>
-        <a href="/" class="brand">@@webhouse/cms · .NET 9</a>
+        <a href="/" class="brand">@Globals.BrandPrefix · @Globals.BrandSuffix</a>
         <div>
             <a href="/">EN</a>
             <a href="/da">DA</a>
@@ -128,7 +129,7 @@
     @RenderBody()
 
     <footer>
-        Powered by @@webhouse/cms — read by ASP.NET Core 9 / Razor Pages
+        @Globals.FooterText
     </footer>
 </body>
 </html>

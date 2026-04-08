@@ -24,7 +24,7 @@
 </head>
 <body>
     <nav>
-        <a href="/" class="brand">@webhouse/cms · Spring Boot</a>
+        <a href="/" class="brand" th:text="${globals.brandPrefix} + ' · ' + ${globals.brandSuffix}">@webhouse/cms</a>
         <div>
             <a href="/">EN</a>
             <a href="/da/">DA</a>
@@ -48,8 +48,8 @@
         <p th:text="${post.getString('excerpt')}">excerpt</p>
     </a>
 
-    <footer>
-        Powered by @webhouse/cms — read by Spring Boot 3.4 / Java 21
+    <footer th:text="${globals.footerText}">
+        Powered by @webhouse/cms
     </footer>
 </body>
 </html>

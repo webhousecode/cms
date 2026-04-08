@@ -18,7 +18,7 @@
 </head>
 <body>
     <nav>
-        <a href="/" class="brand">@webhouse/cms · Spring Boot</a>
+        <a href="/" class="brand" th:text="${globals.brandPrefix} + ' · ' + ${globals.brandSuffix}">@webhouse/cms</a>
         <div>
             <a href="/">EN</a>
             <a href="/da/">DA</a>
