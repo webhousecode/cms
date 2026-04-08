@@ -91,6 +91,22 @@ This means we can whitelabel the mobile app later (a different brand wrapping th
 
 When adding new mobile endpoints, put them under `/api/mobile/`, not `/api/cms/` or `/api/admin/`. The `/api/mobile/` prefix is the contract.
 
+## Hard Rule: Re-export schema after every cms.config.ts change
+
+For projects with non-TS consumers (Java, .NET, PHP, Python, Ruby, Go), the `webhouse-schema.json` file is the contract between the TypeScript admin and the runtime readers. **Whenever you modify `cms.config.ts` (add/remove/rename a field, change a type, add a collection), you MUST regenerate `webhouse-schema.json` and commit both files in the same commit.**
+
+Re-export commands (any of these works):
+```bash
+# CLI (deterministic, scriptable — preferred for AI agents)
+cd /path/to/project && npx cms export-schema --out webhouse-schema.json
+
+# CMS admin UI: Site Settings → Schema export → Save to project root
+
+# API: GET /api/cms/registry/export-schema?configPath=...&download=1
+```
+
+The file lives at `{projectDir}/webhouse-schema.json`. Treat it like a generated lockfile — always committed, always in sync. AI agents that forget this break downstream consumers silently. See `docs/ai-guide/21-framework-consumers.md` for the full rule and checklist.
+
 ## Hard Rule: Reserved Collection Names
 
 **NEVER name or label a collection with any of these reserved names:**
