@@ -1,0 +1,18 @@
+{
+  "id": "post-hello-world-da",
+  "slug": "hello-world-da",
+  "status": "published",
+  "locale": "da",
+  "translationGroup": "3a5c7e9b-1d3f-5a7c-9e1b-3d5f7a9c1e3d",
+  "_fieldMeta": {},
+  "data": {
+    "title": "Hej verden fra PHP",
+    "excerpt": "Et blogindlæg gemt som JSON-fil i @webhouse/cms og renderet af en PHP front controller.",
+    "content": "## Opsætningen\n\nDette indlæg ligger i `content/posts/hello-world-da.json`. Det er en flad JSON-fil i @webhouse/cms-format. **PHP læser det direkte** via `Webhouse\\Cms\\Reader`-klassen — ingen API-kald, ingen database, bare `glob()` og `json_decode()`.\n\n## Laravel-kompatibel\n\n`src/Reader.php`-filen er en enkelt klasse med nul framework-afhængigheder. For at bruge det i en Laravel-app, registrér den som en singleton service:\n\n```php\n// app/Providers/AppServiceProvider.php\npublic function register(): void {\n    $this->app->singleton(\\Webhouse\\Cms\\Reader::class, fn() =>\n        new \\Webhouse\\Cms\\Reader(base_path('content'))\n    );\n}\n```\n\nInjicér derefter ind i dine controllers via constructor injection.",
+    "date": "2026-04-09",
+    "author": "Christian Broberg",
+    "tags": ["intro", "php", "laravel"]
+  },
+  "createdAt": "2026-04-09T00:00:00.000Z",
+  "updatedAt": "2026-04-09T00:00:00.000Z"
+}

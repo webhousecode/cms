@@ -1,0 +1,18 @@
+{
+  "id": "post-hello-world-en",
+  "slug": "hello-world",
+  "status": "published",
+  "locale": "en",
+  "translationGroup": "3a5c7e9b-1d3f-5a7c-9e1b-3d5f7a9c1e3d",
+  "_fieldMeta": {},
+  "data": {
+    "title": "Hello, world from PHP",
+    "excerpt": "A blog post stored as a JSON file in @webhouse/cms and rendered by a PHP front controller.",
+    "content": "## The setup\n\nThis post lives at `content/posts/hello-world.json`. It's a flat JSON file in the @webhouse/cms format. **PHP reads it directly** via the `Webhouse\\Cms\\Reader` class — no API calls, no database, just `glob()` and `json_decode()`.\n\n## Laravel compatible\n\nThe `src/Reader.php` file is a single class with zero framework dependencies. To use it in a Laravel app, register it as a singleton service:\n\n```php\n// app/Providers/AppServiceProvider.php\npublic function register(): void {\n    $this->app->singleton(\\Webhouse\\Cms\\Reader::class, fn() =>\n        new \\Webhouse\\Cms\\Reader(base_path('content'))\n    );\n}\n```\n\nThen inject it into your controllers via constructor injection.",
+    "date": "2026-04-09",
+    "author": "Christian Broberg",
+    "tags": ["intro", "php", "laravel"]
+  },
+  "createdAt": "2026-04-09T00:00:00.000Z",
+  "updatedAt": "2026-04-09T00:00:00.000Z"
+}

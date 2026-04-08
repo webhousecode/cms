@@ -1,0 +1,13 @@
+{
+  "id": "globals-site",
+  "slug": "site",
+  "status": "published",
+  "_fieldMeta": {},
+  "data": {
+    "brandPrefix": "@webhouse/cms",
+    "brandSuffix": "PHP 8.5 · Laravel-compatible",
+    "footerText": "Powered by @webhouse/cms — read by PHP 8.5"
+  },
+  "createdAt": "2026-04-09T00:00:00.000Z",
+  "updatedAt": "2026-04-09T00:00:00.000Z"
+}

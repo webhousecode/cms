@@ -1,0 +1,18 @@
+{
+  "id": "post-why-php-da",
+  "slug": "why-php-da",
+  "status": "published",
+  "locale": "da",
+  "translationGroup": "4b6d8f0a-2c4e-6f8a-0c2e-4b6d8f0a2c4e",
+  "_fieldMeta": {},
+  "data": {
+    "title": "Hvorfor en PHP-reader (og Laravel-kompatibilitet)?",
+    "excerpt": "PHP driver 75% af webben. Laravel er den dominerende moderne PHP-framework. Her er hvorfor @webhouse/cms leverer en førsteklasses PHP-reader.",
+    "content": "## PHP-publikummet\n\nPHP driver 75% af websites globalt — WordPress alene driver 43% af webben. Laravel er den dominerende moderne PHP-framework, brugt af Disney, BBC og TripAdvisor til produktions-apps. Der er millioner af PHP-udviklere og de har brug for et indholdslag der ikke kæmper imod dem.\n\n## Hvorfor en reader, ikke et API?\n\nEn fil-reader er bare `glob()` og `json_decode()`. Det er øjeblikkeligt. Det virker offline. Det kan testes med PHPUnit-fixtures. Det er et mønster PHP-udviklere allerede kender fra Laravel's `File` facade.\n\n## Hvad der er i pakken\n\n- `Webhouse\\Cms\\Reader::collection(name, locale)` — list publicerede dokumenter\n- `Webhouse\\Cms\\Reader::document(collection, slug)` — hent ét dokument\n- `Webhouse\\Cms\\Reader::findTranslation(doc, collection)` — søskende via translationGroup\n- `Webhouse\\Cms\\Reader::globals()` — cached singleton\n- `Webhouse\\Cms\\Reader::string($doc, $key, $default)` — sikker felt-accessor\n- Path traversal-beskyttelse via `SAFE_NAME` regex + `realpath()` prefix-tjek\n\n~140 linjer PHP. Enkelt afhængighed: `league/commonmark` til markdown-rendering (valgfri).\n\n## Laravel-integration\n\n`Reader`-klassen virker i ethvert Laravel-projekt. Drop filen i `app/Services/Webhouse/`, registrér som singleton i din service provider, og injicér ind i controllers. Ingen facades, ingen service location — bare moderne PHP DI.",
+    "date": "2026-04-08",
+    "author": "Christian Broberg",
+    "tags": ["php", "laravel", "filosofi"]
+  },
+  "createdAt": "2026-04-08T00:00:00.000Z",
+  "updatedAt": "2026-04-08T00:00:00.000Z"
+}

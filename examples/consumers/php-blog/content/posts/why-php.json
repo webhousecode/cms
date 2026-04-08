@@ -1,0 +1,18 @@
+{
+  "id": "post-why-php-en",
+  "slug": "why-php",
+  "status": "published",
+  "locale": "en",
+  "translationGroup": "4b6d8f0a-2c4e-6f8a-0c2e-4b6d8f0a2c4e",
+  "_fieldMeta": {},
+  "data": {
+    "title": "Why a PHP reader (and Laravel compatibility)?",
+    "excerpt": "PHP runs 75% of the web. Laravel is the dominant modern PHP framework. Here's why @webhouse/cms ships a first-class PHP reader.",
+    "content": "## The PHP audience\n\nPHP runs 75% of websites globally — WordPress alone powers 43% of the web. Laravel is the dominant modern PHP framework, used by Disney, BBC, and TripAdvisor for production apps. There are millions of PHP developers and they need a content layer that doesn't fight them.\n\n## Why a reader, not an API?\n\nA file reader is just `glob()` and `json_decode()`. It's instant. It works offline. It's testable with PHPUnit fixtures. And it's a pattern PHP developers already know from Laravel's `File` facade.\n\n## What's in the package\n\n- `Webhouse\\Cms\\Reader::collection(name, locale)` — list published documents\n- `Webhouse\\Cms\\Reader::document(collection, slug)` — load one document\n- `Webhouse\\Cms\\Reader::findTranslation(doc, collection)` — sibling via translationGroup\n- `Webhouse\\Cms\\Reader::globals()` — cached singleton\n- `Webhouse\\Cms\\Reader::string($doc, $key, $default)` — safe field accessor\n- Path traversal protection via `SAFE_NAME` regex + `realpath()` prefix check\n\n~140 lines of PHP. Single dependency: `league/commonmark` for markdown rendering (optional).\n\n## Laravel integration\n\nThe `Reader` class works in any Laravel project. Drop the file in `app/Services/Webhouse/`, register as a singleton in your service provider, and inject it into controllers. No facades, no service location — just modern PHP DI.",
+    "date": "2026-04-08",
+    "author": "Christian Broberg",
+    "tags": ["php", "laravel", "philosophy"]
+  },
+  "createdAt": "2026-04-08T00:00:00.000Z",
+  "updatedAt": "2026-04-08T00:00:00.000Z"
+}

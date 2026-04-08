@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?= htmlspecialchars($title) ?> — <?= htmlspecialchars($brand_prefix) ?></title>
+    <style>
+        :root { --gold: #F7BB2E; --dark: #0D0D0D; --text: #e8e8e8; --text-dim: #888; --border: #222; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--dark); color: var(--text); line-height: 1.7; max-width: 740px; margin: 0 auto; padding: 3rem 2rem; }
+        nav { display: flex; justify-content: space-between; align-items: center; padding-bottom: 2rem; border-bottom: 1px solid var(--border); margin-bottom: 3rem; }
+        nav .brand { font-family: 'JetBrains Mono', monospace; color: var(--gold); font-weight: 600; text-decoration: none; }
+        nav a { color: var(--text-dim); text-decoration: none; margin-left: 1.5rem; font-size: 0.85rem; }
+        nav a:hover { color: var(--gold); }
+        h1 { font-size: 2.5rem; color: #fff; margin-bottom: 0.5rem; line-height: 1.15; }
+        h2 { font-size: 1.4rem; color: #fff; margin: 2rem 0 1rem; }
+        h3 { color: #fff; margin: 0; font-size: 1.2rem; }
+        p { margin-bottom: 1rem; color: #ccc; }
+        a { color: var(--gold); }
+        .lead { color: var(--text-dim); margin-bottom: 3rem; font-size: 1rem; }
+        .meta { color: var(--text-dim); font-size: 0.85rem; margin-bottom: 0.5rem; font-family: 'JetBrains Mono', monospace; }
+        .post-card { display: block; padding: 1.5rem; border: 1px solid var(--border); border-radius: 8px; margin-bottom: 1rem; text-decoration: none; transition: border-color 0.2s; }
+        .post-card:hover { border-color: var(--gold); }
+        .post-card .meta { color: #555; font-size: 0.75rem; margin-bottom: 0.5rem; }
+        .post-card p { color: var(--text-dim); font-size: 0.9rem; margin: 0.4rem 0 0; }
+        article p { color: #ccc; }
+        article strong { color: #fff; }
+        pre { background: #111; padding: 1rem; border-radius: 6px; overflow-x: auto; margin: 1rem 0; border: 1px solid var(--border); }
+        code { font-family: 'JetBrains Mono', monospace; background: rgba(247,187,46,0.1); color: var(--gold); padding: 0.1rem 0.4rem; border-radius: 3px; font-size: 0.9em; }
+        pre code { padding: 0; background: transparent; color: var(--text); }
+        .translation { margin-top: 3rem; padding: 1rem; border: 1px solid var(--border); border-radius: 6px; font-size: 0.85rem; color: var(--text-dim); }
+        .back { display: inline-block; margin-top: 2rem; font-family: 'JetBrains Mono', monospace; font-size: 0.85rem; }
+        footer { margin-top: 4rem; padding-top: 2rem; border-top: 1px solid var(--border); color: var(--text-dim); font-size: 0.8rem; text-align: center; }
+    </style>
+</head>
+<body>
+    <nav>
+        <a href="/" class="brand"><?= htmlspecialchars($brand_prefix) ?> · <?= htmlspecialchars($brand_suffix) ?></a>
+        <div>
+            <a href="/">EN</a>
+            <a href="/da/">DA</a>
+        </div>
+    </nav>
+
+    <?= $body ?>
+
+    <footer><?= htmlspecialchars($footer_text) ?></footer>
+</body>
+</html>

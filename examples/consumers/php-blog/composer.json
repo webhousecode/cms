@@ -1,0 +1,17 @@
+{
+    "name": "webhouse/cms-example-php-blog",
+    "description": "F125 reference consumer example — PHP 8 reading @webhouse/cms JSON content (Laravel-compatible)",
+    "type": "project",
+    "license": "MIT",
+    "require": {
+        "php": "^8.1",
+        "ext-json": "*",
+        "league/commonmark": "^2.5"
+    },
+    "autoload": {
+        "psr-4": {
+            "Webhouse\\Cms\\": "src/"
+        }
+    },
+    "minimum-stability": "stable"
+}
