@@ -26,9 +26,18 @@ import { getUserById, getUserByEmail, saveUser, type StoredPasskey, type User } 
 
 /** Derive rpID (hostname) + origin from a request. */
 export function getRpFromRequest(req: Request): { rpID: string; origin: string; rpName: string } {
+  // Behind a reverse proxy (Fly.io, Vercel, nginx) req.url reflects the
+  // internal address — we must trust x-forwarded-host / x-forwarded-proto
+  // so the RP ID matches what the browser actually sees, otherwise
+  // verifyRegistrationResponse rejects the attestation.
+  const h = req.headers;
+  const fwdHost = h.get("x-forwarded-host");
+  const fwdProto = h.get("x-forwarded-proto");
   const url = new URL(req.url);
-  const rpID = url.hostname; // e.g. "localhost" or "cms.webhouse.app"
-  const origin = `${url.protocol}//${url.host}`;
+  const host = fwdHost ?? url.host;
+  const proto = fwdProto ?? url.protocol.replace(":", "");
+  const rpID = host.split(":")[0]!; // strip port
+  const origin = `${proto}://${host}`;
   const rpName = "webhouse.app CMS";
   return { rpID, origin, rpName };
 }
