@@ -31,6 +31,7 @@ This guide is split into **20 focused modules**. Fetch only what you need for th
 | 18 | **Deployment** | Vercel, Docker, Fly.io deployment checklist |
 | 19 | **Troubleshooting** | Common errors, debugging, FAQ |
 | 20 | **Interactives** | Data-driven interactive content, embedding |
+| 21 | **Framework Consumers** | Non-TS readers (Java, .NET, PHP, Python, Ruby, Go), schema export rules — **fetch this whenever modifying `cms.config.ts` in a project that has non-TS consumers** |
 
 **Example:** To fetch the field types reference:
 ```
@@ -48,6 +49,9 @@ fetch https://raw.githubusercontent.com/webhousecode/cms/main/docs/ai-guide/03-f
 - **"Block-based pages"** → fetch 04, 03, 08
 - **"Content relationships"** → fetch 14, 02
 - **"Interactives"** → fetch 20, 05
+- **"Add Java/PHP/Python/Ruby/Go/.NET consumer"** → fetch 21, 02
+- **"Modify cms.config.ts in a framework consumer project"** → fetch 21 (mandatory schema re-export rule)
+- **"Run schema export"** → fetch 21
 
 ---
 
