@@ -146,6 +146,30 @@ export async function saveLocalTemplate(
   return template;
 }
 
+export async function updateLocalTemplate(
+  orgId: string,
+  id: string,
+  patch: Partial<Omit<AgentTemplate, "id" | "createdAt" | "source">>,
+): Promise<AgentTemplate> {
+  const existing = await getLocalTemplate(orgId, id);
+  if (!existing) throw new Error(`Template ${id} not found`);
+  // Marketplace ids should never end up here in practice (they're read-only),
+  // but defensively we still refuse to mutate any non-local entry.
+  if (existing.source !== "local") {
+    throw new Error("Only local templates can be edited");
+  }
+  const updated: AgentTemplate = {
+    ...existing,
+    ...patch,
+    id: existing.id,
+    createdAt: existing.createdAt,
+    source: "local",
+  };
+  const dir = await getTemplatesDir(orgId);
+  await fs.writeFile(path.join(dir, `${id}.json`), JSON.stringify(updated, null, 2));
+  return updated;
+}
+
 export async function deleteLocalTemplate(orgId: string, id: string): Promise<void> {
   const dir = await getTemplatesDir(orgId);
   await fs.unlink(path.join(dir, `${id}.json`));

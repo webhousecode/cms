@@ -79,6 +79,19 @@ export function AgentsTabs({ agents, readOnly }: { agents: AgentConfig[]; readOn
   );
 }
 
+interface EditDraft {
+  name: string;
+  description: string;
+  category: string;
+  systemPrompt: string;
+  temperature: number;
+  formality: number;
+  verbosity: number;
+  webSearch: boolean;
+  internalDatabase: boolean;
+  imageGeneration: boolean;
+}
+
 function TemplatesTab({ readOnly }: { readOnly: boolean }) {
   const [local, setLocal] = useState<AgentTemplate[]>([]);
   const [marketplace, setMarketplace] = useState<AgentTemplate[]>([]);
@@ -86,6 +99,10 @@ function TemplatesTab({ readOnly }: { readOnly: boolean }) {
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
   const [confirming, setConfirming] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState<EditDraft | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [editError, setEditError] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -118,6 +135,80 @@ function TemplatesTab({ readOnly }: { readOnly: boolean }) {
     }
   }
 
+  function startEditTemplate(t: AgentTemplate) {
+    const p = t.payload as Record<string, unknown>;
+    const beh = (p.behavior ?? {}) as { temperature?: number; formality?: number; verbosity?: number };
+    const tools = (p.tools ?? {}) as { webSearch?: boolean; internalDatabase?: boolean; imageGeneration?: boolean };
+    setEditingId(t.id);
+    setEditDraft({
+      name: t.name,
+      description: t.description ?? "",
+      category: t.category ?? "",
+      systemPrompt: typeof p.systemPrompt === "string" ? p.systemPrompt : "",
+      temperature: beh.temperature ?? 50,
+      formality: beh.formality ?? 50,
+      verbosity: beh.verbosity ?? 50,
+      webSearch: !!tools.webSearch,
+      internalDatabase: tools.internalDatabase !== false,
+      imageGeneration: !!tools.imageGeneration,
+    });
+    setEditError("");
+  }
+
+  function cancelEdit() {
+    setEditingId(null);
+    setEditDraft(null);
+    setEditError("");
+  }
+
+  async function handleSaveEdit(t: AgentTemplate) {
+    if (!editDraft) return;
+    setSaving(true);
+    setEditError("");
+    try {
+      // Reuse the existing payload as the base, then patch the editable fields.
+      // Anything we don't expose in the form (autonomy, targetCollections,
+      // fieldDefaults, role) is preserved.
+      const basePayload = (t.payload ?? {}) as Record<string, unknown>;
+      const newPayload = {
+        ...basePayload,
+        name: editDraft.name,
+        systemPrompt: editDraft.systemPrompt,
+        behavior: {
+          temperature: editDraft.temperature,
+          formality: editDraft.formality,
+          verbosity: editDraft.verbosity,
+        },
+        tools: {
+          webSearch: editDraft.webSearch,
+          internalDatabase: editDraft.internalDatabase,
+          imageGeneration: editDraft.imageGeneration,
+        },
+      };
+      const res = await fetch(`/api/cms/agent-templates/${t.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: editDraft.name,
+          description: editDraft.description,
+          category: editDraft.category || undefined,
+          payload: newPayload,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setEditError(data.error ?? "Failed to save");
+        return;
+      }
+      cancelEdit();
+      await load();
+    } catch {
+      setEditError("Network error");
+    } finally {
+      setSaving(false);
+    }
+  }
+
   if (loading) {
     return <p className="text-sm text-muted-foreground">Loading templates…</p>;
   }
@@ -140,8 +231,96 @@ function TemplatesTab({ readOnly }: { readOnly: boolean }) {
             No local templates yet. Open an agent and click <strong>Save as template</strong> in the action bar to make one.
           </div>
         ) : (
-          <div className="grid gap-3" style={{ gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))" }}>
+          <div className="grid gap-3" style={{ gridTemplateColumns: editingId ? "1fr" : "repeat(auto-fill, minmax(280px, 1fr))" }}>
             {local.map((t) => (
+              editingId === t.id && editDraft ? (
+                <div key={t.id} className="rounded-lg border border-primary/40 bg-primary/5 p-5 space-y-3">
+                  <p className="text-sm font-semibold">Edit template</p>
+                  {editError && <p className="text-xs text-destructive">{editError}</p>}
+                  <div>
+                    <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">Name</label>
+                    <input
+                      type="text"
+                      value={editDraft.name}
+                      onChange={(e) => setEditDraft({ ...editDraft, name: e.target.value })}
+                      className="w-full px-2 py-1.5 rounded border border-border bg-background text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">Description</label>
+                    <input
+                      type="text"
+                      value={editDraft.description}
+                      onChange={(e) => setEditDraft({ ...editDraft, description: e.target.value })}
+                      className="w-full px-2 py-1.5 rounded border border-border bg-background text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">Category</label>
+                    <input
+                      type="text"
+                      value={editDraft.category}
+                      onChange={(e) => setEditDraft({ ...editDraft, category: e.target.value })}
+                      placeholder="e.g. blog, fitness, ecommerce"
+                      className="w-full px-2 py-1.5 rounded border border-border bg-background text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">System prompt</label>
+                    <textarea
+                      value={editDraft.systemPrompt}
+                      onChange={(e) => setEditDraft({ ...editDraft, systemPrompt: e.target.value })}
+                      rows={6}
+                      className="w-full px-2 py-1.5 rounded border border-border bg-background text-xs font-mono"
+                    />
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    <div>
+                      <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">Creativity ({editDraft.temperature})</label>
+                      <input type="range" min={0} max={100} value={editDraft.temperature} onChange={(e) => setEditDraft({ ...editDraft, temperature: Number(e.target.value) })} className="w-full accent-[var(--primary)]" />
+                    </div>
+                    <div>
+                      <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">Formality ({editDraft.formality})</label>
+                      <input type="range" min={0} max={100} value={editDraft.formality} onChange={(e) => setEditDraft({ ...editDraft, formality: Number(e.target.value) })} className="w-full accent-[var(--primary)]" />
+                    </div>
+                    <div>
+                      <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">Verbosity ({editDraft.verbosity})</label>
+                      <input type="range" min={0} max={100} value={editDraft.verbosity} onChange={(e) => setEditDraft({ ...editDraft, verbosity: Number(e.target.value) })} className="w-full accent-[var(--primary)]" />
+                    </div>
+                  </div>
+                  <div className="flex gap-3 text-xs">
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input type="checkbox" checked={editDraft.webSearch} onChange={(e) => setEditDraft({ ...editDraft, webSearch: e.target.checked })} className="accent-primary" />
+                      Web search
+                    </label>
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input type="checkbox" checked={editDraft.internalDatabase} onChange={(e) => setEditDraft({ ...editDraft, internalDatabase: e.target.checked })} className="accent-primary" />
+                      Internal database
+                    </label>
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input type="checkbox" checked={editDraft.imageGeneration} onChange={(e) => setEditDraft({ ...editDraft, imageGeneration: e.target.checked })} className="accent-primary" />
+                      Image generation
+                    </label>
+                  </div>
+                  <div className="flex gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => handleSaveEdit(t)}
+                      disabled={saving || !editDraft.name.trim()}
+                      className="px-3 py-1.5 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50"
+                    >
+                      {saving ? "Saving…" : "Save changes"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={cancelEdit}
+                      className="px-3 py-1.5 rounded-md text-xs border border-border hover:bg-secondary"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              ) : (
               <div
                 key={t.id}
                 className="rounded-lg border border-border bg-card p-4 flex flex-col gap-2"
@@ -178,14 +357,24 @@ function TemplatesTab({ readOnly }: { readOnly: boolean }) {
                         </button>
                       </div>
                     ) : (
-                      <button
-                        type="button"
-                        onClick={() => setConfirming(t.id)}
-                        title="Delete template"
-                        className="p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
+                      <div className="flex items-center gap-1 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => startEditTemplate(t)}
+                          title="Edit template"
+                          className="p-1 rounded hover:bg-secondary text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setConfirming(t.id)}
+                          title="Delete template"
+                          className="p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     )
                   )}
                 </div>
@@ -196,6 +385,7 @@ function TemplatesTab({ readOnly }: { readOnly: boolean }) {
                   Saved {new Date(t.createdAt).toLocaleDateString()}
                 </p>
               </div>
+              )
             ))}
           </div>
         )}

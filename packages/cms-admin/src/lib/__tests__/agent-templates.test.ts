@@ -18,6 +18,7 @@ import {
   listLocalTemplates,
   getLocalTemplate,
   saveLocalTemplate,
+  updateLocalTemplate,
   deleteLocalTemplate,
 } from "../agent-templates";
 import { fetchMarketplaceTemplates, clearMarketplaceCache } from "../marketplace-templates";
@@ -152,6 +153,38 @@ describe("local template storage", () => {
     });
     await deleteLocalTemplate("acme", saved.id);
     expect(await getLocalTemplate("acme", saved.id)).toBeNull();
+  });
+
+  it("updates a local template's editable fields without touching id/createdAt/source", async () => {
+    const saved = await saveLocalTemplate("acme", {
+      name: "Original",
+      description: "before",
+      category: "blog",
+      payload: agentToTemplatePayload(makeAgent({ name: "Original" })),
+    });
+    const updated = await updateLocalTemplate("acme", saved.id, {
+      name: "Renamed",
+      description: "after",
+      category: "fitness",
+      payload: agentToTemplatePayload(makeAgent({ name: "Renamed", systemPrompt: "New prompt" })),
+    });
+    expect(updated.id).toBe(saved.id);
+    expect(updated.createdAt).toBe(saved.createdAt);
+    expect(updated.source).toBe("local");
+    expect(updated.name).toBe("Renamed");
+    expect(updated.description).toBe("after");
+    expect(updated.category).toBe("fitness");
+    expect(updated.payload.systemPrompt).toBe("New prompt");
+
+    // Round-trip
+    const fetched = await getLocalTemplate("acme", saved.id);
+    expect(fetched?.name).toBe("Renamed");
+  });
+
+  it("updateLocalTemplate throws on missing id", async () => {
+    await expect(
+      updateLocalTemplate("acme", "tpl-missing", { name: "X" }),
+    ).rejects.toThrow(/not found/);
   });
 });
 
