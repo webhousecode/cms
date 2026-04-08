@@ -3,6 +3,7 @@ import { useLocation } from "wouter";
 import { Screen } from "@/components/Screen";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
+import { Logo } from "@/components/Logo";
 import { ApiError, exchangePairingToken, loginWithPassword } from "@/api/client";
 import { setJwt, setLastUserEmail } from "@/lib/prefs";
 import { onDeepLink } from "@/lib/bridge";
@@ -86,7 +87,10 @@ export function Login() {
   return (
     <Screen className="px-6">
       <div className="flex flex-1 flex-col gap-6 py-10">
-        <h1 className="text-2xl font-semibold">Sign in</h1>
+        <div className="flex flex-col items-center gap-3 pt-4 pb-2">
+          <Logo size={64} withWordmark />
+        </div>
+        <h1 className="text-2xl font-semibold text-center">Sign in</h1>
 
         {/* Tab switcher */}
         <div className="flex gap-2 rounded-xl bg-brand-darkSoft p-1">

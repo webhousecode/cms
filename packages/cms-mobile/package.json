@@ -12,7 +12,8 @@
     "android": "./scripts/android-boot.sh",
     "icons:generate": "./scripts/icons-generate.sh",
     "deeplink:login": "./scripts/ios-deeplink-login.sh",
-    "sim:add-qr": "./scripts/sim-add-qr.sh"
+    "sim:add-qr": "./scripts/sim-add-qr.sh",
+    "sim:login": "node scripts/sim-login.mjs"
   },
   "dependencies": {
     "@capacitor-mlkit/barcode-scanning": "^7.0.0",

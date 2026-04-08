@@ -4,6 +4,7 @@ import { GeneralSettingsPanel, PasswordChangePanel } from "@/components/settings
 import { PasskeysPanel } from "@/components/settings/passkeys-panel";
 import { TotpPanel } from "@/components/settings/totp-panel";
 import { SectionHeading } from "@/components/ui/section-heading";
+import { MobilePairingClient } from "./mobile-pairing/client";
 
 export default async function AccountPage({
   searchParams,
@@ -16,6 +17,7 @@ export default async function AccountPage({
     { id: "general", label: "General" },
     { id: "security", label: "Security" },
     { id: "tokens", label: "Access Tokens" },
+    { id: "mobile", label: "Mobile" },
   ];
 
   return (
@@ -109,6 +111,19 @@ export default async function AccountPage({
                 <p className="text-xs text-muted-foreground mt-1">Generate a token to authenticate API requests.</p>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Mobile tab — F07 webhouse.app pairing QR */}
+        {tab === "mobile" && (
+          <div className="max-w-2xl space-y-6">
+            <div>
+              <SectionHeading>Pair mobile device</SectionHeading>
+              <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "-0.5rem", marginBottom: "0.5rem" }}>
+                Sign in to the webhouse.app mobile app by scanning this QR code with your phone. The QR encodes both the server URL and a one-time pairing token — single-use, 5-minute TTL.
+              </p>
+            </div>
+            <MobilePairingClient />
           </div>
         )}
       </div>

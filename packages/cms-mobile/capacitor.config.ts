@@ -13,6 +13,19 @@ const config: CapacitorConfig = {
   backgroundColor: "#0D0D0D",
 
   plugins: {
+    // CapacitorHttp patches window.fetch to route through native NSURLSession
+    // (iOS) / OkHttp (Android) instead of WKWebView's sandboxed fetch.
+    //
+    // CRITICAL: without this, fetch() to localhost / self-signed certs from
+    // the JS context fails with "TypeError: Load failed" because WKWebView's
+    // fetch ignores Info.plist NSAppTransportSecurity exceptions. Native
+    // HTTP honors ATS, which is the expected behavior we configured.
+    //
+    // It also gives us free CORS bypass — native HTTP doesn't enforce CORS
+    // at all, so the BYO-server-URL model just works against any cms-admin.
+    CapacitorHttp: {
+      enabled: true,
+    },
     SplashScreen: {
       launchShowDuration: 1500,
       launchAutoHide: true,

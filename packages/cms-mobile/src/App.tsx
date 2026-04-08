@@ -4,22 +4,29 @@ import { Onboarding } from "./screens/Onboarding";
 import { Login } from "./screens/Login";
 import { Biometric } from "./screens/Biometric";
 import { Home } from "./screens/Home";
-import { getServerUrl, getJwt } from "./lib/prefs";
+import { getJwt, getServerUrl } from "./lib/prefs";
+import { onDeepLink } from "./lib/bridge";
+import { consumePairingDeepLink } from "./lib/pairing-flow";
 import { Spinner } from "./components/Spinner";
 
 /**
- * Top-level router.
+ * Top-level router + global deep link handler.
  *
  * Boot decision tree:
  * - No server URL set      → Onboarding
  * - Server set, no JWT     → Login
  * - JWT + biometric set    → Biometric (then Home)
  * - JWT + no biometric     → Home
+ *
+ * Deep links: ANY screen can receive a `webhouseapp://login?server=...&token=...`
+ * URL. The handler runs at the App root so a brand-new install can be paired
+ * by scanning a QR — no need to fill in the server URL manually first.
  */
 export function App() {
   const [, setLocation] = useLocation();
   const [booted, setBooted] = useState(false);
 
+  // Initial boot: figure out where to land
   useEffect(() => {
     void (async () => {
       const serverUrl = await getServerUrl();
@@ -35,6 +42,19 @@ export function App() {
       }
       setBooted(true);
     })();
+  }, [setLocation]);
+
+  // Global deep link handler — runs from any screen, even Onboarding
+  useEffect(() => {
+    return onDeepLink(async (url) => {
+      try {
+        await consumePairingDeepLink(url);
+        setLocation("/home");
+      } catch (err) {
+        console.error("Deep link pairing failed:", err);
+        // Stay on current screen; the screen-level handler can show its own toast
+      }
+    });
   }, [setLocation]);
 
   if (!booted) {

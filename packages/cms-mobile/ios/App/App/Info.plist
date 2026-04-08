@@ -51,10 +51,37 @@
 	<false/>
 	<key>NSAppTransportSecurity</key>
 	<dict>
+		<!--
+		  DEV scoping: production traffic goes through normal TLS chains.
+		  We explicitly grant exceptions for:
+		    - localhost: dev cms-admin with mkcert self-signed cert
+		    - WebView content loads: Capacitor's local file:// → http://localhost
+		      bridge that loads bundled assets
+		    - Local network: required by Capacitor plugin discovery on Android
+		      parity (no-op on iOS but documented intent)
+
+		  This is intentionally MORE restrictive than NSAllowsArbitraryLoads.
+		  CapacitorHttp routes window.fetch through native NSURLSession which
+		  DOES honor these exceptions — verified working on iOS sim 18.x.
+		-->
 		<key>NSAllowsArbitraryLoadsInWebContent</key>
 		<true/>
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<key>localhost</key>
+			<dict>
+				<key>NSExceptionAllowsInsecureHTTPLoads</key>
+				<true/>
+				<key>NSExceptionMinimumTLSVersion</key>
+				<string>TLSv1.0</string>
+				<key>NSExceptionRequiresForwardSecrecy</key>
+				<false/>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+			</dict>
+		</dict>
 	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>webhouse.app uses the camera to scan the QR code from your CMS admin login. For example, you can open your CMS in a browser, click "Pair mobile device", and scan the displayed QR code to log in on mobile without typing your password.</string>

@@ -22,6 +22,7 @@
     "webhouse.app:android": "pnpm --filter @webhouse/cms-mobile android",
     "wha:ios": "pnpm --filter @webhouse/cms-mobile ios",
     "wha:android": "pnpm --filter @webhouse/cms-mobile android",
+    "wha:login": "pnpm --filter @webhouse/cms-mobile sim:login",
     "test:e2e": "cd packages/cms-admin && pnpm test:e2e",
     "test:all": "pnpm -r run test && cd packages/cms-admin && pnpm test:e2e",
     "clean": "pnpm --filter @webhouse/cms-admin clean"
