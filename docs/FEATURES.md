@@ -140,6 +140,7 @@
 | F122 | [Beam — Site Teleportation](#f122-beam) | Planned | [docs/features/F122-beam.md](features/F122-beam.md) |
 | F123 | [Providers / Integrations Tab](#f123-providers-tab) | Planned | [docs/features/F123-providers-tab.md](features/F123-providers-tab.md) |
 | F124 | [Snippet Embeds](#f124-snippet-embeds) | Planned | [docs/features/F124-snippet-embeds.md](features/F124-snippet-embeds.md) |
+| F127 | [Collection Purpose Metadata](#f127-collection-purpose-metadata) | Planned | [docs/features/F127-collection-purpose-metadata.md](features/F127-collection-purpose-metadata.md) |
 
 ---
 
@@ -518,6 +519,10 @@ Drop-in route handlers and metadata utilities for Next.js sites using @webhouse/
 ## F124 — Snippet Embeds
 
 TipTap node extension that renders `{{snippet:slug}}` tokens as visual pill/badge in the richtext editor. Inline preview shows snippet title, language badge, and code preview. Click to expand. Insert via toolbar button or /snippet slash command. Resolves from content/snippets/ collection. Reusable code blocks stored once, embedded everywhere.
+
+## F127 — Collection Purpose Metadata
+
+Adds optional `kind` and `description` fields to `CollectionConfig` so chat, MCP, and other AI tools understand what each collection is FOR. Five kinds: `page` (default, has URL), `snippet` (reusable fragment), `data` (records rendered on other pages like team/FAQ/testimonials), `form` (submissions, read-only), `global` (site-wide config). Chat adapts per kind: skips SEO for non-pages, hides View pill, doesn't remap body/content on data collections. Plain-English `description` fills the gaps that the enum can't express. AI Builder Guide instructs scaffolding AIs to always populate both fields. F79 validator warns softly when description is missing. Backwards compatible — undefined kind = current behavior.
 
 ## F122 — Beam — Site Teleportation
 
