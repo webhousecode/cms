@@ -17,11 +17,19 @@
  *   pnpm dlx pm2 list
  *   pnpm dlx pm2 logs cms-docs
  *
- * ⚠️  PORT 3010 IS RESERVED for the CMS admin dev server and must NEVER appear here.
+ * Port 3010 — the CMS admin dev server. PM2 manages it now (was manual
+ * before so the user wouldn't lose their session to a Claude Code mistake).
+ * Hard rule for Claude Code: NEVER kill/pkill/lsof+kill it on its own;
+ * use `pm2 restart cms-admin` only when explicitly asked by the user.
  *
- * Note: We invoke `next` directly (not via `pnpm dev`) so PM2 manages the actual
- * Next.js process. With a pnpm wrapper, if Next crashes the wrapper survives as a
- * zombie and PM2 never restarts it.
+ * The cms-admin entry is the one exception to the "no pnpm wrapper"
+ * note below: the user wants `pnpm dev` literally so it matches their
+ * manual workflow muscle memory. If next crashes inside the wrapper PM2
+ * may not auto-restart it — `pm2 restart cms-admin` to recover.
+ *
+ * Note: We invoke `next` directly (not via `pnpm dev`) for the test sites
+ * so PM2 manages the actual Next.js process. With a pnpm wrapper, if Next
+ * crashes the wrapper survives as a zombie and PM2 never restarts it.
  */
 
 const nextSite = (name, cwd, port) => ({
@@ -40,6 +48,25 @@ const nextSite = (name, cwd, port) => ({
   listen_timeout: 15000,
   kill_timeout: 5000,
 });
+
+// Live CMS admin dev server on port 3010. Runs `pnpm dev` from
+// packages/cms-admin to match the user's manual workflow exactly.
+// If the inner next process crashes the pnpm wrapper may survive as a
+// zombie — `pm2 restart cms-admin` will recover it.
+const cmsAdminDev = {
+  name: "cms-admin",
+  cwd: "/Users/cb/Apps/webhouse/cms/packages/cms-admin",
+  script: "pnpm",
+  args: "dev",
+  interpreter: "none", // pnpm is its own shebang script
+  env: { NODE_ENV: "development" },
+  autorestart: true,
+  watch: false,
+  max_memory_restart: "2G",
+  time: true,
+  listen_timeout: 30000, // Next dev server boot is slow
+  kill_timeout: 5000,
+};
 
 // Production build of cms-admin (Next.js standalone) for performance testing.
 // Uses port 4010. Shares _data with dev (CMS_CONFIG_PATH from .env.local).
@@ -65,6 +92,7 @@ const cmsAdminProd = {
 
 module.exports = {
   apps: [
+    cmsAdminDev,
     nextSite("webhouse-site", "/Users/cb/Apps/webhouse/webhouse-site", 3009),
     nextSite("cms-docs",      "/Users/cb/Apps/webhouse/cms-docs",      3036),
     nextSite("sproutlake",    "/Users/cb/Apps/cbroberg/sproutlake",    3002),
