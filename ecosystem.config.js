@@ -57,7 +57,10 @@ const cmsAdminDev = {
   name: "cms-admin",
   cwd: "/Users/cb/Apps/webhouse/cms/packages/cms-admin",
   script: "pnpm",
-  args: "dev",
+  // dev:https = `next dev --port 3010 --experimental-https --hostname 0.0.0.0`
+  // Required for WebAuthn / Web Crypto / iOS Safari testing over the LAN.
+  // Switch back to "dev" (plain HTTP) if HTTPS ever causes issues.
+  args: "dev:https",
   interpreter: "none", // pnpm is its own shebang script
   // PORT is also passed by `next dev --port 3010` inside the pnpm script,
   // but setting it here too lets `pm2 jlist` / scripts/pm2-ports.sh
