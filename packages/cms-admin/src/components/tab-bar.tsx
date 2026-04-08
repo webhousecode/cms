@@ -58,7 +58,7 @@ export function TabBar() {
   const [confirmOpen, setConfirmOpen] = useState(false);
 
   useEffect(() => {
-    fetch("/api/admin/profile")
+    fetch("/api/admin/profile", { cache: "no-store" })
       .then((r) => r.json())
       .then((d: { showCloseAllTabs?: boolean }) => setShowCloseAll(d.showCloseAllTabs ?? false))
       .catch(() => {});

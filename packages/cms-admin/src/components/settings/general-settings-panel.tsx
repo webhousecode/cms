@@ -34,18 +34,26 @@ function Toggle({ checked, onChange, label, description }: {
 	checked: boolean; onChange: (v: boolean) => void; label: string; description?: string;
 }) {
 	return (
-		<label style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "1rem", cursor: "pointer" }}>
+		<button
+			type="button"
+			onClick={() => onChange(!checked)}
+			style={{
+				display: "flex", alignItems: "center", justifyContent: "space-between",
+				gap: "1rem", cursor: "pointer", width: "100%",
+				background: "none", border: "none", padding: 0, textAlign: "left",
+				color: "inherit", font: "inherit",
+			}}
+		>
 			<div>
 				<p style={{ fontSize: "0.875rem", fontWeight: 500, margin: 0 }}>{label}</p>
 				{description && <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", margin: "0.15rem 0 0" }}>{description}</p>}
 			</div>
 			<div
-				onClick={() => onChange(!checked)}
 				style={{
 					flexShrink: 0,
 					width: "36px", height: "20px", borderRadius: "10px",
 					background: checked ? "var(--primary)" : "var(--border)",
-					position: "relative", transition: "background 200ms", cursor: "pointer",
+					position: "relative", transition: "background 200ms",
 				}}
 			>
 				<div style={{
@@ -56,7 +64,7 @@ function Toggle({ checked, onChange, label, description }: {
 					boxShadow: "0 1px 3px rgba(0,0,0,0.3)",
 				}} />
 			</div>
-		</label>
+		</button>
 	);
 }
 
@@ -297,7 +305,6 @@ function SiteSection() {
 		curationRetentionDays: 30,
 		schemaEditEnabled: false,
 		devInspector: false,
-		showCloseAllTabs: false,
 		defaultLocale: "en",
 		locales: [] as string[],
 		localeStrategy: "prefix-other",
@@ -1337,8 +1344,9 @@ function UserPreferencesSection() {
 			if (state?.mediaView) setMediaView(state.mediaView);
 			if (state?.intsView) setIntsView(state.intsView);
 		}).catch(() => {});
-		// Load global UI prefs from profile (cross-site)
-		fetch("/api/admin/profile").then((r) => r.ok ? r.json() : null).then((profile) => {
+		// Load global UI prefs from profile (cross-site).
+		// no-store: settings panel must always show server truth, never a stale cached value.
+		fetch("/api/admin/profile", { cache: "no-store" }).then((r) => r.ok ? r.json() : null).then((profile) => {
 			if (profile?.showCloseAllTabs !== undefined) setShowCloseAll(profile.showCloseAllTabs);
 		}).catch(() => {});
 	}, []);

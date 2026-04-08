@@ -14,6 +14,9 @@ import { resolveWebhooks, type WebhookCategory } from "./webhook-sources";
 import { getActiveSitePaths, getActiveSiteEntry } from "./site-paths";
 import { readSiteConfig } from "./site-config";
 import { readOrgSettingsForOrg } from "./org-settings";
+import { buildAdminDeepLink } from "./goto-links";
+
+const ADMIN_BASE = process.env.NEXTAUTH_URL || `http://localhost:${process.env.PORT || 3010}`;
 
 async function loadSources(category: WebhookCategory) {
   try {
@@ -23,13 +26,14 @@ async function loadSources(category: WebhookCategory) {
       getActiveSiteEntry().catch(() => null),
     ]);
 
-    // Resolve org settings for inheritance
+    // Resolve org settings for inheritance + capture orgId for deep links
     let orgSettings = null;
+    let orgId: string | null = null;
     try {
       // Read the active org ID from cookies — only works in request context
       const { cookies } = await import("next/headers");
       const cookieStore = await cookies();
-      const orgId = cookieStore.get("cms-active-org")?.value;
+      orgId = cookieStore.get("cms-active-org")?.value ?? null;
       if (orgId) {
         orgSettings = await readOrgSettingsForOrg(orgId).catch(() => null);
       }
@@ -42,11 +46,32 @@ async function loadSources(category: WebhookCategory) {
       webhooks,
       dataDir: sitePaths?.dataDir,
       siteName: siteEntry?.name,
-      siteId: siteEntry?.id,
+      siteId: siteEntry?.id ?? null,
+      orgId,
     };
   } catch {
-    return { webhooks: [], dataDir: undefined, siteName: undefined, siteId: undefined };
+    return { webhooks: [], dataDir: undefined, siteName: undefined, siteId: null, orgId: null };
   }
+}
+
+/**
+ * Build a deep link for a notification embed. Wraps with /admin/goto so the
+ * recipient lands in the correct org+site, falling back to a raw URL when
+ * org/site context is unavailable. See `buildAdminDeepLink` for details.
+ */
+async function deepLink(
+  src: { orgId: string | null; siteId: string | null },
+  path: string,
+  label?: string,
+): Promise<string | undefined> {
+  if (!/^https?:\/\//i.test(ADMIN_BASE)) return undefined;
+  return buildAdminDeepLink({
+    base: ADMIN_BASE,
+    path,
+    orgId: src.orgId,
+    siteId: src.siteId,
+    ...(label ? { label } : {}),
+  });
 }
 
 /**
@@ -70,6 +95,13 @@ export async function fireContentEvent(
     : action === "restored" ? 0x3b82f6
     : 0xF7BB2E;
 
+  // Deep link to the document — trash and unpublish go to the trash list
+  // because the document no longer lives in the collection list view.
+  const linkPath = (action === "trashed" || action === "unpublished")
+    ? `/admin/trash`
+    : `/admin/${collection}/${slug}`;
+  const linkUrl = await deepLink(src, linkPath, `content.${action} → ${title}`);
+
   const evt: WebhookEvent = {
     event: `content.${action}`,
     title: `${action.charAt(0).toUpperCase() + action.slice(1)}: ${title}`,
@@ -83,6 +115,7 @@ export async function fireContentEvent(
     siteName: src.siteName,
     actor,
     data: doc as Record<string, unknown> | undefined,
+    linkUrl,
   };
 
   dispatchWebhooks(src.webhooks, evt, src.dataDir).catch(() => {});
@@ -178,6 +211,8 @@ export async function fireDeployEvent(
   if (details?.durationMs !== undefined) fields.push({ name: "Duration", value: `${(details.durationMs / 1000).toFixed(1)}s` });
   if (details?.error) fields.push({ name: "Error", value: details.error });
 
+  const linkUrl = await deepLink(src, "/admin/deploy", `deploy.${action} → ${provider}`);
+
   const evt: WebhookEvent = {
     event: `deploy.${action}`,
     title: `Deploy ${action}: ${provider}`,
@@ -186,6 +221,7 @@ export async function fireDeployEvent(
     fields,
     siteName: src.siteName,
     actor,
+    linkUrl,
   };
 
   dispatchWebhooks(src.webhooks, evt, src.dataDir).catch(() => {});
@@ -208,6 +244,8 @@ export async function fireMediaEvent(
   if (details?.mimeType) fields.push({ name: "Type", value: details.mimeType });
   if (details?.size !== undefined) fields.push({ name: "Size", value: `${(details.size / 1024).toFixed(1)} KB` });
 
+  const linkUrl = await deepLink(src, "/admin/media", `media.${action} → ${filename}`);
+
   const evt: WebhookEvent = {
     event: `media.${action}`,
     title: `Media ${action}: ${filename}`,
@@ -216,6 +254,7 @@ export async function fireMediaEvent(
     fields,
     siteName: src.siteName,
     actor,
+    linkUrl,
   };
 
   dispatchWebhooks(src.webhooks, evt, src.dataDir).catch(() => {});

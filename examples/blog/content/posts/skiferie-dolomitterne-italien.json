@@ -2,7 +2,7 @@
   "id": "hflCW_AX04oKFDhsReAxV",
   "slug": "skiferie-dolomitterne-italien",
   "collection": "posts",
-  "status": "draft",
+  "status": "published",
   "data": {
     "title": "Dolomitterne, Italien – UNESCO-skiferie med stil",
     "excerpt": "Dolomitterne er ikke bare smukke – de er et UNESCO-verdensarvssted og hjem for Superski Dolomiti med 1.200 km pister. Kombinationen af italiensk charme og alpint eventyr er uslåelig.",
@@ -30,7 +30,6 @@
   },
   "_fieldMeta": {},
   "createdAt": "2026-03-27T23:51:48.922Z",
-  "updatedAt": "2026-03-28T18:36:58.107Z",
-  "publishAt": "2026-04-02T09:00:00",
+  "updatedAt": "2026-04-06T21:29:14.882Z",
   "locale": "da"
 }

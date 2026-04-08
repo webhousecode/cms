@@ -2,9 +2,10 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Heart, Search, ArrowUpDown, X, List, Grid3x3, FileText, Settings2, Globe, Wrench, Zap } from "lucide-react";
+import { Heart, Search, ArrowUpDown, X, List, LayoutGrid, FileText, Settings2, Wrench, Zap } from "lucide-react";
 import { useFavorites } from "@/lib/hooks/use-favorites";
 import type { Favorite } from "@/lib/user-state";
+import { PreviewThumb } from "@/components/preview-thumb";
 
 type ViewMode = "list" | "grid";
 type SortKey = "label" | "type" | "addedAt";
@@ -36,10 +37,27 @@ export function FavoritesList() {
     return (localStorage.getItem("cms-favorites-view") as ViewMode) || "list";
   });
   const [typeFilter, setTypeFilter] = useState<string>("all");
+  const [previewBase, setPreviewBase] = useState<string>("");
 
   useEffect(() => {
     localStorage.setItem("cms-favorites-view", view);
   }, [view]);
+
+  // Fetch site preview base URL once (for grid view thumbnails of document favorites)
+  useEffect(() => {
+    fetch("/api/admin/site-config")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => { if (d?.previewSiteUrl) setPreviewBase(d.previewSiteUrl); })
+      .catch(() => {});
+  }, []);
+
+  function favPreviewUrl(fav: Favorite): string {
+    if (!previewBase || fav.type !== "document") return "";
+    // Heuristic: admin path /admin/<collection>/<slug> → preview <base>/<collection>/<slug>
+    // Works for the default urlPrefix convention; PreviewThumb falls back gracefully.
+    const sitePath = fav.path.replace(/^\/admin/, "") || "/";
+    return `${previewBase.replace(/\/$/, "")}${sitePath}`;
+  }
 
   const filtered = favorites
     .filter((f) => {
@@ -154,32 +172,23 @@ export function FavoritesList() {
 
         {/* View toggle */}
         <div style={{ display: "flex", border: "1px solid var(--border)", borderRadius: "6px", overflow: "hidden" }}>
-          <button
-            type="button"
-            onClick={() => setView("list")}
-            title="List view"
-            style={{
-              padding: "0.4rem 0.55rem", border: "none",
-              background: view === "list" ? "var(--secondary)" : "transparent",
-              color: view === "list" ? "var(--foreground)" : "var(--muted-foreground)",
-              cursor: "pointer", display: "flex", alignItems: "center",
-            }}
-          >
-            <List style={{ width: "0.9rem", height: "0.9rem" }} />
-          </button>
-          <button
-            type="button"
-            onClick={() => setView("grid")}
-            title="Grid view"
-            style={{
-              padding: "0.4rem 0.55rem", border: "none",
-              background: view === "grid" ? "var(--secondary)" : "transparent",
-              color: view === "grid" ? "var(--foreground)" : "var(--muted-foreground)",
-              cursor: "pointer", display: "flex", alignItems: "center",
-            }}
-          >
-            <Grid3x3 style={{ width: "0.9rem", height: "0.9rem" }} />
-          </button>
+          {(["grid", "list"] as ViewMode[]).map((v) => (
+            <button
+              key={v}
+              type="button"
+              onClick={() => setView(v)}
+              style={{
+                padding: "0.25rem 0.5rem", background: view === v ? "var(--accent)" : "transparent",
+                border: "none", cursor: "pointer", color: view === v ? "var(--foreground)" : "var(--muted-foreground)",
+                display: "flex", alignItems: "center",
+              }}
+              title={v === "grid" ? "Grid view" : "List view"}
+            >
+              {v === "grid"
+                ? <LayoutGrid style={{ width: "0.875rem", height: "0.875rem" }} />
+                : <List style={{ width: "0.875rem", height: "0.875rem" }} />}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -269,6 +278,7 @@ export function FavoritesList() {
         }}>
           {filtered.map((fav: Favorite) => {
             const Icon = TYPE_ICONS[fav.type] ?? FileText;
+            const previewUrl = favPreviewUrl(fav);
             return (
               <div
                 key={fav.id}
@@ -278,45 +288,60 @@ export function FavoritesList() {
                   border: "1px solid var(--border)",
                   background: "var(--card)",
                   overflow: "hidden",
+                  display: "flex",
+                  flexDirection: "column",
                   transition: "border-color 120ms",
                 }}
                 className="hover:border-primary/50"
               >
-                <Link href={fav.path} style={{ display: "block", textDecoration: "none", padding: "1rem" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
+                <Link href={fav.path} style={{ display: "flex", flexDirection: "column", textDecoration: "none", flex: 1 }}>
+                  {/* Preview thumb (only for document favorites) */}
+                  {previewUrl ? (
+                    <PreviewThumb previewUrl={previewUrl} title={fav.label} />
+                  ) : (
                     <div style={{
-                      width: 32, height: 32, borderRadius: 6,
-                      background: "color-mix(in srgb, #ef4444 10%, transparent)",
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      flexShrink: 0,
+                      width: "100%", minHeight: "8rem", flex: 1,
+                      background: "var(--muted)", display: "flex",
+                      alignItems: "center", justifyContent: "center",
                     }}>
-                      <Icon style={{ width: "1rem", height: "1rem", color: "#ef4444" }} />
+                      <div style={{
+                        width: 48, height: 48, borderRadius: 10,
+                        background: "color-mix(in srgb, #ef4444 12%, transparent)",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                      }}>
+                        <Icon style={{ width: "1.5rem", height: "1.5rem", color: "#ef4444" }} />
+                      </div>
                     </div>
-                    <span style={{
-                      fontSize: "0.6rem", padding: "0.1rem 0.4rem", borderRadius: 3,
-                      background: "var(--muted)", color: "var(--muted-foreground)",
-                      textTransform: "uppercase", fontWeight: 600, letterSpacing: "0.03em",
+                  )}
+                  <div style={{ padding: "0.875rem 1rem" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", marginBottom: "0.4rem" }}>
+                      <Icon style={{ width: "0.8rem", height: "0.8rem", color: "var(--muted-foreground)", flexShrink: 0 }} />
+                      <span style={{
+                        fontSize: "0.6rem", padding: "0.1rem 0.4rem", borderRadius: 3,
+                        background: "var(--muted)", color: "var(--muted-foreground)",
+                        textTransform: "uppercase", fontWeight: 600, letterSpacing: "0.03em",
+                      }}>
+                        {TYPE_LABELS[fav.type] ?? fav.type}
+                      </span>
+                    </div>
+                    <p style={{
+                      fontSize: "0.9rem", fontWeight: 600, color: "var(--foreground)",
+                      margin: 0, overflow: "hidden", textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
                     }}>
-                      {TYPE_LABELS[fav.type] ?? fav.type}
-                    </span>
+                      {fav.label}
+                    </p>
+                    <p style={{
+                      fontSize: "0.7rem", color: "var(--muted-foreground)",
+                      fontFamily: "monospace", margin: "0.35rem 0 0",
+                      overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
+                    }}>
+                      {fav.path}
+                    </p>
+                    <p style={{ fontSize: "0.68rem", color: "var(--muted-foreground)", margin: "0.5rem 0 0" }}>
+                      Added {new Date(fav.addedAt).toLocaleDateString("da-DK", { day: "2-digit", month: "short" })}
+                    </p>
                   </div>
-                  <p style={{
-                    fontSize: "0.9rem", fontWeight: 600, color: "var(--foreground)",
-                    margin: 0, overflow: "hidden", textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}>
-                    {fav.label}
-                  </p>
-                  <p style={{
-                    fontSize: "0.7rem", color: "var(--muted-foreground)",
-                    fontFamily: "monospace", margin: "0.35rem 0 0",
-                    overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                  }}>
-                    {fav.path}
-                  </p>
-                  <p style={{ fontSize: "0.68rem", color: "var(--muted-foreground)", margin: "0.5rem 0 0" }}>
-                    Added {new Date(fav.addedAt).toLocaleDateString("da-DK", { day: "2-digit", month: "short" })}
-                  </p>
                 </Link>
                 <button
                   type="button"

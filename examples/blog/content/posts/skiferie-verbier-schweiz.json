@@ -2,7 +2,7 @@
   "id": "CTbkRhgqrJuVI8JcEihyf",
   "slug": "skiferie-verbier-schweiz",
   "collection": "posts",
-  "status": "draft",
+  "status": "published",
   "data": {
     "title": "Verbier, Schweiz – det ultimative skimål for de vilde",
     "excerpt": "Verbier er de ekspertes paradis. Med adgang til 4 Vallées-skiområdet, vilde off-piste ruter og en uforglemmelig atmosfære er det en destination på sin egen liga.",
@@ -101,7 +101,6 @@
   },
   "_fieldMeta": {},
   "createdAt": "2026-03-27T23:51:48.917Z",
-  "updatedAt": "2026-03-28T18:36:58.136Z",
-  "publishAt": "2026-04-01T09:00:00",
+  "updatedAt": "2026-04-01T11:45:43.776Z",
   "locale": "da"
 }

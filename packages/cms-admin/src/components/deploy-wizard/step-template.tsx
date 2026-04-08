@@ -39,9 +39,12 @@ export function StepTemplate({ selected, onSelect }: Props) {
       setTemplates(tmplData.templates ?? []);
       // Extract sites from all orgs
       if (regData.registry?.orgs) {
+        const seen = new Set<string>();
         const allSites: OrgSite[] = [];
         for (const org of regData.registry.orgs) {
           for (const site of org.sites ?? []) {
+            if (seen.has(site.id)) continue;
+            seen.add(site.id);
             allSites.push({ id: site.id, name: site.name, adapter: site.adapter });
           }
         }

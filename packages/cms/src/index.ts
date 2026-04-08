@@ -57,8 +57,35 @@ import type { CmsConfig } from './schema/types.js';
 import type { StorageAdapter } from './storage/types.js';
 import type { BuildOptions } from './build/pipeline.js';
 
-export async function createCms(config: CmsConfig, options?: { storage?: StorageAdapter }) {
+export async function createCms(
+  config: CmsConfig,
+  options?: {
+    storage?: StorageAdapter;
+    /**
+     * Strict mode — reject relative `filesystem.contentDir` / `uploadDir` with
+     * a hard error. Use this in multi-tenant hosts (CMS admin panel) where the
+     * config is loaded for many sites in the same process and `process.cwd()`
+     * cannot be trusted. Single-site builds (npx cms build) should leave this
+     * off; relative paths are resolved against `process.cwd()` as before.
+     */
+    strict?: boolean;
+  },
+) {
   const validated = validateConfig(config);
+
+  // Strict mode: enforce absolute paths so we can't silently read content from
+  // the wrong tenant's directory due to a process.chdir race. See cms-admin's
+  // lib/site-pool.ts (`absolutizeConfigPaths`) for the call site that uses this.
+  if (options?.strict) {
+    const fs = validated.storage?.adapter === "filesystem" ? validated.storage.filesystem : undefined;
+    if (fs?.contentDir && !(await import("node:path")).isAbsolute(fs.contentDir)) {
+      throw new Error(
+        `createCms (strict): filesystem.contentDir must be absolute, got "${fs.contentDir}". ` +
+        `Resolve it via path.join(projectDir, contentDir) before calling createCms — ` +
+        `relative paths race against process.cwd() in multi-tenant hosts and can leak content across sites.`,
+      );
+    }
+  }
 
   let storage: StorageAdapter;
 

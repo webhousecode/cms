@@ -198,6 +198,52 @@ async function checkPathTraversal() {
   }
 }
 
+// Rule 6: Process-wide global state mutation (cross-request data leak risk)
+// Catches process.chdir() and process.env[x] = ... assignments that race
+// between concurrent requests in multi-tenant request handlers. The
+// link-checker cross-site bug (April 2026) was caused by process.chdir().
+async function checkProcessGlobalState() {
+  const files = await walkDir(join(ROOT, "packages/cms-admin/src"));
+
+  for (const file of files) {
+    // Tests legitimately set env vars to exercise different code paths
+    if (file.includes("__tests__") || file.endsWith(".test.ts") || file.endsWith(".test.tsx")) continue;
+
+    const content = await readFile(file, "utf-8");
+    const rel = relative(ROOT, file);
+    const lines = content.split("\n");
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i]!;
+      // Skip comments
+      if (line.trim().startsWith("//") || line.trim().startsWith("*")) continue;
+
+      if (/\bprocess\.chdir\s*\(/.test(line)) {
+        findings.push({
+          severity: "critical",
+          rule: "cms/process-global-state",
+          file: rel,
+          line: i + 1,
+          message: "process.chdir() mutates process-wide cwd and races between concurrent requests — can leak data across sites/tenants",
+          suggestion: "Resolve paths to absolute via path.join(projectDir, ...) before passing to libraries that use cwd",
+        });
+      }
+
+      // Detect: process.env.X = value or process.env["X"] = value
+      if (/\bprocess\.env\s*(?:\.[A-Z_][A-Z0-9_]*|\[\s*["'][^"']+["']\s*\])\s*=[^=]/.test(line)) {
+        findings.push({
+          severity: "high",
+          rule: "cms/process-global-state",
+          file: rel,
+          line: i + 1,
+          message: "Mutating process.env at runtime affects all concurrent requests",
+          suggestion: "Pass values through function arguments or use AsyncLocalStorage if request-scoped state is needed",
+        });
+      }
+    }
+  }
+}
+
 // Rule 5: NEXT_PUBLIC_ secret exposure
 async function checkPublicSecrets() {
   const envFiles = [".env", ".env.local", ".env.production"].map((f) => join(ROOT, f));
@@ -234,6 +280,7 @@ async function main() {
   await checkCommandInjection();
   await checkPathTraversal();
   await checkPublicSecrets();
+  await checkProcessGlobalState();
 
   // Sort by severity
   const order: Record<string, number> = { critical: 0, high: 1, medium: 2, info: 3 };

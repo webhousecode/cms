@@ -7,10 +7,18 @@
  */
 import { createCms } from "@webhouse/cms";
 import type { CmsConfig } from "@webhouse/cms";
-import { dirname, resolve } from "node:path";
+import { dirname, isAbsolute, join, resolve } from "node:path";
 import { cookies } from "next/headers";
 import { loadRegistry, findSite, findOrg, getDefaultSite } from "./site-registry";
 import { getOrCreateInstance } from "./site-pool";
+
+/** Same chdir-free path absolutization as in site-pool. See site-pool.ts for rationale. */
+function absolutizeConfigPaths(config: CmsConfig, projectDir: string): void {
+  const fs = (config.storage as { filesystem?: { contentDir?: string } } | undefined)?.filesystem;
+  if (fs?.contentDir && !isAbsolute(fs.contentDir)) {
+    fs.contentDir = join(projectDir, fs.contentDir);
+  }
+}
 
 // ─── Single-site mode cache ──────────────────────────────
 
@@ -32,13 +40,16 @@ async function getSingleSiteCms() {
 
   const absoluteConfigPath = resolve(configPath);
   const projectDir = dirname(absoluteConfigPath);
-  process.chdir(projectDir);
 
   const { createJiti } = await import("jiti");
   const jiti = createJiti(absoluteConfigPath, { debug: false, moduleCache: false });
   const mod = await jiti.import(absoluteConfigPath) as { default?: CmsConfig } | CmsConfig;
   _singleConfig = ((mod as { default?: CmsConfig }).default ?? mod) as CmsConfig;
-  _singleCms = await createCms(_singleConfig);
+  // Absolutize relative paths so we don't need a process.chdir() (which races
+  // between concurrent requests in multi-site mode and is harmful here too).
+  absolutizeConfigPaths(_singleConfig, projectDir);
+  // strict: catch any future regression that lets a relative path through.
+  _singleCms = await createCms(_singleConfig, { strict: true });
   return { cms: _singleCms, config: _singleConfig };
 }
 

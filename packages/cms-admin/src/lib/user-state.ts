@@ -64,8 +64,6 @@ export interface UserState {
   mediaView: "grid" | "list";
   /** Default interactives view */
   intsView: "grid" | "list";
-  /** Show Close All button in tab bar */
-  showCloseAllTabs: boolean;
   /** Onboarding tour progress (F120) */
   onboarding: OnboardingState;
   /** Favorites (F94) */
@@ -93,7 +91,6 @@ const DEFAULTS: UserState = {
   calendarView: "week",
   mediaView: "grid",
   intsView: "grid",
-  showCloseAllTabs: false,
   onboarding: ONBOARDING_DEFAULTS,
   favorites: [],
   sidebarFavoritesOpen: true,

@@ -10,7 +10,6 @@ export interface SiteConfig {
   curationRetentionDays: number;
   schemaEditEnabled: boolean;
   devInspector: boolean;
-  showCloseAllTabs: boolean;
   /** Default AI model for interactive generation/editing (legacy alias for aiCodeModel) */
   aiInteractivesModel: string;
   /** Default max tokens for interactive generation/editing */
@@ -158,7 +157,6 @@ async function defaults(): Promise<SiteConfig> {
     curationRetentionDays: 30,
     schemaEditEnabled: process.env.SCHEMA_EDIT_ENABLED === "true",
     devInspector: process.env.DEV_INSPECTOR === "true",
-    showCloseAllTabs: false,
     aiInteractivesModel: "claude-sonnet-4-6",
     aiInteractivesMaxTokens: 16384,
     aiContentModel: "claude-haiku-4-5-20251001",

@@ -94,6 +94,9 @@ export async function confirmRegistration(
     expectedChallenge,
     expectedOrigin: rp.origin,
     expectedRPID: rp.rpID,
+    // Match the "preferred" UV we requested in options — some authenticators
+    // (notably roaming security keys without PIN) return without the UV flag.
+    requireUserVerification: false,
   });
 
   if (!verification.verified || !verification.registrationInfo) {
@@ -172,6 +175,7 @@ export async function confirmAuthentication(
       counter: passkey.counter,
       transports: passkey.transports as never,
     },
+    requireUserVerification: false,
   });
 
   if (!verification.verified) throw new Error("Authentication failed");

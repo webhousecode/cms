@@ -2,7 +2,7 @@
   "id": "q9OTwZLFjvdxEvhfjUXyG",
   "slug": "skiferie-mayrhofen-oestrig",
   "collection": "posts",
-  "status": "draft",
+  "status": "published",
   "data": {
     "title": "Mayrhofen, Østrig – hjem for Europas stejleste piste",
     "excerpt": "Mayrhofen i Zillertaler Alperne er et must for eventyrlyste skiløbere. Her finder du Harakiri – Europas stejleste pistede nedfart – og en après-ski-kultur i særklasse.",
@@ -101,7 +101,6 @@
   },
   "_fieldMeta": {},
   "createdAt": "2026-03-27T23:51:48.905Z",
-  "updatedAt": "2026-03-28T18:36:58.165Z",
-  "publishAt": "2026-03-31T09:00:00",
+  "updatedAt": "2026-04-01T11:45:43.777Z",
   "locale": "da"
 }

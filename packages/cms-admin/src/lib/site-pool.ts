@@ -6,9 +6,26 @@
  */
 import { createCms, VALID_FIELD_TYPES } from "@webhouse/cms";
 import type { CmsConfig } from "@webhouse/cms";
-import { dirname, resolve } from "node:path";
+import { dirname, isAbsolute, join, resolve } from "node:path";
 import type { SiteEntry } from "./site-registry";
 import { ZodError } from "zod";
+
+/**
+ * Resolve all relative paths in a CmsConfig to absolute paths anchored at
+ * `projectDir`. Mutates the config in place.
+ *
+ * Why: each site's cms.config.ts typically uses a relative `contentDir: 'content'`
+ * which is resolved against process.cwd() by the filesystem adapter. If two
+ * concurrent requests load different sites, process.cwd() (set via chdir) would
+ * race and one site could end up reading another site's content. By
+ * absolutizing here we make the config self-contained and immune to chdir races.
+ */
+function absolutizeConfigPaths(config: CmsConfig, projectDir: string): void {
+  const fs = (config.storage as { filesystem?: { contentDir?: string } } | undefined)?.filesystem;
+  if (fs?.contentDir && !isAbsolute(fs.contentDir)) {
+    fs.contentDir = join(projectDir, fs.contentDir);
+  }
+}
 
 /**
  * F79: Format config loading errors into human-readable messages.
@@ -207,15 +224,22 @@ export async function getOrCreateInstance(
     const absoluteConfigPath = resolve(site.configPath);
     const projectDir = dirname(absoluteConfigPath);
 
-    // Change cwd so relative paths resolve correctly
-    process.chdir(projectDir);
-
     const { createJiti } = await import("jiti");
     const jiti = createJiti(absoluteConfigPath, { debug: false, moduleCache: false });
     const mod = await jiti.import(absoluteConfigPath) as { default?: CmsConfig } | CmsConfig;
     const config = ((mod as { default?: CmsConfig }).default ?? mod) as CmsConfig;
 
-    const cms = await createCms(config);
+    // Resolve any relative paths in the config to absolute paths anchored at
+    // projectDir. We must NOT use process.chdir() here — it mutates global
+    // process state and races between concurrent requests for different sites,
+    // causing one site's filesystem adapter to read another site's content
+    // (the worst kind of cross-site data leak).
+    absolutizeConfigPaths(config, projectDir);
+
+    // strict: throw if any relative filesystem path slipped through. This is
+    // the runtime backstop against the cross-site data leak that
+    // absolutizeConfigPaths is meant to prevent.
+    const cms = await createCms(config, { strict: true });
     const instance: CmsInstance = { cms, config, site };
     pool.set(key, instance);
     return instance;

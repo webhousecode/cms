@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Globe, MoreVertical, Settings2, Plus, Copy, Eye, ExternalLink, Pencil, LayoutGrid, List, FileStack, Loader2 } from "lucide-react";
+import { Globe, MoreVertical, Settings2, Plus, Copy, Eye, ExternalLink, Pencil, LayoutGrid, List, FileStack, Loader2, ArrowUpDown } from "lucide-react";
 import { useSiteRole } from "@/hooks/use-site-role";
 import { useTabs } from "@/lib/tabs-context";
 import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
@@ -582,6 +582,9 @@ export default function SitesDashboard() {
   );
 }
 
+type SiteSortKey = "name" | "type" | "pages" | "collections" | "status";
+type SortDir = "asc" | "desc";
+
 function SiteListView({ sites, stats, healthMap, liveUrls, onEnter, onSettings, onRename, onPreview, onCopyId, onClone }: {
   sites: SiteEntry[];
   stats: Record<string, { pages: number; collections: number }>;
@@ -594,20 +597,97 @@ function SiteListView({ sites, stats, healthMap, liveUrls, onEnter, onSettings, 
   onCopyId: (id: string) => void;
   onClone?: (site: SiteEntry) => void;
 }) {
+  const [sortKey, setSortKey] = useState<SiteSortKey>(() => {
+    if (typeof window === "undefined") return "name";
+    return (localStorage.getItem("cms-sites-sort-key") as SiteSortKey) || "name";
+  });
+  const [sortDir, setSortDir] = useState<SortDir>(() => {
+    if (typeof window === "undefined") return "asc";
+    return (localStorage.getItem("cms-sites-sort-dir") as SortDir) || "asc";
+  });
+
+  function toggleSort(key: SiteSortKey) {
+    if (sortKey === key) {
+      const next = sortDir === "asc" ? "desc" : "asc";
+      setSortDir(next);
+      localStorage.setItem("cms-sites-sort-dir", next);
+    } else {
+      setSortKey(key);
+      setSortDir("asc");
+      localStorage.setItem("cms-sites-sort-key", key);
+      localStorage.setItem("cms-sites-sort-dir", "asc");
+    }
+  }
+
+  function statusRank(site: SiteEntry): number {
+    // Live > Local-up > Local-down/unknown
+    if (liveUrls[site.id]) return 2;
+    if (healthMap[site.id] === "up") return 1;
+    return 0;
+  }
+
+  const sorted = [...sites].sort((a, b) => {
+    let av: number | string;
+    let bv: number | string;
+    switch (sortKey) {
+      case "name":
+        av = a.name.toLowerCase(); bv = b.name.toLowerCase(); break;
+      case "type":
+        av = a.adapter; bv = b.adapter; break;
+      case "pages":
+        av = stats[a.id]?.pages ?? -1; bv = stats[b.id]?.pages ?? -1; break;
+      case "collections":
+        av = stats[a.id]?.collections ?? -1; bv = stats[b.id]?.collections ?? -1; break;
+      case "status":
+        av = statusRank(a); bv = statusRank(b); break;
+    }
+    if (av < bv) return sortDir === "asc" ? -1 : 1;
+    if (av > bv) return sortDir === "asc" ? 1 : -1;
+    return 0;
+  });
+
+  const thBase: React.CSSProperties = {
+    textAlign: "left", padding: "0.5rem 0.75rem", fontWeight: 500,
+    color: "var(--muted-foreground)", fontSize: "0.7rem",
+    textTransform: "uppercase", letterSpacing: "0.05em",
+  };
+
+  function SortHeader({ label, sk, align = "left" }: { label: string; sk: SiteSortKey; align?: "left" | "right" }) {
+    const active = sortKey === sk;
+    return (
+      <th style={{ ...thBase, textAlign: align }}>
+        <button
+          type="button"
+          onClick={() => toggleSort(sk)}
+          style={{
+            display: "inline-flex", alignItems: "center", gap: "0.25rem",
+            background: "none", border: "none", padding: 0, cursor: "pointer",
+            color: active ? "var(--foreground)" : "var(--muted-foreground)",
+            fontSize: "0.7rem", fontWeight: active ? 600 : 500,
+            textTransform: "uppercase", letterSpacing: "0.05em",
+          }}
+        >
+          {label}
+          <ArrowUpDown style={{ width: "0.65rem", height: "0.65rem", opacity: active ? 1 : 0.4 }} />
+        </button>
+      </th>
+    );
+  }
+
   return (
     <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.8rem" }}>
       <thead>
         <tr style={{ borderBottom: "1px solid var(--border)" }}>
-          <th style={{ textAlign: "left", padding: "0.5rem 0.75rem", fontWeight: 500, color: "var(--muted-foreground)", fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Name</th>
-          <th style={{ textAlign: "left", padding: "0.5rem 0.75rem", fontWeight: 500, color: "var(--muted-foreground)", fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Type</th>
-          <th style={{ textAlign: "left", padding: "0.5rem 0.75rem", fontWeight: 500, color: "var(--muted-foreground)", fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Pages</th>
-          <th style={{ textAlign: "left", padding: "0.5rem 0.75rem", fontWeight: 500, color: "var(--muted-foreground)", fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Collections</th>
-          <th style={{ textAlign: "left", padding: "0.5rem 0.75rem", fontWeight: 500, color: "var(--muted-foreground)", fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.05em" }}>Status</th>
-          <th style={{ textAlign: "right", padding: "0.5rem 0.75rem", fontWeight: 500, color: "var(--muted-foreground)", fontSize: "0.7rem", textTransform: "uppercase", letterSpacing: "0.05em" }}></th>
+          <SortHeader label="Name" sk="name" />
+          <SortHeader label="Type" sk="type" />
+          <SortHeader label="Pages" sk="pages" />
+          <SortHeader label="Collections" sk="collections" />
+          <SortHeader label="Status" sk="status" />
+          <th style={{ ...thBase, textAlign: "right" }}></th>
         </tr>
       </thead>
       <tbody>
-        {sites.map((site) => (
+        {sorted.map((site) => (
           <tr
             key={site.id}
             onClick={() => onEnter(site)}

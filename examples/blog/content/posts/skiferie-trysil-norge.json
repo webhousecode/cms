@@ -2,7 +2,7 @@
   "id": "MPJdNsS-okOxEmrdQJRCl",
   "slug": "skiferie-trysil-norge",
   "collection": "posts",
-  "status": "draft",
+  "status": "published",
   "data": {
     "title": "Trysil, Norge – Skandinaviens største skiresort",
     "excerpt": "Trysil er Norges stolthed på ski – et komplet og familievenligt skiresort med 68 pister og perfekte forhold for alle niveauer. Her er din guide til den ultimate norske skioplevelse.",
@@ -101,7 +101,6 @@
   },
   "_fieldMeta": {},
   "createdAt": "2026-03-27T23:51:48.891Z",
-  "updatedAt": "2026-03-28T18:36:58.194Z",
-  "publishAt": "2026-03-30T09:00:00",
+  "updatedAt": "2026-03-30T07:00:33.523Z",
   "locale": "da"
 }

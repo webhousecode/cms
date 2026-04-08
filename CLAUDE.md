@@ -19,6 +19,60 @@
 - Default (no urlPattern): `urlPrefix + "/" + slug` — NEVER inject category or other fields automatically
 - Test preview for ALL monitored sites after any change to URL construction: cms-docs, webhouse-site, maurseth, SproutLake, all examples
 
+## Hard Rule: No Process-Wide Global State in Request Handlers
+
+**NEVER mutate process-wide state inside request handlers, libraries called by them, or any code path that runs in cms-admin.** It races between concurrent requests and causes cross-tenant data leaks.
+
+Banned patterns:
+- `process.chdir(...)` — mutates the process cwd globally. If two requests for different sites run concurrently, the filesystem adapter resolves relative paths against whichever cwd was set last → one tenant reads another tenant's content. This is exactly how the April 2026 link-checker cross-site leak happened.
+- `process.env.X = value` — mutates env vars seen by every concurrent request.
+- Module-level `let` that gets reassigned per request without a request key.
+- Any cache that's not keyed by `(orgId, siteId)`.
+
+Allowed alternatives:
+- Resolve paths to absolute via `path.join(projectDir, relativePath)` BEFORE passing to libraries that use cwd.
+- Pass values through function arguments, not env mutation.
+- Use `AsyncLocalStorage` if you genuinely need request-scoped state in async chains.
+
+Defenses already in place:
+- **Lint:** `scripts/security-scan.ts` rule `cms/process-global-state` flags `process.chdir()` (CRITICAL) and `process.env =` (HIGH). Runs in pre-commit via `scripts/security-gate-hook.sh`.
+- **Runtime:** `createCms(config, { strict: true })` throws if `filesystem.contentDir` is relative. cms-admin's `site-pool.ts` and `cms.ts` always pass `strict: true`. Single-site `npx cms build` doesn't need it.
+- **Helper:** `absolutizeConfigPaths(config, projectDir)` in both call sites — must be called before `createCms`.
+
+When adding new site-loader code or anything that calls `createCms`: pass `strict: true` and absolutize paths first. Don't trust process.cwd() to be anything in particular.
+
+## Hard Rule: Deep Links Across Orgs/Sites Must Use /admin/goto
+
+CMS admin can host multiple orgs and sites simultaneously. ANY clickable
+link that points into `/admin/...` AND will be sent or shown to someone
+whose active workspace might differ from the source workspace MUST be wrapped
+via the goto short-link system, otherwise the recipient lands in the wrong
+workspace.
+
+This applies to: webhook embeds (Discord/Slack/email), cross-site notifications,
+calendar invites, AI agent outputs, chat memory references, and any link that
+"leaves" the request that produced it.
+
+Use the helper:
+```ts
+import { buildAdminDeepLink } from "@/lib/goto-links";
+
+const url = await buildAdminDeepLink({
+  base: process.env.NEXTAUTH_URL || `http://localhost:${process.env.PORT || 3010}`,
+  path: "/admin/curation?tab=approved",
+  orgId,                   // null/undefined → falls back to raw URL
+  siteId,
+  label: "agent.completed → My Post",
+});
+```
+
+Inside `webhook-events.ts` use the `deepLink(src, path, label)` shortcut.
+Already wired in: `agent-runner.ts`, all `fireXxxEvent` functions. When adding
+new notification senders, do NOT hand-roll `/admin` URLs — always go through
+`buildAdminDeepLink()` or `deepLink()`.
+
+See `lib/goto-links.ts` and `app/admin/goto/[id]/route.ts` for the implementation.
+
 ## Hard Rule: Reserved Collection Names
 
 **NEVER name or label a collection with any of these reserved names:**
