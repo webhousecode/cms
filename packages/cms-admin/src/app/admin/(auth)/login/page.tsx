@@ -19,6 +19,9 @@ function LoginForm() {
   const [qrDataUrl, setQrDataUrl] = useState<string>("");
   const [qrSessionId, setQrSessionId] = useState<string>("");
   const [qrStatus, setQrStatus] = useState<"idle" | "pending" | "approved" | "claimed" | "rejected" | "expired">("idle");
+  // Hidden until the webhouse.app mobile app exists. Flip
+  // NEXT_PUBLIC_CMS_ENABLE_QR_LOGIN=true once the app ships.
+  const qrLoginEnabled = process.env.NEXT_PUBLIC_CMS_ENABLE_QR_LOGIN === "true";
 
   // If no users exist yet, redirect to setup. Also check if GitHub OAuth is configured.
   useEffect(() => {
@@ -33,6 +36,7 @@ function LoginForm() {
 
   // QR session: create on mount, listen to SSE, claim on approval
   useEffect(() => {
+    if (!qrLoginEnabled) return;
     let es: EventSource | null = null;
     let cancelled = false;
     fetch("/api/auth/qr/session", { method: "POST" })
@@ -346,8 +350,8 @@ function LoginForm() {
           )}
         </div>
 
-        {/* QR code panel — Discord-style */}
-        <div style={{
+        {/* QR code panel — Discord-style. Hidden behind NEXT_PUBLIC_CMS_ENABLE_QR_LOGIN until the mobile app ships. */}
+        {qrLoginEnabled && <div style={{
           width: "260px",
           padding: "2rem 1.5rem",
           background: "hsl(0 0% 8% / 0.8)",
@@ -408,7 +412,7 @@ function LoginForm() {
           <p style={{ fontSize: "0.65rem", color: "hsl(0 0% 35%)", margin: "0.75rem 0 0", textAlign: "center" }}>
             {qrSessionId ? "Waiting for approval…" : ""}
           </p>
-        </div>
+        </div>}
         </div>
         <p style={{ marginTop: "0", fontSize: "0.7rem", color: "hsl(0 0% 30%)", letterSpacing: "0.05em" }}>
           Powered by <span style={{ color: "hsl(38 80% 55%)", fontWeight: 500 }}>@webhouse/cms</span>

@@ -21,6 +21,9 @@ function findLanHost(): string | null {
 
 /** POST /api/auth/qr/session — create a pending QR login session. */
 export async function POST(req: NextRequest) {
+  if (process.env.NEXT_PUBLIC_CMS_ENABLE_QR_LOGIN !== "true") {
+    return NextResponse.json({ error: "QR login is disabled" }, { status: 404 });
+  }
   const ua = req.headers.get("user-agent") ?? undefined;
   const session = createQrSession(ua);
 

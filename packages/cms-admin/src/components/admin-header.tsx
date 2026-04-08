@@ -97,7 +97,7 @@ function ThemeItems() {
 
 function UserNav({ user }: { user: SessionUser | null }) {
   const displayName = user?.name ?? "Admin";
-  const initials = user ? getInitials(user.name) : "?";
+  const initials = user ? getInitials(user.name) : "";
   const router = useRouter();
 
   async function logout() {
@@ -111,7 +111,16 @@ function UserNav({ user }: { user: SessionUser | null }) {
       <DropdownMenuTrigger className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring bg-transparent border-0 p-0 cursor-pointer">
         <Avatar className="h-8 w-8">
           {user?.gravatarUrl && <AvatarImage src={user.gravatarUrl} alt={displayName} />}
-          <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+          <AvatarFallback className="text-xs">
+            {initials || (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src="/cms-logo-icon.svg"
+                alt=""
+                style={{ width: "60%", height: "60%", objectFit: "contain" }}
+              />
+            )}
+          </AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" style={{ width: "223px" }}>
