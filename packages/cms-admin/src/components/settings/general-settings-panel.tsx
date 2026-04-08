@@ -192,6 +192,131 @@ function ValidateSiteButton({ configPath, contentDir }: { configPath: string; co
 	);
 }
 
+/* ─── F125: Schema Export section ───────────────────────────────── */
+function ExportSchemaSection({ configPath }: { configPath: string }) {
+	const [exporting, setExporting] = useState(false);
+	const [saving, setSaving] = useState(false);
+	const [result, setResult] = useState<{ ok: boolean; path?: string; bytes?: number; collections?: number; blocks?: number; generatedAt?: string; error?: string } | null>(null);
+
+	async function downloadSchema() {
+		if (!configPath) return;
+		setExporting(true);
+		setResult(null);
+		try {
+			const url = `/api/cms/registry/export-schema?configPath=${encodeURIComponent(configPath)}&download=1`;
+			const res = await fetch(url);
+			if (!res.ok) {
+				const data = await res.json();
+				setResult({ ok: false, error: data.error ?? "Download failed" });
+				return;
+			}
+			const blob = await res.blob();
+			const blobUrl = URL.createObjectURL(blob);
+			const a = document.createElement("a");
+			a.href = blobUrl;
+			a.download = "webhouse-schema.json";
+			document.body.appendChild(a);
+			a.click();
+			document.body.removeChild(a);
+			URL.revokeObjectURL(blobUrl);
+			setResult({ ok: true });
+		} catch (err) {
+			setResult({ ok: false, error: err instanceof Error ? err.message : "Download failed" });
+		}
+		setExporting(false);
+	}
+
+	async function saveToProject() {
+		if (!configPath) return;
+		setSaving(true);
+		setResult(null);
+		try {
+			const res = await fetch("/api/cms/registry/export-schema", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ configPath }),
+			});
+			const data = await res.json();
+			if (!res.ok) {
+				setResult({ ok: false, error: data.error ?? "Save failed" });
+			} else {
+				setResult(data);
+			}
+		} catch (err) {
+			setResult({ ok: false, error: err instanceof Error ? err.message : "Save failed" });
+		}
+		setSaving(false);
+	}
+
+	const isGitHub = configPath.startsWith("github://");
+	const enabled = configPath && !isGitHub;
+
+	return (
+		<div style={{ borderTop: "1px solid var(--border)", paddingTop: "0.75rem", marginTop: "0.75rem" }}>
+			<div style={{ marginBottom: "0.5rem" }}>
+				<div style={{ fontSize: "0.78rem", fontWeight: 600, color: "var(--foreground)", marginBottom: "0.2rem" }}>
+					Schema export
+				</div>
+				<div style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", lineHeight: 1.5 }}>
+					Generate <code style={{ fontSize: "0.95em", background: "var(--border)", padding: "0 0.25rem", borderRadius: "3px" }}>webhouse-schema.json</code> so PHP, Python, Ruby, Go, Java, and .NET reader libraries can introspect your content model. One file, all languages.
+				</div>
+			</div>
+			<div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
+				<button type="button" onClick={downloadSchema} disabled={exporting || !enabled}
+					style={{
+						display: "inline-flex", alignItems: "center", gap: "0.3rem",
+						padding: "0.35rem 0.75rem", borderRadius: "6px", border: "none",
+						background: enabled ? "#F7BB2E" : "var(--border)",
+						color: enabled ? "#0D0D0D" : "var(--muted-foreground)",
+						cursor: enabled ? "pointer" : "default",
+						fontSize: "0.75rem", fontWeight: 600,
+					}}>
+					{exporting ? "Exporting..." : "⬇ Download schema"}
+				</button>
+				<button type="button" onClick={saveToProject} disabled={saving || !enabled}
+					style={{
+						display: "inline-flex", alignItems: "center", gap: "0.3rem",
+						padding: "0.35rem 0.75rem", borderRadius: "6px",
+						border: "1px solid var(--border)",
+						background: "transparent",
+						color: enabled ? "var(--foreground)" : "var(--muted-foreground)",
+						cursor: enabled ? "pointer" : "default",
+						fontSize: "0.75rem", fontWeight: 600,
+					}}>
+					{saving ? "Saving..." : "💾 Save to project root"}
+				</button>
+			</div>
+			{isGitHub && (
+				<div style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", marginTop: "0.5rem", fontStyle: "italic" }}>
+					Schema export from GitHub-backed configs is not supported yet.
+				</div>
+			)}
+			{result?.ok && result.path && (
+				<div style={{ marginTop: "0.5rem", fontSize: "0.72rem", padding: "0.5rem", background: "rgba(74,222,128,0.08)", borderRadius: "4px", color: "#4ade80" }}>
+					<div style={{ fontWeight: 600 }}>✓ Saved {(result.bytes! / 1024).toFixed(1)} KB</div>
+					<div style={{ color: "var(--muted-foreground)", marginTop: "0.2rem", fontFamily: "monospace", fontSize: "0.68rem", wordBreak: "break-all" }}>
+						{result.path}
+					</div>
+					<div style={{ color: "var(--muted-foreground)", marginTop: "0.2rem" }}>
+						{result.collections} collection{result.collections === 1 ? "" : "s"}
+						{result.blocks ? `, ${result.blocks} block${result.blocks === 1 ? "" : "s"}` : ""}
+					</div>
+				</div>
+			)}
+			{result?.ok && !result.path && (
+				<div style={{ marginTop: "0.5rem", fontSize: "0.72rem", color: "#4ade80", fontWeight: 600 }}>
+					✓ Downloaded webhouse-schema.json
+				</div>
+			)}
+			{result?.error && (
+				<div style={{ marginTop: "0.5rem", fontSize: "0.72rem", color: "#f87171", padding: "0.5rem", background: "rgba(248,113,113,0.08)", borderRadius: "4px" }}>
+					✗ {result.error}
+				</div>
+			)}
+		</div>
+	);
+}
+
 /* ─── Profile section ─────────────────────────────────────────── */
 function ProfileSection() {
 	const [name, setName] = useState("");
@@ -498,6 +623,7 @@ function SiteSection() {
 						copiable
 					/>
 					<ValidateSiteButton configPath={configPath} contentDir={contentDir} />
+					<ExportSchemaSection configPath={configPath} />
 				</Card>
 			</div>
 
