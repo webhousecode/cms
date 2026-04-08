@@ -1,0 +1,12 @@
+/* Danish localization for webhouse.app purpose strings.
+   Apple shows these to Danish-locale users instead of the English base
+   strings in Info.plist. Pattern: "[App] bruger X til Y. Du kan for eksempel..."
+*/
+
+"NSCameraUsageDescription" = "webhouse.app bruger kameraet til at scanne QR-koden fra dit CMS admin login. Du kan for eksempel åbne dit CMS i en browser, klikke 'Par mobil enhed', og scanne den viste QR-kode for at logge ind på mobilen uden at indtaste password.";
+
+"NSPhotoLibraryUsageDescription" = "webhouse.app bruger dit fotobibliotek til at læse en QR-kode fra et gemt billede, hvis dit kamera ikke er tilgængeligt. Du kan for eksempel gemme et screenshot af din CMS pairing QR-kode og vælge det her for at logge ind.";
+
+"NSFaceIDUsageDescription" = "webhouse.app bruger Face ID til hurtigt at låse din CMS-session op uden at indtaste password hver gang. Du kan for eksempel åbne appen om morgenen og være logget ind på dit CMS med et enkelt blik.";
+
+"CFBundleDisplayName" = "webhouse.app";

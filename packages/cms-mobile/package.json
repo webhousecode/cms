@@ -1,0 +1,46 @@
+{
+  "name": "@webhouse/cms-mobile",
+  "version": "0.0.1",
+  "private": true,
+  "description": "webhouse.app — first-class native mobile app for the CMS (Capacitor + React + Vite)",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "typecheck": "tsc --noEmit",
+    "cap:sync": "pnpm build && npx cap sync",
+    "ios": "./scripts/ios-boot.sh",
+    "android": "./scripts/android-boot.sh",
+    "icons:generate": "./scripts/icons-generate.sh",
+    "deeplink:login": "./scripts/ios-deeplink-login.sh",
+    "sim:add-qr": "./scripts/sim-add-qr.sh"
+  },
+  "dependencies": {
+    "@capacitor-mlkit/barcode-scanning": "^7.0.0",
+    "@capacitor/app": "^8.0.0",
+    "@capacitor/cli": "^8.0.2",
+    "@capacitor/core": "^8.0.2",
+    "@capacitor/preferences": "^8.0.0",
+    "@capacitor/splash-screen": "^8.0.0",
+    "@capacitor/status-bar": "^8.0.0",
+    "@capgo/capacitor-native-biometric": "^8.3.6",
+    "@tanstack/react-query": "^5.90.20",
+    "framer-motion": "^11.15.0",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
+    "react-hook-form": "^7.49.3",
+    "wouter": "^3.5.0",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@capacitor/android": "^8.0.2",
+    "@capacitor/ios": "^8.0.2",
+    "@types/react": "^19.2.13",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^4.3.4",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.33",
+    "tailwindcss": "^3.4.1",
+    "typescript": "^5.9.3",
+    "vite": "^5.4.11"
+  }
+}

@@ -76,6 +76,21 @@ new notification senders, do NOT hand-roll `/admin` URLs — always go through
 
 See `lib/goto-links.ts` and `app/admin/goto/[id]/route.ts` for the implementation.
 
+## Hard Rule: Mobile App is Server-Agnostic
+
+The webhouse.app mobile app (F07, `packages/cms-mobile/`) is a first-class native product that talks to cms-admin via JSON API only — it is NOT a WebView wrapper. cms-admin must NEVER write code that assumes a specific mobile bundle id, app version, or mobile endpoint.
+
+All mobile-facing endpoints (`/api/mobile/*`) MUST:
+- Accept any bundle id (no hard-coded `app.webhouse.cms` checks)
+- Authenticate via Bearer JWT in the `Authorization` header — NEVER cookies
+- Return JSON only (no HTML, no redirects)
+- Be CORS-permissive for the configured mobile origins (`capacitor://localhost`, `https://localhost`, `ionic://localhost`)
+- Validate session via the same JWT verification helper as the web app — no parallel auth path
+
+This means we can whitelabel the mobile app later (a different brand wrapping the same shell) without touching cms-admin. It also means mobile and desktop share one auth backend with one set of audit logs.
+
+When adding new mobile endpoints, put them under `/api/mobile/`, not `/api/cms/` or `/api/admin/`. The `/api/mobile/` prefix is the contract.
+
 ## Hard Rule: Reserved Collection Names
 
 **NEVER name or label a collection with any of these reserved names:**

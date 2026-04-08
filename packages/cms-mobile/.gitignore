@@ -1,0 +1,25 @@
+# Build output
+dist/
+node_modules/
+
+# Capacitor native projects (generated artifacts only — source files committed)
+ios/App/Pods/
+ios/App/build/
+ios/App/Podfile.lock
+ios/DerivedData/
+android/.gradle/
+android/build/
+android/app/build/
+android/local.properties
+android/captures/
+android/.idea/
+
+# Secrets
+.env
+.env.local
+.env.secrets
+certs/
+
+# OS
+.DS_Store
+*.swp

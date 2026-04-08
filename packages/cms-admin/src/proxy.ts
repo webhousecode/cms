@@ -25,6 +25,7 @@ const PUBLIC_PREFIXES = [
   "/api/mcp",               // MCP servers have their own auth (Bearer token)
   "/api/publish-scheduled", // Called by cron/instrumentation, no user session
   "/api/beam/receive/",     // Live Beam receive — token-authenticated (not session)
+  "/api/mobile/",           // F07 webhouse.app mobile — Bearer JWT in header, no cookies (handlers enforce auth themselves)
   "/_next/",
   "/favicon",
 ];
