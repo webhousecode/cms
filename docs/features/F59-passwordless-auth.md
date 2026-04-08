@@ -254,6 +254,22 @@ packages/cms-mobile/               # or separate repo
 15. Submit to App Store / Google Play
 16. Update F07 plan to reflect Capacitor instead of Expo/React Native
 
+### Phase 4 — TOTP (Microsoft / Google Authenticator, Authy, 1Password)
+
+Strictly speaking TOTP is 2FA, not passwordless, but it complements F59
+because it lets users add a second factor using existing apps they already
+have installed — no need to wait for the webhouse.app mobile app.
+
+17. Install `otpauth` (RFC 6238 TOTP implementation)
+18. Extend `User` with `totp?: { secret: string; createdAt: string; lastUsedAt?: string; backupCodes?: string[] }`
+19. `POST /api/auth/totp/enroll/start` — generate secret + otpauth:// URI + QR data URL
+20. `POST /api/auth/totp/enroll/verify` — verify the first 6-digit code, persist secret + 10 backup codes
+21. `POST /api/auth/totp/verify` — verify code during login (as 2FA step after password / passkey)
+22. `DELETE /api/auth/totp` — disable TOTP for the current user
+23. Account → Security → "Authenticator app" panel: replace placeholder with real enrollment QR + verify input + backup codes display
+24. Login flow: if user has TOTP enabled, after password success show a 6-digit code prompt before issuing the cms-session cookie
+25. Tests: secret generation, enrollment verification, login verification, backup code consumption
+
 
 > **NOTE — F107 Chat Integration:** When this feature introduces new API routes, tools, or admin actions, ensure they are also exposed as tool-use functions in F107 (Chat with Your Site). The chat interface must be able to perform any action the traditional admin UI can. See `docs/features/F107-chat-with-your-site.md`.
 
