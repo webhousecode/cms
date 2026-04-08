@@ -104,7 +104,43 @@ the next time someone runs `pm2 start ecosystem.config.js`.
 
 ## Helper scripts
 
-The repo also has a small wrapper script for common operations:
+### `scripts/pm2-ports.sh` — list with a PORT column
+
+PM2's built-in `pm2 list` doesn't show which port each app is bound
+to (the port lives in `env.PORT` which the table omits). This wrapper
+parses `pm2 jlist` and prints a richer table:
+
+```bash
+bash scripts/pm2-ports.sh
+```
+
+Output:
+
+```
+NAME                     PORT   STATUS     CPU    MEM      ↺     PID
+----------------------------------------------------------------------
+cms-admin                3010   online     1.8%   40M      0     68394
+cms-admin-prod           4010   online     3.5%   73M      10    68578
+cms-docs                 3036   online     0.2%   14M      0     8569
+sproutlake               3002   online     0.2%   14M      0     8580
+webhouse-site            3009   online     0.1%   14M      0     8558
+```
+
+The script falls back to `npx pm2` if pm2 isn't installed globally,
+so it works on a fresh checkout. Recommended alias:
+
+```bash
+alias pmp='bash /Users/cb/Apps/webhouse/cms/scripts/pm2-ports.sh'
+```
+
+> **Note about PORT visibility**: PM2 caches the merged env at first
+> start. If you change `env.PORT` in `ecosystem.config.js` after an app
+> is already running, `pm2 restart --update-env` is **not enough** —
+> you need a full `pm2 delete <name> && pm2 start ecosystem.config.js
+> --only <name>` for the new value to show up in `pm2 jlist`. This
+> only matters when adding the PORT field for the first time.
+
+### `scripts/pm2-pool.sh` — bulk pool operations
 
 ```bash
 bash scripts/pm2-pool.sh up       # start the whole pool, killing any conflicting standalone servers first
@@ -140,6 +176,7 @@ Drop in your `~/.zshrc` if you find yourself typing the long forms a lot:
 
 ```bash
 alias pml='pm2 list'
+alias pmp='bash /Users/cb/Apps/webhouse/cms/scripts/pm2-ports.sh'
 alias pmc='pm2 logs cms-admin --lines 50'
 alias pmm='pm2 monit'
 ```

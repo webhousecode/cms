@@ -59,7 +59,10 @@ const cmsAdminDev = {
   script: "pnpm",
   args: "dev",
   interpreter: "none", // pnpm is its own shebang script
-  env: { NODE_ENV: "development" },
+  // PORT is also passed by `next dev --port 3010` inside the pnpm script,
+  // but setting it here too lets `pm2 jlist` / scripts/pm2-ports.sh
+  // surface the port in the listing.
+  env: { NODE_ENV: "development", PORT: "3010" },
   autorestart: true,
   watch: false,
   max_memory_restart: "2G",
