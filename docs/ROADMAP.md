@@ -95,6 +95,8 @@ _Without these, we cannot build and deliver professional sites on the platform._
 | ~~9~~ | ~~**F31 Documentation Site**~~ | ~~Done~~ | ~~Shipped 2026-04-01. docs.webhouse.app — 89 pages EN/DA, Shiki code blocks, shared snippets, JSON API, GHA auto-deploy.~~ |
 | ~~10~~ | ~~**F121 Next.js CMS Helpers**~~ | ~~Done~~ | ~~Shipped 2026-04-01. 8 helpers in `@webhouse/cms/next` (sitemap, robots, llms.txt, metadata, JSON-LD, feed, static-params). Boilerplates updated. Fly.io Dockerfile deploy. Docs at docs.webhouse.app.~~ |
 | 11 | **F120 Onboarding** | Medium | Can't convert users without guided first experience. Tooltip tour from landing to first publish. |
+| 12 | **F125 Framework-Agnostic Consumer Guides** | Medium | Positioning: @webhouse/cms as a universal JSON content platform. Schema export + reader examples for Laravel, Django, Rails, Go, .NET. Ships 6 bilingual docs pages. |
+| 13 | **F126 Framework-Agnostic Build Pipeline** | Large | Let CMS admin's Build button invoke ANY build system via `build.command` in cms.config.ts. Profiles, log streaming, security allowlist. Completes the framework-agnostic story alongside F125. |
 | ~~9b~~ | ~~**F90 Marketing Content Bank**~~ | ~~Done~~ | ~~Shipped. 5 messaging frameworks, talking points, badge/shield suggestions, deploy targets.~~ |
 | ~~9c~~ | ~~**F96 Embeddable Maps**~~ | ~~Done~~ | ~~Shipped. OSM/Leaflet map block, richtext embed, field type.~~ |
 
