@@ -1,0 +1,18 @@
+{
+  "id": "post-hello-world-en",
+  "slug": "hello-world",
+  "status": "published",
+  "locale": "en",
+  "translationGroup": "8d2e4f6a-1c3b-4e5d-9a7f-2b4c6e8f0a1d",
+  "_fieldMeta": {},
+  "data": {
+    "title": "Hello, world from Django",
+    "excerpt": "A blog post stored as a JSON file in @webhouse/cms and rendered by a Django view.",
+    "content": "## The setup\n\nThis post lives at `content/posts/hello-world.json`. It's a flat JSON file in the @webhouse/cms format. **Django reads it directly** via the `blog.webhouse` module — no API calls, no database, just `Path.glob()` and `json.loads()`.\n\n## Why this matters\n\nThe content is in your git repository. The schema is in `cms.config.ts`. The renderer is your Django app. There's no vendor lock-in.\n\n## What you can edit\n\nOpen CMS admin and point it at this folder. Edit the title above. Save. Reload this page. The change is live.",
+    "date": "2026-04-09",
+    "author": "Christian Broberg",
+    "tags": ["intro", "django", "python"]
+  },
+  "createdAt": "2026-04-09T00:00:00.000Z",
+  "updatedAt": "2026-04-09T00:00:00.000Z"
+}

@@ -1,0 +1,27 @@
+{% extends "blog/_layout.html" %}
+{% load webhouse_filters %}
+
+{% block title %}{{ post|wh_string:"title" }}{% endblock %}
+
+{% block content %}
+<article>
+    <h1>{{ post|wh_string:"title" }}</h1>
+    <div class="meta">
+        <span>{{ post|wh_string:"author" }}</span>
+        <span> · </span>
+        <span>{{ post.data.date }}</span>
+        <span> · </span>
+        <span>{{ post|wh_locale }}</span>
+    </div>
+    {{ content_html|safe }}
+
+    {% if translation %}
+    <div class="translation">
+        This post is also available in {{ translation|wh_locale }}:
+        <a href="/blog/{{ translation.slug }}/">{{ translation|wh_string:"title" }}</a>
+    </div>
+    {% endif %}
+
+    <p><a href="/" class="back">← Back to all posts</a></p>
+</article>
+{% endblock %}

@@ -1,0 +1,18 @@
+{
+  "id": "post-why-django-en",
+  "slug": "why-django",
+  "status": "published",
+  "locale": "en",
+  "translationGroup": "1a3c5e7f-9b2d-4f6e-8a0c-3e5f7a9b1c2d",
+  "_fieldMeta": {},
+  "data": {
+    "title": "Why a Django reader?",
+    "excerpt": "Python runs the data web. Django is the dominant Python framework. Here's why @webhouse/cms ships a first-class Django reader.",
+    "content": "## The Python audience\n\nPython is the most-used language in the world according to TIOBE and IEEE Spectrum. Django powers Instagram, Disqus, Mozilla, Pinterest, and most of the data-engineering web. ML/AI teams live in Python — and they often need a content layer for documentation, marketing, and dashboards.\n\n## Why a reader, not an API?\n\nA file reader is just `Path.glob()` and `json.loads()`. It's instant. It works offline. It's testable with regular `pytest` fixtures. And it's a pattern Python developers already know from `pathlib`.\n\n## What's in the package\n\n- `webhouse.collection(name, locale)` — list published documents\n- `webhouse.document(collection, slug)` — load one document\n- `webhouse.find_translation(doc, collection)` — sibling via translationGroup\n- `webhouse.globals_doc()` — cached singleton for site-wide settings\n- Path traversal protection via `SAFE_NAME` regex + resolved-path prefix check\n\nDjango integration:\n\n- `blog.context_processors.webhouse_globals` — inject globals into every template\n- `blog.templatetags.webhouse_filters.wh_string` — `{{ post|wh_string:\"title\" }}` filter\n\nThat's it. ~120 lines of Python. Zero deps beyond Django itself + `markdown` for richtext rendering.\n\n## The result\n\nYour Django app reads the same JSON files that CMS admin writes. Editors get a beautiful visual editor. You keep Django.",
+    "date": "2026-04-08",
+    "author": "Christian Broberg",
+    "tags": ["python", "django", "philosophy"]
+  },
+  "createdAt": "2026-04-08T00:00:00.000Z",
+  "updatedAt": "2026-04-08T00:00:00.000Z"
+}

@@ -1,0 +1,25 @@
+{% extends "blog/_layout.html" %}
+{% load webhouse_filters %}
+
+{% block title %}Blog ({{ locale }}){% endblock %}
+
+{% block content %}
+<h1>Blog</h1>
+<p class="lead">Content read from @webhouse/cms JSON files by a Django {{ locale }} app.</p>
+
+{% if not posts %}
+<p>No published posts yet.</p>
+{% endif %}
+
+{% for post in posts %}
+<a href="/blog/{{ post.slug }}/" class="post-card">
+    <div class="meta">
+        <span>{{ post.data.date }}</span>
+        <span> · </span>
+        <span>{{ post|wh_locale }}</span>
+    </div>
+    <h3>{{ post|wh_string:"title" }}</h3>
+    <p>{{ post|wh_string:"excerpt" }}</p>
+</a>
+{% endfor %}
+{% endblock %}
