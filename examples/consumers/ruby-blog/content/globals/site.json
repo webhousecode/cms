@@ -1,0 +1,13 @@
+{
+  "id": "globals-site",
+  "slug": "site",
+  "status": "published",
+  "_fieldMeta": {},
+  "data": {
+    "brandPrefix": "@webhouse/cms",
+    "brandSuffix": "Ruby · Sinatra",
+    "footerText": "Powered by @webhouse/cms — read by Sinatra / Ruby 3.3"
+  },
+  "createdAt": "2026-04-09T00:00:00.000Z",
+  "updatedAt": "2026-04-09T00:00:00.000Z"
+}

@@ -1,0 +1,6 @@
+.bundle/
+vendor/bundle/
+*.log
+.DS_Store
+.idea/
+.vscode/

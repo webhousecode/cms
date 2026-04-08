@@ -1,0 +1,21 @@
+<% @title = wh_string(@post, 'title') %>
+<article>
+    <h1><%= wh_string(@post, 'title') %></h1>
+    <div class="meta">
+        <span><%= wh_string(@post, 'author', 'Unknown') %></span>
+        <span> · </span>
+        <span><%= @post.dig('data', 'date') %></span>
+        <span> · </span>
+        <span><%= @post['locale'] %></span>
+    </div>
+    <%= @content_html %>
+
+    <% if @translation %>
+        <div class="translation">
+            This post is also available in <%= @translation['locale'] %>:
+            <a href="/blog/<%= @translation['slug'] %>"><%= wh_string(@translation, 'title') %></a>
+        </div>
+    <% end %>
+
+    <p><a href="/" class="back">← Back to all posts</a></p>
+</article>
