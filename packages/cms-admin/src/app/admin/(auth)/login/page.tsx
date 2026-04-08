@@ -16,6 +16,9 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [checking, setChecking] = useState(true);
   const [hasGitHub, setHasGitHub] = useState(true); // always show — GitHub OAuth is part of the platform
+  const [qrDataUrl, setQrDataUrl] = useState<string>("");
+  const [qrSessionId, setQrSessionId] = useState<string>("");
+  const [qrStatus, setQrStatus] = useState<"idle" | "pending" | "approved" | "claimed" | "rejected" | "expired">("idle");
 
   // If no users exist yet, redirect to setup. Also check if GitHub OAuth is configured.
   useEffect(() => {
@@ -27,6 +30,46 @@ function LoginForm() {
       })
       .catch(() => setChecking(false));
   }, [router]);
+
+  // QR session: create on mount, listen to SSE, claim on approval
+  useEffect(() => {
+    let es: EventSource | null = null;
+    let cancelled = false;
+    fetch("/api/auth/qr/session", { method: "POST" })
+      .then((r) => r.json())
+      .then((d: { sessionId: string; qrDataUrl: string }) => {
+        if (cancelled) return;
+        setQrSessionId(d.sessionId);
+        setQrDataUrl(d.qrDataUrl);
+        setQrStatus("pending");
+        es = new EventSource(`/api/auth/qr/status/${d.sessionId}`);
+        es.onmessage = async (ev) => {
+          try {
+            const msg = JSON.parse(ev.data) as { status: typeof qrStatus };
+            setQrStatus(msg.status);
+            if (msg.status === "approved") {
+              const res = await fetch("/api/auth/qr/claim", {
+                method: "POST",
+                credentials: "same-origin",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ sessionId: d.sessionId }),
+              });
+              if (res.ok) {
+                window.location.href = from;
+              }
+            }
+          } catch { /* ignore parse errors */ }
+        };
+        es.onerror = () => { es?.close(); };
+      })
+      .catch(() => { /* QR is optional — fail silently */ });
+
+    return () => {
+      cancelled = true;
+      es?.close();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Check for GitHub OAuth error in URL
   useEffect(() => {
@@ -150,7 +193,8 @@ function LoginForm() {
         pointerEvents: "none",
       }} />
 
-      <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center" }}>
+      <div style={{ position: "relative", zIndex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: "1.5rem" }}>
+        <div style={{ display: "flex", gap: "1rem", alignItems: "stretch", flexWrap: "wrap", justifyContent: "center" }}>
         <div style={{
           width: "100%",
           maxWidth: "380px",
@@ -301,7 +345,72 @@ function LoginForm() {
             </>
           )}
         </div>
-        <p style={{ marginTop: "1.5rem", fontSize: "0.7rem", color: "hsl(0 0% 30%)", letterSpacing: "0.05em" }}>
+
+        {/* QR code panel — Discord-style */}
+        <div style={{
+          width: "260px",
+          padding: "2rem 1.5rem",
+          background: "hsl(0 0% 8% / 0.8)",
+          backdropFilter: "blur(12px)",
+          border: "1px solid hsl(0 0% 18%)",
+          borderRadius: "16px",
+          boxShadow: "0 16px 64px rgba(0,0,0,0.4), 0 0 0 1px hsl(0 0% 15%)",
+          display: "flex", flexDirection: "column", alignItems: "center",
+        }}>
+          <h3 style={{ fontSize: "0.85rem", fontWeight: 600, color: "#fff", margin: "0 0 0.5rem", textAlign: "center" }}>
+            Log in with QR code
+          </h3>
+          <p style={{ fontSize: "0.7rem", color: "hsl(0 0% 50%)", margin: "0 0 1rem", textAlign: "center", lineHeight: 1.4 }}>
+            Scan with the webhouse.app mobile app or another signed-in device.
+          </p>
+          <div style={{
+            width: "200px", height: "200px",
+            background: "#fff", borderRadius: "8px",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            position: "relative",
+          }}>
+            {qrDataUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={qrDataUrl} alt="Login QR code" style={{ width: "100%", height: "100%" }} />
+            ) : (
+              <span style={{ fontSize: "0.7rem", color: "#999" }}>Loading…</span>
+            )}
+            {(qrStatus === "expired" || qrStatus === "rejected") && (
+              <div style={{
+                position: "absolute", inset: 0, background: "rgba(0,0,0,0.85)",
+                display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                borderRadius: "8px",
+              }}>
+                <span style={{ color: "#fff", fontSize: "0.75rem", marginBottom: "0.5rem" }}>
+                  {qrStatus === "expired" ? "Expired" : "Rejected"}
+                </span>
+                <button
+                  onClick={() => window.location.reload()}
+                  style={{
+                    fontSize: "0.7rem", padding: "0.3rem 0.7rem", borderRadius: "4px",
+                    border: "1px solid hsl(38 92% 50%)", background: "transparent",
+                    color: "hsl(38 92% 50%)", cursor: "pointer",
+                  }}
+                >
+                  Refresh
+                </button>
+              </div>
+            )}
+            {qrStatus === "approved" && (
+              <div style={{
+                position: "absolute", inset: 0, background: "rgba(13, 13, 13, 0.9)",
+                display: "flex", alignItems: "center", justifyContent: "center", borderRadius: "8px",
+              }}>
+                <span style={{ color: "hsl(140 60% 50%)", fontSize: "1.5rem" }}>✓ Signing in…</span>
+              </div>
+            )}
+          </div>
+          <p style={{ fontSize: "0.65rem", color: "hsl(0 0% 35%)", margin: "0.75rem 0 0", textAlign: "center" }}>
+            {qrSessionId ? "Waiting for approval…" : ""}
+          </p>
+        </div>
+        </div>
+        <p style={{ marginTop: "0", fontSize: "0.7rem", color: "hsl(0 0% 30%)", letterSpacing: "0.05em" }}>
           Powered by <span style={{ color: "hsl(38 80% 55%)", fontWeight: 500 }}>@webhouse/cms</span>
         </p>
       </div>
