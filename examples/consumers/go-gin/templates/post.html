@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .Post.String "title" }} — {{ if .Globals }}{{ .Globals.StringOr "brandPrefix" "@webhouse/cms" }}{{ else }}@webhouse/cms{{ end }}</title>
+    <style>{{ template "style.css" . }}</style>
+</head>
+<body>
+    {{ template "nav.html" . }}
+
+    <article>
+        <h1>{{ .Post.String "title" }}</h1>
+        <div class="meta">
+            <span>{{ .Post.StringOr "author" "Unknown" }}</span>
+            <span> · </span>
+            <span>{{ .Post.StringOr "date" "" }}</span>
+            <span> · </span>
+            <span>{{ .Post.Locale }}</span>
+        </div>
+        {{ .ContentHTML }}
+
+        {{ if .Translation }}
+        <div class="translation">
+            This post is also available in {{ .Translation.Locale }}:
+            <a href="/blog/{{ .Translation.Slug }}">{{ .Translation.String "title" }}</a>
+        </div>
+        {{ end }}
+
+        <p><a href="/" class="back">← Back to all posts</a></p>
+    </article>
+
+    {{ template "footer.html" . }}
+</body>
+</html>

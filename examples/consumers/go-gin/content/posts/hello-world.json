@@ -1,0 +1,18 @@
+{
+  "id": "post-hello-world-en",
+  "slug": "hello-world",
+  "status": "published",
+  "locale": "en",
+  "translationGroup": "7c9f4e2a-5b1d-4e8a-9f3c-2d6e8f1a0b3e",
+  "_fieldMeta": {},
+  "data": {
+    "title": "Hello, world from Gin",
+    "excerpt": "A blog post stored as a JSON file in @webhouse/cms and rendered by a Gin handler in Go.",
+    "content": "## The setup\n\nThis post lives at `content/posts/hello-world.json`. It's a flat JSON file in the @webhouse/cms format. **Gin reads it directly** via the `webhouse` package — no API calls, no database, just `os.ReadDir()` and `json.Unmarshal()`.\n\n## Why this matters\n\nThe content is in your git repository. The schema is in `cms.config.ts`. The renderer is your Gin app. There's no vendor lock-in: if you ever want to swap out @webhouse/cms admin, your content stays put.\n\n## What you can edit\n\nOpen CMS admin and point it at this folder. Edit the title above. Save. Reload this page in your browser. The change is live.",
+    "date": "2026-04-09",
+    "author": "Christian Broberg",
+    "tags": ["intro", "go", "gin"]
+  },
+  "createdAt": "2026-04-09T00:00:00.000Z",
+  "updatedAt": "2026-04-09T00:00:00.000Z"
+}

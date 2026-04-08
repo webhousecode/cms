@@ -1,0 +1,18 @@
+{
+  "id": "post-why-go",
+  "slug": "why-go",
+  "status": "published",
+  "locale": "en",
+  "translationGroup": "9e1b3d5c-8a2f-4c6e-b9d1-7f3a5b8c2e4d",
+  "_fieldMeta": {},
+  "data": {
+    "title": "Why a Go reader?",
+    "excerpt": "Go runs the modern infrastructure web. Single-binary deploys. No runtime. Fast cold starts. Here's why @webhouse/cms ships a first-class Go reader.",
+    "content": "## The Go audience\n\nGo has quietly become the dominant language for infrastructure tooling, microservices, and high-throughput APIs. Hugo, Caddy, Traefik, Docker, Kubernetes, and Terraform are all written in Go. Cloudflare, Uber, and Dropbox run massive Go fleets.\n\n## Why a reader, not an API?\n\nA file reader is just `os.ReadDir()` and `json.Unmarshal()`. It's instant. It works offline. It compiles to a single static binary. There's nothing to deploy alongside it.\n\n## What's in the package\n\n- `Reader` — list collections, load documents, find translations\n- `Document` — typed wrapper with helpers like `String()`, `StringOr()`, `StringSlice()`\n- Path validation against `^[a-z0-9][a-z0-9-]*$` to prevent traversal attacks\n- `IsPublished()`, `Locale`, `TranslationGroup` — first-class fields\n\nThat's it. ~150 lines of Go. Zero deps beyond `gin-gonic/gin` and `goldmark` for the example app — the reader itself uses only stdlib.\n\n## The result\n\nYour Gin app reads the same JSON files that CMS admin writes. Editors get a beautiful visual editor. You keep Go. Single binary. Sub-millisecond reads. Static deploy.",
+    "date": "2026-04-08",
+    "author": "Christian Broberg",
+    "tags": ["go", "gin", "philosophy"]
+  },
+  "createdAt": "2026-04-08T00:00:00.000Z",
+  "updatedAt": "2026-04-08T00:00:00.000Z"
+}

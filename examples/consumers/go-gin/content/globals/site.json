@@ -1,0 +1,13 @@
+{
+  "id": "globals-site",
+  "slug": "site",
+  "status": "published",
+  "_fieldMeta": {},
+  "data": {
+    "brandPrefix": "@webhouse/cms",
+    "brandSuffix": "Go · Gin",
+    "footerText": "Powered by @webhouse/cms — read by Gin / Go 1.22"
+  },
+  "createdAt": "2026-04-09T00:00:00.000Z",
+  "updatedAt": "2026-04-09T00:00:00.000Z"
+}
