@@ -286,6 +286,14 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
 
   useEffect(() => {
     load();
+    // Command Palette can request the create form pre-opened by setting
+    // a one-shot localStorage flag before navigating here.
+    try {
+      if (localStorage.getItem("cms:agents-workflows-create") === "1") {
+        localStorage.removeItem("cms:agents-workflows-create");
+        setCreating(true);
+      }
+    } catch { /* ignore */ }
   }, [load]);
 
   const agentNameById = (id: string) => agents.find((a) => a.id === id)?.name ?? id;

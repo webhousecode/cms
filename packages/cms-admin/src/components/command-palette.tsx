@@ -36,6 +36,12 @@ function buildQuickActions(logout: () => void): QuickAction[] {
     { id: "nav-dashboard", label: "Dashboard", sublabel: "Overview", category: "navigation", icon: <LayoutDashboard style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin", keywords: ["home", "oversigt"], featured: true },
     { id: "nav-sites", label: "Sites", sublabel: "Manage sites", category: "navigation", icon: <Globe style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/sites", keywords: ["site", "sider"] },
     { id: "nav-agents", label: "AI Agents", sublabel: "Automated content generation", category: "navigation", icon: <Bot style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/agents", keywords: ["agent", "ai", "bot", "automation"], featured: true },
+    // Phase 6 — Templates and Workflows are tabs on /admin/agents but
+    // it's nice to deep-link to them from the palette so curators can
+    // jump straight in. The localStorage key cms:agents-tab is read by
+    // AgentsTabs on mount, so we set it before navigating.
+    { id: "nav-agent-templates", label: "Agent Templates", sublabel: "Local + marketplace agent presets", category: "navigation", icon: <Bot style={{ ...ICON_SIZE, color: MUTED }} />, keywords: ["template", "templates", "marketplace", "preset", "agent"], action: () => { try { localStorage.setItem("cms:agents-tab", "templates"); } catch {} window.location.href = "/admin/agents"; } },
+    { id: "nav-workflows", label: "Agent Workflows", sublabel: "Multi-agent pipelines", category: "navigation", icon: <Bot style={{ ...ICON_SIZE, color: MUTED }} />, keywords: ["workflow", "workflows", "pipeline", "chain", "agent"], action: () => { try { localStorage.setItem("cms:agents-tab", "workflows"); } catch {} window.location.href = "/admin/agents"; } },
     { id: "nav-media", label: "Media", sublabel: "Images and files", category: "navigation", icon: <Image style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/media", keywords: ["billeder", "images", "files", "upload"], featured: true },
     { id: "nav-ints", label: "Interactives", sublabel: "HTML interactives", category: "navigation", icon: <Puzzle style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/interactives", keywords: ["ints", "interactive", "html"] },
     { id: "nav-calendar", label: "Calendar", sublabel: "Scheduled content", category: "navigation", icon: <Calendar style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/scheduled", keywords: ["kalender", "schedule", "planned"], featured: true },
@@ -50,6 +56,7 @@ function buildQuickActions(logout: () => void): QuickAction[] {
 
     // Actions — create
     { id: "act-new-agent", label: "New Agent", sublabel: "Create a new AI agent", category: "action", icon: <Plus style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/agents/new", keywords: ["new", "agent", "create", "ny", "opret"], featured: true },
+    { id: "act-new-workflow", label: "New Workflow", sublabel: "Chain agents into a pipeline", category: "action", icon: <Plus style={{ ...ICON_SIZE, color: MUTED }} />, keywords: ["new", "workflow", "pipeline", "chain", "create", "ny", "opret"], action: () => { try { localStorage.setItem("cms:agents-tab", "workflows"); localStorage.setItem("cms:agents-workflows-create", "1"); } catch {} window.location.href = "/admin/agents"; } },
     { id: "act-new-site", label: "New site", sublabel: "Create a new site", category: "action", icon: <Plus style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/sites/new", keywords: ["new", "site", "create", "ny", "opret"] },
     { id: "act-new-org", label: "New organization", sublabel: "Create a new organization", category: "action", icon: <Plus style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/organizations/new", keywords: ["new", "org", "organization", "create", "ny", "opret"] },
 
@@ -147,6 +154,9 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
   const [collections, setCollections] = useState<{ name: string; label: string }[]>([]);
   const [sites, setSites] = useState<{ id: string; name: string; orgId: string }[]>([]);
   const [orgs, setOrgs] = useState<{ id: string; name: string; firstSiteId: string | null; siteCount: number }[]>([]);
+  // Phase 6 — workflows + agent templates surfaced as searchable palette items
+  const [workflows, setWorkflows] = useState<{ id: string; name: string; stepCount: number }[]>([]);
+  const [agentTemplates, setAgentTemplates] = useState<{ id: string; name: string; description: string; source: "local" | "marketplace" }[]>([]);
   const [activeSiteId, setActiveSiteId] = useState<string>("");
   const [activeOrgId, setActiveOrgId] = useState<string>("");
   const [favorites, setFavorites] = useState<Array<{ id: string; type: string; label: string; path: string }>>([]);
@@ -209,8 +219,38 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
         },
       });
     }
+    // Phase 6 — dynamic per-workflow entries. Curators can search by
+    // workflow name and land on the Workflows tab pre-filtered.
+    for (const wf of workflows) {
+      actions.push({
+        id: `wf-${wf.id}`,
+        label: wf.name,
+        sublabel: `Workflow · ${wf.stepCount} step${wf.stepCount === 1 ? "" : "s"}`,
+        category: "navigation",
+        icon: <Bot style={{ ...ICON_SIZE, color: MUTED }} />,
+        keywords: [wf.name.toLowerCase(), "workflow", "pipeline", "chain"],
+        action: () => {
+          try { localStorage.setItem("cms:agents-tab", "workflows"); } catch {}
+          window.location.href = "/admin/agents";
+        },
+      });
+    }
+    // Phase 6 — dynamic per-template entries. Click → new-agent page
+    // pre-filtered with the template selected (the new-agent page reads
+    // ?template=<id> from the query string already).
+    for (const tpl of agentTemplates) {
+      actions.push({
+        id: `tpl-${tpl.id}`,
+        label: tpl.name,
+        sublabel: `${tpl.source === "local" ? "Local template" : "Marketplace template"} · ${tpl.description.slice(0, 70)}`,
+        category: "action",
+        icon: <Plus style={{ ...ICON_SIZE, color: MUTED }} />,
+        href: `/admin/agents/new?template=${encodeURIComponent(tpl.id)}`,
+        keywords: [tpl.name.toLowerCase(), "template", tpl.source, "agent", "new"],
+      });
+    }
     return actions;
-  }, [logout, collections, sites, activeSiteId, orgs, activeOrgId, router]);
+  }, [logout, collections, sites, activeSiteId, orgs, activeOrgId, workflows, agentTemplates, router]);
 
   /* Auto-focus input + fetch collections + sites */
   useEffect(() => {
@@ -218,6 +258,24 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
     fetch("/api/cms/collections")
       .then((r) => r.ok ? r.json() : { collections: [] })
       .then((d: { collections: { name: string; label: string }[] }) => setCollections(d.collections ?? []))
+      .catch(() => {});
+    // Phase 6 — workflows + agent templates for the palette dynamic items
+    fetch("/api/cms/workflows")
+      .then((r) => r.ok ? r.json() : [])
+      .then((d: { id: string; name: string; steps: unknown[] }[]) => {
+        if (!Array.isArray(d)) return;
+        setWorkflows(d.map((w) => ({ id: w.id, name: w.name, stepCount: w.steps?.length ?? 0 })));
+      })
+      .catch(() => {});
+    fetch("/api/cms/agent-templates")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d: { local?: { id: string; name: string; description?: string }[]; marketplace?: { id: string; name: string; description?: string }[] } | null) => {
+        if (!d) return;
+        const tpls: { id: string; name: string; description: string; source: "local" | "marketplace" }[] = [];
+        for (const t of d.local ?? []) tpls.push({ id: t.id, name: t.name, description: t.description ?? "", source: "local" });
+        for (const t of d.marketplace ?? []) tpls.push({ id: t.id, name: t.name, description: t.description ?? "", source: "marketplace" });
+        setAgentTemplates(tpls);
+      })
       .catch(() => {});
     fetch("/api/cms/registry")
       .then((r) => r.ok ? r.json() : null)
