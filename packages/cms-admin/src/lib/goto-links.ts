@@ -57,6 +57,12 @@ export async function createGotoLink(input: {
   path: string;
   label?: string;
 }): Promise<string> {
+  // Only allow internal admin paths — reject absolute URLs, protocol-relative
+  // URLs, and anything that doesn't start with "/". This prevents open-redirect
+  // abuse via crafted goto links.
+  if (!input.path.startsWith("/") || input.path.startsWith("//")) {
+    throw new Error(`createGotoLink: path must be an internal path starting with "/", got "${input.path}"`);
+  }
   const links = await load();
   const id = shortId();
   links.push({
