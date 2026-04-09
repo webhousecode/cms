@@ -13,7 +13,7 @@ import {
   getServerUrl,
   setActiveOrgId,
 } from "@/lib/prefs";
-import { clearBiometricJwt } from "@/lib/bridge";
+import { clearBiometricJwt, registerPendingPushToken } from "@/lib/bridge";
 
 /**
  * Phase 1 Home placeholder.
@@ -85,6 +85,15 @@ export function Home() {
     () => (meQuery.data ? groupByOrg(meQuery.data.sites) : []),
     [meQuery.data],
   );
+
+  // Phase 2: try to flush any pending FCM/APNs token to the server now
+  // that we definitely have a JWT. No-op if no token yet — the bridge
+  // listener will retry on its own.
+  useEffect(() => {
+    void registerPendingPushToken().catch((err) => {
+      console.warn("Push token register failed (will retry):", err);
+    });
+  }, []);
 
   // Pick the initial active org: stored pref → user.lastActiveOrg → first org
   useEffect(() => {

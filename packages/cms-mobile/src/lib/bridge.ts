@@ -143,6 +143,158 @@ export async function clearBiometricJwt(): Promise<void> {
   }
 }
 
+// ─── Push notifications (Phase 2) ─────────────────────
+//
+// Two-phase setup:
+//   1. setupPushListeners() — runs at boot (initCapacitor). Requests
+//      permission, registers Capacitor listeners, calls native register.
+//      The OS/FCM gives us a token via the "registration" event; we
+//      stash it in localStorage as a pending token.
+//   2. registerPendingPushToken() — runs from /home AFTER login. Sends
+//      the pending token to the server with a Bearer JWT. If no token
+//      yet, polls up to 15s.
+//
+// This split is necessary because the FCM token can arrive BEFORE the
+// user logs in, but we can't POST it to the server until we have a JWT.
+
+const PUSH_TOKEN_KEY = "wha.pendingPushToken";
+
+interface PendingToken {
+  token: string;
+  platform: "ios" | "android";
+}
+
+function savePendingToken(token: string, plat: "ios" | "android") {
+  try {
+    localStorage.setItem(PUSH_TOKEN_KEY, JSON.stringify({ token, platform: plat }));
+  } catch {
+    // localStorage unavailable
+  }
+}
+
+function loadPendingToken(): PendingToken | null {
+  try {
+    const raw = localStorage.getItem(PUSH_TOKEN_KEY);
+    return raw ? (JSON.parse(raw) as PendingToken) : null;
+  } catch {
+    return null;
+  }
+}
+
+function clearPendingToken() {
+  try {
+    localStorage.removeItem(PUSH_TOKEN_KEY);
+  } catch {
+    // localStorage unavailable
+  }
+}
+
+export async function setupPushListeners(): Promise<void> {
+  if (!isNative()) return;
+  try {
+    const { PushNotifications } = await import("@capacitor/push-notifications");
+
+    // Permission prompt — iOS shows the system dialog the first time.
+    const perm = await PushNotifications.requestPermissions();
+    if (perm.receive !== "granted") {
+      console.warn("[push] permission not granted:", perm.receive);
+      return;
+    }
+
+    // Token from FCM/APNs
+    PushNotifications.addListener("registration", (token) => {
+      const plat = isIOS() ? "ios" : "android";
+      console.log("[push] got registration token:", token.value.slice(0, 16) + "...");
+      savePendingToken(token.value, plat);
+      // Try to register immediately — works if user is already logged in
+      void registerPendingPushToken().catch((err) => {
+        console.warn("[push] eager register failed:", err);
+      });
+    });
+
+    PushNotifications.addListener("registrationError", (err) => {
+      console.warn("[push] registration error:", err);
+    });
+
+    // Foreground notification
+    PushNotifications.addListener("pushNotificationReceived", (notif) => {
+      console.log("[push] received in foreground:", notif);
+      document.dispatchEvent(
+        new CustomEvent("wha:push-received", { detail: notif }),
+      );
+    });
+
+    // User tapped a notification
+    PushNotifications.addListener("pushNotificationActionPerformed", (action) => {
+      console.log("[push] tapped:", action);
+      const data = action.notification.data as { url?: string } | undefined;
+      if (data?.url) {
+        // Defer to next tick so React routers are mounted
+        setTimeout(() => {
+          window.location.hash = "";
+          window.history.pushState({}, "", data.url);
+          // Dispatch a popstate so wouter picks it up
+          window.dispatchEvent(new PopStateEvent("popstate"));
+        }, 50);
+      }
+    });
+
+    // Trigger native registration
+    await PushNotifications.register();
+  } catch (err) {
+    console.error("[push] setupPushListeners failed:", err);
+  }
+}
+
+/**
+ * Send any pending push token to the server. Called from /home after login.
+ * Polls up to 15s for the token to arrive from native.
+ */
+export async function registerPendingPushToken(): Promise<boolean> {
+  if (!isNative()) return false;
+
+  // Wait up to 15s for the registration event to land
+  let attempts = 0;
+  while (!loadPendingToken() && attempts < 15) {
+    await new Promise((r) => setTimeout(r, 1000));
+    attempts++;
+  }
+
+  const pending = loadPendingToken();
+  if (!pending) {
+    console.warn("[push] no pending token after 15s");
+    return false;
+  }
+
+  // Lazy import to avoid circular deps with api/client
+  const { getServerUrl, getJwt } = await import("./prefs");
+  const server = await getServerUrl();
+  const jwt = await getJwt();
+  if (!server || !jwt) return false;
+
+  try {
+    const res = await fetch(`${server}/api/mobile/push/register`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${jwt}`,
+      },
+      credentials: "omit",
+      body: JSON.stringify({ token: pending.token, platform: pending.platform }),
+    });
+    if (!res.ok) {
+      console.warn("[push] register failed:", res.status, await res.text().catch(() => ""));
+      return false;
+    }
+    clearPendingToken();
+    console.log("[push] token registered with server");
+    return true;
+  } catch (err) {
+    console.error("[push] register network error:", err);
+    return false;
+  }
+}
+
 // ─── Master init ───────────────────────────────────────
 export async function initCapacitor(): Promise<void> {
   if (!isNative()) {
@@ -154,6 +306,9 @@ export async function initCapacitor(): Promise<void> {
     await setDarkStatusBar();
     await hideSplash();
     await initDeepLinks();
+    // Phase 2: kick off push registration. Permission prompt fires here
+    // on first launch. The server-side wire-up happens later from Home.
+    await setupPushListeners();
   } catch (err) {
     console.error("Capacitor init error:", err);
   }
