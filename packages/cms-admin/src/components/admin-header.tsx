@@ -281,7 +281,12 @@ function PreviewButton() {
   useEffect(() => {
     function onSiteChange() { setFetchKey((k) => k + 1); }
     window.addEventListener("cms-site-change", onSiteChange);
-    return () => window.removeEventListener("cms-site-change", onSiteChange);
+    // Re-fetch preview/live URLs when site config is saved (previewSiteUrl, deploy URL, etc.)
+    window.addEventListener("cms:site-config-updated", onSiteChange);
+    return () => {
+      window.removeEventListener("cms-site-change", onSiteChange);
+      window.removeEventListener("cms:site-config-updated", onSiteChange);
+    };
   }, []);
 
   useEffect(() => {
