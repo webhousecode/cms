@@ -1,0 +1,53 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { cms, getString, InvalidName } from '../../lib/webhouse';
+import { renderMarkdown } from '../../lib/markdown';
+
+const { slug } = Astro.params;
+
+let post = null;
+let invalidSlug = false;
+try {
+  post = cms.document('posts', slug ?? '');
+} catch (e) {
+  if (e instanceof InvalidName) {
+    invalidSlug = true;
+  } else {
+    throw e;
+  }
+}
+
+if (invalidSlug) {
+  return new Response('Invalid slug', { status: 400 });
+}
+
+if (!post) {
+  return new Response('Post not found', { status: 404 });
+}
+
+const translation = cms.findTranslation(post, 'posts');
+const contentHtml = renderMarkdown(getString(post, 'content'));
+---
+
+<Layout title={getString(post, 'title')}>
+  <article>
+    <h1>{getString(post, 'title')}</h1>
+    <div class="meta">
+      <span>{getString(post, 'author', 'Unknown')}</span>
+      <span> · </span>
+      <span>{getString(post, 'date')}</span>
+      <span> · </span>
+      <span>{post.locale}</span>
+    </div>
+    <div set:html={contentHtml} />
+
+    {translation && (
+      <div class="translation">
+        This post is also available in {translation.locale}:
+        <a href={`/blog/${translation.slug}`}>{getString(translation, 'title')}</a>
+      </div>
+    )}
+
+    <p><a href="/" class="back">← Back to all posts</a></p>
+  </article>
+</Layout>

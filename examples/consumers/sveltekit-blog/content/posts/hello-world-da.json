@@ -1,0 +1,18 @@
+{
+  "id": "post-hello-world-da",
+  "slug": "hello-world-da",
+  "status": "published",
+  "locale": "da",
+  "translationGroup": "3c5e7f9b-1d3f-5a7c-9e1b-3d5f7a9c1e3f",
+  "_fieldMeta": {},
+  "data": {
+    "title": "Hej verden fra SvelteKit",
+    "excerpt": "Et blogindlæg gemt som JSON-fil i @webhouse/cms og renderet af en SvelteKit-side.",
+    "content": "## Opsætningen\n\nDette indlæg ligger i `content/posts/hello-world-da.json`. **SvelteKit læser det direkte** i `+page.server.ts` via `WebhouseReader`-klassen.\n\n## Server-side load\n\nSvelteKit's server `load` funktioner kører i Node og kan læse filsystemet. `cms`-singleton'en fra `$lib/webhouse.ts` håndterer al I/O.",
+    "date": "2026-04-09",
+    "author": "Christian Broberg",
+    "tags": ["intro", "sveltekit", "svelte"]
+  },
+  "createdAt": "2026-04-09T00:00:00.000Z",
+  "updatedAt": "2026-04-09T00:00:00.000Z"
+}

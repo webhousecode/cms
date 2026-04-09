@@ -1,0 +1,21 @@
+{{ define "main" }}
+<h1>Blog</h1>
+<p class="lead">Content read from @webhouse/cms JSON files, synced to Hugo markdown via a 100-line Go script, then rendered by Hugo.</p>
+
+{{ $posts := where .Site.RegularPages "Section" "posts" }}
+{{ if not $posts }}
+  <p>No published posts yet.</p>
+{{ end }}
+
+{{ range $posts }}
+  <a href="{{ .RelPermalink }}" class="post-card">
+    <div class="meta">
+      <span>{{ .Date.Format "2006-01-02" }}</span>
+      <span> · </span>
+      <span>{{ .Site.Language.Lang }}</span>
+    </div>
+    <h3>{{ .Title }}</h3>
+    <p>{{ .Description }}</p>
+  </a>
+{{ end }}
+{{ end }}

@@ -1,0 +1,18 @@
+{
+  "id": "post-hello-world-en",
+  "slug": "hello-world",
+  "status": "published",
+  "locale": "en",
+  "translationGroup": "4d6f8a0c-2e4f-6a8c-0e2f-4a6c8e0a2c4e",
+  "_fieldMeta": {},
+  "data": {
+    "title": "Hello, world from Hugo",
+    "excerpt": "A blog post stored as a JSON file in @webhouse/cms, synced to Hugo markdown via a 100-line Go script.",
+    "content": "## The setup\n\nHugo expects markdown files in `content/posts/`. **scripts/sync-content.go** reads the JSON files in `_webhouse-content/posts/`, extracts the fields, and writes them as Hugo-compatible markdown with TOML front matter.\n\nRun the sync, then `hugo build` or `hugo serve`. The CMS admin writes the JSON, the sync script regenerates the markdown.\n\n## Why this approach\n\nHugo's content model is opinionated — front matter + markdown. Our JSON model is more structured (separate fields for excerpt, tags, author). The 100-line sync script bridges the two without losing fidelity.\n\nFor production, run `go run scripts/sync-content.go` as a pre-build step in your CI/CD or content webhook.",
+    "date": "2026-04-09",
+    "author": "Christian Broberg",
+    "tags": ["intro", "hugo", "go"]
+  },
+  "createdAt": "2026-04-09T00:00:00.000Z",
+  "updatedAt": "2026-04-09T00:00:00.000Z"
+}

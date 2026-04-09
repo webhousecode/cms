@@ -1,0 +1,25 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { cms, getString } from '../lib/webhouse';
+
+const posts = cms.collection('posts', 'en');
+---
+
+<Layout title="Blog (en)">
+  <h1>Blog</h1>
+  <p class="lead">Content read from @webhouse/cms JSON files by an Astro 5 app.</p>
+
+  {posts.length === 0 && <p>No published posts yet.</p>}
+
+  {posts.map((post) => (
+    <a href={`/blog/${post.slug}`} class="post-card">
+      <div class="meta">
+        <span>{getString(post, 'date')}</span>
+        <span> · </span>
+        <span>{post.locale}</span>
+      </div>
+      <h3>{getString(post, 'title')}</h3>
+      <p>{getString(post, 'excerpt')}</p>
+    </a>
+  ))}
+</Layout>

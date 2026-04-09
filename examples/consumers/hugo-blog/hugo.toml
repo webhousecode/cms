@@ -1,0 +1,22 @@
+baseURL = "http://localhost:1313/"
+languageCode = "en-us"
+title = "@webhouse/cms · Hugo"
+
+[params]
+brandPrefix = "@webhouse/cms"
+brandSuffix = "Hugo"
+footerText = "Powered by @webhouse/cms — read by Hugo via JSON sync"
+
+[languages]
+  [languages.en]
+    languageName = "English"
+    weight = 1
+  [languages.da]
+    languageName = "Dansk"
+    weight = 2
+    contentDir = "content-da"
+
+[markup]
+  [markup.goldmark]
+    [markup.goldmark.renderer]
+      unsafe = true

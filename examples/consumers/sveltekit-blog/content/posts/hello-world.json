@@ -1,0 +1,18 @@
+{
+  "id": "post-hello-world-en",
+  "slug": "hello-world",
+  "status": "published",
+  "locale": "en",
+  "translationGroup": "3c5e7f9b-1d3f-5a7c-9e1b-3d5f7a9c1e3f",
+  "_fieldMeta": {},
+  "data": {
+    "title": "Hello, world from SvelteKit",
+    "excerpt": "A blog post stored as a JSON file in @webhouse/cms and rendered by a SvelteKit page.",
+    "content": "## The setup\n\nThis post lives at `content/posts/hello-world.json`. **SvelteKit reads it directly** in `+page.server.ts` via the `WebhouseReader` class — no API calls, no database.\n\n## Server-side load\n\nSvelteKit's server `load` functions run in Node and can read the filesystem. The `cms` singleton from `$lib/webhouse.ts` handles all I/O — your `+page.svelte` just receives typed data.\n\n## Reactive everything\n\nSvelte 5 runes make this trivial. The `data` prop is fully typed and reactive. Use it directly in your template.",
+    "date": "2026-04-09",
+    "author": "Christian Broberg",
+    "tags": ["intro", "sveltekit", "svelte"]
+  },
+  "createdAt": "2026-04-09T00:00:00.000Z",
+  "updatedAt": "2026-04-09T00:00:00.000Z"
+}

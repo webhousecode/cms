@@ -1,0 +1,18 @@
+{
+  "id": "post-why-astro-da",
+  "slug": "why-astro-da",
+  "status": "published",
+  "locale": "da",
+  "translationGroup": "2b4d6f8a-3c5e-7f9b-1d3f-5a7c9e1b3d5f",
+  "_fieldMeta": {},
+  "data": {
+    "title": "Hvorfor Astro?",
+    "excerpt": "Astro er moderne content-sites darling. Dens filosofi flugter præcis med @webhouse/cms — fil-baseret, content-først, zero JS som standard.",
+    "content": "## Astro-publikummet\n\nAstro blev den hurtigst voksende static-først framework i 2024-2026, der driver sites for Block, Cassidoo, Trivago og masser af open source docs (inkl. Vercel's dokumentation). Den udmærker sig ved **indholdsdrevne** sites — præcis @webhouse/cms målgruppen.\n\n## Hvorfor det passer perfekt\n\n- **Fil-baseret indhold** — Astro's content collections forventer JSON/MD-filer i mapper. Det gør @webhouse/cms også.\n- **Zero JS som standard** — Astro leverer HTML, hydrater kun det der har brug for interaktivitet.\n- **TypeScript native** — type-sikre schemaer, fuld IDE-support.\n- **Server-side rendering** — Astro's SSR-mode lader dig rendere dynamisk CMS-indhold per request.\n\n## Hvad der er i dette eksempel\n\n- `src/lib/webhouse.ts` — TypeScript reader (~110 LOC)\n- `src/pages/index.astro` — Engelsk forside\n- `src/pages/da/index.astro` — Dansk forside\n- `src/pages/blog/[slug].astro` — Dynamisk post-route\n- `src/layouts/Layout.astro` — Delt layout der læser globals\n- Tiny zero-dep markdown renderer (skift til `marked` for produktion)",
+    "date": "2026-04-08",
+    "author": "Christian Broberg",
+    "tags": ["astro", "filosofi"]
+  },
+  "createdAt": "2026-04-08T00:00:00.000Z",
+  "updatedAt": "2026-04-08T00:00:00.000Z"
+}

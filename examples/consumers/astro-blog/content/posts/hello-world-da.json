@@ -1,0 +1,18 @@
+{
+  "id": "post-hello-world-da",
+  "slug": "hello-world-da",
+  "status": "published",
+  "locale": "da",
+  "translationGroup": "1f3a5c7e-9b2d-4f6a-8c0e-2a4c6e8f0b1d",
+  "_fieldMeta": {},
+  "data": {
+    "title": "Hej verden fra Astro",
+    "excerpt": "Et blogindlæg gemt som JSON-fil i @webhouse/cms og renderet af en Astro-side.",
+    "content": "## Opsætningen\n\nDette indlæg ligger i `content/posts/hello-world-da.json`. **Astro læser det direkte** via `WebhouseReader`-klassen i `src/lib/webhouse.ts`.\n\n## Astro passer perfekt\n\nAstro's content-først filosofi flugter præcis med @webhouse/cms. Begge mener at indhold skal være portabelt, læsbart og version-controlled. Reader'en bruger Node fs API'er og kører i Astro's SSR-kontekst.",
+    "date": "2026-04-09",
+    "author": "Christian Broberg",
+    "tags": ["intro", "astro"]
+  },
+  "createdAt": "2026-04-09T00:00:00.000Z",
+  "updatedAt": "2026-04-09T00:00:00.000Z"
+}

@@ -1,0 +1,18 @@
+{
+  "id": "post-why-astro-en",
+  "slug": "why-astro",
+  "status": "published",
+  "locale": "en",
+  "translationGroup": "2b4d6f8a-3c5e-7f9b-1d3f-5a7c9e1b3d5f",
+  "_fieldMeta": {},
+  "data": {
+    "title": "Why Astro?",
+    "excerpt": "Astro is the modern darling of content sites. Its philosophy aligns precisely with @webhouse/cms — file-based, content-first, zero JS by default.",
+    "content": "## The Astro audience\n\nAstro became the fastest-growing static-first framework of 2024-2026, powering sites for Block, Cassidoo, Trivago, and many open source docs (including Vercel's documentation). It excels at **content-driven** sites — exactly the @webhouse/cms target.\n\n## Why a perfect fit\n\n- **File-based content** — Astro's content collections expect JSON/MD files in folders. So does @webhouse/cms.\n- **Zero JS by default** — Astro ships HTML, hydrates only what needs interactivity. Same philosophy as our static builds.\n- **TypeScript native** — type-safe schemas, full IDE support.\n- **Server-side rendering** — Astro's SSR mode lets you render dynamic CMS content per request, while static mode pre-renders at build time.\n\n## What's in this example\n\n- `src/lib/webhouse.ts` — TypeScript reader (~110 LOC)\n- `src/pages/index.astro` — English home\n- `src/pages/da/index.astro` — Danish home\n- `src/pages/blog/[slug].astro` — dynamic post route\n- `src/layouts/Layout.astro` — shared layout reading globals\n- Tiny zero-dep markdown renderer (swap in `marked` for production)\n\nThe reader pattern is the same as the other 11 framework consumers — only the framework-specific glue differs.",
+    "date": "2026-04-08",
+    "author": "Christian Broberg",
+    "tags": ["astro", "philosophy"]
+  },
+  "createdAt": "2026-04-08T00:00:00.000Z",
+  "updatedAt": "2026-04-08T00:00:00.000Z"
+}

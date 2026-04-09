@@ -1,0 +1,16 @@
+{{ define "main" }}
+<article>
+  <h1>{{ .Title }}</h1>
+  <div class="meta">
+    <span>{{ .Params.author | default "Unknown" }}</span>
+    <span> · </span>
+    <span>{{ .Date.Format "2006-01-02" }}</span>
+    <span> · </span>
+    <span>{{ .Site.Language.Lang }}</span>
+  </div>
+
+  {{ .Content }}
+
+  <p><a href="{{ "/" | relLangURL }}" class="back">← Back to all posts</a></p>
+</article>
+{{ end }}
