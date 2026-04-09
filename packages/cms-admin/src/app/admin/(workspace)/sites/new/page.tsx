@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Github, HardDrive, FolderOpen } from "lucide-react";
+import { Github, HardDrive, FolderOpen, Globe } from "lucide-react";
+import { WpMigrationPanel } from "@/components/settings/wp-migration-panel";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { Checkbox } from "@/components/ui/checkbox-styled";
 
@@ -41,7 +42,7 @@ export default function NewSitePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
 
-  const [adapter, setAdapter] = useState<"github" | "filesystem">("filesystem");
+  const [adapter, setAdapter] = useState<"github" | "filesystem" | "migrate">("filesystem");
   const [name, setName] = useState("");
   // GitHub OAuth state
   const [ghConnected, setGhConnected] = useState(false);
@@ -200,6 +201,7 @@ export default function NewSitePage() {
     if (!name.trim()) { setError("Site name is required"); return; }
 
     const orgId = getCookie("cms-active-org") ?? "";
+    if (adapter === "migrate") return; // Migration handled by WpMigrationPanel
     const site: SiteEntry = { id, name: name.trim(), adapter, configPath: "", previewUrl: previewUrl || undefined };
 
     if (adapter === "github") {
@@ -309,6 +311,7 @@ export default function NewSitePage() {
             {([
               { value: "filesystem" as const, label: "Filesystem", icon: HardDrive },
               { value: "github" as const, label: "GitHub", icon: Github },
+              { value: "migrate" as const, label: "Migrate", icon: Globe },
             ]).map(({ value, label, icon: Icon }) => (
               <button
                 key={value}
@@ -596,11 +599,21 @@ export default function NewSitePage() {
             </>
           )}
 
-          {/* Preview URL */}
-          <div>
-            <label style={labelStyle}>Preview URL (optional)</label>
-            <input type="url" value={previewUrl} onChange={(e) => setPreviewUrl(e.target.value)} placeholder="https://my-site.example.com" style={inputStyle} />
-          </div>
+          {/* Migrate: WP migration wizard replaces the form entirely */}
+          {adapter === "migrate" && (
+            <WpMigrationPanel orgId={getCookie("cms-active-org") ?? ""} onComplete={(siteId) => {
+              document.cookie = `cms-active-site=${siteId};path=/;max-age=31536000`;
+              router.push("/admin");
+            }} />
+          )}
+
+          {/* Preview URL — only for filesystem/github */}
+          {adapter !== "migrate" && (
+            <div>
+              <label style={labelStyle}>Preview URL (optional)</label>
+              <input type="url" value={previewUrl} onChange={(e) => setPreviewUrl(e.target.value)} placeholder="https://my-site.example.com" style={inputStyle} />
+            </div>
+          )}
 
         {error && (
           <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--destructive)", padding: "0.5rem 0.75rem", borderRadius: "6px", background: "color-mix(in srgb, var(--destructive) 10%, transparent)" }}>
@@ -608,26 +621,28 @@ export default function NewSitePage() {
           </p>
         )}
 
-        {/* Actions */}
-        <div style={{ display: "flex", gap: "0.75rem", marginTop: "0.5rem" }}>
-          <button
-            type="button"
-            onClick={handleCreate}
-            disabled={saving || (adapter === "github" && !ghConnected)}
-            style={{
-              padding: "0.5rem 1.25rem", borderRadius: "8px", border: "none",
-              background: "var(--primary)", color: "var(--primary-foreground)",
-              fontSize: "0.85rem", fontWeight: 600,
-              cursor: saving || (adapter === "github" && !ghConnected) ? "not-allowed" : "pointer",
-              opacity: saving || (adapter === "github" && !ghConnected) ? 0.5 : 1,
-            }}
-          >
-            {saving ? "Creating..." : "Create site"}
-          </button>
-          <button type="button" onClick={() => router.push("/admin/sites")} style={{ padding: "0.5rem 1rem", borderRadius: "8px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.85rem", cursor: "pointer" }}>
-            Cancel
-          </button>
-        </div>
+        {/* Actions — only for filesystem/github */}
+        {adapter !== "migrate" && (
+          <div style={{ display: "flex", gap: "0.75rem", marginTop: "0.5rem" }}>
+            <button
+              type="button"
+              onClick={handleCreate}
+              disabled={saving || (adapter === "github" && !ghConnected)}
+              style={{
+                padding: "0.5rem 1.25rem", borderRadius: "8px", border: "none",
+                background: "var(--primary)", color: "var(--primary-foreground)",
+                fontSize: "0.85rem", fontWeight: 600,
+                cursor: saving || (adapter === "github" && !ghConnected) ? "not-allowed" : "pointer",
+                opacity: saving || (adapter === "github" && !ghConnected) ? 0.5 : 1,
+              }}
+            >
+              {saving ? "Creating..." : "Create site"}
+            </button>
+            <button type="button" onClick={() => router.push("/admin/sites")} style={{ padding: "0.5rem 1rem", borderRadius: "8px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.85rem", cursor: "pointer" }}>
+              Cancel
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

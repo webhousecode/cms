@@ -34,7 +34,7 @@ interface MigrationResult {
 
 type Step = "url" | "review" | "migrating" | "done";
 
-export function WpMigrationPanel({ orgId }: { orgId: string }) {
+export function WpMigrationPanel({ orgId, onComplete }: { orgId: string; onComplete?: (siteId: string) => void }) {
   const [step, setStep] = useState<Step>("url");
   const [url, setUrl] = useState("");
   const [siteName, setSiteName] = useState("");
@@ -311,9 +311,12 @@ export function WpMigrationPanel({ orgId }: { orgId: string }) {
           <div style={{ display: "flex", gap: "0.5rem" }}>
             <button
               onClick={() => {
-                // Switch to the new site — set cookie and reload
-                document.cookie = `cms-active-site=${result.siteId};path=/;max-age=31536000`;
-                window.location.href = "/admin";
+                if (onComplete) {
+                  onComplete(result.siteId);
+                } else {
+                  document.cookie = `cms-active-site=${result.siteId};path=/;max-age=31536000`;
+                  window.location.href = "/admin";
+                }
               }}
               style={btnPrimary}
             >

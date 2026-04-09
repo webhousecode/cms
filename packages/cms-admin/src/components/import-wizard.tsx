@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback } from "react";
-import { Upload, ArrowRight, ArrowLeft, Check, AlertTriangle, FileSpreadsheet, X } from "lucide-react";
+import { Upload, ArrowRight, ArrowLeft, Check, AlertTriangle, FileSpreadsheet, X, FileUp } from "lucide-react";
 import { CustomSelect } from "@/components/ui/custom-select";
 
 interface FieldConfig {
@@ -67,7 +67,9 @@ export function ImportWizard({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasFile, setHasFile] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const dragCounter = useRef(0);
 
   // ── Step 1: Upload ──
   async function handleUpload() {
@@ -230,19 +232,53 @@ export function ImportWizard({
             </div>
           )}
 
-          {/* ── Step 1: Upload ── */}
+          {/* ── Step 1: Upload (DnD) ── */}
           {step === 1 && (
             <div>
-              <p style={{ fontSize: "0.82rem", color: "var(--muted-foreground)", marginBottom: "1rem" }}>
-                Upload a CSV, JSON, or Markdown file. Multiple .md files are merged into one import batch.
-              </p>
+              <div
+                onClick={() => fileRef.current?.click()}
+                onDragEnter={(e) => { e.preventDefault(); dragCounter.current++; setDragOver(true); }}
+                onDragLeave={(e) => { e.preventDefault(); dragCounter.current--; if (dragCounter.current === 0) setDragOver(false); }}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  dragCounter.current = 0;
+                  setDragOver(false);
+                  const files = e.dataTransfer.files;
+                  if (files.length && fileRef.current) {
+                    fileRef.current.files = files;
+                    setHasFile(true);
+                    handleUpload();
+                  }
+                }}
+                style={{
+                  padding: "2rem 1.5rem",
+                  borderRadius: 8,
+                  border: dragOver ? "2px dashed #F7BB2E" : "2px dashed var(--border)",
+                  background: dragOver ? "rgba(247, 187, 46, 0.05)" : "transparent",
+                  cursor: "pointer",
+                  textAlign: "center",
+                  transition: "all 0.15s",
+                  marginBottom: "1rem",
+                }}
+              >
+                <FileUp style={{ width: 28, height: 28, color: dragOver ? "#F7BB2E" : "var(--muted-foreground)", margin: "0 auto 0.5rem" }} />
+                <div style={{ fontSize: "0.85rem", fontWeight: 500, marginBottom: "0.25rem" }}>
+                  {hasFile
+                    ? `${fileRef.current?.files?.[0]?.name ?? "File selected"}`
+                    : "Drop file here or click to browse"}
+                </div>
+                <div style={{ fontSize: "0.72rem", color: "var(--muted-foreground)" }}>
+                  CSV, JSON, or Markdown (.md)
+                </div>
+              </div>
               <input
                 ref={fileRef}
                 type="file"
                 accept=".csv,.json,.md,.markdown,.tsv"
                 multiple
-                onChange={() => setHasFile(!!(fileRef.current?.files?.length))}
-                style={{ fontSize: "0.82rem", marginBottom: "1rem" }}
+                onChange={() => { setHasFile(!!(fileRef.current?.files?.length)); }}
+                style={{ display: "none" }}
               />
               <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem" }}>
                 <button
