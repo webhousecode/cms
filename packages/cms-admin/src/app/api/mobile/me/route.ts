@@ -6,6 +6,7 @@ import { existsSync } from "fs";
 import { getUserById } from "@/lib/auth";
 import { getMobileSession } from "@/lib/mobile-auth";
 import { loadRegistry } from "@/lib/site-registry";
+import { signPreviewToken } from "@/lib/preview-token";
 
 function findLanHost(): string | null {
   const ifaces = os.networkInterfaces();
@@ -55,8 +56,10 @@ function derivePreviewUrl(
     // External URLs (Vercel, Netlify, etc.) — phone can reach them directly
     if (!isLocalhostUrl(site.previewUrl)) return site.previewUrl;
 
-    // Localhost URLs — must proxy through cms-admin
-    return `${proxyBase}?upstream=${encodeURIComponent(site.previewUrl)}`;
+    // Localhost URLs — must proxy through cms-admin with signed token
+    const param = site.previewUrl;
+    const token = signPreviewToken(param);
+    return `${proxyBase}?upstream=${encodeURIComponent(param)}&tok=${token}`;
   }
 
   // No previewUrl — try sirv from dist/
@@ -65,7 +68,8 @@ function derivePreviewUrl(
   const distDir = path.join(projectDir, "dist");
   if (!existsSync(distDir)) return undefined;
 
-  return `${proxyBase}?dir=${encodeURIComponent(distDir)}`;
+  const token = signPreviewToken(distDir);
+  return `${proxyBase}?dir=${encodeURIComponent(distDir)}&tok=${token}`;
 }
 
 function isLocalhostUrl(url: string): boolean {
