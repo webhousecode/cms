@@ -105,9 +105,12 @@ const cmsAdminDev = {
 const cmsAdminProd = {
   name: "cms-admin-prod",
   cwd: "/Users/cb/Apps/webhouse/cms/packages/cms-admin",
-  script: "node_modules/next/dist/bin/next",
-  args: "start --port 4010",
-  interpreter: "node",
+  // Source .env.local first so CMS_CONFIG_PATH and other secrets are
+  // available at runtime. `next start` with output:"standalone" in
+  // next.config.ts doesn't load .env.local itself.
+  script: "/opt/homebrew/bin/bash",
+  args: '-c "set -a && source .env.local && set +a && node_modules/next/dist/bin/next start --port 4010"',
+  interpreter: "none",
   env: {
     PORT: "4010",
     NODE_ENV: "production",
