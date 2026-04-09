@@ -232,7 +232,7 @@ In-browser AI-assisted site building. Live preview of AI-generated pages. Conver
 Send emails from the CMS. AWS SES, Resend, SendGrid integration. Email templates with CMS content. Triggered by events (form submission, publish, schedule). Template editor in admin. Send history and delivery tracking.
 
 ## F30 — Form Engine
-Simple form builder and submission handler. Define forms in config or admin UI. Submissions stored as CMS documents. Email notification on submit. Spam protection (honeypot + rate limit). Webhook forwarding. Embeddable form widget.
+CMS-native form builder and submission handler. The CMS admin IS the form backend — static sites POST cross-origin to the admin API, no third-party services needed. Define forms in `cms.config.ts`, `cms build` generates `<form>` HTML with honeypot + CORS, public `POST /api/forms/[name]` validates and stores in `_data/submissions/`. Admin inbox with unread badges in sidebar (below Interactives), read/archive/delete, CSV export. Email + webhook notifications via F35. Embeddable widget script for non-CMS pages. Rate limiting per IP. Works OOTB on every deploy target.
 
 ## F31 — Documentation Site
 Full documentation built with AI + webhouse.app. Auto-generated from OpenAPI spec, CLAUDE.md, and source code. Versioned docs. Search. Code examples in multiple languages. Hosted at `docs.webhouse.app`. Dog-fooded — the docs site itself runs on @webhouse/cms.

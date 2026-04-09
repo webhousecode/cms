@@ -170,7 +170,7 @@ _Unique selling points and advanced features._
 | 20 | **F46 Plugin System** | Large | Extensibility — `registerPlugin()`, build/AI hooks, custom fields |
 | 21 | **F36 Framework Integrations** | Large | Astro, Remix, Nuxt, SvelteKit adapters |
 | 22 | **F45 AI Image Generation** | Medium | Flux/DALL-E in editor. Differentiator. |
-| 23 | **F30 Form Engine** | Medium | Contact forms, surveys, submissions |
+| 23 | **F30 Form Engine** | Medium | CMS-native form submissions. Admin = backend. Inbox with badge, honeypot + rate limit, email/webhook notify, CSV export, embeddable widget. |
 | 24 | **F29 Transactional Email** | Medium | Password reset, invites, notifications |
 | 25 | **F08 RAG Knowledge Base** | Large | AI grounded in site content |
 | 26 | **F09 Chat Plugin** | Medium | AI chat widget built on F08 |
