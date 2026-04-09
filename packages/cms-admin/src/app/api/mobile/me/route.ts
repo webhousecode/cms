@@ -126,9 +126,10 @@ export async function GET(req: NextRequest) {
         sitePromises.push(
           readSiteConfigForSite(org.id, site.id)
             .then((cfg) => {
-              if (cfg?.deployCustomDomain) {
+              if (!cfg) return;
+              if (cfg.deployCustomDomain) {
                 entry.liveUrl = `https://${cfg.deployCustomDomain}`;
-              } else if (cfg?.deployProductionUrl) {
+              } else if (cfg.deployProductionUrl) {
                 entry.liveUrl = cfg.deployProductionUrl;
               }
             })
