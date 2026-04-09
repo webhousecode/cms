@@ -137,13 +137,17 @@ export function AppSidebar({ collections }: Props) {
       })
       .catch(() => {});
 
-    fetch("/api/admin/forms")
-      .then((r) => r.json())
-      .then((data: { forms?: Array<{ unread: number }> }) => {
-        const total = (data.forms ?? []).reduce((sum, f) => sum + f.unread, 0);
-        setFormUnreadTotal(total);
-      })
-      .catch(() => {});
+    function fetchFormCounts() {
+      fetch("/api/admin/forms")
+        .then((r) => r.json())
+        .then((data: { forms?: Array<{ unread: number }> }) => {
+          const total = (data.forms ?? []).reduce((sum, f) => sum + f.unread, 0);
+          setFormUnreadTotal(total);
+        })
+        .catch(() => {});
+    }
+    fetchFormCounts();
+    const formPoll = setInterval(fetchFormCounts, 30_000);
 
     fetch("/api/cms/command")
       .then((r) => r.json())
@@ -152,6 +156,8 @@ export function AppSidebar({ collections }: Props) {
         setBudgetTotal(data.monthlyBudgetUsd ?? 50);
       })
       .catch(() => {});
+
+    return () => clearInterval(formPoll);
   }, []);
 
   const budgetPct = budgetTotal > 0 ? (budgetSpent / budgetTotal) * 100 : 0;
