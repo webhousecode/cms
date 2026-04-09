@@ -16,6 +16,7 @@ import { DeploySettingsPanel } from "@/components/settings/deploy-settings-panel
 import { GeoSettingsPanel } from "@/components/settings/geo-settings-panel";
 import { BackupSettingsPanel } from "@/components/settings/backup-settings-panel";
 import { BeamSettingsPanel } from "@/components/settings/beam-settings-panel";
+import { WpMigrationPanel } from "@/components/settings/wp-migration-panel";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { readSiteConfig } from "@/lib/site-config";
 import { readBrandVoice } from "@/lib/brand-voice";
@@ -63,6 +64,7 @@ export default async function SettingsPage({
     { id: "geo",         label: "GEO" },
     { id: "mcp",         label: "MCP" },
     { id: "beam",        label: "Beam" },
+    { id: "wp-migrate",  label: "WordPress" },
     ...(globals.length > 0 ? [{ id: "globals", label: "Globals" }] : []),
     ...(siteConfig.schemaEditEnabled ? [{ id: "schema", label: "Schema" }] : []),
     { id: "prompts", label: "AI Prompts" },
@@ -314,6 +316,17 @@ export default async function SettingsPage({
               Export your complete site as a portable .beam archive, or import one from another CMS instance.
             </p>
             <BeamSettingsPanel orgId={activeOrgId} />
+          </div>
+        )}
+
+        {/* WordPress Migration tab */}
+        {tab === "wp-migrate" && (
+          <div className="max-w-lg" data-testid="settings-panel-wp-migrate">
+            <SectionHeading>WordPress Migration</SectionHeading>
+            <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "-0.5rem", marginBottom: "1.25rem" }}>
+              Migrate content, media, and structure from any WordPress site. Just enter the URL.
+            </p>
+            <WpMigrationPanel orgId={activeOrgId} />
           </div>
         )}
 
