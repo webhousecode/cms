@@ -3,6 +3,44 @@ import { getMobileSession } from "@/lib/mobile-auth";
 import { getAdminCmsForSite, getAdminConfigForSite } from "@/lib/cms";
 import { readSiteConfigForSite } from "@/lib/site-config";
 import { saveRevision } from "@/lib/revisions";
+import { signMobileUploadUrl } from "@/app/api/mobile/uploads/route";
+import os from "os";
+
+function getLanBaseUrl(reqUrl: URL): string {
+  let base = `${reqUrl.protocol}//${reqUrl.host}`;
+  if (/localhost|127\.0\.0\.1|0\.0\.0\.0/.test(base)) {
+    const ifaces = os.networkInterfaces();
+    for (const list of Object.values(ifaces)) {
+      for (const i of list ?? []) {
+        if (i.family === "IPv4" && !i.internal) {
+          base = base.replace(/localhost|127\.0\.0\.1|0\.0\.0\.0/, i.address);
+          return base;
+        }
+      }
+    }
+  }
+  return base;
+}
+
+/** Rewrite relative /uploads/ URLs in document data to signed absolute URLs */
+function signDocumentUrls(data: Record<string, unknown>, baseUrl: string, orgId: string, siteId: string): Record<string, unknown> {
+  const result = { ...data };
+  for (const [key, value] of Object.entries(result)) {
+    if (typeof value === "string" && value.startsWith("/uploads/")) {
+      result[key] = signMobileUploadUrl(baseUrl, orgId, siteId, value);
+    }
+    // Handle image-gallery arrays: [{url, alt}]
+    if (Array.isArray(value)) {
+      result[key] = value.map((item) => {
+        if (item && typeof item === "object" && typeof (item as any).url === "string" && (item as any).url.startsWith("/uploads/")) {
+          return { ...item, url: signMobileUploadUrl(baseUrl, orgId, siteId, (item as any).url) };
+        }
+        return item;
+      });
+    }
+  }
+  return result;
+}
 
 /**
  * Fire-and-forget: trigger deploy for a site after content changes.
@@ -67,14 +105,19 @@ export async function GET(req: NextRequest) {
   const slug = req.nextUrl.searchParams.get("slug");
 
   try {
+    const baseUrl = getLanBaseUrl(new URL(req.url));
+
     if (slug) {
-      // Single document
+      // Single document — sign upload URLs in data
       const doc = await ctx.cms.content.findBySlug(ctx.collection, slug);
       if (!doc) return NextResponse.json({ error: "Not found" }, { status: 404 });
-      return NextResponse.json(doc);
+      return NextResponse.json({
+        ...doc,
+        data: signDocumentUrls(doc.data, baseUrl, ctx.orgId, ctx.siteId),
+      });
     }
 
-    // List all (exclude trashed)
+    // List all (exclude trashed) — sign upload URLs
     const { documents } = await ctx.cms.content.findMany(ctx.collection, {});
     const filtered = documents
       .filter((d: any) => d.status !== "trashed")
@@ -83,7 +126,7 @@ export async function GET(req: NextRequest) {
         slug: d.slug,
         status: d.status,
         locale: d.locale,
-        data: d.data,
+        data: signDocumentUrls(d.data, baseUrl, ctx.orgId, ctx.siteId),
         createdAt: d.createdAt,
         updatedAt: d.updatedAt,
       }));

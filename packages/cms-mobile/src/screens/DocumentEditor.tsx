@@ -332,25 +332,19 @@ function RichtextField({ field, value, onChange }: FieldEditorProps) {
   );
 }
 
+/** Check if a URL is already absolute (http/data/signed) — no client-side resolution needed */
+function isAbsoluteUrl(url: string): boolean {
+  return !url || url.startsWith("http") || url.startsWith("data:") || url.includes("/api/mobile/uploads");
+}
+
 function ImageField({ field, value, onChange }: FieldEditorProps) {
   const rawUrl = (value as string) ?? "";
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
-  const [serverBase, setServerBase] = useState("");
 
-  // Resolve server URL for displaying relative image paths
-  useEffect(() => {
-    void (async () => {
-      const { getServerUrl } = await import("@/lib/prefs");
-      const s = await getServerUrl();
-      if (s) setServerBase(s);
-    })();
-  }, []);
-
-  // Prefix relative URLs with server base so images load from CMS server
-  const url = rawUrl && !rawUrl.startsWith("http") && serverBase
-    ? `${serverBase}${rawUrl}`
-    : rawUrl;
+  // Server signs all /uploads/ URLs in the document response — URLs are ready to use
+  const url = rawUrl;
+  const imageReady = !rawUrl || isAbsoluteUrl(rawUrl);
 
   async function handleFile(file: File) {
     // Get orgId/siteId from the URL params
@@ -391,7 +385,7 @@ function ImageField({ field, value, onChange }: FieldEditorProps) {
   return (
     <div>
       <FieldLabel field={field} />
-      {url ? (
+      {url && imageReady ? (
         <div className="relative rounded-lg overflow-hidden border border-white/10">
           <img src={url} alt="" className="w-full max-h-48 object-cover" />
           <div className="absolute bottom-0 inset-x-0 flex gap-2 p-2 bg-gradient-to-t from-black/80 to-transparent">
@@ -459,15 +453,6 @@ interface GalleryImage {
 function ImageGalleryField({ field, value, onChange }: FieldEditorProps) {
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
-  const [serverBase, setServerBase] = useState("");
-
-  useEffect(() => {
-    void (async () => {
-      const { getServerUrl } = await import("@/lib/prefs");
-      const s = await getServerUrl();
-      if (s) setServerBase(s);
-    })();
-  }, []);
 
   // Normalize: legacy plain strings → { url, alt }
   const images: GalleryImage[] = Array.isArray(value)
@@ -526,8 +511,7 @@ function ImageGalleryField({ field, value, onChange }: FieldEditorProps) {
       {images.length > 0 && (
         <div className="flex flex-col gap-2 mb-2">
           {images.map((img, idx) => {
-            const displayUrl = img.url && !img.url.startsWith("http") && serverBase
-              ? `${serverBase}${img.url}` : img.url;
+            const displayUrl = img.url;
             return (
             <div key={idx} className="flex gap-2 items-start rounded-lg border border-white/10 p-2 bg-brand-darkPanel">
               <img src={displayUrl} alt={img.alt} className="w-16 h-16 rounded object-cover shrink-0" />
