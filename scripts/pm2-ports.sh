@@ -46,13 +46,80 @@ if not apps:
     print("(no apps running under PM2)")
     sys.exit(0)
 
+def find_port(a):
+    """Resolve port from multiple sources (in priority order):
+    1. env.PORT (set explicitly in ecosystem.config.js)
+    2. Parse from args (may be a string OR a JSON array)
+    3. PORT at the top level of pm2_env (some PM2 versions put it here)
+    """
+    env_block = a.get('pm2_env', {}) or {}
+    env = env_block.get('env', {}) or {}
+
+    # 1. Explicit env.PORT
+    p = env.get('PORT') or env_block.get('PORT')
+    if p:
+        return str(p)
+
+    # 2. Parse from args. PM2 stores args as a string (space-separated)
+    #    OR as a list-repr string like "['dist', '--port', '3011']".
+    #    Flatten both into a single searchable string.
+    raw_args = env_block.get('args', '') or ''
+    if isinstance(raw_args, list):
+        args = ' '.join(str(x) for x in raw_args)
+    else:
+        args = str(raw_args)
+        # If it looks like a Python/JSON list repr, flatten it
+        if args.startswith('['):
+            try:
+                import ast
+                parsed = ast.literal_eval(args)
+                if isinstance(parsed, list):
+                    args = ' '.join(str(x) for x in parsed)
+            except:
+                pass
+
+    script = str(env_block.get('pm_exec_path', '') or '')
+    full_cmd = f'{script} {args}'
+
+    # --port N / --port=N / -p N / -P N (Next.js, sirv, most Node tools)
+    m = re.search(r'(?:--port|(?:^|\s)-[pP])\s+(\d{2,5})', full_cmd)
+    if m: return m.group(1)
+    m = re.search(r'--port=(\d{2,5})', full_cmd)
+    if m: return m.group(1)
+
+    # --server.port=N (Spring Boot)
+    m = re.search(r'--server\.port=(\d{2,5})', full_cmd)
+    if m: return m.group(1)
+
+    # --urls http://...:N (.NET / Kestrel)
+    m = re.search(r'--urls\s+https?://[^:]+:(\d{2,5})', full_cmd)
+    if m: return m.group(1)
+
+    # host:port pattern (Django runserver, PHP built-in server, etc.)
+    # Match 0.0.0.0:3037, localhost:3034, 127.0.0.1:8080 etc.
+    # Exclude common false positives like timestamps (12:34:56)
+    m = re.search(r'(?:0\.0\.0\.0|localhost|127\.0\.0\.1):(\d{2,5})', full_cmd)
+    if m: return m.group(1)
+
+    # -S host:port (PHP's built-in server uses -S)
+    m = re.search(r'-S\s+\S+:(\d{2,5})', full_cmd)
+    if m: return m.group(1)
+
+    # 3. Check for PORT-like env vars
+    for key in ('PORT', 'APP_PORT', 'SERVER_PORT', 'ASPNETCORE_URLS'):
+        val = env.get(key) or env_block.get(key)
+        if val:
+            m2 = re.search(r':(\d{2,5})', str(val))
+            if m2: return m2.group(1)
+
+    return '-'
+
 print(f'{"NAME":<24} {"PORT":<6} {"STATUS":<10} {"CPU":<6} {"MEM":<8} {"↺":<5} PID')
 print('-' * 70)
 for a in sorted(apps, key=lambda x: x.get('name', '')):
     name = a.get('name', '?')
     env_block = a.get('pm2_env', {}) or {}
-    env = env_block.get('env', {}) or {}
-    port = env.get('PORT') or env_block.get('PORT') or '-'
+    port = find_port(a)
     status = env_block.get('status', '?')
     restarts = env_block.get('restart_time', '-')
     monit = a.get('monit', {}) or {}
