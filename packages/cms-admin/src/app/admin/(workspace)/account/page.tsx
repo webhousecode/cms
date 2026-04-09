@@ -74,7 +74,6 @@ export default async function AccountPage({
 
         {/* Access Tokens tab */}
         {tab === "tokens" && <AccessTokensPanel />}
-        )}
 
         {/* Mobile tab — F07 webhouse.app pairing QR */}
         {tab === "mobile" && (
