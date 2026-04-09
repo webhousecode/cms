@@ -202,4 +202,38 @@ export interface CmsConfig {
     port?: number;
     prefix?: string;
   };
+  /** F30 — Form definitions. Each form creates a public submission endpoint. */
+  forms?: FormConfig[];
+}
+
+/** F30 — A form that accepts public submissions (contact, signup, feedback). */
+export interface FormConfig {
+  name: string;
+  label: string;
+  fields: FormFieldConfig[];
+  successMessage?: string;
+  successRedirect?: string;
+  notifications?: {
+    email?: string[];
+    webhook?: string;
+  };
+  spam?: {
+    honeypot?: boolean;
+    rateLimit?: number;
+  };
+}
+
+export interface FormFieldConfig {
+  name: string;
+  type: "text" | "email" | "textarea" | "select" | "checkbox" | "number" | "phone" | "url" | "date" | "hidden";
+  label: string;
+  required?: boolean;
+  placeholder?: string;
+  options?: Array<{ label: string; value: string }>;
+  defaultValue?: string;
+  validation?: {
+    pattern?: string;
+    minLength?: number;
+    maxLength?: number;
+  };
 }
