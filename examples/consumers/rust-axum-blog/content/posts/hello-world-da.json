@@ -1,0 +1,18 @@
+{
+  "id": "post-hello-world-da",
+  "slug": "hello-world-da",
+  "status": "published",
+  "locale": "da",
+  "translationGroup": "5e7f9b1d-3f5a-7c9e-1b3d-5f7a9c1e3f5a",
+  "_fieldMeta": {},
+  "data": {
+    "title": "Hej verden fra Rust",
+    "excerpt": "Et blogindlæg gemt som JSON-fil i @webhouse/cms og renderet af en Axum + Tokio-applikation.",
+    "content": "## Opsætningen\n\nDette indlæg ligger i `content/posts/hello-world-da.json`. **Axum læser det direkte** via `webhouse::Reader`-strukturen — ingen API-kald, ingen database.\n\n## Memory-safe som standard\n\nHele reader'en er ~180 linjer Rust. Ingen `unwrap()`-panics i happy path, alle fejl returnerer `Result<T, WebhouseError>`. Path traversal-beskyttelse via `canonicalize() + starts_with()`.",
+    "date": "2026-04-09",
+    "author": "Christian Broberg",
+    "tags": ["intro", "rust", "axum"]
+  },
+  "createdAt": "2026-04-09T00:00:00.000Z",
+  "updatedAt": "2026-04-09T00:00:00.000Z"
+}

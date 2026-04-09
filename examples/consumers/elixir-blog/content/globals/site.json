@@ -1,0 +1,11 @@
+{
+  "id": "globals-site",
+  "slug": "site",
+  "status": "published",
+  "_fieldMeta": {},
+  "data": {
+    "brandPrefix": "@webhouse/cms",
+    "brandSuffix": "Elixir · Plug · Bandit",
+    "footerText": "Powered by @webhouse/cms — read by Elixir 1.19 / Plug / Bandit"
+  }
+}
