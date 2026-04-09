@@ -72,9 +72,11 @@ async function getMessaging(): Promise<unknown | null> {
   }
 
   try {
-    // @ts-ignore — firebase-admin is an optional dep, may not be installed
+    // firebase-admin is an optional dep — cast through unknown to avoid
+    // strict type errors when it IS installed (the default-export shape
+    // doesn't match CJS vs ESM assumptions).
     const admin = await import("firebase-admin");
-    const adm = (admin as { default?: typeof admin }).default ?? admin;
+    const adm = ((admin as unknown as { default?: unknown }).default ?? admin) as typeof admin;
     // Initialize once per process
     if (!adm.apps?.length) {
       // @ts-ignore — typed by admin module if installed
