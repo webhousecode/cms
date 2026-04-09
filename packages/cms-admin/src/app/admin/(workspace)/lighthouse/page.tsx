@@ -98,7 +98,7 @@ export default function LighthousePage() {
             fontSize: "0.8rem", color: "#ef4444",
           }}>
             {error}
-            {error.includes("429") && (
+            {error.includes("quota") && (
               <PsiKeySetup />
             )}
           </div>

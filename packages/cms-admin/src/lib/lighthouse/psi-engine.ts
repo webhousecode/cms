@@ -24,8 +24,16 @@ export async function runPsiAudit(
   });
 
   if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    throw new Error(`PSI API ${res.status}: ${body.slice(0, 200)}`);
+    if (res.status === 429) {
+      throw new Error("Daily quota exceeded — add your own PageSpeed Insights API key below to get 25,000 free scans per day.");
+    }
+    if (res.status === 400) {
+      throw new Error("Invalid URL — make sure the site is publicly accessible (not localhost).");
+    }
+    if (res.status === 500 || res.status === 503) {
+      throw new Error("Google PageSpeed Insights is temporarily unavailable. Try again in a few minutes.");
+    }
+    throw new Error(`PageSpeed Insights returned an error (${res.status}). Check that the URL is correct and the site is online.`);
   }
 
   const data = await res.json();
