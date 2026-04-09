@@ -7,6 +7,7 @@ import { Home } from "./screens/Home";
 import { Site } from "./screens/Site";
 import { SitePreviewFullscreen } from "./screens/SitePreviewFullscreen";
 import { Chat } from "./screens/Chat";
+import { Settings } from "./screens/Settings";
 import { ChatFab } from "./components/ChatFab";
 import { getJwt, getServerUrl } from "./lib/prefs";
 import { onDeepLink } from "./lib/bridge";
@@ -80,6 +81,7 @@ export function App() {
         <Route path="/home" component={Home} />
         <Route path="/site/:orgId/:siteId/preview" component={SitePreviewFullscreen} />
         <Route path="/site/:orgId/:siteId" component={Site} />
+        <Route path="/settings" component={Settings} />
         <Route path="/chat" component={Chat} />
         <Route>
           <div className="flex h-screen items-center justify-center bg-brand-dark text-white">
@@ -101,6 +103,7 @@ function FabGate() {
   const [location] = useLocation();
   const showFab =
     location.startsWith("/home") ||
+    location.startsWith("/settings") ||
     (location.startsWith("/site/") && !location.endsWith("/preview"));
   if (!showFab) return null;
   return <ChatFab />;
