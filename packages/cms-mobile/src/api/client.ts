@@ -185,6 +185,34 @@ export function saveDocument(
   );
 }
 
+/** Upload a file (image). Returns { url, name }. */
+export async function uploadFile(
+  orgId: string,
+  siteId: string,
+  file: File,
+): Promise<{ url: string; name: string }> {
+  const baseUrl = await getServerUrl();
+  if (!baseUrl) throw new ApiError(0, null, "No server URL configured");
+
+  const jwt = await getJwt();
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await fetch(
+    `${baseUrl}/api/mobile/upload?orgId=${encodeURIComponent(orgId)}&siteId=${encodeURIComponent(siteId)}`,
+    {
+      method: "POST",
+      headers: jwt ? { Authorization: `Bearer ${jwt}` } : {},
+      body: formData,
+      credentials: "omit",
+    },
+  );
+
+  const body = await res.json();
+  if (!res.ok) throw new ApiError(res.status, body, body.error ?? `HTTP ${res.status}`);
+  return body as { url: string; name: string };
+}
+
 /** Trash a document (soft delete). */
 export function deleteDocument(orgId: string, siteId: string, collection: string, slug: string): Promise<{ ok: boolean }> {
   return request<{ ok: boolean }>(

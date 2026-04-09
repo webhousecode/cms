@@ -1,7 +1,27 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getMobileSession } from "@/lib/mobile-auth";
 import { getAdminCmsForSite, getAdminConfigForSite } from "@/lib/cms";
+import { readSiteConfigForSite } from "@/lib/site-config";
 import { saveRevision } from "@/lib/revisions";
+
+/**
+ * Fire-and-forget: trigger deploy for a site after content changes.
+ * Calls the deploy API internally with cookies set so it resolves the right site.
+ */
+function dispatchMobileDeploy(orgId: string, siteId: string) {
+  const baseUrl = process.env.NEXTAUTH_URL || `http://localhost:${process.env.PORT || 3010}`;
+  const serviceToken = process.env.CMS_JWT_SECRET;
+  fetch(`${baseUrl}/api/admin/deploy`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Cookie: `cms-active-org=${orgId}; cms-active-site=${siteId}`,
+      ...(serviceToken ? { "x-cms-service-token": serviceToken } : {}),
+    },
+  }).catch((err) => {
+    console.error("[mobile/deploy] Fire-and-forget deploy failed:", err);
+  });
+}
 
 /**
  * Mobile document CRUD — /api/mobile/content/docs
@@ -105,6 +125,15 @@ export async function POST(req: NextRequest) {
       ...(body.locale ? { locale: body.locale } : {}),
     });
 
+    // Auto-deploy on create if deployOnSave enabled
+    readSiteConfigForSite(ctx.orgId, ctx.siteId)
+      .then((siteConfig) => {
+        if (siteConfig?.deployOnSave) {
+          dispatchMobileDeploy(ctx.orgId, ctx.siteId);
+        }
+      })
+      .catch(() => {});
+
     return NextResponse.json(doc, { status: 201 });
   } catch (err) {
     console.error("[mobile/content/docs] POST error:", err);
@@ -154,6 +183,17 @@ export async function PATCH(req: NextRequest) {
     });
 
     const updated = await ctx.cms.content.findBySlug(ctx.collection, slug);
+
+    // Auto-deploy if site has deployOnSave enabled (fire-and-forget)
+    readSiteConfigForSite(ctx.orgId, ctx.siteId)
+      .then((siteConfig) => {
+        if (siteConfig?.deployOnSave) {
+          console.log(`[mobile/deploy] Auto-deploy triggered for ${ctx.orgId}/${ctx.siteId} (content PATCH from mobile)`);
+          dispatchMobileDeploy(ctx.orgId, ctx.siteId);
+        }
+      })
+      .catch(() => {});
+
     return NextResponse.json(updated);
   } catch (err) {
     console.error("[mobile/content/docs] PATCH error:", err);
