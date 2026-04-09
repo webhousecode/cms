@@ -76,6 +76,7 @@ export function Home() {
     queryFn: getMe,
   });
 
+
   const serverQuery = useQuery({
     queryKey: ["serverUrl"],
     queryFn: getServerUrl,
@@ -179,7 +180,7 @@ export function Home() {
         subtitle={serverQuery.data ?? undefined}
       />
 
-      <div className="flex flex-1 flex-col px-6 pb-24">
+      <div className="flex flex-1 flex-col px-6 pb-24 overflow-auto">
       {/* Org selector — single trigger button + custom dropdown.
           Saves vertical space and scales to many orgs without scrolling. */}
       {orgs.length > 0 && visibleOrg && (
