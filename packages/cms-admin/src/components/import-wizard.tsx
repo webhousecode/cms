@@ -66,6 +66,7 @@ export function ImportWizard({
   const [result, setResult] = useState<ImportResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [hasFile, setHasFile] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   // ── Step 1: Upload ──
@@ -240,13 +241,14 @@ export function ImportWizard({
                 type="file"
                 accept=".csv,.json,.md,.markdown,.tsv"
                 multiple
+                onChange={() => setHasFile(!!(fileRef.current?.files?.length))}
                 style={{ fontSize: "0.82rem", marginBottom: "1rem" }}
               />
               <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem" }}>
                 <button
                   onClick={handleUpload}
-                  disabled={loading}
-                  style={btnPrimary(loading)}
+                  disabled={loading || !hasFile}
+                  style={btnPrimary(loading || !hasFile)}
                 >
                   {loading ? "Parsing..." : "Upload & Detect"}
                   <ArrowRight style={{ width: 14, height: 14 }} />
