@@ -1,0 +1,18 @@
+{
+  "id": "post-hello-world-da",
+  "slug": "hello-world-da",
+  "status": "published",
+  "locale": "da",
+  "translationGroup": "7a9b1d3f-5a7c-9e1b-3d5f-7a9c1e3f5a7c",
+  "_fieldMeta": {},
+  "data": {
+    "title": "Hej verden fra Vapor",
+    "excerpt": "Et blogindlæg gemt som JSON-fil i @webhouse/cms og renderet af en Vapor 4 server-side Swift-applikation.",
+    "content": "## Opsætningen\n\nDette indlæg ligger i `content/posts/hello-world-da.json`. **Vapor læser det direkte** via `WebhouseReader`-klassen — ingen API-kald, ingen database, bare `FileManager` og `JSONDecoder`.\n\n## Server-side Swift\n\nVapor 4 er den dominerende server-side Swift-framework. Bygget på SwiftNIO til non-blocking I/O.",
+    "date": "2026-04-09",
+    "author": "Christian Broberg",
+    "tags": ["intro", "swift", "vapor"]
+  },
+  "createdAt": "2026-04-09T00:00:00.000Z",
+  "updatedAt": "2026-04-09T00:00:00.000Z"
+}

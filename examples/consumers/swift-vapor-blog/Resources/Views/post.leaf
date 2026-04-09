@@ -1,0 +1,25 @@
+#extend("_layout"):
+#export("body"):
+    <article>
+        <h1>#(post.title)</h1>
+        <div class="meta">
+            <span>#(post.author)</span>
+            <span> · </span>
+            <span>#(post.date)</span>
+            <span> · </span>
+            <span>#(post.locale)</span>
+        </div>
+
+        #(contentHtml)
+
+        #if(translation):
+            <div class="translation">
+                This post is also available in #(translation.locale):
+                <a href="/blog/#(translation.slug)">#(translation.title)</a>
+            </div>
+        #endif
+
+        <p><a href="/" class="back">← Back to all posts</a></p>
+    </article>
+#endexport
+#endextend

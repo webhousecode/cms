@@ -1,0 +1,11 @@
+{
+  "id": "globals-site",
+  "slug": "site",
+  "status": "published",
+  "_fieldMeta": {},
+  "data": {
+    "brandPrefix": "@webhouse/cms",
+    "brandSuffix": "Swift · Vapor 4",
+    "footerText": "Powered by @webhouse/cms — read by Vapor 4 / Swift 6"
+  }
+}

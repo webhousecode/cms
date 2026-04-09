@@ -1,0 +1,18 @@
+{
+  "id": "post-hello-world-en",
+  "slug": "hello-world",
+  "status": "published",
+  "locale": "en",
+  "translationGroup": "7a9b1d3f-5a7c-9e1b-3d5f-7a9c1e3f5a7c",
+  "_fieldMeta": {},
+  "data": {
+    "title": "Hello, world from Vapor",
+    "excerpt": "A blog post stored as a JSON file in @webhouse/cms and rendered by a Vapor 4 server-side Swift application.",
+    "content": "## The setup\n\nThis post lives at `content/posts/hello-world.json`. **Vapor reads it directly** via the `WebhouseReader` class — no API calls, no database, just `FileManager` and `JSONDecoder`.\n\n## Server-side Swift\n\nVapor 4 is the dominant server-side Swift framework. Built on SwiftNIO for non-blocking I/O, it scales to thousands of concurrent connections per machine. The reader is `Sendable` and thread-safe.\n\n## What's in this example\n\n- `Sources/App/Webhouse.swift` — the reader (~150 LOC)\n- `Sources/App/routes.swift` — Vapor route handlers\n- `Sources/App/configure.swift` — Vapor + Leaf setup\n- `Resources/Views/` — Leaf templates (Vapor's templating engine)",
+    "date": "2026-04-09",
+    "author": "Christian Broberg",
+    "tags": ["intro", "swift", "vapor"]
+  },
+  "createdAt": "2026-04-09T00:00:00.000Z",
+  "updatedAt": "2026-04-09T00:00:00.000Z"
+}
