@@ -6,6 +6,7 @@ import { existsSync } from "fs";
 import { getUserById } from "@/lib/auth";
 import { getMobileSession } from "@/lib/mobile-auth";
 import { loadRegistry } from "@/lib/site-registry";
+import { readSiteConfigForSite } from "@/lib/site-config";
 import { signPreviewToken } from "@/lib/preview-token";
 
 function findLanHost(): string | null {
@@ -50,7 +51,9 @@ function derivePreviewUrl(
   site: { configPath: string; adapter: string; previewUrl?: string },
   reqUrl: URL,
 ): string | undefined {
-  const proxyBase = `${reqUrl.protocol}//${reqUrl.host}/api/mobile/preview-proxy`;
+  // Use LAN IP for the proxy base so the phone can reach it
+  const lanHost = rewriteLocalhostUrl(`${reqUrl.protocol}//${reqUrl.host}`) ?? `${reqUrl.protocol}//${reqUrl.host}`;
+  const proxyBase = `${lanHost}/api/mobile/preview-proxy`;
 
   if (site.previewUrl) {
     // External URLs (Vercel, Netlify, etc.) — phone can reach them directly
@@ -103,21 +106,38 @@ export async function GET(req: NextRequest) {
   }> = [];
 
   if (registry) {
+    // Resolve live URLs from site configs in parallel (same logic as site-health)
+    const sitePromises: Promise<void>[] = [];
+
     for (const org of registry.orgs) {
       for (const site of org.sites) {
-        sites.push({
+        const entry = {
           orgId: org.id,
           orgName: org.name,
           siteId: site.id,
           siteName: site.name,
-          role: user.role ?? "admin",
+          role: (user.role ?? "admin") as "owner" | "admin" | "editor" | "viewer",
           previewUrl: derivePreviewUrl(site, reqUrl),
-          liveUrl: rewriteLocalhostUrl(
-            site.revalidateUrl?.replace(/\/api\/revalidate$/, ""),
-          ),
-        });
+          liveUrl: undefined as string | undefined,
+        };
+        sites.push(entry);
+
+        // Resolve live URL from deploy config
+        sitePromises.push(
+          readSiteConfigForSite(org.id, site.id)
+            .then((cfg) => {
+              if (cfg?.deployCustomDomain) {
+                entry.liveUrl = `https://${cfg.deployCustomDomain}`;
+              } else if (cfg?.deployProductionUrl) {
+                entry.liveUrl = cfg.deployProductionUrl;
+              }
+            })
+            .catch(() => {}),
+        );
       }
     }
+
+    await Promise.all(sitePromises);
   }
 
   return NextResponse.json({
