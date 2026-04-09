@@ -525,8 +525,7 @@ for (const locale of LOCALES) {
       : `<div class="card-grid">${snippetItems.map(s => `
         <div class="card">
           <h2 style="font-size:1.1rem">${esc(s.data.title)}</h2>
-          <div style="margin-top:0.5rem;font-family:monospace;font-size:0.75rem;color:var(--color-primary);background:var(--color-bg-alt);padding:0.3rem 0.6rem;border-radius:4px;display:inline-block">{{snippet:${s.slug}}}</div>
-          ${s.data.content ? `<div class="prose" style="margin-top:1rem;font-size:0.85rem">${renderContent(s.data.content)}</div>` : ""}
+          ${s.data.content ? `<div class="prose" style="margin-top:0.75rem;font-size:0.85rem">${renderContent(s.data.content)}</div>` : ""}
         </div>
       `).join("")}</div>`}
   `, locale, undefined, `${snippetsTitle} — ${snippetItems.length}`));
