@@ -224,13 +224,23 @@ function formatDate(d: unknown, locale = "da"): string {
 }
 
 /** Render content — parse markdown if needed, pass HTML through */
+function resolveSnippets(html: string): string {
+  return html.replace(/\{\{snippet:([a-z0-9-]+)\}\}/g, (_match, slug) => {
+    const snippet = allSnippets.find(s => s.slug === slug);
+    if (!snippet) return `<span style="color:var(--color-muted);font-style:italic">[snippet "${slug}" not found]</span>`;
+    return renderContent(snippet.data.content ?? snippet.data.title ?? "");
+  });
+}
+
 function renderContent(raw: unknown): string {
   const s = String(raw ?? "");
   if (!s) return "";
+  // Resolve {{snippet:slug}} embeds first
+  const withSnippets = resolveSnippets(s);
   // If it starts with HTML tags, it's already HTML (from richtext editor)
-  if (/^\s*</.test(s)) return s;
+  if (/^\s*</.test(withSnippets)) return withSnippets;
   // Otherwise treat as markdown
-  let html = marked.parse(s, { async: false }) as string;
+  let html = marked.parse(withSnippets, { async: false }) as string;
   // Convert image title attributes to inline styles (float:left|width:303px)
   html = html.replace(
     /<img\s+([^>]*?)title="([^"]*(?:float|width|height|margin)[^"]*)"([^>]*?)>/gi,

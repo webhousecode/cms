@@ -21,7 +21,7 @@
 <style>
   :global(:root) { --gold: #F7BB2E; --dark: #0D0D0D; --text: #e8e8e8; --text-dim: #888; --border: #222; }
   :global(*) { box-sizing: border-box; margin: 0; padding: 0; }
-  :global(body) { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--dark); color: var(--text); line-height: 1.7; max-width: 740px; margin: 0 auto; padding: 3rem 2rem; }
+  :global(html) { overflow-x: hidden; } :global(body) { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--dark); color: var(--text); line-height: 1.7; max-width: 740px; margin: 0 auto; padding: 3rem 2rem; }
   nav { display: flex; justify-content: space-between; align-items: center; padding-bottom: 2rem; border-bottom: 1px solid var(--border); margin-bottom: 3rem; }
   nav .brand { font-family: 'JetBrains Mono', monospace; color: var(--gold); font-weight: 600; text-decoration: none; }
   nav a { color: var(--text-dim); text-decoration: none; margin-left: 1.5rem; font-size: 0.85rem; }
