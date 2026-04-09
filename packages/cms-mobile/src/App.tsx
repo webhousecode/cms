@@ -12,6 +12,7 @@ import { ChatFab } from "./components/ChatFab";
 import { getJwt, getServerUrl } from "./lib/prefs";
 import { onDeepLink } from "./lib/bridge";
 import { consumePairingDeepLink } from "./lib/pairing-flow";
+import { usePullToRefresh } from "./lib/use-pull-to-refresh";
 import { Spinner } from "./components/Spinner";
 
 /**
@@ -30,6 +31,9 @@ import { Spinner } from "./components/Spinner";
 export function App() {
   const [, setLocation] = useLocation();
   const [booted, setBooted] = useState(false);
+
+  // Native pull-to-refresh: listen for iOS UIRefreshControl / Android SwipeRefreshLayout
+  usePullToRefresh();
 
   // Initial boot: figure out where to land
   useEffect(() => {

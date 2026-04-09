@@ -36,7 +36,8 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, "../../..");
 const CMS_ADMIN_ENV = path.join(REPO_ROOT, "packages/cms-admin/.env.local");
-const SERVER_URL = process.env.CMS_SERVER_URL ?? "https://localhost:3010";
+// Auto-detect protocol: try HTTP first (dev default), fall back to HTTPS
+const SERVER_URL = process.env.CMS_SERVER_URL ?? "http://localhost:3010";
 const TEST_EMAIL = process.env.COCPIT_TEST_EMAIL ?? "cb@webhouse.dk";
 
 function loadEnv(file) {

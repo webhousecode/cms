@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">webhouse.app</string>
-    <string name="title_activity_main">webhouse.app</string>
+    <string name="app_name">CMS</string>
+    <string name="title_activity_main">CMS</string>
     <string name="package_name">app.webhouse.cms</string>
     <string name="custom_url_scheme">app.webhouse.cms</string>
 </resources>

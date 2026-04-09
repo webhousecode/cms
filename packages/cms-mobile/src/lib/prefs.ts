@@ -82,7 +82,15 @@ export async function setActiveSiteId(siteId: string): Promise<void> {
   await Preferences.set({ key: KEY_ACTIVE_SITE, value: siteId });
 }
 
-/** Wipe all stored credentials — used by Logout. */
+/** Wipe all stored credentials + server URL — used by Sign out.
+ *  Clears everything so the app returns to Onboarding on next launch. */
 export async function clearAllAuth(): Promise<void> {
-  await Promise.all([clearJwt(), Preferences.remove({ key: KEY_BIOMETRIC_ENABLED })]);
+  await Promise.all([
+    clearJwt(),
+    clearServerUrl(),
+    Preferences.remove({ key: KEY_BIOMETRIC_ENABLED }),
+    Preferences.remove({ key: KEY_LAST_USER_EMAIL }),
+    Preferences.remove({ key: KEY_ACTIVE_ORG }),
+    Preferences.remove({ key: KEY_ACTIVE_SITE }),
+  ]);
 }

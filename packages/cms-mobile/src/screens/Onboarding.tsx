@@ -21,7 +21,7 @@ import { parseQrPayload } from "@/lib/qr";
  */
 export function Onboarding() {
   const [, setLocation] = useLocation();
-  const [url, setUrl] = useState("https://localhost:3010");
+  const [url, setUrl] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
@@ -121,7 +121,8 @@ export function Onboarding() {
             autoCorrect="off"
             placeholder="https://demo.webhouse.app"
             value={url}
-            onChange={(e) => setUrl(e.target.value)}
+            onChange={(e) => { setUrl(e.target.value); setError(null); }}
+            onClear={() => { setUrl(""); setError(null); }}
             error={error ?? undefined}
           />
           <Button variant="secondary" onClick={handleConnect} loading={loading}>
