@@ -1,0 +1,18 @@
+{
+  "id": "post-hello-world-en",
+  "slug": "hello-world",
+  "status": "published",
+  "locale": "en",
+  "translationGroup": "f1e2d3c4-b5a6-4d7e-8f9a-0b1c2d3e4f5a",
+  "_fieldMeta": {},
+  "data": {
+    "title": "Hello, world from .NET 9",
+    "excerpt": "A blog post stored as a JSON file in @webhouse/cms and rendered by an ASP.NET Core 9 Razor Page.",
+    "content": "## The setup\n\nThis post lives at `content/posts/hello-world.json`. It's a flat JSON file in the @webhouse/cms format. **ASP.NET Core reads it directly** via the `WebhouseReader` service — no API calls, no database, just `Directory.EnumerateFiles()`.\n\n## Why this matters\n\nThe content is in your git repository. The schema is in `cms.config.ts`. The renderer is your .NET app. There's no vendor lock-in: if you ever want to swap out @webhouse/cms admin, your content stays put.\n\n## What you can edit\n\nOpen CMS admin and point it at this folder. Edit the title above. Save. Reload this page in your browser. The change is live.\n\nThat's the whole story.",
+    "date": "2026-04-08",
+    "author": "Christian Broberg",
+    "tags": ["intro", "dotnet", "razor-pages"]
+  },
+  "createdAt": "2026-04-08T12:00:00.000Z",
+  "updatedAt": "2026-04-08T12:00:00.000Z"
+}

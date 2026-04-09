@@ -6,7 +6,7 @@
     <style>
         :root { --gold: #F7BB2E; --dark: #0D0D0D; --text: #e8e8e8; --text-dim: #888; --border: #222; }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: -apple-system, sans-serif; background: var(--dark); color: var(--text); line-height: 1.7; max-width: 740px; margin: 0 auto; padding: 3rem 2rem; }
+        html { overflow-x: hidden; } body { font-family: -apple-system, sans-serif; background: var(--dark); color: var(--text); line-height: 1.7; max-width: 740px; margin: 0 auto; padding: 3rem 2rem; }
         nav { display: flex; justify-content: space-between; padding-bottom: 2rem; border-bottom: 1px solid var(--border); margin-bottom: 3rem; }
         nav .brand { font-family: monospace; color: var(--gold); font-weight: 600; }
         nav a { color: var(--text-dim); text-decoration: none; margin-left: 1.5rem; font-size: 0.85rem; }
@@ -20,7 +20,7 @@
         article { font-size: 1rem; }
         article p { color: #ccc; }
         article strong { color: #fff; }
-        pre { background: #111; padding: 1rem; border-radius: 6px; overflow-x: auto; margin: 1rem 0; border: 1px solid var(--border); }
+        pre { max-width: 100%; overflow-x: auto; background: #111; padding: 1rem; border-radius: 6px; overflow-x: auto; margin: 1rem 0; border: 1px solid var(--border); }
         code { font-family: 'JetBrains Mono', monospace; background: rgba(247,187,46,0.1); color: var(--gold); padding: 0.1rem 0.4rem; border-radius: 3px; font-size: 0.9em; }
         pre code { padding: 0; background: transparent; color: var(--text); }
         .translation { margin-top: 3rem; padding: 1rem; border: 1px solid var(--border); border-radius: 6px; font-size: 0.85rem; color: var(--text-dim); }

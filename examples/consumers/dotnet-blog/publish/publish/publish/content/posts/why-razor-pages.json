@@ -1,0 +1,18 @@
+{
+  "id": "post-why-razor-pages",
+  "slug": "why-razor-pages",
+  "status": "published",
+  "locale": "en",
+  "translationGroup": "a2b3c4d5-e6f7-4a8b-9c0d-1e2f3a4b5c6d",
+  "_fieldMeta": {},
+  "data": {
+    "title": "Why Razor Pages for the .NET example?",
+    "excerpt": "ASP.NET Core gives you three ways to build web apps: MVC, Razor Pages, and Minimal APIs. We picked Razor Pages. Here's why.",
+    "content": "## The three options\n\nASP.NET Core 9 supports three primary web app patterns:\n\n- **MVC** — controllers + views, classic separation of concerns\n- **Razor Pages** — page-focused, file-system routing, less ceremony\n- **Minimal APIs** — endpoint definitions in `Program.cs`, lambda style\n\nFor a content-driven blog, **Razor Pages** is the natural fit. Each `.cshtml` file is a route. The `.cshtml.cs` PageModel handles the request. There's no router config to maintain, no controller naming conventions to remember.\n\n## What this example shows\n\n- `Pages/Index.cshtml` → `/` — list all English posts\n- `Pages/Da.cshtml` → `/da` — list all Danish posts\n- `Pages/Blog/Post.cshtml` → `/blog/{slug}` — single post detail\n\nThe `WebhouseReader` is registered as a singleton in `Program.cs` and injected into each PageModel via constructor injection. Standard .NET 9 patterns.\n\n## Markdown rendering\n\nRichtext fields are stored as markdown. We use `Markdig` to convert them to HTML in the PageModel, then render with `@Html.Raw()` in the Razor template. Markdig has 4M+ NuGet downloads and zero dependencies — exactly the kind of library we want.\n\n## What's NOT here\n\nNo Entity Framework. No database migrations. No `appsettings.json` connection strings. No DbContext. Just files and a service class that reads them. That's the whole point of @webhouse/cms.",
+    "date": "2026-04-07",
+    "author": "Christian Broberg",
+    "tags": ["dotnet", "razor-pages", "philosophy"]
+  },
+  "createdAt": "2026-04-07T12:00:00.000Z",
+  "updatedAt": "2026-04-07T12:00:00.000Z"
+}

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "title": "Webhouse Content Schema",
   "x-webhouse-version": "0.3.0",
-  "x-generated-at": "2026-04-08T22:23:32.340Z",
+  "x-generated-at": "2026-04-08T22:35:38.778Z",
   "$defs": {
     "Document": {
       "type": "object",
@@ -164,6 +164,5 @@
         }
       }
     }
-  },
-  "$id": "https://dotnet-blog.example.com/webhouse-schema.json"
+  }
 }

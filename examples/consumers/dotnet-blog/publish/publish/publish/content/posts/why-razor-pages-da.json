@@ -1,0 +1,18 @@
+{
+  "id": "post-why-razor-pages-da",
+  "slug": "why-razor-pages-da",
+  "status": "published",
+  "locale": "da",
+  "translationGroup": "a2b3c4d5-e6f7-4a8b-9c0d-1e2f3a4b5c6d",
+  "_fieldMeta": {},
+  "data": {
+    "title": "Hvorfor Razor Pages til .NET-eksemplet?",
+    "excerpt": "ASP.NET Core giver dig tre måder at bygge web-apps på: MVC, Razor Pages og Minimal APIs. Vi valgte Razor Pages. Her er hvorfor.",
+    "content": "## De tre muligheder\n\nASP.NET Core 9 understøtter tre primære webapp-mønstre:\n\n- **MVC** — controllers + views, klassisk separation of concerns\n- **Razor Pages** — sidefokuseret, filsystem-routing, mindre ceremoni\n- **Minimal APIs** — endpoint-definitioner i `Program.cs`, lambda-stil\n\nTil en indholdsdrevet blog er **Razor Pages** det naturlige valg. Hver `.cshtml`-fil er en route. `.cshtml.cs` PageModel håndterer requesten. Der er ingen router-konfiguration at vedligeholde.\n\n## Hvad dette eksempel viser\n\n- `Pages/Index.cshtml` → `/` — list alle engelske indlæg\n- `Pages/Da.cshtml` → `/da` — list alle danske indlæg\n- `Pages/Blog/Post.cshtml` → `/blog/{slug}` — enkelt indlæg detalje\n\n`WebhouseReader` er registreret som singleton i `Program.cs` og injiceres i hver PageModel via constructor injection. Standard .NET 9-mønstre.\n\n## Markdown-rendering\n\nRichtext-felter er gemt som markdown. Vi bruger `Markdig` til at konvertere dem til HTML i PageModel, og renderer derefter med `@Html.Raw()` i Razor-skabelonen.\n\n## Hvad der IKKE er her\n\nIngen Entity Framework. Ingen database-migrationer. Ingen `appsettings.json` connection strings. Ingen DbContext. Bare filer og en service-klasse der læser dem. Det er hele pointen med @webhouse/cms.",
+    "date": "2026-04-07",
+    "author": "Christian Broberg",
+    "tags": ["dotnet", "razor-pages", "filosofi"]
+  },
+  "createdAt": "2026-04-07T12:00:00.000Z",
+  "updatedAt": "2026-04-07T12:00:00.000Z"
+}
