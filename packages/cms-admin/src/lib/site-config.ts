@@ -140,6 +140,8 @@ export interface SiteConfig {
   geoOrganizationUrl: string;
   /** F112 GEO — Organization logo URL */
   geoOrganizationLogo: string;
+  /** F98 Lighthouse — Google PageSpeed Insights API key */
+  psiApiKey: string;
 }
 
 async function getConfigPath(): Promise<string> {
@@ -221,6 +223,7 @@ async function defaults(): Promise<SiteConfig> {
     geoOrganizationName: "",
     geoOrganizationUrl: "",
     geoOrganizationLogo: "",
+    psiApiKey: process.env.GOOGLE_PSI_API_KEY ?? "",
   };
 }
 

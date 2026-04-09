@@ -26,7 +26,8 @@ export async function POST(request: NextRequest) {
       url = `https://${url}`;
     }
 
-    const apiKey = process.env.GOOGLE_PSI_API_KEY;
+    const config = await readSiteConfig();
+    const apiKey = config.psiApiKey || process.env.GOOGLE_PSI_API_KEY;
     const result = await runAudit(url, { strategy, apiKey });
 
     return NextResponse.json(result);

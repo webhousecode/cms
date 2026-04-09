@@ -93,11 +93,14 @@ export default function LighthousePage() {
       <div style={{ padding: "2rem", maxWidth: "64rem" }}>
         {error && (
           <div style={{
-            padding: "0.6rem 0.85rem", borderRadius: 6, marginBottom: "1.5rem",
+            padding: "0.75rem 0.85rem", borderRadius: 6, marginBottom: "1.5rem",
             background: "rgba(239,68,68,0.08)", border: "1px solid rgba(239,68,68,0.2)",
             fontSize: "0.8rem", color: "#ef4444",
           }}>
             {error}
+            {error.includes("429") && (
+              <PsiKeySetup />
+            )}
           </div>
         )}
 
@@ -280,6 +283,68 @@ function CwvMetric({ label, value, threshold, raw }: { label: string; value: str
     <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
       <span style={{ fontSize: "0.72rem", fontWeight: 600, color: "var(--muted-foreground)", minWidth: 32 }}>{label}</span>
       <span style={{ fontSize: "0.85rem", fontWeight: 600, color }}>{value}</span>
+    </div>
+  );
+}
+
+function PsiKeySetup() {
+  const [key, setKey] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  async function handleSave() {
+    if (!key.trim()) return;
+    setSaving(true);
+    await fetch("/api/admin/site-config", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ psiApiKey: key.trim() }),
+    });
+    setSaving(false);
+    setSaved(true);
+  }
+
+  return (
+    <div style={{
+      marginTop: "0.75rem", padding: "0.75rem", borderRadius: 6,
+      background: "var(--card)", border: "1px solid var(--border)",
+      color: "var(--foreground)", fontSize: "0.78rem",
+    }}>
+      <div style={{ fontWeight: 600, marginBottom: "0.35rem" }}>Set up a PageSpeed Insights API key</div>
+      <div style={{ color: "var(--muted-foreground)", marginBottom: "0.5rem", lineHeight: 1.5 }}>
+        Without a key, quota is shared and runs out quickly. Get your own free key (25,000 scans/day):
+      </div>
+      <ol style={{ margin: "0 0 0.5rem 1.25rem", padding: 0, color: "var(--muted-foreground)", lineHeight: 1.7 }}>
+        <li>Go to <a href="https://console.cloud.google.com/apis/library/pagespeedonline.googleapis.com" target="_blank" rel="noopener" style={{ color: "#F7BB2E" }}>Google Cloud Console → PageSpeed Insights API</a></li>
+        <li>Click <strong>Enable</strong></li>
+        <li>Go to <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener" style={{ color: "#F7BB2E" }}>Credentials</a> → Create Credentials → API Key</li>
+        <li>Paste it below</li>
+      </ol>
+      <div style={{ display: "flex", gap: "0.4rem" }}>
+        <input
+          type="password"
+          value={key}
+          onChange={(e) => setKey(e.target.value)}
+          placeholder="AIzaSy..."
+          style={{
+            flex: 1, padding: "0.35rem 0.6rem", borderRadius: 5,
+            border: "1px solid var(--border)", background: "var(--background)",
+            fontSize: "0.78rem", color: "var(--foreground)", outline: "none",
+          }}
+        />
+        <button
+          onClick={handleSave}
+          disabled={saving || !key.trim() || saved}
+          style={{
+            padding: "0.35rem 0.75rem", borderRadius: 5, border: "none",
+            background: saved ? "#0cce6b" : "#F7BB2E", color: "#0D0D0D",
+            fontSize: "0.75rem", fontWeight: 600, cursor: saving ? "wait" : "pointer",
+            opacity: saving || !key.trim() ? 0.6 : 1,
+          }}
+        >
+          {saved ? "Saved ✓" : saving ? "Saving..." : "Save key"}
+        </button>
+      </div>
     </div>
   );
 }
