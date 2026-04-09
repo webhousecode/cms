@@ -32,6 +32,13 @@ export async function notifyFormSubmission(
     }));
   }
 
+  // Auto-reply to submitter
+  if (form.autoReply?.enabled && submission.data.email) {
+    promises.push(sendAutoReply(form, submission).catch((e) => {
+      console.error(`[F30] Auto-reply failed for form ${form.name}:`, e);
+    }));
+  }
+
   // F35 webhook event (goes through the site's configured webhook endpoints)
   promises.push(fireFormWebhookEvent(form, submission).catch((e) => {
     console.error(`[F30] Webhook event dispatch failed for form ${form.name}:`, e);
@@ -95,6 +102,31 @@ async function fireFormWebhookEvent(form: FormConfig, sub: FormSubmission): Prom
     );
   } catch {
     // Webhook system not available — fine, this is optional
+  }
+}
+
+/** Replace {{fieldName}} placeholders with submission data values. */
+function interpolate(template: string, data: Record<string, unknown>): string {
+  return template.replace(/\{\{(\w+)\}\}/g, (_, key) => String(data[key] ?? ""));
+}
+
+async function sendAutoReply(form: FormConfig, sub: FormSubmission): Promise<void> {
+  const to = String(sub.data.email);
+  if (!to || !to.includes("@")) return;
+
+  const subject = interpolate(form.autoReply!.subject, sub.data);
+  const textBody = interpolate(form.autoReply!.body, sub.data);
+  const html = `<div style="font-family:-apple-system,sans-serif;font-size:14px;line-height:1.6;color:#333">${escHtml(textBody).replace(/\n/g, "<br>")}</div>`;
+  const from = form.autoReply!.from || process.env.CMS_EMAIL_FROM || "forms@webhouse.app";
+
+  try {
+    const { Resend } = await import("resend");
+    const key = process.env.RESEND_API_KEY;
+    if (!key) throw new Error("RESEND_API_KEY not set");
+    const resend = new Resend(key);
+    await resend.emails.send({ from, to: [to], subject, html });
+  } catch {
+    console.log(`[F30] Auto-reply (no email transport):`, { to, subject, textBody });
   }
 }
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminConfig } from "@/lib/cms";
 import { getActiveSitePaths } from "@/lib/site-paths";
+import { getAllForms } from "@/lib/forms/store";
 import { readSiteConfig } from "@/lib/site-config";
 import { FormService } from "@/lib/forms/service";
 import { isHoneypotTriggered, hashIp, isRateLimited, HONEYPOT_FIELD } from "@/lib/forms/spam";
@@ -50,9 +50,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ nam
   const allowed = await getAllowedOrigins();
   const cors = corsHeaders(origin, allowed);
 
-  // Look up form definition
-  const config = await getAdminConfig();
-  const form = config.forms?.find((f) => f.name === name);
+  // Look up form definition (config + admin-defined)
+  const allForms = await getAllForms();
+  const form = allForms.find((f) => f.name === name);
   if (!form) {
     return NextResponse.json({ error: "Form not found" }, { status: 404, headers: cors });
   }

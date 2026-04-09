@@ -217,10 +217,22 @@ export interface FormConfig {
     email?: string[];
     webhook?: string;
   };
+  /** Auto-reply email sent to the submitter. Requires an "email" field in the form. */
+  autoReply?: {
+    enabled: boolean;
+    /** Override the site-level CMS_EMAIL_FROM. */
+    from?: string;
+    /** Subject line. Supports {{fieldName}} placeholders. */
+    subject: string;
+    /** Plain-text body. Supports {{fieldName}} placeholders. */
+    body: string;
+  };
   spam?: {
     honeypot?: boolean;
     rateLimit?: number;
   };
+  /** "config" = defined in cms.config.ts (read-only in admin). "admin" = created in admin UI. */
+  _source?: "config" | "admin";
 }
 
 export interface FormFieldConfig {

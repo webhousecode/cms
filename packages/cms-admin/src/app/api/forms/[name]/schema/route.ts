@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAdminConfig } from "@/lib/cms";
+import { getAllForms } from "@/lib/forms/store";
 
 /**
  * GET /api/forms/[name]/schema — public form schema.
@@ -9,8 +9,8 @@ import { getAdminConfig } from "@/lib/cms";
  */
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ name: string }> }) {
   const { name } = await params;
-  const config = await getAdminConfig();
-  const form = config.forms?.find((f) => f.name === name);
+  const allForms = await getAllForms();
+  const form = allForms.find((f) => f.name === name);
   if (!form) return NextResponse.json({ error: "Form not found" }, { status: 404 });
 
   return NextResponse.json({
