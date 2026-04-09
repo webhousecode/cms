@@ -107,6 +107,38 @@ export function Site() {
             </div>
           )}
 
+          {/* Quick links — Preview + Live */}
+          <div className="flex gap-2">
+            {site.previewUrl && (
+              <a
+                href={site.previewUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-brand-darkSoft border border-white/10 px-4 py-3 text-sm text-white/80 active:scale-97 transition-transform"
+              >
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                  <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5" />
+                  <circle cx="8" cy="8" r="2" fill="currentColor" />
+                </svg>
+                Preview
+              </a>
+            )}
+            {site.liveUrl && (
+              <a
+                href={site.liveUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex-1 flex items-center justify-center gap-2 rounded-xl bg-brand-darkSoft border border-white/10 px-4 py-3 text-sm text-brand-gold active:scale-97 transition-transform"
+              >
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                  <path d="M2 8h12M8 2a10 10 0 014 6 10 10 0 01-4 6 10 10 0 01-4-6A10 10 0 018 2z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                  <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5" />
+                </svg>
+                Live
+              </a>
+            )}
+          </div>
+
           <div className="rounded-xl bg-brand-darkSoft p-4">
             <p className="text-xs uppercase text-white/40">Curation queue</p>
             <p className="mt-1 text-3xl font-semibold text-brand-gold">

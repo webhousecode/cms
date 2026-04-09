@@ -35,6 +35,8 @@ export interface MobileSite {
   role: "owner" | "admin" | "editor" | "viewer";
   /** Public preview URL — used by the mobile Site screen's iframe thumb */
   previewUrl?: string;
+  /** Live/deployed URL for the site */
+  liveUrl?: string;
 }
 
 export interface MobileMeResponse {

@@ -1,6 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createHash } from "crypto";
 import os from "os";
+import path from "path";
+import { existsSync } from "fs";
 import { getUserById } from "@/lib/auth";
 import { getMobileSession } from "@/lib/mobile-auth";
 import { loadRegistry } from "@/lib/site-registry";
@@ -24,11 +26,6 @@ function rewriteLocalhostUrl(url: string | undefined): string | undefined {
   return url.replace(/\/(localhost|127\.0\.0\.1|0\.0\.0\.0)/, `/${lan}`);
 }
 
-/**
- * Resolve an avatar URL for the user.
- * Mirrors /api/auth/me: prefer GitHub avatar for linked users, otherwise
- * Gravatar with `d=404` so the client can fall back to initials cleanly.
- */
 function resolveAvatarUrl(user: { email: string; githubUsername?: string }): string {
   if (user.githubUsername) {
     return `https://github.com/${user.githubUsername}.png?size=128`;
@@ -38,16 +35,27 @@ function resolveAvatarUrl(user: { email: string; githubUsername?: string }): str
 }
 
 /**
+ * For filesystem-adapter sites without previewUrl, check if dist/ exists.
+ * If so, return a preview URL that goes through our preview-proxy endpoint
+ * which starts sirv on-demand (avoids slow startup during /me response).
+ */
+function derivePreviewUrl(
+  site: { configPath: string; adapter: string; previewUrl?: string },
+  reqUrl: URL,
+): string | undefined {
+  if (site.previewUrl) return site.previewUrl;
+  if (site.adapter !== "filesystem" || !site.configPath) return undefined;
+
+  const projectDir = path.dirname(path.resolve(site.configPath));
+  const distDir = path.join(projectDir, "dist");
+  if (!existsSync(distDir)) return undefined;
+
+  // Return a proxy URL that starts sirv on-demand
+  return `${reqUrl.protocol}//${reqUrl.host}/api/mobile/preview-proxy?dir=${encodeURIComponent(distDir)}`;
+}
+
+/**
  * GET /api/mobile/me
- *
- * Returns the current user, the orgs/sites they have access to, and a few
- * quick counters (curation queue, today's drafts). This is the data the
- * webhouse.app mobile Home screen renders.
- *
- * Auth: Bearer JWT in Authorization header.
- *
- * Phase 1: counters are hard-coded zeros — they get real values in Phase 3
- * (curation) and Phase 4 (dashboard).
  */
 export async function GET(req: NextRequest) {
   const session = await getMobileSession(req);
@@ -60,10 +68,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: "User no longer exists" }, { status: 404 });
   }
 
-  // Discover orgs/sites the user can access. In Phase 1 every authenticated
-  // user sees the full registry — per-user access control will be added in
-  // a later phase when we wire up team membership.
   const registry = await loadRegistry();
+  const reqUrl = new URL(req.url);
   const sites: Array<{
     orgId: string;
     orgName: string;
@@ -71,6 +77,7 @@ export async function GET(req: NextRequest) {
     siteName: string;
     role: "owner" | "admin" | "editor" | "viewer";
     previewUrl?: string;
+    liveUrl?: string;
   }> = [];
 
   if (registry) {
@@ -81,9 +88,11 @@ export async function GET(req: NextRequest) {
           orgName: org.name,
           siteId: site.id,
           siteName: site.name,
-          // Phase 1: derive role from the user record's global role
           role: user.role ?? "admin",
-          previewUrl: rewriteLocalhostUrl(site.previewUrl),
+          previewUrl: rewriteLocalhostUrl(derivePreviewUrl(site, reqUrl)),
+          liveUrl: rewriteLocalhostUrl(
+            site.revalidateUrl?.replace(/\/api\/revalidate$/, ""),
+          ),
         });
       }
     }
