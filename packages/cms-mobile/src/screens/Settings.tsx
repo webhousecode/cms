@@ -7,7 +7,7 @@ import { Button } from "@/components/Button";
 import { Spinner } from "@/components/Spinner";
 import { getMe } from "@/api/client";
 import { clearAllAuth, getServerUrl } from "@/lib/prefs";
-import { clearBiometricJwt, isNative, platform } from "@/lib/bridge";
+import { clearBiometricJwt, isNative, platform, getPushDebugInfo, forceRegisterPush } from "@/lib/bridge";
 import type { TopicKey } from "./settings-types";
 
 // Inline the topic metadata so we don't need a server round-trip just for labels
@@ -123,6 +123,8 @@ export function Settings() {
 
   const me = meQuery.data;
 
+  // ─── Render ───────────────────────────────────────────
+
   return (
     <Screen>
       <ScreenHeader
@@ -218,11 +220,65 @@ export function Settings() {
           Sign out
         </Button>
 
+        {/* Push debug (temporary) */}
+        <PushDebug />
+
         {/* Version */}
         <p className="text-center text-xs text-white/30 py-2">
           webhouse.app v0.0.1 · {isNative() ? platform() : "web"}
         </p>
       </div>
     </Screen>
+  );
+}
+
+/** Temporary push debug panel — shows FCM token status */
+function PushDebug() {
+  const [info, setInfo] = useState<Record<string, string> | null>(null);
+  const [registerResult, setRegisterResult] = useState<string | null>(null);
+  const [registering, setRegistering] = useState(false);
+
+  return (
+    <div className="rounded-xl bg-brand-darkSoft border border-white/10 p-4">
+      <div className="flex items-center justify-between mb-2">
+        <p className="text-xs uppercase text-white/40">Push Debug</p>
+        <button
+          type="button"
+          onClick={async () => {
+            const result = await getPushDebugInfo();
+            setInfo(result);
+          }}
+          className="text-xs text-brand-gold active:scale-95"
+        >
+          Check
+        </button>
+      </div>
+      {info && (
+        <div className="space-y-1">
+          {Object.entries(info).map(([k, v]) => (
+            <p key={k} className="text-xs text-white/60 font-mono">
+              {k}: <span className="text-white/90">{v}</span>
+            </p>
+          ))}
+        </div>
+      )}
+      <button
+        type="button"
+        disabled={registering}
+        onClick={async () => {
+          setRegistering(true);
+          setRegisterResult("registering...");
+          const result = await forceRegisterPush();
+          setRegisterResult(result);
+          setRegistering(false);
+        }}
+        className="mt-3 w-full rounded-lg bg-brand-gold text-brand-dark text-xs font-medium py-2 active:scale-97 disabled:opacity-50"
+      >
+        Force Register Push
+      </button>
+      {registerResult && (
+        <p className="mt-2 text-xs font-mono text-white/80 break-all">{registerResult}</p>
+      )}
+    </div>
   );
 }

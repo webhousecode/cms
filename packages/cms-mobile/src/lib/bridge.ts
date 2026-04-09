@@ -295,6 +295,65 @@ export async function registerPendingPushToken(): Promise<boolean> {
   }
 }
 
+// ─── Push debug ───────────────────────────────────────
+/** Returns push registration status for debugging. */
+export async function getPushDebugInfo(): Promise<Record<string, string>> {
+  const info: Record<string, string> = {};
+  info.native = isNative() ? "yes" : "no";
+  info.platform = platform();
+
+  const pending = loadPendingToken();
+  info.pendingToken = pending ? pending.token.slice(0, 20) + "..." : "none";
+  info.pendingPlatform = pending?.platform ?? "none";
+
+  if (!isNative()) return info;
+
+  try {
+    const { PushNotifications } = await import("@capacitor/push-notifications");
+    const perm = await PushNotifications.checkPermissions();
+    info.permission = perm.receive;
+  } catch (err) {
+    info.permission = `error: ${(err as Error).message}`;
+  }
+
+  return info;
+}
+
+/** Force re-register for push and return result. */
+export async function forceRegisterPush(): Promise<string> {
+  if (!isNative()) return "not native";
+
+  try {
+    const { PushNotifications } = await import("@capacitor/push-notifications");
+
+    // Set up one-shot listeners
+    const result = await new Promise<string>((resolve) => {
+      const timeout = setTimeout(() => resolve("timeout (15s) — no token received"), 15000);
+
+      PushNotifications.addListener("registration", (token) => {
+        clearTimeout(timeout);
+        const plat = isIOS() ? "ios" : "android";
+        savePendingToken(token.value, plat);
+        resolve(`✓ token: ${token.value.slice(0, 30)}...`);
+      });
+
+      PushNotifications.addListener("registrationError", (err) => {
+        clearTimeout(timeout);
+        resolve(`✗ error: ${JSON.stringify(err)}`);
+      });
+
+      PushNotifications.register().catch((err) => {
+        clearTimeout(timeout);
+        resolve(`✗ register() threw: ${(err as Error).message}`);
+      });
+    });
+
+    return result;
+  } catch (err) {
+    return `✗ exception: ${(err as Error).message}`;
+  }
+}
+
 // ─── Master init ───────────────────────────────────────
 export async function initCapacitor(): Promise<void> {
   if (!isNative()) {
