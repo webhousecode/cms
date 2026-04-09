@@ -1,8 +1,20 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
+import os from "os";
 import QRCode from "qrcode";
 import { getSessionUser } from "@/lib/auth";
 import { approveQrSession, createQrSession } from "@/lib/qr-sessions";
+
+/** Find first non-internal IPv4 address (LAN IP). */
+function findLanHost(): string | null {
+  const ifaces = os.networkInterfaces();
+  for (const list of Object.values(ifaces)) {
+    for (const i of list ?? []) {
+      if (i.family === "IPv4" && !i.internal) return i.address;
+    }
+  }
+  return null;
+}
 
 /**
  * POST /api/mobile/pair
@@ -37,9 +49,16 @@ export async function POST(req: Request) {
   }
 
   const reqUrl = new URL(req.url);
-  const serverUrl =
-    body.serverUrl ??
-    `${reqUrl.protocol}//${reqUrl.host}`;
+  let serverUrl = body.serverUrl ?? `${reqUrl.protocol}//${reqUrl.host}`;
+
+  // Dev: rewrite localhost → LAN IP so phones on the same WiFi can reach it.
+  // Same pattern as /api/auth/qr/session.
+  if (/^https?:\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0)(:|$)/.test(serverUrl)) {
+    const lan = process.env.CMS_LAN_HOST || findLanHost();
+    if (lan) {
+      serverUrl = serverUrl.replace(/\/(localhost|127\.0\.0\.1|0\.0\.0\.0)/, `/${lan}`);
+    }
+  }
 
   // Create + auto-approve in one step (the desktop session IS the approval)
   const session = createQrSession(req.headers.get("user-agent") ?? undefined);

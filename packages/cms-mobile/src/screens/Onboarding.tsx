@@ -4,26 +4,27 @@ import { Screen } from "@/components/Screen";
 import { Button } from "@/components/Button";
 import { Input } from "@/components/Input";
 import { Logo } from "@/components/Logo";
+import { QrScanner } from "@/components/QrScanner";
 import { ApiError, ping } from "@/api/client";
 import { setServerUrl } from "@/lib/prefs";
 import { consumePairingDeepLink } from "@/lib/pairing-flow";
-import { scanQrFromCamera, scanQrFromPhotoLibrary } from "@/lib/qr";
+import { parseQrPayload } from "@/lib/qr";
 
 /**
  * First-launch screen.
  *
- * Two paths to get connected:
- *  1. Scan a pairing QR from the desktop CMS — gives URL + token in one go,
- *     skips this screen entirely (handled by App-level deep link listener).
- *  2. Type the CMS server URL manually, validate via /api/mobile/ping,
- *     then go to the Login screen for credentials.
+ * Primary path: "Scan pairing QR" opens a live camera scanner that
+ * auto-detects QR codes. The QR from desktop CMS encodes both server
+ * URL and pairing token, so one scan → logged in.
+ *
+ * Fallback: type the CMS server URL manually → Login screen.
  */
 export function Onboarding() {
   const [, setLocation] = useLocation();
   const [url, setUrl] = useState("https://localhost:3010");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [scanning, setScanning] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
 
   async function handleConnect() {
     setError(null);
@@ -52,29 +53,38 @@ export function Onboarding() {
     }
   }
 
-  async function handleScanFromQr(source: "camera" | "photo") {
+  async function handleQrScanned(data: string) {
+    setShowScanner(false);
     setError(null);
-    setScanning(true);
-    try {
-      const payload =
-        source === "camera"
-          ? await scanQrFromCamera()
-          : await scanQrFromPhotoLibrary();
 
-      if (!payload) {
-        // user cancelled — silent
-        return;
+    const payload = parseQrPayload(data);
+    if (payload.pairingToken && payload.serverUrl) {
+      // QR contains both server + token → full pairing in one go
+      setLoading(true);
+      try {
+        await consumePairingDeepLink(data);
+        setLocation("/home");
+      } catch (err) {
+        setError((err as Error).message);
+      } finally {
+        setLoading(false);
       }
-      if (!payload.pairingToken || !payload.serverUrl) {
-        throw new Error("Scanned code is not a webhouse.app pairing QR");
-      }
-      await consumePairingDeepLink(payload.raw);
-      setLocation("/home");
-    } catch (err) {
-      setError((err as Error).message);
-    } finally {
-      setScanning(false);
+    } else if (data.startsWith("http://") || data.startsWith("https://")) {
+      // Plain URL — set it as server URL and go to login
+      setUrl(data);
+      setError("Scanned a URL but not a pairing QR. Tap Connect to use it as server URL.");
+    } else {
+      setError(`Scanned code is not a webhouse.app pairing QR: "${data.slice(0, 50)}..."`);
     }
+  }
+
+  if (showScanner) {
+    return (
+      <QrScanner
+        onScan={handleQrScanned}
+        onClose={() => setShowScanner(false)}
+      />
+    );
   }
 
   return (
@@ -90,12 +100,9 @@ export function Onboarding() {
 
         {/* Middle: actions */}
         <div className="flex flex-col gap-4">
-          {/* Primary path — scan QR */}
-          <Button onClick={() => handleScanFromQr("camera")} loading={scanning}>
+          {/* Primary path — live QR scanner */}
+          <Button onClick={() => setShowScanner(true)} loading={loading}>
             Scan pairing QR
-          </Button>
-          <Button variant="secondary" onClick={() => handleScanFromQr("photo")}>
-            Choose QR from photos
           </Button>
 
           <div className="flex items-center gap-3 my-2">
