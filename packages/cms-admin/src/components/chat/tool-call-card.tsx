@@ -61,6 +61,11 @@ const TOOL_META: Record<string, ToolMeta> = {
   // Translation
   translate_document:{ label: "Translating document", icon: Sparkles },
   translate_site:    { label: "Translating site", icon: Sparkles },
+  // Lighthouse (F98)
+  get_lighthouse_scores: { label: "Checking site speed" },
+  // Forms (F30)
+  list_form_submissions: { label: "Reading submissions" },
+  form_stats:            { label: "Counting submissions" },
   // Memory (F114)
   search_memories:   { label: "Searching memory", icon: Brain },
   add_memory:        { label: "Remembering", icon: Brain },
