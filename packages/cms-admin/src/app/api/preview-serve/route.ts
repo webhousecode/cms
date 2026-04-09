@@ -98,14 +98,11 @@ export async function POST(req: NextRequest) {
         // npm installed
         path.resolve(process.cwd(), "node_modules", "@webhouse", "cms", "static", "404.html"),
       ];
-      try {
-        // Also try require.resolve (works in Node, may fail in Turbopack).
-        // Indirect the module name through a variable so Turbopack's static
-        // analysis doesn't flag it as a missing module at build time.
-        const pkg = "@webhouse/cms" + "/package.json";
-        const resolved = require.resolve(pkg);
-        candidates.unshift(path.join(path.dirname(resolved), "static", "404.html"));
-      } catch { /* skip */ }
+      // Note: previously tried require.resolve("@webhouse/cms/package.json")
+      // here as another candidate, but Turbopack's static analysis flags it
+      // as Module not found at build time even inside try/catch. The
+      // hardcoded candidates above (monorepo symlink + npm installed) cover
+      // the same paths at runtime, so this is safe to omit.
 
       for (const candidate of candidates) {
         if (existsSync(candidate)) {
