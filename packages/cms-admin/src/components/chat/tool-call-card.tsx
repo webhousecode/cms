@@ -65,6 +65,7 @@ const TOOL_META: Record<string, ToolMeta> = {
   get_lighthouse_scores: { label: "Checking site speed" },
   // Forms (F30)
   list_form_submissions: { label: "Reading submissions" },
+  get_form_submission:   { label: "Reading submission" },
   form_stats:            { label: "Counting submissions" },
   // Memory (F114)
   search_memories:   { label: "Searching memory", icon: Brain },

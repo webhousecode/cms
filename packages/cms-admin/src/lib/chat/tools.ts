@@ -2039,7 +2039,9 @@ DESIGN GUIDELINES:
             const subject = s.data.subject ? ` — ${s.data.subject}` : "";
             const date = new Date(s.createdAt).toLocaleDateString("da-DK", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
             const badge = s.status === "new" ? " **NEW**" : s.status === "archived" ? " (archived)" : "";
-            return `- [${s.form}] **${name}**${subject} — ${date}${badge}`;
+            const msg = String(s.data.message ?? s.data.body ?? "").slice(0, 80);
+            const preview = msg ? `\n  > ${msg}${msg.length >= 80 ? "…" : ""}` : "";
+            return `- [${s.form}] **${name}**${subject} — ${date}${badge} (ID: \`${s.id}\`)${preview}`;
           }).join("\n");
         } catch {
           return "Forms module not available on this site.";
@@ -2080,6 +2082,45 @@ DESIGN GUIDELINES:
           }
 
           lines.push(``, `**Total:** ${totalAll} submissions, ${totalUnread} unread`);
+          return lines.join("\n");
+        } catch {
+          return "Forms module not available on this site.";
+        }
+      },
+    },
+
+    {
+      definition: {
+        name: "get_form_submission",
+        description:
+          "Read the full content of a specific form submission. Use this when the user asks to see the details or message body of a submission.",
+        input_schema: {
+          type: "object",
+          properties: {
+            form: { type: "string", description: "Form name (e.g. 'contact')" },
+            id: { type: "string", description: "Submission ID" },
+          },
+          required: ["form", "id"],
+        },
+      },
+      handler: async (input) => {
+        try {
+          const { FormService } = await import("@/lib/forms/service");
+          const { getActiveSitePaths } = await import("@/lib/site-paths");
+          const { dataDir } = await getActiveSitePaths();
+          const svc = new FormService(dataDir);
+          const sub = await svc.get(String(input.form), String(input.id));
+          if (!sub) return `Submission not found: ${input.form}/${input.id}`;
+
+          const lines = [
+            `**Form:** ${sub.form}`,
+            `**Status:** ${sub.status}`,
+            `**Submitted:** ${new Date(sub.createdAt).toLocaleDateString("da-DK", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}`,
+            ``,
+          ];
+          for (const [key, value] of Object.entries(sub.data)) {
+            lines.push(`**${key}:** ${String(value)}`);
+          }
           return lines.join("\n");
         } catch {
           return "Forms module not available on this site.";
