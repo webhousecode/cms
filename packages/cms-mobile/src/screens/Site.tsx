@@ -89,10 +89,11 @@ export function Site() {
         />
 
         <div className="flex flex-1 flex-col gap-3 px-6 pb-24 overflow-auto">
-          {/* Live preview card — always shown, placeholder if no URL */}
-          {site.previewUrl ? (
+          {/* Preview card — prefer liveUrl (works from phone, loads all resources)
+              Fall back to previewUrl (proxy, may lack sub-resources) */}
+          {(site.liveUrl || site.previewUrl) ? (
             <SitePreview
-              previewUrl={site.previewUrl}
+              previewUrl={site.liveUrl || site.previewUrl!}
               title={site.siteName}
               onExpand={() =>
                 setLocation(`/site/${params.orgId}/${params.siteId}/preview`)
