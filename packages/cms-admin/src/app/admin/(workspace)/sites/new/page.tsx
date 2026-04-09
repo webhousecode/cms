@@ -311,7 +311,8 @@ export default function NewSitePage() {
             {([
               { value: "filesystem" as const, label: "Filesystem", icon: HardDrive },
               { value: "github" as const, label: "GitHub", icon: Github },
-              { value: "migrate" as const, label: "Migrate", icon: Globe },
+              // F03: Migrate tab parked — backend done, UI needs redesign
+              // { value: "migrate" as const, label: "Migrate", icon: Globe },
             ]).map(({ value, label, icon: Icon }) => (
               <button
                 key={value}
