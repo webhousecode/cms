@@ -223,6 +223,14 @@ export function Home() {
               </svg>
             </button>
             {orgDropdownOpen && (
+              <>
+              {/* Glass overlay dims + blurs content below the dropdown */}
+              <div
+                className="fixed inset-0 z-[5]"
+                style={{ backgroundColor: "rgba(13,13,13,0.5)", WebkitBackdropFilter: "blur(8px)", backdropFilter: "blur(8px)" }}
+                onClick={() => setOrgDropdownOpen(false)}
+                aria-hidden
+              />
               <ul
                 role="listbox"
                 className="absolute left-0 right-0 top-full z-10 mt-1 max-h-72 overflow-auto rounded-xl border border-white/10 bg-brand-darkPanel shadow-xl"
@@ -268,6 +276,7 @@ export function Home() {
                   );
                 })}
               </ul>
+              </>
             )}
           </div>
         </section>
