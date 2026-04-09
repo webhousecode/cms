@@ -52,6 +52,7 @@ export function Home() {
   const [, setLocation] = useLocation();
   const [activeOrg, setActiveOrgState] = useState<string | null>(null);
   const [orgDropdownOpen, setOrgDropdownOpen] = useState(false);
+  const [siteSearch, setSiteSearch] = useState("");
   const orgDropdownRef = useRef<HTMLDivElement | null>(null);
 
   // Close dropdown on outside tap
@@ -150,17 +151,29 @@ export function Home() {
 
   const me = meQuery.data!;
   const visibleOrg = orgs.find((o) => o.orgId === activeOrg) ?? orgs[0];
-  const visibleSites = visibleOrg?.sites ?? [];
+  const allVisibleSites = visibleOrg?.sites ?? [];
+  const visibleSites = siteSearch.trim()
+    ? allVisibleSites.filter((s) =>
+        s.siteName.toLowerCase().includes(siteSearch.toLowerCase()),
+      )
+    : allVisibleSites;
 
   return (
     <Screen>
       <ScreenHeader
         left={
-          <HeaderAvatar
-            name={me.user.name ?? me.user.email}
-            email={me.user.email}
-            src={me.user.avatarUrl ?? undefined}
-          />
+          <button
+            type="button"
+            onClick={() => setLocation("/settings")}
+            className="rounded-full active:scale-95 transition-transform"
+            aria-label="Open settings"
+          >
+            <HeaderAvatar
+              name={me.user.name ?? me.user.email}
+              email={me.user.email}
+              src={me.user.avatarUrl ?? undefined}
+            />
+          </button>
         }
         title={me.user.name ?? me.user.email}
         subtitle={serverQuery.data ?? undefined}
@@ -263,8 +276,46 @@ export function Home() {
         <div className="rounded-xl bg-brand-darkSoft p-4">
           <div className="flex items-baseline justify-between mb-2">
             <p className="text-xs uppercase text-white/40">Sites</p>
-            <p className="text-xs text-white/40">{visibleSites.length}</p>
+            <p className="text-xs text-white/40">
+              {siteSearch.trim()
+                ? `${visibleSites.length} / ${allVisibleSites.length}`
+                : visibleSites.length}
+            </p>
           </div>
+          {/* Type-ahead search — shown when org has 4+ sites */}
+          {allVisibleSites.length >= 4 && (
+            <div className="relative mb-3">
+              <svg
+                width="14"
+                height="14"
+                viewBox="0 0 16 16"
+                fill="none"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-white/40"
+              >
+                <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.5" />
+                <path d="M11 11l3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              </svg>
+              <input
+                type="text"
+                placeholder="Search sites..."
+                value={siteSearch}
+                onChange={(e) => setSiteSearch(e.target.value)}
+                className="w-full rounded-lg bg-brand-darkPanel border border-white/10 py-2 pl-9 pr-8 text-sm text-white placeholder:text-white/30 focus:border-brand-gold focus:outline-none"
+              />
+              {siteSearch && (
+                <button
+                  type="button"
+                  onClick={() => setSiteSearch("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white"
+                  aria-label="Clear search"
+                >
+                  <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+                    <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          )}
           <ul className="mt-2 flex flex-col gap-2">
             {visibleSites.map((site) => (
               <li key={`${site.orgId}-${site.siteId}`}>
@@ -304,11 +355,7 @@ export function Home() {
         </div>
       </section>
 
-      <footer className="mt-auto py-6">
-        <Button variant="secondary" onClick={handleLogout} className="w-full">
-          Sign out
-        </Button>
-      </footer>
+      {/* Sign out moved to Settings — avatar tap → Settings → Sign out */}
       </div>
     </Screen>
   );
