@@ -80,23 +80,21 @@ function parsePsiResponse(data: any, strategy: "mobile" | "desktop", requestUrl?
   }
   opportunities.sort((a, b) => (a.score ?? 1) - (b.score ?? 1));
 
-  // Diagnostics
+  // Diagnostics — any failing audit that's not an opportunity
   const diagnostics: LighthouseDiagnostic[] = [];
-  const diagIds = [
-    "dom-size", "total-byte-weight", "mainthread-work-breakdown",
-    "bootup-time", "network-requests", "network-rtt", "network-server-latency",
-    "uses-long-cache-ttl", "font-display", "critical-request-chains",
-  ];
-  for (const id of diagIds) {
-    const audit = audits[id];
-    if (audit && audit.score !== null && audit.score < 1) {
-      diagnostics.push({
-        id,
-        title: audit.title ?? id,
-        description: stripMarkdownLinks(audit.description ?? ""),
-        displayValue: audit.displayValue,
-      });
-    }
+  const oppIds = new Set(opportunities.map((o) => o.id));
+  const skipTypes = new Set(["opportunity", "screenshot", "filmstrip", "debugdata"]);
+  for (const [id, audit] of Object.entries(audits) as [string, any][]) {
+    if (oppIds.has(id)) continue;
+    if (audit.score === null || audit.score >= 0.9) continue;
+    if (audit.details?.type && skipTypes.has(audit.details.type)) continue;
+    if (audit.scoreDisplayMode === "informative" || audit.scoreDisplayMode === "notApplicable") continue;
+    diagnostics.push({
+      id,
+      title: audit.title ?? id,
+      description: stripMarkdownLinks(audit.description ?? ""),
+      displayValue: audit.displayValue,
+    });
   }
 
   // CrUX field data

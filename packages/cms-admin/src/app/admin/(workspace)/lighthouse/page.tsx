@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { Gauge, RefreshCw, Monitor, Smartphone, AlertTriangle, ChevronDown, ChevronRight, TrendingDown, TrendingUp, Minus } from "lucide-react";
 import { ActionBar, ActionBarBreadcrumb } from "@/components/action-bar";
+import { HelpCard } from "@/components/ui/help-card";
 import { TabTitle } from "@/lib/tabs-context";
 import { scoreColor, SCORE_COLOR_MAP, type LighthouseResult, type LighthouseScore, type ScoreHistoryEntry } from "@/lib/lighthouse/types";
 
@@ -152,12 +153,13 @@ export default function LighthousePage() {
                 <div style={{ fontSize: "0.78rem", fontWeight: 600, marginBottom: "0.75rem", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--muted-foreground)" }}>
                   Core Web Vitals
                 </div>
-                <div style={{ display: "flex", gap: "2rem", flexWrap: "wrap" }}>
+                <div style={{ display: "flex", gap: "2rem", flexWrap: "wrap", marginBottom: "0.75rem" }}>
                   <CwvMetric label="LCP" value={`${(latest.coreWebVitals.lcp / 1000).toFixed(1)}s`} threshold={[2500, 4000]} raw={latest.coreWebVitals.lcp} />
                   <CwvMetric label="CLS" value={latest.coreWebVitals.cls.toFixed(3)} threshold={[0.1, 0.25]} raw={latest.coreWebVitals.cls} />
                   <CwvMetric label="FCP" value={`${(latest.coreWebVitals.fcp / 1000).toFixed(1)}s`} threshold={[1800, 3000]} raw={latest.coreWebVitals.fcp} />
                   <CwvMetric label="TTFB" value={`${Math.round(latest.coreWebVitals.ttfb)}ms`} threshold={[800, 1800]} raw={latest.coreWebVitals.ttfb} />
                 </div>
+                <HelpCard articleId="lighthouse-cwv" variant="compact" />
               </div>
             )}
 
@@ -197,6 +199,36 @@ export default function LighthousePage() {
                     ))}
                   </div>
                 )}
+              </div>
+            )}
+
+            {/* ── Diagnostics ── */}
+            {latest.diagnostics.length > 0 && (
+              <div style={{ marginBottom: "2rem" }}>
+                <div style={{ fontSize: "0.82rem", fontWeight: 600, marginBottom: "0.5rem" }}>
+                  Diagnostics ({latest.diagnostics.length})
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+                  {latest.diagnostics.map((diag) => (
+                    <div key={diag.id} style={{
+                      padding: "0.6rem 0.85rem", borderRadius: 6,
+                      border: "1px solid var(--border)", background: "var(--card)",
+                      fontSize: "0.78rem",
+                    }}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                        <span>{diag.title}</span>
+                        {diag.displayValue && (
+                          <span style={{ color: "var(--muted-foreground)", fontSize: "0.72rem" }}>{diag.displayValue}</span>
+                        )}
+                      </div>
+                      {diag.description && (
+                        <div style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", marginTop: "0.2rem", lineHeight: 1.4 }}>
+                          {diag.description.slice(0, 150)}{diag.description.length > 150 ? "..." : ""}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
