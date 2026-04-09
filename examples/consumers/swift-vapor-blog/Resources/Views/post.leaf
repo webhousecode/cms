@@ -10,7 +10,7 @@
             <span>#(post.locale)</span>
         </div>
 
-        #(contentHtml)
+        #raw(contentHtml)
 
         #if(translation):
             <div class="translation">

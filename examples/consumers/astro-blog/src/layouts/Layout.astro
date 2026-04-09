@@ -18,7 +18,7 @@ const footerText = getString(globals, 'footerText', 'Powered by @webhouse/cms');
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{title} — {brandPrefix}</title>
-  <style>
+  <style is:global>
     :root { --gold: #F7BB2E; --dark: #0D0D0D; --text: #e8e8e8; --text-dim: #888; --border: #222; }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--dark); color: var(--text); line-height: 1.7; max-width: 740px; margin: 0 auto; padding: 3rem 2rem; }

@@ -8,6 +8,7 @@ public func configure(_ app: Application) throws {
     // Leaf templates
     app.views.use(.leaf)
     app.leaf.cache.isEnabled = false  // Dev mode — no template caching
+    app.leaf.tags["raw"] = RawTag()  // #raw(html) — unescaped HTML output
 
     try routes(app)
 }
