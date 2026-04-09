@@ -52,41 +52,28 @@
 	<key>NSAppTransportSecurity</key>
 	<dict>
 		<!--
-		  DEV scoping: production traffic goes through normal TLS chains.
-		  We explicitly grant exceptions for:
-		    - localhost: dev cms-admin with mkcert self-signed cert
-		    - WebView content loads: Capacitor's local file:// → http://localhost
-		      bridge that loads bundled assets
-		    - Local network: required by Capacitor plugin discovery on Android
-		      parity (no-op on iOS but documented intent)
+		  DEV: NSAllowsArbitraryLoads is required for local development
+		  because the real iPhone talks to the Mac's CMS via LAN IP
+		  (e.g. 192.168.x.x:3010) with a self-signed mkcert cert.
+		  NSExceptionDomains for "localhost" only covers localhost, not
+		  LAN IPs. NSAllowsLocalNetworking only covers .local domains.
 
-		  This is intentionally MORE restrictive than NSAllowsArbitraryLoads.
-		  CapacitorHttp routes window.fetch through native NSURLSession which
-		  DOES honor these exceptions — verified working on iOS sim 18.x.
+		  DEFENSE: scripts/preflight-release.sh blocks this from shipping.
+		  Phase 8 removes it and requires valid TLS on user servers.
 		-->
+		<key>NSAllowsArbitraryLoads</key>
+		<true/>
 		<key>NSAllowsArbitraryLoadsInWebContent</key>
 		<true/>
 		<key>NSAllowsLocalNetworking</key>
 		<true/>
-		<key>NSExceptionDomains</key>
-		<dict>
-			<key>localhost</key>
-			<dict>
-				<key>NSExceptionAllowsInsecureHTTPLoads</key>
-				<true/>
-				<key>NSExceptionMinimumTLSVersion</key>
-				<string>TLSv1.0</string>
-				<key>NSExceptionRequiresForwardSecrecy</key>
-				<false/>
-				<key>NSIncludesSubdomains</key>
-				<true/>
-			</dict>
-		</dict>
 	</dict>
 	<key>NSCameraUsageDescription</key>
 	<string>webhouse.app uses the camera to scan the QR code from your CMS admin login. For example, you can open your CMS in a browser, click "Pair mobile device", and scan the displayed QR code to log in on mobile without typing your password.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>webhouse.app uses your photo library to read a QR code from a saved image when your camera is unavailable. For example, you can save a screenshot of your CMS pairing QR code and select it here to log in.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>webhouse.app needs permission to save photos to your library. For example, when you take a photo of a QR code for pairing, the camera plugin requires write access to function correctly.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>webhouse.app uses Face ID to quickly unlock your CMS session without typing your password every time. For example, you can open the app in the morning and be logged in to your CMS with a single glance.</string>
 	<key>CFBundleURLTypes</key>
