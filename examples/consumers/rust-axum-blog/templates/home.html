@@ -1,0 +1,22 @@
+{% extends "_layout.html" %}
+{% block title %}Blog ({{ locale }}){% endblock %}
+{% block content %}
+<h1>Blog</h1>
+<p class="lead">Content read from @webhouse/cms JSON files by an Axum / Rust app.</p>
+
+{% if posts.is_empty() %}
+  <p>No published posts yet.</p>
+{% endif %}
+
+{% for post in posts %}
+  <a href="/blog/{{ post.slug }}" class="post-card">
+    <div class="meta">
+      <span>{{ post.string("date") }}</span>
+      <span> · </span>
+      <span>{{ post.locale.as_deref().unwrap_or("") }}</span>
+    </div>
+    <h3>{{ post.string("title") }}</h3>
+    <p>{{ post.string("excerpt") }}</p>
+  </a>
+{% endfor %}
+{% endblock %}

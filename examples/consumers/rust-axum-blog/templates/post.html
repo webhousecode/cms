@@ -1,0 +1,25 @@
+{% extends "_layout.html" %}
+{% block title %}{{ post.string("title") }}{% endblock %}
+{% block content %}
+<article>
+  <h1>{{ post.string("title") }}</h1>
+  <div class="meta">
+    <span>{{ post.string_or("author", "Unknown") }}</span>
+    <span> · </span>
+    <span>{{ post.string("date") }}</span>
+    <span> · </span>
+    <span>{{ post.locale.as_deref().unwrap_or("") }}</span>
+  </div>
+
+  {{ content_html|safe }}
+
+  {% if let Some(t) = translation %}
+    <div class="translation">
+      This post is also available in {{ t.locale.as_deref().unwrap_or("") }}:
+      <a href="/blog/{{ t.slug }}">{{ t.string("title") }}</a>
+    </div>
+  {% endif %}
+
+  <p><a href="/" class="back">← Back to all posts</a></p>
+</article>
+{% endblock %}

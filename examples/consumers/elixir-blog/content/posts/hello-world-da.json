@@ -1,0 +1,18 @@
+{
+  "id": "post-hello-world-da",
+  "slug": "hello-world-da",
+  "status": "published",
+  "locale": "da",
+  "translationGroup": "6f8a0c2e-4f6a-8c0e-2f4a-6c8e0a2c4e6f",
+  "_fieldMeta": {},
+  "data": {
+    "title": "Hej verden fra Elixir",
+    "excerpt": "Et blogindlæg gemt som JSON-fil i @webhouse/cms og renderet af en Elixir/Plug/Bandit-app.",
+    "content": "## Opsætningen\n\nDette indlæg ligger i `content/posts/hello-world-da.json`. **Elixir læser det direkte** via `WebhouseBlog.Webhouse`-modulet.\n\n## Phoenix-kompatibel\n\n`Webhouse`-modulet har nul Plug-specifik kode. Drop det ind i et Phoenix-projekt under `lib/my_app/webhouse.ex` og kald det fra enhver controller — API'et er identisk.",
+    "date": "2026-04-09",
+    "author": "Christian Broberg",
+    "tags": ["intro", "elixir", "phoenix"]
+  },
+  "createdAt": "2026-04-09T00:00:00.000Z",
+  "updatedAt": "2026-04-09T00:00:00.000Z"
+}

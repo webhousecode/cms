@@ -1,0 +1,18 @@
+{
+  "id": "post-hello-world-en",
+  "slug": "hello-world",
+  "status": "published",
+  "locale": "en",
+  "translationGroup": "6f8a0c2e-4f6a-8c0e-2f4a-6c8e0a2c4e6f",
+  "_fieldMeta": {},
+  "data": {
+    "title": "Hello, world from Elixir",
+    "excerpt": "A blog post stored as a JSON file in @webhouse/cms and rendered by an Elixir/Plug/Bandit app.",
+    "content": "## The setup\n\nThis post lives at `content/posts/hello-world.json`. **Elixir reads it directly** via the `WebhouseBlog.Webhouse` module — no API calls, no database, just `File.read/1` and `Jason.decode/1`.\n\n## Phoenix compatible\n\nThe `Webhouse` module has zero Plug-specific code. Drop it into a Phoenix project under `lib/my_app/webhouse.ex` and call it from any controller — the API is identical.\n\n## BEAM concurrency\n\nBandit handles thousands of concurrent connections on the BEAM VM. The reader is stateless, so there's no contention.",
+    "date": "2026-04-09",
+    "author": "Christian Broberg",
+    "tags": ["intro", "elixir", "phoenix"]
+  },
+  "createdAt": "2026-04-09T00:00:00.000Z",
+  "updatedAt": "2026-04-09T00:00:00.000Z"
+}

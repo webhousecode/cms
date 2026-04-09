@@ -1,0 +1,18 @@
+{
+  "id": "post-hello-world-en",
+  "slug": "hello-world",
+  "status": "published",
+  "locale": "en",
+  "translationGroup": "5e7f9b1d-3f5a-7c9e-1b3d-5f7a9c1e3f5a",
+  "_fieldMeta": {},
+  "data": {
+    "title": "Hello, world from Rust",
+    "excerpt": "A blog post stored as a JSON file in @webhouse/cms and rendered by an Axum + Tokio application.",
+    "content": "## The setup\n\nThis post lives at `content/posts/hello-world.json`. **Axum reads it directly** via the `webhouse::Reader` struct — no API calls, no database, just `std::fs::read_to_string` and `serde_json`.\n\n## Memory-safe by default\n\nThe whole reader is ~180 lines of Rust. No `unwrap()` panics in the happy path, all errors return `Result<T, WebhouseError>`. Path traversal protection via `canonicalize() + starts_with()`.\n\n## Single static binary\n\n`cargo build --release` produces a ~5 MB binary with zero runtime dependencies. Deploy it with `scp` and run.",
+    "date": "2026-04-09",
+    "author": "Christian Broberg",
+    "tags": ["intro", "rust", "axum"]
+  },
+  "createdAt": "2026-04-09T00:00:00.000Z",
+  "updatedAt": "2026-04-09T00:00:00.000Z"
+}
