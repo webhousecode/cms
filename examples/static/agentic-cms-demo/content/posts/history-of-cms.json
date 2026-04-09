@@ -1,0 +1,17 @@
+{
+  "slug": "history-of-cms",
+  "status": "published",
+  "locale": "en",
+  "translationGroup": "0f6d3d71-fa4b-46ba-a73c-310f4bb5aa47",
+  "id": "post-history-en",
+  "_fieldMeta": {},
+  "data": {
+    "title": "From Static HTML to AI-Powered Content: The History of CMS (1995–2026)",
+    "excerpt": "Content management systems have quietly shaped the web for three decades. From hand-coded HTML files on FTP servers to headless, AI-integrated platforms — here's the full story.",
+    "content": "## The FTP era (1995–2000)\n\nBefore content management systems existed, there was a developer, an FTP client, and a folder of HTML files. Every page was hand-coded. Every change required a developer. Every deployment was a manual upload to a shared server.\n\nThis was unsustainable. The web was growing exponentially, and organizations needed to publish content faster than their developers could type.\n\n## The CMS era begins (2001–2010)\n\nMovable Type (2001), WordPress (2003), Drupal (2001), Joomla (2005). The first generation of CMS platforms separated content from presentation. Non-developers could log in, type content, and publish. The developer's role shifted from page-builder to template-builder.\n\nWordPress won this era decisively. By 2010, it powered 15% of all websites. Its plugin ecosystem made it infinitely extensible — and infinitely complex.\n\n## The headless revolution (2011–2020)\n\nMobile killed the monolith. When your CMS needs to serve a website, an iOS app, an Android app, and a smartwatch, the traditional \"CMS renders HTML\" model breaks. Contentful (2013), Prismic (2013), and Sanity (2017) pioneered the headless approach: the CMS is an API, the frontend is separate.\n\nDevelopers regained control. But content editors lost their WYSIWYG preview. And the complexity budget simply shifted from plugins to API integrations.\n\n## The AI moment (2023–present)\n\nLarge language models changed everything. Content generation, translation, SEO optimization, image analysis — tasks that took hours now take seconds. But the CMS platforms built for the pre-AI world aren't ready.\n\nThey treat AI as a plugin. A sidebar widget. A \"generate\" button on a text field. This is the WordPress plugin pattern repeating itself.\n\nThe CMS of the AI era needs AI at its core. Schema-driven content that AI can reason about. Native operations for generation, translation, and optimization. Field-level protection (AI Lock) to keep humans in control. And machine-readable output (llms.txt, MCP) so other AI agents can discover and query your content.\n\nThat's what we're building.",
+    "date": "2025-07-10",
+    "tags": ["history", "cms", "architecture"],
+    "author": "Christian Broberg",
+    "readTime": "12 min"
+  }
+}

@@ -56,6 +56,28 @@ export function TourTooltip({
     };
   }, [step.target]);
 
+  // Keyboard shortcuts: Esc to skip the tour, Enter to advance.
+  // Ignore Enter when an editable element is focused (textarea, contenteditable, etc.)
+  // so the user can still type newlines while a tooltip is visible.
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        onSkip();
+        return;
+      }
+      if (e.key === "Enter") {
+        const target = e.target as HTMLElement | null;
+        const tag = target?.tagName?.toLowerCase();
+        if (tag === "textarea" || target?.isContentEditable) return;
+        e.preventDefault();
+        onNext();
+      }
+    }
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onNext, onSkip]);
+
   if (!targetRect) return null;
 
   // Calculate tooltip position based on placement

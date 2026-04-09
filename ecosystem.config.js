@@ -49,6 +49,29 @@ const nextSite = (name, cwd, port) => ({
   kill_timeout: 5000,
 });
 
+// Static site served from a pre-built dist/ directory via sirv-cli on a fixed
+// port. Use this for sites that have no Next.js dev server (CMS-built static
+// sites: landing, examples/static/*, examples/blog, maurseth). The dist/
+// must be pre-built — `pnpm build` or `npx cms build` in the site dir.
+const staticSite = (name, cwd, port) => ({
+  name,
+  cwd,
+  // sirv-cli is hoisted into the monorepo's pnpm store. We invoke its bin.js
+  // directly via node so PM2 manages the actual process (no shell wrapper
+  // zombie problem). --single makes 404s fall back to index.html, --quiet
+  // suppresses per-request logging that would flood pm2 logs.
+  script: "/Users/cb/Apps/webhouse/cms/node_modules/.pnpm/sirv-cli@3.0.1/node_modules/sirv-cli/bin.js",
+  args: `dist --port ${port} --host 0.0.0.0 --single --quiet`,
+  interpreter: "node",
+  env: {},
+  autorestart: true,
+  watch: false,
+  max_memory_restart: "256M",
+  time: true,
+  listen_timeout: 5000,
+  kill_timeout: 5000,
+});
+
 // Live CMS admin dev server on port 3010. Runs `pnpm dev` from
 // packages/cms-admin to match the user's manual workflow exactly.
 // If the inner next process crashes the pnpm wrapper may survive as a
@@ -102,6 +125,7 @@ module.exports = {
     nextSite("webhouse-site", "/Users/cb/Apps/webhouse/webhouse-site", 3009),
     nextSite("cms-docs",      "/Users/cb/Apps/webhouse/cms-docs",      3036),
     nextSite("sproutlake",    "/Users/cb/Apps/cbroberg/sproutlake",    3002),
+    staticSite("landing",     "/Users/cb/Apps/webhouse/cms/examples/landing", 3011),
     cmsAdminProd,
   ],
 };

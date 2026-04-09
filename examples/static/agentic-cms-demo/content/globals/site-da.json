@@ -1,0 +1,19 @@
+{
+  "slug": "site-da",
+  "status": "published",
+  "locale": "da",
+  "translationGroup": "1bbd63a0-d9df-4d26-bf0f-ce731518a3be",
+  "id": "globals-site-da",
+  "_fieldMeta": {},
+  "data": {
+    "siteTitle": "@webhouse/cms",
+    "tagline": "AI-native indholdsmotor",
+    "metaDescription": "CMS'et hvor du beskriver hvad du vil have og får et produktionsklart website. Skemadrevet indhold. AI-drevet produktion. Statisk output.",
+    "heroHeadline": "AI-native indholdsmotor",
+    "heroSubline": "Beskriv hvad du vil have. Få et produktionsklart website. Fortsæt med at iterere med AI eller manuelt.",
+    "ctaPrimary": "Kom i gang",
+    "ctaSecondary": "Se på GitHub",
+    "footerText": "© 2026 WebHouse — webhouse.app",
+    "navItems": "Features,Om os,Kom i gang,Blog"
+  }
+}

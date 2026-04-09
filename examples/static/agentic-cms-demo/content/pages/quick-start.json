@@ -1,0 +1,58 @@
+{
+  "slug": "quick-start",
+  "status": "published",
+  "locale": "en",
+  "translationGroup": "e91f11b8-d8de-49cd-84ca-7f5999b42078",
+  "id": "page-quickstart-en",
+  "_fieldMeta": {},
+  "data": {
+    "title": "Quick Start",
+    "description": "Scaffold a new project and have a CMS-powered site running in under 5 minutes.",
+    "sections": [
+      {
+        "_block": "hero",
+        "badge": "Getting Started",
+        "headline": "Up and running in under 5 minutes.",
+        "subline": "One command to scaffold. Install. Build. Deploy. That's it.",
+        "ctaPrimary": "",
+        "ctaSecondary": ""
+      },
+      {
+        "_block": "code-showcase",
+        "heading": "1. Create a new project",
+        "description": "The scaffolder creates a complete project with schema, example content, and AI configuration.",
+        "code": "$ npx @webhouse/cms init my-site\n\nmy-site/\n  cms.config.ts          # Collection + field definitions\n  package.json           # Dependencies\n  .env                   # AI provider keys\n  content/\n    posts/\n      hello-world.json   # Example document",
+        "language": "bash"
+      },
+      {
+        "_block": "code-showcase",
+        "heading": "2. Install and run",
+        "description": "Start the dev server and admin UI. Content changes are live-reloaded.",
+        "code": "$ cd my-site\n$ npm install\n$ npx cms dev\n\n✓ Admin UI → http://localhost:3000/admin\n✓ Dev server → http://localhost:3000\n✓ Watching for changes...",
+        "language": "bash"
+      },
+      {
+        "_block": "code-showcase",
+        "heading": "3. Build for production",
+        "description": "The build pipeline generates optimized static HTML with SEO, sitemaps, RSS, and AI discovery files.",
+        "code": "$ npx cms build\n\n✓ 12 pages rendered\n✓ sitemap.xml generated\n✓ robots.txt generated\n✓ llms.txt + llms-full.txt generated\n✓ feed.xml RSS feed generated\n✓ Per-page .md files for AI\n→ Build complete in 1.2s",
+        "language": "bash"
+      },
+      {
+        "_block": "text-section",
+        "heading": "What you get",
+        "body": "Every build generates a complete static site with:\n\n- **HTML pages** for all published documents\n- **sitemap.xml** for search engines (with hreflang for i18n)\n- **robots.txt** with AI-optimized crawler rules\n- **llms.txt** and **llms-full.txt** for AI discovery\n- **feed.xml** RSS feed\n- **Per-page .md files** for AI consumption\n- **JSON-LD** structured data on every page\n- **OG metadata** for social sharing",
+        "variant": "default"
+      },
+      {
+        "_block": "cta",
+        "heading": "Next steps",
+        "subheading": "Define your own collections. Add AI agents. Deploy to production.",
+        "buttonText": "Read the Docs",
+        "buttonUrl": "https://docs.webhouse.app",
+        "secondaryText": "View Examples",
+        "secondaryUrl": "https://github.com/webhousecode/cms/tree/main/examples"
+      }
+    ]
+  }
+}

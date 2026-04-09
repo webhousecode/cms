@@ -1,0 +1,17 @@
+{
+  "slug": "history-of-cms-da",
+  "status": "published",
+  "locale": "da",
+  "translationGroup": "0f6d3d71-fa4b-46ba-a73c-310f4bb5aa47",
+  "id": "post-history-da",
+  "_fieldMeta": {},
+  "data": {
+    "title": "Fra statisk HTML til AI-drevet indhold: CMS'ets historie (1995–2026)",
+    "excerpt": "Content management systemer har stille formet nettet i tre årtier. Fra håndkodede HTML-filer på FTP-servere til headless, AI-integrerede platforme — her er den fulde historie.",
+    "content": "## FTP-æraen (1995–2000)\n\nFør content management systemer eksisterede, var der en udvikler, en FTP-klient og en mappe med HTML-filer. Hver side var håndkodet. Hver ændring krævede en udvikler. Hvert deploy var en manuel upload til en delt server.\n\nDette var uholdbart. Nettet voksede eksponentielt, og organisationer havde brug for at publicere indhold hurtigere end deres udviklere kunne skrive.\n\n## CMS-æraen begynder (2001–2010)\n\nMovable Type (2001), WordPress (2003), Drupal (2001), Joomla (2005). Den første generation af CMS-platforme adskilte indhold fra præsentation. Ikke-udviklere kunne logge ind, skrive indhold og publicere. Udviklerens rolle skiftede fra sidebygger til skabelonbygger.\n\nWordPress vandt denne æra afgørende. I 2010 drev det 15% af alle websites. Dets plugin-økosystem gjorde det uendeligt udvidbart — og uendeligt komplekst.\n\n## Den headless revolution (2011–2020)\n\nMobil dræbte monolitten. Når dit CMS skal servere et website, en iOS-app, en Android-app og et smartwatch, bryder den traditionelle \"CMS renderer HTML\"-model sammen. Contentful (2013), Prismic (2013) og Sanity (2017) var pionerer inden for headless-tilgangen: CMS'et er et API, frontend'en er separat.\n\nUdviklere genvandt kontrollen. Men indholdsredaktører mistede deres WYSIWYG-forhåndsvisning. Og kompleksitetsbudgettet skiftede blot fra plugins til API-integrationer.\n\n## AI-øjeblikket (2023–nu)\n\nStore sprogmodeller ændrede alt. Indholdsgenerering, oversættelse, SEO-optimering, billedanalyse — opgaver der tog timer tager nu sekunder. Men de CMS-platforme der er bygget til den præ-AI verden er ikke klar.\n\nDe behandler AI som et plugin. En sidebar-widget. En \"generér\"-knap på et tekstfelt. Dette er WordPress plugin-mønsteret der gentager sig.\n\nCMS'et i AI-æraen har brug for AI i sin kerne. Skemadrevet indhold som AI kan ræsonnere over. Native operationer til generering, oversættelse og optimering. Feltbeskyttelse (AI Lock) for at holde mennesker i kontrol. Og maskinlæsbart output (llms.txt, MCP) så andre AI-agenter kan opdage og søge i dit indhold.\n\nDet er det vi bygger.",
+    "date": "2025-07-10",
+    "tags": ["historie", "cms", "arkitektur"],
+    "author": "Christian Broberg",
+    "readTime": "12 min"
+  }
+}

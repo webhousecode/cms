@@ -1,0 +1,62 @@
+{
+  "slug": "home",
+  "status": "published",
+  "locale": "en",
+  "translationGroup": "4af72842-eb10-48e2-b774-08f6914242d2",
+  "id": "page-home-en",
+  "_fieldMeta": {},
+  "data": {
+    "title": "Home",
+    "description": "The CMS where you describe what you want and get a production-ready site.",
+    "sections": [
+      {
+        "_block": "hero",
+        "badge": "Open Source — MIT License (Agentic Tester)",
+        "headline": "AI-native content engine",
+        "subline": "Schema-driven content. AI-powered authoring. Static-first output.\nDescribe what you want and get a production-ready site.",
+        "terminalCode": "$ npx @webhouse/cms init\n✓ Created cms.config.ts\n✓ Schema definitions ready\n✓ AI agents configured\n✓ Admin dashboard at localhost:3000/admin\n→ Ready in 847ms",
+        "ctaPrimary": "Get Started Free",
+        "ctaSecondary": "View on GitHub"
+      },
+      {
+        "_block": "stats",
+        "items": "[{\"value\":\"<3min\",\"label\":\"AI scaffold time\"},{\"value\":\"<50\",\"label\":\"Lines of config\"},{\"value\":\"95+\",\"label\":\"Lighthouse score\"},{\"value\":\"0\",\"label\":\"Runtime JS\"}]"
+      },
+      {
+        "_block": "features",
+        "heading": "Everything the AI shouldn't reinvent.",
+        "subheading": "A complete CMS engine — so your AI agents can focus on content, not infrastructure.",
+        "items": "[{\"title\":\"AI Agent Orchestration\",\"description\":\"Provider-agnostic agents for content generation, rewriting, translation, SEO optimization, and design tokens. Swap between Anthropic, OpenAI, or local models.\",\"icon\":\"⚡\",\"tag\":\"@webhouse/cms-ai\"},{\"title\":\"Schema-Driven Content\",\"description\":\"JSON Schema powered collections and blocks. Every piece of content is typed, validated, and introspectable — so AI agents can reason about structure.\",\"icon\":\"◆\",\"tag\":\"cms.config.ts\"},{\"title\":\"Static-First Output\",\"description\":\"The production artifact is always pre-rendered HTML + CSS + minimal JS. No runtime framework unless you opt in. Incremental builds.\",\"icon\":\"▲\",\"tag\":\"npx cms build\"},{\"title\":\"Framework Adapters\",\"description\":\"First-class integration with Next.js (App Router, Server Components, ISR), Astro, and generic Node.js/Express.\",\"icon\":\"⬡\",\"tag\":\"Adapters\"},{\"title\":\"Media Pipeline\",\"description\":\"Sharp-based image processing with AI generation, responsive variants, WebP/AVIF conversion, blur hashes, and auto alt-text.\",\"icon\":\"◉\",\"tag\":\"@webhouse/cms-media\"},{\"title\":\"AI Lock System\",\"description\":\"Field-level protection enforced at the engine level. AI agents can never unlock fields — only humans can.\",\"icon\":\"🔒\",\"tag\":\"AI-LOCK\"}]"
+      },
+      {
+        "_block": "code-showcase",
+        "heading": "Define your schema in TypeScript",
+        "description": "Type-safe collections, fields, and blocks. Your entire content model in one file.",
+        "code": "import { defineConfig, defineCollection } from '@webhouse/cms';\n\nexport default defineConfig({\n  defaultLocale: 'en',\n  locales: ['en', 'da'],\n  collections: [\n    defineCollection({\n      name: 'posts',\n      label: 'Blog Posts',\n      urlPrefix: '/blog',\n      translatable: true,\n      fields: [\n        { name: 'title', type: 'text', required: true },\n        { name: 'content', type: 'richtext' },\n        { name: 'date', type: 'date' },\n        { name: 'tags', type: 'tags' },\n      ],\n    }),\n  ],\n});",
+        "language": "typescript"
+      },
+      {
+        "_block": "mcp-section",
+        "heading": "Every site speaks to every AI.",
+        "subheading": "Two MCP servers — one public for discovery, one authenticated for production. Your content is AI-accessible from day one.",
+        "cards": "[{\"title\":\"cms-mcp-client\",\"badge\":\"PUBLIC · READ-ONLY\",\"description\":\"Bundled with every site. Any AI agent can discover and query published content — no API keys, no documentation needed.\",\"tools\":[\"get_site_summary\",\"list_collection\",\"search_content\",\"get_page\",\"get_schema\",\"export_all\"]},{\"title\":\"cms-mcp-server\",\"badge\":\"AUTHENTICATED · READ+WRITE\",\"description\":\"Full content production from Claude iOS, Claude.ai, Cursor, or Claude Code. Create, edit, publish, and deploy.\",\"tools\":[\"create_document\",\"update_document\",\"publish\",\"generate_with_ai\",\"rewrite_field\",\"trigger_build\"]}]"
+      },
+      {
+        "_block": "cta",
+        "heading": "Describe what you want. Get a production-ready site.",
+        "subheading": "Then keep iterating with AI or by hand.",
+        "buttonText": "Create Free Account",
+        "buttonUrl": "https://webhouse.app/signup",
+        "secondaryText": "View on GitHub",
+        "secondaryUrl": "https://github.com/webhousecode/cms"
+      }
+    ],
+    "_lastEditedBy": {
+      "userId": "fb4eda6a-bc5c-4dec-8cb6-c77c9fb74cd9",
+      "name": "Christian Broberg",
+      "email": "cb@webhouse.dk",
+      "at": "2026-04-06T21:30:05.313Z"
+    }
+  },
+  "updatedAt": "2026-04-06T21:30:05.314Z"
+}

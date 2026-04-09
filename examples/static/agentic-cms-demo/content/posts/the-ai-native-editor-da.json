@@ -1,0 +1,17 @@
+{
+  "slug": "the-ai-native-editor-da",
+  "status": "published",
+  "locale": "da",
+  "translationGroup": "a3a353b2-1256-4aa5-a4b7-e0af07a7f7da",
+  "id": "post-editor-da",
+  "_fieldMeta": {},
+  "data": {
+    "title": "CMS Krønike #12: Den AI-native editor",
+    "excerpt": "748 commits på 11 dage. Vi leverede en samtalebaseret CMS-grænseflade, opgraderede richtext-editoren til TipTap v3, byggede en mediebehandlings-pipeline og opdagede en gemme-bug der havde gemt sig siden dag ét.",
+    "content": "## Sprinten\n\n748 commits. 11 dage. Det lyder absurd, og det var det. Men når du bygger med Claude Code, skifter flaskehalsen fra at skrive til at tænke. Hvert commit er en beslutning. Hver beslutning er testet. Hastigheden er reel.\n\n## Hvad vi leverede\n\n### Samtalebaseret CMS-grænseflade\n\nChat-grænsefladen har nu 40+ værktøjer. Du kan oprette dokumenter, omskrive felter, optimere SEO, administrere medier, køre agenter, tjekke links og deploye — alt fra én samtale. Det er ikke en chatbot der sidder ved siden af CMS'et. Det *er* CMS'et.\n\n### TipTap v3 richtext-editor\n\nVi opgraderede fra TipTap v2 til v3. Migrationen var ikke-triviel — `immediatelyRender: false` er nu påkrævet for SSR, og `shouldRerenderOnTransaction: false` forhindrer flushSync-kald per tastetryk. Men resultatet er en markant hurtigere, mere stabil editor.\n\n### Medie-pipeline\n\nSharp-baseret billedbehandling: WebP-konvertering, responsive varianter (400w, 800w, 1200w, 1600w), EXIF metadata-udtræk og AI-billedanalyse der genererer billedtekster og alt-tekst i alle konfigurerede sprog.\n\n### Gemme-buggen\n\nEn bug der havde gemt sig siden den første uge af udviklingen: TipTap `onUpdate`-handleren fyrede ved mount og markerede dokumenter som ændrede før brugeren havde ændret noget. Det tog tre dage at finde fordi symptomerne var subtile — fantom-gemninger, forældet indhold og lejlighedsvis datatab.\n\nFixet var to linjers guard: spring det første `onUpdate`-kald over efter mount. Simpelt. Oplagt i bagklogskabens lys. Men det krævede forståelse af hele gemme-pipelinen fra editor-tilstand til API til storage-adapter.",
+    "date": "2026-03-20",
+    "tags": ["krønike", "editor", "tiptap", "ai"],
+    "author": "Christian Broberg",
+    "readTime": "6 min"
+  }
+}

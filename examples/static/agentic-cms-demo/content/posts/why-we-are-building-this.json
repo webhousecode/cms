@@ -1,0 +1,17 @@
+{
+  "slug": "why-we-are-building-this",
+  "status": "published",
+  "locale": "en",
+  "translationGroup": "0229aebf-3bba-4d40-83d1-1beeb7037862",
+  "id": "post-why-en",
+  "_fieldMeta": {},
+  "data": {
+    "title": "Why We're Building This",
+    "excerpt": "A CMS is not a product decision. It's a philosophical one. We've shipped over 1,000 websites. Here's why we're building a new opinionated CMS anyway.",
+    "content": "## The problem\n\nEvery CMS we've ever used has eventually failed us. Not because they were bad — WordPress, Contentful, Sanity, Strapi — they all solve real problems. But they all share the same fundamental flaw: **they assume the developer is secondary.**\n\nContent editors get drag-and-drop. Developers get documentation pages and plugin ecosystems. And when those plugins break (and they always break), the developer is left debugging someone else's abstraction.\n\n## What we wanted\n\nA CMS where:\n\n1. **The schema is code.** Not a web UI. Not a database migration. A TypeScript file that defines exactly what content looks like.\n2. **AI is native, not bolted on.** Not a plugin. Not an API call you wire up yourself. AI agents that understand your content model and can generate, rewrite, translate, and optimize.\n3. **The output is static.** HTML + CSS. No runtime. No server. No attack surface. The CMS disappears after build.\n4. **Content is in git.** JSON files. Diffable. Reviewable. Branchable. Your content history is your git history.\n\n## What we built\n\n@webhouse/cms. A TypeScript-native, AI-first, static-output CMS engine. It's opinionated. It's minimal. It does exactly what we need and nothing more.\n\nWe've been building CMS platforms since 1995. This one is different because we finally stopped trying to be everything to everyone.",
+    "date": "2026-01-15",
+    "tags": ["philosophy", "architecture", "cms"],
+    "author": "Christian Broberg",
+    "readTime": "5 min"
+  }
+}
