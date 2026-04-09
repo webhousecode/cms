@@ -219,5 +219,16 @@ exports[`builtin-blocks > block definitions match snapshot 1`] = `
     "label": "HTML Document",
     "name": "htmldoc",
   },
+  {
+    "fields": [
+      {
+        "label": "Form name (e.g. "contact")",
+        "name": "formName",
+        "type": "text",
+      },
+    ],
+    "label": "Form Embed",
+    "name": "form",
+  },
 ]
 `;
