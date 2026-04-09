@@ -1,4 +1,4 @@
-import { cms } from '$lib/webhouse';
+import { cms } from '$lib/server/webhouse';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = () => {

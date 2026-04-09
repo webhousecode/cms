@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { getString } from '$lib/webhouse';
+  import { getString } from '$lib/helpers';
   let { data } = $props();
 </script>
 

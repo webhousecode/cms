@@ -1,4 +1,4 @@
-import { cms, getString } from '$lib/webhouse';
+import { cms, getString } from '$lib/server/webhouse';
 import type { LayoutServerLoad } from './$types';
 
 export const load: LayoutServerLoad = () => {

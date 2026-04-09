@@ -1,5 +1,5 @@
 import { error } from '@sveltejs/kit';
-import { cms, getString, InvalidName } from '$lib/webhouse';
+import { cms, getString, InvalidName } from '$lib/server/webhouse';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = ({ params }) => {
