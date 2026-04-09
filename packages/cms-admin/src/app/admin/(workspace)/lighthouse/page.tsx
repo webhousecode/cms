@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { Gauge, RefreshCw, Monitor, Smartphone, AlertTriangle, ChevronDown, ChevronRight, TrendingDown, TrendingUp, Minus } from "lucide-react";
 import { ActionBar, ActionBarBreadcrumb } from "@/components/action-bar";
-import { HelpCard } from "@/components/ui/help-card";
 import { TabTitle } from "@/lib/tabs-context";
 import { scoreColor, SCORE_COLOR_MAP, type LighthouseResult, type LighthouseScore, type ScoreHistoryEntry } from "@/lib/lighthouse/types";
 
@@ -49,6 +48,7 @@ export default function LighthousePage() {
     <>
       <TabTitle value="Lighthouse" />
       <ActionBar
+        helpArticleId="lighthouse-intro"
         actions={
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             {/* Strategy toggle */}
@@ -159,7 +159,6 @@ export default function LighthousePage() {
                   <CwvMetric label="FCP" value={`${(latest.coreWebVitals.fcp / 1000).toFixed(1)}s`} threshold={[1800, 3000]} raw={latest.coreWebVitals.fcp} />
                   <CwvMetric label="TTFB" value={`${Math.round(latest.coreWebVitals.ttfb)}ms`} threshold={[800, 1800]} raw={latest.coreWebVitals.ttfb} />
                 </div>
-                <HelpCard articleId="lighthouse-cwv" variant="compact" />
               </div>
             )}
 

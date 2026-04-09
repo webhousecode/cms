@@ -350,11 +350,14 @@ export const HELP_ARTICLES: HelpArticle[] = [
   },
   // ── Lighthouse ────────────────────────────────
   {
-    id: "lighthouse-cwv",
-    title: "Understanding Core Web Vitals",
-    body: "Core Web Vitals are Google's key metrics for real-world user experience. They directly impact search rankings.\n\n**LCP (Largest Contentful Paint)** — How fast the main content loads. Target: under 2.5 seconds. Affected by server speed, image size, and render-blocking resources.\n\n**CLS (Cumulative Layout Shift)** — How much the page layout jumps around during load. Target: under 0.1. Caused by images without dimensions, late-loading fonts, or injected content.\n\n**FCP (First Contentful Paint)** — When the first text or image appears. Target: under 1.8 seconds. Improved by reducing server response time and eliminating render-blocking CSS/JS.\n\n**TTFB (Time to First Byte)** — Server response time. Target: under 800ms. Affected by hosting, CDN, and backend processing.\n\n**INP (Interaction to Next Paint)** — How fast the page responds to clicks/taps. Target: under 200ms. Affected by heavy JavaScript and long tasks on the main thread.",
+    id: "lighthouse-intro",
+    title: "Lighthouse performance audit",
+    body: "Lighthouse scans your deployed site via Google PageSpeed Insights and scores it on four categories: **Performance**, **Accessibility**, **SEO**, and **Best Practices**.\n\nScores use Google's thresholds: 🟢 90-100 (good), 🟡 50-89 (needs work), 🔴 0-49 (poor).\n\n**Core Web Vitals** are the metrics Google uses for search ranking:\n- **LCP** — main content load time (target: < 2.5s)\n- **CLS** — layout shift during load (target: < 0.1)\n- **FCP** — first text/image visible (target: < 1.8s)\n- **TTFB** — server response time (target: < 800ms)\n\n**Opportunities** show specific improvements with estimated savings. **Diagnostics** flag issues like large DOM, unused JavaScript, or missing cache headers.\n\nScans require a publicly accessible URL — set your production URL as the site's Preview URL in Settings.",
+    actions: [
+      { label: "Configure Preview URL", href: "/admin/settings?tab=general" },
+    ],
+    learnMorePath: "/docs/lighthouse",
     context: ["lighthouse"],
-    learnMorePath: "/docs/seo",
     priority: 1,
   },
 ];
