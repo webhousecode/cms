@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { useSwipeBack } from "@/lib/use-swipe-back";
 import { Screen } from "@/components/Screen";
 import { ScreenHeader, BackButton, HeaderAvatar } from "@/components/ScreenHeader";
 import { Button } from "@/components/Button";
@@ -33,7 +32,6 @@ const TOPIC_META: { key: TopicKey; label: string; description: string }[] = [
 export function Settings() {
   const [, setLocation] = useLocation();
   const goBack = useCallback(() => setLocation("/home"), [setLocation]);
-  useSwipeBack(goBack);
   const queryClient = useQueryClient();
 
   const meQuery = useQuery({ queryKey: ["me"], queryFn: getMe });
@@ -128,7 +126,7 @@ export function Settings() {
   return (
     <Screen>
       <ScreenHeader
-        left={<BackButton onClick={() => setLocation("/home")} />}
+        left={<BackButton onClick={goBack} />}
         title="Settings"
         subtitle="Account"
       />

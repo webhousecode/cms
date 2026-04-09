@@ -3,7 +3,6 @@ import { useQuery } from "@tanstack/react-query";
 import { useLocation, useRoute } from "wouter";
 import { Screen } from "@/components/Screen";
 import { ScreenHeader, BackButton } from "@/components/ScreenHeader";
-import { useSwipeBack } from "@/lib/use-swipe-back";
 import { SitePreview } from "@/components/SitePreview";
 import { Button } from "@/components/Button";
 import { Spinner } from "@/components/Spinner";
@@ -28,7 +27,6 @@ export function Site() {
   );
   const [, setLocation] = useLocation();
   const goBack = useCallback(() => setLocation("/home"), [setLocation]);
-  useSwipeBack(goBack);
 
   const meQuery = useQuery({
     queryKey: ["me"],
@@ -78,61 +76,61 @@ export function Site() {
   const draftsToday = 0;
 
   return (
-    <Screen>
-      <ScreenHeader
-        left={<BackButton onClick={() => setLocation("/home")} />}
-        subtitle={site.orgName}
-        title={site.siteName}
-        right={
-          <span className="rounded-full bg-white/10 px-2.5 py-1 text-xs text-white/70">
-            {site.role}
-          </span>
-        }
-      />
+      <Screen>
+        <ScreenHeader
+          left={<BackButton onClick={goBack} />}
+          subtitle={site.orgName}
+          title={site.siteName}
+          right={
+            <span className="rounded-full bg-white/10 px-2.5 py-1 text-xs text-white/70">
+              {site.role}
+            </span>
+          }
+        />
 
-      <div className="flex flex-1 flex-col gap-3 px-6 pb-24">
-        {/* Live preview card — always shown, placeholder if no URL */}
-        {site.previewUrl ? (
-          <SitePreview
-            previewUrl={site.previewUrl}
-            title={site.siteName}
-            onExpand={() =>
-              setLocation(`/site/${params.orgId}/${params.siteId}/preview`)
-            }
-          />
-        ) : (
-          <div className="flex items-center justify-center rounded-xl bg-brand-darkSoft border border-white/10 text-center p-6" style={{ aspectRatio: "16/9" }}>
-            <div>
-              <p className="text-sm text-white/40">No preview configured</p>
-              <p className="text-xs text-white/30 mt-1">Set a Preview URL in Site Settings</p>
+        <div className="flex flex-1 flex-col gap-3 px-6 pb-24 overflow-auto">
+          {/* Live preview card — always shown, placeholder if no URL */}
+          {site.previewUrl ? (
+            <SitePreview
+              previewUrl={site.previewUrl}
+              title={site.siteName}
+              onExpand={() =>
+                setLocation(`/site/${params.orgId}/${params.siteId}/preview`)
+              }
+            />
+          ) : (
+            <div className="flex items-center justify-center rounded-xl bg-brand-darkSoft border border-white/10 text-center p-6" style={{ aspectRatio: "16/9" }}>
+              <div>
+                <p className="text-sm text-white/40">No preview configured</p>
+                <p className="text-xs text-white/30 mt-1">Set a Preview URL in Site Settings</p>
+              </div>
             </div>
+          )}
+
+          <div className="rounded-xl bg-brand-darkSoft p-4">
+            <p className="text-xs uppercase text-white/40">Curation queue</p>
+            <p className="mt-1 text-3xl font-semibold text-brand-gold">
+              {curationPending}
+            </p>
+            <p className="mt-1 text-xs text-white/50">
+              Coming in Phase 3 — swipe to approve
+            </p>
           </div>
-        )}
 
-        <div className="rounded-xl bg-brand-darkSoft p-4">
-          <p className="text-xs uppercase text-white/40">Curation queue</p>
-          <p className="mt-1 text-3xl font-semibold text-brand-gold">
-            {curationPending}
-          </p>
-          <p className="mt-1 text-xs text-white/50">
-            Coming in Phase 3 — swipe to approve
-          </p>
-        </div>
+          <div className="rounded-xl bg-brand-darkSoft p-4">
+            <p className="text-xs uppercase text-white/40">Drafts today</p>
+            <p className="mt-1 text-3xl font-semibold text-white">{draftsToday}</p>
+            <p className="mt-1 text-xs text-white/50">
+              Coming in Phase 4 — daily dashboard
+            </p>
+          </div>
 
-        <div className="rounded-xl bg-brand-darkSoft p-4">
-          <p className="text-xs uppercase text-white/40">Drafts today</p>
-          <p className="mt-1 text-3xl font-semibold text-white">{draftsToday}</p>
-          <p className="mt-1 text-xs text-white/50">
-            Coming in Phase 4 — daily dashboard
-          </p>
+          <div className="rounded-xl border border-dashed border-white/10 p-4">
+            <p className="text-xs text-white/40">
+              Phase 1 placeholder — site-scoped editing arrives in Phase 3-7
+            </p>
+          </div>
         </div>
-
-        <div className="rounded-xl border border-dashed border-white/10 p-4">
-          <p className="text-xs text-white/40">
-            Phase 1 placeholder — site-scoped editing arrives in Phase 3-7
-          </p>
-        </div>
-      </div>
-    </Screen>
+      </Screen>
   );
 }
