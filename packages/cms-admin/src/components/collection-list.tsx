@@ -262,6 +262,19 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
     if (typeof window === "undefined") return "";
     return sessionStorage.getItem("cms-preview-base") ?? "";
   });
+  // Flush stale cache when site config is updated (user changed previewSiteUrl in settings)
+  useEffect(() => {
+    function onConfigUpdate() {
+      sessionStorage.removeItem("cms-preview-base");
+      setPreviewBase("");
+    }
+    window.addEventListener("cms:site-config-updated", onConfigUpdate);
+    window.addEventListener("cms-site-change", onConfigUpdate);
+    return () => {
+      window.removeEventListener("cms:site-config-updated", onConfigUpdate);
+      window.removeEventListener("cms-site-change", onConfigUpdate);
+    };
+  }, []);
   useEffect(() => {
     async function resolve() {
       // 1. FIRST: check previewSiteUrl from site config (Next.js dev server, custom URL)
