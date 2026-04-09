@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Gauge, RefreshCw, Monitor, Smartphone, ChevronDown, ChevronRight, TrendingDown, TrendingUp } from "lucide-react";
+import { Gauge, RefreshCw, Monitor, Smartphone, ChevronDown, ChevronRight, TrendingDown, TrendingUp, Sparkles, Check, Wrench } from "lucide-react";
 import { ActionBar, ActionBarBreadcrumb } from "@/components/action-bar";
 import { TabTitle } from "@/lib/tabs-context";
 import { scoreColor, SCORE_COLOR_MAP, type LighthouseResult, type ScoreHistoryEntry } from "@/lib/lighthouse/types";
@@ -11,6 +11,8 @@ export default function LighthousePage() {
   const [desktop, setDesktop] = useState<LighthouseResult | null>(null);
   const [history, setHistory] = useState<ScoreHistoryEntry[]>([]);
   const [scanning, setScanning] = useState(false);
+  const [optimizing, setOptimizing] = useState(false);
+  const [optimizeResult, setOptimizeResult] = useState<{ fixes: Array<{ id: string; title: string; status: "fixed" | "manual"; description: string }>; fixedCount: number; manualCount: number } | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -54,7 +56,27 @@ export default function LighthousePage() {
     }
   }, []);
 
+  const handleOptimize = useCallback(async () => {
+    setOptimizing(true);
+    setOptimizeResult(null);
+    try {
+      const res = await fetch("/api/admin/lighthouse/optimize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mobile, desktop }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      setOptimizeResult(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Optimize failed");
+    } finally {
+      setOptimizing(false);
+    }
+  }, [mobile, desktop]);
+
   const hasResults = !!(mobile?.scores || desktop?.scores);
+  const hasIssues = (mobile?.opportunities?.length ?? 0) + (mobile?.diagnostics?.length ?? 0) + (desktop?.opportunities?.length ?? 0) + (desktop?.diagnostics?.length ?? 0) > 0;
 
   return (
     <>
@@ -62,6 +84,25 @@ export default function LighthousePage() {
       <ActionBar
         helpArticleId="lighthouse-intro"
         actions={
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          {hasIssues && (
+            <button
+              onClick={handleOptimize}
+              disabled={optimizing}
+              style={{
+                height: 28, display: "inline-flex", alignItems: "center", gap: "0.35rem",
+                padding: "0 0.75rem", borderRadius: 6,
+                border: "1px solid var(--border)", background: "transparent",
+                color: "var(--foreground)",
+                fontSize: "0.75rem", fontWeight: 500,
+                cursor: optimizing ? "wait" : "pointer",
+                opacity: optimizing ? 0.7 : 1,
+              }}
+            >
+              <Sparkles style={{ width: 13, height: 13, color: "#F7BB2E" }} />
+              {optimizing ? "Optimizing..." : "Optimize"}
+            </button>
+          )}
           <button
             onClick={handleScan}
             disabled={scanning}
@@ -77,6 +118,7 @@ export default function LighthousePage() {
             <RefreshCw style={{ width: 13, height: 13, animation: scanning ? "spin 1s linear infinite" : "none" }} />
             {scanning ? "Scanning both..." : "Run Scan"}
           </button>
+          </div>
         }
       >
         <ActionBarBreadcrumb items={["Lighthouse"]} />
@@ -101,6 +143,43 @@ export default function LighthousePage() {
               <StrategyCard label="Mobile" icon={<Smartphone style={{ width: 15, height: 15 }} />} result={mobile} history={history} strategy="mobile" />
               <StrategyCard label="Desktop" icon={<Monitor style={{ width: 15, height: 15 }} />} result={desktop} history={history} strategy="desktop" />
             </div>
+
+            {/* ── Optimize Results ── */}
+            {optimizeResult && (
+              <div style={{ marginBottom: "2rem", padding: "1rem", borderRadius: 10, border: "1px solid var(--border)", background: "var(--card)" }}>
+                <div style={{ fontSize: "0.82rem", fontWeight: 600, marginBottom: "0.75rem", display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                  <Sparkles style={{ width: 15, height: 15, color: "#F7BB2E" }} />
+                  Optimization Report — {optimizeResult.fixedCount} fixed, {optimizeResult.manualCount} need manual attention
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+                  {optimizeResult.fixes.map((fix) => (
+                    <div key={fix.id} style={{
+                      padding: "0.5rem 0.75rem", borderRadius: 6, fontSize: "0.78rem",
+                      border: `1px solid ${fix.status === "fixed" ? "rgba(34,197,94,0.2)" : "rgba(250,180,50,0.2)"}`,
+                      background: fix.status === "fixed" ? "rgba(34,197,94,0.04)" : "rgba(250,180,50,0.04)",
+                    }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", marginBottom: "0.15rem" }}>
+                        {fix.status === "fixed"
+                          ? <Check style={{ width: 13, height: 13, color: "#22c55e" }} />
+                          : <Wrench style={{ width: 13, height: 13, color: "#ffa400" }} />}
+                        <span style={{ fontWeight: 600 }}>{fix.title}</span>
+                        <span style={{
+                          fontSize: "0.6rem", padding: "1px 5px", borderRadius: 3,
+                          background: fix.status === "fixed" ? "rgba(34,197,94,0.15)" : "rgba(250,180,50,0.15)",
+                          color: fix.status === "fixed" ? "#22c55e" : "#ffa400",
+                          fontWeight: 600,
+                        }}>
+                          {fix.status === "fixed" ? "AUTO-FIXED" : "MANUAL"}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", lineHeight: 1.5 }}>
+                        {fix.description}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* ── Combined Opportunities + Diagnostics ── */}
             <OpportunitiesSection mobile={mobile} desktop={desktop} />
