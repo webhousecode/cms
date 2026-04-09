@@ -86,11 +86,7 @@ private func makePostContext(_ req: Request, post: WebhouseDocument, translation
 }
 
 // Re-encode helper to convert [String: Any] to ViewContext via Encodable wrapper
-extension Request {
-    var view: ViewRenderer {
-        application.views
-    }
-}
+// Removed the `view` extension — Request already has `req.view` via Vapor.
 
 private struct DictContext: Encodable {
     let dict: [String: Any]
