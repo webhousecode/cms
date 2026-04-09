@@ -26,6 +26,7 @@ const PUBLIC_PREFIXES = [
   "/api/publish-scheduled", // Called by cron/instrumentation, no user session
   "/api/beam/receive/",     // Live Beam receive — token-authenticated (not session)
   "/api/mobile/",           // F07 webhouse.app mobile — Bearer JWT in header, no cookies (handlers enforce auth themselves)
+  "/api/forms/",            // F30 Form Engine — public submission + schema + widget endpoints
   "/_next/",
   "/favicon",
 ];
