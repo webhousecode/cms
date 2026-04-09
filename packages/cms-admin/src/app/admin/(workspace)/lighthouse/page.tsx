@@ -129,8 +129,8 @@ export default function LighthousePage() {
                     }}>
                       {value}
                     </div>
-                    <div style={{ fontSize: "0.78rem", fontWeight: 600, textTransform: "capitalize" }}>
-                      {key === "bestPractices" ? "Best Practices" : key}
+                    <div style={{ fontSize: "0.78rem", fontWeight: 600 }}>
+                      {key === "bestPractices" ? "Best Practices" : key === "seo" ? "SEO" : key.charAt(0).toUpperCase() + key.slice(1)}
                     </div>
                     {diff !== 0 && (
                       <div style={{ fontSize: "0.68rem", color: diff > 0 ? "#0cce6b" : "#ff4e42", marginTop: "0.15rem", display: "flex", alignItems: "center", justifyContent: "center", gap: "0.15rem" }}>
