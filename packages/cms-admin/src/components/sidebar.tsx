@@ -26,6 +26,7 @@ import {
   Eye,
   Heart,
   Gauge,
+  ClipboardList,
 } from "lucide-react";
 import {
   Sidebar,
@@ -106,6 +107,7 @@ export function AppSidebar({ collections }: Props) {
     return () => window.removeEventListener("cms:favorites-changed", onFavChange);
   }, []);
   const [readyCount, setReadyCount] = useState(0);
+  const [formUnreadTotal, setFormUnreadTotal] = useState(0);
   const [budgetSpent, setBudgetSpent] = useState(0);
   const [budgetTotal, setBudgetTotal] = useState(50);
   const [siteRole, setSiteRole] = useState<string | null>(null);
@@ -132,6 +134,14 @@ export function AppSidebar({ collections }: Props) {
       .then((r) => r.json())
       .then((data: { user?: { siteRole?: string } }) => {
         setSiteRole(data.user?.siteRole ?? null);
+      })
+      .catch(() => {});
+
+    fetch("/api/admin/forms")
+      .then((r) => r.json())
+      .then((data: { forms?: Array<{ unread: number }> }) => {
+        const total = (data.forms ?? []).reduce((sum, f) => sum + f.unread, 0);
+        setFormUnreadTotal(total);
       })
       .catch(() => {});
 
@@ -331,6 +341,21 @@ export function AppSidebar({ collections }: Props) {
               >
                 <Image className="!w-5 !h-5" />
                 <span>Media</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                isActive={pathname.startsWith("/admin/forms")}
+                tooltip="Forms"
+                render={<Link href="/admin/forms" data-testid="nav-link-forms" />}
+              >
+                <ClipboardList className="!w-5 !h-5" />
+                <span className="flex-1">Forms</span>
+                {formUnreadTotal > 0 && (
+                  <span className="ml-auto flex items-center justify-center min-w-[1.25rem] h-5 px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold">
+                    {formUnreadTotal}
+                  </span>
+                )}
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
