@@ -13,6 +13,17 @@ import { generateRobotsTxt } from './robots.js';
 import { generateRssFeed } from './rss.js';
 import { generateFormPage } from './forms.js';
 
+function getAllHtmlFiles(dir: string): string[] {
+  const results: string[] = [];
+  if (!existsSync(dir)) return results;
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const full = join(dir, entry.name);
+    if (entry.isDirectory()) results.push(...getAllHtmlFiles(full));
+    else if (entry.name.endsWith('.html')) results.push(full);
+  }
+  return results;
+}
+
 export interface BuildOptions {
   outDir?: string;
   /** Include draft documents in the build output. Defaults to false. Also reads INCLUDE_DRAFTS env var. */
@@ -89,15 +100,30 @@ export async function runBuild(
   const rssFeed = generateRssFeed(context, baseUrl, config.build?.rss);
   writeFileSync(join(outDir, 'feed.xml'), rssFeed, 'utf-8');
 
-  // Phase 10: Forms — generate standalone <form> HTML pages
+  // Phase 10: Forms — generate standalone pages + expand {{form:name}} shortcodes
+  const adminUrl = process.env.CMS_ADMIN_URL || `http://localhost:${process.env.PORT || 3010}`;
   if (config.forms && config.forms.length > 0) {
-    const adminUrl = process.env.CMS_ADMIN_URL || `http://localhost:${process.env.PORT || 3010}`;
     const siteTitle = config.build?.siteName ?? undefined;
     for (const form of config.forms) {
       const formDir = join(outDir, 'forms', form.name);
       if (!existsSync(formDir)) mkdirSync(formDir, { recursive: true });
       const html = generateFormPage(form, adminUrl, siteTitle);
       writeFileSync(join(formDir, 'index.html'), html, 'utf-8');
+    }
+  }
+
+  // Phase 10b: Expand {{form:name}} shortcodes in all HTML files
+  if (config.forms && config.forms.length > 0) {
+    const formMap = new Map(config.forms.map(f => [f.name, f]));
+    const htmlFiles = getAllHtmlFiles(outDir);
+    for (const file of htmlFiles) {
+      let content = readFileSync(file, 'utf-8');
+      const replaced = content.replace(/\{\{form:(\w[\w-]*)\}\}/g, (_match, name) => {
+        const form = formMap.get(name);
+        if (!form) return `<!-- form "${name}" not found -->`;
+        return generateFormHtml(form, adminUrl);
+      });
+      if (replaced !== content) writeFileSync(file, replaced, 'utf-8');
     }
   }
 

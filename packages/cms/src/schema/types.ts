@@ -19,7 +19,8 @@ export type FieldType =
   | 'file'
   | 'interactive'
   | 'column-slots'
-  | 'map';
+  | 'map'
+  | 'form';
 
 export interface FieldConfig {
   name: string;

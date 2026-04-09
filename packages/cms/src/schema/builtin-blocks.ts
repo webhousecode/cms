@@ -108,4 +108,11 @@ export const builtinBlocks: BlockConfig[] = [
       { name: 'content', type: 'htmldoc' as const, label: 'HTML' },
     ],
   },
+  {
+    name: 'form',
+    label: 'Form Embed',
+    fields: [
+      { name: 'formName', type: 'text', label: 'Form name (e.g. "contact")' },
+    ],
+  },
 ];
