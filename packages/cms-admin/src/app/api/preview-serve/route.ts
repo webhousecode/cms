@@ -99,8 +99,11 @@ export async function POST(req: NextRequest) {
         path.resolve(process.cwd(), "node_modules", "@webhouse", "cms", "static", "404.html"),
       ];
       try {
-        // Also try require.resolve (works in Node, may fail in Turbopack)
-        const resolved = require.resolve("@webhouse/cms/package.json");
+        // Also try require.resolve (works in Node, may fail in Turbopack).
+        // Indirect the module name through a variable so Turbopack's static
+        // analysis doesn't flag it as a missing module at build time.
+        const pkg = "@webhouse/cms" + "/package.json";
+        const resolved = require.resolve(pkg);
         candidates.unshift(path.join(path.dirname(resolved), "static", "404.html"));
       } catch { /* skip */ }
 

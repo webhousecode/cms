@@ -72,18 +72,18 @@ async function getMessaging(): Promise<unknown | null> {
   }
 
   try {
-    // @ts-expect-error — firebase-admin is an optional dep, may not be installed
+    // @ts-ignore — firebase-admin is an optional dep, may not be installed
     const admin = await import("firebase-admin");
     const adm = (admin as { default?: typeof admin }).default ?? admin;
     // Initialize once per process
     if (!adm.apps?.length) {
-      // @ts-expect-error — typed by admin module if installed
+      // @ts-ignore — typed by admin module if installed
       adm.initializeApp({
-        // @ts-expect-error — typed by admin module if installed
+        // @ts-ignore — typed by admin module if installed
         credential: adm.credential.cert({ projectId, clientEmail, privateKey }),
       });
     }
-    // @ts-expect-error — typed by admin module if installed
+    // @ts-ignore — typed by admin module if installed
     firebaseMessaging = adm.messaging();
     return firebaseMessaging;
   } catch (err) {
@@ -110,10 +110,10 @@ async function getWebPush(): Promise<unknown | null> {
   }
 
   try {
-    // @ts-expect-error — web-push is an optional dep
+    // @ts-ignore — web-push is an optional dep
     const wp = await import("web-push");
     const lib = (wp as { default?: typeof wp }).default ?? wp;
-    // @ts-expect-error — typed if installed
+    // @ts-ignore — typed if installed
     lib.setVapidDetails(subject, publicKey, privateKey);
     webpushModule = lib;
     webpushReady = true;
@@ -168,7 +168,7 @@ export async function sendPushNotification(
 
     if (isMobile && messaging) {
       try {
-        // @ts-expect-error — typed by firebase-admin if installed
+        // @ts-ignore — typed by firebase-admin if installed
         await messaging.send({
           token: t.token,
           notification: { title: payload.title, body: payload.body },
@@ -210,7 +210,7 @@ export async function sendPushNotification(
           tag: `webhouse-${Date.now()}`,
           badge: payload.badge,
         });
-        // @ts-expect-error — typed by web-push if installed
+        // @ts-ignore — typed by web-push if installed
         await wp.sendNotification(sub, body);
         sent++;
       } catch (err: unknown) {

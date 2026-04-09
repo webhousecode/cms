@@ -4,7 +4,7 @@
 
 ---
 
-## Done (40 milestones)
+## Done (49 milestones)
 
 | # | Milestone | Completed |
 |---|-----------|-----------|
@@ -53,6 +53,8 @@
 | 45 | **Favorites** — Heart toggle on ActionBar, collapsible sidebar Favorites section, Command Palette group at top, per-user persistence (F94) | 2026-04-06 |
 | 46 | **Homepage Designation** — Explicit homepage dropdown in Site Settings, Homepage badge in editor, slug convention fallback (F81) | 2026-04-06 |
 | 47 | **Webhooks** — Enhanced dispatcher (HMAC, retry, delivery log), 7 categories, content/agent/deploy lifecycle wiring, site+org inheritance (F35) | 2026-04-06 |
+| 48 | **Import Engine** — CSV/JSON/Markdown bulk import, 4-step wizard, auto-suggest field mappings, 7 transforms (F02) | 2026-04-09 |
+| 49 | **WordPress Migration** — Phase 1: probe, REST API content extraction, media download, auto cms.config.ts, site creation (F03) | 2026-04-09 |
 
 ---
 
@@ -115,8 +117,8 @@ _Makes us stand out. Customers expect these from a modern CMS._
 | ~~9c~~ | ~~**F84 Move Site to Org**~~ | ~~Done~~ | ~~Shipped. API route, registry move, settings UI, 15 unit tests.~~ |
 | 10 | ~~**F48 i18n**~~ | ~~Medium~~ | ~~Moved to Tier 1~~ |
 | 11 | **F38 Environment Manager** | Medium | Dev/Staging/Prod. Professional workflow for agencies. |
-| 12 | **F02 Import Engine** | Medium | Migrating FROM another CMS is the #1 adoption barrier. |
-| 13 | **F03 WordPress Migration** | Medium | WP is the biggest migration source. Built on F02. |
+| ~~12~~ | ~~**F02 Import Engine**~~ | ~~Done~~ | ~~Shipped 2026-04-09. CSV/JSON/Markdown bulk import. 4-step wizard (upload → map fields → preview → execute). Auto-suggest mappings via aliases. 7 transforms. 22 tests.~~ |
+| ~~13~~ | ~~**F03 WordPress Migration**~~ | ~~Done~~ | ~~Shipped 2026-04-09. Phase 1: probe (REST API/theme/builder/CPTs), content extraction with pagination, media download + URL rewrite, auto cms.config.ts generation, site creation + registry. 13 tests. Phase 2 (design extraction) deferred.~~ |
 | ~~14~~ | ~~**F13 Notification Channels**~~ | ~~Done~~ | ~~Shipped 2026-03-29. Shared webhook dispatcher (Discord/Slack/generic), all 4 automation categories wired (publish, backup, link check, agent), notification log.~~ |
 | ~~15~~ | ~~**F15 Agent Scheduler**~~ | ~~Done~~ | ~~Shipped. scheduler.ts, daily/weekly scheduling, calendar UI, run history, scheduler-notify, scheduler-bus.~~ |
 | ~~16~~ | ~~**F35 Webhooks**~~ | ~~Done~~ | ~~Shipped 2026-04-06. Enhanced dispatcher (HMAC-SHA256, exponential retry, delivery log), 7 webhook categories (content, publish, backup, linkCheck, agent, deploy, media), site+org inheritance, wired into content lifecycle, agent runner, deploy service. Test/deliveries API. 8 unit tests.~~ |
