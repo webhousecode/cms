@@ -25,6 +25,7 @@ import {
   HardDrive,
   Eye,
   Heart,
+  Gauge,
 } from "lucide-react";
 import {
   Sidebar,
@@ -413,6 +414,17 @@ export function AppSidebar({ collections }: Props) {
                   >
                     <Eye className="!w-5 !h-5" />
                     <span>Visibility</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    isActive={pathname === "/admin/lighthouse"}
+                    tooltip="Lighthouse"
+                    render={<Link href="/admin/lighthouse" data-testid="nav-link-lighthouse" />}
+                    style={{ paddingLeft: "1.75rem" }}
+                  >
+                    <Gauge className="!w-5 !h-5" />
+                    <span>Lighthouse</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
               </SidebarMenu>
