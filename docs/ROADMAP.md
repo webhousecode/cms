@@ -4,7 +4,7 @@
 
 ---
 
-## Done (49 milestones)
+## Done (50 milestones)
 
 | # | Milestone | Completed |
 |---|-----------|-----------|
@@ -55,6 +55,7 @@
 | 47 | **Webhooks** — Enhanced dispatcher (HMAC, retry, delivery log), 7 categories, content/agent/deploy lifecycle wiring, site+org inheritance (F35) | 2026-04-06 |
 | 48 | **Import Engine** — CSV/JSON/Markdown bulk import, 4-step wizard, auto-suggest field mappings, 7 transforms (F02) | 2026-04-09 |
 | 49 | **WordPress Migration** — Phase 1: probe, REST API content extraction, media download, auto cms.config.ts, site creation (F03) | 2026-04-09 |
+| 50 | **Lighthouse Audit** — PSI API, mobile+desktop parallel scan, score circles + CWV + opportunities + diagnostics, Optimize auto-fix, history, docs (F98) | 2026-04-09 |
 
 ---
 
@@ -133,7 +134,7 @@ _Makes us stand out. Customers expect these from a modern CMS._
 | ~~18e~~ | ~~**F92 Desktop PWA**~~ | ~~Done~~ | ~~Shipped 2026-04-06. manifest.json, PWA icons (192/512 + maskable + apple-touch), minimal pass-through service worker, file_handlers for .beam files, layout metadata. Chrome/Edge "Install app" ready.~~ |
 | ~~18f~~ | ~~**F94 Favorites**~~ | ~~Done~~ | ~~Shipped 2026-04-06. FavoriteToggle heart on ActionBar, sidebar Favorites section (collapsible, hidden when empty), Command Palette "Favorites" group at top, UserState persistence with localStorage fast-path + server sync.~~ |
 | ~~18g~~ | ~~**F95 Cloud Backup Providers**~~ | ~~Done~~ | ~~Shipped 2026-03-31. pCloud (WebDAV), S3-compatible (R2, B2, Scaleway, Hetzner, AWS). Storage quota management, auto-prune, cloud badges. Verified on Cloudflare R2.~~ |
-| 18h | **F98 Lighthouse Audit** | Medium | PSI API + local Lighthouse. Dashboard scores + trend, scheduled scans, per-page audits, alerts on drop. |
+| ~~18h~~ | ~~**F98 Lighthouse Audit**~~ | ~~Done~~ | ~~Shipped 2026-04-09. Google PSI API, mobile+desktop parallel scan, 4 score circles + CWV + opportunities + diagnostics, Optimize button (auto-fix meta titles/descriptions/hreflang + manual recs), score history, HelpCard, default API key, docs EN/DA.~~ |
 | ~~18i~~ | ~~**F114 Chat Memory**~~ | ~~Done~~ | ~~Shipped 2026-03-29. Mini-RAG: Haiku extraction, MiniSearch BM25+, top-15 injection, 3 AI tools, memory UI, ZIP export/import, master memory. 27 tests.~~ |
 | 18j | **F115 CMS Help Chat** | Small | Product knowledge base — build-time index of all docs/features/CLAUDE.md. Auto-injects relevant help into system prompt. `search_help` tool. Same MiniSearch engine as F114. |
 | ~~18k~~ | ~~**F117 MCP ↔ Chat Parity**~~ | ~~Done~~ | ~~Shipped 2026-03-30. 43 tools (28 new). AdminServices bridge. Scope RBAC + audit. Chat untouched.~~ |
