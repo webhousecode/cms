@@ -1,7 +1,21 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { createHash } from "crypto";
 import { getUserById } from "@/lib/auth";
 import { getMobileSession } from "@/lib/mobile-auth";
 import { loadRegistry } from "@/lib/site-registry";
+
+/**
+ * Resolve an avatar URL for the user.
+ * Mirrors /api/auth/me: prefer GitHub avatar for linked users, otherwise
+ * Gravatar with `d=404` so the client can fall back to initials cleanly.
+ */
+function resolveAvatarUrl(user: { email: string; githubUsername?: string }): string {
+  if (user.githubUsername) {
+    return `https://github.com/${user.githubUsername}.png?size=128`;
+  }
+  const hash = createHash("md5").update(user.email.toLowerCase().trim()).digest("hex");
+  return `https://www.gravatar.com/avatar/${hash}?s=128&d=404`;
+}
 
 /**
  * GET /api/mobile/me
@@ -36,6 +50,7 @@ export async function GET(req: NextRequest) {
     siteId: string;
     siteName: string;
     role: "owner" | "admin" | "editor" | "viewer";
+    previewUrl?: string;
   }> = [];
 
   if (registry) {
@@ -48,6 +63,7 @@ export async function GET(req: NextRequest) {
           siteName: site.name,
           // Phase 1: derive role from the user record's global role
           role: (user.role as "admin" | "editor" | "viewer") ?? "viewer",
+          previewUrl: site.previewUrl,
         });
       }
     }
@@ -58,9 +74,11 @@ export async function GET(req: NextRequest) {
       id: user.id,
       email: user.email,
       name: user.name,
-      avatarUrl: null,
+      avatarUrl: resolveAvatarUrl(user),
     },
     sites,
+    lastActiveOrg: user.lastActiveOrg,
+    lastActiveSite: user.lastActiveSite,
     counters: {
       curationPending: 0,
       draftsToday: 0,

@@ -14,6 +14,8 @@ const KEY_SERVER_URL = "wha.serverUrl";
 const KEY_JWT = "wha.jwt";
 const KEY_BIOMETRIC_ENABLED = "wha.biometricEnabled";
 const KEY_LAST_USER_EMAIL = "wha.lastUserEmail";
+const KEY_ACTIVE_ORG = "wha.activeOrg";
+const KEY_ACTIVE_SITE = "wha.activeSite";
 
 export async function getServerUrl(): Promise<string | null> {
   const { value } = await Preferences.get({ key: KEY_SERVER_URL });
@@ -60,6 +62,24 @@ export async function getLastUserEmail(): Promise<string | null> {
 
 export async function setLastUserEmail(email: string): Promise<void> {
   await Preferences.set({ key: KEY_LAST_USER_EMAIL, value: email });
+}
+
+export async function getActiveOrgId(): Promise<string | null> {
+  const { value } = await Preferences.get({ key: KEY_ACTIVE_ORG });
+  return value;
+}
+
+export async function setActiveOrgId(orgId: string): Promise<void> {
+  await Preferences.set({ key: KEY_ACTIVE_ORG, value: orgId });
+}
+
+export async function getActiveSiteId(): Promise<string | null> {
+  const { value } = await Preferences.get({ key: KEY_ACTIVE_SITE });
+  return value;
+}
+
+export async function setActiveSiteId(siteId: string): Promise<void> {
+  await Preferences.set({ key: KEY_ACTIVE_SITE, value: siteId });
 }
 
 /** Wipe all stored credentials — used by Logout. */

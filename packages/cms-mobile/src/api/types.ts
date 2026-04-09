@@ -33,11 +33,17 @@ export interface MobileSite {
   siteId: string;
   siteName: string;
   role: "owner" | "admin" | "editor" | "viewer";
+  /** Public preview URL — used by the mobile Site screen's iframe thumb */
+  previewUrl?: string;
 }
 
 export interface MobileMeResponse {
   user: MobileUser;
   sites: MobileSite[];
+  /** User's last active org id from the desktop session, if any. */
+  lastActiveOrg?: string;
+  /** User's last active site id from the desktop session, if any. */
+  lastActiveSite?: string;
   counters: {
     curationPending: number;
     draftsToday: number;

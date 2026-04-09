@@ -52,4 +52,12 @@
   .safe-bottom {
     padding-bottom: env(safe-area-inset-bottom);
   }
+  /* Hide horizontal scrollbar on the org selector */
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
 }

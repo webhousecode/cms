@@ -4,6 +4,10 @@ import { Onboarding } from "./screens/Onboarding";
 import { Login } from "./screens/Login";
 import { Biometric } from "./screens/Biometric";
 import { Home } from "./screens/Home";
+import { Site } from "./screens/Site";
+import { SitePreviewFullscreen } from "./screens/SitePreviewFullscreen";
+import { Chat } from "./screens/Chat";
+import { ChatFab } from "./components/ChatFab";
 import { getJwt, getServerUrl } from "./lib/prefs";
 import { onDeepLink } from "./lib/bridge";
 import { consumePairingDeepLink } from "./lib/pairing-flow";
@@ -65,17 +69,39 @@ export function App() {
     );
   }
 
+  // Show the AI Chat FAB only on screens where the user is authenticated.
+  // The wouter location hook is read at the top so we can branch the FAB.
   return (
-    <Switch>
-      <Route path="/onboarding" component={Onboarding} />
-      <Route path="/login" component={Login} />
-      <Route path="/biometric" component={Biometric} />
-      <Route path="/home" component={Home} />
-      <Route>
-        <div className="flex h-screen items-center justify-center bg-brand-dark text-white">
-          <p>404 — unknown route</p>
-        </div>
-      </Route>
-    </Switch>
+    <>
+      <Switch>
+        <Route path="/onboarding" component={Onboarding} />
+        <Route path="/login" component={Login} />
+        <Route path="/biometric" component={Biometric} />
+        <Route path="/home" component={Home} />
+        <Route path="/site/:orgId/:siteId/preview" component={SitePreviewFullscreen} />
+        <Route path="/site/:orgId/:siteId" component={Site} />
+        <Route path="/chat" component={Chat} />
+        <Route>
+          <div className="flex h-screen items-center justify-center bg-brand-dark text-white">
+            <p>404 — unknown route</p>
+          </div>
+        </Route>
+      </Switch>
+      <FabGate />
+    </>
   );
+}
+
+/**
+ * The Chat FAB should appear on Home, Site, and other authenticated screens —
+ * but NOT on Onboarding/Login/Biometric/Chat itself/SitePreviewFullscreen.
+ * Centralizing the rule here so screens stay clean.
+ */
+function FabGate() {
+  const [location] = useLocation();
+  const showFab =
+    location.startsWith("/home") ||
+    (location.startsWith("/site/") && !location.endsWith("/preview"));
+  if (!showFab) return null;
+  return <ChatFab />;
 }

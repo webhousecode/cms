@@ -29,7 +29,10 @@ if [ ! -f "$PLIST" ]; then
   exit 1
 fi
 
-if grep -q "NSAllowsArbitraryLoads" "$PLIST"; then
+# Match the exact dangerous key only — NOT the more scoped
+# NSAllowsArbitraryLoadsInWebContent which is fine for Capacitor's
+# local file:// → http://localhost asset bridge.
+if grep -q "<key>NSAllowsArbitraryLoads</key>" "$PLIST"; then
   echo ""
   echo "🛑 BLOCKED: webhouse.app Info.plist still contains NSAllowsArbitraryLoads."
   echo ""

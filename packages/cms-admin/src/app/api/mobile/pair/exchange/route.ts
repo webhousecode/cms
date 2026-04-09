@@ -1,6 +1,13 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { createHash } from "crypto";
 import { createToken, getUserById } from "@/lib/auth";
 import { claimQrSession } from "@/lib/qr-sessions";
+
+function resolveAvatarUrl(user: { email: string; githubUsername?: string }): string {
+  if (user.githubUsername) return `https://github.com/${user.githubUsername}.png?size=128`;
+  const hash = createHash("md5").update(user.email.toLowerCase().trim()).digest("hex");
+  return `https://www.gravatar.com/avatar/${hash}?s=128&d=404`;
+}
 
 /**
  * POST /api/mobile/pair/exchange
@@ -46,7 +53,7 @@ export async function POST(req: NextRequest) {
       id: user.id,
       email: user.email,
       name: user.name,
-      avatarUrl: null,
+      avatarUrl: resolveAvatarUrl(user),
     },
   });
 }
