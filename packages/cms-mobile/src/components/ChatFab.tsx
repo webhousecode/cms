@@ -21,9 +21,13 @@ export function ChatFab() {
       type="button"
       onClick={() => setLocation("/chat")}
       aria-label="Open AI chat"
-      className="fixed right-5 z-20 flex h-14 w-14 items-center justify-center rounded-full bg-brand-gold text-brand-dark shadow-xl shadow-black/50 border border-brand-goldDark active:scale-95 hover:bg-brand-goldDark transition"
+      className="z-20 flex h-14 w-14 items-center justify-center rounded-full bg-brand-gold text-brand-dark shadow-xl shadow-black/50 border border-brand-goldDark active:scale-95 hover:bg-brand-goldDark transition"
       style={{
+        position: "fixed",
+        right: 20,
         bottom: "calc(env(safe-area-inset-bottom) + 20px)",
+        WebkitTransform: "translateZ(0)",
+        transform: "translateZ(0)",
       }}
     >
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
