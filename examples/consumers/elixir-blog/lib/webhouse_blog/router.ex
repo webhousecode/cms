@@ -7,6 +7,15 @@ defmodule WebhouseBlog.Router do
   plug(:match)
   plug(:dispatch)
 
+  # ── Health check (HEAD) — CMS admin sends HEAD to verify site is up ──
+  head "/" do
+    send_resp(conn, 200, "")
+  end
+
+  head "/da/" do
+    send_resp(conn, 200, "")
+  end
+
   # ── Routes ──────────────────────────────────────────────
 
   get "/" do
