@@ -128,16 +128,13 @@ User quote: "Vi skal have 100% redigering af ALT fra mobilen pånær 1000 settin
 ### 2. Multi-Server Support in Settings
 Like WordPress app — add/switch CMS servers. Currently only one server URL stored. Settings should show list of servers, active indicator, add new via QR or URL.
 
-### 3. Access Token Scope Selector
-UI in Account Preferences to select scopes when creating tokens. Backend supports it, UI defaults to `admin`.
-
-### 4. Push from More Event Types
+### 3. Push from More Event Types
 Wire `broadcastPush()` into: curation_pending, link_check_failed, scheduled_publish events. Currently only deploy + agent events send push.
 
-### 5. QR Pairing Reliability
+### 4. QR Pairing Reliability
 Pairing via QR works intermittently — sometimes fails first try. Needs investigation. The deep link handler or token exchange has a timing issue.
 
-### 6. Phase 8 BLOCKER: Remove NSAllowsArbitraryLoads
+### 5. Phase 8 BLOCKER: Remove NSAllowsArbitraryLoads
 `preflight-release.sh` gate blocks App Store submission if Info.plist contains NSAllowsArbitraryLoads. Must be removed and all HTTP connections secured before release.
 
 ## iPhone deployment recipe

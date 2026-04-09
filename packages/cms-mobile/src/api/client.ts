@@ -1,5 +1,12 @@
 import { getJwt, getServerUrl } from "@/lib/prefs";
-import type { MobileMeResponse, MobilePingResponse, MobilePairExchangeResponse } from "./types";
+import type {
+  MobileMeResponse,
+  MobilePingResponse,
+  MobilePairExchangeResponse,
+  CollectionsResponse,
+  DocumentsResponse,
+  DocumentEntry,
+} from "./types";
 
 /**
  * Typed JSON API client for the user's CMS server.
@@ -23,7 +30,7 @@ export class ApiError extends Error {
 }
 
 interface RequestOptions {
-  method?: "GET" | "POST" | "PUT" | "DELETE";
+  method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   body?: unknown;
   /** Override the server URL — used during onboarding before it's stored */
   serverUrl?: string;
@@ -125,4 +132,63 @@ export function loginWithPassword(
 /** Authenticated: returns the current user, their orgs/sites, and counters. */
 export function getMe(): Promise<MobileMeResponse> {
   return request<MobileMeResponse>("/api/mobile/me");
+}
+
+// ─── Content Editing ─────────────────────────────────
+
+/** List all collections for a site with field schemas and doc counts. */
+export function getCollections(orgId: string, siteId: string): Promise<CollectionsResponse> {
+  return request<CollectionsResponse>(
+    `/api/mobile/content?orgId=${encodeURIComponent(orgId)}&siteId=${encodeURIComponent(siteId)}`,
+  );
+}
+
+/** List all documents in a collection (excludes trashed). */
+export function getDocuments(orgId: string, siteId: string, collection: string): Promise<DocumentsResponse> {
+  return request<DocumentsResponse>(
+    `/api/mobile/content/docs?orgId=${encodeURIComponent(orgId)}&siteId=${encodeURIComponent(siteId)}&collection=${encodeURIComponent(collection)}`,
+  );
+}
+
+/** Load a single document by slug. */
+export function getDocument(orgId: string, siteId: string, collection: string, slug: string): Promise<DocumentEntry> {
+  return request<DocumentEntry>(
+    `/api/mobile/content/docs?orgId=${encodeURIComponent(orgId)}&siteId=${encodeURIComponent(siteId)}&collection=${encodeURIComponent(collection)}&slug=${encodeURIComponent(slug)}`,
+  );
+}
+
+/** Create a new document (draft). */
+export function createDocument(
+  orgId: string,
+  siteId: string,
+  collection: string,
+  slug: string,
+  data?: Record<string, unknown>,
+): Promise<DocumentEntry> {
+  return request<DocumentEntry>(
+    `/api/mobile/content/docs?orgId=${encodeURIComponent(orgId)}&siteId=${encodeURIComponent(siteId)}&collection=${encodeURIComponent(collection)}`,
+    { method: "POST", body: { slug, data } },
+  );
+}
+
+/** Update a document's data and/or status. */
+export function saveDocument(
+  orgId: string,
+  siteId: string,
+  collection: string,
+  slug: string,
+  updates: { data?: Record<string, unknown>; status?: string },
+): Promise<DocumentEntry> {
+  return request<DocumentEntry>(
+    `/api/mobile/content/docs?orgId=${encodeURIComponent(orgId)}&siteId=${encodeURIComponent(siteId)}&collection=${encodeURIComponent(collection)}&slug=${encodeURIComponent(slug)}`,
+    { method: "PATCH", body: updates },
+  );
+}
+
+/** Trash a document (soft delete). */
+export function deleteDocument(orgId: string, siteId: string, collection: string, slug: string): Promise<{ ok: boolean }> {
+  return request<{ ok: boolean }>(
+    `/api/mobile/content/docs?orgId=${encodeURIComponent(orgId)}&siteId=${encodeURIComponent(siteId)}&collection=${encodeURIComponent(collection)}&slug=${encodeURIComponent(slug)}`,
+    { method: "DELETE" },
+  );
 }

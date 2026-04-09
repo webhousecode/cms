@@ -141,6 +141,8 @@
 | F123 | [Providers / Integrations Tab](#f123-providers-tab) | Planned | [docs/features/F123-providers-tab.md](features/F123-providers-tab.md) |
 | F124 | [Snippet Embeds](#f124-snippet-embeds) | Planned | [docs/features/F124-snippet-embeds.md](features/F124-snippet-embeds.md) |
 | F127 | [Collection Purpose Metadata](#f127-collection-purpose-metadata) | **Done** | [docs/features/F127-collection-purpose-metadata.md](features/F127-collection-purpose-metadata.md) |
+| F128 | [Access Token Scope Selector](#f128-access-token-scopes) | Planned | [docs/features/F128-access-token-scopes.md](features/F128-access-token-scopes.md) |
+| F129 | [Edit What You See](#f129-edit-what-you-see) | **Tier 1** | [docs/features/F129-edit-what-you-see.md](features/F129-edit-what-you-see.md) |
 
 ---
 

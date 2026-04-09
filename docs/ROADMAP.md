@@ -124,6 +124,7 @@ _Makes us stand out. Customers expect these from a modern CMS._
 | ~~15~~ | ~~**F15 Agent Scheduler**~~ | ~~Done~~ | ~~Shipped. scheduler.ts, daily/weekly scheduling, calendar UI, run history, scheduler-notify, scheduler-bus.~~ |
 | ~~16~~ | ~~**F35 Webhooks**~~ | ~~Done~~ | ~~Shipped 2026-04-06. Enhanced dispatcher (HMAC-SHA256, exponential retry, delivery log), 7 webhook categories (content, publish, backup, linkCheck, agent, deploy, media), site+org inheritance, wired into content lifecycle, agent runner, deploy service. Test/deliveries API. 8 unit tests.~~ |
 | 16b | **F61 Activity Log** | Medium | Audit trail — who did what when. Compliance, debugging, team accountability. |
+| 16c | **F129 Edit What You See** | Medium | Contextual Edit FAB on preview — tap to edit the page you're looking at. Transforms preview into primary content nav. |
 | 17 | **F40 Drag and Drop Tabs** | Small | Polish. Expected UX in a tabbed interface. |
 | 17b | **F52 Custom Column Presets** | Medium | Visual preset editor in Settings. Drag-resize columns. |
 | 17c | **F53 Drag & Drop Blocks** | Medium | Drag blocks between columns with @dnd-kit. |

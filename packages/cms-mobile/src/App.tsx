@@ -6,6 +6,9 @@ import { Biometric } from "./screens/Biometric";
 import { Home } from "./screens/Home";
 import { Site } from "./screens/Site";
 import { SitePreviewFullscreen } from "./screens/SitePreviewFullscreen";
+import { CollectionList } from "./screens/CollectionList";
+import { DocumentList } from "./screens/DocumentList";
+import { DocumentEditor } from "./screens/DocumentEditor";
 import { Chat } from "./screens/Chat";
 import { Settings } from "./screens/Settings";
 import { ChatFab } from "./components/ChatFab";
@@ -68,6 +71,10 @@ export function App() {
     location === "/settings" ||
     location === "/chat";
 
+  // Content editing screens get their own back-navigation (no swipe to Home)
+  const isContentScreen =
+    location.includes("/collections") || location.includes("/edit/");
+
   // Non-authenticated screens
   if (
     location === "/onboarding" ||
@@ -95,7 +102,14 @@ export function App() {
     <>
       <RefreshIndicator />
 
-      {isChildOfHome ? (
+      {isContentScreen ? (
+        // Content editing screens — no swipe-to-Home (they have their own back nav)
+        <Switch>
+          <Route path="/site/:orgId/:siteId/collections/:collection" component={DocumentList} />
+          <Route path="/site/:orgId/:siteId/collections" component={CollectionList} />
+          <Route path="/site/:orgId/:siteId/edit/:collection/:slug" component={DocumentEditor} />
+        </Switch>
+      ) : isChildOfHome ? (
         // Child screen on top of Home with swipe-back
         <NavigationStack backScreen={<Home />} onBack={goHome}>
           <Switch>
@@ -116,10 +130,13 @@ export function App() {
 
 function FabGate() {
   const [location] = useLocation();
+  // Hide FAB on content editing screens (collections, doc list, editor) and preview
+  const isContentEditing = location.includes("/collections") || location.includes("/edit/");
   const showFab =
-    location.startsWith("/home") ||
-    location.startsWith("/settings") ||
-    (location.startsWith("/site/") && !location.endsWith("/preview"));
+    !isContentEditing &&
+    (location.startsWith("/home") ||
+      location.startsWith("/settings") ||
+      (location.startsWith("/site/") && !location.endsWith("/preview")));
   if (!showFab) return null;
   return <ChatFab />;
 }

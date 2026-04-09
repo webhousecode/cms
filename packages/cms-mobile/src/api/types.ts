@@ -52,3 +52,43 @@ export interface MobileMeResponse {
   };
   serverVersion: string;
 }
+
+// ─── Content Editing Types ───────────────────────────
+
+export interface FieldConfig {
+  name: string;
+  type: string;
+  label: string;
+  required: boolean;
+  options?: { label: string; value: string }[];
+  placeholder?: string;
+  collection?: string; // for relation fields
+}
+
+export interface CollectionInfo {
+  name: string;
+  label: string;
+  kind: "page" | "snippet" | "data" | "form" | "global";
+  description?: string;
+  urlPrefix?: string;
+  fields: FieldConfig[];
+  docCount: number;
+}
+
+export interface CollectionsResponse {
+  collections: CollectionInfo[];
+}
+
+export interface DocumentEntry {
+  id: string;
+  slug: string;
+  status: "draft" | "published" | "archived";
+  locale?: string;
+  data: Record<string, unknown>;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface DocumentsResponse {
+  documents: DocumentEntry[];
+}
