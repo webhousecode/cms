@@ -13,6 +13,8 @@ class WebhouseBlog < Sinatra::Base
     set :views, File.expand_path('views', __dir__)
     set :public_folder, File.expand_path('public', __dir__)
     set :bind, '0.0.0.0'
+    # Allow CMS admin to iframe this site for preview
+    set :protection, except: :frame_options
 
     cms = Webhouse::Reader.new(settings.content_dir)
     set :cms, cms
