@@ -65,9 +65,9 @@ export function SitePreviewFullscreen() {
         <div className="flex flex-1 items-center justify-center">
           <Spinner />
         </div>
-      ) : site?.previewUrl ? (
+      ) : (site?.liveUrl || site?.previewUrl) ? (
         <iframe
-          src={site.previewUrl}
+          src={site.liveUrl || site.previewUrl!}
           title={`${site.siteName} live preview`}
           sandbox="allow-same-origin allow-scripts allow-forms allow-popups"
           className="min-h-0 w-full flex-1 border-0"
