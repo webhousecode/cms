@@ -76,7 +76,6 @@ async function getMessaging(): Promise<unknown | null> {
     const admin = await import("firebase-admin");
     const adm = (admin as { default?: typeof admin }).default ?? admin;
     // Initialize once per process
-    // @ts-expect-error — typed by admin module if installed
     if (!adm.apps?.length) {
       // @ts-expect-error — typed by admin module if installed
       adm.initializeApp({
