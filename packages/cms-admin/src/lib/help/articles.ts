@@ -348,6 +348,15 @@ export const HELP_ARTICLES: HelpArticle[] = [
     context: ["settings-schema"],
     priority: 1,
   },
+  // ── Lighthouse ────────────────────────────────
+  {
+    id: "lighthouse-cwv",
+    title: "Understanding Core Web Vitals",
+    body: "Core Web Vitals are Google's key metrics for real-world user experience. They directly impact search rankings.\n\n**LCP (Largest Contentful Paint)** — How fast the main content loads. Target: under 2.5 seconds. Affected by server speed, image size, and render-blocking resources.\n\n**CLS (Cumulative Layout Shift)** — How much the page layout jumps around during load. Target: under 0.1. Caused by images without dimensions, late-loading fonts, or injected content.\n\n**FCP (First Contentful Paint)** — When the first text or image appears. Target: under 1.8 seconds. Improved by reducing server response time and eliminating render-blocking CSS/JS.\n\n**TTFB (Time to First Byte)** — Server response time. Target: under 800ms. Affected by hosting, CDN, and backend processing.\n\n**INP (Interaction to Next Paint)** — How fast the page responds to clicks/taps. Target: under 200ms. Affected by heavy JavaScript and long tasks on the main thread.",
+    context: ["lighthouse"],
+    learnMorePath: "/docs/seo",
+    priority: 1,
+  },
 ];
 
 /** Look up a help article by ID */
