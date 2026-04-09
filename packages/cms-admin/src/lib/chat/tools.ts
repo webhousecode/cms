@@ -1941,6 +1941,152 @@ DESIGN GUIDELINES:
       },
     },
 
+    // ── Lighthouse (F98) ─────────────────────────────────────────
+    {
+      definition: {
+        name: "get_lighthouse_scores",
+        description:
+          "Get the latest Lighthouse/PageSpeed Insights scores for the site. Shows performance, accessibility, SEO, and best practices scores plus Core Web Vitals and top improvement opportunities.",
+        input_schema: { type: "object", properties: {} },
+      },
+      handler: async () => {
+        const { getLatest } = await import("@/lib/lighthouse/history");
+        const result = await getLatest();
+        if (!result) return "No Lighthouse audit results yet. Run a scan from Tools → Lighthouse in Admin mode, or ask me to run one.";
+
+        const s = result.scores;
+        const lines = [
+          `**Lighthouse scores** (${result.strategy}, ${new Date(result.timestamp).toLocaleDateString("da-DK", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })})`,
+          `URL: ${result.url}`,
+          ``,
+          `| Category | Score |`,
+          `|----------|-------|`,
+          `| Performance | ${s.performance}/100 |`,
+          `| Accessibility | ${s.accessibility}/100 |`,
+          `| SEO | ${s.seo}/100 |`,
+          `| Best Practices | ${s.bestPractices}/100 |`,
+        ];
+
+        if (result.coreWebVitals) {
+          const cwv = result.coreWebVitals;
+          lines.push(``, `**Core Web Vitals:**`);
+          if (cwv.lcp != null) lines.push(`- LCP: ${cwv.lcp}ms`);
+          if (cwv.cls != null) lines.push(`- CLS: ${cwv.cls}`);
+          if (cwv.inp != null) lines.push(`- INP: ${cwv.inp}ms`);
+          if (cwv.fcp != null) lines.push(`- FCP: ${cwv.fcp}ms`);
+          if (cwv.ttfb != null) lines.push(`- TTFB: ${cwv.ttfb}ms`);
+        }
+
+        if (result.opportunities?.length) {
+          const top = result.opportunities
+            .filter((o: any) => o.score !== null && o.score < 1)
+            .sort((a: any, b: any) => (b.savingsMs ?? 0) - (a.savingsMs ?? 0))
+            .slice(0, 5);
+          if (top.length > 0) {
+            lines.push(``, `**Top opportunities:**`);
+            for (const o of top) {
+              const savings = o.savingsMs ? ` (save ~${Math.round(o.savingsMs)}ms)` : "";
+              lines.push(`- ${o.title}${savings}`);
+            }
+          }
+        }
+
+        return lines.join("\n");
+      },
+    },
+
+    // ── Forms (F30) ───────────────────────────────────────────────
+    {
+      definition: {
+        name: "list_form_submissions",
+        description:
+          "List recent form submissions (contact form, signup, etc.). Shows sender, subject, date, and read status. Optionally filter by form name and status.",
+        input_schema: {
+          type: "object",
+          properties: {
+            form: { type: "string", description: "Form name to filter by (e.g. 'contact'). If omitted, lists submissions across all forms." },
+            status: { type: "string", description: "Filter by status: 'new', 'read', 'archived'. Default: all." },
+            limit: { type: "number", description: "Max results. Default: 20." },
+          },
+        },
+      },
+      handler: async () => {
+        try {
+          const { FormService } = await import("@/lib/forms/service");
+          const { getActiveSitePaths } = await import("@/lib/site-paths");
+          const { dataDir } = await getActiveSitePaths();
+          const config = await getAdminConfig();
+          const forms = (config as any).forms as Array<{ name: string; label: string }> | undefined;
+          if (!forms?.length) return "No forms configured on this site. Add a `forms` array to cms.config.ts.";
+
+          const svc = new FormService(dataDir);
+          const allItems: Array<{ form: string; id: string; data: Record<string, unknown>; status: string; createdAt: string }> = [];
+
+          for (const f of forms) {
+            const items = await svc.list(f.name);
+            for (const item of items) {
+              allItems.push({ form: f.name, id: item.id, data: item.data, status: item.status, createdAt: item.createdAt });
+            }
+          }
+
+          allItems.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+          const limited = allItems.slice(0, 20);
+
+          if (limited.length === 0) return "No form submissions yet.";
+
+          return limited.map((s) => {
+            const name = String(s.data.name ?? s.data.email ?? "Anonymous");
+            const subject = s.data.subject ? ` — ${s.data.subject}` : "";
+            const date = new Date(s.createdAt).toLocaleDateString("da-DK", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+            const badge = s.status === "new" ? " **NEW**" : s.status === "archived" ? " (archived)" : "";
+            return `- [${s.form}] **${name}**${subject} — ${date}${badge}`;
+          }).join("\n");
+        } catch {
+          return "Forms module not available on this site.";
+        }
+      },
+    },
+    {
+      definition: {
+        name: "form_stats",
+        description:
+          "Get form submission statistics: total count, unread count, and breakdown by form and status.",
+        input_schema: { type: "object", properties: {} },
+      },
+      handler: async () => {
+        try {
+          const { FormService } = await import("@/lib/forms/service");
+          const { getActiveSitePaths } = await import("@/lib/site-paths");
+          const { dataDir: formDataDir } = await getActiveSitePaths();
+          const config = await getAdminConfig();
+          const forms = (config as any).forms as Array<{ name: string; label: string }> | undefined;
+          if (!forms?.length) return "No forms configured on this site.";
+
+          const svc = new FormService(formDataDir);
+          const unread = await svc.unreadCounts();
+
+          const lines = [`**Form submissions overview:**`, ``];
+          let totalAll = 0;
+          let totalUnread = 0;
+
+          for (const f of forms) {
+            const items = await svc.list(f.name);
+            const newCount = items.filter((i: any) => i.status === "new").length;
+            const readCount = items.filter((i: any) => i.status === "read").length;
+            const archivedCount = items.filter((i: any) => i.status === "archived").length;
+            totalAll += items.length;
+            totalUnread += newCount;
+            lines.push(`**${f.label}** (\`${f.name}\`): ${items.length} total (${newCount} new, ${readCount} read, ${archivedCount} archived)`);
+          }
+
+          lines.push(``, `**Total:** ${totalAll} submissions, ${totalUnread} unread`);
+          return lines.join("\n");
+        } catch {
+          return "Forms module not available on this site.";
+        }
+      },
+    },
+
     // ── Memory tools (F114) ────────────────────────────────────
     {
       definition: {
@@ -2382,56 +2528,6 @@ DESIGN GUIDELINES:
         return recent.map((e) => {
           if (e.type === "rejection") return `- **rejection** _(${new Date(e.createdAt).toLocaleDateString()})_: ${e.notes ?? "(no notes)"}`;
           return `- **${e.type}** on \`${e.field ?? "?"}\`: \"${(e.original ?? "").slice(0, 60)}\" → \"${(e.corrected ?? "").slice(0, 60)}\"`;
-        }).join("\n");
-      },
-    },
-
-    // ── F30: list_forms ──────────────────────────────────────
-    {
-      tool: {
-        type: "function" as const,
-        function: {
-          name: "list_forms",
-          description: "List all configured forms and their unread submission counts.",
-          parameters: { type: "object", properties: {}, required: [] },
-        },
-      },
-      handler: async () => {
-        const res = await fetch(`${adminBase}/api/admin/forms`, { headers: authHeaders() });
-        const data = (await res.json()) as { forms?: Array<{ name: string; label: string; unread: number; fieldCount: number }> };
-        const forms = data.forms ?? [];
-        if (forms.length === 0) return "No forms configured on this site. Add a `forms` array to cms.config.ts.";
-        return forms.map((f) => `- **${f.label}** (\`${f.name}\`) — ${f.fieldCount} fields, ${f.unread} unread`).join("\n");
-      },
-    },
-
-    // ── F30: list_form_submissions ───────────────────────────
-    {
-      tool: {
-        type: "function" as const,
-        function: {
-          name: "list_form_submissions",
-          description: "List recent submissions for a form. Returns newest first.",
-          parameters: {
-            type: "object",
-            properties: {
-              form: { type: "string", description: "Form name (e.g. 'contact')" },
-              status: { type: "string", enum: ["new", "read", "archived"], description: "Filter by status (optional)" },
-            },
-            required: ["form"],
-          },
-        },
-      },
-      handler: async (_args: Record<string, unknown>) => {
-        const form = String(_args.form ?? "");
-        const qs = _args.status ? `?status=${_args.status}` : "";
-        const res = await fetch(`${adminBase}/api/admin/forms/${encodeURIComponent(form)}/submissions${qs}`, { headers: authHeaders() });
-        const data = (await res.json()) as { submissions?: Array<{ id: string; status: string; createdAt: string; data: Record<string, unknown> }> };
-        const subs = data.submissions ?? [];
-        if (subs.length === 0) return `No submissions for form "${form}".`;
-        return subs.slice(0, 20).map((s) => {
-          const preview = Object.values(s.data).filter((v) => typeof v === "string" && v.length > 0).slice(0, 2).join(" · ");
-          return `- [${s.status}] ${new Date(s.createdAt).toLocaleDateString()} — ${preview || "(empty)"}`;
         }).join("\n");
       },
     },
