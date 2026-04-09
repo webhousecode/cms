@@ -5,11 +5,16 @@ import path from "path";
 import { getMobileSession } from "@/lib/mobile-auth";
 
 /**
- * GET /api/mobile/preview-proxy?dir=/path/to/dist&path=/index.html
+ * GET /api/mobile/preview-proxy?upstream=http://localhost:3034&path=/
+ * GET /api/mobile/preview-proxy?dir=/path/to/dist&path=/
  *
- * On-demand sirv preview proxy for sites without a configured previewUrl.
- * Starts a sirv server for the given dist/ directory (reuses existing ones),
- * then proxies the request to it.
+ * Unified preview proxy for mobile. Two modes:
+ *
+ * 1. `upstream` — proxy to an already-running localhost server (e.g. .NET, Ruby, Rust).
+ *    Most dev servers only bind to localhost, so the phone can't reach them
+ *    directly via LAN IP. This endpoint relays the request.
+ *
+ * 2. `dir` — start sirv on-demand for a dist/ directory (sites without previewUrl).
  *
  * Auth: Bearer JWT.
  */
@@ -67,7 +72,6 @@ async function ensureSirv(distDir: string): Promise<number> {
     dev: true,
   });
 
-  // Try loading custom 404
   let custom404 = "<h1>404</h1>";
   const site404 = path.join(distDir, "404.html");
   if (existsSync(site404)) {
@@ -92,37 +96,71 @@ async function ensureSirv(distDir: string): Promise<number> {
 }
 
 export async function GET(req: NextRequest) {
-  // Auth check
   const session = await getMobileSession(req);
   if (!session) {
     return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   }
 
+  const upstream = req.nextUrl.searchParams.get("upstream");
   const distDir = req.nextUrl.searchParams.get("dir");
   const filePath = req.nextUrl.searchParams.get("path") ?? "/";
 
-  if (!distDir || !existsSync(distDir)) {
-    return NextResponse.json({ error: "dist/ not found" }, { status: 404 });
+  // Mode 1: Proxy to an already-running localhost server
+  if (upstream) {
+    try {
+      const upstreamUrl = new URL(filePath, upstream).toString();
+      const res = await fetch(upstreamUrl, {
+        signal: AbortSignal.timeout(8000),
+        headers: {
+          "Accept": req.headers.get("Accept") ?? "*/*",
+          "Accept-Encoding": "identity",
+        },
+      });
+
+      const headers = new Headers();
+      // Pass through content type and other relevant headers
+      for (const key of ["content-type", "cache-control", "etag", "last-modified"]) {
+        const val = res.headers.get(key);
+        if (val) headers.set(key, val);
+      }
+      headers.set("Access-Control-Allow-Origin", "*");
+      // Allow iframe embedding
+      headers.delete("X-Frame-Options");
+
+      return new NextResponse(res.body, {
+        status: res.status,
+        headers,
+      });
+    } catch (err) {
+      return NextResponse.json(
+        { error: `Upstream proxy failed: ${(err as Error).message}` },
+        { status: 502 },
+      );
+    }
   }
 
-  try {
-    const port = await ensureSirv(distDir);
-    // Proxy the request to sirv
-    const sirvUrl = `http://localhost:${port}${filePath}`;
-    const upstream = await fetch(sirvUrl, { signal: AbortSignal.timeout(5000) });
+  // Mode 2: Sirv on-demand for dist/ directory
+  if (distDir) {
+    if (!existsSync(distDir)) {
+      return NextResponse.json({ error: "dist/ not found" }, { status: 404 });
+    }
+    try {
+      const port = await ensureSirv(distDir);
+      const sirvUrl = `http://localhost:${port}${filePath}`;
+      const res = await fetch(sirvUrl, { signal: AbortSignal.timeout(5000) });
 
-    const headers = new Headers();
-    headers.set("Content-Type", upstream.headers.get("Content-Type") ?? "text/html");
-    headers.set("Access-Control-Allow-Origin", "*");
+      const headers = new Headers();
+      headers.set("Content-Type", res.headers.get("Content-Type") ?? "text/html");
+      headers.set("Access-Control-Allow-Origin", "*");
 
-    return new NextResponse(upstream.body, {
-      status: upstream.status,
-      headers,
-    });
-  } catch (err) {
-    return NextResponse.json(
-      { error: `Preview proxy failed: ${(err as Error).message}` },
-      { status: 502 },
-    );
+      return new NextResponse(res.body, { status: res.status, headers });
+    } catch (err) {
+      return NextResponse.json(
+        { error: `Sirv proxy failed: ${(err as Error).message}` },
+        { status: 502 },
+      );
+    }
   }
+
+  return NextResponse.json({ error: "Missing upstream or dir parameter" }, { status: 400 });
 }

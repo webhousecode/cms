@@ -35,23 +35,41 @@ function resolveAvatarUrl(user: { email: string; githubUsername?: string }): str
 }
 
 /**
- * For filesystem-adapter sites without previewUrl, check if dist/ exists.
- * If so, return a preview URL that goes through our preview-proxy endpoint
- * which starts sirv on-demand (avoids slow startup during /me response).
+ * Wrap a preview URL so the mobile app can always reach it.
+ *
+ * Problem: many dev servers (Ruby, .NET, Rust, etc.) only bind to localhost.
+ * The phone can't reach localhost directly, only the cms-admin LAN IP.
+ * Solution: ALL localhost preview URLs go through our preview-proxy which
+ * runs on cms-admin and relays to the localhost server.
+ *
+ * For sites without previewUrl, start sirv on-demand for their dist/ dir.
+ * External URLs (Vercel, Netlify) pass through unchanged.
  */
 function derivePreviewUrl(
   site: { configPath: string; adapter: string; previewUrl?: string },
   reqUrl: URL,
 ): string | undefined {
-  if (site.previewUrl) return site.previewUrl;
-  if (site.adapter !== "filesystem" || !site.configPath) return undefined;
+  const proxyBase = `${reqUrl.protocol}//${reqUrl.host}/api/mobile/preview-proxy`;
 
+  if (site.previewUrl) {
+    // External URLs (Vercel, Netlify, etc.) — phone can reach them directly
+    if (!isLocalhostUrl(site.previewUrl)) return site.previewUrl;
+
+    // Localhost URLs — must proxy through cms-admin
+    return `${proxyBase}?upstream=${encodeURIComponent(site.previewUrl)}`;
+  }
+
+  // No previewUrl — try sirv from dist/
+  if (site.adapter !== "filesystem" || !site.configPath) return undefined;
   const projectDir = path.dirname(path.resolve(site.configPath));
   const distDir = path.join(projectDir, "dist");
   if (!existsSync(distDir)) return undefined;
 
-  // Return a proxy URL that starts sirv on-demand
-  return `${reqUrl.protocol}//${reqUrl.host}/api/mobile/preview-proxy?dir=${encodeURIComponent(distDir)}`;
+  return `${proxyBase}?dir=${encodeURIComponent(distDir)}`;
+}
+
+function isLocalhostUrl(url: string): boolean {
+  return /^https?:\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0)(:|$)/.test(url);
 }
 
 /**
@@ -89,7 +107,7 @@ export async function GET(req: NextRequest) {
           siteId: site.id,
           siteName: site.name,
           role: user.role ?? "admin",
-          previewUrl: rewriteLocalhostUrl(derivePreviewUrl(site, reqUrl)),
+          previewUrl: derivePreviewUrl(site, reqUrl),
           liveUrl: rewriteLocalhostUrl(
             site.revalidateUrl?.replace(/\/api\/revalidate$/, ""),
           ),

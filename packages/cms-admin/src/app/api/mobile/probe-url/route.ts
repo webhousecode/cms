@@ -23,7 +23,16 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const res = await fetch(url, {
+    // The mobile app receives LAN IP URLs (e.g. 192.168.x.x:3034) so it can
+    // reach dev servers from the phone. But the probe runs server-side where
+    // those servers only bind to localhost. Rewrite LAN IP back to localhost.
+    let probeUrl = url;
+    const lanPattern = /^(https?:\/\/)\d+\.\d+\.\d+\.\d+(:\d+)/;
+    if (lanPattern.test(probeUrl)) {
+      probeUrl = probeUrl.replace(lanPattern, "$1localhost$2");
+    }
+
+    const res = await fetch(probeUrl, {
       method: "HEAD",
       signal: AbortSignal.timeout(3000),
     });
