@@ -137,7 +137,7 @@
 | F119 | [One-Click Docker Deploy](#f119-one-click-docker-deploy) | Planned | [docs/features/F119-one-click-docker-deploy.md](features/F119-one-click-docker-deploy.md) |
 | F120 | [Onboarding](#f120-onboarding) | **Tier 1** | [docs/features/F120-onboarding.md](features/F120-onboarding.md) |
 | F121 | [Next.js CMS Helpers](#f121-nextjs-cms-helpers) | **Done** | [docs/features/F121-nextjs-cms-helpers.md](features/F121-nextjs-cms-helpers.md) |
-| F122 | [Beam — Site Teleportation](#f122-beam) | Planned | [docs/features/F122-beam.md](features/F122-beam.md) |
+| F122 | [Beam — Site Teleportation](#f122-beam) | **Done** | [docs/features/F122-beam.md](features/F122-beam.md) |
 | F123 | [Providers / Integrations Tab](#f123-providers-tab) | Planned | [docs/features/F123-providers-tab.md](features/F123-providers-tab.md) |
 | F124 | [Snippet Embeds](#f124-snippet-embeds) | Planned | [docs/features/F124-snippet-embeds.md](features/F124-snippet-embeds.md) |
 | F127 | [Collection Purpose Metadata](#f127-collection-purpose-metadata) | **Done** | [docs/features/F127-collection-purpose-metadata.md](features/F127-collection-purpose-metadata.md) |
@@ -524,6 +524,6 @@ TipTap node extension that renders `{{snippet:slug}}` tokens as visual pill/badg
 
 Adds optional `kind` and `description` fields to `CollectionConfig` so chat, MCP, and other AI tools understand what each collection is FOR. Five kinds: `page` (default, has URL), `snippet` (reusable fragment), `data` (records rendered on other pages like team/FAQ/testimonials), `form` (submissions, read-only), `global` (site-wide config). Chat adapts per kind: skips SEO for non-pages, hides View pill, doesn't remap body/content on data collections, blocks `create_document` for `form` kinds. Plain-English `description` fills the gaps that the enum can't express, injected into system prompt per collection. AI Builder Guide (`packages/cms/CLAUDE.md` + 02-config-reference + 10-config-example + index) instructs scaffolding AIs to always populate both fields. F79 validator warns softly when description is missing. Docs site has dedicated page at `docs.webhouse.app/docs/collection-metadata`. All boilerplates + create-cms scaffold templates updated with examples. 32 unit tests. Backwards compatible — undefined kind = current behavior.
 
-## F122 — Beam — Site Teleportation
+## F122 — Beam — Site Teleportation ✅
 
-"Beam me up, Scotty" — one-click site teleportation from localhost to cloud. Two modes: (1) Beam Archive (.beam file) for offline export/import. (2) Live Beam for direct CMS-to-CMS transfer over HTTPS with token auth and SSE progress. Transfers everything: content, media, cms.config.ts, agents, brand voice, site settings. Secrets auto-stripped, listed as required on import. CLI support: `cms beam export`, `cms beam import`, `cms beam push`. Solves the core workflow: develop locally, beam to production.
+"Beam me up, Scotty" — one-click site teleportation from localhost to cloud. Two modes: (1) Beam Archive (.beam file) for offline export/import. (2) Live Beam for direct CMS-to-CMS transfer over HTTPS with token auth and SSE progress. Transfers everything: content, media, cms.config.ts, agents, brand voice, site settings. Secrets auto-stripped, listed as required on import. Token system (single-use, 1hr expiry, SHA-256 hashed). SSE progress tracking. Settings panel with export, import, live beam push, and token generator. 7/7 E2E tests.
