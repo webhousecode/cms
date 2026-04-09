@@ -15,6 +15,7 @@ import { getActiveSitePaths, getActiveSiteEntry } from "./site-paths";
 import { readSiteConfig } from "./site-config";
 import { readOrgSettingsForOrg } from "./org-settings";
 import { buildAdminDeepLink } from "./goto-links";
+import { broadcastPush } from "./push-send";
 
 const ADMIN_BASE = process.env.NEXTAUTH_URL || `http://localhost:${process.env.PORT || 3010}`;
 
@@ -191,6 +192,17 @@ export async function fireAgentEvent(
   };
 
   dispatchWebhooks(src.webhooks, evt, src.dataDir).catch(() => {});
+
+  // Push notification for agent completion/failure
+  if (action === "completed" || action === "failed") {
+    broadcastPush({
+      title: action === "failed" ? `❌ AI agent failed` : `✅ AI agent done`,
+      body: `${agentName}${details?.documentTitle ? ` — ${details.documentTitle}` : ""} (${src.siteName})`,
+      topic: "agent_completed",
+      url: details?.linkUrl,
+      badge: 1,
+    }).catch(() => {});
+  }
 }
 
 /**
@@ -225,6 +237,17 @@ export async function fireDeployEvent(
   };
 
   dispatchWebhooks(src.webhooks, evt, src.dataDir).catch(() => {});
+
+  // Push notification for deploy events
+  if (action === "failed" || action === "success") {
+    broadcastPush({
+      title: action === "failed" ? `❌ Build failed` : `✅ Build succeeded`,
+      body: `${src.siteName} — ${provider}`,
+      topic: action === "failed" ? "build_failed" : "build_succeeded",
+      url: linkUrl,
+      badge: 1,
+    }).catch(() => {});
+  }
 }
 
 /**

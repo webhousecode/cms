@@ -55,21 +55,51 @@ export async function proxy(request: NextRequest) {
     if (serviceToken === secret) return NextResponse.next();
   }
 
-  // Dev/API token: Authorization: Bearer <CMS_DEV_TOKEN>
+  // Bearer token auth: supports CMS_DEV_TOKEN and wh_ access tokens.
   // Mints a short-lived JWT and injects it into the request cookie header
   // so downstream route handlers can read it via cookies().
-  const devToken = process.env.CMS_DEV_TOKEN;
   const authHeader = request.headers.get("authorization");
-  if (devToken && authHeader === `Bearer ${devToken}`) {
-    const jwt = await new SignJWT({ sub: "dev-token", email: "dev@localhost", name: "Dev Token", role: "admin" })
-      .setProtectedHeader({ alg: "HS256" })
-      .setExpirationTime("5m")
-      .sign(getJwtSecret());
-    // Inject JWT into the forwarded request's cookie header
-    const requestHeaders = new Headers(request.headers);
-    const existingCookies = requestHeaders.get("cookie") ?? "";
-    requestHeaders.set("cookie", `${existingCookies}; ${COOKIE_NAME}=${jwt}`);
-    return NextResponse.next({ request: { headers: requestHeaders } });
+  const bearerToken = authHeader?.startsWith("Bearer ") ? authHeader.slice(7) : null;
+
+  if (bearerToken) {
+    // CMS_DEV_TOKEN — legacy dev convenience token
+    const devToken = process.env.CMS_DEV_TOKEN;
+    if (devToken && bearerToken === devToken) {
+      const jwt = await new SignJWT({ sub: "dev-token", email: "dev@localhost", name: "Dev Token", role: "admin" })
+        .setProtectedHeader({ alg: "HS256" })
+        .setExpirationTime("5m")
+        .sign(getJwtSecret());
+      const requestHeaders = new Headers(request.headers);
+      const existingCookies = requestHeaders.get("cookie") ?? "";
+      requestHeaders.set("cookie", `${existingCookies}; ${COOKIE_NAME}=${jwt}`);
+      return NextResponse.next({ request: { headers: requestHeaders } });
+    }
+
+    // wh_ access tokens — created in Account Preferences → Access Tokens
+    if (bearerToken.startsWith("wh_")) {
+      try {
+        const { verifyAccessToken } = await import("./lib/access-tokens");
+        const tokenEntry = await verifyAccessToken(bearerToken);
+        if (tokenEntry) {
+          const jwt = await new SignJWT({
+            sub: tokenEntry.userId,
+            email: `token:${tokenEntry.name}`,
+            name: tokenEntry.name,
+            role: "admin",
+            scopes: tokenEntry.scopes,
+          })
+            .setProtectedHeader({ alg: "HS256" })
+            .setExpirationTime("5m")
+            .sign(getJwtSecret());
+          const requestHeaders = new Headers(request.headers);
+          const existingCookies = requestHeaders.get("cookie") ?? "";
+          requestHeaders.set("cookie", `${existingCookies}; ${COOKIE_NAME}=${jwt}`);
+          return NextResponse.next({ request: { headers: requestHeaders } });
+        }
+      } catch {
+        // Token verification failed — fall through to cookie auth
+      }
+    }
   }
 
   const token = request.cookies.get(COOKIE_NAME)?.value;

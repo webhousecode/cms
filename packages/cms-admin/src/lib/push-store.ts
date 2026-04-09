@@ -146,6 +146,12 @@ export async function getTokensForUser(userId: string): Promise<DeviceToken[]> {
   return store.tokens.filter((t) => t.userId === userId);
 }
 
+/** Get all unique user IDs that have at least one registered token. */
+export async function getAllUserIdsWithTokens(): Promise<string[]> {
+  const store = await loadStore();
+  return [...new Set(store.tokens.map((t) => t.userId))];
+}
+
 export async function deleteToken(tokenId: string): Promise<void> {
   const store = await loadStore();
   store.tokens = store.tokens.filter((t) => t.id !== tokenId);

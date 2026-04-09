@@ -30,6 +30,7 @@ import {
   deleteTokensByIds,
   getTokensForUser,
   getTopicPrefs,
+  getAllUserIdsWithTokens,
   type TopicKey,
 } from "./push-store";
 
@@ -239,3 +240,21 @@ export async function sendPushNotification(
     skipped: 0,
   };
 }
+
+/**
+ * Broadcast a push notification to ALL users with registered tokens.
+ * Each user's topic preferences are respected individually.
+ * Used by webhook events (deploy, agent, etc.) to notify the team.
+ */
+export async function broadcastPush(payload: PushPayload): Promise<void> {
+  const userIds = await getAllUserIdsWithTokens();
+  await Promise.all(
+    userIds.map((uid) =>
+      sendPushNotification(uid, payload).catch((err) => {
+        console.warn(`[push] broadcast to ${uid} failed:`, err);
+      }),
+    ),
+  );
+}
+
+export type { TopicKey } from "./push-store";
