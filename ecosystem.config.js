@@ -97,18 +97,19 @@ const cmsAdminDev = {
   kill_timeout: 5000,
 };
 
-// Production build of cms-admin (Next.js standalone) for performance testing.
-// Uses port 4010. Shares _data with dev (CMS_CONFIG_PATH from .env.local).
-// Build via: bash scripts/build-cms-admin-prod.sh
-const CMS_ADMIN_DIR = "/Users/cb/Apps/webhouse/cms/packages/cms-admin";
+// Production build of cms-admin — regular `next start` (NOT standalone).
+// Full node_modules access so jiti can resolve cms.config.ts imports from
+// any framework org (Django, .NET, PHP, etc.) without symlink hacks.
+// Build: cd packages/cms-admin && pnpm build
+// Standalone mode is only used in the Dockerfile for minimal image size.
 const cmsAdminProd = {
   name: "cms-admin-prod",
-  cwd: `${CMS_ADMIN_DIR}/.next/standalone/packages/cms-admin`,
-  script: "server.js",
+  cwd: "/Users/cb/Apps/webhouse/cms/packages/cms-admin",
+  script: "node_modules/next/dist/bin/next",
+  args: "start --port 4010",
   interpreter: "node",
   env: {
     PORT: "4010",
-    HOSTNAME: "0.0.0.0",
     NODE_ENV: "production",
   },
   autorestart: true,
