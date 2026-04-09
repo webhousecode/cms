@@ -3,6 +3,7 @@ import { createServer, type Server } from "node:http";
 import { existsSync, readFileSync } from "node:fs";
 import path from "path";
 import { getMobileSession } from "@/lib/mobile-auth";
+import { verifyPreviewToken } from "@/lib/preview-token";
 
 /**
  * GET /api/mobile/preview-proxy?upstream=http://localhost:3034&path=/
@@ -96,14 +97,21 @@ async function ensureSirv(distDir: string): Promise<number> {
 }
 
 export async function GET(req: NextRequest) {
-  const session = await getMobileSession(req);
-  if (!session) {
-    return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
-  }
-
   const upstream = req.nextUrl.searchParams.get("upstream");
   const distDir = req.nextUrl.searchParams.get("dir");
   const filePath = req.nextUrl.searchParams.get("path") ?? "/";
+  const token = req.nextUrl.searchParams.get("tok");
+
+  // Auth: accept signed URL token (for iframes) OR Bearer JWT (for API calls)
+  const payload = upstream ?? distDir ?? "";
+  const tokenValid = verifyPreviewToken(token, payload);
+
+  if (!tokenValid) {
+    const session = await getMobileSession(req);
+    if (!session) {
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    }
+  }
 
   // Mode 1: Proxy to an already-running localhost server
   if (upstream) {
