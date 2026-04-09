@@ -70,6 +70,11 @@ function readCollection(name: string): Doc[] {
 
 const allPosts = readCollection("posts");
 const allPages = readCollection("pages");
+const allTeam = readCollection("team");
+const allServices = readCollection("services");
+const allTestimonials = readCollection("testimonials");
+const allSnippets = readCollection("snippets");
+const allContactSubmissions = readCollection("contact-submissions");
 
 /** Get docs for a specific locale (source docs in that locale + translations into it) */
 function getLocalized(docs: Doc[], locale: string): Doc[] {
@@ -160,8 +165,8 @@ function layout(title: string, content: string, locale: string, alternateUrl?: s
   const altLabel = LOCALE_LABELS[altLocale] ?? altLocale;
   const altHref = alternateUrl ?? `${bp(localePrefix(altLocale))}/`;
   const navLabels = locale === "da"
-    ? { posts: "Blog Posts", about: "Om os" }
-    : { posts: "Blog Posts", about: "About" };
+    ? { posts: "Blog Posts", about: "Om os", team: "Team", services: "Services", testimonials: "Udtalelser", snippets: "Snippets" }
+    : { posts: "Blog Posts", about: "About", team: "Team", services: "Services", testimonials: "Testimonials", snippets: "Snippets" };
   const dateLocale = locale === "da" ? "da-DK" : "en-US";
 
   return `<!DOCTYPE html>
@@ -185,6 +190,10 @@ function layout(title: string, content: string, locale: string, alternateUrl?: s
         <a href="${bp(prefix)}/" class="site-title">Simple Blog</a>
         <a href="${bp(prefix)}/posts/" class="nav-link">${navLabels.posts}</a>
         <a href="${bp(`${prefix}/${locale === "da" ? "om-os" : "about"}/`)}" class="nav-link">${navLabels.about}</a>
+        <a href="${bp(prefix)}/team/" class="nav-link">${navLabels.team}</a>
+        <a href="${bp(prefix)}/services/" class="nav-link">${navLabels.services}</a>
+        <a href="${bp(prefix)}/testimonials/" class="nav-link">${navLabels.testimonials}</a>
+        <a href="${bp(prefix)}/snippets/" class="nav-link">${navLabels.snippets}</a>
         <a href="${altHref}" class="nav-link" style="margin-left:auto; font-size:0.8rem; border:1px solid var(--color-border); padding:0.2rem 0.6rem; border-radius:4px;" title="${altLabel}">
           ${altFlag} ${altLocale.toUpperCase()}
         </a>
@@ -430,6 +439,88 @@ for (const locale of LOCALES) {
       </article>
     `, locale, altUrl));
   }
+
+  // ── Data collections ───────────────────────────────────────
+
+  // Team page
+  const teamMembers = allTeam
+    .filter(d => d.status !== "draft" || INCLUDE_DRAFTS)
+    .sort((a, b) => Number(a.data.sortOrder ?? 99) - Number(b.data.sortOrder ?? 99));
+  const teamTitle = locale === "da" ? "Team" : "Team";
+  write(`${outPrefix}team/index.html`, layout(teamTitle, `
+    <div class="prose"><h1>${teamTitle}</h1></div>
+    ${teamMembers.length === 0
+      ? `<p style="color:var(--color-muted)">${locale === "da" ? "Ingen teammedlemmer endnu." : "No team members yet."}</p>`
+      : `<div class="card-grid">${teamMembers.map(m => `
+        <div class="card" style="text-align:center">
+          ${m.data.photo ? `<img src="${bp(`/uploads/${String(m.data.photo).replace(/^\/?(uploads\/)?/, "")}`)}/" style="width:100px;height:100px;border-radius:50%;object-fit:cover;margin:0 auto 1rem;display:block" alt="${esc(m.data.name)}">` : ""}
+          <h2 style="font-size:1.1rem">${esc(m.data.name)}</h2>
+          <div class="meta">${esc(m.data.role ?? "")}</div>
+          ${m.data.bio ? `<p style="font-size:0.85rem;color:var(--color-muted);margin-top:0.5rem">${esc(m.data.bio)}</p>` : ""}
+          ${m.data.email ? `<p style="font-size:0.8rem"><a href="mailto:${esc(m.data.email)}">${esc(m.data.email)}</a></p>` : ""}
+        </div>
+      `).join("")}</div>`}
+  `, locale, undefined, `${teamTitle} — ${teamMembers.length} members`));
+  console.log(`    /team/ (${teamMembers.length} members)`);
+
+  // Services page
+  const serviceItems = allServices
+    .filter(d => d.status !== "draft" || INCLUDE_DRAFTS)
+    .sort((a, b) => Number(a.data.sortOrder ?? 99) - Number(b.data.sortOrder ?? 99));
+  const servicesTitle = locale === "da" ? "Services" : "Services";
+  write(`${outPrefix}services/index.html`, layout(servicesTitle, `
+    <div class="prose"><h1>${servicesTitle}</h1></div>
+    ${serviceItems.length === 0
+      ? `<p style="color:var(--color-muted)">${locale === "da" ? "Ingen services endnu." : "No services yet."}</p>`
+      : `<div class="card-grid">${serviceItems.map(s => `
+        <div class="card">
+          ${s.data.icon ? `<div style="font-size:2rem;margin-bottom:0.5rem">${esc(s.data.icon)}</div>` : ""}
+          <h2 style="font-size:1.1rem">${esc(s.data.title)}</h2>
+          ${s.data.description ? `<p style="font-size:0.85rem;color:var(--color-muted)">${esc(s.data.description)}</p>` : ""}
+          ${s.data.price ? `<p style="font-weight:600;color:var(--color-primary);margin-top:0.5rem">${esc(s.data.price)}</p>` : ""}
+        </div>
+      `).join("")}</div>`}
+  `, locale, undefined, `${servicesTitle} — ${serviceItems.length}`));
+  console.log(`    /services/ (${serviceItems.length} items)`);
+
+  // Testimonials page
+  const testimonialItems = allTestimonials.filter(d => d.status !== "draft" || INCLUDE_DRAFTS);
+  const testimonialsTitle = locale === "da" ? "Udtalelser" : "Testimonials";
+  write(`${outPrefix}testimonials/index.html`, layout(testimonialsTitle, `
+    <div class="prose"><h1>${testimonialsTitle}</h1></div>
+    ${testimonialItems.length === 0
+      ? `<p style="color:var(--color-muted)">${locale === "da" ? "Ingen udtalelser endnu." : "No testimonials yet."}</p>`
+      : `<div class="card-grid">${testimonialItems.map(t => `
+        <div class="card">
+          <blockquote style="font-style:italic;border-left:3px solid var(--color-primary);padding-left:1rem;margin:0 0 1rem">"${esc(t.data.quote)}"</blockquote>
+          <div style="font-weight:600">${esc(t.data.author)}</div>
+          <div class="meta">${esc(t.data.role ?? "")}${t.data.company ? `, ${esc(t.data.company)}` : ""}</div>
+          ${t.data.rating ? `<div style="margin-top:0.5rem">${"★".repeat(Number(t.data.rating))}${"☆".repeat(5 - Number(t.data.rating))}</div>` : ""}
+        </div>
+      `).join("")}</div>`}
+  `, locale, undefined, `${testimonialsTitle} — ${testimonialItems.length}`));
+  console.log(`    /testimonials/ (${testimonialItems.length} items)`);
+
+  // Snippets page
+  const snippetItems = allSnippets.filter(d => d.status !== "draft" || INCLUDE_DRAFTS);
+  const snippetsTitle = locale === "da" ? "Snippets" : "Snippets";
+  write(`${outPrefix}snippets/index.html`, layout(snippetsTitle, `
+    <div class="prose"><h1>${snippetsTitle}</h1>
+      <p style="color:var(--color-muted)">${locale === "da"
+        ? "Genbrugelige tekstfragmenter der kan indlejres i andre sider via {{snippet:slug}}."
+        : "Reusable text fragments that can be embedded in other pages via {{snippet:slug}}."}</p>
+    </div>
+    ${snippetItems.length === 0
+      ? `<p style="color:var(--color-muted)">${locale === "da" ? "Ingen snippets endnu." : "No snippets yet."}</p>`
+      : `<div class="card-grid">${snippetItems.map(s => `
+        <div class="card">
+          <h2 style="font-size:1.1rem">${esc(s.data.title)}</h2>
+          <div style="margin-top:0.5rem;font-family:monospace;font-size:0.75rem;color:var(--color-primary);background:var(--color-bg-alt);padding:0.3rem 0.6rem;border-radius:4px;display:inline-block">{{snippet:${s.slug}}}</div>
+          ${s.data.content ? `<div class="prose" style="margin-top:1rem;font-size:0.85rem">${renderContent(s.data.content)}</div>` : ""}
+        </div>
+      `).join("")}</div>`}
+  `, locale, undefined, `${snippetsTitle} — ${snippetItems.length}`));
+  console.log(`    /snippets/ (${snippetItems.length} items)`);
 }
 
 // Copy uploads to dist (so images work in built site)
