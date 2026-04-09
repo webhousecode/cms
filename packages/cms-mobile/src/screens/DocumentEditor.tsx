@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useLocation, useRoute } from "wouter";
 import { Screen } from "@/components/Screen";
 import { ScreenHeader, BackButton } from "@/components/ScreenHeader";
 import { Spinner } from "@/components/Spinner";
-import { getDocument, getCollections, saveDocument, deleteDocument } from "@/api/client";
+import { getDocument, getCollections, saveDocument, deleteDocument, uploadFile } from "@/api/client";
 import type { FieldConfig } from "@/api/types";
 
 // ─── Field Editors ───────────────────────────────────
@@ -91,16 +91,39 @@ function BooleanField({ field, value, onChange }: FieldEditorProps) {
 }
 
 function DateField({ field, value, onChange }: FieldEditorProps) {
+  const raw = (value as string) ?? "";
+
+  const display = raw
+    ? new Date(raw + "T00:00:00").toLocaleDateString(undefined, {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+      })
+    : "";
+
   return (
     <div>
       <FieldLabel field={field} />
-      <input
-        type="date"
-        value={(value as string) ?? ""}
-        onChange={(e) => onChange(e.target.value || undefined)}
-        style={{ display: "block", width: "100%", boxSizing: "border-box" }}
-        className="rounded-lg bg-brand-darkPanel border border-white/10 px-3 py-2.5 text-sm text-white outline-none focus:border-brand-gold transition-colors [color-scheme:dark]"
-      />
+      {/* Native date input overlaid with opacity-0, display div underneath */}
+      <div className="relative w-full min-w-0">
+        {/* Visual display */}
+        <div className="flex w-full items-center justify-between rounded-lg bg-brand-darkPanel border border-white/10 px-3 py-2.5 pointer-events-none">
+          <span className={`text-sm ${display ? "text-white" : "text-white/30"}`}>
+            {display || "Select date..."}
+          </span>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" className="text-white/40 shrink-0">
+            <rect x="2" y="3" width="12" height="11" rx="1.5" stroke="currentColor" strokeWidth="1.5" />
+            <path d="M2 6.5h12M5.5 2v2M10.5 2v2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+        </div>
+        {/* Invisible native input on top — tapping it opens the iOS date wheel */}
+        <input
+          type="date"
+          value={raw}
+          onChange={(e) => onChange(e.target.value || undefined)}
+          className="absolute inset-0 w-full h-full opacity-0"
+        />
+      </div>
     </div>
   );
 }
@@ -191,18 +214,373 @@ function TagsField({ field, value, onChange }: FieldEditorProps) {
   );
 }
 
-function RichtextPlaceholder({ field, value, onChange }: FieldEditorProps) {
+function RichtextField({ field, value, onChange }: FieldEditorProps) {
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const text = (value as string) ?? "";
+
+  /** Wrap selection with prefix/suffix, or insert at cursor */
+  function wrapSelection(prefix: string, suffix: string = prefix) {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    const start = ta.selectionStart;
+    const end = ta.selectionEnd;
+    const selected = text.slice(start, end);
+    const before = text.slice(0, start);
+    const after = text.slice(end);
+
+    if (selected) {
+      // Wrap selection
+      const newText = before + prefix + selected + suffix + after;
+      onChange(newText);
+      // Restore cursor after React re-renders
+      requestAnimationFrame(() => {
+        ta.selectionStart = start + prefix.length;
+        ta.selectionEnd = end + prefix.length;
+        ta.focus();
+      });
+    } else {
+      // Insert at cursor
+      const placeholder = "text";
+      const newText = before + prefix + placeholder + suffix + after;
+      onChange(newText);
+      requestAnimationFrame(() => {
+        ta.selectionStart = start + prefix.length;
+        ta.selectionEnd = start + prefix.length + placeholder.length;
+        ta.focus();
+      });
+    }
+  }
+
+  /** Insert prefix at start of current line */
+  function linePrefix(prefix: string) {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    const pos = ta.selectionStart;
+    // Find start of current line
+    const lineStart = text.lastIndexOf("\n", pos - 1) + 1;
+    const before = text.slice(0, lineStart);
+    const after = text.slice(lineStart);
+    // Check if line already has this prefix
+    if (after.startsWith(prefix)) {
+      // Remove it (toggle off)
+      onChange(before + after.slice(prefix.length));
+      requestAnimationFrame(() => {
+        ta.selectionStart = ta.selectionEnd = pos - prefix.length;
+        ta.focus();
+      });
+    } else {
+      onChange(before + prefix + after);
+      requestAnimationFrame(() => {
+        ta.selectionStart = ta.selectionEnd = pos + prefix.length;
+        ta.focus();
+      });
+    }
+  }
+
+  const TB = "flex items-center justify-center h-9 w-9 rounded-md text-white/60 active:bg-white/10 active:text-white active:scale-90 transition-all";
+
   return (
     <div>
       <FieldLabel field={field} />
+      {/* Toolbar */}
+      <div className="flex items-center gap-0.5 mb-1.5 overflow-x-auto">
+        <button type="button" className={TB} onClick={() => wrapSelection("**")} aria-label="Bold">
+          <span className="text-sm font-bold">B</span>
+        </button>
+        <button type="button" className={TB} onClick={() => wrapSelection("*")} aria-label="Italic">
+          <span className="text-sm italic">I</span>
+        </button>
+        <button type="button" className={TB} onClick={() => linePrefix("## ")} aria-label="Heading">
+          <span className="text-xs font-bold">H2</span>
+        </button>
+        <button type="button" className={TB} onClick={() => linePrefix("### ")} aria-label="Heading 3">
+          <span className="text-xs font-bold">H3</span>
+        </button>
+        <button type="button" className={TB} onClick={() => linePrefix("- ")} aria-label="Bullet list">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <circle cx="3" cy="4" r="1.25" fill="currentColor" />
+            <circle cx="3" cy="8" r="1.25" fill="currentColor" />
+            <circle cx="3" cy="12" r="1.25" fill="currentColor" />
+            <path d="M6.5 4h7M6.5 8h7M6.5 12h7" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+        </button>
+        <button type="button" className={TB} onClick={() => linePrefix("> ")} aria-label="Quote">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M3 4v8M6 6h7M6 10h5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+          </svg>
+        </button>
+        <button type="button" className={TB} onClick={() => wrapSelection("[", "](url)")} aria-label="Link">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+            <path d="M6.5 9.5a3 3 0 004-4.5l-1-1a3 3 0 00-4.24 0l-.76.76a3 3 0 000 4.24" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            <path d="M9.5 6.5a3 3 0 00-4 4.5l1 1a3 3 0 004.24 0l.76-.76a3 3 0 000-4.24" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+        </button>
+        <button type="button" className={TB} onClick={() => wrapSelection("`")} aria-label="Code">
+          <span className="text-xs font-mono">&lt;/&gt;</span>
+        </button>
+      </div>
+      {/* Textarea */}
       <textarea
-        value={(value as string) ?? ""}
+        ref={textareaRef}
+        value={text}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="Rich text (plain text mode on mobile)"
-        rows={6}
-        className="w-full min-w-0 rounded-lg bg-brand-darkPanel border border-white/10 px-3 py-2.5 text-sm text-white outline-none focus:border-brand-gold transition-colors resize-y"
+        placeholder="Write in Markdown..."
+        rows={10}
+        className="w-full min-w-0 rounded-lg bg-brand-darkPanel border border-white/10 px-3 py-2.5 text-sm text-white font-mono leading-relaxed outline-none focus:border-brand-gold transition-colors resize-y"
       />
-      <p className="text-[10px] text-white/30 mt-1">Full rich text editor coming soon</p>
+    </div>
+  );
+}
+
+function ImageField({ field, value, onChange }: FieldEditorProps) {
+  const rawUrl = (value as string) ?? "";
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [serverBase, setServerBase] = useState("");
+
+  // Resolve server URL for displaying relative image paths
+  useEffect(() => {
+    void (async () => {
+      const { getServerUrl } = await import("@/lib/prefs");
+      const s = await getServerUrl();
+      if (s) setServerBase(s);
+    })();
+  }, []);
+
+  // Prefix relative URLs with server base so images load from CMS server
+  const url = rawUrl && !rawUrl.startsWith("http") && serverBase
+    ? `${serverBase}${rawUrl}`
+    : rawUrl;
+
+  async function handleFile(file: File) {
+    // Get orgId/siteId from the URL params
+    const match = location.pathname.match(/\/site\/([^/]+)\/([^/]+)/);
+    if (!match) return;
+    setUploading(true);
+    try {
+      const result = await uploadFile(match[1], match[2], file);
+      onChange(result.url);
+    } catch (err) {
+      console.error("Upload failed:", err);
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function pickImage() {
+    try {
+      const { Camera, CameraResultType, CameraSource } = await import("@capacitor/camera");
+      const photo = await Camera.getPhoto({
+        quality: 85,
+        resultType: CameraResultType.Uri,
+        source: CameraSource.Prompt,
+      });
+      if (photo.webPath) {
+        const res = await fetch(photo.webPath);
+        const blob = await res.blob();
+        const ext = photo.format === "png" ? "png" : "jpg";
+        const file = new File([blob], `photo-${Date.now()}.${ext}`, { type: `image/${ext}` });
+        await handleFile(file);
+      }
+    } catch {
+      // User cancelled or native not available — fall back to file input
+      fileRef.current?.click();
+    }
+  }
+
+  return (
+    <div>
+      <FieldLabel field={field} />
+      {url ? (
+        <div className="relative rounded-lg overflow-hidden border border-white/10">
+          <img src={url} alt="" className="w-full max-h-48 object-cover" />
+          <div className="absolute bottom-0 inset-x-0 flex gap-2 p-2 bg-gradient-to-t from-black/80 to-transparent">
+            <button
+              type="button"
+              onClick={pickImage}
+              disabled={uploading}
+              className="text-xs text-white/80 bg-white/10 backdrop-blur rounded-md px-2.5 py-1.5 active:scale-95"
+            >
+              {uploading ? "Uploading..." : "Replace"}
+            </button>
+            <button
+              type="button"
+              onClick={() => onChange(undefined)}
+              className="text-xs text-red-400 bg-white/10 backdrop-blur rounded-md px-2.5 py-1.5 active:scale-95"
+            >
+              Remove
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          type="button"
+          onClick={pickImage}
+          disabled={uploading}
+          className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-white/20 bg-brand-darkPanel px-4 py-6 text-sm text-white/40 active:bg-white/5 active:scale-[0.98] transition-all disabled:opacity-50"
+        >
+          {uploading ? (
+            <>
+              <span className="h-4 w-4 animate-spin rounded-full border-2 border-brand-gold border-t-transparent" />
+              Uploading...
+            </>
+          ) : (
+            <>
+              <svg width="20" height="20" viewBox="0 0 16 16" fill="none">
+                <rect x="2" y="3" width="12" height="10" rx="1.5" stroke="currentColor" strokeWidth="1.25" />
+                <circle cx="5.5" cy="6.5" r="1.25" stroke="currentColor" strokeWidth="1" />
+                <path d="M2 11l3.5-3 2.5 2 3-3.5L14 11" stroke="currentColor" strokeWidth="1.25" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+              Add image
+            </>
+          )}
+        </button>
+      )}
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) handleFile(f);
+          e.target.value = "";
+        }}
+      />
+    </div>
+  );
+}
+
+interface GalleryImage {
+  url: string;
+  alt: string;
+}
+
+function ImageGalleryField({ field, value, onChange }: FieldEditorProps) {
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [serverBase, setServerBase] = useState("");
+
+  useEffect(() => {
+    void (async () => {
+      const { getServerUrl } = await import("@/lib/prefs");
+      const s = await getServerUrl();
+      if (s) setServerBase(s);
+    })();
+  }, []);
+
+  // Normalize: legacy plain strings → { url, alt }
+  const images: GalleryImage[] = Array.isArray(value)
+    ? (value as unknown[]).map((item) =>
+        typeof item === "string" ? { url: item, alt: "" } : (item as GalleryImage),
+      )
+    : [];
+
+  function updateImage(idx: number, patch: Partial<GalleryImage>) {
+    const next = [...images];
+    next[idx] = { ...next[idx], ...patch };
+    onChange(next);
+  }
+
+  function removeImage(idx: number) {
+    onChange(images.filter((_, i) => i !== idx));
+  }
+
+  async function handleFile(file: File) {
+    const match = location.pathname.match(/\/site\/([^/]+)\/([^/]+)/);
+    if (!match) return;
+    setUploading(true);
+    try {
+      const result = await uploadFile(match[1], match[2], file);
+      onChange([...images, { url: result.url, alt: "" }]);
+    } catch (err) {
+      console.error("Upload failed:", err);
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  async function pickImage() {
+    try {
+      const { Camera, CameraResultType, CameraSource } = await import("@capacitor/camera");
+      const photo = await Camera.getPhoto({
+        quality: 85,
+        resultType: CameraResultType.Uri,
+        source: CameraSource.Prompt,
+      });
+      if (photo.webPath) {
+        const res = await fetch(photo.webPath);
+        const blob = await res.blob();
+        const ext = photo.format === "png" ? "png" : "jpg";
+        const file = new File([blob], `photo-${Date.now()}.${ext}`, { type: `image/${ext}` });
+        await handleFile(file);
+      }
+    } catch {
+      fileRef.current?.click();
+    }
+  }
+
+  return (
+    <div>
+      <FieldLabel field={field} />
+      {images.length > 0 && (
+        <div className="flex flex-col gap-2 mb-2">
+          {images.map((img, idx) => {
+            const displayUrl = img.url && !img.url.startsWith("http") && serverBase
+              ? `${serverBase}${img.url}` : img.url;
+            return (
+            <div key={idx} className="flex gap-2 items-start rounded-lg border border-white/10 p-2 bg-brand-darkPanel">
+              <img src={displayUrl} alt={img.alt} className="w-16 h-16 rounded object-cover shrink-0" />
+              <div className="flex-1 min-w-0">
+                <input
+                  type="text"
+                  value={img.alt}
+                  onChange={(e) => updateImage(idx, { alt: e.target.value })}
+                  placeholder="Alt text..."
+                  className="w-full min-w-0 text-xs bg-transparent border-b border-white/10 pb-1 text-white outline-none focus:border-brand-gold"
+                />
+              </div>
+              <button
+                type="button"
+                onClick={() => removeImage(idx)}
+                className="text-white/30 active:text-red-400 shrink-0 p-1"
+                aria-label="Remove"
+              >
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                  <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
+            );
+          })}
+        </div>
+      )}
+      <button
+        type="button"
+        onClick={pickImage}
+        disabled={uploading}
+        className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-white/20 bg-brand-darkPanel px-3 py-3 text-xs text-white/40 active:bg-white/5 active:scale-[0.98] transition-all disabled:opacity-50"
+      >
+        {uploading ? (
+          <>
+            <span className="h-3 w-3 animate-spin rounded-full border-2 border-brand-gold border-t-transparent" />
+            Uploading...
+          </>
+        ) : (
+          `+ Add image (${images.length})`
+        )}
+      </button>
+      <input
+        ref={fileRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) handleFile(f);
+          e.target.value = "";
+        }}
+      />
     </div>
   );
 }
@@ -233,7 +611,9 @@ const FIELD_EDITORS: Record<string, React.FC<FieldEditorProps>> = {
   date: DateField,
   select: SelectField,
   tags: TagsField,
-  richtext: RichtextPlaceholder,
+  richtext: RichtextField,
+  image: ImageField,
+  "image-gallery": ImageGalleryField,
 };
 
 function FieldEditor({ field, value, onChange }: FieldEditorProps) {

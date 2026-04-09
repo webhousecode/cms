@@ -29,14 +29,17 @@ export function clearProbeCache() {
 export function SitePreview({ previewUrl, title, onExpand }: SitePreviewProps) {
   const [status, setStatus] = useState<"loading" | "ok" | "failed">(() => {
     if (!previewUrl) return "failed";
-    if (probeCache.has(previewUrl)) return probeCache.get(previewUrl) ? "ok" : "failed";
+    // Only trust cached successes — failed probes always re-try
+    if (probeCache.get(previewUrl) === true) return "ok";
     return "loading";
   });
   const wrapperRef = useRef<HTMLDivElement | null>(null);
 
   // Probe via the mobile API
   useEffect(() => {
-    if (!previewUrl || probeCache.has(previewUrl)) return;
+    if (!previewUrl) return;
+    // Skip only if we have a cached SUCCESS — always re-probe failures
+    if (probeCache.get(previewUrl) === true) return;
     let cancelled = false;
     void (async () => {
       try {
@@ -44,7 +47,6 @@ export function SitePreview({ previewUrl, title, onExpand }: SitePreviewProps) {
         const server = await getServerUrl();
         const jwt = await getJwt();
         if (!server || !jwt) {
-          probeCache.set(previewUrl, false);
           if (!cancelled) setStatus("failed");
           return;
         }
@@ -53,10 +55,9 @@ export function SitePreview({ previewUrl, title, onExpand }: SitePreviewProps) {
           { headers: { Authorization: `Bearer ${jwt}` }, credentials: "omit" },
         );
         const data = (await res.json()) as { ok: boolean };
-        probeCache.set(previewUrl, data.ok);
+        if (data.ok) probeCache.set(previewUrl, true); // Only cache successes
         if (!cancelled) setStatus(data.ok ? "ok" : "failed");
       } catch {
-        probeCache.set(previewUrl, false);
         if (!cancelled) setStatus("failed");
       }
     })();
