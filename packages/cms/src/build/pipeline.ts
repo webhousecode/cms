@@ -11,6 +11,7 @@ import { generateLlmsTxt, generateLlmsFullTxt, generateMarkdownPages } from './l
 import { generateAiPlugin } from './ai-plugin.js';
 import { generateRobotsTxt } from './robots.js';
 import { generateRssFeed } from './rss.js';
+import { generateFormPage } from './forms.js';
 
 export interface BuildOptions {
   outDir?: string;
@@ -87,6 +88,18 @@ export async function runBuild(
   // Phase 9: RSS feed
   const rssFeed = generateRssFeed(context, baseUrl, config.build?.rss);
   writeFileSync(join(outDir, 'feed.xml'), rssFeed, 'utf-8');
+
+  // Phase 10: Forms — generate standalone <form> HTML pages
+  if (config.forms && config.forms.length > 0) {
+    const adminUrl = process.env.CMS_ADMIN_URL || `http://localhost:${process.env.PORT || 3010}`;
+    const siteTitle = config.build?.siteName ?? undefined;
+    for (const form of config.forms) {
+      const formDir = join(outDir, 'forms', form.name);
+      if (!existsSync(formDir)) mkdirSync(formDir, { recursive: true });
+      const html = generateFormPage(form, adminUrl, siteTitle);
+      writeFileSync(join(formDir, 'index.html'), html, 'utf-8');
+    }
+  }
 
   return {
     pages: pages.length,

@@ -2385,5 +2385,56 @@ DESIGN GUIDELINES:
         }).join("\n");
       },
     },
+
+    // ── F30: list_forms ──────────────────────────────────────
+    {
+      tool: {
+        type: "function" as const,
+        function: {
+          name: "list_forms",
+          description: "List all configured forms and their unread submission counts.",
+          parameters: { type: "object", properties: {}, required: [] },
+        },
+      },
+      handler: async () => {
+        const res = await fetch(`${adminBase}/api/admin/forms`, { headers: authHeaders() });
+        const data = (await res.json()) as { forms?: Array<{ name: string; label: string; unread: number; fieldCount: number }> };
+        const forms = data.forms ?? [];
+        if (forms.length === 0) return "No forms configured on this site. Add a `forms` array to cms.config.ts.";
+        return forms.map((f) => `- **${f.label}** (\`${f.name}\`) — ${f.fieldCount} fields, ${f.unread} unread`).join("\n");
+      },
+    },
+
+    // ── F30: list_form_submissions ───────────────────────────
+    {
+      tool: {
+        type: "function" as const,
+        function: {
+          name: "list_form_submissions",
+          description: "List recent submissions for a form. Returns newest first.",
+          parameters: {
+            type: "object",
+            properties: {
+              form: { type: "string", description: "Form name (e.g. 'contact')" },
+              status: { type: "string", enum: ["new", "read", "archived"], description: "Filter by status (optional)" },
+            },
+            required: ["form"],
+          },
+        },
+      },
+      handler: async (_args: Record<string, unknown>) => {
+        const form = String(_args.form ?? "");
+        const qs = _args.status ? `?status=${_args.status}` : "";
+        const res = await fetch(`${adminBase}/api/admin/forms/${encodeURIComponent(form)}/submissions${qs}`, { headers: authHeaders() });
+        const data = (await res.json()) as { submissions?: Array<{ id: string; status: string; createdAt: string; data: Record<string, unknown> }> };
+        const subs = data.submissions ?? [];
+        if (subs.length === 0) return `No submissions for form "${form}".`;
+        return subs.slice(0, 20).map((s) => {
+          const preview = Object.values(s.data).filter((v) => typeof v === "string" && v.length > 0).slice(0, 2).join(" · ");
+          return `- [${s.status}] ${new Date(s.createdAt).toLocaleDateString()} — ${preview || "(empty)"}`;
+        }).join("\n");
+      },
+    },
+
   ];
 }

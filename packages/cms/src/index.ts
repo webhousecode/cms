@@ -8,6 +8,7 @@ export { toJsonSchema, fieldToSchema } from './schema/to-json-schema.js';
 export type { JsonSchemaOutput, ToJsonSchemaOptions } from './schema/to-json-schema.js';
 export { builtinBlocks } from './schema/builtin-blocks.js';
 export type { CmsConfig, CollectionConfig, FieldConfig, BlockConfig, FieldType, BuildConfig, AutolinkConfig, FormConfig, FormFieldConfig } from './schema/types.js';
+export { generateFormHtml, generateFormPage } from './build/forms.js';
 
 // Storage
 export { FilesystemStorageAdapter } from './storage/filesystem/adapter.js';
