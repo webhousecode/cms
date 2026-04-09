@@ -7,6 +7,8 @@ import { ActionBar, ActionBarBreadcrumb } from "@/components/action-bar";
 import { CollectionList, type ViewMode } from "@/components/collection-list";
 import { NewDocumentButton } from "@/components/new-document-button";
 import { GenerateDocumentButton } from "@/components/generate-document-button";
+import { ImportWizard } from "@/components/import-wizard";
+import { Upload } from "lucide-react";
 
 interface FieldConfig {
   name: string;
@@ -48,6 +50,7 @@ export function CollectionListPage({
 }: Props) {
   const storageKey = `cms-view-${collection}`;
   const [view, setView] = useState<ViewMode>("list");
+  const [importOpen, setImportOpen] = useState(false);
 
   // Restore saved preference after mount (avoids SSR hydration mismatch)
   useEffect(() => {
@@ -99,6 +102,15 @@ export function CollectionListPage({
                     </button>
                   </Link>
                 )}
+                <button type="button" onClick={() => setImportOpen(true)} style={{
+                  height: "28px", display: "inline-flex", alignItems: "center", gap: "0.35rem",
+                  padding: "0 0.65rem", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 500,
+                  background: "transparent", color: "var(--foreground)", border: "1px solid var(--border)",
+                  cursor: "pointer", whiteSpace: "nowrap",
+                }}>
+                  <Upload style={{ width: 14, height: 14 }} />
+                  Import
+                </button>
                 <GenerateDocumentButton collection={collection} collectionLabel={collectionLabel} />
                 <NewDocumentButton collection={collection} titleField={titleField} defaultLocale={defaultLocale} siteLocales={siteLocales} />
               </>
@@ -124,6 +136,17 @@ export function CollectionListPage({
           siteLocales={siteLocales}
         />
       </div>
+
+      {importOpen && (
+        <ImportWizard
+          collection={collection}
+          collectionLabel={collectionLabel}
+          fields={fields}
+          titleField={titleField}
+          onClose={() => setImportOpen(false)}
+          onComplete={() => window.location.reload()}
+        />
+      )}
     </>
   );
 }
