@@ -1,8 +1,28 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createHash } from "crypto";
+import os from "os";
 import { getUserById } from "@/lib/auth";
 import { getMobileSession } from "@/lib/mobile-auth";
 import { loadRegistry } from "@/lib/site-registry";
+
+function findLanHost(): string | null {
+  const ifaces = os.networkInterfaces();
+  for (const list of Object.values(ifaces)) {
+    for (const i of list ?? []) {
+      if (i.family === "IPv4" && !i.internal) return i.address;
+    }
+  }
+  return null;
+}
+
+/** Rewrite localhost URLs to LAN IP so mobile devices can reach them. */
+function rewriteLocalhostUrl(url: string | undefined): string | undefined {
+  if (!url) return url;
+  if (!/^https?:\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0)(:|$)/.test(url)) return url;
+  const lan = process.env.CMS_LAN_HOST || findLanHost();
+  if (!lan) return url;
+  return url.replace(/\/(localhost|127\.0\.0\.1|0\.0\.0\.0)/, `/${lan}`);
+}
 
 /**
  * Resolve an avatar URL for the user.
@@ -62,8 +82,8 @@ export async function GET(req: NextRequest) {
           siteId: site.id,
           siteName: site.name,
           // Phase 1: derive role from the user record's global role
-          role: (user.role as "admin" | "editor" | "viewer") ?? "viewer",
-          previewUrl: site.previewUrl,
+          role: user.role ?? "admin",
+          previewUrl: rewriteLocalhostUrl(site.previewUrl),
         });
       }
     }
