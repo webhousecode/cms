@@ -216,9 +216,10 @@ export async function setupPushListeners(): Promise<void> {
       console.warn("[push] registration error:", err);
     });
 
-    // Foreground notification
+    // Foreground notification — clear badge since user is active
     PushNotifications.addListener("pushNotificationReceived", (notif) => {
       console.log("[push] received in foreground:", notif);
+      void clearBadge();
       document.dispatchEvent(
         new CustomEvent("wha:push-received", { detail: notif }),
       );
@@ -295,6 +296,22 @@ export async function registerPendingPushToken(): Promise<boolean> {
   }
 }
 
+// ─── Badge ────────────────────────────────────────────
+
+export async function setBadgeCount(count: number): Promise<void> {
+  if (!isNative()) return;
+  try {
+    const { Badge } = await import("@capawesome/capacitor-badge");
+    await Badge.set({ count });
+  } catch (err) {
+    console.warn("setBadgeCount failed:", err);
+  }
+}
+
+export async function clearBadge(): Promise<void> {
+  return setBadgeCount(0);
+}
+
 // ─── Push debug ───────────────────────────────────────
 /** Returns push registration status for debugging. */
 export async function getPushDebugInfo(): Promise<Record<string, string>> {
@@ -365,8 +382,7 @@ export async function initCapacitor(): Promise<void> {
     await setDarkStatusBar();
     await hideSplash();
     await initDeepLinks();
-    // Phase 2: kick off push registration. Permission prompt fires here
-    // on first launch. The server-side wire-up happens later from Home.
+    await clearBadge(); // Clear badge on app open
     await setupPushListeners();
   } catch (err) {
     console.error("Capacitor init error:", err);
