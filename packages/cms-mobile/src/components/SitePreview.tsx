@@ -7,8 +7,13 @@ interface SitePreviewProps {
   onExpand?: () => void;
 }
 
-// Cache probe results so we only check each URL once per session
+// Cache probe results — cleared on pull-to-refresh so new URLs get re-probed
 const probeCache = new Map<string, boolean>();
+
+/** Clear the probe cache (called by pull-to-refresh) */
+export function clearProbeCache() {
+  probeCache.clear();
+}
 
 /**
  * Live site preview thumbnail — port of cms-admin's preview-thumb.tsx.
