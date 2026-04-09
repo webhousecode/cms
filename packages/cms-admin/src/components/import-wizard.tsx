@@ -2,7 +2,7 @@
 
 import { useState, useRef, useCallback } from "react";
 import { Upload, ArrowRight, ArrowLeft, Check, AlertTriangle, FileSpreadsheet, X } from "lucide-react";
-import { CustomSelect } from "@/components/custom-select";
+import { CustomSelect } from "@/components/ui/custom-select";
 
 interface FieldConfig {
   name: string;
