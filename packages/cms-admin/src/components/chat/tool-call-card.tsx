@@ -63,6 +63,7 @@ const TOOL_META: Record<string, ToolMeta> = {
   translate_site:    { label: "Translating site", icon: Sparkles },
   // Lighthouse (F98)
   get_lighthouse_scores: { label: "Checking site speed" },
+  run_lighthouse:        { label: "Running Lighthouse scan", icon: Sparkles },
   // Forms (F30)
   list_form_submissions: { label: "Reading submissions" },
   get_form_submission:   { label: "Reading submission" },

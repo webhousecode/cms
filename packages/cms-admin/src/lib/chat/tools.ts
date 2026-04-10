@@ -1956,7 +1956,7 @@ DESIGN GUIDELINES:
       handler: async () => {
         const { getLatest } = await import("@/lib/lighthouse/history");
         const result = await getLatest();
-        if (!result) return "No Lighthouse audit results yet. Run a scan from Tools → Lighthouse in Admin mode, or ask me to run one.";
+        if (!result) return "No Lighthouse audit results yet. I can run a scan for you — just say the word.";
 
         const s = result.scores;
         const lines = [
@@ -1996,6 +1996,49 @@ DESIGN GUIDELINES:
         }
 
         return lines.join("\n");
+      },
+    },
+    {
+      definition: {
+        name: "run_lighthouse",
+        description:
+          "Run a Lighthouse/PageSpeed Insights scan on the site right now. Takes 10-20 seconds. Returns performance, accessibility, SEO, and best practices scores.",
+        input_schema: { type: "object", properties: {} },
+      },
+      handler: async () => {
+        try {
+          const baseUrl = process.env.NEXTAUTH_URL || `http://localhost:${process.env.PORT || 3010}`;
+          const serviceToken = process.env.CMS_JWT_SECRET ?? "";
+          const res = await fetch(`${baseUrl}/api/admin/lighthouse/scan`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "x-cms-service-token": serviceToken },
+          });
+          if (!res.ok) {
+            const err = await res.json().catch(() => ({ error: "Scan failed" }));
+            return `Lighthouse scan failed: ${err.error ?? res.statusText}`;
+          }
+          const data = await res.json();
+          const results = data.results ?? [data];
+          const lines: string[] = ["**Lighthouse scan complete!**", ""];
+          for (const r of results) {
+            const s = r.scores;
+            if (!s) continue;
+            lines.push(`**${r.strategy ?? "unknown"}:**`);
+            lines.push(`- Performance: ${s.performance}/100`);
+            lines.push(`- Accessibility: ${s.accessibility}/100`);
+            lines.push(`- SEO: ${s.seo}/100`);
+            lines.push(`- Best Practices: ${s.bestPractices}/100`);
+            if (r.coreWebVitals) {
+              const cwv = r.coreWebVitals;
+              if (cwv.lcp != null) lines.push(`- LCP: ${cwv.lcp}ms`);
+              if (cwv.cls != null) lines.push(`- CLS: ${cwv.cls}`);
+            }
+            lines.push("");
+          }
+          return lines.join("\n");
+        } catch (err) {
+          return `Lighthouse scan error: ${err instanceof Error ? err.message : "unknown"}`;
+        }
       },
     },
 
