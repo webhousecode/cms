@@ -291,6 +291,14 @@ export function getConversation(orgId: string, siteId: string, id: string): Prom
   return request(`/api/mobile/chat/conversations/${encodeURIComponent(id)}?orgId=${encodeURIComponent(orgId)}&siteId=${encodeURIComponent(siteId)}`);
 }
 
+/** Delete a conversation */
+export function deleteConversation(orgId: string, siteId: string, id: string): Promise<any> {
+  return request(
+    `/api/mobile/chat/conversations/${encodeURIComponent(id)}?orgId=${encodeURIComponent(orgId)}&siteId=${encodeURIComponent(siteId)}`,
+    { method: "DELETE" },
+  );
+}
+
 /** Save a conversation */
 export function saveConversation(
   orgId: string,
