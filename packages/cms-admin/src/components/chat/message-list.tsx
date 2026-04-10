@@ -214,8 +214,8 @@ export function MessageList({ messages, isThinking, thinkingText, thinkingStartT
       `}</style>
 
       <div style={{ maxWidth: "768px", margin: "0 auto", padding: "0 16px" }}>
-        {messages.map((msg) => (
-          <MessageBubble key={msg.id} message={msg} userAvatarUrl={userAvatar} />
+        {messages.map((msg, idx) => (
+          <MessageBubble key={`${msg.id}-${idx}`} message={msg} userAvatarUrl={userAvatar} />
         ))}
 
         {isThinking && (
