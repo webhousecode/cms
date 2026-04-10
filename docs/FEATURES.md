@@ -143,6 +143,7 @@
 | F127 | [Collection Purpose Metadata](#f127-collection-purpose-metadata) | **Done** | [docs/features/F127-collection-purpose-metadata.md](features/F127-collection-purpose-metadata.md) |
 | F128 | [Access Token Scope Selector](#f128-access-token-scopes) | Planned | [docs/features/F128-access-token-scopes.md](features/F128-access-token-scopes.md) |
 | F129 | [Edit What You See](#f129-edit-what-you-see) | **Tier 1** | [docs/features/F129-edit-what-you-see.md](features/F129-edit-what-you-see.md) |
+| F130 | [AI Fallback Gateway (Local Gemma 4)](#f130-ai-fallback-gateway) | Planned | [docs/features/F130-ai-fallback-gateway.md](features/F130-ai-fallback-gateway.md) |
 
 ---
 
@@ -529,3 +530,7 @@ Adds optional `kind` and `description` fields to `CollectionConfig` so chat, MCP
 ## F122 — Beam — Site Teleportation ✅
 
 "Beam me up, Scotty" — one-click site teleportation from localhost to cloud. Two modes: (1) Beam Archive (.beam file) for offline export/import. (2) Live Beam for direct CMS-to-CMS transfer over HTTPS with token auth and SSE progress. Transfers everything: content, media, cms.config.ts, agents, brand voice, site settings. Secrets auto-stripped, listed as required on import. Token system (single-use, 1hr expiry, SHA-256 hashed). SSE progress tracking. Settings panel with export, import, live beam push, and token generator. 7/7 E2E tests.
+
+## F130 — AI Fallback Gateway (Local Gemma 4)
+
+A self-hosted TypeScript API that wraps a local Gemma 4 model and exposes a uniform interface to @webhouse/cms. Used for cheap/simple generation tasks (alt-text, summaries, translations) and as an automatic fallback when Anthropic is degraded or down. Runs on the same machine as cms-admin via Ollama. CMS detects degradation (HTTP 529/503, timeouts) and transparently routes to the local gateway. Cost: $0 per call. Latency: local network only. No API key needed. Configurable per-task routing rules: "use local for alt-text, use Claude for long-form content."

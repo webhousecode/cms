@@ -1,4 +1,4 @@
-# F112 — AI Fallback Gateway (Local Gemma 4)
+# F130 — AI Fallback Gateway (Local Gemma 4)
 
 > A self-hosted TypeScript API that wraps a local Gemma 4 model and exposes a uniform interface to `@webhouse/cms`. Used for cheap/simple generation tasks and as an automatic fallback when Anthropic is degraded or down.
 
