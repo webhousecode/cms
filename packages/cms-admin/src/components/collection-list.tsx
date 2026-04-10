@@ -385,6 +385,7 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
     await fetch(`/api/cms/${collection}/${doc.slug}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "clone" }) });
     setCloningSlug(null);
     startTransition(() => router.refresh());
+    window.dispatchEvent(new Event("cms:content-changed"));
   }
 
   async function toggleStatus(e: React.MouseEvent, doc: Doc) {
@@ -393,6 +394,7 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
     setDocs((prev) => prev.map((d) => d.id === doc.id ? { ...d, status: next } : d));
     await fetch(`/api/cms/${collection}/${doc.slug}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: next }) });
     startTransition(() => router.refresh());
+    window.dispatchEvent(new Event("cms:content-changed"));
   }
 
   async function trashDoc(e: React.MouseEvent, doc: Doc) {
@@ -400,6 +402,7 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
     setDocs((prev) => prev.map((d) => d.id === doc.id ? { ...d, status: "trashed" } : d));
     await fetch(`/api/cms/${collection}/${doc.slug}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ status: "trashed" }) });
     startTransition(() => router.refresh());
+    window.dispatchEvent(new Event("cms:content-changed"));
   }
 
   const thStyle: React.CSSProperties = {

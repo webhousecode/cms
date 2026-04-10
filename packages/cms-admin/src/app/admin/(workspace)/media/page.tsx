@@ -1041,6 +1041,16 @@ function GridView({ files, copied, deleting, usageMap, aiAnalyzedSet, aiGenerate
                 <img src={file.url} alt={file.name} loading="lazy" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               ) : file.mediaType === "video" ? (
                 <VideoThumb file={file} />
+              ) : file.mediaType === "interactive" ? (
+                <div style={{ width: "100%", height: "100%", overflow: "hidden", position: "relative" }}>
+                  <iframe
+                    src={file.url}
+                    title={file.name}
+                    sandbox="allow-scripts allow-same-origin"
+                    loading="lazy"
+                    style={{ width: "200%", height: "300px", border: "none", transform: "scale(0.5)", transformOrigin: "top left", pointerEvents: "none", position: "absolute", top: 0, left: 0 }}
+                  />
+                </div>
               ) : (
                 <MediaIcon mediaType={file.mediaType} size="2rem" />
               )}

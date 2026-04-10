@@ -48,7 +48,20 @@ export async function GET() {
       return NextResponse.json({ canDeploy: true, provider: "flyio", hasGitHubToken });
     }
 
-    // No build.ts or Dockerfile → needs explicit deploy config
+    // GitHub-adapter sites are already on GitHub — they can deploy to
+    // GitHub Pages via GitHub Actions. Pre-populate owner/repo from the
+    // adapter config so the user doesn't have to enter it manually.
+    if (siteEntry?.adapter === "github" && siteEntry.github) {
+      return NextResponse.json({
+        canDeploy: true,
+        provider: "github-pages",
+        hasGitHubToken,
+        githubOwner: siteEntry.github.owner,
+        githubRepo: siteEntry.github.repo,
+      });
+    }
+
+    // No build.ts, Dockerfile, or GitHub adapter → needs explicit deploy config
     return NextResponse.json({ canDeploy: false, hasGitHubToken });
   } catch {
     return NextResponse.json({ canDeploy: false, hasGitHubToken: false });

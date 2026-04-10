@@ -1,21 +1,5 @@
 {
   "enabledPlugins": {
     "frontend-design@claude-plugins-official": true
-  },
-  "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "Bash",
-        "if": "Bash(git commit *)",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "bash -c 'changed=$(git diff --name-only HEAD~1 HEAD 2>/dev/null | grep -E \"^(packages/cms/src|packages/cms-admin/src|packages/cms-cli/src|docs/ai-guide|docs/features)\" | head -1); if [ -n \"$changed\" ]; then echo \"{\\\"systemMessage\\\": \\\"Docs may need updating — run /update-docs to sync docs.webhouse.app\\\"}\"; fi'",
-            "timeout": 5,
-            "statusMessage": "Checking if docs need updating..."
-          }
-        ]
-      }
-    ]
   }
 }

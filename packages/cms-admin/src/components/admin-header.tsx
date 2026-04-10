@@ -138,6 +138,10 @@ function UserNav({ user }: { user: SessionUser | null }) {
             <Settings className="mr-2 h-4 w-4" />
             Account Preferences
           </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => router.push("/admin/settings")}>
+            <Settings className="mr-2 h-4 w-4" />
+            Site Settings
+          </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <ThemeItems />

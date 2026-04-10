@@ -37,18 +37,17 @@ export function StepTemplate({ selected, onSelect }: Props) {
       fetch("/api/cms/registry").then((r) => r.json()).catch(() => ({ registry: null })),
     ]).then(([tmplData, regData]) => {
       setTemplates(tmplData.templates ?? []);
-      // Extract sites from all orgs
+      // Extract sites from the ACTIVE org only (not all orgs)
       if (regData.registry?.orgs) {
-        const seen = new Set<string>();
-        const allSites: OrgSite[] = [];
-        for (const org of regData.registry.orgs) {
-          for (const site of org.sites ?? []) {
-            if (seen.has(site.id)) continue;
-            seen.add(site.id);
-            allSites.push({ id: site.id, name: site.name, adapter: site.adapter });
+        const activeOrgId = document.cookie.match(/(?:^|; )cms-active-org=([^;]*)/)?.[1] ?? regData.registry.defaultOrgId;
+        const activeOrg = regData.registry.orgs.find((o: { id: string }) => o.id === activeOrgId) ?? regData.registry.orgs[0];
+        const orgSites: OrgSite[] = [];
+        if (activeOrg) {
+          for (const site of activeOrg.sites ?? []) {
+            orgSites.push({ id: site.id, name: site.name, adapter: site.adapter });
           }
         }
-        setSites(allSites);
+        setSites(orgSites);
       }
     }).finally(() => setLoading(false));
   }, []);

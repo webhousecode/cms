@@ -492,9 +492,15 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
               <X style={{ width: "0.875rem", height: "0.875rem" }} />
             </button>
           )}
-          <kbd style={{ fontSize: "0.65rem", padding: "0.15rem 0.4rem", borderRadius: "4px", border: "1px solid var(--border)", color: "var(--muted-foreground)", fontFamily: "monospace", flexShrink: 0 }}>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{ fontSize: "0.65rem", padding: "0.15rem 0.4rem", borderRadius: "4px", border: "1px solid var(--border)", color: "var(--muted-foreground)", fontFamily: "monospace", flexShrink: 0, background: "none", cursor: "pointer" }}
+            className="hover:border-foreground hover:text-foreground transition-colors"
+            title="Close (Esc)"
+          >
             ESC
-          </kbd>
+          </button>
         </div>
 
         {/* Results */}

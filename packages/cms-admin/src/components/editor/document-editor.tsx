@@ -803,7 +803,7 @@ function PropertiesPanel({ doc, collection, locales, onClose, onSaved }: {
       const updated = await res.json() as DocSnapshot;
       onSaved(updated);
       router.replace(`/admin/${collection}/${slug}`);
-      router.refresh();
+      router.refresh(); window.dispatchEvent(new Event("cms:content-changed"));
       // Trigger rebuild for static sites after slug rename
       fetch("/api/preview-build", { method: "POST" }).catch(() => {});
     } else {
@@ -1246,7 +1246,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
     await fetch(`/api/cms/${collection}/${doc.slug}`, { method: "DELETE" });
     toast("Moved to trash", { description: doc.slug });
     router.push(`/admin/${collection}`);
-    router.refresh();
+    router.refresh(); window.dispatchEvent(new Event("cms:content-changed"));
   }
 
   async function openPreview() {
@@ -1329,7 +1329,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
       const cloned = (await res.json()) as { slug: string };
       toast.success("Document cloned", { description: cloned.slug });
       router.push(`/admin/${collection}/${cloned.slug}`);
-      router.refresh();
+      router.refresh(); window.dispatchEvent(new Event("cms:content-changed"));
     }
     setCloning(false);
   }

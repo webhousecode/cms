@@ -75,6 +75,14 @@ const PATH_TITLES: Record<string, string> = {
   "/admin/account": "Account",
   "/admin/trash": "Trash",
   "/admin/backup": "Backup",
+  "/admin/forms": "Forms",
+  "/admin/forms/builder": "Form Builder",
+  "/admin/seo": "SEO",
+  "/admin/lighthouse": "Lighthouse",
+  "/admin/visibility": "Visibility",
+  "/admin/ai-analytics": "AI Analytics",
+  "/admin/favorites": "Favorites",
+  "/admin/deploy/docker": "Docker Deploy",
 };
 
 function pathTitle(path: string): string {

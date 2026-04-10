@@ -238,6 +238,16 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
             return { ...m, toolCalls };
           })
         );
+        // Notify the rest of the UI when a chat tool modifies content so
+        // server-rendered stats (dashboard cards, collection counts) refresh.
+        if ([
+          "create_document", "update_document", "publish_document",
+          "unpublish_document", "trash_document", "restore_from_trash",
+          "clone_document", "bulk_publish", "bulk_update", "empty_trash",
+          "translate_document", "translate_site",
+        ].includes(data.tool)) {
+          window.dispatchEvent(new Event("cms:content-changed"));
+        }
         break;
 
       case "form":

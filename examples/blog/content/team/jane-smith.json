@@ -1,0 +1,21 @@
+{
+  "id": "iprxmaOzTiiuWxUs8TWAf",
+  "slug": "jane-smith",
+  "collection": "team",
+  "status": "published",
+  "data": {
+    "name": "Jane Smith",
+    "role": "Lead Designer",
+    "bio": "Passionate about typography",
+    "_lastEditedBy": {
+      "userId": "fb4eda6a-bc5c-4dec-8cb6-c77c9fb74cd9",
+      "name": "Christian Broberg",
+      "email": "cb@webhouse.dk",
+      "at": "2026-04-09T11:41:26.354Z"
+    }
+  },
+  "_fieldMeta": {},
+  "createdAt": "2026-04-09T11:32:46.746Z",
+  "updatedAt": "2026-04-09T11:41:26.355Z",
+  "locale": "da"
+}

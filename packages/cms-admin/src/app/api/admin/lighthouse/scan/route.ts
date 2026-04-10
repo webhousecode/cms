@@ -15,14 +15,26 @@ export async function POST(request: NextRequest) {
 
     const config = await readSiteConfig();
     if (!url) {
-      url = config.previewSiteUrl;
+      // Prefer the live production URL — PSI API requires a public URL,
+      // not localhost. Fall back to custom domain, then previewSiteUrl.
+      const customDomain = config.deployCustomDomain
+        ? `https://${config.deployCustomDomain}`
+        : "";
+      url = config.deployProductionUrl || customDomain || config.previewSiteUrl;
       if (!url) {
-        return NextResponse.json({ error: "No URL provided and no previewSiteUrl configured" }, { status: 400 });
+        return NextResponse.json({ error: "No URL provided and no production or preview URL configured" }, { status: 400 });
       }
     }
 
     if (!url.startsWith("http")) {
       url = `https://${url}`;
+    }
+
+    // PSI API cannot audit localhost — reject early with a clear message
+    if (/localhost|127\.0\.0\.1|\[::1\]/.test(url)) {
+      return NextResponse.json({
+        error: "Cannot audit localhost URLs — PSI API requires a public URL. Configure a production URL in Site Settings → Deploy.",
+      }, { status: 400 });
     }
 
     const apiKey = config.psiApiKey || process.env.GOOGLE_PSI_API_KEY;
