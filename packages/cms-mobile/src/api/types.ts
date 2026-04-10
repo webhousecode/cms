@@ -92,3 +92,24 @@ export interface DocumentEntry {
 export interface DocumentsResponse {
   documents: DocumentEntry[];
 }
+
+export interface MediaFile {
+  name: string;
+  folder: string;
+  url: string;
+  /** 400w WebP thumbnail URL (faster for grids) */
+  thumbUrl?: string;
+  size: number;
+  isImage: boolean;
+  mediaType: "image" | "svg" | "audio" | "video" | "document" | "interactive" | "other";
+  createdAt: string;
+  aiCaption?: string | null;
+  aiAlt?: string | null;
+  aiTags?: string[] | null;
+  aiAnalyzedAt?: string | null;
+}
+
+export interface MediaListResponse {
+  files: MediaFile[];
+  total: number;
+}

@@ -6,6 +6,7 @@ import type {
   CollectionsResponse,
   DocumentsResponse,
   DocumentEntry,
+  MediaListResponse,
 } from "./types";
 
 /**
@@ -211,6 +212,26 @@ export async function uploadFile(
   const body = await res.json();
   if (!res.ok) throw new ApiError(res.status, body, body.error ?? `HTTP ${res.status}`);
   return body as { url: string; name: string };
+}
+
+/** List media files for a site. Optional search query. */
+export function getMedia(orgId: string, siteId: string, query?: string): Promise<MediaListResponse> {
+  const params = new URLSearchParams({ orgId, siteId });
+  if (query) params.set("q", query);
+  return request<MediaListResponse>(`/api/mobile/media?${params.toString()}`);
+}
+
+/** Trigger AI analysis for a media file. Returns caption, alt, tags. */
+export function analyzeMedia(
+  orgId: string,
+  siteId: string,
+  filename: string,
+  folder?: string,
+): Promise<{ caption: string; alt: string; tags: string[] }> {
+  return request(`/api/mobile/media/analyze?orgId=${encodeURIComponent(orgId)}&siteId=${encodeURIComponent(siteId)}`, {
+    method: "POST",
+    body: { filename, folder: folder || undefined },
+  });
 }
 
 /** Trash a document (soft delete). */

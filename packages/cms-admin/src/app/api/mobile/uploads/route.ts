@@ -69,7 +69,7 @@ export async function GET(req: NextRequest) {
     return new NextResponse(new Uint8Array(data), {
       headers: {
         "Content-Type": contentType,
-        "Cache-Control": "public, max-age=3600",
+        "Cache-Control": "public, max-age=86400, immutable",
       },
     });
   } catch {

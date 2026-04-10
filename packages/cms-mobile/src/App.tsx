@@ -9,6 +9,7 @@ import { SitePreviewFullscreen } from "./screens/SitePreviewFullscreen";
 import { CollectionList } from "./screens/CollectionList";
 import { DocumentList } from "./screens/DocumentList";
 import { DocumentEditor } from "./screens/DocumentEditor";
+import { MediaBrowser } from "./screens/MediaBrowser";
 import { Chat } from "./screens/Chat";
 import { Settings } from "./screens/Settings";
 import { ChatFab } from "./components/ChatFab";
@@ -73,7 +74,7 @@ export function App() {
 
   // Content editing screens get their own back-navigation (no swipe to Home)
   const isContentScreen =
-    location.includes("/collections") || location.includes("/edit/");
+    location.includes("/collections") || location.includes("/edit/") || location.includes("/media");
 
   // Non-authenticated screens
   if (
@@ -108,6 +109,7 @@ export function App() {
           <Route path="/site/:orgId/:siteId/collections/:collection" component={DocumentList} />
           <Route path="/site/:orgId/:siteId/collections" component={CollectionList} />
           <Route path="/site/:orgId/:siteId/edit/:collection/:slug" component={DocumentEditor} />
+          <Route path="/site/:orgId/:siteId/media" component={MediaBrowser} />
         </Switch>
       ) : isChildOfHome ? (
         // Child screen on top of Home with swipe-back

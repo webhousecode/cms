@@ -73,7 +73,6 @@ export function Site() {
   // Phase 1 placeholder counters — replaced by real per-site endpoints
   // in Phase 3 (curation) and Phase 4 (dashboard).
   const curationPending = 0;
-  const draftsToday = 0;
 
   return (
       <Screen>
@@ -150,14 +149,6 @@ export function Site() {
             </p>
           </div>
 
-          <div className="rounded-xl bg-brand-darkSoft p-4">
-            <p className="text-xs uppercase text-white/40">Drafts today</p>
-            <p className="mt-1 text-3xl font-semibold text-white">{draftsToday}</p>
-            <p className="mt-1 text-xs text-white/50">
-              Coming in Phase 4 — daily dashboard
-            </p>
-          </div>
-
           {/* Content editing entry point */}
           <button
             type="button"
@@ -168,6 +159,22 @@ export function Site() {
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium">Content</p>
               <p className="text-xs text-white/40">Edit pages, posts and collections</p>
+            </div>
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="text-white/30 shrink-0">
+              <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+
+          {/* Media browser entry point */}
+          <button
+            type="button"
+            onClick={() => setLocation(`/site/${params.orgId}/${params.siteId}/media`)}
+            className="flex items-center gap-4 rounded-xl bg-brand-darkSoft border border-white/10 px-4 py-4 text-left active:scale-[0.98] active:bg-white/5 transition-all"
+          >
+            <span className="text-2xl">🖼️</span>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium">Media</p>
+              <p className="text-xs text-white/40">Browse and upload images</p>
             </div>
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className="text-white/30 shrink-0">
               <path d="M6 4l4 4-4 4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
