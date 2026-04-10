@@ -2022,12 +2022,15 @@ DESIGN GUIDELINES:
             return `Lighthouse scan failed: ${err.error ?? res.statusText}`;
           }
           const data = await res.json();
-          const results = data.results ?? [data];
-          const lines: string[] = ["**Lighthouse scan complete!**", ""];
+          // Scan endpoint returns { mobile: LighthouseResult, desktop: LighthouseResult }
+          const results = [data.mobile, data.desktop].filter(Boolean);
+          if (results.length === 0) return "Scan completed but returned no results.";
+
+          const lines: string[] = [`**Lighthouse scan complete!** (${results[0]?.url ?? ""})`, ""];
           for (const r of results) {
             const s = r.scores;
             if (!s) continue;
-            lines.push(`**${r.strategy ?? "unknown"}:**`);
+            lines.push(`**${(r.strategy ?? "unknown").charAt(0).toUpperCase() + (r.strategy ?? "").slice(1)}:**`);
             lines.push(`- Performance: ${s.performance}/100`);
             lines.push(`- Accessibility: ${s.accessibility}/100`);
             lines.push(`- SEO: ${s.seo}/100`);
@@ -2036,6 +2039,20 @@ DESIGN GUIDELINES:
               const cwv = r.coreWebVitals;
               if (cwv.lcp != null) lines.push(`- LCP: ${cwv.lcp}ms`);
               if (cwv.cls != null) lines.push(`- CLS: ${cwv.cls}`);
+              if (cwv.fcp != null) lines.push(`- FCP: ${cwv.fcp}ms`);
+            }
+            if (r.opportunities?.length) {
+              const top = r.opportunities
+                .filter((o: any) => o.score !== null && o.score < 1)
+                .sort((a: any, b: any) => (b.savingsMs ?? 0) - (a.savingsMs ?? 0))
+                .slice(0, 3);
+              if (top.length > 0) {
+                lines.push(`  Top issues:`);
+                for (const o of top) {
+                  const savings = o.savingsMs ? ` (save ~${Math.round(o.savingsMs)}ms)` : "";
+                  lines.push(`  - ${o.title}${savings}`);
+                }
+              }
             }
             lines.push("");
           }
