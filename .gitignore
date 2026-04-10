@@ -173,3 +173,4 @@ packages/cms-admin/test-results/
 
 # Next.js auto-generated
 next-env.d.ts
+.vscode/
