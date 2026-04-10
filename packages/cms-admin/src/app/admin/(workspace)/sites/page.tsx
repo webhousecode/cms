@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { Globe, MoreVertical, Settings2, Plus, Copy, Eye, ExternalLink, Pencil, LayoutGrid, List, FileStack, Loader2, ArrowUpDown } from "lucide-react";
+import { Globe, MoreVertical, Settings2, Plus, Copy, Eye, ExternalLink, Pencil, LayoutGrid, List, FileStack, Loader2, ArrowUpDown, Play, Square } from "lucide-react";
 import { useSiteRole } from "@/hooks/use-site-role";
 import { useTabs } from "@/lib/tabs-context";
 import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
@@ -36,6 +36,11 @@ interface Registry {
   defaultSiteId: string;
 }
 
+function extractPort(url?: string): string | null {
+  if (!url) return null;
+  try { return new URL(url).port || null; } catch { return null; }
+}
+
 function getCookie(name: string): string | null {
   const match = document.cookie.match(new RegExp(`(?:^|; )${name}=([^;]*)`));
   return match ? decodeURIComponent(match[1]) : null;
@@ -66,6 +71,11 @@ export default function SitesDashboard() {
   const [cloneInProgress, setCloneInProgress] = useState(false);
   const [cloneError, setCloneError] = useState("");
 
+  // DEV ONLY — PM2 server status per site (matched by previewUrl port)
+  const isDev = process.env.NODE_ENV !== "production";
+  const [pm2Status, setPm2Status] = useState<Record<string, { name: string; status: string }>>({});
+  const [pm2Busy, setPm2Busy] = useState<string | null>(null);
+
   async function handleClone() {
     if (!cloningSite || !cloneName.trim()) return;
     setCloneInProgress(true);
@@ -94,6 +104,35 @@ export default function SitesDashboard() {
     if (typeof window !== "undefined") return (localStorage.getItem("cms-sites-view") as "grid" | "list") ?? "grid";
     return "grid";
   });
+
+  const loadPm2 = useCallback(() => {
+    if (!isDev) return;
+    fetch("/api/admin/pm2")
+      .then((r) => r.json())
+      .then((d: { processes?: Array<{ name: string; status: string; port: string | null }> }) => {
+        const map: Record<string, { name: string; status: string }> = {};
+        for (const p of d.processes ?? []) {
+          if (p.port) map[p.port] = { name: p.name, status: p.status };
+        }
+        setPm2Status(map);
+      })
+      .catch(() => {});
+  }, [isDev]);
+
+  async function togglePm2(sitePort: string, action: "start" | "stop") {
+    const proc = pm2Status[sitePort];
+    if (!proc) return;
+    setPm2Busy(sitePort);
+    try {
+      await fetch("/api/admin/pm2", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: proc.name, action }),
+      });
+      loadPm2();
+    } catch { /* ignore */ }
+    finally { setPm2Busy(null); }
+  }
 
   const loadSites = useCallback(() => {
     setLoaded(false);
@@ -134,7 +173,7 @@ export default function SitesDashboard() {
       .catch(() => {});
   }, []);
 
-  useEffect(() => { loadSites(); }, [loadSites]);
+  useEffect(() => { loadSites(); loadPm2(); }, [loadSites, loadPm2]);
 
   const activeOrg = registry?.orgs.find((o) => o.id === activeOrgId) ?? registry?.orgs[0];
   // Filter to only sites the user has team access to
@@ -294,6 +333,9 @@ export default function SitesDashboard() {
             }
           }}
           onCopyId={(id) => navigator.clipboard.writeText(id)}
+          pm2Status={pm2Status}
+          pm2Busy={pm2Busy}
+          onTogglePm2={togglePm2}
         />
       ) : (
       <div style={{
@@ -362,6 +404,24 @@ export default function SitesDashboard() {
                     <Settings2 className="mr-2 h-4 w-4 text-muted-foreground" />
                     Settings
                   </DropdownMenuItem>
+                  {isDev && (() => {
+                    const port = extractPort(site.previewUrl);
+                    const proc = port ? pm2Status[port] : null;
+                    if (!proc) return null;
+                    const isOnline = proc.status === "online";
+                    const busy = pm2Busy === port;
+                    return (
+                      <DropdownMenuItem
+                        disabled={busy}
+                        onClick={(e) => { e.stopPropagation(); if (port) togglePm2(port, isOnline ? "stop" : "start"); }}
+                      >
+                        {isOnline
+                          ? <><Square className="mr-2 h-4 w-4 text-destructive" />{busy ? "Stopping…" : "Stop server"}</>
+                          : <><Play className="mr-2 h-4 w-4 text-green-500" />{busy ? "Starting…" : "Start server"}</>
+                        }
+                      </DropdownMenuItem>
+                    );
+                  })()}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
@@ -585,7 +645,7 @@ export default function SitesDashboard() {
 type SiteSortKey = "name" | "type" | "pages" | "collections" | "status";
 type SortDir = "asc" | "desc";
 
-function SiteListView({ sites, stats, healthMap, liveUrls, onEnter, onSettings, onRename, onPreview, onCopyId, onClone }: {
+function SiteListView({ sites, stats, healthMap, liveUrls, onEnter, onSettings, onRename, onPreview, onCopyId, onClone, pm2Status: pm2Map, pm2Busy: pm2BusyPort, onTogglePm2 }: {
   sites: SiteEntry[];
   stats: Record<string, { pages: number; collections: number }>;
   healthMap: Record<string, "up" | "down" | "no-preview">;
@@ -596,7 +656,12 @@ function SiteListView({ sites, stats, healthMap, liveUrls, onEnter, onSettings, 
   onPreview: (site: SiteEntry) => void;
   onCopyId: (id: string) => void;
   onClone?: (site: SiteEntry) => void;
+  pm2Status?: Record<string, { name: string; status: string }>;
+  pm2Busy?: string | null;
+  onTogglePm2?: (port: string, action: "start" | "stop") => void;
 }) {
+  const pm2StatusMap = pm2Map ?? {};
+  const isDev = process.env.NODE_ENV !== "production";
   const [sortKey, setSortKey] = useState<SiteSortKey>(() => {
     if (typeof window === "undefined") return "name";
     return (localStorage.getItem("cms-sites-sort-key") as SiteSortKey) || "name";
@@ -780,6 +845,24 @@ function SiteListView({ sites, stats, healthMap, liveUrls, onEnter, onSettings, 
                       <Settings2 className="mr-2 h-4 w-4 text-muted-foreground" />
                       Settings
                     </DropdownMenuItem>
+                    {isDev && (() => {
+                      const port = extractPort(site.previewUrl);
+                      const proc = port ? pm2StatusMap[port] : null;
+                      if (!proc) return null;
+                      const isOnline = proc.status === "online";
+                      const busy = pm2BusyPort === port;
+                      return (
+                        <DropdownMenuItem
+                          disabled={busy}
+                          onClick={(e) => { e.stopPropagation(); if (port && onTogglePm2) onTogglePm2(port, isOnline ? "stop" : "start"); }}
+                        >
+                          {isOnline
+                            ? <><Square className="mr-2 h-4 w-4 text-destructive" />{busy ? "Stopping…" : "Stop server"}</>
+                            : <><Play className="mr-2 h-4 w-4 text-green-500" />{busy ? "Starting…" : "Start server"}</>
+                          }
+                        </DropdownMenuItem>
+                      );
+                    })()}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>
