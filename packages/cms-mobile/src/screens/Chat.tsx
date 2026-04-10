@@ -310,6 +310,31 @@ function ToolCallCard({ tool }: { tool: ToolCall }) {
   );
 }
 
+// ─── Copy ID Button (history list) ───────────────────
+
+function CopyIdButton({ id }: { id: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        navigator.clipboard.writeText(id).then(() => {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 1500);
+        });
+      }}
+      className="shrink-0 px-3 py-3 text-white/20 active:text-white/60"
+      aria-label="Copy chat ID"
+    >
+      {copied ? (
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-7" stroke="#4ade80" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+      ) : (
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="3" r="1" fill="currentColor" /><circle cx="8" cy="8" r="1" fill="currentColor" /><circle cx="8" cy="13" r="1" fill="currentColor" /></svg>
+      )}
+    </button>
+  );
+}
+
 // ─── Copy Button ─────────────────────────────────────
 
 function CopyButton({ text }: { text: string }) {
@@ -854,19 +879,24 @@ export function Chat() {
                 <p className="text-xs text-white/30 text-center py-12">No saved chats yet</p>
               ) : (
                 conversations.map((conv, i) => (
-                  <button
+                  <div
                     key={conv.id ?? i}
-                    type="button"
-                    onClick={() => loadConversation(conv)}
-                    className="w-full text-left px-4 py-3 border-b border-white/5 active:bg-white/5"
+                    className="flex items-center border-b border-white/5"
                   >
-                    <p className="text-sm text-white truncate">{conv.title}</p>
-                    {conv.createdAt && (
-                      <p className="text-[10px] text-white/30 mt-0.5">
-                        {new Date(conv.createdAt).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
-                      </p>
-                    )}
-                  </button>
+                    <button
+                      type="button"
+                      onClick={() => loadConversation(conv)}
+                      className="flex-1 min-w-0 text-left px-4 py-3 active:bg-white/5"
+                    >
+                      <p className="text-sm text-white truncate">{conv.title}</p>
+                      {conv.createdAt && (
+                        <p className="text-[10px] text-white/30 mt-0.5">
+                          {new Date(conv.createdAt).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                        </p>
+                      )}
+                    </button>
+                    {conv.id && <CopyIdButton id={conv.id} />}
+                  </div>
                 ))
               )
             ) : (
