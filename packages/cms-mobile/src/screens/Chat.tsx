@@ -1,43 +1,852 @@
+import { Fragment, createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
+
+/** Site context for doc pills — orgId/siteId available to all markdown renderers */
+const SiteCtx = createContext<{ orgId: string; siteId: string }>({ orgId: "", siteId: "" });
 import { Screen } from "@/components/Screen";
 import { ScreenHeader, BackButton } from "@/components/ScreenHeader";
+import { streamChat, listConversations, saveConversation, getConversation as fetchConversation, getMemories } from "@/api/client";
+import { getActiveOrgId, getActiveSiteId } from "@/lib/prefs";
 
-/**
- * AI Chat screen — placeholder for Phase 1.5.
- *
- * Phase 6 wires this to F107 (Chat with Your Site) — full conversation,
- * voice input, agent tool calls, push when long-running tasks complete.
- *
- * Per user direction: AI is a first-class citizen in everything, so the
- * chat is reachable from EVERY screen via the bottom-right FAB.
- */
-export function Chat() {
+// ─── Types ───────────────────────────────────────────
+
+interface ToolCall {
+  tool: string;
+  input?: string;
+  result?: string;
+  status: "running" | "done" | "error";
+}
+
+interface Message {
+  role: "user" | "assistant";
+  content: string;
+  toolCalls?: ToolCall[];
+  thinking?: string;
+}
+
+interface Conversation {
+  id?: string;
+  title: string;
+  messages: Message[];
+  createdAt?: string;
+}
+
+// ─── Quick Action Chips ──────────────────────────────
+
+const QUICK_ACTIONS = [
+  { label: "Site overview", icon: "📊" },
+  { label: "Show drafts", icon: "📄" },
+  { label: "Search content", icon: "🔍" },
+  { label: "What can you do?", icon: "🔧" },
+];
+
+// ─── Markdown Renderer (ported from desktop chat) ────
+// Block-based parser identical to cms-admin's markdown-renderer.tsx
+// with CSS vars replaced by dark-mode colors.
+
+const C = {
+  fg: "#fff",
+  muted: "rgba(255,255,255,0.5)",
+  border: "rgba(255,255,255,0.1)",
+  bg: "rgba(255,255,255,0.05)",
+  gold: "#F7BB2E",
+};
+
+interface MdBlock {
+  type: "paragraph" | "heading" | "code" | "table" | "ul" | "ol" | "blockquote" | "hr" | "image";
+  content: string;
+  level?: number;
+  lang?: string;
+  rows?: string[][];
+  alt?: string;
+}
+
+function parseMdBlocks(text: string): MdBlock[] {
+  const blocks: MdBlock[] = [];
+  const lines = text.split("\n");
+  let i = 0;
+  while (i < lines.length) {
+    const line = lines[i];
+    // Image
+    const imgMatch = line.trim().match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+    if (imgMatch) { blocks.push({ type: "image", content: imgMatch[2], alt: imgMatch[1] }); i++; continue; }
+    // HR
+    if (/^---+$/.test(line.trim())) { blocks.push({ type: "hr", content: "" }); i++; continue; }
+    // Code block
+    if (line.trimStart().startsWith("```")) {
+      const lang = line.trimStart().slice(3).trim();
+      const codeLines: string[] = []; i++;
+      while (i < lines.length && !lines[i].trimStart().startsWith("```")) { codeLines.push(lines[i]); i++; }
+      i++;
+      blocks.push({ type: "code", content: codeLines.join("\n"), lang }); continue;
+    }
+    // Heading
+    const hm = line.match(/^(#{1,3})\s+(.+)/);
+    if (hm) { blocks.push({ type: "heading", content: hm[2], level: hm[1].length }); i++; continue; }
+    // Table
+    if (line.includes("|") && i + 1 < lines.length && /^\s*\|?[\s-:|]+\|/.test(lines[i + 1])) {
+      const tl: string[] = [line]; i++; i++;
+      while (i < lines.length && lines[i].includes("|")) { tl.push(lines[i]); i++; }
+      const rows = tl.map((l) => l.split("|").map((c) => c.trim()).filter((c) => c !== ""));
+      blocks.push({ type: "table", content: "", rows }); continue;
+    }
+    // Blockquote
+    if (line.startsWith("> ")) {
+      const ql: string[] = [];
+      while (i < lines.length && (lines[i].startsWith("> ") || lines[i].startsWith(">"))) { ql.push(lines[i].replace(/^>\s?/, "")); i++; }
+      blocks.push({ type: "blockquote", content: ql.join("\n") }); continue;
+    }
+    // UL
+    if (/^[-*•]\s/.test(line)) {
+      const items: string[] = [];
+      while (i < lines.length && /^[-*•]\s/.test(lines[i])) { items.push(lines[i].replace(/^[-*•]\s/, "")); i++; }
+      blocks.push({ type: "ul", content: items.join("\n") }); continue;
+    }
+    // OL
+    if (/^\d+[.)]\s/.test(line)) {
+      const items: string[] = [];
+      while (i < lines.length && /^\d+[.)]\s/.test(lines[i])) { items.push(lines[i].replace(/^\d+[.)]\s/, "")); i++; }
+      blocks.push({ type: "ol", content: items.join("\n") }); continue;
+    }
+    // Empty
+    if (line.trim() === "") { i++; continue; }
+    // Paragraph
+    const pl: string[] = [];
+    while (i < lines.length && lines[i].trim() !== "" && !lines[i].startsWith("```") && !lines[i].match(/^#{1,3}\s/) && !lines[i].match(/^[-*•]\s/) && !lines[i].match(/^\d+[.)]\s/) && !lines[i].startsWith("> ") && !/^---+$/.test(lines[i].trim())) {
+      pl.push(lines[i]); i++;
+    }
+    if (pl.length > 0) blocks.push({ type: "paragraph", content: pl.join("\n") });
+  }
+  return blocks;
+}
+
+function DocPill({ collection, slug, variant }: { collection: string; slug: string; variant: "edit" | "view" }) {
   const [, setLocation] = useLocation();
+  const { orgId, siteId } = useContext(SiteCtx);
+  const label = variant === "edit" ? "Edit" : "View";
+  return (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        if (variant === "edit") {
+          setLocation(`/site/${orgId}/${siteId}/edit/${collection}/${slug}`);
+        } else {
+          setLocation(`/site/${orgId}/${siteId}/preview`);
+        }
+      }}
+      style={{
+        display: "inline-flex", alignItems: "center", gap: 3,
+        padding: "1px 7px", borderRadius: 4, fontSize: "0.65rem", fontWeight: 500,
+        lineHeight: "1.5", marginLeft: 3, cursor: "pointer",
+        background: variant === "edit" ? "rgba(247,187,46,0.15)" : C.bg,
+        color: variant === "edit" ? C.gold : C.muted,
+        border: `1px solid ${variant === "edit" ? "rgba(247,187,46,0.3)" : C.border}`,
+      }}
+    >
+      {label}
+    </button>
+  );
+}
+
+function InlineRich({ text }: { text: string }) {
+  const regex = /(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*|~~[^~]+~~|\[doc:[^\]]+\]|\[form:[^\]]+\]|\[[^\]]+\]\([^)]+\))/g;
+  const parts: React.ReactNode[] = [];
+  let lastIdx = 0;
+  let match: RegExpExecArray | null;
+  while ((match = regex.exec(text)) !== null) {
+    if (match.index > lastIdx) parts.push(text.slice(lastIdx, match.index));
+    const m = match[0];
+    if (m.startsWith("`") && m.endsWith("`")) {
+      parts.push(<code key={match.index} style={{ padding: "2px 6px", borderRadius: 4, fontSize: "0.82em", backgroundColor: C.bg, border: `1px solid ${C.border}`, fontFamily: "monospace", color: C.gold }}>{m.slice(1, -1)}</code>);
+    } else if (m.startsWith("**")) {
+      parts.push(<strong key={match.index} style={{ fontWeight: 600, color: C.fg }}>{m.slice(2, -2)}</strong>);
+    } else if (m.startsWith("*")) {
+      parts.push(<em key={match.index}>{m.slice(1, -1)}</em>);
+    } else if (m.startsWith("~~")) {
+      parts.push(<s key={match.index} style={{ opacity: 0.6 }}>{m.slice(2, -2)}</s>);
+    } else if (m.startsWith("[doc:")) {
+      const dm = m.match(/^\[doc:([^/]+)\/([^|\]]+)(?:\|([^\]]*))?\]$/);
+      if (dm) {
+        parts.push(
+          <span key={match.index} style={{ whiteSpace: "nowrap" }}>
+            <DocPill collection={dm[1]} slug={dm[2]} variant="edit" />
+            <DocPill collection={dm[1]} slug={dm[2]} variant="view" />
+          </span>
+        );
+      }
+    } else if (m.startsWith("[form:")) {
+      const fm = m.match(/^\[form:([^\]]+)\]$/);
+      if (fm) {
+        parts.push(<code key={match.index} style={{ padding: "2px 6px", borderRadius: 4, fontSize: "0.82em", backgroundColor: C.bg, border: `1px solid ${C.border}`, fontFamily: "monospace", color: C.gold }}>{fm[1]}</code>);
+      }
+    } else if (m.startsWith("[")) {
+      const lm = m.match(/\[([^\]]+)\]\(([^)]+)\)/);
+      if (lm) parts.push(<a key={match.index} href={lm[2]} target="_blank" rel="noopener noreferrer" style={{ color: C.gold, textDecoration: "underline", textUnderlineOffset: "2px" }}>{lm[1]}</a>);
+    }
+    lastIdx = match.index + m.length;
+  }
+  if (lastIdx < text.length) parts.push(text.slice(lastIdx));
+  return <>{parts}</>;
+}
+
+function renderMdBlock(block: MdBlock, key: number): React.ReactNode {
+  switch (block.type) {
+    case "hr": return <hr key={key} style={{ border: "none", borderTop: `1px solid ${C.border}`, margin: "16px 0" }} />;
+    case "image": return <ChatImage key={key} src={block.content} alt={block.alt ?? ""} />;
+    case "heading": {
+      const s = { 1: { fontSize: "1.15rem", fontWeight: 700, margin: "16px 0 6px" }, 2: { fontSize: "1rem", fontWeight: 650, margin: "12px 0 5px" }, 3: { fontSize: "0.9rem", fontWeight: 600, margin: "10px 0 4px" } }[block.level ?? 2]!;
+      return <div key={key} style={{ ...s, color: C.fg }}><InlineRich text={block.content} /></div>;
+    }
+    case "code": return (
+      <div key={key} style={{ margin: "8px 0" }}>
+        {block.lang && <div style={{ fontSize: "0.65rem", color: C.muted, padding: "4px 12px 0", backgroundColor: C.bg, borderRadius: "8px 8px 0 0", border: `1px solid ${C.border}`, borderBottom: "none", fontFamily: "monospace" }}>{block.lang}</div>}
+        <pre style={{ padding: "10px 12px", borderRadius: block.lang ? "0 0 8px 8px" : "8px", backgroundColor: C.bg, border: `1px solid ${C.border}`, borderTop: block.lang ? "none" : undefined, fontSize: "0.78rem", lineHeight: 1.5, fontFamily: "monospace", overflowX: "auto", whiteSpace: "pre-wrap", wordBreak: "break-word", margin: 0 }}><code>{block.content}</code></pre>
+      </div>
+    );
+    case "table": return (
+      <div key={key} style={{ margin: "8px 0", overflowX: "auto" }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: "0.78rem" }}>
+          {block.rows && block.rows.length > 0 && (<>
+            <thead><tr>{block.rows[0].map((cell, ci) => <th key={ci} style={{ padding: "6px 10px", textAlign: "left", fontWeight: 600, borderBottom: `2px solid ${C.border}`, color: C.fg, whiteSpace: "nowrap" }}><InlineRich text={cell} /></th>)}</tr></thead>
+            <tbody>{block.rows.slice(1).map((row, ri) => <tr key={ri}>{row.map((cell, ci) => <td key={ci} style={{ padding: "5px 10px", borderBottom: `1px solid ${C.border}`, color: C.muted }}><InlineRich text={cell} /></td>)}</tr>)}</tbody>
+          </>)}
+        </table>
+      </div>
+    );
+    case "ul": return <ul key={key} style={{ margin: "6px 0", paddingLeft: 20, listStyleType: "disc" }}>{block.content.split("\n").map((item, j) => <li key={j} style={{ margin: "3px 0", color: C.fg, fontSize: "0.85rem" }}><InlineRich text={item} /></li>)}</ul>;
+    case "ol": return <ol key={key} style={{ margin: "6px 0", paddingLeft: 20, listStyleType: "decimal" }}>{block.content.split("\n").map((item, j) => <li key={j} style={{ margin: "3px 0", color: C.fg, fontSize: "0.85rem" }}><InlineRich text={item} /></li>)}</ol>;
+    case "blockquote": return <blockquote key={key} style={{ margin: "8px 0", padding: "8px 12px", borderLeft: `3px solid ${C.gold}`, backgroundColor: "rgba(247,187,46,0.05)", borderRadius: "0 6px 6px 0", color: C.fg }}><InlineRich text={block.content} /></blockquote>;
+    case "paragraph": return <p key={key} style={{ margin: "6px 0", color: C.fg, fontSize: "0.875rem", lineHeight: 1.6 }}>{block.content.split("\n").map((line, j) => <Fragment key={j}>{j > 0 && <br />}<InlineRich text={line} /></Fragment>)}</p>;
+  }
+}
+
+/** Resolve and display images in chat — fetches relative URLs via Bearer JWT and creates blob URL */
+function ChatImage({ src, alt }: { src: string; alt: string }) {
+  const { orgId, siteId } = useContext(SiteCtx);
+  const [blobUrl, setBlobUrl] = useState<string | null>(src.startsWith("http") ? src : null);
+
+  useEffect(() => {
+    if (src.startsWith("http") || src.startsWith("data:")) { setBlobUrl(src); return; }
+    let revoked = false;
+    void (async () => {
+      try {
+        const { getServerUrl, getJwt } = await import("@/lib/prefs");
+        const server = await getServerUrl();
+        const jwt = await getJwt();
+        if (!server || !jwt || !orgId || !siteId) return;
+        // Fetch image bytes via server (server resolves the file and serves it)
+        const filePath = src.replace(/^\/uploads\//, "");
+        const res = await fetch(
+          `${server}/api/mobile/media/file?orgId=${encodeURIComponent(orgId)}&siteId=${encodeURIComponent(siteId)}&path=${encodeURIComponent(filePath)}`,
+          { headers: { Authorization: `Bearer ${jwt}` }, credentials: "omit" },
+        );
+        if (res.ok) {
+          const blob = await res.blob();
+          if (!revoked) setBlobUrl(URL.createObjectURL(blob));
+        }
+      } catch { /* image won't show */ }
+    })();
+    return () => { revoked = true; };
+  }, [src, orgId, siteId]);
+
+  if (!blobUrl) return null;
 
   return (
+    <div style={{ margin: "8px 0" }}>
+      <img src={blobUrl} alt={alt} style={{ maxWidth: "100%", maxHeight: 300, borderRadius: 8, border: `1px solid ${C.border}`, objectFit: "contain" }} loading="lazy" />
+      {alt && <div style={{ fontSize: "0.65rem", color: C.muted, marginTop: 4 }}>{alt}</div>}
+    </div>
+  );
+}
+
+function MarkdownContent({ text }: { text: string }) {
+  if (!text) return null;
+  const clean = text.replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"');
+  const blocks = parseMdBlocks(clean);
+  return <div style={{ wordBreak: "break-word" }}>{blocks.map((b, i) => renderMdBlock(b, i))}</div>;
+}
+
+// ─── Tool Call Card ──────────────────────────────────
+
+function ToolCallCard({ tool }: { tool: ToolCall }) {
+  const [expanded, setExpanded] = useState(false);
+  return (
+    <div className="rounded-lg bg-white/5 border border-white/10 my-1.5">
+      <button
+        type="button"
+        onClick={() => setExpanded(!expanded)}
+        className="flex items-center gap-2 w-full px-3 py-2 text-left active:bg-white/5"
+      >
+        {tool.status === "running" ? (
+          <span className="h-3 w-3 animate-spin rounded-full border-2 border-brand-gold border-t-transparent shrink-0" />
+        ) : tool.status === "done" ? (
+          <span className="text-green-400 text-xs shrink-0">✓</span>
+        ) : (
+          <span className="text-red-400 text-xs shrink-0">✗</span>
+        )}
+        <span className="text-xs text-white/50 truncate">{tool.tool.replace(/_/g, " ")}</span>
+      </button>
+      {expanded && tool.result && (
+        <div className="px-3 pb-2 text-[10px] text-white/30 font-mono max-h-32 overflow-y-auto border-t border-white/5">
+          {tool.result.slice(0, 500)}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Thinking Animation (ported from desktop) ───────
+
+function ThinkingIndicator({ startTime }: { startTime: number | null }) {
+  const [elapsed, setElapsed] = useState(0);
+
+  useEffect(() => {
+    if (!startTime) { setElapsed(0); return; }
+    setElapsed(Math.floor((Date.now() - startTime) / 1000));
+    const interval = setInterval(() => {
+      setElapsed(Math.floor((Date.now() - startTime) / 1000));
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [startTime]);
+
+  const minutes = Math.floor(elapsed / 60);
+  const seconds = elapsed % 60;
+  const timeStr = `${minutes}:${String(seconds).padStart(2, "0")}`;
+
+  return (
+    <div className="flex items-center gap-2.5 px-1 py-2">
+      <style>{`
+        @keyframes chat-orbit {
+          0%   { transform: rotate(0deg)   translateX(9px) rotate(0deg);   opacity: 1; }
+          33%  { opacity: 0.6; }
+          66%  { opacity: 1; }
+          100% { transform: rotate(360deg) translateX(9px) rotate(-360deg); opacity: 1; }
+        }
+        @keyframes chat-pulse-ring {
+          0%, 100% { transform: scale(0.85); opacity: 0.15; }
+          50%      { transform: scale(1.1);  opacity: 0.05; }
+        }
+      `}</style>
+      <div className="relative" style={{ width: 28, height: 28 }}>
+        {/* Pulse ring */}
+        <div
+          className="absolute rounded-full border-[1.5px] border-brand-gold"
+          style={{ inset: -2, animation: "chat-pulse-ring 2.4s ease-in-out infinite" }}
+        />
+        {/* Orbiting dots */}
+        {[0, 1, 2].map((i) => (
+          <div
+            key={i}
+            className="absolute rounded-full bg-brand-gold"
+            style={{
+              top: "50%", left: "50%", width: 5, height: 5,
+              marginTop: -2.5, marginLeft: -2.5,
+              animation: "chat-orbit 1.8s cubic-bezier(0.4,0,0.2,1) infinite",
+              animationDelay: `${i * -0.6}s`,
+            }}
+          />
+        ))}
+        {/* Center dot */}
+        <div
+          className="absolute rounded-full bg-brand-gold opacity-40"
+          style={{ top: "50%", left: "50%", width: 4, height: 4, marginTop: -2, marginLeft: -2 }}
+        />
+      </div>
+      <span className="text-xs text-white/40 italic">Thinking...</span>
+      {elapsed > 0 && (
+        <span className="text-xs text-white/30 tabular-nums">{timeStr}</span>
+      )}
+    </div>
+  );
+}
+
+// ─── Chat Screen ─────────────────────────────────────
+
+export function Chat() {
+  const [, setLocation] = useLocation();
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState("");
+  const [streaming, setStreaming] = useState(false);
+  const [thinkingStartTime, setThinkingStartTime] = useState<number | null>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [historyTab, setHistoryTab] = useState<"chats" | "memory">("chats");
+  const [memories, setMemories] = useState<any[]>([]);
+  const [conversationId, setConversationId] = useState<string | undefined>();
+  const [orgId, setOrgId] = useState("");
+  const [siteId, setSiteId] = useState("");
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const abortRef = useRef<AbortController | null>(null);
+
+  // Load active org/site
+  useEffect(() => {
+    void (async () => {
+      const o = await getActiveOrgId();
+      const s = await getActiveSiteId();
+      if (o) setOrgId(o);
+      if (s) setSiteId(s);
+    })();
+  }, []);
+
+  // Auto-scroll to bottom
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [messages, streaming]);
+
+  // Thinking start time
+  useEffect(() => {
+    if (streaming) {
+      setThinkingStartTime(Date.now());
+    } else {
+      setThinkingStartTime(null);
+    }
+  }, [streaming]);
+
+  const goBack = useCallback(() => {
+    if (window.history.length > 1) window.history.back();
+    else setLocation("/home");
+  }, [setLocation]);
+
+  async function send(text: string) {
+    if (!text.trim() || streaming || !orgId || !siteId) return;
+
+    const userMsg: Message = { role: "user", content: text.trim() };
+    const newMessages = [...messages, userMsg];
+    setMessages(newMessages);
+    setInput("");
+    setStreaming(true);
+
+    // Prepare assistant message that will be built up from SSE
+    const assistantMsg: Message = { role: "assistant", content: "", toolCalls: [] };
+    setMessages([...newMessages, assistantMsg]);
+
+    try {
+      const abort = new AbortController();
+      abortRef.current = abort;
+
+      const apiMessages = newMessages.map((m) => ({ role: m.role, content: m.content }));
+      const body = await streamChat(orgId, siteId, apiMessages, conversationId, abort.signal);
+      if (!body) throw new Error("No response body");
+
+      const reader = body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let currentToolIdx = -1;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        // Process complete lines
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? ""; // Keep incomplete line in buffer
+
+        for (const line of lines) {
+          if (line.startsWith("event: ")) {
+            const eventType = line.slice(7).trim();
+            // Next data line will use this event type
+            buffer = `__event__:${eventType}\n${buffer}`;
+          } else if (line.startsWith("data: ")) {
+            const data = line.slice(6);
+            // Check if we have a pending event type
+            const eventMatch = buffer.match(/^__event__:(\w+)\n/);
+            const eventType = eventMatch ? eventMatch[1] : "text";
+            if (eventMatch) buffer = buffer.replace(/^__event__:\w+\n/, "");
+
+            setMessages((prev) => {
+              const msgs = [...prev];
+              const last = { ...msgs[msgs.length - 1] };
+              last.toolCalls = [...(last.toolCalls ?? [])];
+
+              switch (eventType) {
+                case "text": {
+                  try {
+                    const parsed = JSON.parse(data);
+                    last.content += parsed.text ?? "";
+                  } catch {
+                    last.content += data; // fallback: plain string
+                  }
+                  break;
+                }
+                case "thinking": {
+                  try {
+                    const parsed = JSON.parse(data);
+                    last.thinking = (last.thinking ?? "") + (parsed.text ?? "");
+                  } catch {
+                    last.thinking = (last.thinking ?? "") + data;
+                  }
+                  break;
+                }
+                case "tool_call": {
+                  try {
+                    const tc = JSON.parse(data);
+                    last.toolCalls.push({
+                      tool: tc.tool ?? tc.name ?? "unknown",
+                      input: typeof tc.input === "string" ? tc.input : JSON.stringify(tc.input),
+                      status: "running",
+                    });
+                    currentToolIdx = last.toolCalls.length - 1;
+                  } catch { /* ignore parse errors */ }
+                  break;
+                }
+                case "tool_result": {
+                  if (currentToolIdx >= 0 && last.toolCalls[currentToolIdx]) {
+                    try {
+                      const tr = JSON.parse(data);
+                      last.toolCalls[currentToolIdx] = {
+                        ...last.toolCalls[currentToolIdx],
+                        result: typeof tr.result === "string" ? tr.result : JSON.stringify(tr.result),
+                        status: "done",
+                      };
+                    } catch {
+                      last.toolCalls[currentToolIdx] = {
+                        ...last.toolCalls[currentToolIdx],
+                        result: data,
+                        status: "done",
+                      };
+                    }
+                  }
+                  break;
+                }
+                case "error": {
+                  try {
+                    const parsed = JSON.parse(data);
+                    last.content += `\n\n⚠️ ${parsed.error ?? parsed.text ?? data}`;
+                  } catch {
+                    last.content += `\n\n⚠️ ${data}`;
+                  }
+                  break;
+                }
+                case "done":
+                  break;
+              }
+
+              msgs[msgs.length - 1] = last;
+              return msgs;
+            });
+          }
+        }
+      }
+    } catch (err) {
+      if ((err as Error).name !== "AbortError") {
+        setMessages((prev) => {
+          const msgs = [...prev];
+          const last = msgs[msgs.length - 1];
+          if (last?.role === "assistant") {
+            last.content += `\n\n⚠️ Connection error: ${(err as Error).message}`;
+          }
+          return msgs;
+        });
+      }
+    } finally {
+      setStreaming(false);
+      abortRef.current = null;
+
+      // Auto-save conversation for sync with desktop
+      try {
+        setMessages((current) => {
+          if (current.length >= 2) {
+            const title = current[0].content.slice(0, 80);
+            saveConversation(orgId, siteId, {
+              id: conversationId,
+              title,
+              messages: current.map((m) => ({ role: m.role, content: m.content })),
+            }).then((saved) => {
+              if (saved?.id) setConversationId(saved.id);
+            }).catch(() => {});
+          }
+          return current;
+        });
+      } catch { /* non-fatal */ }
+    }
+  }
+
+  function handleQuickAction(label: string) {
+    send(label);
+  }
+
+  function stopStreaming() {
+    abortRef.current?.abort();
+  }
+
+  async function loadHistory() {
+    if (!orgId || !siteId) return;
+    setHistoryOpen(true);
+    try {
+      const [convData, memData] = await Promise.all([
+        listConversations(orgId, siteId).catch(() => []),
+        getMemories(orgId, siteId).catch(() => ({ memories: [] })),
+      ]);
+      const list = Array.isArray(convData) ? convData : (convData as any)?.conversations ?? [];
+      setConversations(list);
+      setMemories((memData as any)?.memories ?? []);
+    } catch { /* ignore */ }
+  }
+
+  async function loadConversation(conv: Conversation) {
+    setHistoryOpen(false);
+    setConversationId(conv.id);
+
+    // Fetch full conversation from server (includes tool calls, full content)
+    if (conv.id && orgId && siteId) {
+      try {
+        const data = await fetchConversation(orgId, siteId, conv.id);
+        const full = data?.conversation ?? data;
+        if (full?.messages) {
+          setMessages(
+            full.messages.map((m: any) => ({
+              role: m.role,
+              content: m.content,
+              toolCalls: m.toolCalls?.map((tc: any) => ({
+                tool: tc.tool,
+                input: typeof tc.input === "string" ? tc.input : JSON.stringify(tc.input),
+                result: tc.result,
+                status: "done" as const,
+              })),
+            })),
+          );
+          return;
+        }
+      } catch { /* fall back to summary */ }
+    }
+
+    // Fallback: use the summary messages from the list
+    setMessages(
+      (conv.messages ?? []).map((m: any) => ({
+        role: m.role ?? "user",
+        content: m.content ?? "",
+      })),
+    );
+  }
+
+  function newChat() {
+    setMessages([]);
+    setConversationId(undefined);
+    setHistoryOpen(false);
+  }
+
+  const isEmpty = messages.length === 0;
+
+  return (
+    <SiteCtx.Provider value={{ orgId, siteId }}>
     <Screen>
       <ScreenHeader
-        left={<BackButton onClick={() => window.history.back()} />}
-        subtitle="Assistant"
-        title="Chat with your site"
+        left={<BackButton onClick={goBack} />}
+        title="Chat"
+        subtitle="AI Assistant"
+        right={
+          <button
+            type="button"
+            onClick={loadHistory}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white/60 active:scale-90 transition-transform"
+            aria-label="History"
+          >
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+              <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5" />
+              <path d="M8 5v3.5l2.5 1.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+            </svg>
+          </button>
+        }
       />
 
-      <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
-        <div className="text-5xl">💬</div>
-        <h2 className="text-lg font-semibold">Coming in Phase 6</h2>
-        <p className="max-w-xs text-sm text-white/60">
-          Talk to your CMS like a teammate — ask questions, get drafts, run
-          long-running agents in the background and get a push when they're done.
-          Voice input, F107 tool integration, the works.
-        </p>
-        <button
-          type="button"
-          onClick={() => setLocation("/home")}
-          className="mt-4 text-sm text-brand-gold hover:underline"
-        >
-          Back to home
-        </button>
+      {/* Messages area */}
+      <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 pb-4" style={{ overflowX: "hidden" }}>
+        {isEmpty ? (
+          /* Empty state */
+          <div className="flex flex-col items-center justify-center h-full gap-4 px-2">
+            <div className="w-14 h-14 rounded-2xl bg-brand-gold flex items-center justify-center">
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0D0D0D" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+              </svg>
+            </div>
+            <h2 className="text-lg font-semibold text-white">Chat with your site</h2>
+            <p className="text-xs text-white/40 text-center max-w-[250px]">
+              Ask anything about <strong className="text-white/60">your site</strong>. I know your schema, content, and settings.
+            </p>
+            <div className="flex flex-wrap justify-center gap-2 mt-2">
+              {QUICK_ACTIONS.map((a) => (
+                <button
+                  key={a.label}
+                  type="button"
+                  onClick={() => handleQuickAction(a.label)}
+                  className="flex items-center gap-2 rounded-xl bg-brand-darkSoft border border-white/10 px-3.5 py-2.5 text-xs text-white/70 active:scale-95 active:bg-white/5 transition-all"
+                >
+                  <span>{a.icon}</span>
+                  {a.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        ) : (
+          /* Message list */
+          <div className="flex flex-col gap-3 pt-2">
+            {messages.map((msg, i) => (
+              <div key={i} className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}>
+                {msg.role === "user" ? (
+                  <div className="rounded-2xl rounded-br-md bg-brand-darkSoft border border-white/10 px-4 py-2.5 max-w-[85%]">
+                    <p className="text-sm text-white">{msg.content}</p>
+                  </div>
+                ) : (
+                  <div className="max-w-[95%]">
+                    {/* Tool calls */}
+                    {msg.toolCalls?.map((tc, j) => (
+                      <ToolCallCard key={j} tool={tc} />
+                    ))}
+                    {/* Content */}
+                    {msg.content && <MarkdownContent text={msg.content} />}
+                  </div>
+                )}
+              </div>
+            ))}
+            {streaming && messages[messages.length - 1]?.content === "" && (
+              <ThinkingIndicator startTime={thinkingStartTime} />
+            )}
+          </div>
+        )}
       </div>
+
+      {/* Input bar */}
+      <div className="shrink-0 border-t border-white/10 bg-brand-dark px-4 py-3 safe-bottom">
+        <div className="flex items-end gap-2">
+          <textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                send(input);
+              }
+            }}
+            placeholder="How can I help today?"
+            rows={1}
+            className="flex-1 min-w-0 resize-none rounded-xl bg-brand-darkPanel border border-white/10 px-4 py-2.5 text-sm text-white outline-none focus:border-brand-gold transition-colors max-h-32"
+            style={{ fieldSizing: "content" } as any}
+          />
+          {streaming ? (
+            <button
+              type="button"
+              onClick={stopStreaming}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-red-500/20 text-red-400 active:scale-90 transition-transform"
+              aria-label="Stop"
+            >
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor">
+                <rect x="3" y="3" width="10" height="10" rx="2" />
+              </svg>
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => send(input)}
+              disabled={!input.trim() || !orgId}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-brand-gold text-brand-dark active:scale-90 transition-transform disabled:opacity-30"
+              aria-label="Send"
+            >
+              <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+                <path d="M14 2L7 9M14 2l-4.5 12-2-5.5L2 6.5 14 2z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* History drawer */}
+      {historyOpen && (
+        <div className="fixed inset-0 z-50 flex flex-col bg-brand-dark">
+          {/* Header with tabs */}
+          <div className="px-4 pt-safe-top py-3 border-b border-white/10">
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setHistoryTab("chats")}
+                  className={`text-sm font-medium pb-0.5 ${historyTab === "chats" ? "text-white border-b-2 border-brand-gold" : "text-white/40"}`}
+                >
+                  Chats
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setHistoryTab("memory")}
+                  className={`text-sm font-medium pb-0.5 flex items-center gap-1.5 ${historyTab === "memory" ? "text-white border-b-2 border-brand-gold" : "text-white/40"}`}
+                >
+                  Memory
+                  {memories.length > 0 && (
+                    <span className="text-[10px] bg-white/10 rounded-full px-1.5 py-0.5 tabular-nums">{memories.length}</span>
+                  )}
+                </button>
+              </div>
+              <div className="flex items-center gap-2">
+                {historyTab === "chats" && (
+                  <button type="button" onClick={newChat} className="text-xs text-brand-gold active:opacity-70 px-2 py-1">+ New</button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setHistoryOpen(false)}
+                  className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white active:scale-90"
+                >
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                    <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex-1 overflow-y-auto">
+            {historyTab === "chats" ? (
+              /* Chats list */
+              conversations.length === 0 ? (
+                <p className="text-xs text-white/30 text-center py-12">No saved chats yet</p>
+              ) : (
+                conversations.map((conv, i) => (
+                  <button
+                    key={conv.id ?? i}
+                    type="button"
+                    onClick={() => loadConversation(conv)}
+                    className="w-full text-left px-4 py-3 border-b border-white/5 active:bg-white/5"
+                  >
+                    <p className="text-sm text-white truncate">{conv.title}</p>
+                    {conv.createdAt && (
+                      <p className="text-[10px] text-white/30 mt-0.5">
+                        {new Date(conv.createdAt).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                      </p>
+                    )}
+                  </button>
+                ))
+              )
+            ) : (
+              /* Memory list */
+              memories.length === 0 ? (
+                <p className="text-xs text-white/30 text-center py-12">No memories yet</p>
+              ) : (
+                memories.map((mem: any, i: number) => (
+                  <div
+                    key={mem.id ?? i}
+                    className="px-4 py-3 border-b border-white/5"
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <span className="text-[10px] font-medium uppercase tracking-wider rounded px-1.5 py-0.5 bg-brand-gold/15 text-brand-gold border border-brand-gold/30">
+                        {mem.category ?? "fact"}
+                      </span>
+                      {mem.useCount != null && (
+                        <span className="text-[10px] text-white/30">{mem.useCount}x used</span>
+                      )}
+                    </div>
+                    <p className="text-sm text-white/80">{mem.fact}</p>
+                    {mem.entities?.length > 0 && (
+                      <p className="text-[10px] text-white/30 mt-1">{mem.entities.join(", ")}</p>
+                    )}
+                  </div>
+                ))
+              )
+            )}
+          </div>
+        </div>
+      )}
     </Screen>
+    </SiteCtx.Provider>
   );
 }

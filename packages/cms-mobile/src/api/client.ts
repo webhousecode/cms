@@ -234,6 +234,80 @@ export function analyzeMedia(
   });
 }
 
+// ─── Chat ────────────────────────────────────────────
+
+export interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+  toolCalls?: { tool: string; input?: string; result?: string; status: "running" | "done" | "error" }[];
+}
+
+export interface SSEEvent {
+  event: string;
+  data: string;
+}
+
+/** Stream chat response as SSE events. Caller handles parsing. */
+export async function streamChat(
+  orgId: string,
+  siteId: string,
+  messages: { role: string; content: string }[],
+  conversationId?: string,
+  signal?: AbortSignal,
+): Promise<ReadableStream<Uint8Array> | null> {
+  const baseUrl = await getServerUrl();
+  if (!baseUrl) throw new ApiError(0, null, "No server URL configured");
+  const jwt = await getJwt();
+
+  const res = await fetch(
+    `${baseUrl}/api/mobile/chat?orgId=${encodeURIComponent(orgId)}&siteId=${encodeURIComponent(siteId)}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        ...(jwt ? { Authorization: `Bearer ${jwt}` } : {}),
+      },
+      body: JSON.stringify({ messages, conversationId }),
+      credentials: "omit",
+      signal,
+    },
+  );
+
+  if (!res.ok) {
+    const body = await res.text();
+    throw new ApiError(res.status, body, `Chat error: HTTP ${res.status}`);
+  }
+
+  return res.body;
+}
+
+/** List saved conversations */
+export function listConversations(orgId: string, siteId: string): Promise<any[]> {
+  return request(`/api/mobile/chat/conversations?orgId=${encodeURIComponent(orgId)}&siteId=${encodeURIComponent(siteId)}`);
+}
+
+/** Load a single conversation by ID */
+export function getConversation(orgId: string, siteId: string, id: string): Promise<any> {
+  return request(`/api/mobile/chat/conversations/${encodeURIComponent(id)}?orgId=${encodeURIComponent(orgId)}&siteId=${encodeURIComponent(siteId)}`);
+}
+
+/** Save a conversation */
+export function saveConversation(
+  orgId: string,
+  siteId: string,
+  conversation: { id?: string; title: string; messages: any[] },
+): Promise<any> {
+  return request(
+    `/api/mobile/chat/conversations?orgId=${encodeURIComponent(orgId)}&siteId=${encodeURIComponent(siteId)}`,
+    { method: "POST", body: conversation },
+  );
+}
+
+/** List chat memories */
+export function getMemories(orgId: string, siteId: string): Promise<any> {
+  return request(`/api/mobile/chat/memory?orgId=${encodeURIComponent(orgId)}&siteId=${encodeURIComponent(siteId)}`);
+}
+
 /** Trash a document (soft delete). */
 export function deleteDocument(orgId: string, siteId: string, collection: string, slug: string): Promise<{ ok: boolean }> {
   return request<{ ok: boolean }>(

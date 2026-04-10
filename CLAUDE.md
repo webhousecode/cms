@@ -91,6 +91,10 @@ This means we can whitelabel the mobile app later (a different brand wrapping th
 
 When adding new mobile endpoints, put them under `/api/mobile/`, not `/api/cms/` or `/api/admin/`. The `/api/mobile/` prefix is the contract.
 
+## BLOCKER: Remove NSAllowsArbitraryLoads Before App Store Submit
+
+`Info.plist` currently has `NSAllowsArbitraryLoads = YES` which Apple will reject. Before ANY App Store submission, this must be removed and all HTTP connections must be secured (HTTPS only). The `preflight-release.sh` script gates on this. See F07 handoff doc for details.
+
 ## Hard Rule: Re-export schema after every cms.config.ts change
 
 For projects with non-TS consumers (Java, .NET, PHP, Python, Ruby, Go), the `webhouse-schema.json` file is the contract between the TypeScript admin and the runtime readers. **Whenever you modify `cms.config.ts` (add/remove/rename a field, change a type, add a collection), you MUST regenerate `webhouse-schema.json` and commit both files in the same commit.**
