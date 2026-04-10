@@ -5,7 +5,7 @@ import { useLocation } from "wouter";
 const SiteCtx = createContext<{ orgId: string; siteId: string }>({ orgId: "", siteId: "" });
 import { Screen } from "@/components/Screen";
 import { ScreenHeader, BackButton } from "@/components/ScreenHeader";
-import { streamChat, listConversations, saveConversation, getConversation as fetchConversation, getMemories } from "@/api/client";
+import { streamChat, listConversations, saveConversation, getConversation as fetchConversation, deleteConversation as apiDeleteConversation, getMemories } from "@/api/client";
 import { getActiveOrgId, getActiveSiteId } from "@/lib/prefs";
 
 // ─── Types ───────────────────────────────────────────
@@ -310,28 +310,91 @@ function ToolCallCard({ tool }: { tool: ToolCall }) {
   );
 }
 
-// ─── Copy ID Button (history list) ───────────────────
+// ─── Conversation Context Menu ───────────────────────
 
-function CopyIdButton({ id }: { id: string }) {
+function ConversationMenu({ conv, onDelete, onRename }: {
+  conv: Conversation;
+  onDelete: () => void;
+  onRename: (title: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [renaming, setRenaming] = useState(false);
+  const [renameValue, setRenameValue] = useState(conv.title);
+
+  function copyId() {
+    if (!conv.id) return;
+    navigator.clipboard.writeText(conv.id).then(() => {
+      setCopied(true);
+      setTimeout(() => { setCopied(false); setOpen(false); }, 1000);
+    });
+  }
+
+  function startRename() {
+    setRenameValue(conv.title);
+    setRenaming(true);
+    setOpen(false);
+  }
+
+  function submitRename() {
+    if (renameValue.trim() && renameValue !== conv.title) {
+      onRename(renameValue.trim());
+    }
+    setRenaming(false);
+  }
+
+  if (renaming) {
+    return (
+      <div className="flex items-center gap-1 shrink-0 pr-2">
+        <input
+          type="text"
+          value={renameValue}
+          onChange={(e) => setRenameValue(e.target.value)}
+          onKeyDown={(e) => { if (e.key === "Enter") submitRename(); if (e.key === "Escape") setRenaming(false); }}
+          autoFocus
+          className="w-28 text-xs bg-brand-darkPanel border border-white/20 rounded px-2 py-1 text-white outline-none focus:border-brand-gold"
+        />
+        <button type="button" onClick={submitRename} className="text-green-400 p-1">
+          <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <button
-      type="button"
-      onClick={() => {
-        navigator.clipboard.writeText(id).then(() => {
-          setCopied(true);
-          setTimeout(() => setCopied(false), 1500);
-        });
-      }}
-      className="shrink-0 px-3 py-3 text-white/20 active:text-white/60"
-      aria-label="Copy chat ID"
-    >
-      {copied ? (
-        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-7" stroke="#4ade80" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
-      ) : (
-        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="3" r="1" fill="currentColor" /><circle cx="8" cy="8" r="1" fill="currentColor" /><circle cx="8" cy="13" r="1" fill="currentColor" /></svg>
+    <div className="relative shrink-0">
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); setOpen(!open); }}
+        className="px-3 py-3 text-white/20 active:text-white/60"
+        aria-label="Menu"
+      >
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="3" r="1.25" fill="currentColor" /><circle cx="8" cy="8" r="1.25" fill="currentColor" /><circle cx="8" cy="13" r="1.25" fill="currentColor" /></svg>
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 top-full z-50 w-40 rounded-lg bg-brand-darkPanel border border-white/15 shadow-xl overflow-hidden">
+            <button type="button" onClick={copyId} className="flex w-full items-center gap-2.5 px-3 py-2.5 text-xs text-white/70 active:bg-white/10">
+              {copied ? (
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-7" stroke="#4ade80" strokeWidth="2" strokeLinecap="round" /></svg>
+              ) : (
+                <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="5" y="5" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.5" /><path d="M3 11V3.5A.5.5 0 013.5 3H11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+              )}
+              {copied ? "Copied!" : "Copy ID"}
+            </button>
+            <button type="button" onClick={startRename} className="flex w-full items-center gap-2.5 px-3 py-2.5 text-xs text-white/70 active:bg-white/10 border-t border-white/5">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M11.5 1.5l3 3L5 14H2v-3z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              Rename
+            </button>
+            <button type="button" onClick={() => { setOpen(false); onDelete(); }} className="flex w-full items-center gap-2.5 px-3 py-2.5 text-xs text-red-400 active:bg-white/10 border-t border-white/5">
+              <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M3 4h10M6 4V3a1 1 0 011-1h2a1 1 0 011 1v1M5 4v8a1 1 0 001 1h4a1 1 0 001-1V4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg>
+              Delete
+            </button>
+          </div>
+        </>
       )}
-    </button>
+    </div>
   );
 }
 
@@ -895,7 +958,21 @@ export function Chat() {
                         </p>
                       )}
                     </button>
-                    {conv.id && <CopyIdButton id={conv.id} />}
+                    <ConversationMenu
+                      conv={conv}
+                      onDelete={async () => {
+                        if (conv.id) {
+                          await apiDeleteConversation(orgId, siteId, conv.id).catch(() => {});
+                          setConversations((prev) => prev.filter((c) => c.id !== conv.id));
+                        }
+                      }}
+                      onRename={(title) => {
+                        if (conv.id) {
+                          saveConversation(orgId, siteId, { id: conv.id, title, messages: conv.messages ?? [] }).catch(() => {});
+                          setConversations((prev) => prev.map((c) => c.id === conv.id ? { ...c, title } : c));
+                        }
+                      }}
+                    />
                   </div>
                 ))
               )
