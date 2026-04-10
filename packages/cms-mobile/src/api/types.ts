@@ -63,6 +63,8 @@ export interface FieldConfig {
   options?: { label: string; value: string }[];
   placeholder?: string;
   collection?: string; // for relation fields
+  multiple?: boolean; // for relation multiple
+  fields?: FieldConfig[]; // for array/object sub-fields
 }
 
 export interface CollectionInfo {

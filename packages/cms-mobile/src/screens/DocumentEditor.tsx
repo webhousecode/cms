@@ -4,7 +4,7 @@ import { useLocation, useRoute } from "wouter";
 import { Screen } from "@/components/Screen";
 import { ScreenHeader, BackButton } from "@/components/ScreenHeader";
 import { Spinner } from "@/components/Spinner";
-import { getDocument, getCollections, saveDocument, deleteDocument, uploadFile } from "@/api/client";
+import { getDocument, getDocuments, getCollections, saveDocument, deleteDocument, uploadFile } from "@/api/client";
 import type { FieldConfig } from "@/api/types";
 
 // ─── Field Editors ───────────────────────────────────
@@ -569,6 +569,199 @@ function ImageGalleryField({ field, value, onChange }: FieldEditorProps) {
   );
 }
 
+// ─── Relation Picker ─────────────────────────────────
+
+function RelationField({ field, value, onChange }: FieldEditorProps) {
+  const [open, setOpen] = useState(false);
+  const [options, setOptions] = useState<{ slug: string; label: string }[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const isMultiple = !!field.multiple;
+  const selected = isMultiple
+    ? (Array.isArray(value) ? (value as string[]) : value ? [String(value)] : [])
+    : value ? [String(value)] : [];
+
+  async function loadOptions() {
+    if (!field.collection || options.length > 0) return;
+    setLoading(true);
+    try {
+      const match = location.pathname.match(/\/site\/([^/]+)\/([^/]+)/);
+      if (!match) return;
+      const result = await getDocuments(match[1], match[2], field.collection);
+      setOptions(
+        result.documents.map((d) => ({
+          slug: d.slug,
+          label: (d.data.title as string) || (d.data.name as string) || (d.data.label as string) || d.slug,
+        })),
+      );
+    } catch (err) {
+      console.error("Failed to load relation options:", err);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function toggle(slug: string) {
+    if (isMultiple) {
+      const arr = selected.includes(slug)
+        ? selected.filter((s) => s !== slug)
+        : [...selected, slug];
+      onChange(arr);
+    } else {
+      onChange(selected.includes(slug) ? undefined : slug);
+    }
+  }
+
+  return (
+    <div>
+      <FieldLabel field={field} />
+      {/* Selected items */}
+      {selected.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mb-2">
+          {selected.map((slug) => (
+            <span key={slug} className="flex items-center gap-1.5 rounded-full bg-brand-gold/15 border border-brand-gold/30 px-2.5 py-1 text-xs text-brand-gold">
+              {options.find((o) => o.slug === slug)?.label || slug}
+              <button type="button" onClick={() => toggle(slug)} className="text-brand-gold/60 active:text-red-400">×</button>
+            </span>
+          ))}
+        </div>
+      )}
+      <button
+        type="button"
+        onClick={() => { setOpen(!open); loadOptions(); }}
+        className="w-full rounded-lg bg-brand-darkPanel border border-white/10 px-3 py-2.5 text-sm text-left text-white/50 active:bg-white/5 transition-colors"
+      >
+        {open ? "Close" : `Select from ${field.collection}...`}
+      </button>
+      {open && (
+        <div className="mt-1 rounded-lg border border-white/10 bg-brand-darkPanel max-h-48 overflow-y-auto">
+          {loading ? (
+            <p className="text-xs text-white/30 p-3 text-center">Loading...</p>
+          ) : options.length === 0 ? (
+            <p className="text-xs text-white/30 p-3 text-center">No documents</p>
+          ) : (
+            options.map((opt) => {
+              const isSelected = selected.includes(opt.slug);
+              return (
+                <button
+                  key={opt.slug}
+                  type="button"
+                  onClick={() => toggle(opt.slug)}
+                  className={`w-full text-left px-3 py-2.5 text-sm border-b border-white/5 last:border-0 active:bg-white/5 ${
+                    isSelected ? "text-brand-gold" : "text-white/70"
+                  }`}
+                >
+                  {isSelected && <span className="mr-1.5">✓</span>}
+                  {opt.label}
+                </button>
+              );
+            })
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Array Editor ────────────────────────────────────
+
+function ArrayField({ field, value, onChange }: FieldEditorProps) {
+  const items = Array.isArray(value) ? (value as Record<string, unknown>[]) : [];
+  const subFields = field.fields ?? [];
+
+  function updateItem(idx: number, fieldName: string, val: unknown) {
+    const next = [...items];
+    next[idx] = { ...next[idx], [fieldName]: val };
+    onChange(next);
+  }
+
+  function addItem() {
+    const empty: Record<string, unknown> = {};
+    subFields.forEach((f) => { empty[f.name] = undefined; });
+    onChange([...items, empty]);
+  }
+
+  function removeItem(idx: number) {
+    onChange(items.filter((_, i) => i !== idx));
+  }
+
+  if (subFields.length === 0) {
+    return <UnsupportedField field={field} />;
+  }
+
+  return (
+    <div>
+      <FieldLabel field={field} />
+      <div className="space-y-2">
+        {items.map((item, idx) => (
+          <div key={idx} className="rounded-lg border border-white/10 bg-brand-darkPanel p-3 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] text-white/30 uppercase">#{idx + 1}</span>
+              <button
+                type="button"
+                onClick={() => removeItem(idx)}
+                className="text-white/30 active:text-red-400 p-0.5"
+                aria-label="Remove item"
+              >
+                <svg width="12" height="12" viewBox="0 0 16 16" fill="none">
+                  <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
+            {subFields.map((sf) => (
+              <FieldEditor
+                key={sf.name}
+                field={sf}
+                value={item[sf.name]}
+                onChange={(v) => updateItem(idx, sf.name, v)}
+              />
+            ))}
+          </div>
+        ))}
+      </div>
+      <button
+        type="button"
+        onClick={addItem}
+        className="mt-2 w-full rounded-lg border border-dashed border-white/20 bg-brand-darkPanel px-3 py-2.5 text-xs text-white/40 active:bg-white/5 active:scale-[0.98] transition-all"
+      >
+        + Add item ({items.length})
+      </button>
+    </div>
+  );
+}
+
+// ─── Object Editor ───────────────────────────────────
+
+function ObjectField({ field, value, onChange }: FieldEditorProps) {
+  const obj = (typeof value === "object" && value !== null && !Array.isArray(value))
+    ? (value as Record<string, unknown>) : {};
+  const subFields = field.fields ?? [];
+
+  function updateField(name: string, val: unknown) {
+    onChange({ ...obj, [name]: val });
+  }
+
+  if (subFields.length === 0) {
+    return <UnsupportedField field={field} />;
+  }
+
+  return (
+    <div>
+      <FieldLabel field={field} />
+      <div className="rounded-lg border border-white/10 bg-brand-darkPanel p-3 space-y-3">
+        {subFields.map((sf) => (
+          <FieldEditor
+            key={sf.name}
+            field={sf}
+            value={obj[sf.name]}
+            onChange={(v) => updateField(sf.name, v)}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function UnsupportedField({ field }: { field: FieldConfig }) {
   return (
     <div className="rounded-lg bg-brand-darkPanel border border-white/10 px-3 py-3">
@@ -598,6 +791,9 @@ const FIELD_EDITORS: Record<string, React.FC<FieldEditorProps>> = {
   richtext: RichtextField,
   image: ImageField,
   "image-gallery": ImageGalleryField,
+  relation: RelationField,
+  array: ArrayField,
+  object: ObjectField,
 };
 
 function FieldEditor({ field, value, onChange }: FieldEditorProps) {

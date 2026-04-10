@@ -3,6 +3,24 @@ import { getMobileSession } from "@/lib/mobile-auth";
 import { getAdminCmsForSite, getAdminConfigForSite } from "@/lib/cms";
 import { loadRegistry } from "@/lib/site-registry";
 
+/** Recursively serialize a field config for mobile consumption */
+function serializeField(f: any): any {
+  const base: any = {
+    name: f.name,
+    type: f.type,
+    label: f.label ?? f.name,
+    required: !!f.required,
+  };
+  if (f.options) base.options = f.options;
+  if (f.placeholder) base.placeholder = f.placeholder;
+  if (f.collection) base.collection = f.collection; // relation
+  if (f.multiple) base.multiple = true; // relation multiple
+  if (f.fields && Array.isArray(f.fields)) {
+    base.fields = f.fields.map(serializeField); // array/object sub-fields
+  }
+  return base;
+}
+
 /**
  * GET /api/mobile/content?orgId=...&siteId=...
  *
@@ -45,15 +63,7 @@ export async function GET(req: NextRequest) {
           kind: (col as any).kind ?? "page",
           description: (col as any).description,
           urlPrefix: (col as any).urlPrefix,
-          fields: col.fields.map((f) => ({
-            name: f.name,
-            type: f.type,
-            label: (f as any).label ?? f.name,
-            required: !!(f as any).required,
-            options: (f as any).options,
-            placeholder: (f as any).placeholder,
-            collection: (f as any).collection, // for relation fields
-          })),
+          fields: col.fields.map((f) => serializeField(f)),
           docCount,
         };
       }),
