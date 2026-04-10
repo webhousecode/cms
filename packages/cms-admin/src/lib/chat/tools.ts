@@ -1958,45 +1958,51 @@ DESIGN GUIDELINES:
         input_schema: { type: "object", properties: {} },
       },
       handler: async () => {
-        const { getLatest } = await import("@/lib/lighthouse/history");
-        const result = await getLatest();
-        if (!result) return "No Lighthouse audit results yet. I can run a scan for you — just say the word.";
+        const { getLatestBoth } = await import("@/lib/lighthouse/history");
+        const { mobile, desktop } = await getLatestBoth();
+        if (!mobile && !desktop) return "No Lighthouse audit results yet. I can run a scan for you — just say the word.";
 
-        const s = result.scores;
-        const lines = [
-          `**Lighthouse scores** (${result.strategy}, ${new Date(result.timestamp).toLocaleDateString("da-DK", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })})`,
-          `URL: ${result.url}`,
-          ``,
-          `| Category | Score |`,
-          `|----------|-------|`,
-          `| Performance | ${s.performance}/100 |`,
-          `| Accessibility | ${s.accessibility}/100 |`,
-          `| SEO | ${s.seo}/100 |`,
-          `| Best Practices | ${s.bestPractices}/100 |`,
-        ];
+        const lines: string[] = [];
 
-        if (result.coreWebVitals) {
-          const cwv = result.coreWebVitals;
-          lines.push(``, `**Core Web Vitals:**`);
-          if (cwv.lcp != null) lines.push(`- LCP: ${cwv.lcp}ms`);
-          if (cwv.cls != null) lines.push(`- CLS: ${cwv.cls}`);
-          if (cwv.inp != null) lines.push(`- INP: ${cwv.inp}ms`);
-          if (cwv.fcp != null) lines.push(`- FCP: ${cwv.fcp}ms`);
-          if (cwv.ttfb != null) lines.push(`- TTFB: ${cwv.ttfb}ms`);
-        }
+        for (const result of [mobile, desktop]) {
+          if (!result) continue;
+          const s = result.scores;
+          lines.push(
+            `**${result.strategy === "mobile" ? "Mobile" : "Desktop"}** (${new Date(result.timestamp).toLocaleDateString("da-DK", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })})`,
+            `URL: ${result.url}`,
+            ``,
+            `| Category | Score |`,
+            `|----------|-------|`,
+            `| Performance | ${s.performance}/100 |`,
+            `| Accessibility | ${s.accessibility}/100 |`,
+            `| SEO | ${s.seo}/100 |`,
+            `| Best Practices | ${s.bestPractices}/100 |`,
+          );
 
-        if (result.opportunities?.length) {
-          const top = result.opportunities
-            .filter((o: any) => o.score !== null && o.score < 1)
-            .sort((a: any, b: any) => (b.savingsMs ?? 0) - (a.savingsMs ?? 0))
-            .slice(0, 5);
-          if (top.length > 0) {
-            lines.push(``, `**Top opportunities:**`);
-            for (const o of top) {
-              const savings = o.savingsMs ? ` (save ~${Math.round(o.savingsMs)}ms)` : "";
-              lines.push(`- ${o.title}${savings}`);
+          if (result.coreWebVitals) {
+            const cwv = result.coreWebVitals;
+            lines.push(``, `**Core Web Vitals:**`);
+            if (cwv.lcp != null) lines.push(`- LCP: ${cwv.lcp}ms`);
+            if (cwv.cls != null) lines.push(`- CLS: ${cwv.cls}`);
+            if (cwv.inp != null) lines.push(`- INP: ${cwv.inp}ms`);
+            if (cwv.fcp != null) lines.push(`- FCP: ${cwv.fcp}ms`);
+            if (cwv.ttfb != null) lines.push(`- TTFB: ${cwv.ttfb}ms`);
+          }
+
+          if (result.opportunities?.length) {
+            const top = result.opportunities
+              .filter((o: any) => o.score !== null && o.score < 1)
+              .sort((a: any, b: any) => (b.savingsMs ?? 0) - (a.savingsMs ?? 0))
+              .slice(0, 5);
+            if (top.length > 0) {
+              lines.push(``, `**Top opportunities:**`);
+              for (const o of top) {
+                const savings = o.savingsMs ? ` (save ~${Math.round(o.savingsMs)}ms)` : "";
+                lines.push(`- ${o.title}${savings}`);
+              }
             }
           }
+          lines.push(``, `---`, ``);
         }
 
         return lines.join("\n");

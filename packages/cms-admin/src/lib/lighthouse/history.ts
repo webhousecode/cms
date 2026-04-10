@@ -19,11 +19,13 @@ async function getLighthouseDir(): Promise<string> {
   return dir;
 }
 
-/** Append a scan result to history and save as latest. */
+/** Append a scan result to history and save as latest (per strategy). */
 export async function appendResult(result: LighthouseResult): Promise<void> {
   const dir = await getLighthouseDir();
 
-  // Save full latest result
+  // Save latest per strategy so mobile and desktop don't overwrite each other
+  writeFileSync(path.join(dir, `latest-${result.strategy}.json`), JSON.stringify(result, null, 2));
+  // Also save a single latest.json (last scanned strategy) for backwards compat
   writeFileSync(path.join(dir, "latest.json"), JSON.stringify(result, null, 2));
 
   // Append to history
@@ -58,6 +60,24 @@ export async function getLatest(): Promise<LighthouseResult | null> {
   } catch {
     return null;
   }
+}
+
+/** Read latest results for both strategies (mobile + desktop). */
+export async function getLatestBoth(): Promise<{ mobile: LighthouseResult | null; desktop: LighthouseResult | null }> {
+  const dir = await getLighthouseDir();
+  let mobile: LighthouseResult | null = null;
+  let desktop: LighthouseResult | null = null;
+  try { mobile = JSON.parse(readFileSync(path.join(dir, "latest-mobile.json"), "utf-8")); } catch { /* no mobile */ }
+  try { desktop = JSON.parse(readFileSync(path.join(dir, "latest-desktop.json"), "utf-8")); } catch { /* no desktop */ }
+  // Fallback to legacy latest.json if per-strategy files don't exist
+  if (!mobile && !desktop) {
+    const legacy = await getLatest();
+    if (legacy) {
+      if (legacy.strategy === "mobile") mobile = legacy;
+      else desktop = legacy;
+    }
+  }
+  return { mobile, desktop };
 }
 
 function readHistory(filePath: string): ScoreHistoryEntry[] {
