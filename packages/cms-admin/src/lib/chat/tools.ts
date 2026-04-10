@@ -239,6 +239,8 @@ export async function buildChatTools(): Promise<ToolPair[]> {
               const tags = [...(m?.tags ?? []), ...(m?.aiTags ?? [])].join(", ");
               const caption = m?.aiCaption ?? "";
               parts.push(`- **${f.name}** (${f.mediaType}) URL: ${f.url}${tags ? ` Tags: ${tags}` : ""}${caption ? ` Caption: ${caption}` : ""}`);
+              // Show image inline in chat
+              if (f.mediaType === "image") parts.push(`\n![${m?.aiAlt ?? f.name}](${f.url})`);
             }
           }
         } catch { /* media search failed — non-fatal */ }
@@ -519,7 +521,9 @@ export async function buildChatTools(): Promise<ToolPair[]> {
             const alt = mAny?.aiAlts?.[contentLocale] ?? m?.aiAlt;
             if (caption) parts.push(`  Caption: ${caption}`);
             if (alt) parts.push(`  Alt: ${alt}`);
-            parts.push(`  Use this markdown: ![${alt ?? f.name}](${f.url})`);
+            // Show image inline in chat + provide copyable markdown
+            if (f.mediaType === "image") parts.push(`\n![${alt ?? f.name}](${f.url})`);
+            parts.push(`  Markdown: \`![${alt ?? f.name}](${f.url})\``);
             if (m?.tags?.length) parts.push(`  User tags: ${m.tags.join(", ")}`);
             if (m?.aiTags?.length) parts.push(`  AI tags: ${m.aiTags.join(", ")}`);
             if (m?.exif) {

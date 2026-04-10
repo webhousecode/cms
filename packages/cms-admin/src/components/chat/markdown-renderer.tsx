@@ -64,11 +64,12 @@ function CopyButton({ text }: { text: string }) {
 // ── Block-level parsing ──────────────────────────────────
 
 interface Block {
-  type: "paragraph" | "heading" | "code" | "table" | "ul" | "ol" | "blockquote" | "hr" | "preview";
+  type: "paragraph" | "heading" | "code" | "table" | "ul" | "ol" | "blockquote" | "hr" | "preview" | "image";
   content: string;
   level?: number; // heading level 1-3
   lang?: string;  // code block language
   rows?: string[][]; // table rows
+  alt?: string;  // image alt text
 }
 
 function parseBlocks(text: string): Block[] {
@@ -83,6 +84,14 @@ function parseBlocks(text: string): Block[] {
     const previewMatch = line.match(/^\[preview:(\/[^\]]+)\]$/);
     if (previewMatch) {
       blocks.push({ type: "preview", content: previewMatch[1] });
+      i++;
+      continue;
+    }
+
+    // Standalone image: ![alt](url)
+    const imgMatch = line.trim().match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+    if (imgMatch) {
+      blocks.push({ type: "image", content: imgMatch[2], alt: imgMatch[1] });
       i++;
       continue;
     }
@@ -202,6 +211,32 @@ function renderBlock(block: Block, key: number): React.ReactNode {
   switch (block.type) {
     case "preview":
       return <PagePreviewCard key={key} pagePath={block.content} />;
+
+    case "image": {
+      // Resolve relative URLs against the preview site
+      const src = block.content.startsWith("/") ? block.content : block.content;
+      return (
+        <div key={key} style={{ margin: "8px 0" }}>
+          <img
+            src={src}
+            alt={block.alt ?? ""}
+            style={{
+              maxWidth: "100%",
+              maxHeight: "300px",
+              borderRadius: "8px",
+              border: "1px solid var(--border)",
+              objectFit: "contain",
+            }}
+            loading="lazy"
+          />
+          {block.alt && (
+            <div style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", marginTop: "4px" }}>
+              {block.alt}
+            </div>
+          )}
+        </div>
+      );
+    }
 
     case "hr":
       return (
