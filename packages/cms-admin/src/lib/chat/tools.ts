@@ -2034,7 +2034,11 @@ DESIGN GUIDELINES:
 
           if (limited.length === 0) return "No form submissions yet.";
 
-          return limited.map((s) => {
+          // Group by form for the pill links
+          const formsUsed = [...new Set(limited.map((s) => s.form))];
+          const header = formsUsed.map((f) => `[form:${f}]`).join(" ");
+
+          return header + "\n\n" + limited.map((s) => {
             const name = String(s.data.name ?? s.data.email ?? "Anonymous");
             const subject = s.data.subject ? ` — ${s.data.subject}` : "";
             const date = new Date(s.createdAt).toLocaleDateString("da-DK", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });

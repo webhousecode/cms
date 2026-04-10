@@ -462,8 +462,8 @@ function DocPill({ collection, slug, variant }: { collection: string; slug: stri
 
 /** Render inline markdown: bold, italic, code, links, strikethrough, doc refs */
 function InlineRich({ text }: { text: string }) {
-  // Split on: `code`, **bold**, *italic*, ~~strike~~, [link](url), [doc:col/slug|Title]
-  const regex = /(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*|~~[^~]+~~|\[doc:[^\]]+\]|\[[^\]]+\]\([^)]+\))/g;
+  // Split on: `code`, **bold**, *italic*, ~~strike~~, [link](url), [doc:col/slug|Title], [form:name]
+  const regex = /(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*|~~[^~]+~~|\[doc:[^\]]+\]|\[form:[^\]]+\]|\[[^\]]+\]\([^)]+\))/g;
   const parts: React.ReactNode[] = [];
   let lastIndex = 0;
   let match: RegExpExecArray | null;
@@ -509,6 +509,29 @@ function InlineRich({ text }: { text: string }) {
             <DocPill collection={col} slug={slug} variant="edit" />
             <DocPillView collection={col} slug={slug} />
           </span>
+        );
+      }
+    } else if (m.startsWith("[form:")) {
+      // [form:name] — links to form inbox
+      const formMatch = m.match(/^\[form:([^\]]+)\]$/);
+      if (formMatch) {
+        const formName = formMatch[1];
+        parts.push(
+          <button
+            key={match.index}
+            onClick={() => {
+              window.dispatchEvent(new CustomEvent("cms:navigate-to-doc", { detail: { path: `/admin/forms/${formName}` } }));
+            }}
+            style={{
+              display: "inline-flex", alignItems: "center", gap: "3px",
+              fontSize: "0.65rem", padding: "1px 6px", borderRadius: "4px",
+              border: "1px solid var(--border)", background: "var(--muted)",
+              color: "var(--foreground)", cursor: "pointer", fontWeight: 500,
+              verticalAlign: "middle", lineHeight: 1.4, marginLeft: "4px",
+            }}
+          >
+            Inbox
+          </button>
         );
       }
     } else if (m.startsWith("[")) {
