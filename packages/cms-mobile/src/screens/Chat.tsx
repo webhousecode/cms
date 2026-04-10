@@ -151,14 +151,19 @@ function DocPill({ collection, slug, variant }: { collection: string; slug: stri
 }
 
 function InlineRich({ text }: { text: string }) {
-  const regex = /(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*|~~[^~]+~~|\[doc:[^\]]+\]|\[form:[^\]]+\]|\[[^\]]+\]\([^)]+\))/g;
+  const regex = /(!\[[^\]]*\]\([^)]+\)|`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*|~~[^~]+~~|\[doc:[^\]]+\]|\[form:[^\]]+\]|\[[^\]]+\]\([^)]+\))/g;
   const parts: React.ReactNode[] = [];
   let lastIdx = 0;
   let match: RegExpExecArray | null;
   while ((match = regex.exec(text)) !== null) {
     if (match.index > lastIdx) parts.push(text.slice(lastIdx, match.index));
     const m = match[0];
-    if (m.startsWith("`") && m.endsWith("`")) {
+    if (m.startsWith("![")) {
+      const im = m.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+      if (im) {
+        parts.push(<ChatImage key={match.index} src={im[2]} alt={im[1] || im[2].split("/").pop() || ""} inline />);
+      }
+    } else if (m.startsWith("`") && m.endsWith("`")) {
       parts.push(<code key={match.index} style={{ padding: "2px 6px", borderRadius: 4, fontSize: "0.82em", backgroundColor: C.bg, border: `1px solid ${C.border}`, fontFamily: "monospace", color: C.gold }}>{m.slice(1, -1)}</code>);
     } else if (m.startsWith("**")) {
       parts.push(<strong key={match.index} style={{ fontWeight: 600, color: C.fg }}>{m.slice(2, -2)}</strong>);
@@ -194,7 +199,7 @@ function InlineRich({ text }: { text: string }) {
 function renderMdBlock(block: MdBlock, key: number): React.ReactNode {
   switch (block.type) {
     case "hr": return <hr key={key} style={{ border: "none", borderTop: `1px solid ${C.border}`, margin: "16px 0" }} />;
-    case "image": return <ChatImage key={key} src={block.content} alt={block.alt ?? ""} />;
+    case "image": return <div key={key}><ChatImage src={block.content} alt={block.alt ?? ""} /></div>;
     case "heading": {
       const s = { 1: { fontSize: "1.15rem", fontWeight: 700, margin: "16px 0 6px" }, 2: { fontSize: "1rem", fontWeight: 650, margin: "12px 0 5px" }, 3: { fontSize: "0.9rem", fontWeight: 600, margin: "10px 0 4px" } }[block.level ?? 2]!;
       return <div key={key} style={{ ...s, color: C.fg }}><InlineRich text={block.content} /></div>;
@@ -223,7 +228,7 @@ function renderMdBlock(block: MdBlock, key: number): React.ReactNode {
 }
 
 /** Resolve and display images in chat — fetches relative URLs via Bearer JWT and creates blob URL */
-function ChatImage({ src, alt }: { src: string; alt: string }) {
+function ChatImage({ src, alt, inline }: { src: string; alt: string; inline?: boolean }) {
   const { orgId, siteId } = useContext(SiteCtx);
   const [blobUrl, setBlobUrl] = useState<string | null>(src.startsWith("http") ? src : null);
 
@@ -254,10 +259,18 @@ function ChatImage({ src, alt }: { src: string; alt: string }) {
   if (!blobUrl) return null;
 
   return (
-    <div style={{ margin: "8px 0" }}>
-      <img src={blobUrl} alt={alt} style={{ maxWidth: "100%", maxHeight: 300, borderRadius: 8, border: `1px solid ${C.border}`, objectFit: "contain" }} loading="lazy" />
-      {alt && <div style={{ fontSize: "0.65rem", color: C.muted, marginTop: 4 }}>{alt}</div>}
-    </div>
+    <img
+      src={blobUrl}
+      alt={alt}
+      style={inline ? {
+        width: 40, height: 40, objectFit: "cover", borderRadius: 6,
+        border: `1px solid ${C.border}`, display: "inline-block", verticalAlign: "middle",
+      } : {
+        maxWidth: "100%", maxHeight: 300, borderRadius: 8,
+        border: `1px solid ${C.border}`, objectFit: "contain", display: "block", margin: "8px 0",
+      }}
+      loading="lazy"
+    />
   );
 }
 
@@ -294,6 +307,41 @@ function ToolCallCard({ tool }: { tool: ToolCall }) {
         </div>
       )}
     </div>
+  );
+}
+
+// ─── Copy Button ─────────────────────────────────────
+
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        navigator.clipboard.writeText(text).then(() => {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 2000);
+        });
+      }}
+      className="flex items-center gap-1.5 mt-2 px-2.5 py-1 rounded-md text-[11px] active:scale-95 transition-all"
+      style={{
+        background: C.bg,
+        border: `1px solid ${C.border}`,
+        color: copied ? "#4ade80" : C.muted,
+      }}
+    >
+      {copied ? (
+        <>
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M3 8.5l3 3 7-7" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>
+          Copied
+        </>
+      ) : (
+        <>
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none"><rect x="5" y="5" width="8" height="8" rx="1.5" stroke="currentColor" strokeWidth="1.5" /><path d="M3 11V3.5A.5.5 0 013.5 3H11" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" /></svg>
+          Copy
+        </>
+      )}
+    </button>
   );
 }
 
@@ -698,6 +746,10 @@ export function Chat() {
                     ))}
                     {/* Content */}
                     {msg.content && <MarkdownContent text={msg.content} />}
+                    {/* Copy button */}
+                    {msg.content && !streaming && (
+                      <CopyButton text={msg.content} />
+                    )}
                   </div>
                 )}
               </div>

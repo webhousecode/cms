@@ -337,9 +337,16 @@ export function Home() {
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium truncate">{site.siteName}</p>
                   </div>
-                  <span className="ml-3 shrink-0 rounded-full bg-white/10 px-2 py-0.5 text-xs">
-                    {site.role}
-                  </span>
+                  <div className="ml-3 flex items-center gap-1 shrink-0">
+                    {site.liveUrl && (
+                      <span className="rounded px-1.5 py-0.5 text-[10px] font-semibold bg-green-500/20 text-green-400">LIVE</span>
+                    )}
+                    {site.adapter === "github" ? (
+                      <span className="rounded px-1.5 py-0.5 text-[10px] font-semibold bg-white/10 text-white/50">GITHUB</span>
+                    ) : (
+                      <span className="rounded px-1.5 py-0.5 text-[10px] font-semibold bg-white/10 text-white/50">LOCAL</span>
+                    )}
+                  </div>
                   <svg
                     width="14"
                     height="14"

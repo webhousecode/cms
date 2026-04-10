@@ -497,8 +497,8 @@ function DocPill({ collection, slug, variant }: { collection: string; slug: stri
 
 /** Render inline markdown: bold, italic, code, links, strikethrough, doc refs */
 function InlineRich({ text }: { text: string }) {
-  // Split on: `code`, **bold**, *italic*, ~~strike~~, [link](url), [doc:col/slug|Title], [form:name]
-  const regex = /(`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*|~~[^~]+~~|\[doc:[^\]]+\]|\[form:[^\]]+\]|\[[^\]]+\]\([^)]+\))/g;
+  // Split on: ![img](url), `code`, **bold**, *italic*, ~~strike~~, [link](url), [doc:col/slug|Title], [form:name]
+  const regex = /(!\[[^\]]*\]\([^)]+\)|`[^`]+`|\*\*[^*]+\*\*|\*[^*]+\*|~~[^~]+~~|\[doc:[^\]]+\]|\[form:[^\]]+\]|\[[^\]]+\]\([^)]+\))/g;
   const parts: React.ReactNode[] = [];
   let lastIndex = 0;
   let match: RegExpExecArray | null;
@@ -511,7 +511,29 @@ function InlineRich({ text }: { text: string }) {
 
     const m = match[0];
 
-    if (m.startsWith("`") && m.endsWith("`")) {
+    if (m.startsWith("![")) {
+      const im = m.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
+      if (im) {
+        const imgSrc = im[2];
+        parts.push(
+          <img
+            key={match.index}
+            src={imgSrc}
+            alt={im[1] || imgSrc.split("/").pop() || ""}
+            style={{
+              display: "inline-block",
+              width: "40px",
+              height: "40px",
+              objectFit: "cover",
+              borderRadius: "6px",
+              border: "1px solid var(--border)",
+              verticalAlign: "middle",
+            }}
+            loading="lazy"
+          />
+        );
+      }
+    } else if (m.startsWith("`") && m.endsWith("`")) {
       parts.push(
         <code
           key={match.index}

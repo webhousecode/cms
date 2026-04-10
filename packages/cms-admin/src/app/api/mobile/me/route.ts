@@ -117,6 +117,7 @@ export async function GET(req: NextRequest) {
           siteId: site.id,
           siteName: site.name,
           role: (user.role ?? "admin") as "owner" | "admin" | "editor" | "viewer",
+          adapter: site.adapter as "filesystem" | "github",
           previewUrl: derivePreviewUrl(site, reqUrl),
           liveUrl: undefined as string | undefined,
         };
