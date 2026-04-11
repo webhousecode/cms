@@ -155,7 +155,6 @@ export function Site() {
             onClick={() => setLocation(`/site/${params.orgId}/${params.siteId}/collections`)}
             className="flex items-center gap-4 rounded-xl bg-brand-darkSoft border border-white/10 px-4 py-4 text-left active:scale-[0.98] active:bg-white/5 transition-all"
           >
-            <span className="text-2xl">📝</span>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium">Content</p>
               <p className="text-xs text-white/40">Edit pages, posts and collections</p>
@@ -171,7 +170,6 @@ export function Site() {
             onClick={() => setLocation(`/site/${params.orgId}/${params.siteId}/media`)}
             className="flex items-center gap-4 rounded-xl bg-brand-darkSoft border border-white/10 px-4 py-4 text-left active:scale-[0.98] active:bg-white/5 transition-all"
           >
-            <span className="text-2xl">🖼️</span>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium">Media</p>
               <p className="text-xs text-white/40">Browse and upload images</p>
