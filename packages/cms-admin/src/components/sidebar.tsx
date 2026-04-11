@@ -414,17 +414,19 @@ export function AppSidebar({ collections }: Props) {
                     <span>SEO</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    isActive={pathname === "/admin/backup"}
-                    tooltip="Backup & Restore"
-                    render={<Link href="/admin/backup" data-testid="nav-link-backup" />}
-                    style={{ paddingLeft: "1.75rem" }}
-                  >
-                    <HardDrive className="!w-5 !h-5" />
-                    <span>Backup</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+                {siteRole === "admin" && (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      isActive={pathname === "/admin/backup"}
+                      tooltip="Backup & Restore"
+                      render={<Link href="/admin/backup" data-testid="nav-link-backup" />}
+                      style={{ paddingLeft: "1.75rem" }}
+                    >
+                      <HardDrive className="!w-5 !h-5" />
+                      <span>Backup</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )}
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     isActive={pathname === "/admin/performance"}
