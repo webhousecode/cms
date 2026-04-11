@@ -214,6 +214,17 @@ export async function uploadFile(
   return body as { url: string; name: string };
 }
 
+/** Resolve a URL path to a collection + slug (for Edit FAB). */
+export function resolveContentPath(
+  orgId: string,
+  siteId: string,
+  path: string,
+): Promise<{ collection: string; slug: string; label: string }> {
+  return request(
+    `/api/mobile/content/resolve?orgId=${encodeURIComponent(orgId)}&siteId=${encodeURIComponent(siteId)}&path=${encodeURIComponent(path)}`,
+  );
+}
+
 /** List media files for a site. Optional search query. */
 export function getMedia(orgId: string, siteId: string, query?: string): Promise<MediaListResponse> {
   const params = new URLSearchParams({ orgId, siteId });

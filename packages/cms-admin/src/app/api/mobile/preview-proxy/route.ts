@@ -20,6 +20,14 @@ import { verifyPreviewToken } from "@/lib/preview-token";
  * Auth: Bearer JWT.
  */
 
+/** Inject a small script that reports the current URL to the parent via postMessage */
+function injectUrlTracker(html: string): string {
+  const script = `<script>(function(){function r(){window.parent.postMessage({type:'wh-preview-url',url:location.pathname+location.search},'*')}r();var p=history.pushState;history.pushState=function(){p.apply(this,arguments);r()};var q=history.replaceState;history.replaceState=function(){q.apply(this,arguments);r()};window.addEventListener('popstate',r)})()</script>`;
+  if (html.includes("</head>")) return html.replace("</head>", script + "</head>");
+  if (html.includes("</body>")) return html.replace("</body>", script + "</body>");
+  return html + script;
+}
+
 // Track running sirv servers: distDir → { server, port }
 const sirvServers = new Map<string, { server: Server; port: number }>();
 
@@ -132,8 +140,15 @@ export async function GET(req: NextRequest) {
         if (val) headers.set(key, val);
       }
       headers.set("Access-Control-Allow-Origin", "*");
-      // Allow iframe embedding
       headers.delete("X-Frame-Options");
+
+      // Inject URL tracking script into HTML responses
+      const ct = headers.get("content-type") ?? "";
+      if (ct.includes("text/html")) {
+        let html = await res.text();
+        html = injectUrlTracker(html);
+        return new NextResponse(html, { status: res.status, headers });
+      }
 
       return new NextResponse(res.body, {
         status: res.status,
@@ -158,8 +173,15 @@ export async function GET(req: NextRequest) {
       const res = await fetch(sirvUrl, { signal: AbortSignal.timeout(5000) });
 
       const headers = new Headers();
-      headers.set("Content-Type", res.headers.get("Content-Type") ?? "text/html");
+      const sirvCt = res.headers.get("Content-Type") ?? "text/html";
+      headers.set("Content-Type", sirvCt);
       headers.set("Access-Control-Allow-Origin", "*");
+
+      if (sirvCt.includes("text/html")) {
+        let html = await res.text();
+        html = injectUrlTracker(html);
+        return new NextResponse(html, { status: res.status, headers });
+      }
 
       return new NextResponse(res.body, { status: res.status, headers });
     } catch (err) {
