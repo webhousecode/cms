@@ -7,7 +7,7 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { hasPermission, resolvePermissions, ROLE_PERMISSIONS } from "../permissions";
+import { hasPermission, resolvePermissions, ROLE_PERMISSIONS } from "../permissions-shared";
 
 describe("hasPermission", () => {
   it("exact match", () => {

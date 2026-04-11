@@ -13,7 +13,7 @@
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { ROLE_PERMISSIONS, hasPermission } from "@/lib/permissions";
+import { ROLE_PERMISSIONS, hasPermission } from "@/lib/permissions-shared";
 
 export function usePermissions() {
   const [granted, setGranted] = useState<string[]>(["*"]); // default to admin until loaded (avoids flash of hidden UI for admins)
