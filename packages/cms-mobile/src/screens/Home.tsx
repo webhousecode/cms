@@ -76,6 +76,14 @@ export function Home() {
     queryFn: getMe,
   });
 
+  // Cache permissions when ME data loads
+  useEffect(() => {
+    if (meQuery.data?.permissions) {
+      import("@/lib/permissions").then(({ setPermissions }) => {
+        setPermissions(meQuery.data!.permissions);
+      });
+    }
+  }, [meQuery.data?.permissions]);
 
   const serverQuery = useQuery({
     queryKey: ["serverUrl"],
@@ -233,7 +241,7 @@ export function Home() {
               />
               <ul
                 role="listbox"
-                className="absolute left-0 right-0 top-full z-10 mt-1 max-h-72 overflow-auto rounded-xl border border-white/10 bg-brand-darkPanel shadow-xl"
+                className="absolute left-0 right-0 top-0 z-10 max-h-72 overflow-auto rounded-xl border border-white/10 bg-brand-darkPanel shadow-xl"
               >
                 {orgs.map((org) => {
                   const isActive = org.orgId === visibleOrg.orgId;

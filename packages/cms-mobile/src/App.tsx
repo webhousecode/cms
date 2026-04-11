@@ -19,7 +19,7 @@ import { getJwt, getServerUrl } from "./lib/prefs";
 import { onDeepLink } from "./lib/bridge";
 import { consumePairingDeepLink } from "./lib/pairing-flow";
 import { usePullToRefresh } from "./lib/use-pull-to-refresh";
-import { Spinner } from "./components/Spinner";
+
 
 export function App() {
   const [location, setLocation] = useLocation();
@@ -28,9 +28,10 @@ export function App() {
   // Native pull-to-refresh: listen for iOS UIRefreshControl / Android SwipeRefreshLayout
   usePullToRefresh();
 
-  // Initial boot: figure out where to land
+  // Initial boot: figure out where to land (minimum 2s splash)
   useEffect(() => {
     void (async () => {
+      const splashStart = Date.now();
       const serverUrl = await getServerUrl();
       const jwt = await getJwt();
       if (!serverUrl) {
@@ -40,6 +41,10 @@ export function App() {
       } else {
         setLocation("/home");
       }
+      // Hold splash for at least 2s so the eye animation plays fully
+      const elapsed = Date.now() - splashStart;
+      const remaining = Math.max(0, 2000 - elapsed);
+      if (remaining > 0) await new Promise((r) => setTimeout(r, remaining));
       setBooted(true);
     })();
   }, [setLocation]);
@@ -60,8 +65,51 @@ export function App() {
 
   if (!booted) {
     return (
-      <div className="flex h-screen items-center justify-center bg-brand-dark">
-        <Spinner />
+      <div className="relative flex h-screen items-center justify-center bg-brand-dark overflow-hidden">
+        <style>{`
+          @keyframes eye-bounce {
+            0% { transform: scale(0.8); opacity: 0; }
+            40% { transform: scale(1.05); opacity: 1; }
+            60% { transform: scale(0.97); }
+            80% { transform: scale(1.02); }
+            100% { transform: scale(1); opacity: 1; }
+          }
+          @keyframes glow-pulse {
+            0%, 100% { opacity: 0.4; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+          }
+          .eye-splash { animation: eye-bounce 0.8s ease-out forwards; }
+          .glow-pulse { animation: glow-pulse 2.4s ease-in-out infinite; }
+        `}</style>
+        {/* Grid background — engineering blueprint */}
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `
+              linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+              linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px)
+            `,
+            backgroundSize: "64px 64px",
+          }}
+        />
+        {/* Gold glow behind eye — illumination */}
+        <div
+          className="absolute glow-pulse rounded-full pointer-events-none"
+          style={{
+            width: "60vw",
+            height: "60vw",
+            maxWidth: "300px",
+            maxHeight: "300px",
+            background: "radial-gradient(circle, rgba(247,187,46,0.25) 0%, rgba(247,187,46,0.08) 40%, transparent 70%)",
+          }}
+        />
+        {/* Eye logo */}
+        <img
+          src="/webhouse-eye.svg"
+          alt=""
+          className="eye-splash relative z-10"
+          style={{ width: "44vw", maxWidth: "200px" }}
+        />
       </div>
     );
   }
@@ -136,9 +184,7 @@ function FabGate() {
   const isContentEditing = location.includes("/collections") || location.includes("/edit/");
   const showFab =
     !isContentEditing &&
-    (location.startsWith("/home") ||
-      location.startsWith("/settings") ||
-      (location.startsWith("/site/") && !location.endsWith("/preview")));
+    (location.startsWith("/site/") && !location.endsWith("/preview"));
   if (!showFab) return null;
   return <ChatFab />;
 }

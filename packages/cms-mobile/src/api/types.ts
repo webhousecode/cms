@@ -38,10 +38,14 @@ export interface MobileSite {
   previewUrl?: string;
   /** Live/deployed URL for the site */
   liveUrl?: string;
+  /** Signed proxy URL for fullscreen preview (enables URL tracking) */
+  proxyPreviewUrl?: string;
 }
 
 export interface MobileMeResponse {
   user: MobileUser;
+  /** Resolved permissions for this user's role */
+  permissions: string[];
   sites: MobileSite[];
   /** User's last active org id from the desktop session, if any. */
   lastActiveOrg?: string;
