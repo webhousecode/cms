@@ -5,6 +5,7 @@ import { PasskeysPanel } from "@/components/settings/passkeys-panel";
 import { TotpPanel } from "@/components/settings/totp-panel";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { MobilePairingClient } from "./mobile-pairing/client";
+import { getSiteRole } from "@/lib/require-role";
 import { AccessTokensPanel } from "@/components/settings/access-tokens-panel";
 
 export default async function AccountPage({
@@ -13,12 +14,14 @@ export default async function AccountPage({
   searchParams: Promise<{ tab?: string }>;
 }) {
   const { tab = "general" } = await searchParams;
+  const role = await getSiteRole();
+  const isAdmin = role === "admin";
 
   const tabs = [
     { id: "general", label: "General" },
     { id: "security", label: "Security" },
     { id: "tokens", label: "Access Tokens" },
-    { id: "mobile", label: "Mobile" },
+    ...(isAdmin ? [{ id: "mobile", label: "Mobile" }] : []),
   ];
 
   return (
@@ -76,8 +79,8 @@ export default async function AccountPage({
         {/* Access Tokens tab */}
         {tab === "tokens" && <AccessTokensPanel />}
 
-        {/* Mobile tab — F07 webhouse.app pairing QR */}
-        {tab === "mobile" && (
+        {/* Mobile tab — F07 webhouse.app pairing QR (admin only) */}
+        {tab === "mobile" && isAdmin && (
           <div className="max-w-2xl space-y-6">
             <div>
               <SectionHeading>Pair mobile device</SectionHeading>

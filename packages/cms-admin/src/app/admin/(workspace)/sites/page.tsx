@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Globe, MoreVertical, Settings2, Plus, Copy, Eye, ExternalLink, Pencil, LayoutGrid, List, FileStack, Loader2, ArrowUpDown, Play, Square } from "lucide-react";
 import { useSiteRole } from "@/hooks/use-site-role";
+import { usePermissions } from "@/hooks/use-permissions";
 import { useTabs } from "@/lib/tabs-context";
 import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
 import { previewPath } from "@/lib/utils";
@@ -57,8 +58,9 @@ export default function SitesDashboard() {
   const [stats, setStats] = useState<Record<string, { pages: number; collections: number }>>({});
   const [allowedSiteIds, setAllowedSiteIds] = useState<string[] | null>(null);
   const siteRole = useSiteRole();
+  const can = usePermissions();
   const { openTab } = useTabs();
-  const isAdmin = siteRole === "admin";
+  const isAdmin = siteRole === "admin" || can("settings.edit");
 
   const [loaded, setLoaded] = useState(false);
   const [healthMap, setHealthMap] = useState<Record<string, "up" | "down" | "no-preview">>({});
@@ -336,6 +338,7 @@ export default function SitesDashboard() {
           pm2Status={pm2Status}
           pm2Busy={pm2Busy}
           onTogglePm2={togglePm2}
+          isAdmin={isAdmin}
         />
       ) : (
       <div style={{
@@ -381,15 +384,17 @@ export default function SitesDashboard() {
                   <MoreVertical style={{ width: "0.875rem", height: "0.875rem", color: "var(--muted-foreground)" }} />
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-44">
-                  <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setRenameValue(site.name); setRenamingSiteId(site.id); }}>
-                    <Pencil className="mr-2 h-4 w-4 text-muted-foreground" />
-                    Rename
-                  </DropdownMenuItem>
+                  {isAdmin && (
+                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setRenameValue(site.name); setRenamingSiteId(site.id); }}>
+                      <Pencil className="mr-2 h-4 w-4 text-muted-foreground" />
+                      Rename
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(site.id); }}>
                     <Copy className="mr-2 h-4 w-4 text-muted-foreground" />
                     Copy site ID
                   </DropdownMenuItem>
-                  {site.adapter === "filesystem" && (
+                  {isAdmin && site.adapter === "filesystem" && (
                     <DropdownMenuItem onClick={(e) => {
                       e.stopPropagation();
                       setCloningSite(site);
@@ -400,10 +405,12 @@ export default function SitesDashboard() {
                       Clone site
                     </DropdownMenuItem>
                   )}
-                  <DropdownMenuItem onClick={(e) => { e.stopPropagation(); goToSiteSettings(site); }}>
-                    <Settings2 className="mr-2 h-4 w-4 text-muted-foreground" />
-                    Settings
-                  </DropdownMenuItem>
+                  {isAdmin && (
+                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); goToSiteSettings(site); }}>
+                      <Settings2 className="mr-2 h-4 w-4 text-muted-foreground" />
+                      Settings
+                    </DropdownMenuItem>
+                  )}
                   {isDev && (() => {
                     const port = extractPort(site.previewUrl);
                     const proc = port ? pm2Status[port] : null;
@@ -659,9 +666,11 @@ function SiteListView({ sites, stats, healthMap, liveUrls, onEnter, onSettings, 
   pm2Status?: Record<string, { name: string; status: string }>;
   pm2Busy?: string | null;
   onTogglePm2?: (port: string, action: "start" | "stop") => void;
+  isAdmin?: boolean;
 }) {
   const pm2StatusMap = pm2Map ?? {};
   const isDev = process.env.NODE_ENV !== "production";
+  const adminMode = isAdmin ?? false;
   const [sortKey, setSortKey] = useState<SiteSortKey>(() => {
     if (typeof window === "undefined") return "name";
     return (localStorage.getItem("cms-sites-sort-key") as SiteSortKey) || "name";
@@ -827,24 +836,28 @@ function SiteListView({ sites, stats, healthMap, liveUrls, onEnter, onSettings, 
                     <MoreVertical style={{ width: "0.8rem", height: "0.8rem", color: "var(--muted-foreground)" }} />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-44">
-                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onRename(site); }}>
-                      <Pencil className="mr-2 h-4 w-4 text-muted-foreground" />
-                      Rename
-                    </DropdownMenuItem>
+                    {adminMode && (
+                      <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onRename(site); }}>
+                        <Pencil className="mr-2 h-4 w-4 text-muted-foreground" />
+                        Rename
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onCopyId(site.id); }}>
                       <Copy className="mr-2 h-4 w-4 text-muted-foreground" />
                       Copy site ID
                     </DropdownMenuItem>
-                    {site.adapter === "filesystem" && onClone && (
+                    {adminMode && site.adapter === "filesystem" && onClone && (
                       <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onClone(site); }}>
                         <FileStack className="mr-2 h-4 w-4 text-muted-foreground" />
                         Clone site
                       </DropdownMenuItem>
                     )}
-                    <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onSettings(site); }}>
-                      <Settings2 className="mr-2 h-4 w-4 text-muted-foreground" />
-                      Settings
-                    </DropdownMenuItem>
+                    {adminMode && (
+                      <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onSettings(site); }}>
+                        <Settings2 className="mr-2 h-4 w-4 text-muted-foreground" />
+                        Settings
+                      </DropdownMenuItem>
+                    )}
                     {isDev && (() => {
                       const port = extractPort(site.previewUrl);
                       const proc = port ? pm2StatusMap[port] : null;
