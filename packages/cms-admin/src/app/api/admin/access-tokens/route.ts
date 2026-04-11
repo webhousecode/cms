@@ -7,6 +7,7 @@ import {
   revokeToken,
   type TokenScope,
 } from "@/lib/access-tokens";
+import { requirePermission } from "@/lib/permissions";
 
 const VALID_SCOPES: TokenScope[] = ["admin", "content:read", "content:write", "deploy", "media"];
 
@@ -21,6 +22,7 @@ export async function GET() {
 
 /** POST — create a new token. Returns the raw token ONCE. */
 export async function POST(req: NextRequest) {
+  const denied = await requirePermission("tokens.manage"); if (denied) return denied;
   const user = await getSessionUser(await cookies());
   if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 
@@ -47,6 +49,7 @@ export async function POST(req: NextRequest) {
 
 /** DELETE — revoke a token by ID */
 export async function DELETE(req: NextRequest) {
+  const denied = await requirePermission("tokens.manage"); if (denied) return denied;
   const user = await getSessionUser(await cookies());
   if (!user) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
 

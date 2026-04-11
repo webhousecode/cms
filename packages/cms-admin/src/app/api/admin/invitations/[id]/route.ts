@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { getSessionUser } from "@/lib/auth";
 import { getTeamMember } from "@/lib/team";
 import { revokeInvitation } from "@/lib/invitations";
-import { denyViewers } from "@/lib/require-role";
+import { requirePermission } from "@/lib/permissions";
 
 async function requireSiteAdmin() {
   const cookieStore = await cookies();
@@ -18,7 +18,7 @@ export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  const denied = await denyViewers(); if (denied) return denied;
+  const denied = await requirePermission("users.manage"); if (denied) return denied;
   const session = await requireSiteAdmin();
   if (!session) {
     return NextResponse.json({ error: "Site admin access required" }, { status: 403 });

@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createHash } from "crypto";
-import { verifyToken, getUsers, COOKIE_NAME } from "@/lib/auth";
+import { verifyToken, getUsers, COOKIE_NAME, type UserRole } from "@/lib/auth";
 import { getTeamMembers, addTeamMember } from "@/lib/team";
+import { resolvePermissions } from "@/lib/permissions";
 
 function gravatarUrl(email: string, size = 80): string {
   const hash = createHash("md5").update(email.toLowerCase().trim()).digest("hex");
@@ -35,13 +36,15 @@ export async function GET(request: NextRequest) {
     ? `https://github.com/${user.githubUsername}.png?size=64`
     : gravatarUrl(payload.email);
 
+  const siteRole = (membership?.role ?? null) as UserRole | null;
   return NextResponse.json({
     user: {
       id: payload.sub,
       email: payload.email,
       name: payload.name,
       role: user?.role ?? payload.role ?? "admin",
-      siteRole: membership?.role ?? null, // null = no access to this site
+      siteRole,
+      permissions: siteRole ? resolvePermissions(siteRole) : [],
       gravatarUrl: avatarUrl,
       zoom: user?.zoom ?? 100,
     },

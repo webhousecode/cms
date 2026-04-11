@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readMcpConfig, writeMcpConfig, maskMcpConfig, type McpApiKey } from "@/lib/mcp-config";
-import { denyViewers } from "@/lib/require-role";
+import { requirePermission } from "@/lib/permissions";
 
 export async function GET() {
   try {
@@ -13,7 +13,7 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const denied = await denyViewers(); if (denied) return denied;
+  const denied = await requirePermission("settings.edit"); if (denied) return denied;
   try {
     const body = (await request.json()) as {
       action: "add" | "remove";

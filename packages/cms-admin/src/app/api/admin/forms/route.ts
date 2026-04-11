@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getActiveSitePaths } from "@/lib/site-paths";
 import { FormService } from "@/lib/forms/service";
 import { getAllForms, upsertAdminForm } from "@/lib/forms/store";
-import { denyViewers } from "@/lib/require-role";
+import { requirePermission } from "@/lib/permissions";
 
 /** GET /api/admin/forms — list ALL forms (config + admin) + unread counts. */
 export async function GET() {
@@ -25,7 +25,7 @@ export async function GET() {
 
 /** POST /api/admin/forms — create or update an admin-defined form. */
 export async function POST(req: NextRequest) {
-  const denied = await denyViewers(); if (denied) return denied;
+  const denied = await requirePermission("forms.manage"); if (denied) return denied;
   const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
   if (!body.name || !body.label || !Array.isArray(body.fields)) {
     return NextResponse.json({ error: "name, label, and fields are required" }, { status: 400 });

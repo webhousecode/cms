@@ -6,13 +6,10 @@
  */
 import { NextRequest, NextResponse } from "next/server";
 import { parseFile, parseMarkdownFiles, detectFormat, type ImportFormat } from "@/lib/import-engine";
-import { getSiteRole } from "@/lib/require-role";
+import { requirePermission } from "@/lib/permissions";
 
 export async function POST(request: NextRequest) {
-  const role = await getSiteRole();
-  if (role === "viewer") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  const denied = await requirePermission("import.execute"); if (denied) return denied;
 
   try {
     const formData = await request.formData();
