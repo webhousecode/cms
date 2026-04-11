@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join, dirname, resolve } from "node:path";
-import { getSessionUser } from "@/lib/auth";
+import { getSessionUser, type UserRole } from "@/lib/auth";
+import { requirePermission } from "@/lib/permissions";
+import { getAccessibleSiteIds } from "@/lib/team-access";
 import {
   loadRegistry,
   saveRegistry,
@@ -15,17 +17,60 @@ import {
   type SiteEntry,
 } from "@/lib/site-registry";
 
-/** GET /api/cms/registry — return full registry (or null for single-site) */
+/**
+ * GET /api/cms/registry — return registry filtered by user access.
+ *
+ * Admins see everything. Non-admins see only orgs that contain at least
+ * one site they have team membership on, and within those orgs only the
+ * sites they can access.
+ */
 export async function GET() {
   const registry = await loadRegistry();
   if (!registry) {
     return NextResponse.json({ mode: "single-site", registry: null });
   }
-  return NextResponse.json({ mode: "multi-site", registry });
+
+  const cookieStore = await cookies();
+  const session = await getSessionUser(cookieStore);
+  if (!session) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Admins see the full registry
+  const users = await import("@/lib/auth").then((m) => m.getUsers());
+  const user = users.find((u) => u.id === session.sub);
+  const role = (user?.role ?? "admin") as UserRole;
+
+  if (role === "admin") {
+    return NextResponse.json({ mode: "multi-site", registry });
+  }
+
+  // Non-admins: filter to only sites they have team membership on
+  const accessibleIds = await getAccessibleSiteIds(session.sub);
+  const accessSet = new Set(accessibleIds);
+
+  const filteredOrgs = registry.orgs
+    .map((org) => ({
+      ...org,
+      sites: org.sites.filter((s) => accessSet.has(s.id)),
+    }))
+    .filter((org) => org.sites.length > 0);
+
+  const filteredRegistry: Registry = {
+    ...registry,
+    orgs: filteredOrgs,
+    // Default to the first accessible org/site
+    defaultOrgId: filteredOrgs[0]?.id ?? registry.defaultOrgId,
+    defaultSiteId: filteredOrgs[0]?.sites[0]?.id ?? registry.defaultSiteId,
+  };
+
+  return NextResponse.json({ mode: "multi-site", registry: filteredRegistry });
 }
 
-/** POST /api/cms/registry — create/bootstrap registry or add org/site */
+/** POST /api/cms/registry — create/bootstrap registry or add org/site (admin only) */
 export async function POST(request: NextRequest) {
+  const denied = await requirePermission("settings.edit"); if (denied) return denied;
+
   const body = await request.json() as {
     action: "bootstrap" | "add-org" | "add-site" | "update-org" | "update-site";
     orgName?: string;
@@ -38,7 +83,6 @@ export async function POST(request: NextRequest) {
   };
 
   if (body.action === "bootstrap") {
-    // Create registry from current CMS_CONFIG_PATH
     const existing = await loadRegistry();
     if (existing) {
       return NextResponse.json({ error: "Registry already exists" }, { status: 409 });
@@ -51,7 +95,7 @@ export async function POST(request: NextRequest) {
     if (!body.orgName) {
       return NextResponse.json({ error: "orgName required" }, { status: 400 });
     }
-    const org = await addOrg(body.orgName, body.orgType as any, body.orgPlan as any);
+    const org = await addOrg(body.orgName, body.orgType as never, body.orgPlan as never);
     return NextResponse.json({ ok: true, org });
   }
 
@@ -62,8 +106,8 @@ export async function POST(request: NextRequest) {
     const { updateOrg } = await import("@/lib/site-registry");
     const org = await updateOrg(body.orgId, {
       name: body.orgName,
-      type: body.orgType as any,
-      plan: body.orgPlan as any,
+      type: body.orgType as never,
+      plan: body.orgPlan as never,
     });
     if (!org) return NextResponse.json({ error: "Org not found" }, { status: 404 });
     return NextResponse.json({ ok: true, org });
@@ -107,7 +151,6 @@ export async function POST(request: NextRequest) {
       await mkdir(dataDir, { recursive: true });
       await writeFile(teamFile, JSON.stringify(team, null, 2));
 
-      // Create essential directories for filesystem sites
       if (site.adapter !== "github" && !site.configPath.startsWith("github://")) {
         const projDir = dirname(resolve(site.configPath));
         const contentDir = site.contentDir ?? join(projDir, "content");
@@ -116,8 +159,6 @@ export async function POST(request: NextRequest) {
         await mkdir(uploadDir, { recursive: true });
       }
 
-      // F12: For GitHub sites, persist the OAuth token as service token
-      // so the site can load config even when the OAuth cookie expires
       if (site.adapter === "github" || site.configPath.startsWith("github://")) {
         try {
           const githubToken = cookieStore.get("github-token")?.value;
@@ -125,7 +166,7 @@ export async function POST(request: NextRequest) {
             const serviceTokenFile = join(dataDir, "github-service-token.json");
             await writeFile(serviceTokenFile, JSON.stringify({ token: githubToken }, null, 2));
           }
-        } catch { /* non-fatal — token can be added later */ }
+        } catch { /* non-fatal */ }
       }
     }
 
@@ -135,8 +176,10 @@ export async function POST(request: NextRequest) {
   return NextResponse.json({ error: "Unknown action" }, { status: 400 });
 }
 
-/** DELETE /api/cms/registry — remove org or site */
+/** DELETE /api/cms/registry — remove org or site (admin only) */
 export async function DELETE(request: NextRequest) {
+  const denied = await requirePermission("settings.edit"); if (denied) return denied;
+
   const { searchParams } = request.nextUrl;
   const orgId = searchParams.get("orgId");
   const siteId = searchParams.get("siteId");
@@ -154,8 +197,10 @@ export async function DELETE(request: NextRequest) {
   return NextResponse.json({ ok: true });
 }
 
-/** PUT /api/cms/registry — update full registry */
+/** PUT /api/cms/registry — update full registry (admin only) */
 export async function PUT(request: NextRequest) {
+  const denied = await requirePermission("settings.edit"); if (denied) return denied;
+
   const registry = await request.json() as Registry;
   await saveRegistry(registry);
   return NextResponse.json({ ok: true });
