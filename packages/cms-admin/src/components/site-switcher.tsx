@@ -206,6 +206,10 @@ export function OrgSwitcher() {
   if (!loaded || !registry) return null;
 
   const activeOrg = registry.orgs.find((o) => o.id === activeOrgId) ?? registry.orgs[0];
+  const totalSites = registry.orgs.reduce((sum, o) => sum + o.sites.length, 0);
+
+  // Single org + single site and not admin = nothing to switch — hide entirely
+  if (registry.orgs.length <= 1 && totalSites <= 1 && !isAdmin) return null;
 
   function handleSelect(org: OrgEntry) {
     if (org.id === activeOrgId) return;
