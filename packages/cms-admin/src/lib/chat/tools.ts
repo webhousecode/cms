@@ -1952,6 +1952,57 @@ DESIGN GUIDELINES:
     // ── Lighthouse (F98) ─────────────────────────────────────────
     {
       definition: {
+        name: "get_lighthouse_history",
+        description:
+          "Get Lighthouse score history over time. Shows how performance, accessibility, SEO, and best practices scores have changed across scans. Useful for tracking improvements.",
+        input_schema: {
+          type: "object",
+          properties: {
+            limit: { type: "number", description: "Max entries to show. Default: 10." },
+          },
+        },
+      },
+      handler: async (input) => {
+        const { getHistory } = await import("@/lib/lighthouse/history");
+        const history = await getHistory();
+        if (history.length === 0) return "No Lighthouse scan history yet. I can run a scan for you — just say the word.";
+
+        const limit = Math.min(Number(input.limit ?? 10), 50);
+        const recent = history.slice(-limit);
+
+        const lines = [`**Lighthouse score history** (${history.length} total scans, showing last ${recent.length}):`, ""];
+
+        // Group by date for cleaner output
+        for (const entry of recent) {
+          const date = new Date(entry.timestamp).toLocaleDateString("da-DK", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+          const s = entry.scores;
+          lines.push(`- **${date}** (${entry.strategy}) — Perf: ${s.performance} | A11y: ${s.accessibility} | SEO: ${s.seo} | BP: ${s.bestPractices}`);
+        }
+
+        // Trend analysis
+        const mobileScans = recent.filter((e) => e.strategy === "mobile");
+        const desktopScans = recent.filter((e) => e.strategy === "desktop");
+
+        if (mobileScans.length >= 2) {
+          const first = mobileScans[0].scores.performance;
+          const last = mobileScans[mobileScans.length - 1].scores.performance;
+          const diff = last - first;
+          const arrow = diff > 0 ? "↑" : diff < 0 ? "↓" : "→";
+          lines.push("", `**Mobile trend:** ${first} → ${last} (${arrow}${Math.abs(diff)})`);
+        }
+        if (desktopScans.length >= 2) {
+          const first = desktopScans[0].scores.performance;
+          const last = desktopScans[desktopScans.length - 1].scores.performance;
+          const diff = last - first;
+          const arrow = diff > 0 ? "↑" : diff < 0 ? "↓" : "→";
+          lines.push(`**Desktop trend:** ${first} → ${last} (${arrow}${Math.abs(diff)})`);
+        }
+
+        return lines.join("\n");
+      },
+    },
+    {
+      definition: {
         name: "get_lighthouse_scores",
         description:
           "Get the latest Lighthouse/PageSpeed Insights scores for the site. Shows performance, accessibility, SEO, and best practices scores plus Core Web Vitals and top improvement opportunities.",
