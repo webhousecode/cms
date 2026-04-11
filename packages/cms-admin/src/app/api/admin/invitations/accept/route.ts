@@ -25,7 +25,14 @@ export async function POST(request: NextRequest) {
     let user = users.find((u) => u.email.toLowerCase() === invitation.email.toLowerCase());
 
     if (user) {
-      // Existing user — just add site access, no password needed
+      // Existing CMS-wide user — add site access. If they provided a new
+      // password (they filled in the form), update it so they can log in
+      // with the password they just chose. Previously this silently ignored
+      // the password, causing "invalid credentials" on login.
+      if (body.password && body.password !== "__existing__" && body.password.length >= 8) {
+        const { updateUser } = await import("@/lib/auth");
+        await updateUser(user.id, { password: body.password, name: body.name?.trim() || user.name });
+      }
     } else {
       // New user — requires password
       if (!body.password || body.password === "__existing__") {
