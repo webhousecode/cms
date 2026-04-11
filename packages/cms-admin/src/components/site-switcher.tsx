@@ -166,12 +166,20 @@ export function OrgSwitcher() {
   const [registry, setRegistry] = useState<Registry | null>(null);
   const [activeOrgId, setActiveOrgId] = useState<string>("");
   const [loaded, setLoaded] = useState(false);
+  const [allowedSiteIds, setAllowedSiteIds] = useState<string[] | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const fetchRegistry = useCallback(async () => {
     try {
-      const res = await fetch("/api/cms/registry");
-      if (res.ok) {
-        const d = await res.json() as { mode: string; registry: Registry | null };
+      const [regRes, mySites, meRes] = await Promise.all([
+        fetch("/api/cms/registry"),
+        fetch("/api/admin/my-sites").then((r) => r.json()).catch(() => ({ siteIds: [] })),
+        fetch("/api/auth/me").then((r) => r.json()).catch(() => ({ user: null })),
+      ]);
+      setAllowedSiteIds(mySites.siteIds ?? []);
+      setIsAdmin(meRes.user?.role === "admin");
+      if (regRes.ok) {
+        const d = await regRes.json() as { mode: string; registry: Registry | null };
         if (d.registry) {
           setRegistry(d.registry);
           const cookieOrg = getCookie("cms-active-org");
@@ -212,22 +220,33 @@ export function OrgSwitcher() {
         <ChevronDown className="h-3 w-3 text-muted-foreground" />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
-        {registry.orgs.map((org) => (
+        {registry.orgs
+          .filter((org) => {
+            // Admins see all orgs; non-admins only see orgs with ≥1 allowed site
+            if (isAdmin) return true;
+            if (!allowedSiteIds) return true;
+            return org.sites.some((s) => allowedSiteIds.includes(s.id));
+          })
+          .map((org) => (
           <DropdownMenuItem key={org.id} onClick={() => handleSelect(org)}>
             <Building2 className="mr-2 h-4 w-4 text-muted-foreground" />
             <span className="truncate">{org.name}</span>
             {org.id === activeOrgId && <Check className="ml-auto h-4 w-4" />}
           </DropdownMenuItem>
         ))}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => router.push("/admin/organizations")}>
-          <LayoutGrid className="mr-2 h-4 w-4" />
-          All organizations
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => router.push("/admin/organizations/new")}>
-          <Plus className="mr-2 h-4 w-4" />
-          New organization
-        </DropdownMenuItem>
+        {isAdmin && (
+          <>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => router.push("/admin/organizations")}>
+              <LayoutGrid className="mr-2 h-4 w-4" />
+              All organizations
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => router.push("/admin/organizations/new")}>
+              <Plus className="mr-2 h-4 w-4" />
+              New organization
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

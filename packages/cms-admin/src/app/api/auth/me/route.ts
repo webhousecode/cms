@@ -40,8 +40,8 @@ export async function GET(request: NextRequest) {
   return NextResponse.json({
     user: {
       id: payload.sub,
-      email: payload.email,
-      name: payload.name,
+      email: user?.email ?? payload.email,
+      name: user?.name ?? payload.name,
       role: user?.role ?? payload.role ?? "admin",
       siteRole,
       permissions: siteRole ? resolvePermissions(siteRole) : [],

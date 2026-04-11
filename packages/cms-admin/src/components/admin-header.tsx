@@ -16,6 +16,7 @@ import {
 import { Settings, Fingerprint, Check, Moon, Sun, Monitor, LogOut, Search, ExternalLink, Rocket, Loader2, MessageSquare, LayoutDashboard, Plus, History, Languages } from "lucide-react";
 import type { AdminMode } from "@/lib/hooks/use-admin-mode";
 import { HelpButton } from "@/components/help-drawer";
+import { usePermissions } from "@/hooks/use-permissions";
 import { useThemeAxes, type Temperature } from "@/lib/hooks/use-theme-axes";
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
@@ -99,6 +100,7 @@ function UserNav({ user }: { user: SessionUser | null }) {
   const displayName = user?.name ?? "Admin";
   const initials = user ? getInitials(user.name) : "";
   const router = useRouter();
+  const can = usePermissions();
 
   async function logout() {
     sessionStorage.removeItem("cms-session-user");
@@ -134,14 +136,16 @@ function UserNav({ user }: { user: SessionUser | null }) {
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem onClick={() => router.push("/admin/account")}>
+          <DropdownMenuItem onClick={() => { window.dispatchEvent(new CustomEvent("cms:navigate-admin", { detail: { path: "/admin/account" } })); router.push("/admin/account"); }}>
             <Settings className="mr-2 h-4 w-4" />
             Account Preferences
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => router.push("/admin/settings")}>
-            <Settings className="mr-2 h-4 w-4" />
-            Site Settings
-          </DropdownMenuItem>
+          {can("settings.edit") && (
+            <DropdownMenuItem onClick={() => { window.dispatchEvent(new CustomEvent("cms:navigate-admin", { detail: { path: "/admin/settings" } })); router.push("/admin/settings"); }}>
+              <Settings className="mr-2 h-4 w-4" />
+              Site Settings
+            </DropdownMenuItem>
+          )}
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <ThemeItems />

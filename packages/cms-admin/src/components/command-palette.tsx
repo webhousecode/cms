@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { switchSite, switchOrg } from "@/lib/switch-context";
+import { usePermissions } from "@/hooks/use-permissions";
 
 /* ─── Quick actions (Spotlight-style) ────────────────────────── */
 
@@ -25,6 +26,8 @@ interface QuickAction {
   keywords: string[]; // extra terms for fuzzy matching
   featured?: boolean; // show in default view (no query)
   newTab?: boolean; // open in new browser tab
+  /** If set, only show this item when the user has this permission. */
+  permission?: string;
 }
 
 const ICON_SIZE = { width: "0.9rem", height: "0.9rem" };
@@ -55,13 +58,13 @@ function buildQuickActions(logout: () => void): QuickAction[] {
     { id: "nav-trash", label: "Trash", sublabel: "Deleted items", category: "navigation", icon: <Trash2 style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/trash", keywords: ["slettet", "deleted", "papirkurv"] },
 
     // Actions — create
-    { id: "act-new-agent", label: "New Agent", sublabel: "Create a new AI agent", category: "action", icon: <Plus style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/agents/new", keywords: ["new", "agent", "create", "ny", "opret"], featured: true },
-    { id: "act-new-workflow", label: "New Workflow", sublabel: "Chain agents into a pipeline", category: "action", icon: <Plus style={{ ...ICON_SIZE, color: MUTED }} />, keywords: ["new", "workflow", "pipeline", "chain", "create", "ny", "opret"], action: () => { try { localStorage.setItem("cms:agents-tab", "workflows"); localStorage.setItem("cms:agents-workflows-create", "1"); } catch {} window.location.href = "/admin/agents"; } },
-    { id: "act-new-site", label: "New site", sublabel: "Create a new site", category: "action", icon: <Plus style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/sites/new", keywords: ["new", "site", "create", "ny", "opret"] },
-    { id: "act-new-org", label: "New organization", sublabel: "Create a new organization", category: "action", icon: <Plus style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/organizations/new", keywords: ["new", "org", "organization", "create", "ny", "opret"] },
+    { id: "act-new-agent", label: "New Agent", sublabel: "Create a new AI agent", category: "action", icon: <Plus style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/agents/new", keywords: ["new", "agent", "create", "ny", "opret"], featured: true, permission: "agents.manage" },
+    { id: "act-new-workflow", label: "New Workflow", sublabel: "Chain agents into a pipeline", category: "action", icon: <Plus style={{ ...ICON_SIZE, color: MUTED }} />, keywords: ["new", "workflow", "pipeline", "chain", "create", "ny", "opret"], action: () => { try { localStorage.setItem("cms:agents-tab", "workflows"); localStorage.setItem("cms:agents-workflows-create", "1"); } catch {} window.location.href = "/admin/agents"; }, permission: "agents.manage" },
+    { id: "act-new-site", label: "New site", sublabel: "Create a new site", category: "action", icon: <Plus style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/sites/new", keywords: ["new", "site", "create", "ny", "opret"], permission: "settings.edit" },
+    { id: "act-new-org", label: "New organization", sublabel: "Create a new organization", category: "action", icon: <Plus style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/organizations/new", keywords: ["new", "org", "organization", "create", "ny", "opret"], permission: "settings.edit" },
 
     // Actions — run
-    { id: "act-backup", label: "Create Backup", sublabel: "Backup all content now", category: "action", icon: <HardDrive style={{ ...ICON_SIZE, color: MUTED }} />, keywords: ["backup", "sikkerhedskopi", "export"], action: () => { fetch("/api/admin/backups", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ trigger: "manual" }) }).then(() => { window.location.href = "/admin/backup"; }); } },
+    { id: "act-backup", label: "Create Backup", sublabel: "Backup all content now", category: "action", icon: <HardDrive style={{ ...ICON_SIZE, color: MUTED }} />, keywords: ["backup", "sikkerhedskopi", "export"], action: () => { fetch("/api/admin/backups", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ trigger: "manual" }) }).then(() => { window.location.href = "/admin/backup"; }); }, permission: "backup.manage" },
     { id: "act-linkcheck", label: "Run Link Check", sublabel: "Scan all content for broken links", category: "action", icon: <Play style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/link-checker", keywords: ["link", "check", "scan", "broken", "links"] },
     { id: "act-preview", label: "Preview site", sublabel: "Open site preview", category: "action", icon: <ExternalLink style={{ ...ICON_SIZE, color: MUTED }} />, keywords: ["preview", "site", "view", "se", "forhåndsvisning"], action: () => { window.dispatchEvent(new KeyboardEvent("keydown", { key: "p", bubbles: true })); } },
     { id: "act-refresh", label: "Refresh data", sublabel: "Reload current page data", category: "action", icon: <RefreshCw style={{ ...ICON_SIZE, color: MUTED }} />, keywords: ["refresh", "reload", "genindlæs"], action: () => { window.location.reload(); } },
@@ -71,12 +74,12 @@ function buildQuickActions(logout: () => void): QuickAction[] {
     { id: "act-help", label: "Help & Support", sublabel: "Docs, shortcuts, community", category: "action", icon: <HelpCircle style={{ ...ICON_SIZE, color: MUTED }} />, keywords: ["help", "hjælp", "support", "docs", "shortcuts"], action: () => { window.dispatchEvent(new CustomEvent("cms:open-help")); }, featured: true },
 
     // Settings
-    { id: "set-general", label: "Site Settings", sublabel: "General site configuration", category: "settings", icon: <Settings2 style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings", keywords: ["settings", "indstillinger", "config"], featured: true },
-    { id: "set-team", label: "Team", sublabel: "Manage team members", category: "settings", icon: <UserCircle style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings?tab=team", keywords: ["team", "invite", "members", "brugere"] },
-    { id: "set-email", label: "Email Settings", sublabel: "Configure email delivery", category: "settings", icon: <Zap style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings?tab=email", keywords: ["email", "resend", "smtp"] },
-    { id: "set-ai", label: "AI Settings", sublabel: "API keys and providers", category: "settings", icon: <Sparkles style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings?tab=ai", keywords: ["ai", "api", "keys", "anthropic", "openai"] },
-    { id: "set-deploy", label: "Deploy", sublabel: "Deploy hooks and triggers", category: "settings", icon: <ArrowRightLeft style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings?tab=deploy", keywords: ["deploy", "vercel", "netlify", "fly", "cloudflare", "publish", "ship", "github"] },
-    { id: "set-automation", label: "Automation", sublabel: "Backup, link checker, webhooks", category: "settings", icon: <Zap style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings?tab=tools", keywords: ["automation", "backup", "webhook", "schedule", "link checker", "notification"] },
+    { id: "set-general", label: "Site Settings", sublabel: "General site configuration", category: "settings", icon: <Settings2 style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings", keywords: ["settings", "indstillinger", "config"], featured: true, permission: "settings.edit" },
+    { id: "set-team", label: "Team", sublabel: "Manage team members", category: "settings", icon: <UserCircle style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings?tab=team", keywords: ["team", "invite", "members", "brugere"], permission: "users.manage" },
+    { id: "set-email", label: "Email Settings", sublabel: "Configure email delivery", category: "settings", icon: <Zap style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings?tab=email", keywords: ["email", "resend", "smtp"], permission: "settings.edit" },
+    { id: "set-ai", label: "AI Settings", sublabel: "API keys and providers", category: "settings", icon: <Sparkles style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings?tab=ai", keywords: ["ai", "api", "keys", "anthropic", "openai"], permission: "settings.edit" },
+    { id: "set-deploy", label: "Deploy", sublabel: "Deploy hooks and triggers", category: "settings", icon: <ArrowRightLeft style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings?tab=deploy", keywords: ["deploy", "vercel", "netlify", "fly", "cloudflare", "publish", "ship", "github"], permission: "settings.edit" },
+    { id: "set-automation", label: "Automation", sublabel: "Backup, link checker, webhooks", category: "settings", icon: <Zap style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings?tab=tools", keywords: ["automation", "backup", "webhook", "schedule", "link checker", "notification"], permission: "settings.edit" },
     { id: "set-brand", label: "Brand Voice", sublabel: "Tone and writing style", category: "settings", icon: <Sparkles style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings?tab=brand-voice", keywords: ["brand", "voice", "tone", "stil", "stemme"] },
     { id: "set-mcp", label: "MCP Settings", sublabel: "Model Context Protocol", category: "settings", icon: <Database style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings?tab=mcp", keywords: ["mcp", "protocol", "claude", "cursor"] },
     { id: "set-prompts", label: "AI Prompts", sublabel: "Customize AI prompts", category: "settings", icon: <Sparkles style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/settings?tab=prompts", keywords: ["prompts", "ai", "custom", "skabelon"] },
@@ -144,6 +147,8 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
   const router = useRouter();
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const can = usePermissions();
+
   const logout = useCallback(() => {
     fetch("/api/auth/logout", { method: "POST" }).then(() => {
       router.push("/admin/login");
@@ -176,7 +181,8 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
   }, []);
 
   const quickActions = useMemo(() => {
-    const actions = buildQuickActions(logout);
+    const actions = buildQuickActions(logout)
+      .filter((a) => !a.permission || can(a.permission));
     // Add dynamic collection navigation
     for (const col of collections) {
       actions.push({
@@ -250,7 +256,7 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
       });
     }
     return actions;
-  }, [logout, collections, sites, activeSiteId, orgs, activeOrgId, workflows, agentTemplates, router]);
+  }, [logout, can, collections, sites, activeSiteId, orgs, activeOrgId, workflows, agentTemplates, router]);
 
   /* Auto-focus input + fetch collections + sites */
   useEffect(() => {
@@ -391,12 +397,16 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
   /* Reset selection when results change */
   useEffect(() => { setSelected(0); }, [items.length]);
 
-  /* Navigate to item */
+  /* Navigate to item — also switches from chat to admin mode if needed */
   const navigateItem = useCallback((item: PaletteItem) => {
     if (item.action) { onClose(); setTimeout(() => item.action!(), 50); return; }
     if (item.href) {
       if (item.newTab) { window.open(item.href, "_blank"); onClose(); }
-      else { router.push(item.href); setTimeout(onClose, 50); }
+      else {
+        window.dispatchEvent(new CustomEvent("cms:navigate-admin", { detail: { path: item.href } }));
+        router.push(item.href);
+        setTimeout(onClose, 50);
+      }
     } else {
       onClose();
     }
@@ -425,6 +435,15 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
     const el = list.querySelector(`[data-idx="${selected}"]`) as HTMLElement | null;
     el?.scrollIntoView({ block: "nearest" });
   }, [selected]);
+
+  /* Global ESC handler — works even when input doesn't have focus */
+  useEffect(() => {
+    function onEsc(e: KeyboardEvent) {
+      if (e.key === "Escape") { e.preventDefault(); onClose(); }
+    }
+    window.addEventListener("keydown", onEsc);
+    return () => window.removeEventListener("keydown", onEsc);
+  }, [onClose]);
 
   /* Close on backdrop click */
   const onBackdropClick = (e: React.MouseEvent) => {
@@ -495,11 +514,11 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
           <button
             type="button"
             onClick={onClose}
-            style={{ fontSize: "0.65rem", padding: "0.15rem 0.4rem", borderRadius: "4px", border: "1px solid var(--border)", color: "var(--muted-foreground)", fontFamily: "monospace", flexShrink: 0, background: "none", cursor: "pointer" }}
-            className="hover:border-foreground hover:text-foreground transition-colors"
+            style={{ padding: "0.2rem", borderRadius: "4px", border: "none", color: "var(--muted-foreground)", flexShrink: 0, background: "none", cursor: "pointer", display: "flex", alignItems: "center" }}
+            className="hover:text-foreground transition-colors"
             title="Close (Esc)"
           >
-            ESC
+            <X style={{ width: "0.875rem", height: "0.875rem" }} />
           </button>
         </div>
 
