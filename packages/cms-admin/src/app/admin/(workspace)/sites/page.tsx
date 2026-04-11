@@ -302,7 +302,7 @@ export default function SitesDashboard() {
             <List style={{ width: "0.875rem", height: "0.875rem" }} />
           </button>
         </div>
-        <SiteFilters sites={visibleSites} liveUrls={liveUrls} filter={siteFilter} onFilter={setSiteFilter} />
+        {visibleSites.length > 1 && <SiteFilters sites={visibleSites} liveUrls={liveUrls} filter={siteFilter} onFilter={setSiteFilter} />}
       </div>
 
       {viewMode === "list" ? (
