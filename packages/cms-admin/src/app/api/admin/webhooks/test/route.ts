@@ -9,10 +9,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { dispatchWebhooks } from "@/lib/webhook-dispatch";
 import { getActiveSitePaths, getActiveSiteEntry } from "@/lib/site-paths";
-import { denyViewers } from "@/lib/require-role";
+import { requirePermission } from "@/lib/permissions";
 
 export async function POST(request: NextRequest) {
-  const denied = await denyViewers();
+  const denied = await requirePermission("webhooks.manage");
   if (denied) return denied;
 
   try {

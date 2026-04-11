@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { readAiConfig, writeAiConfig, maskAiConfig, type AiConfig } from "@/lib/ai-config";
-import { denyViewers } from "@/lib/require-role";
+import { requirePermission } from "@/lib/permissions";
 
 export async function GET() {
   try {
@@ -13,7 +13,7 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const denied = await denyViewers(); if (denied) return denied;
+  const denied = await requirePermission("settings.edit"); if (denied) return denied;
   try {
     const body = (await request.json()) as Partial<AiConfig>;
     const existing = await readAiConfig();

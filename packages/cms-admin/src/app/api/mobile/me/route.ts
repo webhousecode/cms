@@ -3,8 +3,9 @@ import { createHash } from "crypto";
 import os from "os";
 import path from "path";
 import { existsSync } from "fs";
-import { getUserById } from "@/lib/auth";
+import { getUserById, type UserRole } from "@/lib/auth";
 import { getMobileSession } from "@/lib/mobile-auth";
+import { resolvePermissions } from "@/lib/permissions";
 import { loadRegistry } from "@/lib/site-registry";
 import { readSiteConfigForSite } from "@/lib/site-config";
 import { signPreviewToken } from "@/lib/preview-token";
@@ -111,6 +112,12 @@ export async function GET(req: NextRequest) {
 
     for (const org of registry.orgs) {
       for (const site of org.sites) {
+        // Build proxy URL for fullscreen preview (enables URL tracking via injected script)
+        const lanHost = rewriteLocalhostUrl(`${reqUrl.protocol}//${reqUrl.host}`) ?? `${reqUrl.protocol}//${reqUrl.host}`;
+        const liveOrPreview = site.previewUrl;
+        let proxyPreviewUrl: string | undefined;
+        // We'll set this after resolving liveUrl too
+
         const entry = {
           orgId: org.id,
           orgName: org.name,
@@ -120,10 +127,11 @@ export async function GET(req: NextRequest) {
           adapter: site.adapter as "filesystem" | "github",
           previewUrl: derivePreviewUrl(site, reqUrl),
           liveUrl: undefined as string | undefined,
+          proxyPreviewUrl: undefined as string | undefined,
         };
         sites.push(entry);
 
-        // Resolve live URL from deploy config
+        // Resolve live URL from deploy config + build proxy preview URL
         sitePromises.push(
           readSiteConfigForSite(org.id, site.id)
             .then((cfg) => {
@@ -132,6 +140,13 @@ export async function GET(req: NextRequest) {
                 entry.liveUrl = `https://${cfg.deployCustomDomain}`;
               } else if (cfg.deployProductionUrl) {
                 entry.liveUrl = cfg.deployProductionUrl;
+              }
+              // Build signed proxy URL for fullscreen preview (URL tracking injection)
+              const target = entry.liveUrl || liveOrPreview;
+              if (target) {
+                const proxyBase = `${lanHost}/api/mobile/preview-proxy`;
+                const token = signPreviewToken(target);
+                entry.proxyPreviewUrl = `${proxyBase}?upstream=${encodeURIComponent(target)}&tok=${token}`;
               }
             })
             .catch(() => {}),
@@ -142,13 +157,16 @@ export async function GET(req: NextRequest) {
     await Promise.all(sitePromises);
   }
 
+  const role = (user.role ?? "admin") as UserRole;
   return NextResponse.json({
     user: {
       id: user.id,
       email: user.email,
       name: user.name,
+      role,
       avatarUrl: resolveAvatarUrl(user),
     },
+    permissions: resolvePermissions(role),
     sites,
     lastActiveOrg: user.lastActiveOrg,
     lastActiveSite: user.lastActiveSite,

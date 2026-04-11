@@ -5,7 +5,7 @@ import { getTeamMember } from "@/lib/team";
 import { createInvitation, listInvitations } from "@/lib/invitations";
 import { sendEmail, renderInviteEmail } from "@/lib/email";
 import { readSiteConfig } from "@/lib/site-config";
-import { denyViewers } from "@/lib/require-role";
+import { requirePermission } from "@/lib/permissions";
 import type { UserRole } from "@/lib/auth";
 
 async function requireSiteAdmin() {
@@ -28,7 +28,7 @@ export async function GET() {
 }
 
 export async function POST(request: NextRequest) {
-  const denied = await denyViewers(); if (denied) return denied;
+  const denied = await requirePermission("users.manage"); if (denied) return denied;
   const session = await requireSiteAdmin();
   if (!session) {
     return NextResponse.json({ error: "Site admin access required" }, { status: 403 });

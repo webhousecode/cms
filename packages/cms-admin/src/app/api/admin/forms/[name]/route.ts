@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAllForms } from "@/lib/forms/store";
 import { deleteAdminForm } from "@/lib/forms/store";
-import { denyViewers } from "@/lib/require-role";
+import { requirePermission } from "@/lib/permissions";
 
 /** GET /api/admin/forms/[name] — full form config (for the builder). */
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ name: string }> }) {
@@ -14,7 +14,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ nam
 
 /** DELETE /api/admin/forms/[name] — delete an admin-defined form. */
 export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ name: string }> }) {
-  const denied = await denyViewers(); if (denied) return denied;
+  const denied = await requirePermission("forms.manage"); if (denied) return denied;
   const { name } = await params;
   try {
     await deleteAdminForm(name);

@@ -13,13 +13,10 @@ import {
   type ImportFormat,
 } from "@/lib/import-engine";
 import { getAdminCms, getAdminConfig } from "@/lib/cms";
-import { getSiteRole } from "@/lib/require-role";
+import { requirePermission } from "@/lib/permissions";
 
 export async function POST(request: NextRequest) {
-  const role = await getSiteRole();
-  if (role === "viewer") {
-    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-  }
+  const denied = await requirePermission("import.execute"); if (denied) return denied;
 
   try {
     const body = await request.json();
