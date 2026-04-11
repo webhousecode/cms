@@ -40,7 +40,6 @@ export async function GET() {
   const users = await import("@/lib/auth").then((m) => m.getUsers());
   const user = users.find((u) => u.id === session.sub);
   const role = (user?.role ?? "admin") as UserRole;
-
   if (role === "admin") {
     return NextResponse.json({ mode: "multi-site", registry });
   }
