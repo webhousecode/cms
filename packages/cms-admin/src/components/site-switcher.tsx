@@ -54,6 +54,7 @@ export function SiteSwitcher() {
   const [activeSiteId, setActiveSiteId] = useState<string>("");
   const [loaded, setLoaded] = useState(false);
   const [siteRole, setSiteRole] = useState<string | null>(null);
+  const [globalRole, setGlobalRole] = useState<string | null>(null);
   const [allowedSiteIds, setAllowedSiteIds] = useState<string[] | null>(null);
   const [healthMap, setHealthMap] = useState<Record<string, "up" | "down" | "no-preview">>({});
 
@@ -88,7 +89,7 @@ export function SiteSwitcher() {
   useEffect(() => {
     fetch("/api/auth/me")
       .then((r) => r.json())
-      .then((d: { user?: { siteRole?: string } }) => setSiteRole(d.user?.siteRole ?? null))
+      .then((d: { user?: { siteRole?: string; role?: string } }) => { setSiteRole(d.user?.siteRole ?? null); setGlobalRole(d.user?.role ?? null); })
       .catch(() => {});
   }, [activeSiteId]);
 
@@ -118,7 +119,7 @@ export function SiteSwitcher() {
     ? allSites.filter((s) => allowedSiteIds.includes(s.id))
     : allSites;
   const activeSite = allSites.find((s) => s.id === activeSiteId) ?? sites[0];
-  const isAdmin = siteRole === "admin";
+  const isAdmin = globalRole === "admin" || siteRole === "admin";
 
   // Don't show if only one site (or none)
   if (sites.length <= 1) return null;
