@@ -92,6 +92,58 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
       .catch(() => {});
   }, []);
 
+  // SSE sync — real-time cross-device chat synchronization
+  useEffect(() => {
+    let eventSource: EventSource | null = null;
+    let reconnectTimer: ReturnType<typeof setTimeout>;
+
+    function connect() {
+      eventSource = new EventSource("/api/cms/chat/sync");
+      eventSource.addEventListener("conversation-saved", (e) => {
+        try {
+          const data = JSON.parse(e.data) as { conversationId: string };
+          // If we're viewing this conversation on another device, reload it
+          if (data.conversationId === conversationId) {
+            fetch(`/api/cms/chat/conversations/${conversationId}`)
+              .then((r) => r.ok ? r.json() : null)
+              .then((d) => {
+                if (!d?.conversation?.messages) return;
+                setMessages(d.conversation.messages.map((m: any) => ({
+                  id: m.id, role: m.role, content: m.content,
+                  toolCalls: m.toolCalls?.map((tc: any) => ({ ...tc, status: "done" })),
+                })));
+              })
+              .catch(() => {});
+          }
+          // Refresh history list if drawer is open
+          if (showHistory) {
+            fetch("/api/cms/chat/conversations")
+              .then((r) => r.ok ? r.json() : null)
+              .then((d) => { if (d?.conversations) setConversations(d.conversations); })
+              .catch(() => {});
+          }
+        } catch { /* ignore */ }
+      });
+      eventSource.addEventListener("conversation-deleted", (e) => {
+        try {
+          const data = JSON.parse(e.data) as { conversationId: string };
+          setConversations((prev) => prev.filter((c) => c.id !== data.conversationId));
+          if (data.conversationId === conversationId) handleNewConversation();
+        } catch { /* ignore */ }
+      });
+      eventSource.onerror = () => {
+        eventSource?.close();
+        reconnectTimer = setTimeout(connect, 5000);
+      };
+    }
+
+    connect();
+    return () => {
+      eventSource?.close();
+      clearTimeout(reconnectTimer);
+    };
+  }, [conversationId, showHistory]);
+
   const handleSend = useCallback(
     async (text: string) => {
       // Add user message
@@ -302,6 +354,12 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
           })),
         }),
       });
+      // Broadcast to other devices via SSE sync
+      fetch("/api/cms/chat/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ event: "conversation-saved", data: { conversationId: id } }),
+      }).catch(() => {});
     } catch { /* ignore save errors */ }
   }
 
@@ -406,10 +464,13 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
     try {
       await fetch(`/api/cms/chat/conversations/${id}`, { method: "DELETE" });
       setConversations((prev) => prev.filter((c) => c.id !== id));
-      // If we deleted the active conversation, start fresh
-      if (id === conversationId) {
-        handleNewConversation();
-      }
+      if (id === conversationId) handleNewConversation();
+      // Broadcast to other devices
+      fetch("/api/cms/chat/sync", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ event: "conversation-deleted", data: { conversationId: id } }),
+      }).catch(() => {});
     } catch { /* ignore */ }
   }
 
