@@ -232,8 +232,8 @@ export function DeploySettingsPanel() {
               {config.deployProvider === "netlify" && "Supports Next.js via adapter, static sites, and serverless functions."}
               {config.deployProvider === "flyio" && "Docker-based. Best for SSR apps (Next.js, Remix) and custom servers. Deploys to arn (Stockholm)."}
               {config.deployProvider === "cloudflare" && "Static sites and Workers. Limited SSR support — not recommended for full Next.js apps."}
-              {config.deployProvider === "github-pages" && canAutoDeploy && "Ready to deploy — using your existing GitHub connection. No additional configuration needed."}
-              {config.deployProvider === "github-pages" && !canAutoDeploy && "Static files only. Requires a GitHub token and repository."}
+              {config.deployProvider === "github-pages" && canAutoDeploy && "Ready to deploy — GitHub connected. A repository will be created automatically if needed, and your site files pushed to GitHub Pages in one click."}
+              {config.deployProvider === "github-pages" && !canAutoDeploy && "Static files only. Connect GitHub above, or provide a token and repository manually."}
               {config.deployProvider === "custom" && "Any service that accepts a POST request to trigger a build."}
             </p>
           )}
@@ -306,22 +306,53 @@ export function DeploySettingsPanel() {
         <>
           <SectionHeading>GitHub Connection</SectionHeading>
           <SettingsCard>
-            <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", margin: 0 }}>
-              Connect your GitHub account to deploy this site to GitHub Pages. A repository will be created automatically.
-            </p>
-            <a
-              href="/api/auth/github"
-              style={{
-                display: "inline-flex", alignItems: "center", gap: "0.5rem",
-                padding: "0.45rem 1rem", borderRadius: "7px", border: "none",
-                background: "#24292f", color: "#fff",
-                fontSize: "0.8rem", fontWeight: 600, textDecoration: "none",
-                cursor: "pointer",
-              }}
-            >
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" /></svg>
-              Connect GitHub
-            </a>
+            <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+              <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", margin: 0 }}>
+                GitHub Pages hosts your site for free. Connect your GitHub account and the CMS will create a repository and deploy automatically.
+              </p>
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem" }}>
+                  <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--primary)", minWidth: "1.25rem" }}>1</span>
+                  <div>
+                    <p style={{ fontSize: "0.8rem", fontWeight: 500, margin: 0 }}>Have a GitHub account</p>
+                    <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: "0.15rem 0 0" }}>
+                      Don&apos;t have one? <a href="https://github.com/signup" target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)", textDecoration: "none" }}>Create a free account →</a>
+                    </p>
+                  </div>
+                </div>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem" }}>
+                  <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--primary)", minWidth: "1.25rem" }}>2</span>
+                  <div>
+                    <p style={{ fontSize: "0.8rem", fontWeight: 500, margin: 0 }}>Connect your account</p>
+                    <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: "0.15rem 0 0" }}>
+                      Authorizes the CMS to create a repository and push your site files.
+                    </p>
+                  </div>
+                </div>
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem" }}>
+                  <span style={{ fontSize: "0.85rem", fontWeight: 600, color: "var(--primary)", minWidth: "1.25rem" }}>3</span>
+                  <div>
+                    <p style={{ fontSize: "0.8rem", fontWeight: 500, margin: 0 }}>Click Deploy</p>
+                    <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: "0.15rem 0 0" }}>
+                      The CMS creates the repo, builds your site, and enables GitHub Pages — all in one click.
+                    </p>
+                  </div>
+                </div>
+              </div>
+              <a
+                href="/api/auth/github"
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: "0.5rem",
+                  padding: "0.5rem 1.25rem", borderRadius: "7px", border: "none",
+                  background: "#24292f", color: "#fff",
+                  fontSize: "0.8rem", fontWeight: 600, textDecoration: "none",
+                  cursor: "pointer", alignSelf: "flex-start",
+                }}
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z" /></svg>
+                Connect GitHub
+              </a>
+            </div>
           </SettingsCard>
         </>
       )}
