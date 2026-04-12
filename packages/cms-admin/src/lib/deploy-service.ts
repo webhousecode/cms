@@ -7,6 +7,7 @@
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { existsSync, readdirSync, statSync, readFileSync, rmSync, mkdirSync, writeFileSync, cpSync } from "node:fs";
 import path from "node:path";
+import os from "node:os";
 import { execFileSync } from "node:child_process";
 import { getActiveSitePaths, getActiveSiteEntry } from "./site-paths";
 import { readSiteConfig, writeSiteConfig } from "./site-config";
@@ -847,111 +848,63 @@ async function githubPagesBuildAndDeploy(token: string, repo: string): Promise<s
   }
   console.log(`[deploy] Collected ${files.length} files from dist/`);
 
-  // 3. Push to gh-pages branch via GitHub API
-  // Create a tree with all files, then create a commit, then update gh-pages ref
-  console.log(`[deploy] Pushing ${files.length} files to ${repo} gh-pages branch...`);
+  // 3. Push to gh-pages branch via git clone + push.
+  // The blob API approach hit GitHub's secondary rate limits (403) on repos
+  // with 2000+ files. Git push handles any number of files in one operation.
+  console.log(`[deploy] Pushing ${files.length} files to ${repo} gh-pages branch via git...`);
 
-  // Create blobs in parallel batches (sequential was too slow — 2000+ files
-  // at 1 API call each took 2+ minutes and timed out the SSE stream).
-  // Sequential with retry + exponential backoff. GitHub's secondary rate
-  // limit (403) triggers on concurrent requests — parallel batching was
-  // too aggressive even at batch size 5.
-  const blobs: { path: string; sha: string }[] = [];
-  for (let i = 0; i < files.length; i++) {
-    const f = files[i]!;
-    const content = readFileSync(f.fullPath);
-    let lastStatus = 0;
-    for (let attempt = 0; attempt < 3; attempt++) {
-      if (attempt > 0) {
-        const delay = attempt === 1 ? 3000 : 10000;
-        console.log(`[deploy] Rate limited on ${f.relativePath}, waiting ${delay / 1000}s (attempt ${attempt + 1}/3)...`);
-        await new Promise((r) => setTimeout(r, delay));
-      }
-      const blobRes = await fetch(`https://api.github.com/repos/${repo}/git/blobs`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({ content: content.toString("base64"), encoding: "base64" }),
-        signal: AbortSignal.timeout(30000),
+  const tmpDir = path.join(os.tmpdir(), `cms-deploy-${Date.now()}`);
+  try {
+    const repoUrl = `https://x-access-token:${token}@github.com/${repo}.git`;
+
+    // Clone just the gh-pages branch (shallow, single-branch) — or init if it doesn't exist
+    let isNewBranch = false;
+    try {
+      execFileSync("git", ["clone", "--depth", "1", "--branch", "gh-pages", repoUrl, tmpDir], {
+        timeout: 30000,
+        stdio: "pipe",
       });
-      if (blobRes.ok) {
-        const blob = await blobRes.json() as { sha: string };
-        blobs.push({ path: f.relativePath, sha: blob.sha });
-        lastStatus = 0;
-        break;
-      }
-      lastStatus = blobRes.status;
-      if (blobRes.status !== 403) {
-        throw new Error(`Failed to create blob for ${f.relativePath}: ${blobRes.status}`);
-      }
+    } catch {
+      // gh-pages branch doesn't exist yet — init a fresh repo
+      mkdirSync(tmpDir, { recursive: true });
+      execFileSync("git", ["init"], { cwd: tmpDir, stdio: "pipe" });
+      execFileSync("git", ["checkout", "-b", "gh-pages"], { cwd: tmpDir, stdio: "pipe" });
+      execFileSync("git", ["remote", "add", "origin", repoUrl], { cwd: tmpDir, stdio: "pipe" });
+      isNewBranch = true;
     }
-    if (lastStatus === 403) {
-      throw new Error(`GitHub rate limit exceeded after 3 retries on ${f.relativePath}. Wait a few minutes and try again.`);
+
+    // Clear existing content (except .git)
+    for (const entry of readdirSync(tmpDir)) {
+      if (entry === ".git") continue;
+      const full = path.join(tmpDir, entry);
+      rmSync(full, { recursive: true, force: true });
     }
-  }
 
-  // Create tree
-  const treeRes = await fetch(`https://api.github.com/repos/${repo}/git/trees`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({
-      tree: blobs.map((b) => ({
-        path: b.path,
-        mode: "100644",
-        type: "blob",
-        sha: b.sha,
-      })),
-    }),
-    signal: AbortSignal.timeout(15000),
-  });
-  if (!treeRes.ok) throw new Error(`Failed to create tree: ${treeRes.status}`);
-  const tree = await treeRes.json() as { sha: string };
+    // Copy dist/ into the clone
+    copyDirRecursive(distDir, tmpDir);
 
-  // Get current gh-pages ref (might not exist)
-  let parentSha: string | undefined;
-  const refRes = await fetch(`https://api.github.com/repos/${repo}/git/refs/heads/gh-pages`, {
-    headers,
-    signal: AbortSignal.timeout(10000),
-  });
-  if (refRes.ok) {
-    const ref = await refRes.json() as { object: { sha: string } };
-    parentSha = ref.object.sha;
-  }
+    // Add .nojekyll so GitHub doesn't run Jekyll on the output
+    writeFileSync(path.join(tmpDir, ".nojekyll"), "");
 
-  // Create commit
-  const commitBody: Record<string, unknown> = {
-    message: `Deploy from webhouse.app — ${new Date().toLocaleString("da-DK")}`,
-    tree: tree.sha,
-  };
-  if (parentSha) commitBody.parents = [parentSha];
-  const commitRes = await fetch(`https://api.github.com/repos/${repo}/git/commits`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify(commitBody),
-    signal: AbortSignal.timeout(15000),
-  });
-  if (!commitRes.ok) throw new Error(`Failed to create commit: ${commitRes.status}`);
-  const commit = await commitRes.json() as { sha: string };
-
-  // Update or create gh-pages ref
-  if (parentSha) {
-    const updateRes = await fetch(`https://api.github.com/repos/${repo}/git/refs/heads/gh-pages`, {
-      method: "PATCH",
-      headers,
-      body: JSON.stringify({ sha: commit.sha, force: true }),
-      signal: AbortSignal.timeout(10000),
+    // Git add + commit + push
+    execFileSync("git", ["add", "-A"], { cwd: tmpDir, stdio: "pipe" });
+    execFileSync("git", ["-c", "user.name=webhouse.app", "-c", "user.email=deploy@webhouse.app", "commit", "-m", `Deploy from webhouse.app — ${new Date().toLocaleString("da-DK")}`], {
+      cwd: tmpDir,
+      stdio: "pipe",
+      timeout: 30000,
     });
-    if (!updateRes.ok) throw new Error(`Failed to update gh-pages ref: ${updateRes.status}`);
-  } else {
-    const createRes = await fetch(`https://api.github.com/repos/${repo}/git/refs`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({ ref: "refs/heads/gh-pages", sha: commit.sha }),
-      signal: AbortSignal.timeout(10000),
-    });
-    if (!createRes.ok) throw new Error(`Failed to create gh-pages ref: ${createRes.status}`);
-  }
 
-  console.log(`[deploy] Pushed ${files.length} files to gh-pages branch`);
+    if (isNewBranch) {
+      execFileSync("git", ["push", "-u", "origin", "gh-pages"], { cwd: tmpDir, stdio: "pipe", timeout: 120000 });
+    } else {
+      execFileSync("git", ["push", "--force-with-lease", "origin", "gh-pages"], { cwd: tmpDir, stdio: "pipe", timeout: 120000 });
+    }
+
+    console.log(`[deploy] Pushed ${files.length} files to gh-pages branch`);
+  } finally {
+    // Clean up temp dir
+    try { rmSync(tmpDir, { recursive: true, force: true }); } catch { /* non-fatal */ }
+  }
 
   // 4. Ensure GitHub Pages is enabled on gh-pages branch
   const checkRes = await fetch(`https://api.github.com/repos/${repo}/pages`, {
@@ -1038,6 +991,25 @@ const SKIP_EXTENSIONS = new Set([
   ".dmg", ".iso", ".exe", ".msi",                             // installers
   ".psd", ".ai", ".sketch", ".fig",                           // design source files
 ]);
+
+/** Recursively copy all files from src to dest, respecting the skip list. */
+function copyDirRecursive(src: string, dest: string): void {
+  for (const entry of readdirSync(src, { withFileTypes: true })) {
+    if (entry.name.startsWith(".")) continue;
+    const srcPath = path.join(src, entry.name);
+    const destPath = path.join(dest, entry.name);
+    if (entry.isDirectory()) {
+      mkdirSync(destPath, { recursive: true });
+      copyDirRecursive(srcPath, destPath);
+    } else {
+      const ext = path.extname(entry.name).toLowerCase();
+      if (SKIP_EXTENSIONS.has(ext)) continue;
+      const stat = statSync(srcPath);
+      if (stat.size > MAX_FILE_SIZE) continue;
+      cpSync(srcPath, destPath);
+    }
+  }
+}
 
 function collectFiles(dir: string, baseDir: string): { fullPath: string; relativePath: string }[] {
   const results: { fullPath: string; relativePath: string }[] = [];
