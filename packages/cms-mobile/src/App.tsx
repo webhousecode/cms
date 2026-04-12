@@ -39,9 +39,15 @@ export function App() {
       } else if (!jwt) {
         setLocation("/login");
       } else {
-        setLocation("/home");
+        // Check for default site — skip home, go straight to site page
+        const { getDefaultSite } = await import("./lib/prefs");
+        const def = await getDefaultSite();
+        if (def) {
+          setLocation(`/site/${def.orgId}/${def.siteId}`);
+        } else {
+          setLocation("/home");
+        }
       }
-      // Hold splash for at least 2s so the eye animation plays fully
       const elapsed = Date.now() - splashStart;
       const remaining = Math.max(0, 2000 - elapsed);
       if (remaining > 0) await new Promise((r) => setTimeout(r, remaining));

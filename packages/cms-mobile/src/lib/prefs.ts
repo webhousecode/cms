@@ -16,6 +16,7 @@ const KEY_BIOMETRIC_ENABLED = "wha.biometricEnabled";
 const KEY_LAST_USER_EMAIL = "wha.lastUserEmail";
 const KEY_ACTIVE_ORG = "wha.activeOrg";
 const KEY_ACTIVE_SITE = "wha.activeSite";
+const KEY_DEFAULT_SITE = "wha.defaultSite"; // "orgId/siteId" or null
 
 export async function getServerUrl(): Promise<string | null> {
   const { value } = await Preferences.get({ key: KEY_SERVER_URL });
@@ -80,6 +81,22 @@ export async function getActiveSiteId(): Promise<string | null> {
 
 export async function setActiveSiteId(siteId: string): Promise<void> {
   await Preferences.set({ key: KEY_ACTIVE_SITE, value: siteId });
+}
+
+/** Default site — app boots directly to this site's page. Format: "orgId/siteId" */
+export async function getDefaultSite(): Promise<{ orgId: string; siteId: string } | null> {
+  const { value } = await Preferences.get({ key: KEY_DEFAULT_SITE });
+  if (!value) return null;
+  const [orgId, siteId] = value.split("/");
+  return orgId && siteId ? { orgId, siteId } : null;
+}
+
+export async function setDefaultSite(orgId: string, siteId: string): Promise<void> {
+  await Preferences.set({ key: KEY_DEFAULT_SITE, value: `${orgId}/${siteId}` });
+}
+
+export async function clearDefaultSite(): Promise<void> {
+  await Preferences.remove({ key: KEY_DEFAULT_SITE });
 }
 
 /** Wipe all stored credentials + server URL — used by Sign out.

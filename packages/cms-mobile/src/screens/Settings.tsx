@@ -6,7 +6,7 @@ import { ScreenHeader, BackButton } from "@/components/ScreenHeader";
 import { Button } from "@/components/Button";
 import { Spinner } from "@/components/Spinner";
 import { getMe } from "@/api/client";
-import { clearAllAuth, getServerUrl } from "@/lib/prefs";
+import { clearAllAuth, getServerUrl, getDefaultSite, setDefaultSite, clearDefaultSite } from "@/lib/prefs";
 import { clearBiometricJwt, isNative, platform } from "@/lib/bridge";
 import type { TopicKey } from "./settings-types";
 
@@ -29,6 +29,15 @@ export function Settings() {
   const [pushPermission, setPushPermission] = useState<"granted" | "denied" | "unknown">("unknown");
   const [topicPrefs, setTopicPrefs] = useState<Record<TopicKey, boolean> | null>(null);
   const [pushExpanded, setPushExpanded] = useState(false);
+  const [defaultSiteKey, setDefaultSiteKey] = useState<string | null>(null);
+  const [defaultSiteOpen, setDefaultSiteOpen] = useState(false);
+
+  // Load default site pref
+  useEffect(() => {
+    void getDefaultSite().then((d) => {
+      setDefaultSiteKey(d ? `${d.orgId}/${d.siteId}` : null);
+    });
+  }, []);
 
   useEffect(() => {
     void (async () => {
@@ -106,6 +115,57 @@ export function Settings() {
       />
 
       <div className="flex flex-1 flex-col gap-4 px-6 pb-24 overflow-auto">
+
+        {/* Default site — boot straight to this site */}
+        <section className="rounded-xl bg-brand-darkSoft overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setDefaultSiteOpen((v) => !v)}
+            className="flex w-full items-center justify-between px-4 py-3 active:bg-white/5"
+          >
+            <div>
+              <p className="text-sm font-medium">Default site</p>
+              <p className="text-xs text-white/40 mt-0.5">
+                {defaultSiteKey
+                  ? me?.sites.find((s) => `${s.orgId}/${s.siteId}` === defaultSiteKey)?.siteName ?? defaultSiteKey
+                  : "None — opens Home on launch"}
+              </p>
+            </div>
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" className={`text-white/40 transition-transform ${defaultSiteOpen ? "rotate-180" : ""}`}>
+              <path d="M4 6l4 4 4-4" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+          {defaultSiteOpen && (
+            <div className="border-t border-white/5">
+              {/* None option */}
+              <button
+                type="button"
+                onClick={async () => { await clearDefaultSite(); setDefaultSiteKey(null); setDefaultSiteOpen(false); }}
+                className={`flex w-full items-center px-4 py-2.5 text-sm active:bg-white/5 ${!defaultSiteKey ? "text-brand-gold" : "text-white/70"}`}
+              >
+                {!defaultSiteKey && <span className="mr-2">✓</span>}
+                None (show Home)
+              </button>
+              {/* Site list */}
+              {me?.sites.map((site) => {
+                const key = `${site.orgId}/${site.siteId}`;
+                const active = key === defaultSiteKey;
+                return (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={async () => { await setDefaultSite(site.orgId, site.siteId); setDefaultSiteKey(key); setDefaultSiteOpen(false); }}
+                    className={`flex w-full items-center px-4 py-2.5 text-sm border-t border-white/5 active:bg-white/5 ${active ? "text-brand-gold" : "text-white/70"}`}
+                  >
+                    {active && <span className="mr-2">✓</span>}
+                    {site.siteName}
+                    <span className="ml-auto text-[10px] text-white/30">{site.orgName}</span>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </section>
 
         {/* Push notifications — collapsible */}
         <section className="rounded-xl bg-brand-darkSoft overflow-hidden">
