@@ -47,115 +47,97 @@ export async function POST(req: NextRequest) {
     }
     const sessionJwt = await createToken(user);
 
-    // Pre-process messages: convert ![](url) image refs to Anthropic vision content blocks
-    // Read images directly from disk (HTTP fetch of /uploads/ needs cookies we don't have)
-    if (body.messages && orgId && siteId) {
-      const paths = await getSitePathsFor(orgId, siteId);
-      body.messages = await Promise.all(
-        body.messages.map(async (msg: any) => {
-          if (msg.role !== "user" || typeof msg.content !== "string") return msg;
-          const imgRegex = /!\[[^\]]*\]\(([^)]+)\)/g;
-          const images: string[] = [];
-          let match;
-          while ((match = imgRegex.exec(msg.content)) !== null) {
-            images.push(match[1]);
-          }
-          if (images.length === 0) return msg;
-
-          const textContent = msg.content.replace(/!\[[^\]]*\]\([^)]+\)/g, "").trim();
-          const contentBlocks: any[] = [];
-          if (textContent) {
-            contentBlocks.push({ type: "text", text: textContent });
-          }
-
-          for (const imgUrl of images) {
-            try {
-              let buf: Buffer | null = null;
-
-              // Try reading from disk first (handles /uploads/xxx and http://...3010/uploads/xxx)
-              const uploadsMatch = imgUrl.match(/\/uploads\/(.+)$/);
-              if (uploadsMatch && paths) {
-                const adapter = new FilesystemMediaAdapter(paths.uploadDir, paths.dataDir);
-                const segments = uploadsMatch[1].split("/");
-                const data = await adapter.readFile(segments);
-                if (data) buf = Buffer.from(data);
-              }
-
-              // Fallback: HTTP fetch for external URLs
-              if (!buf && imgUrl.startsWith("http") && !imgUrl.includes("/uploads/")) {
-                const res = await fetch(imgUrl, { signal: AbortSignal.timeout(5000) });
-                if (res.ok) buf = Buffer.from(await res.arrayBuffer());
-              }
-
-              if (buf) {
-                const ext = imgUrl.split(".").pop()?.toLowerCase() ?? "jpeg";
-                const mediaType = ext === "png" ? "image/png" : ext === "webp" ? "image/webp" : "image/jpeg";
-                contentBlocks.push({
-                  type: "image",
-                  source: { type: "base64", media_type: mediaType, data: buf.toString("base64") },
-                });
-              }
-            } catch { /* skip */ }
-          }
-          return contentBlocks.length > 0 ? { ...msg, content: contentBlocks } : msg;
-        }),
-      );
-    }
-
-    // Proxy to the real chat endpoint with cookies for site context + session
-    const upstream = await fetch(`${baseUrl}/api/cms/chat`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Cookie: `cms-active-org=${orgId}; cms-active-site=${siteId}; cms-session=${sessionJwt}`,
-      },
-      body: JSON.stringify(body),
-    });
-
-    if (!upstream.ok) {
-      const errText = await upstream.text();
-      return new Response(errText, {
-        status: upstream.status,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
-
-    // Stream SSE with keepalive injection to prevent WKWebView timeout.
-    // WKWebView kills fetch connections after ~60s of no data.
-    // Claude can think for 60+ seconds on complex tasks (vision, multi-tool).
-    // We inject SSE comments (`:keepalive\n\n`) every 15s to keep the connection alive.
+    // Start streaming IMMEDIATELY — send keepalives while we prepare the request.
+    // WKWebView kills connections that don't send data within ~60s.
     const encoder = new TextEncoder();
-    const keepaliveStream = new ReadableStream({
+    const stream = new ReadableStream({
       async start(controller) {
-        const reader = upstream.body!.getReader();
-        let keepaliveTimer: ReturnType<typeof setInterval> | null = null;
-
-        function resetKeepalive() {
-          if (keepaliveTimer) clearInterval(keepaliveTimer);
-          keepaliveTimer = setInterval(() => {
-            try { controller.enqueue(encoder.encode(":keepalive\n\n")); } catch { /* stream closed */ }
-          }, 15000);
-        }
-
-        resetKeepalive();
+        // Start keepalive immediately
+        const keepalive = setInterval(() => {
+          try { controller.enqueue(encoder.encode(":keepalive\n\n")); } catch { /* closed */ }
+        }, 10000);
 
         try {
+          // Pre-process: convert ![](url) to vision content blocks
+          if (body.messages && orgId && siteId) {
+            const paths = await getSitePathsFor(orgId, siteId);
+            body.messages = await Promise.all(
+              body.messages.map(async (msg: any) => {
+                if (msg.role !== "user" || typeof msg.content !== "string") return msg;
+                const imgRegex = /!\[[^\]]*\]\(([^)]+)\)/g;
+                const images: string[] = [];
+                let match;
+                while ((match = imgRegex.exec(msg.content)) !== null) {
+                  images.push(match[1]);
+                }
+                if (images.length === 0) return msg;
+
+                const textContent = msg.content.replace(/!\[[^\]]*\]\([^)]+\)/g, "").trim();
+                const contentBlocks: any[] = [];
+                if (textContent) contentBlocks.push({ type: "text", text: textContent });
+
+                for (const imgUrl of images) {
+                  try {
+                    let buf: Buffer | null = null;
+                    const uploadsMatch = imgUrl.match(/\/uploads\/(.+)$/);
+                    if (uploadsMatch && paths) {
+                      const adapter = new FilesystemMediaAdapter(paths.uploadDir, paths.dataDir);
+                      const data = await adapter.readFile(uploadsMatch[1].split("/"));
+                      if (data) buf = Buffer.from(data);
+                    }
+                    if (!buf && imgUrl.startsWith("http") && !imgUrl.includes("/uploads/")) {
+                      const r = await fetch(imgUrl, { signal: AbortSignal.timeout(5000) });
+                      if (r.ok) buf = Buffer.from(await r.arrayBuffer());
+                    }
+                    if (buf) {
+                      const ext = imgUrl.split(".").pop()?.toLowerCase() ?? "jpeg";
+                      const mt = ext === "png" ? "image/png" : ext === "webp" ? "image/webp" : "image/jpeg";
+                      contentBlocks.push({ type: "image", source: { type: "base64", media_type: mt, data: buf.toString("base64") } });
+                    }
+                  } catch { /* skip */ }
+                }
+                return contentBlocks.length > 0 ? { ...msg, content: contentBlocks } : msg;
+              }),
+            );
+          }
+
+          // Send to upstream chat
+          console.log("[mobile/chat] Sending to upstream...");
+          const upstream = await fetch(`${baseUrl}/api/cms/chat`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Cookie: `cms-active-org=${orgId}; cms-active-site=${siteId}; cms-session=${sessionJwt}`,
+            },
+            body: JSON.stringify(body),
+          });
+
+          if (!upstream.ok) {
+            const errText = await upstream.text();
+            controller.enqueue(encoder.encode(`event: error\ndata: ${JSON.stringify({ message: errText })}\n\n`));
+            controller.enqueue(encoder.encode("event: done\ndata: {}\n\n"));
+            return;
+          }
+
+          // Pipe upstream SSE through
+          const reader = upstream.body!.getReader();
           while (true) {
             const { done, value } = await reader.read();
             if (done) break;
-            resetKeepalive(); // Got data — reset timer
             controller.enqueue(value);
           }
         } catch (err) {
-          console.error("[mobile/chat] Stream error:", err);
+          console.error("[mobile/chat] Error:", err);
+          controller.enqueue(encoder.encode(`event: error\ndata: ${JSON.stringify({ message: String(err) })}\n\n`));
         } finally {
-          if (keepaliveTimer) clearInterval(keepaliveTimer);
+          clearInterval(keepalive);
+          controller.enqueue(encoder.encode("event: done\ndata: {}\n\n"));
           controller.close();
         }
       },
     });
 
-    return new Response(keepaliveStream, {
+    return new Response(stream, {
       status: 200,
       headers: {
         "Content-Type": "text/event-stream",
