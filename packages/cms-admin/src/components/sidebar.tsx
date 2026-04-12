@@ -236,16 +236,18 @@ export function AppSidebar({ collections }: Props) {
         {/* AI Section */}
         <SidebarGroup style={{ padding: "0 0.5rem" }}>
           <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                isActive={pathname === "/admin/command"}
-                tooltip="Cockpit"
-                render={<Link href="/admin/command" data-testid="nav-link-cockpit" />}
-              >
-                <Cpu className="!w-5 !h-5" />
-                <span>Cockpit</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
+            {siteRole === "admin" && (
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={pathname === "/admin/command"}
+                  tooltip="Cockpit"
+                  render={<Link href="/admin/command" data-testid="nav-link-cockpit" />}
+                >
+                  <Cpu className="!w-5 !h-5" />
+                  <span>Cockpit</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
             <SidebarMenuItem>
               <SidebarMenuButton
                 isActive={pathname.startsWith("/admin/agents")}

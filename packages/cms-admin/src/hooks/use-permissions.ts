@@ -3,28 +3,26 @@
 /**
  * Client-side permission hook.
  *
- * Fetches the current user's role once, resolves it to permissions via the
- * same ROLE_PERMISSIONS map the server uses, and returns a `can(perm)` fn.
+ * Fetches the current user's resolved permissions from /api/auth/me and
+ * returns a `can(perm)` function for UI gating.
  *
- * Usage:
- *   const can = usePermissions();
- *   {can("deploy.trigger") && <DeployButton />}
- *   {can("agents.manage") && <AgentConfigLink />}
+ * SECURITY: defaults to [] (deny all) until the fetch completes. This
+ * means admin-only UI flickers in briefly on first load for admins, but
+ * it's the secure default — the alternative (defaulting to ["*"]) would
+ * show admin UI to editors until the fetch resolves.
  */
 
 import { useState, useEffect, useCallback } from "react";
-import { ROLE_PERMISSIONS, hasPermission } from "@/lib/permissions-shared";
+import { hasPermission } from "@/lib/permissions-shared";
 
 export function usePermissions() {
-  const [granted, setGranted] = useState<string[]>(["*"]); // default to admin until loaded (avoids flash of hidden UI for admins)
+  const [granted, setGranted] = useState<string[]>([]);
 
   useEffect(() => {
     fetch("/api/auth/me")
       .then((r) => r.json())
-      .then((d: { user?: { siteRole?: string } }) => {
-        const role = d.user?.siteRole ?? "admin";
-        const perms = ROLE_PERMISSIONS[role as keyof typeof ROLE_PERMISSIONS] ?? [];
-        setGranted(perms);
+      .then((d: { user?: { permissions?: string[] } }) => {
+        setGranted(d.user?.permissions ?? []);
       })
       .catch(() => {});
   }, []);
