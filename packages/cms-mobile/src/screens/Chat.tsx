@@ -878,7 +878,7 @@ export function Chat() {
               <div key={i} className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}>
                 {msg.role === "user" ? (
                   <div className="rounded-2xl rounded-br-md bg-brand-darkSoft border border-white/10 px-4 py-2.5 max-w-[85%]">
-                    <p className="text-sm text-white">{msg.content}</p>
+                    <MarkdownContent text={msg.content} />
                   </div>
                 ) : (
                   <div className="max-w-[95%]">

@@ -103,7 +103,8 @@ export async function POST(request: NextRequest) {
         // Convert messages to Anthropic format
         const anthropicMessages: Anthropic.MessageParam[] = messages.map((m) => ({
           role: m.role,
-          content: m.content,
+          // Support both string content and array content blocks (vision images)
+          content: m.content as any,
         }));
 
         for (let i = 0; i < chatMaxIterations; i++) {
