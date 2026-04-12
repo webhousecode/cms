@@ -120,8 +120,42 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Stream the SSE response through unchanged
-    return new Response(upstream.body, {
+    // Stream SSE with keepalive injection to prevent WKWebView timeout.
+    // WKWebView kills fetch connections after ~60s of no data.
+    // Claude can think for 60+ seconds on complex tasks (vision, multi-tool).
+    // We inject SSE comments (`:keepalive\n\n`) every 15s to keep the connection alive.
+    const encoder = new TextEncoder();
+    const keepaliveStream = new ReadableStream({
+      async start(controller) {
+        const reader = upstream.body!.getReader();
+        let keepaliveTimer: ReturnType<typeof setInterval> | null = null;
+
+        function resetKeepalive() {
+          if (keepaliveTimer) clearInterval(keepaliveTimer);
+          keepaliveTimer = setInterval(() => {
+            try { controller.enqueue(encoder.encode(":keepalive\n\n")); } catch { /* stream closed */ }
+          }, 15000);
+        }
+
+        resetKeepalive();
+
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            resetKeepalive(); // Got data — reset timer
+            controller.enqueue(value);
+          }
+        } catch (err) {
+          console.error("[mobile/chat] Stream error:", err);
+        } finally {
+          if (keepaliveTimer) clearInterval(keepaliveTimer);
+          controller.close();
+        }
+      },
+    });
+
+    return new Response(keepaliveStream, {
       status: 200,
       headers: {
         "Content-Type": "text/event-stream",
