@@ -504,7 +504,7 @@ export function Chat() {
   const [, setLocation] = useLocation();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
-  const [attachedImages, setAttachedImages] = useState<{ url: string; uploading?: boolean }[]>([]);
+  const [attachedImages, setAttachedImages] = useState<{ preview: string; url?: string; uploading?: boolean }[]>([]);
   const [streaming, setStreaming] = useState(false);
   const [thinkingStartTime, setThinkingStartTime] = useState<number | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -552,10 +552,10 @@ export function Chat() {
     // Any still-uploading images? Wait.
     if (attachedImages.some((img) => img.uploading)) return;
 
-    // Build message content: text + image markdown refs
+    // Build message content: text + image markdown refs (use server URL)
     let content = text.trim();
     for (const img of attachedImages) {
-      content += `\n![](${img.url})`;
+      if (img.url) content += `\n![](${img.url})`;
     }
     setAttachedImages([]);
 
@@ -742,21 +742,15 @@ export function Chat() {
     if (!orgId || !siteId) return;
     const localPreview = dataOrPath;
     const idx = attachedImages.length;
-    setAttachedImages((prev) => [...prev, { url: localPreview, uploading: true }]);
+    setAttachedImages((prev) => [...prev, { preview: localPreview, uploading: true }]);
     try {
-      let blob: Blob;
-      if (dataOrPath.startsWith("data:")) {
-        const res = await fetch(dataOrPath);
-        blob = await res.blob();
-      } else {
-        const res = await fetch(dataOrPath);
-        blob = await res.blob();
-      }
+      const res = await fetch(dataOrPath);
+      const blob = await res.blob();
       const file = new File([blob], `chat-${Date.now()}.${ext}`, { type: `image/${ext}` });
       const { uploadFile } = await import("@/api/client");
       const result = await uploadFile(orgId, siteId, file);
-      // Replace local preview with server URL
-      setAttachedImages((prev) => prev.map((img, i) => i === idx ? { url: result.url } : img));
+      // Keep local preview, add server URL
+      setAttachedImages((prev) => prev.map((img, i) => i === idx ? { ...img, url: result.url, uploading: false } : img));
     } catch (err) {
       console.error("Chat image upload failed:", err);
       // Remove failed upload
@@ -908,64 +902,70 @@ export function Chat() {
         )}
       </div>
 
-      {/* Input bar */}
+      {/* Input bar — Claude iOS style: everything inside one rounded box */}
       <div className="shrink-0 border-t border-white/10 bg-brand-dark px-4 py-3 safe-bottom">
-        {/* Attached image thumbnails */}
-        {attachedImages.length > 0 && (
-          <div className="flex gap-2 mb-2 overflow-x-auto pb-1">
-            {attachedImages.map((img, idx) => (
-              <div key={idx} className="relative shrink-0">
-                <img
-                  src={img.url}
-                  alt=""
-                  className="h-16 w-16 rounded-lg object-cover border border-white/10"
-                />
-                {img.uploading ? (
-                  <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/50">
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-brand-gold border-t-transparent" />
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => removeAttachedImage(idx)}
-                    className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-black/80 border border-white/20 text-white active:scale-90"
-                  >
-                    <svg width="10" height="10" viewBox="0 0 16 16" fill="none">
-                      <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-                    </svg>
-                  </button>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
         <div className="flex items-end gap-2">
-          {/* + button — camera/photo picker */}
-          <button
-            type="button"
-            onClick={pickChatImage}
-            disabled={streaming}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-white/60 active:scale-90 active:bg-white/20 transition-all disabled:opacity-30"
-            aria-label="Add image"
-          >
-            <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
-              <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-            </svg>
-          </button>
-          <textarea
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault();
-                send(input);
-              }
-            }}
-            placeholder="How can I help today?"
-            rows={1}
-            className="flex-1 min-w-0 resize-none rounded-xl bg-brand-darkPanel border border-white/10 px-4 py-2.5 text-sm text-white outline-none focus:border-brand-gold transition-colors max-h-32"
-            style={{ fieldSizing: "content" } as any}
-          />
+          {/* Input container — images + textarea + plus button all inside */}
+          <div className="flex-1 min-w-0 rounded-2xl bg-brand-darkPanel border border-white/10 focus-within:border-brand-gold transition-colors overflow-hidden">
+            {/* Attached images */}
+            {attachedImages.length > 0 && (
+              <div className="flex gap-2 px-3 pt-3">
+                {attachedImages.map((img, idx) => (
+                  <div key={idx} className="relative shrink-0">
+                    <img
+                      src={img.preview}
+                      alt=""
+                      className="h-20 w-20 rounded-xl object-cover"
+                    />
+                    {img.uploading ? (
+                      <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/40">
+                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => removeAttachedImage(idx)}
+                        className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/70 text-white active:scale-90"
+                      >
+                        <svg width="10" height="10" viewBox="0 0 16 16" fill="none">
+                          <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                        </svg>
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+            {/* Textarea */}
+            <textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  send(input);
+                }
+              }}
+              placeholder="How can I help today?"
+              rows={1}
+              className="w-full resize-none bg-transparent px-4 pt-3 pb-1 text-sm text-white outline-none max-h-32"
+              style={{ fieldSizing: "content" } as any}
+            />
+            {/* + button inside field, bottom-left */}
+            <div className="flex items-center px-2 pb-2">
+              <button
+                type="button"
+                onClick={pickChatImage}
+                disabled={streaming}
+                className="flex h-7 w-7 items-center justify-center rounded-full text-white/40 active:text-white/70 active:bg-white/10 transition-all disabled:opacity-30"
+                aria-label="Add image"
+              >
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
+          </div>
           {streaming ? (
             <button
               type="button"
