@@ -144,7 +144,7 @@ function MessageBubble({ message, userAvatarUrl }: { message: ChatMessageUI; use
 
         {/* Rendered markdown content */}
         {isUser ? (
-          <div style={{ fontWeight: 500 }}>{message.content}</div>
+          <div style={{ fontWeight: 500 }}><MarkdownRenderer text={message.content} /></div>
         ) : (
           <div style={{ position: "relative" }}>
             <MarkdownRenderer text={message.content} />
