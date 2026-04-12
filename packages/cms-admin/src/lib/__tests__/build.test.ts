@@ -8,6 +8,8 @@ import os from "os";
 import { parseCommand, isCommandAllowed, type OrgBuildSettings } from "../build/allowlist";
 import { resolveWorkingDir, resolveOutDir } from "../build/validate-paths";
 import { executeBuild } from "../build/executor";
+import { resolveProfile, listProfiles } from "../build/resolve-profile";
+import type { BuildConfig } from "@webhouse/cms";
 
 // ── parseCommand ────────────────────────────────────────────
 
@@ -250,4 +252,142 @@ describe("executeBuild", () => {
     expect(result.cancelled).toBe(true);
     expect(result.success).toBe(false);
   }, 10000);
+});
+
+// ── resolveProfile (Phase 3) ────────────────────────────────
+
+describe("resolveProfile", () => {
+  it("returns null when no build config", () => {
+    expect(resolveProfile(undefined)).toBeNull();
+  });
+
+  it("returns null when build has no command and no profiles", () => {
+    expect(resolveProfile({ outDir: "dist" })).toBeNull();
+  });
+
+  it("returns root command as 'default' profile (Phase 1 compat)", () => {
+    const build: BuildConfig = { command: "hugo --minify", outDir: "public" };
+    const p = resolveProfile(build);
+    expect(p).not.toBeNull();
+    expect(p!.name).toBe("default");
+    expect(p!.command).toBe("hugo --minify");
+    expect(p!.outDir).toBe("public");
+  });
+
+  it("picks named profile", () => {
+    const build: BuildConfig = {
+      profiles: [
+        { name: "dev", command: "npm run dev", outDir: "dist" },
+        { name: "prod", command: "npm run build", outDir: "build" },
+      ],
+    };
+    const p = resolveProfile(build, "prod");
+    expect(p!.name).toBe("prod");
+    expect(p!.command).toBe("npm run build");
+    expect(p!.outDir).toBe("build");
+  });
+
+  it("falls back to defaultProfile when no name given", () => {
+    const build: BuildConfig = {
+      defaultProfile: "prod",
+      profiles: [
+        { name: "dev", command: "npm run dev", outDir: "dist" },
+        { name: "prod", command: "npm run build", outDir: "build" },
+      ],
+    };
+    const p = resolveProfile(build);
+    expect(p!.name).toBe("prod");
+  });
+
+  it("falls back to first profile when no default and no name", () => {
+    const build: BuildConfig = {
+      profiles: [
+        { name: "alpha", command: "echo alpha", outDir: "a" },
+        { name: "beta", command: "echo beta", outDir: "b" },
+      ],
+    };
+    const p = resolveProfile(build);
+    expect(p!.name).toBe("alpha");
+  });
+
+  it("merges root env into profile env", () => {
+    const build: BuildConfig = {
+      env: { NODE_ENV: "production" },
+      profiles: [
+        { name: "test", command: "echo", outDir: "out", env: { APP_ENV: "test" } },
+      ],
+    };
+    const p = resolveProfile(build);
+    expect(p!.env).toEqual({ NODE_ENV: "production", APP_ENV: "test" });
+  });
+
+  it("profile env overrides root env", () => {
+    const build: BuildConfig = {
+      env: { NODE_ENV: "development" },
+      profiles: [
+        { name: "prod", command: "echo", outDir: "out", env: { NODE_ENV: "production" } },
+      ],
+    };
+    const p = resolveProfile(build);
+    expect(p!.env!.NODE_ENV).toBe("production");
+  });
+
+  it("inherits root workingDir when profile has none", () => {
+    const build: BuildConfig = {
+      workingDir: "src",
+      profiles: [
+        { name: "test", command: "echo", outDir: "out" },
+      ],
+    };
+    const p = resolveProfile(build);
+    expect(p!.workingDir).toBe("src");
+  });
+
+  it("profile workingDir overrides root", () => {
+    const build: BuildConfig = {
+      workingDir: "src",
+      profiles: [
+        { name: "test", command: "echo", outDir: "out", workingDir: "lib" },
+      ],
+    };
+    const p = resolveProfile(build);
+    expect(p!.workingDir).toBe("lib");
+  });
+});
+
+// ── listProfiles ────────────────────────────────────────────
+
+describe("listProfiles", () => {
+  it("returns empty for no config", () => {
+    expect(listProfiles(undefined)).toEqual([]);
+  });
+
+  it("returns single 'default' for root command", () => {
+    const list = listProfiles({ command: "echo hi" });
+    expect(list).toEqual([{ name: "default", description: undefined, isDefault: true }]);
+  });
+
+  it("lists all profiles with default marked", () => {
+    const list = listProfiles({
+      defaultProfile: "prod",
+      profiles: [
+        { name: "dev", command: "echo", outDir: "d", description: "Development" },
+        { name: "prod", command: "echo", outDir: "p", description: "Production" },
+      ],
+    });
+    expect(list).toHaveLength(2);
+    expect(list[0]).toEqual({ name: "dev", description: "Development", isDefault: false });
+    expect(list[1]).toEqual({ name: "prod", description: "Production", isDefault: true });
+  });
+
+  it("marks first profile as default when no defaultProfile set", () => {
+    const list = listProfiles({
+      profiles: [
+        { name: "a", command: "echo", outDir: "x" },
+        { name: "b", command: "echo", outDir: "y" },
+      ],
+    });
+    expect(list[0].isDefault).toBe(true);
+    expect(list[1].isDefault).toBe(false);
+  });
 });

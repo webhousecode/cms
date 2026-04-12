@@ -3,6 +3,7 @@
  *
  * Used by deploy-service to abstract whether a site uses the native
  * TypeScript build pipeline or a custom build command (Laravel, Hugo, etc.).
+ * Supports build profiles (Phase 3).
  */
 import { execFileSync } from "node:child_process";
 import { existsSync } from "node:fs";
@@ -10,7 +11,7 @@ import path from "node:path";
 import type { CmsConfig } from "@webhouse/cms";
 import { executeBuild } from "./executor";
 import { resolveWorkingDir } from "./validate-paths";
-import { parseCommand } from "./allowlist";
+import { resolveProfile } from "./resolve-profile";
 
 export interface SiteBuildOptions {
   /** Absolute path to site project directory. */
@@ -21,6 +22,8 @@ export interface SiteBuildOptions {
   deployOutDir: string;
   /** BASE_PATH env var for the build. */
   basePath?: string;
+  /** Profile name to use (Phase 3). If omitted, uses default profile. */
+  profileName?: string;
 }
 
 export interface SiteBuildResult {
@@ -32,20 +35,24 @@ export interface SiteBuildResult {
   duration: number;
   /** Whether a custom command was used (vs native build.ts). */
   usedCustomCommand: boolean;
+  /** Name of the profile used. */
+  profileName?: string;
 }
 
 /**
- * Run a site build — either via the custom `build.command` from cms.config.ts,
+ * Run a site build — either via a resolved build profile from cms.config.ts,
  * or the native `npx tsx build.ts` fallback.
  */
 export async function runSiteBuild(
   opts: SiteBuildOptions,
 ): Promise<SiteBuildResult> {
-  const { projectDir, cmsConfig, deployOutDir, basePath } = opts;
-  const buildCommand = cmsConfig.build?.command;
+  const { projectDir, cmsConfig, deployOutDir, basePath, profileName } = opts;
 
-  if (buildCommand) {
-    return runCustomBuild(projectDir, cmsConfig, deployOutDir, basePath);
+  // Phase 3: resolve profile (handles both profiles[] and root command)
+  const profile = resolveProfile(cmsConfig.build, profileName);
+
+  if (profile) {
+    return runCustomBuild(projectDir, profile, deployOutDir, basePath);
   }
   return runNativeBuild(projectDir, deployOutDir, basePath);
 }
@@ -54,19 +61,16 @@ export async function runSiteBuild(
 
 async function runCustomBuild(
   projectDir: string,
-  config: CmsConfig,
+  profile: { name: string; command: string; outDir: string; workingDir?: string; env?: Record<string, string>; timeout?: number },
   deployOutDir: string,
   basePath?: string,
 ): Promise<SiteBuildResult> {
-  const buildConfig = config.build!;
-  const command = buildConfig.command!;
+  const workingDir = resolveWorkingDir(projectDir, profile.workingDir);
+  const timeout = Math.min(profile.timeout ?? 300, 900);
 
-  const workingDir = resolveWorkingDir(projectDir, buildConfig.workingDir);
-  const timeout = Math.min(buildConfig.timeout ?? 300, 900);
-
-  // Merge config env with deploy-specific overrides
+  // Merge profile env with deploy-specific overrides
   const env: Record<string, string> = {
-    ...buildConfig.env,
+    ...profile.env,
     NODE_ENV: "production",
     BUILD_OUT_DIR: deployOutDir,
   };
@@ -75,11 +79,11 @@ async function runCustomBuild(
   }
 
   console.log(
-    `[deploy] Running custom build: ${command} in ${workingDir} (out=${deployOutDir})`,
+    `[deploy] Running build profile "${profile.name}": ${profile.command} in ${workingDir} (out=${deployOutDir})`,
   );
 
   const result = await executeBuild({
-    command,
+    command: profile.command,
     workingDir,
     env,
     timeout,
@@ -89,14 +93,11 @@ async function runCustomBuild(
     },
   });
 
-  const outDirAbs = path.join(
-    projectDir,
-    buildConfig.outDir ?? deployOutDir,
-  );
+  const outDirAbs = path.join(projectDir, profile.outDir ?? deployOutDir);
 
   if (!result.success) {
     const errMsg = result.stderr.slice(-300) || `Exit code: ${result.exitCode}`;
-    throw new Error(`Custom build failed: ${errMsg}`);
+    throw new Error(`Build "${profile.name}" failed: ${errMsg}`);
   }
 
   return {
@@ -104,6 +105,7 @@ async function runCustomBuild(
     outDirAbs,
     duration: result.duration,
     usedCustomCommand: true,
+    profileName: profile.name,
   };
 }
 

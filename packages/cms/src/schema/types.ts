@@ -176,6 +176,33 @@ export interface BuildConfig {
 
   /** Timeout in seconds. Default: 300. Max: 900. */
   timeout?: number;
+
+  // ── F126 Phase 3: Build Profiles ──────────────────────────
+
+  /** Multiple named build profiles. Overrides command/outDir when present. */
+  profiles?: BuildProfile[];
+
+  /** Default profile name (used when profiles[] is set and no profile is specified). */
+  defaultProfile?: string;
+}
+
+export interface BuildProfile {
+  /** Unique profile name (e.g. "dev", "production", "docker"). */
+  name: string;
+  /** Shell command to execute. */
+  command: string;
+  /** Output directory for this profile. */
+  outDir: string;
+  /** Working directory (relative to config file). */
+  workingDir?: string;
+  /** Env vars for this profile. */
+  env?: Record<string, string>;
+  /** Human-readable description. */
+  description?: string;
+  /** Timeout in seconds. */
+  timeout?: number;
+  /** Override preview URL for this profile. */
+  previewUrl?: string;
 }
 
 export interface AutolinkConfig {
