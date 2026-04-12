@@ -881,8 +881,13 @@ export function Chat() {
             {messages.map((msg, i) => (
               <div key={i} className={`flex flex-col ${msg.role === "user" ? "items-end" : "items-start"}`}>
                 {msg.role === "user" ? (
-                  <div className="rounded-2xl rounded-br-md bg-brand-darkSoft border border-white/10 px-4 py-2.5 max-w-[85%]">
-                    <MarkdownContent text={msg.content} />
+                  <div className="max-w-[85%]">
+                    <div className="rounded-2xl rounded-br-md bg-brand-darkSoft border border-white/10 px-4 py-2.5">
+                      <MarkdownContent text={msg.content} />
+                    </div>
+                    <div className="flex justify-end mt-1">
+                      <CopyButton text={msg.content} />
+                    </div>
                   </div>
                 ) : (
                   <div className="max-w-[95%]">
