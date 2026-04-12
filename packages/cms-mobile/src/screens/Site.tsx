@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation, useRoute } from "wouter";
 import { Screen } from "@/components/Screen";
@@ -7,7 +7,7 @@ import { SitePreview } from "@/components/SitePreview";
 import { Button } from "@/components/Button";
 import { Spinner } from "@/components/Spinner";
 import { getMe } from "@/api/client";
-import { setActiveOrgId, setActiveSiteId } from "@/lib/prefs";
+import { setActiveOrgId, setActiveSiteId, getDefaultSite, setDefaultSite, clearDefaultSite } from "@/lib/prefs";
 
 /**
  * Site screen — scoped to one (org, site) pair.
@@ -33,12 +33,29 @@ export function Site() {
     queryFn: getMe,
   });
 
+  const [isDefault, setIsDefault] = useState(false);
+
   // Persist active org+site so push notifs can fall back to last-viewed
   useEffect(() => {
     if (!params?.orgId || !params?.siteId) return;
     void setActiveOrgId(params.orgId);
     void setActiveSiteId(params.siteId);
+    // Check if this is the default site
+    void getDefaultSite().then((d) => {
+      setIsDefault(d?.orgId === params.orgId && d?.siteId === params.siteId);
+    });
   }, [params?.orgId, params?.siteId]);
+
+  async function toggleDefault() {
+    if (!params) return;
+    if (isDefault) {
+      await clearDefaultSite();
+      setIsDefault(false);
+    } else {
+      await setDefaultSite(params.orgId, params.siteId);
+      setIsDefault(true);
+    }
+  }
 
   if (!params) {
     setLocation("/home");
@@ -81,9 +98,16 @@ export function Site() {
           subtitle={site.orgName}
           title={site.siteName}
           right={
-            <span className="rounded-full bg-white/10 px-2.5 py-1 text-xs text-white/70">
-              {site.role}
-            </span>
+            <button
+              type="button"
+              onClick={toggleDefault}
+              className="flex h-10 w-10 items-center justify-center rounded-full active:scale-90 transition-transform"
+              aria-label={isDefault ? "Remove as default" : "Set as default"}
+            >
+              <svg width="20" height="20" viewBox="0 0 16 16" fill={isDefault ? "#F7BB2E" : "none"} stroke={isDefault ? "#F7BB2E" : "rgba(255,255,255,0.4)"} strokeWidth="1.5">
+                <path d="M8 1.5l2 4.1 4.5.6-3.25 3.2.75 4.5L8 11.7l-4 2.2.75-4.5L1.5 6.2l4.5-.6z" strokeLinecap="round" strokeLinejoin="round" />
+              </svg>
+            </button>
           }
         />
 
