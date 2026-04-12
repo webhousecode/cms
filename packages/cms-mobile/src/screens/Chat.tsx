@@ -927,7 +927,7 @@ export function Chat() {
                       <button
                         type="button"
                         onClick={() => removeAttachedImage(idx)}
-                        className="absolute -top-1 -left-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/70 text-white active:scale-90"
+                        className="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-neutral-600 text-white active:scale-90 shadow"
                       >
                         <svg width="10" height="10" viewBox="0 0 16 16" fill="none">
                           <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
