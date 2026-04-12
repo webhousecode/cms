@@ -20,9 +20,36 @@ import { verifyPreviewToken } from "@/lib/preview-token";
  * Auth: Bearer JWT.
  */
 
-/** Inject a small script that reports the current URL to the parent via postMessage */
-function injectUrlTracker(html: string): string {
-  const script = `<script>(function(){function r(){window.parent.postMessage({type:'wh-preview-url',url:location.pathname+location.search},'*')}r();var p=history.pushState;history.pushState=function(){p.apply(this,arguments);r()};var q=history.replaceState;history.replaceState=function(){q.apply(this,arguments);r()};window.addEventListener('popstate',r)})()</script>`;
+/**
+ * Inject scripts into proxied HTML:
+ * 1. URL tracker — reports current path to parent via postMessage
+ * 2. Link interceptor — rewrites internal link clicks to go through the proxy
+ *    so in-iframe navigation works (without this, links resolve against cms-admin's origin)
+ */
+function injectUrlTracker(html: string, proxyBase: string): string {
+  const script = `<script>(function(){
+    // URL tracker
+    function r(){window.parent.postMessage({type:'wh-preview-url',url:location.pathname+location.search},'*')}
+    r();
+    var p=history.pushState;history.pushState=function(){p.apply(this,arguments);r()};
+    var q=history.replaceState;history.replaceState=function(){q.apply(this,arguments);r()};
+    window.addEventListener('popstate',r);
+
+    // Link interceptor — rewrite internal navigation through proxy
+    var base='${proxyBase}';
+    if(base){
+      document.addEventListener('click',function(e){
+        var a=e.target.closest('a');
+        if(!a)return;
+        var href=a.getAttribute('href');
+        if(!href||href.startsWith('http')||href.startsWith('//')||href.startsWith('#')||href.startsWith('mailto:'))return;
+        e.preventDefault();
+        var newPath=href.startsWith('/')?href:'/'+href;
+        var proxyUrl=base+'&path='+encodeURIComponent(newPath);
+        window.location.href=proxyUrl;
+      },true);
+    }
+  })()</script>`;
   if (html.includes("</head>")) return html.replace("</head>", script + "</head>");
   if (html.includes("</body>")) return html.replace("</body>", script + "</body>");
   return html + script;
@@ -121,6 +148,13 @@ export async function GET(req: NextRequest) {
     }
   }
 
+  // Build proxy base URL for link rewriting (preserves all params except path)
+  const proxyBaseParams = new URLSearchParams();
+  if (upstream) proxyBaseParams.set("upstream", upstream);
+  if (distDir) proxyBaseParams.set("dir", distDir);
+  if (token) proxyBaseParams.set("tok", token);
+  const proxyBase = `${req.nextUrl.origin}/api/mobile/preview-proxy?${proxyBaseParams.toString()}`;
+
   // Mode 1: Proxy to an already-running localhost server
   if (upstream) {
     try {
@@ -146,7 +180,7 @@ export async function GET(req: NextRequest) {
       const ct = headers.get("content-type") ?? "";
       if (ct.includes("text/html")) {
         let html = await res.text();
-        html = injectUrlTracker(html);
+        html = injectUrlTracker(html, proxyBase);
         return new NextResponse(html, { status: res.status, headers });
       }
 
@@ -179,7 +213,7 @@ export async function GET(req: NextRequest) {
 
       if (sirvCt.includes("text/html")) {
         let html = await res.text();
-        html = injectUrlTracker(html);
+        html = injectUrlTracker(html, proxyBase);
         return new NextResponse(html, { status: res.status, headers });
       }
 
