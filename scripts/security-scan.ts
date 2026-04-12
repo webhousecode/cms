@@ -271,6 +271,45 @@ async function checkPublicSecrets() {
   }
 }
 
+// Rule 7: Build executor safety (F126)
+// Flag spawn/exec calls in cms-admin that aren't in build/executor.ts
+// or deploy-service.ts (which has pre-existing native build calls).
+async function checkBuildExecutorSafety() {
+  const files = await walkDir(join(ROOT, "packages/cms-admin/src"));
+  const allowedFiles = [
+    "lib/build/executor.ts",
+    "lib/deploy-service.ts",
+    "lib/build/run-site-build.ts",
+  ];
+
+  for (const file of files) {
+    if (file.includes("__tests__") || file.endsWith(".test.ts")) continue;
+    const rel = relative(ROOT, file);
+    if (allowedFiles.some((a) => rel.endsWith(a))) continue;
+
+    const content = await readFile(file, "utf-8");
+    const lines = content.split("\n");
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i]!;
+      if (line.trim().startsWith("//") || line.trim().startsWith("*")) continue;
+
+      if (/\b(spawn|exec|execSync|execFile|execFileSync)\s*\(/.test(line)) {
+        // Skip imports
+        if (/import\s/.test(line)) continue;
+        findings.push({
+          severity: "high",
+          rule: "cms/build-executor-safety",
+          file: rel,
+          line: i + 1,
+          message: "Direct subprocess execution outside build/executor.ts bypasses security controls",
+          suggestion: "Use build/executor.ts for subprocess execution — it enforces shell:false, env allowlist, and timeout",
+        });
+      }
+    }
+  }
+}
+
 // Run all checks
 async function main() {
   console.log("Security Gate — CMS Security Scan");
@@ -281,6 +320,7 @@ async function main() {
   await checkPathTraversal();
   await checkPublicSecrets();
   await checkProcessGlobalState();
+  await checkBuildExecutorSafety();
 
   // Sort by severity
   const order: Record<string, number> = { critical: 0, high: 1, medium: 2, info: 3 };

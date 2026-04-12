@@ -9,6 +9,7 @@ import { parseCommand, isCommandAllowed, type OrgBuildSettings } from "../build/
 import { resolveWorkingDir, resolveOutDir } from "../build/validate-paths";
 import { executeBuild } from "../build/executor";
 import { resolveProfile, listProfiles } from "../build/resolve-profile";
+import { resolveDockerConfig, DOCKER_PRESETS } from "../build/docker-presets";
 import type { BuildConfig } from "@webhouse/cms";
 
 // ── parseCommand ────────────────────────────────────────────
@@ -389,5 +390,92 @@ describe("listProfiles", () => {
     });
     expect(list[0].isDefault).toBe(true);
     expect(list[1].isDefault).toBe(false);
+  });
+});
+
+// ── Docker presets (Phase 4) ────────────────────────────────
+
+describe("resolveDockerConfig", () => {
+  it("returns undefined for undefined input", () => {
+    expect(resolveDockerConfig(undefined)).toBeUndefined();
+  });
+
+  it("resolves string preset to DockerConfig", () => {
+    const config = resolveDockerConfig("php");
+    expect(config).toBeDefined();
+    expect(config!.image).toBe("php:8.3-cli");
+    expect(config!.workdir).toBe("/workspace");
+  });
+
+  it("throws on unknown preset", () => {
+    expect(() => resolveDockerConfig("unknown-framework")).toThrow(
+      'Unknown Docker preset "unknown-framework"',
+    );
+  });
+
+  it("passes through object config unchanged", () => {
+    const input = { image: "custom:latest", workdir: "/app" };
+    const config = resolveDockerConfig(input);
+    expect(config).toEqual(input);
+  });
+
+  it("has presets for all major frameworks", () => {
+    const expected = ["php", "laravel", "python", "django", "ruby", "rails", "go", "hugo", "node", "dotnet"];
+    for (const name of expected) {
+      expect(DOCKER_PRESETS[name]).toBeDefined();
+      expect(DOCKER_PRESETS[name].image).toBeTruthy();
+    }
+  });
+});
+
+describe("resolveProfile with docker", () => {
+  it("resolves docker preset string on root config", () => {
+    const build: BuildConfig = {
+      command: "php artisan build",
+      outDir: "public",
+      docker: "laravel",
+    };
+    const p = resolveProfile(build);
+    expect(p!.docker).toBeDefined();
+    expect(p!.docker!.image).toBe("php:8.3-cli");
+  });
+
+  it("resolves docker object on root config", () => {
+    const build: BuildConfig = {
+      command: "echo hi",
+      docker: { image: "my-image:1.0", workdir: "/src" },
+    };
+    const p = resolveProfile(build);
+    expect(p!.docker!.image).toBe("my-image:1.0");
+  });
+
+  it("profile docker overrides root docker", () => {
+    const build: BuildConfig = {
+      docker: "node",
+      profiles: [
+        { name: "prod", command: "echo", outDir: "out", docker: "python" },
+      ],
+    };
+    const p = resolveProfile(build);
+    expect(p!.docker!.image).toBe("python:3.12-slim");
+  });
+
+  it("inherits root docker when profile has none", () => {
+    const build: BuildConfig = {
+      docker: "go",
+      profiles: [
+        { name: "test", command: "echo", outDir: "out" },
+      ],
+    };
+    const p = resolveProfile(build);
+    expect(p!.docker!.image).toBe("golang:1.22");
+  });
+
+  it("no docker when neither root nor profile has it", () => {
+    const build: BuildConfig = {
+      command: "echo hi",
+    };
+    const p = resolveProfile(build);
+    expect(p!.docker).toBeUndefined();
   });
 });

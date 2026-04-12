@@ -12,6 +12,7 @@ import { getAdminConfig } from "@/lib/cms";
 import { getActiveSitePaths } from "@/lib/site-paths";
 import { executeBuild } from "@/lib/build/executor";
 import { resolveWorkingDir, resolveOutDir } from "@/lib/build/validate-paths";
+import { logBuildExecution } from "@/lib/build/audit";
 import { resolveProfile } from "@/lib/build/resolve-profile";
 import {
   isCommandAllowed,
@@ -141,6 +142,7 @@ export async function POST(req: NextRequest) {
           workingDir,
           env: { ...profile.env, ...bodyEnv },
           timeout,
+          docker: profile.docker,
           onLog: (line, streamName) => {
             emit({
               type: "log",
@@ -162,6 +164,21 @@ export async function POST(req: NextRequest) {
           buildId: result.buildId,
           cancelled: result.cancelled,
         });
+
+        // Phase 6: audit log (fire-and-forget)
+        logBuildExecution({
+          buildId: result.buildId,
+          timestamp: new Date().toISOString(),
+          profile: profile.name,
+          command: profile.command,
+          workingDir,
+          outDir: profile.outDir,
+          exitCode: result.exitCode,
+          duration: result.duration,
+          success: result.success,
+          cancelled: result.cancelled,
+          docker: profile.docker?.image,
+        }).catch(() => {});
       } catch (err) {
         emit({
           type: "error",

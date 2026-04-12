@@ -227,6 +227,38 @@ When `build.command` is set:
 - The command runs with `shell: false` — no shell injection possible
 - If omitted, the native CMS pipeline runs as before (fully backwards compatible)
 
+**Build Profiles** — multiple build targets per site:
+
+```typescript
+build: {
+  profiles: [
+    { name: 'dev', command: 'npm run dev', outDir: 'dist', description: 'Fast local build' },
+    { name: 'production', command: 'mvn package -DskipTests', outDir: 'target', description: 'Production JAR' },
+  ],
+  defaultProfile: 'production',
+}
+```
+
+When profiles are configured, the Build button shows a dropdown to select which profile to run.
+
+**Docker Mode** — run builds in isolated containers (no framework install needed on host):
+
+```typescript
+build: {
+  command: 'php artisan build',
+  outDir: 'public',
+  docker: 'laravel',          // Preset: expands to { image: 'php:8.3-cli', workdir: '/workspace' }
+}
+
+// Or full config:
+build: {
+  command: 'python manage.py collectstatic',
+  docker: { image: 'python:3.12-slim', workdir: '/workspace', env: { DJANGO_ENV: 'prod' } },
+}
+```
+
+Available Docker presets: `php`, `laravel`, `python`, `django`, `ruby`, `rails`, `go`, `hugo`, `node`, `dotnet`.
+
 ### Critical rules
 
 1. **Always specify `storage` in `cms.config.ts`** — omitting it defaults to SQLite, not filesystem! Static sites MUST use `storage: { adapter: 'filesystem', filesystem: { contentDir: 'content' } }`

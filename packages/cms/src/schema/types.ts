@@ -184,6 +184,22 @@ export interface BuildConfig {
 
   /** Default profile name (used when profiles[] is set and no profile is specified). */
   defaultProfile?: string;
+
+  // ── F126 Phase 4: Docker Mode ─────────────────────────────
+
+  /** Docker config for isolated builds. String = preset name, object = full config. */
+  docker?: DockerConfig | string;
+}
+
+export interface DockerConfig {
+  /** Docker image (e.g. "php:8.3-cli", "node:22-alpine"). */
+  image: string;
+  /** Working directory inside the container. Default: "/workspace". */
+  workdir?: string;
+  /** Additional volume mounts (host:container format). */
+  volumes?: string[];
+  /** Env vars inside the container. */
+  env?: Record<string, string>;
 }
 
 export interface BuildProfile {
@@ -203,6 +219,8 @@ export interface BuildProfile {
   timeout?: number;
   /** Override preview URL for this profile. */
   previewUrl?: string;
+  /** Docker config for this profile. String = preset name. */
+  docker?: DockerConfig | string;
 }
 
 export interface AutolinkConfig {

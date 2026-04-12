@@ -61,7 +61,7 @@ export async function runSiteBuild(
 
 async function runCustomBuild(
   projectDir: string,
-  profile: { name: string; command: string; outDir: string; workingDir?: string; env?: Record<string, string>; timeout?: number },
+  profile: { name: string; command: string; outDir: string; workingDir?: string; env?: Record<string, string>; timeout?: number; docker?: import("@webhouse/cms").DockerConfig },
   deployOutDir: string,
   basePath?: string,
 ): Promise<SiteBuildResult> {
@@ -87,6 +87,7 @@ async function runCustomBuild(
     workingDir,
     env,
     timeout,
+    docker: profile.docker,
     onLog: (line, stream) => {
       const prefix = stream === "stderr" ? "[stderr]" : "[stdout]";
       console.log(`[build] ${prefix} ${line}`);

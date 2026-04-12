@@ -8,6 +8,7 @@
 import { spawn, type ChildProcess } from "child_process";
 import { randomUUID } from "crypto";
 import { parseCommand } from "./allowlist";
+import type { DockerConfig } from "@webhouse/cms";
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -24,6 +25,8 @@ export interface ExecuteOptions {
   onLog?: (line: string, stream: "stdout" | "stderr") => void;
   /** AbortSignal for cancellation. */
   signal?: AbortSignal;
+  /** Docker config for containerized builds (Phase 4). */
+  docker?: DockerConfig;
 }
 
 export interface ExecuteResult {
@@ -98,7 +101,37 @@ export async function executeBuild(
   if (argv.length === 0) {
     throw new Error("Empty build command");
   }
-  const [cmd, ...args] = argv;
+  const [rawCmd, ...rawArgs] = argv;
+
+  // Docker wrapping (Phase 4): wrap command inside `docker run`
+  let cmd: string;
+  let args: string[];
+  if (opts.docker) {
+    const d = opts.docker;
+    const workdir = d.workdir ?? "/workspace";
+    const dockerArgs = [
+      "run", "--rm",
+      "-v", `${opts.workingDir}:${workdir}`,
+      "-w", workdir,
+    ];
+    // Pass env vars into container
+    for (const [k, v] of Object.entries(safeEnv)) {
+      dockerArgs.push("-e", `${k}=${v}`);
+    }
+    for (const [k, v] of Object.entries(d.env ?? {})) {
+      dockerArgs.push("-e", `${k}=${v}`);
+    }
+    // Additional volume mounts
+    for (const vol of d.volumes ?? []) {
+      dockerArgs.push("-v", vol);
+    }
+    dockerArgs.push(d.image, rawCmd as string, ...rawArgs);
+    cmd = "docker";
+    args = dockerArgs;
+  } else {
+    cmd = rawCmd as string;
+    args = rawArgs;
+  }
 
   return new Promise<ExecuteResult>((resolve, reject) => {
     let stdout = "";

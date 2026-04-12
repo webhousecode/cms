@@ -163,3 +163,38 @@ build: {
 **Blocked env var keys:** `LD_PRELOAD`, `LD_LIBRARY_PATH`, `DYLD_INSERT_LIBRARIES`, `DYLD_LIBRARY_PATH` (security).
 
 When `build.command` is omitted, the native CMS build pipeline runs — fully backwards compatible.
+
+#### Build Profiles
+
+Multiple named build targets per site:
+
+```typescript
+build: {
+  profiles: [
+    { name: 'dev', command: 'npm run dev', outDir: 'dist', description: 'Local dev build' },
+    { name: 'prod', command: 'mvn package -DskipTests', outDir: 'target', description: 'Production' },
+  ],
+  defaultProfile: 'prod',
+}
+```
+
+Profile fields: `name` (required), `command` (required), `outDir` (required), `workingDir`, `env`, `description`, `timeout`, `previewUrl`, `docker`.
+
+#### Docker Mode
+
+Run builds in isolated containers — no framework install needed on host:
+
+```typescript
+// Preset shorthand (expands to a known image):
+build: { command: 'php artisan build', docker: 'laravel' }
+
+// Full config:
+build: {
+  command: 'python manage.py collectstatic',
+  docker: { image: 'python:3.12-slim', workdir: '/workspace' },
+}
+```
+
+Presets: `php`, `laravel`, `python`, `django`, `ruby`, `rails`, `go`, `hugo`, `node`, `dotnet`.
+
+Docker wraps the command: `docker run --rm -v project:/workspace -w /workspace image command args`.

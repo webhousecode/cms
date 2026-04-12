@@ -5,7 +5,8 @@
  * When profiles[] is absent, synthesizes a profile from the root
  * command/outDir/env/timeout fields (Phase 1 compatibility).
  */
-import type { BuildConfig, BuildProfile } from "@webhouse/cms";
+import type { BuildConfig, BuildProfile, DockerConfig } from "@webhouse/cms";
+import { resolveDockerConfig } from "./docker-presets";
 
 /** A resolved profile — always has command + outDir. */
 export interface ResolvedProfile {
@@ -13,6 +14,8 @@ export interface ResolvedProfile {
   command: string;
   outDir: string;
   workingDir?: string;
+  /** Resolved Docker config (presets expanded). */
+  docker?: DockerConfig;
   env?: Record<string, string>;
   timeout?: number;
   description?: string;
@@ -59,6 +62,7 @@ export function resolveProfile(
         timeout: profile.timeout ?? build.timeout,
         description: profile.description,
         previewUrl: profile.previewUrl,
+        docker: resolveDockerConfig(profile.docker ?? build.docker),
       };
     }
   }
@@ -74,6 +78,7 @@ export function resolveProfile(
       timeout: build.timeout,
       description: undefined,
       previewUrl: undefined,
+      docker: resolveDockerConfig(build.docker),
     };
   }
 
