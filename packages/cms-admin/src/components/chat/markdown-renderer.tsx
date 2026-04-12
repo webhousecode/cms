@@ -213,8 +213,10 @@ function renderBlock(block: Block, key: number): React.ReactNode {
       return <PagePreviewCard key={key} pagePath={block.content} />;
 
     case "image": {
-      // Resolve relative URLs against the preview site
-      const src = block.content.startsWith("/") ? block.content : block.content;
+      // Rewrite absolute /uploads/ URLs to relative so cookies work
+      let src = block.content;
+      const um = src.match(/https?:\/\/[^/]+(\/(uploads|api)\/.+)$/);
+      if (um) src = um[1];
       return (
         <div key={key} style={{ margin: "8px 0" }}>
           <img
@@ -514,7 +516,10 @@ function InlineRich({ text }: { text: string }) {
     if (m.startsWith("![")) {
       const im = m.match(/^!\[([^\]]*)\]\(([^)]+)\)$/);
       if (im) {
-        const imgSrc = im[2];
+        // Rewrite absolute /uploads/ URLs to relative so cookies work on desktop
+        let imgSrc = im[2];
+        const uploadsMatch = imgSrc.match(/https?:\/\/[^/]+(\/(uploads|api)\/.+)$/);
+        if (uploadsMatch) imgSrc = uploadsMatch[1];
         parts.push(
           <img
             key={match.index}
