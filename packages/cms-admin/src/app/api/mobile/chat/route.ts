@@ -1,6 +1,8 @@
 import { NextRequest } from "next/server";
 import { getMobileSession } from "@/lib/mobile-auth";
 import { getUserById, createToken } from "@/lib/auth";
+import { getSitePathsFor } from "@/lib/site-paths";
+import { FilesystemMediaAdapter } from "@/lib/media/filesystem";
 
 export const maxDuration = 300; // 5 min — chat with tools can run long
 
@@ -45,8 +47,10 @@ export async function POST(req: NextRequest) {
     }
     const sessionJwt = await createToken(user);
 
-    // Pre-process messages: convert ![](url) image refs to vision content blocks
-    if (body.messages) {
+    // Pre-process messages: convert ![](url) image refs to Anthropic vision content blocks
+    // Read images directly from disk (HTTP fetch of /uploads/ needs cookies we don't have)
+    if (body.messages && orgId && siteId) {
+      const paths = await getSitePathsFor(orgId, siteId);
       body.messages = await Promise.all(
         body.messages.map(async (msg: any) => {
           if (msg.role !== "user" || typeof msg.content !== "string") return msg;
@@ -58,19 +62,32 @@ export async function POST(req: NextRequest) {
           }
           if (images.length === 0) return msg;
 
-          // Build content blocks: text + images
           const textContent = msg.content.replace(/!\[[^\]]*\]\([^)]+\)/g, "").trim();
           const contentBlocks: any[] = [];
           if (textContent) {
             contentBlocks.push({ type: "text", text: textContent });
           }
+
           for (const imgUrl of images) {
             try {
-              // Fetch image and convert to base64
-              const fetchUrl = imgUrl.startsWith("http") ? imgUrl : `${baseUrl}${imgUrl}`;
-              const imgRes = await fetch(fetchUrl, { signal: AbortSignal.timeout(5000) });
-              if (imgRes.ok) {
-                const buf = Buffer.from(await imgRes.arrayBuffer());
+              let buf: Buffer | null = null;
+
+              // Try reading from disk first (handles /uploads/xxx and http://...3010/uploads/xxx)
+              const uploadsMatch = imgUrl.match(/\/uploads\/(.+)$/);
+              if (uploadsMatch && paths) {
+                const adapter = new FilesystemMediaAdapter(paths.uploadDir, paths.dataDir);
+                const segments = uploadsMatch[1].split("/");
+                const data = await adapter.readFile(segments);
+                if (data) buf = Buffer.from(data);
+              }
+
+              // Fallback: HTTP fetch for external URLs
+              if (!buf && imgUrl.startsWith("http") && !imgUrl.includes("/uploads/")) {
+                const res = await fetch(imgUrl, { signal: AbortSignal.timeout(5000) });
+                if (res.ok) buf = Buffer.from(await res.arrayBuffer());
+              }
+
+              if (buf) {
                 const ext = imgUrl.split(".").pop()?.toLowerCase() ?? "jpeg";
                 const mediaType = ext === "png" ? "image/png" : ext === "webp" ? "image/webp" : "image/jpeg";
                 contentBlocks.push({
@@ -78,7 +95,7 @@ export async function POST(req: NextRequest) {
                   source: { type: "base64", media_type: mediaType, data: buf.toString("base64") },
                 });
               }
-            } catch { /* skip failed images */ }
+            } catch { /* skip */ }
           }
           return contentBlocks.length > 0 ? { ...msg, content: contentBlocks } : msg;
         }),
