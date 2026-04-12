@@ -504,6 +504,7 @@ export function Chat() {
   const [, setLocation] = useLocation();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
+  const [attachedImages, setAttachedImages] = useState<{ url: string; uploading?: boolean }[]>([]);
   const [streaming, setStreaming] = useState(false);
   const [thinkingStartTime, setThinkingStartTime] = useState<number | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -547,9 +548,18 @@ export function Chat() {
   }, [setLocation]);
 
   async function send(text: string) {
-    if (!text.trim() || streaming || !orgId || !siteId) return;
+    if ((!text.trim() && attachedImages.length === 0) || streaming || !orgId || !siteId) return;
+    // Any still-uploading images? Wait.
+    if (attachedImages.some((img) => img.uploading)) return;
 
-    const userMsg: Message = { role: "user", content: text.trim() };
+    // Build message content: text + image markdown refs
+    let content = text.trim();
+    for (const img of attachedImages) {
+      content += `\n![](${img.url})`;
+    }
+    setAttachedImages([]);
+
+    const userMsg: Message = { role: "user", content };
     const newMessages = [...messages, userMsg];
     setMessages(newMessages);
     setInput("");
@@ -730,18 +740,27 @@ export function Chat() {
 
   async function uploadAndAttachImage(webPath: string, ext: string) {
     if (!orgId || !siteId) return;
+    // Show local preview immediately while uploading
+    const localPreview = webPath;
+    const idx = attachedImages.length;
+    setAttachedImages((prev) => [...prev, { url: localPreview, uploading: true }]);
     try {
       const res = await fetch(webPath);
       const blob = await res.blob();
       const file = new File([blob], `chat-${Date.now()}.${ext}`, { type: `image/${ext}` });
       const { uploadFile } = await import("@/api/client");
       const result = await uploadFile(orgId, siteId, file);
-      // Insert markdown image reference into input
-      const imgMd = `![](${result.url})`;
-      setInput((prev) => prev ? `${prev}\n${imgMd}` : imgMd);
+      // Replace local preview with server URL
+      setAttachedImages((prev) => prev.map((img, i) => i === idx ? { url: result.url } : img));
     } catch (err) {
       console.error("Chat image upload failed:", err);
+      // Remove failed upload
+      setAttachedImages((prev) => prev.filter((_, i) => i !== idx));
     }
+  }
+
+  function removeAttachedImage(idx: number) {
+    setAttachedImages((prev) => prev.filter((_, i) => i !== idx));
   }
 
   async function loadHistory() {
@@ -886,6 +905,35 @@ export function Chat() {
 
       {/* Input bar */}
       <div className="shrink-0 border-t border-white/10 bg-brand-dark px-4 py-3 safe-bottom">
+        {/* Attached image thumbnails */}
+        {attachedImages.length > 0 && (
+          <div className="flex gap-2 mb-2 overflow-x-auto pb-1">
+            {attachedImages.map((img, idx) => (
+              <div key={idx} className="relative shrink-0">
+                <img
+                  src={img.url}
+                  alt=""
+                  className="h-16 w-16 rounded-lg object-cover border border-white/10"
+                />
+                {img.uploading ? (
+                  <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/50">
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-brand-gold border-t-transparent" />
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => removeAttachedImage(idx)}
+                    className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-black/80 border border-white/20 text-white active:scale-90"
+                  >
+                    <svg width="10" height="10" viewBox="0 0 16 16" fill="none">
+                      <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
         <div className="flex items-end gap-2">
           {/* + button — camera/photo picker */}
           <button
