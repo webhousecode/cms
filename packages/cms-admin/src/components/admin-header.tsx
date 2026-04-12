@@ -221,14 +221,10 @@ function DeployButton() {
       return;
     }
 
-    // Admins → open the deploy modal with progress UI (unless skip-dialog)
-    const skipDialog = localStorage.getItem("cms-deploy-skip-dialog") === "true";
-    if (!skipDialog && isAdminUser) {
-      router.push("/admin/settings?tab=deploy&deploy=1");
-      return;
-    }
-
-    // Editors (or admin with skip-dialog) → deploy directly with toast feedback
+    // Deploy directly with toast feedback for ALL roles. Previously admins
+    // were redirected to /admin/settings?tab=deploy&deploy=1 for the progress
+    // modal, but the service worker (PWA) intercepts that navigation and
+    // breaks it. Direct deploy + toast is more reliable and works everywhere.
     setDeploying(true);
     setLastResult(null);
     try {
