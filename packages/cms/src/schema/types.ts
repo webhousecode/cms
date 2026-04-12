@@ -138,6 +138,8 @@ export interface CollectionConfig {
 export interface BuildConfig {
   outDir?: string;
   baseUrl?: string;
+  /** Site name used in form page titles. */
+  siteName?: string;
   /** RSS feed config. Generates /feed.xml. */
   rss?: {
     /** Feed title. Defaults to site title. */
