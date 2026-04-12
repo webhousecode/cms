@@ -220,6 +220,22 @@ export async function triggerDeploy(): Promise<DeployEntry> {
     entry.error = err instanceof Error ? err.message : String(err);
   }
 
+  // Post-deploy: auto-set previewSiteUrl from any available production URL.
+  // This covers ALL providers — webhook-based ones (Vercel, Netlify, etc.)
+  // don't return a URL at deploy time, but the admin may have manually set
+  // deployProductionUrl or deployCustomDomain. If previewSiteUrl is still
+  // empty/default, populate it so CMS preview works.
+  if (entry.status === "success") {
+    try {
+      const freshConfig = await readSiteConfig();
+      const liveUrl = entry.url || freshConfig.deployProductionUrl || (freshConfig.deployCustomDomain ? `https://${freshConfig.deployCustomDomain}` : "");
+      const preview = freshConfig.previewSiteUrl;
+      if (liveUrl && (!preview || preview === "http://localhost:3000" || preview === "")) {
+        await writeSiteConfig({ previewSiteUrl: liveUrl });
+      }
+    } catch { /* non-fatal */ }
+  }
+
   entry.duration = Date.now() - start;
 
   // Save to log
