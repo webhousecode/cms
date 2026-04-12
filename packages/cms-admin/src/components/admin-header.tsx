@@ -194,10 +194,19 @@ function DeployButton() {
       .catch(() => {});
   }, [fetchKey]);
 
+  // Fetch user role once to determine deploy flow (modal vs direct toast)
+  const [userRole, setUserRole] = useState<string | null>(null);
+  useEffect(() => {
+    fetch("/api/auth/me").then(r => r.json()).then((d: { user?: { siteRole?: string; role?: string } }) => {
+      setUserRole(d.user?.role ?? d.user?.siteRole ?? null);
+    }).catch(() => {});
+  }, []);
+  const isAdminUser = userRole === "admin";
+
   const handleDeploy = useCallback(async () => {
     // Not configured → tell the user
     if (provider === "off") {
-      if (can("settings.edit")) {
+      if (isAdminUser) {
         toast.info("Deploy not configured", {
           description: "Set up a deploy provider for this site.",
           action: { label: "Configure", onClick: () => router.push("/admin/settings?tab=deploy") },
@@ -212,14 +221,14 @@ function DeployButton() {
       return;
     }
 
-    // Admins with full settings access → open the deploy modal with progress UI
+    // Admins → open the deploy modal with progress UI (unless skip-dialog)
     const skipDialog = localStorage.getItem("cms-deploy-skip-dialog") === "true";
-    if (!skipDialog && can("settings.edit")) {
+    if (!skipDialog && isAdminUser) {
       router.push("/admin/settings?tab=deploy&deploy=1");
       return;
     }
 
-    // Editors (or skip-dialog mode) → deploy directly with toast feedback
+    // Editors (or admin with skip-dialog) → deploy directly with toast feedback
     setDeploying(true);
     setLastResult(null);
     try {
@@ -243,7 +252,7 @@ function DeployButton() {
       setLastResult({ ok: false, error: "Request failed" });
     }
     setDeploying(false);
-  }, [provider, can, router]);
+  }, [provider, isAdminUser, router]);
 
   // "d" shortcut → deploy
   useEffect(() => {
