@@ -11,7 +11,7 @@ import { generateLlmsTxt, generateLlmsFullTxt, generateMarkdownPages } from './l
 import { generateAiPlugin } from './ai-plugin.js';
 import { generateRobotsTxt } from './robots.js';
 import { generateRssFeed } from './rss.js';
-import { generateFormPage } from './forms.js';
+import { generateFormPage, generateFormHtml } from './forms.js';
 
 function getAllHtmlFiles(dir: string): string[] {
   const results: string[] = [];

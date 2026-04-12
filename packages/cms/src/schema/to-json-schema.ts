@@ -403,6 +403,13 @@ export function fieldToSchema(field: FieldConfig): Record<string, unknown> {
         },
       };
 
+    case 'form':
+      return {
+        ...base,
+        type: 'object',
+        description: 'Form field — renders an embeddable form',
+      };
+
     default: {
       // Exhaustiveness check — if a new field type is added without updating
       // this switch, the next line becomes a TypeScript error.

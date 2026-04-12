@@ -13,9 +13,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Settings, Fingerprint, Check, Moon, Sun, Monitor, LogOut, Search, ExternalLink, Rocket, Loader2, MessageSquare, LayoutDashboard, Plus, History, Languages } from "lucide-react";
+import { Settings, Fingerprint, Check, Moon, Sun, Monitor, LogOut, Search, ExternalLink, Rocket, Loader2, MessageSquare, LayoutDashboard, Plus, History, Languages, Hammer } from "lucide-react";
 import type { AdminMode } from "@/lib/hooks/use-admin-mode";
 import { HelpButton } from "@/components/help-drawer";
+import { BuildLogPanel } from "@/components/build/build-log-panel";
 import { usePermissions } from "@/hooks/use-permissions";
 import { useThemeAxes, type Temperature } from "@/lib/hooks/use-theme-axes";
 import { useEffect, useState, useCallback } from "react";
@@ -288,6 +289,68 @@ function DeployButton() {
           ? <Check style={{ width: "0.9rem", height: "0.9rem" }} />
           : <Rocket style={{ width: "0.9rem", height: "0.9rem" }} />}
     </button>
+  );
+}
+
+function BuildButton() {
+  const [hasBuildCommand, setHasBuildCommand] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [fetchKey, setFetchKey] = useState(0);
+
+  useEffect(() => {
+    function onSiteChange() { setFetchKey((k) => k + 1); }
+    window.addEventListener("cms-site-change", onSiteChange);
+    return () => window.removeEventListener("cms-site-change", onSiteChange);
+  }, []);
+
+  useEffect(() => {
+    setHasBuildCommand(false);
+    fetch("/api/admin/site-config/build-command")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d) => {
+        if (d?.hasBuildCommand) setHasBuildCommand(true);
+      })
+      .catch(() => {});
+  }, [fetchKey]);
+
+  // "b" shortcut → open build panel
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key !== "b" || e.metaKey || e.ctrlKey || e.altKey) return;
+      const tag = (document.activeElement?.tagName ?? "").toLowerCase();
+      if (tag === "input" || tag === "textarea" || tag === "select" || (document.activeElement as HTMLElement)?.isContentEditable) return;
+      if (!hasBuildCommand) return;
+      e.preventDefault();
+      setPanelOpen((o) => !o);
+    }
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [hasBuildCommand]);
+
+  if (!hasBuildCommand) return null;
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setPanelOpen((o) => !o)}
+        title="Build (b)"
+        style={{
+          background: "none",
+          border: "1.5px solid var(--border)",
+          cursor: "pointer",
+          color: panelOpen ? "var(--foreground)" : "var(--muted-foreground)",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          borderRadius: "50%",
+          width: "2rem", height: "2rem",
+          padding: 0,
+        }}
+        className="hover:border-foreground hover:text-foreground transition-colors"
+      >
+        <Hammer style={{ width: "0.9rem", height: "0.9rem" }} />
+      </button>
+      <BuildLogPanel open={panelOpen} onClose={() => setPanelOpen(false)} />
+    </>
   );
 }
 
@@ -632,6 +695,7 @@ export function AdminHeader({ mode, onToggleMode, onNewChat, onToggleHistory, sh
         <SiteSwitcher />
         <LocaleIndicator />
         <OrgSwitcher />
+        <BuildButton />
         <DeployButton />
         <PreviewButton />
         <HelpButton />
