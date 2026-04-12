@@ -847,19 +847,27 @@ async function githubPagesBuildAndDeploy(token: string, repo: string): Promise<s
   // Create a tree with all files, then create a commit, then update gh-pages ref
   console.log(`[deploy] Pushing ${files.length} files to ${repo} gh-pages branch...`);
 
-  // Create blobs for each file
+  // Create blobs in parallel batches (sequential was too slow — 2000+ files
+  // at 1 API call each took 2+ minutes and timed out the SSE stream).
+  const BATCH_SIZE = 20;
   const blobs: { path: string; sha: string }[] = [];
-  for (const f of files) {
-    const content = readFileSync(f.fullPath);
-    const blobRes = await fetch(`https://api.github.com/repos/${repo}/git/blobs`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({ content: content.toString("base64"), encoding: "base64" }),
-      signal: AbortSignal.timeout(15000),
-    });
-    if (!blobRes.ok) throw new Error(`Failed to create blob for ${f.relativePath}: ${blobRes.status}`);
-    const blob = await blobRes.json() as { sha: string };
-    blobs.push({ path: f.relativePath, sha: blob.sha });
+  for (let i = 0; i < files.length; i += BATCH_SIZE) {
+    const batch = files.slice(i, i + BATCH_SIZE);
+    const results = await Promise.all(
+      batch.map(async (f) => {
+        const content = readFileSync(f.fullPath);
+        const blobRes = await fetch(`https://api.github.com/repos/${repo}/git/blobs`, {
+          method: "POST",
+          headers,
+          body: JSON.stringify({ content: content.toString("base64"), encoding: "base64" }),
+          signal: AbortSignal.timeout(30000),
+        });
+        if (!blobRes.ok) throw new Error(`Failed to create blob for ${f.relativePath}: ${blobRes.status}`);
+        const blob = await blobRes.json() as { sha: string };
+        return { path: f.relativePath, sha: blob.sha };
+      }),
+    );
+    blobs.push(...results);
   }
 
   // Create tree
