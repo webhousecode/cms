@@ -849,22 +849,33 @@ async function githubPagesBuildAndDeploy(token: string, repo: string): Promise<s
 
   // Create blobs in parallel batches (sequential was too slow — 2000+ files
   // at 1 API call each took 2+ minutes and timed out the SSE stream).
-  const BATCH_SIZE = 20;
+  const BATCH_SIZE = 5; // Conservative to avoid GitHub secondary rate limits (403)
   const blobs: { path: string; sha: string }[] = [];
   for (let i = 0; i < files.length; i += BATCH_SIZE) {
     const batch = files.slice(i, i + BATCH_SIZE);
     const results = await Promise.all(
       batch.map(async (f) => {
         const content = readFileSync(f.fullPath);
-        const blobRes = await fetch(`https://api.github.com/repos/${repo}/git/blobs`, {
-          method: "POST",
-          headers,
-          body: JSON.stringify({ content: content.toString("base64"), encoding: "base64" }),
-          signal: AbortSignal.timeout(30000),
-        });
-        if (!blobRes.ok) throw new Error(`Failed to create blob for ${f.relativePath}: ${blobRes.status}`);
-        const blob = await blobRes.json() as { sha: string };
-        return { path: f.relativePath, sha: blob.sha };
+        // Retry once on 403 (secondary rate limit) with backoff
+        for (let attempt = 0; attempt < 2; attempt++) {
+          const blobRes = await fetch(`https://api.github.com/repos/${repo}/git/blobs`, {
+            method: "POST",
+            headers,
+            body: JSON.stringify({ content: content.toString("base64"), encoding: "base64" }),
+            signal: AbortSignal.timeout(30000),
+          });
+          if (blobRes.ok) {
+            const blob = await blobRes.json() as { sha: string };
+            return { path: f.relativePath, sha: blob.sha };
+          }
+          if (blobRes.status === 403 && attempt === 0) {
+            // Secondary rate limit — wait and retry
+            await new Promise((r) => setTimeout(r, 2000));
+            continue;
+          }
+          throw new Error(`Failed to create blob for ${f.relativePath}: ${blobRes.status}`);
+        }
+        throw new Error(`Failed to create blob for ${f.relativePath} after retries`);
       }),
     );
     blobs.push(...results);
