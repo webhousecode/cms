@@ -158,8 +158,14 @@ export async function triggerDeploy(): Promise<DeployEntry> {
           const flyUrl = await flyioBuildAndDeploy(useToken, useAppName, config.deployFlyOrg || undefined);
           if (flyUrl) {
             entry.url = flyUrl;
-            if (!config.deployProductionUrl) {
-              try { await writeSiteConfig({ deployProductionUrl: flyUrl }); } catch { /* non-fatal */ }
+            const flyUpdates: Record<string, string> = {};
+            if (!config.deployProductionUrl) flyUpdates.deployProductionUrl = flyUrl;
+            const flyPreview = (await readSiteConfig()).previewSiteUrl;
+            if (!flyPreview || flyPreview === "http://localhost:3000" || flyPreview === "") {
+              flyUpdates.previewSiteUrl = flyUrl;
+            }
+            if (Object.keys(flyUpdates).length > 0) {
+              try { await writeSiteConfig(flyUpdates); } catch { /* non-fatal */ }
             }
           }
           entry.status = "success";
@@ -194,8 +200,15 @@ export async function triggerDeploy(): Promise<DeployEntry> {
         const pagesUrl = await githubPagesBuildAndDeploy(useToken, useRepo);
         if (pagesUrl) {
           entry.url = pagesUrl;
-          if (!config.deployProductionUrl) {
-            try { await writeSiteConfig({ deployProductionUrl: pagesUrl }); } catch { /* non-fatal */ }
+          const updates: Record<string, string> = {};
+          if (!config.deployProductionUrl) updates.deployProductionUrl = pagesUrl;
+          // Auto-set previewSiteUrl so CMS preview works out of the box
+          const currentPreview = (await readSiteConfig()).previewSiteUrl;
+          if (!currentPreview || currentPreview === "http://localhost:3000" || currentPreview === "") {
+            updates.previewSiteUrl = pagesUrl;
+          }
+          if (Object.keys(updates).length > 0) {
+            try { await writeSiteConfig(updates); } catch { /* non-fatal */ }
           }
         }
         entry.status = "success";
