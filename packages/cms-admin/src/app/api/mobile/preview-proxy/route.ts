@@ -148,12 +148,13 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // Build proxy base URL for link rewriting (preserves all params except path)
+  // Build proxy base URL for link rewriting — use relative path so it works
+  // regardless of whether iframe was loaded from localhost or LAN IP
   const proxyBaseParams = new URLSearchParams();
   if (upstream) proxyBaseParams.set("upstream", upstream);
   if (distDir) proxyBaseParams.set("dir", distDir);
   if (token) proxyBaseParams.set("tok", token);
-  const proxyBase = `${req.nextUrl.origin}/api/mobile/preview-proxy?${proxyBaseParams.toString()}`;
+  const proxyBase = `/api/mobile/preview-proxy?${proxyBaseParams.toString()}`;
 
   // Mode 1: Proxy to an already-running localhost server
   if (upstream) {
