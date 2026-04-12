@@ -11,6 +11,8 @@ import { execFileSync } from "node:child_process";
 import { getActiveSitePaths, getActiveSiteEntry } from "./site-paths";
 import { readSiteConfig, writeSiteConfig } from "./site-config";
 import { resolveToken } from "./site-pool";
+import { getAdminConfig } from "./cms";
+import { runSiteBuild } from "./build/run-site-build";
 
 export type DeployProvider = "off" | "vercel" | "netlify" | "flyio" | "cloudflare" | "github-pages" | "custom";
 
@@ -440,8 +442,13 @@ async function flyioBuildAndDeploy(token: string, appName: string, orgSlug?: str
   const hasBuildTs = existsSync(buildFile);
   const hasDockerfile = existsSync(dockerFile);
 
-  if (!hasBuildTs && !hasDockerfile) {
-    throw new Error("No build.ts or Dockerfile found — this site can't be deployed to Fly.io. Add a build.ts (static) or Dockerfile (Next.js/SSR) to the project root.");
+  // F126: check for custom build command in cms.config.ts
+  let cmsConfig;
+  try { cmsConfig = await getAdminConfig(); } catch { cmsConfig = null; }
+  const hasCustomBuildCommand = !!cmsConfig?.build?.command;
+
+  if (!hasBuildTs && !hasDockerfile && !hasCustomBuildCommand) {
+    throw new Error("No build.ts, Dockerfile, or build.command found — this site can't be deployed to Fly.io. Add a build.ts (static), Dockerfile (Next.js/SSR), or build.command in cms.config.ts.");
   }
 
   // Check flyctl is available
@@ -499,11 +506,11 @@ async function flyioBuildAndDeploy(token: string, appName: string, orgSlug?: str
   }
 
   // ── Case B: Dockerfile deploy (Next.js / SSR) ──
-  if (hasDockerfile && !hasBuildTs) {
+  if (hasDockerfile && !hasBuildTs && !hasCustomBuildCommand) {
     return flyioDockerfileDeploy(token, appName, appUrl, customDomain, sitePaths.projectDir);
   }
 
-  // ── Case A: build.ts deploy (static site via Caddy) ──
+  // ── Case A/C: build.ts or custom command deploy (static site via Caddy) ──
 
   // Clean deploy dir
   const deployDir = path.join(sitePaths.projectDir, "deploy");
@@ -512,19 +519,14 @@ async function flyioBuildAndDeploy(token: string, appName: string, orgSlug?: str
     console.log("[deploy] Cleaned deploy/ directory");
   }
 
-  // Build with root paths — Fly serves at root, not under a subpath
-  console.log(`[deploy] Running build.ts in ${sitePaths.projectDir} (Fly.io, root paths, out=deploy/)...`);
-  try {
-    execFileSync("npx", ["tsx", "build.ts"], {
-      cwd: sitePaths.projectDir,
-      timeout: 60000,
-      env: { ...process.env, NODE_ENV: "production", BASE_PATH: "", BUILD_OUT_DIR: "deploy" },
-      stdio: "pipe",
-    });
-  } catch (err) {
-    const msg = err instanceof Error ? (err as Error & { stderr?: Buffer }).stderr?.toString().slice(0, 300) || err.message : "Build failed";
-    throw new Error(`Build failed: ${msg}`);
-  }
+  // F126: Use runSiteBuild which handles both custom command and native build.ts
+  const buildResult = await runSiteBuild({
+    projectDir: sitePaths.projectDir,
+    cmsConfig: cmsConfig!,
+    deployOutDir: "deploy",
+    basePath: "",
+  });
+  console.log(`[deploy] Build completed in ${buildResult.duration}ms (custom: ${buildResult.usedCustomCommand})`);
 
   if (!existsSync(deployDir)) {
     throw new Error("Build completed but no deploy/ directory was created.");
@@ -765,8 +767,14 @@ async function githubPagesBuildAndDeploy(token: string, repo: string): Promise<s
   // 1. Run build
   const sitePaths = await getActiveSitePaths();
   const buildFile = path.join(sitePaths.projectDir, "build.ts");
-  if (!existsSync(buildFile)) {
-    throw new Error("No build.ts found — this site doesn't support static builds.");
+
+  // F126: check for custom build command
+  let ghCmsConfig;
+  try { ghCmsConfig = await getAdminConfig(); } catch { ghCmsConfig = null; }
+  const ghHasCustomBuild = !!ghCmsConfig?.build?.command;
+
+  if (!existsSync(buildFile) && !ghHasCustomBuild) {
+    throw new Error("No build.ts or build.command found — this site doesn't support static builds.");
   }
 
   // Custom domain → root path; otherwise /repo-name
@@ -782,23 +790,19 @@ async function githubPagesBuildAndDeploy(token: string, repo: string): Promise<s
     console.log("[deploy] Cleaned deploy/ directory");
   }
 
-  console.log(`[deploy] Running build.ts in ${sitePaths.projectDir} (BASE_PATH=${basePath || "(root)"}, out=deploy/)...`);
-  try {
-    execFileSync("npx", ["tsx", "build.ts"], {
-      cwd: sitePaths.projectDir,
-      timeout: 60000,
-      env: { ...process.env, NODE_ENV: "production", BASE_PATH: basePath, BUILD_OUT_DIR: "deploy" },
-      stdio: "pipe",
-    });
-  } catch (err) {
-    const msg = err instanceof Error ? (err as Error & { stderr?: Buffer }).stderr?.toString().slice(0, 300) || err.message : "Build failed";
-    throw new Error(`Build failed: ${msg}`);
-  }
+  // F126: Use runSiteBuild which handles both custom command and native build.ts
+  const ghBuildResult = await runSiteBuild({
+    projectDir: sitePaths.projectDir,
+    cmsConfig: ghCmsConfig ?? { collections: [] },
+    deployOutDir: "deploy",
+    basePath,
+  });
+  console.log(`[deploy] Build completed in ${ghBuildResult.duration}ms (custom: ${ghBuildResult.usedCustomCommand})`);
 
   // 2. Collect deploy/ files (separate from dist/ which stays preview-ready)
   const distDir = path.join(sitePaths.projectDir, "deploy");
   if (!existsSync(distDir)) {
-    throw new Error("Build completed but no dist/ directory was created.");
+    throw new Error("Build completed but no deploy/ directory was created.");
   }
 
   // Write CNAME file for custom domain

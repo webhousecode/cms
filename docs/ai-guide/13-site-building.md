@@ -308,6 +308,38 @@ export default async function PostPage({ params }: { params: Promise<{ slug: str
 - The `clear: "both"` on the wrapper ensures floated images don't leak outside the article
 - This pattern handles ALL richtext features: images with sizing, tables, code blocks, blockquotes, lists, links
 
+## Custom Build Commands (F126)
+
+If the site uses a non-TypeScript framework, configure `build.command` in `cms.config.ts` so the CMS admin "Deploy" button runs the correct build tool:
+
+```typescript
+// Laravel project
+build: {
+  command: 'php artisan build',
+  outDir: 'public',
+  env: { APP_ENV: 'production' },
+}
+
+// Hugo project
+build: {
+  command: 'hugo --minify',
+  outDir: 'public',
+  env: { HUGO_ENV: 'production' },
+}
+
+// Astro project
+build: {
+  command: 'npm run build',
+  outDir: 'dist',
+}
+```
+
+**Important:**
+- The command runs with `shell: false` — no pipes, redirects, or `&&` chains. For multi-step builds, use a wrapper script (e.g. `node build-steps.js` or `make build`).
+- `BUILD_OUT_DIR` and `BASE_PATH` are injected as env vars automatically during deploy.
+- If `build.command` is omitted, the native `npx tsx build.ts` pipeline runs (backwards compatible).
+- Path traversal is blocked: `workingDir` must stay within the project directory.
+
 ## After Building a Site
 
 Always inform the user about content management options:
