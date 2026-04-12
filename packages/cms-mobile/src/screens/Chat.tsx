@@ -230,10 +230,12 @@ function renderMdBlock(block: MdBlock, key: number): React.ReactNode {
 /** Resolve and display images in chat — fetches relative URLs via Bearer JWT and creates blob URL */
 function ChatImage({ src, alt, inline }: { src: string; alt: string; inline?: boolean }) {
   const { orgId, siteId } = useContext(SiteCtx);
-  const [blobUrl, setBlobUrl] = useState<string | null>(src.startsWith("http") ? src : null);
+  const [blobUrl, setBlobUrl] = useState<string | null>(src.startsWith("data:") ? src : null);
 
   useEffect(() => {
-    if (src.startsWith("http") || src.startsWith("data:")) { setBlobUrl(src); return; }
+    if (src.startsWith("data:")) { setBlobUrl(src); return; }
+    // External URLs without /uploads/ — can display directly
+    if (src.startsWith("http") && !src.includes("/uploads/")) { setBlobUrl(src); return; }
     let revoked = false;
     void (async () => {
       try {
@@ -241,8 +243,10 @@ function ChatImage({ src, alt, inline }: { src: string; alt: string; inline?: bo
         const server = await getServerUrl();
         const jwt = await getJwt();
         if (!server || !jwt || !orgId || !siteId) return;
-        // Fetch image bytes via server (server resolves the file and serves it)
-        const filePath = src.replace(/^\/uploads\//, "");
+        // Extract file path from /uploads/xxx or http://server:port/uploads/xxx
+        const uploadsMatch = src.match(/\/uploads\/(.+)$/);
+        if (!uploadsMatch) return;
+        const filePath = uploadsMatch[1];
         const res = await fetch(
           `${server}/api/mobile/media/file?orgId=${encodeURIComponent(orgId)}&siteId=${encodeURIComponent(siteId)}&path=${encodeURIComponent(filePath)}`,
           { headers: { Authorization: `Bearer ${jwt}` }, credentials: "omit" },

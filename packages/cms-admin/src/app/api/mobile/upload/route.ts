@@ -1,12 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import os from "os";
 import { join } from "node:path";
-import { writeFile } from "node:fs/promises";
+import { readFile, writeFile, mkdir } from "node:fs/promises";
 import { getMobileSession } from "@/lib/mobile-auth";
 import { getSitePathsFor } from "@/lib/site-paths";
 import { readSiteConfigForSite } from "@/lib/site-config";
 import { FilesystemMediaAdapter } from "@/lib/media/filesystem";
 import { generateVariants, isProcessableImage, extractExif } from "@/lib/media/image-processor";
+
+/** Write media-meta.json directly (no cookies needed) */
+async function appendMetaDirect(dataDir: string, key: string, data: Record<string, unknown>) {
+  const metaPath = join(dataDir, "media-meta.json");
+  let entries: any[] = [];
+  try { entries = JSON.parse(await readFile(metaPath, "utf-8")); } catch { /* new file */ }
+  const folder = key.includes("/") ? key.split("/").slice(0, -1).join("/") : "";
+  const name = key.includes("/") ? key.split("/").pop()! : key;
+  const existing = entries.find((e: any) => e.key === key);
+  if (existing) { Object.assign(existing, data); }
+  else { entries.push({ key, name, folder, status: "active", ...data }); }
+  await mkdir(dataDir, { recursive: true });
+  await writeFile(metaPath, JSON.stringify(entries, null, 2));
+}
 
 function findLanHost(): string | null {
   const ifaces = os.networkInterfaces();
@@ -90,8 +104,7 @@ export async function POST(req: NextRequest) {
       extractExif(buffer)
         .then(async (exif) => {
           if (exif) {
-            const { appendMediaMeta } = await import("@/lib/media/media-meta");
-            await appendMediaMeta(metaKey, { exif });
+            await appendMetaDirect(paths.dataDir, metaKey, { exif });
           }
         })
         .catch(() => {});
@@ -106,8 +119,7 @@ export async function POST(req: NextRequest) {
           import("@/lib/ai/image-analysis").then(({ analyzeImageMultiLocale }) => {
             analyzeImageMultiLocale(buffer, mimeType, siteLocales).then(async (r) => {
               const firstLocale = siteLocales[0];
-              const { appendMediaMeta } = await import("@/lib/media/media-meta");
-              await appendMediaMeta(metaKey, {
+              await appendMetaDirect(paths.dataDir, metaKey, {
                 aiCaption: r.captions[firstLocale] ?? Object.values(r.captions)[0] ?? "",
                 aiAlt: r.alts[firstLocale] ?? Object.values(r.alts)[0] ?? "",
                 aiTags: r.tags,
@@ -122,8 +134,7 @@ export async function POST(req: NextRequest) {
           import("@/lib/ai/image-analysis").then(({ analyzeImage }) => {
             analyzeImage(buffer, mimeType).then(async (analysis) => {
               if (analysis) {
-                const { appendMediaMeta } = await import("@/lib/media/media-meta");
-                await appendMediaMeta(metaKey, {
+                await appendMetaDirect(paths.dataDir, metaKey, {
                   aiCaption: analysis.caption,
                   aiAlt: analysis.alt,
                   aiTags: analysis.tags,
