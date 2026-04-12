@@ -16,7 +16,14 @@ export default defineConfig({
   locales: ['en', 'da'],         // Optional: supported locales for AI translation
   autolinks: [ /* ... */ ],      // Optional: automatic internal linking rules
   storage: { /* ... */ },        // REQUIRED — defaults to SQLite if omitted! Use 'filesystem' for static sites
-  build: { outDir: 'dist', baseUrl: '/' },
+  build: {
+    outDir: 'dist',                  // Output directory for build (default: 'dist')
+    baseUrl: '/',                    // Base URL for links
+    command: 'hugo --minify',        // Optional (F126): custom build command — omit for native CMS pipeline
+    workingDir: '.',                 // Optional (F126): working dir relative to config (default: config dir)
+    timeout: 300,                    // Optional (F126): build timeout in seconds (default: 300, max: 900)
+    env: { HUGO_ENV: 'production' }, // Optional (F126): env vars passed to command (allowlisted)
+  },
   api: { port: 3000 },
 });
 ```
@@ -126,3 +133,33 @@ defineCollection({
 ```
 
 Full reference: `docs.webhouse.app/docs/collection-metadata`
+
+### Build Config (F126)
+
+The `build` key in `defineConfig()` controls how the site is built. By default, the native CMS pipeline runs (`npx cms build`). Set `build.command` to use any framework's CLI instead.
+
+```typescript
+build: {
+  // ── Standard fields ──
+  outDir: 'dist',              // Output directory (default: 'dist')
+  baseUrl: '/',                // Base URL for all generated links
+
+  // ── F126: Custom build command ──
+  command: 'php artisan build', // Shell command (parsed into argv, NO shell interpretation)
+  workingDir: '.',              // Working directory, relative to cms.config.ts (default: config dir)
+  timeout: 300,                 // Seconds before SIGTERM (default: 300, max: 900)
+  env: {                        // Env vars passed to the command (allowlisted keys only)
+    APP_ENV: 'production',
+  },
+
+  // ── Standard fields (always available) ──
+  rss: { title: 'My Blog', collections: ['posts'] },
+  robots: { strategy: 'maximum' },
+}
+```
+
+**Allowed env var keys:** `APP_ENV`, `NODE_ENV`, `RAILS_ENV`, `DJANGO_SETTINGS_MODULE`, `HUGO_ENV`, `JEKYLL_ENV`, `BASE_URL`, `BASE_PATH`, `BUILD_OUT_DIR`, `PUBLIC_URL`, `DOTNET_ENVIRONMENT`, `GOPATH`, `GOFLAGS`, `MIX_ENV`.
+
+**Blocked env var keys:** `LD_PRELOAD`, `LD_LIBRARY_PATH`, `DYLD_INSERT_LIBRARIES`, `DYLD_LIBRARY_PATH` (security).
+
+When `build.command` is omitted, the native CMS build pipeline runs — fully backwards compatible.

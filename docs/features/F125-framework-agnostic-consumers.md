@@ -1,7 +1,8 @@
 # F125 — Framework-Agnostic Content Platform
 
-**Status:** Planned
+**Status:** Done
 **Size:** Large
+**Completed:** 2026-04-08
 **Tier:** 1 (v1.0 — Launch)
 **Created:** 2026-04-08
 **Related:** F126 (Framework-Agnostic Build Pipeline)

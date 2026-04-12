@@ -192,6 +192,41 @@ When you scaffold a new site or add a new collection to an existing one,
 back to `"page"` behavior, but this is a fallback for legacy code — not a
 pattern to copy.
 
+### Custom Build Commands (F126)
+
+By default, CMS admin runs the native TypeScript build pipeline (`npx cms build` / `build.ts`). If your site uses a different framework (Laravel, Hugo, Django, Rails, etc.), configure `build.command` in `cms.config.ts`:
+
+```typescript
+export default defineConfig({
+  collections: [/* ... */],
+  build: {
+    command: 'hugo --minify',        // Any CLI command — runs with shell: false
+    outDir: 'public',                // Where the build output lands
+    workingDir: '.',                  // Relative to cms.config.ts (default: config dir)
+    timeout: 300,                    // Seconds (default: 300, max: 900)
+    env: { HUGO_ENV: 'production' }, // Allowlisted env vars passed to the command
+  },
+});
+```
+
+**Framework examples:**
+
+| Framework | `command` | `outDir` |
+|-----------|-----------|----------|
+| Hugo | `hugo --minify` | `public` |
+| Laravel | `php artisan build` | `public` |
+| Jekyll | `bundle exec jekyll build` | `_site` |
+| Django | `python manage.py collectstatic --no-input` | `staticfiles` |
+| Astro | `npm run build` | `dist` |
+| Eleventy | `npx @11ty/eleventy` | `_site` |
+| .NET | `dotnet publish -c Release -o dist` | `dist` |
+
+When `build.command` is set:
+- The Deploy button (Fly.io, GitHub Pages) uses your command instead of `npx tsx build.ts`
+- `BUILD_OUT_DIR` and `BASE_PATH` are passed as env vars to the command
+- The command runs with `shell: false` — no shell injection possible
+- If omitted, the native CMS pipeline runs as before (fully backwards compatible)
+
 ### Critical rules
 
 1. **Always specify `storage` in `cms.config.ts`** — omitting it defaults to SQLite, not filesystem! Static sites MUST use `storage: { adapter: 'filesystem', filesystem: { contentDir: 'content' } }`

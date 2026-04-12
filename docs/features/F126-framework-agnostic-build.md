@@ -1,6 +1,6 @@
 # F126 — Framework-Agnostic Build Pipeline
 
-**Status:** Planned
+**Status:** In Progress (Phase 1)
 **Size:** Large
 **Tier:** 1 (v1.0 — Launch)
 **Created:** 2026-04-08

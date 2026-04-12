@@ -160,6 +160,20 @@ export interface BuildConfig {
     /** Paths to disallow for all bots (default: ["/admin/", "/api/"]) */
     disallowPaths?: string[];
   };
+
+  // ── F126: Framework-Agnostic Build Pipeline ────────────────
+
+  /** Shell command to execute. If omitted, the native CMS pipeline runs. */
+  command?: string;
+
+  /** Working directory for the command (relative to config file). Default: config dir. */
+  workingDir?: string;
+
+  /** Env vars to set for the command. Only allowlisted vars are passed through. */
+  env?: Record<string, string>;
+
+  /** Timeout in seconds. Default: 300. Max: 900. */
+  timeout?: number;
 }
 
 export interface AutolinkConfig {
