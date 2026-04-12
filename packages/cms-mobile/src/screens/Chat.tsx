@@ -726,11 +726,11 @@ export function Chat() {
       const { Camera, CameraResultType, CameraSource } = await import("@capacitor/camera");
       const photo = await Camera.getPhoto({
         quality: 85,
-        resultType: CameraResultType.Uri,
+        resultType: CameraResultType.DataUrl,
         source: CameraSource.Prompt,
       });
-      if (photo.webPath) {
-        await uploadAndAttachImage(photo.webPath, photo.format === "png" ? "png" : "jpg");
+      if (photo.dataUrl) {
+        await uploadAndAttachImage(photo.dataUrl, photo.format === "png" ? "png" : "jpg");
       }
     } catch {
       // Native not available or cancelled — fall back to file input
@@ -738,15 +738,20 @@ export function Chat() {
     }
   }
 
-  async function uploadAndAttachImage(webPath: string, ext: string) {
+  async function uploadAndAttachImage(dataOrPath: string, ext: string) {
     if (!orgId || !siteId) return;
-    // Show local preview immediately while uploading
-    const localPreview = webPath;
+    const localPreview = dataOrPath;
     const idx = attachedImages.length;
     setAttachedImages((prev) => [...prev, { url: localPreview, uploading: true }]);
     try {
-      const res = await fetch(webPath);
-      const blob = await res.blob();
+      let blob: Blob;
+      if (dataOrPath.startsWith("data:")) {
+        const res = await fetch(dataOrPath);
+        blob = await res.blob();
+      } else {
+        const res = await fetch(dataOrPath);
+        blob = await res.blob();
+      }
       const file = new File([blob], `chat-${Date.now()}.${ext}`, { type: `image/${ext}` });
       const { uploadFile } = await import("@/api/client");
       const result = await uploadFile(orgId, siteId, file);
