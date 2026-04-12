@@ -258,38 +258,34 @@ export interface SSEEvent {
   data: string;
 }
 
-/** Stream chat response as SSE events. Caller handles parsing. */
-export async function streamChat(
+/**
+ * Start a chat job and poll for results.
+ * Returns a jobId. Use pollChat() to get events.
+ */
+export async function startChat(
   orgId: string,
   siteId: string,
   messages: { role: string; content: string }[],
   conversationId?: string,
-  signal?: AbortSignal,
-): Promise<ReadableStream<Uint8Array> | null> {
-  const baseUrl = await getServerUrl();
-  if (!baseUrl) throw new ApiError(0, null, "No server URL configured");
-  const jwt = await getJwt();
-
-  const res = await fetch(
-    `${baseUrl}/api/mobile/chat?orgId=${encodeURIComponent(orgId)}&siteId=${encodeURIComponent(siteId)}`,
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(jwt ? { Authorization: `Bearer ${jwt}` } : {}),
-      },
-      body: JSON.stringify({ messages, conversationId }),
-      credentials: "omit",
-      signal,
-    },
+): Promise<string> {
+  const data = await request<{ jobId: string }>(
+    `/api/mobile/chat?orgId=${encodeURIComponent(orgId)}&siteId=${encodeURIComponent(siteId)}`,
+    { method: "POST", body: { messages, conversationId } },
   );
+  return data.jobId;
+}
 
-  if (!res.ok) {
-    const body = await res.text();
-    throw new ApiError(res.status, body, `Chat error: HTTP ${res.status}`);
-  }
+export interface PollResult {
+  events: { event: string; data: any }[];
+  cursor: number;
+  done: boolean;
+}
 
-  return res.body;
+/** Poll for new chat events since cursor position. */
+export async function pollChat(jobId: string, after: number = 0): Promise<PollResult> {
+  return request<PollResult>(
+    `/api/mobile/chat/poll?jobId=${encodeURIComponent(jobId)}&after=${after}`,
+  );
 }
 
 /** List saved conversations */

@@ -5,7 +5,7 @@ import { useLocation } from "wouter";
 const SiteCtx = createContext<{ orgId: string; siteId: string }>({ orgId: "", siteId: "" });
 import { Screen } from "@/components/Screen";
 import { ScreenHeader, BackButton } from "@/components/ScreenHeader";
-import { streamChat, listConversations, saveConversation, getConversation as fetchConversation, deleteConversation as apiDeleteConversation, getMemories } from "@/api/client";
+import { startChat, pollChat, listConversations, saveConversation, getConversation as fetchConversation, deleteConversation as apiDeleteConversation, getMemories } from "@/api/client";
 import { getActiveOrgId, getActiveSiteId } from "@/lib/prefs";
 
 // ─── Types ───────────────────────────────────────────
@@ -520,7 +520,6 @@ export function Chat() {
   const [orgId, setOrgId] = useState("");
   const [siteId, setSiteId] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
-  const abortRef = useRef<AbortController | null>(null);
 
   // Load active org/site
   useEffect(() => {
@@ -554,10 +553,8 @@ export function Chat() {
 
   async function send(text: string) {
     if ((!text.trim() && attachedImages.length === 0) || streaming || !orgId || !siteId) return;
-    // Any still-uploading images? Wait.
     if (attachedImages.some((img) => img.uploading)) return;
 
-    // Build message content: text + image markdown refs (use server URL)
     let content = text.trim();
     for (const img of attachedImages) {
       if (img.url) content += `\n![](${img.url})`;
@@ -570,109 +567,60 @@ export function Chat() {
     setInput("");
     setStreaming(true);
 
-    // Prepare assistant message that will be built up from SSE
     const assistantMsg: Message = { role: "assistant", content: "", toolCalls: [] };
     setMessages([...newMessages, assistantMsg]);
 
+    let currentToolIdx = -1;
+
     try {
-      const abort = new AbortController();
-      abortRef.current = abort;
-
+      // Start job — returns immediately with jobId
       const apiMessages = newMessages.map((m) => ({ role: m.role, content: m.content }));
-      const body = await streamChat(orgId, siteId, apiMessages, conversationId, abort.signal);
-      if (!body) throw new Error("No response body");
+      const jobId = await startChat(orgId, siteId, apiMessages, conversationId);
 
-      const reader = body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-      let currentToolIdx = -1;
+      // Poll for events every 1.5s until done
+      let cursor = 0;
+      let done = false;
+      while (!done) {
+        await new Promise((r) => setTimeout(r, 1500));
+        try {
+          const poll = await pollChat(jobId, cursor);
+          cursor = poll.cursor;
+          done = poll.done;
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        // Process complete lines
-        const lines = buffer.split("\n");
-        buffer = lines.pop() ?? ""; // Keep incomplete line in buffer
-
-        for (const line of lines) {
-          if (line.startsWith("event: ")) {
-            const eventType = line.slice(7).trim();
-            // Next data line will use this event type
-            buffer = `__event__:${eventType}\n${buffer}`;
-          } else if (line.startsWith("data: ")) {
-            const data = line.slice(6);
-            // Check if we have a pending event type
-            const eventMatch = buffer.match(/^__event__:(\w+)\n/);
-            const eventType = eventMatch ? eventMatch[1] : "text";
-            if (eventMatch) buffer = buffer.replace(/^__event__:\w+\n/, "");
-
+          // Process new events
+          for (const evt of poll.events) {
+            const data = evt.data;
             setMessages((prev) => {
               const msgs = [...prev];
               const last = { ...msgs[msgs.length - 1] };
               last.toolCalls = [...(last.toolCalls ?? [])];
 
-              switch (eventType) {
-                case "text": {
-                  try {
-                    const parsed = JSON.parse(data);
-                    last.content += parsed.text ?? "";
-                  } catch {
-                    last.content += data; // fallback: plain string
-                  }
+              switch (evt.event) {
+                case "text":
+                  last.content += data?.text ?? "";
                   break;
-                }
-                case "thinking": {
-                  try {
-                    const parsed = JSON.parse(data);
-                    last.thinking = (last.thinking ?? "") + (parsed.text ?? "");
-                  } catch {
-                    last.thinking = (last.thinking ?? "") + data;
-                  }
+                case "thinking":
+                  last.thinking = (last.thinking ?? "") + (data?.text ?? "");
                   break;
-                }
-                case "tool_call": {
-                  try {
-                    const tc = JSON.parse(data);
-                    last.toolCalls.push({
-                      tool: tc.tool ?? tc.name ?? "unknown",
-                      input: typeof tc.input === "string" ? tc.input : JSON.stringify(tc.input),
-                      status: "running",
-                    });
-                    currentToolIdx = last.toolCalls.length - 1;
-                  } catch { /* ignore parse errors */ }
+                case "tool_call":
+                  last.toolCalls.push({
+                    tool: data?.tool ?? data?.name ?? "unknown",
+                    input: typeof data?.input === "string" ? data.input : JSON.stringify(data?.input),
+                    status: "running",
+                  });
+                  currentToolIdx = last.toolCalls.length - 1;
                   break;
-                }
-                case "tool_result": {
+                case "tool_result":
                   if (currentToolIdx >= 0 && last.toolCalls[currentToolIdx]) {
-                    try {
-                      const tr = JSON.parse(data);
-                      last.toolCalls[currentToolIdx] = {
-                        ...last.toolCalls[currentToolIdx],
-                        result: typeof tr.result === "string" ? tr.result : JSON.stringify(tr.result),
-                        status: "done",
-                      };
-                    } catch {
-                      last.toolCalls[currentToolIdx] = {
-                        ...last.toolCalls[currentToolIdx],
-                        result: data,
-                        status: "done",
-                      };
-                    }
+                    last.toolCalls[currentToolIdx] = {
+                      ...last.toolCalls[currentToolIdx],
+                      result: typeof data?.result === "string" ? data.result : JSON.stringify(data?.result),
+                      status: "done",
+                    };
                   }
                   break;
-                }
-                case "error": {
-                  try {
-                    const parsed = JSON.parse(data);
-                    last.content += `\n\n⚠️ ${parsed.error ?? parsed.text ?? data}`;
-                  } catch {
-                    last.content += `\n\n⚠️ ${data}`;
-                  }
-                  break;
-                }
-                case "done":
+                case "error":
+                  last.content += `\n\n⚠️ ${data?.message ?? data?.error ?? JSON.stringify(data)}`;
                   break;
               }
 
@@ -680,24 +628,23 @@ export function Chat() {
               return msgs;
             });
           }
+        } catch {
+          // Poll failed — retry next iteration
         }
       }
     } catch (err) {
-      if ((err as Error).name !== "AbortError") {
-        setMessages((prev) => {
-          const msgs = [...prev];
-          const last = msgs[msgs.length - 1];
-          if (last?.role === "assistant") {
-            last.content += `\n\n⚠️ Connection error: ${(err as Error).message}`;
-          }
-          return msgs;
-        });
-      }
+      setMessages((prev) => {
+        const msgs = [...prev];
+        const last = msgs[msgs.length - 1];
+        if (last?.role === "assistant") {
+          last.content += `\n\n⚠️ ${(err as Error).message}`;
+        }
+        return msgs;
+      });
     } finally {
       setStreaming(false);
-      abortRef.current = null;
 
-      // Auto-save conversation for sync with desktop
+      // Auto-save for sync
       try {
         setMessages((current) => {
           if (current.length >= 2) {
@@ -721,7 +668,8 @@ export function Chat() {
   }
 
   function stopStreaming() {
-    abortRef.current?.abort();
+    // Poll-based: just set streaming false — job continues server-side
+    setStreaming(false);
   }
 
   const chatFileRef = useRef<HTMLInputElement>(null);
