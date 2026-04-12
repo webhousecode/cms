@@ -2,6 +2,8 @@ import { NextRequest } from "next/server";
 import { getMobileSession } from "@/lib/mobile-auth";
 import { getUserById, createToken } from "@/lib/auth";
 
+export const maxDuration = 300; // 5 min — chat with tools can run long
+
 /**
  * POST /api/mobile/chat?orgId=...&siteId=...
  *
@@ -42,6 +44,46 @@ export async function POST(req: NextRequest) {
       });
     }
     const sessionJwt = await createToken(user);
+
+    // Pre-process messages: convert ![](url) image refs to vision content blocks
+    if (body.messages) {
+      body.messages = await Promise.all(
+        body.messages.map(async (msg: any) => {
+          if (msg.role !== "user" || typeof msg.content !== "string") return msg;
+          const imgRegex = /!\[[^\]]*\]\(([^)]+)\)/g;
+          const images: string[] = [];
+          let match;
+          while ((match = imgRegex.exec(msg.content)) !== null) {
+            images.push(match[1]);
+          }
+          if (images.length === 0) return msg;
+
+          // Build content blocks: text + images
+          const textContent = msg.content.replace(/!\[[^\]]*\]\([^)]+\)/g, "").trim();
+          const contentBlocks: any[] = [];
+          if (textContent) {
+            contentBlocks.push({ type: "text", text: textContent });
+          }
+          for (const imgUrl of images) {
+            try {
+              // Fetch image and convert to base64
+              const fetchUrl = imgUrl.startsWith("http") ? imgUrl : `${baseUrl}${imgUrl}`;
+              const imgRes = await fetch(fetchUrl, { signal: AbortSignal.timeout(5000) });
+              if (imgRes.ok) {
+                const buf = Buffer.from(await imgRes.arrayBuffer());
+                const ext = imgUrl.split(".").pop()?.toLowerCase() ?? "jpeg";
+                const mediaType = ext === "png" ? "image/png" : ext === "webp" ? "image/webp" : "image/jpeg";
+                contentBlocks.push({
+                  type: "image",
+                  source: { type: "base64", media_type: mediaType, data: buf.toString("base64") },
+                });
+              }
+            } catch { /* skip failed images */ }
+          }
+          return contentBlocks.length > 0 ? { ...msg, content: contentBlocks } : msg;
+        }),
+      );
+    }
 
     // Proxy to the real chat endpoint with cookies for site context + session
     const upstream = await fetch(`${baseUrl}/api/cms/chat`, {
