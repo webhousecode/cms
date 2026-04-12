@@ -163,6 +163,7 @@ function UserNav({ user }: { user: SessionUser | null }) {
 
 function DeployButton() {
   const router = useRouter();
+  const can = usePermissions();
   const [provider, setProvider] = useState<string>("off");
   const [deploying, setDeploying] = useState(false);
   const [lastResult, setLastResult] = useState<{ ok: boolean; error?: string } | null>(null);
@@ -194,25 +195,31 @@ function DeployButton() {
   }, [fetchKey]);
 
   const handleDeploy = useCallback(async () => {
-    // Not configured → prompt to configure
+    // Not configured → tell the user
     if (provider === "off") {
-      toast.info("Deploy not configured", {
-        description: "Set up a deploy provider for this site.",
-        action: { label: "Configure", onClick: () => router.push("/admin/settings?tab=deploy") },
-        duration: 8000,
-      });
+      if (can("settings.edit")) {
+        toast.info("Deploy not configured", {
+          description: "Set up a deploy provider for this site.",
+          action: { label: "Configure", onClick: () => router.push("/admin/settings?tab=deploy") },
+          duration: 8000,
+        });
+      } else {
+        toast.info("Deploy not configured", {
+          description: "Ask your site admin to set up a deploy provider.",
+          duration: 5000,
+        });
+      }
       return;
     }
 
-    // Check if "skip dialog" is set — if so, deploy directly (legacy flow)
+    // Admins with full settings access → open the deploy modal with progress UI
     const skipDialog = localStorage.getItem("cms-deploy-skip-dialog") === "true";
-    if (!skipDialog) {
-      // Open the deploy settings page with modal — let the user see progress
+    if (!skipDialog && can("settings.edit")) {
       router.push("/admin/settings?tab=deploy&deploy=1");
       return;
     }
 
-    // Direct deploy (skip dialog mode)
+    // Editors (or skip-dialog mode) → deploy directly with toast feedback
     setDeploying(true);
     setLastResult(null);
     try {
@@ -221,20 +228,22 @@ function DeployButton() {
       setLastResult({ ok: data.status === "success", error: data.error });
       setTimeout(() => setLastResult(null), 5000);
       if (data.status === "success" && data.url) {
-        toast.success("Deployed", {
+        toast.success("Published!", {
           description: data.url,
           duration: 10000,
           action: { label: "Open", onClick: () => window.open(data.url, "_blank") },
         });
         window.dispatchEvent(new CustomEvent("cms-site-change", { detail: {} }));
+      } else if (data.status === "success") {
+        toast.success("Published!", { description: "Your changes are now live.", duration: 5000 });
       } else if (data.status === "error") {
-        toast.error("Deploy failed", { description: data.error, duration: 8000 });
+        toast.error("Publish failed", { description: data.error, duration: 8000 });
       }
     } catch {
       setLastResult({ ok: false, error: "Request failed" });
     }
     setDeploying(false);
-  }, [provider, router]);
+  }, [provider, can, router]);
 
   // "d" shortcut → deploy
   useEffect(() => {
@@ -255,7 +264,7 @@ function DeployButton() {
       type="button"
       onClick={handleDeploy}
       disabled={deploying}
-      title={deploying ? "Deploying..." : lastResult ? (lastResult.ok ? "Deployed!" : `Deploy failed: ${lastResult.error}`) : "Deploy site"}
+      title={deploying ? "Publishing..." : lastResult ? (lastResult.ok ? "Published!" : `Publish failed: ${lastResult.error}`) : provider === "off" ? "Deploy not configured" : "Publish changes"}
       style={{
         background: "none",
         border: "1.5px solid var(--border)",
@@ -465,7 +474,7 @@ function ModeToggle({ mode, onToggle }: { mode: AdminMode; onToggle: () => void 
       }}
     >
       {([
-        { value: "traditional" as const, label: "Admin", icon: LayoutDashboard },
+        { value: "traditional" as const, label: "CMS", icon: LayoutDashboard },
         { value: "chat" as const, label: "Chat", icon: MessageSquare },
       ]).map(({ value, label, icon: Icon }) => (
         <button
