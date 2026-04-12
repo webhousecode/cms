@@ -1008,15 +1008,36 @@ async function githubPagesBuildAndDeploy(token: string, repo: string): Promise<s
 }
 
 /** Recursively collect all files in a directory (skips dotfile directories like .well-known) */
+/**
+ * GitHub blob API hard limit is 100 MB. Large binary files (video, archives)
+ * don't belong on a static hosting service anyway — skip them with a warning.
+ */
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50 MB — safe margin under GitHub's 100 MB
+const SKIP_EXTENSIONS = new Set([
+  ".mov", ".mp4", ".avi", ".mkv", ".wmv", ".flv", ".webm",  // video
+  ".zip", ".tar", ".gz", ".rar", ".7z",                      // archives
+  ".dmg", ".iso", ".exe", ".msi",                             // installers
+  ".psd", ".ai", ".sketch", ".fig",                           // design source files
+]);
+
 function collectFiles(dir: string, baseDir: string): { fullPath: string; relativePath: string }[] {
   const results: { fullPath: string; relativePath: string }[] = [];
   for (const entry of readdirSync(dir)) {
-    if (entry.startsWith(".")) continue; // skip dotfiles/dotdirs — GitHub Pages/API issues
+    if (entry.startsWith(".")) continue;
     const full = path.join(dir, entry);
     const stat = statSync(full);
     if (stat.isDirectory()) {
       results.push(...collectFiles(full, baseDir));
     } else {
+      const ext = path.extname(entry).toLowerCase();
+      if (SKIP_EXTENSIONS.has(ext)) {
+        console.log(`[deploy] Skipping ${path.relative(baseDir, full)} (${ext} not suitable for static hosting)`);
+        continue;
+      }
+      if (stat.size > MAX_FILE_SIZE) {
+        console.log(`[deploy] Skipping ${path.relative(baseDir, full)} (${(stat.size / 1024 / 1024).toFixed(1)} MB exceeds ${MAX_FILE_SIZE / 1024 / 1024} MB limit)`);
+        continue;
+      }
       results.push({ fullPath: full, relativePath: path.relative(baseDir, full) });
     }
   }
