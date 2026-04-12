@@ -144,6 +144,7 @@
 | F128 | [Access Token Scope Selector](#f128-access-token-scopes) | Planned | [docs/features/F128-access-token-scopes.md](features/F128-access-token-scopes.md) |
 | F129 | [Edit What You See](#f129-edit-what-you-see) | **Tier 1** | [docs/features/F129-edit-what-you-see.md](features/F129-edit-what-you-see.md) |
 | F130 | [AI Fallback Gateway (Local Gemma 4)](#f130-ai-fallback-gateway) | Planned | [docs/features/F130-ai-fallback-gateway.md](features/F130-ai-fallback-gateway.md) |
+| F131 | [Media CDN Offloading](#f131-media-cdn-offloading) | Planned | [docs/features/F131-media-cdn-offloading.md](features/F131-media-cdn-offloading.md) |
 
 ---
 
@@ -534,3 +535,6 @@ Adds optional `kind` and `description` fields to `CollectionConfig` so chat, MCP
 ## F130 — AI Fallback Gateway (Local Gemma 4)
 
 A self-hosted TypeScript API that wraps a local Gemma 4 model and exposes a uniform interface to @webhouse/cms. Used for cheap/simple generation tasks (alt-text, summaries, translations) and as an automatic fallback when Anthropic is degraded or down. Runs on the same machine as cms-admin via Ollama. CMS detects degradation (HTTP 529/503, timeouts) and transparently routes to the local gateway. Cost: $0 per call. Latency: local network only. No API key needed. Configurable per-task routing rules: "use local for alt-text, use Claude for long-form content."
+
+## F131 — Media CDN Offloading
+Upload large media files (video, high-res images, archives) to S3-compatible cloud storage (R2, B2, AWS) and serve via CDN URL. Files above a configurable threshold (default 5MB) or matching offload extensions (video, archives) auto-upload to cloud on CMS upload. Reuses existing F95 S3 adapter credentials — no new config needed. Build pipeline skips CDN-URL files (no dist/ bloat). Solves GitHub Pages 100MB limit and 2000+ file deploys.

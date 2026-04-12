@@ -849,36 +849,40 @@ async function githubPagesBuildAndDeploy(token: string, repo: string): Promise<s
 
   // Create blobs in parallel batches (sequential was too slow — 2000+ files
   // at 1 API call each took 2+ minutes and timed out the SSE stream).
-  const BATCH_SIZE = 5; // Conservative to avoid GitHub secondary rate limits (403)
+  // Sequential with retry + exponential backoff. GitHub's secondary rate
+  // limit (403) triggers on concurrent requests — parallel batching was
+  // too aggressive even at batch size 5.
   const blobs: { path: string; sha: string }[] = [];
-  for (let i = 0; i < files.length; i += BATCH_SIZE) {
-    const batch = files.slice(i, i + BATCH_SIZE);
-    const results = await Promise.all(
-      batch.map(async (f) => {
-        const content = readFileSync(f.fullPath);
-        // Retry once on 403 (secondary rate limit) with backoff
-        for (let attempt = 0; attempt < 2; attempt++) {
-          const blobRes = await fetch(`https://api.github.com/repos/${repo}/git/blobs`, {
-            method: "POST",
-            headers,
-            body: JSON.stringify({ content: content.toString("base64"), encoding: "base64" }),
-            signal: AbortSignal.timeout(30000),
-          });
-          if (blobRes.ok) {
-            const blob = await blobRes.json() as { sha: string };
-            return { path: f.relativePath, sha: blob.sha };
-          }
-          if (blobRes.status === 403 && attempt === 0) {
-            // Secondary rate limit — wait and retry
-            await new Promise((r) => setTimeout(r, 2000));
-            continue;
-          }
-          throw new Error(`Failed to create blob for ${f.relativePath}: ${blobRes.status}`);
-        }
-        throw new Error(`Failed to create blob for ${f.relativePath} after retries`);
-      }),
-    );
-    blobs.push(...results);
+  for (let i = 0; i < files.length; i++) {
+    const f = files[i]!;
+    const content = readFileSync(f.fullPath);
+    let lastStatus = 0;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      if (attempt > 0) {
+        const delay = attempt === 1 ? 3000 : 10000;
+        console.log(`[deploy] Rate limited on ${f.relativePath}, waiting ${delay / 1000}s (attempt ${attempt + 1}/3)...`);
+        await new Promise((r) => setTimeout(r, delay));
+      }
+      const blobRes = await fetch(`https://api.github.com/repos/${repo}/git/blobs`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({ content: content.toString("base64"), encoding: "base64" }),
+        signal: AbortSignal.timeout(30000),
+      });
+      if (blobRes.ok) {
+        const blob = await blobRes.json() as { sha: string };
+        blobs.push({ path: f.relativePath, sha: blob.sha });
+        lastStatus = 0;
+        break;
+      }
+      lastStatus = blobRes.status;
+      if (blobRes.status !== 403) {
+        throw new Error(`Failed to create blob for ${f.relativePath}: ${blobRes.status}`);
+      }
+    }
+    if (lastStatus === 403) {
+      throw new Error(`GitHub rate limit exceeded after 3 retries on ${f.relativePath}. Wait a few minutes and try again.`);
+    }
   }
 
   // Create tree
