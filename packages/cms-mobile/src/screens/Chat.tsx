@@ -505,6 +505,7 @@ export function Chat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [attachedImages, setAttachedImages] = useState<{ preview: string; url?: string; uploading?: boolean }[]>([]);
+  const [fullscreenImage, setFullscreenImage] = useState<string | null>(null);
   const [streaming, setStreaming] = useState(false);
   const [thinkingStartTime, setThinkingStartTime] = useState<number | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -916,6 +917,7 @@ export function Chat() {
                       src={img.preview}
                       alt=""
                       className="h-20 w-20 rounded-xl object-cover"
+                      onClick={() => setFullscreenImage(img.preview)}
                     />
                     {img.uploading ? (
                       <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-black/40">
@@ -925,7 +927,7 @@ export function Chat() {
                       <button
                         type="button"
                         onClick={() => removeAttachedImage(idx)}
-                        className="absolute -top-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/70 text-white active:scale-90"
+                        className="absolute -top-1 -left-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/70 text-white active:scale-90"
                       >
                         <svg width="10" height="10" viewBox="0 0 16 16" fill="none">
                           <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
@@ -1105,6 +1107,25 @@ export function Chat() {
           </div>
         </div>
       )}
+      {/* Fullscreen image preview */}
+      {fullscreenImage && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
+          onClick={() => setFullscreenImage(null)}
+        >
+          <img src={fullscreenImage} alt="" className="max-w-full max-h-full object-contain" />
+          <button
+            type="button"
+            onClick={() => setFullscreenImage(null)}
+            className="absolute top-safe-top right-4 mt-3 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white active:scale-90"
+          >
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+              <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </button>
+        </div>
+      )}
+
       {/* Hidden file input for web fallback */}
       <input
         ref={chatFileRef}
