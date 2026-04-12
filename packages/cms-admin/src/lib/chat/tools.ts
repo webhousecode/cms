@@ -6,14 +6,34 @@ import { buildLocaleInstruction, getSeoLimits } from "@/lib/ai/locale-prompt";
 // getDocumentUrl imported dynamically in get_document handler to avoid Turbopack bundling issues
 import { cookies } from "next/headers";
 import type { ToolDefinition, ToolHandler } from "@/lib/tools";
+import { hasPermission } from "@/lib/permissions-shared";
 
 interface ToolPair {
   definition: ToolDefinition;
   handler: ToolHandler;
+  /** If set, tool is only included when the user has this permission. */
+  permission?: string;
 }
 
-/** Phase 1: Read-only chat tools */
-export async function buildChatTools(): Promise<ToolPair[]> {
+/**
+ * Build chat tools filtered by the caller's permissions.
+ *
+ * Tools tagged with a `permission` string are excluded from the returned
+ * list if the user doesn't have that permission. This means the AI model
+ * never even sees admin-only tools when an editor is chatting — it can't
+ * call what it doesn't know exists.
+ *
+ * @param userPermissions — resolved permission strings for the current user.
+ *   Pass ["*"] for admins (all tools), or the editor's permission set.
+ *   If omitted, defaults to ["*"] for backwards compatibility.
+ */
+export async function buildChatTools(userPermissions?: string[]): Promise<ToolPair[]> {
+  const perms = userPermissions ?? ["*"];
+  const allTools = await _buildAllTools();
+  return allTools.filter((t) => !t.permission || hasPermission(perms, t.permission));
+}
+
+async function _buildAllTools(): Promise<ToolPair[]> {
   return [
     // ── site_summary ──────────────────────────────────────────
     {
@@ -367,6 +387,7 @@ export async function buildChatTools(): Promise<ToolPair[]> {
         const changedKeys = Object.keys(patch).join(", ");
         return `Updated site settings: ${changedKeys}`;
       },
+      permission: "settings.edit",
     },
 
     // ═══════════════════════════════════════════════════════════
@@ -1316,6 +1337,7 @@ DESIGN GUIDELINES:
         } as any);
         return `Created agent **${agent.name}** (${agent.role})\nID: \`${agent.id}\`\nTarget: ${agent.targetCollections.join(", ")}`;
       },
+      permission: "agents.manage",
     },
 
     // ── run_agent ─────────────────────────────────────────────
@@ -1607,6 +1629,7 @@ DESIGN GUIDELINES:
 
         return deleted > 0 ? `Permanently deleted ${deleted} item(s) from trash.` : "Trash was already empty.";
       },
+      permission: "content.trash.empty",
     },
 
     // ── run_link_check ────────────────────────────────────────
@@ -1645,6 +1668,7 @@ DESIGN GUIDELINES:
         const snapshot = await createBackup("manual");
         return `Backup created: ${snapshot.fileName}\nSize: ${Math.round(snapshot.sizeBytes / 1024)}KB\nDocs: ${snapshot.documentCount}\nTime: ${snapshot.timestamp}`;
       },
+      permission: "backup.manage",
     },
 
     // ── content_stats ─────────────────────────────────────────

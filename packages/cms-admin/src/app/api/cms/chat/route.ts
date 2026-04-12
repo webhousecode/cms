@@ -7,6 +7,8 @@ import { extractMemories } from "@/lib/chat/memory-extractor";
 import { getConversation } from "@/lib/chat/conversation-store";
 import { getSessionWithSiteRole } from "@/lib/require-role";
 import { readSiteConfig } from "@/lib/site-config";
+import { resolvePermissions } from "@/lib/permissions-shared";
+import type { UserRole } from "@/lib/auth";
 import { getModel } from "@/lib/ai/model-resolver";
 
 export const maxDuration = 300;
@@ -55,7 +57,8 @@ export async function POST(request: NextRequest) {
   try {
     siteContext = await gatherSiteContext();
     systemPrompt = buildChatSystemPrompt(siteContext);
-    toolPairs = await buildChatTools();
+    const userPerms = resolvePermissions((session.role ?? "admin") as UserRole);
+    toolPairs = await buildChatTools(userPerms);
 
     // Inject relevant memories from past conversations
     const lastUserMsg = messages.filter((m) => m.role === "user").pop();
