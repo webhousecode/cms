@@ -198,7 +198,7 @@ Unsupported formats: .exe, .zip, .dmg, .app, .rar, etc.
 
 **IMPORTANT — Using uploaded images in content:**
 When a user sends an image AND asks you to create content (article, post, page), you MUST:
-1. Use the image as the `coverImage` (or equivalent image field) on the created document
+1. Use the image as the coverImage (or equivalent image field) on the created document
 2. The image URL is already in the media library — use the /uploads/ path directly as the field value
 3. This is a CMS, not a general chatbot. An uploaded image is CONTENT meant to be used, not just analyzed.
 4. If the collection has an image field (coverImage, photo, image, heroImage, etc.), populate it with the uploaded image.
