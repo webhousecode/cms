@@ -4,6 +4,7 @@ import { useEffect, useState, useRef } from "react";
 import { Trash2, RotateCcw, X, Search, AlertTriangle } from "lucide-react";
 import { useTabs } from "@/lib/tabs-context";
 import { useSiteRole } from "@/hooks/use-site-role";
+import { usePermissions } from "@/hooks/use-permissions";
 
 const RETENTION_DAYS = parseInt(process.env.NEXT_PUBLIC_TRASH_RETENTION_DAYS ?? "30");
 
@@ -58,7 +59,9 @@ export default function TrashPage() {
   const [working, setWorking] = useState<string | null>(null); // item id being acted on
   const { tabs, closeTab } = useTabs();
   const siteRole = useSiteRole();
+  const can = usePermissions();
   const readOnly = siteRole === null || siteRole === "viewer";
+  const canEmpty = can("content.trash.empty");
 
   function closeTabsForPaths(paths: string[]) {
     const pathSet = new Set(paths);
@@ -155,7 +158,7 @@ export default function TrashPage() {
           <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", fontFamily: "monospace" }}>
             Auto-deleted after {RETENTION_DAYS} days
           </span>
-          {!readOnly && items.length > 0 && (
+          {canEmpty && items.length > 0 && (
             <button
               type="button"
               onClick={() => setConfirmEmpty(true)}
