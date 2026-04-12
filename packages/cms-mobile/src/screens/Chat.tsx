@@ -709,6 +709,41 @@ export function Chat() {
     abortRef.current?.abort();
   }
 
+  const chatFileRef = useRef<HTMLInputElement>(null);
+
+  async function pickChatImage() {
+    try {
+      const { Camera, CameraResultType, CameraSource } = await import("@capacitor/camera");
+      const photo = await Camera.getPhoto({
+        quality: 85,
+        resultType: CameraResultType.Uri,
+        source: CameraSource.Prompt,
+      });
+      if (photo.webPath) {
+        await uploadAndAttachImage(photo.webPath, photo.format === "png" ? "png" : "jpg");
+      }
+    } catch {
+      // Native not available or cancelled — fall back to file input
+      chatFileRef.current?.click();
+    }
+  }
+
+  async function uploadAndAttachImage(webPath: string, ext: string) {
+    if (!orgId || !siteId) return;
+    try {
+      const res = await fetch(webPath);
+      const blob = await res.blob();
+      const file = new File([blob], `chat-${Date.now()}.${ext}`, { type: `image/${ext}` });
+      const { uploadFile } = await import("@/api/client");
+      const result = await uploadFile(orgId, siteId, file);
+      // Insert markdown image reference into input
+      const imgMd = `![](${result.url})`;
+      setInput((prev) => prev ? `${prev}\n${imgMd}` : imgMd);
+    } catch (err) {
+      console.error("Chat image upload failed:", err);
+    }
+  }
+
   async function loadHistory() {
     if (!orgId || !siteId) return;
     setHistoryOpen(true);
@@ -852,6 +887,18 @@ export function Chat() {
       {/* Input bar */}
       <div className="shrink-0 border-t border-white/10 bg-brand-dark px-4 py-3 safe-bottom">
         <div className="flex items-end gap-2">
+          {/* + button — camera/photo picker */}
+          <button
+            type="button"
+            onClick={pickChatImage}
+            disabled={streaming}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-white/60 active:scale-90 active:bg-white/20 transition-all disabled:opacity-30"
+            aria-label="Add image"
+          >
+            <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+              <path d="M8 3v10M3 8h10" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </button>
           <textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -1005,6 +1052,22 @@ export function Chat() {
           </div>
         </div>
       )}
+      {/* Hidden file input for web fallback */}
+      <input
+        ref={chatFileRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) {
+            const ext = f.name.split(".").pop()?.toLowerCase() ?? "jpg";
+            const url = URL.createObjectURL(f);
+            uploadAndAttachImage(url, ext);
+          }
+          e.target.value = "";
+        }}
+      />
     </Screen>
     </SiteCtx.Provider>
   );
