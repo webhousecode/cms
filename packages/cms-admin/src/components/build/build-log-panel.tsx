@@ -23,14 +23,26 @@ interface LogLine {
 
 type BuildStatus = "idle" | "running" | "success" | "failed" | "cancelled";
 
+interface ProfileInfo {
+  name: string;
+  description?: string;
+  isDefault: boolean;
+}
+
 interface BuildLogPanelProps {
   open: boolean;
   onClose: () => void;
+  /** Active profile name to build with. */
+  profile?: string;
+  /** Available profiles for the profile selector. */
+  profiles?: ProfileInfo[];
+  /** Callback when user selects a different profile. */
+  onProfileChange?: (name: string) => void;
 }
 
 // ── Component ────────────────────────────────────────────────
 
-export function BuildLogPanel({ open, onClose }: BuildLogPanelProps) {
+export function BuildLogPanel({ open, onClose, profile, profiles, onProfileChange }: BuildLogPanelProps) {
   const [logs, setLogs] = useState<LogLine[]>([]);
   const [status, setStatus] = useState<BuildStatus>("idle");
   const [exitCode, setExitCode] = useState<number | null>(null);
@@ -82,13 +94,13 @@ export function BuildLogPanel({ open, onClose }: BuildLogPanelProps) {
     setCommand("");
     setAutoScroll(true);
 
-    toast.info("Build started", { duration: 2000 });
+    toast.info(profile ? `Build started (${profile})` : "Build started", { duration: 2000 });
 
     try {
       const res = await fetch("/api/cms/build/execute", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
+        body: JSON.stringify({ profile }),
         signal: ac.signal,
       });
 
@@ -336,6 +348,40 @@ export function BuildLogPanel({ open, onClose }: BuildLogPanelProps) {
           }}
         >
           $ {command}
+        </div>
+      )}
+
+      {/* ── Profile selector (Phase 3) ── */}
+      {profiles && profiles.length > 1 && status !== "running" && (
+        <div
+          style={{
+            display: "flex",
+            gap: "0.25rem",
+            padding: "0.4rem 1rem",
+            borderBottom: "1px solid var(--border)",
+            overflowX: "auto",
+          }}
+        >
+          {profiles.map((p) => (
+            <button
+              key={p.name}
+              type="button"
+              onClick={() => onProfileChange?.(p.name)}
+              style={{
+                fontSize: "0.65rem",
+                fontWeight: p.name === profile ? 600 : 400,
+                padding: "0.2rem 0.5rem",
+                borderRadius: "4px",
+                border: p.name === profile ? "1px solid var(--foreground)" : "1px solid var(--border)",
+                background: p.name === profile ? "var(--accent)" : "transparent",
+                color: p.name === profile ? "var(--foreground)" : "var(--muted-foreground)",
+                cursor: "pointer",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {p.name}
+            </button>
+          ))}
         </div>
       )}
 

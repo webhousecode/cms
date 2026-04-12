@@ -292,9 +292,18 @@ function DeployButton() {
   );
 }
 
+interface BuildProfileInfo {
+  name: string;
+  description?: string;
+  isDefault: boolean;
+}
+
 function BuildButton() {
   const [hasBuildCommand, setHasBuildCommand] = useState(false);
+  const [profiles, setProfiles] = useState<BuildProfileInfo[]>([]);
+  const [selectedProfile, setSelectedProfile] = useState<string | undefined>();
   const [panelOpen, setPanelOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
   const [fetchKey, setFetchKey] = useState(0);
 
   useEffect(() => {
@@ -305,10 +314,17 @@ function BuildButton() {
 
   useEffect(() => {
     setHasBuildCommand(false);
+    setProfiles([]);
+    setSelectedProfile(undefined);
     fetch("/api/admin/site-config/build-command")
       .then((r) => r.ok ? r.json() : null)
       .then((d) => {
-        if (d?.hasBuildCommand) setHasBuildCommand(true);
+        if (d?.hasBuildCommand) {
+          setHasBuildCommand(true);
+          setProfiles(d.profiles ?? []);
+          const defaultProfile = (d.profiles ?? []).find((p: BuildProfileInfo) => p.isDefault);
+          setSelectedProfile(defaultProfile?.name);
+        }
       })
       .catch(() => {});
   }, [fetchKey]);
@@ -329,27 +345,109 @@ function BuildButton() {
 
   if (!hasBuildCommand) return null;
 
+  const hasMultipleProfiles = profiles.length > 1;
+
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setPanelOpen((o) => !o)}
-        title="Build (b)"
-        style={{
-          background: "none",
-          border: "1.5px solid var(--border)",
-          cursor: "pointer",
-          color: panelOpen ? "var(--foreground)" : "var(--muted-foreground)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-          borderRadius: "50%",
-          width: "2rem", height: "2rem",
-          padding: 0,
-        }}
-        className="hover:border-foreground hover:text-foreground transition-colors"
-      >
-        <Hammer style={{ width: "0.9rem", height: "0.9rem" }} />
-      </button>
-      <BuildLogPanel open={panelOpen} onClose={() => setPanelOpen(false)} />
+      <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
+        <button
+          type="button"
+          onClick={() => setPanelOpen((o) => !o)}
+          title="Build (b)"
+          style={{
+            background: "none",
+            border: "1.5px solid var(--border)",
+            cursor: "pointer",
+            color: panelOpen ? "var(--foreground)" : "var(--muted-foreground)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            borderRadius: hasMultipleProfiles ? "50% 0 0 50%" : "50%",
+            width: "2rem", height: "2rem",
+            padding: 0,
+            borderRight: hasMultipleProfiles ? "none" : undefined,
+          }}
+          className="hover:border-foreground hover:text-foreground transition-colors"
+        >
+          <Hammer style={{ width: "0.9rem", height: "0.9rem" }} />
+        </button>
+        {hasMultipleProfiles && (
+          <button
+            type="button"
+            onClick={() => setDropdownOpen((o) => !o)}
+            title="Select build profile"
+            style={{
+              background: "none",
+              border: "1.5px solid var(--border)",
+              borderLeft: "none",
+              cursor: "pointer",
+              color: "var(--muted-foreground)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              borderRadius: "0 50% 50% 0",
+              width: "1.25rem", height: "2rem",
+              padding: 0,
+              fontSize: "0.55rem",
+            }}
+            className="hover:border-foreground hover:text-foreground transition-colors"
+          >
+            ▾
+          </button>
+        )}
+        {/* Profile dropdown */}
+        {dropdownOpen && hasMultipleProfiles && (
+          <div
+            style={{
+              position: "absolute",
+              top: "calc(100% + 4px)",
+              right: 0,
+              background: "var(--popover)",
+              border: "1px solid var(--border)",
+              borderRadius: "8px",
+              padding: "0.25rem",
+              minWidth: "160px",
+              zIndex: 50,
+              boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+            }}
+          >
+            {profiles.map((p) => (
+              <button
+                key={p.name}
+                type="button"
+                onClick={() => {
+                  setSelectedProfile(p.name);
+                  setDropdownOpen(false);
+                }}
+                style={{
+                  display: "block",
+                  width: "100%",
+                  textAlign: "left",
+                  padding: "0.4rem 0.6rem",
+                  fontSize: "0.75rem",
+                  background: p.name === selectedProfile ? "var(--accent)" : "transparent",
+                  color: "var(--foreground)",
+                  border: "none",
+                  borderRadius: "5px",
+                  cursor: "pointer",
+                  fontWeight: p.name === selectedProfile ? 600 : 400,
+                }}
+              >
+                <span>{p.name}</span>
+                {p.isDefault && (
+                  <span style={{ color: "var(--muted-foreground)", fontSize: "0.6rem", marginLeft: "0.4rem" }}>default</span>
+                )}
+                {p.description && (
+                  <div style={{ color: "var(--muted-foreground)", fontSize: "0.6rem", marginTop: "0.1rem" }}>{p.description}</div>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+      <BuildLogPanel
+        open={panelOpen}
+        onClose={() => setPanelOpen(false)}
+        profile={selectedProfile}
+        profiles={profiles}
+        onProfileChange={setSelectedProfile}
+      />
     </>
   );
 }

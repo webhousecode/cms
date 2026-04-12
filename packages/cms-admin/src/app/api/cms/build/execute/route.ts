@@ -2,8 +2,9 @@
  * F126 — Custom Build Executor API
  *
  * POST /api/cms/build/execute
+ * Body: { profile?: string, env?: Record<string, string> }
  * Streams NDJSON build events (start, log, complete, error).
- * Requires admin role. Falls back to native pipeline if no build.command.
+ * Requires admin role. Supports build profiles (Phase 3).
  */
 import { NextRequest } from "next/server";
 import { denyViewers } from "@/lib/require-role";
@@ -11,6 +12,7 @@ import { getAdminConfig } from "@/lib/cms";
 import { getActiveSitePaths } from "@/lib/site-paths";
 import { executeBuild } from "@/lib/build/executor";
 import { resolveWorkingDir, resolveOutDir } from "@/lib/build/validate-paths";
+import { resolveProfile } from "@/lib/build/resolve-profile";
 import {
   isCommandAllowed,
   type OrgBuildSettings,
@@ -49,13 +51,29 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const buildConfig = config.build;
-  if (!buildConfig?.command) {
+  // Read optional body (profile name + env overrides)
+  let profileName: string | undefined;
+  let bodyEnv: Record<string, string> = {};
+  try {
+    const body = await req.json();
+    if (body?.profile && typeof body.profile === "string") {
+      profileName = body.profile;
+    }
+    if (body?.env && typeof body.env === "object") {
+      bodyEnv = body.env;
+    }
+  } catch {
+    // No body or invalid JSON — that's fine
+  }
+
+  // Resolve profile (Phase 3) — handles both profiles[] and root command
+  const profile = resolveProfile(config.build, profileName);
+  if (!profile) {
     return new Response(
       JSON.stringify({
         type: "error",
         message:
-          "No build.command configured in cms.config.ts. Use the native pipeline via the Deploy button instead.",
+          "No build command configured in cms.config.ts. Use the native pipeline via the Deploy button instead.",
       }) + "\n",
       { status: 400, headers: { "Content-Type": "application/x-ndjson" } },
     );
@@ -63,11 +81,11 @@ export async function POST(req: NextRequest) {
 
   // Validate command against org settings
   const orgSettings = getOrgBuildSettings();
-  if (!isCommandAllowed(buildConfig.command, orgSettings)) {
+  if (!isCommandAllowed(profile.command, orgSettings)) {
     return new Response(
       JSON.stringify({
         type: "error",
-        message: `Command "${buildConfig.command}" is not allowed by organization settings.`,
+        message: `Command "${profile.command}" is not allowed by organization settings.`,
       }) + "\n",
       { status: 403, headers: { "Content-Type": "application/x-ndjson" } },
     );
@@ -79,11 +97,11 @@ export async function POST(req: NextRequest) {
   try {
     workingDir = resolveWorkingDir(
       sitePaths.projectDir,
-      buildConfig.workingDir,
+      profile.workingDir,
     );
     outDirAbs = resolveOutDir(
       sitePaths.projectDir,
-      buildConfig.outDir ?? "dist",
+      profile.outDir,
     );
   } catch (err) {
     return new Response(
@@ -96,20 +114,9 @@ export async function POST(req: NextRequest) {
   }
 
   const timeout = Math.min(
-    buildConfig.timeout ?? 300,
+    profile.timeout ?? 300,
     orgSettings.maxTimeout ?? 900,
   );
-
-  // Read optional body (env overrides)
-  let bodyEnv: Record<string, string> = {};
-  try {
-    const body = await req.json();
-    if (body?.env && typeof body.env === "object") {
-      bodyEnv = body.env;
-    }
-  } catch {
-    // No body or invalid JSON — that's fine
-  }
 
   // Stream NDJSON
   const encoder = new TextEncoder();
@@ -121,17 +128,18 @@ export async function POST(req: NextRequest) {
 
       emit({
         type: "start",
-        command: buildConfig.command,
+        profile: profile.name,
+        command: profile.command,
         workingDir,
-        outDir: buildConfig.outDir ?? "dist",
+        outDir: profile.outDir,
         timeout,
       });
 
       try {
         const result = await executeBuild({
-          command: buildConfig.command!,
+          command: profile.command,
           workingDir,
-          env: { ...buildConfig.env, ...bodyEnv },
+          env: { ...profile.env, ...bodyEnv },
           timeout,
           onLog: (line, streamName) => {
             emit({
@@ -148,7 +156,8 @@ export async function POST(req: NextRequest) {
           success: result.success,
           exitCode: result.exitCode ?? -1,
           duration: result.duration,
-          outDir: buildConfig.outDir ?? "dist",
+          profile: profile.name,
+          outDir: profile.outDir,
           outDirAbs,
           buildId: result.buildId,
           cancelled: result.cancelled,

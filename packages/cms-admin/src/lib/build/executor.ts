@@ -124,22 +124,24 @@ export async function executeBuild(
     opts.signal?.addEventListener("abort", onAbort, { once: true });
 
     try {
-      child = spawn(cmd!, args, {
+      child = spawn(cmd as string, args, {
         cwd: opts.workingDir,
         env: {
           ...safeEnv,
           // PATH and HOME are needed for command lookup
           PATH: process.env.PATH ?? "",
           HOME: process.env.HOME ?? "",
-        },
+        } as unknown as NodeJS.ProcessEnv,
         shell: false, // CRITICAL: no shell interpretation
         stdio: ["ignore", "pipe", "pipe"],
       });
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+      const proc = child!; // non-null immediately after spawn
 
-      child.stdout?.setEncoding("utf8");
-      child.stderr?.setEncoding("utf8");
+      proc.stdout?.setEncoding("utf8");
+      proc.stderr?.setEncoding("utf8");
 
-      child.stdout?.on("data", (chunk: string) => {
+      proc.stdout?.on("data", (chunk: string) => {
         stdout += chunk;
         // Keep only last MAX_BUFFER bytes
         if (stdout.length > MAX_BUFFER * 2) {
@@ -150,7 +152,7 @@ export async function executeBuild(
         }
       });
 
-      child.stderr?.on("data", (chunk: string) => {
+      proc.stderr?.on("data", (chunk: string) => {
         stderr += chunk;
         if (stderr.length > MAX_BUFFER * 2) {
           stderr = stderr.slice(-MAX_BUFFER);
@@ -160,7 +162,7 @@ export async function executeBuild(
         }
       });
 
-      child.on("close", (code) => {
+      proc.on("close", (code) => {
         clearTimeout(timer);
         if (killTimer) clearTimeout(killTimer);
         opts.signal?.removeEventListener("abort", onAbort);
@@ -175,7 +177,7 @@ export async function executeBuild(
         });
       });
 
-      child.on("error", (err) => {
+      proc.on("error", (err) => {
         clearTimeout(timer);
         if (killTimer) clearTimeout(killTimer);
         opts.signal?.removeEventListener("abort", onAbort);
