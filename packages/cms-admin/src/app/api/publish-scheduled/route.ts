@@ -1,5 +1,6 @@
 import { getAdminCms, getAdminConfig } from "@/lib/cms";
 import { NextResponse } from "next/server";
+import { getSiteRole } from "@/lib/require-role";
 
 /**
  * POST /api/publish-scheduled
@@ -10,6 +11,10 @@ import { NextResponse } from "next/server";
  * Returns { published: [{ collection, slug }] }
  */
 export async function POST() {
+  const role = await getSiteRole();
+  if (!role || role === "viewer") {
+    return NextResponse.json({ error: "Not authorized" }, { status: 403 });
+  }
   try {
     const [cms, config] = await Promise.all([getAdminCms(), getAdminConfig()]);
     const now = new Date();
