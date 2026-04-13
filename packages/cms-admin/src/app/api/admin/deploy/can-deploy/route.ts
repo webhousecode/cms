@@ -4,9 +4,12 @@ import path from "node:path";
 import { getActiveSitePaths, getActiveSiteEntry } from "@/lib/site-paths";
 import { readSiteConfig } from "@/lib/site-config";
 import { resolveToken } from "@/lib/site-pool";
+import { getSiteRole } from "@/lib/require-role";
 
 /** GET /api/admin/deploy/can-deploy — check if the active site can deploy */
 export async function GET() {
+  const role = await getSiteRole();
+  if (!role) return NextResponse.json({ canDeploy: false }, { status: 401 });
   try {
     const config = await readSiteConfig();
 

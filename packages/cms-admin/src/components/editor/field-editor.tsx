@@ -315,6 +315,58 @@ function textWidth(fieldName: string): string | undefined {
   return undefined;
 }
 
+/** Simple string array editor — extracted to its own component to avoid hooks-rules violation */
+function SimpleStringArray({ values, onChange, locked }: { values: string[]; onChange: (v: string[]) => void; locked?: boolean }) {
+  const [confirmIdx, setConfirmIdx] = useState<number | null>(null);
+  const confirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
+      {values.map((item, i) => (
+        <div key={i} style={{ display: "flex", gap: "0.4rem", alignItems: "center" }}>
+          <Input
+            value={item}
+            disabled={locked}
+            onChange={(e) => { const next = [...values]; next[i] = e.target.value; onChange(next); }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") { e.preventDefault(); const next = [...values]; next.splice(i + 1, 0, ""); onChange(next); }
+              if (e.key === "Backspace" && item === "" && values.length > 1) { e.preventDefault(); onChange(values.filter((_, j) => j !== i)); }
+            }}
+            style={{ flex: 1 }}
+          />
+          {!locked && (
+            <span style={{ display: "flex", alignItems: "center", gap: "4px", flexShrink: 0 }}>
+              {confirmIdx === i ? (
+                <>
+                  <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
+                  <button type="button" onClick={() => { if (confirmTimer.current) clearTimeout(confirmTimer.current); setConfirmIdx(null); onChange(values.filter((_, j) => j !== i)); }}
+                    style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
+                  <button type="button" onClick={() => { if (confirmTimer.current) clearTimeout(confirmTimer.current); setConfirmIdx(null); }}
+                    style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
+                </>
+              ) : (
+                <button type="button" onClick={() => {
+                  if (!item.trim()) { onChange(values.filter((_, j) => j !== i)); return; }
+                  if (confirmTimer.current) clearTimeout(confirmTimer.current);
+                  setConfirmIdx(i);
+                  confirmTimer.current = setTimeout(() => setConfirmIdx(null), 3000);
+                }} style={{ width: "18px", height: "18px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: "0.9rem", lineHeight: 1 }} title="Remove item" className="hover:text-destructive transition-colors">×</button>
+              )}
+            </span>
+          )}
+        </div>
+      ))}
+      {!locked && (
+        <button type="button" onClick={() => onChange([...values, ""])}
+          style={{ alignSelf: "flex-start", background: "none", border: "1px dashed var(--border)", borderRadius: "5px", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "0.75rem", padding: "0.25rem 0.75rem", marginTop: "0.1rem" }}
+          className="hover:border-primary hover:text-primary transition-colors"
+        >
+          + Add item
+        </button>
+      )}
+    </div>
+  );
+}
+
 export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Props) {
   const strVal = String(value ?? "");
   const testId = `field-${field.type}-${field.name}`;
@@ -1174,72 +1226,7 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
           />
         );
       }
-      const strArr = arrVal.map(v => String(v ?? ""));
-      // eslint-disable-next-line react-hooks/rules-of-hooks
-      const [arrConfirmIdx, setArrConfirmIdx] = useState<number | null>(null);
-      // eslint-disable-next-line react-hooks/rules-of-hooks
-      const arrConfirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-      return (
-        <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
-          {strArr.map((item, i) => (
-            <div key={i} style={{ display: "flex", gap: "0.4rem", alignItems: "center" }}>
-              <Input
-                value={item}
-                disabled={locked}
-                onChange={(e) => {
-                  const next = [...strArr];
-                  next[i] = e.target.value;
-                  onChange(next);
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    const next = [...strArr];
-                    next.splice(i + 1, 0, "");
-                    onChange(next);
-                  }
-                  if (e.key === "Backspace" && item === "" && strArr.length > 1) {
-                    e.preventDefault();
-                    const next = strArr.filter((_, j) => j !== i);
-                    onChange(next);
-                  }
-                }}
-                style={{ flex: 1 }}
-              />
-              {!locked && (
-                <span style={{ display: "flex", alignItems: "center", gap: "4px", flexShrink: 0 }}>
-                  {arrConfirmIdx === i ? (
-                    <>
-                      <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
-                      <button type="button" onClick={() => { if (arrConfirmTimer.current) clearTimeout(arrConfirmTimer.current); setArrConfirmIdx(null); onChange(strArr.filter((_, j) => j !== i)); }}
-                        style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
-                      <button type="button" onClick={() => { if (arrConfirmTimer.current) clearTimeout(arrConfirmTimer.current); setArrConfirmIdx(null); }}
-                        style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
-                    </>
-                  ) : (
-                    <button type="button" onClick={() => {
-                      if (!item.trim()) { onChange(strArr.filter((_, j) => j !== i)); return; }
-                      if (arrConfirmTimer.current) clearTimeout(arrConfirmTimer.current);
-                      setArrConfirmIdx(i);
-                      arrConfirmTimer.current = setTimeout(() => setArrConfirmIdx(null), 3000);
-                    }} style={{ width: "18px", height: "18px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: "0.9rem", lineHeight: 1 }} title="Remove item" className="hover:text-destructive transition-colors">×</button>
-                  )}
-                </span>
-              )}
-            </div>
-          ))}
-          {!locked && (
-            <button
-              type="button"
-              onClick={() => onChange([...strArr, ""])}
-              style={{ alignSelf: "flex-start", background: "none", border: "1px dashed var(--border)", borderRadius: "5px", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "0.75rem", padding: "0.25rem 0.75rem", marginTop: "0.1rem" }}
-              className="hover:border-primary hover:text-primary transition-colors"
-            >
-              + Add item
-            </button>
-          )}
-        </div>
-      );
+      return <SimpleStringArray values={arrVal.map(v => String(v ?? ""))} onChange={onChange} locked={locked} />;
     }
 
     case "blocks": {

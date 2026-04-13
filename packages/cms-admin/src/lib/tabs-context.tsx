@@ -32,8 +32,10 @@ function syncToServer(tabs: Tab[], activeId: string | null) {
   }, 500);
 }
 
-// Flush pending sync on page unload
-if (typeof window !== "undefined") {
+// Flush pending sync on page unload.
+// Guard against duplicate listeners from HMR hot-reloads in dev.
+if (typeof window !== "undefined" && !(window as any).__tabsSyncBound) {
+  (window as any).__tabsSyncBound = true;
   window.addEventListener("beforeunload", flushSync);
   window.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "hidden") flushSync();
