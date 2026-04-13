@@ -6,6 +6,7 @@ import { CommandPaletteProvider } from "@/components/command-palette";
 import { TabsProvider } from "@/lib/tabs-context";
 import { TabBar } from "@/components/tab-bar";
 import { AdminHeader } from "@/components/admin-header";
+import { HeaderDataProvider } from "@/lib/header-data-context";
 import { useRouter } from "next/navigation";
 import { DevInspector } from "@/components/dev-inspector";
 import { SchedulerNotifier } from "@/components/scheduler-notifier";
@@ -67,6 +68,7 @@ export function WorkspaceShell({ collections, globals, activeSiteId, devInspecto
   // This keeps the traditional workspace mounted (tabs, sidebar, state preserved)
   // so switching back is instant.
   return (
+    <HeaderDataProvider>
     <SidebarProvider>
       <div style={{ display: isChat ? "none" : "contents" }}>
         <AppSidebarClient collections={collections} globals={globals} />
@@ -110,5 +112,6 @@ export function WorkspaceShell({ collections, globals, activeSiteId, devInspecto
         </TabsProvider>
       </SidebarInset>
     </SidebarProvider>
+    </HeaderDataProvider>
   );
 }

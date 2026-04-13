@@ -3,6 +3,7 @@
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { useTabs } from "@/lib/tabs-context";
 import { OrgSwitcher, SiteSwitcher } from "@/components/site-switcher";
+import { useHeaderData, HeaderDataProvider } from "@/lib/header-data-context";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -165,43 +166,27 @@ function UserNav({ user }: { user: SessionUser | null }) {
 function DeployButton() {
   const router = useRouter();
   const can = usePermissions();
+  const { user, siteConfig } = useHeaderData();
   const [provider, setProvider] = useState<string>("off");
   const [deploying, setDeploying] = useState(false);
   const [lastResult, setLastResult] = useState<{ ok: boolean; error?: string } | null>(null);
-  const [fetchKey, setFetchKey] = useState(0);
 
   useEffect(() => {
-    function onSiteChange() { setFetchKey((k) => k + 1); }
-    window.addEventListener("cms-site-change", onSiteChange);
-    return () => window.removeEventListener("cms-site-change", onSiteChange);
-  }, []);
+    if (!siteConfig) return;
+    const dp = siteConfig.deployProvider as string | undefined;
+    if (dp && dp !== "off") {
+      setProvider(dp);
+    } else {
+      fetch("/api/admin/deploy/can-deploy")
+        .then((r) => r.ok ? r.json() : null)
+        .then((d: any) => {
+          if (d?.canDeploy) setProvider(d.provider ?? "off");
+        })
+        .catch(() => {});
+    }
+  }, [siteConfig]);
 
-  useEffect(() => {
-    setProvider("off");
-    fetch("/api/admin/site-config")
-      .then((r) => r.ok ? r.json() : null)
-      .then((data) => {
-        if (data?.deployProvider && data.deployProvider !== "off") {
-          setProvider(data.deployProvider);
-        } else {
-          fetch("/api/admin/deploy/can-deploy")
-            .then((r) => r.ok ? r.json() : null)
-            .then((d: any) => {
-              if (d?.canDeploy) setProvider(d.provider ?? "off");
-            })
-            .catch(() => {});
-        }
-      })
-      .catch(() => {});
-  }, [fetchKey]);
-
-  // Fetch user role once to determine deploy flow (modal vs direct toast)
-  const [userRole, setUserRole] = useState<string | null>(null);
-  useEffect(() => {
-    fetch("/api/auth/me").then(r => r.json()).then((d: { user?: { siteRole?: string; role?: string } }) => {
-      setUserRole(d.user?.role ?? d.user?.siteRole ?? null);
-    }).catch(() => {});
-  }, []);
+  const userRole = user?.role ?? user?.siteRole ?? null;
   const isAdminUser = userRole === "admin";
 
   const handleDeploy = useCallback(async () => {
@@ -453,33 +438,23 @@ function BuildButton() {
 }
 
 function PreviewButton() {
+  const { siteConfig } = useHeaderData();
   const [previewUrl, setPreviewUrl] = useState<string>("");
   const [liveUrl, setLiveUrl] = useState<string>("");
   const [siteName, setSiteName] = useState("Site");
   const [previewDown, setPreviewDown] = useState(false);
   const [liveDown, setLiveDown] = useState(false);
-  const [fetchKey, setFetchKey] = useState(0);
   const { openTab } = useTabs();
 
-  useEffect(() => {
-    function onSiteChange() { setFetchKey((k) => k + 1); }
-    window.addEventListener("cms-site-change", onSiteChange);
-    // Re-fetch preview/live URLs when site config is saved (previewSiteUrl, deploy URL, etc.)
-    window.addEventListener("cms:site-config-updated", onSiteChange);
-    return () => {
-      window.removeEventListener("cms-site-change", onSiteChange);
-      window.removeEventListener("cms:site-config-updated", onSiteChange);
-    };
-  }, []);
-
+  // Derive URLs from shared siteConfig + start sirv
   useEffect(() => {
     setPreviewUrl("");
     setLiveUrl("");
     setPreviewDown(false);
     setLiveDown(false);
-    let customPreview = "";
 
-    // Always try sirv preview server first — works for all filesystem sites
+    // Always try sirv preview server — works for all filesystem sites
+    let customPreview = "";
     fetch("/api/preview-serve", { method: "POST" })
       .then((r) => r.ok ? r.json() : null)
       .then((d: { url?: string } | null) => {
@@ -487,37 +462,20 @@ function PreviewButton() {
       })
       .catch(() => {});
 
-    // Fetch site config for custom preview URL + live URL
-    fetch("/api/admin/site-config")
-      .then((r) => r.ok ? r.json() : null)
-      .then((data) => {
-        if (data?.previewSiteUrl) {
-          customPreview = data.previewSiteUrl;
-          setPreviewUrl(data.previewSiteUrl);
-          // Health check ONLY on custom preview URL — sirv is always up
-          fetch(data.previewSiteUrl, { method: "HEAD", mode: "no-cors", signal: AbortSignal.timeout(3000) })
-            .catch(() => setPreviewDown(true));
-        }
-        const live = data?.deployCustomDomain
-          ? `https://${data.deployCustomDomain}`
-          : data?.deployProductionUrl ?? "";
-        setLiveUrl(live);
-      })
-      .catch(() => {});
-
-    // Get site name
-    fetch("/api/cms/registry")
-      .then((r) => r.ok ? r.json() : null)
-      .then((d: any) => {
-        if (!d?.registry) return;
-        const orgId = document.cookie.match(/(?:^|; )cms-active-org=([^;]*)/)?.[1] ?? d.registry.defaultOrgId;
-        const siteId = document.cookie.match(/(?:^|; )cms-active-site=([^;]*)/)?.[1] ?? d.registry.defaultSiteId;
-        const org = d.registry.orgs?.find((o: any) => o.id === orgId);
-        const site = org?.sites?.find((s: any) => s.id === siteId);
-        if (site?.name) setSiteName(site.name);
-      })
-      .catch(() => {});
-  }, [fetchKey]);
+    if (siteConfig) {
+      if (siteConfig.previewSiteUrl) {
+        customPreview = siteConfig.previewSiteUrl as string;
+        setPreviewUrl(customPreview);
+        fetch(customPreview, { method: "HEAD", mode: "no-cors", signal: AbortSignal.timeout(3000) })
+          .catch(() => setPreviewDown(true));
+      }
+      const live = siteConfig.deployCustomDomain
+        ? `https://${siteConfig.deployCustomDomain}`
+        : (siteConfig.deployProductionUrl as string) ?? "";
+      setLiveUrl(live);
+      if (siteConfig.siteName) setSiteName(siteConfig.siteName as string);
+    }
+  }, [siteConfig]);
 
   // Check live URL health separately
   useEffect(() => {
@@ -671,24 +629,10 @@ function ModeToggle({ mode, onToggle }: { mode: AdminMode; onToggle: () => void 
 }
 
 function LocaleIndicator() {
-  const [siteLocales, setSiteLocales] = useState<string[]>([]);
-  const [fetchKey, setFetchKey] = useState(0);
-
-  useEffect(() => {
-    function onSiteChange() { setFetchKey((k) => k + 1); }
-    window.addEventListener("cms-site-change", onSiteChange);
-    return () => window.removeEventListener("cms-site-change", onSiteChange);
-  }, []);
-
-  useEffect(() => {
-    setSiteLocales([]);
-    fetch("/api/admin/site-config")
-      .then((r) => r.ok ? r.json() : null)
-      .then((data) => {
-        if (data?.locales?.length > 1) setSiteLocales(data.locales);
-      })
-      .catch(() => {});
-  }, [fetchKey]);
+  const { siteConfig } = useHeaderData();
+  const siteLocales = (siteConfig?.locales as string[] | undefined)?.length ?? 0 > 1
+    ? (siteConfig!.locales as string[])
+    : [];
 
   if (!siteLocales.length) return null;
 
@@ -717,27 +661,13 @@ export function AdminHeader({ mode, onToggleMode, onNewChat, onToggleHistory, sh
   const { tabs, activeId } = useTabs();
   const activeTab = tabs.find((t) => t.id === activeId);
   const title = activeTab?.title;
-  const [user, setUser] = useState<SessionUser | null>(() => {
-    if (typeof window === "undefined") return null;
-    try {
-      const cached = sessionStorage.getItem("cms-session-user");
-      return cached ? JSON.parse(cached) as SessionUser : null;
-    } catch { return null; }
-  });
-
-  useEffect(() => {
-    // If already cached, skip fetch — only refresh on login
-    if (user) return;
-    fetch("/api/auth/me")
-      .then((r) => r.json())
-      .then((d: { user?: SessionUser | null }) => {
-        if (d.user) {
-          setUser(d.user);
-          sessionStorage.setItem("cms-session-user", JSON.stringify(d.user));
-        }
-      })
-      .catch(() => {});
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  const { user: headerUser } = useHeaderData();
+  const user: SessionUser | null = headerUser ? {
+    id: headerUser.id,
+    email: headerUser.email,
+    name: headerUser.name,
+    gravatarUrl: headerUser.gravatarUrl,
+  } : null;
 
   return (
     <header style={{

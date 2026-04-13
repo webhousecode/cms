@@ -16,6 +16,16 @@ import sirv from "sirv";
 // Track running servers per site: siteId → { server, port }
 const activeServers = new Map<string, { server: Server; port: number }>();
 
+// Clean up sirv servers on process exit so ports are freed before PM2 restart
+function shutdownServers() {
+  for (const [id, { server }] of activeServers) {
+    try { server.close(); } catch { /* best effort */ }
+  }
+  activeServers.clear();
+}
+process.on("SIGINT", shutdownServers);
+process.on("SIGTERM", shutdownServers);
+
 async function findFreePort(): Promise<number> {
   // Try Code Launcher first
   try {
@@ -122,9 +132,19 @@ export async function POST(req: NextRequest) {
     });
   });
 
-  await new Promise<void>((resolve) => {
-    server.listen(port, () => resolve());
-  });
+  try {
+    await new Promise<void>((resolve, reject) => {
+      server.on("error", reject);
+      server.listen(port, () => resolve());
+    });
+  } catch (err: any) {
+    // Port in use (e.g. stale sirv from previous PM2 restart) — try to reuse
+    if (err?.code === "EADDRINUSE") {
+      console.warn(`Preview port ${port} already in use — reusing existing server`);
+      return NextResponse.json({ url: `http://localhost:${port}` });
+    }
+    throw err;
+  }
 
   activeServers.set(siteId, { server, port });
 
