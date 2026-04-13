@@ -5,7 +5,7 @@ import { getSiteRole } from "@/lib/require-role";
 
 type Ctx = { params: Promise<{ collection: string }> };
 
-export async function GET(_req: NextRequest, { params }: Ctx) {
+export async function GET(req: NextRequest, { params }: Ctx) {
   // Viewers can read, but check team membership exists
   const role = await getSiteRole();
   if (!role) return NextResponse.json({ error: "No access to this site" }, { status: 403 });
@@ -15,7 +15,9 @@ export async function GET(_req: NextRequest, { params }: Ctx) {
     const colConfig = config.collections.find((c) => c.name === collection);
     if (!colConfig) return NextResponse.json({ error: "Unknown collection" }, { status: 404 });
     const { documents } = await cms.content.findMany(collection, {});
-    return NextResponse.json(documents.filter((d: any) => d.status !== "trashed"));
+    // ?all=true includes trashed docs (needed for collection list filters)
+    const includeAll = req.nextUrl.searchParams.get("all") === "true";
+    return NextResponse.json(includeAll ? documents : documents.filter((d: any) => d.status !== "trashed"));
   } catch (err) {
     console.error(err);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
