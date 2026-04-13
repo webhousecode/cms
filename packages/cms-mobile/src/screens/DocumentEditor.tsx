@@ -666,27 +666,60 @@ function RelationField({ field, value, onChange }: FieldEditorProps) {
 // ─── Array Editor ────────────────────────────────────
 
 function ArrayField({ field, value, onChange }: FieldEditorProps) {
-  const items = Array.isArray(value) ? (value as Record<string, unknown>[]) : [];
+  const rawItems = Array.isArray(value) ? value : [];
   const subFields = field.fields ?? [];
+  const isSimple = subFields.length === 0; // Simple string array vs structured object array
+
+  // Simple array: ["a", "b", "c"]
+  if (isSimple) {
+    const items = rawItems as string[];
+    return (
+      <div>
+        <FieldLabel field={field} />
+        <div className="space-y-1.5">
+          {items.map((item, idx) => (
+            <div key={idx} className="flex items-center gap-2">
+              <input
+                type="text"
+                value={String(item ?? "")}
+                onChange={(e) => {
+                  const next = [...items];
+                  next[idx] = e.target.value;
+                  onChange(next);
+                }}
+                className="flex-1 min-w-0 rounded-lg bg-brand-darkPanel border border-white/10 px-3 py-2.5 text-sm text-white outline-none focus:border-brand-gold transition-colors"
+              />
+              <button
+                type="button"
+                onClick={() => onChange(items.filter((_, i) => i !== idx))}
+                className="shrink-0 text-white/30 active:text-red-400 p-1"
+                aria-label="Remove"
+              >
+                <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                  <path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={() => onChange([...items, ""])}
+          className="mt-2 w-full rounded-lg border border-dashed border-white/20 bg-brand-darkPanel px-3 py-2.5 text-xs text-white/40 active:bg-white/5 active:scale-[0.98] transition-all"
+        >
+          + Add item ({items.length})
+        </button>
+      </div>
+    );
+  }
+
+  // Structured array: [{ title: "...", url: "..." }, ...]
+  const items = rawItems as Record<string, unknown>[];
 
   function updateItem(idx: number, fieldName: string, val: unknown) {
     const next = [...items];
     next[idx] = { ...next[idx], [fieldName]: val };
     onChange(next);
-  }
-
-  function addItem() {
-    const empty: Record<string, unknown> = {};
-    subFields.forEach((f) => { empty[f.name] = undefined; });
-    onChange([...items, empty]);
-  }
-
-  function removeItem(idx: number) {
-    onChange(items.filter((_, i) => i !== idx));
-  }
-
-  if (subFields.length === 0) {
-    return <UnsupportedField field={field} />;
   }
 
   return (
@@ -699,7 +732,7 @@ function ArrayField({ field, value, onChange }: FieldEditorProps) {
               <span className="text-[10px] text-white/30 uppercase">#{idx + 1}</span>
               <button
                 type="button"
-                onClick={() => removeItem(idx)}
+                onClick={() => onChange(items.filter((_, i) => i !== idx))}
                 className="text-white/30 active:text-red-400 p-0.5"
                 aria-label="Remove item"
               >
@@ -721,7 +754,11 @@ function ArrayField({ field, value, onChange }: FieldEditorProps) {
       </div>
       <button
         type="button"
-        onClick={addItem}
+        onClick={() => {
+          const empty: Record<string, unknown> = {};
+          subFields.forEach((f) => { empty[f.name] = undefined; });
+          onChange([...items, empty]);
+        }}
         className="mt-2 w-full rounded-lg border border-dashed border-white/20 bg-brand-darkPanel px-3 py-2.5 text-xs text-white/40 active:bg-white/5 active:scale-[0.98] transition-all"
       >
         + Add item ({items.length})
