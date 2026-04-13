@@ -847,19 +847,63 @@ async function githubPagesBuildAndDeploy(token: string, repo: string): Promise<s
   }
   console.log(`[deploy] Collected ${files.length} files from dist/`);
 
-  // 3. Push to gh-pages branch via GitHub API
-  // Create a tree with all files, then create a commit, then update gh-pages ref
-  console.log(`[deploy] Pushing ${files.length} files to ${repo} gh-pages branch...`);
+  // 3. Push to gh-pages branch via GitHub API (incremental)
+  // Fetch existing tree, compare SHAs, only upload changed files.
 
-  // Create blobs in parallel batches (sequential was too slow — 2000+ files
-  // at 1 API call each took 2+ minutes and timed out the SSE stream).
-  // Sequential with retry + exponential backoff. GitHub's secondary rate
-  // limit (403) triggers on concurrent requests — parallel batching was
-  // too aggressive even at batch size 5.
-  const blobs: { path: string; sha: string }[] = [];
-  for (let i = 0; i < files.length; i++) {
-    const f = files[i]!;
+  // 3a. Get existing gh-pages tree for diff
+  let existingTree = new Map<string, string>(); // path → blob SHA
+  let parentSha: string | undefined;
+  const refRes = await fetch(`https://api.github.com/repos/${repo}/git/refs/heads/gh-pages`, {
+    headers,
+    signal: AbortSignal.timeout(10000),
+  });
+  if (refRes.ok) {
+    const ref = await refRes.json() as { object: { sha: string } };
+    parentSha = ref.object.sha;
+    // Fetch full tree recursively
+    const treeRes = await fetch(`https://api.github.com/repos/${repo}/git/trees/${parentSha}?recursive=1`, {
+      headers,
+      signal: AbortSignal.timeout(15000),
+    });
+    if (treeRes.ok) {
+      const treeData = await treeRes.json() as { tree: Array<{ path: string; sha: string; type: string }> };
+      for (const item of treeData.tree) {
+        if (item.type === "blob") existingTree.set(item.path, item.sha);
+      }
+      console.log(`[deploy] Existing gh-pages tree: ${existingTree.size} files`);
+    }
+  }
+
+  // 3b. Compute git blob SHAs locally to find changed files
+  const { createHash } = await import("node:crypto");
+  function gitBlobSha(content: Buffer): string {
+    const header = `blob ${content.length}\0`;
+    return createHash("sha1").update(header).update(content).digest("hex");
+  }
+
+  const changedFiles: { fullPath: string; relativePath: string; content: Buffer }[] = [];
+  const unchangedBlobs: { path: string; sha: string }[] = [];
+  const localPaths = new Set<string>();
+
+  for (const f of files) {
+    localPaths.add(f.relativePath);
     const content = readFileSync(f.fullPath);
+    const sha = gitBlobSha(content);
+    const existingSha = existingTree.get(f.relativePath);
+    if (existingSha === sha) {
+      // Unchanged — reuse existing blob
+      unchangedBlobs.push({ path: f.relativePath, sha });
+    } else {
+      changedFiles.push({ ...f, content });
+    }
+  }
+
+  console.log(`[deploy] ${unchangedBlobs.length} unchanged, ${changedFiles.length} changed/new files to upload`);
+
+  // 3c. Upload only changed blobs (sequential with retry)
+  const blobs: { path: string; sha: string }[] = [...unchangedBlobs];
+  for (let i = 0; i < changedFiles.length; i++) {
+    const f = changedFiles[i]!;
     let lastStatus = 0;
     for (let attempt = 0; attempt < 3; attempt++) {
       if (attempt > 0) {
@@ -870,7 +914,7 @@ async function githubPagesBuildAndDeploy(token: string, repo: string): Promise<s
       const blobRes = await fetch(`https://api.github.com/repos/${repo}/git/blobs`, {
         method: "POST",
         headers,
-        body: JSON.stringify({ content: content.toString("base64"), encoding: "base64" }),
+        body: JSON.stringify({ content: f.content.toString("base64"), encoding: "base64" }),
         signal: AbortSignal.timeout(30000),
       });
       if (blobRes.ok) {
@@ -889,33 +933,53 @@ async function githubPagesBuildAndDeploy(token: string, repo: string): Promise<s
     }
   }
 
-  // Create tree
-  const treeRes = await fetch(`https://api.github.com/repos/${repo}/git/trees`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({
-      tree: blobs.map((b) => ({
-        path: b.path,
-        mode: "100644",
-        type: "blob",
-        sha: b.sha,
-      })),
-    }),
-    signal: AbortSignal.timeout(15000),
-  });
-  if (!treeRes.ok) throw new Error(`Failed to create tree: ${treeRes.status}`);
-  const tree = await treeRes.json() as { sha: string };
+  // 3d. Create tree — use base_tree for incremental update (only send changes)
+  // This avoids the 502 error from GitHub when sending 2000+ entries.
+  // With base_tree, we only need to send changed/new files + deletions.
+  const deletedPaths = [...existingTree.keys()].filter((p) => !localPaths.has(p));
 
-  // Get current gh-pages ref (might not exist)
-  let parentSha: string | undefined;
-  const refRes = await fetch(`https://api.github.com/repos/${repo}/git/refs/heads/gh-pages`, {
-    headers,
-    signal: AbortSignal.timeout(10000),
-  });
-  if (refRes.ok) {
-    const ref = await refRes.json() as { object: { sha: string } };
-    parentSha = ref.object.sha;
+  const treeEntries = [
+    // Changed and new files
+    ...changedFiles.map((f) => {
+      const blob = blobs.find((b) => b.path === f.relativePath);
+      return { path: f.relativePath, mode: "100644" as const, type: "blob" as const, sha: blob!.sha };
+    }),
+    // Deleted files — null sha removes from tree
+    ...deletedPaths.map((p) => ({
+      path: p, mode: "100644" as const, type: "blob" as const, sha: null as unknown as string,
+    })),
+  ];
+
+  let tree: { sha: string };
+  if (parentSha && treeEntries.length > 0) {
+    // Incremental: base_tree + only changes
+    console.log(`[deploy] Creating incremental tree: ${changedFiles.length} changed, ${deletedPaths.length} deleted`);
+    const commitData = await fetch(`https://api.github.com/repos/${repo}/git/commits/${parentSha}`, { headers, signal: AbortSignal.timeout(10000) });
+    const commitJson = await commitData.json() as { tree: { sha: string } };
+    const treeRes = await fetch(`https://api.github.com/repos/${repo}/git/trees`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ base_tree: commitJson.tree.sha, tree: treeEntries }),
+      signal: AbortSignal.timeout(30000),
+    });
+    if (!treeRes.ok) throw new Error(`Failed to create tree: ${treeRes.status}`);
+    tree = await treeRes.json() as { sha: string };
+  } else {
+    // First deploy or no parent — full tree (chunk if needed)
+    console.log(`[deploy] Creating full tree: ${blobs.length} files`);
+    const treeRes = await fetch(`https://api.github.com/repos/${repo}/git/trees`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        tree: blobs.map((b) => ({ path: b.path, mode: "100644", type: "blob", sha: b.sha })),
+      }),
+      signal: AbortSignal.timeout(30000),
+    });
+    if (!treeRes.ok) throw new Error(`Failed to create tree: ${treeRes.status}`);
+    tree = await treeRes.json() as { sha: string };
   }
+
+  // parentSha already fetched above in the incremental diff step
 
   // Create commit
   const commitBody: Record<string, unknown> = {

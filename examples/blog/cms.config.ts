@@ -76,6 +76,15 @@ export default defineConfig({
       ],
     }),
     defineCollection({
+      name: "bookmarks",
+      label: "Bookmarks",
+      fields: [
+        { name: "title", type: "text", required: true },
+        { name: "url", type: "text", label: "URL" },
+        { name: "links", type: "array", label: "Related Links" },
+      ],
+    }),
+    defineCollection({
       name: "globals",
       label: "Globals",
       fields: [
