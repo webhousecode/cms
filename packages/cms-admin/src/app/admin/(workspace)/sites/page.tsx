@@ -121,6 +121,16 @@ export default function SitesDashboard() {
       .catch(() => {});
   }, [isDev]);
 
+  const refreshHealth = useCallback(() => {
+    fetch("/api/admin/site-health?all=true")
+      .then((r) => r.ok ? r.json() : { sites: {} })
+      .then((d: { sites: Record<string, "up" | "down" | "no-preview">; urls?: Record<string, string> }) => {
+        setHealthMap(d.sites ?? {});
+        setLiveUrls(d.urls ?? {});
+      })
+      .catch(() => {});
+  }, []);
+
   async function togglePm2(sitePort: string, action: "start" | "stop") {
     const proc = pm2Status[sitePort];
     if (!proc) return;
@@ -132,6 +142,9 @@ export default function SitesDashboard() {
         body: JSON.stringify({ name: proc.name, action }),
       });
       loadPm2();
+      // Server needs time to boot — poll health after short delays
+      setTimeout(refreshHealth, 1500);
+      setTimeout(refreshHealth, 4000);
     } catch { /* ignore */ }
     finally { setPm2Busy(null); }
   }
@@ -166,16 +179,10 @@ export default function SitesDashboard() {
         setLoaded(true);
       })
       .catch(() => setLoaded(true));
-    fetch("/api/admin/site-health?all=true")
-      .then((r) => r.ok ? r.json() : { sites: {} })
-      .then((d: { sites: Record<string, "up" | "down" | "no-preview">; urls?: Record<string, string> }) => {
-        setHealthMap(d.sites ?? {});
-        setLiveUrls(d.urls ?? {});
-      })
-      .catch(() => {});
-  }, []);
+    refreshHealth();
+  }, [refreshHealth]);
 
-  useEffect(() => { loadSites(); loadPm2(); }, [loadSites, loadPm2]);
+  useEffect(() => { loadSites(); loadPm2(); }, [loadSites, loadPm2, refreshHealth]);
 
   const activeOrg = registry?.orgs.find((o) => o.id === activeOrgId) ?? registry?.orgs[0];
   // Filter to only sites the user has team access to
@@ -460,6 +467,34 @@ export default function SitesDashboard() {
                 }}>
                   {site.adapter === "github" ? "GitHub" : "Local"}
                 </span>
+                {isDev && (() => {
+                  const port = extractPort(site.previewUrl);
+                  const proc = port ? pm2Status[port] : null;
+                  if (!proc) return null;
+                  const isOnline = proc.status === "online";
+                  const busy = pm2Busy === port;
+                  return (
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={(e) => { e.stopPropagation(); if (port) togglePm2(port, isOnline ? "stop" : "start"); }}
+                      style={{
+                        fontSize: "0.65rem", fontWeight: 600, letterSpacing: "0.03em",
+                        padding: "0.2rem 0.5rem", borderRadius: "4px",
+                        background: isOnline ? "color-mix(in srgb, var(--destructive) 15%, transparent)" : "color-mix(in srgb, #22c55e 15%, transparent)",
+                        color: isOnline ? "var(--destructive)" : "#22c55e",
+                        textTransform: "uppercase", border: "none", cursor: busy ? "wait" : "pointer",
+                        display: "inline-flex", alignItems: "center", gap: "0.25rem",
+                        opacity: busy ? 0.6 : 1, transition: "all 0.2s",
+                      }}
+                    >
+                      {isOnline
+                        ? <>{busy ? "Stopping…" : <><Square style={{ width: "0.6rem", height: "0.6rem" }} /> Stop</>}</>
+                        : <>{busy ? "Starting…" : <><Play style={{ width: "0.6rem", height: "0.6rem" }} /> Start</>}</>
+                      }
+                    </button>
+                  );
+                })()}
               </div>
               <button
                 type="button"
@@ -652,7 +687,7 @@ export default function SitesDashboard() {
 type SiteSortKey = "name" | "type" | "pages" | "collections" | "status";
 type SortDir = "asc" | "desc";
 
-function SiteListView({ sites, stats, healthMap, liveUrls, onEnter, onSettings, onRename, onPreview, onCopyId, onClone, pm2Status: pm2Map, pm2Busy: pm2BusyPort, onTogglePm2 }: {
+function SiteListView({ sites, stats, healthMap, liveUrls, onEnter, onSettings, onRename, onPreview, onCopyId, onClone, pm2Status: pm2Map, pm2Busy: pm2BusyPort, onTogglePm2, isAdmin }: {
   sites: SiteEntry[];
   stats: Record<string, { pages: number; collections: number }>;
   healthMap: Record<string, "up" | "down" | "no-preview">;

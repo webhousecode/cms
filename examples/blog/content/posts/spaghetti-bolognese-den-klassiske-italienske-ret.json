@@ -1,0 +1,99 @@
+{
+  "id": "LzgEgB9rEcIBeNhMtdGHJ",
+  "slug": "spaghetti-bolognese-den-klassiske-italienske-ret",
+  "collection": "posts",
+  "status": "draft",
+  "data": {
+    "title": "Spaghetti Bolognese – Den klassiske italienske ret",
+    "excerpt": "Spaghetti Bolognese er en af verdens mest elskede pastaretter. Med sin rige, langtidskogte kødsauce og perfekt kogte spaghetti er det en ret, der samler familien omkring bordet.",
+    "content": "## En ret med rødder i Bologna\n\nSpaghetti Bolognese – eller *ragù alla bolognese* som den hedder på italiensk – stammer fra den norditalienenske by Bologna i regionen Emilia-Romagna. Her er retten en del af den kulinariske arv og har eksisteret i hundredvis af år. I dag er den blevet en af de mest tilberedte pastaretter i hele verden.\n\n## Hvad gør Bolognese særlig?\n\nHemmeligheden bag en god Bolognese ligger i **tålmodighed**. Saucen skal simre længe – gerne i 2-3 timer – så smagene kan udvikle sig og kødet bliver mørt og saftigt. De vigtigste ingredienser er:\n\n- **Hakket oksekød** (eller en blanding af okse og svin)\n- **Soffritto** – en base af løg, gulerod og selleri sauteret i olivenolie\n- **Tomatpuré og hakkede tomater**\n- **Rødvin** – giver dybde og kompleksitet\n- **Mælk eller fløde** – giver saucen en blødere, rundere smag\n- **Friske urter** – laurbær, timian og frisk basilikum\n\n## Opskrift – Klassisk Spaghetti Bolognese\n\n**Til 4 personer**\n\n### Ingredienser\n\n- 500 g spaghetti\n- 400 g hakket oksekød\n- 1 løg, finthakket\n- 2 gulerødder, finthakket\n- 2 stængler selleri, finthakket\n- 3 fed hvidløg\n- 2 spsk tomatpuré\n- 400 g hakkede tomater (dåse)\n- 1 dl rødvin\n- 1 dl sødmælk\n- Olivenolie, salt, peber\n- Frisk basilikum og revet parmesan til servering\n\n### Fremgangsmåde\n\n1. **Lav soffrittoen:** Svits løg, gulerod og selleri i olivenolie ved middel varme i ca. 10 minutter, til det er blødt og glasagtigt.\n2. **Brun kødet:** Tilsæt hakket kød og steg ved høj varme, til det er brunet. Krydr med salt og peber.\n3. **Tilsæt tomat og vin:** Rør tomatpuré i og lad det stege et minut. Tilsæt rødvinen og lad det koge ind.\n4. **Simr saucen:** Tilsæt hakkede tomater og mælk. Lad saucen simre ved lav varme i mindst 1,5-2 timer. Rør jævnligt.\n5. **Kog pastaen:** Kog spaghetti al dente i rigeligt saltet vand.\n6. **Servér:** Anret spaghetti med saucen og top med frisk basilikum og revet parmesan.\n\n## Tips til den perfekte Bolognese\n\n- **Brug tid** – jo længere saucen simrer, jo bedre smager den\n- **Rødvin er ikke valgfrit** – det giver saucen den dybde, der skiller en god Bolognese fra en middelmådig\n- **Autentisk tagliatelle** – i Bologna serveres retten traditionelt med tagliatelle, ikke spaghetti\n- **Lav en stor portion** – Bolognese smager endnu bedre dagen efter og fryser perfekt\n\n## En ret der forener\n\nSpaghetti Bolognese er mere end bare mad. Det er hygge, nærvær og kærlighed på en tallerken. Uanset om det er en hverdagsaften eller en festmiddag, bringer denne ret altid glæde til bordet. *Buon appetito!*",
+    "date": "2025-01-24",
+    "author": "Redaktionen",
+    "_seo": {
+      "metaTitle": "Spaghetti Bolognese – Klassisk italiensk opskrift",
+      "metaDescription": "Lær at lave autentisk Spaghetti Bolognese med denne klassiske italiensk opskrift. Trin-for-trin guide til den perfekte ragù alla bolognese.",
+      "keywords": [
+        "spaghetti bolognese",
+        "bolognese opskrift",
+        "italiensk mad",
+        "ragù alla bolognese",
+        "pastaopskrift"
+      ],
+      "robots": "index,follow",
+      "score": 86,
+      "scoreDetails": [
+        {
+          "rule": "meta-title",
+          "label": "Meta title",
+          "status": "pass",
+          "message": "Meta title length is good (49/60 characters)"
+        },
+        {
+          "rule": "meta-desc",
+          "label": "Meta description",
+          "status": "pass",
+          "message": "Meta description length is good (139/155 characters)"
+        },
+        {
+          "rule": "keyword-title",
+          "label": "Keyword in title",
+          "status": "pass",
+          "message": "Keyword \"spaghetti bolognese\" found in meta title"
+        },
+        {
+          "rule": "keyword-desc",
+          "label": "Keyword in description",
+          "status": "pass",
+          "message": "Keyword \"spaghetti bolognese\" found in meta description"
+        },
+        {
+          "rule": "content-length",
+          "label": "Content length",
+          "status": "pass",
+          "message": "Content is 427 words (300+ is good)"
+        },
+        {
+          "rule": "headings",
+          "label": "Heading structure",
+          "status": "pass",
+          "message": "Content uses H2 headings for structure"
+        },
+        {
+          "rule": "og-image",
+          "label": "Social image",
+          "status": "warn",
+          "message": "No social image set. Add an image in the \"Social image (OG)\" field above — it shows when someone shares this page on Facebook/LinkedIn."
+        },
+        {
+          "rule": "keyword-slug",
+          "label": "Keyword in URL",
+          "status": "pass",
+          "message": "Keyword \"spaghetti bolognese\" found in the URL"
+        },
+        {
+          "rule": "internal-links",
+          "label": "Internal links",
+          "status": "warn",
+          "message": "No internal links. Add links to other pages on your site (e.g. related posts) to improve SEO."
+        },
+        {
+          "rule": "title",
+          "label": "Page title",
+          "status": "pass",
+          "message": "Page has a title"
+        },
+        {
+          "rule": "readability",
+          "label": "Readability",
+          "status": "warn",
+          "message": "Readability score is 41/100 — consider shorter sentences and simpler words"
+        }
+      ],
+      "lastOptimized": "2026-04-12T13:34:50.918Z"
+    }
+  },
+  "_fieldMeta": {},
+  "createdAt": "2026-04-12T13:34:49.362Z",
+  "updatedAt": "2026-04-12T13:34:50.940Z",
+  "locale": "da"
+}

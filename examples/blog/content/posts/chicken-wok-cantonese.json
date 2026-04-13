@@ -1,0 +1,106 @@
+{
+  "id": "vh4ISoCN8hybXkbH9IqTc",
+  "slug": "chicken-wok-cantonese",
+  "collection": "posts",
+  "status": "published",
+  "data": {
+    "title": "Chicken Wok — The Classic Cantonese Stir-Fry",
+    "excerpt": "A juicy and colourful chicken wok with spinach, carrots and pointed cabbage in a rich orange sauce. Learn the history of the dish, get the full recipe and facts from China.",
+    "date": "2025-01-31",
+    "author": "Editorial",
+    "content": "![Chicken wok with vegetables and noodles on dining table](/uploads/chat-1776004141564-ucif.jpg \"width:100%\")\n\n## What is chicken wok?\n\nChicken wok is one of the most beloved dishes in Chinese cuisine — and for good reason. The dish combines tender strips of chicken with crisp vegetables in an aromatic sauce, all cooked over high heat in just a few minutes. The result is a dish full of flavour, colour and texture.\n\nThe dish you see in the photo is a classic **Cantonese stir-fry** with chicken, spinach, carrots, pointed cabbage and spring onions in an orange-red sauce — served with noodles.\n\n---\n\n## The history of wok cooking\n\nWok cooking originates from China and has roots going back more than **2,000 years**. The round, deep pan — the wok — emerged in southern China during the Han Dynasty (206 BC – 220 AD), when fuel was expensive and scarce. The high heat and rapid cooking was not just practical — it was a necessity.\n\nIn the Canton region (today Guangdong Province in southern China), a special food culture developed based on fresh ingredients, light saucing and minimal cooking time. Cantonese cuisine is today considered one of the four great culinary traditions in China.\n\n> *\"China is the homeland of cooking — and the wok is its most important tool.\"*\n\n---\n\n## Facts about Guangdong (Canton)\n\n- 🌍 **Location:** Southern China, bordering Hong Kong and Macau\n- 👥 **Population:** Approx. 130 million people\n- 🍜 **Food tradition:** Cantonese cuisine is the most widespread Chinese cuisine outside China\n- 🥢 **Characteristics:** Fresh ingredients, light flavour, minimal seasoning — the natural taste of the ingredients is emphasised\n- 🏙️ **Largest city:** Guangzhou (formerly Canton)\n- 🌶️ **Sauce use:** Oyster sauce, hoisin sauce and light sweet-sour sauce are typical of the region\n\n---\n\n## Recipe: Chicken Wok with Vegetables and Noodles\n\n**Serves 2–3 | Preparation time: 25 minutes**\n\n### Ingredients\n\n**For the wok:**\n- 400 g chicken breast — sliced into thin strips\n- 2 carrots — peeled and sliced\n- 150 g fresh spinach\n- ¼ pointed cabbage — roughly shredded\n- 2 spring onions — sliced diagonally\n- 3 cloves garlic — minced\n- 1 tbsp fresh ginger — grated\n- 3 tbsp oyster sauce\n- 1 tbsp hoisin sauce\n- 1 tbsp soy sauce\n- 1 tsp sesame oil\n- 2 tbsp neutral oil for frying\n- Salt and pepper\n\n**To serve:**\n- 200 g egg noodles or rice noodles\n- Sesame seeds and spring onions to garnish\n\n### Method\n\n1. **Prepare the ingredients:** Cut the chicken into thin strips and season with a little salt and pepper. Prep all the vegetables.\n2. **Cook the noodles** according to the packet instructions. Set aside.\n3. **Heat the wok** over high heat until it starts to smoke lightly. Add the oil.\n4. **Fry the chicken** for 3–4 minutes until golden and cooked through. Remove and set aside.\n5. **Stir-fry the vegetables:** Add garlic and ginger for 30 seconds, then carrots and cabbage for 2 minutes. Add spinach and spring onions last.\n6. **Add the sauce:** Pour over the oyster sauce, hoisin sauce, soy sauce and sesame oil. Stir well.\n7. **Return the chicken** to the wok and combine everything for 1 minute.\n8. **Serve** immediately over the noodles with sesame seeds and extra spring onions.\n\n---\n\n## Tips for the perfect wok\n\n- 🔥 **High heat is key** — the wok should be hot enough to smoke lightly\n- ⏱️ **Cook quickly** — too long in the pan gives soft, soggy vegetables\n- 🥄 **Mise en place** — have everything ready before you start, it moves fast!\n- 🍳 **Cook in batches** — too much in the wok lowers the temperature\n\n---\n\n## Nutritional information (per serving)\n\n| Nutrient | Amount |\n|:---|:---|\n| Calories | approx. 420 kcal |\n| Protein | 38 g |\n| Carbohydrates | 35 g |\n| Fat | 12 g |\n| Fibre | 5 g |",
+    "_seo": {
+      "metaTitle": "Chicken Wok — Classic Cantonese Stir-Fry Recipe",
+      "metaDescription": "Learn how to make authentic chicken wok, a classic Cantonese stir-fry with tender chicken, fresh vegetables and aromatic sauce. History, facts and easy recipe.",
+      "keywords": [
+        "chicken wok",
+        "Cantonese stir-fry",
+        "chicken stir-fry recipe",
+        "wok cooking",
+        "Chinese chicken recipe"
+      ],
+      "robots": "index,follow",
+      "score": 82,
+      "scoreDetails": [
+        {
+          "rule": "meta-title",
+          "label": "Meta title",
+          "status": "pass",
+          "message": "Meta title length is good (47/60 characters)"
+        },
+        {
+          "rule": "meta-desc",
+          "label": "Meta description",
+          "status": "warn",
+          "message": "Meta description is too long (159 characters). Google cuts off after 155. Remove 4 characters."
+        },
+        {
+          "rule": "keyword-title",
+          "label": "Keyword in title",
+          "status": "pass",
+          "message": "Keyword \"chicken wok\" found in meta title"
+        },
+        {
+          "rule": "keyword-desc",
+          "label": "Keyword in description",
+          "status": "pass",
+          "message": "Keyword \"chicken wok\" found in meta description"
+        },
+        {
+          "rule": "content-length",
+          "label": "Content length",
+          "status": "pass",
+          "message": "Content is 704 words (300+ is good)"
+        },
+        {
+          "rule": "headings",
+          "label": "Heading structure",
+          "status": "pass",
+          "message": "Content uses H2 headings for structure"
+        },
+        {
+          "rule": "og-image",
+          "label": "Social image",
+          "status": "warn",
+          "message": "No social image set. Add an image in the \"Social image (OG)\" field above — it shows when someone shares this page on Facebook/LinkedIn."
+        },
+        {
+          "rule": "keyword-slug",
+          "label": "Keyword in URL",
+          "status": "pass",
+          "message": "Keyword \"chicken wok\" found in the URL"
+        },
+        {
+          "rule": "internal-links",
+          "label": "Internal links",
+          "status": "warn",
+          "message": "No internal links. Add links to other pages on your site (e.g. related posts) to improve SEO."
+        },
+        {
+          "rule": "title",
+          "label": "Page title",
+          "status": "pass",
+          "message": "Page has a title"
+        },
+        {
+          "rule": "readability",
+          "label": "Readability",
+          "status": "warn",
+          "message": "Readability score is 53/100 — consider shorter sentences and simpler words"
+        }
+      ],
+      "lastOptimized": "2026-04-12T14:31:34.877Z"
+    },
+    "_lastEditedBy": {
+      "userId": "fb4eda6a-bc5c-4dec-8cb6-c77c9fb74cd9",
+      "name": "Christian Broberg",
+      "email": "cb@webhouse.dk",
+      "at": "2026-04-12T22:08:35.913Z"
+    }
+  },
+  "_fieldMeta": {},
+  "createdAt": "2026-04-12T14:31:33.607Z",
+  "updatedAt": "2026-04-12T22:08:35.914Z",
+  "locale": "en",
+  "translationGroup": "23c3bc5ee1fc49e1b14cf"
+}
