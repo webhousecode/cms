@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect, useMemo } from "react";
 import { useTheme } from "next-themes";
+import { useHeaderData } from "@/lib/header-data-context";
 import {
   LayoutDashboard,
   Cpu,
@@ -74,17 +75,16 @@ export function AppSidebar({ collections }: Props) {
     } catch { return []; }
   });
 
-  // Load logo preference from user profile (global, not per-site)
+  // Load logo preference from shared context (profile)
+  const { user: ctxUser, profile: ctxProfile } = useHeaderData();
   useEffect(() => {
-    fetch("/api/admin/profile")
-      .then((r) => r.ok ? r.json() : null)
-      .then((profile: { showLogoIcon?: boolean } | null) => {
-        if (profile && typeof profile.showLogoIcon === "boolean") {
-          setShowLogoIcon(profile.showLogoIcon);
-        }
-      })
-      .catch(() => {});
-    // Sidebar content open: from per-site user-state
+    if (ctxProfile && typeof (ctxProfile as any).showLogoIcon === "boolean") {
+      setShowLogoIcon((ctxProfile as any).showLogoIcon);
+    }
+  }, [ctxProfile]);
+
+  // Sidebar content open: from per-site user-state
+  useEffect(() => {
     fetch("/api/admin/user-state")
       .then((r) => r.ok ? r.json() : null)
       .then((state) => {
@@ -110,7 +110,7 @@ export function AppSidebar({ collections }: Props) {
   const [formUnreadTotal, setFormUnreadTotal] = useState(0);
   const [budgetSpent, setBudgetSpent] = useState(0);
   const [budgetTotal, setBudgetTotal] = useState(50);
-  const [siteRole, setSiteRole] = useState<string | null>(null);
+  const siteRole = ctxUser?.siteRole ?? null;
 
   // Listen for logo icon preference changes
   useEffect(() => {
@@ -130,12 +130,7 @@ export function AppSidebar({ collections }: Props) {
       })
       .catch(() => {});
 
-    fetch("/api/auth/me")
-      .then((r) => r.json())
-      .then((data: { user?: { siteRole?: string } }) => {
-        setSiteRole(data.user?.siteRole ?? null);
-      })
-      .catch(() => {});
+    // siteRole loaded from shared context (ctxUser) below
 
     function fetchFormCounts() {
       // Skip polling when tab is hidden — no point wasting requests

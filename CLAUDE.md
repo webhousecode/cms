@@ -272,6 +272,20 @@ Do NOT remove `immediatelyRender: false` — it will break SSR hydration.
 - Custom scanner: `npx tsx scripts/security-scan.ts` (CMS-specific rules)
 - CI: `.github/workflows/security-gate.yml` (Semgrep + Gitleaks + npm audit)
 
+## Hard Rule: Use Shared Context for Common Data — Never Fetch Independently
+
+**Components in cms-admin MUST use shared context providers for frequently-needed data. NEVER add a standalone `fetch()` to get data that's already available via context.**
+
+Available contexts (provided by `WorkspaceShell`):
+- **`useHeaderData()`** from `@/lib/header-data-context` — provides `user` (from `/api/auth/me`) and `siteConfig` (from `/api/admin/site-config`). Auto-refreshes on site change. Use this instead of fetching `/api/auth/me` or `/api/admin/site-config` directly.
+
+When you need data in a component:
+1. **Check if a context already provides it** — `useHeaderData()` for user/siteConfig
+2. **If no context exists and 3+ components need the same data** — create a new context provider in `lib/`, add it to `WorkspaceShell`
+3. **Only fetch directly if the data is page-specific** (e.g. a collection's documents, a specific form's submissions)
+
+Violations of this rule cause cascading duplicate API calls on every page load. The CMS had 11 redundant API calls per page load before this was fixed.
+
 ## Key Conventions
 
 - **Follow instructions exactly** — when given a task description, implement EXACTLY what is described. "Same as X" means find X's implementation and replicate the pattern. Do not add creative interpretations, extra features, or alternative approaches not asked for. When in doubt, ask — don't assume.

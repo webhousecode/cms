@@ -1210,7 +1210,10 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
     setDirty(true);
   }, [setDoc]);
 
+  const savingRef = useRef(false);
   async function save(status?: "draft" | "published") {
+    if (savingRef.current) return; // Prevent concurrent saves
+    savingRef.current = true;
     setSaving(true);
     const nextStatus = status ?? doc.status;
 
@@ -1238,6 +1241,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
       const err = await res.json().catch(() => ({ error: "Save failed" }));
       toast.error("Save failed", { description: err.error ?? `Server returned ${res.status}` });
       setSaving(false);
+      savingRef.current = false;
       return;
     }
     {
@@ -1296,6 +1300,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
       }
     }
     setSaving(false);
+    savingRef.current = false;
   }
 
   async function deleteDoc() {

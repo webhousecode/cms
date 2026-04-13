@@ -2,12 +2,14 @@
 
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from "react";
 
-/** Shared data fetched once and used by all header components */
+/** Shared data fetched once and used by all workspace components */
 interface HeaderData {
   /** Current user from /api/auth/me */
   user: { id: string; email: string; name: string; role?: string; siteRole?: string; permissions?: string[]; gravatarUrl?: string; zoom?: number } | null;
   /** Site config from /api/admin/site-config */
   siteConfig: Record<string, unknown> | null;
+  /** User profile from /api/admin/profile */
+  profile: { lastActiveSite?: string; lastActiveOrg?: string; pinnedSidebar?: string[]; collapsedSidebar?: string[] } | null;
   /** Whether data has loaded at least once */
   loaded: boolean;
   /** Re-fetch all data (e.g. on site change) */
@@ -17,6 +19,7 @@ interface HeaderData {
 const HeaderDataContext = createContext<HeaderData>({
   user: null,
   siteConfig: null,
+  profile: null,
   loaded: false,
   refresh: () => {},
 });
@@ -28,15 +31,18 @@ export function useHeaderData() {
 export function HeaderDataProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<HeaderData["user"]>(null);
   const [siteConfig, setSiteConfig] = useState<Record<string, unknown> | null>(null);
+  const [profile, setProfile] = useState<HeaderData["profile"]>(null);
   const [loaded, setLoaded] = useState(false);
 
   const refresh = useCallback(() => {
     Promise.all([
       fetch("/api/auth/me").then((r) => r.ok ? r.json() : null),
       fetch("/api/admin/site-config").then((r) => r.ok ? r.json() : null),
-    ]).then(([meData, configData]) => {
+      fetch("/api/admin/profile").then((r) => r.ok ? r.json() : null),
+    ]).then(([meData, configData, profileData]) => {
       if (meData?.user) setUser(meData.user);
       if (configData) setSiteConfig(configData);
+      if (profileData) setProfile(profileData);
       setLoaded(true);
     }).catch(() => setLoaded(true));
   }, []);
@@ -55,7 +61,7 @@ export function HeaderDataProvider({ children }: { children: ReactNode }) {
   }, [refresh]);
 
   return (
-    <HeaderDataContext.Provider value={{ user, siteConfig, loaded, refresh }}>
+    <HeaderDataContext.Provider value={{ user, siteConfig, profile, loaded, refresh }}>
       {children}
     </HeaderDataContext.Provider>
   );
