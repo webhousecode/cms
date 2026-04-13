@@ -11,7 +11,6 @@ import { ActionBar, ActionBarBreadcrumb } from "@/components/action-bar";
 import { formatDate, cn, previewPath } from "@/lib/utils";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { useTabs } from "@/lib/tabs-context";
 import { AIPanel } from "./ai-panel";
 import { SeoPanel } from "./seo-panel";
@@ -1031,9 +1030,19 @@ interface Props {
 
 // Global cache: survives unmount/remount from tab navigation + HMR.
 // Keyed by collection/slug, stores the latest doc state.
+const DOC_CACHE_MAX = 20;
 const G = globalThis as unknown as { __docCache?: Map<string, DocSnapshot> };
 if (!G.__docCache) G.__docCache = new Map();
 const docStateCache = G.__docCache;
+
+// Evict oldest entries when cache exceeds limit
+function cacheSet(key: string, value: DocSnapshot) {
+  docStateCache.set(key, value);
+  if (docStateCache.size > DOC_CACHE_MAX) {
+    const oldest = docStateCache.keys().next().value;
+    if (oldest) docStateCache.delete(oldest);
+  }
+}
 
 export function DocumentEditor({ collection, colConfig, blocksConfig = [], locales = [], defaultLocale = "en", initialDoc, translations: initialTranslations = [], siblingData: initialSiblingData, previewSiteUrl, previewInIframe, localeStrategy = "prefix-other", backHref, readOnly = false }: Props) {
   const PREVIEW_SITE_URL = previewSiteUrl ?? PREVIEW_SITE_URL_DEFAULT;
@@ -1057,13 +1066,6 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
   const [doc, setDocRaw] = useState(() => {
     // Prefer cached state over server-provided initialDoc (survives tab navigation)
     const cached = docStateCache.get(cacheKey);
-    console.log("[DocEditor mount]", cacheKey, {
-      hasCached: !!cached,
-      cacheSize: docStateCache.size,
-      cachedUpdatedAt: cached?.updatedAt,
-      initialUpdatedAt: initialDoc.updatedAt,
-      willUseCache: !!(cached && cached.updatedAt >= initialDoc.updatedAt),
-    });
     if (cached && cached.updatedAt >= initialDoc.updatedAt) {
       return cached;
     }
@@ -1082,8 +1084,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
     setDocRaw((prev) => {
       const next = typeof update === "function" ? update(prev) : update;
       const key = `${collection}/${next.slug}`;
-      docStateCache.set(key, next);
-      console.log("[DocEditor setDoc]", key, "cached, cacheSize:", docStateCache.size);
+      cacheSet(key, next);
       return next;
     });
   }, [collection]);
