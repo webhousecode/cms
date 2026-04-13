@@ -53,4 +53,11 @@ export default defineConfig({
     adapter: 'filesystem',
     filesystem: { contentDir: 'content' },
   },
+
+  build: {
+    command: 'mvn validate',
+    outDir: 'target',
+    timeout: 120,
+    env: { JAVA_HOME: process.env.JAVA_HOME ?? '' },
+  },
 });

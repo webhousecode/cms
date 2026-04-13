@@ -32,14 +32,18 @@ export async function GET() {
     const apps = JSON.parse(raw) as Array<{
       name: string;
       pm_id: number;
-      pm2_env: { status: string; env?: { PORT?: string } };
+      pm2_env: { status: string; env?: { PORT?: string }; args?: string | string[] };
     }>;
-    const processes = apps.map((a) => ({
-      name: a.name,
-      pmId: a.pm_id,
-      status: a.pm2_env.status, // "online" | "stopped" | "errored"
-      port: a.pm2_env.env?.PORT ?? null,
-    }));
+    const processes = apps.map((a) => {
+      // Try PORT env var first, then parse port from args (--port N, -p N, :PORT patterns)
+      let port = a.pm2_env.env?.PORT ?? null;
+      if (!port) {
+        const args = Array.isArray(a.pm2_env.args) ? a.pm2_env.args.join(" ") : (a.pm2_env.args ?? "");
+        const m = args.match(/(?:--(?:\w+\.)*port[=\s]+|(?:^|\s)-p\s+|:)(\d{4,5})/);
+        if (m) port = m[1];
+      }
+      return { name: a.name, pmId: a.pm_id, status: a.pm2_env.status, port };
+    });
     return NextResponse.json({ processes });
   } catch (err) {
     return NextResponse.json({ error: err instanceof Error ? err.message : "pm2 error" }, { status: 500 });

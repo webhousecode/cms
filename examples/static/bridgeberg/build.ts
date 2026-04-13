@@ -179,6 +179,7 @@ function pixelStrip(): string {
 function css(): string {
   return `
     * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { overflow-x: hidden; }
 
     body {
       font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
@@ -371,6 +372,7 @@ function css(): string {
     .contact-table td {
       padding: 0.5rem 0.75rem;
       background: #fff;
+      word-break: break-word;
     }
     .contact-table td:first-child {
       font-weight: 700;
@@ -434,6 +436,16 @@ function css(): string {
     .blog-table .tags-col {
       color: #666;
       font-size: 0.8125rem;
+    }
+    @media (max-width: 640px) {
+      .blog-table .date-col,
+      .blog-table .tags-col,
+      .blog-table th:nth-child(1),
+      .blog-table th:nth-child(4) {
+        display: none;
+      }
+      .blog-table .title-col { font-size: 0.8125rem; }
+      .blog-table td { padding: 0.5rem 0.375rem; }
     }
 
     /* Category filter pills */
@@ -662,6 +674,8 @@ function css(): string {
     .prose hr { border: none; border-top: 1px solid #e5e5e5; margin: 2rem 0; }
     .prose strong { font-weight: 700; }
     .prose em { font-style: italic; }
+    .prose pre { max-width: 100%; overflow-x: auto; background: #f5f5f5; padding: 0.75rem; margin: 1rem 0; font-size: 0.85em; }
+    .prose img { max-width: 100%; height: auto; }
 
     /* Footer */
     .site-footer {

@@ -783,7 +783,7 @@ export default function MediaPage() {
                 />
                 {query && (
                   <button
-                    onClick={() => setQuery("")}
+                    onClick={() => setQueryDebounced("")}
                     style={{ position: "absolute", right: "0.5rem", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", padding: 0, cursor: "pointer", color: "var(--muted-foreground)", display: "flex", alignItems: "center" }}
                   >
                     <X style={{ width: "0.8rem", height: "0.8rem" }} />

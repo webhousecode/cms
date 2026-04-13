@@ -76,7 +76,7 @@ export function renderInviteEmail(opts: {
           You're invited
         </h1>
         <p style="margin:0 0 28px;font-size:14px;color:#737373;text-align:center;line-height:1.5;">
-          <strong style="color:#a3a3a3;">${inviterName}</strong> has invited you to join
+          <strong style="color:#a3a3a3;">${inviterName}</strong> has invited you to join the AI-native content engine and CMS:
         </p>
 
         <!-- Site name badge -->
