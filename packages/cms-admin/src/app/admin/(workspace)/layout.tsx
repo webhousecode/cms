@@ -14,7 +14,7 @@ import { findFirstAccessibleSite } from "@/lib/team-access";
 import { NoAccessGate, ConnectGitHubGate, SiteRedirectGate, GitHubErrorGate } from "@/components/gate-screen";
 import { OrgSidebar } from "@/components/org-sidebar";
 import { redirect } from "next/navigation";
-import { loadRegistry, findSite } from "@/lib/site-registry";
+import { loadRegistry, findSite, findOrg } from "@/lib/site-registry";
 import { readUserState } from "@/lib/user-state";
 import type { Metadata } from "next";
 
@@ -51,7 +51,6 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const activeOrgCookie = cookieStore.get("cms-active-org")?.value;
 
   if (activeOrgCookie) {
-    const { loadRegistry, findOrg } = await import("@/lib/site-registry");
     const reg = await loadRegistry();
     if (reg) {
       const org = findOrg(reg, activeOrgCookie);

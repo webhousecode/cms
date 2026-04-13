@@ -188,6 +188,8 @@ const poolTimestamps = new Map<string, number>();
 
 /** GitHub config cache TTL — avoid re-fetching cms.config.ts on every request */
 const GITHUB_CACHE_TTL_MS = 120_000; // 2 minutes
+/** Filesystem config cache TTL in dev — avoid jiti re-import on every request */
+const FS_DEV_CACHE_TTL_MS = 5_000; // 5 seconds
 
 function poolKey(orgId: string, siteId: string): string {
   return `${orgId}:${siteId}`;
@@ -202,12 +204,10 @@ export async function getOrCreateInstance(
   if (pool.has(key)) {
     // Production: always use cache
     if (process.env.NODE_ENV === "production") return pool.get(key)!;
-    // Dev + GitHub adapter: cache for TTL to avoid rate limiting
-    if (site.adapter === "github") {
-      const ts = poolTimestamps.get(key) ?? 0;
-      if (Date.now() - ts < GITHUB_CACHE_TTL_MS) return pool.get(key)!;
-    }
-    // Dev + filesystem: always reload (file may have changed)
+    // Dev: cache for TTL to avoid jiti re-import on every request
+    const ts = poolTimestamps.get(key) ?? 0;
+    const ttl = site.adapter === "github" ? GITHUB_CACHE_TTL_MS : FS_DEV_CACHE_TTL_MS;
+    if (Date.now() - ts < ttl) return pool.get(key)!;
   }
 
   try {
@@ -242,6 +242,7 @@ export async function getOrCreateInstance(
     const cms = await createCms(config, { strict: true });
     const instance: CmsInstance = { cms, config, site };
     pool.set(key, instance);
+    poolTimestamps.set(key, Date.now());
     return instance;
   } catch (err) {
     // F79: Graceful error handling — format ZodError and config loading errors

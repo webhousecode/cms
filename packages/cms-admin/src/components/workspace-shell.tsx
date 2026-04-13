@@ -55,22 +55,12 @@ export function WorkspaceShell({ collections, globals, activeSiteId, devInspecto
   }, [setMode, router]);
 
   // Auto-refresh server components when content changes (new document created,
-  // published, trashed, etc.) so dashboard stats, collection counts, and other
-  // server-rendered data stay up to date without manual page reload.
-  // Also refreshes when the tab regains focus (covers cross-tab content edits).
+  // published, trashed, etc.) so sidebar counts and other server-rendered data
+  // stay up to date without manual page reload.
   useEffect(() => {
     function refresh() { router.refresh(); }
     window.addEventListener("cms:content-changed", refresh);
-
-    function onVisibility() {
-      if (document.visibilityState === "visible") refresh();
-    }
-    document.addEventListener("visibilitychange", onVisibility);
-
-    return () => {
-      window.removeEventListener("cms:content-changed", refresh);
-      document.removeEventListener("visibilitychange", onVisibility);
-    };
+    return () => { window.removeEventListener("cms:content-changed", refresh); };
   }, [router]);
 
   // Render BOTH modes, hide the inactive one with CSS.
