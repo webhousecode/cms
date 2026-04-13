@@ -8,6 +8,7 @@ import { CollectionList, type ViewMode } from "@/components/collection-list";
 import { NewDocumentButton } from "@/components/new-document-button";
 import { GenerateDocumentButton } from "@/components/generate-document-button";
 import { ImportWizard } from "@/components/import-wizard";
+import { usePermissions } from "@/hooks/use-permissions";
 import { Upload } from "lucide-react";
 
 interface FieldConfig {
@@ -48,6 +49,7 @@ export function CollectionListPage({
   collection, collectionLabel, titleField, fields, initialDocs,
   readOnly, urlPrefix, urlPattern, localeStrategy, schemaEnabled, defaultLocale, siteLocales,
 }: Props) {
+  const can = usePermissions();
   const storageKey = `cms-view-${collection}`;
   const [view, setView] = useState<ViewMode>("list");
   const [importOpen, setImportOpen] = useState(false);
@@ -89,7 +91,7 @@ export function CollectionListPage({
 
             {!readOnly && (
               <>
-                {schemaEnabled && (
+                {schemaEnabled && can("settings.edit") && (
                   <Link href={`/admin/settings/${collection}`}>
                     <button type="button" style={{
                       height: "28px", display: "inline-flex", alignItems: "center", gap: "0.35rem",

@@ -159,7 +159,9 @@ export async function GET(req: NextRequest) {
   // Mode 1: Proxy to an already-running localhost server
   if (upstream) {
     try {
-      const upstreamUrl = new URL(filePath, upstream).toString();
+      // Ensure upstream base has trailing slash so URL resolution preserves the path
+      const base = upstream.endsWith("/") ? upstream : upstream + "/";
+      const upstreamUrl = filePath === "/" ? base : new URL(filePath.replace(/^\//, ""), base).toString();
       const res = await fetch(upstreamUrl, {
         signal: AbortSignal.timeout(8000),
         headers: {
