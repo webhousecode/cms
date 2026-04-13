@@ -35,18 +35,37 @@ function injectUrlTracker(html: string, proxyBase: string): string {
     var q=history.replaceState;history.replaceState=function(){q.apply(this,arguments);r()};
     window.addEventListener('popstate',r);
 
-    // Link interceptor — rewrite internal navigation through proxy
+    // Link interceptor — rewrite ALL internal navigation through proxy
     var base='${proxyBase}';
+    var origin=location.origin;
+    var upstreamOrigin='${upstream ? new URL(upstream.endsWith("/") ? upstream : upstream + "/").origin : ""}';
+    var upstreamPath='${upstream ? new URL(upstream.endsWith("/") ? upstream : upstream + "/").pathname.replace(/\/$/, "") : ""}';
     if(base){
       document.addEventListener('click',function(e){
         var a=e.target.closest('a');
         if(!a)return;
         var href=a.getAttribute('href');
-        if(!href||href.startsWith('http')||href.startsWith('//')||href.startsWith('#')||href.startsWith('mailto:'))return;
+        if(!href||href.startsWith('#')||href.startsWith('mailto:')||href.startsWith('javascript:'))return;
+        var newPath;
+        if(href.startsWith('http')){
+          // Absolute URL — check if it's same upstream domain
+          try{
+            var u=new URL(href);
+            if(u.origin===upstreamOrigin){
+              // Strip upstream base path to get relative path
+              newPath=u.pathname;
+              if(upstreamPath&&newPath.startsWith(upstreamPath)){
+                newPath=newPath.slice(upstreamPath.length)||'/';
+              }
+            }else{return}// External link — don't intercept
+          }catch(ex){return}
+        }else if(href.startsWith('//')){
+          return;// Protocol-relative external
+        }else{
+          newPath=href.startsWith('/')?href:'/'+href;
+        }
         e.preventDefault();
-        var newPath=href.startsWith('/')?href:'/'+href;
-        var proxyUrl=base+'&path='+encodeURIComponent(newPath);
-        window.location.href=proxyUrl;
+        window.location.href=base+'&path='+encodeURIComponent(newPath);
       },true);
     }
   })()</script>`;
