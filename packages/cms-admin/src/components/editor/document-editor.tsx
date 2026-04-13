@@ -625,6 +625,7 @@ function TranslationGroupSection({ doc, collection, onSaved, labelStyle, valueSt
   const [linking, setLinking] = useState(false);
   const [search, setSearch] = useState("");
   const [results, setResults] = useState<Array<{ slug: string; locale?: string; title: string }>>([]);
+  const [linkError, setLinkError] = useState("");
   const groupId = (doc as any).translationGroup ?? "";
 
   async function searchDocs(q: string) {
@@ -660,24 +661,31 @@ function TranslationGroupSection({ doc, collection, onSaved, labelStyle, valueSt
   async function linkDoc(targetSlug: string) {
     const newGroupId = groupId || crypto.randomUUID().replace(/-/g, "").slice(0, 21);
     try {
-      // Set translationGroup on this doc
-      await fetch(`/api/cms/${collection}/${doc.slug}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ data: {}, translationGroup: newGroupId }),
-      });
-      // Set translationGroup on target doc
-      await fetch(`/api/cms/${collection}/${targetSlug}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ data: {}, translationGroup: newGroupId }),
-      });
+      // Set translationGroup on both docs — both must succeed
+      const [r1, r2] = await Promise.all([
+        fetch(`/api/cms/${collection}/${doc.slug}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ data: {}, translationGroup: newGroupId }),
+        }),
+        fetch(`/api/cms/${collection}/${targetSlug}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ data: {}, translationGroup: newGroupId }),
+        }),
+      ]);
+      if (!r1.ok || !r2.ok) {
+        setLinkError("Failed to link documents — please try again");
+        return;
+      }
       const updated = { ...doc, translationGroup: newGroupId } as any;
       onSaved(updated);
       setLinking(false);
       setSearch("");
       setResults([]);
-    } catch {}
+    } catch {
+      setLinkError("Failed to link documents — please try again");
+    }
   }
 
   return (
@@ -733,7 +741,7 @@ function TranslationGroupSection({ doc, collection, onSaved, labelStyle, valueSt
           ))}
           <button
             type="button"
-            onClick={() => { setLinking(false); setSearch(""); setResults([]); }}
+            onClick={() => { setLinking(false); setSearch(""); setResults([]); setLinkError(""); }}
             style={{
               padding: "0.2rem 0.5rem", borderRadius: "4px",
               border: "none", background: "transparent",
@@ -742,6 +750,7 @@ function TranslationGroupSection({ doc, collection, onSaved, labelStyle, valueSt
           >
             Cancel
           </button>
+          {linkError && <p style={{ color: "var(--destructive)", fontSize: "0.65rem", margin: 0 }}>{linkError}</p>}
         </div>
       )}
     </div>
