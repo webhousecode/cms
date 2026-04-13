@@ -1,5 +1,5 @@
 import { getAdminCms, getAdminConfig } from "@/lib/cms";
-import { readBrandVoice, brandVoiceToPromptContext } from "@/lib/brand-voice";
+import { getBrandVoiceForLocale, brandVoiceToPromptContext } from "@/lib/brand-voice";
 import { loadRegistry, findSite } from "@/lib/site-registry";
 import { readSiteConfig } from "@/lib/site-config";
 import { buildLocaleInstruction } from "@/lib/ai/locale-prompt";
@@ -48,10 +48,8 @@ export async function gatherSiteContext(): Promise<SiteContext> {
     }
   } catch { /* fallback to defaults */ }
 
-  const [brandVoice, siteConfig] = await Promise.all([
-    readBrandVoice().catch(() => null),
-    readSiteConfig(),
-  ]);
+  const siteConfig = await readSiteConfig();
+  const brandVoice = await getBrandVoiceForLocale(siteConfig.defaultLocale || "en").catch(() => null);
   const brandContext = brandVoice ? brandVoiceToPromptContext(brandVoice) : undefined;
 
   const collections: SiteContext["collections"] = [];

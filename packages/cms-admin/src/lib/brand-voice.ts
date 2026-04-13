@@ -73,23 +73,27 @@ export async function readBrandVoiceVersions(): Promise<(BrandVoiceVersion & { a
     .map((v) => ({ ...v, active: v.id === store.activeId }));
 }
 
-/** Saves a new version and makes it active. */
+/** Saves a new version and makes it active. Invalidates per-locale caches. */
 export async function writeBrandVoice(data: BrandVoice): Promise<BrandVoiceVersion> {
   const store = await readStore();
   const version: BrandVoiceVersion = { ...data, id: genId(), completedAt: new Date().toISOString() };
   store.versions.push(version);
   store.activeId = version.id;
   await writeStore(store);
+  // Per-locale caches are derived from the primary — invalidate them
+  await invalidateLocaleBrandVoiceCache().catch(() => {});
   return version;
 }
 
-/** Updates fields on an existing version (manual edit). */
+/** Updates fields on an existing version (manual edit). Invalidates per-locale caches. */
 export async function updateBrandVoiceVersion(id: string, data: Partial<BrandVoice>): Promise<BrandVoiceVersion | null> {
   const store = await readStore();
   const idx = store.versions.findIndex((v) => v.id === id);
   if (idx === -1) return null;
   store.versions[idx] = { ...store.versions[idx], ...data };
   await writeStore(store);
+  // If editing the active version, locale caches are now stale
+  if (store.activeId === id) await invalidateLocaleBrandVoiceCache().catch(() => {});
   return store.versions[idx];
 }
 
@@ -102,19 +106,73 @@ export async function activateBrandVoiceVersion(id: string): Promise<boolean> {
   return true;
 }
 
+/* ─── Per-locale Brand Voice ─────────────────────────────────── */
+
+/** Map from BrandVoice.language (e.g. "Danish") to locale code (e.g. "da") */
+const LANG_TO_LOCALE: Record<string, string> = {
+  danish: "da", english: "en", german: "de", deutsch: "de",
+  french: "fr", spanish: "es", norwegian: "nb", swedish: "sv",
+  dansk: "da", norsk: "nb", svenska: "sv",
+};
+
+function bvLanguageToLocale(lang: string): string | null {
+  return LANG_TO_LOCALE[lang.toLowerCase()] ?? null;
+}
+
+async function getLocalePath(locale: string): Promise<string> {
+  const { dataDir } = await getActiveSitePaths();
+  return path.join(dataDir, `brand-voice-${locale}.json`);
+}
+
+/** Read the per-locale brand voice file (not from the versions store). */
+export async function readBrandVoiceForLocale(locale: string): Promise<BrandVoice | null> {
+  try {
+    const raw = await fs.readFile(await getLocalePath(locale), "utf-8");
+    return JSON.parse(raw) as BrandVoice;
+  } catch {
+    return null;
+  }
+}
+
+/** Write (or overwrite) the per-locale brand voice file. */
+export async function writeBrandVoiceForLocale(locale: string, bv: BrandVoice): Promise<void> {
+  const p = await getLocalePath(locale);
+  await fs.mkdir(path.dirname(p), { recursive: true });
+  await fs.writeFile(p, JSON.stringify(bv, null, 2));
+}
+
+/** Delete cached locale files (call when primary BV changes). */
+export async function invalidateLocaleBrandVoiceCache(): Promise<string[]> {
+  const { dataDir } = await getActiveSitePaths();
+  const files = await fs.readdir(dataDir).catch(() => [] as string[]);
+  const deleted: string[] = [];
+  for (const f of files) {
+    if (f.startsWith("brand-voice-") && f.endsWith(".json")) {
+      await fs.unlink(path.join(dataDir, f)).catch(() => {});
+      deleted.push(f);
+    }
+  }
+  return deleted;
+}
+
 /**
  * Get brand voice for a specific locale.
- * If locale matches the brand voice language, return as-is.
- * Otherwise, check for a cached translation, or auto-translate and cache.
+ * 1. If the primary BV language matches the locale → return primary
+ * 2. If a per-locale file exists → return it
+ * 3. Auto-translate, cache, and return
  */
 export async function getBrandVoiceForLocale(locale: string): Promise<BrandVoice | null> {
   const defaultVoice = await readBrandVoice();
   if (!defaultVoice) return null;
-  // If brand voice is already in the requested locale, return it
-  if (defaultVoice.language === locale) return defaultVoice;
-  // Check cache
-  const cached = await readCachedBrandVoice(locale);
+
+  // Check if primary BV language matches the requested locale
+  const primaryLocale = bvLanguageToLocale(defaultVoice.language);
+  if (primaryLocale === locale) return defaultVoice;
+
+  // Check for existing per-locale file
+  const cached = await readBrandVoiceForLocale(locale);
   if (cached) return cached;
+
   // Auto-translate via the brand-voice translate API (internal call)
   try {
     const { LOCALE_LABELS } = await import("./locale");
@@ -128,32 +186,12 @@ export async function getBrandVoiceForLocale(locale: string): Promise<BrandVoice
     });
     if (!res.ok) return defaultVoice; // fallback to default
     const translated = await res.json() as BrandVoice;
-    await cacheBrandVoice(locale, translated);
-    console.log(`[brand-voice] Auto-translated to ${locale}, cached.`);
+    await writeBrandVoiceForLocale(locale, translated);
+    console.log(`[brand-voice] Auto-translated to ${locale} (${targetLang}), cached.`);
     return translated;
   } catch {
     return defaultVoice; // fallback
   }
-}
-
-async function getCachePath(locale: string): Promise<string> {
-  const { dataDir } = await getActiveSitePaths();
-  return path.join(dataDir, `brand-voice-${locale}.json`);
-}
-
-async function readCachedBrandVoice(locale: string): Promise<BrandVoice | null> {
-  try {
-    const raw = await fs.readFile(await getCachePath(locale), "utf-8");
-    return JSON.parse(raw) as BrandVoice;
-  } catch {
-    return null;
-  }
-}
-
-async function cacheBrandVoice(locale: string, bv: BrandVoice): Promise<void> {
-  const p = await getCachePath(locale);
-  await fs.mkdir(path.dirname(p), { recursive: true });
-  await fs.writeFile(p, JSON.stringify(bv, null, 2));
 }
 
 /** Returns a condensed system-prompt injection for agents */

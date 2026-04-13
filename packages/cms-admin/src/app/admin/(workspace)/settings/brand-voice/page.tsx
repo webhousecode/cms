@@ -1,10 +1,17 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, type KeyboardEvent } from "react";
-import { Loader2, Send, RefreshCw, Pencil, History, ChevronDown, Languages, Check, ArrowUpDown } from "lucide-react";
+import { Loader2, Send, RefreshCw, Pencil, History, ChevronDown, Languages, Check, ArrowUpDown, Globe } from "lucide-react";
 import type { BrandVoice, BrandVoiceVersion } from "@/lib/brand-voice";
+import { useHeaderData } from "@/lib/header-data-context";
 
 const TRANSLATE_LANGUAGES = ["English", "Danish", "German", "French", "Spanish", "Norwegian", "Swedish"];
+
+const LOCALE_LABELS: Record<string, string> = {
+  da: "Dansk", en: "English", de: "Deutsch", fr: "Français", es: "Español",
+  sv: "Svenska", nb: "Norsk", nl: "Nederlands", fi: "Suomi", it: "Italiano",
+  pt: "Português", pl: "Polski", ja: "日本語", zh: "中文", ko: "한국어",
+};
 
 /* ─── Shared diff utilities (mirrors document-editor) ───────────── */
 function wordDiff(oldText: string, newText: string): Array<{ text: string; type: "same" | "added" | "removed" }> {
@@ -402,13 +409,16 @@ function ImportExportMenu({ bv, onImport }: { bv: BrandVoice; onImport: (v: Bran
 }
 
 /* ─── Brand voice card ──────────────────────────────────────────── */
-function BrandVoiceCard({ bv, onReinterview, onEdit, onTranslate, onHistory, onImport }: {
+function BrandVoiceCard({ bv, onReinterview, onEdit, onTranslate, onHistory, onImport, hideHistory, hideTranslateDropdown, retranslateLabel }: {
   bv: BrandVoice;
   onReinterview: () => void;
   onEdit: () => void;
   onTranslate: (lang: string) => void;
   onHistory: () => void;
   onImport: (v: BrandVoice) => Promise<void>;
+  hideHistory?: boolean;
+  hideTranslateDropdown?: boolean;
+  retranslateLabel?: string;
 }) {
   const [langOpen, setLangOpen] = useState(false);
   const [translating, setTranslating] = useState(false);
@@ -434,53 +444,57 @@ function BrandVoiceCard({ bv, onReinterview, onEdit, onTranslate, onHistory, onI
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
           <ImportExportMenu bv={bv} onImport={onImport} />
-          {/* Translate to */}
-          <div style={{ position: "relative" }}>
-            <button
-              type="button"
-              onClick={() => setLangOpen((o) => !o)}
-              disabled={translating}
-              style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.4rem 0.75rem", borderRadius: "7px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: translating ? "not-allowed" : "pointer" }}
-            >
-              {translating
-                ? <Loader2 style={{ width: "12px", height: "12px" }} className="animate-spin" />
-                : <Languages style={{ width: "12px", height: "12px" }} />}
-              Translate to
-              <ChevronDown style={{ width: "10px", height: "10px" }} />
-            </button>
-            {langOpen && (
-              <div style={{ position: "absolute", top: "calc(100% + 4px)", right: 0, zIndex: 50, background: "var(--popover)", border: "1px solid var(--border)", borderRadius: "8px", boxShadow: "0 4px 16px rgba(0,0,0,0.15)", minWidth: "140px", overflow: "hidden" }}>
-                {TRANSLATE_LANGUAGES.filter((l) => l.toLowerCase() !== bv.language.toLowerCase()).map((lang) => (
-                  <button
-                    key={lang}
-                    type="button"
-                    onClick={async () => {
-                      setLangOpen(false);
-                      setTranslating(true);
-                      try { await onTranslate(lang); } finally { setTranslating(false); }
-                    }}
-                    style={{ display: "block", width: "100%", padding: "0.5rem 0.875rem", textAlign: "left", background: "none", border: "none", color: "var(--foreground)", fontSize: "0.8rem", cursor: "pointer" }}
-                    onMouseEnter={(e) => { e.currentTarget.style.background = "var(--accent)"; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.background = "none"; }}
-                  >
-                    {lang}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+          {/* Translate to — hidden in locale view (locale tabs replace it) */}
+          {!hideTranslateDropdown && (
+            <div style={{ position: "relative" }}>
+              <button
+                type="button"
+                onClick={() => setLangOpen((o) => !o)}
+                disabled={translating}
+                style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.4rem 0.75rem", borderRadius: "7px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: translating ? "not-allowed" : "pointer" }}
+              >
+                {translating
+                  ? <Loader2 style={{ width: "12px", height: "12px" }} className="animate-spin" />
+                  : <Languages style={{ width: "12px", height: "12px" }} />}
+                Translate to
+                <ChevronDown style={{ width: "10px", height: "10px" }} />
+              </button>
+              {langOpen && (
+                <div style={{ position: "absolute", top: "calc(100% + 4px)", right: 0, zIndex: 50, background: "var(--popover)", border: "1px solid var(--border)", borderRadius: "8px", boxShadow: "0 4px 16px rgba(0,0,0,0.15)", minWidth: "140px", overflow: "hidden" }}>
+                  {TRANSLATE_LANGUAGES.filter((l) => l.toLowerCase() !== bv.language.toLowerCase()).map((lang) => (
+                    <button
+                      key={lang}
+                      type="button"
+                      onClick={async () => {
+                        setLangOpen(false);
+                        setTranslating(true);
+                        try { await onTranslate(lang); } finally { setTranslating(false); }
+                      }}
+                      style={{ display: "block", width: "100%", padding: "0.5rem 0.875rem", textAlign: "left", background: "none", border: "none", color: "var(--foreground)", fontSize: "0.8rem", cursor: "pointer" }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = "var(--accent)"; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = "none"; }}
+                    >
+                      {lang}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           <button type="button" onClick={onEdit}
             style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.4rem 0.75rem", borderRadius: "7px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: "pointer" }}>
             <Pencil style={{ width: "12px", height: "12px" }} /> Edit
           </button>
-          <button type="button" onClick={onHistory}
-            style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.4rem 0.75rem", borderRadius: "7px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: "pointer" }}>
-            <History style={{ width: "12px", height: "12px" }} /> History
-          </button>
+          {!hideHistory && (
+            <button type="button" onClick={onHistory}
+              style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.4rem 0.75rem", borderRadius: "7px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: "pointer" }}>
+              <History style={{ width: "12px", height: "12px" }} /> History
+            </button>
+          )}
           <button type="button" onClick={onReinterview}
             style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.4rem 0.75rem", borderRadius: "7px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: "pointer" }}>
-            <RefreshCw style={{ width: "12px", height: "12px" }} /> Re-interview
+            <RefreshCw style={{ width: "12px", height: "12px" }} /> {retranslateLabel || "Re-interview"}
           </button>
         </div>
       </div>
@@ -562,6 +576,17 @@ export default function BrandVoicePage() {
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
+  // ── Locale-aware Brand Voice ──
+  const { siteConfig } = useHeaderData();
+  const cfgLocales = (siteConfig as { locales?: string[]; defaultLocale?: string } | null)?.locales;
+  const cfgDefaultLocale = (siteConfig as { defaultLocale?: string } | null)?.defaultLocale || "en";
+  const siteLocales: string[] = Array.isArray(cfgLocales) && cfgLocales.length > 0 ? cfgLocales : [];
+  const hasMultipleLocales = siteLocales.length > 1;
+  const [activeLocale, setActiveLocale] = useState<string | null>(null); // null = primary (from versions store)
+  const [localeVoice, setLocaleVoice] = useState<BrandVoice | null>(null);
+  const [localeLoading, setLocaleLoading] = useState(false);
+  const [translatingLocale, setTranslatingLocale] = useState<string | null>(null);
+
   const loadVersions = useCallback(async () => {
     const res = await fetch("/api/cms/brand-voice?versions=1");
     const data = await res.json() as VersionWithActive[];
@@ -573,6 +598,61 @@ export default function BrandVoicePage() {
   useEffect(() => {
     loadVersions().finally(() => setLoading(false));
   }, [loadVersions]);
+
+  // Load per-locale BV when switching locale tab
+  const loadLocaleVoice = useCallback(async (locale: string) => {
+    setLocaleLoading(true);
+    try {
+      const res = await fetch(`/api/cms/brand-voice?locale=${locale}`);
+      const data = await res.json() as BrandVoice | null;
+      setLocaleVoice(data);
+    } catch { setLocaleVoice(null); }
+    finally { setLocaleLoading(false); }
+  }, []);
+
+  function switchLocale(locale: string | null) {
+    setActiveLocale(locale);
+    setEditing(false);
+    setLocaleVoice(null);
+    if (locale) loadLocaleVoice(locale);
+  }
+
+  // Auto-translate BV to a specific locale and save
+  async function translateToLocale(locale: string) {
+    if (!activeVoice) return;
+    setTranslatingLocale(locale);
+    try {
+      const langName = LOCALE_LABELS[locale] ?? locale;
+      const res = await fetch("/api/cms/brand-voice/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ brandVoice: activeVoice, targetLanguage: langName }),
+      });
+      if (!res.ok) return;
+      const translated = await res.json() as BrandVoice;
+      // Save as per-locale file (not as new version)
+      await fetch("/api/cms/brand-voice", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ locale, brandVoice: translated }),
+      });
+      // If we're currently viewing this locale, refresh
+      if (activeLocale === locale) {
+        setLocaleVoice(translated);
+      }
+    } finally { setTranslatingLocale(null); }
+  }
+
+  // Save edited per-locale BV
+  async function saveLocaleVoice(locale: string, bv: BrandVoice) {
+    await fetch("/api/cms/brand-voice", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ locale, brandVoice: bv }),
+    });
+    setLocaleVoice(bv);
+    setEditing(false);
+  }
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -772,51 +852,154 @@ export default function BrandVoicePage() {
   if (activeVoice || synthesized) {
     const voice = (synthesized ? { ...synthesized, id: "", completedAt: new Date().toISOString() } : activeVoice) as BrandVoiceVersion;
 
+    // Determine which BV to show: primary or locale-specific
+    const isLocaleView = activeLocale !== null;
+    const displayVoice = isLocaleView ? localeVoice : voice;
+
+    // Locale tab bar (only when site has multiple locales)
+    const localeTabBar = hasMultipleLocales ? (
+      <div style={{ display: "flex", gap: "0.25rem", marginBottom: "1.5rem", borderBottom: "1px solid var(--border)", paddingBottom: "0.5rem" }}>
+        {/* Primary tab */}
+        <button
+          type="button"
+          onClick={() => switchLocale(null)}
+          style={{
+            display: "flex", alignItems: "center", gap: "0.35rem",
+            padding: "0.4rem 0.75rem", borderRadius: "6px 6px 0 0", border: "none",
+            background: !isLocaleView ? "var(--accent)" : "transparent",
+            color: !isLocaleView ? "var(--foreground)" : "var(--muted-foreground)",
+            fontSize: "0.8rem", fontWeight: !isLocaleView ? 600 : 400, cursor: "pointer",
+            borderBottom: !isLocaleView ? "2px solid var(--primary)" : "2px solid transparent",
+          }}
+        >
+          <Globe style={{ width: "12px", height: "12px" }} />
+          {LOCALE_LABELS[cfgDefaultLocale || "en"] || "Primary"}
+          <span style={{ fontSize: "0.6rem", opacity: 0.6, textTransform: "uppercase" }}>primary</span>
+        </button>
+        {siteLocales.filter((l) => l !== cfgDefaultLocale).map((locale) => (
+          <button
+            key={locale}
+            type="button"
+            onClick={() => switchLocale(locale)}
+            style={{
+              display: "flex", alignItems: "center", gap: "0.35rem",
+              padding: "0.4rem 0.75rem", borderRadius: "6px 6px 0 0", border: "none",
+              background: activeLocale === locale ? "var(--accent)" : "transparent",
+              color: activeLocale === locale ? "var(--foreground)" : "var(--muted-foreground)",
+              fontSize: "0.8rem", fontWeight: activeLocale === locale ? 600 : 400, cursor: "pointer",
+              borderBottom: activeLocale === locale ? "2px solid var(--primary)" : "2px solid transparent",
+            }}
+          >
+            {LOCALE_LABELS[locale] || locale}
+            {translatingLocale === locale && <Loader2 style={{ width: "10px", height: "10px" }} className="animate-spin" />}
+          </button>
+        ))}
+      </div>
+    ) : null;
+
     return (
       <div className="p-8 max-w-3xl">
         {pageHeader}
+        {localeTabBar}
 
-        {editing ? (
-          <EditForm
-            version={activeVoice ?? voice}
-            onSaved={(updated) => {
-              setActiveVoice(updated);
-              setEditing(false);
-              setSynthesized(null);
-              loadVersions();
-            }}
-            onCancel={() => setEditing(false)}
-          />
-        ) : (
-          <>
-            <BrandVoiceCard
-              bv={voice}
-              onEdit={() => setEditing(true)}
-              onReinterview={startInterview}
-              onTranslate={handleTranslate}
-              onHistory={() => setHistoryOpen(true)}
-              onImport={async (imported) => {
-                const res = await fetch("/api/cms/brand-voice", {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify(imported),
-                });
-                if (res.ok) {
-                  const newVersion = await res.json() as BrandVoiceVersion;
-                  setActiveVoice(newVersion);
-                  setSynthesized(null);
-                  loadVersions();
-                }
+        {/* Locale view — no voice yet for this locale */}
+        {isLocaleView && localeLoading && (
+          <p className="text-sm text-muted-foreground">Loading {LOCALE_LABELS[activeLocale!] || activeLocale}…</p>
+        )}
+        {isLocaleView && !localeLoading && !localeVoice && (
+          <div style={{ padding: "2rem", borderRadius: "10px", border: "1px solid var(--border)", background: "var(--card)", display: "flex", flexDirection: "column", gap: "1rem", alignItems: "flex-start" }}>
+            <p style={{ margin: 0, fontSize: "0.9rem", color: "var(--muted-foreground)" }}>
+              No Brand Voice for <strong>{LOCALE_LABELS[activeLocale!] || activeLocale}</strong> yet.
+              Translate from the primary version to create one.
+            </p>
+            <button
+              type="button"
+              disabled={translatingLocale === activeLocale}
+              onClick={() => translateToLocale(activeLocale!)}
+              style={{
+                display: "flex", alignItems: "center", gap: "0.5rem",
+                padding: "0.5rem 1rem", borderRadius: "8px", border: "none",
+                background: "var(--primary)", color: "var(--primary-foreground)",
+                fontSize: "0.8rem", fontWeight: 600,
+                cursor: translatingLocale === activeLocale ? "wait" : "pointer",
+                opacity: translatingLocale === activeLocale ? 0.7 : 1,
               }}
+            >
+              {translatingLocale === activeLocale
+                ? <><Loader2 style={{ width: "13px", height: "13px" }} className="animate-spin" /> Translating…</>
+                : <><Languages style={{ width: "13px", height: "13px" }} /> Translate from {LOCALE_LABELS[cfgDefaultLocale || "en"] || "primary"}</>
+              }
+            </button>
+          </div>
+        )}
+
+        {/* Locale view — has voice, show card or edit */}
+        {isLocaleView && !localeLoading && localeVoice && (
+          editing ? (
+            <EditForm
+              version={{ ...localeVoice, id: `locale-${activeLocale}` }}
+              onSaved={(updated) => saveLocaleVoice(activeLocale!, updated)}
+              onCancel={() => setEditing(false)}
             />
-            {historyOpen && (
-              <BrandVoiceHistoryPanel
-                versions={versions}
-                onRestore={(v) => { setActiveVoice(v); setHistoryOpen(false); loadVersions(); }}
-                onClose={() => setHistoryOpen(false)}
+          ) : (
+            <BrandVoiceCard
+              bv={localeVoice}
+              onEdit={() => setEditing(true)}
+              onReinterview={() => translateToLocale(activeLocale!).then(() => loadLocaleVoice(activeLocale!))}
+              onTranslate={() => translateToLocale(activeLocale!).then(() => loadLocaleVoice(activeLocale!))}
+              onHistory={() => {}}
+              onImport={async (imported) => { await saveLocaleVoice(activeLocale!, imported); }}
+              hideHistory
+              hideTranslateDropdown
+              retranslateLabel={`Re-translate from ${LOCALE_LABELS[cfgDefaultLocale || "en"] || "primary"}`}
+            />
+          )
+        )}
+
+        {/* Primary view */}
+        {!isLocaleView && (
+          editing ? (
+            <EditForm
+              version={activeVoice ?? voice}
+              onSaved={(updated) => {
+                setActiveVoice(updated);
+                setEditing(false);
+                setSynthesized(null);
+                loadVersions();
+              }}
+              onCancel={() => setEditing(false)}
+            />
+          ) : (
+            <>
+              <BrandVoiceCard
+                bv={voice}
+                onEdit={() => setEditing(true)}
+                onReinterview={startInterview}
+                onTranslate={handleTranslate}
+                onHistory={() => setHistoryOpen(true)}
+                onImport={async (imported) => {
+                  const res = await fetch("/api/cms/brand-voice", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(imported),
+                  });
+                  if (res.ok) {
+                    const newVersion = await res.json() as BrandVoiceVersion;
+                    setActiveVoice(newVersion);
+                    setSynthesized(null);
+                    loadVersions();
+                  }
+                }}
               />
-            )}
-          </>
+              {historyOpen && (
+                <BrandVoiceHistoryPanel
+                  versions={versions}
+                  onRestore={(v) => { setActiveVoice(v); setHistoryOpen(false); loadVersions(); }}
+                  onClose={() => setHistoryOpen(false)}
+                />
+              )}
+            </>
+          )
         )}
       </div>
     );

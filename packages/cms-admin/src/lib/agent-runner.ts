@@ -1,7 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { getAgent } from "@/lib/agents";
 import { readCockpit, addCost } from "@/lib/cockpit";
-import { readBrandVoice, brandVoiceToPromptContext } from "@/lib/brand-voice";
+import { getBrandVoiceForLocale, brandVoiceToPromptContext } from "@/lib/brand-voice";
 import { getApiKey } from "@/lib/ai-config";
 import { getAdminConfig } from "@/lib/cms";
 import { buildContentContext } from "@/lib/content-context";
@@ -243,22 +243,22 @@ export async function runAgent(agentId: string, userPrompt: string, overrideColl
   const collectionDef = cmsConfig.collections.find((c) => c.name === targetCollection);
   const schemaFields: FieldDef[] = (collectionDef?.fields ?? []) as FieldDef[];
 
-  const [cockpit, brandVoice, feedback, rejections, contentContext, toolRegistry] = await Promise.all([
+  const [cockpit, feedback, rejections, contentContext, toolRegistry, siteConfig] = await Promise.all([
     readCockpit(),
-    readBrandVoice(),
     loadFeedbackForPrompt(agentId),
     loadRejectionsForPrompt(agentId),
     buildContentContext().catch(() => ""),
     buildToolRegistry(agent),
+    readSiteConfig(),
   ]);
 
   try {
-  const brandContext = brandVoice ? brandVoiceToPromptContext(brandVoice) : null;
-
-  const siteConfig = await readSiteConfig();
   // Phase 6 — agent.locale overrides siteConfig.defaultLocale so a
   // single multi-locale site can host EN + DA agents in parallel.
   const agentLocale = agent.locale || siteConfig.defaultLocale;
+  const brandVoice = await getBrandVoiceForLocale(agentLocale).catch(() => null);
+  const brandContext = brandVoice ? brandVoiceToPromptContext(brandVoice) : null;
+
   const localeInstruction = buildLocaleInstruction(agentLocale);
 
   let systemPrompt = `${localeInstruction}\n\n` + buildSystemPrompt(
@@ -573,13 +573,13 @@ export async function executeAgentRaw(
   const collectionDef = cmsConfig.collections.find((c) => c.name === targetCollection);
   const schemaFields: FieldDef[] = (collectionDef?.fields ?? []) as FieldDef[];
 
-  const [cockpit, brandVoice, feedback, rejections, contentContext, toolRegistry] = await Promise.all([
+  const [cockpit, feedback, rejections, contentContext, toolRegistry, siteConfig] = await Promise.all([
     readCockpit(),
-    readBrandVoice(),
     loadFeedbackForPrompt(agentId),
     loadRejectionsForPrompt(agentId),
     buildContentContext().catch(() => ""),
     buildToolRegistry(agent),
+    readSiteConfig(),
   ]);
 
   const cleanup = async () => {
@@ -589,9 +589,9 @@ export async function executeAgentRaw(
   };
 
   try {
-    const brandContext = brandVoice ? brandVoiceToPromptContext(brandVoice) : null;
-    const siteConfig = await readSiteConfig();
     const agentLocale = agent.locale || siteConfig.defaultLocale;
+    const brandVoice = await getBrandVoiceForLocale(agentLocale).catch(() => null);
+    const brandContext = brandVoice ? brandVoiceToPromptContext(brandVoice) : null;
     const localeInstruction = buildLocaleInstruction(agentLocale);
 
     let systemPrompt = `${localeInstruction}\n\n` + buildSystemPrompt(

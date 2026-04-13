@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { getApiKey } from "@/lib/ai-config";
 import { getAdminConfig } from "@/lib/cms";
-import { readBrandVoice, brandVoiceToPromptContext } from "@/lib/brand-voice";
+import { getBrandVoiceForLocale, brandVoiceToPromptContext } from "@/lib/brand-voice";
 import { readCockpit, addCost } from "@/lib/cockpit";
 import { getModel } from "@/lib/ai/model-resolver";
 import { buildContentContext } from "@/lib/content-context";
@@ -132,22 +132,18 @@ export async function POST(request: NextRequest) {
     const fields = colDef.fields as FieldDef[];
     const schemaInstructions = buildSchemaInstructions(fields);
 
-    const [brandVoice, contentContext] = await Promise.all([
-      readBrandVoice().catch(() => null),
+    const [contentContext, toolRegistry, siteConfig] = await Promise.all([
       buildContentContext().catch(() => ""),
+      buildToolRegistry({
+        tools: { webSearch: true, internalDatabase: true },
+      } as Parameters<typeof buildToolRegistry>[0]),
+      readSiteConfig(),
     ]);
-    const brandContext = brandVoice ? brandVoiceToPromptContext(brandVoice) : null;
 
-    // Build tool registry (CMS tools + web search + MCP servers)
-    const toolRegistry = await buildToolRegistry({
-      tools: { webSearch: true, internalDatabase: true },
-      // Minimal agent config for tool registry
-    } as Parameters<typeof buildToolRegistry>[0]);
-
-    const toolNames = toolRegistry.definitions.map((t) => t.name);
-
-    const siteConfig = await readSiteConfig();
     const locale = bodyLocale || siteConfig.defaultLocale || "en";
+    const brandVoice = await getBrandVoiceForLocale(locale).catch(() => null);
+    const brandContext = brandVoice ? brandVoiceToPromptContext(brandVoice) : null;
+    const toolNames = toolRegistry.definitions.map((t) => t.name);
 
     const systemParts = [
       buildLocaleInstruction(locale),
