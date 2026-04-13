@@ -4,7 +4,7 @@ import {
   createContext, useContext, useState, useEffect,
   useCallback, useRef, type ReactNode,
 } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 
 /* ─── Server sync (debounced) ────────────────────────────────── */
 let syncTimer: ReturnType<typeof setTimeout> | null = null;
@@ -87,10 +87,23 @@ const PATH_TITLES: Record<string, string> = {
   "/admin/deploy/docker": "Docker Deploy",
 };
 
+const SETTINGS_TAB_LABELS: Record<string, string> = {
+  general: "General", team: "Team", email: "Email", ai: "AI",
+  "brand-voice": "Brand Voice", deploy: "Deploy", backup: "Backup",
+  tools: "Automation", geo: "GEO", mcp: "MCP", beam: "Beam",
+  globals: "Globals", schema: "Schema", prompts: "AI Prompts",
+};
+
 function pathTitle(path: string): string {
-  // Strip query params for lookup
-  const bare = path.split("?")[0];
-  if (PATH_TITLES[bare]) return PATH_TITLES[bare];
+  const [bare, query] = path.split("?");
+  if (PATH_TITLES[bare]) {
+    // For settings sub-tabs, append the tab label
+    if (bare === "/admin/settings" && query) {
+      const tab = new URLSearchParams(query).get("tab");
+      if (tab && SETTINGS_TAB_LABELS[tab]) return `Settings: ${SETTINGS_TAB_LABELS[tab]}`;
+    }
+    return PATH_TITLES[bare];
+  }
   const parts = bare.replace(/^\/admin\/?/, "").split("/").filter(Boolean);
   if (parts.length === 0) return "Dashboard";
   return decodeURIComponent(parts[parts.length - 1]);
@@ -133,6 +146,8 @@ export function useTabs(): TabsCtx {
 export function TabsProvider({ children, siteId }: { children: ReactNode; siteId?: string }) {
   const router = useRouter();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const fullPath = searchParams?.toString() ? `${pathname}?${searchParams.toString()}` : pathname;
   const [tabs, setTabs] = useState<Tab[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
@@ -180,7 +195,7 @@ export function TabsProvider({ children, siteId }: { children: ReactNode; siteId
           ...t,
           title: PATH_TITLES[t.path.split("?")[0]] ?? t.title,
         }));
-        const match = migrated.find((t) => t.path === pathname);
+        const match = migrated.find((t) => t.path === fullPath) || migrated.find((t) => t.path.split("?")[0] === pathname);
         if (match) {
           // Current URL matches a saved tab — activate it
           applyTabs(migrated, match.id);
@@ -188,12 +203,12 @@ export function TabsProvider({ children, siteId }: { children: ReactNode; siteId
           // Current URL is not in saved tabs — add it as active tab
           // NEVER navigate away from the current URL on init
           const id = uid();
-          const newTab = { id, path: pathname, title: pathTitle(pathname) };
+          const newTab = { id, path: fullPath, title: pathTitle(fullPath) };
           applyTabs([newTab, ...migrated], id);
         }
       } else {
         const id = uid();
-        applyTabs([{ id, path: pathname, title: pathTitle(pathname) }], id);
+        applyTabs([{ id, path: fullPath, title: pathTitle(fullPath) }], id);
       }
     }
 
@@ -288,17 +303,17 @@ export function TabsProvider({ children, siteId }: { children: ReactNode; siteId
     // For document paths (/admin/collection/slug), don't overwrite the title —
     // TabTitle in the page component sets the real document title via setTabTitle.
     // For shallow paths (collection lists, known routes), use pathTitle.
-    const bare = pathname.split("?")[0];
+    const bare = fullPath.split("?")[0];
     const parts = bare.replace(/^\/admin\/?/, "").split("/").filter(Boolean);
     const isDocumentPath = parts.length >= 2;
     const updated = prev.map((t) =>
       t.id === id
-        ? { ...t, path: pathname, title: isDocumentPath ? t.title : pathTitle(pathname) }
+        ? { ...t, path: fullPath, title: isDocumentPath ? t.title : pathTitle(fullPath) }
         : t
     );
     applyTabs(updated, id);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pathname]);
+  }, [fullPath]);
 
   /* ── Global ⌥W or "c" — close active tab ───────────────────── */
   useEffect(() => {
