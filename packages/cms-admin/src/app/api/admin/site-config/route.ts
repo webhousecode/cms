@@ -3,9 +3,23 @@ import { readSiteConfig, writeSiteConfig, type SiteConfig } from "@/lib/site-con
 import { getSiteRole } from "@/lib/require-role";
 import { getActiveSitePaths } from "@/lib/site-paths";
 
+/** Fields that contain secrets — strip for non-admin users */
+const SECRET_FIELDS = [
+  "resendApiKey", "deployApiToken", "backupS3AccessKeyId", "backupS3SecretAccessKey",
+  "backupPcloudPassword", "backupPcloudUsername", "calendarSecret",
+  "webhookDiscordUrl", "webhookSlackUrl", "webhookCustomUrl", "webhookCustomSecret",
+];
+
 export async function GET() {
+  const role = await getSiteRole();
+  if (!role) return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
   const [config, paths] = await Promise.all([readSiteConfig(), getActiveSitePaths()]);
-  return NextResponse.json({ ...config, resolvedContentDir: paths.contentDir });
+  const result: Record<string, unknown> = { ...config, resolvedContentDir: paths.contentDir };
+  // Strip secrets for non-admin users
+  if (role !== "admin") {
+    for (const key of SECRET_FIELDS) delete result[key];
+  }
+  return NextResponse.json(result);
 }
 
 export async function POST(request: NextRequest) {

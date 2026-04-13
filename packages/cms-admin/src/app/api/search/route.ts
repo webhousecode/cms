@@ -1,5 +1,6 @@
 import { getAdminCms, getAdminConfig } from "@/lib/cms";
 import { NextRequest, NextResponse } from "next/server";
+import { getSiteRole } from "@/lib/require-role";
 
 export type SearchResult = {
   collection: string;
@@ -18,6 +19,8 @@ export type SearchResult = {
  * Returns top 20 results ordered by relevance (exact → prefix → contains).
  */
 export async function GET(req: NextRequest) {
+  const role = await getSiteRole();
+  if (!role) return NextResponse.json([], { status: 401 });
   const q = req.nextUrl.searchParams.get("q")?.trim().toLowerCase() ?? "";
   if (!q) return NextResponse.json([]);
 
