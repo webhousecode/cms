@@ -22,26 +22,10 @@ export default async function DocumentPage({ params, searchParams }: Props) {
   const doc = await cms.content.findBySlug(collection, slug);
   if (!doc) notFound();
 
-  // Fetch sibling translations via translationGroup (bidirectional ID partners)
-  const { documents: allDocs } = await cms.content.findMany(collection, {});
-  const groupId = (doc as any).translationGroup as string | undefined;
-  const translations = groupId
-    ? (allDocs as any[])
-        .filter(d => d.translationGroup === groupId && d.id !== doc.id && d.status !== "trashed")
-        .map(d => ({ slug: d.slug, locale: d.locale ?? null, status: d.status, updatedAt: d.updatedAt }))
-    : // Legacy fallback: use translationOf if no translationGroup yet
-      (() => {
-        const originalSlug = (doc as any).translationOf ?? doc.slug;
-        return (allDocs as any[])
-          .filter(d =>
-            d.slug !== doc.slug &&
-            d.status !== "trashed" &&
-            (d.translationOf === originalSlug || d.slug === originalSlug)
-          )
-          .map(d => ({ slug: d.slug, locale: d.locale ?? null, status: d.status, updatedAt: d.updatedAt }));
-      })();
-
   const docTitle = String(doc.data?.title ?? doc.data?.name ?? doc.data?.label ?? doc.slug);
+
+  // Translations are loaded async client-side by DocumentEditor
+  // via /api/cms/collections/[name]/[slug]/translations
 
   return (
     <>
@@ -66,11 +50,8 @@ export default async function DocumentPage({ params, searchParams }: Props) {
           createdAt: doc.createdAt,
           updatedAt: doc.updatedAt,
         }}
-        translations={translations}
-        siblingData={translations.map(t => {
-          const d = allDocs.find(x => x.slug === t.slug);
-          return d ? { locale: t.locale ?? "", slug: t.slug, data: (d as any).data } : null;
-        }).filter(Boolean) as Array<{ locale: string; slug: string; data: Record<string, unknown> }>}
+        translations={[]}
+        siblingData={[]}
         previewSiteUrl={siteConfig.previewSiteUrl}
         previewInIframe={siteConfig.previewInIframe}
         localeStrategy={siteConfig.localeStrategy ?? "prefix-other"}

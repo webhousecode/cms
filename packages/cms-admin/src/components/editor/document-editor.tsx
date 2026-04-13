@@ -1035,9 +1035,24 @@ const G = globalThis as unknown as { __docCache?: Map<string, DocSnapshot> };
 if (!G.__docCache) G.__docCache = new Map();
 const docStateCache = G.__docCache;
 
-export function DocumentEditor({ collection, colConfig, blocksConfig = [], locales = [], defaultLocale = "en", initialDoc, translations = [], siblingData: siblingDataProp, previewSiteUrl, previewInIframe, localeStrategy = "prefix-other", backHref, readOnly = false }: Props) {
+export function DocumentEditor({ collection, colConfig, blocksConfig = [], locales = [], defaultLocale = "en", initialDoc, translations: initialTranslations = [], siblingData: initialSiblingData, previewSiteUrl, previewInIframe, localeStrategy = "prefix-other", backHref, readOnly = false }: Props) {
   const PREVIEW_SITE_URL = previewSiteUrl ?? PREVIEW_SITE_URL_DEFAULT;
   const PREVIEW_IN_IFRAME = previewInIframe ?? PREVIEW_IN_IFRAME_DEFAULT;
+
+  // Lazy-load translations client-side if not provided by server
+  const [translations, setTranslations] = useState(initialTranslations);
+  const [siblingDataProp, setSiblingDataProp] = useState(initialSiblingData);
+  useEffect(() => {
+    if (initialTranslations.length > 0) return;
+    fetch(`/api/cms/collections/${encodeURIComponent(collection)}/${encodeURIComponent(initialDoc.slug)}/translations`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data?.translations) setTranslations(data.translations);
+        if (data?.siblingData) setSiblingDataProp(data.siblingData);
+      })
+      .catch(() => {});
+  }, [collection, initialDoc.slug, initialTranslations.length]);
+
   const cacheKey = `${collection}/${initialDoc.slug}`;
   const [doc, setDocRaw] = useState(() => {
     // Prefer cached state over server-provided initialDoc (survives tab navigation)
