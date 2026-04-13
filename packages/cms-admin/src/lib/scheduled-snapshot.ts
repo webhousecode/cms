@@ -44,8 +44,8 @@ export async function updateScheduledSnapshot(): Promise<void> {
 
     for (const { col, documents } of allDocs) {
       for (const doc of documents) {
-        const publishAt = (doc as any).publishAt as string | undefined;
-        const unpublishAt = (doc as any).unpublishAt as string | undefined;
+        const publishAt = doc.publishAt;
+        const unpublishAt = doc.unpublishAt;
         const title = String(doc.data?.title ?? doc.data?.name ?? doc.slug);
         const base = {
           title,

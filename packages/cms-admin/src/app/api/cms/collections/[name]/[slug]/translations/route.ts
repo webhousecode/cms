@@ -20,7 +20,7 @@ export async function GET(_req: Request, { params }: Ctx) {
 
     const { documents: allDocs } = await cms.content.findMany(collection, {});
 
-    const groupId = (doc as any).translationGroup as string | undefined;
+    const groupId = doc.translationGroup;
     let siblings: typeof allDocs;
 
     if (groupId) {
@@ -28,7 +28,7 @@ export async function GET(_req: Request, { params }: Ctx) {
         (d) => d.translationGroup === groupId && d.id !== doc.id && d.status !== "trashed"
       );
     } else {
-      const originalSlug = (doc as any).translationOf ?? doc.slug;
+      const originalSlug = doc.translationOf ?? doc.slug;
       siblings = (allDocs as any[]).filter(
         (d) =>
           d.slug !== doc.slug &&

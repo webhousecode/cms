@@ -22,8 +22,8 @@ export async function GET() {
       config.collections.map(async (col) => {
         const { documents } = await cms.content.findMany(col.name, {});
         for (const doc of documents) {
-          const publishAt = (doc as any).publishAt as string | undefined;
-          const unpublishAt = (doc as any).unpublishAt as string | undefined;
+          const publishAt = doc.publishAt;
+          const unpublishAt = doc.unpublishAt;
           if (!publishAt && !unpublishAt) continue;
           items.push({
             collection: col.name,

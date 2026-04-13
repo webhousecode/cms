@@ -423,7 +423,7 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
   function docPreviewUrl(doc: Doc): string {
     if (!previewBase) return "";
     const prefix = (urlPrefix ?? `/${collection}`).replace(/\/$/, "");
-    const docLocale = (doc as any).locale ?? "";
+    const docLocale = doc.locale ?? "";
 
     // Determine if locale prefix is used
     const usesLocalePrefix =

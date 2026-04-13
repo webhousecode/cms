@@ -34,8 +34,8 @@ export async function GET() {
     const upcomingItems: { collection: string; collectionLabel: string; slug: string; title: string; publishAt?: string; unpublishAt?: string }[] = [];
     for (const { col, documents } of allResults) {
       for (const doc of documents) {
-        const publishAt = (doc as any).publishAt as string | undefined;
-        const unpublishAt = (doc as any).unpublishAt as string | undefined;
+        const publishAt = doc.publishAt;
+        const unpublishAt = doc.unpublishAt;
         if (publishAt && new Date(publishAt) > now) {
           scheduledCount++;
           if (upcomingItems.length < 5) upcomingItems.push({ collection: col.name, collectionLabel: col.label, slug: doc.slug, title: String(doc.data?.title ?? doc.slug), publishAt });
