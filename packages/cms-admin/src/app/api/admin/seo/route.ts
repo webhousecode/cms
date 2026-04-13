@@ -68,7 +68,7 @@ export async function GET() {
         hasKeywords: !!(seo.keywords?.length),
         locale: (data.locale as string) || undefined,
         optimized: !!(seo.lastOptimized),
-        publishAt: (doc as any).publishAt ?? undefined,
+        publishAt: doc.publishAt ?? undefined,
       });
     }
 

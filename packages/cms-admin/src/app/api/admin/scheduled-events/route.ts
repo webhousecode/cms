@@ -57,8 +57,8 @@ export async function GET() {
     const events: Event[] = [];
     for (const { col, documents } of allDocs) {
       for (const doc of documents) {
-        const publishAt = (doc as any).publishAt as string | undefined;
-        const unpublishAt = (doc as any).unpublishAt as string | undefined;
+        const publishAt = doc.publishAt;
+        const unpublishAt = doc.unpublishAt;
         const excerpt = getExcerpt(doc.data);
         const base = {
           title: String(doc.data?.title ?? doc.data?.name ?? doc.slug),
