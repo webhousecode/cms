@@ -1234,7 +1234,13 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
         ...(autoSlug && autoSlug !== doc.slug ? { slug: autoSlug } : {}),
       }),
     });
-    if (res.ok) {
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: "Save failed" }));
+      toast.error("Save failed", { description: err.error ?? `Server returned ${res.status}` });
+      setSaving(false);
+      return;
+    }
+    {
       const updated = (await res.json()) as DocSnapshot & { _deployTriggered?: boolean };
       const deployTriggered = updated._deployTriggered;
       setDoc(updated);
@@ -1293,10 +1299,18 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
   }
 
   async function deleteDoc() {
-    await fetch(`/api/cms/${collection}/${doc.slug}`, { method: "DELETE" });
-    toast("Moved to trash", { description: doc.slug });
-    router.push(`/admin/${collection}`);
-    router.refresh(); window.dispatchEvent(new Event("cms:content-changed"));
+    try {
+      const res = await fetch(`/api/cms/${collection}/${doc.slug}`, { method: "DELETE" });
+      if (!res.ok) {
+        toast.error("Failed to move to trash", { description: `Server returned ${res.status}` });
+        return;
+      }
+      toast("Moved to trash", { description: doc.slug });
+      router.push(`/admin/${collection}`);
+      router.refresh(); window.dispatchEvent(new Event("cms:content-changed"));
+    } catch {
+      toast.error("Failed to move to trash");
+    }
   }
 
   async function openPreview() {

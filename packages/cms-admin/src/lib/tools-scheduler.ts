@@ -120,7 +120,7 @@ async function runForSite(
   if (isDue(config.backupSchedule, config.backupTime, state.lastBackupRun)) {
     try {
       console.log(`[tools-scheduler] ${prefix}Running scheduled backup...`);
-      const res = await fetch(`${baseUrl}/api/admin/backup`, {
+      const res = await fetch(`${baseUrl}/api/admin/backups`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
