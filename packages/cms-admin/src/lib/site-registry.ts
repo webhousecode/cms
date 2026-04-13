@@ -83,12 +83,23 @@ export async function loadRegistry(): Promise<Registry | null> {
   }
 }
 
+let _writeLock: Promise<void> = Promise.resolve();
+
 export async function saveRegistry(registry: Registry): Promise<void> {
-  const registryPath = getRegistryPath();
-  const dir = path.dirname(registryPath);
-  await fs.mkdir(dir, { recursive: true });
-  await fs.writeFile(registryPath, JSON.stringify(registry, null, 2));
-  _cached = registry;
+  // Serialize writes to prevent concurrent mutations from losing data
+  const prev = _writeLock;
+  let resolve: () => void;
+  _writeLock = new Promise<void>((r) => { resolve = r; });
+  await prev;
+  try {
+    const registryPath = getRegistryPath();
+    const dir = path.dirname(registryPath);
+    await fs.mkdir(dir, { recursive: true });
+    await fs.writeFile(registryPath, JSON.stringify(registry, null, 2));
+    _cached = registry;
+  } finally {
+    resolve!();
+  }
 }
 
 // ─── Queries ──────────────────────────────────────────────
@@ -115,7 +126,14 @@ export function getDefaultSite(registry: Registry): { org: OrgEntry; site: SiteE
 
 export async function addOrg(name: string, type?: OrgType, plan?: OrgPlan): Promise<OrgEntry> {
   const registry = await loadRegistry() ?? { orgs: [], defaultOrgId: "", defaultSiteId: "" };
-  const id = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  let id = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  // Ensure unique org ID — append suffix if collision
+  const existingIds = new Set(registry.orgs.map((o) => o.id));
+  if (existingIds.has(id)) {
+    let suffix = 2;
+    while (existingIds.has(`${id}-${suffix}`)) suffix++;
+    id = `${id}-${suffix}`;
+  }
   const org: OrgEntry = { id, name, ...(type && { type }), ...(plan && { plan }), sites: [] };
   registry.orgs.push(org);
   if (!registry.defaultOrgId) registry.defaultOrgId = id;

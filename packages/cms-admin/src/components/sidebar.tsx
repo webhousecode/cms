@@ -138,6 +138,8 @@ export function AppSidebar({ collections }: Props) {
       .catch(() => {});
 
     function fetchFormCounts() {
+      // Skip polling when tab is hidden — no point wasting requests
+      if (document.visibilityState === "hidden") return;
       fetch("/api/admin/forms")
         .then((r) => r.json())
         .then((data: { forms?: Array<{ unread: number }> }) => {
