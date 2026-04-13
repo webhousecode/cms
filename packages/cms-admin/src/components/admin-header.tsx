@@ -112,7 +112,7 @@ function UserNav({ user }: { user: SessionUser | null }) {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring bg-transparent border-0 p-0 cursor-pointer">
+      <DropdownMenuTrigger className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring bg-transparent border-0 p-0 cursor-pointer" aria-label={`User menu: ${displayName}`}>
         <Avatar className="h-8 w-8">
           {user?.gravatarUrl && <AvatarImage src={user.gravatarUrl} alt={displayName} />}
           <AvatarFallback className="text-xs">
@@ -256,6 +256,7 @@ function DeployButton() {
       onClick={handleDeploy}
       disabled={deploying}
       title={deploying ? "Publishing..." : lastResult ? (lastResult.ok ? "Published!" : `Publish failed: ${lastResult.error}`) : provider === "off" ? "Deploy not configured" : "Publish changes"}
+      aria-label="Publish changes"
       style={{
         background: "none",
         border: "1.5px solid var(--border)",
@@ -339,6 +340,7 @@ function BuildButton() {
           type="button"
           onClick={() => setPanelOpen((o) => !o)}
           title="Build (b)"
+          aria-label="Build site"
           style={{
             background: "none",
             border: "1.5px solid var(--border)",
@@ -540,6 +542,7 @@ function PreviewButton() {
         }}
         className="hover:border-foreground hover:text-foreground transition-colors"
         title="Preview site (p)"
+        aria-label="Preview site"
       >
         <ExternalLink style={{ width: "0.9rem", height: "0.9rem" }} />
       </button>
@@ -558,6 +561,7 @@ function PreviewButton() {
         }}
         className="hover:border-foreground hover:text-foreground transition-colors focus-visible:outline-none"
         title="Preview / Live site"
+        aria-label="Preview or live site"
       >
         <ExternalLink style={{ width: "0.9rem", height: "0.9rem" }} />
       </DropdownMenuTrigger>
@@ -604,6 +608,8 @@ function ModeToggle({ mode, onToggle }: { mode: AdminMode; onToggle: () => void 
         <button
           key={value}
           data-testid={`mode-toggle-${value}`}
+          aria-label={`Switch to ${label} mode`}
+          aria-pressed={mode === value}
           onClick={(e) => { e.stopPropagation(); if (mode !== value) onToggle(); }}
           style={{
             display: "flex",
