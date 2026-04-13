@@ -655,7 +655,10 @@ function TranslationGroupSection({ doc, collection, onSaved, labelStyle, valueSt
         .slice(0, 8)
         .map((d: any) => ({ slug: d.slug, locale: d.locale, title: String(d.data?.title ?? d.slug) }))
       );
-    } catch {}
+    } catch {
+      setResults([]);
+      setLinkError("Failed to search documents");
+    }
   }
 
   async function linkDoc(targetSlug: string) {
@@ -955,8 +958,15 @@ function PropertiesPanel({ doc, collection, locales, onClose, onSaved }: {
                   if (res.ok) {
                     const updated = await res.json();
                     onSaved(updated);
+                  } else {
+                    // Revert UI to previous locale
+                    setDocLocale(doc.locale ?? "");
+                    toast.error("Failed to update locale");
                   }
-                } catch {}
+                } catch {
+                  setDocLocale(doc.locale ?? "");
+                  toast.error("Failed to update locale");
+                }
               }}
               style={{
                 width: "100%", padding: "0.35rem 0.5rem", borderRadius: "5px",
@@ -1072,6 +1082,16 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
       .catch(() => {});
     return () => ac.abort();
   }, [collection, initialDoc.slug, initialTranslations.length]);
+
+  // Deploy poll cleanup refs
+  const deployPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const deployPollTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    return () => {
+      if (deployPollRef.current) clearInterval(deployPollRef.current);
+      if (deployPollTimeout.current) clearTimeout(deployPollTimeout.current);
+    };
+  }, []);
 
   const cacheKey = `${collection}/${initialDoc.slug}`;
   const [doc, setDocRaw] = useState(() => {
@@ -1244,26 +1264,29 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
       // Show deploy progress toast
       if (deployTriggered) {
         const deployToastId = toast.loading("Deploying...", { description: "Building and pushing to live site" });
-        const pollDeploy = setInterval(async () => {
+        // Clear any previous poll
+        if (deployPollRef.current) clearInterval(deployPollRef.current);
+        if (deployPollTimeout.current) clearTimeout(deployPollTimeout.current);
+        deployPollRef.current = setInterval(async () => {
           try {
             const r = await fetch("/api/admin/deploy");
             if (!r.ok) return;
             const { deploys } = await r.json() as { deploys: { status: string; url?: string; error?: string; timestamp: string }[] };
             const latest = deploys[0];
             if (!latest) return;
-            // Check if this deploy started after our save
             if (new Date(latest.timestamp).getTime() < Date.now() - 30000) return;
             if (latest.status === "success") {
-              clearInterval(pollDeploy);
+              if (deployPollRef.current) clearInterval(deployPollRef.current);
               toast.success("Deployed", { id: deployToastId, description: latest.url ?? "Site is live" });
             } else if (latest.status === "error") {
-              clearInterval(pollDeploy);
+              if (deployPollRef.current) clearInterval(deployPollRef.current);
               toast.error("Deploy failed", { id: deployToastId, description: latest.error ?? "Check deploy log" });
             }
           } catch { /* ignore poll errors */ }
         }, 2000);
-        // Stop polling after 60s
-        setTimeout(() => clearInterval(pollDeploy), 60000);
+        deployPollTimeout.current = setTimeout(() => {
+          if (deployPollRef.current) clearInterval(deployPollRef.current);
+        }, 60000);
       }
     }
     setSaving(false);
