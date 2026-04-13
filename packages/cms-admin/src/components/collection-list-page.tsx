@@ -104,15 +104,17 @@ export function CollectionListPage({
                     </button>
                   </Link>
                 )}
-                <button type="button" onClick={() => setImportOpen(true)} style={{
-                  height: "28px", display: "inline-flex", alignItems: "center", gap: "0.35rem",
-                  padding: "0 0.65rem", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 500,
-                  background: "transparent", color: "var(--foreground)", border: "1px solid var(--border)",
-                  cursor: "pointer", whiteSpace: "nowrap",
-                }}>
-                  <Upload style={{ width: 14, height: 14 }} />
-                  Import
-                </button>
+                {can("import.execute") && (
+                  <button type="button" onClick={() => setImportOpen(true)} style={{
+                    height: "28px", display: "inline-flex", alignItems: "center", gap: "0.35rem",
+                    padding: "0 0.65rem", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 500,
+                    background: "transparent", color: "var(--foreground)", border: "1px solid var(--border)",
+                    cursor: "pointer", whiteSpace: "nowrap",
+                  }}>
+                    <Upload style={{ width: 14, height: 14 }} />
+                    Import
+                  </button>
+                )}
                 <GenerateDocumentButton collection={collection} collectionLabel={collectionLabel} />
                 <NewDocumentButton collection={collection} titleField={titleField} defaultLocale={defaultLocale} siteLocales={siteLocales} />
               </>
