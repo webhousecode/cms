@@ -6,6 +6,7 @@ import { Heart, Search, ArrowUpDown, X, List, LayoutGrid, FileText, Settings2, W
 import { useFavorites } from "@/lib/hooks/use-favorites";
 import type { Favorite } from "@/lib/user-state";
 import { PreviewThumb } from "@/components/preview-thumb";
+import { useHeaderData } from "@/lib/header-data-context";
 
 type ViewMode = "list" | "grid";
 type SortKey = "label" | "type" | "addedAt";
@@ -37,19 +38,12 @@ export function FavoritesList() {
     return (localStorage.getItem("cms-favorites-view") as ViewMode) || "list";
   });
   const [typeFilter, setTypeFilter] = useState<string>("all");
-  const [previewBase, setPreviewBase] = useState<string>("");
+  const { siteConfig } = useHeaderData();
+  const previewBase = (siteConfig?.previewSiteUrl as string) ?? "";
 
   useEffect(() => {
     localStorage.setItem("cms-favorites-view", view);
   }, [view]);
-
-  // Fetch site preview base URL once (for grid view thumbnails of document favorites)
-  useEffect(() => {
-    fetch("/api/admin/site-config")
-      .then((r) => r.ok ? r.json() : null)
-      .then((d) => { if (d?.previewSiteUrl) setPreviewBase(d.previewSiteUrl); })
-      .catch(() => {});
-  }, []);
 
   function favPreviewUrl(fav: Favorite): string {
     if (!previewBase || fav.type !== "document") return "";

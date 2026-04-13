@@ -3,38 +3,34 @@
 import { useEffect, useState } from "react";
 import { useTabs } from "@/lib/tabs-context";
 import { previewPath } from "@/lib/utils";
+import { useHeaderData } from "@/lib/header-data-context";
 
 export function SiteIntroCard() {
+  const { siteConfig } = useHeaderData();
   const [previewUrl, setPreviewUrl] = useState("");
-  const [liveUrl, setLiveUrl] = useState("");
   const [siteName, setSiteName] = useState("Site");
   const { openTab } = useTabs();
 
   useEffect(() => {
-    // 1. Fetch site config FIRST — previewSiteUrl takes priority
-    fetch("/api/admin/site-config")
-      .then((r) => r.ok ? r.json() : null)
-      .then((data) => {
-        if (data?.previewSiteUrl) {
-          setPreviewUrl(data.previewSiteUrl);
-        } else {
-          // 2. Only start sirv if NO previewSiteUrl is configured
-          fetch("/api/preview-serve", { method: "POST" })
-            .then((r) => r.ok ? r.json() : null)
-            .then((d: { url?: string } | null) => {
-              if (d?.url) setPreviewUrl(d.url);
-            })
-            .catch(() => {});
-        }
-        const live = data?.deployCustomDomain
-          ? `https://${data.deployCustomDomain}`
-          : data?.deployProductionUrl ?? "";
-        setLiveUrl(live);
-        if (data?.siteName) setSiteName(data.siteName);
-      })
-      .catch(() => {});
-  }, []);
+    if (!siteConfig) return;
 
+    if (siteConfig.previewSiteUrl) {
+      setPreviewUrl(siteConfig.previewSiteUrl as string);
+    } else {
+      // Only start sirv if NO previewSiteUrl is configured
+      fetch("/api/preview-serve", { method: "POST" })
+        .then((r) => r.ok ? r.json() : null)
+        .then((d: { url?: string } | null) => {
+          if (d?.url) setPreviewUrl(d.url);
+        })
+        .catch(() => {});
+    }
+    if (siteConfig.siteName) setSiteName(siteConfig.siteName as string);
+  }, [siteConfig]);
+
+  const liveUrl = siteConfig?.deployCustomDomain
+    ? `https://${siteConfig.deployCustomDomain}`
+    : (siteConfig?.deployProductionUrl as string) ?? "";
   const thumbnailUrl = previewUrl || liveUrl;
 
   function handleClick(e: React.MouseEvent) {

@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
 import { LOCALE_FLAGS } from "@/lib/locale";
 import { PreviewThumb, NoPreviewPlaceholder } from "@/components/preview-thumb";
+import { useHeaderData } from "@/lib/header-data-context";
 
 export type ViewMode = "list" | "grid";
 type StatusFilter = "all" | "published" | "draft" | "scheduled" | "expired" | "trashed";
@@ -257,51 +258,34 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
 
   const extraColumns = buildColumns(fields, titleField);
 
-  // Resolve preview base URL for grid view thumbnails
+  // Resolve preview base URL for grid view thumbnails — uses shared context
+  const { siteConfig } = useHeaderData();
   const [previewBase, setPreviewBase] = useState(() => {
     if (typeof window === "undefined") return "";
     return sessionStorage.getItem("cms-preview-base") ?? "";
   });
-  // Flush stale cache when site config is updated (user changed previewSiteUrl in settings)
   useEffect(() => {
-    function onConfigUpdate() {
-      sessionStorage.removeItem("cms-preview-base");
-      setPreviewBase("");
+    if (siteConfig?.previewSiteUrl) {
+      const url = siteConfig.previewSiteUrl as string;
+      setPreviewBase(url);
+      sessionStorage.setItem("cms-preview-base", url);
+      return;
     }
-    window.addEventListener("cms:site-config-updated", onConfigUpdate);
-    window.addEventListener("cms-site-change", onConfigUpdate);
-    return () => {
-      window.removeEventListener("cms:site-config-updated", onConfigUpdate);
-      window.removeEventListener("cms-site-change", onConfigUpdate);
-    };
-  }, []);
-  useEffect(() => {
+    // No previewSiteUrl — fall back to sirv for static sites
     async function resolve() {
-      // 1. FIRST: check previewSiteUrl from site config (Next.js dev server, custom URL)
-      try {
-        const r = await fetch("/api/admin/site-config");
-        if (r.ok) {
-          const data = await r.json();
-          if (data?.previewSiteUrl) { setPreviewBase(data.previewSiteUrl); sessionStorage.setItem("cms-preview-base", data.previewSiteUrl); return; }
-        }
-      } catch { /* no config */ }
-      // 2. Build with drafts only in grid view (thumbnails need it) — only for static sites
       if (view === "grid") {
-        try {
-          await fetch("/api/preview-build", { method: "POST" });
-        } catch { /* build not available — serve existing dist/ */ }
+        try { await fetch("/api/preview-build", { method: "POST" }); } catch { /* build not available */ }
       }
-      // 3. Fall back to sirv (static sites with dist/)
       try {
         const r = await fetch("/api/preview-serve", { method: "POST" });
         if (r.ok) {
           const d = await r.json() as { url?: string };
-          if (d?.url) { setPreviewBase(d.url); sessionStorage.setItem("cms-preview-base", d.url); return; }
+          if (d?.url) { setPreviewBase(d.url); sessionStorage.setItem("cms-preview-base", d.url); }
         }
       } catch { /* sirv not available */ }
     }
     resolve();
-  }, [view]);
+  }, [siteConfig, view]);
 
   const counts = {
     published: docs.filter((d) => d.status === "published").length,

@@ -6,6 +6,7 @@ import { MessageList, type ChatMessageUI, type ToolCall } from "./message-list";
 import { ChatInput } from "./chat-input";
 import { WelcomeScreen } from "./welcome-screen";
 import { Pencil, Check, X, Trash2, MoreHorizontal, Star, Copy, Brain, Plus, Search, Download, Upload, Package } from "lucide-react";
+import { useHeaderData } from "@/lib/header-data-context";
 
 interface ChatInterfaceProps {
   collections: Array<{ name: string; label: string }>;
@@ -84,13 +85,11 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
     return () => document.removeEventListener("keydown", onKey);
   }, [showHistory]);
 
-  // Fetch site name
+  // Site name from shared context
+  const { siteConfig } = useHeaderData();
   useEffect(() => {
-    fetch("/api/admin/site-config")
-      .then((r) => r.ok ? r.json() : null)
-      .then((d: any) => { if (d?.siteName) setSiteName(d.siteName); })
-      .catch(() => {});
-  }, []);
+    if (siteConfig?.siteName) setSiteName(siteConfig.siteName as string);
+  }, [siteConfig]);
 
   // SSE sync — real-time cross-device chat synchronization
   useEffect(() => {
