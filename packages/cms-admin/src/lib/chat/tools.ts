@@ -6,6 +6,7 @@ import { buildLocaleInstruction, getSeoLimits } from "@/lib/ai/locale-prompt";
 // getDocumentUrl imported dynamically in get_document handler to avoid Turbopack bundling issues
 import { cookies } from "next/headers";
 import type { ToolDefinition, ToolHandler } from "@/lib/tools";
+import { buildWebSearchTool } from "@/lib/tools/web-search";
 import { hasPermission } from "@/lib/permissions-shared";
 
 interface ToolPair {
@@ -36,6 +37,59 @@ export async function buildChatTools(userPermissions?: string[]): Promise<ToolPa
   const activeOrg = cookieStore.get("cms-active-org")?.value;
   const activeSite = cookieStore.get("cms-active-site")?.value;
   const allTools = await _buildAllTools(activeOrg, activeSite);
+
+  // Add web_search if configured (Brave or Tavily API key set in Settings → AI).
+  // Same tool shape as agents use — chat gets current events, facts, statistics.
+  try {
+    const webTool = await buildWebSearchTool();
+    if (webTool) {
+      allTools.push({
+        definition: webTool.definition,
+        handler: webTool.handler as ToolHandler,
+      });
+    }
+  } catch (err) {
+    console.error("[chat/tools] web_search setup failed:", err);
+  }
+
+  // web_fetch — fetch a specific URL's content (no API key needed)
+  allTools.push({
+    definition: {
+      name: "web_fetch",
+      description: "Fetch the content of a specific URL. Use when the user shares a link or when web_search returned a URL you want to read in detail.",
+      input_schema: {
+        type: "object" as const,
+        properties: {
+          url: { type: "string", description: "The URL to fetch (must be http:// or https://)" },
+        },
+        required: ["url"],
+      },
+    },
+    handler: async (input: any) => {
+      const url = String(input.url ?? "");
+      if (!url.match(/^https?:\/\//)) {
+        return "Error: URL must start with http:// or https://";
+      }
+      try {
+        const res = await fetch(url, {
+          signal: AbortSignal.timeout(10000),
+          headers: { "User-Agent": "webhouse-cms-chat/1.0" },
+        });
+        if (!res.ok) return `HTTP ${res.status}: ${res.statusText}`;
+        const ct = res.headers.get("content-type") ?? "";
+        if (ct.includes("text/html") || ct.includes("text/plain") || ct.includes("json") || ct.includes("xml")) {
+          const text = await res.text();
+          // Strip HTML tags for cleaner LLM consumption, limit to 50KB
+          const stripped = text.replace(/<script[\s\S]*?<\/script>/gi, "").replace(/<style[\s\S]*?<\/style>/gi, "").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+          return stripped.slice(0, 50000);
+        }
+        return `Unsupported content-type: ${ct}`;
+      } catch (err) {
+        return `Fetch error: ${err instanceof Error ? err.message : "unknown"}`;
+      }
+    },
+  });
+
   return allTools.filter((t) => !t.permission || hasPermission(perms, t.permission));
 }
 
