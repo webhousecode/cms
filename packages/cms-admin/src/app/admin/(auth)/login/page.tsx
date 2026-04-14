@@ -506,6 +506,15 @@ function LoginForm() {
         </div>
         <p style={{ marginTop: "0", fontSize: "0.7rem", color: "hsl(0 0% 30%)", letterSpacing: "0.05em" }}>
           Powered by <span style={{ color: "hsl(38 80% 55%)", fontWeight: 500 }}>@webhouse/cms</span>
+          {" · "}
+          <a
+            href="https://docs.webhouse.app"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: "hsl(38 80% 55%)", textDecoration: "none" }}
+          >
+            Docs
+          </a>
         </p>
       </div>
     </div>
