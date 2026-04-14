@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
   try {
     siteContext = await gatherSiteContext();
     systemPrompt = buildChatSystemPrompt(siteContext);
-    const userPerms = resolvePermissions((session.role ?? "admin") as UserRole);
+    const userPerms = resolvePermissions((session.siteRole ?? "admin") as UserRole);
     toolPairs = await buildChatTools(userPerms);
 
     // Inject relevant memories from past conversations

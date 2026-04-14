@@ -26,7 +26,7 @@ import { verifyPreviewToken } from "@/lib/preview-token";
  * 2. Link interceptor — rewrites internal link clicks to go through the proxy
  *    so in-iframe navigation works (without this, links resolve against cms-admin's origin)
  */
-function injectUrlTracker(html: string, proxyBase: string): string {
+function injectUrlTracker(html: string, proxyBase: string, upstream: string | null = null): string {
   const script = `<script>(function(){
     // URL tracker
     function r(){window.parent.postMessage({type:'wh-preview-url',url:location.pathname+location.search},'*')}
@@ -202,7 +202,7 @@ export async function GET(req: NextRequest) {
       const ct = headers.get("content-type") ?? "";
       if (ct.includes("text/html")) {
         let html = await res.text();
-        html = injectUrlTracker(html, proxyBase);
+        html = injectUrlTracker(html, proxyBase, upstream);
         return new NextResponse(html, { status: res.status, headers });
       }
 
