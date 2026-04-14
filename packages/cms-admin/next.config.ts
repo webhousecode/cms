@@ -12,19 +12,6 @@ const nextConfig: NextConfig = {
       { source: "/login", destination: "/admin/login", permanent: false },
     ];
   },
-  // HSTS — after first HTTPS visit, Chrome auto-upgrades future http://localhost:3010
-  // requests to https:// (no more ERR_EMPTY_RESPONSE when typing "localhost:3010").
-  // 1-year max-age, includeSubDomains for completeness.
-  async headers() {
-    return [
-      {
-        source: "/:path*",
-        headers: [
-          { key: "Strict-Transport-Security", value: "max-age=31536000; includeSubDomains" },
-        ],
-      },
-    ];
-  },
   async rewrites() {
     return [
       { source: "/uploads/:path*", destination: "/api/uploads/:path*" },
