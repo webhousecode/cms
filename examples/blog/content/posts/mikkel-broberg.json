@@ -1,0 +1,106 @@
+{
+  "id": "p4pIgz0QS9f4XKD3wg9FP",
+  "slug": "mikkel-broberg",
+  "collection": "posts",
+  "status": "published",
+  "data": {
+    "title": "Mød Mikkel Broberg – partner, udvikler og gusmester",
+    "excerpt": "Mikkel Broberg er født i 1972 og er en erfaren webudvikler og partner hos WebHouse. Uden for arbejdet er han gusmester i den lokale badeklub – en mand med mange talenter.",
+    "date": "2026-04-14",
+    "author": "Christian Broberg",
+    "content": "![Mand med briller og skæg i stue med tv på væg](/uploads/chat-1776161418136-08g5.jpg \"float:right|width:300px\")\n\n## Mød Mikkel Broberg\n\nMikkel Broberg er født i 1972 og har tilbragt store dele af sit professionelle liv i skæringspunktet mellem teknologi og kreativitet. Som partner og udvikler hos **WebHouse** er han en af de centrale kræfter bag virksomhedens digitale projekter og webudvikling.\n\n## En erfaren udvikler\n\nHos WebHouse bidrager Mikkel med mange års erfaring inden for webudvikling. Han er med til at forme de løsninger, som WebHouse leverer til sine kunder, og arbejder tæt sammen med resten af teamet – herunder sin bror, Christian Broberg, der er stifter af WebHouse og arkitekten bag webhouse.app CMS.\n\nMed over to årtiers erfaring i branchen har Mikkel set teknologien udvikle sig fra bunden og er med til at sikre, at WebHouse altid leverer moderne og holdbare løsninger.\n\n## Gusmester i badeklubben\n\nUden for skærmen er Mikkel en dedikeret sportsudøver. Han er **gusmester** i den lokale badeklub – en titel, der vidner om både engagement, teknik og en vis mængde koldt vand. Gus er en traditionel disciplin inden for vinterbadning, og at nå til tops kræver ikke blot mod, men også præcision og fornemmelse for detaljerne.\n\n## En mand med mange sider\n\nMikkel Broberg er et godt eksempel på, at man sagtens kan være dybt forankret i den digitale verden og samtidig have begge ben plantet solidt i det virkelige liv – gerne i koldt vand.",
+    "_seo": {
+      "metaTitle": "Mikkel Broberg – Partner & Udvikler hos WebHouse",
+      "metaDescription": "Møt Mikkel Broberg, partner og webudvikler hos WebHouse med over 20 års erfaring. Også gusmester i badeklubben.",
+      "keywords": [
+        "Mikkel Broberg",
+        "webudvikler",
+        "WebHouse partner",
+        "digitale løsninger",
+        "badeklub gusmester"
+      ],
+      "ogImage": "/uploads/og/mikkel-broberg.jpg",
+      "robots": "index,follow",
+      "score": 83,
+      "scoreDetails": [
+        {
+          "rule": "meta-title",
+          "label": "Meta title",
+          "status": "pass",
+          "message": "Meta title length is good (48/60 characters)"
+        },
+        {
+          "rule": "meta-desc",
+          "label": "Meta description",
+          "status": "warn",
+          "message": "Meta description is too short (111 characters). Add 9 more characters to reach 120."
+        },
+        {
+          "rule": "keyword-title",
+          "label": "Keyword in title",
+          "status": "pass",
+          "message": "Keyword \"Mikkel Broberg\" found in meta title"
+        },
+        {
+          "rule": "keyword-desc",
+          "label": "Keyword in description",
+          "status": "pass",
+          "message": "Keyword \"Mikkel Broberg\" found in meta description"
+        },
+        {
+          "rule": "content-length",
+          "label": "Content length",
+          "status": "warn",
+          "message": "Content is 220 words. Write 80 more words to reach 300 (recommended minimum)."
+        },
+        {
+          "rule": "headings",
+          "label": "Heading structure",
+          "status": "pass",
+          "message": "Content uses H2 headings for structure"
+        },
+        {
+          "rule": "img-alt",
+          "label": "Image alt text",
+          "status": "pass",
+          "message": "All 1 images have alt text"
+        },
+        {
+          "rule": "og-image",
+          "label": "Social image",
+          "status": "pass",
+          "message": "Social sharing image (OG) is set"
+        },
+        {
+          "rule": "keyword-slug",
+          "label": "Keyword in URL",
+          "status": "pass",
+          "message": "Keyword \"Mikkel Broberg\" found in the URL"
+        },
+        {
+          "rule": "internal-links",
+          "label": "Internal links",
+          "status": "pass",
+          "message": "Content links to other pages on the site"
+        },
+        {
+          "rule": "title",
+          "label": "Page title",
+          "status": "pass",
+          "message": "Page has a title"
+        },
+        {
+          "rule": "readability",
+          "label": "Readability",
+          "status": "fail",
+          "message": "Readability score is 29/100 — text is very hard to read. Use shorter sentences and simpler words."
+        }
+      ],
+      "lastOptimized": "2026-04-14T10:12:28.599Z"
+    }
+  },
+  "_fieldMeta": {},
+  "createdAt": "2026-04-14T10:12:26.936Z",
+  "updatedAt": "2026-04-14T10:13:55.171Z",
+  "locale": "da"
+}

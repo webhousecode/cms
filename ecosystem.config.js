@@ -87,7 +87,9 @@ const cmsAdminDev = {
   script: "/opt/homebrew/bin/bash",
   // dev:https = `next dev --port 3010 --experimental-https --hostname 0.0.0.0`
   // Required for WebAuthn / Web Crypto / iOS Safari testing over the LAN.
-  args: '-c "ulimit -n 8192 && pnpm dev:https"',
+  // macOS kern.maxfilesperproc is 61440 — ulimit will cap any higher request
+  // to that. 65536 is requested explicitly to make the cap behavior obvious.
+  args: '-c "ulimit -n 65536; pnpm dev:https"',
   interpreter: "none",
   // PORT is also passed by `next dev --port 3010` inside the pnpm script,
   // but setting it here too lets `pm2 jlist` / scripts/pm2-ports.sh
