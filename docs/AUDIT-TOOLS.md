@@ -194,6 +194,49 @@ mcp__chrome-devtools__list_console_messages — find runtime warnings
 
 ---
 
+## TODO — Deferred from Audit #1
+
+These items were identified but deferred because they require focused work
+with dedicated test coverage, not batch refactoring.
+
+### Type Safety Debt
+
+**98 remaining `as any` casts** (down from 110). Grouped by category:
+
+- **chat/tools.ts** (~30) — Generic API mappings between JSON schema and
+  TypeScript. Risk: runtime breakage if the replacement type doesn't match
+  what the API actually returns. Fix approach: use Zod schemas to generate
+  types from runtime validation. Requires testing every chat tool.
+- **rich-text-editor.tsx** (~15) — TipTap library interfaces with incomplete
+  types (especially `editor.storage.markdown.getMarkdown()`). Fix approach:
+  create a typed helper function, use it consistently. Risk: subtle
+  transaction handling bugs.
+- **map-leaflet.tsx** (~5) — Leaflet library typing gaps. Low risk but
+  needs browser test of map click/drag/zoom after changes.
+- **Other** (~48) — mixed: form data, dynamic imports, event handlers.
+  Should be addressed case-by-case.
+
+**Rule:** Don't batch-remove these. Each change needs:
+1. Manual verification the replacement type matches runtime
+2. Browser test of the affected feature
+3. Separate commit per category
+
+### Other deferred items
+
+- **rich-text-editor.tsx (4282 lines)** — split into sub-components
+  (toolbar, plugins, block picker, source view, etc.). Parent re-renders
+  currently re-evaluate all 4282 lines. Risk: very high — editor is
+  core functionality with complex state machine.
+- **8 settings panels** still fetch `/api/admin/site-config` directly.
+  They also WRITE to the config and need fresh data after save.
+  `useHeaderData()` context is read-only. Fix requires extending context
+  with `refresh()` callback or switching panels to local state + revalidation.
+- **rich-text-editor `editor.storage` typed helper** — same file has 5
+  identical `(editor.storage as any).markdown.getMarkdown()` calls. Create
+  one typed helper, replace all.
+
+---
+
 ## Rules for Future Sessions
 
 After fixing audit findings, add rules to `CLAUDE.md` so future CC sessions don't reintroduce the same issues.
