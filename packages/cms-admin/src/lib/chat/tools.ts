@@ -29,11 +29,29 @@ interface ToolPair {
  */
 export async function buildChatTools(userPermissions?: string[]): Promise<ToolPair[]> {
   const perms = userPermissions ?? ["*"];
-  const allTools = await _buildAllTools();
+  // Capture active org/site from cookies ONCE at build time. All tool handlers
+  // need to forward this to internal HTTP calls so site context is preserved.
+  const { cookies } = await import("next/headers");
+  const cookieStore = await cookies();
+  const activeOrg = cookieStore.get("cms-active-org")?.value;
+  const activeSite = cookieStore.get("cms-active-site")?.value;
+  const allTools = await _buildAllTools(activeOrg, activeSite);
   return allTools.filter((t) => !t.permission || hasPermission(perms, t.permission));
 }
 
-async function _buildAllTools(): Promise<ToolPair[]> {
+/** Build headers for internal API calls — service token + site context */
+function siteHeaders(activeOrg?: string, activeSite?: string): Record<string, string> {
+  const serviceToken = process.env.CMS_JWT_SECRET ?? "";
+  const h: Record<string, string> = {
+    "Content-Type": "application/json",
+    "x-cms-service-token": serviceToken,
+  };
+  if (activeOrg) h["x-cms-active-org"] = activeOrg;
+  if (activeSite) h["x-cms-active-site"] = activeSite;
+  return h;
+}
+
+async function _buildAllTools(activeOrg?: string, activeSite?: string): Promise<ToolPair[]> {
   return [
     // ── site_summary ──────────────────────────────────────────
     {
@@ -1915,10 +1933,9 @@ DESIGN GUIDELINES:
       handler: async (input: any) => {
         const { collection, slug, targetLocale, publish } = input;
         const baseUrl = process.env.NEXTAUTH_URL || `http://localhost:${process.env.PORT || 3010}`;
-        const serviceToken = process.env.CMS_JWT_SECRET ?? "";
         const res = await fetch(`${baseUrl}/api/cms/${collection}/${slug}/translate`, {
           method: "POST",
-          headers: { "Content-Type": "application/json", "x-cms-service-token": serviceToken },
+          headers: siteHeaders(activeOrg, activeSite),
           body: JSON.stringify({ targetLocale, publish: publish ?? false }),
         });
         if (!res.ok) {

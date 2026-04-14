@@ -49,11 +49,34 @@ export async function proxy(request: NextRequest) {
   const isApi = pathname.startsWith("/api/");
   if (!isAdminPath && !isApi) return NextResponse.next();
 
-  // Allow internal service calls with X-CMS-Service-Token header (matches CMS_JWT_SECRET)
+  // Allow internal service calls with X-CMS-Service-Token header (matches CMS_JWT_SECRET).
+  // Mint a system-admin JWT and inject as cookie so downstream handlers that check
+  // session/role see a valid admin identity (same pattern as Bearer token handling below).
+  // Also honor X-CMS-Active-Site header to set site context without needing separate cookies.
   const serviceToken = request.headers.get("x-cms-service-token");
   if (serviceToken) {
     const secret = process.env.CMS_JWT_SECRET ?? "cms-dev-secret-change-me-in-production";
-    if (serviceToken === secret) return NextResponse.next();
+    if (serviceToken === secret) {
+      const jwt = await new SignJWT({
+        sub: "service-token",
+        email: "service@internal",
+        name: "Service",
+        role: "admin",
+      })
+        .setProtectedHeader({ alg: "HS256" })
+        .setIssuedAt()
+        .setExpirationTime("5m")
+        .sign(getJwtSecret());
+      const requestHeaders = new Headers(request.headers);
+      const existingCookies = requestHeaders.get("cookie") ?? "";
+      const extras = [`${COOKIE_NAME}=${jwt}`];
+      const activeOrg = request.headers.get("x-cms-active-org");
+      const activeSite = request.headers.get("x-cms-active-site");
+      if (activeOrg) extras.push(`cms-active-org=${activeOrg}`);
+      if (activeSite) extras.push(`cms-active-site=${activeSite}`);
+      requestHeaders.set("cookie", `${existingCookies}; ${extras.join("; ")}`);
+      return NextResponse.next({ request: { headers: requestHeaders } });
+    }
   }
 
   // Bearer token auth: supports CMS_DEV_TOKEN and wh_ access tokens.
