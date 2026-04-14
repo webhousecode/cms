@@ -35,11 +35,12 @@
 const nextSite = (name, cwd, port) => ({
   name,
   cwd,
-  // Invoke Next.js's JS entry directly so PM2 manages the actual Node process,
-  // avoiding the pnpm/npm wrapper zombie problem.
-  script: "node_modules/next/dist/bin/next",
-  args: "dev",
-  interpreter: "node",
+  // Wrap in bash to raise open-file limit BEFORE next dev boots — same EMFILE
+  // problem as cmsAdminDev. macOS gives PM2 children maxfiles=256 which
+  // Turbopack/Watchpack exhausts.
+  script: "/opt/homebrew/bin/bash",
+  args: '-c "ulimit -n 8192 && node_modules/next/dist/bin/next dev"',
+  interpreter: "none",
   env: { PORT: String(port), NODE_ENV: "development" },
   autorestart: true,
   watch: false,
@@ -79,12 +80,15 @@ const staticSite = (name, cwd, port) => ({
 const cmsAdminDev = {
   name: "cms-admin",
   cwd: "/Users/cb/Apps/webhouse/cms/packages/cms-admin",
-  script: "pnpm",
+  // Wrap in bash to raise the open-file limit BEFORE Next.js boots.
+  // macOS launchctl gives PM2 child processes maxfiles=256, which Turbopack/
+  // Watchpack exhausts in a monorepo this size — symptom: EMFILE errors and
+  // every route returning 404 because the compiler can't index files.
+  script: "/opt/homebrew/bin/bash",
   // dev:https = `next dev --port 3010 --experimental-https --hostname 0.0.0.0`
   // Required for WebAuthn / Web Crypto / iOS Safari testing over the LAN.
-  // Switch back to "dev" (plain HTTP) if HTTPS ever causes issues.
-  args: "dev:https",
-  interpreter: "none", // pnpm is its own shebang script
+  args: '-c "ulimit -n 8192 && pnpm dev:https"',
+  interpreter: "none",
   // PORT is also passed by `next dev --port 3010` inside the pnpm script,
   // but setting it here too lets `pm2 jlist` / scripts/pm2-ports.sh
   // surface the port in the listing.
