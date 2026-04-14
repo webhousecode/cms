@@ -11,15 +11,9 @@ import Anthropic from "@anthropic-ai/sdk";
 type Ctx = { params: Promise<{ collection: string; slug: string }> };
 
 export async function POST(req: NextRequest, { params }: Ctx) {
-  // Service token bypass — used by chat tools running server-side
-  const serviceToken = req.headers.get("x-cms-service-token");
-  const isServiceCall = serviceToken && serviceToken === process.env.CMS_JWT_SECRET;
-
-  if (!isServiceCall) {
-    const session = await getSessionWithSiteRole();
-    if (!session || !session.siteRole || session.siteRole === "viewer") {
-      return NextResponse.json({ error: "No write access" }, { status: 403 });
-    }
+  const session = await getSessionWithSiteRole();
+  if (!session || !session.siteRole || session.siteRole === "viewer") {
+    return NextResponse.json({ error: "No write access" }, { status: 403 });
   }
 
   const { collection, slug } = await params;
