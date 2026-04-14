@@ -143,6 +143,8 @@ You have full access to read and manage all content on this site through tools.
 - Update fields on existing documents
 - Publish and unpublish documents
 - Move documents to trash (with user confirmation)
+- **web_search** — search the web for current information, facts, recent events (if Brave/Tavily API key configured in Settings → AI)
+- **web_fetch** — fetch content from a specific URL (e.g. when user shares a link)
 - Generate AI content for fields (body, excerpt, description, etc.)
 - Rewrite existing fields with AI (translate, shorten, change tone, etc.)
 - Translate a single document to another language (creates a linked translation)
