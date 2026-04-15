@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { RefreshCw, Download, ShieldCheck, Terminal, Globe2, AlertCircle, AlertTriangle, Info } from "lucide-react";
 import { ActionBar, ActionBarBreadcrumb } from "@/components/action-bar";
 import { TabTitle } from "@/lib/tabs-context";
+import { CustomSelect } from "@/components/ui/custom-select";
 
 type LogLayer = "audit" | "server" | "client";
 type LogLevel = "info" | "warn" | "error";
@@ -194,21 +195,17 @@ export default function EventLogPage() {
               </button>
             );
           })}
-          <select
+          <CustomSelect
             value={level}
-            onChange={(e) => setLevel(e.target.value as LogLevel | "all")}
-            style={{
-              height: 28,
-              padding: "0 0.6rem", borderRadius: 6,
-              border: "1px solid var(--border)", background: "var(--background)",
-              color: "var(--foreground)", fontSize: "0.72rem", cursor: "pointer",
-            }}
-          >
-            <option value="all">All levels</option>
-            <option value="info">Info</option>
-            <option value="warn">Warn</option>
-            <option value="error">Error</option>
-          </select>
+            onChange={(v) => setLevel(v as LogLevel | "all")}
+            options={[
+              { value: "all", label: "All levels" },
+              { value: "info", label: "Info" },
+              { value: "warn", label: "Warn" },
+              { value: "error", label: "Error" },
+            ]}
+            style={{ height: 28, fontSize: "0.72rem", minWidth: 130 }}
+          />
           <input
             type="text"
             value={actionFilter}
