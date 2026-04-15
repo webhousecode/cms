@@ -7,6 +7,8 @@ import {
   MessageCircle, Keyboard, ExternalLink, Bot,
   Search, FileText, Settings, Pencil, Send, Trash2,
   BarChart3, Shield, Clock, Copy, Image, Sparkles,
+  Workflow, ClipboardList, Gauge, Languages, Brain, Globe, Zap,
+  CheckCircle2, XCircle, Layers,
 } from "lucide-react";
 
 const ICON_SIZE = { width: "1rem", height: "1rem" };
@@ -283,6 +285,9 @@ const AI_TOOL_GROUPS = [
       { icon: Pencil, name: "Inline edit form", desc: "Edit specific fields directly in chat" },
       { icon: Send, name: "Bulk publish", desc: "Publish all drafts at once" },
       { icon: Pencil, name: "Bulk update", desc: "Update a field across many docs" },
+      { icon: FileText, name: "List drafts", desc: "All unpublished documents across collections" },
+      { icon: Layers, name: "Get schema", desc: "Inspect collection fields and block definitions" },
+      { icon: Trash2, name: "Restore from trash", desc: "Recover a trashed document" },
     ],
   },
   {
@@ -300,6 +305,61 @@ const AI_TOOL_GROUPS = [
       { icon: Bot, name: "Create agent", desc: "Set up a new copywriter, SEO, or custom agent" },
       { icon: Sparkles, name: "Run agent", desc: "Execute an agent with a prompt" },
       { icon: FileText, name: "Curation queue", desc: "Review, approve, or reject AI content" },
+      { icon: CheckCircle2, name: "Approve queue item", desc: "Publish an AI-generated draft from curation" },
+      { icon: XCircle, name: "Reject queue item", desc: "Discard or send back an AI-generated draft" },
+      { icon: Bot, name: "Agent templates", desc: "Start from a template, save new ones" },
+      { icon: BarChart3, name: "Agent feedback", desc: "Accept / reject stats per agent" },
+      { icon: Shield, name: "Agent budget", desc: "Set token or cost ceilings per agent" },
+      { icon: Globe, name: "Agent locale", desc: "Lock an agent to a specific language" },
+    ],
+  },
+  {
+    label: "Workflows",
+    tools: [
+      { icon: Workflow, name: "List workflows", desc: "View multi-step agent chains" },
+      { icon: Workflow, name: "Create workflow", desc: "Chain agents into a pipeline" },
+      { icon: Zap, name: "Run workflow", desc: "Execute a workflow on a document" },
+      { icon: Trash2, name: "Delete workflow", desc: "Remove a workflow definition" },
+    ],
+  },
+  {
+    label: "Forms",
+    tools: [
+      { icon: ClipboardList, name: "List submissions", desc: "All form submissions per form" },
+      { icon: FileText, name: "Read submission", desc: "Read a specific form submission" },
+      { icon: BarChart3, name: "Form stats", desc: "Submission counts and conversion data" },
+    ],
+  },
+  {
+    label: "SEO & Quality",
+    tools: [
+      { icon: Gauge, name: "Run Lighthouse", desc: "Mobile + desktop performance audit" },
+      { icon: Gauge, name: "Lighthouse scores", desc: "Latest scores for every page" },
+      { icon: Clock, name: "Lighthouse history", desc: "Scores over time" },
+    ],
+  },
+  {
+    label: "Translation",
+    tools: [
+      { icon: Languages, name: "Translate document", desc: "AI-translate one document to a locale" },
+      { icon: Languages, name: "Translate site", desc: "AI-translate every document to a locale" },
+    ],
+  },
+  {
+    label: "Interactives",
+    tools: [
+      { icon: Sparkles, name: "Generate interactive", desc: "AI-build a custom HTML widget" },
+      { icon: Image, name: "Enable image generation", desc: "Turn AI image gen on/off per site" },
+    ],
+  },
+  {
+    label: "Memory & Web",
+    tools: [
+      { icon: Brain, name: "Search memories", desc: "Search chat's long-term memory" },
+      { icon: Brain, name: "Add memory", desc: "Save a fact or preference for future chats" },
+      { icon: Trash2, name: "Forget memory", desc: "Remove a stored memory" },
+      { icon: Globe, name: "Web search", desc: "Live web search via Brave or Tavily" },
+      { icon: Globe, name: "Web fetch", desc: "Fetch and read any URL in the conversation" },
     ],
   },
   {

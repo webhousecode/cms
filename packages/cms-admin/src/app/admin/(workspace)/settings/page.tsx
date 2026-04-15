@@ -17,6 +17,7 @@ import { GeoSettingsPanel } from "@/components/settings/geo-settings-panel";
 import { BackupSettingsPanel } from "@/components/settings/backup-settings-panel";
 import { BeamSettingsPanel } from "@/components/settings/beam-settings-panel";
 import { SectionHeading } from "@/components/ui/section-heading";
+import { HelpCard } from "@/components/ui/help-card";
 import { readSiteConfig } from "@/lib/site-config";
 import { readBrandVoice } from "@/lib/brand-voice";
 import { cookies } from "next/headers";
@@ -101,6 +102,7 @@ export default async function SettingsPage({
         {/* General tab — site-specific settings */}
         {tab === "general" && (
           <div className="max-w-lg" data-testid="settings-panel-general">
+            <div style={{ marginBottom: "1rem" }}><HelpCard articleId="settings-general" variant="compact" /></div>
             <SiteGeneralSettingsPanel />
           </div>
         )}
@@ -108,6 +110,7 @@ export default async function SettingsPage({
         {/* Team tab */}
         {tab === "team" && (
           <div className="max-w-2xl" data-testid="settings-panel-team">
+            <div style={{ marginBottom: "1rem" }}><HelpCard articleId="settings-team" variant="compact" /></div>
             <TeamPanel />
           </div>
         )}
@@ -116,9 +119,10 @@ export default async function SettingsPage({
         {tab === "email" && (
           <div className="max-w-lg" data-testid="settings-panel-email">
             <SectionHeading>Email</SectionHeading>
-            <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "-0.5rem", marginBottom: "1.25rem" }}>
+            <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "-0.5rem", marginBottom: "1rem" }}>
               Configure transactional email for invitations and notifications.
             </p>
+            <div style={{ marginBottom: "1rem" }}><HelpCard articleId="settings-email" variant="compact" /></div>
             <EmailSettingsPanel />
           </div>
         )}
@@ -126,6 +130,7 @@ export default async function SettingsPage({
         {/* Schema tab */}
         {tab === "schema" && siteConfig.schemaEditEnabled && (
           <div className="space-y-2">
+            <div style={{ marginBottom: "1rem" }}><HelpCard articleId="settings-schema" variant="compact" /></div>
             <div className="flex items-center justify-between mb-6">
               <div>
                 <SectionHeading>Collections</SectionHeading>
@@ -168,6 +173,7 @@ export default async function SettingsPage({
         {/* Brand Voice tab */}
         {tab === "brand-voice" && (
           <div className="max-w-2xl">
+            <div style={{ marginBottom: "1rem" }}><HelpCard articleId="settings-brand-voice" variant="compact" /></div>
             {brandVoice ? (
               <div style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
@@ -224,6 +230,7 @@ export default async function SettingsPage({
         {/* Globals tab */}
         {tab === "globals" && globals.length > 0 && (
           <div className="space-y-3 max-w-2xl">
+            <HelpCard articleId="settings-globals" variant="compact" />
             <p className="text-sm text-muted-foreground">
               Global collections contain site-wide settings and data shared across all pages.
             </p>
@@ -249,6 +256,7 @@ export default async function SettingsPage({
         {/* AI tab */}
         {tab === "ai" && (
           <div className="max-w-lg" data-testid="settings-panel-ai">
+            <div style={{ marginBottom: "1rem" }}><HelpCard articleId="settings-ai" variant="compact" /></div>
             <SectionHeading>AI Providers</SectionHeading>
             <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "-0.5rem", marginBottom: "1.25rem" }}>
               Configure API keys for AI-powered content generation and rewriting.
@@ -269,6 +277,7 @@ export default async function SettingsPage({
         {/* Deploy tab */}
         {tab === "deploy" && (
           <div className="max-w-lg" data-testid="settings-panel-deploy">
+            <div style={{ marginBottom: "1rem" }}><HelpCard articleId="settings-deploy" variant="compact" /></div>
             <DeploySettingsPanel />
           </div>
         )}
@@ -276,6 +285,7 @@ export default async function SettingsPage({
         {/* Backup tab — schedule, retention, cloud provider */}
         {tab === "backup" && (
           <div className="max-w-lg" data-testid="settings-panel-backup">
+            <div style={{ marginBottom: "1rem" }}><HelpCard articleId="backup-schedule" variant="compact" /></div>
             <BackupSettingsPanel />
           </div>
         )}
@@ -283,6 +293,7 @@ export default async function SettingsPage({
         {/* Tools tab — link checker, webhooks, media */}
         {tab === "tools" && (
           <div className="max-w-lg" data-testid="settings-panel-tools">
+            <div style={{ marginBottom: "1rem" }}><HelpCard articleId="settings-tools" variant="compact" /></div>
             <ToolsSettingsPanel />
           </div>
         )}
@@ -290,6 +301,7 @@ export default async function SettingsPage({
         {/* GEO tab — AI visibility settings */}
         {tab === "geo" && (
           <div className="max-w-lg" data-testid="settings-panel-geo">
+            <div style={{ marginBottom: "1rem" }}><HelpCard articleId="settings-geo" variant="compact" /></div>
             <GeoSettingsPanel />
           </div>
         )}
@@ -298,9 +310,10 @@ export default async function SettingsPage({
         {tab === "mcp" && (
           <div className="max-w-lg" data-testid="settings-panel-mcp">
             <SectionHeading>Model Context Protocol</SectionHeading>
-            <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "-0.5rem", marginBottom: "1.25rem" }}>
+            <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "-0.5rem", marginBottom: "1rem" }}>
               Connect Claude iOS, Cursor, or any MCP-compatible AI client to read and manage content on this site.
             </p>
+            <div style={{ marginBottom: "1rem" }}><HelpCard articleId="settings-mcp" variant="compact" /></div>
             <MCPSettingsPanel />
           </div>
         )}
@@ -309,9 +322,10 @@ export default async function SettingsPage({
         {tab === "beam" && (
           <div className="max-w-lg" data-testid="settings-panel-beam">
             <SectionHeading>Beam — Site Teleportation</SectionHeading>
-            <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "-0.5rem", marginBottom: "1.25rem" }}>
+            <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", marginTop: "-0.5rem", marginBottom: "1rem" }}>
               Export your complete site as a portable .beam archive, or import one from another CMS instance.
             </p>
+            <div style={{ marginBottom: "1rem" }}><HelpCard articleId="settings-beam" variant="compact" /></div>
             <BeamSettingsPanel orgId={activeOrgId} />
           </div>
         )}
@@ -319,6 +333,7 @@ export default async function SettingsPage({
         {/* AI Prompts tab */}
         {tab === "prompts" && (
           <div className="max-w-3xl">
+            <div style={{ marginBottom: "1rem" }}><HelpCard articleId="settings-prompts" variant="compact" /></div>
             <AIPromptsPanel />
           </div>
         )}
