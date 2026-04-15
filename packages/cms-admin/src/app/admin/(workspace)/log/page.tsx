@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { RefreshCw, Download, ShieldCheck, Terminal, Globe2, AlertCircle, AlertTriangle, Info } from "lucide-react";
+import { RefreshCw, Download, ShieldCheck, Terminal, Globe2, AlertCircle, AlertTriangle, Info, Activity, Clock, Users, AlertOctagon } from "lucide-react";
 import { ActionBar, ActionBarBreadcrumb } from "@/components/action-bar";
 import { TabTitle } from "@/lib/tabs-context";
 import { CustomSelect } from "@/components/ui/custom-select";
@@ -62,6 +62,46 @@ function formatTime(iso: string): string {
   return d.toLocaleString("da-DK", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
+function StatCard({
+  icon: Icon,
+  label,
+  value,
+  sublabel,
+  tone = "default",
+}: {
+  icon: typeof Info;
+  label: string;
+  value: number;
+  sublabel?: string;
+  tone?: "default" | "error";
+}) {
+  const accent = tone === "error" && value > 0 ? "rgb(239 68 68)" : "var(--muted-foreground)";
+  return (
+    <div style={{
+      padding: "0.85rem 1rem",
+      borderRadius: 8,
+      border: "1px solid var(--border)",
+      background: "var(--card, var(--background))",
+      display: "flex", flexDirection: "column", gap: "0.35rem",
+    }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", color: accent }}>
+        <Icon style={{ width: 14, height: 14 }} />
+        <span style={{ fontSize: "0.7rem", fontWeight: 500 }}>{label}</span>
+      </div>
+      <div style={{
+        fontSize: "1.75rem", fontWeight: 600, lineHeight: 1,
+        color: tone === "error" && value > 0 ? "rgb(239 68 68)" : "var(--foreground)",
+        fontFamily: "monospace",
+      }}>
+        {value.toLocaleString("da-DK")}
+      </div>
+      {sublabel && (
+        <div style={{ fontSize: "0.65rem", color: "var(--muted-foreground)" }}>{sublabel}</div>
+      )}
+    </div>
+  );
+}
+
 function formatAction(entry: LogEntry): string {
   const actor = entry.actor.name ?? entry.actor.email ?? entry.actor.type;
   const target = entry.target
@@ -72,9 +112,17 @@ function formatAction(entry: LogEntry): string {
   return target ? `${actor} → ${entry.action} ${target}` : `${actor} → ${entry.action}`;
 }
 
+interface LogStats {
+  total: number;
+  events24h: number;
+  activeUsers24h: number;
+  errors24h: number;
+}
+
 export default function EventLogPage() {
   const [entries, setEntries] = useState<LogEntry[]>([]);
   const [total, setTotal] = useState(0);
+  const [stats, setStats] = useState<LogStats | null>(null);
   const [loading, setLoading] = useState(false);
   const [layers, setLayers] = useState<Set<LogLayer>>(new Set(["audit", "server", "client"]));
   const [level, setLevel] = useState<LogLevel | "all">("all");
@@ -88,10 +136,15 @@ export default function EventLogPage() {
       if (level !== "all") params.set("level", level);
       if (actionFilter) params.set("action", actionFilter);
       params.set("limit", "200");
-      const res = await fetch(`/api/admin/log?${params.toString()}`);
-      const data = await res.json() as { entries: LogEntry[]; total: number };
+      const [feedRes, statsRes] = await Promise.all([
+        fetch(`/api/admin/log?${params.toString()}`),
+        fetch(`/api/admin/log?stats=1`),
+      ]);
+      const data = await feedRes.json() as { entries: LogEntry[]; total: number };
+      const statsData = await statsRes.json() as LogStats;
       setEntries(data.entries ?? []);
       setTotal(data.total ?? 0);
+      setStats(statsData);
     } catch {
       setEntries([]);
     } finally {
@@ -157,9 +210,22 @@ export default function EventLogPage() {
       </ActionBar>
 
       <div style={{ padding: "2rem", maxWidth: "72rem" }}>
-        {/* Stats line */}
+        {/* Stat cards */}
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
+          gap: "0.75rem",
+          marginBottom: "1.5rem",
+        }}>
+          <StatCard icon={Activity} label="Total activities" value={stats?.total ?? 0} sublabel="Total" />
+          <StatCard icon={Clock} label="Last 24 hours" value={stats?.events24h ?? 0} sublabel="Sidste 24 timer" />
+          <StatCard icon={Users} label="Active users" value={stats?.activeUsers24h ?? 0} sublabel="Sidste 24 timer" />
+          <StatCard icon={AlertOctagon} label="Errors" value={stats?.errors24h ?? 0} sublabel="Sidste 24 timer" tone={stats && stats.errors24h > 0 ? "error" : "default"} />
+        </div>
+
+        {/* Filtered count line */}
         <p style={{ fontSize: "0.78rem", color: "var(--muted-foreground)", margin: "0 0 1.25rem" }}>
-          {total} event{total === 1 ? "" : "s"} across {layers.size} layer{layers.size === 1 ? "" : "s"}
+          {total} event{total === 1 ? "" : "s"} match current filters
         </p>
 
         {/* Filters — fixed-height row prevents layout shift when toggled */}

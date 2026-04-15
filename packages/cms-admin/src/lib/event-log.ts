@@ -185,19 +185,35 @@ export async function logStats(opts: { since?: string } = {}): Promise<{
   byLayer: Record<LogLayer, number>;
   byLevel: Record<LogLevel, number>;
   errors24h: number;
+  activeUsers24h: number;
+  events24h: number;
   total: number;
 }> {
   const { entries } = await readLog({ limit: 100000, since: opts.since });
   const byLayer: Record<LogLayer, number> = { audit: 0, server: 0, client: 0 };
   const byLevel: Record<LogLevel, number> = { info: 0, warn: 0, error: 0 };
   const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const activeUserIds = new Set<string>();
   let errors24h = 0;
+  let events24h = 0;
   for (const e of entries) {
     byLayer[e.layer]++;
     byLevel[e.level]++;
-    if (e.level === "error" && e.timestamp >= cutoff) errors24h++;
+    const in24h = e.timestamp >= cutoff;
+    if (in24h) {
+      events24h++;
+      if (e.actor.userId) activeUserIds.add(e.actor.userId);
+      if (e.level === "error") errors24h++;
+    }
   }
-  return { byLayer, byLevel, errors24h, total: entries.length };
+  return {
+    byLayer,
+    byLevel,
+    errors24h,
+    activeUsers24h: activeUserIds.size,
+    events24h,
+    total: entries.length,
+  };
 }
 
 /** Rotate a layer's log if it exceeds thresholds. */
