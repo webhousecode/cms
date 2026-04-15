@@ -9,6 +9,8 @@ export type { JsonSchemaOutput, ToJsonSchemaOptions } from './schema/to-json-sch
 export { builtinBlocks } from './schema/builtin-blocks.js';
 export type { CmsConfig, CollectionConfig, FieldConfig, BlockConfig, FieldType, BuildConfig, BuildProfile, DockerConfig, AutolinkConfig, FormConfig, FormFieldConfig } from './schema/types.js';
 export { generateFormHtml, generateFormPage } from './build/forms.js';
+export { expandShortcodes } from './build/shortcodes.js';
+export type { ShortcodeOptions, InteractiveParams } from './build/shortcodes.js';
 
 // Storage
 export { FilesystemStorageAdapter } from './storage/filesystem/adapter.js';

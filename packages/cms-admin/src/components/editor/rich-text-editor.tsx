@@ -34,7 +34,7 @@ import {
   IconUnderline, IconSuperscript, IconSubscript, IconHighlight,
   IconZoomIn, IconZoomOut, IconProofread,
 } from "./editor-icons";
-import { Image as LucideImage, Zap, MessageSquareWarning, Code2, ChevronDown, Braces } from "lucide-react";
+import { Image as LucideImage, Zap, MessageSquareWarning, Code2, ChevronDown, Braces, Shapes } from "lucide-react";
 import { toast } from "sonner";
 import { AIMetadataPopover } from "@/components/media/ai-metadata-popover";
 import { ProofreadPlugin, proofreadKey, textOffsetToPos } from "./proofread-plugin";
@@ -2174,6 +2174,189 @@ const SnippetEmbed = TipTapNode.create({
   },
 });
 
+/* ─── SvgEmbed — inline SVG with optional caption ─────────────
+ *
+ * Stores a slug referencing a file under public/uploads/<slug>.svg (by
+ * default). Markdown form: `{{svg:slug}}` or `{{svg:slug|caption text}}`.
+ * Build-time expander inlines the SVG content wrapped in <figure>, so the
+ * output is CSS-stylable (unlike <img src=…svg>). Editor preview uses an
+ * <img> tag for simplicity.
+ */
+function SvgNodeView({ node, selected, updateAttributes, deleteNode }: NodeViewProps) {
+  const { slug, src, caption } = node.attrs as { slug: string; src: string; caption: string };
+  const del = useConfirmDelete(deleteNode);
+  const [captionDraft, setCaptionDraft] = useState(caption ?? "");
+
+  useEffect(() => { setCaptionDraft(caption ?? ""); }, [caption]);
+
+  function commitCaption() {
+    if (captionDraft !== caption) updateAttributes({ caption: captionDraft });
+  }
+
+  return (
+    <NodeViewWrapper draggable style={{ margin: "0.75rem 0", position: "relative" }}>
+      <DragHandle />
+      <figure
+        style={{
+          margin: 0,
+          padding: "0.75rem",
+          borderRadius: 8,
+          border: selected ? "2px solid var(--primary)" : "1px solid var(--border)",
+          background: "var(--card)",
+          textAlign: "center",
+        }}
+      >
+        {src ? (
+          <img
+            src={src}
+            alt={caption || slug}
+            style={{ maxWidth: "100%", height: "auto", display: "block", margin: "0 auto" }}
+          />
+        ) : (
+          <div style={{
+            padding: "2rem",
+            border: "1px dashed var(--border)",
+            borderRadius: 6,
+            color: "var(--muted-foreground)",
+            fontSize: "0.8rem",
+          }}>
+            <Shapes style={{ width: 24, height: 24, opacity: 0.4, marginBottom: "0.5rem" }} />
+            <div>SVG: <code>{slug || "(no slug)"}</code></div>
+          </div>
+        )}
+        <input
+          type="text"
+          value={captionDraft}
+          onChange={(e) => setCaptionDraft(e.target.value)}
+          onBlur={commitCaption}
+          placeholder="Caption (optional)"
+          style={{
+            width: "100%",
+            marginTop: "0.5rem",
+            padding: "0.25rem 0.5rem",
+            border: "none",
+            borderBottom: "1px solid var(--border)",
+            background: "transparent",
+            fontSize: "0.78rem",
+            color: "var(--muted-foreground)",
+            textAlign: "center",
+            outline: "none",
+            fontStyle: "italic",
+          }}
+        />
+        <div style={{
+          position: "absolute", top: 6, right: 6,
+          display: "flex", alignItems: "center", gap: "0.2rem",
+        }}>
+          <span style={{ fontSize: "0.6rem", color: "var(--muted-foreground)", fontFamily: "monospace" }}>
+            {slug}
+          </span>
+          {del.confirming ? (
+            <>
+              <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
+              <button type="button" onClick={del.confirm}
+                style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
+              <button type="button" onClick={del.cancel}
+                style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
+            </>
+          ) : (
+            <button type="button" onClick={del.request}
+              style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0 2px", fontSize: "0.7rem", lineHeight: 1 }}>×</button>
+          )}
+        </div>
+      </figure>
+    </NodeViewWrapper>
+  );
+}
+
+const SvgEmbed = TipTapNode.create({
+  name: "svgEmbed",
+  group: "block",
+  atom: true,
+  draggable: true,
+
+  addAttributes() {
+    return {
+      slug: { default: "" },
+      src: { default: "" },
+      caption: { default: "" },
+    };
+  },
+
+  parseHTML() {
+    return [
+      { tag: "cms-svg[data-slug]", getAttrs: (el) => ({
+        slug: (el as Element).getAttribute("data-slug") ?? "",
+        src: (el as Element).getAttribute("data-src") ?? "",
+        caption: (el as Element).getAttribute("data-caption") ?? "",
+      }) },
+    ];
+  },
+
+  renderHTML({ node }) {
+    return ["cms-svg", {
+      "data-slug": node.attrs.slug,
+      "data-src": node.attrs.src || undefined,
+      "data-caption": node.attrs.caption || undefined,
+    }];
+  },
+
+  addStorage() {
+    return {
+      markdown: {
+        serialize(state: { write: (s: string) => void; closeBlock: (node: unknown) => void }, node: { attrs: Record<string, unknown> }) {
+          const slug = String(node.attrs.slug ?? "");
+          const caption = String(node.attrs.caption ?? "").trim();
+          state.write(caption ? `{{svg:${slug}|${caption}}}` : `{{svg:${slug}}}`);
+          state.closeBlock(node);
+        },
+        parse: {
+          updateDOM(dom: Element) {
+            dom.querySelectorAll("p").forEach((p) => {
+              const text = (p.textContent ?? "").trim();
+              const m = text.match(/^\{\{svg:([\w-]+)(?:\|(.*))?\}\}$/);
+              if (!m) return;
+              const el = document.createElement("cms-svg");
+              el.setAttribute("data-slug", m[1]);
+              if (m[2]) el.setAttribute("data-caption", m[2]);
+              p.parentNode?.replaceChild(el, p);
+            });
+          },
+        },
+      },
+    };
+  },
+
+  addKeyboardShortcuts() {
+    return {
+      ArrowDown: ({ editor }) => {
+        const { selection, doc } = editor.state;
+        const node = doc.nodeAt(selection.from);
+        if (node?.type.name !== "svgEmbed") return false;
+        const end = selection.from + node.nodeSize;
+        if (end >= doc.content.size) {
+          editor.chain().insertContentAt(end, { type: "paragraph" }).setTextSelection(end + 1).run();
+          return true;
+        }
+        editor.commands.setTextSelection(end + 1);
+        return true;
+      },
+      Enter: ({ editor }) => {
+        const { selection, doc } = editor.state;
+        const node = doc.nodeAt(selection.from);
+        if (node?.type.name !== "svgEmbed") return false;
+        const end = selection.from + node.nodeSize;
+        editor.chain().insertContentAt(end, { type: "paragraph" }).setTextSelection(end + 1).run();
+        return true;
+      },
+    };
+  },
+
+  addNodeView() {
+    return ReactNodeViewRenderer(SvgNodeView);
+  },
+});
+
 /* ─── Toolbar button ─────────────────────────────────────────── */
 function Btn({
   tooltip, active, disabled, onClick, children,
@@ -2374,6 +2557,10 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
   const [availableSnippets, setAvailableSnippets] = useState<{ slug: string; title: string; lang: string; code: string }[]>([]);
   const [snippetsLoading, setSnippetsLoading] = useState(false);
   const [hasSnippetsCollection, setHasSnippetsCollection] = useState(false);
+  const [showSvgPicker, setShowSvgPicker] = useState(false);
+  const [svgSearch, setSvgSearch] = useState("");
+  const [availableSvgs, setAvailableSvgs] = useState<{ slug: string; src: string; name: string }[]>([]);
+  const [svgsLoading, setSvgsLoading] = useState(false);
   const headingRef = useRef<HTMLDivElement>(null);
   const linkRef = useRef<HTMLDivElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -2425,6 +2612,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
       MapEmbed,
       InteractiveEmbed,
       SnippetEmbed,
+      SvgEmbed,
       Callout,
       TextDragDrop,
       Table.configure({ resizable: false }),
@@ -2465,6 +2653,12 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
         if (snippetMatch) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           replacements.push({ pos, end: pos + node.nodeSize, node: editor.schema.nodes.snippetEmbed.create({ slug: snippetMatch[1] }) as any });
+        }
+        // {{svg:slug}} or {{svg:slug|caption}} fallback
+        const svgMatch = text.match(/^\{\{svg:([\w-]+)(?:\|(.*))?\}\}$/);
+        if (svgMatch) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          replacements.push({ pos, end: pos + node.nodeSize, node: editor.schema.nodes.svgEmbed.create({ slug: svgMatch[1], caption: svgMatch[2] ?? "" }) as any });
         }
       });
       if (replacements.length > 0) {
@@ -3378,6 +3572,28 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
               <Braces className="w-[18px] h-[18px]" />
             </Btn>}
 
+            <Btn tooltip="Insert SVG figure" onClick={() => {
+              setShowSvgPicker(true);
+              setSvgSearch("");
+              setSvgsLoading(true);
+              fetch("/api/media")
+                .then(r => r.json())
+                .then((data) => {
+                  const items = Array.isArray(data) ? data : (data.media ?? data.files ?? []);
+                  setAvailableSvgs(items
+                    .filter((i: Record<string, string>) => (i.mediaType === "svg") || /\.svg$/i.test(i.name ?? ""))
+                    .map((i: Record<string, string>) => ({
+                      slug: (i.name ?? "").replace(/\.svg$/i, ""),
+                      src: i.url ?? `/uploads/${i.name}`,
+                      name: i.name ?? "",
+                    })));
+                })
+                .catch(() => setAvailableSvgs([]))
+                .finally(() => setSvgsLoading(false));
+            }}>
+              <Shapes className="w-[18px] h-[18px]" />
+            </Btn>
+
             {/* Spacer to push right-side controls to the right */}
             <div style={{ flex: 1 }} />
 
@@ -3932,6 +4148,82 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                         {item.slug}{item.lang ? ` · ${item.lang}` : ""}
                       </p>
                     </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ── SVG picker ── */}
+      {showSvgPicker && (() => {
+        const filtered = svgSearch.trim()
+          ? availableSvgs.filter(s =>
+              s.slug.toLowerCase().includes(svgSearch.toLowerCase()) ||
+              s.name.toLowerCase().includes(svgSearch.toLowerCase()))
+          : availableSvgs;
+        return (
+          <div style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", backgroundColor: "rgba(0,0,0,0.5)" }}
+            onMouseDown={() => setShowSvgPicker(false)}>
+            <div onMouseDown={(e) => e.stopPropagation()} style={{
+              width: "100%", maxWidth: "540px", maxHeight: "32rem",
+              backgroundColor: "var(--card)", border: "1px solid var(--border)",
+              borderRadius: "1rem", boxShadow: "0 24px 48px rgba(0,0,0,0.5)",
+              display: "flex", flexDirection: "column", overflow: "hidden",
+            }}>
+              <div style={{ padding: "1rem 1.25rem 0.75rem", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+                  <Shapes style={{ width: 16, height: 16, color: "#F7BB2E" }} />
+                  <span style={{ fontSize: "0.95rem", fontWeight: 600 }}>Insert SVG figure</span>
+                </div>
+                <button type="button" onClick={() => setShowSvgPicker(false)}
+                  style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1.1rem" }}>×</button>
+              </div>
+              <div style={{ padding: "0 1.25rem 0.5rem" }}>
+                <input type="text" value={svgSearch} onChange={(e) => setSvgSearch(e.target.value)}
+                  onKeyDown={(e) => { if (e.key === "Escape") { e.stopPropagation(); setShowSvgPicker(false); } }}
+                  placeholder="Search SVG files…" autoFocus
+                  style={{
+                    width: "100%", padding: "0.4rem 0.625rem", borderRadius: "6px",
+                    border: "1px solid var(--border)", background: "var(--background)",
+                    color: "var(--foreground)", fontSize: "0.85rem", outline: "none",
+                  }}
+                />
+              </div>
+              <div style={{ flex: 1, overflow: "auto", padding: "0.5rem 1.25rem 1rem", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))", gap: "0.5rem" }}>
+                {svgsLoading && (
+                  <p style={{ gridColumn: "1/-1", fontSize: "0.85rem", color: "var(--muted-foreground)", padding: "1rem 0", textAlign: "center" }}>Loading…</p>
+                )}
+                {!svgsLoading && filtered.length === 0 && (
+                  <p style={{ gridColumn: "1/-1", fontSize: "0.85rem", color: "var(--muted-foreground)", padding: "1rem 0", textAlign: "center" }}>
+                    {svgSearch ? `No SVG matching "${svgSearch}"` : "No SVG files found. Upload .svg to Media first."}
+                  </p>
+                )}
+                {filtered.map(item => (
+                  <button
+                    key={item.name}
+                    type="button"
+                    onClick={() => {
+                      editor?.chain().focus().insertContent({ type: "svgEmbed", attrs: { slug: item.slug, src: item.src, caption: "" } }).run();
+                      setShowSvgPicker(false);
+                      setSvgSearch("");
+                    }}
+                    style={{
+                      display: "flex", flexDirection: "column", alignItems: "center", gap: "0.375rem",
+                      padding: "0.5rem", borderRadius: "8px", border: "1px solid var(--border)",
+                      backgroundColor: "transparent", cursor: "pointer", textAlign: "center",
+                      transition: "border-color 120ms, background 120ms",
+                    }}
+                    onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "rgba(255,255,255,0.05)"; (e.currentTarget as HTMLButtonElement).style.borderColor = "#F7BB2E"; }}
+                    onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = "transparent"; (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--border)"; }}
+                  >
+                    <div style={{ width: "100%", aspectRatio: "1", background: "var(--background)", borderRadius: 4, display: "flex", alignItems: "center", justifyContent: "center", padding: "0.25rem" }}>
+                      <img src={item.src} alt={item.slug} style={{ maxWidth: "100%", maxHeight: "100%", objectFit: "contain" }} />
+                    </div>
+                    <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", fontFamily: "monospace", wordBreak: "break-all", lineHeight: 1.3 }}>
+                      {item.slug}
+                    </span>
                   </button>
                 ))}
               </div>
