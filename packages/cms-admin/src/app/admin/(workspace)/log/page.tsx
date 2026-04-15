@@ -157,6 +157,8 @@ export default function EventLogPage() {
   const [actionFilter, setActionFilter] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [pageSize, setPageSize] = useState(50);
+  const [page, setPage] = useState(1);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -167,7 +169,8 @@ export default function EventLogPage() {
       if (actionFilter) params.set("action", actionFilter);
       if (dateFrom) params.set("since", `${dateFrom}T00:00:00.000Z`);
       if (dateTo) params.set("until", `${dateTo}T23:59:59.999Z`);
-      params.set("limit", "200");
+      params.set("limit", String(pageSize));
+      params.set("offset", String((page - 1) * pageSize));
       const [feedRes, statsRes] = await Promise.all([
         fetch(`/api/admin/log?${params.toString()}`),
         fetch(`/api/admin/log?stats=1`),
@@ -182,7 +185,12 @@ export default function EventLogPage() {
     } finally {
       setLoading(false);
     }
-  }, [layers, level, actionFilter, dateFrom, dateTo]);
+  }, [layers, level, actionFilter, dateFrom, dateTo, pageSize, page]);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setPage(1);
+  }, [layers, level, actionFilter, dateFrom, dateTo, pageSize]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -455,6 +463,75 @@ export default function EventLogPage() {
             );
           })}
         </div>
+
+        {/* Pagination */}
+        {total > pageSize && (
+          <div style={{
+            display: "flex", alignItems: "center", justifyContent: "space-between",
+            gap: "1rem", marginTop: "1rem",
+            fontSize: "0.72rem", color: "var(--muted-foreground)",
+          }}>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <span>
+                Showing {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, total)} of {total}
+              </span>
+              <span>•</span>
+              <label>
+                Per page:
+                <select
+                  value={pageSize}
+                  onChange={(e) => setPageSize(parseInt(e.target.value, 10))}
+                  style={{
+                    marginLeft: "0.35rem",
+                    height: 24, padding: "0 0.4rem", borderRadius: 4,
+                    border: "1px solid var(--border)", background: "var(--background)",
+                    color: "var(--foreground)", fontSize: "0.7rem",
+                  }}
+                >
+                  <option value="25">25</option>
+                  <option value="50">50</option>
+                  <option value="100">100</option>
+                  <option value="200">200</option>
+                </select>
+              </label>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
+              <button
+                type="button"
+                onClick={() => setPage(Math.max(1, page - 1))}
+                disabled={page === 1}
+                style={{
+                  height: 28, padding: "0 0.75rem", borderRadius: 6,
+                  border: "1px solid var(--border)", background: "transparent",
+                  color: page === 1 ? "var(--muted-foreground)" : "var(--foreground)",
+                  fontSize: "0.72rem",
+                  cursor: page === 1 ? "not-allowed" : "pointer",
+                  opacity: page === 1 ? 0.5 : 1,
+                }}
+              >
+                Previous
+              </button>
+              <span style={{ padding: "0 0.5rem" }}>
+                Page {page} of {Math.max(1, Math.ceil(total / pageSize))}
+              </span>
+              <button
+                type="button"
+                onClick={() => setPage(page + 1)}
+                disabled={page * pageSize >= total}
+                style={{
+                  height: 28, padding: "0 0.75rem", borderRadius: 6,
+                  border: "1px solid var(--border)", background: "transparent",
+                  color: page * pageSize >= total ? "var(--muted-foreground)" : "var(--foreground)",
+                  fontSize: "0.72rem",
+                  cursor: page * pageSize >= total ? "not-allowed" : "pointer",
+                  opacity: page * pageSize >= total ? 0.5 : 1,
+                }}
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );
