@@ -22,18 +22,35 @@ export async function GET() {
   return NextResponse.json(result);
 }
 
-export async function POST(request: NextRequest) {
+async function updateAndAudit(request: NextRequest): Promise<NextResponse> {
   const role = await getSiteRole();
   if (role !== "admin") return NextResponse.json({ error: "Admin only" }, { status: 403 });
   const patch = (await request.json()) as Partial<SiteConfig>;
   const updated = await writeSiteConfig(patch);
+
+  // F61: audit settings updates (mask sensitive values)
+  try {
+    const { auditLog } = await import("@/lib/event-log");
+    const { getSessionWithSiteRole } = await import("@/lib/require-role");
+    const session = await getSessionWithSiteRole();
+    if (session) {
+      const changedKeys = Object.keys(patch);
+      await auditLog(
+        "settings.updated",
+        { type: "user", userId: session.userId, email: session.email, name: session.name },
+        { type: "settings" },
+        { fields: changedKeys },
+      );
+    }
+  } catch { /* non-fatal */ }
+
   return NextResponse.json(updated);
 }
 
+export async function POST(request: NextRequest) {
+  return updateAndAudit(request);
+}
+
 export async function PATCH(request: NextRequest) {
-  const role = await getSiteRole();
-  if (role !== "admin") return NextResponse.json({ error: "Admin only" }, { status: 403 });
-  const patch = (await request.json()) as Partial<SiteConfig>;
-  const updated = await writeSiteConfig(patch);
-  return NextResponse.json(updated);
+  return updateAndAudit(request);
 }
