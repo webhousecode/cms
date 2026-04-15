@@ -1,0 +1,56 @@
+<svg viewBox="55 60 775 200" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Timeline from 1945 memex to 2026 Trail">
+  <!-- Main line -->
+  <line x1="60" y1="150" x2="840" y2="150" stroke="#1a1715" stroke-width="1.5"/>
+
+  <!-- 1945 Memex -->
+  <circle cx="100" cy="150" r="7" fill="#e8a87c"/>
+  <circle cx="100" cy="150" r="12" fill="none" stroke="#e8a87c" stroke-width="0.6" opacity="0.5"/>
+  <line x1="100" y1="140" x2="100" y2="100" stroke="#1a1715" stroke-width="0.7" stroke-dasharray="2,2"/>
+  <text x="100" y="88"  font-family="monospace" font-size="11" fill="#1a1715" text-anchor="middle" font-weight="bold">1945</text>
+  <text x="100" y="73"  font-family="monospace" font-size="10" fill="#1a1715" text-anchor="middle" letter-spacing="0.5">MEMEX</text>
+  <text x="100" y="185" font-family="monospace" font-size="8"  fill="#1a1715" text-anchor="middle" opacity="0.6">Bush</text>
+  <text x="100" y="197" font-family="monospace" font-size="8"  fill="#1a1715" text-anchor="middle" opacity="0.6">The Atlantic</text>
+
+  <!-- 1965 Hypertext -->
+  <circle cx="250" cy="150" r="5" fill="#1a1715"/>
+  <line x1="250" y1="145" x2="250" y2="100" stroke="#1a1715" stroke-width="0.7" stroke-dasharray="2,2"/>
+  <text x="250" y="88"  font-family="monospace" font-size="11" fill="#1a1715" text-anchor="middle" font-weight="bold">1965</text>
+  <text x="250" y="73"  font-family="monospace" font-size="10" fill="#1a1715" text-anchor="middle" letter-spacing="0.5">HYPERTEXT</text>
+  <text x="250" y="185" font-family="monospace" font-size="8"  fill="#1a1715" text-anchor="middle" opacity="0.6">Nelson</text>
+  <text x="250" y="197" font-family="monospace" font-size="8"  fill="#1a1715" text-anchor="middle" opacity="0.6">Xanadu</text>
+
+  <!-- 1968 Engelbart -->
+  <circle cx="380" cy="150" r="5" fill="#1a1715"/>
+  <line x1="380" y1="145" x2="380" y2="100" stroke="#1a1715" stroke-width="0.7" stroke-dasharray="2,2"/>
+  <text x="380" y="88"  font-family="monospace" font-size="11" fill="#1a1715" text-anchor="middle" font-weight="bold">1968</text>
+  <text x="380" y="73"  font-family="monospace" font-size="10" fill="#1a1715" text-anchor="middle" letter-spacing="0.5">THE DEMO</text>
+  <text x="380" y="185" font-family="monospace" font-size="8"  fill="#1a1715" text-anchor="middle" opacity="0.6">Engelbart</text>
+  <text x="380" y="197" font-family="monospace" font-size="8"  fill="#1a1715" text-anchor="middle" opacity="0.6">SRI · NLS</text>
+
+  <!-- 1989 WWW -->
+  <circle cx="530" cy="150" r="5" fill="#1a1715"/>
+  <line x1="530" y1="145" x2="530" y2="100" stroke="#1a1715" stroke-width="0.7" stroke-dasharray="2,2"/>
+  <text x="530" y="88"  font-family="monospace" font-size="11" fill="#1a1715" text-anchor="middle" font-weight="bold">1989</text>
+  <text x="530" y="73"  font-family="monospace" font-size="10" fill="#1a1715" text-anchor="middle" letter-spacing="0.5">WWW</text>
+  <text x="530" y="185" font-family="monospace" font-size="8"  fill="#1a1715" text-anchor="middle" opacity="0.6">Berners-Lee</text>
+  <text x="530" y="197" font-family="monospace" font-size="8"  fill="#1a1715" text-anchor="middle" opacity="0.6">CERN</text>
+
+  <!-- 2025 LLM Wiki -->
+  <circle cx="680" cy="150" r="5" fill="#1a1715"/>
+  <line x1="680" y1="145" x2="680" y2="100" stroke="#1a1715" stroke-width="0.7" stroke-dasharray="2,2"/>
+  <text x="680" y="88"  font-family="monospace" font-size="11" fill="#1a1715" text-anchor="middle" font-weight="bold">2025</text>
+  <text x="680" y="73"  font-family="monospace" font-size="10" fill="#1a1715" text-anchor="middle" letter-spacing="0.5">LLM WIKI</text>
+  <text x="680" y="185" font-family="monospace" font-size="8"  fill="#1a1715" text-anchor="middle" opacity="0.6">Karpathy</text>
+
+  <!-- 2026 Trail -->
+  <circle cx="800" cy="150" r="8" fill="#e8a87c"/>
+  <circle cx="800" cy="150" r="14" fill="none" stroke="#e8a87c" stroke-width="0.7" opacity="0.6"/>
+  <circle cx="800" cy="150" r="20" fill="none" stroke="#e8a87c" stroke-width="0.4" opacity="0.3"/>
+  <line x1="800" y1="135" x2="800" y2="100" stroke="#e8a87c" stroke-width="1"/>
+  <text x="800" y="88"  font-family="monospace" font-size="11" fill="#1a1715" text-anchor="middle" font-weight="bold">2026</text>
+  <text x="800" y="73"  font-family="monospace" font-size="10" fill="#1a1715" text-anchor="middle" letter-spacing="0.5">Trail</text>
+  <text x="800" y="185" font-family="monospace" font-size="8"  fill="#1a1715" text-anchor="middle" opacity="0.6">broberg.ai</text>
+
+  <!-- Caption -->
+  <text x="450" y="245" font-family="monospace" font-size="11" fill="#1a1715" text-anchor="middle" opacity="0.55" letter-spacing="1.5">EIGHTY-ONE YEARS FROM VISION TO IMPLEMENTATION</text>
+</svg>
