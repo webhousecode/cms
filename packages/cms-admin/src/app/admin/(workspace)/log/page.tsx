@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { RefreshCw, Download, ShieldCheck, Terminal, Globe2, AlertCircle, AlertTriangle, Info, Activity, Clock, Users, AlertOctagon } from "lucide-react";
+import { RefreshCw, Download, ShieldCheck, Terminal, Globe2, AlertCircle, AlertTriangle, Info, Activity, Clock, Users, AlertOctagon, X } from "lucide-react";
 import { ActionBar, ActionBarBreadcrumb } from "@/components/action-bar";
 import { TabTitle } from "@/lib/tabs-context";
 import { CustomSelect } from "@/components/ui/custom-select";
@@ -60,6 +60,34 @@ function formatTime(iso: string): string {
   if (isToday) return `i dag ${time}`;
   if (isYesterday) return `i går ${time}`;
   return d.toLocaleString("da-DK", { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+}
+
+function FilterChip({ label, onRemove }: { label: string; onRemove: () => void }) {
+  return (
+    <span style={{
+      display: "inline-flex", alignItems: "center", gap: "0.3rem",
+      padding: "0.15rem 0.5rem", borderRadius: 999,
+      border: "1px solid var(--border)",
+      background: "var(--muted, rgba(255,255,255,0.03))",
+      color: "var(--foreground)",
+      fontSize: "0.65rem", fontWeight: 500,
+    }}>
+      {label}
+      <button
+        type="button"
+        onClick={onRemove}
+        aria-label={`Remove ${label} filter`}
+        style={{
+          display: "inline-flex", alignItems: "center",
+          background: "transparent", border: "none",
+          color: "var(--muted-foreground)",
+          cursor: "pointer", padding: 0,
+        }}
+      >
+        <X style={{ width: 11, height: 11 }} />
+      </button>
+    </span>
+  );
 }
 
 function StatCard({
@@ -248,10 +276,49 @@ export default function EventLogPage() {
           <StatCard icon={AlertOctagon} label="Errors" value={stats?.errors24h ?? 0} sublabel="Sidste 24 timer" tone={stats && stats.errors24h > 0 ? "error" : "default"} />
         </div>
 
-        {/* Filtered count line */}
-        <p style={{ fontSize: "0.78rem", color: "var(--muted-foreground)", margin: "0 0 1.25rem" }}>
-          {total} event{total === 1 ? "" : "s"} match current filters
-        </p>
+        {/* Filtered count line + active filter chips */}
+        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap", margin: "0 0 1.25rem", minHeight: 22 }}>
+          <span style={{ fontSize: "0.78rem", color: "var(--muted-foreground)" }}>
+            {total} event{total === 1 ? "" : "s"} match current filters
+          </span>
+          {level !== "all" && (
+            <FilterChip label={`Level: ${level}`} onRemove={() => setLevel("all")} />
+          )}
+          {actionFilter && (
+            <FilterChip label={`Action: ${actionFilter}`} onRemove={() => setActionFilter("")} />
+          )}
+          {dateFrom && (
+            <FilterChip label={`From: ${dateFrom}`} onRemove={() => setDateFrom("")} />
+          )}
+          {dateTo && (
+            <FilterChip label={`To: ${dateTo}`} onRemove={() => setDateTo("")} />
+          )}
+          {layers.size < 3 && (
+            <FilterChip
+              label={`Layers: ${Array.from(layers).join(", ")}`}
+              onRemove={() => setLayers(new Set(["audit", "server", "client"]))}
+            />
+          )}
+          {(level !== "all" || actionFilter || dateFrom || dateTo || layers.size < 3) && (
+            <button
+              type="button"
+              onClick={() => {
+                setLevel("all");
+                setActionFilter("");
+                setDateFrom("");
+                setDateTo("");
+                setLayers(new Set(["audit", "server", "client"]));
+              }}
+              style={{
+                fontSize: "0.65rem", color: "var(--muted-foreground)",
+                background: "transparent", border: "none", cursor: "pointer",
+                textDecoration: "underline", padding: 0,
+              }}
+            >
+              Clear all
+            </button>
+          )}
+        </div>
 
         {/* Filters — fixed-height row prevents layout shift when toggled */}
         <div style={{
