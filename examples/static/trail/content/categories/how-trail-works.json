@@ -4,7 +4,7 @@
   "data": {
     "name": "How Trail Works",
     "slug": "how-trail-works",
-    "description": "Essays on trail's architecture — ingest-time compilation, cross-referenced Neurons, and the design choices that make a knowledge graph compound instead of fragment.",
+    "description": "Essays on Trail's architecture — ingest-time compilation, cross-referenced Neurons, and the design choices that make a knowledge graph compound instead of fragment.",
     "order": 1
   },
   "id": "how-trail-works",
