@@ -887,19 +887,27 @@ function renderRelatedLinks(post: Doc): string {
   </div>`;
 }
 
+function renderTagPills(doc: Doc): string {
+  const tags = Array.isArray(doc.data.tags) ? (doc.data.tags as string[]) : [];
+  if (!tags.length) return "";
+  return `<div class="post-tags">${tags
+    .map((t) => `<a class="post-tag" href="${esc(bp(`/tags/${t}/`))}">#${esc(t)}</a>`)
+    .join("")}</div>`;
+}
+
 function renderPostFooter(post: Doc): string {
-  const tags = Array.isArray(post.data.tags) ? (post.data.tags as string[]) : [];
   const cat = categoryOf(post);
-  const tagPills = tags.length
-    ? `<div class="post-tags">${tags
-        .map((t) => `<a class="post-tag" href="${esc(bp(`/tags/${t}/`))}">#${esc(t)}</a>`)
-        .join("")}</div>`
-    : "";
   const more = cat
     ? `<a class="post-more" href="${esc(bp(`/trails/${String(cat.data.slug ?? cat.slug)}/`))}">← MORE FROM ${esc(String(cat.data.name ?? cat.slug).toUpperCase())}</a>`
     : `<a class="post-more" href="${esc(bp("/trails/"))}">← MORE FROM TRAILS</a>`;
-  const related = renderRelatedLinks(post);
-  return `<div class="post-footer">${related}${tagPills}${more}</div>`;
+  return `<div class="post-footer">${renderRelatedLinks(post)}${renderTagPills(post)}${more}</div>`;
+}
+
+function renderPageFooter(page: Doc): string {
+  const related = renderRelatedLinks(page);
+  const tagPills = renderTagPills(page);
+  if (!related && !tagPills) return "";
+  return `<div class="post-footer">${related}${tagPills}</div>`;
 }
 
 function renderCategoryHeader(cat: Doc): string {
@@ -1040,8 +1048,9 @@ for (const page of pages) {
   const bodyHtml = renderContent(page.data.content);
   const hasLongForm = !!bodyHtml;
   const header = hasLongForm ? renderArticle(page.data, page.slug) : "";
+  const footer = hasLongForm ? renderPageFooter(page) : "";
   const inner = hasLongForm
-    ? `<article class="article container">${header}<div class="prose">${bodyHtml}</div></article>`
+    ? `<article class="article container">${header}<div class="prose">${bodyHtml}</div>${footer}</article>`
     : blocksHtml;
   const fullContent = blocksHtml && hasLongForm ? `${blocksHtml}${inner}` : inner || blocksHtml;
   const desc = String(page.data.metaDescription ?? page.data.excerpt ?? siteDescription);
