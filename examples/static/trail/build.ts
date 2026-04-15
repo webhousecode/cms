@@ -232,11 +232,11 @@ button { font: inherit; cursor: pointer; border: none; background: none; color: 
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--fg-10);
 }
-.nav-brand { display: flex; align-items: center; gap: 0.75rem; }
-.nav-brand img { width: 32px; height: 32px; }
+.nav-brand { display: flex; align-items: center; gap: 0.875rem; }
+.nav-brand img { width: 40px; height: 40px; }
 .nav-brand .brand-text {
   font-family: var(--font-mono);
-  font-size: 1.125rem;
+  font-size: 1.375rem;
   font-weight: 600;
   letter-spacing: -0.02em;
   color: var(--fg);
@@ -619,6 +619,37 @@ button { font: inherit; cursor: pointer; border: none; background: none; color: 
   transition: color 0.15s;
 }
 .post-more:hover { color: var(--accent); }
+
+.post-related {
+  margin-bottom: 1.75rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--fg-10);
+}
+.post-related-label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--fg-60);
+  margin-bottom: 0.75rem;
+}
+.post-related ul { list-style: none; padding: 0; margin: 0; }
+.post-related li { margin: 0.4rem 0; }
+.post-related a {
+  font-size: 1rem;
+  color: var(--fg);
+  border-bottom: 1px solid var(--fg-10);
+  padding-bottom: 0.15rem;
+  transition: color 0.15s, border-color 0.15s;
+}
+.post-related a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+.post-related-arrow {
+  color: var(--fg-60);
+  margin-left: 0.25rem;
+  transition: color 0.15s, transform 0.15s;
+  display: inline-block;
+}
+.post-related a:hover .post-related-arrow { color: var(--accent); transform: translateX(3px); }
 `;
 
 // ── Rendering ───────────────────────────────────────────────
@@ -813,6 +844,36 @@ function renderPostCard(post: Doc): string {
   </a>`;
 }
 
+function normalizeRefs(raw: unknown): string[] {
+  if (!raw) return [];
+  if (Array.isArray(raw)) return raw.map((x) => String(x)).filter(Boolean);
+  const s = String(raw);
+  return s ? [s] : [];
+}
+
+function renderRelatedLinks(post: Doc): string {
+  const pageRefs = normalizeRefs(post.data.relatedPages);
+  const postRefs = normalizeRefs(post.data.relatedPosts);
+  const items: string[] = [];
+  for (const ref of pageRefs) {
+    const p = pages.find((x) => x.slug === ref || String(x.data.id ?? "") === ref);
+    if (!p) continue;
+    const title = String(p.data.title ?? p.slug);
+    items.push(`<li><a href="${esc(bp(`/${p.slug}/`))}">${esc(title)} <span class="post-related-arrow">→</span></a></li>`);
+  }
+  for (const ref of postRefs) {
+    const p = posts.find((x) => x.slug === ref || String(x.data.id ?? "") === ref);
+    if (!p) continue;
+    const title = String(p.data.title ?? p.slug);
+    items.push(`<li><a href="${esc(postUrl(p))}">${esc(title)} <span class="post-related-arrow">→</span></a></li>`);
+  }
+  if (!items.length) return "";
+  return `<div class="post-related">
+    <div class="post-related-label">Related</div>
+    <ul>${items.join("")}</ul>
+  </div>`;
+}
+
 function renderPostFooter(post: Doc): string {
   const tags = Array.isArray(post.data.tags) ? (post.data.tags as string[]) : [];
   const cat = categoryOf(post);
@@ -824,7 +885,8 @@ function renderPostFooter(post: Doc): string {
   const more = cat
     ? `<a class="post-more" href="${esc(bp(`/trails/${String(cat.data.slug ?? cat.slug)}/`))}">← MORE FROM ${esc(String(cat.data.name ?? cat.slug).toUpperCase())}</a>`
     : `<a class="post-more" href="${esc(bp("/trails/"))}">← MORE FROM TRAILS</a>`;
-  return `<div class="post-footer">${tagPills}${more}</div>`;
+  const related = renderRelatedLinks(post);
+  return `<div class="post-footer">${related}${tagPills}${more}</div>`;
 }
 
 function renderCategoryHeader(cat: Doc): string {
@@ -903,7 +965,7 @@ function layout(title: string, content: string, metaDesc?: string): string {
 <body>
   <nav class="nav">
     <a href="${esc(bp("/"))}" class="nav-brand">
-      <img src="${esc(bp(logo))}" alt="${esc(siteTitle)}" width="32" height="32">
+      <img src="${esc(bp(logo))}" alt="${esc(siteTitle)}" width="40" height="40">
       <span class="brand-text">${esc(siteTitle)}</span>
     </a>
     <div class="nav-links">
