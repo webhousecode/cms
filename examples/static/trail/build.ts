@@ -836,21 +836,34 @@ function collectTags(postList: Doc[]): Map<string, Doc[]> {
   return map;
 }
 
-function renderPostCard(post: Doc): string {
-  const title = String(post.data.title ?? post.slug);
-  const excerpt = String(post.data.excerpt ?? "");
-  const date = String(post.data.date ?? "");
-  const readTime = String(post.data.readTime ?? "");
-  const cat = categoryOf(post);
+function isPost(doc: Doc): boolean {
+  return posts.includes(doc);
+}
+
+function docUrl(doc: Doc): string {
+  return isPost(doc) ? postUrl(doc) : bp(`/${doc.slug}/`);
+}
+
+function docCategoryLabel(doc: Doc): string {
+  if (isPost(doc)) {
+    const cat = categoryOf(doc);
+    return cat ? String(cat.data.name ?? cat.slug) : "";
+  }
+  return String(doc.data.category ?? "");
+}
+
+function renderPostCard(doc: Doc): string {
+  const title = String(doc.data.title ?? doc.slug);
+  const excerpt = String(doc.data.excerpt ?? "");
+  const date = String(doc.data.date ?? "");
+  const readTime = String(doc.data.readTime ?? "");
+  const catLabel = docCategoryLabel(doc);
   const dateStr = date
     ? new Date(date).toLocaleDateString("en", { year: "numeric", month: "long", day: "numeric" })
     : "";
-  const meta = [cat ? String(cat.data.name ?? cat.slug) : "", dateStr, readTime]
-    .filter(Boolean)
-    .map(esc)
-    .join(" · ");
-  return `<a class="post-card" href="${esc(postUrl(post))}">
-    ${cat ? `<div class="post-card-eyebrow">${esc(String(cat.data.name ?? cat.slug))}</div>` : ""}
+  const meta = [catLabel, dateStr, readTime].filter(Boolean).map(esc).join(" · ");
+  return `<a class="post-card" href="${esc(docUrl(doc))}">
+    ${catLabel ? `<div class="post-card-eyebrow">${esc(catLabel)}</div>` : ""}
     <h3>${esc(title)}</h3>
     ${excerpt ? `<p>${esc(excerpt)}</p>` : ""}
     ${meta ? `<div class="post-card-meta">${meta}</div>` : ""}
@@ -1096,17 +1109,18 @@ for (const post of posts) {
   );
 }
 
-// Tag index pages (/tags/<tag>/)
-const tagMap = collectTags(posts);
+// Tag index pages (/tags/<tag>/) — across both posts AND pages, so tag pills
+// on long-form pages (e.g. the-1945-concept essay) resolve instead of 404.
+const tagMap = collectTags([...posts, ...pages]);
 for (const [tag, list] of tagMap) {
   const header = `<header class="article-header">
     <div class="article-eyebrow">Tag</div>
     <h1>#${esc(tag)}</h1>
-    <p class="article-lead">${list.length} post${list.length === 1 ? "" : "s"} tagged <code>${esc(tag)}</code>.</p>
+    <p class="article-lead">${list.length} item${list.length === 1 ? "" : "s"} tagged <code>${esc(tag)}</code>.</p>
   </header>`;
   const body = renderPostGrid(list.sort((a, b) => String(b.data.date ?? "").localeCompare(String(a.data.date ?? ""))));
   const html = `<article class="article container">${header}${body}</article>`;
-  write(`tags/${tag}/index.html`, layout(`#${tag}`, html, `Posts tagged ${tag}.`));
+  write(`tags/${tag}/index.html`, layout(`#${tag}`, html, `Content tagged ${tag}.`));
 }
 
 // Copy uploads
