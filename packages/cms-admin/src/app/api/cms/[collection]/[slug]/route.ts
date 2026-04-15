@@ -185,20 +185,20 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
 
     // F61: audit
     try {
-      const { auditLog } = await import("@/lib/event-log");
+      const { logDocumentPublished, logDocumentTrashed, logDocumentUpdated, auditLog } = await import("@/lib/event-log");
       const title = String(editedData.title ?? doc.data?.title ?? slug);
       const statusChanged = body.status && body.status !== doc.status;
-      const action =
-        statusChanged && nextStatus === "published" ? "document.published" :
-        statusChanged && nextStatus === "trashed" ? "document.trashed" :
-        statusChanged && nextStatus === "draft" && doc.status === "published" ? "document.unpublished" :
-        "document.updated";
-      await auditLog(
-        action,
-        { type: "user", userId: session.userId, email: session.email, name: session.name },
-        { type: "document", collection, slug: body.slug ?? slug, title },
-        body.data ? { fields: Object.keys(body.data) } : undefined,
-      );
+      const actor = { userId: session.userId, email: session.email, name: session.name };
+      const finalSlug = body.slug ?? slug;
+      if (statusChanged && nextStatus === "published") {
+        await logDocumentPublished(actor, collection, finalSlug, title);
+      } else if (statusChanged && nextStatus === "trashed") {
+        await logDocumentTrashed(actor, collection, finalSlug, title);
+      } else if (statusChanged && nextStatus === "draft" && doc.status === "published") {
+        await auditLog("document.unpublished", { type: "user", ...actor }, { type: "document", collection, slug: finalSlug, title });
+      } else {
+        await logDocumentUpdated(actor, collection, finalSlug, title, body.data ? Object.keys(body.data) : undefined);
+      }
     } catch { /* non-fatal */ }
 
     // If trashing, clean up any pending curation queue entries for this doc
@@ -302,12 +302,14 @@ export async function DELETE(req: NextRequest, { params }: Ctx) {
 
     // F61: audit
     try {
-      const { auditLog } = await import("@/lib/event-log");
-      await auditLog(
-        permanent ? "document.deleted" : "document.trashed",
-        { type: "user", userId: delSession.userId, email: delSession.email, name: delSession.name },
-        { type: "document", collection, slug, title: String(doc.data?.title ?? slug) },
-      );
+      const { logDocumentDeleted, logDocumentTrashed } = await import("@/lib/event-log");
+      const actor = { userId: delSession.userId, email: delSession.email, name: delSession.name };
+      const title = String(doc.data?.title ?? slug);
+      if (permanent) {
+        await logDocumentDeleted(actor, collection, slug, title);
+      } else {
+        await logDocumentTrashed(actor, collection, slug, title);
+      }
     } catch { /* non-fatal */ }
 
     // Either way, clean up any pending curation queue entries

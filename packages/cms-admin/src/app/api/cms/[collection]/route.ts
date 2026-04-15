@@ -47,14 +47,15 @@ export async function POST(req: NextRequest, { params }: Ctx) {
 
     // F61: audit
     try {
-      const { auditLog } = await import("@/lib/event-log");
+      const { logDocumentCreated } = await import("@/lib/event-log");
       const { getSessionWithSiteRole } = await import("@/lib/require-role");
       const session = await getSessionWithSiteRole();
       if (session) {
-        await auditLog(
-          "document.created",
-          { type: "user", userId: session.userId, email: session.email, name: session.name },
-          { type: "document", collection, slug: body.slug, title: String(body.data?.title ?? body.slug) },
+        await logDocumentCreated(
+          { userId: session.userId, email: session.email, name: session.name },
+          collection,
+          body.slug,
+          String(body.data?.title ?? body.slug),
         );
       }
     } catch { /* non-fatal */ }

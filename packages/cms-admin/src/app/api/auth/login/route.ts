@@ -30,14 +30,9 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "This account uses GitHub login — click \"Sign in with GitHub\" below" }, { status: 401 });
       }
       try {
-        const { auditLog, hashIp } = await import("@/lib/event-log");
+        const { logLoginFailed, hashIp } = await import("@/lib/event-log");
         const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
-        await auditLog(
-          "auth.login.failed",
-          { type: "user", email: String(email), ipHash: hashIp(ip) },
-          undefined,
-          { reason: "invalid_credentials" },
-        );
+        await logLoginFailed(String(email), "invalid_credentials", hashIp(ip));
       } catch { /* non-fatal */ }
       return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
     }
@@ -61,11 +56,11 @@ export async function POST(request: NextRequest) {
 
     // F61: audit login success
     try {
-      const { auditLog, hashIp } = await import("@/lib/event-log");
+      const { logLogin, hashIp } = await import("@/lib/event-log");
       const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? null;
-      await auditLog(
-        "auth.login",
-        { type: "user", userId: user.id, email: user.email, name: user.name, ipHash: hashIp(ip) },
+      await logLogin(
+        { userId: user.id, email: user.email, name: user.name, ipHash: hashIp(ip) },
+        "password",
       );
     } catch { /* non-fatal */ }
 
