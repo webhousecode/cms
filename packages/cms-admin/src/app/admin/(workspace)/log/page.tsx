@@ -103,7 +103,7 @@ export default function EventLogPage() {
   function toggleLayer(l: LogLayer) {
     const next = new Set(layers);
     if (next.has(l)) next.delete(l); else next.add(l);
-    if (next.size === 0) next.add(l); // never allow empty
+    if (next.size === 0) next.add(l);
     setLayers(next);
   }
 
@@ -116,85 +116,92 @@ export default function EventLogPage() {
 
   return (
     <>
-      <TabTitle title="Event Log" />
-      <ActionBar>
-        <ActionBarBreadcrumb items={["Event Log"]} />
-      </ActionBar>
-
-      <div style={{ padding: "1.5rem", maxWidth: "1200px", margin: "0 auto" }}>
-        <div style={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", marginBottom: "1rem", gap: "1rem", flexWrap: "wrap" }}>
-          <div>
-            <h1 style={{ fontSize: "1.25rem", fontWeight: 600, margin: 0 }}>Event Log</h1>
-            <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", margin: "0.25rem 0 0" }}>
-              {total} events across {layers.size} layer{layers.size === 1 ? "" : "s"}
-            </p>
-          </div>
-          <div style={{ display: "flex", gap: "0.5rem" }}>
+      <TabTitle value="Event Log" />
+      <ActionBar
+        actions={
+          <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <button
               type="button"
               onClick={load}
               disabled={loading}
               style={{
-                display: "flex", alignItems: "center", gap: "0.35rem",
-                padding: "0.4rem 0.75rem", borderRadius: "6px", border: "1px solid var(--border)",
-                background: "transparent", color: "var(--foreground)", fontSize: "0.75rem",
+                height: 28, display: "inline-flex", alignItems: "center", gap: "0.35rem",
+                padding: "0 0.75rem", borderRadius: 6,
+                border: "1px solid var(--border)", background: "transparent",
+                color: "var(--foreground)",
+                fontSize: "0.75rem", fontWeight: 500,
                 cursor: loading ? "wait" : "pointer",
               }}
             >
-              <RefreshCw className={loading ? "animate-spin" : ""} style={{ width: 14, height: 14 }} />
+              <RefreshCw className={loading ? "animate-spin" : ""} style={{ width: 13, height: 13 }} />
               Refresh
             </button>
             <button
               type="button"
               onClick={exportJson}
               style={{
-                display: "flex", alignItems: "center", gap: "0.35rem",
-                padding: "0.4rem 0.75rem", borderRadius: "6px", border: "1px solid var(--border)",
-                background: "transparent", color: "var(--foreground)", fontSize: "0.75rem",
-                cursor: "pointer",
+                height: 28, display: "inline-flex", alignItems: "center", gap: "0.35rem",
+                padding: "0 0.75rem", borderRadius: 6, border: "none",
+                background: "#F7BB2E", color: "#0D0D0D",
+                fontSize: "0.75rem", fontWeight: 600, cursor: "pointer",
               }}
             >
-              <Download style={{ width: 14, height: 14 }} />
+              <Download style={{ width: 13, height: 13 }} />
               Export
             </button>
           </div>
-        </div>
+        }
+      >
+        <ActionBarBreadcrumb items={["Event Log"]} />
+      </ActionBar>
 
-        {/* Filters */}
-        <div style={{ display: "flex", gap: "0.75rem", flexWrap: "wrap", marginBottom: "1rem", alignItems: "center" }}>
-          <div style={{ display: "flex", gap: "0.35rem" }}>
-            {(["audit", "server", "client"] as LogLayer[]).map((l) => {
-              const Icon = LAYER_ICONS[l];
-              const active = layers.has(l);
-              return (
-                <button
-                  key={l}
-                  type="button"
-                  onClick={() => toggleLayer(l)}
-                  style={{
-                    display: "flex", alignItems: "center", gap: "0.3rem",
-                    padding: "0.3rem 0.6rem", borderRadius: "999px",
-                    border: "1px solid var(--border)",
-                    background: active ? "#F7BB2E" : "transparent",
-                    color: active ? "#0D0D0D" : "var(--muted-foreground)",
-                    fontSize: "0.7rem", fontWeight: 500, cursor: "pointer",
-                    textTransform: "capitalize",
-                  }}
-                >
-                  <Icon style={{ width: 12, height: 12 }} />
-                  {l}
-                </button>
-              );
-            })}
-          </div>
+      <div style={{ padding: "2rem", maxWidth: "72rem" }}>
+        {/* Stats line */}
+        <p style={{ fontSize: "0.78rem", color: "var(--muted-foreground)", margin: "0 0 1.25rem" }}>
+          {total} event{total === 1 ? "" : "s"} across {layers.size} layer{layers.size === 1 ? "" : "s"}
+        </p>
 
+        {/* Filters — fixed-height row prevents layout shift when toggled */}
+        <div style={{
+          display: "flex",
+          gap: "0.75rem",
+          flexWrap: "wrap",
+          alignItems: "center",
+          marginBottom: "1.5rem",
+          minHeight: 32,
+        }}>
+          {(["audit", "server", "client"] as LogLayer[]).map((l) => {
+            const Icon = LAYER_ICONS[l];
+            const active = layers.has(l);
+            return (
+              <button
+                key={l}
+                type="button"
+                onClick={() => toggleLayer(l)}
+                style={{
+                  display: "flex", alignItems: "center", gap: "0.3rem",
+                  height: 28,
+                  padding: "0 0.75rem", borderRadius: 999,
+                  border: "1px solid var(--border)",
+                  background: active ? "#F7BB2E" : "transparent",
+                  color: active ? "#0D0D0D" : "var(--muted-foreground)",
+                  fontSize: "0.72rem", fontWeight: 500, cursor: "pointer",
+                  textTransform: "capitalize",
+                }}
+              >
+                <Icon style={{ width: 12, height: 12 }} />
+                {l}
+              </button>
+            );
+          })}
           <select
             value={level}
             onChange={(e) => setLevel(e.target.value as LogLevel | "all")}
             style={{
-              padding: "0.3rem 0.6rem", borderRadius: "6px",
+              height: 28,
+              padding: "0 0.6rem", borderRadius: 6,
               border: "1px solid var(--border)", background: "var(--background)",
-              color: "var(--foreground)", fontSize: "0.7rem", cursor: "pointer",
+              color: "var(--foreground)", fontSize: "0.72rem", cursor: "pointer",
             }}
           >
             <option value="all">All levels</option>
@@ -202,25 +209,30 @@ export default function EventLogPage() {
             <option value="warn">Warn</option>
             <option value="error">Error</option>
           </select>
-
           <input
             type="text"
             value={actionFilter}
             onChange={(e) => setActionFilter(e.target.value)}
             placeholder="Filter action (e.g. document.)"
             style={{
-              padding: "0.3rem 0.6rem", borderRadius: "6px",
+              height: 28,
+              padding: "0 0.6rem", borderRadius: 6,
               border: "1px solid var(--border)", background: "var(--background)",
-              color: "var(--foreground)", fontSize: "0.7rem", minWidth: "200px",
+              color: "var(--foreground)", fontSize: "0.72rem", minWidth: 240,
             }}
           />
         </div>
 
-        {/* Entries */}
+        {/* Entries — left-aligned, fixed columns. Empty state stays left. */}
         <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem" }}>
           {entries.length === 0 && !loading && (
-            <div style={{ padding: "2rem", textAlign: "center", color: "var(--muted-foreground)", fontSize: "0.85rem" }}>
-              No events yet. Try making a change or triggering a deploy.
+            <div style={{
+              padding: "0.75rem 0",
+              color: "var(--muted-foreground)",
+              fontSize: "0.78rem",
+              textAlign: "left",
+            }}>
+              No events match the current filters.
             </div>
           )}
           {entries.map((e) => {
@@ -231,10 +243,10 @@ export default function EventLogPage() {
                 key={e.id}
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "120px 24px 24px 90px 1fr",
+                  gridTemplateColumns: "120px 20px 20px 70px 1fr",
                   gap: "0.6rem",
                   padding: "0.5rem 0.75rem",
-                  borderRadius: "6px",
+                  borderRadius: 6,
                   border: "1px solid var(--border)",
                   background: e.level === "error" ? "rgba(239,68,68,0.05)" : "transparent",
                   fontSize: "0.72rem",
@@ -243,9 +255,9 @@ export default function EventLogPage() {
                 }}
               >
                 <span style={{ color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>{formatTime(e.timestamp)}</span>
-                <LevelIcon style={{ width: 14, height: 14, color: LEVEL_COLORS[e.level] }} />
-                <LayerIcon style={{ width: 14, height: 14, color: "var(--muted-foreground)" }} />
-                <span style={{ color: "var(--muted-foreground)", fontSize: "0.65rem", textTransform: "uppercase" }}>{e.layer}</span>
+                <LevelIcon style={{ width: 13, height: 13, color: LEVEL_COLORS[e.level] }} />
+                <LayerIcon style={{ width: 13, height: 13, color: "var(--muted-foreground)" }} />
+                <span style={{ color: "var(--muted-foreground)", fontSize: "0.62rem", textTransform: "uppercase" }}>{e.layer}</span>
                 <div style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                   <span style={{ color: "var(--foreground)" }}>{formatAction(e)}</span>
                   {e.error?.message && (
