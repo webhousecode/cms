@@ -127,6 +127,8 @@ export default function EventLogPage() {
   const [layers, setLayers] = useState<Set<LogLayer>>(new Set(["audit", "server", "client"]));
   const [level, setLevel] = useState<LogLevel | "all">("all");
   const [actionFilter, setActionFilter] = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -135,6 +137,8 @@ export default function EventLogPage() {
       params.set("layers", Array.from(layers).join(","));
       if (level !== "all") params.set("level", level);
       if (actionFilter) params.set("action", actionFilter);
+      if (dateFrom) params.set("since", `${dateFrom}T00:00:00.000Z`);
+      if (dateTo) params.set("until", `${dateTo}T23:59:59.999Z`);
       params.set("limit", "200");
       const [feedRes, statsRes] = await Promise.all([
         fetch(`/api/admin/log?${params.toString()}`),
@@ -150,7 +154,7 @@ export default function EventLogPage() {
     } finally {
       setLoading(false);
     }
-  }, [layers, level, actionFilter]);
+  }, [layers, level, actionFilter, dateFrom, dateTo]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -166,6 +170,8 @@ export default function EventLogPage() {
     params.set("layers", Array.from(layers).join(","));
     if (level !== "all") params.set("level", level);
     if (actionFilter) params.set("action", actionFilter);
+    if (dateFrom) params.set("since", `${dateFrom}T00:00:00.000Z`);
+    if (dateTo) params.set("until", `${dateTo}T23:59:59.999Z`);
     params.set("format", format);
     window.location.href = `/api/admin/log/export?${params.toString()}`;
   }
@@ -301,6 +307,33 @@ export default function EventLogPage() {
               padding: "0 0.6rem", borderRadius: 6,
               border: "1px solid var(--border)", background: "var(--background)",
               color: "var(--foreground)", fontSize: "0.72rem", minWidth: 240,
+            }}
+          />
+          <input
+            type="date"
+            value={dateFrom}
+            onChange={(e) => setDateFrom(e.target.value)}
+            title="From date"
+            style={{
+              height: 28,
+              padding: "0 0.6rem", borderRadius: 6,
+              border: "1px solid var(--border)", background: "var(--background)",
+              color: "var(--foreground)", fontSize: "0.72rem",
+              colorScheme: "dark",
+            }}
+          />
+          <span style={{ color: "var(--muted-foreground)", fontSize: "0.72rem" }}>–</span>
+          <input
+            type="date"
+            value={dateTo}
+            onChange={(e) => setDateTo(e.target.value)}
+            title="To date"
+            style={{
+              height: 28,
+              padding: "0 0.6rem", borderRadius: 6,
+              border: "1px solid var(--border)", background: "var(--background)",
+              color: "var(--foreground)", fontSize: "0.72rem",
+              colorScheme: "dark",
             }}
           />
         </div>
