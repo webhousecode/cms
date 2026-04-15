@@ -1,0 +1,12 @@
+{
+  "slug": "field-notes",
+  "status": "published",
+  "data": {
+    "name": "Field Notes",
+    "slug": "field-notes",
+    "description": "Engineering diaries from inside the trail build — pipelines, benchmarks, incidents, and the everyday craft of shipping a knowledge engine.",
+    "order": 2
+  },
+  "id": "field-notes",
+  "_fieldMeta": {}
+}

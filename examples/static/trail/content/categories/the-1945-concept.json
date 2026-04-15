@@ -1,0 +1,12 @@
+{
+  "slug": "the-1945-concept",
+  "status": "published",
+  "data": {
+    "name": "The 1945 Concept",
+    "slug": "the-1945-concept",
+    "description": "Short essays on Vannevar Bush's Memex, associative trails, and the eight-decade lineage that leads to modern LLM-maintained knowledge graphs.",
+    "order": 3
+  },
+  "id": "the-1945-concept",
+  "_fieldMeta": {}
+}

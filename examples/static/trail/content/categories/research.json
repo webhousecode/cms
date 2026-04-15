@@ -1,0 +1,12 @@
+{
+  "slug": "research",
+  "status": "published",
+  "data": {
+    "name": "Research",
+    "slug": "research",
+    "description": "Deep dives into adjacent systems, benchmarks, and comparisons — from MemPalace and Mem0 to Karpathy's LLM Wiki and the long tail of RAG variants.",
+    "order": 5
+  },
+  "id": "research",
+  "_fieldMeta": {}
+}

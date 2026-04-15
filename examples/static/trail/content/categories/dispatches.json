@@ -1,0 +1,12 @@
+{
+  "slug": "dispatches",
+  "status": "published",
+  "data": {
+    "name": "Dispatches",
+    "slug": "dispatches",
+    "description": "Releases, announcements, and observations from the broader knowledge-infrastructure landscape — what's shipping, what's shifting, what's worth watching.",
+    "order": 4
+  },
+  "id": "dispatches",
+  "_fieldMeta": {}
+}
