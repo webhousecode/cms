@@ -28,6 +28,7 @@ import {
   Heart,
   Gauge,
   ClipboardList,
+  ScrollText,
 } from "lucide-react";
 import {
   Sidebar,
@@ -459,6 +460,19 @@ export function AppSidebar({ collections }: Props) {
                     <span>Lighthouse</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
+                {siteRole === "admin" && (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      isActive={pathname === "/admin/log"}
+                      tooltip="Event Log"
+                      render={<Link href="/admin/log" data-testid="nav-link-log" />}
+                      style={{ paddingLeft: "1.75rem" }}
+                    >
+                      <ScrollText className="!w-5 !h-5" />
+                      <span>Event Log</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )}
               </SidebarMenu>
             </SidebarGroupContent>
           )}

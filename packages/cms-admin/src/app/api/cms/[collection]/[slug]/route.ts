@@ -183,6 +183,24 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
       ...("unpublishAt" in body ? { unpublishAt: body.unpublishAt } : {}),
     });
 
+    // F61: audit
+    try {
+      const { auditLog } = await import("@/lib/event-log");
+      const title = String(editedData.title ?? doc.data?.title ?? slug);
+      const statusChanged = body.status && body.status !== doc.status;
+      const action =
+        statusChanged && nextStatus === "published" ? "document.published" :
+        statusChanged && nextStatus === "trashed" ? "document.trashed" :
+        statusChanged && nextStatus === "draft" && doc.status === "published" ? "document.unpublished" :
+        "document.updated";
+      await auditLog(
+        action,
+        { type: "user", userId: session.userId, email: session.email, name: session.name },
+        { type: "document", collection, slug: body.slug ?? slug, title },
+        body.data ? { fields: Object.keys(body.data) } : undefined,
+      );
+    } catch { /* non-fatal */ }
+
     // If trashing, clean up any pending curation queue entries for this doc
     if (nextStatus === "trashed") {
       await removeQueueItemsBySlug(collection, slug).catch(() => {});
@@ -281,6 +299,17 @@ export async function DELETE(req: NextRequest, { params }: Ctx) {
         data: { ...doc.data, _trashedAt: new Date().toISOString() },
       });
     }
+
+    // F61: audit
+    try {
+      const { auditLog } = await import("@/lib/event-log");
+      await auditLog(
+        permanent ? "document.deleted" : "document.trashed",
+        { type: "user", userId: delSession.userId, email: delSession.email, name: delSession.name },
+        { type: "document", collection, slug, title: String(doc.data?.title ?? slug) },
+      );
+    } catch { /* non-fatal */ }
+
     // Either way, clean up any pending curation queue entries
     await removeQueueItemsBySlug(collection, slug).catch(() => {});
 

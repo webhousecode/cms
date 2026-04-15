@@ -33,6 +33,22 @@ export async function requirePermission(permission: string): Promise<Response | 
   }
   const granted = ROLE_PERMISSIONS[role] ?? [];
   if (hasPermission(granted, permission)) return null;
+
+  // F61: audit the denial
+  try {
+    const { auditLog } = await import("./event-log");
+    const { getSessionWithSiteRole } = await import("./require-role");
+    const session = await getSessionWithSiteRole();
+    if (session) {
+      await auditLog(
+        "permission.denied",
+        { type: "user", userId: session.userId, email: session.email, name: session.name },
+        { type: "permission" },
+        { permission, role },
+      );
+    }
+  } catch { /* logging must not block */ }
+
   return NextResponse.json(
     { error: "Forbidden", permission, role },
     { status: 403 },

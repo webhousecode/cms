@@ -240,6 +240,16 @@ export async function triggerDeploy(): Promise<DeployEntry> {
 
   entry.duration = Date.now() - start;
 
+  // F61: log to server layer
+  try {
+    const { serverLog } = await import("./event-log");
+    if (entry.status === "success") {
+      await serverLog("info", "deploy.succeeded", { provider, url: entry.url, duration: entry.duration });
+    } else {
+      await serverLog("error", "deploy.failed", { provider, duration: entry.duration }, { message: entry.error ?? "Unknown error" });
+    }
+  } catch { /* non-fatal */ }
+
   // Save to log
   const log = await readLog();
   log.deploys.unshift(entry);
