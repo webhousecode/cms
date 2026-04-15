@@ -118,7 +118,7 @@ export default function EventLogPage() {
     <>
       <TabTitle title="Event Log" />
       <ActionBar>
-        <ActionBarBreadcrumb items={[{ label: "Event Log" }]} />
+        <ActionBarBreadcrumb items={["Event Log"]} />
       </ActionBar>
 
       <div style={{ padding: "1.5rem", maxWidth: "1200px", margin: "0 auto" }}>
