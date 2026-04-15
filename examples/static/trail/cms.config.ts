@@ -138,7 +138,7 @@ export default defineConfig({
     }),
     defineCollection({
       name: "categories",
-      label: "Trail Categories",
+      label: "Categories",
       kind: "data",
       description:
         "Post taxonomy. Referenced by posts.category. build.ts auto-generates /trails/<slug>/ index pages and the Trails menu from published category records.",
