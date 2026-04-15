@@ -28,37 +28,37 @@
       {
         "_block": "features",
         "title": "Architecture of thought.",
-        "description": "trail provides the primitives required to build complex semantic search, retrieval augmented generation pipelines, and interconnected knowledge bases.",
+        "description": "The primitives for a persistent graph of cross-referenced Neurons — compiled by an LLM, curated by you, navigated by association.",
         "items": [
           {
-            "icon": "graph",
-            "title": "Semantic Graph",
-            "description": "Entities are linked not just by reference, but by semantic relationship. Traverse the graph to uncover implicit connections."
+            "icon": "spark",
+            "title": "LLM-Compiled Wiki",
+            "description": "Sources aren't chunked and indexed — they're read by an LLM that authors a persistent wiki on your behalf. Every new fact updates existing Neurons instead of spawning isolated fragments."
           },
           {
-            "icon": "sync",
-            "title": "Local-First Sync",
-            "description": "Built on CRDTs. Your knowledge graph lives locally for zero-latency access, syncing securely to the cloud when connected."
+            "icon": "graph",
+            "title": "Cross-Referenced Neurons",
+            "description": "Every Neuron (wiki page) links bidirectionally to its source documents and to related Neurons. Follow a claim back to its origin, or forward to everything it touches — the associative trails Vannevar Bush imagined."
           },
           {
             "icon": "search",
-            "title": "Vector Embeddings",
-            "description": "Native integration with modern embedding models. Search by concept, not just keyword, across all ingested nodes."
+            "title": "Instant Full-Text Search",
+            "description": "Built-in SQLite FTS5 with auto-sync triggers keeps sources and compiled Neurons searchable in lockstep. No vector index to rebuild, no embedding drift."
+          },
+          {
+            "icon": "layers",
+            "title": "Adapter Architecture",
+            "description": "Storage, LLM, vision, and pipeline processors sit behind pluggable interfaces. Start local with SQLite and Claude Code; swap in R2, Anthropic API, or a CMS consumer (@webhouse/cms, Laravel) without touching the engine."
           },
           {
             "icon": "cube",
             "title": "Extensible Ingestion",
-            "description": "Connectors for Slack, Notion, GitHub, and Linear. Automatically map scattered data into a unified cognitive structure."
-          },
-          {
-            "icon": "code",
-            "title": "Type-Safe API",
-            "description": "Interact with your infrastructure via a strictly typed GraphQL and REST API. Predictable responses for resilient applications."
+            "description": "Connectors roadmap: Slack, Discord, Notion, GitHub, Linear. Today: Markdown and PDF upload, plus native MCP for Claude Code and Cursor."
           },
           {
             "icon": "lock",
-            "title": "End-to-End Encryption",
-            "description": "Your data is encrypted at rest and in transit. Only you hold the keys to decipher the nodes within your organizational graph."
+            "title": "Curator, Not Dictator",
+            "description": "The LLM proposes, you dispose. Twelve candidate kinds, an auto-approval threshold, and a replay-able event log keep every change reviewable and reversible."
           }
         ]
       }

@@ -701,7 +701,7 @@ function layout(title: string, content: string, metaDesc?: string): string {
           .map((l) => `<a href="${esc(bp(l.href))}">${esc(l.label)}</a>`)
           .join("\n        ")}
       </div>
-      <div class="footer-copy">${esc(footerCopyright)}${footerTagline ? ` ${esc(footerTagline)}` : ""}</div>
+      <div class="footer-copy">${esc(footerCopyright)}${footerTagline ? ` ${esc(footerTagline)}` : ""} Site built by <a href="https://webhouse.app" target="_blank" rel="noopener">@webhouse/cms</a></div>
     </div>
   </footer>
   <script>${CANVAS_SCRIPT}</script>
