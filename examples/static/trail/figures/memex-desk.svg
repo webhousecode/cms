@@ -1,0 +1,52 @@
+<svg viewBox="60 140 720 345" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Schematic of the Memex desk">
+  <!-- Base rectangular portion -->
+  <path d="M 200 240 L 200 400 L 600 400 L 600 240 Z" fill="none" stroke="#1a1715" stroke-width="1.5"/>
+  <!-- Slanted top -->
+  <path d="M 200 240 L 260 150 L 600 150 L 600 240 Z" fill="none" stroke="#1a1715" stroke-width="1.5"/>
+  <!-- Screen on the slanted surface -->
+  <path d="M 290 215 L 335 160 L 560 160 L 560 215 Z" fill="none" stroke="#1a1715" stroke-width="1"/>
+  <!-- Subtle text lines on screen -->
+  <line x1="345" y1="180" x2="545" y2="180" stroke="#1a1715" stroke-width="0.5" opacity="0.35"/>
+  <line x1="355" y1="192" x2="540" y2="192" stroke="#1a1715" stroke-width="0.5" opacity="0.35"/>
+  <line x1="350" y1="204" x2="535" y2="204" stroke="#1a1715" stroke-width="0.5" opacity="0.35"/>
+  <!-- Amber active node on screen (the current Trail) -->
+  <circle cx="440" cy="180" r="4" fill="#e8a87c"/>
+  <circle cx="440" cy="180" r="9" fill="none" stroke="#e8a87c" stroke-width="0.6" opacity="0.5"/>
+  <!-- Keyboard area on desk front -->
+  <rect x="220" y="255" width="120" height="14" fill="none" stroke="#1a1715" stroke-width="0.8"/>
+  <g fill="#1a1715" opacity="0.7">
+    <circle cx="230" cy="262" r="1.2"/><circle cx="243" cy="262" r="1.2"/><circle cx="256" cy="262" r="1.2"/>
+    <circle cx="269" cy="262" r="1.2"/><circle cx="282" cy="262" r="1.2"/><circle cx="295" cy="262" r="1.2"/>
+    <circle cx="308" cy="262" r="1.2"/><circle cx="321" cy="262" r="1.2"/><circle cx="334" cy="262" r="1.2"/>
+  </g>
+  <!-- Levers -->
+  <line x1="365" y1="268" x2="365" y2="245" stroke="#1a1715" stroke-width="1.5"/>
+  <circle cx="365" cy="242" r="3" fill="#1a1715"/>
+  <line x1="385" y1="268" x2="385" y2="245" stroke="#1a1715" stroke-width="1.5"/>
+  <circle cx="385" cy="242" r="3" fill="#1a1715"/>
+  <!-- Microfilm compartment inside the base (dashed) -->
+  <rect x="410" y="285" width="170" height="95" fill="none" stroke="#1a1715" stroke-width="0.8" stroke-dasharray="3,3"/>
+  <!-- Two reels + tape -->
+  <circle cx="445" cy="325" r="22" fill="none" stroke="#1a1715" stroke-width="1"/>
+  <circle cx="445" cy="325" r="4" fill="#1a1715"/>
+  <circle cx="445" cy="325" r="12" fill="none" stroke="#1a1715" stroke-width="0.5" opacity="0.4"/>
+  <circle cx="545" cy="325" r="22" fill="none" stroke="#1a1715" stroke-width="1"/>
+  <circle cx="545" cy="325" r="4" fill="#1a1715"/>
+  <circle cx="545" cy="325" r="12" fill="none" stroke="#1a1715" stroke-width="0.5" opacity="0.4"/>
+  <line x1="467" y1="325" x2="523" y2="325" stroke="#1a1715" stroke-width="1"/>
+  <!-- Labels with dashed leader lines -->
+  <g font-family="monospace" font-size="10" fill="#1a1715">
+    <text x="680" y="175" text-anchor="start">TRANSLUCENT</text>
+    <text x="680" y="188" text-anchor="start">SCREEN</text>
+    <line x1="675" y1="183" x2="565" y2="190" stroke="#1a1715" stroke-width="0.5" stroke-dasharray="2,2"/>
+    <text x="150" y="265" text-anchor="end">KEYBOARD</text>
+    <line x1="155" y1="262" x2="218" y2="262" stroke="#1a1715" stroke-width="0.5" stroke-dasharray="2,2"/>
+    <text x="150" y="248" text-anchor="end">LEVERS</text>
+    <line x1="155" y1="245" x2="363" y2="245" stroke="#1a1715" stroke-width="0.5" stroke-dasharray="2,2"/>
+    <text x="680" y="325" text-anchor="start">MICROFILM</text>
+    <text x="680" y="338" text-anchor="start">STORAGE</text>
+    <line x1="675" y1="330" x2="585" y2="330" stroke="#1a1715" stroke-width="0.5" stroke-dasharray="2,2"/>
+  </g>
+  <!-- Caption -->
+  <text x="400" y="470" font-family="monospace" font-size="11" fill="#1a1715" text-anchor="middle" opacity="0.55" letter-spacing="1.5">THE MEMEX · VANNEVAR BUSH · 1945</text>
+</svg>

@@ -26,7 +26,11 @@ import { join } from "node:path";
 const BASE = "/Users/cb/Apps/webhouse/cms/examples/static/trail/content";
 const MD_SOURCES = ["/Users/cb/Apps/broberg/trail/docs/as-we-may-think.md"];
 
-const PATTERN = /(?<![\w/\-.])trail(?![\w/\-.])/g;
+// Match bare "trail" in prose. Exclude occurrences adjacent to:
+//   \w /- .   — word chars, slash, hyphen, dot (paths, slugs, domains, plural "trails")
+//   :         — before: "{{svg:trail}}" shortcode, or "category:trail" slug notation
+//   }         — after:  closing shortcode brace
+const PATTERN = /(?<![\w/\-.:])trail(?![\w/\-.}])/g;
 
 const PROSE_FIELDS = new Set([
   "title",
