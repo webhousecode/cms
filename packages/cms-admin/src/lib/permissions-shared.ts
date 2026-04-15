@@ -36,6 +36,8 @@ export const PERMISSIONS = {
   "tokens.manage": "Create / revoke API tokens",
   "import.execute": "Run CSV / WP import",
   "users.manage": "Invite / remove users",
+  "logs.view": "View event log (audit trail)",
+  "logs.export": "Export event log (GDPR data)",
 } as const;
 
 export type Permission = keyof typeof PERMISSIONS;

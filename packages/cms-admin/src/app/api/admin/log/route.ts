@@ -5,9 +5,9 @@ import { requirePermission } from "@/lib/permissions";
 
 export const dynamic = "force-dynamic";
 
-/** GET /api/admin/log — read unified event feed (admin only) */
+/** GET /api/admin/log — read unified event feed (requires logs.view permission) */
 export async function GET(req: NextRequest) {
-  const denied = await requirePermission("settings.edit");
+  const denied = await requirePermission("logs.view");
   if (denied) return denied;
 
   const params = req.nextUrl.searchParams;

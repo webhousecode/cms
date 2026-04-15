@@ -460,7 +460,7 @@ export function AppSidebar({ collections }: Props) {
                     <span>Lighthouse</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-                {siteRole === "admin" && (
+                {ctxUser?.permissions?.includes("logs.view") && (
                   <SidebarMenuItem>
                     <SidebarMenuButton
                       isActive={pathname === "/admin/log"}
