@@ -1,0 +1,759 @@
+/**
+ * trail — Static Site Generator
+ *
+ * Reads JSON from content/ and writes pure static HTML to dist/.
+ * Pixel-matches the Gemini reference: warm off-white, charcoal, amber accent.
+ * Canvas knowledge-graph animation embedded as vanilla JS.
+ *
+ * Run:  npx tsx build.ts
+ * Env:  BASE_PATH=/prefix  BUILD_OUT_DIR=deploy
+ */
+import { readdirSync, readFileSync, mkdirSync, writeFileSync, existsSync, cpSync } from "node:fs";
+import { join, dirname } from "node:path";
+import { marked } from "marked";
+
+const BASE_PATH = process.env.BASE_PATH ?? "";
+const OUT_DIR = process.env.BUILD_OUT_DIR ?? "dist";
+const INCLUDE_DRAFTS = process.env.INCLUDE_DRAFTS === "true";
+const CONTENT_DIR = join(import.meta.dirname, "content");
+
+// ── Types ───────────────────────────────────────────────────
+
+interface Doc {
+  slug: string;
+  data: Record<string, unknown>;
+  status?: string;
+}
+
+interface Block {
+  _block: string;
+  [key: string]: unknown;
+}
+
+// ── Content readers ─────────────────────────────────────────
+
+function readCollection(name: string): Doc[] {
+  const dir = join(CONTENT_DIR, name);
+  if (!existsSync(dir)) return [];
+  return readdirSync(dir)
+    .filter((f) => f.endsWith(".json"))
+    .map((f) => {
+      const raw = JSON.parse(readFileSync(join(dir, f), "utf-8"));
+      return { slug: f.replace(/\.json$/, ""), data: raw.data ?? raw, status: raw.status };
+    })
+    .filter((d) => d.status !== "draft" || INCLUDE_DRAFTS);
+}
+
+function readSingleton(collection: string, slug: string): Record<string, unknown> {
+  const file = join(CONTENT_DIR, collection, `${slug}.json`);
+  if (!existsSync(file)) return {};
+  const raw = JSON.parse(readFileSync(file, "utf-8"));
+  return raw.data ?? raw;
+}
+
+const pages = readCollection("pages");
+const global = readSingleton("global", "global");
+
+// ── Helpers ─────────────────────────────────────────────────
+
+function bp(p: string): string {
+  if (!p) return p;
+  if (/^https?:/.test(p)) return p;
+  return `${BASE_PATH}${p}`;
+}
+
+function esc(s: unknown): string {
+  return String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+// ── Inline SVG icons ────────────────────────────────────────
+
+const ICONS: Record<string, string> = {
+  graph: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>`,
+  sync: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 0 1-9 9m9-9a9 9 0 0 0-9-9m9 9H3m9 9a9 9 0 0 1-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 0 1 9-9"/></svg>`,
+  search: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="21" y1="21" x2="16.65" y2="16.65"/><circle cx="11" cy="11" r="8"/><path d="M11 7v4"/><path d="M8 11h6"/></svg>`,
+  cube: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>`,
+  code: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>`,
+  lock: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`,
+  spark: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>`,
+  layers: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>`,
+  atom: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><path d="M20.2 20.2c2.04-2.03.02-7.36-4.5-11.9-4.54-4.52-9.87-6.54-11.9-4.5-2.04 2.03-.02 7.36 4.5 11.9 4.54 4.52 9.87 6.54 11.9 4.5Z"/><path d="M15.7 15.7c4.52-4.54 6.54-9.87 4.5-11.9-2.03-2.04-7.36-.02-11.9 4.5-4.52 4.54-6.54 9.87-4.5 11.9 2.03 2.04 7.36.02 11.9-4.5Z"/></svg>`,
+};
+
+function iconSvg(key: unknown): string {
+  return ICONS[String(key)] ?? ICONS.graph;
+}
+
+const ARROW_SVG = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>`;
+const BOOK_SVG = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>`;
+
+// ── Canvas graph animation (pure vanilla JS, inlined) ───────
+
+const CANVAS_SCRIPT = `
+(function(){
+  const canvas = document.getElementById('trail-graph');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let animationFrameId;
+  let particles = [];
+  const mouse = { x: null, y: null };
+  const DPR = Math.min(window.devicePixelRatio || 1, 2);
+
+  function resize(){
+    canvas.width = window.innerWidth * DPR;
+    canvas.height = window.innerHeight * DPR;
+    canvas.style.width = window.innerWidth + 'px';
+    canvas.style.height = window.innerHeight + 'px';
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    initParticles();
+  }
+
+  function Particle(){
+    this.x = Math.random() * window.innerWidth;
+    this.y = Math.random() * window.innerHeight;
+    this.vx = (Math.random() - 0.5) * 0.3;
+    this.vy = (Math.random() - 0.5) * 0.3;
+    this.baseRadius = Math.random() > 0.95 ? 3 : 1.5;
+    this.isAccent = Math.random() > 0.98;
+  }
+  Particle.prototype.update = function(){
+    this.x += this.vx;
+    this.y += this.vy;
+    if (this.x < 0 || this.x > window.innerWidth) this.vx = -this.vx;
+    if (this.y < 0 || this.y > window.innerHeight) this.vy = -this.vy;
+    if (mouse.x !== null && mouse.y !== null) {
+      const dx = mouse.x - this.x;
+      const dy = mouse.y - this.y;
+      const d = Math.sqrt(dx*dx + dy*dy);
+      if (d < 100) { this.x -= dx * 0.01; this.y -= dy * 0.01; }
+    }
+  };
+  Particle.prototype.draw = function(){
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.baseRadius, 0, Math.PI * 2);
+    ctx.fillStyle = this.isAccent ? '#e8a87c' : '#1a1715';
+    if (this.isAccent) { ctx.shadowBlur = 10; ctx.shadowColor = '#e8a87c'; }
+    else { ctx.shadowBlur = 0; }
+    ctx.fill();
+  };
+
+  function initParticles(){
+    particles = [];
+    const count = Math.floor((window.innerWidth * window.innerHeight) / 15000);
+    for (let i = 0; i < count; i++) particles.push(new Particle());
+  }
+
+  function drawLines(){
+    for (let i = 0; i < particles.length; i++){
+      for (let j = i + 1; j < particles.length; j++){
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const d = Math.sqrt(dx*dx + dy*dy);
+        if (d < 160){
+          const opacity = 1 - (d / 160);
+          ctx.beginPath();
+          if (particles[i].isAccent || particles[j].isAccent) {
+            ctx.strokeStyle = 'rgba(232, 168, 124, ' + (opacity * 0.5) + ')';
+          } else {
+            ctx.strokeStyle = 'rgba(26, 23, 21, ' + (opacity * 0.18) + ')';
+          }
+          ctx.lineWidth = 0.6;
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.stroke();
+        }
+      }
+    }
+  }
+
+  function animate(){
+    ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    for (const p of particles){ p.update(); p.draw(); }
+    drawLines();
+    animationFrameId = requestAnimationFrame(animate);
+  }
+
+  window.addEventListener('resize', resize);
+  window.addEventListener('mousemove', function(e){ mouse.x = e.clientX; mouse.y = e.clientY; });
+  window.addEventListener('mouseout', function(){ mouse.x = null; mouse.y = null; });
+
+  resize();
+  animate();
+})();
+`;
+
+// ── CSS (Tailwind-equivalent, inlined) ──────────────────────
+
+const CSS = `
+:root {
+  --bg: #FAF9F5;
+  --fg: #1a1715;
+  --accent: #e8a87c;
+  --fg-10: rgba(26, 23, 21, 0.10);
+  --fg-20: rgba(26, 23, 21, 0.20);
+  --fg-40: rgba(26, 23, 21, 0.40);
+  --fg-60: rgba(26, 23, 21, 0.60);
+  --fg-70: rgba(26, 23, 21, 0.70);
+  --bg-50: rgba(250, 249, 245, 0.50);
+  --bg-80: rgba(250, 249, 245, 0.80);
+  --font-sans: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", "Fira Code", "Courier New", monospace;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+body {
+  font-family: var(--font-sans);
+  background: var(--bg);
+  color: var(--fg);
+  line-height: 1.5;
+  min-height: 100vh;
+}
+::selection { background: rgba(232, 168, 124, 0.3); color: var(--fg); }
+
+a { color: inherit; text-decoration: none; }
+img { max-width: 100%; display: block; }
+button { font: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+
+/* Navbar */
+.nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+  padding: 1rem 1.5rem;
+  display: flex; justify-content: space-between; align-items: center;
+  background: var(--bg-80);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--fg-10);
+}
+.nav-brand { display: flex; align-items: center; gap: 0.75rem; }
+.nav-brand img { width: 32px; height: 32px; }
+.nav-brand .brand-text {
+  font-family: var(--font-mono);
+  font-size: 1.125rem;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+}
+.nav-links { display: none; gap: 2rem; font-size: 0.875rem; font-weight: 500; color: var(--fg-70); }
+.nav-links a { transition: color 0.15s; }
+.nav-links a:hover { color: var(--fg); }
+@media (min-width: 768px) { .nav-links { display: flex; } }
+
+.nav-actions { display: flex; gap: 1rem; align-items: center; }
+.nav-signin {
+  font-size: 0.875rem; font-weight: 500; color: var(--fg);
+  transition: color 0.15s;
+}
+.nav-signin:hover { color: var(--accent); }
+.nav-cta {
+  padding: 0.5rem 1rem;
+  background: var(--fg); color: var(--bg);
+  font-size: 0.875rem; font-weight: 500;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  transition: all 0.2s;
+}
+.nav-cta:hover { background: rgba(26, 23, 21, 0.9); border-color: var(--accent); }
+
+/* Hero */
+.hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex; flex-direction: column; justify-content: center; align-items: center;
+  padding-top: 5rem; overflow: hidden;
+}
+#trail-graph {
+  position: absolute; inset: 0;
+  pointer-events: none; opacity: 0.4; z-index: 0;
+}
+.hero-inner {
+  position: relative; z-index: 10;
+  max-width: 56rem; margin: 0 auto;
+  padding: 0 1.5rem;
+  text-align: center;
+}
+.eyebrow {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  padding: 0.25rem 0.75rem; margin-bottom: 2rem;
+  border: 1px solid var(--fg-20); border-radius: 9999px;
+  font-size: 0.75rem; font-family: var(--font-mono);
+  background: var(--bg-50); backdrop-filter: blur(4px);
+}
+.eyebrow .dot {
+  width: 0.5rem; height: 0.5rem; border-radius: 9999px;
+  background: var(--accent);
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+
+.hero h1 {
+  font-size: clamp(2.5rem, 7vw, 4.5rem);
+  font-weight: 700;
+  letter-spacing: -0.04em;
+  line-height: 1.1;
+  margin-bottom: 1.5rem;
+}
+.hero h1 .accent {
+  background: linear-gradient(to right, var(--fg), rgba(232, 168, 124, 0.8));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.hero p.lead {
+  font-size: 1.125rem;
+  color: var(--fg-70);
+  margin: 0 auto 2.5rem; max-width: 40rem;
+  line-height: 1.6;
+}
+@media (min-width: 768px) { .hero p.lead { font-size: 1.25rem; } }
+
+.cta-group {
+  display: flex; flex-direction: column; gap: 1rem;
+  justify-content: center; align-items: center;
+}
+@media (min-width: 640px) { .cta-group { flex-direction: row; } }
+
+.btn {
+  display: inline-flex; align-items: center; gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+.btn-primary {
+  background: var(--fg); color: var(--bg);
+}
+.btn-primary:hover {
+  background: rgba(26, 23, 21, 0.9);
+  box-shadow: 0 10px 25px -5px rgba(232, 168, 124, 0.2);
+}
+.btn-secondary {
+  background: transparent; border: 1px solid var(--fg-20);
+  color: var(--fg);
+  font-family: var(--font-mono); font-size: 0.875rem;
+}
+.btn-secondary:hover { border-color: var(--fg); }
+
+.scroll-indicator {
+  position: absolute; bottom: 2.5rem; left: 50%;
+  transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
+  opacity: 0.5; animation: bounce 2s infinite;
+}
+.scroll-indicator .line {
+  width: 1px; height: 3rem;
+  background: linear-gradient(to bottom, transparent, var(--fg));
+}
+@keyframes bounce {
+  0%, 100% { transform: translate(-50%, 0); }
+  50% { transform: translate(-50%, -8px); }
+}
+
+/* Features */
+.features {
+  padding: 6rem 1.5rem;
+  border-top: 1px solid var(--fg-10);
+}
+.features-inner { max-width: 72rem; margin: 0 auto; }
+.features-header { margin-bottom: 4rem; }
+.features-header h2 {
+  font-size: clamp(1.75rem, 3.5vw, 2rem);
+  font-weight: 700; letter-spacing: -0.02em; margin-bottom: 1rem;
+}
+.features-header p {
+  color: var(--fg-60); max-width: 36rem;
+}
+.features-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.25rem;
+}
+@media (min-width: 768px) { .features-grid { grid-template-columns: repeat(3, 1fr); } }
+
+.feature-card {
+  position: relative; overflow: hidden;
+  padding: 1.5rem;
+  border: 1px solid var(--fg-10);
+  background: var(--bg);
+  transition: background 0.2s;
+}
+.feature-card:hover { background: #fff; }
+.feature-card::before {
+  content: "";
+  position: absolute; top: 0; left: 0;
+  width: 100%; height: 2px;
+  background: var(--accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s;
+}
+.feature-card:hover::before { transform: scaleX(1); }
+.feature-card .icon { margin-bottom: 1rem; color: var(--fg); }
+.feature-card h3 {
+  font-family: var(--font-mono);
+  font-size: 1.125rem; font-weight: 600;
+  letter-spacing: -0.02em; margin-bottom: 0.5rem;
+  color: var(--fg);
+}
+.feature-card p {
+  color: var(--fg-70);
+  font-size: 0.875rem; line-height: 1.6;
+}
+
+/* Article (long-form pages) */
+.container { max-width: 44rem; margin: 0 auto; padding: 0 1.5rem; }
+.article { padding: 7rem 0 4rem; }
+.article-header { margin-bottom: 3rem; border-bottom: 1px solid var(--fg-10); padding-bottom: 2rem; }
+.article-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.75rem; letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 1rem;
+}
+.article-header h1 {
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  line-height: 1.1;
+  margin-bottom: 1rem;
+}
+.article-lead {
+  font-size: 1.125rem;
+  color: var(--fg-70);
+  line-height: 1.6;
+  margin-bottom: 1.25rem;
+}
+.article-meta {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--fg-60);
+}
+.article-tags { display: flex; flex-wrap: wrap; gap: 0.375rem; margin-top: 1rem; }
+.article-tags .tag {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  padding: 0.15rem 0.5rem;
+  border: 1px solid var(--fg-10);
+  border-radius: 9999px;
+  color: var(--fg-60);
+}
+.article-cover { margin: 2rem 0 0; }
+.article-cover img { width: 100%; border-radius: 4px; }
+
+.prose { font-size: 1.0625rem; line-height: 1.75; color: var(--fg); }
+.prose h1, .prose h2, .prose h3 { letter-spacing: -0.02em; }
+.prose h2 { font-size: 1.625rem; font-weight: 700; margin: 3rem 0 1rem; }
+.prose h3 { font-size: 1.25rem; font-weight: 600; margin: 2rem 0 0.75rem; }
+.prose p { margin-bottom: 1.25rem; }
+.prose strong { font-weight: 600; }
+.prose em { font-style: italic; }
+.prose a { color: var(--fg); border-bottom: 1px solid var(--accent); transition: color 0.15s; }
+.prose a:hover { color: var(--accent); }
+.prose blockquote {
+  border-left: 3px solid var(--accent);
+  padding: 0.5rem 0 0.5rem 1.25rem;
+  margin: 1.75rem 0;
+  color: var(--fg-70);
+  font-style: italic;
+}
+.prose blockquote p:last-child { margin-bottom: 0; }
+.prose ul, .prose ol { padding-left: 1.5rem; margin-bottom: 1.25rem; }
+.prose li { margin-bottom: 0.5rem; }
+.prose code {
+  font-family: var(--font-mono);
+  font-size: 0.875em;
+  background: rgba(26, 23, 21, 0.06);
+  padding: 0.125rem 0.375rem;
+  border-radius: 3px;
+}
+.prose pre {
+  background: var(--fg); color: var(--bg);
+  padding: 1rem 1.25rem;
+  border-radius: 4px;
+  overflow-x: auto;
+  margin-bottom: 1.5rem;
+  font-size: 0.875rem;
+}
+.prose pre code { background: none; padding: 0; color: inherit; }
+.prose hr { border: none; border-top: 1px solid var(--fg-10); margin: 3rem 0; }
+.prose figure {
+  margin: 1rem 0 1.5rem;
+  text-align: center;
+}
+.prose figure svg { max-width: 100%; height: auto; }
+.prose figcaption {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--fg-60);
+  margin-top: 0.75rem;
+  line-height: 1.5;
+}
+.prose img { max-width: 100%; border-radius: 4px; margin: 1.5rem auto; }
+
+/* Footer */
+.footer {
+  border-top: 1px solid var(--fg-10);
+  padding: 3rem 1.5rem;
+  background: var(--bg);
+}
+.footer-inner {
+  max-width: 72rem; margin: 0 auto;
+  display: flex; flex-direction: column;
+  gap: 1.5rem; align-items: center;
+  justify-content: space-between;
+}
+@media (min-width: 768px) { .footer-inner { flex-direction: row; } }
+.footer-brand { display: flex; align-items: center; gap: 0.625rem; }
+.footer-brand img { width: 32px; height: 32px; }
+.footer-brand span {
+  font-family: var(--font-mono);
+  font-size: 1rem; font-weight: 600;
+}
+.footer-links { display: flex; gap: 1.5rem; font-family: var(--font-mono); font-size: 0.875rem; color: var(--fg-60); }
+.footer-links a { transition: color 0.15s; }
+.footer-links a:hover { color: var(--accent); }
+.footer-copy { font-family: var(--font-mono); font-size: 0.75rem; color: var(--fg-40); }
+`;
+
+// ── Rendering ───────────────────────────────────────────────
+
+function renderHero(b: Block): string {
+  const ctas = (b.ctas as Array<{ label: string; href: string; variant?: string }>) ?? [];
+  const showScroll = b.showScrollIndicator !== false;
+
+  const titleLine1 = esc(b.titleLine1);
+  const titleLine2 = b.titleLine2 ? `<br/><span class="accent">${esc(b.titleLine2)}</span>` : "";
+
+  const ctaHtml = ctas
+    .map((c, i) => {
+      const isPrimary = (c.variant ?? (i === 0 ? "primary" : "secondary")) === "primary";
+      const iconSvgStr = isPrimary ? ARROW_SVG : BOOK_SVG;
+      const cls = isPrimary ? "btn btn-primary" : "btn btn-secondary";
+      return `<a href="${esc(bp(c.href || "#"))}" class="${cls}">${esc(c.label)}${iconSvgStr}</a>`;
+    })
+    .join("");
+
+  return `<main class="hero">
+    <canvas id="trail-graph"></canvas>
+    <div class="hero-inner">
+      ${
+        b.eyebrow
+          ? `<div class="eyebrow"><span class="dot"></span><span>${esc(b.eyebrow)}</span></div>`
+          : ""
+      }
+      <h1>${titleLine1}${titleLine2}</h1>
+      ${b.description ? `<p class="lead">${esc(b.description)}</p>` : ""}
+      ${ctaHtml ? `<div class="cta-group">${ctaHtml}</div>` : ""}
+    </div>
+    ${showScroll ? `<div class="scroll-indicator"><div class="line"></div></div>` : ""}
+  </main>`;
+}
+
+function renderFeatures(b: Block): string {
+  const items = (b.items as Array<{ icon: string; title: string; description: string }>) ?? [];
+  return `<section id="features" class="features">
+    <div class="features-inner">
+      <div class="features-header">
+        ${b.title ? `<h2>${esc(b.title)}</h2>` : ""}
+        ${b.description ? `<p>${esc(b.description)}</p>` : ""}
+      </div>
+      <div class="features-grid">
+        ${items
+          .map(
+            (item) => `<div class="feature-card">
+          <div class="icon">${iconSvg(item.icon)}</div>
+          <h3>${esc(item.title)}</h3>
+          <p>${esc(item.description)}</p>
+        </div>`,
+          )
+          .join("")}
+      </div>
+    </div>
+  </section>`;
+}
+
+function renderBlocks(blocks: unknown): string {
+  if (!Array.isArray(blocks)) return "";
+  return (blocks as Block[])
+    .map((block) => {
+      switch (block._block) {
+        case "hero":
+          return renderHero(block);
+        case "features":
+          return renderFeatures(block);
+        default:
+          return "";
+      }
+    })
+    .join("\n");
+}
+
+function renderContent(raw: unknown): string {
+  const s = String(raw ?? "");
+  if (!s) return "";
+  // Already HTML? Pass through.
+  if (/^\s*</.test(s)) return s;
+  return marked.parse(s, { async: false }) as string;
+}
+
+interface ArticleMeta {
+  title?: unknown;
+  excerpt?: unknown;
+  date?: unknown;
+  author?: unknown;
+  category?: unknown;
+  tags?: unknown;
+  coverImage?: unknown;
+}
+
+function renderArticle(data: ArticleMeta, slug: string): string {
+  const title = String(data.title ?? "");
+  const excerpt = String(data.excerpt ?? "");
+  const date = String(data.date ?? "");
+  const author = String(data.author ?? "");
+  const category = String(data.category ?? "");
+  const tags = Array.isArray(data.tags) ? (data.tags as string[]) : [];
+  const coverImage = String(data.coverImage ?? "");
+  const cover = coverImage
+    ? `<figure class="article-cover"><img src="${esc(bp(coverImage))}" alt="${esc(title)}" /></figure>`
+    : "";
+  const dateStr = date
+    ? new Date(date).toLocaleDateString("en", { year: "numeric", month: "long", day: "numeric" })
+    : "";
+  const metaLine = [category, author, dateStr].filter(Boolean).map(esc).join(" · ");
+  const tagHtml = tags.length
+    ? `<div class="article-tags">${tags.map((t) => `<span class="tag">${esc(t)}</span>`).join("")}</div>`
+    : "";
+  return `<header class="article-header">
+      ${category ? `<div class="article-eyebrow">${esc(category)}</div>` : ""}
+      <h1>${esc(title)}</h1>
+      ${excerpt ? `<p class="article-lead">${esc(excerpt)}</p>` : ""}
+      ${metaLine ? `<div class="article-meta">${metaLine}</div>` : ""}
+      ${tagHtml}
+      ${cover}
+    </header>`;
+}
+
+// ── Global data ─────────────────────────────────────────────
+
+const siteTitle = String(global.siteTitle ?? "trail");
+const siteDescription = String(global.siteDescription ?? "");
+const logo = String(global.logo ?? "/uploads/memx-logo.svg");
+const navLinks = (global.navLinks as Array<{ label: string; href: string }>) ?? [];
+const signInLabel = String(global.signInLabel ?? "Sign In");
+const signInHref = String(global.signInHref ?? "#");
+const navCtaLabel = String(global.navCtaLabel ?? "Initialize Node");
+const navCtaHref = String(global.navCtaHref ?? "#");
+const footerLinks = (global.footerLinks as Array<{ label: string; href: string }>) ?? [];
+const footerCopyright = String(global.footerCopyright ?? `© ${new Date().getFullYear()} ${siteTitle}.`);
+const footerTagline = String(global.footerTagline ?? "");
+
+// ── Layout ──────────────────────────────────────────────────
+
+function layout(title: string, content: string, metaDesc?: string): string {
+  const desc = metaDesc ?? siteDescription;
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${esc(title)} — ${esc(siteTitle)}</title>
+  <meta name="description" content="${esc(desc)}">
+  <meta property="og:title" content="${esc(title)}">
+  <meta property="og:description" content="${esc(desc)}">
+  <meta property="og:type" content="website">
+  <link rel="icon" type="image/svg+xml" href="${esc(bp("/uploads/favicon.svg"))}">
+  <link rel="apple-touch-icon" href="${esc(bp(logo))}">
+  <meta name="theme-color" content="#FAF9F5">
+  <style>${CSS}</style>
+</head>
+<body>
+  <nav class="nav">
+    <a href="${esc(bp("/"))}" class="nav-brand">
+      <img src="${esc(bp(logo))}" alt="${esc(siteTitle)}" width="32" height="32">
+      <span class="brand-text">${esc(siteTitle)}</span>
+    </a>
+    <div class="nav-links">
+      ${navLinks
+        .map((l) => `<a href="${esc(bp(l.href))}">${esc(l.label)}</a>`)
+        .join("\n      ")}
+    </div>
+    <div class="nav-actions">
+      <a href="${esc(bp(signInHref))}" class="nav-signin">${esc(signInLabel)}</a>
+      <a href="${esc(bp(navCtaHref))}" class="nav-cta">${esc(navCtaLabel)}</a>
+    </div>
+  </nav>
+  ${content}
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <img src="${esc(bp(logo))}" alt="${esc(siteTitle)}" width="32" height="32">
+        <span>${esc(siteTitle)}</span>
+      </div>
+      <div class="footer-links">
+        ${footerLinks
+          .map((l) => `<a href="${esc(bp(l.href))}">${esc(l.label)}</a>`)
+          .join("\n        ")}
+      </div>
+      <div class="footer-copy">${esc(footerCopyright)}${footerTagline ? ` ${esc(footerTagline)}` : ""}</div>
+    </div>
+  </footer>
+  <script>${CANVAS_SCRIPT}</script>
+</body>
+</html>`;
+}
+
+// ── Write ───────────────────────────────────────────────────
+
+function write(relPath: string, html: string): void {
+  const fullPath = join(import.meta.dirname, OUT_DIR, relPath);
+  mkdirSync(dirname(fullPath), { recursive: true });
+  writeFileSync(fullPath, html);
+  console.log(`  ${relPath}`);
+}
+
+// ── Build ───────────────────────────────────────────────────
+
+console.log(`Building ${siteTitle} → ${OUT_DIR}/\n`);
+
+const home = pages.find((p) => p.slug === "home");
+const homeHtml = home
+  ? renderBlocks(home.data.sections)
+  : `<main class="hero"><div class="hero-inner"><h1>${esc(siteTitle)}</h1><p class="lead">${esc(siteDescription)}</p></div></main>`;
+
+const homeTitle = home ? String(home.data.title ?? siteTitle) : siteTitle;
+const homeDesc = home ? String(home.data.metaDescription ?? siteDescription) : siteDescription;
+write("index.html", layout(homeTitle, homeHtml, homeDesc));
+
+// Other pages (non-home)
+for (const page of pages) {
+  if (page.slug === "home") continue;
+  const blocksHtml = renderBlocks(page.data.sections);
+  const bodyHtml = renderContent(page.data.content);
+  const hasLongForm = !!bodyHtml;
+  const header = hasLongForm ? renderArticle(page.data, page.slug) : "";
+  const inner = hasLongForm
+    ? `<article class="article container">${header}<div class="prose">${bodyHtml}</div></article>`
+    : blocksHtml;
+  const fullContent = blocksHtml && hasLongForm ? `${blocksHtml}${inner}` : inner || blocksHtml;
+  const desc = String(page.data.metaDescription ?? page.data.excerpt ?? siteDescription);
+  write(`${page.slug}/index.html`, layout(String(page.data.title), fullContent, desc));
+}
+
+// Copy uploads
+if (existsSync(join(import.meta.dirname, "public", "uploads"))) {
+  cpSync(
+    join(import.meta.dirname, "public", "uploads"),
+    join(import.meta.dirname, OUT_DIR, "uploads"),
+    { recursive: true },
+  );
+  console.log("  uploads/ copied");
+}
+
+console.log(`\nDone! ${pages.length} page(s) → ${OUT_DIR}/`);

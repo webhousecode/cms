@@ -1,0 +1,27 @@
+{
+  "slug": "global",
+  "status": "published",
+  "data": {
+    "siteTitle": "trail",
+    "siteDescription": "A minimalist engine to ingest, connect, and retrieve your organization's collective intelligence. Reimagining Vannevar Bush's 1945 vision with geometric precision.",
+    "logo": "/uploads/memx-logo.svg",
+    "navLinks": [
+      { "label": "Architecture", "href": "#features" },
+      { "label": "Documentation", "href": "#docs" },
+      { "label": "The 1945 Concept", "href": "/the-1945-concept/" }
+    ],
+    "signInLabel": "Sign In",
+    "signInHref": "#",
+    "navCtaLabel": "Initialize Node",
+    "navCtaHref": "#",
+    "footerLinks": [
+      { "label": "Twitter", "href": "#" },
+      { "label": "GitHub", "href": "https://github.com/broberg-ai/trail" },
+      { "label": "Status", "href": "#" }
+    ],
+    "footerCopyright": "© 2026 Trail by broberg.ai.",
+    "footerTagline": "As we may think."
+  },
+  "id": "global",
+  "_fieldMeta": {}
+}

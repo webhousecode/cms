@@ -1,0 +1,77 @@
+{
+  "slug": "home",
+  "status": "published",
+  "data": {
+    "title": "Knowledge Infrastructure for the AI Era",
+    "metaDescription": "Trail is a knowledge infrastructure engine that turns your sources into a persistent, compounding wiki — maintained by an LLM on your behalf. Realizing Vannevar Bush's 1945 Memex vision with modern LLMs.",
+    "sections": [
+      {
+        "_block": "hero",
+        "eyebrow": "trail engine v1.1 is live",
+        "titleLine1": "Knowledge Infrastructure",
+        "titleLine2": "for the AI Era.",
+        "description": "A minimalist engine to ingest, connect, and retrieve your organization's collective intelligence. Reimagining Vannevar Bush's 1945 vision with geometric precision.",
+        "ctas": [
+          {
+            "label": "Start Building",
+            "href": "#",
+            "variant": "primary"
+          },
+          {
+            "label": "Read the Docs",
+            "href": "#docs",
+            "variant": "secondary"
+          }
+        ],
+        "showScrollIndicator": true
+      },
+      {
+        "_block": "features",
+        "title": "Architecture of thought.",
+        "description": "trail provides the primitives required to build complex semantic search, retrieval augmented generation pipelines, and interconnected knowledge bases.",
+        "items": [
+          {
+            "icon": "graph",
+            "title": "Semantic Graph",
+            "description": "Entities are linked not just by reference, but by semantic relationship. Traverse the graph to uncover implicit connections."
+          },
+          {
+            "icon": "sync",
+            "title": "Local-First Sync",
+            "description": "Built on CRDTs. Your knowledge graph lives locally for zero-latency access, syncing securely to the cloud when connected."
+          },
+          {
+            "icon": "search",
+            "title": "Vector Embeddings",
+            "description": "Native integration with modern embedding models. Search by concept, not just keyword, across all ingested nodes."
+          },
+          {
+            "icon": "cube",
+            "title": "Extensible Ingestion",
+            "description": "Connectors for Slack, Notion, GitHub, and Linear. Automatically map scattered data into a unified cognitive structure."
+          },
+          {
+            "icon": "code",
+            "title": "Type-Safe API",
+            "description": "Interact with your infrastructure via a strictly typed GraphQL and REST API. Predictable responses for resilient applications."
+          },
+          {
+            "icon": "lock",
+            "title": "End-to-End Encryption",
+            "description": "Your data is encrypted at rest and in transit. Only you hold the keys to decipher the nodes within your organizational graph."
+          }
+        ]
+      }
+    ],
+    "date": "2026-04-15",
+    "_lastEditedBy": {
+      "userId": "fb4eda6a-bc5c-4dec-8cb6-c77c9fb74cd9",
+      "name": "Christian Broberg",
+      "email": "cb@webhouse.dk",
+      "at": "2026-04-15T08:44:21.092Z"
+    }
+  },
+  "id": "home",
+  "_fieldMeta": {},
+  "updatedAt": "2026-04-15T08:44:21.093Z"
+}
