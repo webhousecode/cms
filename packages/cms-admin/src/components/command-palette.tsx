@@ -8,6 +8,7 @@ import {
   ListChecks, Terminal, Settings2, Sparkles, UserCircle, LogOut, Lock,
   Database, Link2, BarChart3, Trash2, Plus, Zap, Puzzle, ArrowRightLeft,
   Building2, HelpCircle, HardDrive, Play, ExternalLink, Moon, Sun, RefreshCw, Heart,
+  ScrollText,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { switchSite, switchOrg } from "@/lib/switch-context";
@@ -54,6 +55,7 @@ function buildQuickActions(logout: () => void): QuickAction[] {
     { id: "nav-visibility", label: "Visibility", sublabel: "SEO + GEO combined score", category: "navigation", icon: <BarChart3 style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/visibility", keywords: ["visibility", "synlighed", "geo", "ai", "score", "ranking"] },
     { id: "nav-analytics", label: "AI Analytics", sublabel: "Content performance insights", category: "navigation", icon: <BarChart3 style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/performance", keywords: ["analytics", "performance", "stats", "statistik", "ai analytics"] },
     { id: "nav-linkchecker", label: "Link Checker", sublabel: "Find broken links", category: "navigation", icon: <Link2 style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/link-checker", keywords: ["links", "broken", "check"] },
+    { id: "nav-log", label: "Event Log", sublabel: "Audit trail, server errors, client events", category: "navigation", icon: <ScrollText style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/log", keywords: ["log", "audit", "events", "trail", "history", "errors", "gdpr", "logs"], permission: "logs.view" },
     { id: "nav-backup", label: "Backup", sublabel: "Backup & restore content", category: "navigation", icon: <Database style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/backup", keywords: ["backup", "restore", "export", "sikkerhedskopi"] },
     { id: "nav-trash", label: "Trash", sublabel: "Deleted items", category: "navigation", icon: <Trash2 style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/trash", keywords: ["slettet", "deleted", "papirkurv"] },
 
