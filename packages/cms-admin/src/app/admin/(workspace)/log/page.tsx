@@ -161,11 +161,13 @@ export default function EventLogPage() {
     setLayers(next);
   }
 
-  function exportJson() {
+  function exportLog(format: "csv" | "json") {
     const params = new URLSearchParams();
     params.set("layers", Array.from(layers).join(","));
-    params.set("limit", "10000");
-    window.open(`/api/admin/log?${params.toString()}`, "_blank");
+    if (level !== "all") params.set("level", level);
+    if (actionFilter) params.set("action", actionFilter);
+    params.set("format", format);
+    window.location.href = `/api/admin/log/export?${params.toString()}`;
   }
 
   return (
@@ -192,16 +194,33 @@ export default function EventLogPage() {
             </button>
             <button
               type="button"
-              onClick={exportJson}
+              onClick={() => exportLog("csv")}
+              title="Export filtered events as CSV (for GDPR data requests)"
               style={{
                 height: 28, display: "inline-flex", alignItems: "center", gap: "0.35rem",
-                padding: "0 0.75rem", borderRadius: 6, border: "none",
-                background: "#F7BB2E", color: "#0D0D0D",
-                fontSize: "0.75rem", fontWeight: 600, cursor: "pointer",
+                padding: "0 0.75rem", borderRadius: 6,
+                border: "1px solid var(--border)", background: "transparent",
+                color: "var(--foreground)",
+                fontSize: "0.75rem", fontWeight: 500, cursor: "pointer",
               }}
             >
               <Download style={{ width: 13, height: 13 }} />
-              Export
+              CSV
+            </button>
+            <button
+              type="button"
+              onClick={() => exportLog("json")}
+              title="Export filtered events as JSON"
+              style={{
+                height: 28, display: "inline-flex", alignItems: "center", gap: "0.35rem",
+                padding: "0 0.75rem", borderRadius: 6,
+                border: "1px solid var(--border)", background: "transparent",
+                color: "var(--foreground)",
+                fontSize: "0.75rem", fontWeight: 500, cursor: "pointer",
+              }}
+            >
+              <Download style={{ width: 13, height: 13 }} />
+              JSON
             </button>
           </div>
         }
