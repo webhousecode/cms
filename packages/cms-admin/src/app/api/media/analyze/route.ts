@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { analyzeImage, analyzeImageMultiLocale } from "@/lib/ai/image-analysis";
+import { analyzeImage, analyzeImageMultiLocale, analyzeSvgText, analyzeSvgTextMultiLocale } from "@/lib/ai/image-analysis";
 import type { ImageAnalysis, MultiLocaleImageAnalysis } from "@/lib/ai/image-analysis";
 import { getMediaAdapter } from "@/lib/media";
 import { denyViewers } from "@/lib/require-role";
@@ -44,15 +44,33 @@ export async function POST(req: NextRequest) {
         webp: "image/webp", gif: "image/gif", svg: "image/svg+xml",
       };
       mimeType = mimeMap[ext] ?? "image/jpeg";
-
-      if (mimeType === "image/svg+xml") {
-        return NextResponse.json({ error: "SVG images cannot be analyzed" }, { status: 400 });
-      }
     }
 
     // Determine site locales for multi-locale analysis
     const siteConfig = await readSiteConfig();
     const siteLocales = siteConfig.locales?.length ? siteConfig.locales : [];
+
+    // SVG — analyze XML source as text (Claude vision API doesn't accept SVG,
+    // but the structure contains enough info for caption/alt/tags).
+    if (mimeType === "image/svg+xml") {
+      const svgText = buffer.toString("utf-8");
+      if (siteLocales.length > 1) {
+        const multiResult = await analyzeSvgTextMultiLocale(svgText, siteLocales);
+        await saveAIMetadataMultiLocale(folder, filename, multiResult);
+        const primaryLocale = language || siteConfig.defaultLocale || siteLocales[0];
+        return NextResponse.json({
+          caption: multiResult.captions[primaryLocale] ?? Object.values(multiResult.captions)[0] ?? "",
+          alt: multiResult.alts[primaryLocale] ?? Object.values(multiResult.alts)[0] ?? "",
+          tags: multiResult.tags,
+          provider: multiResult.provider,
+          captions: multiResult.captions,
+          alts: multiResult.alts,
+        });
+      }
+      const result = await analyzeSvgText(svgText, language);
+      await saveAIMetadata(folder, filename, result);
+      return NextResponse.json(result);
+    }
 
     if (siteLocales.length > 1) {
       // Multi-locale site: generate caption/alt for ALL locales in one call

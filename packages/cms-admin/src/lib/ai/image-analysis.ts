@@ -170,6 +170,120 @@ Rules:
   };
 }
 
+/**
+ * Analyze SVG as TEXT — SVG is XML source, not a raster image. Claude's vision
+ * API doesn't accept SVG, but the XML structure (shapes, paths, text, IDs, etc.)
+ * contains enough info for a useful caption/alt/tags analysis.
+ *
+ * Truncates very large SVGs (>50KB) since most info is in the opening structure.
+ */
+export async function analyzeSvgText(
+  svgText: string,
+  language: string = "da",
+): Promise<ImageAnalysis & { provider: string }> {
+  const { model, provider } = await getVisionModel();
+  const src = svgText.length > 50000 ? svgText.slice(0, 50000) + "\n<!-- truncated -->" : svgText;
+
+  const { object } = await generateObject({
+    model,
+    schema: imageAnalysisSchema,
+    messages: [{
+      role: "user",
+      content: [{
+        type: "text",
+        text: `You are an image analyst for a CMS media library. This is an SVG file — its XML source is below. Analyze the structure (shapes, paths, text elements, viewBox, IDs, classes) to infer what the SVG depicts.
+
+Rules:
+- caption: One natural sentence describing what the SVG depicts. Be specific.
+- alt: Short accessible description for screen readers. Max 125 characters.
+- tags: 3-8 keywords. Include: subject, style (icon/illustration/diagram/logo/chart), dominant colors, mood.
+- Do not use generic tags like "image" or "svg".
+${language === "da" ? "Svar på dansk." : language === "de" ? "Antworte auf Deutsch." : language === "sv" ? "Svara på svenska." : language === "no" ? "Svar på norsk." : "Respond in English."}
+
+SVG source:
+\`\`\`xml
+${src}
+\`\`\``,
+      }],
+    }],
+  });
+
+  return { ...object, provider };
+}
+
+/** Multi-locale SVG text analysis — mirrors analyzeImageMultiLocale structure */
+export async function analyzeSvgTextMultiLocale(
+  svgText: string,
+  locales: string[],
+): Promise<MultiLocaleImageAnalysis> {
+  if (locales.length === 0) locales = ["en"];
+
+  if (locales.length === 1) {
+    const result = await analyzeSvgText(svgText, locales[0]);
+    return {
+      captions: { [locales[0]]: result.caption },
+      alts: { [locales[0]]: result.alt },
+      tags: result.tags,
+      provider: result.provider,
+    };
+  }
+
+  const { model, provider } = await getVisionModel();
+  const src = svgText.length > 50000 ? svgText.slice(0, 50000) + "\n<!-- truncated -->" : svgText;
+
+  const langMap: Record<string, string> = {
+    da: "Dansk", en: "English", de: "Deutsch", sv: "Svenska",
+    no: "Norsk", fr: "Français", es: "Español", nl: "Nederlands",
+    fi: "Suomi", it: "Italiano", pt: "Português", pl: "Polski",
+    ja: "日本語", zh: "中文", ko: "한국어",
+  };
+  const localeList = locales.map((l) => `${l} (${langMap[l] ?? l})`).join(", ");
+
+  const captionsShape: Record<string, z.ZodString> = {};
+  const altsShape: Record<string, z.ZodString> = {};
+  for (const l of locales) {
+    captionsShape[l] = z.string().describe(`Caption in ${langMap[l] ?? l}`);
+    altsShape[l] = z.string().describe(`Alt-text in ${langMap[l] ?? l}, max 125 chars`);
+  }
+  const multiSchema = z.object({
+    captions: z.object(captionsShape),
+    alts: z.object(altsShape),
+    tags: z.array(z.string()).min(1).max(10),
+  });
+
+  const { object } = await generateObject({
+    model,
+    schema: multiSchema,
+    messages: [{
+      role: "user",
+      content: [{
+        type: "text",
+        text: `You are an image analyst for a CMS media library. This is an SVG file — its XML source is below. Analyze the structure (shapes, paths, text elements, viewBox, IDs, classes) to infer what the SVG depicts.
+
+Return captions and alts for these locales: ${localeList}.
+
+Rules:
+- captions: one natural sentence per locale describing what the SVG depicts. Each in its respective language.
+- alts: short accessible description per locale, max 125 chars each.
+- tags: 3-8 keywords in English. Include subject, style (icon/illustration/diagram/logo/chart), colors, mood.
+- Do not use generic tags like "image" or "svg".
+
+SVG source:
+\`\`\`xml
+${src}
+\`\`\``,
+      }],
+    }],
+  });
+
+  return {
+    captions: object.captions as Record<string, string>,
+    alts: object.alts as Record<string, string>,
+    tags: object.tags,
+    provider,
+  };
+}
+
 /** Quick test that the vision model works */
 export async function testVisionConnection(): Promise<{ ok: boolean; provider?: string; error?: string }> {
   try {
