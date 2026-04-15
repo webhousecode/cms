@@ -245,3 +245,91 @@ export function hashIp(ip: string | null | undefined): string | undefined {
   if (!ip) return undefined;
   return crypto.createHash("sha256").update(ip).digest("hex").slice(0, 8);
 }
+
+/* ────────────────────────────────────────────────────────────────
+ * Convenience helpers — clean call sites for common events.
+ * All helpers are fire-and-forget and never throw.
+ * ──────────────────────────────────────────────────────────────── */
+
+interface ActorLike {
+  userId?: string;
+  name?: string;
+  email?: string;
+  ipHash?: string;
+}
+
+export async function logLogin(actor: ActorLike, method?: "password" | "passkey" | "github" | "totp" | "magic-link"): Promise<void> {
+  await auditLog("auth.login", { type: "user", ...actor }, undefined, method ? { method } : undefined);
+}
+
+export async function logLoginFailed(email: string, reason: string, ipHash?: string): Promise<void> {
+  await auditLog("auth.login.failed", { type: "user", email, ipHash }, undefined, { reason });
+}
+
+export async function logLogout(actor: ActorLike): Promise<void> {
+  await auditLog("auth.logout", { type: "user", ...actor });
+}
+
+export async function logDocumentCreated(actor: ActorLike, collection: string, slug: string, title?: string): Promise<void> {
+  await auditLog("document.created", { type: "user", ...actor }, { type: "document", collection, slug, title });
+}
+
+export async function logDocumentUpdated(actor: ActorLike, collection: string, slug: string, title?: string, changedFields?: string[]): Promise<void> {
+  await auditLog(
+    "document.updated",
+    { type: "user", ...actor },
+    { type: "document", collection, slug, title },
+    changedFields ? { fields: changedFields } : undefined,
+  );
+}
+
+export async function logDocumentPublished(actor: ActorLike, collection: string, slug: string, title?: string): Promise<void> {
+  await auditLog("document.published", { type: "user", ...actor }, { type: "document", collection, slug, title });
+}
+
+export async function logDocumentTrashed(actor: ActorLike, collection: string, slug: string, title?: string): Promise<void> {
+  await auditLog("document.trashed", { type: "user", ...actor }, { type: "document", collection, slug, title });
+}
+
+export async function logDocumentDeleted(actor: ActorLike, collection: string, slug: string, title?: string): Promise<void> {
+  await auditLog("document.deleted", { type: "user", ...actor }, { type: "document", collection, slug, title });
+}
+
+export async function logSettingsUpdated(actor: ActorLike, changedFields: string[]): Promise<void> {
+  await auditLog("settings.updated", { type: "user", ...actor }, { type: "settings" }, { fields: changedFields });
+}
+
+export async function logMediaUploaded(actor: ActorLike, filename: string, size?: number, mimeType?: string): Promise<void> {
+  await auditLog(
+    "media.uploaded",
+    { type: "user", ...actor },
+    { type: "media", title: filename },
+    { size, mimeType },
+  );
+}
+
+export async function logMediaDeleted(actor: ActorLike, filename: string): Promise<void> {
+  await auditLog("media.deleted", { type: "user", ...actor }, { type: "media", title: filename });
+}
+
+export async function logAgentRan(agentId: string, agentName: string, outcome: "success" | "failed", durationMs?: number): Promise<void> {
+  await auditLog(
+    outcome === "success" ? "agent.ran" : "agent.failed",
+    { type: "agent", agentId, name: agentName },
+    { type: "agent", id: agentId, title: agentName },
+    durationMs ? { durationMs } : undefined,
+  );
+}
+
+export async function logRoleChanged(actor: ActorLike, targetUserId: string, oldRole: string, newRole: string): Promise<void> {
+  await auditLog(
+    "team.role_changed",
+    { type: "user", ...actor },
+    { type: "team", id: targetUserId },
+    { oldRole, newRole },
+  );
+}
+
+export async function logExport(actor: ActorLike, what: string, count: number, format?: string): Promise<void> {
+  await auditLog("export", { type: "user", ...actor }, undefined, { what, count, format });
+}

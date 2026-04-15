@@ -28,18 +28,15 @@ async function updateAndAudit(request: NextRequest): Promise<NextResponse> {
   const patch = (await request.json()) as Partial<SiteConfig>;
   const updated = await writeSiteConfig(patch);
 
-  // F61: audit settings updates (mask sensitive values)
+  // F61: audit settings updates (field names only — never values)
   try {
-    const { auditLog } = await import("@/lib/event-log");
+    const { logSettingsUpdated } = await import("@/lib/event-log");
     const { getSessionWithSiteRole } = await import("@/lib/require-role");
     const session = await getSessionWithSiteRole();
     if (session) {
-      const changedKeys = Object.keys(patch);
-      await auditLog(
-        "settings.updated",
-        { type: "user", userId: session.userId, email: session.email, name: session.name },
-        { type: "settings" },
-        { fields: changedKeys },
+      await logSettingsUpdated(
+        { userId: session.userId, email: session.email, name: session.name },
+        Object.keys(patch),
       );
     }
   } catch { /* non-fatal */ }
