@@ -145,6 +145,7 @@
 | F129 | [Edit What You See](#f129-edit-what-you-see) | **Tier 1** | [docs/features/F129-edit-what-you-see.md](features/F129-edit-what-you-see.md) |
 | F130 | [AI Fallback Gateway (Local Gemma 4)](#f130-ai-fallback-gateway) | Planned | [docs/features/F130-ai-fallback-gateway.md](features/F130-ai-fallback-gateway.md) |
 | F131 | [Media CDN Offloading](#f131-media-cdn-offloading) | Planned | [docs/features/F131-media-cdn-offloading.md](features/F131-media-cdn-offloading.md) |
+| F132 | [Document Search & Replace](#f132-document-search-replace) | Planned | [docs/features/F132-document-search-replace.md](features/F132-document-search-replace.md) |
 
 ---
 
@@ -538,3 +539,6 @@ A self-hosted TypeScript API that wraps a local Gemma 4 model and exposes a unif
 
 ## F131 — Media CDN Offloading
 Upload large media files (video, high-res images, archives) to S3-compatible cloud storage (R2, B2, AWS) and serve via CDN URL. Files above a configurable threshold (default 5MB) or matching offload extensions (video, archives) auto-upload to cloud on CMS upload. Reuses existing F95 S3 adapter credentials — no new config needed. Build pipeline skips CDN-URL files (no dist/ bloat). Solves GitHub Pages 100MB limit and 2000+ file deploys.
+
+## F132 — Document Search & Replace
+Cmd+F (find) and Cmd+Option+F (find + replace) scoped to the currently open document. Works across ALL field types: text, textarea, richtext (TipTap), htmldoc, arrays, nested objects, blocks. Search bar dockable below the action bar with case-sensitive, whole-word, and regex toggles. Match navigation auto-expands collapsed array/object/blocks. Rich text uses @tiptap/extension-search-and-replace with ProseMirror decorations. Replace applies to form state only — existing dirty-tracking handles save. Distinct from F66 (site-wide search) — F132 is in-document only.
