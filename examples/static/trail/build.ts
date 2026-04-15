@@ -11,6 +11,7 @@
 import { readdirSync, readFileSync, mkdirSync, writeFileSync, existsSync, cpSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { marked } from "marked";
+import { expandShortcodes } from "@webhouse/cms";
 
 const BASE_PATH = process.env.BASE_PATH ?? "";
 const OUT_DIR = process.env.BUILD_OUT_DIR ?? "dist";
@@ -725,36 +726,24 @@ function renderBlocks(blocks: unknown): string {
     .join("\n");
 }
 
-// Figures live as separate SVG assets in figures/ (workaround for
-// tiptap's markdown roundtrip stripping raw <svg> blocks on save —
-// see cms-core intercom #17/#19 for the planned TipTap NodeView fix).
-// Shortcode: {{svg:slug}} → <figure><svg>…</svg><figcaption>…</figcaption></figure>
-const FIGURES_DIR = join(import.meta.dirname, "figures");
-const CAPTIONS: Record<string, string> = existsSync(join(FIGURES_DIR, "captions.json"))
-  ? JSON.parse(readFileSync(join(FIGURES_DIR, "captions.json"), "utf-8"))
+// Shortcodes ({{svg:slug}}, {{snippet:slug}}, !!INTERACTIVE[...], !!FILE[...],
+// !!MAP[...]) are expanded via @webhouse/cms's shared helper. SVG figures
+// live in public/uploads/svg/ so the CMS admin Shapes picker can browse them.
+const UPLOADS_DIR = join(import.meta.dirname, "public", "uploads");
+const SVG_CAPTIONS: Record<string, string> = existsSync(join(UPLOADS_DIR, "svg", "captions.json"))
+  ? JSON.parse(readFileSync(join(UPLOADS_DIR, "svg", "captions.json"), "utf-8"))
   : {};
-
-function expandSvgShortcodes(md: string): string {
-  return md.replace(/\{\{svg:([a-z0-9-]+)\}\}/g, (_match, slug: string) => {
-    const svgPath = join(FIGURES_DIR, `${slug}.svg`);
-    if (!existsSync(svgPath)) {
-      console.warn(`  ⚠ figures/${slug}.svg not found — leaving shortcode in place`);
-      return _match;
-    }
-    const svg = readFileSync(svgPath, "utf-8").trim();
-    const caption = CAPTIONS[slug] ?? "";
-    const capHtml = caption ? `<figcaption>${caption}</figcaption>` : "";
-    return `<figure>${svg}${capHtml}</figure>`;
-  });
-}
 
 function renderContent(raw: unknown): string {
   const s = String(raw ?? "");
   if (!s) return "";
-  const expanded = expandSvgShortcodes(s);
-  // Already HTML? Pass through.
-  if (/^\s*</.test(expanded)) return expanded;
-  return marked.parse(expanded, { async: false }) as string;
+  const html = /^\s*</.test(s) ? s : (marked.parse(s, { async: false }) as string);
+  return expandShortcodes(html, {
+    basePath: BASE_PATH,
+    uploadsDir: UPLOADS_DIR,
+    svgDir: "svg",
+    svgCaptions: SVG_CAPTIONS,
+  });
 }
 
 interface ArticleMeta {

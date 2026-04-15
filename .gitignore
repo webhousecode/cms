@@ -158,8 +158,16 @@ _revisions/
 *-1600w.webp
 
 # Example site uploads (too large for git, re-downloadable)
-examples/*/public/uploads/
-examples/static/*/public/uploads/
+# Exclude uploads/* contents rather than the directory itself so the svg/
+# subdir below can be re-included (git can't re-include a file under an
+# excluded directory; it can under an excluded pattern match on files).
+examples/*/public/uploads/*
+examples/static/*/public/uploads/*
+# …except svg/ — dev-authored figure assets referenced via {{svg:slug}}
+!examples/*/public/uploads/svg
+!examples/*/public/uploads/svg/**
+!examples/static/*/public/uploads/svg
+!examples/static/*/public/uploads/svg/**
 
 # OG images (generated)
 **/og/

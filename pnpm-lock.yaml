@@ -175,6 +175,22 @@ importers:
         specifier: ^4.0.0
         version: 4.21.0
 
+  examples/static/trail:
+    dependencies:
+      '@webhouse/cms':
+        specifier: workspace:*
+        version: link:../../../packages/cms
+      marked:
+        specifier: ^15.0.0
+        version: 15.0.12
+    devDependencies:
+      tsx:
+        specifier: ^4.21.0
+        version: 4.21.0
+      typescript:
+        specifier: ^5.8.0
+        version: 5.9.3
+
   packages/cms:
     dependencies:
       '@hono/node-server':

@@ -1,5 +1,5 @@
 {
-  "name": "memx-landing",
+  "name": "@webhouse/cms-example-trail",
   "version": "0.1.0",
   "private": true,
   "type": "module",
@@ -8,7 +8,7 @@
     "dev": "tsx watch build.ts"
   },
   "dependencies": {
-    "@webhouse/cms": "^0.2.11",
+    "@webhouse/cms": "workspace:*",
     "marked": "^15.0.0"
   },
   "devDependencies": {
