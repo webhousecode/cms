@@ -81,6 +81,7 @@ const PATH_TITLES: Record<string, string> = {
   "/admin/forms/builder": "Form Builder",
   "/admin/seo": "SEO",
   "/admin/lighthouse": "Lighthouse",
+  "/admin/log": "Event Log",
   "/admin/visibility": "Visibility",
   "/admin/ai-analytics": "AI Analytics",
   "/admin/favorites": "Favorites",
@@ -106,7 +107,9 @@ function pathTitle(path: string): string {
   }
   const parts = bare.replace(/^\/admin\/?/, "").split("/").filter(Boolean);
   if (parts.length === 0) return "Dashboard";
-  return decodeURIComponent(parts[parts.length - 1]);
+  // Tab titles are ALWAYS capitalized (first letter uppercase) — never raw URL slugs.
+  const slug = decodeURIComponent(parts[parts.length - 1]);
+  return slug.charAt(0).toUpperCase() + slug.slice(1);
 }
 
 const STORE_KEY_BASE = "cms-admin-tabs-v4";
