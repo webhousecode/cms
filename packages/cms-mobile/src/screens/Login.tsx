@@ -5,7 +5,7 @@ import { Button } from "@/components/Button";
 import { Logo } from "@/components/Logo";
 import { QrScanner } from "@/components/QrScanner";
 import { ApiError, exchangePairingToken } from "@/api/client";
-import { setJwt, setLastUserEmail } from "@/lib/prefs";
+import { setJwt, setLastUserEmail, setServerUrl } from "@/lib/prefs";
 import { onDeepLink } from "@/lib/bridge";
 import { parseQrPayload } from "@/lib/qr";
 
@@ -26,17 +26,19 @@ export function Login() {
     const off = onDeepLink((url) => {
       const payload = parseQrPayload(url);
       if (payload.pairingToken) {
-        void handlePairingToken(payload.pairingToken);
+        void handlePairingToken(payload.pairingToken, payload.serverUrl);
       }
     });
     return off;
   }, []);
 
-  async function handlePairingToken(token: string) {
+  async function handlePairingToken(token: string, serverUrl?: string) {
     setError(null);
     setLoading(true);
     try {
-      const result = await exchangePairingToken(token);
+      // Persist server URL FIRST so subsequent requests can find it
+      if (serverUrl) await setServerUrl(serverUrl);
+      const result = await exchangePairingToken(token, serverUrl);
       await setJwt(result.jwt);
       await setLastUserEmail(result.user.email);
       setLocation("/home");
@@ -51,7 +53,7 @@ export function Login() {
     setShowScanner(false);
     const payload = parseQrPayload(data);
     if (payload.pairingToken) {
-      await handlePairingToken(payload.pairingToken);
+      await handlePairingToken(payload.pairingToken, payload.serverUrl);
     } else {
       setError("Scanned code is not a webhouse.app pairing QR");
     }
