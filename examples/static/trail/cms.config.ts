@@ -137,12 +137,26 @@ export default defineConfig({
       ],
     }),
     defineCollection({
+      name: "categories",
+      label: "Trail Categories",
+      kind: "data",
+      description:
+        "Post taxonomy. Referenced by posts.category. build.ts auto-generates /trails/<slug>/ index pages and the Trails menu from published category records.",
+      fields: [
+        { name: "name", type: "text", label: "Name", required: true, description: "Display label (e.g. 'Field Notes')" },
+        { name: "slug", type: "text", label: "Slug", required: true, description: "URL segment (e.g. 'field-notes'). Must match the document id." },
+        { name: "description", type: "textarea", label: "Description", description: "Shown on the category index page header." },
+        { name: "order", type: "number", label: "Order", description: "Sort order in the Trails menu (lower first)." },
+      ],
+    }),
+    defineCollection({
       name: "posts",
       label: "Posts",
-      urlPrefix: "/blog",
+      urlPrefix: "/trails",
+      urlPattern: "/:category/:slug",
       kind: "page",
       description:
-        "Blog posts and essays. Organized by category, tagged for discovery, linked to related content.",
+        "Blog posts and essays. Category is a relation to categories collection; tags are a free-form taxonomy rendered as clickable pills at the bottom of each post.",
       fields: [
         { name: "title", type: "text", label: "Title", required: true },
         { name: "excerpt", type: "textarea", label: "Excerpt" },
@@ -150,18 +164,7 @@ export default defineConfig({
         { name: "date", type: "date", label: "Publish date" },
         { name: "author", type: "text", label: "Author" },
         { name: "coverImage", type: "image", label: "Cover image" },
-        {
-          name: "category",
-          type: "select",
-          label: "Category",
-          options: [
-            { value: "the-1945-concept", label: "The 1945 Concept" },
-            { value: "engineering", label: "Engineering" },
-            { value: "research", label: "Research" },
-            { value: "product", label: "Product" },
-            { value: "announcements", label: "Announcements" },
-          ],
-        },
+        { name: "category", type: "relation", label: "Category", collection: "categories", multiple: false },
         { name: "tags", type: "tags", label: "Tags" },
         { name: "readTime", type: "text", label: "Read time", description: "e.g. \"6 min read\"" },
         { name: "attribution", type: "textarea", label: "Attribution / source note" },

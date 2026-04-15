@@ -8,6 +8,7 @@
     "navLinks": [
       { "label": "Architecture", "href": "#features" },
       { "label": "Documentation", "href": "#docs" },
+      { "label": "Trails", "href": "/trails/" },
       { "label": "The 1945 Concept", "href": "/the-1945-concept/" }
     ],
     "signInLabel": "Sign In",

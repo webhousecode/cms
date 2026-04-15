@@ -52,6 +52,8 @@ function readSingleton(collection: string, slug: string): Record<string, unknown
 }
 
 const pages = readCollection("pages");
+const posts = readCollection("posts");
+const categories = readCollection("categories");
 const global = readSingleton("global", "global");
 
 // ── Helpers ─────────────────────────────────────────────────
@@ -519,6 +521,104 @@ button { font: inherit; cursor: pointer; border: none; background: none; color: 
 .footer-links a { transition: color 0.15s; }
 .footer-links a:hover { color: var(--accent); }
 .footer-copy { font-family: var(--font-mono); font-size: 0.75rem; color: var(--fg-40); }
+.footer-copy a { color: var(--fg-60); border-bottom: 1px dotted var(--fg-20); transition: color 0.15s, border-color 0.15s; }
+.footer-copy a:hover { color: var(--accent); border-bottom-color: var(--accent); }
+
+/* Clickable article tags (reused by pages) */
+.article-tags .tag { transition: color 0.15s, border-color 0.15s; }
+.article-tags .tag:hover { color: var(--accent); border-color: var(--accent); }
+
+/* Trails index + category pages */
+.trails-section { margin: 3rem 0; }
+.trails-section-header {
+  display: flex; justify-content: space-between; align-items: baseline;
+  gap: 1rem; margin-bottom: 1.25rem;
+  border-bottom: 1px solid var(--fg-10); padding-bottom: 0.5rem;
+}
+.trails-section-header h2 {
+  font-size: 1.375rem; font-weight: 700; letter-spacing: -0.02em;
+}
+.trails-section-link {
+  font-family: var(--font-mono); font-size: 0.75rem;
+  color: var(--fg-60); letter-spacing: 0.06em;
+  transition: color 0.15s;
+}
+.trails-section-link:hover { color: var(--accent); }
+.post-empty { color: var(--fg-60); font-style: italic; margin: 2rem 0; }
+
+.post-grid {
+  display: grid; grid-template-columns: 1fr;
+  gap: 0.25rem;
+}
+@media (min-width: 640px) { .post-grid { grid-template-columns: repeat(2, 1fr); } }
+.post-card {
+  display: flex; flex-direction: column; gap: 0.5rem;
+  padding: 1.25rem;
+  border: 1px solid var(--fg-10);
+  background: var(--bg);
+  transition: background 0.2s, border-color 0.2s;
+  position: relative; overflow: hidden;
+}
+.post-card::before {
+  content: "";
+  position: absolute; top: 0; left: 0;
+  width: 100%; height: 2px; background: var(--accent);
+  transform: scaleX(0); transform-origin: left;
+  transition: transform 0.3s;
+}
+.post-card:hover { background: #fff; border-color: var(--fg-20); }
+.post-card:hover::before { transform: scaleX(1); }
+.post-card-eyebrow {
+  font-family: var(--font-mono); font-size: 0.7rem;
+  letter-spacing: 0.08em; text-transform: uppercase;
+  color: var(--accent);
+}
+.post-card h3 {
+  font-size: 1.125rem; font-weight: 600;
+  letter-spacing: -0.02em; line-height: 1.3;
+}
+.post-card p {
+  color: var(--fg-70); font-size: 0.9rem; line-height: 1.55;
+  margin: 0;
+}
+.post-card-meta {
+  font-family: var(--font-mono); font-size: 0.7rem;
+  color: var(--fg-60); margin-top: auto; padding-top: 0.25rem;
+}
+
+/* Post footer (below prose): bottom tag pills + "more from category" */
+.post-footer {
+  margin: 3rem 0 0;
+  padding-top: 2rem;
+  border-top: 1px solid var(--fg-10);
+}
+.post-tags {
+  display: flex; flex-wrap: wrap; gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+.post-tag {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  padding: 0.3rem 0.75rem;
+  border: 1px solid var(--fg-20);
+  border-radius: 9999px;
+  color: var(--fg-70);
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.post-tag:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: rgba(232, 168, 124, 0.06);
+}
+.post-more {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  letter-spacing: 0.06em;
+  color: var(--fg-60);
+  transition: color 0.15s;
+}
+.post-more:hover { color: var(--accent); }
 `;
 
 // ── Rendering ───────────────────────────────────────────────
@@ -627,17 +727,144 @@ function renderArticle(data: ArticleMeta, slug: string): string {
     ? new Date(date).toLocaleDateString("en", { year: "numeric", month: "long", day: "numeric" })
     : "";
   const metaLine = [category, author, dateStr].filter(Boolean).map(esc).join(" · ");
-  const tagHtml = tags.length
-    ? `<div class="article-tags">${tags.map((t) => `<span class="tag">${esc(t)}</span>`).join("")}</div>`
-    : "";
+  void tags; // tags render at bottom via renderPostFooter
   return `<header class="article-header">
       ${category ? `<div class="article-eyebrow">${esc(category)}</div>` : ""}
       <h1>${esc(title)}</h1>
       ${excerpt ? `<p class="article-lead">${esc(excerpt)}</p>` : ""}
       ${metaLine ? `<div class="article-meta">${metaLine}</div>` : ""}
-      ${tagHtml}
       ${cover}
     </header>`;
+}
+
+// ── Post + category helpers ─────────────────────────────────
+
+interface CategoryData {
+  name?: unknown;
+  slug?: unknown;
+  description?: unknown;
+  order?: unknown;
+}
+
+function categoryOf(post: Doc): Doc | undefined {
+  const ref = String(post.data.category ?? "");
+  if (!ref) return undefined;
+  return categories.find((c) => c.slug === ref || String(c.data.slug ?? "") === ref);
+}
+
+function postUrl(post: Doc): string {
+  const cat = categoryOf(post);
+  const catSlug = cat ? String(cat.data.slug ?? cat.slug) : "uncategorized";
+  return bp(`/trails/${catSlug}/${post.slug}/`);
+}
+
+function sortedCategories(): Doc[] {
+  return [...categories].sort((a, b) => {
+    const oa = Number(a.data.order ?? 999);
+    const ob = Number(b.data.order ?? 999);
+    if (oa !== ob) return oa - ob;
+    return String(a.data.name ?? a.slug).localeCompare(String(b.data.name ?? b.slug));
+  });
+}
+
+function postsInCategory(catSlug: string): Doc[] {
+  return posts
+    .filter((p) => {
+      const ref = String(p.data.category ?? "");
+      return ref === catSlug;
+    })
+    .sort((a, b) => String(b.data.date ?? "").localeCompare(String(a.data.date ?? "")));
+}
+
+function sortedPosts(): Doc[] {
+  return [...posts].sort((a, b) => String(b.data.date ?? "").localeCompare(String(a.data.date ?? "")));
+}
+
+function collectTags(postList: Doc[]): Map<string, Doc[]> {
+  const map = new Map<string, Doc[]>();
+  for (const p of postList) {
+    const tags = Array.isArray(p.data.tags) ? (p.data.tags as string[]) : [];
+    for (const t of tags) {
+      if (!map.has(t)) map.set(t, []);
+      map.get(t)!.push(p);
+    }
+  }
+  return map;
+}
+
+function renderPostCard(post: Doc): string {
+  const title = String(post.data.title ?? post.slug);
+  const excerpt = String(post.data.excerpt ?? "");
+  const date = String(post.data.date ?? "");
+  const readTime = String(post.data.readTime ?? "");
+  const cat = categoryOf(post);
+  const dateStr = date
+    ? new Date(date).toLocaleDateString("en", { year: "numeric", month: "long", day: "numeric" })
+    : "";
+  const meta = [cat ? String(cat.data.name ?? cat.slug) : "", dateStr, readTime]
+    .filter(Boolean)
+    .map(esc)
+    .join(" · ");
+  return `<a class="post-card" href="${esc(postUrl(post))}">
+    ${cat ? `<div class="post-card-eyebrow">${esc(String(cat.data.name ?? cat.slug))}</div>` : ""}
+    <h3>${esc(title)}</h3>
+    ${excerpt ? `<p>${esc(excerpt)}</p>` : ""}
+    ${meta ? `<div class="post-card-meta">${meta}</div>` : ""}
+  </a>`;
+}
+
+function renderPostFooter(post: Doc): string {
+  const tags = Array.isArray(post.data.tags) ? (post.data.tags as string[]) : [];
+  const cat = categoryOf(post);
+  const tagPills = tags.length
+    ? `<div class="post-tags">${tags
+        .map((t) => `<a class="post-tag" href="${esc(bp(`/tags/${t}/`))}">#${esc(t)}</a>`)
+        .join("")}</div>`
+    : "";
+  const more = cat
+    ? `<a class="post-more" href="${esc(bp(`/trails/${String(cat.data.slug ?? cat.slug)}/`))}">← MORE FROM ${esc(String(cat.data.name ?? cat.slug).toUpperCase())}</a>`
+    : `<a class="post-more" href="${esc(bp("/trails/"))}">← MORE FROM TRAILS</a>`;
+  return `<div class="post-footer">${tagPills}${more}</div>`;
+}
+
+function renderCategoryHeader(cat: Doc): string {
+  const name = String(cat.data.name ?? cat.slug);
+  const desc = String(cat.data.description ?? "");
+  return `<header class="article-header">
+    <div class="article-eyebrow">Trails</div>
+    <h1>${esc(name)}</h1>
+    ${desc ? `<p class="article-lead">${esc(desc)}</p>` : ""}
+  </header>`;
+}
+
+function renderPostGrid(postList: Doc[]): string {
+  if (!postList.length) return `<p class="post-empty">No posts yet.</p>`;
+  return `<div class="post-grid">${postList.map(renderPostCard).join("")}</div>`;
+}
+
+function renderTrailsIndex(): string {
+  const cats = sortedCategories();
+  const sections = cats
+    .map((c) => {
+      const list = postsInCategory(String(c.data.slug ?? c.slug));
+      if (!list.length) return "";
+      return `<section class="trails-section">
+        <div class="trails-section-header">
+          <h2>${esc(String(c.data.name ?? c.slug))}</h2>
+          <a class="trails-section-link" href="${esc(bp(`/trails/${String(c.data.slug ?? c.slug)}/`))}">All ${esc(String(c.data.name ?? c.slug))} →</a>
+        </div>
+        ${renderPostGrid(list)}
+      </section>`;
+    })
+    .filter(Boolean)
+    .join("");
+  const header = `<header class="article-header">
+    <div class="article-eyebrow">Trails</div>
+    <h1>Trails</h1>
+    <p class="article-lead">Essays, field notes, and dispatches from inside a knowledge engine that compiles instead of retrieves.</p>
+  </header>`;
+  const body = sections || `<p class="post-empty">No posts published yet.</p>`;
+  return `<article class="article container">${header}${body}</article>`;
 }
 
 // ── Global data ─────────────────────────────────────────────
@@ -746,6 +973,58 @@ for (const page of pages) {
   write(`${page.slug}/index.html`, layout(String(page.data.title), fullContent, desc));
 }
 
+// Trails index (/trails/)
+const trailsIndexHtml = renderTrailsIndex();
+write(
+  `trails/index.html`,
+  layout(
+    `Trails`,
+    trailsIndexHtml,
+    `Essays, field notes, and dispatches from the trail knowledge engine.`,
+  ),
+);
+
+// Category index pages (/trails/<category-slug>/)
+for (const cat of sortedCategories()) {
+  const catSlug = String(cat.data.slug ?? cat.slug);
+  const list = postsInCategory(catSlug);
+  const header = renderCategoryHeader(cat);
+  const body = renderPostGrid(list);
+  const html = `<article class="article container">${header}${body}</article>`;
+  const catName = String(cat.data.name ?? cat.slug);
+  const desc = String(cat.data.description ?? `Posts in ${catName}.`);
+  write(`trails/${catSlug}/index.html`, layout(catName, html, desc));
+}
+
+// Individual posts (/trails/<category-slug>/<post-slug>/)
+for (const post of posts) {
+  const cat = categoryOf(post);
+  const catSlug = cat ? String(cat.data.slug ?? cat.slug) : "uncategorized";
+  const catName = cat ? String(cat.data.name ?? cat.slug) : "";
+  const header = renderArticle({ ...post.data, category: catName }, post.slug);
+  const bodyHtml = renderContent(post.data.content);
+  const footer = renderPostFooter(post);
+  const inner = `<article class="article container">${header}<div class="prose">${bodyHtml}</div>${footer}</article>`;
+  const desc = String(post.data.excerpt ?? siteDescription);
+  write(
+    `trails/${catSlug}/${post.slug}/index.html`,
+    layout(String(post.data.title ?? post.slug), inner, desc),
+  );
+}
+
+// Tag index pages (/tags/<tag>/)
+const tagMap = collectTags(posts);
+for (const [tag, list] of tagMap) {
+  const header = `<header class="article-header">
+    <div class="article-eyebrow">Tag</div>
+    <h1>#${esc(tag)}</h1>
+    <p class="article-lead">${list.length} post${list.length === 1 ? "" : "s"} tagged <code>${esc(tag)}</code>.</p>
+  </header>`;
+  const body = renderPostGrid(list.sort((a, b) => String(b.data.date ?? "").localeCompare(String(a.data.date ?? ""))));
+  const html = `<article class="article container">${header}${body}</article>`;
+  write(`tags/${tag}/index.html`, layout(`#${tag}`, html, `Posts tagged ${tag}.`));
+}
+
 // Copy uploads
 if (existsSync(join(import.meta.dirname, "public", "uploads"))) {
   cpSync(
@@ -756,4 +1035,5 @@ if (existsSync(join(import.meta.dirname, "public", "uploads"))) {
   console.log("  uploads/ copied");
 }
 
-console.log(`\nDone! ${pages.length} page(s) → ${OUT_DIR}/`);
+const totalPages = pages.length + 1 + categories.length + posts.length + tagMap.size;
+console.log(`\nDone! ${totalPages} page(s) → ${OUT_DIR}/ (${pages.length} pages, 1 trails index, ${categories.length} categories, ${posts.length} posts, ${tagMap.size} tags)`);
