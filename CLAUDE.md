@@ -122,6 +122,36 @@ These conflict with CMS admin's built-in UI panels and confuse editors. Use `glo
 
 For bilingual/multilingual static sites with `/da/`, `/en/` locale prefixes, CMS admin still constructs preview URLs as `urlPrefix + "/" + slug` (e.g. `/blog/my-post-da`). The build.ts MUST output redirect HTML files at the CMS-expected slug paths that redirect to the actual locale URL (e.g. `/da/blog/my-post/`). Without this, preview gives 404 for all non-default-locale documents.
 
+## Hard Rule: Every New Page, Route, and Sidebar Item MUST Be Permission-Gated
+
+**Before merging ANY new admin page, API route, sidebar item, command palette entry, or chat tool, you MUST answer this question explicitly: "Is this admin-only or also for editors?" — and wire the answer into the permission system on ALL layers.**
+
+The permission system lives in `packages/cms-admin/src/lib/permissions-shared.ts`. Available roles: `admin` (gets `["*"]`), `editor` (curated permission list), `viewer` (read-only).
+
+**Required gating on every layer the feature touches:**
+
+| Layer | How to gate |
+|-------|-------------|
+| **Sidebar nav item** (`components/sidebar.tsx`) | `{ctxUser?.permissions?.includes("foo.bar") && (...)}` |
+| **Server page/layout** (`app/admin/.../page.tsx` or `layout.tsx`) | `const role = await getSiteRole(); if (!hasPermission(ROLE_PERMISSIONS[role] ?? [], "foo.bar")) redirect("/admin");` |
+| **API route** (`app/api/.../route.ts`) | `const denied = await requirePermission("foo.bar"); if (denied) return denied;` |
+| **Chat tool** (`lib/chat/tools.ts`) | Add `permission: "foo.bar"` to the tool definition object |
+| **MCP server tool** (`packages/cms-mcp-server/src/tools.ts`) | Add the required scope to `TOOL_SCOPES[toolName]` |
+| **Command palette / quick actions** | `if (!can("foo.bar")) return null;` filter |
+| **Buttons/UI controls inside pages** | `{can("foo.bar") && <Button ... />}` |
+
+**Adding a new permission:**
+
+1. Add to the `PERMISSIONS` object in `permissions-shared.ts` with a human label
+2. Decide if editors should have it — if yes, add to `ROLE_PERMISSIONS.editor`; if no, only admins get it (via `["*"]`)
+3. Use the permission string in ALL the layers above
+
+**NEVER use direct role checks like `siteRole === "admin"`, `role !== "viewer"`, or `if (user.role === ...)` for new features.** Always go through `hasPermission()` / `requirePermission()` / `can()`. Direct role checks bypass the permission system and are impossible to reason about consistently.
+
+**Defense-in-depth is mandatory:** server-side gating is the security boundary; client-side gating is for UX (don't show buttons that 403). Always do BOTH — never rely on hiding a button as the security control.
+
+When designing a feature, the permission question is part of the spec, not an afterthought. Ask the user before implementing if it's not obvious from the feature description.
+
 ## Project Structure
 
 pnpm monorepo with 8 publishable npm packages:
