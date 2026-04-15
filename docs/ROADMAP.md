@@ -185,6 +185,7 @@ _Unique selling points and advanced features._
 | 31 | **F25 Storage Buckets** | Medium | S3, R2, Supabase storage for large media |
 | 31b | **F56 GitHub Live Content** | Large | Bidirectional repo sync — external AI agents can push content to CMS |
 | 31c | **F130 AI Fallback Gateway** | Medium | Self-hosted Gemma 4 via Ollama as automatic fallback when Anthropic is degraded. $0/call for cheap tasks (alt-text, summaries). Per-task routing rules. |
+| 31c2 | **F132 Document Search & Replace** | Medium | Cmd+F / Cmd+Option+F scoped to the open document. Works across text, textarea, richtext (TipTap), arrays, blocks, objects. Auto-expands collapsed sections on match navigation. |
 | 31c | **F68 Shop Plugin** | XL | Stripe e-commerce — products, cart, checkout, subscriptions, gated content, AI chat integration |
 | 31d | **F69 Social Media Plugin** | Large | AI social media bank — FB/IG/LinkedIn drafts, GBP auto-posting, hashtag bank, seasonal calendar |
 | 31e | **F71 Multi-Player Editing** | Small (v1) | Optimistic document locking — prevents concurrent edit data loss. v2 (real-time CRDT) is Large. |
