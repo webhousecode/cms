@@ -347,7 +347,7 @@ export function DeploySettingsPanel() {
               {config.deployProvider === "vercel" && "Recommended for Next.js and static sites. Supports SSR, API routes, and edge functions."}
               {config.deployProvider === "netlify" && "Supports Next.js via adapter, static sites, and serverless functions."}
               {config.deployProvider === "flyio" && "Docker-based rebuild on every deploy. Best for SSR apps (Next.js, Remix) that genuinely need Docker. Slow for content edits — use Fly.io Live for static sites."}
-              {config.deployProvider === "flyio-live" && "Static sites on Fly. First deploy spins up a Caddy/Bun Docker container + volume; every subsequent edit pushes only changed files (~200 ms–1 s). Region: configurable, default arn (Stockholm)."}
+              {config.deployProvider === "flyio-live" && "Your site runs on Fly.io. The first deploy takes about a minute; every edit after goes live in under a second. Best for EU hosting."}
               {config.deployProvider === "cloudflare" && "Legacy webhook-only — just POSTs to a Cloudflare Pages deploy hook URL. Prefer 'Cloudflare Pages (direct)' for full integration."}
               {config.deployProvider === "cloudflare-pages" && "Direct Cloudflare Pages API upload. 300+ global edge PoPs, free tier covers most small sites. Fastest option for pure-static sites worldwide."}
               {config.deployProvider === "github-pages" && canAutoDeploy && "Ready to deploy — GitHub connected. A repository will be created automatically if needed, and your site files pushed to GitHub Pages in one click."}
@@ -375,9 +375,9 @@ export function DeploySettingsPanel() {
           <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>API Token</label>
-              {config.deployProvider === "flyio" && (
+              {(config.deployProvider === "flyio" || config.deployProvider === "flyio-live") && (
                 <a href="https://fly.io/dashboard/personal/tokens" target="_blank" rel="noopener noreferrer"
-                  style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>Get key <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
+                  style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>Get token <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
               )}
               {config.deployProvider === "github-pages" && (
                 <a href="https://github.com/settings/tokens/new?scopes=repo&description=webhouse-deploy" target="_blank" rel="noopener noreferrer"
@@ -486,6 +486,17 @@ export function DeploySettingsPanel() {
       </SettingsCard>
 
       {/* ── F133: Fly Live infrastructure status ────────── */}
+      {config.deployProvider === "flyio-live" && !flyLiveStatus?.provisioned && (
+        <>
+          <SectionHeading>Infrastructure</SectionHeading>
+          <SettingsCard>
+            <div style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", lineHeight: 1.5 }}>
+              Not provisioned yet. Click <strong style={{ color: "var(--foreground)" }}>Deploy now</strong> below to spin up the Fly app and volume. After that, this card will show the server status and a <strong style={{ color: "var(--foreground)" }}>Rebuild infrastructure</strong> button.
+            </div>
+          </SettingsCard>
+        </>
+      )}
+
       {config.deployProvider === "flyio-live" && flyLiveStatus?.provisioned && (
         <div data-rebuild-infra-section>
           <SectionHeading>Infrastructure</SectionHeading>
