@@ -62,6 +62,46 @@ const CONFIG_DEFAULTS: DeployConfig = {
   deployCloudflareProjectName: "",
 };
 
+/** Re-check button with full feedback per CLAUDE.md hard rule:
+ *  hover, active, loading-while-running, success-flash after. */
+function RecheckButton({ busy, justRan, onClick }: { busy: boolean; justRan: boolean; onClick: () => void }) {
+  const [hover, setHover] = useState(false);
+  const [active, setActive] = useState(false);
+  const success = justRan && !busy;
+  return (
+    <button
+      onClick={onClick}
+      disabled={busy}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => { setHover(false); setActive(false); }}
+      onMouseDown={() => setActive(true)}
+      onMouseUp={() => setActive(false)}
+      title={busy ? "Checking DNS..." : success ? "Updated just now" : "Re-check DNS"}
+      style={{
+        padding: "0.35rem 0.7rem", borderRadius: "5px",
+        background: success
+          ? "color-mix(in srgb, #16a34a 18%, var(--background))"
+          : active
+          ? "color-mix(in srgb, var(--primary) 12%, var(--background))"
+          : hover
+          ? "var(--muted)"
+          : "transparent",
+        color: success ? "#16a34a" : "var(--muted-foreground)",
+        border: `1px solid ${success ? "#16a34a" : "var(--border)"}`,
+        fontSize: "0.65rem",
+        cursor: busy ? "wait" : "pointer",
+        display: "inline-flex", alignItems: "center", gap: "0.3rem",
+        transform: active ? "translateY(1px)" : "none",
+        transition: "background 100ms, color 100ms, border 100ms",
+        whiteSpace: "nowrap",
+      }}
+    >
+      {busy && <Loader2 className="animate-spin" style={{ width: "0.7rem", height: "0.7rem" }} />}
+      {busy ? "Checking..." : success ? "✓ Updated" : "Re-check"}
+    </button>
+  );
+}
+
 interface FlyLiveStatus {
   provisioned: boolean;
   reachable: boolean;
@@ -100,6 +140,8 @@ export function DeploySettingsPanel() {
   } | null>(null);
   const [dnsBusy, setDnsBusy] = useState(false);
   const [dnsMsg, setDnsMsg] = useState<string | null>(null);
+  const [dnsRecheckBusy, setDnsRecheckBusy] = useState(false);
+  const [dnsRecheckedAt, setDnsRecheckedAt] = useState<number | null>(null);
   const [domainCheck, setDomainCheck] = useState<{
     state: "idle" | "checking" | "available" | "ours" | "taken" | "no-zone" | "invalid";
     conflicts?: Array<{ type: string; value: string }>;
@@ -928,19 +970,19 @@ export function DeploySettingsPanel() {
                   </button>
                 )}
                 {dnsStatus.zoneManagedByApi && dnsStatus.state === "ok" && (
-                  <button
-                    onClick={loadDnsStatus}
-                    disabled={dnsBusy}
-                    title="Re-check DNS"
-                    style={{
-                      padding: "0.35rem 0.6rem", borderRadius: "5px",
-                      background: "transparent", color: "var(--muted-foreground)",
-                      border: "1px solid var(--border)", fontSize: "0.65rem",
-                      cursor: dnsBusy ? "wait" : "pointer",
+                  <RecheckButton
+                    busy={dnsRecheckBusy}
+                    justRan={dnsRecheckedAt !== null && Date.now() - dnsRecheckedAt < 2500}
+                    onClick={async () => {
+                      setDnsRecheckBusy(true);
+                      try {
+                        await loadDnsStatus();
+                        setDnsRecheckedAt(Date.now());
+                      } finally {
+                        setDnsRecheckBusy(false);
+                      }
                     }}
-                  >
-                    Re-check
-                  </button>
+                  />
                 )}
               </div>
             )}
