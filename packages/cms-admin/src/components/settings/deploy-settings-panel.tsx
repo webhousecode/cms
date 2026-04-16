@@ -812,13 +812,36 @@ export function DeploySettingsPanel() {
                 type="text"
                 value={config.deployCustomDomain}
                 onChange={(e) => updateConfig((c) => ({ ...c, deployCustomDomain: e.target.value }))}
-                placeholder={`${(config.deployAppName.split("/")[1] ?? "my-site").replace(/-site$/, "")}.webhouse.app`}
-                style={{ ...inputStyle, flex: 1 }}
+                placeholder="No custom domain — using default"
+                style={{ ...inputStyle, flex: 1, fontStyle: config.deployCustomDomain ? "normal" : "italic" }}
               />
               {config.deployCustomDomain && (
                 <CopyButton text={config.deployCustomDomain} />
               )}
             </div>
+
+            {/* Suggestion chip — only when no value is set yet */}
+            {!config.deployCustomDomain && (() => {
+              const suggested = `${(config.deployAppName.split("/")[1] ?? "my-site").replace(/-site$/, "")}.webhouse.app`;
+              return (
+                <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.65rem", color: "var(--muted-foreground)" }}>
+                  <span>Suggestion:</span>
+                  <button
+                    type="button"
+                    onClick={() => updateConfig((c) => ({ ...c, deployCustomDomain: suggested }))}
+                    style={{
+                      padding: "0.2rem 0.5rem", borderRadius: "4px",
+                      background: "color-mix(in srgb, var(--primary) 15%, transparent)",
+                      color: "var(--foreground)", border: "1px solid var(--border)",
+                      fontSize: "0.65rem", fontFamily: "monospace",
+                      cursor: "pointer",
+                    }}
+                  >
+                    + Use {suggested}
+                  </button>
+                </div>
+              );
+            })()}
 
             {/* F133 — Live availability check as you type */}
             {dnsStatus?.available && config.deployCustomDomain && (
