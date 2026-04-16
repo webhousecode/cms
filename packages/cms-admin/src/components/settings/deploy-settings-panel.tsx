@@ -203,8 +203,15 @@ export function DeploySettingsPanel() {
     );
   }
 
+  // When provider="off" but auto-detect would route to GitHub Pages, relabel
+  // the "off" option so the dropdown reflects what actually happens on Deploy.
+  // The underlying value stays "off" — the user can still pick a different
+  // provider explicitly without us touching their config in the background.
+  const offLabel = canAutoDeploy && config.deployProvider === "off"
+    ? "GitHub Pages (auto-detected)"
+    : "Off";
   const deployProviders = [
-    { value: "off", label: "Off" },
+    { value: "off", label: offLabel },
     { value: "vercel", label: "Vercel" },
     { value: "netlify", label: "Netlify" },
     { value: "cloudflare-pages", label: "Cloudflare Pages (direct)" },
@@ -334,7 +341,7 @@ export function DeploySettingsPanel() {
               background: "color-mix(in srgb, var(--primary) 8%, transparent)",
               color: "var(--muted-foreground)",
             }}>
-              Auto-detected — this site has a build pipeline and will deploy to GitHub Pages automatically. No manual configuration needed.
+              Your site has a build pipeline and a connected GitHub account, so it will deploy to GitHub Pages automatically. Pick a different provider above to override.
             </p>
           )}
           {config.deployProvider !== "off" && (
