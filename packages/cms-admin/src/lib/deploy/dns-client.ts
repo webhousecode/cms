@@ -59,7 +59,7 @@ export async function parseCustomDomain(domain: string): Promise<{ subdomain: st
   try {
     zones = await listManagedZones();
   } catch {
-    /* fall through to dumb split */
+    /* fall through to dumb split — caller surfaces "no-zone" state */
   }
 
   // Find the longest managed zone that the domain ends with
