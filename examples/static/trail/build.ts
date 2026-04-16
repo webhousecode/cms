@@ -209,11 +209,11 @@ const CSS = `
 
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; background: var(--bg); }
 html, body { overflow-x: hidden; max-width: 100vw; }
 body {
   font-family: var(--font-sans);
-  background: var(--bg);
+  background: transparent; /* canvas (fixed, z-index: -1) renders between html and body */
   color: var(--fg);
   line-height: 1.5;
   min-height: 100vh;
@@ -337,8 +337,8 @@ body[data-menu-open="true"] { overflow: hidden; }
   padding-top: 5rem; overflow: hidden;
 }
 #trail-graph {
-  position: absolute; inset: 0;
-  pointer-events: none; opacity: 0.4; z-index: 0;
+  position: fixed; inset: 0;
+  pointer-events: none; opacity: 0.4; z-index: -1;
 }
 .hero-inner {
   position: relative; z-index: 10;
@@ -451,10 +451,12 @@ body[data-menu-open="true"] { overflow: hidden; }
   position: relative; overflow: hidden;
   padding: 1.5rem;
   border: 1px solid var(--fg-10);
-  background: var(--bg);
+  background: color-mix(in srgb, var(--bg) 78%, transparent);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   transition: background 0.2s;
 }
-.feature-card:hover { background: #fff; }
+.feature-card:hover { background: color-mix(in srgb, #fff 90%, transparent); }
 .feature-card::before {
   content: "";
   position: absolute; top: 0; left: 0;
@@ -629,7 +631,9 @@ body[data-menu-open="true"] { overflow: hidden; }
   display: flex; flex-direction: column; gap: 0.5rem;
   padding: 1.25rem;
   border: 1px solid var(--fg-10);
-  background: var(--bg);
+  background: color-mix(in srgb, var(--bg) 78%, transparent);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   transition: background 0.2s, border-color 0.2s;
   position: relative; overflow: hidden;
 }
@@ -745,7 +749,6 @@ function renderHero(b: Block): string {
     .join("");
 
   return `<main class="hero">
-    <canvas id="trail-graph"></canvas>
     <div class="hero-inner">
       ${
         b.eyebrow
@@ -1070,6 +1073,7 @@ function layout(title: string, content: string, metaDesc?: string): string {
   <style>${CSS}</style>
 </head>
 <body>
+  <canvas id="trail-graph" aria-hidden="true"></canvas>
   <nav class="nav">
     <a href="${esc(bp("/"))}" class="nav-brand">
       <img src="${esc(bp(logo))}" alt="${esc(siteTitle)}" width="40" height="40">
