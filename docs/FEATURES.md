@@ -146,6 +146,7 @@
 | F130 | [AI Fallback Gateway (Local Gemma 4)](#f130-ai-fallback-gateway) | Planned | [docs/features/F130-ai-fallback-gateway.md](features/F130-ai-fallback-gateway.md) |
 | F131 | [Media CDN Offloading](#f131-media-cdn-offloading) | Planned | [docs/features/F131-media-cdn-offloading.md](features/F131-media-cdn-offloading.md) |
 | F132 | [Document Search & Replace](#f132-document-search-replace) | Planned | [docs/features/F132-document-search-replace.md](features/F132-document-search-replace.md) |
+| F133 | [Instant Deploy Providers](#f133-instant-deploy-providers) | In progress | [docs/features/F133-instant-deploy-providers.md](features/F133-instant-deploy-providers.md) |
 
 ---
 
@@ -542,3 +543,6 @@ Upload large media files (video, high-res images, archives) to S3-compatible clo
 
 ## F132 — Document Search & Replace
 Cmd+F (find) and Cmd+Option+F (find + replace) scoped to the currently open document. Works across ALL field types: text, textarea, richtext (TipTap), htmldoc, arrays, nested objects, blocks. Search bar dockable below the action bar with case-sensitive, whole-word, and regex toggles. Match navigation auto-expands collapsed array/object/blocks. Rich text uses @tiptap/extension-search-and-replace with ProseMirror decorations. Replace applies to form state only — existing dirty-tracking handles save. Distinct from F66 (site-wide search) — F132 is in-document only.
+
+## F133 — Instant Deploy Providers
+Two new deploy providers for sub-second content propagation. **Fly.io Live**: Docker image contains only web-server + HMAC-signed sync endpoint (immutable infra, deployed once). Site content lives on a mounted Fly Volume. CMS admin publish diffs local build vs remote manifest and pushes only changed files — typical edit live in 200 ms–1 s. Atomic COW deploys via hardlinked `/srv/deploys/<id>/` + symlink swap. **Cloudflare Pages (direct)**: replaces the current webhook-only `cloudflare` provider with real Direct Upload API integration — 300+ PoP edge network, free tier covers most sites. Existing `flyio` and `cloudflare` providers kept for backwards compat, relabeled to "Fly.io (rebuild)" and "Cloudflare (webhook)". Reuses F125 ICD HMAC signing pattern.
