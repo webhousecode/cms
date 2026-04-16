@@ -25,7 +25,9 @@
     "wha:login": "pnpm --filter @webhouse/cms-mobile sim:login",
     "test:e2e": "cd packages/cms-admin && pnpm test:e2e",
     "test:all": "pnpm -r run test && cd packages/cms-admin && pnpm test:e2e",
-    "clean": "pnpm --filter @webhouse/cms-admin clean"
+    "clean": "pnpm --filter @webhouse/cms-admin clean",
+    "weekly": "bash scripts/weekly-local.sh",
+    "weekly:trigger": "gh workflow run \"Release (weekly)\" --repo webhousecode/cms --ref main -f force=true && gh run watch --repo webhousecode/cms"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.12",
