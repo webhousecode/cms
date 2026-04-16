@@ -1,0 +1,115 @@
+name: Release (weekly)
+
+# Scheduled weekly release: every Monday 16:00 UTC (18:00 CEST summer,
+# 17:00 CET winter). Skipped if no commits since the last weekly tag.
+#
+# Produces:
+#   - ghcr.io/webhousecode/cms-admin:weekly
+#   - ghcr.io/webhousecode/cms-admin:YYYY.MM.DD (CalVer snapshot)
+#   - GitHub Release "weekly" with cms-admin-YYYY.MM.DD.tar.gz attached
+#   - releases.txt at the repo root, committed back to main
+
+on:
+  schedule:
+    - cron: "0 16 * * 1"   # Monday 16:00 UTC
+  workflow_dispatch:
+    inputs:
+      force:
+        description: "Build even if no commits since last weekly"
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    outputs:
+      should_run: ${{ steps.gate.outputs.should_run }}
+      calver: ${{ steps.version.outputs.calver }}
+      last_tag: ${{ steps.version.outputs.last_tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # need full history to find last weekly tag
+
+      - name: Compute version + gate
+        id: version
+        run: |
+          calver=$(date -u +"%Y.%m.%d")
+          echo "calver=$calver" >> "$GITHUB_OUTPUT"
+          # Find the most recent weekly-tagged commit
+          last_tag=$(git describe --tags --match "weekly-*" --abbrev=0 2>/dev/null || echo "")
+          echo "last_tag=$last_tag" >> "$GITHUB_OUTPUT"
+
+      - name: Decide whether to run
+        id: gate
+        run: |
+          if [ "${{ inputs.force }}" = "true" ]; then
+            echo "Forced — building"
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          last="${{ steps.version.outputs.last_tag }}"
+          if [ -z "$last" ]; then
+            echo "No previous weekly tag — building first weekly"
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          count=$(git rev-list --count "$last..HEAD")
+          echo "Commits since $last: $count"
+          if [ "$count" -eq 0 ]; then
+            echo "No changes — skipping weekly release"
+            echo "should_run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "should_run=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  build:
+    needs: check
+    if: needs.check.outputs.should_run == 'true'
+    uses: ./.github/workflows/_release-build.yml
+    with:
+      version: ${{ needs.check.outputs.calver }}
+      docker_tags: "weekly,${{ needs.check.outputs.calver }}"
+      github_release_tag: "weekly"
+      github_release_name: "Weekly build ${{ needs.check.outputs.calver }}"
+      update_latest: false   # weekly is NOT latest; stable is latest
+      prerelease: true
+    secrets: inherit
+
+  post:
+    needs: [check, build]
+    if: needs.check.outputs.should_run == 'true'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Tag commit for future diff gates
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag "weekly-${{ needs.check.outputs.calver }}"
+          git push origin "weekly-${{ needs.check.outputs.calver }}"
+
+      - name: Update releases.txt
+        run: |
+          entry="$(date -u +%Y-%m-%dT%H:%M:%SZ)  weekly  ${{ needs.check.outputs.calver }}  https://github.com/${{ github.repository }}/releases/download/weekly/cms-admin-${{ needs.check.outputs.calver }}.tar.gz"
+          touch releases.txt
+          # Prepend the new entry
+          { echo "$entry"; cat releases.txt; } > releases.txt.new
+          mv releases.txt.new releases.txt
+          # Keep last 50 entries
+          head -50 releases.txt > releases.txt.trim && mv releases.txt.trim releases.txt
+
+      - name: Commit releases.txt
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add releases.txt
+          git commit -m "chore(release): weekly ${{ needs.check.outputs.calver }}" || echo "Nothing to commit"
+          git push origin HEAD:main

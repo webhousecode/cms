@@ -1,0 +1,4 @@
+# @webhouse/cms-admin — release feed
+# Newest first. Each line: ISO timestamp, channel, version, tarball URL.
+# See docs.webhouse.app/docs/releases for the full story.
+# Auto-updated by .github/workflows/release-weekly.yml + release-stable.yml.

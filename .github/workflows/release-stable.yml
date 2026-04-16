@@ -1,0 +1,55 @@
+name: Release (stable)
+
+# Triggered by pushing an annotated tag v*.*.*.
+# Produces:
+#   - ghcr.io/webhousecode/cms-admin:VERSION
+#   - ghcr.io/webhousecode/cms-admin:latest
+#   - Permanent GitHub Release with cms-admin-VERSION.tar.gz
+#
+# Cut a release with:
+#   git tag -a v0.3.0 -m "F133 + mobile polish"
+#   git push origin v0.3.0
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version (e.g. 0.3.0) — only for manual re-run"
+        required: true
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+    steps:
+      - name: Compute version
+        id: v
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            version="${{ inputs.version }}"
+          else
+            # Strip leading v from tag
+            version="${GITHUB_REF_NAME#v}"
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "Stable release version: $version"
+
+  build:
+    needs: version
+    uses: ./.github/workflows/_release-build.yml
+    with:
+      version: ${{ needs.version.outputs.version }}
+      docker_tags: "${{ needs.version.outputs.version }},latest"
+      github_release_tag: "v${{ needs.version.outputs.version }}"
+      github_release_name: "v${{ needs.version.outputs.version }}"
+      update_latest: true
+      prerelease: false
+    secrets: inherit

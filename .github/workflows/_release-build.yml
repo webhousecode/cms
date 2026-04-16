@@ -1,0 +1,241 @@
+name: _Release Build (shared)
+
+# Reusable workflow: builds the Next.js standalone tarball + Docker image
+# and uploads both to a GitHub Release. Called by release-weekly.yml and
+# release-stable.yml.
+#
+# Not meant to be triggered directly.
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: "Version string (e.g. 0.3.0 or 2026.04.20)"
+        required: true
+        type: string
+      docker_tags:
+        description: "Comma-separated docker tags (e.g. 'weekly,2026.04.20')"
+        required: true
+        type: string
+      github_release_tag:
+        description: "GitHub Release tag (e.g. 'weekly' or 'v0.3.0')"
+        required: true
+        type: string
+      github_release_name:
+        description: "GitHub Release display name"
+        required: true
+        type: string
+      update_latest:
+        description: "Mark as 'latest' release on GitHub"
+        required: false
+        type: boolean
+        default: false
+      prerelease:
+        description: "Mark as prerelease"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  tarball:
+    name: Build standalone tarball
+    runs-on: ubuntu-latest
+    outputs:
+      tarball_name: ${{ steps.pack.outputs.tarball_name }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.30.3
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Build workspace (skip cms-admin + example-blog — they build via Next.js)
+        run: pnpm build --filter='!@webhouse/cms-admin' --filter='!@webhouse/cms-example-blog'
+
+      - name: Build cms-admin (Next.js standalone)
+        run: pnpm --filter @webhouse/cms-admin build
+
+      - name: Assemble tarball
+        id: pack
+        run: |
+          version="${{ inputs.version }}"
+          stage="cms-admin-$version"
+          mkdir -p "$stage"
+
+          # Next.js standalone output
+          # .next/standalone/ is the self-contained server (includes node_modules)
+          # .next/static/ must be copied alongside server.js
+          # public/ must be copied alongside server.js
+          cp -R packages/cms-admin/.next/standalone/. "$stage/"
+          mkdir -p "$stage/packages/cms-admin/.next"
+          cp -R packages/cms-admin/.next/static "$stage/packages/cms-admin/.next/static"
+          if [ -d packages/cms-admin/public ]; then
+            cp -R packages/cms-admin/public "$stage/packages/cms-admin/public"
+          fi
+
+          # Entry script — users just run ./run.sh
+          cat > "$stage/run.sh" <<'SH'
+          #!/usr/bin/env bash
+          set -euo pipefail
+          DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+          cd "$DIR/packages/cms-admin"
+          export HOSTNAME="${HOSTNAME:-0.0.0.0}"
+          export PORT="${PORT:-3010}"
+          echo "cms-admin starting on http://$HOSTNAME:$PORT"
+          exec node server.js
+          SH
+          chmod +x "$stage/run.sh"
+
+          # README in the tarball
+          cat > "$stage/README.md" <<EOF
+          # @webhouse/cms-admin — $version
+
+          Standalone build of the webhouse.app CMS admin UI. No Docker required.
+
+          ## Requirements
+
+          - Node.js 22 or newer
+
+          ## Run
+
+          \`\`\`bash
+          ./run.sh
+          \`\`\`
+
+          Or manually:
+
+          \`\`\`bash
+          cd packages/cms-admin
+          node server.js
+          \`\`\`
+
+          Default port is 3010. Override with \`PORT=4000 ./run.sh\`.
+
+          ## First boot
+
+          Visit http://localhost:3010 and complete the setup wizard — you
+          create the first admin interactively (email + password).
+
+          Alternatively, bootstrap via env vars:
+
+          \`\`\`bash
+          ADMIN_EMAIL=you@example.com ADMIN_PASSWORD=your-password ./run.sh
+          \`\`\`
+
+          ## Docs
+
+          https://docs.webhouse.app
+          EOF
+
+          # Tar it up
+          tarball="cms-admin-$version.tar.gz"
+          tar -czf "$tarball" "$stage"
+          echo "tarball_name=$tarball" >> "$GITHUB_OUTPUT"
+          ls -lh "$tarball"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: tarball
+          path: ${{ steps.pack.outputs.tarball_name }}
+          retention-days: 7
+
+  docker:
+    name: Build + push Docker image
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-qemu-action@v3
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Compute image tags
+        id: tags
+        run: |
+          IFS=',' read -ra parts <<< "${{ inputs.docker_tags }}"
+          tags=""
+          for t in "${parts[@]}"; do
+            tags+="ghcr.io/webhousecode/cms-admin:$t"$'\n'
+          done
+          echo "tags<<EOF" >> "$GITHUB_OUTPUT"
+          echo "$tags" >> "$GITHUB_OUTPUT"
+          echo "EOF" >> "$GITHUB_OUTPUT"
+
+      - uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: deploy/Dockerfile.admin
+          push: true
+          tags: ${{ steps.tags.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          platforms: linux/amd64,linux/arm64
+
+  release:
+    name: Create GitHub Release
+    needs: [tarball, docker]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: tarball
+
+      - name: Compose release notes
+        id: notes
+        run: |
+          tarball="${{ needs.tarball.outputs.tarball_name }}"
+          version="${{ inputs.version }}"
+          {
+            echo "## Downloads"
+            echo ""
+            echo "- **Tarball (Linux/Mac/Windows with Node.js 22+)**: [\`$tarball\`](https://github.com/${{ github.repository }}/releases/download/${{ inputs.github_release_tag }}/$tarball)"
+            echo "- **Docker image**: \`docker pull ghcr.io/webhousecode/cms-admin:$version\`"
+            echo ""
+            echo "## Quick start"
+            echo ""
+            echo '```bash'
+            echo "curl -L https://github.com/${{ github.repository }}/releases/download/${{ inputs.github_release_tag }}/$tarball | tar xz"
+            echo "cd cms-admin-$version"
+            echo "./run.sh"
+            echo '```'
+            echo ""
+            echo "Then visit http://localhost:3010 and complete the setup wizard."
+            echo ""
+            echo "## Changelog"
+            echo ""
+            git log --pretty=format:"- %s (%h)" --no-merges $(git describe --tags --abbrev=0 --exclude="${{ inputs.github_release_tag }}" 2>/dev/null)..HEAD 2>/dev/null | head -80 || echo "- First release"
+          } > release-notes.md
+          echo "body_path=release-notes.md" >> "$GITHUB_OUTPUT"
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ inputs.github_release_tag }}
+          name: ${{ inputs.github_release_name }}
+          body_path: release-notes.md
+          files: ${{ needs.tarball.outputs.tarball_name }}
+          make_latest: ${{ inputs.update_latest }}
+          prerelease: ${{ inputs.prerelease }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

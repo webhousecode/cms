@@ -86,7 +86,7 @@ console.log(post.data.title); // "Hello, World!"
 
 ---
 
-## Admin UI — 4 ways to run it
+## Admin UI — 5 ways to run it
 
 The visual admin interface for managing content. Open source, full-featured, works with any site.
 
@@ -115,12 +115,25 @@ npx @webhouse/cms-admin-cli --update                   # force rebuild
 ### 3. Docker — isolated, reproducible
 
 ```bash
-docker run -p 3010:3010 -v $(pwd):/site webhousecode/cms-admin
+docker run -p 3010:3010 -v $(pwd):/site ghcr.io/webhousecode/cms-admin:latest
 ```
 
-Available on [Docker Hub](https://hub.docker.com/r/webhousecode/cms-admin). Mounts your project at `/site`, auto-detects `cms.config.ts`, serves admin on port 3010.
+Published to [GHCR](https://github.com/webhousecode/cms/pkgs/container/cms-admin) for `linux/amd64` + `linux/arm64`. Mounts your project at `/site`, auto-detects `cms.config.ts`, serves admin on port 3010.
 
-### 4. Git clone — full source access
+- **Stable**: `:latest` or `:0.3.0` — tagged releases
+- **Weekly**: `:weekly` — automated Monday builds
+
+### 4. Tarball — Node.js only, no Docker
+
+```bash
+curl -L https://github.com/webhousecode/cms/releases/latest/download/cms-admin.tar.gz | tar xz
+cd cms-admin-*
+./run.sh
+```
+
+Requires Node.js 22+. Runs on Linux, macOS, and Windows (WSL/Git Bash). First boot prompts for admin email + password via the setup wizard. See **[docs.webhouse.app/docs/releases](https://docs.webhouse.app/docs/releases)** for all download channels, or the plain-text [releases.txt](./releases.txt) feed for scripts.
+
+### 5. Git clone — full source access
 
 ```bash
 git clone https://github.com/webhousecode/cms.git
