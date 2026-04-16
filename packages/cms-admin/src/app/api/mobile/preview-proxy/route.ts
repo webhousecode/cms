@@ -202,6 +202,15 @@ export async function GET(req: NextRequest) {
       const ct = headers.get("content-type") ?? "";
       if (ct.includes("text/html")) {
         let html = await res.text();
+        // Inject <base> so relative assets (images, CSS, JS, fonts) resolve
+        // against the upstream origin instead of cms-admin's origin.
+        const baseUrl = upstream.endsWith("/") ? upstream : upstream + "/";
+        const baseTag = `<base href="${baseUrl}">`;
+        if (html.includes("<head>")) {
+          html = html.replace("<head>", `<head>${baseTag}`);
+        } else if (html.match(/<html[^>]*>/i)) {
+          html = html.replace(/<html([^>]*)>/i, `<html$1><head>${baseTag}</head>`);
+        }
         html = injectUrlTracker(html, proxyBase, upstream);
         return new NextResponse(html, { status: res.status, headers });
       }
