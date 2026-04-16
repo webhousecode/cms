@@ -1,0 +1,14 @@
+{
+  "slug": "about",
+  "status": "published",
+  "data": {
+    "title": "About",
+    "content": "## About This Site\n\nThis is a Next.js site built with the **webhouse.app** CMS boilerplate. It demonstrates:\n\n- Richtext content with react-markdown\n- Block-based page sections (hero, features, CTA)\n- Blog posts with tags, excerpts, and cover images\n- OpenStreetMap embeds via Leaflet\n- SEO metadata and JSON-LD structured data\n- Dark mode via class strategy\n- Tailwind CSS v4 with CSS-only config\n\n## How It Works\n\n1. Content is stored as JSON files in `content/`\n2. Next.js reads JSON at build time via `fs`\n3. Pages use React Server Components by default\n4. Client components only where needed (map, markdown, nav)\n\n## Stack\n\n| Component | Technology |\n|-----------|------------|\n| Framework | Next.js 16+ (App Router) |\n| Language | TypeScript (strict) |\n| Styling | Tailwind CSS v4 |\n| CMS | webhouse.app |\n| Maps | OpenStreetMap + Leaflet |\n| Markdown | react-markdown + remark-gfm |",
+    "_seo": {
+      "metaTitle": "About \u2014 My Site",
+      "metaDescription": "Learn about this Next.js site built with the webhouse.app CMS boilerplate."
+    }
+  },
+  "id": "about",
+  "_fieldMeta": {}
+}

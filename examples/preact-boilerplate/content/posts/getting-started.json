@@ -1,0 +1,18 @@
+{
+  "slug": "getting-started",
+  "status": "published",
+  "data": {
+    "title": "Getting Started with the Next.js Boilerplate",
+    "excerpt": "Everything you need to know to start building with this Next.js starter template.",
+    "content": "## Quick Start\n\n```bash\nnpm install\nnpm run dev\n```\n\nOpen [http://localhost:3000](http://localhost:3000) in your browser.\n\n## Project Structure\n\n- `cms.config.ts` \u2014 collection and field definitions\n- `src/app/` \u2014 Next.js App Router pages\n- `src/components/` \u2014 reusable React components\n- `src/lib/content.ts` \u2014 content reading utilities\n- `content/` \u2014 JSON content files (one per document)\n- `public/uploads/` \u2014 media files (images, PDFs, etc.)\n\n## Adding Content\n\nYou can edit content in two ways:\n\n1. **CMS Admin** \u2014 run `npx @webhouse/cms-admin-cli` and edit visually\n2. **JSON files** \u2014 edit `content/posts/*.json` directly\n\n## Adding a New Post\n\nCreate a new file in `content/posts/`:\n\n```json\n{\n  \"slug\": \"my-new-post\",\n  \"status\": \"published\",\n  \"data\": {\n    \"title\": \"My New Post\",\n    \"excerpt\": \"A short summary.\",\n    \"content\": \"## Hello\\n\\nThis is my post.\",\n    \"date\": \"2026-03-28\",\n    \"author\": \"Your Name\"\n  },\n  \"id\": \"my-new-post\",\n  \"_fieldMeta\": {}\n}\n```\n\nThe dev server picks up changes automatically \u2014 no rebuild needed.",
+    "date": "2026-03-28",
+    "author": "webhouse.app",
+    "tags": ["getting-started", "tutorial"],
+    "_seo": {
+      "metaTitle": "Getting Started with the Next.js Boilerplate",
+      "metaDescription": "Everything you need to know to start building with the webhouse.app Next.js starter template."
+    }
+  },
+  "id": "getting-started",
+  "_fieldMeta": {}
+}

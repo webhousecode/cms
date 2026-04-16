@@ -1,0 +1,18 @@
+{
+  "slug": "using-blocks",
+  "status": "published",
+  "data": {
+    "title": "Building Pages with Blocks",
+    "excerpt": "Learn how to use the block editor to create structured page sections.",
+    "content": "## What Are Blocks?\n\nBlocks are reusable content sections defined in `cms.config.ts`. Instead of writing everything in a single richtext field, you compose pages from structured blocks like:\n\n- **Hero** \u2014 headline, description, call-to-action buttons\n- **Features** \u2014 grid of feature cards with icons\n- **CTA** \u2014 call-to-action banner with button\n\n## How Blocks Work\n\nIn your `cms.config.ts`, define blocks with `defineBlock()`:\n\n```typescript\ndefineBlock({\n  name: 'hero',\n  label: 'Hero Section',\n  fields: [\n    { name: 'tagline', type: 'text', required: true },\n    { name: 'description', type: 'textarea' },\n  ],\n})\n```\n\nThen use them in a collection field:\n\n```typescript\n{ name: 'sections', type: 'blocks', blocks: ['hero', 'features', 'cta'] }\n```\n\n## Rendering Blocks in Next.js\n\nThe `BlockRenderer` component maps each block type to a React component:\n\n```tsx\nswitch (block._block) {\n  case 'hero': return <HeroBlock block={block} />;\n  case 'features': return <FeaturesBlock block={block} />;\n  case 'cta': return <CtaBlock block={block} />;\n}\n```\n\nEach block type gets its own component with Tailwind styles.",
+    "date": "2026-03-27",
+    "author": "webhouse.app",
+    "tags": ["blocks", "tutorial"],
+    "_seo": {
+      "metaTitle": "Building Pages with Blocks \u2014 CMS Guide",
+      "metaDescription": "Learn how to use the block editor to create structured page sections with hero, features, and CTA blocks."
+    }
+  },
+  "id": "using-blocks",
+  "_fieldMeta": {}
+}
