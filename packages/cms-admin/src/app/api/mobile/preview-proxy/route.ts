@@ -35,9 +35,10 @@ function injectUrlTracker(html: string, proxyBase: string, upstream: string | nu
     var q=history.replaceState;history.replaceState=function(){q.apply(this,arguments);r()};
     window.addEventListener('popstate',r);
 
-    // Link interceptor — rewrite ALL internal navigation through proxy
-    var base='${proxyBase}';
-    var origin=location.origin;
+    // Link interceptor — rewrite ALL internal navigation through proxy.
+    // NOTE: must use absolute URL here because injected <base> tag makes
+    // relative URL assignments resolve against upstream (not cms-admin).
+    var base=location.origin+'${proxyBase}';
     var upstreamOrigin='${upstream ? new URL(upstream.endsWith("/") ? upstream : upstream + "/").origin : ""}';
     var upstreamPath='${upstream ? new URL(upstream.endsWith("/") ? upstream : upstream + "/").pathname.replace(/\/$/, "") : ""}';
     if(base){
