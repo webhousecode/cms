@@ -210,6 +210,7 @@ const CSS = `
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+html, body { overflow-x: hidden; max-width: 100vw; }
 body {
   font-family: var(--font-sans);
   background: var(--bg);
@@ -220,48 +221,113 @@ body {
 ::selection { background: rgba(232, 168, 124, 0.3); color: var(--fg); }
 
 a { color: inherit; text-decoration: none; }
-img { max-width: 100%; display: block; }
+img { max-width: 100%; display: block; height: auto; }
 button { font: inherit; cursor: pointer; border: none; background: none; color: inherit; }
+svg { max-width: 100%; height: auto; }
 
 /* Navbar */
 .nav {
   position: fixed; top: 0; left: 0; right: 0; z-index: 50;
-  padding: 1rem 1.5rem;
+  padding: 0.75rem 1rem;
   display: flex; justify-content: space-between; align-items: center;
   background: var(--bg-80);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--fg-10);
 }
-.nav-brand { display: flex; align-items: center; gap: 0.875rem; }
-.nav-brand img { width: 40px; height: 40px; }
+@media (min-width: 768px) { .nav { padding: 1rem 1.5rem; } }
+.nav-brand { display: flex; align-items: center; gap: 0.625rem; min-width: 0; }
+.nav-brand img { width: 32px; height: 32px; flex-shrink: 0; }
+@media (min-width: 768px) { .nav-brand { gap: 0.875rem; } .nav-brand img { width: 40px; height: 40px; } }
 .nav-brand .brand-text {
   font-family: var(--font-mono);
-  font-size: 1.375rem;
+  font-size: 1.125rem;
   font-weight: 600;
   letter-spacing: -0.02em;
   color: var(--fg);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
+@media (min-width: 768px) { .nav-brand .brand-text { font-size: 1.375rem; } }
 .nav-links { display: none; gap: 2rem; font-size: 0.875rem; font-weight: 500; color: var(--fg-70); }
 .nav-links a { transition: color 0.15s; }
 .nav-links a:hover { color: var(--fg); }
 @media (min-width: 768px) { .nav-links { display: flex; } }
 
-.nav-actions { display: flex; gap: 1rem; align-items: center; }
+.nav-actions { display: flex; gap: 0.5rem; align-items: center; }
+@media (min-width: 768px) { .nav-actions { gap: 1rem; } }
 .nav-signin {
   font-size: 0.875rem; font-weight: 500; color: var(--fg);
   transition: color 0.15s;
+  display: none;
 }
+@media (min-width: 768px) { .nav-signin { display: inline; } }
 .nav-signin:hover { color: var(--accent); }
 .nav-cta {
-  padding: 0.5rem 1rem;
+  padding: 0.45rem 0.85rem;
   background: var(--fg); color: var(--bg);
-  font-size: 0.875rem; font-weight: 500;
+  font-size: 0.8rem; font-weight: 500;
   border-radius: 6px;
   border: 1px solid transparent;
   transition: all 0.2s;
+  white-space: nowrap;
 }
+@media (min-width: 768px) { .nav-cta { padding: 0.5rem 1rem; font-size: 0.875rem; } }
 .nav-cta:hover { background: rgba(26, 23, 21, 0.9); border-color: var(--accent); }
+
+/* Mobile hamburger toggle */
+.nav-toggle {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 40px; height: 40px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid var(--fg-10);
+  border-radius: 6px;
+  cursor: pointer;
+  gap: 4px;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s;
+}
+.nav-toggle:hover { background: var(--bg-50); }
+.nav-toggle:active { transform: scale(0.96); }
+.nav-toggle span {
+  display: block;
+  width: 18px;
+  height: 2px;
+  background: var(--fg);
+  border-radius: 2px;
+  transition: transform 0.2s, opacity 0.2s;
+}
+@media (min-width: 768px) { .nav-toggle { display: none; } }
+body[data-menu-open="true"] .nav-toggle span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
+body[data-menu-open="true"] .nav-toggle span:nth-child(2) { opacity: 0; }
+body[data-menu-open="true"] .nav-toggle span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
+
+/* Mobile menu overlay */
+.nav-mobile {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: var(--bg);
+  z-index: 49;
+  padding: 5rem 1.5rem 2rem;
+  display: flex; flex-direction: column; gap: 1.5rem;
+  transform: translateX(100%);
+  transition: transform 0.25s ease-out;
+  overflow-y: auto;
+}
+body[data-menu-open="true"] .nav-mobile { transform: translateX(0); }
+@media (min-width: 768px) { .nav-mobile { display: none; } }
+.nav-mobile a {
+  font-size: 1.125rem; font-weight: 500; color: var(--fg);
+  padding: 0.625rem 0;
+  border-bottom: 1px solid var(--fg-10);
+}
+.nav-mobile a:last-child { border-bottom: none; }
+body[data-menu-open="true"] { overflow: hidden; }
 
 /* Hero */
 .hero {
@@ -277,9 +343,11 @@ button { font: inherit; cursor: pointer; border: none; background: none; color: 
 .hero-inner {
   position: relative; z-index: 10;
   max-width: 56rem; margin: 0 auto;
-  padding: 0 1.5rem;
+  padding: 0 1rem;
   text-align: center;
+  width: 100%;
 }
+@media (min-width: 640px) { .hero-inner { padding: 0 1.5rem; } }
 .eyebrow {
   display: inline-flex; align-items: center; gap: 0.5rem;
   padding: 0.25rem 0.75rem; margin-bottom: 2rem;
@@ -359,9 +427,10 @@ button { font: inherit; cursor: pointer; border: none; background: none; color: 
 
 /* Features */
 .features {
-  padding: 6rem 1.5rem;
+  padding: 4rem 1rem;
   border-top: 1px solid var(--fg-10);
 }
+@media (min-width: 768px) { .features { padding: 6rem 1.5rem; } }
 .features-inner { max-width: 72rem; margin: 0 auto; }
 .features-header { margin-bottom: 4rem; }
 .features-header h2 {
@@ -409,8 +478,10 @@ button { font: inherit; cursor: pointer; border: none; background: none; color: 
 }
 
 /* Article (long-form pages) */
-.container { max-width: 44rem; margin: 0 auto; padding: 0 1.5rem; }
-.article { padding: 7rem 0 4rem; }
+.container { max-width: 44rem; margin: 0 auto; padding: 0 1rem; }
+@media (min-width: 640px) { .container { padding: 0 1.5rem; } }
+.article { padding: 5rem 0 3rem; }
+@media (min-width: 768px) { .article { padding: 7rem 0 4rem; } }
 .article-header { margin-bottom: 3rem; border-bottom: 1px solid var(--fg-10); padding-bottom: 2rem; }
 .article-eyebrow {
   font-family: var(--font-mono);
@@ -449,7 +520,7 @@ button { font: inherit; cursor: pointer; border: none; background: none; color: 
 .article-cover { margin: 2rem 0 0; }
 .article-cover img { width: 100%; border-radius: 4px; }
 
-.prose { font-size: 1.0625rem; line-height: 1.75; color: var(--fg); }
+.prose { font-size: 1.0625rem; line-height: 1.75; color: var(--fg); word-wrap: break-word; overflow-wrap: break-word; }
 .prose h1, .prose h2, .prose h3 { letter-spacing: -0.02em; }
 .prose h2 { font-size: 1.625rem; font-weight: 700; margin: 3rem 0 1rem; }
 .prose h3 { font-size: 1.25rem; font-weight: 600; margin: 2rem 0 0.75rem; }
@@ -502,9 +573,10 @@ button { font: inherit; cursor: pointer; border: none; background: none; color: 
 /* Footer */
 .footer {
   border-top: 1px solid var(--fg-10);
-  padding: 3rem 1.5rem;
+  padding: 2rem 1rem;
   background: var(--bg);
 }
+@media (min-width: 768px) { .footer { padding: 3rem 1.5rem; } }
 .footer-inner {
   max-width: 72rem; margin: 0 auto;
   display: flex; flex-direction: column;
@@ -1010,8 +1082,36 @@ function layout(title: string, content: string, metaDesc?: string): string {
     <div class="nav-actions">
       <a href="${esc(bp(signInHref))}" class="nav-signin">${esc(signInLabel)}</a>
       <a href="${esc(bp(navCtaHref))}" class="nav-cta">${esc(navCtaLabel)}</a>
+      <button type="button" class="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
+        <span></span><span></span><span></span>
+      </button>
     </div>
   </nav>
+  <div id="mobile-menu" class="nav-mobile" role="navigation" aria-label="Mobile menu" aria-hidden="true">
+    ${navLinks
+      .map((l) => `<a href="${esc(bp(l.href))}">${esc(l.label)}</a>`)
+      .join("\n    ")}
+    <a href="${esc(bp(signInHref))}">${esc(signInLabel)}</a>
+  </div>
+  <script>
+    (function () {
+      var btn = document.querySelector('.nav-toggle');
+      var menu = document.getElementById('mobile-menu');
+      var body = document.body;
+      if (!btn || !menu) return;
+      function setOpen(open) {
+        body.dataset.menuOpen = open ? 'true' : 'false';
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        btn.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+        menu.setAttribute('aria-hidden', open ? 'false' : 'true');
+      }
+      btn.addEventListener('click', function () { setOpen(body.dataset.menuOpen !== 'true'); });
+      menu.addEventListener('click', function (e) {
+        if (e.target instanceof HTMLAnchorElement) setOpen(false);
+      });
+      document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setOpen(false); });
+    })();
+  </script>
   ${content}
   <footer class="footer">
     <div class="footer-inner">
