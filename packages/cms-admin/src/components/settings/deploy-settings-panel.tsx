@@ -86,6 +86,20 @@ export function DeploySettingsPanel() {
   const [rebuildConfirm, setRebuildConfirm] = useState(false);
   const [rebuilding, setRebuilding] = useState(false);
   const [rebuildMsg, setRebuildMsg] = useState<string | null>(null);
+  const [dnsStatus, setDnsStatus] = useState<{
+    available: boolean;
+    configured?: boolean;
+    domain?: string;
+    subdomain?: string;
+    zone?: string;
+    zoneManagedByApi?: boolean;
+    expectedTarget?: string | null;
+    currentTarget?: string | null;
+    state?: "ok" | "missing" | "mismatch" | "no-zone" | "no-target";
+    providerLabel?: string | null;
+  } | null>(null);
+  const [dnsBusy, setDnsBusy] = useState(false);
+  const [dnsMsg, setDnsMsg] = useState<string | null>(null);
 
   // Auto-open modal when navigated with ?deploy=1 (from header button)
   useEffect(() => {
@@ -142,6 +156,36 @@ export function DeploySettingsPanel() {
   }, [config.deployProvider]);
 
   useEffect(() => { loadFlyLiveStatus(); }, [loadFlyLiveStatus]);
+
+  // F133 — DNS auto-CNAME (Custom Domain field)
+  const loadDnsStatus = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/deploy/dns/cname");
+      if (res.ok) setDnsStatus(await res.json());
+      else setDnsStatus({ available: false });
+    } catch {
+      setDnsStatus({ available: false });
+    }
+  }, []);
+
+  useEffect(() => { loadDnsStatus(); }, [loadDnsStatus, config.deployCustomDomain, config.deployProvider, config.deployAppName]);
+
+  const handleCreateCname = useCallback(async () => {
+    setDnsBusy(true);
+    setDnsMsg(null);
+    try {
+      const res = await fetch("/api/admin/deploy/dns/cname", { method: "POST" });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error ?? "CNAME creation failed");
+      const verb = body.status === "created" ? "Created" : body.status === "updated" ? "Updated" : "Already up to date";
+      setDnsMsg(`${verb}: ${body.subdomain}.${body.zone} → ${body.target}`);
+      await loadDnsStatus();
+    } catch (err) {
+      setDnsMsg(`Failed: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setDnsBusy(false);
+    }
+  }, [loadDnsStatus]);
 
   const handleRebuildInfra = useCallback(async () => {
     setRebuilding(true);
@@ -706,14 +750,14 @@ export function DeploySettingsPanel() {
       )}
 
       {/* ── Custom domain ────────────────────────────────── */}
-      {(effectiveProvider === "github-pages" || effectiveProvider === "flyio") && (
+      {["github-pages", "flyio", "flyio-live", "vercel", "netlify", "cloudflare-pages"].includes(effectiveProvider) && (
         <>
           <SectionHeading>Custom Domain</SectionHeading>
           <SettingsCard>
             <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>
               {effectiveProvider === "github-pages"
-                ? <>Use your own domain instead of <code style={{ fontSize: "0.7rem" }}>username.github.io/repo/</code>. Ask your DNS provider to create a <strong>CNAME</strong> record:</>
-                : <>Use your own domain instead of <code style={{ fontSize: "0.7rem" }}>{config.deployAppName || "app"}.fly.dev</code>. Ask your DNS provider to create a <strong>CNAME</strong> record:</>
+                ? <>Use your own domain instead of <code style={{ fontSize: "0.7rem" }}>username.github.io/repo/</code>. Set up a <strong>CNAME</strong> record:</>
+                : <>Use your own domain instead of the default. Set up a <strong>CNAME</strong> record:</>
               }
             </p>
             <div style={{
@@ -722,10 +766,18 @@ export function DeploySettingsPanel() {
               color: "var(--foreground)", lineHeight: 1.6,
             }}>
               <span style={{ color: "var(--muted-foreground)" }}>Type:</span> CNAME<br />
-              <span style={{ color: "var(--muted-foreground)" }}>Name:</span> your-subdomain<br />
-              <span style={{ color: "var(--muted-foreground)" }}>Target:</span> {effectiveProvider === "github-pages"
-                ? "your-username.github.io."
-                : `${config.deployAppName || "app"}.fly.dev.`}
+              <span style={{ color: "var(--muted-foreground)" }}>Name:</span> {dnsStatus?.subdomain ?? "your-subdomain"}<br />
+              <span style={{ color: "var(--muted-foreground)" }}>Target:</span> {dnsStatus?.expectedTarget ?? (
+                effectiveProvider === "github-pages"
+                  ? "your-username.github.io."
+                  : effectiveProvider === "vercel"
+                  ? "cname.vercel-dns.com."
+                  : effectiveProvider === "cloudflare-pages"
+                  ? `${config.deployCloudflareProjectName || "your-project"}.pages.dev.`
+                  : effectiveProvider === "netlify"
+                  ? `${config.deployAppName || "your-site"}.netlify.app.`
+                  : `${config.deployAppName || "app"}.fly.dev.`
+              )}
             </div>
             <div style={{ display: "flex", gap: "0.4rem", alignItems: "center" }}>
               <input
@@ -739,8 +791,78 @@ export function DeploySettingsPanel() {
                 <CopyButton text={config.deployCustomDomain} />
               )}
             </div>
+
+            {/* F133 — Auto-create CNAME via DNS API (only when API is configured) */}
+            {dnsStatus?.available && config.deployCustomDomain && (
+              <div style={{
+                marginTop: "0.4rem",
+                padding: "0.5rem 0.6rem",
+                borderRadius: "6px",
+                border: "1px solid var(--border)",
+                background: "var(--background)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: "0.75rem",
+              }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: "0.72rem", fontWeight: 500, display: "flex", alignItems: "center", gap: "0.4rem" }}>
+                    {dnsStatus.state === "ok" && <span style={{ color: "#16a34a" }}>● CNAME record live</span>}
+                    {dnsStatus.state === "missing" && <span style={{ color: "#d97706" }}>● CNAME record not yet created</span>}
+                    {dnsStatus.state === "mismatch" && <span style={{ color: "#d97706" }}>● CNAME points elsewhere</span>}
+                    {dnsStatus.state === "no-zone" && <span style={{ color: "var(--muted-foreground)" }}>● Zone not managed by webhouse DNS — set this CNAME manually at your registrar</span>}
+                    {dnsStatus.state === "no-target" && <span style={{ color: "var(--muted-foreground)" }}>● Configure the deploy provider before creating the CNAME</span>}
+                  </div>
+                  {dnsStatus.currentTarget && dnsStatus.state === "mismatch" && (
+                    <div style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", marginTop: "0.2rem", fontFamily: "monospace" }}>
+                      Current: {dnsStatus.currentTarget} → Expected: {dnsStatus.expectedTarget}
+                    </div>
+                  )}
+                </div>
+                {dnsStatus.zoneManagedByApi && dnsStatus.expectedTarget && dnsStatus.state !== "ok" && (
+                  <button
+                    onClick={handleCreateCname}
+                    disabled={dnsBusy}
+                    style={{
+                      padding: "0.35rem 0.7rem", borderRadius: "5px",
+                      background: "var(--primary)", color: "#0D0D0D",
+                      border: "none", fontSize: "0.7rem", fontWeight: 600,
+                      cursor: dnsBusy ? "wait" : "pointer", whiteSpace: "nowrap",
+                      opacity: dnsBusy ? 0.6 : 1,
+                    }}
+                  >
+                    {dnsBusy ? "..." : dnsStatus.state === "mismatch" ? "Update CNAME" : "Create CNAME"}
+                  </button>
+                )}
+                {dnsStatus.zoneManagedByApi && dnsStatus.state === "ok" && (
+                  <button
+                    onClick={loadDnsStatus}
+                    disabled={dnsBusy}
+                    title="Re-check DNS"
+                    style={{
+                      padding: "0.35rem 0.6rem", borderRadius: "5px",
+                      background: "transparent", color: "var(--muted-foreground)",
+                      border: "1px solid var(--border)", fontSize: "0.65rem",
+                      cursor: dnsBusy ? "wait" : "pointer",
+                    }}
+                  >
+                    Re-check
+                  </button>
+                )}
+              </div>
+            )}
+            {dnsMsg && (
+              <div style={{
+                fontSize: "0.65rem", color: "var(--muted-foreground)",
+                padding: "0.3rem 0.5rem", borderRadius: "4px",
+                background: "var(--muted)", marginTop: "0.3rem",
+              }}>
+                {dnsMsg}
+              </div>
+            )}
+
             {config.deployCustomDomain && (
-              <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: 0 }}>
+              <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: "0.4rem 0 0" }}>
                 Deploys will serve on <strong>{config.deployCustomDomain}</strong> with root paths.
               </p>
             )}
