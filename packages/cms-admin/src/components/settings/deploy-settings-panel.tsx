@@ -62,6 +62,18 @@ const CONFIG_DEFAULTS: DeployConfig = {
   deployCloudflareProjectName: "",
 };
 
+interface FlyLiveStatus {
+  provisioned: boolean;
+  reachable: boolean;
+  version: string | null;
+  expectedVersion: string;
+  isOutdated: boolean;
+  url: string | null;
+  region: string;
+  volumeName: string;
+  error: string | null;
+}
+
 export function DeploySettingsPanel() {
   const [config, setConfig] = useState<DeployConfig>(CONFIG_DEFAULTS);
   const [canAutoDeploy, setCanAutoDeploy] = useState(false);
@@ -70,6 +82,10 @@ export function DeploySettingsPanel() {
   const [deploying, setDeploying] = useState(false);
   const [loading, setLoading] = useState(true);
   const [showDeployModal, setShowDeployModal] = useState(false);
+  const [flyLiveStatus, setFlyLiveStatus] = useState<FlyLiveStatus | null>(null);
+  const [rebuildConfirm, setRebuildConfirm] = useState(false);
+  const [rebuilding, setRebuilding] = useState(false);
+  const [rebuildMsg, setRebuildMsg] = useState<string | null>(null);
 
   // Auto-open modal when navigated with ?deploy=1 (from header button)
   useEffect(() => {
@@ -112,6 +128,37 @@ export function DeploySettingsPanel() {
   }, []);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  // F133 — fetch Fly Live health status when provider is selected
+  const loadFlyLiveStatus = useCallback(async () => {
+    if (config.deployProvider !== "flyio-live") {
+      setFlyLiveStatus(null);
+      return;
+    }
+    try {
+      const res = await fetch("/api/admin/deploy/fly-live/status");
+      if (res.ok) setFlyLiveStatus(await res.json());
+    } catch { /* best-effort */ }
+  }, [config.deployProvider]);
+
+  useEffect(() => { loadFlyLiveStatus(); }, [loadFlyLiveStatus]);
+
+  const handleRebuildInfra = useCallback(async () => {
+    setRebuilding(true);
+    setRebuildMsg("Rebuilding Docker image on Fly... this takes ~60 seconds.");
+    try {
+      const res = await fetch("/api/admin/deploy/fly-live/rebuild", { method: "POST" });
+      const body = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(body.error ?? "Rebuild failed");
+      setRebuildMsg("Infrastructure rebuilt. Content is preserved.");
+      await loadFlyLiveStatus();
+    } catch (err) {
+      setRebuildMsg(`Failed: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setRebuilding(false);
+      setRebuildConfirm(false);
+    }
+  }, [loadFlyLiveStatus]);
 
   // Save config via ActionBar save event
   const handleSave = useCallback(async () => {
@@ -197,6 +244,45 @@ export function DeploySettingsPanel() {
 
   return (
     <div data-testid="panel-deploy">
+      {/* ── F133: drift banner — show when sync-endpoint lags admin bundle ── */}
+      {flyLiveStatus?.provisioned && flyLiveStatus.isOutdated && (
+        <div
+          role="alert"
+          style={{
+            padding: "0.75rem 1rem",
+            borderRadius: 8,
+            border: "1px solid #d97706",
+            background: "color-mix(in srgb, #d97706 10%, var(--card))",
+            marginBottom: "1.5rem",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "1rem",
+          }}
+        >
+          <div>
+            <div style={{ fontSize: "0.8rem", fontWeight: 600, color: "#d97706" }}>Sync endpoint is out of date</div>
+            <div style={{ fontSize: "0.7rem", color: "var(--muted-foreground)" }}>
+              Your Fly container runs sync-endpoint v{flyLiveStatus.version}, but cms-admin now bundles v{flyLiveStatus.expectedVersion}. Rebuild to get the latest fixes.
+            </div>
+          </div>
+          <button
+            onClick={() => {
+              const infraSection = document.querySelector('[data-rebuild-infra-section]');
+              infraSection?.scrollIntoView({ behavior: "smooth", block: "center" });
+            }}
+            style={{
+              padding: "0.4rem 0.8rem", borderRadius: 6,
+              background: "#d97706", color: "#fff",
+              border: "none", fontSize: "0.7rem", fontWeight: 600,
+              cursor: "pointer", whiteSpace: "nowrap",
+            }}
+          >
+            Rebuild infrastructure →
+          </button>
+        </div>
+      )}
+
       {/* ── Docker Deploy wizard link ───────────────────── */}
       <div style={{
         padding: "0.75rem 1rem",
@@ -306,10 +392,10 @@ export function DeploySettingsPanel() {
         {needsAppName && (
           <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
             <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>
-              {config.deployProvider === "flyio" ? "App name" : "Repository (owner/repo)"}
+              {config.deployProvider === "flyio" || config.deployProvider === "flyio-live" ? "App name" : "Repository (owner/repo)"}
             </label>
             <input type="text" value={config.deployAppName} onChange={(e) => updateConfig((c) => ({ ...c, deployAppName: e.target.value }))}
-              placeholder={config.deployProvider === "flyio" ? "my-app" : "owner/repo"} style={inputStyle} />
+              placeholder={config.deployProvider === "flyio" || config.deployProvider === "flyio-live" ? "my-app" : "owner/repo"} style={inputStyle} />
           </div>
         )}
 
@@ -398,6 +484,89 @@ export function DeploySettingsPanel() {
           </>
         )}
       </SettingsCard>
+
+      {/* ── F133: Fly Live infrastructure status ────────── */}
+      {config.deployProvider === "flyio-live" && flyLiveStatus?.provisioned && (
+        <div data-rebuild-infra-section>
+          <SectionHeading>Infrastructure</SectionHeading>
+          <SettingsCard>
+            <div style={{ display: "grid", gridTemplateColumns: "auto 1fr", gap: "0.4rem 1rem", fontSize: "0.75rem" }}>
+              <span style={{ color: "var(--muted-foreground)" }}>Status</span>
+              <span>
+                {flyLiveStatus.reachable
+                  ? <span style={{ color: "#16a34a" }}>● Reachable</span>
+                  : <span style={{ color: "#dc2626" }}>● Unreachable — {flyLiveStatus.error ?? "no response"}</span>
+                }
+              </span>
+              <span style={{ color: "var(--muted-foreground)" }}>Server version</span>
+              <span style={{ fontFamily: "monospace" }}>
+                {flyLiveStatus.version ?? "unknown"}
+                {flyLiveStatus.isOutdated && (
+                  <span style={{ marginLeft: "0.5rem", color: "#d97706", fontSize: "0.7rem" }}>
+                    (admin bundles {flyLiveStatus.expectedVersion})
+                  </span>
+                )}
+              </span>
+              <span style={{ color: "var(--muted-foreground)" }}>Region</span>
+              <span style={{ fontFamily: "monospace" }}>{flyLiveStatus.region}</span>
+              <span style={{ color: "var(--muted-foreground)" }}>Volume</span>
+              <span style={{ fontFamily: "monospace" }}>{flyLiveStatus.volumeName}</span>
+              {flyLiveStatus.url && (
+                <>
+                  <span style={{ color: "var(--muted-foreground)" }}>URL</span>
+                  <a href={flyLiveStatus.url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)" }}>{flyLiveStatus.url}</a>
+                </>
+              )}
+            </div>
+
+            <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginTop: "0.75rem", paddingTop: "0.75rem", borderTop: "1px solid var(--border)" }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: "0.75rem", fontWeight: 500 }}>Rebuild infrastructure</div>
+                <div style={{ fontSize: "0.65rem", color: "var(--muted-foreground)" }}>
+                  Pushes a fresh Docker image (web server + sync endpoint). Content on the volume is preserved. Takes ~60 s.
+                </div>
+              </div>
+              {!rebuildConfirm && !rebuilding && (
+                <button
+                  onClick={() => setRebuildConfirm(true)}
+                  style={{
+                    padding: "0.35rem 0.8rem", borderRadius: "6px",
+                    border: "1px solid var(--border)", background: "transparent",
+                    color: "var(--foreground)", fontSize: "0.7rem",
+                    cursor: "pointer", whiteSpace: "nowrap",
+                  }}
+                >
+                  Rebuild
+                </button>
+              )}
+              {rebuildConfirm && !rebuilding && (
+                <div style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
+                  <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Rebuild?</span>
+                  <button onClick={handleRebuildInfra}
+                    style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
+                  <button onClick={() => setRebuildConfirm(false)}
+                    style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
+                </div>
+              )}
+              {rebuilding && (
+                <div style={{ display: "flex", alignItems: "center", gap: "0.35rem", fontSize: "0.7rem", color: "var(--muted-foreground)" }}>
+                  <Loader2 className="animate-spin" style={{ width: "0.8rem", height: "0.8rem" }} />
+                  Rebuilding...
+                </div>
+              )}
+            </div>
+            {rebuildMsg && (
+              <div style={{
+                marginTop: "0.5rem", fontSize: "0.7rem",
+                padding: "0.4rem 0.6rem", borderRadius: "4px",
+                background: "var(--muted)", color: "var(--muted-foreground)",
+              }}>
+                {rebuildMsg}
+              </div>
+            )}
+          </SettingsCard>
+        </div>
+      )}
 
       {/* ── Connect GitHub (when needed and no token) ───── */}
       {effectiveProvider === "github-pages" && !hasGitHubToken && !needsToken && (
