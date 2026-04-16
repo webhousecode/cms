@@ -65,8 +65,8 @@ jobs:
       - name: Typecheck (cms core)
         run: pnpm --filter @webhouse/cms exec tsc --noEmit
 
-      - name: Lint (best-effort — warn, don't block)
-        run: pnpm --filter @webhouse/cms-admin exec next lint || echo "::warning::Lint reported issues — not blocking release"
+      # Note: Next.js 16 dropped `next lint`. Project doesn't configure ESLint
+      # directly. Typecheck + tests are the quality gate.
 
       - name: Tests (cms core — blocks release if any fail)
         run: pnpm --filter @webhouse/cms exec vitest run
@@ -113,6 +113,12 @@ jobs:
           # .next/static/ must be copied alongside server.js
           # public/ must be copied alongside server.js
           cp -R packages/cms-admin/.next/standalone/. "$stage/"
+
+          # Strip Next.js's over-eager workspace copy: cms-mobile (Capacitor/iOS
+          # artifacts, ~1.9 GB of DerivedData) + examples. Admin server doesn't
+          # need either at runtime.
+          rm -rf "$stage/packages/cms-mobile" "$stage/examples" 2>/dev/null || true
+
           mkdir -p "$stage/packages/cms-admin/.next"
           cp -R packages/cms-admin/.next/static "$stage/packages/cms-admin/.next/static"
           if [ -d packages/cms-admin/public ]; then

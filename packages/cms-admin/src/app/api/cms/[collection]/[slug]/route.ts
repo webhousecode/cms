@@ -186,7 +186,7 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
     // F61: audit
     try {
       const { logDocumentPublished, logDocumentTrashed, logDocumentUpdated, auditLog } = await import("@/lib/event-log");
-      const title = String(editedData.title ?? doc.data?.title ?? slug);
+      const title = String((editedData as Record<string, unknown>).title ?? doc.data?.title ?? slug);
       const statusChanged = body.status && body.status !== doc.status;
       const actor = { userId: session.userId, email: session.email, name: session.name };
       const finalSlug = body.slug ?? slug;
