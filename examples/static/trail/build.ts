@@ -480,8 +480,9 @@ body[data-menu-open="true"] { overflow: hidden; }
 /* Article (long-form pages) */
 .container { max-width: 44rem; margin: 0 auto; padding: 0 2rem; }
 @media (min-width: 640px) { .container { padding: 0 2.5rem; } }
-.article { padding: 6rem 0 3rem; }
-@media (min-width: 768px) { .article { padding: 7rem 0 4rem; } }
+/* Use padding-block (top/bottom only) so .container's horizontal padding survives. */
+.article { padding-top: 6rem; padding-bottom: 3rem; }
+@media (min-width: 768px) { .article { padding-top: 7rem; padding-bottom: 4rem; } }
 .article-header { margin-bottom: 3rem; border-bottom: 1px solid var(--fg-10); padding-bottom: 2rem; }
 .article-eyebrow {
   font-family: var(--font-mono);
