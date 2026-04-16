@@ -354,6 +354,12 @@ export async function triggerDeploy(): Promise<DeployEntry> {
           entry.url = pagesUrl;
           const updates: Record<string, string> = {};
           if (!config.deployProductionUrl) updates.deployProductionUrl = pagesUrl;
+          // Persist provider when auto-detect was used — the user clicked Deploy with
+          // provider="off" and we silently routed to github-pages. After success, lock
+          // it in so the UI matches reality and users don't see "Off" while their
+          // site is published. Same logic for the resolved repo name.
+          if (config.deployProvider === "off") updates.deployProvider = "github-pages";
+          if (!config.deployAppName && useRepo) updates.deployAppName = useRepo;
           // Auto-set previewSiteUrl so CMS preview works out of the box
           const currentPreview = (await readSiteConfig()).previewSiteUrl;
           if (!currentPreview || currentPreview === "http://localhost:3000" || currentPreview === "") {
