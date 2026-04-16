@@ -411,18 +411,22 @@ body[data-menu-open="true"] { overflow: hidden; }
 .btn-secondary:hover { border-color: var(--fg); }
 
 .scroll-indicator {
-  position: absolute; bottom: 2.5rem; left: 50%;
+  position: absolute; bottom: 2rem; left: 50%;
   transform: translateX(-50%);
-  display: flex; flex-direction: column; align-items: center; gap: 0.5rem;
-  opacity: 0.5; animation: bounce 2s infinite;
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--fg-20);
+  border-radius: 9999px;
+  color: var(--fg-60);
+  opacity: 0.7;
+  animation: scroll-hint 2.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  transition: opacity 0.2s, border-color 0.2s;
 }
-.scroll-indicator .line {
-  width: 1px; height: 3rem;
-  background: linear-gradient(to bottom, transparent, var(--fg));
-}
-@keyframes bounce {
+.scroll-indicator:hover { opacity: 1; border-color: var(--fg); color: var(--fg); }
+.scroll-indicator svg { width: 14px; height: 14px; }
+@keyframes scroll-hint {
   0%, 100% { transform: translate(-50%, 0); }
-  50% { transform: translate(-50%, -8px); }
+  50%      { transform: translate(-50%, 6px); }
 }
 
 /* Features */
@@ -759,7 +763,7 @@ function renderHero(b: Block): string {
       ${b.description ? `<p class="lead">${esc(b.description)}</p>` : ""}
       ${ctaHtml ? `<div class="cta-group">${ctaHtml}</div>` : ""}
     </div>
-    ${showScroll ? `<div class="scroll-indicator"><div class="line"></div></div>` : ""}
+    ${showScroll ? `<a class="scroll-indicator" href="#features" aria-label="Scroll to content"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="6 9 12 15 18 9"></polyline></svg></a>` : ""}
   </main>`;
 }
 
