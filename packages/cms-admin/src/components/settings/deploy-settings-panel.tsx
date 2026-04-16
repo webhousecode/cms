@@ -100,6 +100,13 @@ export function DeploySettingsPanel() {
   } | null>(null);
   const [dnsBusy, setDnsBusy] = useState(false);
   const [dnsMsg, setDnsMsg] = useState<string | null>(null);
+  const [domainCheck, setDomainCheck] = useState<{
+    state: "idle" | "checking" | "available" | "ours" | "taken" | "no-zone" | "invalid";
+    conflicts?: Array<{ type: string; value: string }>;
+    subdomain?: string;
+    zone?: string;
+    reason?: string;
+  }>({ state: "idle" });
 
   // Auto-open modal when navigated with ?deploy=1 (from header button)
   useEffect(() => {
@@ -169,6 +176,27 @@ export function DeploySettingsPanel() {
   }, []);
 
   useEffect(() => { loadDnsStatus(); }, [loadDnsStatus, config.deployCustomDomain, config.deployProvider, config.deployAppName]);
+
+  // Debounced availability check on the Custom Domain input as the user types
+  useEffect(() => {
+    if (!dnsStatus?.available) return;
+    const domain = config.deployCustomDomain.trim();
+    if (!domain || !domain.includes(".")) {
+      setDomainCheck({ state: "idle" });
+      return;
+    }
+    setDomainCheck((s) => ({ ...s, state: "checking" }));
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/admin/deploy/dns/availability?domain=${encodeURIComponent(domain)}`);
+        if (!res.ok) { setDomainCheck({ state: "invalid" }); return; }
+        setDomainCheck(await res.json());
+      } catch {
+        setDomainCheck({ state: "invalid" });
+      }
+    }, 400);
+    return () => clearTimeout(t);
+  }, [config.deployCustomDomain, dnsStatus?.available, config.deployProvider, config.deployAppName]);
 
   const handleCreateCname = useCallback(async () => {
     setDnsBusy(true);
@@ -792,6 +820,34 @@ export function DeploySettingsPanel() {
               )}
             </div>
 
+            {/* F133 — Live availability check as you type */}
+            {dnsStatus?.available && config.deployCustomDomain && (
+              <div style={{ fontSize: "0.65rem", marginTop: "-0.1rem" }}>
+                {domainCheck.state === "checking" && (
+                  <span style={{ color: "var(--muted-foreground)" }}>Checking availability…</span>
+                )}
+                {domainCheck.state === "available" && (
+                  <span style={{ color: "#16a34a" }}>✓ {domainCheck.subdomain}.{domainCheck.zone} is available</span>
+                )}
+                {domainCheck.state === "ours" && (
+                  <span style={{ color: "#16a34a" }}>✓ Already pointed to this site</span>
+                )}
+                {domainCheck.state === "taken" && (
+                  <span style={{ color: "#dc2626" }}>
+                    ✗ Already in use ({domainCheck.conflicts?.[0]?.type} → {domainCheck.conflicts?.[0]?.value}). Pick a different subdomain.
+                  </span>
+                )}
+                {domainCheck.state === "no-zone" && (
+                  <span style={{ color: "var(--muted-foreground)" }}>
+                    Zone {domainCheck.zone} not managed here — set the CNAME at your registrar.
+                  </span>
+                )}
+                {domainCheck.state === "invalid" && config.deployCustomDomain.includes(".") && (
+                  <span style={{ color: "var(--muted-foreground)" }}>Invalid domain</span>
+                )}
+              </div>
+            )}
+
             {/* F133 — Auto-create CNAME via DNS API (only when API is configured) */}
             {dnsStatus?.available && config.deployCustomDomain && (
               <div style={{
@@ -822,12 +878,14 @@ export function DeploySettingsPanel() {
                 {dnsStatus.zoneManagedByApi && dnsStatus.expectedTarget && dnsStatus.state !== "ok" && (
                   <button
                     onClick={handleCreateCname}
-                    disabled={dnsBusy}
+                    disabled={dnsBusy || domainCheck.state === "taken"}
+                    title={domainCheck.state === "taken" ? "Subdomain is already used by another site" : undefined}
                     style={{
                       padding: "0.35rem 0.7rem", borderRadius: "5px",
-                      background: "var(--primary)", color: "#0D0D0D",
+                      background: domainCheck.state === "taken" ? "var(--muted)" : "var(--primary)",
+                      color: domainCheck.state === "taken" ? "var(--muted-foreground)" : "#0D0D0D",
                       border: "none", fontSize: "0.7rem", fontWeight: 600,
-                      cursor: dnsBusy ? "wait" : "pointer", whiteSpace: "nowrap",
+                      cursor: dnsBusy || domainCheck.state === "taken" ? "not-allowed" : "pointer", whiteSpace: "nowrap",
                       opacity: dnsBusy ? 0.6 : 1,
                     }}
                   >
