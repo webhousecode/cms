@@ -1,6 +1,6 @@
-# F75 — AI Site Builder Guide (Modular Docs)
+# F75 — AI Site Builder Guide (Modular Docs + AI Builder Site)
 
-> Split the 2421-line monolithic CLAUDE.md into modular online docs that AI sessions fetch on-demand based on what the user asks.
+> Modular online docs that AI sessions fetch on-demand. Phase 1 (Done): split monolithic CLAUDE.md into 21 module files. Phase 2 (Done): dedicated AI Builder Site at `/ai` on docs.webhouse.app with self-guided walkthrough optimized for any LLM platform (Claude Code, Cursor, Copilot, Gemini, Windsurf).
 
 ## Problem
 
@@ -230,7 +230,8 @@ The index includes the version so the AI can check if it has an outdated cached 
 ## Dependencies
 
 - F24 (AI Playbook) — Done. This evolves the existing CLAUDE.md approach.
-- No code dependencies — pure documentation restructuring.
+- F31 (Documentation Site) — Done. Hosts the AI Builder Site at `/ai`.
+- No code dependencies — pure documentation restructuring + one Next.js route group.
 
 ## Effort Estimate
 
@@ -238,6 +239,217 @@ The index includes the version so the AI can check if it has an outdated cached 
 
 - Day 1: Split CLAUDE.md into 20 modules, write index, replace monolithic file
 - Day 2: Update scaffolder, test with fresh AI sessions, polish module boundaries
+
+---
+
+# Phase 2 — AI Builder Site (`/ai` on docs.webhouse.app)
+
+> Phase 1 shipped the modular docs on GitHub raw. Phase 2 makes them discoverable and
+> consumable from a single canonical URL any AI coding platform can fetch — no GitHub API,
+> no path juggling, no monolithic dump.
+
+## Problem (Phase 2)
+
+Phase 1 uses GitHub raw URLs (`raw.githubusercontent.com/.../docs/ai-guide/*.md`). That's
+fine for Claude Code which can fetch them, but:
+
+1. **Discoverability** — There's no one URL to give to an AI. "Fetch raw.githubusercontent.com
+   paths" is too much setup friction.
+2. **Rate limiting** — GitHub raw throttles at 60 req/hr unauthenticated. A fresh Claude Code
+   session that fetches 5 modules + re-fetches index blows through that on a bad day.
+3. **Platform variance** — Copilot, Gemini, Cursor chat, Windsurf — not all have ergonomic
+   URL-fetch tooling for deep GitHub paths, but basically all of them can fetch a pretty
+   URL like `ai.webhouse.app`.
+4. **No self-guided entry point** — The existing `index.md` is a module index. It assumes
+   the AI already knows what @webhouse/cms is. A blank AI session landed at index.md still
+   needs to be told "you are an AI, follow these steps, if you're stuck fetch X."
+5. **No machine-readable endpoints** — AI platforms increasingly expect `llms.txt`,
+   structured manifest JSON, and versioning. GitHub raw markdown doesn't provide any of that.
+
+## Solution (Phase 2)
+
+Ship a dedicated AI Builder Site as a route group on docs.webhouse.app (which is already
+built with @webhouse/cms — dogfooding). No new infra, no new domain to manage.
+
+- **`/ai`** — Self-contained walkthrough: "You are an AI. Step 0... Step 1... If X then Y."
+  Returned as `text/markdown` so browsers display the raw source and AIs get it verbatim.
+- **`/ai/{slug}`** — All 21 deep-dive modules, one URL per module.
+- **`/ai/llms.txt`** — llms.txt standard (for LLM site crawlers).
+- **`/ai/manifest.json`** — JSON manifest with all modules + descriptions + endpoints.
+- **`/ai/index.json`** — Minimal ordered module list.
+
+Subdomain `ai.webhouse.app` points to the same origin via DNS CNAME + optional host rewrite
+(so both `docs.webhouse.app/ai` and `ai.webhouse.app` work). The subdomain is marketing —
+the `/ai` path is the canonical implementation.
+
+All responses set `X-Robots-Tag: noindex` so the AI site doesn't bleed into search indexes
+for humans. Cache headers: `public, s-maxage=300, stale-while-revalidate=86400` for CDN
+friendliness.
+
+## Technical Design (Phase 2)
+
+### Route structure
+
+```
+cms-docs/src/app/ai/
+  _lib.ts                       // shared readFile / response helpers
+  route.ts                      // GET /ai → _walkthrough.md
+  [slug]/route.ts               // GET /ai/{slug} → {slug}.md
+  llms.txt/route.ts             // GET /ai/llms.txt
+  manifest.json/route.ts        // GET /ai/manifest.json
+  index.json/route.ts           // GET /ai/index.json
+```
+
+All routes use `export const dynamic = "force-static"` so they're pre-rendered at build
+time. The `[slug]/route.ts` implements `generateStaticParams()` to enumerate all 21
+modules. Unknown slugs return 404. Slugs starting with `_` are rejected (the walkthrough
+file is internal).
+
+### Source files
+
+```
+cms-docs/src/ai-guide/
+  _walkthrough.md               // owned by cms-docs (the Step 0-9 guide)
+  index.md                      // mirror of canonical docs/ai-guide/index.md
+  01-getting-started.md
+  02-config-reference.md
+  ...
+  21-framework-consumers.md
+```
+
+Files prefixed `_` are only reachable by the main `/ai` route (not by `/ai/[slug]`).
+Non-prefixed files are served at their slug.
+
+### Content strategy — the walkthrough
+
+The walkthrough (`_walkthrough.md`) is the critical new content. It's structured as a
+**procedure**, not a reference:
+
+```markdown
+## Step 0 — Verify environment
+Check node >= 20, ask about project directory.
+
+## Step 1 — Scaffold
+npm create @webhouse/cms@latest ...
+
+## Step 2 — Understand the model
+[JSON format, cms.config.ts basics, field types, where to fetch more]
+
+## Step 3 — Plan with user
+[5 questions, collection mapping, wait for confirmation]
+
+... Steps 4-9 ...
+
+## Troubleshooting — first-pass fixes
+[Error → Fix table]
+
+## Deep-dive module index
+[Links to /ai/01-..21-]
+
+## Non-negotiable rules
+[8 rules from CLAUDE.md critical rules section]
+```
+
+The AI can complete a basic build end-to-end without fetching any module. Modules are for
+depth when the user asks for something specific (i18n, complex SEO, non-TS backend).
+
+### Machine-readable endpoints
+
+**`/ai/manifest.json`** (structured for programmatic use):
+
+```json
+{
+  "name": "@webhouse/cms AI Builder Site",
+  "version": "0.1.0",
+  "entry": "https://ai.webhouse.app/ai",
+  "canonical_source": "https://raw.githubusercontent.com/...",
+  "package": { "name": "@webhouse/cms", "npm": "...", "repo": "..." },
+  "modules": [
+    { "slug": "01-getting-started", "url": "...", "description": "New project, first setup..." },
+    ...
+  ],
+  "endpoints": { "walkthrough": "...", "llms_txt": "...", "manifest": "...", "index": "..." }
+}
+```
+
+**`/ai/llms.txt`** — Standard llms.txt format with grouped sections (Main entry, Modules,
+Machine-readable endpoints, Canonical source, Optional).
+
+### Build integration
+
+`next.config.ts` adds `outputFileTracingIncludes` so `src/ai-guide/**/*.md` ships with
+the standalone build:
+
+```typescript
+outputFileTracingIncludes: {
+  "/ai": ["./src/ai-guide/**/*.md"],
+  "/ai/[slug]": ["./src/ai-guide/**/*.md"],
+  "/ai/llms.txt": ["./src/ai-guide/**/*.md"],
+  "/ai/manifest.json": ["./src/ai-guide/**/*.md"],
+  "/ai/index.json": ["./src/ai-guide/**/*.md"],
+}
+```
+
+### Keeping modules in sync
+
+`cms-docs/scripts/sync-ai-guide.ts` copies `../cms/docs/ai-guide/*.md` → `src/ai-guide/`
+(skipping `_`-prefixed files). Run manually after upstream docs change. No automatic
+cron — module content is versioned and should be deliberately re-synced when CLAUDE.md
+gets an update. The canonical source is always the cms monorepo; cms-docs holds a
+snapshot.
+
+## Impact Analysis (Phase 2)
+
+### Files created
+- `cms-docs/src/app/ai/_lib.ts` — shared helpers (readAiFile, listAiModules, responses)
+- `cms-docs/src/app/ai/route.ts` — main walkthrough
+- `cms-docs/src/app/ai/[slug]/route.ts` — module dispatcher
+- `cms-docs/src/app/ai/llms.txt/route.ts`
+- `cms-docs/src/app/ai/manifest.json/route.ts`
+- `cms-docs/src/app/ai/index.json/route.ts`
+- `cms-docs/src/ai-guide/_walkthrough.md` — the Step 0-9 procedure (owned here)
+- `cms-docs/src/ai-guide/*.md` — synced copies of 21 modules + index
+- `cms-docs/scripts/sync-ai-guide.ts` — sync script
+
+### Files modified
+- `cms-docs/next.config.ts` — add `outputFileTracingIncludes` for `src/ai-guide/**/*.md`
+
+### Blast radius (Phase 2)
+- New route group `/ai/*` — isolated from the existing `/docs/*` tree, zero risk to
+  human-facing docs.
+- No changes to `/api/*`, search index, or existing layout.
+- `outputFileTracingIncludes` change only adds files to the standalone bundle — pure
+  addition.
+
+### Breaking changes (Phase 2)
+None. Phase 2 is purely additive.
+
+### Test plan (Phase 2)
+- [x] TypeScript compiles: `npx tsc --noEmit` in cms-docs
+- [x] `npm run build` completes, prerenders all 21 modules + /ai + 3 machine endpoints
+- [x] Standalone output includes `src/ai-guide/*.md`
+- [x] `curl http://localhost:3036/ai` returns 200 + text/markdown
+- [x] `curl http://localhost:3036/ai/01-getting-started` returns 200 + module content
+- [x] `curl http://localhost:3036/ai/nonexistent` returns 404
+- [x] `curl http://localhost:3036/ai/_walkthrough` returns 404 (underscore-prefixed files protected)
+- [x] `/ai/llms.txt` emits valid llms.txt with all 21 module links
+- [x] `/ai/manifest.json` emits valid JSON with modules array + endpoints
+- [ ] Fresh Claude Code session fetches `/ai` and completes Step 1-9 successfully
+- [ ] Cursor + Copilot + Gemini sessions can each fetch and parse `/ai`
+- [ ] After prod deploy: `https://docs.webhouse.app/ai` resolves
+
+## Implementation Steps (Phase 2)
+
+1. ✅ Sync `docs/ai-guide/*.md` from cms repo → `cms-docs/src/ai-guide/`
+2. ✅ Write `_walkthrough.md` — the Step 0-9 self-contained build procedure
+3. ✅ Build `_lib.ts` helpers (readAiFile, listAiModules, response constructors)
+4. ✅ Wire `/ai/route.ts`, `/ai/[slug]/route.ts`, `/ai/llms.txt`, `/ai/manifest.json`, `/ai/index.json`
+5. ✅ Add `outputFileTracingIncludes` in `next.config.ts`
+6. ✅ `sync-ai-guide.ts` script for future upstream updates
+7. ✅ Verify: type-check, prod build, all routes return expected content
+8. ⏳ Deploy cms-docs (Fly.io auto-deploy on push to main)
+9. ⏳ Point `ai.webhouse.app` DNS CNAME at cms-docs origin (optional, marketing only)
+10. ⏳ Test with a clean-slate Claude Code session — build a site from `/ai` alone
 
 ---
 

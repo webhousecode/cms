@@ -58,6 +58,7 @@
 | 50 | **Lighthouse Audit** — PSI API, mobile+desktop parallel scan, score circles + CWV + opportunities + diagnostics, Optimize auto-fix, history, docs (F98) | 2026-04-09 |
 | 51 | **Framework-Agnostic Consumer Guides** — Schema export (CLI+API+UI), toJsonSchema(), 12 consumer example apps, AI builder guide (F125) | 2026-04-08 |
 | 52 | **Framework-Agnostic Build Pipeline** — Custom build commands, NDJSON log panel, profiles, Docker mode, audit log, security scan (F126) | 2026-04-13 |
+| 53 | **AI Builder Site** — `/ai` on docs.webhouse.app — self-guided Step 0-9 walkthrough + 21 modules + llms.txt/manifest.json for any LLM platform (F75 Phase 2) | 2026-04-16 |
 
 ---
 
@@ -85,7 +86,7 @@ _Without these, we cannot build and deliver professional sites on the platform._
 | ~~6~~ | ~~**F27 Backup & Restore**~~ | ~~Done~~ | ~~Shipped 2026-03-30. Backup + restore for filesystem and GitHub-backed sites. Scheduled backups, retention pruning, webhook notifications.~~ |
 | ~~7~~ | ~~**F44 Media Processing Pipeline**~~ | ~~Done~~ | ~~Sharp WebP variant generation on upload + batch, EXIF extraction, build-time `<picture>` upgrade, AI image analysis. Configurable variant widths + quality in Settings.~~ |
 | ~~8~~ | ~~**F42 Framework Boilerplates**~~ | ~~Done~~ | ~~Shipped. 3 boilerplates (static, nextjs, nextjs-github) + Claude Code skills/hooks/agents.~~ |
-| ~~8b~~ | ~~**F75 AI Site Builder Guide**~~ | ~~Done~~ | ~~Shipped 2026-03-23. 2383→137 lines, 20 modules.~~ |
+| ~~8b~~ | ~~**F75 AI Site Builder Guide**~~ | ~~Done~~ | ~~Phase 1: 2383→137 lines, 21 modules (2026-03-23). Phase 2: AI Builder Site at `/ai` with self-guided walkthrough + llms.txt/manifest (2026-04-16).~~ |
 | ~~8c~~ | ~~**F78 Bundled Preview Server**~~ | ~~Done~~ | ~~Shipped 2026-03-19~~ |
 | ~~8d~~ | ~~**F79 Site Config Validator**~~ | ~~Done~~ | ~~Shipped. Validates cms.config.ts + content/ with friendly errors.~~ |
 | ~~8e~~ | ~~**F80 Admin Selector Map**~~ | ~~Done~~ | ~~Shipped 2026-03-29. 65 data-testid attributes across 17 files. Fields, nav, buttons, lists, settings, media, switchers. Selector map + Playwright helpers included.~~ |
