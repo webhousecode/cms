@@ -1259,6 +1259,23 @@ async function githubPagesBuildAndDeploy(token: string, repo: string): Promise<s
         signal: AbortSignal.timeout(10000),
       });
     } catch { /* non-fatal */ }
+
+    // Try to enable HTTPS enforcement. Will fail with 422 until GitHub
+    // provisions the Let's Encrypt cert (5–30 min after CNAME file lands).
+    // Best-effort — re-runs on every deploy until it succeeds.
+    try {
+      const httpsRes = await fetch(`https://api.github.com/repos/${repo}/pages`, {
+        method: "PUT",
+        headers,
+        body: JSON.stringify({ https_enforced: true }),
+        signal: AbortSignal.timeout(10000),
+      });
+      if (httpsRes.ok) {
+        console.log(`[deploy] HTTPS enforced for ${customDomain}`);
+      } else {
+        console.log(`[deploy] HTTPS not yet ready (status ${httpsRes.status}) — GitHub provisions Let's Encrypt cert in 5–30 min after first CNAME file commit. Re-deploy later to retry.`);
+      }
+    } catch { /* non-fatal */ }
     console.log(`[deploy] Custom domain: ${pagesUrl}`);
   }
 
