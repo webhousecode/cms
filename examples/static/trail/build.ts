@@ -135,11 +135,17 @@ const CANVAS_SCRIPT = `
       if (d < 100) { this.x -= dx * 0.01; this.y -= dy * 0.01; }
     }
   };
+  function cssVar(name, fallback){
+    var v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    return v || fallback;
+  }
   Particle.prototype.draw = function(){
+    var nodeColor = cssVar('--graph-node', '#1a1715');
+    var accentColor = cssVar('--graph-accent', '#e8a87c');
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.baseRadius, 0, Math.PI * 2);
-    ctx.fillStyle = this.isAccent ? '#e8a87c' : '#1a1715';
-    if (this.isAccent) { ctx.shadowBlur = 10; ctx.shadowColor = '#e8a87c'; }
+    ctx.fillStyle = this.isAccent ? accentColor : nodeColor;
+    if (this.isAccent) { ctx.shadowBlur = 10; ctx.shadowColor = accentColor; }
     else { ctx.shadowBlur = 0; }
     ctx.fill();
   };
@@ -151,6 +157,8 @@ const CANVAS_SCRIPT = `
   }
 
   function drawLines(){
+    var lineRgb = cssVar('--graph-line', '26, 23, 21');
+    var accentLineRgb = cssVar('--graph-accent-line', '232, 168, 124');
     for (let i = 0; i < particles.length; i++){
       for (let j = i + 1; j < particles.length; j++){
         const dx = particles[i].x - particles[j].x;
@@ -160,9 +168,9 @@ const CANVAS_SCRIPT = `
           const opacity = 1 - (d / 160);
           ctx.beginPath();
           if (particles[i].isAccent || particles[j].isAccent) {
-            ctx.strokeStyle = 'rgba(232, 168, 124, ' + (opacity * 0.5) + ')';
+            ctx.strokeStyle = 'rgba(' + accentLineRgb + ', ' + (opacity * 0.5) + ')';
           } else {
-            ctx.strokeStyle = 'rgba(26, 23, 21, ' + (opacity * 0.18) + ')';
+            ctx.strokeStyle = 'rgba(' + lineRgb + ', ' + (opacity * 0.18) + ')';
           }
           ctx.lineWidth = 0.6;
           ctx.moveTo(particles[i].x, particles[i].y);
@@ -192,24 +200,61 @@ const CANVAS_SCRIPT = `
 // ── CSS (Tailwind-equivalent, inlined) ──────────────────────
 
 const CSS = `
-:root {
+/* Tokens mirror apps/admin/src/index.css in the trail repo so landing + admin
+ * share one palette. Light = Bauhaus warm off-white; dark = warm inversion.
+ * Graph vars are rgb triplets (consumed as rgba() by the canvas script). */
+:root,
+html[data-theme="light"] {
   --bg: #FAF9F5;
+  --bg-card: #FFFFFF;
   --fg: #1a1715;
   --accent: #e8a87c;
+  --accent-tint: rgba(232, 168, 124, 0.06);
   --fg-10: rgba(26, 23, 21, 0.10);
   --fg-20: rgba(26, 23, 21, 0.20);
   --fg-40: rgba(26, 23, 21, 0.40);
   --fg-60: rgba(26, 23, 21, 0.60);
   --fg-70: rgba(26, 23, 21, 0.70);
+  --fg-90: rgba(26, 23, 21, 0.90);
   --bg-50: rgba(250, 249, 245, 0.50);
   --bg-80: rgba(250, 249, 245, 0.80);
+  --graph-node: #1a1715;
+  --graph-accent: #e8a87c;
+  --graph-line: 26, 23, 21;
+  --graph-accent-line: 232, 168, 124;
   --font-sans: -apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", Roboto, system-ui, sans-serif;
   --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", "Fira Code", "Courier New", monospace;
 }
 
+html[data-theme="dark"] {
+  --bg: #17140F;
+  --bg-card: #1F1B16;
+  --fg: #F5F1EA;
+  --accent: #e8a87c;
+  --accent-tint: rgba(232, 168, 124, 0.08);
+  --fg-10: rgba(245, 241, 234, 0.10);
+  --fg-20: rgba(245, 241, 234, 0.20);
+  --fg-40: rgba(245, 241, 234, 0.40);
+  --fg-60: rgba(245, 241, 234, 0.60);
+  --fg-70: rgba(245, 241, 234, 0.70);
+  --fg-90: rgba(245, 241, 234, 0.90);
+  --bg-50: rgba(23, 20, 15, 0.50);
+  --bg-80: rgba(23, 20, 15, 0.80);
+  --graph-node: #f5f1ea;
+  --graph-accent: #e8a87c;
+  --graph-line: 245, 241, 234;
+  --graph-accent-line: 232, 168, 124;
+}
+
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; background: var(--bg); }
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: var(--bg);
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
 html, body { overflow-x: hidden; max-width: 100vw; }
 body {
   font-family: var(--font-sans);
@@ -274,7 +319,28 @@ svg { max-width: 100%; height: auto; }
   white-space: nowrap;
 }
 @media (min-width: 768px) { .nav-cta { padding: 0.5rem 1rem; font-size: 0.875rem; } }
-.nav-cta:hover { background: rgba(26, 23, 21, 0.9); border-color: var(--accent); }
+.nav-cta:hover { background: var(--fg-90); border-color: var(--accent); }
+
+/* Theme toggle — sun in dark, moon in light */
+.theme-toggle {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid var(--fg-10);
+  border-radius: 6px;
+  color: var(--fg-70);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.theme-toggle:hover { background: var(--bg-50); color: var(--fg); border-color: var(--fg-20); }
+.theme-toggle:active { transform: scale(0.96); }
+.theme-toggle svg { width: 18px; height: 18px; }
+.theme-toggle .icon-sun { display: none; }
+.theme-toggle .icon-moon { display: block; }
+html[data-theme="dark"] .theme-toggle .icon-sun { display: block; }
+html[data-theme="dark"] .theme-toggle .icon-moon { display: none; }
 
 /* Mobile hamburger toggle */
 .nav-toggle {
@@ -400,7 +466,7 @@ body[data-menu-open="true"] { overflow: hidden; }
   background: var(--fg); color: var(--bg);
 }
 .btn-primary:hover {
-  background: rgba(26, 23, 21, 0.9);
+  background: var(--fg-90);
   box-shadow: 0 10px 25px -5px rgba(232, 168, 124, 0.2);
 }
 .btn-secondary {
@@ -460,7 +526,7 @@ body[data-menu-open="true"] { overflow: hidden; }
   -webkit-backdrop-filter: blur(6px);
   transition: background 0.2s;
 }
-.feature-card:hover { background: color-mix(in srgb, #fff 90%, transparent); }
+.feature-card:hover { background: color-mix(in srgb, var(--bg-card) 90%, transparent); }
 .feature-card::before {
   content: "";
   position: absolute; top: 0; left: 0;
@@ -549,7 +615,7 @@ body[data-menu-open="true"] { overflow: hidden; }
 .prose code {
   font-family: var(--font-mono);
   font-size: 0.875em;
-  background: rgba(26, 23, 21, 0.06);
+  background: var(--fg-10);
   padding: 0.125rem 0.375rem;
   border-radius: 3px;
 }
@@ -648,7 +714,7 @@ body[data-menu-open="true"] { overflow: hidden; }
   transform: scaleX(0); transform-origin: left;
   transition: transform 0.3s;
 }
-.post-card:hover { background: #fff; border-color: var(--fg-20); }
+.post-card:hover { background: var(--bg-card); border-color: var(--fg-20); }
 .post-card:hover::before { transform: scaleX(1); }
 .post-card-eyebrow {
   font-family: var(--font-mono); font-size: 0.7rem;
@@ -690,7 +756,7 @@ body[data-menu-open="true"] { overflow: hidden; }
 .post-tag:hover {
   color: var(--accent);
   border-color: var(--accent);
-  background: rgba(232, 168, 124, 0.06);
+  background: var(--accent-tint);
 }
 .post-more {
   display: inline-block;
@@ -1074,6 +1140,11 @@ function layout(title: string, content: string, metaDesc?: string): string {
   <link rel="icon" type="image/svg+xml" href="${esc(bp("/uploads/favicon.svg"))}">
   <link rel="apple-touch-icon" href="${esc(bp(logo))}">
   <meta name="theme-color" content="#FAF9F5">
+  <script>
+    /* Apply theme before first paint to avoid flash. Mirrors admin's
+     * theme store (localStorage key 'trail.theme'), default light. */
+    (function(){try{var t=localStorage.getItem('trail.theme');document.documentElement.setAttribute('data-theme', t==='dark'?'dark':'light');}catch(e){document.documentElement.setAttribute('data-theme','light');}})();
+  </script>
   <style>${CSS}</style>
 </head>
 <body>
@@ -1089,6 +1160,10 @@ function layout(title: string, content: string, metaDesc?: string): string {
         .join("\n      ")}
     </div>
     <div class="nav-actions">
+      <button type="button" class="theme-toggle" aria-label="Toggle theme">
+        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+      </button>
       <a href="${esc(bp(signInHref))}" class="nav-signin">${esc(signInLabel)}</a>
       <a href="${esc(bp(navCtaHref))}" class="nav-cta">${esc(navCtaLabel)}</a>
       <button type="button" class="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
@@ -1119,6 +1194,19 @@ function layout(title: string, content: string, metaDesc?: string): string {
         if (e.target instanceof HTMLAnchorElement) setOpen(false);
       });
       document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setOpen(false); });
+    })();
+
+    (function () {
+      var tbtn = document.querySelector('.theme-toggle');
+      if (!tbtn) return;
+      tbtn.addEventListener('click', function () {
+        var current = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+        var next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        try { localStorage.setItem('trail.theme', next); } catch (e) {}
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content', next === 'dark' ? '#17140F' : '#FAF9F5');
+      });
     })();
   </script>
   ${content}
