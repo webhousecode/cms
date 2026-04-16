@@ -1,6 +1,6 @@
 {
   "slug": "knowledge-that-compounds",
-  "status": "draft",
+  "status": "published",
   "data": {
     "title": "Why Your Knowledge Base Should Compile, Not Search",
     "excerpt": "Most AI knowledge systems are sophisticated search engines that forget between queries. The organizations winning are building something different — and the architectural choice has direct consequences for cost, accuracy, and defensibility.",
@@ -14,8 +14,15 @@
       "rag",
       "decision-making"
     ],
-    "readTime": "9 min read"
+    "readTime": "9 min read",
+    "_lastEditedBy": {
+      "userId": "fb4eda6a-bc5c-4dec-8cb6-c77c9fb74cd9",
+      "name": "Christian Broberg",
+      "email": "cb@webhouse.dk",
+      "at": "2026-04-16T22:23:24.979Z"
+    }
   },
   "id": "knowledge-that-compounds",
-  "_fieldMeta": {}
+  "_fieldMeta": {},
+  "updatedAt": "2026-04-16T22:23:24.981Z"
 }
