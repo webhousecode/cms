@@ -1,6 +1,6 @@
 {
   "slug": "compile-time-knowledge-vs-rag",
-  "status": "draft",
+  "status": "published",
   "data": {
     "title": "Compile-Time Knowledge: A Technical Argument Against RAG",
     "excerpt": "RAG is a search engine wearing a language model as a hat. Trail compiles knowledge the way a brain consolidates memory — and the architectural difference shows up in latency, accuracy, provenance, and cost.",
@@ -14,8 +14,15 @@
       "knowledge-engineering",
       "systems-design"
     ],
-    "readTime": "14 min read"
+    "readTime": "14 min read",
+    "_lastEditedBy": {
+      "userId": "fb4eda6a-bc5c-4dec-8cb6-c77c9fb74cd9",
+      "name": "Christian Broberg",
+      "email": "cb@webhouse.dk",
+      "at": "2026-04-16T22:23:20.336Z"
+    }
   },
   "id": "compile-time-knowledge-vs-rag",
-  "_fieldMeta": {}
+  "_fieldMeta": {},
+  "updatedAt": "2026-04-16T22:23:20.337Z"
 }
