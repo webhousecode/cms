@@ -41,8 +41,42 @@ permissions:
   packages: write
 
 jobs:
+  quality:
+    name: Quality gate (typecheck + lint + test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.30.3
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "pnpm"
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck (cms-admin)
+        run: pnpm exec tsc --noEmit --project packages/cms-admin/tsconfig.json
+
+      - name: Typecheck (cms core)
+        run: pnpm --filter @webhouse/cms exec tsc --noEmit
+
+      - name: Lint (best-effort — warn, don't block)
+        run: pnpm --filter @webhouse/cms-admin exec next lint || echo "::warning::Lint reported issues — not blocking release"
+
+      - name: Tests (cms core — blocks release if any fail)
+        run: pnpm --filter @webhouse/cms exec vitest run
+
+      - name: Tests (cms-admin — blocks release if any fail)
+        run: pnpm --filter @webhouse/cms-admin exec vitest run
+
   tarball:
     name: Build standalone tarball
+    needs: quality
     runs-on: ubuntu-latest
     outputs:
       tarball_name: ${{ steps.pack.outputs.tarball_name }}
@@ -153,6 +187,7 @@ jobs:
 
   docker:
     name: Build + push Docker image
+    needs: quality
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
