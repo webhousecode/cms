@@ -141,9 +141,13 @@ export async function GET(req: NextRequest) {
               } else if (cfg.deployProductionUrl) {
                 entry.liveUrl = cfg.deployProductionUrl;
               }
-              // Build signed proxy URL for fullscreen preview (URL tracking injection)
+              // External (non-localhost) URLs: load directly — the phone can
+              // reach them, and we avoid the proxy entirely. URL tracking /
+              // Edit FAB relies on initial path only for public sites.
+              // Only localhost dev servers need the proxy (phone can't reach
+              // them via LAN otherwise).
               const target = entry.liveUrl || liveOrPreview;
-              if (target) {
+              if (target && isLocalhostUrl(target)) {
                 const proxyBase = `${lanHost}/api/mobile/preview-proxy`;
                 const token = signPreviewToken(target);
                 entry.proxyPreviewUrl = `${proxyBase}?upstream=${encodeURIComponent(target)}&tok=${token}`;
