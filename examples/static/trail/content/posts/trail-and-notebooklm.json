@@ -1,6 +1,6 @@
 {
   "slug": "trail-and-notebooklm",
-  "status": "draft",
+  "status": "published",
   "data": {
     "title": "Trail and NotebookLM: Same Ethos, Different Artifact",
     "excerpt": "NotebookLM proved source-grounded ingest-time tools can ship to millions. Trail shares that ethos and diverges on one question: what the system leaves behind.",
@@ -17,8 +17,15 @@
     ],
     "readTime": "6 min read",
     "relatedPosts": "how-a-brain-actually-remembers",
-    "relatedPages": "the-1945-concept"
+    "relatedPages": "the-1945-concept",
+    "_lastEditedBy": {
+      "userId": "fb4eda6a-bc5c-4dec-8cb6-c77c9fb74cd9",
+      "name": "Christian Broberg",
+      "email": "cb@webhouse.dk",
+      "at": "2026-04-15T21:27:39.535Z"
+    }
   },
   "id": "trail-and-notebooklm",
-  "_fieldMeta": {}
+  "_fieldMeta": {},
+  "updatedAt": "2026-04-15T21:27:39.538Z"
 }
