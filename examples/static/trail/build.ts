@@ -343,11 +343,11 @@ body[data-menu-open="true"] { overflow: hidden; }
 .hero-inner {
   position: relative; z-index: 10;
   max-width: 56rem; margin: 0 auto;
-  padding: 0 1rem;
+  padding: 0 1.5rem;
   text-align: center;
   width: 100%;
 }
-@media (min-width: 640px) { .hero-inner { padding: 0 1.5rem; } }
+@media (min-width: 640px) { .hero-inner { padding: 0 2rem; } }
 .eyebrow {
   display: inline-flex; align-items: center; gap: 0.5rem;
   padding: 0.25rem 0.75rem; margin-bottom: 2rem;
@@ -427,7 +427,7 @@ body[data-menu-open="true"] { overflow: hidden; }
 
 /* Features */
 .features {
-  padding: 4rem 1rem;
+  padding: 4rem 1.5rem;
   border-top: 1px solid var(--fg-10);
 }
 @media (min-width: 768px) { .features { padding: 6rem 1.5rem; } }
@@ -478,9 +478,9 @@ body[data-menu-open="true"] { overflow: hidden; }
 }
 
 /* Article (long-form pages) */
-.container { max-width: 44rem; margin: 0 auto; padding: 0 1rem; }
-@media (min-width: 640px) { .container { padding: 0 1.5rem; } }
-.article { padding: 5rem 0 3rem; }
+.container { max-width: 44rem; margin: 0 auto; padding: 0 1.5rem; }
+@media (min-width: 640px) { .container { padding: 0 2rem; } }
+.article { padding: 6rem 0 3rem; }
 @media (min-width: 768px) { .article { padding: 7rem 0 4rem; } }
 .article-header { margin-bottom: 3rem; border-bottom: 1px solid var(--fg-10); padding-bottom: 2rem; }
 .article-eyebrow {
@@ -573,7 +573,7 @@ body[data-menu-open="true"] { overflow: hidden; }
 /* Footer */
 .footer {
   border-top: 1px solid var(--fg-10);
-  padding: 2rem 1rem;
+  padding: 2.5rem 1.5rem;
   background: var(--bg);
 }
 @media (min-width: 768px) { .footer { padding: 3rem 1.5rem; } }
