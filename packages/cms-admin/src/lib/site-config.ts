@@ -52,7 +52,7 @@ export interface SiteConfig {
   linkCheckTime: string;
 
   /** Deploy configuration */
-  deployProvider: "off" | "vercel" | "netlify" | "flyio" | "cloudflare" | "github-pages" | "custom";
+  deployProvider: "off" | "vercel" | "netlify" | "flyio" | "flyio-live" | "cloudflare" | "cloudflare-pages" | "github-pages" | "custom";
   deployHookUrl: string;
   deployApiToken: string;
   deployAppName: string;  // Fly.io app name or GitHub repo
@@ -63,6 +63,18 @@ export interface SiteConfig {
   deployCustomDomain: string;
   /** Auto-deploy when content is saved */
   deployOnSave: boolean;
+
+  /** F133 Fly Live — region for the volume-backed site (e.g. arn, fra, iad) */
+  deployFlyLiveRegion: string;
+  /** F133 Fly Live — persistent volume name (default: "site_data") */
+  deployFlyLiveVolumeName: string;
+  /** F133 Fly Live — HMAC secret shared with the sync-endpoint. Auto-generated on first deploy. */
+  deployFlyLiveSyncSecret: string;
+
+  /** F133 Cloudflare Pages (direct) — account ID */
+  deployCloudflareAccountId: string;
+  /** F133 Cloudflare Pages (direct) — project name (slug) */
+  deployCloudflareProjectName: string;
 
   /** AI Image Analysis: how to handle already-analyzed images in batch
    *  "ask" = prompt user, "skip" = skip existing, "overwrite" = always re-analyze */
@@ -182,6 +194,11 @@ async function defaults(): Promise<SiteConfig> {
     deployProductionUrl: "",
     deployCustomDomain: "",
     deployOnSave: false,
+    deployFlyLiveRegion: "arn",
+    deployFlyLiveVolumeName: "site_data",
+    deployFlyLiveSyncSecret: "",
+    deployCloudflareAccountId: "",
+    deployCloudflareProjectName: "",
     backupSchedule: "off",
     backupTime: "03:00",
     backupRetentionDays: 30,

@@ -14,7 +14,16 @@ import { resolveToken } from "./site-pool";
 import { getAdminConfig } from "./cms";
 import { runSiteBuild } from "./build/run-site-build";
 
-export type DeployProvider = "off" | "vercel" | "netlify" | "flyio" | "cloudflare" | "github-pages" | "custom";
+export type DeployProvider =
+  | "off"
+  | "vercel"
+  | "netlify"
+  | "flyio"
+  | "flyio-live"
+  | "cloudflare"
+  | "cloudflare-pages"
+  | "github-pages"
+  | "custom";
 
 export interface DeployEntry {
   id: string;
@@ -135,6 +144,147 @@ export async function triggerDeploy(): Promise<DeployEntry> {
         if (!config.deployHookUrl) throw new Error("Deploy hook URL not configured");
         await postHook(config.deployHookUrl);
         entry.status = "success";
+        break;
+
+      case "cloudflare-pages": {
+        // F133 — Cloudflare Pages (direct API upload)
+        const cfToken = token || config.deployApiToken;
+        const cfAccountId = config.deployCloudflareAccountId;
+        let cfProjectName = config.deployCloudflareProjectName;
+        if (!cfToken) throw new Error("Cloudflare Pages requires an API token (Pages:Edit permission).");
+        if (!cfAccountId) throw new Error("Cloudflare Pages requires your Cloudflare Account ID.");
+        if (!cfProjectName) {
+          const siteEntry = await getActiveSiteEntry();
+          if (siteEntry) {
+            cfProjectName = slugifyForCloudflare(siteEntry.name);
+            try { await writeSiteConfig({ deployCloudflareProjectName: cfProjectName }); } catch { /* non-fatal */ }
+          }
+        }
+        if (!cfProjectName) throw new Error("Cloudflare Pages requires a project name.");
+
+        // Build the site
+        const cfSitePaths = await getActiveSitePaths();
+        const cfBuildFile = path.join(cfSitePaths.projectDir, "build.ts");
+        let cfCmsConfig;
+        try { cfCmsConfig = await getAdminConfig(); } catch { cfCmsConfig = null; }
+        const cfHasCustomBuild = !!cfCmsConfig?.build?.command;
+        if (!existsSync(cfBuildFile) && !cfHasCustomBuild) {
+          throw new Error("Cloudflare Pages requires a build.ts or a build.command in cms.config.ts — it deploys static output.");
+        }
+        const cfDeployDir = path.join(cfSitePaths.projectDir, "deploy");
+        if (existsSync(cfDeployDir)) rmSync(cfDeployDir, { recursive: true, force: true });
+        await runSiteBuild({
+          projectDir: cfSitePaths.projectDir,
+          cmsConfig: cfCmsConfig!,
+          deployOutDir: "deploy",
+          basePath: "",
+        });
+        if (!existsSync(cfDeployDir)) {
+          throw new Error("Build completed but no deploy/ directory was created.");
+        }
+
+        const { cloudflarePagesDeploy } = await import("./deploy/cloudflare-pages-provider");
+        const cfResult = await cloudflarePagesDeploy(
+          {
+            accountId: cfAccountId,
+            projectName: cfProjectName,
+            apiToken: cfToken,
+          },
+          cfDeployDir,
+        );
+
+        entry.url = cfResult.url;
+        entry.status = "success";
+        console.log(`[deploy] cloudflare-pages: ${cfResult.filesUploaded} files uploaded (${cfResult.durationMs}ms)`);
+
+        const cfUpdates: Record<string, string> = {};
+        if (!config.deployProductionUrl) cfUpdates.deployProductionUrl = cfResult.url;
+        const cfPreview = (await readSiteConfig()).previewSiteUrl;
+        if (!cfPreview || cfPreview === "http://localhost:3000" || cfPreview === "") {
+          cfUpdates.previewSiteUrl = cfResult.url;
+        }
+        if (Object.keys(cfUpdates).length > 0) {
+          try { await writeSiteConfig(cfUpdates); } catch { /* non-fatal */ }
+        }
+      }
+        break;
+
+      case "flyio-live": {
+        // F133 — Fly.io Live (volume sync, no Docker rebuild per edit)
+        let useToken = token || config.deployApiToken;
+        if (!useToken) {
+          throw new Error("Fly.io Live requires an API token. Get one at fly.io/dashboard → Tokens.");
+        }
+        let useAppName = appName || config.deployAppName;
+        if (!useAppName) {
+          const siteEntry = await getActiveSiteEntry();
+          if (siteEntry) {
+            useAppName = flyAppName(siteEntry.name, siteEntry.id);
+            try { await writeSiteConfig({ deployAppName: useAppName }); } catch { /* non-fatal */ }
+          }
+        }
+        if (!useAppName) throw new Error("Fly.io Live requires an app name.");
+
+        // Ensure we have a sync secret
+        let syncSecret = config.deployFlyLiveSyncSecret;
+        if (!syncSecret) {
+          const { generateSyncSecret } = await import("./deploy/fly-live-provider");
+          syncSecret = generateSyncSecret();
+          await writeSiteConfig({ deployFlyLiveSyncSecret: syncSecret });
+        }
+
+        // Build the site locally first
+        const flyLiveSitePaths = await getActiveSitePaths();
+        const flyLiveBuildFile = path.join(flyLiveSitePaths.projectDir, "build.ts");
+        let flyLiveCmsConfig;
+        try { flyLiveCmsConfig = await getAdminConfig(); } catch { flyLiveCmsConfig = null; }
+        const hasCustomBuild = !!flyLiveCmsConfig?.build?.command;
+        if (!existsSync(flyLiveBuildFile) && !hasCustomBuild) {
+          throw new Error("Fly.io Live requires a build.ts or a build.command in cms.config.ts — it deploys static output. Use the regular 'Fly.io (rebuild)' provider for Next.js/SSR apps.");
+        }
+        const flyLiveDeployDir = path.join(flyLiveSitePaths.projectDir, "deploy");
+        if (existsSync(flyLiveDeployDir)) {
+          rmSync(flyLiveDeployDir, { recursive: true, force: true });
+        }
+        await runSiteBuild({
+          projectDir: flyLiveSitePaths.projectDir,
+          cmsConfig: flyLiveCmsConfig!,
+          deployOutDir: "deploy",
+          basePath: "",
+        });
+        if (!existsSync(flyLiveDeployDir)) {
+          throw new Error("Build completed but no deploy/ directory was created.");
+        }
+
+        const { flyLiveDeploy } = await import("./deploy/fly-live-provider");
+        const result = await flyLiveDeploy(
+          useToken,
+          {
+            appName: useAppName,
+            region: config.deployFlyLiveRegion || "arn",
+            volumeName: config.deployFlyLiveVolumeName || "site_data",
+            syncSecret,
+            customDomain: config.deployCustomDomain || undefined,
+          },
+          flyLiveDeployDir,
+        );
+
+        entry.url = result.url;
+        entry.status = "success";
+        console.log(
+          `[deploy] fly-live ${result.mode}: ${result.filesUploaded} uploaded, ${result.filesRemoved} removed, ${result.filesUnchanged} unchanged (${result.durationMs}ms)`,
+        );
+
+        const flyLiveUpdates: Record<string, string> = {};
+        if (!config.deployProductionUrl) flyLiveUpdates.deployProductionUrl = result.url;
+        const flyLivePreview = (await readSiteConfig()).previewSiteUrl;
+        if (!flyLivePreview || flyLivePreview === "http://localhost:3000" || flyLivePreview === "") {
+          flyLiveUpdates.previewSiteUrl = result.url;
+        }
+        if (Object.keys(flyLiveUpdates).length > 0) {
+          try { await writeSiteConfig(flyLiveUpdates); } catch { /* non-fatal */ }
+        }
+      }
         break;
 
       case "flyio": {
@@ -758,6 +908,16 @@ function flyAppName(siteName: string, siteId: string): string {
     .replace(/^-+|-+$/g, "")
     || siteId;
   return `${slug}-site`;
+}
+
+// F133 — Cloudflare Pages project slugs must be lowercase + hyphen, 1–58 chars.
+function slugifyForCloudflare(name: string): string {
+  const s = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 58);
+  return s || "webhouse-site";
 }
 
 /**

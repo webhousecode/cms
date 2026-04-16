@@ -7,7 +7,16 @@ import { CustomSelect } from "@/components/ui/custom-select";
 import { Rocket, ExternalLink, Check, X, Loader2, RefreshCw, Copy } from "lucide-react";
 import { DeployModal } from "@/components/deploy-modal";
 
-type DeployProvider = "off" | "vercel" | "netlify" | "flyio" | "cloudflare" | "github-pages" | "custom";
+type DeployProvider =
+  | "off"
+  | "vercel"
+  | "netlify"
+  | "flyio"
+  | "flyio-live"
+  | "cloudflare"
+  | "cloudflare-pages"
+  | "github-pages"
+  | "custom";
 
 interface DeployEntry {
   id: string;
@@ -28,6 +37,13 @@ interface DeployConfig {
   deployProductionUrl: string;
   deployCustomDomain: string;
   deployOnSave: boolean;
+  // F133 Fly Live
+  deployFlyLiveRegion: string;
+  deployFlyLiveVolumeName: string;
+  deployFlyLiveSyncSecret: string;
+  // F133 Cloudflare Pages (direct)
+  deployCloudflareAccountId: string;
+  deployCloudflareProjectName: string;
 }
 
 const CONFIG_DEFAULTS: DeployConfig = {
@@ -39,6 +55,11 @@ const CONFIG_DEFAULTS: DeployConfig = {
   deployProductionUrl: "",
   deployCustomDomain: "",
   deployOnSave: false,
+  deployFlyLiveRegion: "arn",
+  deployFlyLiveVolumeName: "site_data",
+  deployFlyLiveSyncSecret: "",
+  deployCloudflareAccountId: "",
+  deployCloudflareProjectName: "",
 };
 
 export function DeploySettingsPanel() {
@@ -80,6 +101,11 @@ export function DeploySettingsPanel() {
       deployProductionUrl: (cfgRes.deployProductionUrl as string) ?? "",
       deployCustomDomain: (cfgRes.deployCustomDomain as string) ?? "",
       deployOnSave: (cfgRes.deployOnSave as boolean) ?? false,
+      deployFlyLiveRegion: (cfgRes.deployFlyLiveRegion as string) ?? "arn",
+      deployFlyLiveVolumeName: (cfgRes.deployFlyLiveVolumeName as string) ?? "site_data",
+      deployFlyLiveSyncSecret: (cfgRes.deployFlyLiveSyncSecret as string) ?? "",
+      deployCloudflareAccountId: (cfgRes.deployCloudflareAccountId as string) ?? "",
+      deployCloudflareProjectName: (cfgRes.deployCloudflareProjectName as string) ?? "",
     });
     setDeploys(logRes.deploys ?? []);
     setLoading(false);
@@ -134,9 +160,11 @@ export function DeploySettingsPanel() {
     { value: "off", label: "Off" },
     { value: "vercel", label: "Vercel" },
     { value: "netlify", label: "Netlify" },
-    { value: "flyio", label: "Fly.io" },
-    { value: "cloudflare", label: "Cloudflare Pages" },
+    { value: "cloudflare-pages", label: "Cloudflare Pages (direct)" },
     { value: "github-pages", label: "GitHub Pages" },
+    { value: "flyio-live", label: "Fly.io Live (instant sync)" },
+    { value: "flyio", label: "Fly.io (rebuild)" },
+    { value: "cloudflare", label: "Cloudflare (webhook)" },
     { value: "custom", label: "Custom webhook" },
   ];
 
@@ -146,15 +174,17 @@ export function DeploySettingsPanel() {
 
   const isAutoConfigured = config.deployProvider === "off" && canAutoDeploy;
   const needsHookUrl = ["vercel", "netlify", "cloudflare", "custom"].includes(config.deployProvider);
-  const needsToken = ["flyio"].includes(config.deployProvider) || (config.deployProvider === "github-pages" && !canAutoDeploy);
-  const needsAppName = ["flyio"].includes(config.deployProvider) || (config.deployProvider === "github-pages" && !canAutoDeploy);
+  const needsToken = ["flyio", "flyio-live"].includes(config.deployProvider) || (config.deployProvider === "github-pages" && !canAutoDeploy);
+  const needsAppName = ["flyio", "flyio-live"].includes(config.deployProvider) || (config.deployProvider === "github-pages" && !canAutoDeploy);
 
   const providerLabel: Record<string, string> = {
     "github-pages": "GitHub Pages",
     vercel: "Vercel",
     netlify: "Netlify",
-    flyio: "Fly.io",
-    cloudflare: "Cloudflare Pages",
+    flyio: "Fly.io (rebuild)",
+    "flyio-live": "Fly.io Live",
+    cloudflare: "Cloudflare (webhook)",
+    "cloudflare-pages": "Cloudflare Pages",
     custom: "Custom webhook",
   };
 
@@ -230,8 +260,10 @@ export function DeploySettingsPanel() {
             }}>
               {config.deployProvider === "vercel" && "Recommended for Next.js and static sites. Supports SSR, API routes, and edge functions."}
               {config.deployProvider === "netlify" && "Supports Next.js via adapter, static sites, and serverless functions."}
-              {config.deployProvider === "flyio" && "Docker-based. Best for SSR apps (Next.js, Remix) and custom servers. Deploys to arn (Stockholm)."}
-              {config.deployProvider === "cloudflare" && "Static sites and Workers. Limited SSR support — not recommended for full Next.js apps."}
+              {config.deployProvider === "flyio" && "Docker-based rebuild on every deploy. Best for SSR apps (Next.js, Remix) that genuinely need Docker. Slow for content edits — use Fly.io Live for static sites."}
+              {config.deployProvider === "flyio-live" && "Static sites on Fly. First deploy spins up a Caddy/Bun Docker container + volume; every subsequent edit pushes only changed files (~200 ms–1 s). Region: configurable, default arn (Stockholm)."}
+              {config.deployProvider === "cloudflare" && "Legacy webhook-only — just POSTs to a Cloudflare Pages deploy hook URL. Prefer 'Cloudflare Pages (direct)' for full integration."}
+              {config.deployProvider === "cloudflare-pages" && "Direct Cloudflare Pages API upload. 300+ global edge PoPs, free tier covers most small sites. Fastest option for pure-static sites worldwide."}
               {config.deployProvider === "github-pages" && canAutoDeploy && "Ready to deploy — GitHub connected. A repository will be created automatically if needed, and your site files pushed to GitHub Pages in one click."}
               {config.deployProvider === "github-pages" && !canAutoDeploy && "Static files only. Connect GitHub above, or provide a token and repository manually."}
               {config.deployProvider === "custom" && "Any service that accepts a POST request to trigger a build."}
@@ -281,7 +313,7 @@ export function DeploySettingsPanel() {
           </div>
         )}
 
-        {config.deployProvider === "flyio" && (
+        {(config.deployProvider === "flyio" || config.deployProvider === "flyio-live") && (
           <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
             <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Organization</label>
             <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: 0 }}>
@@ -298,6 +330,72 @@ export function DeploySettingsPanel() {
             <input type="url" value={config.deployHookUrl} onChange={(e) => updateConfig((c) => ({ ...c, deployHookUrl: e.target.value }))}
               placeholder="https://..." style={inputStyle} />
           </div>
+        )}
+
+        {config.deployProvider === "flyio-live" && (
+          <>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+              <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Region</label>
+              <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: 0 }}>
+                Fly region code for the volume. Cannot be changed after first deploy.
+              </p>
+              <input type="text" value={config.deployFlyLiveRegion} onChange={(e) => updateConfig((c) => ({ ...c, deployFlyLiveRegion: e.target.value }))}
+                placeholder="arn" style={inputStyle} />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+              <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Volume name</label>
+              <input type="text" value={config.deployFlyLiveVolumeName} onChange={(e) => updateConfig((c) => ({ ...c, deployFlyLiveVolumeName: e.target.value }))}
+                placeholder="site_data" style={inputStyle} />
+            </div>
+            {config.deployFlyLiveSyncSecret && (
+              <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+                <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Sync secret status</label>
+                <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: 0 }}>
+                  HMAC secret shared with the Fly container. Generated on first deploy. Rotate from the "Rebuild infrastructure" action (not yet in UI — use CLI or regenerate manually).
+                </p>
+                <div style={{
+                  fontSize: "0.7rem", fontFamily: "monospace",
+                  padding: "0.3rem 0.5rem", borderRadius: "4px",
+                  background: "var(--muted)", color: "var(--muted-foreground)",
+                }}>
+                  {config.deployFlyLiveSyncSecret.slice(0, 12)}…{config.deployFlyLiveSyncSecret.slice(-4)} (configured)
+                </div>
+              </div>
+            )}
+          </>
+        )}
+
+        {config.deployProvider === "cloudflare-pages" && (
+          <>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>API Token</label>
+                <a href="https://dash.cloudflare.com/profile/api-tokens" target="_blank" rel="noopener noreferrer"
+                  style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>Get token <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
+              </div>
+              <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: 0 }}>
+                Permission: "Account → Cloudflare Pages → Edit"
+              </p>
+              <input type="password" value={config.deployApiToken} onChange={(e) => updateConfig((c) => ({ ...c, deployApiToken: e.target.value }))}
+                placeholder="Token..." style={{ ...inputStyle, fontFamily: "inherit" }} />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+              <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Account ID</label>
+              <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: 0 }}>
+                Cloudflare dashboard → right sidebar → Account ID
+              </p>
+              <input type="text" value={config.deployCloudflareAccountId} onChange={(e) => updateConfig((c) => ({ ...c, deployCloudflareAccountId: e.target.value }))}
+                placeholder="abcdef0123456789..." style={inputStyle} />
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+              <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Project name</label>
+              <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: 0 }}>
+                Lowercase letters, digits, hyphens. Auto-created on first deploy if missing.
+              </p>
+              <input type="text" value={config.deployCloudflareProjectName} onChange={(e) => updateConfig((c) => ({ ...c, deployCloudflareProjectName: e.target.value }))}
+                placeholder="my-site" style={inputStyle} />
+            </div>
+          </>
         )}
       </SettingsCard>
 
