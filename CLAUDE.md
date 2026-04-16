@@ -122,6 +122,10 @@ These conflict with CMS admin's built-in UI panels and confuse editors. Use `glo
 
 For bilingual/multilingual static sites with `/da/`, `/en/` locale prefixes, CMS admin still constructs preview URLs as `urlPrefix + "/" + slug` (e.g. `/blog/my-post-da`). The build.ts MUST output redirect HTML files at the CMS-expected slug paths that redirect to the actual locale URL (e.g. `/da/blog/my-post/`). Without this, preview gives 404 for all non-default-locale documents.
 
+## Hard Rule: Tab Titles Start With a Capital Letter
+
+**EVERY tab title in the CMS admin UI MUST start with a capital letter.** Applies to all tab components — `Tabs`, section tabs, Settings tabs, Account Preferences tabs, inline page tabs, etc. Examples: `"Drafts"`, `"Published"`, `"Media"`, `"Access tokens"` (NOT `"drafts"`, `"published"`, `"access tokens"`). Only the first word is capitalized (sentence case) unless it's a proper noun.
+
 ## Hard Rule: Every New Page, Route, and Sidebar Item MUST Be Permission-Gated
 
 **Before merging ANY new admin page, API route, sidebar item, command palette entry, or chat tool, you MUST answer this question explicitly: "Is this admin-only or also for editors?" — and wire the answer into the permission system on ALL layers.**
