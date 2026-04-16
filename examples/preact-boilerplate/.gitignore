@@ -5,3 +5,6 @@ dist/
 .DS_Store
 bun.lock
 package-lock.json
+
+# CMS runtime data (secrets, deploy log — never commit)
+_data/

@@ -1,0 +1,20 @@
+# CMS runtime data (secrets, deploy log, user state — never commit)
+_data/
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+.next/
+build/
+out/
+
+# Environment
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# TypeScript
+*.tsbuildinfo
