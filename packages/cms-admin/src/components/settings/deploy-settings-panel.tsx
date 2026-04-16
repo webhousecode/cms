@@ -256,6 +256,18 @@ export function DeploySettingsPanel() {
   const handleDeploy = useCallback(async () => {
     setDeploying(true);
     try {
+      // Always persist current panel state to disk BEFORE deploying so the
+      // server-side triggerDeploy reads the values the user actually sees in
+      // the UI (custom domain, provider config, etc.). Without this, typing
+      // a custom domain and clicking Deploy without first hitting Save would
+      // silently deploy the OLD config.
+      await fetch("/api/admin/site-config", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(config),
+      });
+      window.dispatchEvent(new CustomEvent("cms:settings-saved"));
+
       const res = await fetch("/api/admin/deploy", { method: "POST" });
       const data = await res.json() as DeployEntry;
       setDeploys((prev) => [data, ...prev]);
@@ -264,7 +276,7 @@ export function DeploySettingsPanel() {
       }
     } catch { /* handled by deploy log */ }
     setDeploying(false);
-  }, [config.deployProductionUrl]);
+  }, [config]);
 
   if (loading) {
     return (
