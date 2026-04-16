@@ -1,0 +1,20 @@
+{
+  "slug": "contact",
+  "status": "published",
+  "data": {
+    "title": "Contact",
+    "content": "## Get in Touch\n\nWe'd love to hear from you. Visit us at our office or reach out online.",
+    "location": {
+      "lat": 57.048,
+      "lng": 9.919,
+      "address": "Aalborg, Denmark",
+      "zoom": 13
+    },
+    "_seo": {
+      "metaTitle": "Contact \u2014 My Site",
+      "metaDescription": "Get in touch with us. Visit our office in Aalborg, Denmark."
+    }
+  },
+  "id": "contact",
+  "_fieldMeta": {}
+}

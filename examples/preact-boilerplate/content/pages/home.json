@@ -1,0 +1,34 @@
+{
+  "slug": "home",
+  "status": "published",
+  "data": {
+    "title": "Welcome",
+    "sections": [
+      {
+        "_block": "hero",
+        "tagline": "Build Fast. Ship Today.",
+        "description": "A production-ready Next.js starter powered by webhouse.app CMS. Edit content in the admin, deploy anywhere.",
+        "ctas": [
+          { "label": "Get Started", "href": "/blog" },
+          { "label": "Learn More", "href": "/about" }
+        ]
+      },
+      {
+        "_block": "features",
+        "title": "Why This Stack",
+        "items": [
+          { "icon": "\u26a1", "title": "Next.js 16+", "description": "App Router, React Server Components, TypeScript strict mode. The modern React stack." },
+          { "icon": "\u270f\ufe0f", "title": "CMS-Managed", "description": "Edit content in webhouse.app admin. Richtext, blocks, media, SEO \u2014 all built in." },
+          { "icon": "\ud83d\uddfa\ufe0f", "title": "Maps Included", "description": "OpenStreetMap integration with Leaflet. No API key required." },
+          { "icon": "\ud83d\ude80", "title": "Deploy Anywhere", "description": "Vercel, Netlify, Docker, Fly.io \u2014 standard Next.js deployment." }
+        ]
+      }
+    ],
+    "_seo": {
+      "metaTitle": "My Site \u2014 Build Fast, Ship Today",
+      "metaDescription": "A production-ready Next.js starter powered by webhouse.app CMS."
+    }
+  },
+  "id": "home",
+  "_fieldMeta": {}
+}
