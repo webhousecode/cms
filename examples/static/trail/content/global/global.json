@@ -6,8 +6,8 @@
     "siteDescription": "A minimalist engine to ingest, connect, and retrieve your organization's collective intelligence. Reimagining Vannevar Bush's 1945 vision with geometric precision.",
     "logo": "/uploads/memx-logo.svg",
     "navLinks": [
-      { "label": "Architecture", "href": "#features" },
-      { "label": "Documentation", "href": "#docs" },
+      { "label": "Architecture", "href": "/#features" },
+      { "label": "Documentation", "href": "/#docs" },
       { "label": "Trails", "href": "/trails/" },
       { "label": "The 1945 Concept", "href": "/the-1945-concept/" }
     ],
