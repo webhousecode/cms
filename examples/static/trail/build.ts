@@ -100,11 +100,34 @@ const CANVAS_SCRIPT = `
 (function(){
   const canvas = document.getElementById('trail-graph');
   if (!canvas) return;
+  /* Respect reduced-motion — draw one static frame and stop. */
+  const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
   const ctx = canvas.getContext('2d');
-  let animationFrameId;
+  let animationFrameId = 0;
+  let running = false;
   let particles = [];
   const mouse = { x: null, y: null };
   const DPR = Math.min(window.devicePixelRatio || 1, 2);
+
+  /* Cache colors at mount; re-read only on theme change. Reading CSS vars
+   * with getComputedStyle on every frame forces style recalc and was
+   * pegging CPU/GPU on long-running pages. */
+  const colors = { node: '#1a1715', accent: '#e8a87c', line: '26, 23, 21', accentLine: '232, 168, 124' };
+  function refreshColors(){
+    const cs = getComputedStyle(document.documentElement);
+    const read = function(n, f){ return (cs.getPropertyValue(n).trim() || f); };
+    colors.node = read('--graph-node', colors.node);
+    colors.accent = read('--graph-accent', colors.accent);
+    colors.line = read('--graph-line', colors.line);
+    colors.accentLine = read('--graph-accent-line', colors.accentLine);
+  }
+  refreshColors();
+
+  /* Re-cache when theme toggles (data-theme attribute changes on <html>). */
+  if ('MutationObserver' in window) {
+    new MutationObserver(refreshColors).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  }
 
   function resize(){
     canvas.width = window.innerWidth * DPR;
@@ -126,8 +149,10 @@ const CANVAS_SCRIPT = `
   Particle.prototype.update = function(){
     this.x += this.vx;
     this.y += this.vy;
-    if (this.x < 0 || this.x > window.innerWidth) this.vx = -this.vx;
-    if (this.y < 0 || this.y > window.innerHeight) this.vy = -this.vy;
+    /* Bound by intent, not by position — a particle that has drifted
+     * past an edge should only flip if it's still moving outward. */
+    if ((this.x < 0 && this.vx < 0) || (this.x > window.innerWidth && this.vx > 0)) this.vx = -this.vx;
+    if ((this.y < 0 && this.vy < 0) || (this.y > window.innerHeight && this.vy > 0)) this.vy = -this.vy;
     if (mouse.x !== null && mouse.y !== null) {
       const dx = mouse.x - this.x;
       const dy = mouse.y - this.y;
@@ -135,17 +160,11 @@ const CANVAS_SCRIPT = `
       if (d < 100) { this.x -= dx * 0.01; this.y -= dy * 0.01; }
     }
   };
-  function cssVar(name, fallback){
-    var v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-    return v || fallback;
-  }
   Particle.prototype.draw = function(){
-    var nodeColor = cssVar('--graph-node', '#1a1715');
-    var accentColor = cssVar('--graph-accent', '#e8a87c');
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.baseRadius, 0, Math.PI * 2);
-    ctx.fillStyle = this.isAccent ? accentColor : nodeColor;
-    if (this.isAccent) { ctx.shadowBlur = 10; ctx.shadowColor = accentColor; }
+    ctx.fillStyle = this.isAccent ? colors.accent : colors.node;
+    if (this.isAccent) { ctx.shadowBlur = 10; ctx.shadowColor = colors.accent; }
     else { ctx.shadowBlur = 0; }
     ctx.fill();
   };
@@ -157,8 +176,6 @@ const CANVAS_SCRIPT = `
   }
 
   function drawLines(){
-    var lineRgb = cssVar('--graph-line', '26, 23, 21');
-    var accentLineRgb = cssVar('--graph-accent-line', '232, 168, 124');
     for (let i = 0; i < particles.length; i++){
       for (let j = i + 1; j < particles.length; j++){
         const dx = particles[i].x - particles[j].x;
@@ -168,9 +185,9 @@ const CANVAS_SCRIPT = `
           const opacity = 1 - (d / 160);
           ctx.beginPath();
           if (particles[i].isAccent || particles[j].isAccent) {
-            ctx.strokeStyle = 'rgba(' + accentLineRgb + ', ' + (opacity * 0.5) + ')';
+            ctx.strokeStyle = 'rgba(' + colors.accentLine + ', ' + (opacity * 0.5) + ')';
           } else {
-            ctx.strokeStyle = 'rgba(' + lineRgb + ', ' + (opacity * 0.18) + ')';
+            ctx.strokeStyle = 'rgba(' + colors.line + ', ' + (opacity * 0.18) + ')';
           }
           ctx.lineWidth = 0.6;
           ctx.moveTo(particles[i].x, particles[i].y);
@@ -181,19 +198,46 @@ const CANVAS_SCRIPT = `
     }
   }
 
-  function animate(){
+  function renderOneFrame(){
     ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
     for (const p of particles){ p.update(); p.draw(); }
     drawLines();
-    animationFrameId = requestAnimationFrame(animate);
+  }
+
+  function loop(){
+    if (!running) return;
+    renderOneFrame();
+    animationFrameId = requestAnimationFrame(loop);
+  }
+  function start(){
+    if (running || reduceMotion) return;
+    running = true;
+    loop();
+  }
+  function stop(){
+    running = false;
+    if (animationFrameId) cancelAnimationFrame(animationFrameId);
+    animationFrameId = 0;
   }
 
   window.addEventListener('resize', resize);
   window.addEventListener('mousemove', function(e){ mouse.x = e.clientX; mouse.y = e.clientY; });
   window.addEventListener('mouseout', function(){ mouse.x = null; mouse.y = null; });
+  /* Pause when the tab is hidden — rAF keeps firing in some browsers for
+   * several seconds before throttling, and an invisible tab shouldn't
+   * burn GPU. */
+  document.addEventListener('visibilitychange', function(){
+    if (document.hidden) stop();
+    else start();
+  });
 
   resize();
-  animate();
+  if (reduceMotion) {
+    /* Draw one static starfield so the background isn't empty. */
+    renderOneFrame();
+  } else {
+    start();
+  }
 })();
 `;
 
