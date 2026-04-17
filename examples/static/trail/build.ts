@@ -164,36 +164,41 @@ const CANVAS_SCRIPT = `
     ctx.beginPath();
     ctx.arc(this.x, this.y, this.baseRadius, 0, Math.PI * 2);
     ctx.fillStyle = this.isAccent ? colors.accent : colors.node;
-    if (this.isAccent) { ctx.shadowBlur = 10; ctx.shadowColor = colors.accent; }
-    else { ctx.shadowBlur = 0; }
     ctx.fill();
   };
 
   function initParticles(){
     particles = [];
-    const count = Math.floor((window.innerWidth * window.innerHeight) / 15000);
+    /* Cap at 150 — O(n²) linking loop becomes the bottleneck past that.
+     * On 4K screens the old formula produced 400+ particles. */
+    const count = Math.min(150, Math.floor((window.innerWidth * window.innerHeight) / 15000));
     for (let i = 0; i < count; i++) particles.push(new Particle());
   }
 
+  const LINK_DIST = 160;
+  const LINK_DIST_SQ = LINK_DIST * LINK_DIST;
   function drawLines(){
     for (let i = 0; i < particles.length; i++){
+      const pi = particles[i];
       for (let j = i + 1; j < particles.length; j++){
-        const dx = particles[i].x - particles[j].x;
-        const dy = particles[i].y - particles[j].y;
-        const d = Math.sqrt(dx*dx + dy*dy);
-        if (d < 160){
-          const opacity = 1 - (d / 160);
-          ctx.beginPath();
-          if (particles[i].isAccent || particles[j].isAccent) {
-            ctx.strokeStyle = 'rgba(' + colors.accentLine + ', ' + (opacity * 0.5) + ')';
-          } else {
-            ctx.strokeStyle = 'rgba(' + colors.line + ', ' + (opacity * 0.18) + ')';
-          }
-          ctx.lineWidth = 0.6;
-          ctx.moveTo(particles[i].x, particles[i].y);
-          ctx.lineTo(particles[j].x, particles[j].y);
-          ctx.stroke();
+        const pj = particles[j];
+        const dx = pi.x - pj.x;
+        const dy = pi.y - pj.y;
+        /* Squared-distance early-bail — skip sqrt for the ~95% of pairs
+         * that are too far apart to draw a line between. */
+        const d2 = dx*dx + dy*dy;
+        if (d2 >= LINK_DIST_SQ) continue;
+        const opacity = 1 - (Math.sqrt(d2) / LINK_DIST);
+        ctx.beginPath();
+        if (pi.isAccent || pj.isAccent) {
+          ctx.strokeStyle = 'rgba(' + colors.accentLine + ', ' + (opacity * 0.5) + ')';
+        } else {
+          ctx.strokeStyle = 'rgba(' + colors.line + ', ' + (opacity * 0.18) + ')';
         }
+        ctx.lineWidth = 0.6;
+        ctx.moveTo(pi.x, pi.y);
+        ctx.lineTo(pj.x, pj.y);
+        ctx.stroke();
       }
     }
   }
