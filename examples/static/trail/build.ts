@@ -669,15 +669,16 @@ body[data-menu-open="true"] { overflow: hidden; }
 .svg-fullscreen-close {
   position: fixed; top: 1.25rem; right: 1.25rem;
   width: 40px; height: 40px;
+  padding: 0;
   display: inline-flex; align-items: center; justify-content: center;
   background: var(--bg-80);
   border: 1px solid var(--fg-20);
   border-radius: 50%;
   color: var(--fg);
-  font-size: 1.5rem; line-height: 1;
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s, transform 0.15s;
 }
+.svg-fullscreen-close svg { display: block; }
 .svg-fullscreen-close:hover { background: var(--fg-10); border-color: var(--accent); }
 .svg-fullscreen-close:active { transform: scale(0.95); }
 .prose figcaption {
@@ -1264,7 +1265,7 @@ function layout(title: string, content: string, metaDesc?: string): string {
       overlay.setAttribute('role', 'dialog');
       overlay.setAttribute('aria-modal', 'true');
       overlay.setAttribute('aria-label', 'Enlarged figure');
-      overlay.innerHTML = '<button type="button" class="svg-fullscreen-close" aria-label="Close">×</button><div class="svg-fullscreen-content"></div><div class="svg-fullscreen-caption"></div>';
+      overlay.innerHTML = '<button type="button" class="svg-fullscreen-close" aria-label="Close"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="6" y1="6" x2="18" y2="18"/><line x1="18" y1="6" x2="6" y2="18"/></svg></button><div class="svg-fullscreen-content"></div><div class="svg-fullscreen-caption"></div>';
       document.body.appendChild(overlay);
       var contentEl = overlay.querySelector('.svg-fullscreen-content');
       var captionEl = overlay.querySelector('.svg-fullscreen-caption');
