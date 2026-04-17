@@ -3,7 +3,7 @@
   "status": "published",
   "data": {
     "title": "Knowledge Infrastructure for the AI Era",
-    "metaDescription": "Trail is a knowledge infrastructure engine that turns your sources into a persistent, compounding wiki — maintained by an LLM on your behalf. Realizing Vannevar Bush's 1945 Memex vision with modern LLMs.",
+    "metaDescription": "Trail is a knowledge infrastructure engine that turns your sources into a persistent, compounding Neuron-graph — maintained by an LLM on your behalf. Realizing Vannevar Bush's 1945 Memex vision with modern LLMs.",
     "sections": [
       {
         "_block": "hero",
@@ -33,12 +33,12 @@
           {
             "icon": "spark",
             "title": "LLM-Compiled Wiki",
-            "description": "Sources aren't chunked and indexed — they're read by an LLM that authors a persistent wiki on your behalf. Every new fact updates existing Neurons instead of spawning isolated fragments."
+            "description": "Sources aren't chunked and indexed — they're read by an LLM that authors a persistent graph of Neurons on your behalf. Every new fact updates existing Neurons instead of spawning isolated fragments."
           },
           {
             "icon": "graph",
             "title": "Cross-Referenced Neurons",
-            "description": "Every Neuron (wiki page) links bidirectionally to its source documents and to related Neurons. Follow a claim back to its origin, or forward to everything it touches — the associative trails Vannevar Bush imagined."
+            "description": "Every Neuron links bidirectionally to its source documents and to related Neurons. Follow a claim back to its origin, or forward to everything it touches — the associative trails Vannevar Bush imagined."
           },
           {
             "icon": "search",
