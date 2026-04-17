@@ -1,0 +1,81 @@
+<svg viewBox="0 0 840 620" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Feature-by-feature comparison of Google NotebookLM and Trail, showing where they share their source-grounded ethos and where they diverge on the question of what the system leaves behind">
+  <!-- Title -->
+  <text x="420" y="42" font-family="monospace" font-size="14" fill="currentColor" text-anchor="middle" opacity="0.6" letter-spacing="1.5">SAME ETHOS · DIFFERENT ARTIFACT</text>
+
+  <!-- Column headers -->
+  <g font-family="monospace" fill="currentColor" text-anchor="middle">
+    <text x="180" y="92"  font-size="16" font-weight="bold" letter-spacing="1">PROPERTY</text>
+    <text x="455" y="92"  font-size="18" font-weight="bold" letter-spacing="1">NOTEBOOKLM</text>
+    <text x="455" y="112" font-size="12" opacity="0.55">Google · 2023</text>
+    <text x="720" y="92"  font-size="18" font-weight="bold" letter-spacing="1" fill="#e8a87c">TRAIL</text>
+    <text x="720" y="112" font-size="12" opacity="0.55">broberg.ai · 2026</text>
+  </g>
+
+  <line x1="40" y1="135" x2="800" y2="135" stroke="currentColor" stroke-width="1" opacity="0.55"/>
+
+  <!-- Column dividers -->
+  <g stroke="currentColor" stroke-width="0.5" opacity="0.18">
+    <line x1="320" y1="135" x2="320" y2="575"/>
+    <line x1="590" y1="135" x2="590" y2="575"/>
+  </g>
+
+  <!-- Row 1: Scope -->
+  <g font-family="monospace" font-size="16" fill="currentColor" text-anchor="middle">
+    <text x="180" y="175" font-weight="bold" letter-spacing="0.5">SCOPE</text>
+    <text x="455" y="170" font-size="14">one notebook · one user</text>
+    <text x="455" y="190" font-size="14" opacity="0.55">session-scoped</text>
+    <text x="720" y="170" font-size="14">persistent graph</text>
+    <text x="720" y="190" font-size="14" opacity="0.55">org-scoped · multi-user</text>
+  </g>
+  <line x1="40" y1="215" x2="800" y2="215" stroke="currentColor" stroke-width="0.4" opacity="0.2"/>
+
+  <!-- Row 2: Sources -->
+  <g font-family="monospace" font-size="16" fill="currentColor" text-anchor="middle">
+    <text x="180" y="255" font-weight="bold" letter-spacing="0.5">SOURCES</text>
+    <text x="455" y="250" font-size="14">upload per notebook</text>
+    <text x="455" y="270" font-size="14" opacity="0.55">max ~50</text>
+    <text x="720" y="250" font-size="14">continuous ingest</text>
+    <text x="720" y="270" font-size="14" opacity="0.55">thousands, versioned</text>
+  </g>
+  <line x1="40" y1="295" x2="800" y2="295" stroke="currentColor" stroke-width="0.4" opacity="0.2"/>
+
+  <!-- Row 3: Artifact -->
+  <g font-family="monospace" font-size="16" fill="currentColor" text-anchor="middle">
+    <text x="180" y="335" font-weight="bold" letter-spacing="0.5">ARTIFACT</text>
+    <text x="455" y="330" font-size="14" font-style="italic" opacity="0.7">the chat log</text>
+    <text x="455" y="350" font-size="14" opacity="0.55">gone when you close</text>
+    <text x="720" y="330" font-size="14" fill="#e8a87c">Neurons</text>
+    <text x="720" y="350" font-size="14" opacity="0.55">persistent · queryable</text>
+  </g>
+  <line x1="40" y1="375" x2="800" y2="375" stroke="currentColor" stroke-width="0.4" opacity="0.2"/>
+
+  <!-- Row 4: LLM job -->
+  <g font-family="monospace" font-size="16" fill="currentColor" text-anchor="middle">
+    <text x="180" y="415" font-weight="bold" letter-spacing="0.5">LLM JOB</text>
+    <text x="455" y="410" font-size="14">answer the question</text>
+    <text x="455" y="430" font-size="14" opacity="0.55">read-time</text>
+    <text x="720" y="410" font-size="14">maintain Neurons</text>
+    <text x="720" y="430" font-size="14" opacity="0.55">compile-time</text>
+  </g>
+  <line x1="40" y1="455" x2="800" y2="455" stroke="currentColor" stroke-width="0.4" opacity="0.2"/>
+
+  <!-- Row 5: Shareability -->
+  <g font-family="monospace" font-size="16" fill="currentColor" text-anchor="middle">
+    <text x="180" y="495" font-weight="bold" letter-spacing="0.5">SHARE</text>
+    <text x="455" y="490" font-size="14">the notebook link</text>
+    <text x="455" y="510" font-size="14" opacity="0.55">invite someone in</text>
+    <text x="720" y="490" font-size="14">the Neurons are the product</text>
+    <text x="720" y="510" font-size="14" opacity="0.55">read, link, cite directly</text>
+  </g>
+  <line x1="40" y1="535" x2="800" y2="535" stroke="currentColor" stroke-width="0.4" opacity="0.2"/>
+
+  <!-- Row 6: Who it's for -->
+  <g font-family="monospace" font-size="16" fill="currentColor" text-anchor="middle">
+    <text x="180" y="570" font-weight="bold" letter-spacing="0.5">FIT</text>
+    <text x="455" y="565" font-size="14">a researcher for an afternoon</text>
+    <text x="720" y="565" font-size="14">an organisation for a decade</text>
+  </g>
+
+  <!-- Sub-caption -->
+  <text x="420" y="605" font-family="monospace" font-size="12" fill="currentColor" text-anchor="middle" opacity="0.5" letter-spacing="0.5">NotebookLM is a chat · Trail is a place</text>
+</svg>

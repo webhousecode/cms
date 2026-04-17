@@ -7,5 +7,13 @@
   "filters-correspondence": "The same three filters under three different vocabularies: what Bandler & Grinder named in 1975, what thalamic and prefrontal circuits implement biologically, and what Trail's policy engine enforces.",
   "confidence-threshold": "Every candidate carries a scalar. Above the threshold, a Neuron is written automatically; below, a human looks at it first.",
   "contradiction-check": "Two sources making opposite claims don't silently overwrite each other. The background lint surfaces the conflict, and a curator resolves — sometimes for A, sometimes for B, sometimes by encoding the disagreement itself.",
-  "biological-trail-rag": "Seven things a brain does. Trail does six of them, at compile time. RAG does one — and only as a weak parallel to spreading activation."
+  "biological-trail-rag": "Seven things a brain does. Trail does six of them, at compile time. RAG does one — and only as a weak parallel to spreading activation.",
+  "ingest-pipeline": "The nine-step path every source takes to become a Neuron. The amber branch is auto-approved; the dashed one waits on a human curator.",
+  "query-pipeline": "Read time is short because write time was long. The amber box is where the whole architecture pays off: you read an already-compiled Neuron instead of rebuilding an answer from chunks.",
+  "rag-vs-trail-pipeline": "RAG does all the work for every query and then discards it. Trail splits the work into a compile phase (once) and a read phase (fast and repeatable).",
+  "cost-over-time": "RAG pays the same toll for every query. Trail front-loads the compile cost and then reads cheaply — the break-even is usually in the first hundred queries per Neuron.",
+  "knowledge-compounds-curve": "RAG gets no better as you feed it more sources. Trail accelerates because each new source updates every Neuron it touches.",
+  "vendor-decision": "A two-axis matrix. Trail is the answer when knowledge should both accumulate and leave a persistent, queryable artifact — which is most of the interesting cases.",
+  "notebooklm-vs-trail": "NotebookLM and Trail agree on source-grounding. They diverge on what the system leaves behind — a chat log that disappears, or a Neuron that keeps working.",
+  "artifact-persistence": "NotebookLM sessions are bottles thrown into the sea. Trail writes one Neuron and links the next source to it, then the next."
 }

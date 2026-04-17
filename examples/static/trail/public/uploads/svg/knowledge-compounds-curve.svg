@@ -1,0 +1,63 @@
+<svg viewBox="0 0 920 420" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Knowledge usefulness as a function of sources ingested: RAG stays flat while Trail compounds superlinearly">
+  <!-- Title -->
+  <text x="420" y="45" font-family="monospace" font-size="14" fill="currentColor" text-anchor="middle" opacity="0.6" letter-spacing="1.5">WHAT EACH NEW SOURCE BUYS YOU</text>
+
+  <!-- Axes -->
+  <line x1="90" y1="330" x2="780" y2="330" stroke="currentColor" stroke-width="1.2"/>
+  <line x1="90" y1="85"  x2="90"  y2="330" stroke="currentColor" stroke-width="1.2"/>
+
+  <!-- Axis labels -->
+  <text x="36"  y="95"  font-family="monospace" font-size="12" fill="currentColor" opacity="0.7">useful-</text>
+  <text x="36"  y="110" font-family="monospace" font-size="12" fill="currentColor" opacity="0.7">ness</text>
+  <text x="435" y="365" font-family="monospace" font-size="13" fill="currentColor" text-anchor="middle" letter-spacing="0.5">SOURCES INGESTED OVER TIME</text>
+
+  <!-- RAG: flat horizontal -->
+  <line x1="90" y1="265" x2="780" y2="265" stroke="currentColor" stroke-width="1.8"/>
+  <g fill="currentColor">
+    <circle cx="160" cy="265" r="3"/>
+    <circle cx="260" cy="265" r="3"/>
+    <circle cx="360" cy="265" r="3"/>
+    <circle cx="460" cy="265" r="3"/>
+    <circle cx="560" cy="265" r="3"/>
+    <circle cx="660" cy="265" r="3"/>
+    <circle cx="740" cy="265" r="3"/>
+  </g>
+  <text x="790" y="269" font-family="monospace" font-size="13" fill="currentColor" text-anchor="start" font-weight="bold">RAG</text>
+  <text x="790" y="285" font-family="monospace" font-size="11" fill="currentColor" text-anchor="start" opacity="0.55">flat</text>
+
+  <!-- TRAIL: exponential / superlinear upward -->
+  <path d="M 90 300 Q 200 290 300 260 Q 400 220 500 170 Q 600 125 700 100 L 780 92"
+        fill="none" stroke="#e8a87c" stroke-width="2"/>
+  <g fill="#e8a87c">
+    <circle cx="160" cy="295" r="3.5"/>
+    <circle cx="260" cy="280" r="3.5"/>
+    <circle cx="360" cy="240" r="3.5"/>
+    <circle cx="460" cy="195" r="3.5"/>
+    <circle cx="560" cy="145" r="3.5"/>
+    <circle cx="660" cy="115" r="3.5"/>
+    <circle cx="740" cy="95"  r="4.5"/>
+  </g>
+  <!-- halo on latest point -->
+  <circle cx="740" cy="95" r="9"  fill="none" stroke="#e8a87c" stroke-width="0.7" opacity="0.5"/>
+  <circle cx="740" cy="95" r="14" fill="none" stroke="#e8a87c" stroke-width="0.4" opacity="0.3"/>
+
+  <text x="790" y="100" font-family="monospace" font-size="13" fill="#e8a87c" text-anchor="start" font-weight="bold">Trail</text>
+  <text x="790" y="116" font-family="monospace" font-size="11" fill="currentColor" text-anchor="start" opacity="0.55">compounds</text>
+
+  <!-- Annotations -->
+  <g font-family="monospace" font-size="11" fill="currentColor" opacity="0.55" text-anchor="middle">
+    <text x="180" y="255">each query re-does the same work</text>
+    <text x="500" y="225">each source updates every related Neuron</text>
+  </g>
+
+  <!-- X axis tick labels -->
+  <g font-family="monospace" font-size="11" fill="currentColor" opacity="0.6" text-anchor="middle">
+    <text x="160" y="345">10</text>
+    <text x="360" y="345">100</text>
+    <text x="560" y="345">1 000</text>
+    <text x="740" y="345">10 000</text>
+  </g>
+
+  <!-- Caption -->
+  <text x="420" y="405" font-family="monospace" font-size="12" fill="currentColor" text-anchor="middle" opacity="0.5" letter-spacing="0.5">the tenth source improves the Neurons in light of the previous nine · the thousandth even more</text>
+</svg>

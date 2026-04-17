@@ -1,0 +1,88 @@
+<svg viewBox="0 0 840 380" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Trail query pipeline: query identifies relevant Neurons, reads them, synthesizes the answer with citations, returns the response">
+  <!-- Punch-card header strip -->
+  <g fill="none" stroke="currentColor" stroke-width="0.9" opacity="0.65">
+    <polyline points="20,50 45,25 820,25 820,60 20,60 20,50" />
+  </g>
+  <g fill="currentColor" opacity="0.55">
+    <rect x="75"  y="36" width="10" height="14"/>
+    <rect x="105" y="36" width="10" height="14"/>
+    <rect x="135" y="36" width="10" height="14"/>
+    <rect x="165" y="36" width="10" height="14"/>
+    <rect x="195" y="36" width="10" height="14"/>
+    <rect x="225" y="36" width="10" height="14"/>
+    <rect x="255" y="36" width="10" height="14"/>
+    <rect x="285" y="36" width="10" height="14"/>
+    <rect x="315" y="36" width="10" height="14"/>
+    <rect x="345" y="36" width="10" height="14"/>
+    <rect x="375" y="36" width="10" height="14"/>
+    <rect x="405" y="36" width="10" height="14"/>
+  </g>
+  <text x="780" y="47" font-family="monospace" font-size="11" fill="currentColor" text-anchor="end" opacity="0.7" letter-spacing="1">TRAIL · QUERY PIPELINE</text>
+
+  <!-- Section caption -->
+  <text x="420" y="92" font-family="monospace" font-size="13" fill="currentColor" text-anchor="middle" opacity="0.55" letter-spacing="1.5">QUERY → NEURONS → RESPONSE, AT READ TIME</text>
+
+  <!-- Row 1 y=130 -->
+  <g font-family="monospace" font-size="14" fill="currentColor" text-anchor="middle">
+    <rect x="40"  y="140" width="130" height="60" fill="none" stroke="currentColor" stroke-width="1.2"/>
+    <text x="105" y="176">query</text>
+    <rect x="210" y="140" width="230" height="60" fill="none" stroke="currentColor" stroke-width="1.2"/>
+    <text x="325" y="176">identify_relevant</text>
+    <text x="325" y="192">_pages</text>
+  </g>
+  <g stroke="currentColor" stroke-width="1" opacity="0.7">
+    <line x1="170" y1="170" x2="206" y2="170"/>
+    <polygon points="208,170 200,166 200,174" fill="currentColor"/>
+  </g>
+
+  <!-- Amber: read_neurons (the heart of Trail) -->
+  <g font-family="monospace" font-size="14" fill="#e8a87c" text-anchor="middle">
+    <rect x="480" y="140" width="280" height="60" fill="none" stroke="#e8a87c" stroke-width="1.6"/>
+    <text x="620" y="176">read_neurons</text>
+  </g>
+  <g font-family="monospace" font-size="11" fill="currentColor" text-anchor="middle" opacity="0.6">
+    <text x="620" y="192">( ids )</text>
+  </g>
+  <!-- halo behind read_neurons -->
+  <rect x="475" y="135" width="290" height="70" fill="none" stroke="#e8a87c" stroke-width="0.5" opacity="0.3"/>
+  <rect x="470" y="130" width="300" height="80" fill="none" stroke="#e8a87c" stroke-width="0.3" opacity="0.2"/>
+
+  <!-- Arrow from identify → read -->
+  <g stroke="#e8a87c" stroke-width="1.5">
+    <line x1="440" y1="170" x2="476" y2="170"/>
+    <polygon points="478,170 470,166 470,174" fill="#e8a87c"/>
+  </g>
+
+  <!-- Connector down to row 2 -->
+  <g fill="none" stroke="currentColor" stroke-width="1" opacity="0.7">
+    <path d="M 620 200 L 620 230 L 250 230 L 250 260"/>
+  </g>
+  <polygon points="250,263 246,255 254,255" fill="currentColor" opacity="0.7"/>
+
+  <!-- Row 2 y=265 -->
+  <g font-family="monospace" font-size="14" fill="currentColor" text-anchor="middle">
+    <rect x="50"  y="265" width="400" height="60" fill="none" stroke="currentColor" stroke-width="1.2"/>
+    <text x="250" y="301">synthesize_with_citations</text>
+  </g>
+  <g stroke="currentColor" stroke-width="1" opacity="0.7">
+    <line x1="450" y1="295" x2="496" y2="295"/>
+    <polygon points="498,295 490,291 490,299" fill="currentColor"/>
+  </g>
+
+  <g font-family="monospace" font-size="14" fill="currentColor" text-anchor="middle">
+    <rect x="500" y="265" width="290" height="60" fill="none" stroke="currentColor" stroke-width="1.2"/>
+    <text x="645" y="301">response</text>
+  </g>
+
+  <!-- Footer holes + caption -->
+  <g fill="currentColor" opacity="0.35">
+    <rect x="75"  y="340" width="8" height="12"/>
+    <rect x="100" y="340" width="8" height="12"/>
+    <rect x="125" y="340" width="8" height="12"/>
+    <rect x="150" y="340" width="8" height="12"/>
+    <rect x="175" y="340" width="8" height="12"/>
+    <rect x="200" y="340" width="8" height="12"/>
+    <rect x="225" y="340" width="8" height="12"/>
+  </g>
+  <text x="500" y="350" font-family="monospace" font-size="12" fill="currentColor" text-anchor="middle" opacity="0.5" letter-spacing="0.5">the hard work already happened · reading is cheap</text>
+</svg>

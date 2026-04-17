@@ -634,7 +634,7 @@ body[data-menu-open="true"] { overflow: hidden; }
   text-align: center;
   color: var(--fg); /* inline SVGs use currentColor so strokes/text swap with theme */
 }
-.prose figure svg { max-width: 100%; height: auto; }
+.prose figure svg { width: 100%; height: auto; display: block; }
 .prose figcaption {
   font-family: var(--font-mono);
   font-size: 0.8125rem;
