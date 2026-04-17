@@ -1,0 +1,63 @@
+<svg viewBox="20 20 800 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Cost per answer over time: RAG stays flat and high because every query repeats the work, Trail front-loads compile cost and reads cheaply thereafter">
+  <!-- Title -->
+  <text x="420" y="45" font-family="monospace" font-size="11" fill="currentColor" text-anchor="middle" opacity="0.55" letter-spacing="1.5">WHERE THE COST LIVES</text>
+
+  <!-- Axes -->
+  <line x1="80" y1="330" x2="760" y2="330" stroke="currentColor" stroke-width="1.2"/>
+  <line x1="80" y1="90"  x2="80"  y2="330" stroke="currentColor" stroke-width="1.2"/>
+
+  <!-- Y axis label -->
+  <text x="32" y="95" font-family="monospace" font-size="9" fill="currentColor" opacity="0.7">cost /</text>
+  <text x="32" y="107" font-family="monospace" font-size="9" fill="currentColor" opacity="0.7">answer</text>
+  <!-- X axis label -->
+  <text x="420" y="360" font-family="monospace" font-size="10" fill="currentColor" text-anchor="middle" letter-spacing="0.5">QUERIES OVER TIME</text>
+
+  <!-- RAG: flat high horizontal line (~y=140) -->
+  <line x1="80" y1="140" x2="760" y2="140" stroke="currentColor" stroke-width="1.5"/>
+  <!-- Scattered small "query" markers along the line -->
+  <g fill="currentColor">
+    <circle cx="140" cy="140" r="2.5"/>
+    <circle cx="210" cy="140" r="2.5"/>
+    <circle cx="280" cy="140" r="2.5"/>
+    <circle cx="350" cy="140" r="2.5"/>
+    <circle cx="420" cy="140" r="2.5"/>
+    <circle cx="490" cy="140" r="2.5"/>
+    <circle cx="560" cy="140" r="2.5"/>
+    <circle cx="630" cy="140" r="2.5"/>
+    <circle cx="700" cy="140" r="2.5"/>
+  </g>
+  <text x="770" y="144" font-family="monospace" font-size="9" fill="currentColor" text-anchor="start" font-weight="bold">RAG</text>
+  <text x="770" y="156" font-family="monospace" font-size="8" fill="currentColor" text-anchor="start" opacity="0.55">flat cost</text>
+
+  <!-- TRAIL: J-curve starting high then dropping steeply -->
+  <path d="M 80 100 Q 100 100 130 115 Q 160 140 200 220 Q 250 280 330 290 L 760 295"
+        fill="none" stroke="#e8a87c" stroke-width="1.8"/>
+
+  <!-- Compile cost peak label -->
+  <line x1="100" y1="100" x2="100" y2="80" stroke="#e8a87c" stroke-width="0.6" stroke-dasharray="2,2"/>
+  <text x="100" y="72" font-family="monospace" font-size="8" fill="#e8a87c" text-anchor="middle" font-weight="bold">compile</text>
+
+  <!-- Trail label -->
+  <text x="770" y="298" font-family="monospace" font-size="9" fill="#e8a87c" text-anchor="start" font-weight="bold">Trail</text>
+  <text x="770" y="310" font-family="monospace" font-size="8" fill="currentColor" text-anchor="start" opacity="0.55">cheap reads</text>
+
+  <!-- Break-even vertical marker -->
+  <line x1="280" y1="90" x2="280" y2="330" stroke="currentColor" stroke-width="0.6" stroke-dasharray="3,3" opacity="0.45"/>
+  <text x="280" y="385" font-family="monospace" font-size="8" fill="currentColor" text-anchor="middle" opacity="0.6">break-even</text>
+
+  <!-- Shade compile region -->
+  <!-- Annotation: region labels -->
+  <text x="175" y="80" font-family="monospace" font-size="8" fill="currentColor" text-anchor="middle" opacity="0.55">front-loaded</text>
+  <text x="540" y="280" font-family="monospace" font-size="8" fill="currentColor" text-anchor="middle" opacity="0.55">every query free-ish</text>
+
+  <!-- Tick on Y -->
+  <g stroke="currentColor" stroke-width="0.6" opacity="0.5">
+    <line x1="75" y1="100" x2="80" y2="100"/>
+    <line x1="75" y1="140" x2="80" y2="140"/>
+    <line x1="75" y1="295" x2="80" y2="295"/>
+    <line x1="75" y1="330" x2="80" y2="330"/>
+  </g>
+
+  <!-- Caption bottom -->
+  <text x="420" y="405" font-family="monospace" font-size="9" fill="currentColor" text-anchor="middle" opacity="0.4">RAG pays the same toll for every query; Trail pays once and reads cheaply thereafter</text>
+</svg>
