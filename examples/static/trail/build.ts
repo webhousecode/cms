@@ -635,6 +635,51 @@ body[data-menu-open="true"] { overflow: hidden; }
   color: var(--fg); /* inline SVGs use currentColor so strokes/text swap with theme */
 }
 .prose figure svg { width: 100%; height: auto; display: block; }
+
+/* Fullscreen view for SVG figures — click to zoom, Escape to close */
+.prose .cms-svg { cursor: zoom-in; transition: opacity 0.15s; }
+.prose .cms-svg:hover { opacity: 0.85; }
+.svg-fullscreen {
+  position: fixed; inset: 0; z-index: 100;
+  background: color-mix(in srgb, var(--bg) 96%, transparent);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: none;
+  padding: 4rem 2rem 2rem;
+  cursor: zoom-out;
+  overflow-y: auto;
+}
+.svg-fullscreen[data-open="true"] {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 1.25rem;
+}
+.svg-fullscreen-content {
+  max-width: 96vw; max-height: 82vh;
+  display: flex; align-items: center; justify-content: center;
+}
+.svg-fullscreen-content svg {
+  width: auto; height: auto;
+  max-width: 96vw; max-height: 82vh;
+}
+.svg-fullscreen-caption {
+  font-family: var(--font-mono); font-size: 0.85rem;
+  color: var(--fg-70); max-width: 48rem; text-align: center; line-height: 1.5;
+  padding: 0 1rem;
+}
+.svg-fullscreen-close {
+  position: fixed; top: 1.25rem; right: 1.25rem;
+  width: 40px; height: 40px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--bg-80);
+  border: 1px solid var(--fg-20);
+  border-radius: 50%;
+  color: var(--fg);
+  font-size: 1.5rem; line-height: 1;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.15s;
+}
+.svg-fullscreen-close:hover { background: var(--fg-10); border-color: var(--accent); }
+.svg-fullscreen-close:active { transform: scale(0.95); }
 .prose figcaption {
   font-family: var(--font-mono);
   font-size: 0.8125rem;
@@ -1209,6 +1254,73 @@ function layout(title: string, content: string, metaDesc?: string): string {
         if (meta) meta.setAttribute('content', next === 'dark' ? '#17140F' : '#FAF9F5');
       });
     })();
+
+    function initSvgFullscreen() {
+      var figures = document.querySelectorAll('.prose .cms-svg');
+      if (!figures.length) return;
+      var overlay = document.createElement('div');
+      overlay.className = 'svg-fullscreen';
+      overlay.setAttribute('data-open', 'false');
+      overlay.setAttribute('role', 'dialog');
+      overlay.setAttribute('aria-modal', 'true');
+      overlay.setAttribute('aria-label', 'Enlarged figure');
+      overlay.innerHTML = '<button type="button" class="svg-fullscreen-close" aria-label="Close">×</button><div class="svg-fullscreen-content"></div><div class="svg-fullscreen-caption"></div>';
+      document.body.appendChild(overlay);
+      var contentEl = overlay.querySelector('.svg-fullscreen-content');
+      var captionEl = overlay.querySelector('.svg-fullscreen-caption');
+      var closeBtn = overlay.querySelector('.svg-fullscreen-close');
+      function close() {
+        overlay.setAttribute('data-open', 'false');
+        contentEl.innerHTML = '';
+        captionEl.textContent = '';
+        document.body.style.overflow = '';
+      }
+      function open(fig) {
+        var svg = fig.querySelector('svg');
+        var caption = fig.querySelector('figcaption');
+        if (!svg) return;
+        contentEl.innerHTML = svg.outerHTML;
+        var placed = contentEl.querySelector('svg');
+        var vb = placed.getAttribute('viewBox');
+        if (vb) {
+          var parts = vb.split(/\s+|,/).map(Number);
+          var ratio = parts[2] / parts[3];
+          var vw = window.innerWidth;
+          var vh = window.innerHeight - 140; /* room for caption + close */
+          var maxW = vw * 0.96;
+          var maxH = vh * 0.90;
+          var w, h;
+          if (maxW / ratio <= maxH) { w = maxW; h = maxW / ratio; }
+          else { h = maxH; w = maxH * ratio; }
+          placed.style.width = w + 'px';
+          placed.style.height = h + 'px';
+        }
+        captionEl.textContent = caption ? caption.textContent : '';
+        overlay.setAttribute('data-open', 'true');
+        document.body.style.overflow = 'hidden';
+      }
+      figures.forEach(function (fig) {
+        fig.setAttribute('role', 'button');
+        fig.setAttribute('tabindex', '0');
+        fig.setAttribute('aria-label', 'View figure in fullscreen');
+        fig.addEventListener('click', function () { open(fig); });
+        fig.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); open(fig); }
+        });
+      });
+      closeBtn.addEventListener('click', function (e) { e.stopPropagation(); close(); });
+      overlay.addEventListener('click', function (e) {
+        if (e.target === overlay || e.target === contentEl) close();
+      });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && overlay.getAttribute('data-open') === 'true') close();
+      });
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initSvgFullscreen);
+    } else {
+      initSvgFullscreen();
+    }
   </script>
   ${content}
   <footer class="footer">
