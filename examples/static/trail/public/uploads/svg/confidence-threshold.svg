@@ -30,7 +30,7 @@
 
   <!-- Right zone label (auto) -->
   <text x="685" y="110" font-family="monospace" font-size="10" fill="currentColor" text-anchor="middle" font-weight="bold" letter-spacing="0.5">AUTO-APPROVED</text>
-  <text x="685" y="124" font-family="monospace" font-size="8" fill="currentColor" text-anchor="middle" opacity="0.55">above threshold · passes to wiki</text>
+  <text x="685" y="124" font-family="monospace" font-size="8" fill="currentColor" text-anchor="middle" opacity="0.55">above threshold · writes a Neuron</text>
 
   <!-- Candidate dots: below threshold (dimmed, small) -->
   <g fill="currentColor" opacity="0.55">
