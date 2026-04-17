@@ -40,10 +40,19 @@ You return:
 
 ### Typography
 - `font-family="monospace"` everywhere
-- Sizes: `8` (tiny annotations, sub-captions), `9` (row labels), `10`
-  (column headers, inline labels), `11` (the main caption).
-- `letter-spacing="0.5"` for all-caps labels, `letter-spacing="1.5"` for
-  the bottom caption.
+- **Data tables** (where the figure IS the content, e.g. a comparison
+  matrix the reader has to actually *read*) use **`14`** for cells,
+  **`16`** for column headers, **`12–13`** for sub-labels. The SVG
+  renders at article-column width (~720 px), and anything smaller than
+  12 px rendered is strain.
+- **Schematic diagrams** (where labels annotate a visual, not carry it)
+  use smaller — `8` tiny annotations, `9` row labels, `10` inline
+  labels, `11` the main caption.
+- Never size text below `9` in the viewBox if the SVG is expected to
+  render at full-column width. If user has to zoom, the sizes were
+  wrong.
+- `letter-spacing="0.5"` for all-caps labels, `letter-spacing="1.5"`
+  for the bottom caption.
 - Uppercase for headers and captions. Sentence case for secondary labels.
 - `text-anchor="middle"` for centered labels; `"start"` or `"end"`
   elsewhere.

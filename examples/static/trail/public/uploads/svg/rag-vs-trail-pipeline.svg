@@ -1,0 +1,116 @@
+<svg viewBox="20 20 800 440" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Two architectures side by side: RAG treats each query independently, Trail compiles sources into persistent Neurons once and reads them thereafter">
+  <!-- Title -->
+  <text x="420" y="45" font-family="monospace" font-size="11" fill="currentColor" text-anchor="middle" opacity="0.55" letter-spacing="1.5">TWO ARCHITECTURES</text>
+
+  <!-- ================================= -->
+  <!-- RAG (top row) — query-time only  -->
+  <!-- ================================= -->
+  <text x="60" y="100" font-family="monospace" font-size="10" fill="currentColor" font-weight="bold" letter-spacing="0.5">RAG</text>
+  <text x="60" y="113" font-family="monospace" font-size="8" fill="currentColor" opacity="0.55">every query starts from scratch</text>
+
+  <!-- Query input -->
+  <g fill="none" stroke="currentColor" stroke-width="1">
+    <rect x="60" y="140" width="90" height="36"/>
+  </g>
+  <text x="105" y="163" font-family="monospace" font-size="9" fill="currentColor" text-anchor="middle">query</text>
+
+  <!-- Arrow -->
+  <line x1="152" y1="158" x2="196" y2="158" stroke="currentColor" stroke-width="0.9" opacity="0.65"/>
+  <polygon points="198,158 190,154 190,162" fill="currentColor" opacity="0.65"/>
+
+  <!-- Vector DB -->
+  <g fill="none" stroke="currentColor" stroke-width="1">
+    <rect x="200" y="140" width="120" height="36"/>
+  </g>
+  <text x="260" y="158" font-family="monospace" font-size="9" fill="currentColor" text-anchor="middle">vector search</text>
+  <text x="260" y="170" font-family="monospace" font-size="8" fill="currentColor" text-anchor="middle" opacity="0.6">k-NN over chunks</text>
+
+  <line x1="322" y1="158" x2="366" y2="158" stroke="currentColor" stroke-width="0.9" opacity="0.65"/>
+  <polygon points="368,158 360,154 360,162" fill="currentColor" opacity="0.65"/>
+
+  <!-- Chunks -->
+  <g fill="none" stroke="currentColor" stroke-width="1">
+    <rect x="370" y="140" width="110" height="36"/>
+  </g>
+  <text x="425" y="163" font-family="monospace" font-size="9" fill="currentColor" text-anchor="middle">chunks in ctx</text>
+
+  <line x1="482" y1="158" x2="526" y2="158" stroke="currentColor" stroke-width="0.9" opacity="0.65"/>
+  <polygon points="528,158 520,154 520,162" fill="currentColor" opacity="0.65"/>
+
+  <!-- LLM + Answer -->
+  <g fill="none" stroke="currentColor" stroke-width="1">
+    <rect x="530" y="140" width="90" height="36"/>
+    <rect x="650" y="140" width="110" height="36"/>
+  </g>
+  <text x="575" y="163" font-family="monospace" font-size="9" fill="currentColor" text-anchor="middle">LLM</text>
+  <line x1="622" y1="158" x2="646" y2="158" stroke="currentColor" stroke-width="0.9" opacity="0.65"/>
+  <polygon points="648,158 640,154 640,162" fill="currentColor" opacity="0.65"/>
+  <text x="705" y="163" font-family="monospace" font-size="9" fill="currentColor" text-anchor="middle">answer</text>
+
+  <!-- forgetting loop -->
+  <g stroke="currentColor" stroke-width="0.7" fill="none" opacity="0.4" stroke-dasharray="3,3">
+    <path d="M 705 178 Q 705 210 420 210 Q 105 210 105 180"/>
+  </g>
+  <polygon points="105,178 101,186 109,186" fill="currentColor" opacity="0.4"/>
+  <text x="420" y="228" font-family="monospace" font-size="8" fill="currentColor" text-anchor="middle" opacity="0.5">state discarded · next query starts over</text>
+
+  <!-- Divider -->
+  <line x1="40" y1="260" x2="800" y2="260" stroke="currentColor" stroke-width="0.6" opacity="0.35"/>
+
+  <!-- ================================= -->
+  <!-- TRAIL (bottom) — compile + read  -->
+  <!-- ================================= -->
+  <text x="60" y="290" font-family="monospace" font-size="10" fill="#e8a87c" font-weight="bold" letter-spacing="0.5">TRAIL</text>
+  <text x="60" y="303" font-family="monospace" font-size="8" fill="currentColor" opacity="0.55">work done once at compile time, reused every query</text>
+
+  <!-- INGEST phase -->
+  <text x="60" y="330" font-family="monospace" font-size="8" fill="currentColor" opacity="0.55">INGEST · happens once per source</text>
+  <g fill="none" stroke="currentColor" stroke-width="1">
+    <rect x="60" y="340" width="90" height="36"/>
+  </g>
+  <text x="105" y="363" font-family="monospace" font-size="9" fill="currentColor" text-anchor="middle">sources</text>
+  <line x1="152" y1="358" x2="196" y2="358" stroke="currentColor" stroke-width="0.9" opacity="0.65"/>
+  <polygon points="198,358 190,354 190,362" fill="currentColor" opacity="0.65"/>
+
+  <g fill="none" stroke="currentColor" stroke-width="1">
+    <rect x="200" y="340" width="120" height="36"/>
+  </g>
+  <text x="260" y="358" font-family="monospace" font-size="9" fill="currentColor" text-anchor="middle">compile step</text>
+  <text x="260" y="370" font-family="monospace" font-size="8" fill="currentColor" text-anchor="middle" opacity="0.6">LLM integrates</text>
+  <line x1="322" y1="358" x2="366" y2="358" stroke="#e8a87c" stroke-width="1.5"/>
+  <polygon points="368,358 360,354 360,362" fill="#e8a87c"/>
+
+  <!-- Persistent Neurons (amber, halo) -->
+  <g fill="none" stroke="#e8a87c" stroke-width="1.6">
+    <rect x="370" y="340" width="110" height="36"/>
+  </g>
+  <g stroke="currentColor" stroke-width="0.5" opacity="0.5">
+    <line x1="380" y1="352" x2="470" y2="352"/>
+    <line x1="380" y1="361" x2="465" y2="361"/>
+    <line x1="380" y1="370" x2="470" y2="370"/>
+  </g>
+  <text x="425" y="333" font-family="monospace" font-size="9" fill="#e8a87c" text-anchor="middle" font-weight="bold" letter-spacing="0.5">NEURONS</text>
+  <text x="425" y="390" font-family="monospace" font-size="8" fill="currentColor" text-anchor="middle" opacity="0.55">persistent · compound</text>
+  <circle cx="475" cy="358" r="4" fill="#e8a87c"/>
+  <circle cx="475" cy="358" r="9" fill="none" stroke="#e8a87c" stroke-width="0.6" opacity="0.5"/>
+
+  <!-- QUERY phase -->
+  <text x="540" y="330" font-family="monospace" font-size="8" fill="currentColor" opacity="0.55">QUERY · reads already-compiled Neurons</text>
+  <g fill="none" stroke="currentColor" stroke-width="1">
+    <rect x="540" y="340" width="80" height="36"/>
+    <rect x="660" y="340" width="100" height="36"/>
+  </g>
+  <text x="580" y="363" font-family="monospace" font-size="9" fill="currentColor" text-anchor="middle">query</text>
+
+  <line x1="622" y1="358" x2="646" y2="358" stroke="currentColor" stroke-width="0.9" opacity="0.65"/>
+  <polygon points="648,358 640,354 640,362" fill="currentColor" opacity="0.65"/>
+  <text x="710" y="363" font-family="monospace" font-size="9" fill="currentColor" text-anchor="middle">answer</text>
+
+  <!-- Amber read-path from Neurons into the query pipeline -->
+  <g stroke="#e8a87c" stroke-width="1.2" stroke-dasharray="3,3" fill="none" opacity="0.9">
+    <path d="M 475 376 Q 540 420 580 380"/>
+  </g>
+
+  <!-- Caption bottom -->
+  <text x="420" y="445" font-family="monospace" font-size="9" fill="currentColor" text-anchor="middle" opacity="0.4">RAG does one thing; Trail splits the work into two phases and keeps the hard part</text>
+</svg>
