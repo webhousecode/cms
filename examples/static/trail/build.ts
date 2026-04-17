@@ -1309,9 +1309,7 @@ function layout(title: string, content: string, metaDesc?: string): string {
         });
       });
       closeBtn.addEventListener('click', function (e) { e.stopPropagation(); close(); });
-      overlay.addEventListener('click', function (e) {
-        if (e.target === overlay || e.target === contentEl) close();
-      });
+      overlay.addEventListener('click', function () { close(); });
       document.addEventListener('keydown', function (e) {
         if (e.key === 'Escape' && overlay.getAttribute('data-open') === 'true') close();
       });
