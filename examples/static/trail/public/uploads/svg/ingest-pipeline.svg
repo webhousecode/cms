@@ -100,12 +100,12 @@
   </g>
   <!-- Branch connectors -->
   <g fill="none">
-    <!-- to auto (amber) -->
-    <path d="M 540 245 L 580 225" stroke="#e8a87c" stroke-width="1.5"/>
-    <polygon points="580,225 572,222 574,230" fill="#e8a87c"/>
-    <!-- to curator (muted) -->
-    <path d="M 540 265 L 580 285" stroke="currentColor" stroke-width="0.9" opacity="0.55" stroke-dasharray="4,3"/>
-    <polygon points="580,285 572,282 574,289" fill="currentColor" opacity="0.55"/>
+    <!-- diamond right → auto_approve (amber, up-right) -->
+    <line x1="540" y1="247" x2="578" y2="227" stroke="#e8a87c" stroke-width="1.5"/>
+    <polygon points="582,225 572,222 574,232" fill="#e8a87c"/>
+    <!-- diamond right → curator_review (muted, down-right) -->
+    <line x1="540" y1="263" x2="578" y2="283" stroke="currentColor" stroke-width="0.9" opacity="0.55" stroke-dasharray="4,3"/>
+    <polygon points="582,285 572,278 574,288" fill="currentColor" opacity="0.55"/>
   </g>
 
   <!-- Connector amber down to row 3 -->
