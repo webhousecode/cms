@@ -632,6 +632,7 @@ body[data-menu-open="true"] { overflow: hidden; }
 .prose figure {
   margin: 1rem 0 1.5rem;
   text-align: center;
+  color: var(--fg); /* inline SVGs use currentColor so strokes/text swap with theme */
 }
 .prose figure svg { max-width: 100%; height: auto; }
 .prose figcaption {
