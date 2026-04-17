@@ -2,5 +2,9 @@
   "memex-desk": "A schematic reading of Bush's proposed desk: slanting translucent screens, keyboard, levers, and microfilm reels stored in the base.",
   "tree-vs-graph": "The library classifies; the mind associates. Bush's central critique of 20th-century information systems.",
   "trail": "The Trail is not a search result. It is a piece of thinking, captured and made permanent.",
-  "timeline": "A lineage of minds who each carried Bush's idea one step closer to what he described."
+  "timeline": "A lineage of minds who each carried Bush's idea one step closer to what he described.",
+  "three-filters-gate": "Candidates flow through three sequential filters. What passes all three enters the wiki; what fails any one is routed to a human curator.",
+  "filters-correspondence": "The same three filters under three different vocabularies: what Bandler & Grinder named in 1975, what thalamic and prefrontal circuits implement biologically, and what Trail's policy engine enforces.",
+  "confidence-threshold": "Every candidate carries a scalar. Above the threshold, the wiki updates automatically; below, a human looks at it first.",
+  "contradiction-check": "Two sources making opposite claims don't silently overwrite each other. The background lint surfaces the conflict, and a curator resolves — sometimes for A, sometimes for B, sometimes by encoding the disagreement itself."
 }
