@@ -1,9 +1,9 @@
 <svg viewBox="55 80 690 330" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Three linked documents forming an associative Trail">
   <!-- Document 1: Encyclopedia -->
-  <g fill="none" stroke="#1a1715" stroke-width="1.2">
+  <g fill="none" stroke="currentColor" stroke-width="1.2">
     <rect x="60" y="130" width="160" height="190"/>
   </g>
-  <g stroke="#1a1715" stroke-width="0.5" opacity="0.5">
+  <g stroke="currentColor" stroke-width="0.5" opacity="0.5">
     <line x1="80" y1="170" x2="200" y2="170"/>
     <line x1="80" y1="185" x2="185" y2="185"/>
     <line x1="80" y1="200" x2="195" y2="200"/>
@@ -14,13 +14,13 @@
     <line x1="80" y1="275" x2="170" y2="275"/>
     <line x1="80" y1="290" x2="185" y2="290"/>
   </g>
-  <text x="80" y="155" font-family="monospace" font-size="9" fill="#1a1715" font-weight="bold" letter-spacing="0.5">ENCYCLOPEDIA</text>
+  <text x="80" y="155" font-family="monospace" font-size="9" fill="currentColor" font-weight="bold" letter-spacing="0.5">ENCYCLOPEDIA</text>
 
   <!-- Document 2: History -->
-  <g fill="none" stroke="#1a1715" stroke-width="1.2">
+  <g fill="none" stroke="currentColor" stroke-width="1.2">
     <rect x="320" y="85" width="160" height="190"/>
   </g>
-  <g stroke="#1a1715" stroke-width="0.5" opacity="0.5">
+  <g stroke="currentColor" stroke-width="0.5" opacity="0.5">
     <line x1="340" y1="125" x2="460" y2="125"/>
     <line x1="340" y1="140" x2="445" y2="140"/>
     <line x1="340" y1="155" x2="455" y2="155"/>
@@ -31,13 +31,13 @@
     <line x1="340" y1="230" x2="430" y2="230"/>
     <line x1="340" y1="245" x2="445" y2="245"/>
   </g>
-  <text x="340" y="110" font-family="monospace" font-size="9" fill="#1a1715" font-weight="bold" letter-spacing="0.5">HIST · CRUSADES</text>
+  <text x="340" y="110" font-family="monospace" font-size="9" fill="currentColor" font-weight="bold" letter-spacing="0.5">HIST · CRUSADES</text>
 
   <!-- Document 3: Elasticity -->
-  <g fill="none" stroke="#1a1715" stroke-width="1.2">
+  <g fill="none" stroke="currentColor" stroke-width="1.2">
     <rect x="580" y="150" width="160" height="190"/>
   </g>
-  <g stroke="#1a1715" stroke-width="0.5" opacity="0.5">
+  <g stroke="currentColor" stroke-width="0.5" opacity="0.5">
     <line x1="600" y1="190" x2="720" y2="190"/>
     <line x1="600" y1="205" x2="700" y2="205"/>
     <line x1="600" y1="220" x2="715" y2="220"/>
@@ -48,7 +48,7 @@
     <line x1="600" y1="295" x2="685" y2="295"/>
     <line x1="600" y1="310" x2="705" y2="310"/>
   </g>
-  <text x="600" y="175" font-family="monospace" font-size="9" fill="#1a1715" font-weight="bold" letter-spacing="0.5">ELASTICITY</text>
+  <text x="600" y="175" font-family="monospace" font-size="9" fill="currentColor" font-weight="bold" letter-spacing="0.5">ELASTICITY</text>
 
   <!-- The amber Trail -->
   <g stroke="#e8a87c" stroke-width="2" fill="none">
@@ -68,7 +68,7 @@
   </g>
 
   <!-- Trail annotations -->
-  <g font-family="monospace" font-size="9" fill="#1a1715" opacity="0.65">
+  <g font-family="monospace" font-size="9" fill="currentColor" opacity="0.65">
     <text x="270" y="125" text-anchor="middle">"Turkish bow"</text>
     <text text-anchor="middle">
       <tspan x="530" y="110">"material</tspan>
@@ -77,6 +77,6 @@
   </g>
 
   <!-- Caption -->
-  <text x="400" y="380" font-family="monospace" font-size="11" fill="#1a1715" text-anchor="middle" opacity="0.55" letter-spacing="1.5">AN ASSOCIATIVE TRAIL</text>
-  <text x="400" y="398" font-family="monospace" font-size="9"  fill="#1a1715" text-anchor="middle" opacity="0.4">Bush's own example — why the Turkish bow outperformed the English longbow</text>
+  <text x="400" y="380" font-family="monospace" font-size="11" fill="currentColor" text-anchor="middle" opacity="0.55" letter-spacing="1.5">AN ASSOCIATIVE TRAIL</text>
+  <text x="400" y="398" font-family="monospace" font-size="9"  fill="currentColor" text-anchor="middle" opacity="0.4">Bush's own example — why the Turkish bow outperformed the English longbow</text>
 </svg>
