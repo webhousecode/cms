@@ -550,7 +550,7 @@ body[data-menu-open="true"] { overflow: hidden; }
 }
 
 /* Article (long-form pages) */
-.container { max-width: 44rem; margin: 0 auto; padding: 0 2rem; }
+.container { max-width: 48rem; margin: 0 auto; padding: 0 2rem; }
 @media (min-width: 640px) { .container { padding: 0 2.5rem; } }
 /* Use padding-block (top/bottom only) so .container's horizontal padding survives. */
 .article { padding-top: 6rem; padding-bottom: 3rem; }
