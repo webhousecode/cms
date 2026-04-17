@@ -1,0 +1,75 @@
+<svg viewBox="20 40 780 360" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Confidence threshold scatter: candidates below threshold raised to curator, above auto-approved">
+  <!-- Axes -->
+  <!-- horizontal confidence axis -->
+  <line x1="80" y1="320" x2="760" y2="320" stroke="currentColor" stroke-width="1.2"/>
+  <!-- tick marks -->
+  <g stroke="currentColor" stroke-width="0.8">
+    <line x1="80"  y1="320" x2="80"  y2="326"/>
+    <line x1="250" y1="320" x2="250" y2="326"/>
+    <line x1="420" y1="320" x2="420" y2="326"/>
+    <line x1="590" y1="320" x2="590" y2="326"/>
+    <line x1="760" y1="320" x2="760" y2="326"/>
+  </g>
+  <g font-family="monospace" font-size="9" fill="currentColor" text-anchor="middle" opacity="0.7">
+    <text x="80"  y="340">0.0</text>
+    <text x="250" y="340">0.25</text>
+    <text x="420" y="340">0.50</text>
+    <text x="590" y="340">0.75</text>
+    <text x="760" y="340">1.00</text>
+  </g>
+  <text x="420" y="365" font-family="monospace" font-size="10" fill="currentColor" text-anchor="middle" letter-spacing="0.5">CONFIDENCE</text>
+
+  <!-- Threshold line (amber vertical) -->
+  <line x1="590" y1="90" x2="590" y2="320" stroke="#e8a87c" stroke-width="1.4" stroke-dasharray="5,3"/>
+  <text x="590" y="85" font-family="monospace" font-size="9" fill="#e8a87c" text-anchor="middle" font-weight="bold" letter-spacing="0.5">Θ = 0.75</text>
+  <text x="590" y="75" font-family="monospace" font-size="8" fill="currentColor" text-anchor="middle" opacity="0.55">threshold</text>
+
+  <!-- Left zone label (curator) -->
+  <text x="335" y="110" font-family="monospace" font-size="10" fill="currentColor" text-anchor="middle" font-weight="bold" letter-spacing="0.5">RAISED TO CURATOR</text>
+  <text x="335" y="124" font-family="monospace" font-size="8" fill="currentColor" text-anchor="middle" opacity="0.55">below threshold · human reviews</text>
+
+  <!-- Right zone label (auto) -->
+  <text x="685" y="110" font-family="monospace" font-size="10" fill="currentColor" text-anchor="middle" font-weight="bold" letter-spacing="0.5">AUTO-APPROVED</text>
+  <text x="685" y="124" font-family="monospace" font-size="8" fill="currentColor" text-anchor="middle" opacity="0.55">above threshold · passes to wiki</text>
+
+  <!-- Candidate dots: below threshold (dimmed, small) -->
+  <g fill="currentColor" opacity="0.55">
+    <circle cx="115" cy="255" r="3"/>
+    <circle cx="145" cy="220" r="3"/>
+    <circle cx="180" cy="275" r="3"/>
+    <circle cx="210" cy="195" r="3"/>
+    <circle cx="235" cy="250" r="3"/>
+    <circle cx="275" cy="170" r="3"/>
+    <circle cx="305" cy="230" r="3"/>
+    <circle cx="340" cy="260" r="3"/>
+    <circle cx="380" cy="200" r="3"/>
+    <circle cx="410" cy="240" r="3"/>
+    <circle cx="455" cy="180" r="3"/>
+    <circle cx="490" cy="220" r="3"/>
+    <circle cx="525" cy="265" r="3"/>
+    <circle cx="555" cy="195" r="3"/>
+    <circle cx="575" cy="240" r="3"/>
+  </g>
+
+  <!-- Candidate dots: above threshold (solid, larger) -->
+  <g fill="currentColor">
+    <circle cx="610" cy="210" r="3.5"/>
+    <circle cx="635" cy="175" r="3.5"/>
+    <circle cx="660" cy="250" r="3.5"/>
+    <circle cx="690" cy="195" r="3.5"/>
+    <circle cx="715" cy="230" r="3.5"/>
+    <circle cx="740" cy="165" r="3.5"/>
+    <circle cx="730" cy="265" r="3.5"/>
+  </g>
+
+  <!-- Amber active candidate crossing threshold (with halos) -->
+  <circle cx="645" cy="215" r="6" fill="#e8a87c"/>
+  <circle cx="645" cy="215" r="11" fill="none" stroke="#e8a87c" stroke-width="0.7" opacity="0.55"/>
+  <circle cx="645" cy="215" r="17" fill="none" stroke="#e8a87c" stroke-width="0.4" opacity="0.3"/>
+
+  <!-- Threshold guideline hint: subtle dashed horizontal rule separating two zones is not drawn;
+       the amber line does the work. -->
+
+  <!-- Caption -->
+  <text x="420" y="60" font-family="monospace" font-size="11" fill="currentColor" text-anchor="middle" opacity="0.55" letter-spacing="1.5">CONFIDENCE THRESHOLD</text>
+</svg>
