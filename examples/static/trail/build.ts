@@ -1210,6 +1210,30 @@ function renderTrailsIndex(): string {
 const siteTitle = String(global.siteTitle ?? "trail");
 const siteDescription = String(global.siteDescription ?? "");
 const logo = String(global.logo ?? "/uploads/memx-logo.svg");
+
+// If the logo is a local SVG, inline it so currentColor inherits from the
+// parent (theme-aware). External URLs or non-SVG assets fall back to <img>.
+function renderLogo(size: number, label: string): string {
+  const isLocalSvg = logo.startsWith("/uploads/") && logo.endsWith(".svg");
+  if (isLocalSvg) {
+    const file = join(import.meta.dirname, "public", logo);
+    if (existsSync(file)) {
+      let raw = readFileSync(file, "utf-8").trim();
+      // Defense-in-depth: swap any surviving hardcoded #1a1715 strokes/fills
+      // with currentColor so the inlined copy is always theme-aware.
+      raw = raw.replace(/#1a1715/gi, "currentColor");
+      // Rewrite the root <svg> tag: keep only viewBox from the original,
+      // strip all other attrs, then inject size + a11y attrs cleanly.
+      raw = raw.replace(/<svg[^>]*>/, (match) => {
+        const vbMatch = match.match(/viewBox="[^"]*"/i);
+        const viewBox = vbMatch ? vbMatch[0] : 'viewBox="0 0 32 32"';
+        return `<svg xmlns="http://www.w3.org/2000/svg" ${viewBox} width="${size}" height="${size}" role="img" aria-label="${esc(label)}">`;
+      });
+      return raw;
+    }
+  }
+  return `<img src="${esc(bp(logo))}" alt="${esc(label)}" width="${size}" height="${size}">`;
+}
 const navLinks = (global.navLinks as Array<{ label: string; href: string }>) ?? [];
 const signInLabel = String(global.signInLabel ?? "Sign In");
 const signInHref = String(global.signInHref ?? "#");
@@ -1247,7 +1271,7 @@ function layout(title: string, content: string, metaDesc?: string): string {
   <canvas id="trail-graph" aria-hidden="true"></canvas>
   <nav class="nav">
     <a href="${esc(bp("/"))}" class="nav-brand">
-      <img src="${esc(bp(logo))}" alt="${esc(siteTitle)}" width="40" height="40">
+      ${renderLogo(40, siteTitle)}
       <span class="brand-text">${esc(siteTitle)}</span>
     </a>
     <div class="nav-links">
@@ -1374,7 +1398,7 @@ function layout(title: string, content: string, metaDesc?: string): string {
   <footer class="footer">
     <div class="footer-inner">
       <div class="footer-brand">
-        <img src="${esc(bp(logo))}" alt="${esc(siteTitle)}" width="32" height="32">
+        ${renderLogo(32, siteTitle)}
         <span>${esc(siteTitle)}</span>
       </div>
       <div class="footer-links">
