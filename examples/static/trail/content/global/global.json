@@ -13,7 +13,7 @@
     ],
     "signInLabel": "Sign In",
     "signInHref": "#",
-    "navCtaLabel": "Initialize Node",
+    "navCtaLabel": "Initialize trail",
     "navCtaHref": "#",
     "footerLinks": [
       { "label": "Twitter", "href": "#" },
