@@ -111,6 +111,23 @@ export async function resolveApiKeyToSite(bearerHeader: string | null): Promise<
   const token = bearerHeader.slice(7).trim();
   if (!token) return null;
 
+  // F134: accept `wh_...` access tokens. Map their permissions to legacy
+  // MCP scope strings ("read"/"write"/"publish"/"deploy"/"ai"/"admin") so
+  // existing TOOL_SCOPES checks keep working. Resource filters narrow the
+  // token to a specific site — we pick the first allowed site here. Tokens
+  // with no site restriction (empty resources or "site:*") bind to the
+  // default org+site.
+  if (token.startsWith("wh_")) {
+    const { verifyAccessToken } = await import("./access-tokens");
+    const stored = await verifyAccessToken(token);
+    if (stored) {
+      const scopes = permissionsToMcpScopes(stored.permissions ?? []);
+      const { orgId, siteId } = await resolveBoundSite(stored.resources ?? []);
+      return { orgId, siteId, label: stored.name, scopes };
+    }
+    // Looked like wh_ but didn't verify — fall through (caller returns 401)
+  }
+
   const tokenBuf = Buffer.from(token);
 
   // Try multi-site mode first (registry with orgs → sites)
@@ -156,4 +173,63 @@ export async function resolveApiKeyToSite(bearerHeader: string | null): Promise<
   }
 
   return null;
+}
+
+// ─── F134 → MCP bridge ──────────────────────────────────────────
+
+/** Map an F134 Permission list to the legacy MCP scope vocabulary
+ * (`read` / `write` / `publish` / `deploy` / `ai` / `admin`) so the
+ * MCP server's existing TOOL_SCOPES checks keep working unchanged. */
+function permissionsToMcpScopes(perms: readonly string[]): string[] {
+  const out = new Set<string>();
+  if (perms.includes("*")) {
+    out.add("admin"); out.add("read"); out.add("write");
+    out.add("publish"); out.add("deploy"); out.add("ai");
+    return Array.from(out);
+  }
+  for (const p of perms) {
+    if (p.endsWith(":read")) out.add("read");
+    if (p === "content:write" || p === "media:write" || p === "forms:write") out.add("write");
+    if (p === "content:publish") { out.add("publish"); out.add("write"); }
+    if (p === "deploy:trigger") { out.add("deploy"); out.add("write"); }
+    if (p === "media:delete" || p === "content:publish") out.add("write");
+    if (p === "team:manage" || p === "tokens:manage" || p === "sites:write" || p === "org:settings:write") {
+      out.add("admin"); out.add("write");
+    }
+  }
+  // "ai" permission doesn't map directly in F134 — tools tagged "ai" also
+  // require "write" which the mapping above produces from content:write.
+  // Grant "ai" when content:write is present so AI tools remain usable.
+  if (out.has("write")) out.add("ai");
+  return Array.from(out);
+}
+
+/** Derive the (orgId, siteId) that a token's resource filters bind to.
+ * If the filters name a specific site, use the first one. Otherwise the
+ * token is org-wide — fall back to the default. */
+async function resolveBoundSite(
+  filters: ReadonlyArray<{ scope: string; effect: string; targets: "*" | string[] }>,
+): Promise<{ orgId: string; siteId: string }> {
+  const includes = filters.filter((f) => f.effect === "include" && f.scope === "site");
+  for (const f of includes) {
+    if (Array.isArray(f.targets) && f.targets.length > 0) {
+      const siteId = f.targets[0];
+      const { loadRegistry } = await import("./site-registry");
+      const registry = await loadRegistry();
+      if (registry) {
+        for (const org of registry.orgs) {
+          if (org.sites.some((s) => s.id === siteId)) {
+            return { orgId: org.id, siteId };
+          }
+        }
+      }
+    }
+  }
+  // Org-wide or no registry — use default binding
+  const { loadRegistry } = await import("./site-registry");
+  const registry = await loadRegistry();
+  if (registry) {
+    return { orgId: registry.defaultOrgId, siteId: registry.defaultSiteId };
+  }
+  return { orgId: "default", siteId: "default" };
 }

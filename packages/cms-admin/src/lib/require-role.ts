@@ -33,9 +33,32 @@ export async function getSiteRole(): Promise<UserRole | null> {
 
 /**
  * Guard for write endpoints — returns a 403 Response if user is a viewer.
- * Usage: const denied = await denyViewers(); if (denied) return denied;
+ * Accepts F134 Bearer tokens with any `*:write` / `*:publish` / `*:delete`
+ * / `*:trigger` / `*:manage` permission as proof of write-capability.
  */
 export async function denyViewers(): Promise<Response | null> {
+  // F134: Bearer token with any write-class permission passes.
+  const { headers } = await import("next/headers");
+  const h = await headers();
+  const auth = h.get("authorization");
+  if (auth && /^Bearer\s+/i.test(auth)) {
+    const raw = auth.replace(/^Bearer\s+/i, "").trim();
+    const { verifyAccessToken } = await import("./access-tokens");
+    const token = await verifyAccessToken(raw);
+    if (!token) {
+      const { NextResponse } = await import("next/server");
+      return NextResponse.json({ error: "Invalid access token" }, { status: 401 });
+    }
+    const WRITE_SUFFIXES = [":write", ":publish", ":delete", ":trigger", ":manage"];
+    const hasWrite = (token.permissions ?? []).some(
+      (p) => p === "*" || WRITE_SUFFIXES.some((s) => p.endsWith(s)),
+    );
+    if (hasWrite) return null;
+    const { NextResponse } = await import("next/server");
+    return NextResponse.json({ error: "No write access" }, { status: 403 });
+  }
+
+  // No Bearer — existing session + role behaviour.
   const role = await getSiteRole();
   if (!role || role === "viewer") {
     const { NextResponse } = await import("next/server");
