@@ -108,7 +108,7 @@ export function GenerateDocumentDialog({
       }
 
       onClose();
-      router.push(`/admin/${collection}/${created.slug ?? genData.slug}`);
+      router.push(`/admin/content/${collection}/${created.slug ?? genData.slug}`);
     } catch {
       stopTimer();
       setError("Network error");

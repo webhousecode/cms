@@ -50,7 +50,7 @@ export async function updateScheduledSnapshot(): Promise<void> {
         const base = {
           title,
           subtitle: col.label ?? col.name,
-          href: `/admin/${col.name}/${doc.slug}`,
+          href: `/admin/content/${col.name}/${doc.slug}`,
         };
         if (publishAt) {
           events.push({ id: `pub-${col.name}-${doc.slug}`, type: "publish", date: publishAt, ...base });

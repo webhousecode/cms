@@ -31,7 +31,7 @@ export function useSchedulerEvents() {
           const evt = JSON.parse(e.data) as SchedulerEvent;
 
           // Update tab status dot
-          const tabPath = `/admin/${evt.collection}/${evt.slug}`;
+          const tabPath = `/admin/content/${evt.collection}/${evt.slug}`;
           updateRef.current(tabPath, evt.action === "published" ? "published" : "expired");
 
           // Play notification sound

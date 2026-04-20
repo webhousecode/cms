@@ -92,7 +92,7 @@ export function CollectionSchemaEditor({ collection, isNew }: Props) {
     }
 
     startTransition(() => {
-      router.push(`/admin/${name.trim()}`);
+      router.push(`/admin/content/${name.trim()}`);
       router.refresh();
     });
   }

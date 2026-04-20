@@ -100,7 +100,7 @@ export async function fireContentEvent(
   // because the document no longer lives in the collection list view.
   const linkPath = (action === "trashed" || action === "unpublished")
     ? `/admin/trash`
-    : `/admin/${collection}/${slug}`;
+    : `/admin/content/${collection}/${slug}`;
   const linkUrl = await deepLink(src, linkPath, `content.${action} → ${title}`);
 
   const evt: WebhookEvent = {

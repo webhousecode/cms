@@ -51,11 +51,14 @@ interface SiteEntryLike {
  * Compute which paths should be revalidated for a given content change.
  * Uses urlPrefix from collection config if available.
  */
-function computePaths(collection: string, slug: string, urlPrefix?: string): string[] {
+function computePaths(collection: string, slug: string, urlPrefix?: string, collectionKind?: string): string[] {
   const prefix = urlPrefix ?? `/${collection}`;
   const paths = [`${prefix}/${slug}`, prefix];
-  // Always revalidate homepage for pages collection or index/homepage slugs
-  if (collection === "pages" || collection === "global" || slug === "index" || slug === "home" || slug === "homepage") {
+  // Revalidate homepage for collections that affect site-wide rendering
+  // (pages/global kinds) or common homepage slug names. Uses collection KIND
+  // (config-level), not NAME, so users can name their collections freely.
+  const kind = collectionKind ?? (collection === "pages" ? "page" : undefined);
+  if (kind === "global" || collection === "pages" || slug === "index" || slug === "home" || slug === "homepage") {
     paths.push("/");
   }
   return [...new Set(paths)];

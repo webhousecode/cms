@@ -813,7 +813,7 @@ function PropertiesPanel({ doc, collection, locales, onClose, onSaved }: {
     if (res.ok) {
       const updated = await res.json() as DocSnapshot;
       onSaved(updated);
-      router.replace(`/admin/${collection}/${slug}`);
+      router.replace(`/admin/content/${collection}/${slug}`);
       router.refresh(); window.dispatchEvent(new Event("cms:content-changed"));
       // Trigger rebuild for static sites after slug rename
       fetch("/api/preview-build", { method: "POST" }).catch(() => {});
@@ -1250,7 +1250,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
       setDoc(updated);
       // Navigate to new slug if it changed
       if (updated.slug !== doc.slug) {
-        router.replace(`/admin/${collection}/${updated.slug}`);
+        router.replace(`/admin/content/${collection}/${updated.slug}`);
       }
       setDirty(false);
       setSavedAt(new Date());
@@ -1311,7 +1311,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
         return;
       }
       toast("Moved to trash", { description: doc.slug });
-      router.push(`/admin/${collection}`);
+      router.push(`/admin/content/${collection}`);
       router.refresh(); window.dispatchEvent(new Event("cms:content-changed"));
     } catch {
       toast.error("Failed to move to trash");
@@ -1397,7 +1397,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
     if (res.ok) {
       const cloned = (await res.json()) as { slug: string };
       toast.success("Document cloned", { description: cloned.slug });
-      router.push(`/admin/${collection}/${cloned.slug}`);
+      router.push(`/admin/content/${collection}/${cloned.slug}`);
       router.refresh(); window.dispatchEvent(new Event("cms:content-changed"));
     }
     setCloning(false);
@@ -1429,7 +1429,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
         favorite={{
           type: "document",
           label: (doc.data as { title?: string })?.title ?? doc.slug,
-          path: `/admin/${collection}/${doc.slug}`,
+          path: `/admin/content/${collection}/${doc.slug}`,
           icon: "FileText",
           collection,
           slug: doc.slug,
@@ -1493,7 +1493,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
                   {translations.map(t => (
                     <Link
                       key={t.slug}
-                      href={`/admin/${collection}/${t.slug}`}
+                      href={`/admin/content/${collection}/${t.slug}`}
                       onClick={() => setLocaleOpen(false)}
                       style={{
                         display: "flex", alignItems: "center", gap: "0.4rem",
@@ -1708,7 +1708,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
       >
         <div style={{ width: "1px", height: "1rem", backgroundColor: "var(--border)", alignSelf: "center" }} />
         <Link
-          href={backHref ?? `/admin/${collection}`}
+          href={backHref ?? `/admin/content/${collection}`}
           className="text-muted-foreground hover:text-foreground transition-colors"
           title={`Back to ${backHref === "/admin/curation" ? "Curation Queue" : collection}`}
         >
@@ -1752,7 +1752,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
           {translations.map(t => (
               <Link
                 key={t.slug}
-                href={`/admin/${collection}/${t.slug}`}
+                href={`/admin/content/${collection}/${t.slug}`}
                 style={{
                   display: "inline-flex", alignItems: "center", gap: "0.3rem",
                   padding: "0.15rem 0.5rem", borderRadius: "4px",
@@ -2100,7 +2100,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
           onClose={() => setCreateTranslationOpen(false)}
           onCreated={(slug) => {
             setCreateTranslationOpen(false);
-            router.push(`/admin/${collection}/${slug}`);
+            router.push(`/admin/content/${collection}/${slug}`);
           }}
         />
       )}

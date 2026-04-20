@@ -1899,7 +1899,7 @@ function DeleteConfirmDialog({ file, usages, onConfirm, onCancel }: {
               {usages.map((u) => (
                 <li key={`${u.collection}/${u.slug}`}>
                   <a
-                    href={`/admin/${u.collection}/${u.slug}`}
+                    href={`/admin/content/${u.collection}/${u.slug}`}
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{ fontSize: "0.75rem", fontFamily: "monospace", color: "rgb(239 68 68)", textDecoration: "underline", textUnderlineOffset: "2px", opacity: 0.85 }}

@@ -142,7 +142,7 @@ async function _buildAllTools(activeOrg?: string, activeSite?: string): Promise<
         ];
 
         for (const col of config.collections) {
-          if (col.name === "global") continue;
+          if (col.kind === "global") continue;
           const { documents } = await cms.content
             .findMany(col.name, {})
             .catch(() => ({ documents: [] as any[] }));
@@ -392,7 +392,7 @@ async function _buildAllTools(activeOrg?: string, activeSite?: string): Promise<
         const lines: string[] = [];
 
         for (const col of config.collections) {
-          if (col.name === "global") continue;
+          if (col.kind === "global") continue;
           const { documents } = await cms.content
             .findMany(col.name, {})
             .catch(() => ({ documents: [] as any[] }));
@@ -1344,7 +1344,7 @@ DESIGN GUIDELINES:
         const [cms, config] = await Promise.all([getAdminCms(), getAdminConfig()]);
         const items: string[] = [];
         for (const col of config.collections) {
-          if (col.name === "global") continue;
+          if (col.kind === "global") continue;
           const { documents } = await cms.content.findMany(col.name, {}).catch(() => ({ documents: [] as any[] }));
           for (const d of documents) {
             if (d.publishAt || d.unpublishAt) {
@@ -1758,7 +1758,7 @@ DESIGN GUIDELINES:
         let drafts = 0;
 
         for (const col of config.collections) {
-          if (col.name === "global") continue;
+          if (col.kind === "global") continue;
           const { documents } = await cms.content.findMany(col.name, {}).catch(() => ({ documents: [] as any[] }));
           for (const d of documents) {
             if (d.status === "trashed") continue;

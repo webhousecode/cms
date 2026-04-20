@@ -46,7 +46,7 @@ export function NewDocumentButton({ collection, titleField = "title", defaultLoc
       body: JSON.stringify({ slug, data: { [titleField]: title }, locale: locale || defaultLocale }),
     });
     if (res.ok) {
-      router.push(`/admin/${collection}/${slug}`);
+      router.push(`/admin/content/${collection}/${slug}`);
       router.refresh();
     }
     setSaving(false);

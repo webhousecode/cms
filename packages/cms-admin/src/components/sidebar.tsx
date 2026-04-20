@@ -312,9 +312,9 @@ export function AppSidebar({ collections }: Props) {
                 {collections.map((col) => (
                   <SidebarMenuItem key={col.name}>
                     <SidebarMenuButton
-                      isActive={pathname.startsWith(`/admin/${col.name}`)}
+                      isActive={pathname.startsWith(`/admin/content/${col.name}`)}
                       tooltip={col.label}
-                      render={<Link href={`/admin/${col.name}`} data-testid={`nav-link-collection-${col.name}`} />}
+                      render={<Link href={`/admin/content/${col.name}`} data-testid={`nav-link-collection-${col.name}`} />}
                       style={{ paddingLeft: "1.75rem" }}
                     >
                       <span>{col.label}</span>

@@ -119,7 +119,7 @@ export default function TrashPage() {
       closeTabsForPaths([`/admin/interactives/${item.doc.id}`]);
     } else {
       await fetch(`/api/cms/${item.collection}/${item.doc.slug}?permanent=true`, { method: "DELETE" });
-      closeTabsForPaths([`/admin/${item.collection}/${item.doc.slug}`]);
+      closeTabsForPaths([`/admin/content/${item.collection}/${item.doc.slug}`]);
     }
     await load();
     setWorking(null);
@@ -128,7 +128,7 @@ export default function TrashPage() {
   async function emptyTrash() {
     setConfirmEmpty(false);
     // Collect all paths before deleting so we can close their tabs
-    const pathsToClose = items.map(i => `/admin/${i.collection}/${i.doc.slug}`);
+    const pathsToClose = items.map(i => `/admin/content/${i.collection}/${i.doc.slug}`);
     setLoading(true);
     await fetch("/api/trash", { method: "DELETE" });
     closeTabsForPaths(pathsToClose);

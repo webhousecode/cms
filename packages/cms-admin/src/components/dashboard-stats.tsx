@@ -112,7 +112,7 @@ export function DashboardStats() {
         {stats.map((col) => (
           <Link
             key={col.name}
-            href={`/admin/${col.name}`}
+            href={`/admin/content/${col.name}`}
             className="group block p-5 rounded-xl border border-border bg-card hover:border-primary/40 hover:bg-secondary transition-all duration-200"
           >
             <div className="flex items-start justify-between mb-4">

@@ -55,7 +55,7 @@ export async function gatherSiteContext(): Promise<SiteContext> {
   const collections: SiteContext["collections"] = [];
 
   for (const col of config.collections) {
-    if (col.name === "global") continue;
+    if (col.kind === "global") continue;
     const { documents } = await cms.content
       .findMany(col.name, {})
       .catch(() => ({ documents: [] as any[] }));

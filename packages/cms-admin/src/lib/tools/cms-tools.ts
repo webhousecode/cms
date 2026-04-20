@@ -97,7 +97,7 @@ export async function buildCmsTools(): Promise<ToolPair[]> {
         const [cms, config] = await Promise.all([getAdminCms(), getAdminConfig()]);
         const lines: string[] = [];
         for (const col of config.collections) {
-          if (col.name === "global") continue;
+          if (col.kind === "global") continue;
           const { documents } = await cms.content.findMany(col.name, { status: "published" }).catch(() => ({ documents: [] }));
           lines.push(`- ${col.label ?? col.name} (${col.name}): ${documents.length} published`);
         }
