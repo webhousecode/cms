@@ -44,16 +44,20 @@ RUN corepack enable && corepack prepare pnpm@10.30.3 --activate
 ENV NODE_ENV=production
 ENV PORT=3010
 ENV HOSTNAME=0.0.0.0
+# Admin-server data (registry, users, tokens, beam, goto-links) lives here.
+# Mount a named volume / bind mount at /data/cms-admin so it survives restarts.
+ENV WEBHOUSE_DATA_DIR=/data/cms-admin
 
 # Copy built output + workspace dependencies needed at runtime
 COPY --from=builder /app/node_modules              ./node_modules
 COPY --from=builder /app/packages/cms              ./packages/cms
 COPY --from=builder /app/packages/cms-admin        ./packages/cms-admin
 
-# Create non-root user
-RUN addgroup --system --gid 1001 nodejs \
+# Create non-root user + admin data dir (persisted via volume at runtime)
+RUN mkdir -p /data/cms-admin \
+ && addgroup --system --gid 1001 nodejs \
  && adduser  --system --uid 1001 nextjs \
- && chown -R nextjs:nodejs /app
+ && chown -R nextjs:nodejs /app /data
 
 USER nextjs
 

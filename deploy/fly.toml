@@ -6,6 +6,10 @@ primary_region = "arn"
 
 [env]
   DATA_DIR = "/data"
+  # Admin-server data (registry, users, tokens, beam, goto-links) lives on the
+  # Fly Volume so it survives redeploys and machine restarts. Per-site data
+  # still travels with each site.
+  WEBHOUSE_DATA_DIR = "/data/cms-admin"
 
 [mounts]
   source = "cms_data"

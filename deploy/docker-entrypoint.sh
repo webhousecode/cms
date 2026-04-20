@@ -6,6 +6,12 @@
 
 set -e
 
+# Ensure admin-server data dir exists on persistent volume (fresh volumes
+# come up empty). WEBHOUSE_DATA_DIR is set by the Dockerfile to /data/cms-admin.
+if [ -n "${WEBHOUSE_DATA_DIR}" ]; then
+  mkdir -p "${WEBHOUSE_DATA_DIR}/_data"
+fi
+
 # Seed demo site if /site has no config
 if [ ! -f /site/cms.config.ts ] && [ -d /app/seed/content ]; then
   echo ""

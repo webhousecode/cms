@@ -55,39 +55,73 @@ export interface Registry {
 // ─── Paths ────────────────────────────────────────────────
 
 /**
- * Location of cms-admin's own data (registry, per-site _data, goto-links, etc).
+ * Location of cms-admin's own data (registry, users, access-tokens, goto-links,
+ * beam sessions, device tokens). Cross-platform — works on Linux, macOS, Docker,
+ * Fly, Kubernetes, any POSIX host.
  *
  * Resolution order:
- *   1. WEBHOUSE_DATA_DIR env var — explicit override
- *   2. ~/.webhouse/cms-admin — neutral user-owned location (default)
- *   3. Legacy: {CMS_CONFIG_PATH-parent}/_admin — only used if it already exists
- *      on disk AND neither of the above has a registry.json yet. This path is
- *      automatically migrated to the new location on first boot with 0.2.18+.
+ *   1. WEBHOUSE_DATA_DIR env var           — explicit override (preferred for
+ *                                             production: Docker/Fly/k8s)
+ *   2. /data/cms-admin if writable         — convention for Docker & Fly, auto-
+ *                                             detected when the deploy layer has
+ *                                             mounted a persistent volume there
+ *                                             (no env var needed)
+ *   3. XDG_DATA_HOME/webhouse-cms          — XDG Base Directory spec (Linux
+ *                                             standard; honoured on macOS too)
+ *   4. $HOME/.local/share/webhouse-cms     — XDG default when XDG_DATA_HOME
+ *                                             is not set
+ *   5. $HOME/.webhouse/cms-admin           — simple fallback, Unix standard
+ *   6. Legacy {CMS_CONFIG_PATH-parent}/_admin — only if (5) is empty AND the
+ *                                             legacy path already has a
+ *                                             registry.json (auto-fallback for
+ *                                             pre-0.2.18 deployments)
  *
- * The legacy path nested admin data inside whichever site happened to be the
- * bootstrap (`CMS_CONFIG_PATH`). That made deleting or moving that one site
- * destroy all other sites' registry metadata — a cross-tenant coupling bug.
- * New deployments should always use WEBHOUSE_DATA_DIR or the default home path.
+ * Production deployments (Docker/Fly/k8s) should set WEBHOUSE_DATA_DIR
+ * explicitly or mount a persistent volume at /data/cms-admin — otherwise
+ * container restarts wipe registry, users, and tokens.
  */
 export function getAdminDataDir(): string {
   const explicit = process.env.WEBHOUSE_DATA_DIR;
   if (explicit) return path.resolve(explicit);
 
-  const home = process.env.HOME ?? "/tmp";
-  const defaultDir = path.join(home, ".webhouse", "cms-admin");
+  // Auto-detect containerised production: if /data/cms-admin exists and is
+  // writable it means the deploy layer has mounted a persistent volume for us.
+  const containerDir = "/data/cms-admin";
+  if (isWritableDir(containerDir)) return containerDir;
 
-  // Legacy fallback: only if new location is empty AND old location has data.
-  // This is how we auto-migrate on first boot — see migrateAdminDataDir().
+  const xdgData = process.env.XDG_DATA_HOME;
+  if (xdgData) return path.join(xdgData, "webhouse-cms");
+
+  const home = process.env.HOME ?? "/tmp";
+  const xdgDefault = path.join(home, ".local", "share", "webhouse-cms");
+  const simpleDefault = path.join(home, ".webhouse", "cms-admin");
+
+  // Prefer XDG default if it already exists (we've written there before),
+  // else check legacy, else fall back to the simple $HOME location.
+  if (existsSync(path.join(xdgDefault, "registry.json"))) return xdgDefault;
+
   const configPath = process.env.CMS_CONFIG_PATH;
   if (configPath) {
     const legacyDir = path.join(path.dirname(path.resolve(configPath)), "_admin");
-    const defaultHasRegistry = existsSync(path.join(defaultDir, "registry.json"));
-    const legacyHasRegistry = existsSync(path.join(legacyDir, "registry.json"));
-    if (!defaultHasRegistry && legacyHasRegistry) {
-      return legacyDir;
-    }
+    const simpleHas = existsSync(path.join(simpleDefault, "registry.json"));
+    const legacyHas = existsSync(path.join(legacyDir, "registry.json"));
+    if (!simpleHas && legacyHas) return legacyDir;
   }
-  return defaultDir;
+  return simpleDefault;
+}
+
+function isWritableDir(p: string): boolean {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const fsSync = require("node:fs") as typeof import("node:fs");
+    if (!fsSync.existsSync(p)) return false;
+    const stat = fsSync.statSync(p);
+    if (!stat.isDirectory()) return false;
+    fsSync.accessSync(p, fsSync.constants.W_OK);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function getRegistryPath(): string {
