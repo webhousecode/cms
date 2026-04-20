@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { CustomSelect } from "@/components/ui/custom-select";
 
 // ─── Types (mirror lib/access-tokens.ts) ────────────────────────────
 
@@ -320,24 +321,36 @@ export function AccessTokensPanel() {
             <div style={helpTextStyle}>Select edit or read permissions to apply. Each row is one permission.</div>
             {permRows.map((row, i) => (
               <div key={i} style={{ display: "flex", gap: "0.4rem", marginBottom: "0.4rem", alignItems: "center" }}>
-                <select value={row.scope} onChange={(e) => {
-                    const firstCat = Object.keys(PERMISSION_TREE[e.target.value] ?? {})[0] ?? "";
-                    const firstAct = Object.keys(PERMISSION_TREE[e.target.value]?.[firstCat] ?? {})[0] ?? "";
-                    setPermRows(permRows.map((r, idx) => idx === i ? { scope: e.target.value, category: firstCat, action: firstAct } : r));
-                  }} style={{ ...inputStyle, minWidth: 110 }}>
-                  {Object.keys(PERMISSION_TREE).map((s) => <option key={s} value={s}>{s}</option>)}
-                </select>
-                <select value={row.category} onChange={(e) => {
-                    const firstAct = Object.keys(PERMISSION_TREE[row.scope]?.[e.target.value] ?? {})[0] ?? "";
-                    setPermRows(permRows.map((r, idx) => idx === i ? { ...r, category: e.target.value, action: firstAct } : r));
-                  }} style={{ ...inputStyle, minWidth: 140 }}>
-                  {Object.keys(PERMISSION_TREE[row.scope] ?? {}).map((c) => <option key={c} value={c}>{c}</option>)}
-                </select>
-                <select value={row.action} onChange={(e) =>
-                    setPermRows(permRows.map((r, idx) => idx === i ? { ...r, action: e.target.value } : r))
-                  } style={{ ...inputStyle, minWidth: 110 }}>
-                  {Object.keys(PERMISSION_TREE[row.scope]?.[row.category] ?? {}).map((a) => <option key={a} value={a}>{a}</option>)}
-                </select>
+                <div style={{ minWidth: 110 }}>
+                  <CustomSelect
+                    value={row.scope}
+                    options={Object.keys(PERMISSION_TREE).map((s) => ({ value: s, label: s }))}
+                    onChange={(v) => {
+                      const firstCat = Object.keys(PERMISSION_TREE[v] ?? {})[0] ?? "";
+                      const firstAct = Object.keys(PERMISSION_TREE[v]?.[firstCat] ?? {})[0] ?? "";
+                      setPermRows(permRows.map((r, idx) => idx === i ? { scope: v, category: firstCat, action: firstAct } : r));
+                    }}
+                  />
+                </div>
+                <div style={{ minWidth: 140 }}>
+                  <CustomSelect
+                    value={row.category}
+                    options={Object.keys(PERMISSION_TREE[row.scope] ?? {}).map((c) => ({ value: c, label: c }))}
+                    onChange={(v) => {
+                      const firstAct = Object.keys(PERMISSION_TREE[row.scope]?.[v] ?? {})[0] ?? "";
+                      setPermRows(permRows.map((r, idx) => idx === i ? { ...r, category: v, action: firstAct } : r));
+                    }}
+                  />
+                </div>
+                <div style={{ minWidth: 110 }}>
+                  <CustomSelect
+                    value={row.action}
+                    options={Object.keys(PERMISSION_TREE[row.scope]?.[row.category] ?? {}).map((a) => ({ value: a, label: a }))}
+                    onChange={(v) =>
+                      setPermRows(permRows.map((r, idx) => idx === i ? { ...r, action: v } : r))
+                    }
+                  />
+                </div>
                 <button type="button" onClick={() => setPermRows(permRows.filter((_, idx) => idx !== i))}
                   style={smallIconBtn} disabled={permRows.length === 1}>×</button>
               </div>
@@ -351,30 +364,41 @@ export function AccessTokensPanel() {
             <div style={sectionTitleStyle}>Resources</div>
             <div style={helpTextStyle}>Restrict the token to specific sites or admin areas. Leave empty = all resources (Cloudflare default).</div>
             {resourceFilters.map((f, i) => (
-              <div key={i} style={{ display: "flex", gap: "0.4rem", marginBottom: "0.4rem", alignItems: "center" }}>
-                <select value={f.effect} onChange={(e) =>
-                    setResourceFilters(resourceFilters.map((r, idx) => idx === i ? { ...r, effect: e.target.value as ResourceEffect } : r))
-                  } style={{ ...inputStyle, minWidth: 95 }}>
-                  <option value="include">Include</option>
-                  <option value="exclude">Exclude</option>
-                </select>
-                <select value={f.scope} onChange={(e) =>
-                    setResourceFilters(resourceFilters.map((r, idx) => idx === i ? { ...r, scope: e.target.value as ResourceScope, targets: [] } : r))
-                  } style={{ ...inputStyle, minWidth: 120 }}>
-                  <option value="site">Specific sites</option>
-                  <option value="admin-area">Admin areas</option>
-                  <option value="org">Org level</option>
-                </select>
-                <div style={{ flex: 1, display: "flex", gap: "0.3rem", flexWrap: "wrap", alignItems: "center" }}>
+              <div key={i} style={{ display: "flex", gap: "0.4rem", marginBottom: "0.4rem", alignItems: "flex-start" }}>
+                <div style={{ minWidth: 95 }}>
+                  <CustomSelect
+                    value={f.effect}
+                    options={[
+                      { value: "include", label: "Include" },
+                      { value: "exclude", label: "Exclude" },
+                    ]}
+                    onChange={(v) =>
+                      setResourceFilters(resourceFilters.map((r, idx) => idx === i ? { ...r, effect: v as ResourceEffect } : r))
+                    }
+                  />
+                </div>
+                <div style={{ minWidth: 140 }}>
+                  <CustomSelect
+                    value={f.scope}
+                    options={[
+                      { value: "site", label: "Specific sites" },
+                      { value: "admin-area", label: "Admin areas" },
+                      { value: "org", label: "Org level" },
+                    ]}
+                    onChange={(v) =>
+                      setResourceFilters(resourceFilters.map((r, idx) => idx === i ? { ...r, scope: v as ResourceScope, targets: [] } : r))
+                    }
+                  />
+                </div>
+                <div style={{ flex: 1, display: "flex", gap: "0.3rem", flexWrap: "wrap", alignItems: "center", minHeight: 32 }}>
                   {f.scope === "site" && (
-                    <select multiple value={Array.isArray(f.targets) ? f.targets : []}
-                      onChange={(e) => {
-                        const selected = Array.from(e.target.selectedOptions).map((o) => o.value);
-                        setResourceFilters(resourceFilters.map((r, idx) => idx === i ? { ...r, targets: selected } : r));
-                      }}
-                      style={{ ...inputStyle, minHeight: 72, minWidth: 180, flex: 1 }}>
-                      {availableSites.map((s) => <option key={s.id} value={s.id}>{s.name} ({s.id})</option>)}
-                    </select>
+                    <SiteChipPicker
+                      sites={availableSites}
+                      selected={Array.isArray(f.targets) ? f.targets : []}
+                      onChange={(targets) =>
+                        setResourceFilters(resourceFilters.map((r, idx) => idx === i ? { ...r, targets } : r))
+                      }
+                    />
                   )}
                   {f.scope === "admin-area" && (
                     <input type="text" value={Array.isArray(f.targets) ? f.targets.join(", ") : ""}
@@ -383,7 +407,7 @@ export function AccessTokensPanel() {
                       style={{ ...inputStyle, flex: 1 }} />
                   )}
                   {f.scope === "org" && (
-                    <span style={{ fontSize: "0.72rem", color: "var(--muted-foreground)" }}>(matches org:settings)</span>
+                    <span style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", alignSelf: "center" }}>(matches org:settings)</span>
                   )}
                 </div>
                 <button type="button" onClick={() => setResourceFilters(resourceFilters.filter((_, idx) => idx !== i))}
@@ -400,12 +424,18 @@ export function AccessTokensPanel() {
             <div style={helpTextStyle}>CIDR notation (e.g. 203.0.113.0/24) or single IPs. Empty = no IP restriction.</div>
             {ipFilters.map((f, i) => (
               <div key={i} style={{ display: "flex", gap: "0.4rem", marginBottom: "0.4rem", alignItems: "center" }}>
-                <select value={f.op} onChange={(e) =>
-                    setIpFilters(ipFilters.map((x, idx) => idx === i ? { ...x, op: e.target.value as IpFilterOp } : x))
-                  } style={{ ...inputStyle, minWidth: 95 }}>
-                  <option value="in">Is in</option>
-                  <option value="not_in">Is not in</option>
-                </select>
+                <div style={{ minWidth: 110 }}>
+                  <CustomSelect
+                    value={f.op}
+                    options={[
+                      { value: "in", label: "Is in" },
+                      { value: "not_in", label: "Is not in" },
+                    ]}
+                    onChange={(v) =>
+                      setIpFilters(ipFilters.map((x, idx) => idx === i ? { ...x, op: v as IpFilterOp } : x))
+                    }
+                  />
+                </div>
                 <input type="text" value={f.cidrs.join(", ")} placeholder="e.g. 203.0.113.4/32"
                   onChange={(e) => setIpFilters(ipFilters.map((x, idx) => idx === i ? { ...x, cidrs: e.target.value.split(",").map((c) => c.trim()).filter(Boolean) } : x))}
                   style={{ ...inputStyle, flex: 1 }} />
@@ -533,6 +563,56 @@ export function AccessTokensPanel() {
           );
         })}
       </div>
+    </div>
+  );
+}
+
+/**
+ * Chip-based multi-site picker. One chip per available site; click toggles
+ * membership. Avoids the native `<select multiple>` (which breaks our
+ * design system and ignores CustomSelect convention).
+ */
+function SiteChipPicker({
+  sites,
+  selected,
+  onChange,
+}: {
+  sites: Array<{ id: string; name: string; orgId: string }>;
+  selected: string[];
+  onChange: (selected: string[]) => void;
+}) {
+  if (sites.length === 0) {
+    return <span style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", alignSelf: "center" }}>
+      (No sites found — single-site mode)
+    </span>;
+  }
+  const toggle = (id: string) => {
+    onChange(selected.includes(id) ? selected.filter((s) => s !== id) : [...selected, id]);
+  };
+  return (
+    <div style={{ display: "flex", flexWrap: "wrap", gap: "0.3rem" }}>
+      {sites.map((s) => {
+        const active = selected.includes(s.id);
+        return (
+          <button
+            key={s.id}
+            type="button"
+            onClick={() => toggle(s.id)}
+            style={{
+              fontSize: "0.7rem",
+              padding: "0.25rem 0.6rem",
+              borderRadius: "999px",
+              border: `1px solid ${active ? "var(--primary)" : "var(--border)"}`,
+              background: active ? "color-mix(in srgb, var(--primary) 15%, transparent)" : "var(--background)",
+              color: active ? "var(--foreground)" : "var(--muted-foreground)",
+              fontFamily: "monospace",
+              cursor: "pointer",
+            }}
+          >
+            {active ? "✓ " : ""}{s.id}
+          </button>
+        );
+      })}
     </div>
   );
 }
