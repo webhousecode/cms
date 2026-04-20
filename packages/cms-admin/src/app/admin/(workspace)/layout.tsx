@@ -114,14 +114,14 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const siteConfig = await readSiteConfig();
 
   // ── Normal workspace layout ──────────────────────────────
-  const allCollections = config.collections.map((c) => ({
-    name: c.name,
-    label: c.label ?? c.name,
-  }));
-  const collections = allCollections
-    .filter((c) => c.name !== "global")
+  // All user-defined collections live under Content in the sidebar, no matter
+  // what they're named. Namespaced routing (/admin/content/[collection]) means
+  // a collection named `visibility`, `media`, or `global` can no longer collide
+  // with built-in admin panels — so we no longer special-case any name.
+  const collections = config.collections
+    .map((c) => ({ name: c.name, label: c.label ?? c.name }))
     .sort((a, b) => a.label.localeCompare(b.label));
-  const globals = allCollections.filter((c) => c.name === "global");
+  const globals: Array<{ name: string; label: string }> = [];
 
   // Read onboarding state for the current user (F120)
   const userId = session?.sub ?? "anonymous";

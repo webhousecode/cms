@@ -193,7 +193,7 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
         sublabel: `Collection · ${col.name}`,
         category: "navigation",
         icon: <Database style={{ ...ICON_SIZE, color: MUTED }} />,
-        href: `/admin/${col.name}`,
+        href: `/admin/content/${col.name}`,
         keywords: [col.name, col.label.toLowerCase()],
       });
     }
@@ -388,7 +388,7 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
             : r.status === "expired"
             ? <FileText style={{ ...ICON_SIZE, color: "rgb(239 68 68)" }} />
             : <FileText style={{ ...ICON_SIZE, color: MUTED }} />,
-          href: `/admin/${r.collection}/${r.slug}`,
+          href: `/admin/content/${r.collection}/${r.slug}`,
         });
       }
     }

@@ -49,7 +49,7 @@ export default async function SettingsPage({
   const { tab = "general" } = await searchParams;
   const activeOrgId = cookieStore.get("cms-active-org")?.value ?? "default";
 
-  const globals = config.collections.filter((c) => c.name === "global");
+  const globals = config.collections.filter((c) => c.kind === "global");
 
   const tabs = [
     { id: "general",     label: "General" },
@@ -243,7 +243,7 @@ export default async function SettingsPage({
                     <p className="text-xs text-muted-foreground font-mono mt-0.5">{col.name} · {col.fields.length} fields</p>
                   </div>
                 </div>
-                <Link href={`/admin/${col.name}`}>
+                <Link href={`/admin/content/${col.name}`}>
                   <Button variant="outline" size="sm" className="gap-1.5">
                     <Edit2 className="w-3.5 h-3.5" /> Edit
                   </Button>

@@ -63,7 +63,7 @@ export async function GET() {
         const base = {
           title: String(doc.data?.title ?? doc.data?.name ?? doc.slug),
           subtitle: col.label ?? col.name,
-          href: `/admin/${col.name}/${doc.slug}`,
+          href: `/admin/content/${col.name}/${doc.slug}`,
           excerpt,
         };
         if (publishAt) {

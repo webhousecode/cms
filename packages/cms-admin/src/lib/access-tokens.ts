@@ -30,11 +30,12 @@ interface TokenStore {
 // ─── Paths ───────────────────────────────────────────
 
 function getStorePath(): string {
-  const configPath = process.env.CMS_CONFIG_PATH;
-  if (configPath) {
-    return path.join(path.dirname(path.resolve(configPath)), "_data", "access-tokens.json");
-  }
-  return path.join(process.env.HOME ?? "/tmp", ".webhouse-cms", "access-tokens.json");
+  // Tokens are admin-server-level, not site-level — store alongside the
+  // registry in the admin data dir (neutral location), NOT inside whichever
+  // site happens to be the CMS_CONFIG_PATH bootstrap.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { getAdminDataDir } = require("./site-registry") as typeof import("./site-registry");
+  return path.join(getAdminDataDir(), "_data", "access-tokens.json");
 }
 
 async function loadStore(): Promise<TokenStore> {

@@ -122,7 +122,7 @@ function RowMenu({ doc, collection, onClone, onToggle, onTrash, cloning, preview
   const btnRef = useRef<HTMLButtonElement>(null);
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
   const { isFavorite, toggle: toggleFavorite } = useFavorites();
-  const favPath = `/admin/${collection}/${doc.slug}`;
+  const favPath = `/admin/content/${collection}/${doc.slug}`;
   const isFav = isFavorite(favPath);
   const docTitle = (doc.data as { title?: string })?.title ?? doc.slug;
 
@@ -158,7 +158,7 @@ function RowMenu({ doc, collection, onClone, onToggle, onTrash, cloning, preview
           boxShadow: "0 4px 20px rgba(0,0,0,0.3)", padding: "0.25rem",
         }}>
           <Link
-            href={`/admin/${collection}/${doc.slug}`}
+            href={`/admin/content/${collection}/${doc.slug}`}
             onClick={() => setOpen(false)}
             style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.4rem 0.6rem", borderRadius: "5px", fontSize: "0.8rem", color: "var(--foreground)", textDecoration: "none" }}
             className="hover:bg-secondary"
@@ -547,7 +547,7 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
               >
                 <Link
                   data-testid={`collection-item-${doc.slug}`}
-                  href={`/admin/${collection}/${doc.slug}`}
+                  href={`/admin/content/${collection}/${doc.slug}`}
                   style={{ textDecoration: "none", display: "flex", flexDirection: "column", flex: 1 }}
                 >
                   {/* Preview thumbnail */}
@@ -557,7 +557,7 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
                 <div style={{ padding: "0.6rem 0.75rem", borderTop: "1px solid var(--border)" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
                     <StatusDot status={doc.status} publishAt={doc.publishAt} />
-                    <Link href={`/admin/${collection}/${doc.slug}`} style={{ textDecoration: "none", flex: 1, minWidth: 0 }}>
+                    <Link href={`/admin/content/${collection}/${doc.slug}`} style={{ textDecoration: "none", flex: 1, minWidth: 0 }}>
                       <p style={{
                         fontSize: "0.8rem", fontWeight: 500, color: "var(--foreground)",
                         overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
@@ -614,7 +614,7 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
                   >
                     {/* Title */}
                     <td style={{ padding: "0.625rem 0.75rem", maxWidth: "22rem" }}>
-                      <Link href={`/admin/${collection}/${doc.slug}`} style={{ textDecoration: "none" }}>
+                      <Link href={`/admin/content/${collection}/${doc.slug}`} style={{ textDecoration: "none" }}>
                         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                           <StatusDot status={doc.status} publishAt={doc.publishAt} />
                           <div style={{ minWidth: 0 }}>

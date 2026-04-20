@@ -274,7 +274,7 @@ export default function VisibilityPage() {
                       return (
                         <tr key={`${doc.collection}/${doc.slug}`} style={{ borderBottom: "1px solid var(--border)" }}>
                           <td style={{ padding: "0.625rem 0.75rem" }}>
-                            <a href={`/admin/${doc.collection}/${doc.slug}`} style={{ color: "var(--foreground)", textDecoration: "none" }}>
+                            <a href={`/admin/content/${doc.collection}/${doc.slug}`} style={{ color: "var(--foreground)", textDecoration: "none" }}>
                               <span style={{ fontWeight: 500 }}>{doc.title}</span>
                               <span style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", marginLeft: "0.5rem", fontFamily: "monospace" }}>
                                 {doc.collectionLabel}

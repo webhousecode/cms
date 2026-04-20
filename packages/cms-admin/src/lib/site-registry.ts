@@ -5,6 +5,7 @@
  * When it doesn't → single-site mode (CMS_CONFIG_PATH env var).
  */
 import fs from "node:fs/promises";
+import { existsSync } from "node:fs";
 import path from "node:path";
 
 // ─── Types ────────────────────────────────────────────────
@@ -53,13 +54,40 @@ export interface Registry {
 
 // ─── Paths ────────────────────────────────────────────────
 
+/**
+ * Location of cms-admin's own data (registry, per-site _data, goto-links, etc).
+ *
+ * Resolution order:
+ *   1. WEBHOUSE_DATA_DIR env var — explicit override
+ *   2. ~/.webhouse/cms-admin — neutral user-owned location (default)
+ *   3. Legacy: {CMS_CONFIG_PATH-parent}/_admin — only used if it already exists
+ *      on disk AND neither of the above has a registry.json yet. This path is
+ *      automatically migrated to the new location on first boot with 0.2.18+.
+ *
+ * The legacy path nested admin data inside whichever site happened to be the
+ * bootstrap (`CMS_CONFIG_PATH`). That made deleting or moving that one site
+ * destroy all other sites' registry metadata — a cross-tenant coupling bug.
+ * New deployments should always use WEBHOUSE_DATA_DIR or the default home path.
+ */
 export function getAdminDataDir(): string {
+  const explicit = process.env.WEBHOUSE_DATA_DIR;
+  if (explicit) return path.resolve(explicit);
+
+  const home = process.env.HOME ?? "/tmp";
+  const defaultDir = path.join(home, ".webhouse", "cms-admin");
+
+  // Legacy fallback: only if new location is empty AND old location has data.
+  // This is how we auto-migrate on first boot — see migrateAdminDataDir().
   const configPath = process.env.CMS_CONFIG_PATH;
   if (configPath) {
-    return path.join(path.dirname(path.resolve(configPath)), "_admin");
+    const legacyDir = path.join(path.dirname(path.resolve(configPath)), "_admin");
+    const defaultHasRegistry = existsSync(path.join(defaultDir, "registry.json"));
+    const legacyHasRegistry = existsSync(path.join(legacyDir, "registry.json"));
+    if (!defaultHasRegistry && legacyHasRegistry) {
+      return legacyDir;
+    }
   }
-  // Fallback: use home dir
-  return path.join(process.env.HOME ?? "/tmp", ".webhouse-cms");
+  return defaultDir;
 }
 
 function getRegistryPath(): string {

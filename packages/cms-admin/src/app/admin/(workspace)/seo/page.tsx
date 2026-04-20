@@ -430,7 +430,7 @@ export default function SeoPage() {
                                   {kw.documents.map((d) => (
                                     <tr key={`${d.collection}/${d.slug}`} style={{ borderTop: "1px solid var(--border)" }}>
                                       <td style={{ padding: "0.375rem 0.5rem" }}>
-                                        <a href={`/admin/${d.collection}/${d.slug}`} style={{ color: "var(--foreground)", textDecoration: "none" }}>
+                                        <a href={`/admin/content/${d.collection}/${d.slug}`} style={{ color: "var(--foreground)", textDecoration: "none" }}>
                                           {d.title}
                                         </a>
                                       </td>
@@ -503,7 +503,7 @@ export default function SeoPage() {
                 <tr key={`${doc.collection}/${doc.slug}`} style={{ borderBottom: "1px solid var(--border)" }}>
                   <td style={{ padding: "0.625rem 0.75rem" }}>
                     <a
-                      href={`/admin/${doc.collection}/${doc.slug}`}
+                      href={`/admin/content/${doc.collection}/${doc.slug}`}
                       style={{ color: "var(--foreground)", textDecoration: "none", fontWeight: 500, display: "flex", alignItems: "center", gap: "0.5rem" }}
                     >
                       <span style={{

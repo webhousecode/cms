@@ -222,7 +222,7 @@ export default function CurationPage() {
       body: JSON.stringify({ asDraft: true }),
     });
     if (res.ok) {
-      router.push(`/admin/${item.collection}/${item.slug}?from=curation`);
+      router.push(`/admin/content/${item.collection}/${item.slug}?from=curation`);
     }
   }
 

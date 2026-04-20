@@ -1,35 +1,28 @@
-import { getAdminConfig } from "@/lib/cms";
-import { notFound } from "next/navigation";
-import { CollectionPageClient } from "./collection-page-client";
-import { readSiteConfig } from "@/lib/site-config";
-import { getSiteRole } from "@/lib/require-role";
-
-type Props = { params: Promise<{ collection: string }> };
-
 /**
- * Server component — fetches lightweight config only (no content).
- * Documents are loaded client-side by CollectionPageClient.
+ * Backwards-compat redirect — collections moved to /admin/content/[collection].
+ *
+ * Next.js checks static routes before dynamic, so this only matches when the
+ * slug isn't a built-in admin route (settings, media, forms, etc). For any
+ * remaining dynamic segment we 307-redirect to the namespaced location so
+ * existing bookmarks, Discord/Slack webhook links, emails, and goto shortcuts
+ * keep working indefinitely.
  */
-export default async function CollectionPage({ params }: Props) {
+import { redirect } from "next/navigation";
+
+export default async function LegacyCollectionRedirect({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ collection: string }>;
+  searchParams?: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const { collection } = await params;
-  const [config, siteConfig, siteRole] = await Promise.all([getAdminConfig(), readSiteConfig(), getSiteRole()]);
-
-  const colConfig = config.collections.find((c) => c.name === collection);
-  if (!colConfig) notFound();
-
-  return (
-    <CollectionPageClient
-      collection={collection}
-      collectionLabel={colConfig.label ?? collection}
-      titleField={colConfig.fields[0]?.name ?? "title"}
-      fields={colConfig.fields}
-      readOnly={siteRole === "viewer"}
-      urlPrefix={colConfig.urlPrefix}
-      urlPattern={(colConfig as any).urlPattern}
-      localeStrategy={siteConfig.localeStrategy ?? "prefix-other"}
-      schemaEnabled={siteConfig.schemaEditEnabled}
-      defaultLocale={siteConfig.defaultLocale || config.defaultLocale}
-      siteLocales={siteConfig.locales?.length ? siteConfig.locales : config.locales}
-    />
-  );
+  const search = (await searchParams) ?? {};
+  const qs = new URLSearchParams();
+  for (const [k, v] of Object.entries(search)) {
+    if (Array.isArray(v)) v.forEach((x) => qs.append(k, x));
+    else if (v !== undefined) qs.set(k, v);
+  }
+  const suffix = qs.toString() ? `?${qs.toString()}` : "";
+  redirect(`/admin/content/${collection}${suffix}`);
 }

@@ -429,7 +429,7 @@ export default function LinkCheckerPage() {
                     <td style={{ padding: "0.5rem 0.875rem" }}>
                       <button
                         type="button"
-                        onClick={() => openTab(`/admin/${r.docCollection}/${r.docSlug}`, r.docTitle)}
+                        onClick={() => openTab(`/admin/content/${r.docCollection}/${r.docSlug}`, r.docTitle)}
                         className="hover:underline text-left"
                         style={{ color: "var(--foreground)", fontSize: "0.8rem", background: "none", border: "none", cursor: "pointer", padding: 0 }}
                       >
