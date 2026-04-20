@@ -65,16 +65,11 @@ function getJwtSecret(): Uint8Array {
 }
 
 async function getUsersFilePath(): Promise<string> {
-  // Users are CMS-wide, not per-site. Always use the primary data dir
-  // from CMS_CONFIG_PATH so users work regardless of active site.
-  const configPath = process.env.CMS_CONFIG_PATH;
-  if (configPath) {
-    const dataDir = path.join(path.dirname(path.resolve(configPath)), "_data");
-    await fs.mkdir(dataDir, { recursive: true });
-    return path.join(dataDir, "users.json");
-  }
-  // Fallback to active site paths (single-site mode without env var)
-  const { dataDir } = await getActiveSitePaths();
+  // Users are admin-server-level — never per-site. Stored in the neutral
+  // admin data dir so user accounts survive moving/deleting any specific
+  // site and don't depend on CMS_CONFIG_PATH resolving to a bootstrap site.
+  const { getAdminDataDir } = await import("./site-registry");
+  const dataDir = path.join(getAdminDataDir(), "_data");
   await fs.mkdir(dataDir, { recursive: true });
   return path.join(dataDir, "users.json");
 }
