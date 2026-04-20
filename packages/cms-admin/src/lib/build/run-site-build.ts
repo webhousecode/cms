@@ -112,19 +112,60 @@ async function runCustomBuild(
 
 // ── Native build.ts build ───────────────────────────────────
 
+/**
+ * Provide cms-admin's build runtime to site builds so sites don't need their
+ * own node_modules, package.json, or pinned `@webhouse/cms` version.
+ *
+ * A static site should be just: cms.config.ts + build.ts + content/ + public/.
+ * cms-admin owns the runtime (`@webhouse/cms`, `marked`, `tsx`) and injects it
+ * via an ESM loader hook that rewrites bare imports to resolve from cms-admin's
+ * node_modules tree. No per-site deps, no version pin, no stale-publish issues.
+ */
+function resolveProvidedRuntime(): { tsxBin: string | null; loaderPath: string; adminRoot: string } {
+  // cms-admin is always the running process (PM2 + next dev set cwd).
+  const adminRoot = process.cwd();
+  // Monorepo root sits two levels up from packages/cms-admin/.
+  const repoRoot = path.resolve(adminRoot, "..", "..");
+
+  const tsxCandidates = [
+    path.join(repoRoot, "node_modules", ".bin", "tsx"),
+    path.join(adminRoot, "node_modules", ".bin", "tsx"),
+  ];
+  const tsxBin = tsxCandidates.find((p) => existsSync(p)) ?? null;
+  const loaderPath = path.join(adminRoot, "scripts", "build-runtime-loader.mjs");
+
+  return { tsxBin, loaderPath, adminRoot };
+}
+
 async function runNativeBuild(
   projectDir: string,
   deployOutDir: string,
   basePath?: string,
 ): Promise<SiteBuildResult> {
   const start = Date.now();
+  const { tsxBin, loaderPath, adminRoot } = resolveProvidedRuntime();
+
+  // Prefer cms-admin's own tsx + runtime loader. Falls back to `npx tsx` only
+  // if the monorepo layout changed (defensive).
+  const useProvided = tsxBin !== null && existsSync(loaderPath);
+  const bin = useProvided ? tsxBin! : "npx";
+  const args = useProvided ? ["build.ts"] : ["tsx", "build.ts"];
 
   console.log(
-    `[deploy] Running native build.ts in ${projectDir} (out=${deployOutDir}/)`,
+    `[deploy] Running native build.ts in ${projectDir} (out=${deployOutDir}/) — runtime=${useProvided ? "cms-admin" : "npx"}`,
   );
 
+  const providedEnv: Record<string, string> = useProvided
+    ? {
+        CMS_ADMIN_ROOT: adminRoot,
+        NODE_OPTIONS:
+          `--loader=${loaderPath}` +
+          (process.env.NODE_OPTIONS ? " " + process.env.NODE_OPTIONS : ""),
+      }
+    : {};
+
   try {
-    execFileSync("npx", ["tsx", "build.ts"], {
+    execFileSync(bin, args, {
       cwd: projectDir,
       timeout: 60000,
       env: {
@@ -132,6 +173,7 @@ async function runNativeBuild(
         NODE_ENV: "production",
         BASE_PATH: basePath ?? "",
         BUILD_OUT_DIR: deployOutDir,
+        ...providedEnv,
       },
       stdio: "pipe",
     });
