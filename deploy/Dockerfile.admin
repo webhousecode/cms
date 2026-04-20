@@ -54,6 +54,10 @@ ENV NODE_ENV=production
 ENV HOSTNAME=0.0.0.0
 ENV PORT=3010
 ENV CMS_CONFIG_PATH=/site/cms.config.ts
+# Admin-server data (registry, users, tokens, beam, goto-links) lives in a
+# persistent volume so it survives container restarts. Mount this path to
+# a named volume or bind mount in your docker run / compose / Fly config.
+ENV WEBHOUSE_DATA_DIR=/data/cms-admin
 
 # Copy Next.js standalone output (self-contained, no node_modules needed)
 COPY --from=builder /app/packages/cms-admin/.next/standalone ./
@@ -79,10 +83,10 @@ COPY deploy/docker-entrypoint.sh /docker-entrypoint.sh
 
 # Create writable directories for cache and data
 RUN chmod +x /docker-entrypoint.sh \
- && mkdir -p /app/.cache /site \
+ && mkdir -p /app/.cache /site /data/cms-admin \
  && addgroup --system --gid 1001 nodejs \
  && adduser  --system --uid 1001 nextjs \
- && chown -R nextjs:nodejs /app /site
+ && chown -R nextjs:nodejs /app /site /data
 
 USER nextjs
 
