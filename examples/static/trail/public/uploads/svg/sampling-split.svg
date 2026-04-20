@@ -1,0 +1,89 @@
+<svg viewBox="0 20 920 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Sampling strategy: 60% of the per-pass budget is drawn from the most-recently-updated Neurons; the remaining 40% is uniformly sampled from the rest of the corpus so long-idle pages still get revisited.">
+  <text x="460" y="45" font-family="monospace" font-size="11" fill="currentColor" text-anchor="middle" opacity="0.55" letter-spacing="1.5">WHAT THE SAMPLE PICKS</text>
+
+  <!-- Corpus bar: full population, sorted by updatedAt desc (left=most recent) -->
+  <rect x="80" y="100" width="760" height="38" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.85"/>
+
+  <!-- Split divider at 20% (recent zone) -->
+  <line x1="232" y1="98" x2="232" y2="142" stroke="currentColor" stroke-width="0.6" stroke-dasharray="3,3" opacity="0.55"/>
+
+  <!-- Labels for the two regions -->
+  <text x="156" y="90" font-family="monospace" font-size="9" fill="currentColor" text-anchor="middle" opacity="0.7">RECENT EDITS</text>
+  <text x="536" y="90" font-family="monospace" font-size="9" fill="currentColor" text-anchor="middle" opacity="0.55">LONG-TAIL — idle Neurons</text>
+
+  <!-- Axis underneath: newest → oldest -->
+  <line x1="80" y1="158" x2="840" y2="158" stroke="currentColor" stroke-width="0.6" opacity="0.5"/>
+  <text x="80"  y="172" font-family="monospace" font-size="8" fill="currentColor" text-anchor="start"  opacity="0.55">newest</text>
+  <text x="840" y="172" font-family="monospace" font-size="8" fill="currentColor" text-anchor="end"    opacity="0.55">oldest</text>
+
+  <!-- N annotation -->
+  <text x="460" y="175" font-family="monospace" font-size="8" fill="currentColor" text-anchor="middle" opacity="0.45">every Neuron in the KB · sorted by last edit</text>
+
+  <!-- Lower block: the sample (300 solid dots + 200 scattered across tail) -->
+  <text x="460" y="220" font-family="monospace" font-size="11" fill="currentColor" text-anchor="middle" opacity="0.55" letter-spacing="1.5">THE NIGHTLY SAMPLE · cap = 500</text>
+
+  <!-- Recent 60%: packed amber dots from x=80 to x=232 -->
+  <g fill="#e8a87c">
+    <circle cx="88"  cy="260" r="3"/>
+    <circle cx="100" cy="260" r="3"/>
+    <circle cx="112" cy="260" r="3"/>
+    <circle cx="124" cy="260" r="3"/>
+    <circle cx="136" cy="260" r="3"/>
+    <circle cx="148" cy="260" r="3"/>
+    <circle cx="160" cy="260" r="3"/>
+    <circle cx="172" cy="260" r="3"/>
+    <circle cx="184" cy="260" r="3"/>
+    <circle cx="196" cy="260" r="3"/>
+    <circle cx="208" cy="260" r="3"/>
+    <circle cx="220" cy="260" r="3"/>
+    <circle cx="88"  cy="272" r="3"/>
+    <circle cx="100" cy="272" r="3"/>
+    <circle cx="112" cy="272" r="3"/>
+    <circle cx="124" cy="272" r="3"/>
+    <circle cx="136" cy="272" r="3"/>
+    <circle cx="148" cy="272" r="3"/>
+    <circle cx="160" cy="272" r="3"/>
+    <circle cx="172" cy="272" r="3"/>
+    <circle cx="184" cy="272" r="3"/>
+    <circle cx="196" cy="272" r="3"/>
+    <circle cx="208" cy="272" r="3"/>
+    <circle cx="220" cy="272" r="3"/>
+  </g>
+
+  <!-- Random 40%: sparse scattered dots from x=240 to x=840 -->
+  <g fill="currentColor" opacity="0.75">
+    <circle cx="258"  cy="262" r="2.5"/>
+    <circle cx="285"  cy="268" r="2.5"/>
+    <circle cx="312"  cy="259" r="2.5"/>
+    <circle cx="348"  cy="271" r="2.5"/>
+    <circle cx="379"  cy="262" r="2.5"/>
+    <circle cx="412"  cy="268" r="2.5"/>
+    <circle cx="445"  cy="260" r="2.5"/>
+    <circle cx="476"  cy="270" r="2.5"/>
+    <circle cx="508"  cy="264" r="2.5"/>
+    <circle cx="542"  cy="258" r="2.5"/>
+    <circle cx="574"  cy="268" r="2.5"/>
+    <circle cx="605"  cy="262" r="2.5"/>
+    <circle cx="638"  cy="270" r="2.5"/>
+    <circle cx="668"  cy="260" r="2.5"/>
+    <circle cx="698"  cy="267" r="2.5"/>
+    <circle cx="731"  cy="262" r="2.5"/>
+    <circle cx="762"  cy="270" r="2.5"/>
+    <circle cx="795"  cy="260" r="2.5"/>
+    <circle cx="825"  cy="268" r="2.5"/>
+  </g>
+
+  <!-- Bracket annotations for each region -->
+  <!-- Recent bracket -->
+  <path d="M 80 290 L 80 296 L 232 296 L 232 290" fill="none" stroke="#e8a87c" stroke-width="0.9"/>
+  <text x="156" y="315" font-family="monospace" font-size="9" fill="#e8a87c" text-anchor="middle" font-weight="bold">60% · most recent</text>
+  <text x="156" y="327" font-family="monospace" font-size="8" fill="currentColor" text-anchor="middle" opacity="0.55">highest contradiction yield</text>
+
+  <!-- Random bracket -->
+  <path d="M 240 290 L 240 296 L 840 296 L 840 290" fill="none" stroke="currentColor" stroke-width="0.7" opacity="0.6"/>
+  <text x="540" y="315" font-family="monospace" font-size="9" fill="currentColor" text-anchor="middle" font-weight="bold" opacity="0.75">40% · uniform random tail</text>
+  <text x="540" y="327" font-family="monospace" font-size="8" fill="currentColor" text-anchor="middle" opacity="0.55">long-idle Neurons still get revisited</text>
+
+  <!-- Caption bottom -->
+  <text x="460" y="370" font-family="monospace" font-size="9" fill="currentColor" text-anchor="middle" opacity="0.4">the sample is biased toward edits — but not exclusively, so old Neurons don't silently rot</text>
+</svg>

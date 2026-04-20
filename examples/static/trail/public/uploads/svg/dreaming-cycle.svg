@@ -1,0 +1,75 @@
+<svg viewBox="0 20 920 420" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The nightly dreaming cycle: sample, scan top-K peers, emit findings, wait — run once every 24 hours like a slow-wave consolidation pass.">
+  <text x="460" y="45" font-family="monospace" font-size="11" fill="currentColor" text-anchor="middle" opacity="0.55" letter-spacing="1.5">THE NIGHTLY DREAMING PASS</text>
+
+  <!-- Clock dial -->
+  <circle cx="460" cy="240" r="140" fill="none" stroke="currentColor" stroke-width="1.2" opacity="0.85"/>
+
+  <!-- 12 hour ticks -->
+  <g stroke="currentColor" stroke-width="0.8" opacity="0.55">
+    <line x1="460" y1="100" x2="460" y2="110"/>
+    <line x1="530" y1="119" x2="525" y2="127"/>
+    <line x1="581" y1="170" x2="572" y2="175"/>
+    <line x1="600" y1="240" x2="590" y2="240"/>
+    <line x1="581" y1="310" x2="572" y2="305"/>
+    <line x1="530" y1="361" x2="525" y2="353"/>
+    <line x1="460" y1="380" x2="460" y2="370"/>
+    <line x1="390" y1="361" x2="395" y2="353"/>
+    <line x1="339" y1="310" x2="348" y2="305"/>
+    <line x1="320" y1="240" x2="330" y2="240"/>
+    <line x1="339" y1="170" x2="348" y2="175"/>
+    <line x1="390" y1="119" x2="395" y2="127"/>
+  </g>
+
+  <!-- Clock numerals -->
+  <g font-family="monospace" font-size="9" fill="currentColor" opacity="0.55" text-anchor="middle">
+    <text x="460" y="94">00</text>
+    <text x="600" y="243">06</text>
+    <text x="460" y="395">12</text>
+    <text x="320" y="243">18</text>
+  </g>
+
+  <!-- Active scan arc: from ~01:00 to ~02:00 (amber) -->
+  <!-- arc start angle: 30° from 12 (01:00) = vertical +30° right; radius 140 -->
+  <!-- Using SVG arc: from (460 + 140*sin(30°), 240 - 140*cos(30°)) to (460 + 140*sin(60°), 240 - 140*cos(60°)) -->
+  <!-- approx: (530,119) to (581,170) -->
+  <path d="M 530 119 A 140 140 0 0 1 581 170" fill="none" stroke="#e8a87c" stroke-width="5"/>
+  <text x="588" y="138" font-family="monospace" font-size="9" fill="#e8a87c" font-weight="bold">scan pass</text>
+  <text x="588" y="150" font-family="monospace" font-size="8" fill="currentColor" opacity="0.6">~1h wall-clock</text>
+
+  <!-- Center block: pipeline steps -->
+  <g font-family="monospace" font-size="10" fill="currentColor" text-anchor="middle">
+    <text x="460" y="210" font-weight="bold" opacity="0.9">4 steps per pass</text>
+  </g>
+  <g font-family="monospace" font-size="9" fill="currentColor" text-anchor="middle" opacity="0.75">
+    <text x="460" y="232">① sample 500</text>
+    <text x="460" y="248">② find top-K peers</text>
+    <text x="460" y="264">③ emit findings</text>
+    <text x="460" y="280">④ sleep · 23h</text>
+  </g>
+
+  <!-- Idle arc annotation: most of the day is the system waiting -->
+  <text x="225" y="240" font-family="monospace" font-size="9" fill="currentColor" text-anchor="middle" opacity="0.55">idle · 23h</text>
+  <text x="225" y="254" font-family="monospace" font-size="8" fill="currentColor" text-anchor="middle" opacity="0.45">serving reads</text>
+
+  <path d="M 285 240 L 315 240" stroke="currentColor" stroke-width="0.8" opacity="0.45" marker-end="url(#arrowhead)"/>
+
+  <defs>
+    <marker id="arrowhead" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+      <polygon points="0 0, 6 3, 0 6" fill="currentColor" opacity="0.6"/>
+    </marker>
+  </defs>
+
+  <!-- Biological analogy -->
+  <g font-family="monospace" font-size="8" fill="currentColor" opacity="0.55">
+    <text x="700" y="78">LIKE THE BRAIN DOES DURING SLEEP</text>
+  </g>
+  <g font-family="monospace" font-size="9" fill="currentColor" opacity="0.75">
+    <text x="700" y="100">slow-wave sleep</text>
+    <text x="700" y="115" opacity="0.55">hippocampus replays recent traces</text>
+    <text x="700" y="130" opacity="0.55">cortex integrates into long-term memory</text>
+    <text x="700" y="150" font-style="italic">Trail dreams on a cron.</text>
+  </g>
+
+  <!-- Caption bottom -->
+  <text x="460" y="408" font-family="monospace" font-size="9" fill="currentColor" text-anchor="middle" opacity="0.4">work during the quiet hour; serve queries the other twenty-three</text>
+</svg>

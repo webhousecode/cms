@@ -15,5 +15,8 @@
   "knowledge-compounds-curve": "RAG gets no better as you feed it more sources. Trail accelerates because each new source updates every Neuron it touches.",
   "vendor-decision": "A two-axis matrix. Trail is the answer when knowledge should both accumulate and leave a persistent, queryable artifact — which is most of the interesting cases.",
   "notebooklm-vs-trail": "NotebookLM and Trail agree on source-grounding. They diverge on what the system leaves behind — a chat log that disappears, or a Neuron that keeps working.",
-  "artifact-persistence": "NotebookLM sessions are bottles thrown into the sea. Trail writes one Neuron and links the next source to it, then the next."
+  "artifact-persistence": "NotebookLM sessions are bottles thrown into the sea. Trail writes one Neuron and links the next source to it, then the next.",
+  "scan-wall-curve": "A naive sequential scan crosses the 24-hour scheduling window around 8,000 Neurons and the passes start stacking. The sampled pass stays flat — by design.",
+  "sampling-split": "Each nightly sample is biased toward recent edits (where contradictions actually live) but reserves room for random long-tail picks so old Neurons never stop being checked.",
+  "dreaming-cycle": "A scheduled pass that sleeps for most of the day and does one bounded hour of integration work. The analogy to slow-wave consolidation is not metaphorical — it is the same pattern."
 }
