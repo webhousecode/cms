@@ -61,17 +61,26 @@ export async function getActiveSitePaths(): Promise<SitePaths> {
     };
   }
 
-  // Multi-site mode — read from cookies
+  // Multi-site mode — check request-scoped override first (token-based
+  // API callers use this), then fall back to cookies (session users).
+  const { getSiteContextOverride } = await import("./site-context");
+  const override = getSiteContextOverride();
+
   let orgId: string;
   let siteId: string;
-  try {
-    const cookieStore = await cookies();
-    orgId = cookieStore.get("cms-active-org")?.value ?? registry.defaultOrgId;
-    siteId = cookieStore.get("cms-active-site")?.value ?? registry.defaultSiteId;
-  } catch {
-    // cookies() may throw outside request context (e.g. instrumentation)
-    orgId = registry.defaultOrgId;
-    siteId = registry.defaultSiteId;
+  if (override?.orgId && override?.siteId) {
+    orgId = override.orgId;
+    siteId = override.siteId;
+  } else {
+    try {
+      const cookieStore = await cookies();
+      orgId = cookieStore.get("cms-active-org")?.value ?? registry.defaultOrgId;
+      siteId = cookieStore.get("cms-active-site")?.value ?? registry.defaultSiteId;
+    } catch {
+      // cookies() may throw outside request context (e.g. instrumentation)
+      orgId = registry.defaultOrgId;
+      siteId = registry.defaultSiteId;
+    }
   }
 
   // Guard: if active org has no sites, don't fall through to another org's site
@@ -130,15 +139,24 @@ export async function getActiveSiteEntry(): Promise<SiteEntry | null> {
   const registry = await loadRegistry();
   if (!registry) return null;
 
+  // Same precedence as getActiveSitePaths: request-scoped override > cookies > default.
+  const { getSiteContextOverride } = await import("./site-context");
+  const override = getSiteContextOverride();
+
   let orgId: string;
   let siteId: string;
-  try {
-    const cookieStore = await cookies();
-    orgId = cookieStore.get("cms-active-org")?.value ?? registry.defaultOrgId;
-    siteId = cookieStore.get("cms-active-site")?.value ?? registry.defaultSiteId;
-  } catch {
-    orgId = registry.defaultOrgId;
-    siteId = registry.defaultSiteId;
+  if (override?.orgId && override?.siteId) {
+    orgId = override.orgId;
+    siteId = override.siteId;
+  } else {
+    try {
+      const cookieStore = await cookies();
+      orgId = cookieStore.get("cms-active-org")?.value ?? registry.defaultOrgId;
+      siteId = cookieStore.get("cms-active-site")?.value ?? registry.defaultSiteId;
+    } catch {
+      orgId = registry.defaultOrgId;
+      siteId = registry.defaultSiteId;
+    }
   }
 
   // Guard: if active org has no sites, return null (don't leak another org's site)
