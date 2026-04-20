@@ -153,25 +153,21 @@ export async function markAccepted(token: string, siteDataDir?: string): Promise
   throw new Error("Invitation not found");
 }
 
-/** Get _data dirs for all registered sites (+ single-site fallback) */
+/** Get _data dirs for all registered sites via the registry. */
 async function getAllSiteDataDirs(): Promise<string[]> {
   const dirs: string[] = [];
 
-  // Single-site mode
-  const configPath = process.env.CMS_CONFIG_PATH;
-  if (configPath) {
-    dirs.push(path.join(path.dirname(path.resolve(configPath)), "_data"));
-  }
-
-  // Multi-site mode — scan registry
+  // All sites come from the registry — no CMS_CONFIG_PATH bootstrap-site
+  // coupling. If the registry is empty (single-site first-boot), the
+  // caller falls back to getActiveSitePaths() via the individual mutation
+  // helpers above.
   const registry = await loadRegistry();
   if (registry) {
+    const { getAdminDataDir } = await import("./site-registry");
+    const cacheBase = path.join(getAdminDataDir(), ".cache");
     for (const org of registry.orgs) {
       for (const site of org.sites) {
         if (site.adapter === "github" || site.configPath.startsWith("github://")) {
-          const cacheBase = configPath
-            ? path.join(path.dirname(path.resolve(configPath)), ".cache")
-            : path.join(process.env.HOME ?? "/tmp", ".webhouse", ".cache");
           dirs.push(path.join(cacheBase, "sites", site.id, "_data"));
         } else {
           const abs = path.resolve(site.configPath);

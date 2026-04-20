@@ -74,14 +74,11 @@ interface PushStoreShape {
 }
 
 async function getStoreFilePath(): Promise<string> {
-  // Mirror auth.ts: tokens are CMS-wide, not per-site.
-  const configPath = process.env.CMS_CONFIG_PATH;
-  if (configPath) {
-    const dataDir = path.join(path.dirname(path.resolve(configPath)), "_data");
-    await fs.mkdir(dataDir, { recursive: true });
-    return path.join(dataDir, "device_tokens.json");
-  }
-  const { dataDir } = await getActiveSitePaths();
+  // Device push tokens are admin-server-level — one user can receive pushes
+  // across all sites they have access to. Stored in the neutral admin data
+  // dir, never inside a specific site.
+  const { getAdminDataDir } = await import("./site-registry");
+  const dataDir = path.join(getAdminDataDir(), "_data");
   await fs.mkdir(dataDir, { recursive: true });
   return path.join(dataDir, "device_tokens.json");
 }

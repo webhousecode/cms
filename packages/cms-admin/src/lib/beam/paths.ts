@@ -8,24 +8,13 @@ import path from "node:path";
 import { mkdirSync } from "node:fs";
 
 /**
- * Returns the base directory for beam-imported sites.
- * Creates the directory if it doesn't exist.
- *
- * Uses CMS_CONFIG_PATH to derive the project directory — this works
- * in both authenticated and unauthenticated contexts (beam receive endpoints).
+ * Base directory for beam-imported sites (staging area for cross-site beam
+ * transfers). Admin-server-level — lives alongside the registry, not inside
+ * any specific site, so transfers survive site moves/deletions.
  */
 export async function getBeamSitesDir(): Promise<string> {
-  // Derive from CMS_CONFIG_PATH (always available)
-  const configPath = process.env.CMS_CONFIG_PATH;
-  if (configPath) {
-    const projectDir = path.dirname(path.resolve(configPath));
-    const dir = path.join(projectDir, ".beam-sites");
-    mkdirSync(dir, { recursive: true });
-    return dir;
-  }
-
-  // Fallback: use CWD
-  const dir = path.join(process.cwd(), ".beam-sites");
+  const { getAdminDataDir } = await import("../site-registry");
+  const dir = path.join(getAdminDataDir(), "beam-sites");
   mkdirSync(dir, { recursive: true });
   return dir;
 }

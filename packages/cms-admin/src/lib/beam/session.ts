@@ -28,13 +28,11 @@ export interface BeamSession {
   secretsRequired: string[];
 }
 
-/** Directory for beam session files */
+/** Directory for beam session files — admin-server-level (beam transfers cross sites). */
 function getSessionDir(): string {
-  const configPath = process.env.CMS_CONFIG_PATH;
-  const base = configPath
-    ? path.dirname(path.resolve(configPath))
-    : process.cwd();
-  const dir = path.join(base, "_data", "beam-sessions");
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { getAdminDataDir } = require("../site-registry") as typeof import("../site-registry");
+  const dir = path.join(getAdminDataDir(), "_data", "beam-sessions");
   mkdirSync(dir, { recursive: true });
   return dir;
 }
