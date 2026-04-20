@@ -117,8 +117,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "orgId and siteId required" }, { status: 400 });
     }
     const { updateSite } = await import("@/lib/site-registry");
+    const pathsChanged =
+      body.updates?.configPath !== undefined ||
+      body.updates?.contentDir !== undefined ||
+      body.updates?.uploadDir !== undefined;
     const site = await updateSite(body.orgId, body.siteId, body.updates ?? {});
     if (!site) return NextResponse.json({ error: "Site not found" }, { status: 404 });
+    if (pathsChanged) {
+      const { invalidate } = await import("@/lib/site-pool");
+      invalidate(body.orgId, body.siteId);
+    }
     return NextResponse.json({ ok: true, site });
   }
 

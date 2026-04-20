@@ -167,7 +167,7 @@ export async function addSite(orgId: string, site: SiteEntry): Promise<void> {
 export async function updateSite(
   orgId: string,
   siteId: string,
-  updates: Partial<Pick<SiteEntry, "name" | "previewUrl" | "homepageSlug" | "homepageCollection">>,
+  updates: Partial<Pick<SiteEntry, "name" | "previewUrl" | "homepageSlug" | "homepageCollection" | "configPath" | "contentDir" | "uploadDir">>,
 ): Promise<SiteEntry | null> {
   const registry = await loadRegistry();
   if (!registry) throw new Error("No registry");
@@ -184,6 +184,17 @@ export async function updateSite(
   if (updates.homepageCollection !== undefined) {
     if (updates.homepageCollection === "") delete site.homepageCollection;
     else site.homepageCollection = updates.homepageCollection;
+  }
+  if (updates.configPath !== undefined && updates.configPath !== "") {
+    site.configPath = updates.configPath;
+  }
+  if (updates.contentDir !== undefined) {
+    if (updates.contentDir === "") delete site.contentDir;
+    else site.contentDir = updates.contentDir;
+  }
+  if (updates.uploadDir !== undefined) {
+    if (updates.uploadDir === "") delete site.uploadDir;
+    else site.uploadDir = updates.uploadDir;
   }
   await saveRegistry(registry);
   return site;

@@ -550,11 +550,17 @@ function SiteSection() {
 						window.dispatchEvent(new CustomEvent("cms-registry-change"));
 					}
 				}
-				// F81 — Persist homepage setting to registry
+				// F81 — Persist homepage setting + path overrides to registry
 				{
 					const orgId = document.cookie.match(/(?:^|; )cms-active-org=([^;]*)/)?.[1];
 					const siteId = document.cookie.match(/(?:^|; )cms-active-site=([^;]*)/)?.[1];
 					if (orgId && siteId) {
+						const updates: Record<string, string> = {
+							homepageSlug: homepageSlug || "",
+							homepageCollection: homepageSlug ? (homepageCollection || "pages") : "",
+						};
+						if (configPath.trim()) updates.configPath = configPath.trim();
+						updates.contentDir = contentDir.trim();
 						await fetch("/api/cms/registry", {
 							method: "POST",
 							headers: { "Content-Type": "application/json" },
@@ -562,10 +568,7 @@ function SiteSection() {
 								action: "update-site",
 								orgId: decodeURIComponent(orgId),
 								siteId: decodeURIComponent(siteId),
-								updates: {
-									homepageSlug: homepageSlug || "",
-									homepageCollection: homepageSlug ? (homepageCollection || "pages") : "",
-								},
+								updates,
 							}),
 						}).catch(() => {});
 					}
