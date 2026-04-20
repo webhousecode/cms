@@ -136,11 +136,12 @@ async function runNativeBuild(
       stdio: "pipe",
     });
   } catch (err) {
-    const msg =
-      err instanceof Error
-        ? (err as Error & { stderr?: Buffer }).stderr?.toString().slice(0, 300) ||
-          err.message
-        : "Build failed";
+    const stderr = err instanceof Error
+      ? (err as Error & { stderr?: Buffer }).stderr?.toString() ?? ""
+      : "";
+    // Tail of stderr — the actual error typically lands last; npm/pnpm
+    // warnings dominate the head and would otherwise hide the real cause.
+    const msg = stderr.trim().slice(-500) || (err instanceof Error ? err.message : "Build failed");
     throw new Error(`Build failed: ${msg}`);
   }
 
