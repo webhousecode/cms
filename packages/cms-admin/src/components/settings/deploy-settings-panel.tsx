@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { SettingsCard } from "./settings-card";
 import { CustomSelect } from "@/components/ui/custom-select";
-import { Rocket, ExternalLink, Check, X, Loader2, RefreshCw, Copy } from "lucide-react";
+import { Rocket, ExternalLink, Check, X, Loader2, RefreshCw, Copy, Globe, Search } from "lucide-react";
 import { DeployModal } from "@/components/deploy-modal";
 
 type DeployProvider =
@@ -150,6 +150,22 @@ export function DeploySettingsPanel() {
     reason?: string;
   }>({ state: "idle" });
 
+  // ── Registrar state ──────────────────────────────────────────────────
+  const [registrarOpen, setRegistrarOpen] = useState(false);
+  const [registrarQuery, setRegistrarQuery] = useState("");
+  const [registrarSearching, setRegistrarSearching] = useState(false);
+  const [registrarResults, setRegistrarResults] = useState<Array<{
+    name: string; registrable: boolean; tier: string;
+    pricing?: { currency: string; registration_cost: string; renewal_cost: string };
+  }>>([]);
+  const [registrarError, setRegistrarError] = useState<string | null>(null);
+  const [registrarPending, setRegistrarPending] = useState<{
+    domain_name: string; price: number; currency: string;
+    confirm_token: string; expires_at: string;
+  } | null>(null);
+  const [registrarConfirming, setRegistrarConfirming] = useState(false);
+  const [registrarDone, setRegistrarDone] = useState<string | null>(null);
+
   // Auto-open modal when navigated with ?deploy=1 (from header button)
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -256,6 +272,76 @@ export function DeploySettingsPanel() {
       setDnsBusy(false);
     }
   }, [loadDnsStatus]);
+
+  const handleRegistrarSearch = useCallback(async () => {
+    const q = registrarQuery.trim();
+    if (!q) return;
+    setRegistrarSearching(true);
+    setRegistrarError(null);
+    setRegistrarResults([]);
+    setRegistrarPending(null);
+    setRegistrarDone(null);
+    try {
+      const res = await fetch(`/api/admin/dns/registrar?action=search&q=${encodeURIComponent(q)}&limit=5`);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error ?? "Search failed");
+      setRegistrarResults(data.results ?? []);
+    } catch (err) {
+      setRegistrarError(err instanceof Error ? err.message : "Search failed");
+    } finally {
+      setRegistrarSearching(false);
+    }
+  }, [registrarQuery]);
+
+  const handleRegistrarInitiate = useCallback(async (domainName: string) => {
+    setRegistrarError(null);
+    try {
+      const res = await fetch("/api/admin/dns/registrar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "initiate", domain_name: domainName }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error ?? "Failed to initiate registration");
+      setRegistrarPending({
+        domain_name: data.domain_name ?? domainName,
+        price: data.price,
+        currency: data.currency,
+        confirm_token: data.confirm_token,
+        expires_at: data.expires_at,
+      });
+    } catch (err) {
+      setRegistrarError(err instanceof Error ? err.message : "Failed to initiate registration");
+    }
+  }, []);
+
+  const handleRegistrarConfirm = useCallback(async () => {
+    if (!registrarPending) return;
+    setRegistrarConfirming(true);
+    setRegistrarError(null);
+    try {
+      const res = await fetch("/api/admin/dns/registrar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "confirm",
+          domain_name: registrarPending.domain_name,
+          confirm_token: registrarPending.confirm_token,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error ?? "Registration failed");
+      setRegistrarDone(registrarPending.domain_name);
+      setRegistrarPending(null);
+      setRegistrarResults([]);
+      // Suggest the newly registered domain as custom domain
+      setRegistrarQuery("");
+    } catch (err) {
+      setRegistrarError(err instanceof Error ? err.message : "Registration failed");
+    } finally {
+      setRegistrarConfirming(false);
+    }
+  }, [registrarPending]);
 
   const handleRebuildInfra = useCallback(async () => {
     setRebuilding(true);
@@ -1000,6 +1086,168 @@ export function DeploySettingsPanel() {
               <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: "0.4rem 0 0" }}>
                 Deploys will serve on <strong>{config.deployCustomDomain}</strong> with root paths.
               </p>
+            )}
+          </SettingsCard>
+        </>
+      )}
+
+      {/* ── Domain Registrar (only when DNS API configured) ─────────── */}
+      {dnsStatus?.available && ["github-pages", "flyio", "flyio-live", "vercel", "netlify", "cloudflare-pages"].includes(effectiveProvider) && (
+        <>
+          <SectionHeading>Register a Domain</SectionHeading>
+          <SettingsCard>
+            <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>
+              Search for and register a new domain via Cloudflare Registrar. Purchases are non-refundable and billed immediately.
+            </p>
+
+            {registrarDone && (
+              <div style={{
+                fontSize: "0.75rem", color: "#16a34a", fontWeight: 500,
+                padding: "0.5rem 0.7rem", borderRadius: "6px",
+                background: "color-mix(in srgb, #16a34a 12%, transparent)",
+                border: "1px solid color-mix(in srgb, #16a34a 30%, transparent)",
+                display: "flex", alignItems: "center", gap: "0.4rem",
+              }}>
+                <Check style={{ width: "0.85rem", height: "0.85rem", flexShrink: 0 }} />
+                <strong>{registrarDone}</strong> registered successfully. It may take a few minutes to propagate.
+              </div>
+            )}
+
+            {/* Search */}
+            {!registrarPending && !registrarDone && (
+              <>
+                <div style={{ display: "flex", gap: "0.4rem" }}>
+                  <input
+                    type="text"
+                    value={registrarQuery}
+                    onChange={(e) => setRegistrarQuery(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleRegistrarSearch()}
+                    placeholder="Search domains — e.g. myblog"
+                    style={{
+                      flex: 1, fontSize: "0.8rem", padding: "0.45rem 0.65rem",
+                      borderRadius: "5px", border: "1px solid var(--border)",
+                      background: "var(--background)", color: "var(--foreground)",
+                      outline: "none",
+                    }}
+                  />
+                  <button
+                    onClick={handleRegistrarSearch}
+                    disabled={registrarSearching || !registrarQuery.trim()}
+                    style={{
+                      padding: "0.45rem 0.85rem", borderRadius: "5px",
+                      background: "var(--primary)", color: "#0D0D0D",
+                      border: "none", fontSize: "0.8rem", fontWeight: 600,
+                      cursor: registrarSearching || !registrarQuery.trim() ? "not-allowed" : "pointer",
+                      opacity: registrarSearching || !registrarQuery.trim() ? 0.6 : 1,
+                      display: "flex", alignItems: "center", gap: "0.35rem",
+                    }}
+                  >
+                    {registrarSearching
+                      ? <Loader2 className="animate-spin" style={{ width: "0.8rem", height: "0.8rem" }} />
+                      : <Search style={{ width: "0.8rem", height: "0.8rem" }} />}
+                    {registrarSearching ? "Searching..." : "Search"}
+                  </button>
+                </div>
+
+                {registrarError && (
+                  <div style={{ fontSize: "0.65rem", color: "var(--destructive)", padding: "0.3rem 0" }}>
+                    {registrarError}
+                  </div>
+                )}
+
+                {registrarResults.length > 0 && (
+                  <div style={{ display: "flex", flexDirection: "column", gap: "0" }}>
+                    {registrarResults.map((r) => (
+                      <div key={r.name} style={{
+                        display: "flex", alignItems: "center", justifyContent: "space-between",
+                        padding: "0.45rem 0", borderBottom: "1px solid var(--border)", gap: "0.5rem",
+                      }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", minWidth: 0 }}>
+                          <Globe style={{ width: "0.8rem", height: "0.8rem", color: r.registrable ? "#16a34a" : "var(--muted-foreground)", flexShrink: 0 }} />
+                          <span style={{ fontSize: "0.8rem", fontFamily: "monospace", fontWeight: r.registrable ? 500 : 400 }}>
+                            {r.name}
+                          </span>
+                          {!r.registrable && (
+                            <span style={{ fontSize: "0.6rem", color: "var(--muted-foreground)" }}>taken</span>
+                          )}
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexShrink: 0 }}>
+                          {r.pricing && r.registrable && (
+                            <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", fontFamily: "monospace" }}>
+                              {r.pricing.currency} {r.pricing.registration_cost}/yr
+                            </span>
+                          )}
+                          {r.registrable && (
+                            <button
+                              onClick={() => handleRegistrarInitiate(r.name)}
+                              style={{
+                                padding: "0.25rem 0.55rem", borderRadius: "4px",
+                                background: "var(--primary)", color: "#0D0D0D",
+                                border: "none", fontSize: "0.65rem", fontWeight: 600,
+                                cursor: "pointer",
+                              }}
+                            >
+                              Register
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* Confirm purchase */}
+            {registrarPending && (
+              <div style={{
+                padding: "0.75rem", borderRadius: "6px",
+                border: "1px solid var(--border)",
+                background: "var(--background)",
+                display: "flex", flexDirection: "column", gap: "0.5rem",
+              }}>
+                <div style={{ fontSize: "0.75rem", fontWeight: 600 }}>Confirm purchase</div>
+                <div style={{ fontSize: "0.8rem" }}>
+                  Domain: <strong style={{ fontFamily: "monospace" }}>{registrarPending.domain_name}</strong>
+                </div>
+                <div style={{ fontSize: "0.8rem" }}>
+                  Price: <strong>{registrarPending.currency} {registrarPending.price}/yr</strong>
+                </div>
+                <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: 0 }}>
+                  This purchase is <strong>non-refundable</strong> and will be charged immediately to the Cloudflare account.
+                </p>
+                {registrarError && (
+                  <div style={{ fontSize: "0.65rem", color: "var(--destructive)" }}>{registrarError}</div>
+                )}
+                <div style={{ display: "flex", gap: "0.4rem", alignItems: "center" }}>
+                  <button
+                    onClick={handleRegistrarConfirm}
+                    disabled={registrarConfirming}
+                    style={{
+                      padding: "0.35rem 0.8rem", borderRadius: "5px",
+                      background: "var(--primary)", color: "#0D0D0D",
+                      border: "none", fontSize: "0.75rem", fontWeight: 600,
+                      cursor: registrarConfirming ? "wait" : "pointer",
+                      opacity: registrarConfirming ? 0.7 : 1,
+                      display: "flex", alignItems: "center", gap: "0.35rem",
+                    }}
+                  >
+                    {registrarConfirming && <Loader2 className="animate-spin" style={{ width: "0.75rem", height: "0.75rem" }} />}
+                    {registrarConfirming ? "Registering..." : "Yes, register domain"}
+                  </button>
+                  <button
+                    onClick={() => { setRegistrarPending(null); setRegistrarError(null); }}
+                    style={{
+                      padding: "0.35rem 0.7rem", borderRadius: "5px",
+                      background: "transparent", color: "var(--foreground)",
+                      border: "1px solid var(--border)", fontSize: "0.75rem",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
             )}
           </SettingsCard>
         </>

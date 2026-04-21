@@ -198,3 +198,66 @@ export async function ensureCname(
   const record = await updateCname(zone, existing.id, target);
   return { status: "updated", record };
 }
+
+// ── Cloudflare Registrar ────────────────────────────────────────────────
+
+export interface RegistrarDomainPricing {
+  currency: string;
+  registration_cost: string;
+  renewal_cost: string;
+}
+
+export interface RegistrarDomainResult {
+  name: string;
+  registrable: boolean;
+  tier: string;
+  pricing?: RegistrarDomainPricing;
+}
+
+export interface RegistrarInitResult {
+  requires_confirmation: true;
+  confirm_token: string;
+  price: number;
+  currency: string;
+  expires_at: string;
+  domain_name: string;
+}
+
+export interface RegistrarConfirmResult {
+  ok: boolean;
+  domain_name: string;
+  registered: boolean;
+  message?: string;
+}
+
+export async function searchDomains(query: string, limit = 5): Promise<RegistrarDomainResult[]> {
+  const params = new URLSearchParams({ q: query, limit: String(limit) });
+  const res = await dnsFetch("GET", `/registrar/search?${params.toString()}`);
+  if (!res.ok) throw new Error(`Registrar search failed (${res.status})`);
+  const data = (await res.json()) as { results: RegistrarDomainResult[] };
+  return data.results ?? [];
+}
+
+export async function checkDomains(domains: string[]): Promise<{ results: RegistrarDomainResult[]; unsupported: string[] }> {
+  const res = await dnsFetch("POST", "/registrar/check", { domains });
+  if (!res.ok) throw new Error(`Registrar check failed (${res.status})`);
+  return (await res.json()) as { results: RegistrarDomainResult[]; unsupported: string[] };
+}
+
+export async function initiateRegistration(domainName: string): Promise<RegistrarInitResult> {
+  const res = await dnsFetch("POST", "/registrar/register", { domain_name: domainName });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`Registration failed (${res.status}): ${body.slice(0, 200)}`);
+  }
+  return (await res.json()) as RegistrarInitResult;
+}
+
+export async function confirmRegistration(domainName: string, confirmToken: string): Promise<RegistrarConfirmResult> {
+  const res = await dnsFetch("POST", "/registrar/register", { domain_name: domainName, confirm_token: confirmToken });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`Registration confirmation failed (${res.status}): ${body.slice(0, 200)}`);
+  }
+  return (await res.json()) as RegistrarConfirmResult;
+}
