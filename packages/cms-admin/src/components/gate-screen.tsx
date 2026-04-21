@@ -180,6 +180,56 @@ export function GitHubErrorGate({ message }: { message: string }) {
   );
 }
 
+/**
+ * Gate: Site has an invalid cms.config.ts (Zod validation failed).
+ * Shows the errors and lets the user switch to another site so the
+ * rest of the CMS remains fully usable while they fix the config.
+ */
+export function SiteConfigErrorGate({ siteName, errors }: { siteName: string; errors: string }) {
+  function switchSite() {
+    // Clear site/org cookies — next navigation will fall back to registry defaults
+    document.cookie = "cms-active-site=;path=/;max-age=0;samesite=lax";
+    document.cookie = "cms-active-org=;path=/;max-age=0;samesite=lax";
+    window.location.href = "/admin";
+  }
+
+  return (
+    <Shell>
+      <div style={{ textAlign: "center" }}>
+        <AlertTriangle style={{ width: "2.5rem", height: "2.5rem", color: "rgb(239 68 68)", margin: "0 auto 1rem" }} />
+        <h1 style={{ fontSize: "1.1rem", fontWeight: 700, marginBottom: "0.4rem", color: "#fafafa" }}>
+          Site config error
+        </h1>
+        <p style={{ fontSize: "0.8rem", color: "hsl(0 0% 55%)", lineHeight: 1.5, marginBottom: "0.75rem" }}>
+          <strong style={{ color: "hsl(0 0% 75%)" }}>&quot;{siteName}&quot;</strong> has an invalid{" "}
+          <code style={{ fontSize: "0.75rem" }}>cms.config.ts</code> and cannot load.
+          Fix the config below, then switch back to this site.
+        </p>
+        <pre style={{
+          textAlign: "left", fontSize: "0.65rem", lineHeight: 1.6,
+          background: "hsl(0 0% 5%)", border: "1px solid hsl(0 0% 18%)",
+          borderRadius: "6px", padding: "0.6rem 0.75rem",
+          color: "rgb(252 165 165)", maxHeight: "200px", overflowY: "auto",
+          marginBottom: "1.25rem", whiteSpace: "pre-wrap", wordBreak: "break-word",
+        }}>
+          {errors}
+        </pre>
+        <button
+          type="button"
+          onClick={switchSite}
+          style={{
+            padding: "0.55rem 1.25rem", borderRadius: "8px",
+            background: "hsl(38 92% 50%)", color: "hsl(38 30% 10%)",
+            border: "none", fontSize: "0.875rem", fontWeight: 600, cursor: "pointer",
+          }}
+        >
+          Switch to another site
+        </button>
+      </div>
+    </Shell>
+  );
+}
+
 export function SiteRedirectGate({ siteId, orgId }: { siteId: string; orgId: string }) {
   useEffect(() => {
     document.cookie = `cms-active-site=${encodeURIComponent(siteId)};path=/;max-age=31536000;samesite=lax`;

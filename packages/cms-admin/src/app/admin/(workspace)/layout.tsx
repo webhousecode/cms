@@ -11,7 +11,7 @@ import { cookies } from "next/headers";
 import { getSessionUser } from "@/lib/auth";
 import { getTeamMembers } from "@/lib/team";
 import { findFirstAccessibleSite } from "@/lib/team-access";
-import { NoAccessGate, ConnectGitHubGate, SiteRedirectGate, GitHubErrorGate } from "@/components/gate-screen";
+import { NoAccessGate, ConnectGitHubGate, SiteRedirectGate, GitHubErrorGate, SiteConfigErrorGate } from "@/components/gate-screen";
 import { OrgSidebar } from "@/components/org-sidebar";
 import { redirect } from "next/navigation";
 import { loadRegistry, findSite, findOrg } from "@/lib/site-registry";
@@ -106,6 +106,16 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     // GitHub API error (rate limit, bad token, etc.) — show recoverable error
     if (message.includes("GitHub:")) {
       return <GitHubErrorGate message={message} />;
+    }
+    // Site config validation error (bad cms.config.ts) — show recoverable gate.
+    // A broken site must never crash the whole server and block access to all other sites.
+    if (message.includes("config validation failed")) {
+      // Extract site name: 'Site "Foo Bar" config validation failed: ...'
+      const nameMatch = /^Site "([^"]+)"/.exec(message);
+      const siteName = nameMatch?.[1] ?? "Unknown site";
+      // Everything after the first colon = the Zod error list
+      const errors = message.slice(message.indexOf(":") + 1).trim();
+      return <SiteConfigErrorGate siteName={siteName} errors={errors} />;
     }
     throw err;
   }
