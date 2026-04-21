@@ -116,14 +116,7 @@ function UserNav({ user }: { user: SessionUser | null }) {
         <Avatar className="h-8 w-8">
           {user?.gravatarUrl && <AvatarImage src={user.gravatarUrl} alt={displayName} />}
           <AvatarFallback className="text-xs">
-            {initials || (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src="/cms-logo-icon.svg"
-                alt=""
-                style={{ width: "60%", height: "60%", objectFit: "contain" }}
-              />
-            )}
+            {initials || user?.email?.[0]?.toUpperCase() || "?"}
           </AvatarFallback>
         </Avatar>
       </DropdownMenuTrigger>

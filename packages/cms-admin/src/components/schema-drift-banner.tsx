@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { AlertTriangle, X, Wrench, Loader2 } from "lucide-react";
+import { AlertTriangle, X, Plus, Trash2, Loader2, Check } from "lucide-react";
 
 interface Props {
   collection: string;
@@ -15,15 +15,48 @@ export function SchemaDriftBanner({ collection, collectionName, fields }: Props)
     if (typeof window === "undefined") return false;
     return sessionStorage.getItem(storageKey) === "1";
   });
-  const [confirmFix, setConfirmFix] = useState(false);
-  const [fixing, setFixing] = useState(false);
-  const [result, setResult] = useState<{ fixed: number } | null>(null);
-  const [error, setError] = useState("");
+
+  // Add-to-schema state
+  const [confirmAdd, setConfirmAdd] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [addResult, setAddResult] = useState<{ addedFields: string[] } | null>(null);
+  const [addError, setAddError] = useState("");
+
+  // Remove-from-content state
+  const [confirmRemove, setConfirmRemove] = useState(false);
+  const [removing, setRemoving] = useState(false);
+  const [removeResult, setRemoveResult] = useState<{ fixed: number } | null>(null);
+  const [removeError, setRemoveError] = useState("");
 
   if (dismissed) return null;
 
-  async function handleFix() {
-    setFixing(true);
+  async function handleAdd() {
+    setAdding(true);
+    setAddError("");
+    try {
+      const res = await fetch("/api/cms/schema-drift/add-to-schema", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ collection: collectionName, fields }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setAddResult(data);
+        setTimeout(() => { sessionStorage.setItem(storageKey, "1"); setDismissed(true); }, 4000);
+      } else {
+        setAddError(data.error ?? "Add to schema failed");
+        setConfirmAdd(false);
+      }
+    } catch (e) {
+      setAddError(e instanceof Error ? e.message : "Add to schema failed");
+      setConfirmAdd(false);
+    }
+    setAdding(false);
+  }
+
+  async function handleRemove() {
+    setRemoving(true);
+    setRemoveError("");
     try {
       const res = await fetch("/api/cms/schema-drift/fix", {
         method: "POST",
@@ -32,20 +65,20 @@ export function SchemaDriftBanner({ collection, collectionName, fields }: Props)
       });
       const data = await res.json();
       if (res.ok) {
-        setResult(data);
-        setTimeout(() => setDismissed(true), 3000);
+        setRemoveResult(data);
+        setTimeout(() => { sessionStorage.setItem(storageKey, "1"); setDismissed(true); }, 3000);
       } else {
-        setError(data.error ?? "Fix failed");
-        setConfirmFix(false);
+        setRemoveError(data.error ?? "Remove failed");
+        setConfirmRemove(false);
       }
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Fix failed");
-      setConfirmFix(false);
+      setRemoveError(e instanceof Error ? e.message : "Remove failed");
+      setConfirmRemove(false);
     }
-    setFixing(false);
+    setRemoving(false);
   }
 
-  if (result) {
+  if (addResult) {
     return (
       <div style={{
         margin: "0 1.25rem 0.75rem", padding: "0.75rem 1rem",
@@ -53,8 +86,22 @@ export function SchemaDriftBanner({ collection, collectionName, fields }: Props)
         borderRadius: "8px", display: "flex", gap: "0.75rem", alignItems: "center",
         fontSize: "0.8rem", color: "var(--foreground)",
       }}>
-        <span style={{ color: "#4ade80" }}>&#10003;</span>
-        Removed {fields.length} orphaned field{fields.length > 1 ? "s" : ""} from {result.fixed} document{result.fixed !== 1 ? "s" : ""}.
+        <Check style={{ width: 16, height: 16, color: "#4ade80", flexShrink: 0 }} />
+        Added {addResult.addedFields.length} field{addResult.addedFields.length > 1 ? "s" : ""} to the schema. Reloading&hellip;
+      </div>
+    );
+  }
+
+  if (removeResult) {
+    return (
+      <div style={{
+        margin: "0 1.25rem 0.75rem", padding: "0.75rem 1rem",
+        background: "rgba(74, 222, 128, 0.08)", border: "1px solid rgba(74, 222, 128, 0.25)",
+        borderRadius: "8px", display: "flex", gap: "0.75rem", alignItems: "center",
+        fontSize: "0.8rem", color: "var(--foreground)",
+      }}>
+        <Check style={{ width: 16, height: 16, color: "#4ade80", flexShrink: 0 }} />
+        Removed {fields.length} orphaned field{fields.length > 1 ? "s" : ""} from {removeResult.fixed} document{removeResult.fixed !== 1 ? "s" : ""}.
       </div>
     );
   }
@@ -76,20 +123,24 @@ export function SchemaDriftBanner({ collection, collectionName, fields }: Props)
           Schema drift detected in &ldquo;{collection}&rdquo;
         </p>
         <p style={{ margin: "0.25rem 0 0", color: "var(--muted-foreground)" }}>
-          {fields.length} field{fields.length > 1 ? "s" : ""} found in content but missing from schema:{" "}
+          {fields.length} field{fields.length > 1 ? "s" : ""} found in content but not in schema:{" "}
           <span style={{ fontFamily: "monospace", fontSize: "0.75rem" }}>
             {fields.join(", ")}
           </span>
         </p>
         <p style={{ margin: "0.25rem 0 0", color: "var(--muted-foreground)", fontSize: "0.72rem" }}>
-          These fields exist in your content files but are not visible in the editor.
+          These fields exist in your content files but are invisible in the editor.
         </p>
-        {error && <p style={{ margin: "0.25rem 0 0", color: "#f87171", fontSize: "0.72rem" }}>{error}</p>}
-        <div style={{ marginTop: "0.5rem", display: "flex", gap: "0.5rem", alignItems: "center" }}>
-          {!confirmFix ? (
+        {(addError || removeError) && (
+          <p style={{ margin: "0.25rem 0 0", color: "#f87171", fontSize: "0.72rem" }}>{addError || removeError}</p>
+        )}
+
+        <div style={{ marginTop: "0.6rem", display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
+          {/* Primary: Add to schema */}
+          {!confirmAdd && !confirmRemove && (
             <button
               type="button"
-              onClick={() => setConfirmFix(true)}
+              onClick={() => setConfirmAdd(true)}
               style={{
                 display: "inline-flex", alignItems: "center", gap: "0.375rem",
                 padding: "0.3rem 0.75rem", borderRadius: "6px", border: "none",
@@ -97,27 +148,80 @@ export function SchemaDriftBanner({ collection, collectionName, fields }: Props)
                 fontSize: "0.75rem", fontWeight: 600,
               }}
             >
-              <Wrench style={{ width: 12, height: 12 }} /> Remove orphaned fields
+              <Plus style={{ width: 12, height: 12 }} /> Add to schema
             </button>
-          ) : (
+          )}
+
+          {/* Confirm add */}
+          {confirmAdd && (
+            <>
+              <span style={{ fontSize: "0.72rem", color: "var(--foreground)", fontWeight: 500 }}>
+                Add {fields.length} field{fields.length > 1 ? "s" : ""} to cms.config.ts?
+              </span>
+              <button
+                onClick={handleAdd}
+                disabled={adding}
+                style={{
+                  fontSize: "0.7rem", padding: "0.2rem 0.5rem", borderRadius: "4px",
+                  border: "none", background: "var(--primary)", color: "#0D0D0D",
+                  cursor: adding ? "wait" : "pointer", display: "inline-flex", alignItems: "center", gap: "0.25rem",
+                }}
+              >
+                {adding && <Loader2 style={{ width: 10, height: 10 }} className="animate-spin" />}
+                Yes
+              </button>
+              <button
+                onClick={() => setConfirmAdd(false)}
+                disabled={adding}
+                style={{
+                  fontSize: "0.7rem", padding: "0.2rem 0.5rem", borderRadius: "4px",
+                  border: "1px solid var(--border)", background: "transparent",
+                  color: "var(--foreground)", cursor: "pointer",
+                }}
+              >
+                No
+              </button>
+            </>
+          )}
+
+          {/* Secondary: Remove from content (only visible when not in confirm flow) */}
+          {!confirmAdd && !confirmRemove && (
+            <button
+              type="button"
+              onClick={() => setConfirmRemove(true)}
+              style={{
+                display: "inline-flex", alignItems: "center", gap: "0.375rem",
+                padding: "0.3rem 0.65rem", borderRadius: "6px",
+                border: "1px solid var(--border)", background: "transparent",
+                color: "var(--muted-foreground)", cursor: "pointer",
+                fontSize: "0.72rem", fontWeight: 500,
+              }}
+            >
+              <Trash2 style={{ width: 11, height: 11 }} /> Remove from content
+            </button>
+          )}
+
+          {/* Confirm remove */}
+          {confirmRemove && (
             <>
               <span style={{ fontSize: "0.72rem", color: "var(--destructive)", fontWeight: 500 }}>
                 Remove {fields.length} field{fields.length > 1 ? "s" : ""} from all documents?
               </span>
               <button
-                onClick={handleFix}
-                disabled={fixing}
+                onClick={handleRemove}
+                disabled={removing}
                 style={{
                   fontSize: "0.7rem", padding: "0.2rem 0.5rem", borderRadius: "4px",
                   border: "none", background: "var(--destructive)", color: "#fff",
-                  cursor: fixing ? "wait" : "pointer", display: "inline-flex", alignItems: "center", gap: "0.25rem",
+                  cursor: removing ? "wait" : "pointer", display: "inline-flex", alignItems: "center", gap: "0.25rem",
                 }}
               >
-                {fixing ? <Loader2 style={{ width: 10, height: 10, animation: "spin 1s linear infinite" }} /> : null}
+                {removing && <Loader2 style={{ width: 10, height: 10 }} className="animate-spin" />}
                 Yes
               </button>
               <button
-                onClick={() => setConfirmFix(false)}
+                onClick={() => setConfirmRemove(false)}
+                disabled={removing}
                 style={{
                   fontSize: "0.7rem", padding: "0.2rem 0.5rem", borderRadius: "4px",
                   border: "1px solid var(--border)", background: "transparent",
