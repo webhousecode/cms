@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
   </style>
 </head>
 <body>
-  <img src="/cms-logo-icon.svg" width="64" height="64" alt="" style="opacity:0.8">
+  <img src="/webhouse.app-dark-icon.svg" width="72" height="72" alt="webhouse.app">
   <a href="${url.replace(/"/g, '&quot;')}">Open in webhouse.app</a>
   <p>Tap the button to sign in to the mobile app.</p>
   <script>
