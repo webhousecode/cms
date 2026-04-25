@@ -31,11 +31,23 @@ export function useHeaderData() {
   return useContext(HeaderDataContext);
 }
 
-export function HeaderDataProvider({ children }: { children: ReactNode }) {
+export function HeaderDataProvider({
+  children,
+  initialIsAdminEmpty = false,
+}: {
+  children: ReactNode;
+  /**
+   * Server-rendered seed value for `isAdminEmpty`. Without this, the first
+   * paint defaults to `false` and any empty-state UI (sidebar gating in
+   * F138) flashes the FULL menu before the client-side fetch lands. Layout
+   * server-component computes this and passes it down → no FOUC.
+   */
+  initialIsAdminEmpty?: boolean;
+}) {
   const [user, setUser] = useState<HeaderData["user"]>(null);
   const [siteConfig, setSiteConfig] = useState<Record<string, unknown> | null>(null);
   const [profile, setProfile] = useState<HeaderData["profile"]>(null);
-  const [isAdminEmpty, setIsAdminEmpty] = useState(false);
+  const [isAdminEmpty, setIsAdminEmpty] = useState(initialIsAdminEmpty);
   const [loaded, setLoaded] = useState(false);
 
   const refresh = useCallback(() => {

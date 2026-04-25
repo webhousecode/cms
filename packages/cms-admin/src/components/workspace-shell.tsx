@@ -24,10 +24,12 @@ interface WorkspaceShellProps {
   onboarding?: OnboardingState;
   locale?: string;
   forceOnboarding?: boolean;
+  /** F138: server-computed empty-admin flag, seeds HeaderDataProvider so sidebar gating renders correctly on first paint (no FOUC). */
+  isAdminEmpty?: boolean;
   children: React.ReactNode;
 }
 
-export function WorkspaceShell({ collections, globals, activeSiteId, devInspector, onboarding, locale, forceOnboarding, children }: WorkspaceShellProps) {
+export function WorkspaceShell({ collections, globals, activeSiteId, devInspector, onboarding, locale, forceOnboarding, isAdminEmpty, children }: WorkspaceShellProps) {
   const { mode, toggle, setMode } = useAdminMode();
   const isChat = mode === "chat";
 
@@ -68,7 +70,7 @@ export function WorkspaceShell({ collections, globals, activeSiteId, devInspecto
   // This keeps the traditional workspace mounted (tabs, sidebar, state preserved)
   // so switching back is instant.
   return (
-    <HeaderDataProvider>
+    <HeaderDataProvider initialIsAdminEmpty={isAdminEmpty}>
     <SidebarProvider>
       <div style={{ display: isChat ? "none" : "contents" }}>
         <AppSidebarClient collections={collections} globals={globals} />

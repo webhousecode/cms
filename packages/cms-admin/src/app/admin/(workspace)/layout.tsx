@@ -52,7 +52,11 @@ function isAllowedInEmptyAdmin(pathname: string): boolean {
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   // ── F138-B: redirect site-scoped pages when admin is empty ──
-  if (await isAdminEmpty()) {
+  // Compute once; reuse downstream as a server-rendered seed for the
+  // client HeaderDataProvider so the sidebar's empty-admin gating
+  // renders correctly on first paint (no FOUC).
+  const adminEmpty = await isAdminEmpty();
+  if (adminEmpty) {
     const hdrs = await headers();
     const pathname = hdrs.get("x-pathname") ?? hdrs.get("x-invoke-path") ?? hdrs.get("next-url") ?? "";
     if (pathname && !isAllowedInEmptyAdmin(pathname)) {
@@ -184,6 +188,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       onboarding={userState.onboarding}
       locale={siteConfig.defaultLocale || config.defaultLocale || "en"}
       forceOnboarding={forceOnboarding}
+      isAdminEmpty={adminEmpty}
     >
       {children}
     </WorkspaceShell>
