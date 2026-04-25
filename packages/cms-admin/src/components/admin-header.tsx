@@ -103,6 +103,7 @@ function UserNav({ user }: { user: SessionUser | null }) {
   const initials = user ? getInitials(user.name) : "";
   const router = useRouter();
   const can = usePermissions();
+  const { isAdminEmpty } = useHeaderData();
 
   async function logout() {
     sessionStorage.removeItem("cms-session-user");
@@ -135,7 +136,7 @@ function UserNav({ user }: { user: SessionUser | null }) {
             <Settings className="mr-2 h-4 w-4" />
             Account Preferences
           </DropdownMenuItem>
-          {can("settings.edit") && (
+          {can("settings.edit") && !isAdminEmpty && (
             <DropdownMenuItem onClick={() => { window.dispatchEvent(new CustomEvent("cms:navigate-admin", { detail: { path: "/admin/settings" } })); router.push("/admin/settings"); }}>
               <Settings className="mr-2 h-4 w-4" />
               Site Settings

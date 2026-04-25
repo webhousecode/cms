@@ -147,8 +147,7 @@ For users who already have site-level beam-tokens.json files (e.g. from local de
 
 ## Risks / rollout
 
-- **Single-site mode treated as empty:** existing single-site deployments (npm `@webhouse/cms-admin` with one seed config) will see the *empty* sidebar after this change. That's a UX regression for them. **Mitigation:** treat single-site mode as having one synthetic site for nav purposes — only treat *registry-with-zero-sites* as empty. Adjust `isAdminEmpty()` accordingly. Final rule: `isAdminEmpty() = (registry exists) AND (every org has 0 sites)`. Single-site mode (no registry) is *not* empty — it has the seed.
-  - Re-stated decision: F138 only changes UX when `registry exists AND empty`. Single-site fall-back remains the same.
+- **Single-site mode treated as empty:** REVERSED 2026-04-25 after live testing on webhouse.app. Initial conservative rule was `isAdminEmpty() = (registry exists) AND (every org has 0 sites)` — single-site mode counted as a site. But Christian observed the actual UX gap: webhouse.app's seed-only deploy showed the FULL sidebar (Cockpit, Content, Media, Site Settings) while `/admin/sites` correctly showed "No sites yet". That's internally inconsistent and confusing. New rule: `isAdminEmpty() = (no registry) OR (every org has 0 sites)`. Empty includes the bare-seed-deploy case. npm-scaffolded users will see the empty UX briefly until they create their first site, which is fine — it's a useful "first-run wizard" state, not a regression.
 - **Token validation across deployment:** if a user generates a token, we redeploy, then they try to use it — the file must persist on the volume. Admin-level path = `<adminDataDir>/beam-tokens.json`, which on Fly is `/data/cms-admin/beam-tokens.json` (volume-backed) → persists. ✓
 - **Backwards compat:** existing send-site flows that point at site-level token validation still work because the receive-flow falls back to per-site path. No flag day.
 
