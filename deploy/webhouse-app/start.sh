@@ -24,6 +24,16 @@ if [ -d "$STANDALONE_DIR" ]; then
   ln -sfn /app/packages/cms-admin/public       "$STANDALONE_DIR/public"
 fi
 
+# ── Make @webhouse/cms resolvable from the data dir ───────────
+# cms.config.ts (lives at $DATA_DIR/cms.config.ts) does
+# `import "@webhouse/cms"`. Node's module resolver walks up from that
+# file's location, NOT from the standalone server's CWD — so we need
+# a node_modules entry under $DATA_DIR. Symlink to /app/packages/cms
+# (NOT the standalone copy) because the workspace package keeps its
+# own node_modules with hono/zod/nanoid/drizzle/marked/better-sqlite3.
+mkdir -p "$DATA_DIR/node_modules/@webhouse"
+ln -sfn /app/packages/cms "$DATA_DIR/node_modules/@webhouse/cms"
+
 # ── Start cms-admin ───────────────────────────────────────────
 export CMS_CONFIG_PATH="$CONFIG_PATH"
 export UPLOAD_DIR="$UPLOADS_DIR"
