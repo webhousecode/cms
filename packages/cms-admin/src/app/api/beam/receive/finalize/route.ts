@@ -9,7 +9,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { getBeamSession, completeBeamSession } from "@/lib/beam/session";
-import { addSite, loadRegistry } from "@/lib/site-registry";
+import { addSite, loadRegistry, saveRegistry, findOrg, type Registry } from "@/lib/site-registry";
 import type { BeamManifest } from "@/lib/beam/types";
 
 export async function POST(request: NextRequest) {
@@ -36,17 +36,38 @@ export async function POST(request: NextRequest) {
       ? path.join(siteDir, "cms.config.ts")
       : path.join(siteDir, "cms.config.json");
 
-    const registry = await loadRegistry();
-    if (registry) {
-      await addSite(session.targetOrgId ?? "default", {
-        id: session.siteId,
-        name: session.siteName,
-        adapter: "filesystem",
-        configPath: configFile,
-        contentDir: path.join(siteDir, "content"),
-        uploadDir: path.join(siteDir, "public", "uploads"),
-      });
+    // F138-D: auto-init registry on first receive when none exists.
+    // Without this, beaming into a fresh CMS landed files on disk but
+    // the site stayed invisible because addSite() throws "No registry".
+    let registry = await loadRegistry();
+    const targetOrgId = session.targetOrgId ?? "default";
+    if (!registry) {
+      const orgName = targetOrgId === "default"
+        ? "Default"
+        : targetOrgId.charAt(0).toUpperCase() + targetOrgId.slice(1);
+      const seeded: Registry = {
+        orgs: [{ id: targetOrgId, name: orgName, sites: [] }],
+        defaultOrgId: targetOrgId,
+        defaultSiteId: session.siteId,
+      };
+      await saveRegistry(seeded);
+      registry = seeded;
+    } else if (!findOrg(registry, targetOrgId)) {
+      // Make sure the target org exists. Beam can name an org that
+      // wasn't in the receiver's registry (cross-instance transfer).
+      const orgName = targetOrgId.charAt(0).toUpperCase() + targetOrgId.slice(1);
+      registry.orgs.push({ id: targetOrgId, name: orgName, sites: [] });
+      await saveRegistry(registry);
     }
+
+    await addSite(targetOrgId, {
+      id: session.siteId,
+      name: session.siteName,
+      adapter: "filesystem",
+      configPath: configFile,
+      contentDir: path.join(siteDir, "content"),
+      uploadDir: path.join(siteDir, "public", "uploads"),
+    });
 
     // Update session and mark as complete
     completeBeamSession(beamId);
