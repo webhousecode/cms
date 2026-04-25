@@ -205,17 +205,20 @@ export function AppSidebar({ collections }: Props) {
                 <span>Sites</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton
-                isActive={pathname === "/admin"}
-                tooltip="Dashboard"
-                render={<Link href="/admin" data-testid="nav-link-dashboard" />}
-              >
-                <LayoutDashboard className="!w-5 !h-5" />
-                <span>Dashboard</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            {favorites.length > 0 && (
+            {/* F138: Dashboard + Favorites are site-scoped (Content Overview, per-site stats) — hide on empty admin. */}
+            {!isAdminEmpty && (
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  isActive={pathname === "/admin"}
+                  tooltip="Dashboard"
+                  render={<Link href="/admin" data-testid="nav-link-dashboard" />}
+                >
+                  <LayoutDashboard className="!w-5 !h-5" />
+                  <span>Dashboard</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
+            {!isAdminEmpty && favorites.length > 0 && (
               <SidebarMenuItem>
                 <SidebarMenuButton
                   isActive={pathname === "/admin/favorites"}
