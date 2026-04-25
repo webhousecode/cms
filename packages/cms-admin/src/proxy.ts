@@ -34,6 +34,12 @@ const PUBLIC_PREFIXES = [
 export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // F138: forward the pathname so server components can branch on the
+  // current route (Next.js doesn't expose pathname to server components
+  // by default — middleware/proxy is the canonical injection point).
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-pathname", pathname);
+
   // Root path: always show landing page (login is at /admin/login)
   if (pathname === "/") {
     return NextResponse.rewrite(new URL("/home.html", request.url));
@@ -145,7 +151,7 @@ export async function proxy(request: NextRequest) {
 
   try {
     await jwtVerify(token, getJwtSecret());
-    return NextResponse.next();
+    return NextResponse.next({ request: { headers: requestHeaders } });
   } catch (err) {
     // RSC prefetch with invalid token — don't redirect, just reject silently
     const isRsc = request.headers.get("rsc") === "1" || request.nextUrl.searchParams.has("_rsc");

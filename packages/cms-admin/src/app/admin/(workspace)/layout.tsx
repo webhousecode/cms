@@ -7,7 +7,8 @@ import { readSiteConfig } from "@/lib/site-config";
 import { TabsProvider } from "@/lib/tabs-context";
 import { AdminHeader } from "@/components/admin-header";
 import { WorkspaceShell } from "@/components/workspace-shell";
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
+import { isAdminEmpty } from "@/lib/admin-empty";
 import { getSessionUser } from "@/lib/auth";
 import { getTeamMembers } from "@/lib/team";
 import { findFirstAccessibleSite } from "@/lib/team-access";
@@ -32,7 +33,34 @@ export async function generateMetadata(): Promise<Metadata> {
   return { title: "webhouse.app" };
 }
 
+/**
+ * F138-B: paths that work without any site existing. Anything else
+ * gets redirected to /admin/sites with a "create-first" notice when
+ * the admin is empty (registry exists with zero sites across all orgs).
+ */
+const EMPTY_ADMIN_ALLOWED_PREFIXES = [
+  "/admin/sites",
+  "/admin/organizations",
+  "/admin/account",
+  "/admin/admin",
+  "/admin/favorites",
+];
+
+function isAllowedInEmptyAdmin(pathname: string): boolean {
+  if (pathname === "/admin" || pathname === "/admin/") return true;
+  return EMPTY_ADMIN_ALLOWED_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
+}
+
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  // ── F138-B: redirect site-scoped pages when admin is empty ──
+  if (await isAdminEmpty()) {
+    const hdrs = await headers();
+    const pathname = hdrs.get("x-pathname") ?? hdrs.get("x-invoke-path") ?? hdrs.get("next-url") ?? "";
+    if (pathname && !isAllowedInEmptyAdmin(pathname)) {
+      redirect("/admin/sites?notice=create-first");
+    }
+  }
+
   const siteInfo = await getActiveSiteInfo();
 
   // Multi-site mode with no site selected → minimal layout (Sites Dashboard)

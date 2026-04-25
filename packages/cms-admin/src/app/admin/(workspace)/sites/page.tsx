@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Globe, MoreVertical, Settings2, Plus, Copy, Eye, ExternalLink, Pencil, LayoutGrid, List, FileStack, Loader2, ArrowUpDown, Play, Square } from "lucide-react";
 import { useSiteRole } from "@/hooks/use-site-role";
 import { usePermissions } from "@/hooks/use-permissions";
@@ -53,6 +53,8 @@ function setCookie(name: string, value: string) {
 
 export default function SitesDashboard() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const notice = searchParams.get("notice");
   const [registry, setRegistry] = useState<Registry | null>(null);
   const [activeOrgId, setActiveOrgId] = useState<string>("");
   const [stats, setStats] = useState<Record<string, { pages: number; collections: number }>>({});
@@ -238,6 +240,16 @@ export default function SitesDashboard() {
         <ActionBarBreadcrumb items={["Sites"]} />
       </ActionBar>
       <div style={{ padding: "2rem", maxWidth: "64rem" }}>
+        {notice === "create-first" && (
+          <div style={{
+            padding: "0.75rem 1rem", marginBottom: "1rem",
+            background: "color-mix(in srgb, var(--primary) 12%, transparent)",
+            border: "1px solid color-mix(in srgb, var(--primary) 35%, transparent)",
+            borderRadius: "8px", fontSize: "0.85rem",
+          }}>
+            Create or beam a site first — that page is only available once you have a site.
+          </div>
+        )}
         <div style={{
           display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
           padding: "4rem 2rem", border: "1px dashed var(--border)", borderRadius: "12px",
