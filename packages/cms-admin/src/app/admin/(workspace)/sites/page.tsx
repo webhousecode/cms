@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Globe, MoreVertical, Settings2, Plus, Copy, Eye, ExternalLink, Pencil, LayoutGrid, List, FileStack, Loader2, ArrowUpDown, Play, Square } from "lucide-react";
+import { Globe, MoreVertical, Settings2, Plus, Copy, Eye, ExternalLink, Pencil, LayoutGrid, List, FileStack, Loader2, ArrowUpDown, Play, Square, Zap } from "lucide-react";
 import { useSiteRole } from "@/hooks/use-site-role";
 import { usePermissions } from "@/hooks/use-permissions";
 import { useTabs } from "@/lib/tabs-context";
@@ -260,19 +260,38 @@ export default function SitesDashboard() {
           <p style={{ fontSize: "0.8rem", color: "var(--muted-foreground)", margin: "0 0 1.25rem", textAlign: "center", maxWidth: "320px" }}>
             Add your first site to start managing content. Connect a GitHub repo or use a local filesystem.
           </p>
-          <button
-            type="button"
-            onClick={() => router.push("/admin/sites/new")}
-            style={{
-              display: "inline-flex", alignItems: "center", gap: "0.5rem",
-              padding: "0.5rem 1rem", borderRadius: "8px", border: "none",
-              background: "var(--primary)", color: "var(--primary-foreground)",
-              fontSize: "0.8rem", fontWeight: 600, cursor: "pointer",
-            }}
-          >
-            <Plus style={{ width: "0.875rem", height: "0.875rem" }} />
-            New site
-          </button>
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            <button
+              type="button"
+              onClick={() => router.push("/admin/sites/new")}
+              style={{
+                display: "inline-flex", alignItems: "center", gap: "0.5rem",
+                padding: "0.5rem 1rem", borderRadius: "8px", border: "none",
+                background: "var(--primary)", color: "var(--primary-foreground)",
+                fontSize: "0.8rem", fontWeight: 600, cursor: "pointer",
+              }}
+            >
+              <Plus style={{ width: "0.875rem", height: "0.875rem" }} />
+              New site
+            </button>
+            {isAdmin && (
+              <button
+                type="button"
+                onClick={() => router.push("/admin/account?tab=beam")}
+                title="Generate a Beam token to receive a site from another CMS"
+                style={{
+                  display: "inline-flex", alignItems: "center", gap: "0.5rem",
+                  padding: "0.5rem 1rem", borderRadius: "8px",
+                  border: "1px solid var(--border)", background: "transparent",
+                  color: "var(--foreground)",
+                  fontSize: "0.8rem", fontWeight: 600, cursor: "pointer",
+                }}
+              >
+                <Zap style={{ width: "0.875rem", height: "0.875rem" }} />
+                Receive via Beam
+              </button>
+            )}
+          </div>
         </div>
       </div>
       </>
