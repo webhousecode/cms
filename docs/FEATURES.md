@@ -151,6 +151,7 @@
 | F135 | [OpenRouter AI Fallback](#f135-openrouter-ai-fallback) | Planned | [docs/features/F135-openrouter-ai-fallback.md](features/F135-openrouter-ai-fallback.md) |
 | F136 | [Shop Module (E-Commerce Platform)](#f136-shop-module) | Planned | [docs/features/F136-shop-module.md](features/F136-shop-module.md) |
 | F137 | [Fast Fly Deploys (Build Cache)](#f137-fast-fly-deploys) | Planned | [docs/features/F137-fast-fly-deploys.md](features/F137-fast-fly-deploys.md) |
+| F138 | [Empty Admin UX + Beam at Account Level](#f138-empty-admin-ux) | Planned | [docs/features/F138-empty-admin-ux.md](features/F138-empty-admin-ux.md) |
 
 ---
 
@@ -556,3 +557,6 @@ Content-first e-commerce built as CMS document collections — Stripe for paymen
 
 ## F137 — Fast Fly Deploys (Build Cache)
 Cut webhouse-app deploy time from 20+ min cold / 5–8 min steady-state to under 90 sek per code-only change. BuildKit cache mounts for the pnpm store and Next.js build caches, persistent registry-cache tag in `fly.toml` so fresh builder VMs pull warm layers, `.dockerignore` cleanup to shrink build context, and an optional GitHub Actions buildx-cache deploy that keeps the build off the developer's Mac. Pure prod-deploy plumbing — runtime container, env, volume, and ports unchanged. Iteration speed unblocker for everything that follows M1.
+
+## F138 — Empty Admin UX + Beam at Account Level
+A logged-in user on a CMS server with zero sites should only see what's relevant for an empty CMS — Sites, Organizations, Account — not Site Settings or content-scoped sidebar items that point at nothing. Beam token-generation moves from Site Settings into Account Preferences (admin-server-level), enabling the "receive a site via Beam" flow on a fresh empty CMS where no active site exists. Receive-flow auto-initializes a default registry on first beam-finalize so the beamed site appears in the switcher immediately. Backwards-compat fallback keeps existing site-level beam tokens working through the transition.
