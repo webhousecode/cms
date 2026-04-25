@@ -101,6 +101,7 @@ _Without these, we cannot build and deliver professional sites on the platform._
 | ~~9~~ | ~~**F31 Documentation Site**~~ | ~~Done~~ | ~~Shipped 2026-04-01. docs.webhouse.app — 89 pages EN/DA, Shiki code blocks, shared snippets, JSON API, GHA auto-deploy.~~ |
 | ~~10~~ | ~~**F121 Next.js CMS Helpers**~~ | ~~Done~~ | ~~Shipped 2026-04-01. 8 helpers in `@webhouse/cms/next` (sitemap, robots, llms.txt, metadata, JSON-LD, feed, static-params). Boilerplates updated. Fly.io Dockerfile deploy. Docs at docs.webhouse.app.~~ |
 | 11 | **F120 Onboarding** | Medium | Can't convert users without guided first experience. Tooltip tour from landing to first publish. |
+| 11b | **F137 Fast Fly Deploys** | Small | Iteration speed unblocker. Cold deploys take 20+ min, hot deploys 5–8 min. Goal: <90 sek per code change via BuildKit cache + registry-cache tag + .dockerignore cleanup. Pure prod-deploy plumbing. |
 | ~~12~~ | ~~**F125 Framework-Agnostic Consumer Guides**~~ | ~~Done~~ | ~~Shipped 2026-04-08. Schema export (CLI + API + UI), toJsonSchema(), 12 consumer example apps (PHP, Python, Ruby, Go, Java, C#, Astro, SvelteKit, Hugo, Rust, Swift, Elixir), AI builder guide doc.~~ |
 | ~~13~~ | ~~**F126 Framework-Agnostic Build Pipeline**~~ | ~~Done~~ | ~~Shipped 2026-04-13. Custom build commands, NDJSON log streaming panel, build profiles with selector UI, Docker mode (10 presets), audit logging, security scan rule. 55 unit tests.~~ |
 | ~~14~~ | ~~**F127 Collection Purpose Metadata**~~ | ~~Done~~ | ~~Shipped 2026-04-08. Optional `kind` (page/snippet/data/form/global) + `description` on CollectionConfig. Chat skips SEO/View-pill/body-remap for non-page kinds. `form` kind blocks AI create. 32 unit tests. AI Builder Guide + docs site + boilerplates + F79 validator warning.~~ |
@@ -164,6 +165,9 @@ _Makes us stand out. Customers expect these from a modern CMS._
 | ~~18m~~ | ~~**F109 Inline Proofreading**~~ | ~~Done~~ | ~~Shipped 2026-03-29. Inline ProseMirror decorations, accept/reject per correction, sticky toolbar, offset-validated API.~~ |
 | 18n | **F111 External Publishing** | Medium | Cross-post articles to Dev.to, Hashnode, Medium (draft), LinkedIn. Platform adapter pattern, canonical URLs, analytics sync. |
 | 18o | **F123 Providers / Integrations Tab** | Medium | Centralized credentials for external services (Cloudflare, GitHub, Resend, pCloud). One place for all API keys, reused by Backup, Deploy, Email, AI. |
+| 18p | **F135 OpenRouter AI Fallback** | Small | Cloud-baseret fallback for alle AI-kald. Én key, 100+ modeller, pay-per-use. Komplementerer F130 (lokal). |
+| 18q | **F136 Shop Module (E-Commerce)** | XL | Content-first e-commerce som document collections. Stripe, GLS/DAO, AI produkt-oprettelse, returportal, rabatter, multi-locale. Erstatter F68 (Shop Plugin). |
+| 18q | **F136 Shop Module (E-Commerce)** | XL | Content-first e-commerce som document collections. Stripe, GLS/DAO, AI produkt-oprettelse, returportal, rabatter, multi-locale. Erstatter F68 (Shop Plugin). |
 
 ### Tier 3 — Differentiation (v1.3+)
 

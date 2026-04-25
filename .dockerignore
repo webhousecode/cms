@@ -1,7 +1,49 @@
+# F137-C: minimal Docker build context. Keep this tight — anything
+# under here gets tarred and pushed to the remote builder. ~3 GB of
+# node_modules adds 30-60 sek to every deploy if not excluded.
+
+# Build / install outputs
 **/node_modules
 **/.next
 **/.turbo
 **/dist
-**/*.log
-**/.env.local
+**/.tsup-cache
+**/.cache
 **/coverage
+**/test-results
+**/playwright-report
+
+# Logs / artifacts
+**/*.log
+**/.DS_Store
+
+# Secrets
+**/.env
+**/.env.local
+**/.env.*.local
+
+# Source-control / dev tooling
+.git
+.github
+.claude
+.vscode
+.idea
+
+# Docs (~10 MB markdown — not needed at runtime)
+docs
+
+# Static example output dirs we don't bake into the runtime image
+examples/static/*/dist
+examples/static/*/_data
+examples/static/*/.cache
+
+# Test artifacts
+tests
+playwright-report
+
+# Sample/test data
+**/_revisions
+
+# CMS admin local data (lives outside the image; mounted as Fly volume)
+**/_data
+**/_admin

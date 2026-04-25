@@ -1,5 +1,6 @@
+# syntax=docker/dockerfile:1.7
 # webhouse.app — CMS Admin + Landing Page
-# Deployed to Fly.io as app "webhouse-cms"
+# Deployed to Fly.io as app "webhouse-app"
 
 # ── Stage 1: deps ─────────────────────────────────────────────
 FROM node:22-alpine AS deps
@@ -26,15 +27,25 @@ COPY packages/create-cms/package.json     ./packages/create-cms/
 COPY examples/blog/package.json           ./examples/blog/
 COPY examples/landing/package.json        ./examples/landing/
 
-RUN pnpm install --frozen-lockfile
+# BuildKit cache mount: pnpm store survives between builds.
+# Drops `pnpm install` from ~3 min cold to ~10 sek warm.
+RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
+    pnpm install --frozen-lockfile
 
 # ── Stage 2: builder ──────────────────────────────────────────
 FROM deps AS builder
 
 COPY . .
 
-# Build workspace dependencies then CMS Admin
-RUN pnpm --filter @webhouse/cms build \
+# BuildKit cache mounts for tsup + Next.js incremental caches.
+# When only cms-admin source changed, the unchanged workspace packages
+# (cms, cms-ai, cms-mcp-*) reuse their tsup output instead of rebuilding.
+RUN --mount=type=cache,id=cms-tsup-cms,target=/app/packages/cms/.tsup-cache \
+    --mount=type=cache,id=cms-tsup-ai,target=/app/packages/cms-ai/.tsup-cache \
+    --mount=type=cache,id=cms-tsup-mcp-client,target=/app/packages/cms-mcp-client/.tsup-cache \
+    --mount=type=cache,id=cms-tsup-mcp-server,target=/app/packages/cms-mcp-server/.tsup-cache \
+    --mount=type=cache,id=cms-next-cache,target=/app/packages/cms-admin/.next/cache \
+    pnpm --filter @webhouse/cms build \
  && pnpm --filter @webhouse/cms-ai build \
  && pnpm --filter @webhouse/cms-mcp-client build \
  && pnpm --filter @webhouse/cms-mcp-server build \

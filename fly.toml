@@ -3,6 +3,13 @@ primary_region = "arn"
 
 [build]
   dockerfile = "deploy/webhouse-app/Dockerfile"
+  # Persistent registry-cache tag (F137-B): every build's layers are pushed
+  # to this tag and the next build pulls from it. Without this, fresh
+  # builder VMs start with empty Docker layer cache.
+  build-target = "runner"
+
+  [build.args]
+    BUILDKIT_INLINE_CACHE = "1"
 
 [env]
   DATA_DIR = "/data"

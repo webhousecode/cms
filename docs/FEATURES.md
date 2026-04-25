@@ -147,6 +147,10 @@
 | F131 | [Media CDN Offloading](#f131-media-cdn-offloading) | Planned | [docs/features/F131-media-cdn-offloading.md](features/F131-media-cdn-offloading.md) |
 | F132 | [Document Search & Replace](#f132-document-search-replace) | Planned | [docs/features/F132-document-search-replace.md](features/F132-document-search-replace.md) |
 | F133 | [Instant Deploy Providers](#f133-instant-deploy-providers) | In progress | [docs/features/F133-instant-deploy-providers.md](features/F133-instant-deploy-providers.md) |
+| F134 | [Access Token Rules](#f134-access-token-rules) | Planned | [docs/features/F134-access-token-rules.md](features/F134-access-token-rules.md) |
+| F135 | [OpenRouter AI Fallback](#f135-openrouter-ai-fallback) | Planned | [docs/features/F135-openrouter-ai-fallback.md](features/F135-openrouter-ai-fallback.md) |
+| F136 | [Shop Module (E-Commerce Platform)](#f136-shop-module) | Planned | [docs/features/F136-shop-module.md](features/F136-shop-module.md) |
+| F137 | [Fast Fly Deploys (Build Cache)](#f137-fast-fly-deploys) | Planned | [docs/features/F137-fast-fly-deploys.md](features/F137-fast-fly-deploys.md) |
 
 ---
 
@@ -546,3 +550,9 @@ Cmd+F (find) and Cmd+Option+F (find + replace) scoped to the currently open docu
 
 ## F133 — Instant Deploy Providers
 Two new deploy providers for sub-second content propagation. **Fly.io Live**: Docker image contains only web-server + HMAC-signed sync endpoint (immutable infra, deployed once). Site content lives on a mounted Fly Volume. CMS admin publish diffs local build vs remote manifest and pushes only changed files — typical edit live in 200 ms–1 s. Atomic COW deploys via hardlinked `/srv/deploys/<id>/` + symlink swap. **Cloudflare Pages (direct)**: replaces the current webhook-only `cloudflare` provider with real Direct Upload API integration — 300+ PoP edge network, free tier covers most sites. Existing `flyio` and `cloudflare` providers kept for backwards compat, relabeled to "Fly.io (rebuild)" and "Cloudflare (webhook)". Reuses F125 ICD HMAC signing pattern.
+
+## F136 — Shop Module (E-Commerce Platform)
+Content-first e-commerce built as CMS document collections — Stripe for payments, GLS/DAO for shipping, AI-native product creation (single photo or bulk 500 images + CSV), multi-locale, headless storefront, return portal, discount/rabat engine, "Andre købte også" recommendations. Products are regular CMS documents with shop-specific fields, meaning editors get the same familiar UI, i18n, AI tools, and versioning.
+
+## F137 — Fast Fly Deploys (Build Cache)
+Cut webhouse-app deploy time from 20+ min cold / 5–8 min steady-state to under 90 sek per code-only change. BuildKit cache mounts for the pnpm store and Next.js build caches, persistent registry-cache tag in `fly.toml` so fresh builder VMs pull warm layers, `.dockerignore` cleanup to shrink build context, and an optional GitHub Actions buildx-cache deploy that keeps the build off the developer's Mac. Pure prod-deploy plumbing — runtime container, env, volume, and ports unchanged. Iteration speed unblocker for everything that follows M1.
