@@ -31,8 +31,14 @@ fi
 # a node_modules entry under $DATA_DIR. Symlink to /app/packages/cms
 # (NOT the standalone copy) because the workspace package keeps its
 # own node_modules with hono/zod/nanoid/drizzle/marked/better-sqlite3.
+#
+# rm-then-ln (instead of `ln -sfn`) because the symlink survives across
+# deploys on the persistent volume. BusyBox `ln -f` doesn't always
+# replace symlinks pointing into directories — observed crash on Fly:
+# `ln: /data/node_modules/@webhouse/cms: File exists` → exit 1 → boot loop.
 mkdir -p "$DATA_DIR/node_modules/@webhouse"
-ln -sfn /app/packages/cms "$DATA_DIR/node_modules/@webhouse/cms"
+rm -f "$DATA_DIR/node_modules/@webhouse/cms"
+ln -s /app/packages/cms "$DATA_DIR/node_modules/@webhouse/cms"
 
 # ── Start cms-admin ───────────────────────────────────────────
 export CMS_CONFIG_PATH="$CONFIG_PATH"
