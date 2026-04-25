@@ -10,6 +10,8 @@ interface HeaderData {
   siteConfig: Record<string, unknown> | null;
   /** User profile from /api/admin/profile */
   profile: { lastActiveSite?: string; lastActiveOrg?: string; pinnedSidebar?: string[]; collapsedSidebar?: string[] } | null;
+  /** F138: registry exists but every org has 0 sites — drives empty-admin UX */
+  isAdminEmpty: boolean;
   /** Whether data has loaded at least once */
   loaded: boolean;
   /** Re-fetch all data (e.g. on site change) */
@@ -20,6 +22,7 @@ const HeaderDataContext = createContext<HeaderData>({
   user: null,
   siteConfig: null,
   profile: null,
+  isAdminEmpty: false,
   loaded: false,
   refresh: () => {},
 });
@@ -32,6 +35,7 @@ export function HeaderDataProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<HeaderData["user"]>(null);
   const [siteConfig, setSiteConfig] = useState<Record<string, unknown> | null>(null);
   const [profile, setProfile] = useState<HeaderData["profile"]>(null);
+  const [isAdminEmpty, setIsAdminEmpty] = useState(false);
   const [loaded, setLoaded] = useState(false);
 
   const refresh = useCallback(() => {
@@ -39,10 +43,12 @@ export function HeaderDataProvider({ children }: { children: ReactNode }) {
       fetch("/api/auth/me").then((r) => r.ok ? r.json() : null),
       fetch("/api/admin/site-config").then((r) => r.ok ? r.json() : null),
       fetch("/api/admin/profile").then((r) => r.ok ? r.json() : null),
-    ]).then(([meData, configData, profileData]) => {
+      fetch("/api/admin/state").then((r) => r.ok ? r.json() : null),
+    ]).then(([meData, configData, profileData, stateData]) => {
       if (meData?.user) setUser(meData.user);
       if (configData) setSiteConfig(configData);
       if (profileData) setProfile(profileData);
+      if (stateData) setIsAdminEmpty(Boolean(stateData.isEmpty));
       setLoaded(true);
     }).catch(() => setLoaded(true));
   }, []);
@@ -61,7 +67,7 @@ export function HeaderDataProvider({ children }: { children: ReactNode }) {
   }, [refresh]);
 
   return (
-    <HeaderDataContext.Provider value={{ user, siteConfig, profile, loaded, refresh }}>
+    <HeaderDataContext.Provider value={{ user, siteConfig, profile, isAdminEmpty, loaded, refresh }}>
       {children}
     </HeaderDataContext.Provider>
   );

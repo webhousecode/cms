@@ -77,7 +77,7 @@ export function AppSidebar({ collections }: Props) {
   });
 
   // Load logo preference from shared context (profile)
-  const { user: ctxUser, profile: ctxProfile } = useHeaderData();
+  const { user: ctxUser, profile: ctxProfile, isAdminEmpty } = useHeaderData();
   useEffect(() => {
     if (ctxProfile && typeof (ctxProfile as any).showLogoIcon === "boolean") {
       setShowLogoIcon((ctxProfile as any).showLogoIcon);
@@ -231,6 +231,9 @@ export function AppSidebar({ collections }: Props) {
           </SidebarMenu>
         </SidebarGroup>
 
+        {/* F138: hide all site-scoped sections when admin is empty (registry has 0 sites). */}
+        {!isAdminEmpty && (
+        <>
         {/* AI Section */}
         <SidebarGroup style={{ padding: "0 0.5rem" }}>
           <SidebarMenu>
@@ -478,7 +481,7 @@ export function AppSidebar({ collections }: Props) {
           )}
         </SidebarGroup>
 
-        {/* ⌘K Search trigger */}
+        {/* ⌘K Search trigger (site-scoped — hidden in empty admin) */}
         <SidebarGroup style={{ padding: "0 0.5rem" }}>
           <SidebarMenu>
             <SidebarMenuItem>
@@ -529,10 +532,13 @@ export function AppSidebar({ collections }: Props) {
             </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
+        </>
+        )}
       </SidebarContent>
 
       <SidebarFooter style={{ paddingBottom: "3rem" }}>
-        {/* Site Settings + Trash — role-gated */}
+        {/* Site Settings + Trash — role-gated AND hidden when admin is empty (F138). */}
+        {!isAdminEmpty && (
         <SidebarGroup style={{ padding: "0.25rem 0.5rem 0" }}>
           <SidebarMenu>
             {siteRole === "admin" && (
@@ -561,6 +567,7 @@ export function AppSidebar({ collections }: Props) {
             )}
           </SidebarMenu>
         </SidebarGroup>
+        )}
 
         <div className="border-t border-border" />
 
