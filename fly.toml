@@ -9,6 +9,7 @@ primary_region = "arn"
   CMS_CONFIG_PATH = "/data/cms.config.ts"
   UPLOAD_DIR = "/data/uploads"
   NODE_ENV = "production"
+  WEBHOUSE_DATA_DIR = "/data/cms-admin"
 
 [mounts]
   source = "cms_data"
