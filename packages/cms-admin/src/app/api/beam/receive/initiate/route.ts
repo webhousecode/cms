@@ -23,9 +23,18 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate beam token — uses the active site's _data directory
-    const { dataDir } = await getActiveSitePaths();
-    const validToken = await validateAndConsumeBeamToken(token, dataDir);
+    // Validate beam token. F138-C: tokens.validateAndConsumeBeamToken
+    // checks admin-level path first; the site-level path passed here is
+    // a backwards-compat fallback only. On an empty CMS,
+    // getActiveSitePaths() throws — pass a sentinel path so the legacy
+    // fallback finds nothing and the admin-level lookup is authoritative.
+    let legacyDataDir = "/dev/null";
+    try {
+      legacyDataDir = (await getActiveSitePaths()).dataDir;
+    } catch {
+      // No active site (empty CMS). Admin-level path is the only one consulted.
+    }
+    const validToken = await validateAndConsumeBeamToken(token, legacyDataDir);
     if (!validToken) {
       return NextResponse.json(
         { error: "Invalid, expired, or already-used beam token" },

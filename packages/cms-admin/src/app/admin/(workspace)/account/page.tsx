@@ -7,6 +7,7 @@ import { SectionHeading } from "@/components/ui/section-heading";
 import { MobilePairingClient } from "./mobile-pairing/client";
 import { getSiteRole } from "@/lib/require-role";
 import { AccessTokensPanel } from "@/components/settings/access-tokens-panel";
+import { BeamTokensPanel } from "@/components/account/beam-tokens-panel";
 
 export default async function AccountPage({
   searchParams,
@@ -21,6 +22,7 @@ export default async function AccountPage({
     { id: "general", label: "General" },
     { id: "security", label: "Security" },
     { id: "tokens", label: "Access Tokens" },
+    ...(isAdmin ? [{ id: "beam", label: "Beam" }] : []),
     ...(isAdmin ? [{ id: "mobile", label: "Mobile" }] : []),
   ];
 
@@ -78,6 +80,13 @@ export default async function AccountPage({
 
         {/* Access Tokens tab */}
         {tab === "tokens" && <AccessTokensPanel />}
+
+        {/* F138-C: Beam tab (admin only) — generate receive-tokens for transfers from another CMS. */}
+        {tab === "beam" && isAdmin && (
+          <div className="max-w-2xl">
+            <BeamTokensPanel />
+          </div>
+        )}
 
         {/* Mobile tab — F07 webhouse.app pairing QR (admin only) */}
         {tab === "mobile" && isAdmin && (
