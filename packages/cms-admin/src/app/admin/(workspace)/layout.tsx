@@ -35,19 +35,18 @@ export async function generateMetadata(): Promise<Metadata> {
 
 /**
  * F138-B: paths that work without any site existing. Anything else
- * gets redirected to /admin/sites with a "create-first" notice when
- * the admin is empty (registry exists with zero sites across all orgs).
+ * (including /admin root and /admin/favorites — both site-scoped in
+ * practice) gets redirected to /admin/sites with a "create-first"
+ * notice when the admin is empty.
  */
 const EMPTY_ADMIN_ALLOWED_PREFIXES = [
   "/admin/sites",
   "/admin/organizations",
   "/admin/account",
   "/admin/admin",
-  "/admin/favorites",
 ];
 
 function isAllowedInEmptyAdmin(pathname: string): boolean {
-  if (pathname === "/admin" || pathname === "/admin/") return true;
   return EMPTY_ADMIN_ALLOWED_PREFIXES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
 }
 
