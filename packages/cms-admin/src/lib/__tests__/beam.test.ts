@@ -174,6 +174,84 @@ describe("clearRedactedSecrets", () => {
   });
 });
 
+// ── ensureStorageBlock — patches imported configs missing storage ──
+// Mirror of the helper in beam/import.ts; kept in sync so we can unit-test
+// the regex/insertion logic without spinning up the file-extraction pipeline.
+
+function ensureStorageBlockSource(source: string, isJson: boolean): string {
+  if (/\bstorage\s*:/.test(source)) return source;
+  if (isJson) {
+    try {
+      const obj = JSON.parse(source) as Record<string, unknown>;
+      if ("storage" in obj) return source;
+      obj.storage = { adapter: "filesystem", filesystem: { contentDir: "content" } };
+      return JSON.stringify(obj, null, 2);
+    } catch {
+      return source;
+    }
+  }
+  const closingMatch = source.match(/\n\s*\}\s*\)\s*;\s*$/);
+  if (!closingMatch || closingMatch.index === undefined) return source;
+  const insertAt = closingMatch.index;
+  const block =
+    "\n  storage: {\n" +
+    "    adapter: \"filesystem\",\n" +
+    "    filesystem: {\n" +
+    "      contentDir: \"content\",\n" +
+    "    },\n" +
+    "  },";
+  return source.slice(0, insertAt) + block + source.slice(insertAt);
+}
+
+describe("ensureStorageBlock (TS config)", () => {
+  it("appends a filesystem storage block when missing", () => {
+    const original = `import { defineConfig, defineCollection } from '@webhouse/cms';\n\nexport default defineConfig({\n  collections: [\n    defineCollection({ name: "posts", fields: [] }),\n  ],\n});\n`;
+    const patched = ensureStorageBlockSource(original, false);
+    expect(patched).not.toBe(original);
+    expect(patched).toContain('adapter: "filesystem"');
+    expect(patched).toContain('contentDir: "content"');
+    // Inserted before closing }); — the closing parens still terminate the file.
+    expect(patched.trimEnd().endsWith("});")).toBe(true);
+  });
+
+  it("leaves config alone if a storage block is already present", () => {
+    const original = `export default defineConfig({\n  collections: [],\n  storage: { adapter: "github", github: { repo: "x/y" } },\n});\n`;
+    expect(ensureStorageBlockSource(original, false)).toBe(original);
+  });
+
+  it("leaves config alone for any storage adapter (not just filesystem)", () => {
+    const original = `export default defineConfig({\n  collections: [],\n  storage: { adapter: "supabase", supabase: { url: "x" } },\n});\n`;
+    expect(ensureStorageBlockSource(original, false)).toBe(original);
+  });
+
+  it("returns original source if the file has no terminating defineConfig closure", () => {
+    // No `});` at end — refuse to guess where to insert.
+    const original = `// just a comment, no config call`;
+    expect(ensureStorageBlockSource(original, false)).toBe(original);
+  });
+});
+
+describe("ensureStorageBlock (JSON config)", () => {
+  it("adds storage to JSON config without one", () => {
+    const original = JSON.stringify({ collections: [] });
+    const patched = ensureStorageBlockSource(original, true);
+    const parsed = JSON.parse(patched);
+    expect(parsed.storage).toEqual({
+      adapter: "filesystem",
+      filesystem: { contentDir: "content" },
+    });
+  });
+
+  it("keeps existing JSON storage as-is", () => {
+    const original = JSON.stringify({
+      collections: [],
+      storage: { adapter: "github" },
+    });
+    const patched = ensureStorageBlockSource(original, true);
+    expect(JSON.parse(patched).storage).toEqual({ adapter: "github" });
+  });
+});
+
 // ── Manifest validation ──
 
 describe("Beam manifest format", () => {
