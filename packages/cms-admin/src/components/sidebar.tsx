@@ -33,7 +33,6 @@ import {
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -109,8 +108,6 @@ export function AppSidebar({ collections }: Props) {
   }, []);
   const [readyCount, setReadyCount] = useState(0);
   const [formUnreadTotal, setFormUnreadTotal] = useState(0);
-  const [budgetSpent, setBudgetSpent] = useState(0);
-  const [budgetTotal, setBudgetTotal] = useState(50);
   const siteRole = ctxUser?.siteRole ?? null;
 
   // Listen for logo icon preference changes
@@ -147,24 +144,8 @@ export function AppSidebar({ collections }: Props) {
     fetchFormCounts();
     const formPoll = setInterval(fetchFormCounts, 30_000);
 
-    fetch("/api/cms/command")
-      .then((r) => r.json())
-      .then((data: { currentMonthSpentUsd: number; monthlyBudgetUsd: number }) => {
-        setBudgetSpent(data.currentMonthSpentUsd ?? 0);
-        setBudgetTotal(data.monthlyBudgetUsd ?? 50);
-      })
-      .catch(() => {});
-
     return () => clearInterval(formPoll);
   }, []);
-
-  const budgetPct = budgetTotal > 0 ? (budgetSpent / budgetTotal) * 100 : 0;
-  const budgetColor =
-    budgetPct > 90
-      ? "bg-red-500"
-      : budgetPct > 70
-      ? "bg-yellow-500"
-      : "bg-green-500";
 
   return (
     <Sidebar collapsible="offcanvas" data-testid="sidebar">
@@ -533,17 +514,9 @@ export function AppSidebar({ collections }: Props) {
                 </span>
               </SidebarMenuButton>
             </SidebarMenuItem>
-          </SidebarMenu>
-        </SidebarGroup>
-        </>
-        )}
-      </SidebarContent>
-
-      <SidebarFooter style={{ paddingBottom: "3rem" }}>
-        {/* Site Settings + Trash — role-gated AND hidden when admin is empty (F138). */}
-        {!isAdminEmpty && (
-        <SidebarGroup style={{ padding: "0.25rem 0.5rem 0" }}>
-          <SidebarMenu>
+            {/* Site Settings + Trash — role-gated. Sit directly under Search
+                instead of in the footer (F:no-footer-rearrange) so editors
+                don't have to scroll past collections to reach them. */}
             {siteRole === "admin" && (
               <SidebarMenuItem>
                 <SidebarMenuButton
@@ -570,24 +543,9 @@ export function AppSidebar({ collections }: Props) {
             )}
           </SidebarMenu>
         </SidebarGroup>
+        </>
         )}
-
-        <div className="border-t border-border" />
-
-        {/* Usage bar */}
-        <div className="px-3 pb-2">
-          <div className="text-[10px] text-muted-foreground mb-1 font-mono">
-            Usage: {Math.round(budgetPct)}%
-          </div>
-          <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
-            <div
-              className={`h-full rounded-full transition-all ${budgetColor}`}
-              style={{ width: `${Math.min(100, budgetPct)}%` }}
-            />
-          </div>
-        </div>
-
-      </SidebarFooter>
+      </SidebarContent>
     </Sidebar>
   );
 }
