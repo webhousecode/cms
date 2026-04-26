@@ -67,6 +67,25 @@ export async function listDeploys(): Promise<DeployEntry[]> {
 
 // ── Deploy trigger ───────────────────────────────────────────
 
+/**
+ * Resolve a deploy token using a deliberate priority order:
+ *
+ *   1. process.env.FLY_API_TOKEN  — platform-wide secret on the CMS host (the
+ *      "WordPress one-token-rules-them-all" model). When set, EVERY site on
+ *      this CMS instance can deploy without any per-site UI input.
+ *   2. config.deployApiToken      — per-site override via Site Settings →
+ *      Deploy. Useful if a site needs to deploy to a different Fly org.
+ *   3. process.env.FLY_ACCESS_TOKEN — flyctl's standard env var, accepted as
+ *      a courtesy so users who already have it set don't have to duplicate.
+ *
+ * BEAM_REDACTED placeholders are scrubbed at read-time by readSiteConfig, so
+ * we never see the literal string here — but a tomstring or undefined per-site
+ * value correctly falls through to the platform env, which is the whole point.
+ */
+function resolveFlyToken(perSiteToken: string | undefined): string | undefined {
+  return process.env.FLY_API_TOKEN || perSiteToken || process.env.FLY_ACCESS_TOKEN || undefined;
+}
+
 export async function triggerDeploy(): Promise<DeployEntry> {
   const config = await readSiteConfig();
   let provider = config.deployProvider;
@@ -211,9 +230,9 @@ export async function triggerDeploy(): Promise<DeployEntry> {
 
       case "flyio-live": {
         // F133 — Fly.io Live (volume sync, no Docker rebuild per edit)
-        let useToken = token || config.deployApiToken;
+        let useToken = resolveFlyToken(token || config.deployApiToken);
         if (!useToken) {
-          throw new Error("Fly.io Live requires an API token. Get one at fly.io/dashboard → Tokens.");
+          throw new Error("Fly.io Live requires an API token. Set FLY_API_TOKEN as a Fly secret on the CMS host (recommended — works for all sites), or paste a per-site token in Site Settings → Deploy.");
         }
         let useAppName = appName || config.deployAppName;
         if (!useAppName) {
@@ -293,9 +312,9 @@ export async function triggerDeploy(): Promise<DeployEntry> {
           await postHook(config.deployHookUrl);
           entry.status = "success";
         } else {
-          let useToken = token || config.deployApiToken;
+          let useToken = resolveFlyToken(token || config.deployApiToken);
           if (!useToken) {
-            throw new Error("Fly.io requires an API token. Get one at fly.io/dashboard → Tokens.");
+            throw new Error("Fly.io requires an API token. Set FLY_API_TOKEN as a Fly secret on the CMS host (recommended — works for all sites), or paste a per-site token in Site Settings → Deploy.");
           }
           let useAppName = appName || config.deployAppName;
           // Auto-create app name if not configured
