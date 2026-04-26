@@ -32,6 +32,14 @@ COPY examples/landing/package.json        ./examples/landing/
 RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
     pnpm install --frozen-lockfile
 
+# Defensive: pnpm v10 needs `pnpm.onlyBuiltDependencies` in root package.json to
+# run install scripts. Force a rebuild so native bindings (better_sqlite3.node,
+# sharp, esbuild) actually end up in node_modules even if the approval is
+# skipped on a warm cache. Without this, the standalone Next.js bundle fails at
+# runtime with "Could not locate the bindings file" on every SQLite query.
+RUN --mount=type=cache,id=pnpm-store,target=/root/.local/share/pnpm/store \
+    pnpm rebuild better-sqlite3 sharp esbuild
+
 # ── Stage 2: builder ──────────────────────────────────────────
 FROM deps AS builder
 
