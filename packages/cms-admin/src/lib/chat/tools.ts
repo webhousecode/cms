@@ -3,11 +3,40 @@ import { readSiteConfig } from "@/lib/site-config";
 import { loadRegistry, findSite } from "@/lib/site-registry";
 import { saveRevision } from "@/lib/revisions";
 import { buildLocaleInstruction, getSeoLimits } from "@/lib/ai/locale-prompt";
+import { dispatchRevalidation } from "@/lib/revalidation";
+import { getActiveSiteEntry } from "@/lib/site-paths";
 // getDocumentUrl imported dynamically in get_document handler to avoid Turbopack bundling issues
 import { cookies } from "next/headers";
 import type { ToolDefinition, ToolHandler } from "@/lib/tools";
 import { buildWebSearchTool } from "@/lib/tools/web-search";
 import { hasPermission } from "@/lib/permissions-shared";
+
+/**
+ * Fire-and-forget ICD webhook for any chat tool that mutates a published
+ * document. Without this, chat-driven create/publish/update writes only land
+ * on the CMS volume — webhouse-dk (or any consumer) never receives the
+ * revalidation webhook, so live URLs return 404 / stale content. The HTTP API
+ * routes already do this; chat tools were silently bypassing it.
+ *
+ * Errors are swallowed: we never want a failed webhook to break the chat
+ * tool's success path. The CMS-side write is the source of truth; the webhook
+ * is best-effort delivery to the live site.
+ */
+async function dispatchChatRevalidation(
+  collection: string,
+  slug: string,
+  action: "created" | "updated" | "deleted" | "published" | "unpublished",
+  document: unknown,
+): Promise<void> {
+  try {
+    const site = await getActiveSiteEntry().catch(() => null);
+    if (!site?.revalidateUrl) return; // No ICD configured — nothing to do
+    const config = await getAdminConfig().catch(() => null);
+    const colCfg = config?.collections.find((c) => c.name === collection);
+    const urlPrefix = (colCfg as { urlPrefix?: string } | undefined)?.urlPrefix;
+    await dispatchRevalidation(site, { collection, slug, action, document }, urlPrefix);
+  } catch { /* non-fatal — log path is in revalidation.ts */ }
+}
 
 interface ToolPair {
   definition: ToolDefinition;
@@ -959,6 +988,12 @@ async function _buildAllTools(activeOrg?: string, activeSite?: string): Promise<
 
         const mergedData = { ...doc.data, ...newData };
         await cms.content.update(collection, doc.id, { data: mergedData });
+        // Only published docs are visible on the live site — fire ICD so the
+        // edit reaches webhouse-dk in ~500ms. Drafts skip (no live URL).
+        if (doc.status === "published") {
+          const updated = await cms.content.findBySlug(collection, slug).catch(() => null);
+          await dispatchChatRevalidation(collection, slug, "updated", updated);
+        }
 
         const changedFields = Object.keys(newData).join(", ");
         return `Updated "${doc.data.title ?? slug}" in ${collection}.\nChanged fields: ${changedFields}`;
@@ -990,6 +1025,8 @@ async function _buildAllTools(activeOrg?: string, activeSite?: string): Promise<
 
         await saveRevision(collection, doc).catch(() => {});
         await cms.content.update(collection, doc.id, { status: "published" });
+        const updated = await cms.content.findBySlug(collection, slug).catch(() => null);
+        await dispatchChatRevalidation(collection, slug, "published", updated);
 
         return `Published "${doc.data.title ?? slug}" in ${collection}.`;
       },
@@ -1020,6 +1057,9 @@ async function _buildAllTools(activeOrg?: string, activeSite?: string): Promise<
 
         await saveRevision(collection, doc).catch(() => {});
         await cms.content.update(collection, doc.id, { status: "draft" });
+        // Tell the live site to drop this URL from its cache — the post is
+        // no longer published and should 404 (or fall back to redirect).
+        await dispatchChatRevalidation(collection, slug, "unpublished", null);
 
         return `Unpublished "${doc.data.title ?? slug}" — now a draft.`;
       },
@@ -1098,11 +1138,16 @@ async function _buildAllTools(activeOrg?: string, activeSite?: string): Promise<
         const doc = await cms.content.findBySlug(collection, slug);
         if (!doc) return `Error: Document not found: ${collection}/${slug}`;
 
+        const wasPublished = doc.status === "published";
         await saveRevision(collection, doc).catch(() => {});
         await cms.content.update(collection, doc.id, {
           status: "trashed" as any,
           data: { ...doc.data, _trashedAt: new Date().toISOString() },
         });
+        // Tell the live site to drop it — only relevant if it was reachable.
+        if (wasPublished) {
+          await dispatchChatRevalidation(collection, slug, "deleted", null);
+        }
 
         return `Trashed "${doc.data.title ?? slug}" from ${collection}. It can be restored from the Trash page.`;
       },
