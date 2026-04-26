@@ -130,7 +130,15 @@ ${configSource.slice(0, 8000)}`;
     });
 
     if (!res.ok) {
-      return NextResponse.json({ error: "AI type inference failed" }, { status: 502 });
+      const body = await res.text().catch(() => "");
+      const snippet = body.slice(0, 500);
+      console.error(
+        `[schema-drift/add-to-schema] Anthropic API ${res.status} ${res.statusText}: ${snippet}`,
+      );
+      return NextResponse.json(
+        { error: `AI type inference failed (Anthropic ${res.status}): ${snippet || res.statusText}` },
+        { status: 502 },
+      );
     }
 
     const payload = await res.json() as { content: Array<{ type: string; text?: string }> };

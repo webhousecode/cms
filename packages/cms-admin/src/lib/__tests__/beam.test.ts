@@ -9,6 +9,8 @@ import {
   SECRET_FIELDS,
   BEAM_REDACTED,
   EXCLUDED_DATA_DIRS,
+  ORG_SETTINGS_SECRET_FIELDS,
+  clearRedactedSecrets,
   type BeamManifest,
 } from "../beam/types";
 
@@ -24,7 +26,19 @@ describe("Beam types", () => {
   it("ai-config.json secrets include all provider keys", () => {
     expect(SECRET_FIELDS["ai-config.json"]).toContain("anthropicApiKey");
     expect(SECRET_FIELDS["ai-config.json"]).toContain("openaiApiKey");
+    // Real field name in AiConfig is geminiApiKey; legacy googleApiKey kept for
+    // older configs still on disk so push redacts both.
+    expect(SECRET_FIELDS["ai-config.json"]).toContain("geminiApiKey");
     expect(SECRET_FIELDS["ai-config.json"]).toContain("googleApiKey");
+    expect(SECRET_FIELDS["ai-config.json"]).toContain("braveApiKey");
+    expect(SECRET_FIELDS["ai-config.json"]).toContain("tavilyApiKey");
+  });
+
+  it("ORG_SETTINGS_SECRET_FIELDS covers AI keys and deploy tokens", () => {
+    expect(ORG_SETTINGS_SECRET_FIELDS).toContain("aiAnthropicApiKey");
+    expect(ORG_SETTINGS_SECRET_FIELDS).toContain("aiOpenaiApiKey");
+    expect(ORG_SETTINGS_SECRET_FIELDS).toContain("deployApiToken");
+    expect(ORG_SETTINGS_SECRET_FIELDS).toContain("resendApiKey");
   });
 
   it("EXCLUDED_DATA_DIRS excludes backups", () => {
@@ -119,6 +133,44 @@ describe("Secret stripping", () => {
     const stripped = stripSecrets(config, ["deployApiToken", "nonexistent"]);
     expect(stripped).toHaveLength(0);
     expect(config.foo).toBe("bar");
+  });
+});
+
+// ── Defensive read-side scrubbing ──
+
+describe("clearRedactedSecrets", () => {
+  it("deletes BEAM_REDACTED-valued fields and reports change", () => {
+    const config: Record<string, unknown> = {
+      anthropicApiKey: BEAM_REDACTED,
+      openaiApiKey: "sk-real-key",
+      defaultProvider: "anthropic",
+    };
+    const changed = clearRedactedSecrets(config, SECRET_FIELDS["ai-config.json"]!);
+    expect(changed).toBe(true);
+    expect("anthropicApiKey" in config).toBe(false);
+    expect(config.openaiApiKey).toBe("sk-real-key");
+    expect(config.defaultProvider).toBe("anthropic");
+  });
+
+  it("returns false when nothing redacted", () => {
+    const config: Record<string, unknown> = {
+      anthropicApiKey: "sk-ant-real",
+      openaiApiKey: "",
+    };
+    const changed = clearRedactedSecrets(config, SECRET_FIELDS["ai-config.json"]!);
+    expect(changed).toBe(false);
+    expect(config.anthropicApiKey).toBe("sk-ant-real");
+    expect(config.openaiApiKey).toBe("");
+  });
+
+  it("does not touch fields not in the field list", () => {
+    const config: Record<string, unknown> = {
+      anthropicApiKey: BEAM_REDACTED,
+      otherField: BEAM_REDACTED, // not in field list — must be left alone
+    };
+    clearRedactedSecrets(config, ["anthropicApiKey"]);
+    expect("anthropicApiKey" in config).toBe(false);
+    expect(config.otherField).toBe(BEAM_REDACTED);
   });
 });
 

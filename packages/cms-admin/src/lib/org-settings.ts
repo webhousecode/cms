@@ -7,6 +7,7 @@
 import fs from "fs/promises";
 import path from "path";
 import { cookies } from "next/headers";
+import { ORG_SETTINGS_SECRET_FIELDS, clearRedactedSecrets } from "./beam/types";
 
 // ── Types ────────────────────────────────────────────────────
 
@@ -202,7 +203,10 @@ export async function readOrgSettingsForOrg(orgId: string): Promise<Partial<OrgS
   try {
     const filePath = await orgSettingsPath(orgId);
     const raw = await fs.readFile(filePath, "utf-8");
-    return JSON.parse(raw) as Partial<OrgSettings>;
+    const parsed = JSON.parse(raw) as Partial<OrgSettings>;
+    // Defensive: drop BEAM_REDACTED placeholders so site/env fallback applies.
+    clearRedactedSecrets(parsed as Record<string, unknown>, ORG_SETTINGS_SECRET_FIELDS);
+    return parsed;
   } catch {
     return {};
   }

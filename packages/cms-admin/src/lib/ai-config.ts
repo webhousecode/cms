@@ -1,6 +1,7 @@
 import fs from "fs/promises";
 import path from "path";
 import { getActiveSitePaths } from "./site-paths";
+import { SECRET_FIELDS, clearRedactedSecrets } from "./beam/types";
 
 export interface AiConfig {
   defaultProvider: "anthropic" | "openai" | "gemini";
@@ -35,6 +36,12 @@ export async function readAiConfig(): Promise<AiConfig> {
   try {
     stored = JSON.parse(await fs.readFile(filePath, "utf-8")) as Partial<AiConfig>;
   } catch { /* first read */ }
+
+  // Defensive: drop any BEAM_REDACTED placeholders so env-var fallback applies.
+  // Beam push redacts secrets to "BEAM_REDACTED" before export; if a beam was
+  // imported without follow-up secret reconfiguration, those strings sit on disk
+  // and will be used as real API keys unless we strip them here.
+  clearRedactedSecrets(stored as Record<string, unknown>, SECRET_FIELDS["ai-config.json"]!);
 
   // F87: Org-level AI keys fallback
   try {

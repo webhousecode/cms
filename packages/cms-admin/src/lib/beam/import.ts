@@ -9,6 +9,7 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { createHash, randomUUID } from "node:crypto";
 import { addSite, loadRegistry, findSite } from "../site-registry";
+import { SECRET_FIELDS, ORG_SETTINGS_SECRET_FIELDS, clearRedactedSecrets } from "./types";
 import type { BeamManifest, BeamImportResult } from "./types";
 
 /**
@@ -117,7 +118,14 @@ export async function importBeamArchive(
 
     // Ensure parent directory exists and write
     mkdirSync(path.dirname(targetPath), { recursive: true });
-    writeFileSync(targetPath, content);
+
+    // Strip BEAM_REDACTED placeholders from known secret-bearing JSON files before
+    // writing to disk. The push side intentionally redacts secrets for transport;
+    // leaving the placeholder strings on disk would let consumers (getApiKey, etc.)
+    // treat "BEAM_REDACTED" as a real credential and call APIs with garbage,
+    // surfacing as an opaque 401 instead of falling through to env-var fallback.
+    const writeContent = scrubRedactedSecretFile(relativePath, content);
+    writeFileSync(targetPath, writeContent);
   }
 
   // ── 4. Register site in registry ──
@@ -141,4 +149,35 @@ export async function importBeamArchive(
     secretsRequired: manifest.secretsRequired,
     checksumErrors,
   };
+}
+
+/**
+ * If `relativePath` matches a known secret-bearing JSON file in _data/, parse the
+ * buffer, drop any field whose value is exactly "BEAM_REDACTED", and return the
+ * re-serialised buffer. Returns the original buffer for unrelated files or on
+ * parse failure (so binary/unknown files pass through untouched).
+ */
+function scrubRedactedSecretFile(relativePath: string, content: Buffer): Buffer {
+  if (!relativePath.startsWith("_data/")) return content;
+  const basename = path.basename(relativePath);
+  const dataPath = relativePath.slice("_data/".length);
+
+  let fields: readonly string[] | undefined = SECRET_FIELDS[basename];
+  // Org settings live at _data/org-settings/<orgId>.json
+  if (!fields && dataPath.startsWith("org-settings/") && basename.endsWith(".json")) {
+    fields = ORG_SETTINGS_SECRET_FIELDS;
+  }
+  if (!fields) return content;
+
+  let parsed: Record<string, unknown>;
+  try {
+    parsed = JSON.parse(content.toString("utf-8"));
+  } catch {
+    return content;
+  }
+  if (!parsed || typeof parsed !== "object") return content;
+
+  const changed = clearRedactedSecrets(parsed, fields);
+  if (!changed) return content;
+  return Buffer.from(JSON.stringify(parsed, null, 2), "utf-8");
 }

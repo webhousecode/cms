@@ -2,6 +2,7 @@ import fs from "fs/promises";
 import path from "path";
 import crypto from "crypto";
 import { getActiveSitePaths } from "./site-paths";
+import { SECRET_FIELDS, clearRedactedSecrets } from "./beam/types";
 
 export interface SiteConfig {
   previewSiteUrl: string;
@@ -252,6 +253,9 @@ export async function readSiteConfig(): Promise<SiteConfig> {
     stored = JSON.parse(await fs.readFile(filePath, "utf-8")) as Partial<SiteConfig>;
   } catch { /* first read */ }
 
+  // Defensive: drop BEAM_REDACTED placeholders so org/env fallback applies.
+  clearRedactedSecrets(stored as Record<string, unknown>, SECRET_FIELDS["site-config.json"]!);
+
   // Auto-persist calendarSecret on first use so it stays stable across requests
   let needsWrite = false;
   if (!stored.calendarSecret) {
@@ -318,6 +322,7 @@ export async function readSiteConfigForSite(orgId: string, siteId: string): Prom
     const filePath = path.join(dataDir, "site-config.json");
     const raw = await fs.readFile(filePath, "utf-8");
     const stored = JSON.parse(raw) as Partial<SiteConfig>;
+    clearRedactedSecrets(stored as Record<string, unknown>, SECRET_FIELDS["site-config.json"]!);
     const defs = await defaults();
 
     // F87: Org-level settings inheritance

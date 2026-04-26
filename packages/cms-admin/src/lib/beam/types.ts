@@ -63,17 +63,62 @@ export const SECRET_FIELDS: Record<string, string[]> = {
     "deployHookUrl",
     "revalidateSecret",
     "calendarToken",
+    "deployFlyLiveSyncSecret",
+    "resendApiKey",
   ],
   "ai-config.json": [
     "anthropicApiKey",
     "openaiApiKey",
+    // Both names kept: actual field is geminiApiKey; googleApiKey is legacy for any
+    // older configs still on disk. Without geminiApiKey, push left real keys in plaintext.
+    "geminiApiKey",
     "googleApiKey",
+    "braveApiKey",
+    "tavilyApiKey",
+    "webSearchApiKey",
   ],
   "mcp-keys.json": ["key"],
 };
 
+/** Org-level settings file (path is _data/org-settings/<orgId>.json — match by basename prefix). */
+export const ORG_SETTINGS_SECRET_FIELDS: string[] = [
+  "deployApiToken",
+  "deployGitHubToken",
+  "deployVercelHookUrl",
+  "deployNetlifyHookUrl",
+  "deployCloudflareHookUrl",
+  "aiAnthropicApiKey",
+  "aiOpenaiApiKey",
+  "aiGeminiApiKey",
+  "aiBraveApiKey",
+  "aiTavilyApiKey",
+  "resendApiKey",
+];
+
 /** Placeholder value for stripped secrets */
 export const BEAM_REDACTED = "BEAM_REDACTED";
+
+/**
+ * Strip BEAM_REDACTED placeholder values from a config object so callers fall back
+ * to env vars or org-level values instead of using the placeholder string as a real
+ * secret. Mutates the object in place; returns true if anything was cleared.
+ *
+ * Used on both the read path (defensive: legacy data on disk) and on beam-import
+ * (preventive: never write placeholders to disk in the first place).
+ */
+export function clearRedactedSecrets(
+  obj: Record<string, unknown>,
+  fields: readonly string[],
+): boolean {
+  let changed = false;
+  for (const field of fields) {
+    if (obj[field] === BEAM_REDACTED) {
+      delete obj[field];
+      changed = true;
+    }
+  }
+  return changed;
+}
 
 /** Directories under _data/ to EXCLUDE from beam archive */
 export const EXCLUDED_DATA_DIRS = new Set([
