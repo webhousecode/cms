@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAdminConfig } from "@/lib/cms";
 import { getActiveSitePaths } from "@/lib/site-paths";
 import { getSiteRole } from "@/lib/require-role";
+import { getApiKey } from "@/lib/ai-config";
 import { readFileSync, writeFileSync, readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { invalidate } from "@/lib/site-pool";
@@ -75,9 +76,9 @@ export async function POST(req: NextRequest) {
 
     const configSource = readFileSync(configPath, "utf-8");
 
-    const apiKey = process.env.ANTHROPIC_API_KEY;
+    const apiKey = await getApiKey("anthropic");
     if (!apiKey) {
-      return NextResponse.json({ error: "ANTHROPIC_API_KEY not configured — cannot infer field types" }, { status: 503 });
+      return NextResponse.json({ error: "Anthropic API key not configured — set it in AI Settings or ANTHROPIC_API_KEY env" }, { status: 503 });
     }
 
     const system = `You are a TypeScript code editor for @webhouse/cms configuration files.
