@@ -14,7 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Settings, Fingerprint, Check, Moon, Sun, Monitor, LogOut, Search, ExternalLink, Rocket, Loader2, MessageSquare, LayoutDashboard, Plus, History, Languages, Hammer } from "lucide-react";
+import { Settings, Fingerprint, Check, Moon, Sun, Monitor, LogOut, Search, ExternalLink, Rocket, Loader2, MessageSquare, LayoutDashboard, Plus, History, Languages, Hammer, Building2 } from "lucide-react";
 import type { AdminMode } from "@/lib/hooks/use-admin-mode";
 import { HelpButton } from "@/components/help-drawer";
 import { BuildLogPanel } from "@/components/build/build-log-panel";
@@ -140,6 +140,16 @@ function UserNav({ user }: { user: SessionUser | null }) {
             <DropdownMenuItem onClick={() => { window.dispatchEvent(new CustomEvent("cms:navigate-admin", { detail: { path: "/admin/settings" } })); router.push("/admin/settings"); }}>
               <Settings className="mr-2 h-4 w-4" />
               Site Settings
+            </DropdownMenuItem>
+          )}
+          {can("settings.edit") && !isAdminEmpty && (
+            // Org-settings page reads cms-active-org cookie to scope to the
+            // currently shown org in the OrgSwitcher — no need to pass orgId
+            // through the URL. Saves the user from clicking "All organizations"
+            // → row → kebab → Settings just to tweak the active org.
+            <DropdownMenuItem onClick={() => { window.dispatchEvent(new CustomEvent("cms:navigate-admin", { detail: { path: "/admin/organizations/settings" } })); router.push("/admin/organizations/settings"); }}>
+              <Building2 className="mr-2 h-4 w-4" />
+              Organization Settings
             </DropdownMenuItem>
           )}
         </DropdownMenuGroup>
