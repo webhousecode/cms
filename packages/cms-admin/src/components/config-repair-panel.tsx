@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { AlertTriangle, Check, Loader2, Wrench, ChevronDown, ChevronUp } from "lucide-react";
+import { AlertTriangle, Check, Loader2, Wrench, ChevronDown, ChevronUp, Copy, CheckCheck } from "lucide-react";
 import type { DiagnoseResult, DiagnoseIssue } from "@/app/api/admin/site-config/diagnose/route";
 
 interface Props {
@@ -11,11 +11,43 @@ interface Props {
 
 type Phase = "diagnosing" | "report" | "confirming" | "fixing" | "done" | "error";
 
+function buildAiHandoff(siteName: string, diagnosis: DiagnoseResult): string {
+  const lines: string[] = [
+    `# Config problems in "${siteName}"`,
+    "",
+    `## Summary`,
+    diagnosis.summary,
+    "",
+    `## ${diagnosis.issues.length} ${diagnosis.issues.length === 1 ? "issue" : "issues"} found`,
+    "",
+  ];
+  diagnosis.issues.forEach((issue, i) => {
+    lines.push(`### Issue ${i + 1} — \`${issue.field}\``);
+    lines.push(`**Problem:** ${issue.problem}`);
+    lines.push(`**Auto-fixable:** ${issue.autoFixable ? "Yes" : "No"}`);
+    lines.push(`**Fix:** ${issue.fix}`);
+    lines.push("");
+  });
+  lines.push("---");
+  lines.push("Fix all issues above in `cms.config.ts`. After fixing, restart the dev server and verify the site loads.");
+  return lines.join("\n");
+}
+
 export function ConfigRepairPanel({ siteName, rawErrors }: Props) {
   const [phase, setPhase] = useState<Phase>("diagnosing");
   const [diagnosis, setDiagnosis] = useState<DiagnoseResult | null>(null);
   const [errMsg, setErrMsg] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Record<number, boolean>>({});
+  const [copied, setCopied] = useState(false);
+
+  function handleCopy() {
+    if (!diagnosis) return;
+    const md = buildAiHandoff(siteName, diagnosis);
+    navigator.clipboard.writeText(md).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -123,9 +155,28 @@ export function ConfigRepairPanel({ siteName, rawErrors }: Props) {
           {/* Issue list */}
           {diagnosis.issues.length > 0 && (
             <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
-              <h2 style={{ fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted-foreground)", margin: 0 }}>
-                {diagnosis.issues.length} {diagnosis.issues.length === 1 ? "issue" : "issues"} found
-              </h2>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "0.5rem" }}>
+                <h2 style={{ fontSize: "0.75rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted-foreground)", margin: 0 }}>
+                  {diagnosis.issues.length} {diagnosis.issues.length === 1 ? "issue" : "issues"} found
+                </h2>
+                <button
+                  onClick={handleCopy}
+                  title="Copy all issues as markdown — paste into AI site builder"
+                  style={{
+                    display: "flex", alignItems: "center", gap: "0.3rem",
+                    fontSize: "0.7rem", fontWeight: 600,
+                    padding: "0.25rem 0.65rem", borderRadius: "5px",
+                    border: "1px solid var(--border)",
+                    background: copied ? "color-mix(in srgb, #16a34a 12%, transparent)" : "transparent",
+                    color: copied ? "#16a34a" : "var(--muted-foreground)",
+                    cursor: "pointer", transition: "all 0.15s",
+                  }}
+                >
+                  {copied
+                    ? <><CheckCheck style={{ width: "0.75rem", height: "0.75rem" }} />Copied!</>
+                    : <><Copy style={{ width: "0.75rem", height: "0.75rem" }} />Copy for AI builder</>}
+                </button>
+              </div>
               {diagnosis.issues.map((issue: DiagnoseIssue, i: number) => (
                 <div key={i} style={{
                   ...card,
