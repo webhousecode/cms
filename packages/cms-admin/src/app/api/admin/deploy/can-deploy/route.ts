@@ -6,7 +6,34 @@ import { readSiteConfig } from "@/lib/site-config";
 import { resolveToken } from "@/lib/site-pool";
 import { getSiteRole } from "@/lib/require-role";
 
-/** GET /api/admin/deploy/can-deploy — check if the active site can deploy */
+/**
+ * GET /api/admin/deploy/can-deploy
+ *
+ * Auto-detect what the active site CAN do for deploy. Replaces the previous
+ * naive "if explicit provider is set, just trust it" — that returned canDeploy
+ * for sites where the actual rebuild would always fail (e.g. a Beam-imported
+ * Next.js SSR site whose Dockerfile lives in a separate repo). The Deploy
+ * button then surfaced an opaque error toast on every click.
+ *
+ * Now we always probe the project directory and report distinct capabilities
+ * so the UI can pick the right affordance:
+ *
+ *   canRebuildCode   — site has build.ts / Dockerfile / build.command (or is
+ *                      a GitHub-adapter site that can deploy via GH Actions).
+ *                      Only when this is true does "Deploy now" make sense.
+ *   canPublishContent — site has a revalidateUrl wired up, so content edits
+ *                       are pushed live via ICD without a rebuild. True even
+ *                       when canRebuildCode is false (the SSR-external case).
+ *   siteType         — labels the situation so the UI can show a helpful
+ *                      explanation instead of a generic error.
+ *   reason           — human-readable note on why canRebuildCode is false,
+ *                      shown as tooltip on the disabled/hidden Deploy button.
+ *
+ * canDeploy is kept as a derived `canRebuildCode` for backwards compatibility
+ * with callers that haven't migrated yet.
+ */
+type SiteType = "static-with-build" | "ssr-with-dockerfile" | "ssr-external" | "github-adapter" | "unknown";
+
 export async function GET() {
   const role = await getSiteRole();
   if (!role) return NextResponse.json({ canDeploy: false }, { status: 401 });
@@ -24,49 +51,62 @@ export async function GET() {
       } catch { /* no token */ }
     }
 
-    // Explicit provider configured
-    if (config.deployProvider && config.deployProvider !== "off") {
-      return NextResponse.json({ canDeploy: true, provider: config.deployProvider, hasGitHubToken });
+    const canPublishContent = !!(
+      // Site registry has a revalidate webhook (ICD pushes content live without rebuild)
+      (await getActiveSiteEntry().catch(() => null))?.revalidateUrl
+    );
+
+    const siteEntry = await getActiveSiteEntry().catch(() => null);
+
+    // Probe project dir for build pipeline artefacts. Decisive for canRebuildCode.
+    const sitePaths = await getActiveSitePaths().catch(() => null);
+    const hasBuildTs = !!sitePaths && existsSync(path.join(sitePaths.projectDir, "build.ts"));
+    const hasDockerfile = !!sitePaths && existsSync(path.join(sitePaths.projectDir, "Dockerfile"));
+    const hasBuildCommand = !!(config as { build?: { command?: string } }).build?.command;
+    const isGitHubAdapter = siteEntry?.adapter === "github";
+
+    let siteType: SiteType = "unknown";
+    if (hasBuildTs) siteType = "static-with-build";
+    else if (hasDockerfile || hasBuildCommand) siteType = "ssr-with-dockerfile";
+    else if (isGitHubAdapter) siteType = "github-adapter";
+    else if (canPublishContent) siteType = "ssr-external";
+
+    // canRebuildCode = the "Deploy now" button can do useful work
+    const canRebuildCode = hasBuildTs || hasDockerfile || hasBuildCommand || isGitHubAdapter;
+
+    let reason: string | undefined;
+    if (!canRebuildCode) {
+      if (canPublishContent) {
+        reason = "Code lives in a separate repo. Content edits go live automatically via Instant Content Deployment (ICD); code rebuilds happen via git push to that repo.";
+      } else {
+        reason = "No build.ts, Dockerfile, build.command, GitHub adapter, or revalidate webhook configured.";
+      }
     }
 
-    const siteEntry = await getActiveSiteEntry();
-    if (!siteEntry) {
-      return NextResponse.json({ canDeploy: false, hasGitHubToken });
+    // Resolve the effective provider for legacy callers (string union for the
+    // body — header/UI just needs to know whether it's "off" or something).
+    let provider: string = config.deployProvider && config.deployProvider !== "off" ? config.deployProvider : "off";
+    if (provider === "off") {
+      if (hasBuildTs) provider = "github-pages";
+      else if (hasDockerfile) provider = "flyio";
+      else if (isGitHubAdapter) provider = "github-pages";
     }
 
-    // Check if site has a build.ts (static site) or Dockerfile (Next.js/SSR)
-    const sitePaths = await getActiveSitePaths();
-    const buildFile = path.join(sitePaths.projectDir, "build.ts");
-    const dockerFile = path.join(sitePaths.projectDir, "Dockerfile");
-    const hasBuildTs = existsSync(buildFile);
-    const hasDockerfile = existsSync(dockerFile);
-
-    if (hasBuildTs) {
-      // Static site with build.ts → can auto-deploy to GitHub Pages
-      return NextResponse.json({ canDeploy: true, provider: "github-pages", hasGitHubToken });
-    }
-
-    if (hasDockerfile) {
-      // Next.js/SSR site with Dockerfile → can deploy to Fly.io
-      return NextResponse.json({ canDeploy: true, provider: "flyio", hasGitHubToken });
-    }
-
-    // GitHub-adapter sites are already on GitHub — they can deploy to
-    // GitHub Pages via GitHub Actions. Pre-populate owner/repo from the
-    // adapter config so the user doesn't have to enter it manually.
-    if (siteEntry?.adapter === "github" && siteEntry.github) {
-      return NextResponse.json({
-        canDeploy: true,
-        provider: "github-pages",
-        hasGitHubToken,
-        githubOwner: siteEntry.github.owner,
-        githubRepo: siteEntry.github.repo,
-      });
-    }
-
-    // No build.ts, Dockerfile, or GitHub adapter → needs explicit deploy config
-    return NextResponse.json({ canDeploy: false, hasGitHubToken });
+    return NextResponse.json({
+      // New, descriptive fields
+      siteType,
+      canRebuildCode,
+      canPublishContent,
+      reason,
+      // Back-compat
+      canDeploy: canRebuildCode,
+      provider,
+      hasGitHubToken,
+      ...(isGitHubAdapter && siteEntry.github
+        ? { githubOwner: siteEntry.github.owner, githubRepo: siteEntry.github.repo }
+        : {}),
+    });
   } catch {
-    return NextResponse.json({ canDeploy: false, hasGitHubToken: false });
+    return NextResponse.json({ canDeploy: false, canRebuildCode: false, canPublishContent: false, hasGitHubToken: false });
   }
 }

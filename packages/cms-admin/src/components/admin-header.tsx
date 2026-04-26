@@ -162,22 +162,29 @@ function DeployButton() {
   const can = usePermissions();
   const { user, siteConfig } = useHeaderData();
   const [provider, setProvider] = useState<string>("off");
+  const [canRebuildCode, setCanRebuildCode] = useState<boolean | null>(null);
+  const [canPublishContent, setCanPublishContent] = useState(false);
+  const [reason, setReason] = useState<string | undefined>(undefined);
   const [deploying, setDeploying] = useState(false);
   const [lastResult, setLastResult] = useState<{ ok: boolean; error?: string } | null>(null);
 
+  // Always probe capability — we can't trust deployProvider alone because a
+  // Beam-imported SSR site may have provider="flyio" set in config but no
+  // Dockerfile on the volume to actually rebuild from. Calling can-deploy
+  // gives us the truth so we can hide the rocket button rather than show a
+  // useless error toast on every click.
   useEffect(() => {
     if (!siteConfig) return;
-    const dp = siteConfig.deployProvider as string | undefined;
-    if (dp && dp !== "off") {
-      setProvider(dp);
-    } else {
-      fetch("/api/admin/deploy/can-deploy")
-        .then((r) => r.ok ? r.json() : null)
-        .then((d: any) => {
-          if (d?.canDeploy) setProvider(d.provider ?? "off");
-        })
-        .catch(() => {});
-    }
+    fetch("/api/admin/deploy/can-deploy")
+      .then((r) => r.ok ? r.json() : null)
+      .then((d: { canRebuildCode?: boolean; canPublishContent?: boolean; provider?: string; reason?: string } | null) => {
+        if (!d) { setCanRebuildCode(false); return; }
+        setCanRebuildCode(!!d.canRebuildCode);
+        setCanPublishContent(!!d.canPublishContent);
+        setReason(d.reason);
+        setProvider(d.canRebuildCode ? (d.provider ?? "off") : "off");
+      })
+      .catch(() => setCanRebuildCode(false));
   }, [siteConfig]);
 
   const userRole = user?.role ?? user?.siteRole ?? null;
@@ -243,6 +250,39 @@ function DeployButton() {
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
   }, [provider, handleDeploy]);
+
+  // Capability probe still in flight — render nothing rather than flashing
+  // the rocket and yanking it away.
+  if (canRebuildCode === null) return null;
+
+  // SSR site whose code lives in a separate repo: rebuild button doesn't make
+  // sense (we have no Dockerfile / build pipeline locally), but content edits
+  // DO go live via ICD. Show a quiet "auto-syncs" pill so the user knows
+  // changes still ship — and so the rocket isn't there to mislead.
+  if (!canRebuildCode && canPublishContent) {
+    return (
+      <span
+        title={reason ?? "Content edits go live automatically (ICD). Code rebuilds happen via git push."}
+        style={{
+          fontSize: "0.65rem",
+          padding: "0.2rem 0.55rem",
+          borderRadius: "999px",
+          border: "1px solid var(--border)",
+          color: "var(--muted-foreground)",
+          background: "transparent",
+          fontFamily: "monospace",
+          whiteSpace: "nowrap",
+        }}
+      >
+        ICD · auto
+      </span>
+    );
+  }
+
+  // Neither rebuild nor ICD configured: still show the rocket so admins can
+  // click it and get the "Deploy not configured" toast with a Configure CTA.
+  // For non-admins we hide it entirely — there's nothing they can do.
+  if (!canRebuildCode && !isAdminUser) return null;
 
   return (
     <button
