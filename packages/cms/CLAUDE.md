@@ -259,6 +259,26 @@ build: {
 
 Available Docker presets: `php`, `laravel`, `python`, `django`, `ruby`, `rails`, `go`, `hugo`, `node`, `dotnet`.
 
+### CRITICAL: Multilingual sites require translationGroup on EVERY document
+
+**If the site has 2+ languages, every document pair/group MUST share a `translationGroup` UUID.** Omitting this breaks the side-by-side editor, language switcher, AI bulk translate, and hreflang generation. This is the #1 mistake AI builders make on multilingual sites.
+
+```json
+// EN variant
+{ "slug": "about-us", "locale": "en", "translationGroup": "550e8400-e29b-41d4-a716-446655440000", ... }
+
+// DA variant — SAME translationGroup value
+{ "slug": "om-os",    "locale": "da", "translationGroup": "550e8400-e29b-41d4-a716-446655440000", ... }
+```
+
+Rules:
+- Generate **one UUID per page/post** (not per translation) using `randomUUID()` from `crypto`
+- All language variants of the same content share **identical** `translationGroup`
+- `translationOf` is **deprecated** — do not use it for new documents
+- Every document in a multilingual collection must also have `locale` set (`"en"`, `"da"`, etc.)
+
+Full reference: fetch `17-i18n.md` or read `https://docs.webhouse.app/ai`.
+
 ### Critical rules
 
 1. **Always specify `storage` in `cms.config.ts`** — omitting it defaults to SQLite, not filesystem! Static sites MUST use `storage: { adapter: 'filesystem', filesystem: { contentDir: 'content' } }`
