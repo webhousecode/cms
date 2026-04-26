@@ -24,9 +24,11 @@ export async function exportSchemaCommand(options: ExportSchemaOptions): Promise
 
   const { toJsonSchema } = await import('@webhouse/cms');
 
+  // exactOptionalPropertyTypes: only spread defined values so we don't pass
+  // explicit `undefined` for optional fields.
   const schema = toJsonSchema(config, {
-    baseUrl: options.baseUrl,
-    title: options.title,
+    ...(options.baseUrl !== undefined && { baseUrl: options.baseUrl }),
+    ...(options.title !== undefined && { title: options.title }),
     includeBlocks: options.includeBlocks ?? true,
   });
 
