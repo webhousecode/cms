@@ -4,7 +4,7 @@
  * Extracts a .beam archive (ZIP), validates manifest + checksums,
  * writes files to the target site directory, and registers the site.
  */
-import { existsSync, mkdirSync, writeFileSync, readdirSync, rmSync } from "node:fs";
+import { existsSync, mkdirSync, writeFileSync, readdirSync, readFileSync, rmSync } from "node:fs";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { createHash, randomUUID } from "node:crypto";
@@ -133,6 +133,15 @@ export async function importBeamArchive(
     ? path.join(siteDir, "cms.config.ts")
     : path.join(siteDir, "cms.config.json");
 
+  // If the imported config is missing a `storage` block, the @webhouse/cms
+  // engine silently defaults to SQLite (stored in cwd-relative .cms/) — so the
+  // site's content/ directory is never read or written, edits go to a phantom
+  // SQLite db that disappears on container restart, and the site is broken in
+  // a way that's only visible when you trace the create flow back to disk.
+  // Patch in a filesystem-adapter block that matches the registry entry's
+  // contentDir so the site works out-of-the-box after import.
+  ensureStorageBlock(configFile);
+
   await addSite(targetOrgId, {
     id: siteId,
     name: siteName,
@@ -149,6 +158,65 @@ export async function importBeamArchive(
     secretsRequired: manifest.secretsRequired,
     checksumErrors,
   };
+}
+
+/**
+ * Patch a freshly-imported cms.config.{ts,json} to include an explicit
+ * filesystem storage block if one is missing.
+ *
+ * Without storage in the config, @webhouse/cms.createCms falls back to SQLite,
+ * which means the site's `content/` directory (the whole point of a beam
+ * archive) is ignored at runtime. Edits then go to a transient SQLite file
+ * the user can't find, and reads return empty. Detection is by substring on
+ * the source — config is parsed by jiti at runtime, so we don't try to
+ * roundtrip the AST here; if the file already mentions `storage:` we leave
+ * it alone, otherwise we append a minimal block before the closing
+ * `defineConfig({...})` so the import is usable as soon as it lands.
+ */
+function ensureStorageBlock(configFile: string): void {
+  if (!existsSync(configFile)) return;
+  let source: string;
+  try {
+    source = readFileSync(configFile, "utf-8");
+  } catch {
+    return;
+  }
+
+  // Already has any kind of storage configuration — assume the importer knew
+  // what they wanted (filesystem, github, supabase, sqlite, …) and leave it.
+  if (/\bstorage\s*:/.test(source)) return;
+
+  const isJson = configFile.endsWith(".json");
+  let patched: string | null = null;
+
+  if (isJson) {
+    try {
+      const obj = JSON.parse(source) as Record<string, unknown>;
+      if ("storage" in obj) return;
+      obj.storage = { adapter: "filesystem", filesystem: { contentDir: "content" } };
+      patched = JSON.stringify(obj, null, 2);
+    } catch {
+      return;
+    }
+  } else {
+    // TS/JS config: insert before the final `});` of defineConfig.
+    // Match the LAST `});` in the file — defineConfig is the outermost call.
+    const closingMatch = source.match(/\n\s*\}\s*\)\s*;\s*$/);
+    if (!closingMatch || closingMatch.index === undefined) return;
+    const insertAt = closingMatch.index;
+    const block =
+      "\n  storage: {\n" +
+      "    adapter: \"filesystem\",\n" +
+      "    filesystem: {\n" +
+      "      contentDir: \"content\",\n" +
+      "    },\n" +
+      "  },";
+    patched = source.slice(0, insertAt) + block + source.slice(insertAt);
+  }
+
+  if (patched && patched !== source) {
+    try { writeFileSync(configFile, patched, "utf-8"); } catch { /* non-fatal */ }
+  }
 }
 
 /**
