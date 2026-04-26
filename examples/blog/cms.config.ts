@@ -99,8 +99,6 @@ export default defineConfig({
   ],
   storage: {
     adapter: "filesystem",
-    filesystem: {
-        "contentDir": "/Users/cb/Apps/webhouse/cms/examples/blog/content"
-    },
+    filesystem: { contentDir: "content" },
   },
 });
