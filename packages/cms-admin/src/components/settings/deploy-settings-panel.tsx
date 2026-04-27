@@ -920,7 +920,7 @@ export function DeploySettingsPanel() {
       {/* ── Custom domain ────────────────────────────────── */}
       {["github-pages", "flyio", "flyio-live", "vercel", "netlify", "cloudflare-pages"].includes(effectiveProvider) && (
         <>
-          <SectionHeading>Custom Domain</SectionHeading>
+          <SectionHeading id="custom-domain">Custom Domain</SectionHeading>
           <SettingsCard>
             <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>
               {effectiveProvider === "github-pages"
