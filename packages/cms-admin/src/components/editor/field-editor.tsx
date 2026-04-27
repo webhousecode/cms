@@ -306,12 +306,16 @@ function RelationPicker({ collection, value, onChange, disabled }: {
 }
 
 // Fields that are inherently short — render with constrained width
-const SHORT_FIELDS = /year|sort|order|count|number|size|index|icon|code|initials|href|slug|accent|rate|score|rank/i;
-const MEDIUM_FIELDS = /title|name|label|author|category|role|tag|type|status|read.?time|summary.?icon/i;
+// Split camelCase/snake_case field names into components before matching so
+// substrings don't false-positive ("discountNote" must NOT match "count").
+const SHORT_FIELD_WORDS = new Set(["year","sort","order","count","number","size","index","icon","code","initials","href","slug","accent","rate","score","rank"]);
+const MEDIUM_FIELD_WORDS = new Set(["title","name","label","author","category","role","tag","type","status"]);
 
 function textWidth(fieldName: string): string | undefined {
-  if (SHORT_FIELDS.test(fieldName)) return "7rem";
-  if (MEDIUM_FIELDS.test(fieldName)) return "24rem";
+  // "discountNote" → ["discount","Note"] → ["discount","note"]
+  const parts = fieldName.split(/(?=[A-Z])|[_\-\s]/).map((p) => p.toLowerCase()).filter(Boolean);
+  if (parts.some((p) => SHORT_FIELD_WORDS.has(p))) return "7rem";
+  if (parts.some((p) => MEDIUM_FIELD_WORDS.has(p))) return "24rem";
   return undefined;
 }
 
