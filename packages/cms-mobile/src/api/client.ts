@@ -58,18 +58,28 @@ async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
     }
   }
 
+  // Default 10s timeout so unreachable servers fail fast instead of
+  // hanging the spinner for minutes (browser default is ~2 min).
+  const timeoutMs = 10_000;
+  const timeoutSignal = AbortSignal.timeout(timeoutMs);
+  const signal = opts.signal
+    ? AbortSignal.any([opts.signal, timeoutSignal])
+    : timeoutSignal;
+
   let res: Response;
   try {
     res = await fetch(`${baseUrl}${path}`, {
       method: opts.method ?? "GET",
       headers,
       body: opts.body !== undefined ? JSON.stringify(opts.body) : undefined,
-      signal: opts.signal,
+      signal,
       // Important: do NOT send cookies — auth is purely Bearer JWT
       credentials: "omit",
     });
   } catch (err) {
-    throw new ApiError(0, null, `Network error: ${(err as Error).message}`);
+    const msg = (err as Error).message ?? String(err);
+    const isTimeout = msg.includes("timeout") || msg.includes("AbortError") || (err as Error).name === "TimeoutError";
+    throw new ApiError(0, null, isTimeout ? "Server unreachable (timeout)" : `Network error: ${msg}`);
   }
 
   let body: unknown = null;

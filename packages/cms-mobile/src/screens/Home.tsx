@@ -5,7 +5,7 @@ import { Screen } from "@/components/Screen";
 import { ScreenHeader, HeaderAvatar } from "@/components/ScreenHeader";
 import { Button } from "@/components/Button";
 import { Spinner } from "@/components/Spinner";
-import { getMe } from "@/api/client";
+import { getMe, ApiError } from "@/api/client";
 import type { MobileSite } from "@/api/types";
 import {
   clearAllAuth,
@@ -74,7 +74,15 @@ export function Home() {
   const meQuery = useQuery({
     queryKey: ["me"],
     queryFn: getMe,
+    retry: 1,
   });
+
+  // Auto-redirect to login on 401 (expired/invalid JWT)
+  useEffect(() => {
+    if (meQuery.error instanceof ApiError && meQuery.error.status === 401) {
+      void clearAllAuth().then(() => setLocation("/login"));
+    }
+  }, [meQuery.error, setLocation]);
 
   // Cache permissions when ME data loads
   useEffect(() => {
