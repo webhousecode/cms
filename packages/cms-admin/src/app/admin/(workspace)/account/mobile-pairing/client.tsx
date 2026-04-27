@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface PairingResponse {
   sessionId: string;
@@ -46,8 +46,11 @@ export function MobilePairingClient() {
     }
   }, []);
 
-  // Generate on mount
+  // Generate on mount — ref guards against React StrictMode double-fire
+  const generatedRef = useRef(false);
   useEffect(() => {
+    if (generatedRef.current) return;
+    generatedRef.current = true;
     void generate();
   }, [generate]);
 
