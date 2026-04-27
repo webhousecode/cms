@@ -1,8 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getMobileSession } from "@/lib/mobile-auth";
-import { getSiteRole } from "@/lib/require-role";
 import { withSiteContext } from "@/lib/site-context";
 import { loadRegistry, findSite } from "@/lib/site-registry";
+import { getTeamMembers } from "@/lib/team";
 
 /**
  * POST /api/mobile/deploy?orgId=...&siteId=...
@@ -26,7 +26,10 @@ export async function POST(req: NextRequest) {
   }
 
   return withSiteContext({ orgId, siteId }, async () => {
-    const role = await getSiteRole();
+    // getSiteRole() uses cookie session — for mobile Bearer JWT, look up role directly
+    const members = await getTeamMembers();
+    const membership = members.find((m) => m.userId === session.id);
+    const role = membership?.role ?? session.role ?? null;
     if (!role || role === "viewer") {
       return NextResponse.json({ error: "No write access" }, { status: 403 });
     }
