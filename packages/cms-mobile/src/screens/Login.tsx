@@ -95,6 +95,14 @@ export function Login() {
             {error}
           </p>
         )}
+
+        <button
+          type="button"
+          onClick={() => setLocation("/onboarding")}
+          className="text-xs text-white/30 hover:text-white/60 active:text-white/80 mt-2"
+        >
+          Connect to a different server
+        </button>
       </div>
     </Screen>
   );

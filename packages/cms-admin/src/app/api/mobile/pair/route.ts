@@ -41,10 +41,17 @@ export async function POST(req: Request) {
   }
 
   const reqUrl = new URL(req.url);
-  let serverUrl = body.serverUrl ?? `${reqUrl.protocol}//${reqUrl.host}`;
+  // CMS_PUBLIC_URL takes priority (set on Fly to https://webhouse.app).
+  // Next: X-Forwarded-Host (set by Fly/reverse-proxies to the public domain).
+  // Fallback: request host (works for localhost dev).
+  const forwardedHost = (req as Request).headers.get?.("x-forwarded-host");
+  const forwardedProto = (req as Request).headers.get?.("x-forwarded-proto") ?? reqUrl.protocol.replace(":", "");
+  const publicBase = process.env.CMS_PUBLIC_URL
+    ?? (forwardedHost ? `${forwardedProto}://${forwardedHost}` : null)
+    ?? `${reqUrl.protocol}//${reqUrl.host}`;
+  let serverUrl = body.serverUrl ?? publicBase;
 
   // Dev: rewrite localhost → LAN IP so phones on the same WiFi can reach it.
-  // Same pattern as /api/auth/qr/session.
   if (/^https?:\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0)(:|$)/.test(serverUrl)) {
     const lan = findLanHost();
     if (lan) {
