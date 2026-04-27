@@ -142,17 +142,9 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Return a signed /api/mobile/uploads URL that includes orgId/siteId context
-    // so the phone can fetch the image from the right site directory.
-    let baseUrl = `${req.nextUrl.protocol}//${req.nextUrl.host}`;
-    if (/localhost|127\.0\.0\.1|0\.0\.0\.0/.test(baseUrl)) {
-      const lan = findLanHost();
-      if (lan) baseUrl = baseUrl.replace(/localhost|127\.0\.0\.1|0\.0\.0\.0/, lan);
-    }
-    const { signMobileUploadUrl } = await import("@/app/api/mobile/uploads/route");
-    const absoluteUrl = result.url.startsWith("http")
-      ? result.url
-      : signMobileUploadUrl(baseUrl, orgId, siteId, result.url);
+    // Return the relative URL for storage in the document.
+    // ImageField will construct a signed display URL from orgId+siteId+path.
+    const absoluteUrl = result.url; // e.g. "/uploads/photo-xxx.jpg"
 
     return NextResponse.json({
       url: absoluteUrl,

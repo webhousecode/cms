@@ -340,8 +340,8 @@ function ImageField({ field, value, onChange }: FieldEditorProps) {
   const fileRef = useRef<HTMLInputElement>(null);
   const [blobUrl, setBlobUrl] = useState<string | null>(null);
 
-  // Fetch /uploads/ URLs with Bearer auth (proxy protects them).
-  // data: URLs and blob: URLs can be used directly.
+  // Fetch /uploads/ images via /api/mobile/uploads which requires orgId+siteId.
+  // data:/blob: URLs are used directly, signed http URLs are passed through.
   useEffect(() => {
     if (!rawUrl || rawUrl.startsWith("data:") || rawUrl.startsWith("blob:")) {
       setBlobUrl(null);
@@ -352,10 +352,22 @@ function ImageField({ field, value, onChange }: FieldEditorProps) {
       try {
         const { getJwt, getServerUrl } = await import("@/lib/prefs");
         const [jwt, serverUrl] = await Promise.all([getJwt(), getServerUrl()]);
-        let fetchUrl = rawUrl;
-        if (!rawUrl.startsWith("http") && serverUrl) {
-          fetchUrl = `${serverUrl}${rawUrl}`;
+        if (!serverUrl) return;
+
+        let fetchUrl: string;
+        if (rawUrl.startsWith("http")) {
+          // Already absolute (e.g. signed URL) — fetch as-is
+          fetchUrl = rawUrl;
+        } else {
+          // Relative /uploads/... — use /api/mobile/uploads with site context
+          const match = location.pathname.match(/\/site\/([^/]+)\/([^/]+)/);
+          if (!match) return;
+          const [, orgId, siteId] = match;
+          const cleanPath = rawUrl.replace(/^\/uploads\//, "");
+          const params = new URLSearchParams({ orgId, siteId, path: cleanPath });
+          fetchUrl = `${serverUrl}/api/mobile/uploads?${params.toString()}`;
         }
+
         const res = await fetch(fetchUrl, {
           headers: jwt ? { Authorization: `Bearer ${jwt}` } : {},
           credentials: "omit",
