@@ -67,6 +67,6 @@ jobs:
           COMMIT_MSG=$(git log -1 --pretty=format:'%s' HEAD)
           ACTOR="${{ github.actor }}"
           RUN_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-          curl -s -X POST "${{ secrets.SECURITY_GATE_DISCORD_WEBHOOK }}" \
+          curl -s -X POST "${{ secrets.DEPLOY_DISCORD_WEBHOOK }}" \
             -H "Content-Type: application/json" \
             -d "{\"embeds\":[{\"title\":\"$EMOJI $MSG\",\"description\":\"$COMMIT_MSG\",\"color\":$COLOR,\"fields\":[{\"name\":\"Triggered by\",\"value\":\"$ACTOR\",\"inline\":true},{\"name\":\"Run\",\"value\":\"[View]($RUN_URL)\",\"inline\":true}]}]}" || true
