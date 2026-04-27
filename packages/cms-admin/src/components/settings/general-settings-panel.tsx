@@ -36,7 +36,7 @@ function Toggle({ checked, onChange, label, description }: {
 	return (
 		<button
 			type="button"
-			onClick={() => onChange(!checked)}
+			onClick={() => { onChange(!checked); window.dispatchEvent(new CustomEvent("cms:settings-dirty")); }}
 			style={{
 				display: "flex", alignItems: "center", justifyContent: "space-between",
 				gap: "1rem", cursor: "pointer", width: "100%",
