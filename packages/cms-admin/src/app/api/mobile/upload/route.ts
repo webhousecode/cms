@@ -1,3 +1,4 @@
+import { findLanHost } from "@/lib/lan-host";
 import { NextRequest, NextResponse } from "next/server";
 import os from "os";
 import { join } from "node:path";
@@ -22,15 +23,6 @@ async function appendMetaDirect(dataDir: string, key: string, data: Record<strin
   await writeFile(metaPath, JSON.stringify(entries, null, 2));
 }
 
-function findLanHost(): string | null {
-  const ifaces = os.networkInterfaces();
-  for (const list of Object.values(ifaces)) {
-    for (const i of list ?? []) {
-      if (i.family === "IPv4" && !i.internal) return i.address;
-    }
-  }
-  return null;
-}
 
 /**
  * POST /api/mobile/upload?orgId=...&siteId=...
@@ -154,7 +146,7 @@ export async function POST(req: NextRequest) {
     // so the phone can load it from the CMS server via LAN IP
     let baseUrl = `${req.nextUrl.protocol}//${req.nextUrl.host}`;
     if (/localhost|127\.0\.0\.1|0\.0\.0\.0/.test(baseUrl)) {
-      const lan = process.env.CMS_LAN_HOST || findLanHost();
+      const lan = findLanHost();
       if (lan) baseUrl = baseUrl.replace(/localhost|127\.0\.0\.1|0\.0\.0\.0/, lan);
     }
     const absoluteUrl = result.url.startsWith("http") ? result.url : `${baseUrl}${result.url}`;
