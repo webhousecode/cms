@@ -23,6 +23,9 @@
  */
 
 import crypto from "crypto";
+import { existsSync, readFileSync, writeFileSync, mkdirSync } from "fs";
+import path from "path";
+import os from "os";
 
 export type QrSessionStatus = "pending" | "approved" | "claimed" | "rejected" | "expired";
 
@@ -36,8 +39,28 @@ export interface QrSession {
   userAgent?: string;
 }
 
-const SESSIONS = new Map<string, QrSession>();
 const TTL_MS = 15 * 60 * 1000;
+
+// Persist to disk in dev so Turbopack hot-reloads don't wipe sessions.
+const SESSIONS_FILE = path.join(os.tmpdir(), "wh-cms-qr-sessions.json");
+
+function loadSessions(): Map<string, QrSession> {
+  try {
+    if (existsSync(SESSIONS_FILE)) {
+      const data = JSON.parse(readFileSync(SESSIONS_FILE, "utf-8")) as [string, QrSession][];
+      return new Map(data);
+    }
+  } catch { /* corrupt file — start fresh */ }
+  return new Map();
+}
+
+function saveSessions(m: Map<string, QrSession>): void {
+  try {
+    writeFileSync(SESSIONS_FILE, JSON.stringify([...m.entries()]), "utf-8");
+  } catch { /* non-fatal */ }
+}
+
+const SESSIONS = loadSessions();
 
 /** Sweep expired sessions (called on each create). */
 function sweep() {
@@ -65,6 +88,7 @@ export function createQrSession(userAgent?: string): QrSession {
     userAgent,
   };
   SESSIONS.set(id, session);
+  saveSessions(SESSIONS);
   return session;
 }
 
@@ -87,6 +111,7 @@ export function approveQrSession(id: string, userId: string): QrSession {
   }
   s.status = "approved";
   s.approvedUserId = userId;
+  saveSessions(SESSIONS);
   return s;
 }
 
@@ -108,13 +133,19 @@ export function claimQrSession(id: string): { userId: string } | null {
   if (s.status !== "approved" || !s.approvedUserId) return null;
   s.status = "claimed";
   const userId = s.approvedUserId;
-  // Schedule deletion after a short grace window to allow status pollers
-  // to observe the final state.
-  setTimeout(() => SESSIONS.delete(id), 30_000);
+  saveSessions(SESSIONS);
+  setTimeout(() => { SESSIONS.delete(id); saveSessions(SESSIONS); }, 30_000);
   return { userId };
 }
 
 /** Test-only: clear store. */
 export function _resetQrSessions() {
   SESSIONS.clear();
+}
+
+/** Debug: return all session ids + statuses. */
+export function _debugQrSessions(): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [id, s] of SESSIONS) out[id.slice(0, 8)] = s.status;
+  return out;
 }
