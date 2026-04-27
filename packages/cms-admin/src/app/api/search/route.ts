@@ -8,6 +8,8 @@ export type SearchResult = {
   slug: string;
   title: string;
   status: string;
+  /** Where the match was found — shown as sub-label in palette */
+  matchedIn?: "title" | "body";
   /** Media-specific fields */
   mediaUrl?: string;
   mediaThumbnail?: string;
@@ -35,12 +37,25 @@ export async function GET(req: NextRequest) {
 
         for (const doc of documents) {
           const title = String(doc.data?.title ?? doc.data?.name ?? doc.data?.label ?? doc.slug);
-          const haystack = `${doc.slug} ${title} ${doc.status}`.toLowerCase();
+
+          // Flatten ALL text values from doc.data so body/richtext/excerpt
+          // fields are also searchable (not just slug + title).
+          function flattenText(val: unknown, depth = 0): string {
+            if (depth > 4) return "";
+            if (typeof val === "string") return val;
+            if (typeof val === "number") return String(val);
+            if (Array.isArray(val)) return val.map((v) => flattenText(v, depth + 1)).join(" ");
+            if (val && typeof val === "object") return Object.values(val).map((v) => flattenText(v, depth + 1)).join(" ");
+            return "";
+          }
+          const bodyText = flattenText(doc.data);
+          const haystack = `${doc.slug} ${title} ${doc.status} ${bodyText}`.toLowerCase();
 
           let score = 0;
           if (doc.slug === q || title.toLowerCase() === q) score = 100;
           else if (doc.slug.startsWith(q) || title.toLowerCase().startsWith(q)) score = 50;
-          else if (haystack.includes(q)) score = 10;
+          else if (`${doc.slug} ${title}`.toLowerCase().includes(q)) score = 20;
+          else if (haystack.includes(q)) score = 10; // body/field match
 
           if (score > 0) {
             hits.push({
@@ -49,6 +64,7 @@ export async function GET(req: NextRequest) {
               slug: doc.slug,
               title,
               status: doc.status,
+              matchedIn: score <= 10 ? "body" : "title",
               score,
             });
           }

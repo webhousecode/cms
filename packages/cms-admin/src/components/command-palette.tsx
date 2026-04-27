@@ -384,7 +384,9 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
         result.push({
           id: `content-${r.collection}-${r.slug}`,
           label: r.title,
-          sublabel: `${r.collectionLabel} · ${r.slug}`,
+          sublabel: r.matchedIn === "body"
+            ? `${r.collectionLabel} · found in body`
+            : `${r.collectionLabel} · ${r.slug}`,
           category: "content",
           icon: r.status === "published"
             ? <Globe style={{ ...ICON_SIZE, color: "#4ade80" }} />
