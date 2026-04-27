@@ -5,7 +5,7 @@ import { Screen } from "@/components/Screen";
 import { ScreenHeader, BackButton } from "@/components/ScreenHeader";
 import { SitePreview } from "@/components/SitePreview";
 import { Spinner } from "@/components/Spinner";
-import { getMe } from "@/api/client";
+import { getMe, triggerDeploy, listDeploys } from "@/api/client";
 import { setActiveOrgId, setActiveSiteId, getDefaultSite, setDefaultSite, clearDefaultSite } from "@/lib/prefs";
 
 /**
@@ -33,6 +33,8 @@ export function Site() {
   });
 
   const [isDefault, setIsDefault] = useState(false);
+  const [deploying, setDeploying] = useState(false);
+  const [lastDeploy, setLastDeploy] = useState<{ status: string; timestamp?: string } | null>(null);
 
   // Persist active org+site so push notifs can fall back to last-viewed
   useEffect(() => {
@@ -44,6 +46,27 @@ export function Site() {
       setIsDefault(d?.orgId === params.orgId && d?.siteId === params.siteId);
     });
   }, [params?.orgId, params?.siteId]);
+
+  // Load last deploy status
+  useEffect(() => {
+    if (!params) return;
+    void listDeploys(params.orgId, params.siteId)
+      .then((r) => { if (r.deploys[0]) setLastDeploy(r.deploys[0]); })
+      .catch(() => {});
+  }, [params?.orgId, params?.siteId]);
+
+  async function handleDeploy() {
+    if (!params || deploying) return;
+    setDeploying(true);
+    try {
+      const result = await triggerDeploy(params.orgId, params.siteId);
+      setLastDeploy({ status: result.status, timestamp: new Date().toISOString() });
+    } catch {
+      setLastDeploy({ status: "error", timestamp: new Date().toISOString() });
+    } finally {
+      setDeploying(false);
+    }
+  }
 
   async function toggleDefault() {
     if (!params) return;
@@ -155,6 +178,36 @@ export function Site() {
                 Live
               </a>
             )}
+          </div>
+
+          {/* Deploy */}
+          <div className="rounded-xl bg-brand-darkSoft overflow-hidden">
+            <div className="flex items-center justify-between px-4 py-3">
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium">Deploy</p>
+                {lastDeploy && (
+                  <p className={`text-xs mt-0.5 ${lastDeploy.status === "success" ? "text-green-400" : lastDeploy.status === "error" ? "text-red-400" : "text-white/40"}`}>
+                    {lastDeploy.status === "success" ? "✓ Deployed" : lastDeploy.status === "error" ? "✗ Failed" : lastDeploy.status}
+                    {lastDeploy.timestamp && ` · ${new Date(lastDeploy.timestamp).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`}
+                  </p>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={handleDeploy}
+                disabled={deploying}
+                className={`ml-3 shrink-0 flex items-center gap-1.5 rounded-lg px-4 py-2 text-sm font-medium transition-all active:scale-95 ${deploying ? "bg-white/10 text-white/40" : "bg-brand-gold text-brand-dark"}`}
+              >
+                {deploying ? (
+                  <span className="h-4 w-4 animate-spin rounded-full border-2 border-brand-dark/30 border-t-brand-dark" />
+                ) : (
+                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                    <path d="M8 2v8M4 6l4-4 4 4M3 13h10" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                )}
+                {deploying ? "Deploying…" : "Deploy"}
+              </button>
+            </div>
           </div>
 
           <div className="rounded-xl bg-brand-darkSoft p-4">
