@@ -84,6 +84,9 @@ export function MobilePairingClient() {
               height={260}
               className="rounded-lg"
             />
+            <p className="text-xs font-mono bg-muted rounded px-2 py-1 text-muted-foreground break-all text-center max-w-[260px]">
+              {data.serverUrl}
+            </p>
             <p className="text-sm text-muted-foreground">
               Expires in <span className="font-mono">{secondsLeft}s</span>
             </p>
