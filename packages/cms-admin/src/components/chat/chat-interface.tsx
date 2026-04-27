@@ -35,6 +35,8 @@ interface MemoryItem {
 type DrawerTab = "conversations" | "memory";
 
 export function ChatInterface({ collections, activeSiteId, visible }: ChatInterfaceProps) {
+  // Unique ID for this browser tab — used to skip self-broadcast reloads from SSE sync.
+  const tabId = useRef(safeUUID());
   const [messages, setMessages] = useState<ChatMessageUI[]>([]);
   const [isThinking, setIsThinking] = useState(false);
   const [thinkingText, setThinkingText] = useState("");
@@ -100,13 +102,15 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
       eventSource = new EventSource("/api/cms/chat/sync");
       eventSource.addEventListener("conversation-saved", (e) => {
         try {
-          const data = JSON.parse(e.data) as { conversationId: string };
-          // If we're viewing this conversation on another device, reload it
+          const data = JSON.parse(e.data) as { conversationId: string; sourceTabId?: string };
+          // Skip events we broadcast ourselves — prevents self-overwrite after streaming.
+          if (data.sourceTabId === tabId.current) return;
+          // If we're viewing this conversation on another device/tab, reload it
           if (data.conversationId === conversationId) {
             fetch(`/api/cms/chat/conversations/${conversationId}`)
               .then((r) => r.ok ? r.json() : null)
               .then((d) => {
-                if (!d?.conversation?.messages) return;
+                if (!d?.conversation?.messages?.length) return;
                 setMessages(d.conversation.messages.map((m: any) => ({
                   id: m.id, role: m.role, content: m.content,
                   toolCalls: m.toolCalls?.map((tc: any) => ({ ...tc, status: "done" })),
@@ -357,7 +361,7 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
       fetch("/api/cms/chat/sync", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ event: "conversation-saved", data: { conversationId: id } }),
+        body: JSON.stringify({ event: "conversation-saved", data: { conversationId: id, sourceTabId: tabId.current } }),
       }).catch(() => {});
     } catch { /* ignore save errors */ }
   }
