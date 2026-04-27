@@ -333,6 +333,21 @@ export function getMemories(orgId: string, siteId: string): Promise<any> {
   return request(`/api/mobile/chat/memory?orgId=${encodeURIComponent(orgId)}&siteId=${encodeURIComponent(siteId)}`);
 }
 
+/** Trigger a deploy for a site. */
+export function triggerDeploy(orgId: string, siteId: string): Promise<{ status: string; url?: string; provider?: string }> {
+  return request(
+    `/api/mobile/deploy?orgId=${encodeURIComponent(orgId)}&siteId=${encodeURIComponent(siteId)}`,
+    { method: "POST" },
+  );
+}
+
+/** List recent deploys for a site. */
+export function listDeploys(orgId: string, siteId: string): Promise<{ deploys: { id: string; status: string; timestamp: string; url?: string; provider?: string }[] }> {
+  return request(
+    `/api/mobile/deploy?orgId=${encodeURIComponent(orgId)}&siteId=${encodeURIComponent(siteId)}`,
+  );
+}
+
 /** Trash a document (soft delete). */
 export function deleteDocument(orgId: string, siteId: string, collection: string, slug: string): Promise<{ ok: boolean }> {
   return request<{ ok: boolean }>(
