@@ -1,0 +1,24 @@
+{
+  "id": "svLQcL4UI_QG0fDuh5p2A",
+  "slug": "new-mohh1n6k",
+  "collection": "team",
+  "status": "published",
+  "data": {
+    "name": "Christian Broberg",
+    "role": "Founder, CEO",
+    "bio": "Her kommer der en længere bio senere",
+    "photo": "/uploads/photo-1777312694063-15zn.jpg",
+    "email": "christian@broberg.ai",
+    "sortOrder": 3,
+    "_lastEditedBy": {
+      "userId": "fb4eda6a-bc5c-4dec-8cb6-c77c9fb74cd9",
+      "name": "Christian Broberg",
+      "email": "cb@webhouse.dk",
+      "at": "2026-04-27T17:58:16.193Z",
+      "source": "mobile"
+    }
+  },
+  "_fieldMeta": {},
+  "createdAt": "2026-04-27T17:29:01.489Z",
+  "updatedAt": "2026-04-27T17:58:16.194Z"
+}

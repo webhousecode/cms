@@ -463,7 +463,7 @@ for (const locale of LOCALES) {
       ? `<p style="color:var(--color-muted)">${locale === "da" ? "Ingen teammedlemmer endnu." : "No team members yet."}</p>`
       : `<div class="card-grid">${teamMembers.map(m => `
         <div class="card" style="text-align:center">
-          ${m.data.photo ? `<img src="${bp(`/uploads/${String(m.data.photo).replace(/^\/?(uploads\/)?/, "")}`)}/" style="width:100px;height:100px;border-radius:50%;object-fit:cover;margin:0 auto 1rem;display:block" alt="${esc(m.data.name)}">` : ""}
+          ${m.data.photo ? `<img src="${bp(`/uploads/${String(m.data.photo).replace(/^\/?(uploads\/)?/, "")}`)}" style="width:100px;height:100px;border-radius:50%;object-fit:cover;margin:0 auto 1rem;display:block" alt="${esc(m.data.name)}">` : ""}
           <h2 style="font-size:1.1rem">${esc(m.data.name)}</h2>
           <div class="meta">${esc(m.data.role ?? "")}</div>
           ${m.data.bio ? `<p style="font-size:0.85rem;color:var(--color-muted);margin-top:0.5rem">${esc(m.data.bio)}</p>` : ""}
