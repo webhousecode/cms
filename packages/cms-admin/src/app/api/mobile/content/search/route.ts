@@ -1,7 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getMobileSession } from "@/lib/mobile-auth";
-import { withSiteContext } from "@/lib/site-context";
-import { getAdminCms } from "@/lib/cms";
+import { getAdminCmsForSite } from "@/lib/cms";
 
 /**
  * GET /api/mobile/content/search?orgId=...&siteId=...&q=qigong+sund+mad
@@ -26,8 +25,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ results: [] });
   }
 
-  return withSiteContext({ orgId, siteId }, async () => {
-    const cms = await getAdminCms();
+  try {
+    const cms = await getAdminCmsForSite(orgId, siteId);
+    if (!cms) return NextResponse.json({ error: "Site not found" }, { status: 404 });
     const results = await cms.content.search(query, { limit: 30 });
     return NextResponse.json({
       results: results.map((r) => ({
@@ -39,5 +39,7 @@ export async function GET(req: NextRequest) {
         score: r.score,
       })),
     });
-  });
+  } catch (err) {
+    return NextResponse.json({ error: err instanceof Error ? err.message : "Search failed" }, { status: 500 });
+  }
 }
