@@ -29,6 +29,11 @@ export function Settings() {
   const [pushPermission, setPushPermission] = useState<"granted" | "denied" | "unknown">("unknown");
   const [topicPrefs, setTopicPrefs] = useState<Record<TopicKey, boolean> | null>(null);
   const [pushExpanded, setPushExpanded] = useState(false);
+  const [currentServer, setCurrentServer] = useState<string | null>(null);
+
+  useEffect(() => {
+    void getServerUrl().then(setCurrentServer);
+  }, []);
 
   useEffect(() => {
     void (async () => {
@@ -170,6 +175,28 @@ export function Settings() {
                 ))}
             </>
           )}
+        </section>
+
+        {/* Server */}
+        <section className="rounded-xl bg-brand-darkSoft overflow-hidden">
+          <div className="px-4 py-3 flex items-center justify-between">
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium">Connected server</p>
+              <p className="text-xs text-white/40 truncate mt-0.5">{currentServer ?? "—"}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setLocation("/onboarding");
+                void clearAllAuth();
+                void clearBiometricJwt();
+                queryClient.clear();
+              }}
+              className="ml-3 shrink-0 rounded-lg bg-white/10 px-3 py-1.5 text-xs font-medium text-white active:bg-white/20"
+            >
+              Switch
+            </button>
+          </div>
         </section>
 
         {/* Sign out */}

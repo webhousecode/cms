@@ -14,6 +14,6 @@ export async function GET() {
     ok: true,
     product: "webhouse-cms" as const,
     serverVersion: process.env.CMS_VERSION ?? "dev",
-    pairingEnabled: process.env.NEXT_PUBLIC_CMS_ENABLE_QR_LOGIN === "true",
+    pairingEnabled: true,
   });
 }
