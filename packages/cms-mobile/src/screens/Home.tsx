@@ -135,10 +135,11 @@ export function Home() {
     await setActiveOrgId(orgId);
   }
 
-  async function handleLogout() {
-    await clearAllAuth();
-    await clearBiometricJwt();
+  function handleLogout() {
+    // Navigate immediately — don't await so Sign out is instant
     setLocation("/login");
+    void clearAllAuth();
+    void clearBiometricJwt();
   }
 
   if (meQuery.isLoading) {
