@@ -333,18 +333,44 @@ function RichtextField({ field, value, onChange }: FieldEditorProps) {
 }
 
 /** Check if a URL is already absolute (http/data/signed) — no client-side resolution needed */
-function isAbsoluteUrl(url: string): boolean {
-  return !url || url.startsWith("http") || url.startsWith("data:") || url.includes("/api/mobile/uploads");
-}
 
 function ImageField({ field, value, onChange }: FieldEditorProps) {
   const rawUrl = (value as string) ?? "";
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
 
-  // Server signs all /uploads/ URLs in the document response — URLs are ready to use
-  const url = rawUrl;
-  const imageReady = !rawUrl || isAbsoluteUrl(rawUrl);
+  // Fetch /uploads/ URLs with Bearer auth (proxy protects them).
+  // data: URLs and blob: URLs can be used directly.
+  useEffect(() => {
+    if (!rawUrl || rawUrl.startsWith("data:") || rawUrl.startsWith("blob:")) {
+      setBlobUrl(null);
+      return;
+    }
+    let revoke: string | null = null;
+    void (async () => {
+      try {
+        const { getJwt, getServerUrl } = await import("@/lib/prefs");
+        const [jwt, serverUrl] = await Promise.all([getJwt(), getServerUrl()]);
+        let fetchUrl = rawUrl;
+        if (!rawUrl.startsWith("http") && serverUrl) {
+          fetchUrl = `${serverUrl}${rawUrl}`;
+        }
+        const res = await fetch(fetchUrl, {
+          headers: jwt ? { Authorization: `Bearer ${jwt}` } : {},
+          credentials: "omit",
+        });
+        if (!res.ok) return;
+        const blob = await res.blob();
+        revoke = URL.createObjectURL(blob);
+        setBlobUrl(revoke);
+      } catch { /* non-fatal */ }
+    })();
+    return () => { if (revoke) URL.revokeObjectURL(revoke); };
+  }, [rawUrl]);
+
+  const displayUrl = blobUrl ?? (rawUrl.startsWith("data:") || rawUrl.startsWith("blob:") ? rawUrl : null);
+  const imageReady = !!displayUrl;
 
   async function handleFile(file: File) {
     // Get orgId/siteId from the URL params
@@ -385,9 +411,9 @@ function ImageField({ field, value, onChange }: FieldEditorProps) {
   return (
     <div>
       <FieldLabel field={field} />
-      {url && imageReady ? (
+      {rawUrl && imageReady ? (
         <div className="relative rounded-lg overflow-hidden border border-white/10">
-          <img src={url} alt="" className="w-full max-h-48 object-cover" />
+          <img src={displayUrl!} alt="" className="w-full max-h-48 object-cover" />
           <div className="absolute bottom-0 inset-x-0 flex gap-2 p-2 bg-gradient-to-t from-black/80 to-transparent">
             <button
               type="button"
