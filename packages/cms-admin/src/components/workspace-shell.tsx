@@ -54,7 +54,13 @@ export function WorkspaceShell({ collections, globals, activeSiteId, devInspecto
       router.push(path);
     }
     window.addEventListener("cms:navigate-to-doc", onNavigate);
-    return () => window.removeEventListener("cms:navigate-to-doc", onNavigate);
+    // Header dropdowns and command palette fire cms:navigate-admin when navigating
+    // to settings/account pages — switch out of chat mode so the destination is visible.
+    window.addEventListener("cms:navigate-admin", onNavigate);
+    return () => {
+      window.removeEventListener("cms:navigate-to-doc", onNavigate);
+      window.removeEventListener("cms:navigate-admin", onNavigate);
+    };
   }, [setMode, router]);
 
   // Auto-refresh server components when content changes (new document created,
