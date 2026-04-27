@@ -20,7 +20,7 @@ import { HelpButton } from "@/components/help-drawer";
 import { BuildLogPanel } from "@/components/build/build-log-panel";
 import { usePermissions } from "@/hooks/use-permissions";
 import { useThemeAxes, type Temperature } from "@/lib/hooks/use-theme-axes";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { previewPath } from "@/lib/utils";
@@ -176,7 +176,10 @@ function DeployButton() {
   const [canPublishContent, setCanPublishContent] = useState(false);
   const [reason, setReason] = useState<string | undefined>(undefined);
   const [deploying, setDeploying] = useState(false);
+  const [deployPhase, setDeployPhase] = useState<string>("");
   const [lastResult, setLastResult] = useState<{ ok: boolean; error?: string } | null>(null);
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const pollStartRef = useRef<number>(0);
 
   // Always probe capability — we can't trust deployProvider alone because a
   // Beam-imported SSR site may have provider="flyio" set in config but no
@@ -196,6 +199,79 @@ function DeployButton() {
       })
       .catch(() => setCanRebuildCode(false));
   }, [siteConfig]);
+
+  // SSE listener for deploy-done push from GitHub Actions webhook
+  useEffect(() => {
+    let es: EventSource | null = null;
+    let retry: ReturnType<typeof setTimeout>;
+    function connect() {
+      es = new EventSource("/api/admin/deploy/notify");
+      es.addEventListener("message", (e) => {
+        try {
+          const d = JSON.parse(e.data) as { event?: string; status?: string; url?: string; duration?: number };
+          if (d.event !== "deploy-done") return;
+          // Stop polling if active
+          if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+          setDeploying(false);
+          setDeployPhase("");
+          const elapsed = pollStartRef.current ? Math.round((Date.now() - pollStartRef.current) / 1000) : undefined;
+          if (d.status === "success") {
+            const desc = d.url
+              ? `${d.url}${elapsed ? ` · ${elapsed}s` : ""}`
+              : `Live in${elapsed ? ` ${elapsed}s` : ""}!`;
+            toast.success("Published! 🚀", {
+              description: desc,
+              duration: 12000,
+              action: d.url ? { label: "Open", onClick: () => window.open(d.url, "_blank") } : undefined,
+            });
+            window.dispatchEvent(new CustomEvent("cms-site-change", { detail: {} }));
+          } else {
+            toast.error("Deploy failed", { description: "Check GitHub Actions for details.", duration: 10000 });
+          }
+        } catch { /* ignore parse errors */ }
+      });
+      es.onerror = () => { es?.close(); retry = setTimeout(connect, 5000); };
+    }
+    connect();
+    return () => { es?.close(); clearTimeout(retry); };
+  }, []);
+
+  // Poll GitHub Actions status after a webhook deploy
+  function startPolling(liveUrl?: string) {
+    pollStartRef.current = Date.now();
+    setDeployPhase("Queued...");
+    pollRef.current = setInterval(async () => {
+      try {
+        const r = await fetch("/api/admin/deploy/github-status");
+        if (!r.ok) return;
+        const d = await r.json() as { found: boolean; status?: string; conclusion?: string };
+        if (!d.found) return;
+        if (d.status === "queued") setDeployPhase("Queued...");
+        else if (d.status === "in_progress") setDeployPhase("Building...");
+        else if (d.status === "completed") {
+          if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+          setDeploying(false);
+          setDeployPhase("");
+          const elapsed = Math.round((Date.now() - pollStartRef.current) / 1000);
+          if (d.conclusion === "success") {
+            toast.success("Published! 🚀", {
+              description: liveUrl ? `${liveUrl} · ${elapsed}s` : `Done in ${elapsed}s`,
+              duration: 12000,
+              action: liveUrl ? { label: "Open", onClick: () => window.open(liveUrl, "_blank") } : undefined,
+            });
+            window.dispatchEvent(new CustomEvent("cms-site-change", { detail: {} }));
+          } else {
+            toast.error("Deploy failed", { description: "Check GitHub Actions for details.", duration: 10000 });
+          }
+        }
+      } catch { /* keep polling */ }
+    }, 8000);
+
+    // Safety: stop polling after 10 minutes
+    setTimeout(() => {
+      if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; setDeploying(false); setDeployPhase(""); }
+    }, 600_000);
+  }
 
   const userRole = user?.role ?? user?.siteRole ?? null;
   const isAdminUser = userRole === "admin";
@@ -218,15 +294,24 @@ function DeployButton() {
       return;
     }
 
-    // Deploy directly with toast feedback for ALL roles. Previously admins
-    // were redirected to /admin/settings?tab=deploy&deploy=1 for the progress
-    // modal, but the service worker (PWA) intercepts that navigation and
-    // breaks it. Direct deploy + toast is more reliable and works everywhere.
     setDeploying(true);
     setLastResult(null);
+    setDeployPhase("Sending...");
     try {
       const res = await fetch("/api/admin/deploy", { method: "POST" });
-      const data = await res.json() as { status: string; error?: string; url?: string };
+      const data = await res.json() as { status: string; error?: string; url?: string; async?: boolean };
+
+      // Webhook/GitHub Actions deploy: async — switch to polling mode
+      if (data.status === "success" && data.async) {
+        toast.info("Deploy queued", {
+          description: "GitHub Actions is building your site. You'll be notified when it's live.",
+          duration: 6000,
+        });
+        startPolling(data.url);
+        return; // polling takes over — don't setDeploying(false) yet
+      }
+
+      // Synchronous deploy (local build, flyio, github-pages direct)
       setLastResult({ ok: data.status === "success", error: data.error });
       setTimeout(() => setLastResult(null), 5000);
       if (data.status === "success" && data.url) {
@@ -245,6 +330,7 @@ function DeployButton() {
       setLastResult({ ok: false, error: "Request failed" });
     }
     setDeploying(false);
+    setDeployPhase("");
   }, [provider, isAdminUser, router]);
 
   // "d" shortcut → deploy
@@ -293,6 +379,25 @@ function DeployButton() {
   // click it and get the "Deploy not configured" toast with a Configure CTA.
   // For non-admins we hide it entirely — there's nothing they can do.
   if (!canRebuildCode && !isAdminUser) return null;
+
+  // Async deploy with phase label (GitHub Actions / webhook)
+  if (deploying && deployPhase) {
+    return (
+      <span
+        title={deployPhase}
+        style={{
+          display: "flex", alignItems: "center", gap: "0.3rem",
+          fontSize: "0.65rem", color: "var(--muted-foreground)",
+          border: "1.5px solid var(--border)", borderRadius: "999px",
+          padding: "0.2rem 0.55rem", whiteSpace: "nowrap",
+          fontFamily: "monospace",
+        }}
+      >
+        <Loader2 style={{ width: "0.75rem", height: "0.75rem" }} className="animate-spin" />
+        {deployPhase}
+      </span>
+    );
+  }
 
   return (
     <button

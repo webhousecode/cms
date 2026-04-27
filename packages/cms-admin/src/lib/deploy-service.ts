@@ -23,6 +23,7 @@ export type DeployProvider =
   | "cloudflare"
   | "cloudflare-pages"
   | "github-pages"
+  | "webhook"
   | "custom";
 
 export interface DeployEntry {
@@ -33,6 +34,8 @@ export interface DeployEntry {
   url?: string;
   error?: string;
   duration?: number;
+  /** true when the actual deploy runs async (e.g. GitHub Actions) — UI switches to polling mode */
+  async?: boolean;
 }
 
 interface DeployLog {
@@ -155,6 +158,21 @@ export async function triggerDeploy(): Promise<DeployEntry> {
 
   try {
     switch (provider) {
+      case "webhook":
+        // Async webhook deploy (e.g. GitHub Actions workflow_dispatch).
+        // The hook returns immediately; actual build runs in CI.
+        // UI polls /api/admin/deploy/github-status and listens for the
+        // /api/admin/deploy/notify SSE event.
+        if (!config.deployHookUrl) throw new Error("Deploy hook URL not configured");
+        await postHook(config.deployHookUrl, config.deployApiToken || undefined);
+        entry.status = "success";
+        entry.async = true;
+        // Set url to the live site (for the notification when done)
+        entry.url = config.deployCustomDomain
+          ? `https://${config.deployCustomDomain}`
+          : (config.deployProductionUrl as string | undefined) ?? "";
+        break;
+
       case "vercel":
       case "netlify":
       case "cloudflare":
