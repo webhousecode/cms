@@ -260,10 +260,9 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
 
   // Resolve preview base URL for grid view thumbnails — uses shared context
   const { siteConfig } = useHeaderData();
-  const [previewBase, setPreviewBase] = useState(() => {
-    if (typeof window === "undefined") return "";
-    return sessionStorage.getItem("cms-preview-base") ?? "";
-  });
+  // Use "" as initial value — siteConfig.previewSiteUrl is authoritative and
+  // overrides any stale sessionStorage entry from a different site or dev session.
+  const [previewBase, setPreviewBase] = useState("");
   useEffect(() => {
     if (siteConfig?.previewSiteUrl) {
       const url = siteConfig.previewSiteUrl as string;
@@ -271,6 +270,9 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
       sessionStorage.setItem("cms-preview-base", url);
       return;
     }
+    // No previewSiteUrl configured — check sessionStorage before calling sirv
+    const cached = sessionStorage.getItem("cms-preview-base");
+    if (cached) { setPreviewBase(cached); }
     // No previewSiteUrl — fall back to sirv for static sites
     async function resolve() {
       if (view === "grid") {
