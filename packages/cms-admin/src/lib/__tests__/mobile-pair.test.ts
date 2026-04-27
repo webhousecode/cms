@@ -68,12 +68,12 @@ describe("mobile pairing — qr-sessions reuse", () => {
     expect(session.id).toMatch(/^[A-Za-z0-9_-]+$/);
   });
 
-  it("expiresAt is ~5 minutes in the future", () => {
+  it("expiresAt is ~15 minutes in the future", () => {
     const before = Date.now();
     const session = createQrSession();
     const after = Date.now();
-    const expectedMin = before + 4 * 60 * 1000;
-    const expectedMax = after + 6 * 60 * 1000;
+    const expectedMin = before + 14 * 60 * 1000;
+    const expectedMax = after + 16 * 60 * 1000;
     expect(session.expiresAt).toBeGreaterThanOrEqual(expectedMin);
     expect(session.expiresAt).toBeLessThanOrEqual(expectedMax);
   });
