@@ -77,9 +77,9 @@ async function request<T>(path: string, opts: RequestOptions = {}): Promise<T> {
       credentials: "omit",
     });
   } catch (err) {
-    const msg = (err as Error).message ?? String(err);
-    const isTimeout = msg.includes("timeout") || msg.includes("AbortError") || (err as Error).name === "TimeoutError";
-    throw new ApiError(0, null, isTimeout ? "Server unreachable (timeout)" : `Network error: ${msg}`);
+    const e = err as Error;
+    const isAbort = e.name === "AbortError" || e.name === "TimeoutError" || e.message?.includes("aborted") || e.message?.includes("abort");
+    throw new ApiError(0, null, isAbort ? "Cannot reach server — check that your phone and computer are on the same WiFi" : `Network error: ${e.message}`);
   }
 
   let body: unknown = null;
