@@ -50,3 +50,23 @@ jobs:
         run: flyctl deploy --remote-only
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      - name: Notify Discord
+        if: always()
+        run: |
+          STATUS="${{ job.status }}"
+          if [ "$STATUS" = "success" ]; then
+            COLOR=3066993
+            EMOJI="✅"
+            MSG="**webhouse.app deployed** to production"
+          else
+            COLOR=15158332
+            EMOJI="❌"
+            MSG="**webhouse.app deploy failed**"
+          fi
+          COMMIT_MSG=$(git log -1 --pretty=format:'%s' HEAD)
+          ACTOR="${{ github.actor }}"
+          RUN_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          curl -s -X POST "${{ secrets.SECURITY_GATE_DISCORD_WEBHOOK }}" \
+            -H "Content-Type: application/json" \
+            -d "{\"embeds\":[{\"title\":\"$EMOJI $MSG\",\"description\":\"$COMMIT_MSG\",\"color\":$COLOR,\"fields\":[{\"name\":\"Triggered by\",\"value\":\"$ACTOR\",\"inline\":true},{\"name\":\"Run\",\"value\":\"[View]($RUN_URL)\",\"inline\":true}]}]}" || true
