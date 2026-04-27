@@ -69,4 +69,4 @@ jobs:
           RUN_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           curl -s -X POST "${{ secrets.DEPLOY_DISCORD_WEBHOOK }}" \
             -H "Content-Type: application/json" \
-            -d "{\"embeds\":[{\"title\":\"$EMOJI $MSG\",\"description\":\"$COMMIT_MSG\",\"color\":$COLOR,\"fields\":[{\"name\":\"Triggered by\",\"value\":\"$ACTOR\",\"inline\":true},{\"name\":\"Run\",\"value\":\"[View]($RUN_URL)\",\"inline\":true}]}]}" || true
+            -d "{\"embeds\":[{\"title\":\"$EMOJI $MSG\",\"description\":\"$COMMIT_MSG\",\"color\":$COLOR,\"fields\":[{\"name\":\"Site\",\"value\":\"[webhouse.app](https://webhouse.app)\",\"inline\":true},{\"name\":\"Triggered by\",\"value\":\"$ACTOR\",\"inline\":true},{\"name\":\"Run\",\"value\":\"[View]($RUN_URL)\",\"inline\":true}]}]}" || true
