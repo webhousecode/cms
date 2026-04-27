@@ -28,6 +28,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Missing token" }, { status: 400 });
   }
 
+  const { _debugQrSessions } = await import("@/lib/qr-sessions");
+  console.log("[pair/exchange] token:", body.token, "sessions:", _debugQrSessions());
   const claim = claimQrSession(body.token);
   if (!claim) {
     return NextResponse.json(
