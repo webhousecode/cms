@@ -64,6 +64,7 @@ export async function GET() {
     const hasDockerfile = !!sitePaths && existsSync(path.join(sitePaths.projectDir, "Dockerfile"));
     const hasBuildCommand = !!(config as { build?: { command?: string } }).build?.command;
     const isGitHubAdapter = siteEntry?.adapter === "github";
+    const hasDeployHook = !!(config.deployHookUrl);
 
     let siteType: SiteType = "unknown";
     if (hasBuildTs) siteType = "static-with-build";
@@ -72,7 +73,7 @@ export async function GET() {
     else if (canPublishContent) siteType = "ssr-external";
 
     // canRebuildCode = the "Deploy now" button can do useful work
-    const canRebuildCode = hasBuildTs || hasDockerfile || hasBuildCommand || isGitHubAdapter;
+    const canRebuildCode = hasBuildTs || hasDockerfile || hasBuildCommand || isGitHubAdapter || hasDeployHook;
 
     let reason: string | undefined;
     if (!canRebuildCode) {
@@ -90,6 +91,7 @@ export async function GET() {
       if (hasBuildTs) provider = "github-pages";
       else if (hasDockerfile) provider = "flyio";
       else if (isGitHubAdapter) provider = "github-pages";
+      else if (hasDeployHook) provider = "webhook";
     }
 
     return NextResponse.json({

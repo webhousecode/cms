@@ -161,7 +161,7 @@ export async function triggerDeploy(): Promise<DeployEntry> {
       case "custom":
         // All use deploy hook URL — simple POST
         if (!config.deployHookUrl) throw new Error("Deploy hook URL not configured");
-        await postHook(config.deployHookUrl);
+        await postHook(config.deployHookUrl, config.deployApiToken || undefined);
         entry.status = "success";
         break;
 
@@ -309,7 +309,7 @@ export async function triggerDeploy(): Promise<DeployEntry> {
       case "flyio": {
         // Fly.io: deploy hook (simple) or full build+deploy pipeline
         if (config.deployHookUrl) {
-          await postHook(config.deployHookUrl);
+          await postHook(config.deployHookUrl, config.deployApiToken || undefined);
           entry.status = "success";
         } else {
           let useToken = resolveFlyToken(token || config.deployApiToken);
@@ -602,11 +602,18 @@ This site is powered by **[@webhouse/cms](https://github.com/webhousecode/cms)**
 
 // ── Provider implementations ─────────────────────────────────
 
-async function postHook(url: string): Promise<void> {
-  const res = await fetch(url, { method: "POST", signal: AbortSignal.timeout(15000) });
+async function postHook(url: string, token?: string): Promise<void> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  // GitHub workflow_dispatch requires a ref + optional inputs body
+  const isGitHubDispatch = url.includes("api.github.com") && url.includes("/dispatches");
+  const body = isGitHubDispatch ? JSON.stringify({ ref: "main", inputs: { reason: "CMS deploy" } }) : undefined;
+
+  const res = await fetch(url, { method: "POST", headers, body, signal: AbortSignal.timeout(15000) });
   if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    throw new Error(`Hook returned ${res.status}: ${body.slice(0, 200)}`);
+    const text = await res.text().catch(() => "");
+    throw new Error(`Hook returned ${res.status}: ${text.slice(0, 200)}`);
   }
 }
 
