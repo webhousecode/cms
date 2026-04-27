@@ -4,7 +4,6 @@ import { useLocation, useRoute } from "wouter";
 import { Screen } from "@/components/Screen";
 import { ScreenHeader, BackButton } from "@/components/ScreenHeader";
 import { SitePreview } from "@/components/SitePreview";
-import { Button } from "@/components/Button";
 import { Spinner } from "@/components/Spinner";
 import { getMe } from "@/api/client";
 import { setActiveOrgId, setActiveSiteId, getDefaultSite, setDefaultSite, clearDefaultSite } from "@/lib/prefs";
@@ -77,14 +76,9 @@ export function Site() {
   );
 
   if (!site) {
-    return (
-      <Screen>
-        <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6">
-          <p className="text-white/60">Site not found</p>
-          <Button onClick={() => setLocation("/home")}>Back to Home</Button>
-        </div>
-      </Screen>
-    );
+    // Stored defaultSite is stale — clear it and go home
+    void clearDefaultSite().then(() => setLocation("/home"));
+    return null;
   }
 
   // Phase 1 placeholder counters — replaced by real per-site endpoints
