@@ -23,8 +23,12 @@ export type SearchResult = {
 export async function GET(req: NextRequest) {
   const role = await getSiteRole();
   if (!role) return NextResponse.json([], { status: 401 });
-  const q = req.nextUrl.searchParams.get("q")?.trim().toLowerCase() ?? "";
-  if (!q) return NextResponse.json([]);
+  const raw = req.nextUrl.searchParams.get("q")?.trim().toLowerCase() ?? "";
+  if (!raw) return NextResponse.json([]);
+  // Split on commas/spaces so "Qigong, sund mad" → ["qigong", "sund", "mad"]
+  // Each token must appear in the haystack (AND semantics).
+  const tokens = raw.split(/[\s,]+/).map((t) => t.trim()).filter(Boolean);
+  const q = raw; // keep full phrase for exact-match scoring
 
   try {
     const [cms, config] = await Promise.all([getAdminCms(), getAdminConfig()]);
@@ -38,24 +42,44 @@ export async function GET(req: NextRequest) {
         for (const doc of documents) {
           const title = String(doc.data?.title ?? doc.data?.name ?? doc.data?.label ?? doc.slug);
 
-          // Flatten ALL text values from doc.data so body/richtext/excerpt
-          // fields are also searchable (not just slug + title).
+          // Flatten ALL text values from doc.data so richtext body, excerpt,
+          // tags and any other field are searchable.
+          // TipTap/ProseMirror JSON is deeply nested (doc→content[]→paragraph
+          // →content[]→textNode→text) so we need depth ≥ 8 to reach leaf text.
           function flattenText(val: unknown, depth = 0): string {
-            if (depth > 4) return "";
+            if (depth > 10) return "";
             if (typeof val === "string") return val;
             if (typeof val === "number") return String(val);
             if (Array.isArray(val)) return val.map((v) => flattenText(v, depth + 1)).join(" ");
-            if (val && typeof val === "object") return Object.values(val).map((v) => flattenText(v, depth + 1)).join(" ");
+            if (val && typeof val === "object") {
+              const obj = val as Record<string, unknown>;
+              // TipTap leaf node shortcut: { type: "text", text: "..." }
+              if (obj.type === "text" && typeof obj.text === "string") return obj.text;
+              return Object.values(obj).map((v) => flattenText(v, depth + 1)).join(" ");
+            }
             return "";
           }
           const bodyText = flattenText(doc.data);
           const haystack = `${doc.slug} ${title} ${doc.status} ${bodyText}`.toLowerCase();
 
+          // Multi-token match: all tokens must appear in haystack
+          const allTokensMatch = tokens.every((t) => haystack.includes(t));
           let score = 0;
-          if (doc.slug === q || title.toLowerCase() === q) score = 100;
-          else if (doc.slug.startsWith(q) || title.toLowerCase().startsWith(q)) score = 50;
-          else if (`${doc.slug} ${title}`.toLowerCase().includes(q)) score = 20;
-          else if (haystack.includes(q)) score = 10; // body/field match
+          if (!allTokensMatch) {
+            score = 0;
+          } else if (doc.slug === q || title.toLowerCase() === q) {
+            score = 100;
+          } else if (doc.slug.startsWith(q) || title.toLowerCase().startsWith(q)) {
+            score = 50;
+          } else if (`${doc.slug} ${title}`.toLowerCase().includes(q)) {
+            score = 20;
+          } else if (tokens.length > 1) {
+            // Multi-word match — score by how many tokens hit the title
+            const titleHits = tokens.filter((t) => title.toLowerCase().includes(t)).length;
+            score = titleHits > 0 ? 15 : 10;
+          } else {
+            score = 10; // single token, body match
+          }
 
           if (score > 0) {
             hits.push({
