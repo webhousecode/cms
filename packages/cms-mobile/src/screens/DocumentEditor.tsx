@@ -385,15 +385,20 @@ function ImageField({ field, value, onChange }: FieldEditorProps) {
   const imageReady = !!displayUrl;
 
   async function handleFile(file: File) {
-    // Get orgId/siteId from the URL params
     const match = location.pathname.match(/\/site\/([^/]+)\/([^/]+)/);
     if (!match) return;
+    // Show local preview immediately — no server round-trip needed for display
+    const localPreview = URL.createObjectURL(file);
+    setBlobUrl(localPreview);
     setUploading(true);
     try {
       const result = await uploadFile(match[1], match[2], file);
-      onChange(result.url);
+      onChange(result.url); // store server URL for persistence
+      // Keep localPreview as display until next mount (rawUrl change triggers re-fetch)
     } catch (err) {
       console.error("Upload failed:", err);
+      URL.revokeObjectURL(localPreview);
+      setBlobUrl(null);
     } finally {
       setUploading(false);
     }
