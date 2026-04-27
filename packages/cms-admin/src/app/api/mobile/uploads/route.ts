@@ -37,14 +37,22 @@ export async function GET(req: NextRequest) {
   const filePath = req.nextUrl.searchParams.get("path");
   const tok = req.nextUrl.searchParams.get("tok");
 
-  if (!orgId || !siteId || !filePath || !tok) {
+  if (!orgId || !siteId || !filePath) {
     return NextResponse.json({ error: "Missing parameters" }, { status: 400 });
   }
 
-  // Verify HMAC-signed token (1hr TTL)
-  const payload = `mobile-upload:${orgId}/${siteId}/${filePath}`;
-  if (!verifyPreviewToken(tok, payload)) {
-    return NextResponse.json({ error: "Invalid or expired token" }, { status: 403 });
+  // Auth: accept signed token OR Bearer JWT (so ImageField can fetch directly)
+  if (tok) {
+    const payload = `mobile-upload:${orgId}/${siteId}/${filePath}`;
+    if (!verifyPreviewToken(tok, payload)) {
+      return NextResponse.json({ error: "Invalid or expired token" }, { status: 403 });
+    }
+  } else {
+    const { getMobileSession } = await import("@/lib/mobile-auth");
+    const session = await getMobileSession(req);
+    if (!session) {
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    }
   }
 
   // Security: no path traversal
