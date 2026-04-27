@@ -37,7 +37,7 @@ export interface QrSession {
 }
 
 const SESSIONS = new Map<string, QrSession>();
-const TTL_MS = 5 * 60 * 1000;
+const TTL_MS = 15 * 60 * 1000;
 
 /** Sweep expired sessions (called on each create). */
 function sweep() {
