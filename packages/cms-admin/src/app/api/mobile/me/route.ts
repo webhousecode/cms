@@ -1,3 +1,4 @@
+import { findLanHost } from "@/lib/lan-host";
 import { NextResponse, type NextRequest } from "next/server";
 import { createHash } from "crypto";
 import os from "os";
@@ -10,21 +11,12 @@ import { loadRegistry } from "@/lib/site-registry";
 import { readSiteConfigForSite } from "@/lib/site-config";
 import { signPreviewToken } from "@/lib/preview-token";
 
-function findLanHost(): string | null {
-  const ifaces = os.networkInterfaces();
-  for (const list of Object.values(ifaces)) {
-    for (const i of list ?? []) {
-      if (i.family === "IPv4" && !i.internal) return i.address;
-    }
-  }
-  return null;
-}
 
 /** Rewrite localhost URLs to LAN IP so mobile devices can reach them. */
 function rewriteLocalhostUrl(url: string | undefined): string | undefined {
   if (!url) return url;
   if (!/^https?:\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0)(:|$)/.test(url)) return url;
-  const lan = process.env.CMS_LAN_HOST || findLanHost();
+  const lan = findLanHost();
   if (!lan) return url;
   return url.replace(/\/(localhost|127\.0\.0\.1|0\.0\.0\.0)/, `/${lan}`);
 }

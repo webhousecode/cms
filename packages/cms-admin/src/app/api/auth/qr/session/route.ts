@@ -1,3 +1,4 @@
+import { findLanHost } from "@/lib/lan-host";
 import { NextRequest, NextResponse } from "next/server";
 import os from "os";
 import QRCode from "qrcode";
@@ -9,15 +10,6 @@ import { createQrSession } from "@/lib/qr-sessions";
  * non-internal IPv4 address so the QR points at the LAN interface, which
  * Next.js dev server already listens on.
  */
-function findLanHost(): string | null {
-  const ifaces = os.networkInterfaces();
-  for (const list of Object.values(ifaces)) {
-    for (const i of list ?? []) {
-      if (i.family === "IPv4" && !i.internal) return i.address;
-    }
-  }
-  return null;
-}
 
 /** POST /api/auth/qr/session — create a pending QR login session. */
 export async function POST(req: NextRequest) {
@@ -36,7 +28,7 @@ export async function POST(req: NextRequest) {
 
   // Dev convenience: rewrite localhost → LAN IP so phones can scan the QR.
   if (/^(localhost|127\.0\.0\.1|0\.0\.0\.0)(:|$)/.test(host)) {
-    const lan = process.env.CMS_LAN_HOST || findLanHost();
+    const lan = findLanHost();
     if (lan) {
       const port = host.includes(":") ? host.split(":")[1] : "";
       host = port ? `${lan}:${port}` : lan;
