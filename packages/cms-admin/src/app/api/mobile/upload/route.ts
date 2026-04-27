@@ -142,14 +142,17 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // result.url is relative ("/uploads/photo.jpg") — mobile needs absolute URL
-    // so the phone can load it from the CMS server via LAN IP
+    // Return a signed /api/mobile/uploads URL that includes orgId/siteId context
+    // so the phone can fetch the image from the right site directory.
     let baseUrl = `${req.nextUrl.protocol}//${req.nextUrl.host}`;
     if (/localhost|127\.0\.0\.1|0\.0\.0\.0/.test(baseUrl)) {
       const lan = findLanHost();
       if (lan) baseUrl = baseUrl.replace(/localhost|127\.0\.0\.1|0\.0\.0\.0/, lan);
     }
-    const absoluteUrl = result.url.startsWith("http") ? result.url : `${baseUrl}${result.url}`;
+    const { signMobileUploadUrl } = await import("@/app/api/mobile/uploads/route");
+    const absoluteUrl = result.url.startsWith("http")
+      ? result.url
+      : signMobileUploadUrl(baseUrl, orgId, siteId, result.url);
 
     return NextResponse.json({
       url: absoluteUrl,
