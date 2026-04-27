@@ -265,7 +265,7 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
   const [previewBase, setPreviewBase] = useState("");
   useEffect(() => {
     if (siteConfig?.previewSiteUrl) {
-      const url = siteConfig.previewSiteUrl as string;
+      const url = (siteConfig.previewSiteUrl as string).replace(/\/$/, "");
       setPreviewBase(url);
       sessionStorage.setItem("cms-preview-base", url);
       return;
