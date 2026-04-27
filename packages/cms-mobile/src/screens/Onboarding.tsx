@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { Screen } from "@/components/Screen";
 import { Button } from "@/components/Button";
@@ -25,6 +25,7 @@ export function Onboarding() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
+  const handlingRef = useRef(false);
 
   async function handleConnect() {
     setError(null);
@@ -59,7 +60,8 @@ export function Onboarding() {
 
     const payload = parseQrPayload(data);
     if (payload.pairingToken && payload.serverUrl) {
-      // QR contains both server + token → full pairing in one go
+      if (handlingRef.current) return;
+      handlingRef.current = true;
       setLoading(true);
       try {
         await consumePairingDeepLink(data);
@@ -68,6 +70,7 @@ export function Onboarding() {
         setError((err as Error).message);
       } finally {
         setLoading(false);
+        handlingRef.current = false;
       }
     } else if (data.startsWith("http://") || data.startsWith("https://")) {
       // Plain URL — set it as server URL and go to login

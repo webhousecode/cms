@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 import { Screen } from "@/components/Screen";
 import { Button } from "@/components/Button";
@@ -21,6 +21,7 @@ export function Login() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
+  const handlingRef = useRef(false);
 
   useEffect(() => {
     const off = onDeepLink((url) => {
@@ -33,6 +34,8 @@ export function Login() {
   }, []);
 
   async function handlePairingToken(token: string, serverUrl?: string) {
+    if (handlingRef.current) return; // prevent double-exchange (deep link + QR scanner)
+    handlingRef.current = true;
     setError(null);
     setLoading(true);
     try {
@@ -46,6 +49,7 @@ export function Login() {
       setError(err instanceof ApiError ? err.message : (err as Error).message);
     } finally {
       setLoading(false);
+      handlingRef.current = false;
     }
   }
 
