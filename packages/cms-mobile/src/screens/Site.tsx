@@ -115,16 +115,29 @@ export function Site() {
           subtitle={site.orgName}
           title={site.siteName}
           right={
-            <button
-              type="button"
-              onClick={toggleDefault}
-              className="flex h-10 w-10 items-center justify-center rounded-full active:scale-90 transition-transform"
-              aria-label={isDefault ? "Remove as default" : "Set as default"}
-            >
-              <svg width="20" height="20" viewBox="0 0 16 16" fill={isDefault ? "#F7BB2E" : "none"} stroke={isDefault ? "#F7BB2E" : "rgba(255,255,255,0.4)"} strokeWidth="1.5">
-                <path d="M8 1.5l2 4.1 4.5.6-3.25 3.2.75 4.5L8 11.7l-4 2.2.75-4.5L1.5 6.2l4.5-.6z" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setLocation(`/site/${params.orgId}/${params.siteId}/search`)}
+                className="flex h-10 w-10 items-center justify-center rounded-full active:scale-90 transition-transform"
+                aria-label="Search"
+              >
+                <svg width="18" height="18" viewBox="0 0 16 16" fill="none">
+                  <circle cx="6.5" cy="6.5" r="4.5" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" />
+                  <path d="M10.5 10.5L14 14" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" strokeLinecap="round" />
+                </svg>
+              </button>
+              <button
+                type="button"
+                onClick={toggleDefault}
+                className="flex h-10 w-10 items-center justify-center rounded-full active:scale-90 transition-transform"
+                aria-label={isDefault ? "Remove as default" : "Set as default"}
+              >
+                <svg width="20" height="20" viewBox="0 0 16 16" fill={isDefault ? "#F7BB2E" : "none"} stroke={isDefault ? "#F7BB2E" : "rgba(255,255,255,0.4)"} strokeWidth="1.5">
+                  <path d="M8 1.5l2 4.1 4.5.6-3.25 3.2.75 4.5L8 11.7l-4 2.2.75-4.5L1.5 6.2l4.5-.6z" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </button>
+            </div>
           }
         />
 
