@@ -1,33 +1,48 @@
 openapi: 3.1.0
 info:
   title: "@webhouse/cms API"
-  version: "0.2.9"
+  version: "0.3.0"
   description: |
-    Headless CMS REST API.
+    WebHouse CMS REST API — headless content, admin operations, AI chat, and deploy triggers.
 
-    **Public endpoints** (content, schema, manifest) are unauthenticated.
-    **Admin endpoints** require a `cms-session` cookie (JWT) or `X-CMS-Service-Token` header.
+    ## Authentication
 
-    ### Authentication
-    - **Session cookie:** Login via `POST /api/auth/login` → sets `cms-session` httpOnly cookie
-    - **Service token:** Set `X-CMS-Service-Token: {CMS_JWT_SECRET}` header for machine-to-machine calls (heartbeat, cron)
+    ### Bearer Token (recommended for sites & integrations)
+    Create a `wh_` Access Token in **Account Preferences → Access Tokens**.
+    Send it as a Bearer token in the `Authorization` header:
+    ```
+    Authorization: Bearer wh_xxxxxxxxxxxxxxxxxxxx
+    ```
+    Tokens are scoped to specific sites and permissions. Never expose them client-side.
 
-    ### Field-level AI lock
+    ### Session Cookie (admin UI)
+    Login via `POST /api/auth/login` → sets `cms-session` httpOnly cookie.
+
+    ### Service Token (machine-to-machine)
+    Set `X-CMS-Service-Token: {CMS_JWT_SECRET}` header for cron/heartbeat calls.
+
+    ## Field-level AI lock
     `_fieldMeta` is not included in standard document responses.
     Use the dedicated `/_fieldMeta` endpoints to read and manipulate lock state.
 
 servers:
-  - url: http://localhost:3000
-    description: Local dev
+  - url: https://webhouse.app
+    description: WebHouse Cloud (production)
+  - url: https://localhost:3010
+    description: Local dev (HTTPS, mkcert)
   - url: "{baseUrl}"
-    description: Custom
+    description: Self-hosted
     variables:
       baseUrl:
-        default: http://localhost:3000
+        default: https://localhost:3010
 
 tags:
+  - name: Headless
+    description: |
+      Content API for sites and integrations. Use Bearer `wh_` token.
+      See [Headless Site API guide](https://docs.webhouse.app/docs/headless-api).
   - name: Content
-    description: CRUD operations on documents
+    description: Low-level content CRUD (legacy `/api/content/` prefix)
   - name: FieldMeta
     description: Field-level lock and AI-provenance metadata
   - name: Schema
@@ -37,7 +52,13 @@ tags:
   - name: Auth
     description: Authentication (login, logout, session)
   - name: Admin
-    description: Admin operations (profile, team, config, deploy)
+    description: Admin operations (profile, team, config, deploy, access tokens)
+  - name: Deploy
+    description: Deploy triggers, status, and completion webhooks
+  - name: Search
+    description: Full-text search across all collections and media
+  - name: Chat
+    description: AI chat — same model and tools as CMS Admin UI
   - name: Scheduler
     description: Heartbeat, scheduled tasks, calendar feed
   - name: Media
@@ -46,6 +67,29 @@ tags:
     description: AI generation, rewriting, agents, curation
   - name: MCP
     description: Model Context Protocol servers (public + admin)
+
+# ---------------------------------------------------------------------------
+# Security schemes
+# ---------------------------------------------------------------------------
+components:
+  securitySchemes:
+    BearerToken:
+      type: http
+      scheme: bearer
+      description: |
+        `wh_` Access Token created in Account Preferences → Access Tokens.
+        Scoped to specific sites and permissions.
+        Example: `Authorization: Bearer wh_76a2153cc365ed47...`
+    SessionCookie:
+      type: apiKey
+      in: cookie
+      name: cms-session
+      description: JWT cookie set after login via POST /api/auth/login
+    ServiceToken:
+      type: apiKey
+      in: header
+      name: X-CMS-Service-Token
+      description: CMS_JWT_SECRET value — for machine-to-machine (cron, heartbeat)
 
 # ---------------------------------------------------------------------------
 # Reusable components
@@ -120,6 +164,14 @@ components:
         enum: [asc, desc]
         default: desc
       description: Sorteringsretning
+
+    locale:
+      name: locale
+      in: query
+      schema:
+        type: string
+        example: "da"
+      description: Filter by locale (BCP 47, e.g. "en", "da")
 
     tags:
       name: tags
@@ -1079,3 +1131,426 @@ paths:
       responses:
         "200":
           description: MCP server metadata
+
+# ---------------------------------------------------------------------------
+# Headless Content API (F139) — use Bearer wh_ token
+# ---------------------------------------------------------------------------
+  /api/cms/{collection}:
+    get:
+      summary: List documents (headless)
+      operationId: headlessListDocuments
+      tags: [Headless]
+      security:
+        - BearerToken: []
+        - SessionCookie: []
+      description: |
+        List documents in a collection. Requires `content:read` permission.
+        Add `?site=<siteId>` when calling from a token with multi-site scope.
+      parameters:
+        - $ref: "#/components/parameters/collection"
+        - $ref: "#/components/parameters/status"
+        - $ref: "#/components/parameters/locale"
+        - $ref: "#/components/parameters/limit"
+        - $ref: "#/components/parameters/offset"
+        - $ref: "#/components/parameters/tags"
+        - name: site
+          in: query
+          schema: { type: string }
+          description: Site ID (required for multi-site tokens)
+      responses:
+        "200":
+          description: Document list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DocumentList"
+        "401":
+          description: Invalid or missing token
+        "403":
+          description: Token lacks content:read permission
+
+    post:
+      summary: Create document (headless)
+      operationId: headlessCreateDocument
+      tags: [Headless]
+      security:
+        - BearerToken: []
+        - SessionCookie: []
+      description: Requires `content:write` permission.
+      parameters:
+        - $ref: "#/components/parameters/collection"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateDocumentBody"
+      responses:
+        "200":
+          description: Created document
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Document"
+        "403":
+          description: Token lacks content:write permission
+
+  /api/cms/{collection}/{slug}:
+    get:
+      summary: Get document by slug (headless)
+      operationId: headlessGetDocument
+      tags: [Headless]
+      security:
+        - BearerToken: []
+        - SessionCookie: []
+      parameters:
+        - $ref: "#/components/parameters/collection"
+        - $ref: "#/components/parameters/slug"
+      responses:
+        "200":
+          description: Document
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Document"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+    patch:
+      summary: Update document (headless)
+      operationId: headlessUpdateDocument
+      tags: [Headless]
+      security:
+        - BearerToken: []
+        - SessionCookie: []
+      description: Partial update — only supplied `data` fields are merged. Requires `content:write`.
+      parameters:
+        - $ref: "#/components/parameters/collection"
+        - $ref: "#/components/parameters/slug"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateDocumentBody"
+      responses:
+        "200":
+          description: Updated document
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Document"
+
+# ---------------------------------------------------------------------------
+# Full-text Search (F139)
+# ---------------------------------------------------------------------------
+  /api/search:
+    get:
+      summary: Search all collections + media
+      operationId: searchContent
+      tags: [Search]
+      security:
+        - BearerToken: []
+        - SessionCookie: []
+      description: |
+        Multi-token AND search across all collections. Tokens are split on spaces
+        and commas — all must appear somewhere in the document (slug, title, or any field).
+        Richtext body is fully indexed (TipTap JSON traversed to leaf text nodes).
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema: { type: string }
+          description: Search query. Comma/space-separated terms are ANDed.
+          example: "Qigong, sund mad"
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    collection: { type: string }
+                    collectionLabel: { type: string }
+                    slug: { type: string }
+                    title: { type: string }
+                    status: { type: string }
+                    matchedIn:
+                      type: string
+                      enum: [title, body]
+                      description: Whether the match was in the title or body/fields
+
+# ---------------------------------------------------------------------------
+# Deploy (F139, deploy notifications)
+# ---------------------------------------------------------------------------
+  /api/admin/deploy/notify:
+    get:
+      summary: SSE stream — deploy completion events
+      operationId: deployNotifyStream
+      tags: [Deploy]
+      security:
+        - BearerToken: []
+        - SessionCookie: []
+      description: |
+        Server-Sent Events stream. Receives `deploy-done` events when GitHub Actions
+        (or any CI) calls `POST /api/admin/deploy/notify` on completion.
+        Connect once per tab/session; the CMS admin UI uses this to show the
+        "Published! 🚀" toast without polling.
+      responses:
+        "200":
+          description: SSE stream (text/event-stream)
+
+    post:
+      summary: Webhook — notify CMS of completed deploy
+      operationId: deployNotifyWebhook
+      tags: [Deploy]
+      description: |
+        Called by GitHub Actions (or other CI) at the end of a deploy workflow.
+        Broadcasts a `deploy-done` SSE event to all connected admin tabs.
+        Authenticate with `Authorization: Bearer {DEPLOY_NOTIFY_SECRET}`.
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [success, failure]
+                url:
+                  type: string
+                  description: Live site URL to show in the toast
+                app:
+                  type: string
+                  description: Fly.io app name or other identifier
+                duration:
+                  type: integer
+                  description: Build duration in seconds
+      responses:
+        "200":
+          description: Event broadcast to connected clients
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok: { type: boolean }
+                  clients: { type: integer, description: Number of SSE clients notified }
+        "401":
+          description: Invalid DEPLOY_NOTIFY_SECRET
+
+  /api/admin/deploy/github-status:
+    get:
+      summary: Latest GitHub Actions run status
+      operationId: deployGitHubStatus
+      tags: [Deploy]
+      security:
+        - BearerToken: []
+        - SessionCookie: []
+      description: |
+        Polls the latest workflow run for the active site's `deployAppName` repo.
+        Used by the Deploy button to show "Building..." / "Queued..." live status.
+        Requires `deployApiToken` (GitHub PAT) configured in site settings.
+      responses:
+        "200":
+          description: Latest run status
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  found: { type: boolean }
+                  runId: { type: integer }
+                  status:
+                    type: string
+                    enum: [queued, in_progress, completed]
+                  conclusion:
+                    type: string
+                    enum: [success, failure, cancelled, skipped]
+                    nullable: true
+                  url: { type: string, description: GitHub Actions run URL }
+                  startedAt: { type: string, format: date-time }
+
+# ---------------------------------------------------------------------------
+# Access Tokens (F134)
+# ---------------------------------------------------------------------------
+  /api/admin/access-tokens:
+    get:
+      summary: List access tokens
+      operationId: listAccessTokens
+      tags: [Admin]
+      security:
+        - SessionCookie: []
+      description: Returns all tokens for the current user (tokens masked — first 10 + last 4 chars shown).
+      responses:
+        "200":
+          description: Token list
+
+    post:
+      summary: Create access token
+      operationId: createAccessToken
+      tags: [Admin]
+      security:
+        - SessionCookie: []
+      description: |
+        Create a `wh_` Bearer token for headless site access, CI integrations, or MCP clients.
+        Returns the full token value **once only** — store it immediately.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, permissions]
+              properties:
+                name:
+                  type: string
+                  example: "Sanne Andersen site headless"
+                permissions:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - content:read
+                      - content:write
+                      - content:publish
+                      - media:read
+                      - media:write
+                      - media:delete
+                      - deploy:trigger
+                      - deploy:read
+                      - forms:read
+                      - forms:write
+                      - team:manage
+                      - tokens:manage
+                      - sites:read
+                      - sites:write
+                      - org:settings:read
+                      - org:settings:write
+                  example: ["content:read", "forms:read", "deploy:trigger", "deploy:read"]
+                resources:
+                  type: array
+                  description: Restrict token to specific sites or orgs
+                  items:
+                    type: object
+                    required: [scope, effect, targets]
+                    properties:
+                      scope:
+                        type: string
+                        enum: [org, site, admin-area]
+                      effect:
+                        type: string
+                        enum: [include, exclude]
+                      targets:
+                        oneOf:
+                          - type: string
+                            enum: ["*"]
+                          - type: array
+                            items: { type: string }
+                  example:
+                    - scope: site
+                      effect: include
+                      targets: ["sanneandersen"]
+                notAfter:
+                  type: string
+                  format: date-time
+                  description: Optional expiry timestamp
+      responses:
+        "200":
+          description: Token created — full value returned once
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    description: Full wh_ token (only returned on creation)
+                    example: "wh_76a2153cc365ed47..."
+                  id: { type: string }
+                  name: { type: string }
+                  permissions:
+                    type: array
+                    items: { type: string }
+
+  /api/admin/access-tokens/{id}:
+    delete:
+      summary: Revoke access token
+      operationId: revokeAccessToken
+      tags: [Admin]
+      security:
+        - SessionCookie: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        "200":
+          description: Token revoked
+
+# ---------------------------------------------------------------------------
+# AI Chat (F139 — embed in sites)
+# ---------------------------------------------------------------------------
+  /api/cms/chat:
+    post:
+      summary: Chat — streaming AI response
+      operationId: chat
+      tags: [Chat]
+      security:
+        - BearerToken: []
+        - SessionCookie: []
+      description: |
+        Runs the same Claude model and tool set as CMS Admin chat.
+        Returns a Server-Sent Events stream. Parse events:
+        - `event: text` `data: {"text":"..."}` — streamed text chunk
+        - `event: tool_call` `data: {"tool":"...","input":{}}` — tool executing
+        - `event: tool_result` `data: {"tool":"...","result":"..."}` — tool result
+        - `event: done` `data: {}` — stream complete
+
+        **Restrict tools** by only granting the permissions you need on the Bearer token.
+        Example: omit `content:write` to make the chat read-only.
+
+        For site embedding, proxy through a server route — never call from client-side
+        with the token directly. See [docs](https://docs.webhouse.app/docs/headless-api#5-embed-the-ai-chat).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [messages]
+              properties:
+                messages:
+                  type: array
+                  items:
+                    type: object
+                    required: [role, content]
+                    properties:
+                      role:
+                        type: string
+                        enum: [user, assistant]
+                      content:
+                        type: string
+                conversationId:
+                  type: string
+                  description: UUID for conversation persistence and memory extraction
+                model:
+                  type: string
+                  description: Override model (must be in allowed list)
+                  example: claude-haiku-4-5-20251001
+      responses:
+        "200":
+          description: SSE stream (text/event-stream)
+          headers:
+            Content-Type:
+              schema:
+                type: string
+                example: text/event-stream
+        "401":
+          description: Invalid token
+        "503":
+          description: Anthropic API key not configured
