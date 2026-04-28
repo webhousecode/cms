@@ -152,6 +152,7 @@
 | F136 | [Shop Module (E-Commerce Platform)](#f136-shop-module) | Planned | [docs/features/F136-shop-module.md](features/F136-shop-module.md) |
 | F137 | [Fast Fly Deploys (Build Cache)](#f137-fast-fly-deploys) | Planned | [docs/features/F137-fast-fly-deploys.md](features/F137-fast-fly-deploys.md) |
 | F138 | [Empty Admin UX + Beam at Account Level](#f138-empty-admin-ux) | Planned | [docs/features/F138-empty-admin-ux.md](features/F138-empty-admin-ux.md) |
+| F139 | [Headless Site API & Chat Embedding](#f139-headless-site-api) | Planned | [docs/features/F139-headless-site-api.md](features/F139-headless-site-api.md) |
 
 ---
 
@@ -560,3 +561,11 @@ Cut webhouse-app deploy time from 20+ min cold / 5–8 min steady-state to under
 
 ## F138 — Empty Admin UX + Beam at Account Level
 A logged-in user on a CMS server with zero sites should only see what's relevant for an empty CMS — Sites, Organizations, Account — not Site Settings or content-scoped sidebar items that point at nothing. Beam token-generation moves from Site Settings into Account Preferences (admin-server-level), enabling the "receive a site via Beam" flow on a fresh empty CMS where no active site exists. Receive-flow auto-initializes a default registry on first beam-finalize so the beamed site appears in the switcher immediately. Backwards-compat fallback keeps existing site-level beam tokens working through the transition.
+
+## F139 — Headless Site API & Chat Embedding
+
+Use CMS Admin as a headless backend inside your own Next.js (or any framework) site. Authenticate with a permanent `wh_` Access Token to read/write content, trigger deploys, read form inboxes, and embed the AI chat in your own UI design.
+
+- **AI guide:** `docs/ai-guide/22-headless-api.md` (bundled with npm)
+- **Docs pages:** `headless-api` + `headless-api-da` on docs.webhouse.app
+- **Depends on:** F134 (Access Tokens)
