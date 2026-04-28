@@ -298,7 +298,7 @@ function DeployButton() {
     setLastResult(null);
     setDeployPhase("Sending...");
     try {
-      const res = await fetch("/api/admin/deploy", { method: "POST" });
+      const res = await fetch("/api/admin/deploy", { method: "POST", signal: AbortSignal.timeout(120_000) });
       const data = await res.json() as { status: string; error?: string; url?: string; async?: boolean };
 
       // Webhook/GitHub Actions deploy: async — switch to polling mode
