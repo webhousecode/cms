@@ -537,7 +537,7 @@ paths:
       summary: Lås alle AI-genererede felter
       operationId: lockAllFields
       tags: [FieldMeta]
-      description: Sætter `lockedBy: user` på alle felter der har `aiGenerated: true`.
+      description: "Sætter `lockedBy: user` på alle felter der har `aiGenerated: true`."
       parameters:
         - $ref: "#/components/parameters/collection"
         - $ref: "#/components/parameters/slug"
@@ -757,7 +757,7 @@ paths:
       tags: [Auth]
       responses:
         "200":
-          description: Authenticated user profile (or user: null)
+          description: "Authenticated user profile (or user: null)"
           content:
             application/json:
               schema:
@@ -842,7 +842,7 @@ paths:
                   ran:
                     type: array
                     items: { type: string }
-                    example: ["published: 2 doc(s)", "backup: completed", "snapshot: updated"]
+                    example: ["published - 2 doc(s)", "backup - completed", "snapshot - updated"]
                   errors:
                     type: array
                     items: { type: string }
@@ -1333,7 +1333,7 @@ paths:
                 type: object
                 properties:
                   ok: { type: boolean }
-                  clients: { type: integer, description: Number of SSE clients notified }
+                  clients: { type: integer, description: "Number of SSE clients notified" }
         "401":
           description: Invalid DEPLOY_NOTIFY_SECRET
 
@@ -1366,7 +1366,7 @@ paths:
                     type: string
                     enum: [success, failure, cancelled, skipped]
                     nullable: true
-                  url: { type: string, description: GitHub Actions run URL }
+                  url: { type: string, description: "GitHub Actions run URL" }
                   startedAt: { type: string, format: date-time }
 
 # ---------------------------------------------------------------------------

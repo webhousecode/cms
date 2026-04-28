@@ -134,10 +134,11 @@ const cmsAdminProd = {
 module.exports = {
   apps: [
     cmsAdminDev,
-    nextSite("webhouse-site", "/Users/cb/Apps/webhouse/webhouse-site", 3009),
-    nextSite("cms-docs",      "/Users/cb/Apps/webhouse/cms-docs",      3036),
-    nextSite("sproutlake",    "/Users/cb/Apps/cbroberg/sproutlake",    3002),
-    staticSite("landing",     "/Users/cb/Apps/webhouse/cms/examples/landing", 3011),
+    nextSite("webhouse-site",  "/Users/cb/Apps/webhouse/webhouse-site",        3009),
+    nextSite("cms-docs",       "/Users/cb/Apps/webhouse/cms-docs",             3036),
+    nextSite("sproutlake",     "/Users/cb/Apps/cbroberg/sproutlake",           3002),
+    nextSite("sanneandersen",  "/Users/cb/Apps/webhouse/sanneandersen/site",   3021),
+    staticSite("landing",      "/Users/cb/Apps/webhouse/cms/examples/landing", 3011),
     cmsAdminProd,
   ],
 };
