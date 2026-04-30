@@ -353,32 +353,14 @@ function DeployButton() {
 
   // SSR site whose code lives in a separate repo: rebuild button doesn't make
   // sense (we have no Dockerfile / build pipeline locally), but content edits
-  // DO go live via ICD. Show a quiet "auto-syncs" pill so the user knows
-  // changes still ship — and so the rocket isn't there to mislead.
-  if (!canRebuildCode && canPublishContent) {
-    return (
-      <span
-        title={reason ?? "Content edits go live automatically (ICD). Code rebuilds happen via git push."}
-        style={{
-          fontSize: "0.65rem",
-          padding: "0.2rem 0.55rem",
-          borderRadius: "999px",
-          border: "1px solid var(--border)",
-          color: "var(--muted-foreground)",
-          background: "transparent",
-          fontFamily: "monospace",
-          whiteSpace: "nowrap",
-        }}
-      >
-        ICD · auto
-      </span>
-    );
-  }
+  // DO go live via ICD. Show the "auto-syncs" pill AS WELL AS the rocket so
+  // admins can manually trigger a revalidate when they want to.
+  const showIcdPill = !canRebuildCode && canPublishContent;
 
   // Neither rebuild nor ICD configured: still show the rocket so admins can
   // click it and get the "Deploy not configured" toast with a Configure CTA.
   // For non-admins we hide it entirely — there's nothing they can do.
-  if (!canRebuildCode && !isAdminUser) return null;
+  if (!canRebuildCode && !canPublishContent && !isAdminUser) return null;
 
   // Async deploy with phase label (GitHub Actions / webhook)
   if (deploying && deployPhase) {
@@ -400,11 +382,29 @@ function DeployButton() {
   }
 
   return (
+    <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
+      {showIcdPill && (
+        <span
+          title={reason ?? "Content edits auto-sync via ICD. Click the rocket to manually trigger a revalidate."}
+          style={{
+            fontSize: "0.65rem",
+            padding: "0.2rem 0.55rem",
+            borderRadius: "999px",
+            border: "1px solid var(--border)",
+            color: "var(--muted-foreground)",
+            background: "transparent",
+            fontFamily: "monospace",
+            whiteSpace: "nowrap",
+          }}
+        >
+          ICD · auto
+        </span>
+      )}
     <button
       type="button"
       onClick={handleDeploy}
       disabled={deploying}
-      title={deploying ? "Publishing..." : lastResult ? (lastResult.ok ? "Published!" : `Publish failed: ${lastResult.error}`) : provider === "off" ? "Deploy not configured" : "Publish changes"}
+      title={deploying ? "Publishing..." : lastResult ? (lastResult.ok ? "Published!" : `Publish failed: ${lastResult.error}`) : provider === "off" ? "Deploy not configured" : showIcdPill ? "Manually trigger revalidate" : "Publish changes"}
       aria-label="Publish changes"
       style={{
         background: "none",
@@ -424,6 +424,7 @@ function DeployButton() {
           ? <Check style={{ width: "0.9rem", height: "0.9rem" }} />
           : <Rocket style={{ width: "0.9rem", height: "0.9rem" }} />}
     </button>
+    </span>
   );
 }
 
@@ -617,7 +618,7 @@ function PreviewButton() {
       if (siteConfig.previewSiteUrl) {
         customPreview = siteConfig.previewSiteUrl as string;
         setPreviewUrl(customPreview);
-        fetch(customPreview, { method: "HEAD", mode: "no-cors", signal: AbortSignal.timeout(3000) })
+        fetch(customPreview, { method: "HEAD", mode: "no-cors", signal: AbortSignal.timeout(8000) })
           .catch(() => setPreviewDown(true));
       }
       const live = siteConfig.deployCustomDomain
@@ -631,7 +632,7 @@ function PreviewButton() {
   // Check live URL health separately
   useEffect(() => {
     if (!liveUrl) { setLiveDown(false); return; }
-    fetch(liveUrl, { method: "HEAD", mode: "no-cors", signal: AbortSignal.timeout(3000) })
+    fetch(liveUrl, { method: "HEAD", mode: "no-cors", signal: AbortSignal.timeout(8000) })
       .then(() => setLiveDown(false))
       .catch(() => setLiveDown(true));
   }, [liveUrl]);
