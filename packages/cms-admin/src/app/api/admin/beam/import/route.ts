@@ -44,9 +44,33 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "File must be a .beam archive" }, { status: 400 });
     }
 
+    const contentLength = Number(request.headers.get("content-length") ?? 0);
     const buffer = Buffer.from(await request.arrayBuffer());
+
+    console.log(`[beam/import] received bytes=${buffer.length} content-length=${contentLength} filename=${filename || "<none>"}`);
+
     if (buffer.length === 0) {
       return NextResponse.json({ error: "Empty body — no .beam payload received" }, { status: 400 });
+    }
+    if (contentLength > 0 && buffer.length !== contentLength) {
+      return NextResponse.json({
+        error: `Truncated upload: expected ${contentLength} bytes, received ${buffer.length}`,
+      }, { status: 400 });
+    }
+    // ZIP files end with the End of Central Directory marker `PK\x05\x06`.
+    // If absent, the upload was mangled in transit (often because something
+    // along the chain treated the body as text).
+    const last22 = buffer.subarray(Math.max(0, buffer.length - 22));
+    const eocdIndex = last22.indexOf(Buffer.from([0x50, 0x4b, 0x05, 0x06]));
+    if (eocdIndex === -1) {
+      // Search wider in case there's a comment field
+      const widerScan = buffer.subarray(Math.max(0, buffer.length - 65557));
+      const wideEocd = widerScan.lastIndexOf(Buffer.from([0x50, 0x4b, 0x05, 0x06]));
+      if (wideEocd === -1) {
+        return NextResponse.json({
+          error: `Upload mangled: no ZIP end-of-central-directory in ${buffer.length}-byte body. Body was likely corrupted in transit (text encoding or proxy buffering).`,
+        }, { status: 400 });
+      }
     }
 
     const result = await importBeamArchive(buffer, orgId, { overwrite, skipMedia });

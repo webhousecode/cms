@@ -56,6 +56,7 @@ export function BeamImportModal({ file, orgId, onClose, onDone }: Props) {
   useEffect(() => {
     const xhr = new XMLHttpRequest();
     xhrRef.current = xhr;
+    let cancelled = false;
 
     xhr.upload.addEventListener("progress", (e) => {
       if (e.lengthComputable) setUploaded(e.loaded);
@@ -83,14 +84,22 @@ export function BeamImportModal({ file, orgId, onClose, onDone }: Props) {
     xhr.addEventListener("error", () => { setError("Network error during import"); setPhase("error"); });
     xhr.addEventListener("abort", () => { setError("Import cancelled"); setPhase("error"); });
 
-    // Send raw binary — multipart/form-data fails on large bodies via
-    // Next.js' request.formData() parser. Metadata goes in query string.
+    // Read the file into an ArrayBuffer FIRST, then send. Sending a File
+    // directly via xhr.send(file) lets browsers re-detect the body type
+    // and can subtly change the wire format. ArrayBuffer is unambiguous.
     const qs = new URLSearchParams({ orgId, filename: file.name });
-    xhr.open("POST", `/api/admin/beam/import?${qs.toString()}`);
-    xhr.setRequestHeader("Content-Type", "application/octet-stream");
-    xhr.send(file);
+    file.arrayBuffer().then((buf) => {
+      if (cancelled) return;
+      xhr.open("POST", `/api/admin/beam/import?${qs.toString()}`);
+      xhr.setRequestHeader("Content-Type", "application/octet-stream");
+      xhr.send(buf);
+    }).catch((err) => {
+      setError(`Failed to read file: ${err instanceof Error ? err.message : String(err)}`);
+      setPhase("error");
+    });
 
     return () => {
+      cancelled = true;
       // Don't abort on unmount — let the import finish in the background.
       xhrRef.current = null;
     };
