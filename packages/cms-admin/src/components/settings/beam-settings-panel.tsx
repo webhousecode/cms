@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Download, Upload, Zap, FileArchive, CheckCircle, AlertTriangle, Key, Send, Copy } from "lucide-react";
 import { BeamProgressModal } from "./beam-progress-modal";
+import { BeamImportModal } from "./beam-import-modal";
 
 interface ExportStats {
   contentFiles: number;
@@ -41,10 +42,10 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
   const [exportDone, setExportDone] = useState(false);
 
   // ── Import state ──
-  const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
   const [importFileName, setImportFileName] = useState<string | null>(null);
+  const [importModalFile, setImportModalFile] = useState<File | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   // ── Token state ──
@@ -113,8 +114,8 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
     }
   }
 
-  // ── Import handler ──
-  async function handleImport() {
+  // ── Import handler — opens the progress modal which owns the XHR upload. ──
+  function handleImport() {
     const file = fileRef.current?.files?.[0];
     if (!file) {
       setImportError("Please choose a .beam file first");
@@ -124,31 +125,9 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
       setImportError("File must be a .beam archive");
       return;
     }
-
-    setImporting(true);
     setImportResult(null);
     setImportError(null);
-
-    try {
-      const form = new FormData();
-      form.append("file", file);
-      form.append("orgId", orgId);
-
-      const res = await fetch("/api/admin/beam/import", {
-        method: "POST",
-        body: form,
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error ?? "Import failed");
-      }
-      setImportResult(data);
-    } catch (err) {
-      setImportError(err instanceof Error ? err.message : "Import failed");
-    } finally {
-      setImporting(false);
-      if (fileRef.current) fileRef.current.value = "";
-    }
+    setImportModalFile(file);
   }
 
   // ── Token generation handler ──
@@ -236,6 +215,19 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
             setModalOpen(false);
             setPushing(false);
             setActiveBeamId(null);
+          }}
+        />
+      )}
+      {/* Import progress modal */}
+      {importModalFile && (
+        <BeamImportModal
+          file={importModalFile}
+          orgId={orgId}
+          onDone={(r) => setImportResult(r)}
+          onClose={() => {
+            setImportModalFile(null);
+            if (fileRef.current) fileRef.current.value = "";
+            setImportFileName(null);
           }}
         />
       )}
@@ -557,7 +549,6 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
           <button
             type="button"
             onClick={() => fileRef.current?.click()}
-            disabled={importing}
             style={{
               display: "inline-flex",
               alignItems: "center",
@@ -576,7 +567,6 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
           </button>
           <button
             onClick={handleImport}
-            disabled={importing}
             style={{
               display: "inline-flex",
               alignItems: "center",
@@ -588,11 +578,10 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
               color: "#0D0D0D",
               fontSize: "0.8rem",
               fontWeight: 600,
-              cursor: importing ? "wait" : "pointer",
-              opacity: importing ? 0.7 : 1,
+              cursor: "pointer",
             }}
           >
-            {importing ? "Importing..." : "Import"}
+            Import
           </button>
         </div>
 
