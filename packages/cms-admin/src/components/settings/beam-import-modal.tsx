@@ -60,6 +60,14 @@ export function BeamImportModal({ file, orgId, onClose, onDone }: Props) {
   const [retryToken, setRetryToken] = useState(0);
   const xhrRef = useRef<XMLHttpRequest | null>(null);
 
+  // Stash onDone in a ref so the upload effect doesn't re-run when the
+  // parent re-renders with a fresh callback identity. Without this, every
+  // setImportResult() in the parent caused a brand-new import to fire,
+  // which then failed with "already exists" against the site we just
+  // successfully registered.
+  const onDoneRef = useRef(onDone);
+  useEffect(() => { onDoneRef.current = onDone; }, [onDone]);
+
   const isAlreadyExistsError = error?.includes("already exists") ?? false;
 
   function handleOverwriteRetry() {
@@ -151,7 +159,7 @@ export function BeamImportModal({ file, orgId, onClose, onDone }: Props) {
         }
         setResult(data);
         setPhase("done");
-        onDone(data);
+        onDoneRef.current(data);
       } catch (err) {
         setError(err instanceof Error ? err.message : String(err));
         setPhase("error");
@@ -165,7 +173,10 @@ export function BeamImportModal({ file, orgId, onClose, onDone }: Props) {
       // Don't abort in-flight chunk on unmount — let it finish.
       xhrRef.current = null;
     };
-  }, [file, orgId, onDone]);
+    // onDone deliberately omitted — read via onDoneRef so a new callback
+    // identity from the parent doesn't trigger a duplicate import.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [file, orgId, retryToken]);
 
   const uploadPct = file.size > 0 ? Math.round((uploaded / file.size) * 100) : 0;
 
