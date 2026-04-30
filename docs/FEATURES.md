@@ -153,6 +153,7 @@
 | F137 | [Fast Fly Deploys (Build Cache)](#f137-fast-fly-deploys) | Planned | [docs/features/F137-fast-fly-deploys.md](features/F137-fast-fly-deploys.md) |
 | F138 | [Empty Admin UX + Beam at Account Level](#f138-empty-admin-ux) | Planned | [docs/features/F138-empty-admin-ux.md](features/F138-empty-admin-ux.md) |
 | F139 | [Headless Site API & Chat Embedding](#f139-headless-site-api) | Planned | [docs/features/F139-headless-site-api.md](features/F139-headless-site-api.md) |
+| F140 | [Empty-Org UX Regression](#f140-empty-org-ux-regression) | Planned | [docs/features/F140-empty-org-ux-regression.md](features/F140-empty-org-ux-regression.md) |
 
 ---
 
@@ -569,3 +570,7 @@ Use CMS Admin as a headless backend inside your own Next.js (or any framework) s
 - **AI guide:** `docs/ai-guide/22-headless-api.md` (bundled with npm)
 - **Docs pages:** `headless-api` + `headless-api-da` on docs.webhouse.app
 - **Depends on:** F134 (Access Tokens)
+
+## F140 — Empty-Org UX Regression
+
+When an org has zero sites, the admin shell strips user-menu chrome (gravatar, "Org settings", theme controls) and org-switcher chrome ("+ New org", "All orgs") — even though those controls are user-scoped, not site-scoped. Reproduces on prod and localhost. Plan to hoist user-menu logic out of the site-context-aware code path so empty orgs keep their full header. Caught during the sanne-andersen migration session 2026-04-30 when moving a site into a new empty org locked the user out of Site Settings (and thus out of moving the site back).
