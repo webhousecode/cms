@@ -56,7 +56,19 @@ export function BeamImportModal({ file, orgId, onClose, onDone }: Props) {
   const [uploaded, setUploaded] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<ImportResult | null>(null);
+  const [overwrite, setOverwrite] = useState(false);
+  const [retryToken, setRetryToken] = useState(0);
   const xhrRef = useRef<XMLHttpRequest | null>(null);
+
+  const isAlreadyExistsError = error?.includes("already exists") ?? false;
+
+  function handleOverwriteRetry() {
+    setOverwrite(true);
+    setError(null);
+    setUploaded(0);
+    setPhase("uploading");
+    setRetryToken((t) => t + 1);
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -98,6 +110,16 @@ export function BeamImportModal({ file, orgId, onClose, onDone }: Props) {
 
     async function run() {
       try {
+        // Compute SHA-256 of the full file BEFORE upload. Server will
+        // recompute over reassembled chunks and reject the import if they
+        // don't match — that way no site is registered against a corrupt
+        // archive.
+        const fullBuf = await file.arrayBuffer();
+        const sha256Buf = await crypto.subtle.digest("SHA-256", fullBuf);
+        const sha256 = Array.from(new Uint8Array(sha256Buf))
+          .map((b) => b.toString(16).padStart(2, "0"))
+          .join("");
+
         const totalChunks = Math.max(1, Math.ceil(file.size / CHUNK_SIZE));
         for (let i = 0; i < totalChunks; i++) {
           if (cancelled) return;
@@ -115,7 +137,9 @@ export function BeamImportModal({ file, orgId, onClose, onDone }: Props) {
           orgId,
           filename: file.name,
           total: String(totalChunks),
+          sha256,
         });
+        if (overwrite) finalQs.set("overwrite", "true");
         const finalRes = await fetch(`/api/admin/beam/import?${finalQs.toString()}`, {
           method: "POST",
         });

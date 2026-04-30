@@ -1,29 +1,29 @@
 /**
- * POST /api/admin/beam/import — Chunked upload + import of a .beam archive.
+ * POST /api/admin/beam/import — Chunked upload + verify + import of a .beam archive.
  *
- * Why chunks: Fly.io's edge proxy caps request bodies at ~10 MB. Real .beam
- * files routinely exceed that (sanne-andersen.beam is 14.3 MB). We split
- * client-side into 4 MB pieces, write them to a temp dir keyed by uploadId,
- * then concatenate + import on finalize.
+ * Why chunks: Fly.io's edge proxy caps request bodies at ~10 MB. We split
+ * client-side into 4 MB pieces, write them to a volume-backed temp dir
+ * keyed by uploadId, verify SHA-256 of the assembled buffer matches what
+ * the client claimed, and only then run the import. Nothing is registered
+ * (no site name, no registry entry) until the archive is byte-for-byte
+ * verified.
  *
- * Two actions, both POST, both raw binary or empty body, action chosen via
- * `?action=`:
- *   - action=chunk   query: uploadId, index            body: chunk bytes
- *   - action=finalize query: uploadId, orgId, filename, total, overwrite?, skipMedia?
+ * Two actions, both POST, action chosen via `?action=`:
+ *   - action=chunk     query: uploadId, index            body: chunk bytes
+ *   - action=finalize  query: uploadId, orgId, filename, total, sha256, overwrite?, skipMedia?
  *
  * Auth: middleware-protected (admin routes); we double-check role here.
  */
 import { NextRequest, NextResponse } from "next/server";
 import { importBeamArchive } from "@/lib/beam/import";
 import { getSiteRole } from "@/lib/require-role";
+import { getBeamTmpDir } from "@/lib/beam/paths";
 import { mkdir, writeFile, readFile, rm } from "node:fs/promises";
 import path from "node:path";
-import os from "node:os";
+import { createHash } from "node:crypto";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
-
-const TMP_BASE = path.join(os.tmpdir(), "beam-uploads");
 
 function safeUploadId(id: string | null): string | null {
   if (!id) return null;
@@ -31,8 +31,8 @@ function safeUploadId(id: string | null): string | null {
   return id;
 }
 
-function chunkPath(uploadId: string, index: number): string {
-  return path.join(TMP_BASE, uploadId, `chunk-${String(index).padStart(6, "0")}.bin`);
+function chunkPath(baseDir: string, uploadId: string, index: number): string {
+  return path.join(baseDir, uploadId, `chunk-${String(index).padStart(6, "0")}.bin`);
 }
 
 export async function POST(request: NextRequest) {
@@ -43,6 +43,7 @@ export async function POST(request: NextRequest) {
 
   const url = new URL(request.url);
   const action = url.searchParams.get("action");
+  const tmpBase = await getBeamTmpDir();
 
   try {
     if (action === "chunk") {
@@ -55,13 +56,13 @@ export async function POST(request: NextRequest) {
       if (!Number.isInteger(index) || index < 0 || index > 10_000) {
         return NextResponse.json({ error: "Invalid chunk index" }, { status: 400 });
       }
-      const dir = path.join(TMP_BASE, uploadId);
+      const dir = path.join(tmpBase, uploadId);
       await mkdir(dir, { recursive: true });
       const buf = Buffer.from(await request.arrayBuffer());
       if (buf.length === 0) {
         return NextResponse.json({ error: "Empty chunk" }, { status: 400 });
       }
-      await writeFile(chunkPath(uploadId, index), buf);
+      await writeFile(chunkPath(tmpBase, uploadId, index), buf);
       return NextResponse.json({ success: true, received: buf.length });
     }
 
@@ -71,6 +72,7 @@ export async function POST(request: NextRequest) {
       const filename = url.searchParams.get("filename") ?? "";
       const totalRaw = url.searchParams.get("total");
       const total = totalRaw ? Number(totalRaw) : NaN;
+      const claimedSha256 = (url.searchParams.get("sha256") ?? "").toLowerCase();
       const overwrite = url.searchParams.get("overwrite") === "true";
       const skipMedia = url.searchParams.get("skipMedia") === "true";
 
@@ -86,32 +88,58 @@ export async function POST(request: NextRequest) {
       if (filename && !filename.endsWith(".beam")) {
         return NextResponse.json({ error: "File must be a .beam archive" }, { status: 400 });
       }
+      if (claimedSha256 && !/^[a-f0-9]{64}$/.test(claimedSha256)) {
+        return NextResponse.json({ error: "Invalid sha256 (must be 64 hex chars)" }, { status: 400 });
+      }
 
+      const uploadDir = path.join(tmpBase, uploadId);
+
+      // Reassemble + hash. Reads from volume-backed dir so partial uploads
+      // survive machine restarts; we only commit after the hash matches.
       const parts: Buffer[] = [];
       for (let i = 0; i < total; i++) {
         try {
-          parts.push(await readFile(chunkPath(uploadId, i)));
+          parts.push(await readFile(chunkPath(tmpBase, uploadId, i)));
         } catch {
           return NextResponse.json({
-            error: `Missing chunk ${i} of ${total} — upload incomplete`,
+            error: `Missing chunk ${i} of ${total} — upload incomplete. Retry the upload.`,
           }, { status: 400 });
         }
       }
       const buffer = Buffer.concat(parts);
-      console.log(`[beam/import] finalize uploadId=${uploadId} chunks=${total} bytes=${buffer.length}`);
+      const actualSha256 = createHash("sha256").update(buffer).digest("hex");
 
+      console.log(`[beam/import] finalize uploadId=${uploadId} chunks=${total} bytes=${buffer.length} sha256=${actualSha256}`);
+
+      if (claimedSha256 && actualSha256 !== claimedSha256) {
+        return NextResponse.json({
+          error: `SHA-256 mismatch: client said ${claimedSha256}, server got ${actualSha256}. Upload was corrupted in transit; retry.`,
+        }, { status: 400 });
+      }
+
+      // Only NOW — buffer assembled, hash verified — do we run the actual
+      // import (which extracts files and registers the site).
       try {
         const result = await importBeamArchive(buffer, orgId, { overwrite, skipMedia });
-        return NextResponse.json({ success: true, ...result });
+        return NextResponse.json({ success: true, sha256: actualSha256, ...result });
       } finally {
-        rm(path.join(TMP_BASE, uploadId), { recursive: true, force: true }).catch(() => {
+        rm(uploadDir, { recursive: true, force: true }).catch(() => {
           /* best-effort cleanup */
         });
       }
     }
 
+    if (action === "abort") {
+      const uploadId = safeUploadId(url.searchParams.get("uploadId"));
+      if (!uploadId) {
+        return NextResponse.json({ error: "Invalid uploadId" }, { status: 400 });
+      }
+      await rm(path.join(tmpBase, uploadId), { recursive: true, force: true }).catch(() => {});
+      return NextResponse.json({ success: true });
+    }
+
     return NextResponse.json({
-      error: "Missing or invalid ?action= (expected 'chunk' or 'finalize')",
+      error: "Missing or invalid ?action= (expected 'chunk', 'finalize', or 'abort')",
     }, { status: 400 });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Import failed";
