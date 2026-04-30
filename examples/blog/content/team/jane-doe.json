@@ -8,9 +8,17 @@
     "role": "Editor in Chief",
     "bio": "Jane has been writing about content management and the open web for over a decade. She joined Simple Blog as Editor in Chief in 2026.",
     "email": "jane@example.com",
-    "sortOrder": 1
+    "sortOrder": 1,
+    "photo": "/uploads/photo-1777319273314-n2f0.jpg",
+    "_lastEditedBy": {
+      "userId": "fb4eda6a-bc5c-4dec-8cb6-c77c9fb74cd9",
+      "name": "Christian Broberg",
+      "email": "cb@webhouse.dk",
+      "at": "2026-04-27T19:47:55.666Z",
+      "source": "mobile"
+    }
   },
   "_fieldMeta": {},
   "createdAt": "2026-04-08T00:00:00.000Z",
-  "updatedAt": "2026-04-08T00:00:00.000Z"
+  "updatedAt": "2026-04-27T19:47:55.666Z"
 }

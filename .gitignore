@@ -187,3 +187,7 @@ packages/cms-admin/test-results/
 # Next.js auto-generated
 next-env.d.ts
 .vscode/
+
+# Local TLS dev certs (mkcert) — never commit cert material
+*.pem
+localhost+*.pem
