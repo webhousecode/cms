@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Download, Upload, Zap, FileArchive, CheckCircle, AlertTriangle, Key, Send, Copy } from "lucide-react";
+import { BeamProgressModal } from "./beam-progress-modal";
 
 interface ExportStats {
   contentFiles: number;
@@ -57,6 +58,8 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
   const [pushProgress, setPushProgress] = useState<BeamProgress | null>(null);
   const [pushError, setPushError] = useState<string | null>(null);
   const [pushDone, setPushDone] = useState(false);
+  const [activeBeamId, setActiveBeamId] = useState<string | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   // SSE listener for push progress
   const connectSSE = useCallback((beamId: string) => {
@@ -174,6 +177,8 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
     setPushError(null);
     setPushProgress(null);
     setPushDone(false);
+    setActiveBeamId(null);
+    setModalOpen(true);
 
     try {
       const res = await fetch("/api/admin/beam/push", {
@@ -191,22 +196,20 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
       }
 
       if (data.beamId && data.beamId !== "pending") {
-        // Push completed synchronously (small site)
+        // We have a beamId — modal will subscribe to SSE for live progress.
+        // Broadcast so admin-header can show a persistent pill if user
+        // closes the modal.
+        setActiveBeamId(data.beamId);
+        window.dispatchEvent(new CustomEvent("cms:beam-started", { detail: { beamId: data.beamId, targetUrl } }));
+      } else {
+        // No beamId returned — fallback for older API
         setPushing(false);
         setPushDone(true);
-        setPushProgress({
-          beamId: data.beamId,
-          phase: "done",
-          totalFiles: 0,
-          transferredFiles: 0,
-          totalBytes: 0,
-          transferredBytes: 0,
-          currentFile: "",
-        });
       }
     } catch (err) {
       setPushing(false);
       setPushError(err instanceof Error ? err.message : "Push failed");
+      setModalOpen(false);
     }
   }
 
@@ -219,6 +222,19 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
+      {/* Live progress modal */}
+      {modalOpen && activeBeamId && (
+        <BeamProgressModal
+          beamId={activeBeamId}
+          targetUrl={targetUrl}
+          onMinimize={() => setModalOpen(false)}
+          onClose={() => {
+            setModalOpen(false);
+            setPushing(false);
+            setActiveBeamId(null);
+          }}
+        />
+      )}
       {/* ── Export ── */}
       <div style={{
         padding: "1.25rem",

@@ -23,6 +23,9 @@ interface PushOptions {
   targetUrl: string;
   token: string;
   orgId: string;
+  /** Fires once the beamId is generated and session is created — lets the
+   *  caller return it to the client BEFORE the (potentially long) push runs. */
+  onBeamId?: (beamId: string) => void;
 }
 
 interface FileToSend {
@@ -161,6 +164,8 @@ export async function pushBeamToTarget(options: PushOptions): Promise<string> {
 
   // Create local session for SSE progress tracking
   createBeamSession(beamId, "sending", siteName, siteId);
+  // Notify caller about beamId so it can return early to the client
+  options.onBeamId?.(beamId);
   updateBeamSession(beamId, {
     totalFiles: files.length,
     totalBytes: stats.totalSizeBytes,
