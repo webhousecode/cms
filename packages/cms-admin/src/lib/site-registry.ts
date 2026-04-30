@@ -216,14 +216,20 @@ export async function updateOrg(orgId: string, updates: { name?: string; type?: 
 }
 
 export async function addSite(orgId: string, site: SiteEntry): Promise<void> {
-  const registry = await loadRegistry();
-  if (!registry) throw new Error("No registry");
-  const org = findOrg(registry, orgId);
+  const current = await loadRegistry();
+  if (!current) throw new Error("No registry");
+  // Deep-clone before mutating. loadRegistry returns the cached object by
+  // reference; if we mutated it directly and saveRegistry's writeFile then
+  // failed (EACCES, disk full, etc.), the cache would be left holding a
+  // ghost site that doesn't exist on disk — the next import attempt would
+  // see the ghost and refuse with "already exists".
+  const next: Registry = JSON.parse(JSON.stringify(current));
+  const org = findOrg(next, orgId);
   if (!org) throw new Error(`Org "${orgId}" not found`);
   if (org.sites.some((s) => s.id === site.id)) return; // already exists
   org.sites.push(site);
-  if (!registry.defaultSiteId) registry.defaultSiteId = site.id;
-  await saveRegistry(registry);
+  if (!next.defaultSiteId) next.defaultSiteId = site.id;
+  await saveRegistry(next); // updates cache only on successful write
 }
 
 export async function updateSite(

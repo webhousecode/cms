@@ -18,3 +18,17 @@ export async function getBeamSitesDir(): Promise<string> {
   mkdirSync(dir, { recursive: true });
   return dir;
 }
+
+/**
+ * Volume-backed temp dir for chunked Beam Import uploads. Lives on the
+ * persistent volume (not os.tmpdir() / RAM disk) so partially-uploaded
+ * chunks survive machine restarts and don't pollute the in-RAM /tmp.
+ *
+ * Layout: <getAdminDataDir>/_data/beam-tmp/<uploadId>/chunk-NNNNNN.bin
+ */
+export async function getBeamTmpDir(): Promise<string> {
+  const { getAdminDataDir } = await import("../site-registry");
+  const dir = path.join(getAdminDataDir(), "_data", "beam-tmp");
+  mkdirSync(dir, { recursive: true });
+  return dir;
+}
