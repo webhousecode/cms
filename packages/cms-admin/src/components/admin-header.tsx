@@ -442,6 +442,11 @@ interface BuildProfileInfo {
  * Click to re-open the progress modal at /admin/settings?tab=beam
  * (full page nav so we re-mount the panel with active beamId in URL).
  */
+// Module-level dedupe: WorkspaceShell mounts two AdminHeaders (chat + traditional)
+// so each event fires twice. Track which beamIds we've already toasted so we
+// don't show duplicate notifications.
+const toastedBeamIds = new Set<string>();
+
 function BeamPill() {
   const router = useRouter();
   const [activeBeamId, setActiveBeamId] = useState<string | null>(null);
@@ -452,8 +457,10 @@ function BeamPill() {
       setActiveBeamId(beamId);
     }
     function onDone(e: Event) {
-      const { success, error } = (e as CustomEvent).detail;
+      const { beamId, success, error } = (e as CustomEvent).detail as { beamId: string; success: boolean; error?: string };
       setActiveBeamId(null);
+      if (toastedBeamIds.has(beamId)) return;
+      toastedBeamIds.add(beamId);
       if (success) toast.success("Beam complete 🚀", { description: "Site transferred successfully", duration: 8000 });
       else toast.error("Beam failed", { description: error ?? "Transfer failed", duration: 10000 });
     }
