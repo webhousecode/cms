@@ -33,31 +33,46 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Start push in background — returns beamId immediately
-    // The push runs async; client tracks progress via SSE
-    const beamIdPromise = pushBeamToTarget({ targetUrl, token, orgId });
+    // Race the push against an early-beamId signal. We return as soon as
+    // pushBeamToTarget has registered the beamId (typically <1s — after
+    // file collection but before the long upload loop) so the client can
+    // open SSE and stream progress. The push continues running in the
+    // background promise.
+    let earlyBeamId: string | null = null;
+    let earlyResolve: (() => void) | null = null;
+    const earlyReady = new Promise<void>((res) => { earlyResolve = res; });
 
-    // Wait briefly for the initiate step to complete (validates token)
-    // If initiate fails, we return the error immediately
-    const beamId = await Promise.race([
-      beamIdPromise,
-      new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("__timeout__")), 30000),
-      ),
-    ]).catch((err) => {
-      if (err.message === "__timeout__") {
-        // Push is still running — that's fine, client will track via SSE
-        return null;
-      }
+    const pushPromise = pushBeamToTarget({
+      targetUrl,
+      token,
+      orgId,
+      onBeamId: (id) => { earlyBeamId = id; earlyResolve?.(); },
+    }).catch((err) => {
+      // Allow the caller's response to fire even if push later fails
+      earlyResolve?.();
       throw err;
     });
 
-    // If push completed within timeout (small site), return result
-    return NextResponse.json({
-      success: true,
-      beamId: beamId ?? "pending",
-      message: beamId ? "Beam transfer complete" : "Beam transfer in progress",
-    });
+    // Wait for either: beamId to be registered, or the whole push to fail fast.
+    await Promise.race([
+      earlyReady,
+      pushPromise.then(() => undefined, () => undefined),
+    ]);
+
+    if (earlyBeamId) {
+      return NextResponse.json({
+        success: true,
+        beamId: earlyBeamId,
+        message: "Beam transfer started — track progress via SSE",
+      });
+    }
+
+    // No beamId — must have failed before session was created
+    try { await pushPromise; } catch (err) {
+      const message = err instanceof Error ? err.message : "Push failed";
+      return NextResponse.json({ error: message }, { status: 500 });
+    }
+    return NextResponse.json({ success: true, beamId: "pending", message: "Started" });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Push failed";
     console.error("[beam/push]", message);

@@ -434,6 +434,59 @@ interface BuildProfileInfo {
   isDefault: boolean;
 }
 
+/**
+ * Persistent pill shown in the admin header while a Beam transfer is running
+ * in the background. Listens for `cms:beam-started` and `cms:beam-done` events
+ * dispatched by BeamSettingsPanel / BeamProgressModal.
+ *
+ * Click to re-open the progress modal at /admin/settings?tab=beam
+ * (full page nav so we re-mount the panel with active beamId in URL).
+ */
+function BeamPill() {
+  const router = useRouter();
+  const [activeBeamId, setActiveBeamId] = useState<string | null>(null);
+
+  useEffect(() => {
+    function onStart(e: Event) {
+      const { beamId } = (e as CustomEvent).detail;
+      setActiveBeamId(beamId);
+    }
+    function onDone(e: Event) {
+      const { success, error } = (e as CustomEvent).detail;
+      setActiveBeamId(null);
+      if (success) toast.success("Beam complete 🚀", { description: "Site transferred successfully", duration: 8000 });
+      else toast.error("Beam failed", { description: error ?? "Transfer failed", duration: 10000 });
+    }
+    window.addEventListener("cms:beam-started", onStart);
+    window.addEventListener("cms:beam-done", onDone);
+    return () => {
+      window.removeEventListener("cms:beam-started", onStart);
+      window.removeEventListener("cms:beam-done", onDone);
+    };
+  }, []);
+
+  if (!activeBeamId) return null;
+
+  return (
+    <button
+      type="button"
+      onClick={() => router.push(`/admin/settings?tab=beam&active=${activeBeamId}`)}
+      title="Beam in progress — click to view"
+      style={{
+        display: "flex", alignItems: "center", gap: "0.35rem",
+        fontSize: "0.65rem", color: "#F7BB2E",
+        border: "1px solid #F7BB2E", borderRadius: "999px",
+        padding: "0.2rem 0.6rem", whiteSpace: "nowrap",
+        fontFamily: "monospace", background: "transparent",
+        cursor: "pointer",
+      }}
+    >
+      <Loader2 style={{ width: "0.75rem", height: "0.75rem" }} className="animate-spin" />
+      Beaming…
+    </button>
+  );
+}
+
 function BuildButton() {
   const [hasBuildCommand, setHasBuildCommand] = useState(false);
   const [profiles, setProfiles] = useState<BuildProfileInfo[]>([]);
@@ -880,6 +933,7 @@ export function AdminHeader({ mode, onToggleMode, onNewChat, onToggleHistory, sh
         <LocaleIndicator />
         <OrgSwitcher />
         <BuildButton />
+        <BeamPill />
         <DeployButton />
         <PreviewButton />
         <HelpButton />
