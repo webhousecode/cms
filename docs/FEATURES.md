@@ -154,6 +154,7 @@
 | F138 | [Empty Admin UX + Beam at Account Level](#f138-empty-admin-ux) | Planned | [docs/features/F138-empty-admin-ux.md](features/F138-empty-admin-ux.md) |
 | F139 | [Headless Site API & Chat Embedding](#f139-headless-site-api) | Planned | [docs/features/F139-headless-site-api.md](features/F139-headless-site-api.md) |
 | F140 | [Empty-Org UX Regression](#f140-empty-org-ux-regression) | Planned | [docs/features/F140-empty-org-ux-regression.md](features/F140-empty-org-ux-regression.md) |
+| F141 | [Site Switch Context Leak](#f141-site-switch-context-leak) | Planned | [docs/features/F141-site-switch-context-leak.md](features/F141-site-switch-context-leak.md) |
 
 ---
 
@@ -574,3 +575,7 @@ Use CMS Admin as a headless backend inside your own Next.js (or any framework) s
 ## F140 — Empty-Org UX Regression
 
 When an org has zero sites, the admin shell strips user-menu chrome (gravatar, "Org settings", theme controls) and org-switcher chrome ("+ New org", "All orgs") — even though those controls are user-scoped, not site-scoped. Reproduces on prod and localhost. Plan to hoist user-menu logic out of the site-context-aware code path so empty orgs keep their full header. Caught during the sanne-andersen migration session 2026-04-30 when moving a site into a new empty org locked the user out of Site Settings (and thus out of moving the site back).
+
+## F141 — Site Switch Context Leak
+
+When the user switches active site, the header chrome updates (top-bar shows the new site name) but the sidebar collections list and content listing remain bound to the previous site's config. UI claims to be in site B, content shown is from site A. Caught when sanne-andersen showed up in the picker but `/admin/content/work` listed webhouse.dk Case Studies. Suspected cause: server-rendered components don't re-execute on switch (no `router.refresh()`), or the CMS config cache keyed by `(orgId, siteId)` isn't invalidated. **Critical first check:** verify whether the API write path is also leaking — if POST to "site B" actually mutates site A's data, that's a security incident, not just a display bug.
