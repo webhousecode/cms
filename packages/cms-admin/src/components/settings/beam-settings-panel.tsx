@@ -44,6 +44,7 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<ImportResult | null>(null);
   const [importError, setImportError] = useState<string | null>(null);
+  const [importFileName, setImportFileName] = useState<string | null>(null);
   const fileRef = useRef<HTMLInputElement>(null);
 
   // ── Token state ──
@@ -115,7 +116,10 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
   // ── Import handler ──
   async function handleImport() {
     const file = fileRef.current?.files?.[0];
-    if (!file) return;
+    if (!file) {
+      setImportError("Please choose a .beam file first");
+      return;
+    }
     if (!file.name.endsWith(".beam")) {
       setImportError("File must be a .beam archive");
       return;
@@ -538,14 +542,38 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
           Import a <code style={{ fontSize: "0.72rem", padding: "1px 4px", borderRadius: 3, background: "var(--muted)" }}>.beam</code> archive
           from another CMS instance. The site will be added to your current organization.
         </p>
-        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
           <input
             ref={fileRef}
             type="file"
             accept=".beam"
-            style={{ fontSize: "0.78rem" }}
-            onChange={() => { setImportResult(null); setImportError(null); }}
+            style={{ display: "none" }}
+            onChange={(e) => {
+              setImportResult(null);
+              setImportError(null);
+              setImportFileName(e.target.files?.[0]?.name ?? null);
+            }}
           />
+          <button
+            type="button"
+            onClick={() => fileRef.current?.click()}
+            disabled={importing}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "0.4rem",
+              padding: "0.45rem 1rem",
+              borderRadius: 6,
+              border: "1px dashed var(--border)",
+              background: "transparent",
+              color: importFileName ? "var(--foreground)" : "var(--muted-foreground)",
+              fontSize: "0.78rem",
+              cursor: "pointer",
+            }}
+          >
+            <FileArchive style={{ width: 14, height: 14 }} />
+            {importFileName ?? "Choose .beam file…"}
+          </button>
           <button
             onClick={handleImport}
             disabled={importing}
@@ -555,11 +583,11 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
               gap: "0.4rem",
               padding: "0.45rem 1rem",
               borderRadius: 6,
-              border: "1px solid var(--border)",
-              background: "transparent",
-              color: "var(--foreground)",
+              border: "none",
+              background: "#F7BB2E",
+              color: "#0D0D0D",
               fontSize: "0.8rem",
-              fontWeight: 500,
+              fontWeight: 600,
               cursor: importing ? "wait" : "pointer",
               opacity: importing ? 0.7 : 1,
             }}
