@@ -40,7 +40,14 @@ interface FileToSend {
  */
 export async function pushBeamToTarget(options: PushOptions): Promise<string> {
   const { targetUrl, token, orgId } = options;
-  const baseUrl = targetUrl.replace(/\/+$/, "");
+  // Normalize: strip trailing slashes AND force https for any non-localhost
+  // host. Plain http://example.com targets get auto-redirected to https by
+  // most hosts (Fly), and POST bodies are silently dropped on the redirect,
+  // so fetch returns 500 "Unexpected end of JSON input" — confusing.
+  let baseUrl = targetUrl.replace(/\/+$/, "");
+  if (baseUrl.startsWith("http://") && !baseUrl.includes("//localhost") && !baseUrl.includes("//127.0.0.1")) {
+    baseUrl = baseUrl.replace(/^http:\/\//, "https://");
+  }
 
   const sitePaths = await getActiveSitePaths();
   const siteEntry = await getActiveSiteEntry();
