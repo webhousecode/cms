@@ -57,8 +57,14 @@ function writeSession(session: BeamSession): void {
   writeFileSync(sessionPath(session.beamId), JSON.stringify(session, null, 2));
 }
 
-/** In-memory SSE listeners (per-connection, not persisted) */
-const listeners = new Map<string, Set<(event: string, data: string) => void>>();
+/** In-memory SSE listeners (per-connection, not persisted).
+ *  Pinned to globalThis so Next.js dev-mode HMR (which re-imports modules)
+ *  doesn't split the push and the SSE handler into separate Map instances —
+ *  in that case notifyListeners runs on a Map the SSE never registered on,
+ *  and the gauge stalls at "Connecting..." forever. */
+const g = globalThis as Record<string, unknown>;
+if (!g.__beamSessionListeners) g.__beamSessionListeners = new Map<string, Set<(event: string, data: string) => void>>();
+const listeners = g.__beamSessionListeners as Map<string, Set<(event: string, data: string) => void>>;
 
 function notifyListeners(session: BeamSession): void {
   const set = listeners.get(session.beamId);
