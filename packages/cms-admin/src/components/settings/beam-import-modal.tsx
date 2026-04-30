@@ -57,10 +57,6 @@ export function BeamImportModal({ file, orgId, onClose, onDone }: Props) {
     const xhr = new XMLHttpRequest();
     xhrRef.current = xhr;
 
-    const form = new FormData();
-    form.append("file", file);
-    form.append("orgId", orgId);
-
     xhr.upload.addEventListener("progress", (e) => {
       if (e.lengthComputable) setUploaded(e.loaded);
     });
@@ -87,8 +83,12 @@ export function BeamImportModal({ file, orgId, onClose, onDone }: Props) {
     xhr.addEventListener("error", () => { setError("Network error during import"); setPhase("error"); });
     xhr.addEventListener("abort", () => { setError("Import cancelled"); setPhase("error"); });
 
-    xhr.open("POST", "/api/admin/beam/import");
-    xhr.send(form);
+    // Send raw binary — multipart/form-data fails on large bodies via
+    // Next.js' request.formData() parser. Metadata goes in query string.
+    const qs = new URLSearchParams({ orgId, filename: file.name });
+    xhr.open("POST", `/api/admin/beam/import?${qs.toString()}`);
+    xhr.setRequestHeader("Content-Type", "application/octet-stream");
+    xhr.send(file);
 
     return () => {
       // Don't abort on unmount — let the import finish in the background.
