@@ -1,28 +1,39 @@
 /**
- * POST /api/admin/beam/import — Upload and import a .beam archive.
+ * POST /api/admin/beam/import — Chunked upload + import of a .beam archive.
  *
- * Body: raw binary (.beam ZIP bytes). Metadata in query string.
+ * Why chunks: Fly.io's edge proxy caps request bodies at ~10 MB. Real .beam
+ * files routinely exceed that (sanne-andersen.beam is 14.3 MB). We split
+ * client-side into 4 MB pieces, write them to a temp dir keyed by uploadId,
+ * then concatenate + import on finalize.
  *
- * We deliberately avoid `multipart/form-data` here because Next.js'
- * `request.formData()` parser fails on large bodies (>~10 MB) with
- * "Failed to parse body as FormData" — the .beam archives we're
- * importing routinely exceed that. Raw binary via `request.arrayBuffer()`
- * has no such limit.
+ * Two actions, both POST, both raw binary or empty body, action chosen via
+ * `?action=`:
+ *   - action=chunk   query: uploadId, index            body: chunk bytes
+ *   - action=finalize query: uploadId, orgId, filename, total, overwrite?, skipMedia?
  *
- * Query params:
- *   - orgId (required): target org ID
- *   - filename (optional): original filename for logging/validation
- *   - overwrite=true to overwrite existing site
- *   - skipMedia=true to skip media files
- *
- * Auth: middleware-protected (admin routes).
+ * Auth: middleware-protected (admin routes); we double-check role here.
  */
 import { NextRequest, NextResponse } from "next/server";
 import { importBeamArchive } from "@/lib/beam/import";
 import { getSiteRole } from "@/lib/require-role";
+import { mkdir, writeFile, readFile, rm } from "node:fs/promises";
+import path from "node:path";
+import os from "node:os";
 
 export const runtime = "nodejs";
 export const maxDuration = 300;
+
+const TMP_BASE = path.join(os.tmpdir(), "beam-uploads");
+
+function safeUploadId(id: string | null): string | null {
+  if (!id) return null;
+  if (!/^[a-zA-Z0-9-]{8,64}$/.test(id)) return null;
+  return id;
+}
+
+function chunkPath(uploadId: string, index: number): string {
+  return path.join(TMP_BASE, uploadId, `chunk-${String(index).padStart(6, "0")}.bin`);
+}
 
 export async function POST(request: NextRequest) {
   const role = await getSiteRole();
@@ -30,55 +41,78 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Admin only" }, { status: 403 });
   }
 
+  const url = new URL(request.url);
+  const action = url.searchParams.get("action");
+
   try {
-    const url = new URL(request.url);
-    const orgId = url.searchParams.get("orgId");
-    const filename = url.searchParams.get("filename") ?? "";
-    const overwrite = url.searchParams.get("overwrite") === "true";
-    const skipMedia = url.searchParams.get("skipMedia") === "true";
-
-    if (!orgId) {
-      return NextResponse.json({ error: "Missing orgId" }, { status: 400 });
+    if (action === "chunk") {
+      const uploadId = safeUploadId(url.searchParams.get("uploadId"));
+      const indexRaw = url.searchParams.get("index");
+      const index = indexRaw ? Number(indexRaw) : NaN;
+      if (!uploadId) {
+        return NextResponse.json({ error: "Invalid uploadId" }, { status: 400 });
+      }
+      if (!Number.isInteger(index) || index < 0 || index > 10_000) {
+        return NextResponse.json({ error: "Invalid chunk index" }, { status: 400 });
+      }
+      const dir = path.join(TMP_BASE, uploadId);
+      await mkdir(dir, { recursive: true });
+      const buf = Buffer.from(await request.arrayBuffer());
+      if (buf.length === 0) {
+        return NextResponse.json({ error: "Empty chunk" }, { status: 400 });
+      }
+      await writeFile(chunkPath(uploadId, index), buf);
+      return NextResponse.json({ success: true, received: buf.length });
     }
-    if (filename && !filename.endsWith(".beam")) {
-      return NextResponse.json({ error: "File must be a .beam archive" }, { status: 400 });
-    }
 
-    const contentLength = Number(request.headers.get("content-length") ?? 0);
-    const buffer = Buffer.from(await request.arrayBuffer());
+    if (action === "finalize") {
+      const uploadId = safeUploadId(url.searchParams.get("uploadId"));
+      const orgId = url.searchParams.get("orgId");
+      const filename = url.searchParams.get("filename") ?? "";
+      const totalRaw = url.searchParams.get("total");
+      const total = totalRaw ? Number(totalRaw) : NaN;
+      const overwrite = url.searchParams.get("overwrite") === "true";
+      const skipMedia = url.searchParams.get("skipMedia") === "true";
 
-    console.log(`[beam/import] received bytes=${buffer.length} content-length=${contentLength} filename=${filename || "<none>"}`);
+      if (!uploadId) {
+        return NextResponse.json({ error: "Invalid uploadId" }, { status: 400 });
+      }
+      if (!orgId) {
+        return NextResponse.json({ error: "Missing orgId" }, { status: 400 });
+      }
+      if (!Number.isInteger(total) || total < 1 || total > 10_000) {
+        return NextResponse.json({ error: "Invalid chunk count" }, { status: 400 });
+      }
+      if (filename && !filename.endsWith(".beam")) {
+        return NextResponse.json({ error: "File must be a .beam archive" }, { status: 400 });
+      }
 
-    if (buffer.length === 0) {
-      return NextResponse.json({ error: "Empty body — no .beam payload received" }, { status: 400 });
-    }
-    if (contentLength > 0 && buffer.length !== contentLength) {
-      return NextResponse.json({
-        error: `Truncated upload: expected ${contentLength} bytes, received ${buffer.length}`,
-      }, { status: 400 });
-    }
-    // ZIP files end with the End of Central Directory marker `PK\x05\x06`.
-    // If absent, the upload was mangled in transit (often because something
-    // along the chain treated the body as text).
-    const last22 = buffer.subarray(Math.max(0, buffer.length - 22));
-    const eocdIndex = last22.indexOf(Buffer.from([0x50, 0x4b, 0x05, 0x06]));
-    if (eocdIndex === -1) {
-      // Search wider in case there's a comment field
-      const widerScan = buffer.subarray(Math.max(0, buffer.length - 65557));
-      const wideEocd = widerScan.lastIndexOf(Buffer.from([0x50, 0x4b, 0x05, 0x06]));
-      if (wideEocd === -1) {
-        return NextResponse.json({
-          error: `Upload mangled: no ZIP end-of-central-directory in ${buffer.length}-byte body. Body was likely corrupted in transit (text encoding or proxy buffering).`,
-        }, { status: 400 });
+      const parts: Buffer[] = [];
+      for (let i = 0; i < total; i++) {
+        try {
+          parts.push(await readFile(chunkPath(uploadId, i)));
+        } catch {
+          return NextResponse.json({
+            error: `Missing chunk ${i} of ${total} — upload incomplete`,
+          }, { status: 400 });
+        }
+      }
+      const buffer = Buffer.concat(parts);
+      console.log(`[beam/import] finalize uploadId=${uploadId} chunks=${total} bytes=${buffer.length}`);
+
+      try {
+        const result = await importBeamArchive(buffer, orgId, { overwrite, skipMedia });
+        return NextResponse.json({ success: true, ...result });
+      } finally {
+        rm(path.join(TMP_BASE, uploadId), { recursive: true, force: true }).catch(() => {
+          /* best-effort cleanup */
+        });
       }
     }
 
-    const result = await importBeamArchive(buffer, orgId, { overwrite, skipMedia });
-
     return NextResponse.json({
-      success: true,
-      ...result,
-    });
+      error: "Missing or invalid ?action= (expected 'chunk' or 'finalize')",
+    }, { status: 400 });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Import failed";
     console.error("[beam/import]", message);

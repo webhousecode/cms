@@ -46,6 +46,11 @@ function formatBytes(b: number): string {
  *
  * On success: shows result stats. On error: shows the message.
  */
+// Fly's edge proxy caps request bodies around 10 MB, so we ship in 4 MB
+// chunks. Each chunk arrives well under the cap; the server reassembles
+// before running the actual import.
+const CHUNK_SIZE = 4 * 1024 * 1024;
+
 export function BeamImportModal({ file, orgId, onClose, onDone }: Props) {
   const [phase, setPhase] = useState<Phase>("uploading");
   const [uploaded, setUploaded] = useState(0);
@@ -54,53 +59,86 @@ export function BeamImportModal({ file, orgId, onClose, onDone }: Props) {
   const xhrRef = useRef<XMLHttpRequest | null>(null);
 
   useEffect(() => {
-    const xhr = new XMLHttpRequest();
-    xhrRef.current = xhr;
     let cancelled = false;
+    const uploadId = (typeof crypto !== "undefined" && crypto.randomUUID)
+      ? crypto.randomUUID()
+      : `u-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
-    xhr.upload.addEventListener("progress", (e) => {
-      if (e.lengthComputable) setUploaded(e.loaded);
-    });
-    xhr.upload.addEventListener("load", () => {
-      setPhase("processing");
-      setUploaded(file.size);
-    });
-    xhr.addEventListener("load", () => {
+    function uploadChunk(chunk: Blob, index: number, baseLoaded: number): Promise<void> {
+      return new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhrRef.current = xhr;
+        xhr.upload.addEventListener("progress", (e) => {
+          if (e.lengthComputable) setUploaded(baseLoaded + e.loaded);
+        });
+        xhr.addEventListener("load", () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve();
+          } else {
+            try {
+              const data = JSON.parse(xhr.responseText);
+              reject(new Error(data.error ?? `Chunk ${index} failed (HTTP ${xhr.status})`));
+            } catch {
+              reject(new Error(`Chunk ${index} failed (HTTP ${xhr.status})`));
+            }
+          }
+        });
+        xhr.addEventListener("error", () => reject(new Error("Network error during upload")));
+        xhr.addEventListener("abort", () => reject(new Error("Upload cancelled")));
+
+        chunk.arrayBuffer().then((buf) => {
+          if (cancelled) { reject(new Error("Cancelled")); return; }
+          const qs = new URLSearchParams({ action: "chunk", uploadId, index: String(index) });
+          xhr.open("POST", `/api/admin/beam/import?${qs.toString()}`);
+          xhr.setRequestHeader("Content-Type", "application/octet-stream");
+          xhr.send(buf);
+        }).catch(reject);
+      });
+    }
+
+    async function run() {
       try {
-        const data = JSON.parse(xhr.responseText);
-        if (xhr.status >= 200 && xhr.status < 300 && data.success) {
-          setResult(data);
-          setPhase("done");
-          onDone(data);
-        } else {
-          setError(data.error ?? `Import failed (HTTP ${xhr.status})`);
-          setPhase("error");
+        const totalChunks = Math.max(1, Math.ceil(file.size / CHUNK_SIZE));
+        for (let i = 0; i < totalChunks; i++) {
+          if (cancelled) return;
+          const start = i * CHUNK_SIZE;
+          const end = Math.min(file.size, start + CHUNK_SIZE);
+          await uploadChunk(file.slice(start, end), i, start);
+          setUploaded(end);
         }
-      } catch {
-        setError(`Import failed (HTTP ${xhr.status})`);
+        if (cancelled) return;
+
+        setPhase("processing");
+        const finalQs = new URLSearchParams({
+          action: "finalize",
+          uploadId,
+          orgId,
+          filename: file.name,
+          total: String(totalChunks),
+        });
+        const finalRes = await fetch(`/api/admin/beam/import?${finalQs.toString()}`, {
+          method: "POST",
+        });
+        const data = await finalRes.json().catch(() => ({}));
+        if (!finalRes.ok || !data.success) {
+          setError(data.error ?? `Finalize failed (HTTP ${finalRes.status})`);
+          setPhase("error");
+          return;
+        }
+        setResult(data);
+        setPhase("done");
+        onDone(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : String(err));
         setPhase("error");
       }
-    });
-    xhr.addEventListener("error", () => { setError("Network error during import"); setPhase("error"); });
-    xhr.addEventListener("abort", () => { setError("Import cancelled"); setPhase("error"); });
+    }
 
-    // Read the file into an ArrayBuffer FIRST, then send. Sending a File
-    // directly via xhr.send(file) lets browsers re-detect the body type
-    // and can subtly change the wire format. ArrayBuffer is unambiguous.
-    const qs = new URLSearchParams({ orgId, filename: file.name });
-    file.arrayBuffer().then((buf) => {
-      if (cancelled) return;
-      xhr.open("POST", `/api/admin/beam/import?${qs.toString()}`);
-      xhr.setRequestHeader("Content-Type", "application/octet-stream");
-      xhr.send(buf);
-    }).catch((err) => {
-      setError(`Failed to read file: ${err instanceof Error ? err.message : String(err)}`);
-      setPhase("error");
-    });
+    run();
 
     return () => {
       cancelled = true;
-      // Don't abort on unmount — let the import finish in the background.
+      // Don't abort in-flight chunk on unmount — let it finish.
       xhrRef.current = null;
     };
   }, [file, orgId, onDone]);
