@@ -64,32 +64,102 @@ packages/cms-admin/
 ├── src/lib/build-server/
 │   ├── runtime.ts            ← spawn child_process for build.ts
 │   ├── dep-resolver.ts       ← computes NODE_PATH for build.ts run
-│   ├── extra-deps.ts         ← on-demand pnpm install for cms.config.build.deps
+│   ├── dep-scanner.ts        ← AUTO: parse build.ts → list of npm imports
+│   ├── extra-deps.ts         ← on-demand pnpm install (background-queued)
+│   ├── install-queue.ts      ← serialise pnpm installs på Fly volumen
 │   └── log-streamer.ts       ← pipe stdout/stderr → Deploy-modal SSE
 └── /var/cms-admin/build-deps/
     └── <hash-of-deps>/
         └── node_modules/     ← installed once, reused on tværs af sites
 ```
 
+### Auto-detect npm dependencies fra build.ts (no manual config required)
+
+Når et site **registreres** (Add Site), **beames ind** (Beam-finalize), eller **build.ts ændres** (filesystem watcher / commit-trigger), kører cms-admin auto-detection:
+
+```
+1. Læs site's build.ts (+ enhver .ts fil i samme mappe build.ts importerer fra)
+2. Parse via es-module-lexer (fast, no AST overhead) — extract alle `import x from 'pkg'` + `require('pkg')` + `import('pkg')` statements
+3. For hver string: filtrér væk
+   - `node:`-builtins (`node:fs`, `node:path`, ...)
+   - relative paths (`./utils`, `../shared`)
+   - core-deps der allerede er pre-installed i cms-admin's package.json
+4. For scoped pakker (`@webhouse/cms`) eller submodul-imports (`marked/lib/X`):
+   normaliser til root-pakkenavnet (`@webhouse/cms`, `marked`)
+5. Resultatet er listen af extra deps sitet har behov for
+6. Hvis listen ≠ tom: enqueue background pnpm install i build-deps store
+```
+
+Dette gør `cms.config.ts.build.deps`-feltet **valgfrit** — du behøver kun bruge det når du vil pinne en specifik version (`'three@^0.158.0'`) eller deklarere en dep der ikke kommer fra static import (fx en CLI tool build.ts spawner via `execSync`).
+
+### Background-install på Fly.io
+
+Auto-detect kører ved 3 events: site-register, Beam-finalize, build.ts-changed. Installen er **non-blocking**:
+
+```
+Trigger detected (build.ts has new import)
+   │
+   ▼
+install-queue.enqueue({ siteId, deps: [...] })
+   │
+   ▼ (worker tager fra køen, max 1 concurrent install pr volumen)
+   │
+pnpm install --prefix /var/cms-admin/build-deps/<hash> <deps...>
+   │
+   ▼ (skrives til install-status.json: { hash, status, log, finishedAt })
+   │
+Site marker som "deps-ready" → rocket-knappen er nu enabled
+```
+
+Live-status vises i Deploy-modal: "Installing 2 new packages: three, d3-force…" med live progress fra pnpm. Når den er færdig flipper Deploy-knappen fra disabled til enabled.
+
+**Hvis bruger trykker rocket FØR install er færdig:** modal venter, viser install-progress + "deploy will start when packages are ready". Ingen fejl, bare en tydelig "vent et øjeblik".
+
+**Hvis install fejler** (network outage, package udgivet med broken deps, etc.): modal viser pnpm error verbatim, deploy-knappen forbliver disabled, retry-knap synlig. Site forbliver i "deps-pending" state indtil manuelt fix eller dep-list ændres.
+
+### Cms.config.ts.build.deps — manual override (valgfri)
+
+Auto-detect dækker 99%. Brug `build.deps` kun når du vil:
+
+- **Pinne en version** for reproducerbarhed:
+  ```ts
+  build: { deps: ['three@^0.158.0', 'marked@^15.0.0'] }
+  ```
+- **Tilføje en dep der ikke kommer fra static import** (fx en CLI build.ts spawner):
+  ```ts
+  build: { deps: ['imagemin-cli'] }  // build.ts kalder `npx imagemin-cli`
+  ```
+- **Force-include en dep** der auto-scanneren overså (rare edge case):
+  ```ts
+  build: { deps: ['some-dep-only-loaded-via-string-eval'] }
+  ```
+
+Når både auto-scan og manual deps eksisterer, **manual wins** for samme pakke (giver pin-versions). Auto-detected deps der ikke er manuelt overstyret bruger `latest`.
+
 ### Build trigger flow (efter F143)
 
 ```
 User trykker rocket på site X
   │
-  ├─ Læs cms.config.ts → build.deps?
+  ├─ Læs cms.config.ts → manual build.deps + auto-scanned deps fra build.ts
   │
   ├─ Compute combined NODE_PATH:
   │     1. cms-admin's egen node_modules (core deps)
   │     2. /var/cms-admin/build-deps/<hash>/node_modules (hvis extra deps)
   │
-  ├─ Hvis hash mangler: pnpm install --prefix /var/cms-admin/build-deps/<hash>
-  │     pnpm content-addressable store: dep findes nok globalt → snapshot er ms-hurtig
+  ├─ Hvis install allerede er kørt (auto-detect ved site-register/beam):
+  │     hash findes, springer install over → øjeblikkelig deploy
+  │
+  ├─ Hvis hash mangler (sjældent — kun hvis auto-scan blev sprunget):
+  │     install-queue + vent → Deploy-modal viser install-progress
   │
   ├─ Spawn child_process: NODE_PATH=<combined> npx tsx <projectDir>/build.ts
   │     stdout/stderr piped → Deploy-modal SSE
   │
   └─ Output i deploy/ → push til host (gh-pages / CF Pages / Fly static)
 ```
+
+**Vigtig konsekvens af auto-detect:** for 99% af deploys er der **ingen ventetid på install** ved rocket-tryk — installen er allerede kørt i baggrunden da sitet blev registreret eller beamed.
 
 ### Module resolution — hvordan build.ts ser de delte deps
 
@@ -190,7 +260,7 @@ Brugere får samme debug-erfaring som hvis de havde kørt `npx tsx build.ts` lok
 - **F89 (post-build enrichment)**: uændret — kører post-build som i dag
 - **F44 (media processing)**: deler `sharp` instans med build-server's core-deps pulje
 
-## Rollout — 4 phases
+## Rollout — 5 phases
 
 ### Phase 1 — Foundation (1 dag)
 - Add core-deps til cms-admin/package.json: marked, gray-matter, slugify, sharp, marked-highlight
@@ -202,16 +272,34 @@ Brugere får samme debug-erfaring som hvis de havde kørt `npx tsx build.ts` lok
 - Udvid Beam's source-list til at inkludere build.ts + cms.config.ts + tsconfig.json + public/ (eksklusive node_modules, .next, dist, deploy)
 - Tests: re-Beam trail-landing, verificér at /data/cms-admin/beam-sites/trail/ får alt det nødvendige UNDTAGEN node_modules
 
-### Phase 3 — Extra-deps system (1.5 dag)
-- Implement `cms.config.ts.build.deps` parsing
+### Phase 3 — Extra-deps system (1 dag)
+- Implement `cms.config.ts.build.deps` parsing (manual override path)
 - Implement `/var/cms-admin/build-deps/<hash>/` content-addressable store
 - Implement on-demand `pnpm install` ved første brug af et nyt deps-set
 - Tests: site med extra deps deployer succesfuldt fra både lokal og webhouse.app
 
-### Phase 4 — Pilot + cleanup (1-2 dage)
-- Pilot: trail-landing — slet `apps/landing/node_modules` og `package-lock.json`, behold build.ts. Re-Beam. Verificér rocket fra webhouse.app virker.
-- Update Beam UI: vis explicit at "build environment provided by cms-admin" (no per-site install needed)
-- Document i AI Builder Guide og README
+### Phase 4 — Auto-detect + background install (1-1.5 dag)
+- Implement `dep-scanner.ts` med es-module-lexer:
+  - Parse build.ts (+ enhver .ts som build.ts importerer fra samme mappe)
+  - Extract `import x from 'pkg'` + `require('pkg')` + dynamic `import('pkg')` strings
+  - Filtrér node:-builtins, relative paths, og deps der allerede er pre-installed i cms-admin
+  - Normaliser scoped (`@webhouse/cms`) og submodul (`marked/lib/X` → `marked`) imports
+- Implement `install-queue.ts`: serialise pnpm installs på Fly volumen, max 1 concurrent (deps-store skrives til fællesvolumen, undgå race conditions)
+- Hook auto-detect ind på 3 events:
+  1. `POST /api/admin/sites` (Add Site) — efter site er registered, kør scan + queue install hvis nye deps
+  2. `POST /api/admin/beam/finalize` — efter Beam-import, kør scan + queue install
+  3. Filesystem watcher på build.ts (kun ved filesystem-adapter sites) — debounce 5 sek, scan + queue ved change
+- Skriv `install-status.json` per hash: `{ status: 'pending'|'installing'|'ready'|'failed', log, deps, finishedAt }`
+- Deploy-modal læser install-status: hvis pending/installing → vis live progress + disable Deploy-knap; hvis failed → vis error + retry; hvis ready → enable Deploy-knap
+- Tests:
+  - Add a new site med build.ts der importerer `lodash` → verificér lodash bliver auto-installed i baggrund
+  - Beam et site med build.ts der bruger `three` → verificér install starter umiddelbart efter beam-finalize
+  - Edit build.ts til at tilføje en ny import → verificér install kører automatisk via filesystem watcher
+
+### Phase 5 — Pilot + cleanup (1 dag)
+- Pilot: trail-landing — slet `apps/landing/node_modules` og `package-lock.json`, behold build.ts. Re-Beam. Verificér auto-detect kører på beam-finalize, marked auto-installeres, og rocket fra webhouse.app virker uden manuel intervention.
+- Update Beam UI: vis explicit at "build environment provided by cms-admin" + live install-progress under beam-finalize
+- Document i AI Builder Guide og README — herunder at AI/dev sessions IKKE behøver opdatere `cms.config.ts.build.deps` manuelt; auto-detect står for det
 
 ## Acceptance criteria
 
@@ -221,6 +309,9 @@ Brugere får samme debug-erfaring som hvis de havde kørt `npx tsx build.ts` lok
 4. Build-tid <5 sec for trail-landing (samme som lokalt)
 5. Site med `build.deps: ['three']` declared deployer succesfuldt; second site med samme deps genbruger installation (no re-install)
 6. Concurrent rocket-trigger på 2 sites blokkerer ikke hinanden (queue fungerer)
+7. **Auto-detect**: Add Site med en build.ts der importerer `lodash` triggerer baggrunds-install af `lodash` UDEN at brugeren manuelt skal opdatere `cms.config.ts.build.deps`
+8. **Auto-detect on beam**: Beam-import af et nyt site triggerer auto-scan + install ved finalize, så Deploy-knappen er enabled fra første sekund efter beam er færdig (eller venter med tydelig progress hvis install stadig kører)
+9. **Auto-detect on edit**: AI/dev session som ændrer build.ts og tilføjer en `import { foo } from 'new-pkg'` får automatisk `new-pkg` installeret uden manuelt indgreb, inden næste deploy
 
 ## Risici + afbødning
 
@@ -230,6 +321,10 @@ Brugere får samme debug-erfaring som hvis de havde kørt `npx tsx build.ts` lok
 | extra-deps install hænger / fejler første gang | Lav-mellem | Timeout + retry + clear error i Deploy-modal |
 | pnpm content-store fylder volumen op | Lav | Cleanup job: slet build-deps directories der ikke har været tilgået i 30 dage |
 | build.ts skriver til steder uden for projectDir | Lav | child_process kører som non-root user med begrænset write-access (kun til projectDir/deploy/) |
+| **Auto-scanner overser en dep** (fx loaded via dynamic string-eval, eller import-side-effect uden symbol use) | Lav-mellem | Manual `cms.config.ts.build.deps` override eksisterer netop til disse cases. Build fejler tydeligt med "Cannot find module 'X'" — bruger tilføjer X til `build.deps` |
+| **Auto-scanner false-positive** (matcher en streng der ligner en import) | Meget lav | es-module-lexer er AST-baseret, ikke regex — false positives er praktisk udelukket |
+| **Auto-install på Fly er langsom og blokkerer Beam-finalize** | Mellem | Install kører i baggrund (non-blocking) — beam-finalize returnerer som normalt; Deploy-knap aktiveres når install er færdig (sekunder for almindelige deps fra pnpm content-store) |
+| **Race condition: 2 sites beames samtidigt med samme deps** | Lav | install-queue serialiserer (max 1 concurrent på samme volumen); andet site får "deps ready" instant uden at re-installere |
 | Multi-tenant: site A's build kan se site B's secrets | Mellem | child_process env-vars renses per spawn; kun site-relevante secrets passes ind |
 
 ## Relateret incident
