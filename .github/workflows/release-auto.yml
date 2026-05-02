@@ -1,0 +1,170 @@
+name: Auto-release (semver from conventional commits)
+
+# Reads commits since the last v*.*.* tag and bumps:
+#   feat:   → minor   (0.2.17 → 0.3.0)
+#   fix:    → patch   (0.2.17 → 0.2.18)
+#   feat!:, fix!:, BREAKING CHANGE → major (0.2.17 → 1.0.0)
+#   nothing matched → skip (no release)
+#
+# Bumps every package.json in packages/* (they're version-locked) +
+# packages/create-cms/template/package.json if present, then creates
+# and pushes an annotated tag. The existing release-stable.yml workflow
+# picks up the tag push and runs the full Docker build + GitHub Release.
+#
+# Schedule: Monday 12:00 UTC — gives us a stable release every week
+# automatically, so the changelog never goes 19 days + 206 commits stale
+# again. Manual trigger always available.
+
+on:
+  schedule:
+    - cron: "0 12 * * 1"   # Monday 12:00 UTC (4 hours before weekly CalVer build)
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Force bump (major/minor/patch) — skips commit analysis"
+        required: false
+        type: choice
+        default: "auto"
+        options:
+          - auto
+          - patch
+          - minor
+          - major
+      dry_run:
+        description: "Compute next version but don't tag/push"
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: write   # need to push tag + commit
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Compute next version
+        id: ver
+        run: |
+          set -euo pipefail
+          last_tag=$(git tag -l 'v*.*.*' --sort=-version:refname | head -1)
+          if [ -z "$last_tag" ]; then
+            echo "::error::No v*.*.* tag found — bootstrap with v0.1.0 manually"
+            exit 1
+          fi
+          last_version="${last_tag#v}"
+          IFS='.' read -r major minor patch <<< "$last_version"
+          echo "Last tag: $last_tag (major=$major minor=$minor patch=$patch)"
+
+          forced="${{ inputs.bump }}"
+          if [ -z "$forced" ] || [ "$forced" = "auto" ]; then
+            # Scan commit messages since last tag.
+            log=$(git log "${last_tag}..HEAD" --pretty=format:'%s%n%b%n---%n')
+            commit_count=$(git rev-list --count "${last_tag}..HEAD")
+            echo "Commits since $last_tag: $commit_count"
+            if [ "$commit_count" -eq 0 ]; then
+              echo "No commits since last tag — nothing to release."
+              echo "should_release=false" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+
+            bump="patch"
+            # Look at first-line subjects only for breaking/feat/fix.
+            subjects=$(git log "${last_tag}..HEAD" --pretty=format:'%s')
+            bodies=$(git log "${last_tag}..HEAD" --pretty=format:'%b')
+            if echo "$subjects" | grep -qE '^(feat|fix|chore|refactor|perf|build|docs|style|test|ci)(\(.+\))?!:' \
+               || echo "$bodies" | grep -qE 'BREAKING CHANGE'; then
+              bump="major"
+            elif echo "$subjects" | grep -qE '^feat(\(.+\))?:'; then
+              bump="minor"
+            elif echo "$subjects" | grep -qE '^fix(\(.+\))?:'; then
+              bump="patch"
+            else
+              # No conventional commits at all — keep it as patch but flag.
+              echo "::warning::No feat:/fix:/BREAKING CHANGE commits found — defaulting to patch."
+            fi
+          else
+            bump="$forced"
+          fi
+          echo "Bump: $bump"
+
+          case "$bump" in
+            major) major=$((major+1)); minor=0; patch=0 ;;
+            minor) minor=$((minor+1)); patch=0 ;;
+            patch) patch=$((patch+1)) ;;
+          esac
+          new_version="${major}.${minor}.${patch}"
+          new_tag="v${new_version}"
+          echo "Next: $new_tag"
+          echo "should_release=true" >> "$GITHUB_OUTPUT"
+          echo "old_tag=$last_tag"          >> "$GITHUB_OUTPUT"
+          echo "new_version=$new_version"   >> "$GITHUB_OUTPUT"
+          echo "new_tag=$new_tag"           >> "$GITHUB_OUTPUT"
+          echo "bump=$bump"                 >> "$GITHUB_OUTPUT"
+
+      - name: Bump package.json files
+        if: steps.ver.outputs.should_release == 'true' && inputs.dry_run != true
+        run: |
+          set -euo pipefail
+          new="${{ steps.ver.outputs.new_version }}"
+          # Every publishable package shares the same version (cms-admin
+          # has its own track per CLAUDE.md, but we rev it together for now).
+          for pkg in packages/*/package.json; do
+            if [ -f "$pkg" ]; then
+              # Use node so we don't trip over JSON quoting in sed.
+              node -e "const fs=require('fs'); const p=require('./$pkg'); p.version='$new'; fs.writeFileSync('$pkg', JSON.stringify(p,null,2)+'\n');"
+              echo "  bumped $pkg → $new"
+            fi
+          done
+          # Scaffolder template too, if present (so newly-created sites
+          # peg to the released version).
+          for tpl in packages/create-cms/template/package.json packages/create-cms/template/*/package.json; do
+            if [ -f "$tpl" ]; then
+              node -e "const fs=require('fs'); const p=require('./$tpl'); if(p.dependencies && p.dependencies['@webhouse/cms']) p.dependencies['@webhouse/cms']='^$new'; fs.writeFileSync('$tpl', JSON.stringify(p,null,2)+'\n');" || true
+              echo "  template touched: $tpl"
+            fi
+          done
+
+      - name: Commit, tag, push
+        if: steps.ver.outputs.should_release == 'true' && inputs.dry_run != true
+        run: |
+          set -euo pipefail
+          new_tag="${{ steps.ver.outputs.new_tag }}"
+          new_version="${{ steps.ver.outputs.new_version }}"
+          old_tag="${{ steps.ver.outputs.old_tag }}"
+          bump="${{ steps.ver.outputs.bump }}"
+          commit_count=$(git rev-list --count "${old_tag}..HEAD")
+
+          git config user.name "webhouse-release-bot"
+          git config user.email "release-bot@webhouse.dk"
+
+          # Generate a tag annotation with a release summary.
+          {
+            echo "Release ${new_tag}"
+            echo ""
+            echo "${commit_count} commits since ${old_tag} (${bump} bump)"
+            echo ""
+            echo "## Highlights"
+            git log "${old_tag}..HEAD" --pretty=format:'- %s' | grep -E '^- (feat|fix|BREAKING)' | head -20 || true
+          } > /tmp/tag-annotation.txt
+
+          git add packages/*/package.json packages/create-cms/template 2>/dev/null || true
+          git commit -m "chore: release ${new_tag}" -m "Auto-bumped via release-auto workflow (${bump})." || echo "(no package.json changes — tag-only release)"
+          git tag -a "${new_tag}" -F /tmp/tag-annotation.txt
+          git push origin HEAD:main
+          git push origin "${new_tag}"
+
+          echo "Tagged ${new_tag} — release-stable workflow takes over from here."
+
+      - name: Dry-run summary
+        if: inputs.dry_run == true
+        run: |
+          echo "## Dry run"
+          echo "Would create tag: ${{ steps.ver.outputs.new_tag }}"
+          echo "Bump: ${{ steps.ver.outputs.bump }}"
+          echo "Old tag: ${{ steps.ver.outputs.old_tag }}"
