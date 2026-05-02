@@ -157,6 +157,7 @@
 | F141 | [Site Switch Context Leak](#f141-site-switch-context-leak) | Planned | [docs/features/F141-site-switch-context-leak.md](features/F141-site-switch-context-leak.md) |
 | F142 | [Templated SSG Runtime](#f142-templated-ssg-runtime) | Planned | [docs/features/F142-templated-ssg-runtime.md](features/F142-templated-ssg-runtime.md) |
 | F143 | [Common Build Server](#f143-common-build-server) | Planned | [docs/features/F143-common-build-server.md](features/F143-common-build-server.md) |
+| F144 | [Dynamic Site Build Orchestrator](#f144-dynamic-site-build-orchestrator) | Planned | [docs/features/F144-dynamic-site-build-orchestrator.md](features/F144-dynamic-site-build-orchestrator.md) |
 
 ---
 
@@ -588,4 +589,8 @@ Built-in templated static-site generator inside cms-admin so filesystem-adapter 
 
 ## F143 — Common Build Server
 
-Indbygget build-server-modul i cms-admin. Bevarer `build.ts` som kontrakt, men flytter execution til cms-admin's egen Node-proces (child_process). Pre-installerede core-deps (marked, sharp etc.) genbruges på tværs af alle sites — per-site `node_modules` forsvinder. Sites med eksotiske behov declarer `cms.config.ts.build.deps` → on-demand pnpm install i delt content-addressable store. Pragmatisk near-term path: 3-5 dage at ship, ingen migration af eksisterende sites. Søsterplan til F142 (de koeksisterer).
+Indbygget build-server-modul i cms-admin. Bevarer `build.ts` som kontrakt, men flytter execution til cms-admin's egen Node-proces (child_process). Pre-installerede core-deps (marked, sharp etc.) genbruges på tværs af alle sites — per-site `node_modules` forsvinder. Sites med eksotiske behov declarer `cms.config.ts.build.deps` → on-demand pnpm install i delt content-addressable store. Auto-detect via es-module-lexer scanner build.ts og installerer nye deps i baggrund. PIN-FIRST principle: vi opgraderer aldrig automatisk — auto-detected versioner pin'es, upgrades sker via eksplicit user action med smoke-build verification + 7-dages rollback. Pragmatisk near-term path: 6-8 dage at ship, ingen migration af eksisterende sites. Søsterplan til F142 (de koeksisterer).
+
+## F144 — Dynamic Site Build Orchestrator
+
+cms-admin orkestrerer ephemeral Fly Machines som build-VM'er for SSR sites (Next.js, Bun/Hono). Builder pulls source fra GitHub eller cms-admin's egen disk, genererer Dockerfile, builder image, pusher til GHCR, og cms-admin orchestrerer rolling restart af target Fly app. 3 build-triggers støttes: manual rocket i admin, site-repo's egen GHA der POST'er til rebuild API, eller GitHub webhook direkte til cms-admin (zero-touch). Genbruger F143's source-mgmt + dep-scanner + install-queue. Cost: ~$0.01 per Next.js deploy. Erstatter "flyctl deploy fra terminalen" med en knap i admin med live build-logs + smoke-test + auto-rollback. 4-6 dage forudsat F143 er landed.
