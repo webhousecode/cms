@@ -80,7 +80,42 @@ export async function getUsers(): Promise<User[]> {
     const content = await fs.readFile(filePath, "utf-8");
     return JSON.parse(content) as User[];
   } catch {
+    // Backwards-compat read path used by listing/lookup. Always returns []
+    // on any failure. Do NOT use this from createUser/updateUser/etc.,
+    // because a silent [] there would let a write OVERWRITE existing
+    // users (the 2026-05-01 takeover incident). Use getUsersStrict()
+    // for any code path that's about to mutate users.json.
     return [];
+  }
+}
+
+/**
+ * Strict variant of getUsers() — distinguishes "file legitimately doesn't
+ * exist yet" (returns []) from "file exists but is unreadable / corrupt"
+ * (throws). Required precondition for any code path that's about to write
+ * users.json: if we can't actually see existing users, we MUST refuse to
+ * write or we'll silently nuke them.
+ */
+async function getUsersStrict(): Promise<User[]> {
+  const filePath = await getUsersFilePath();
+  let content: string;
+  try {
+    content = await fs.readFile(filePath, "utf-8");
+  } catch (err) {
+    const e = err as NodeJS.ErrnoException;
+    if (e.code === "ENOENT") return []; // legitimately empty (fresh install)
+    throw new Error(
+      `Refusing to mutate users.json — current state is unreadable (${e.code ?? "unknown error"}). ` +
+      `Investigate before retrying; a blind write here would silently overwrite existing users.`,
+    );
+  }
+  try {
+    return JSON.parse(content) as User[];
+  } catch {
+    throw new Error(
+      "Refusing to mutate users.json — current contents are not valid JSON. " +
+      "Restore from a known-good backup before retrying.",
+    );
   }
 }
 
@@ -90,7 +125,7 @@ export async function createUser(
   name: string,
   opts?: { role?: UserRole; invitedBy?: string; source?: "local" | "github" | "invite"; githubUsername?: string },
 ): Promise<User> {
-  const users = await getUsers();
+  const users = await getUsersStrict();
   if (users.find((u) => u.email.toLowerCase() === email.toLowerCase())) {
     throw new Error("User already exists");
   }
@@ -138,7 +173,7 @@ export async function updateUser(
   /** Fallback email for lookup if id doesn't match (stale JWT) */
   fallbackEmail?: string,
 ): Promise<User> {
-  const users = await getUsers();
+  const users = await getUsersStrict();
   let idx = users.findIndex((u) => u.id === id);
   // Fallback: match by email if ID doesn't match (e.g. stale JWT after data migration)
   if (idx === -1 && fallbackEmail) {
@@ -173,7 +208,7 @@ export async function verifyToken(token: string): Promise<SessionPayload | null>
 }
 
 export async function deleteUser(id: string): Promise<void> {
-  const users = await getUsers();
+  const users = await getUsersStrict();
   const idx = users.findIndex((u) => u.id === id);
   if (idx === -1) throw new Error("User not found");
   // Prevent deleting the last admin
@@ -188,7 +223,7 @@ export async function deleteUser(id: string): Promise<void> {
 
 /** Low-level: replace a user record (used by webauthn for passkey mutations). */
 export async function saveUser(updated: User): Promise<void> {
-  const users = await getUsers();
+  const users = await getUsersStrict();
   const idx = users.findIndex((u) => u.id === updated.id);
   if (idx === -1) throw new Error("User not found");
   users[idx] = updated;
