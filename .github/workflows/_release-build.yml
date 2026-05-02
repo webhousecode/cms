@@ -59,6 +59,13 @@ jobs:
       - name: Install deps
         run: pnpm install --frozen-lockfile
 
+      # cms-admin typecheck imports `@webhouse/cms`, which is a workspace
+      # package. Without dist/, jiti resolves the source tree but tsc can't
+      # find the types entrypoint declared in package.json#types. Build the
+      # workspace packages cms-admin depends on before typechecking it.
+      - name: Build workspace deps (so cms-admin typecheck can resolve them)
+        run: pnpm build --filter='!@webhouse/cms-admin' --filter='!@webhouse/cms-example-blog'
+
       - name: Typecheck (cms-admin)
         run: pnpm exec tsc --noEmit --project packages/cms-admin/tsconfig.json
 
