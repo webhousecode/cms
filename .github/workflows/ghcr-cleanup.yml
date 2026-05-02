@@ -41,6 +41,22 @@ on:
 permissions:
   packages: write
 
+# IMPORTANT — token requirement:
+#   The default GITHUB_TOKEN can READ + PUSH org-package versions but
+#   GitHub does NOT grant it DELETE permission, even with `packages:
+#   write`. DELETE returns 404 for org packages unless the token has
+#   admin role on the package.
+#
+#   This workflow expects a repo secret named `GHCR_CLEANUP_PAT` — a
+#   classic Personal Access Token with `delete:packages` (and
+#   `read:packages`) scope. Created once by the org admin:
+#     https://github.com/settings/tokens/new?scopes=delete:packages,read:packages&description=cms+ghcr+cleanup
+#   then added at:
+#     https://github.com/webhousecode/cms/settings/secrets/actions
+#
+#   If the secret is missing the workflow no-ops loudly so we don't get
+#   silent storage bloat.
+
 jobs:
   cleanup:
     # Skip the workflow_run trigger if Release (stable) actually failed —
@@ -55,8 +71,27 @@ jobs:
       OWNER: webhousecode
       KEEP_TAGGED: ${{ github.event.inputs.keep_tagged || '5' }}
       DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Prefer the cleanup PAT (delete:packages scope). Fall back to
+      # GITHUB_TOKEN — sufficient for the dry-run / read snapshots, will
+      # 404 on real DELETE.
+      GH_TOKEN: ${{ secrets.GHCR_CLEANUP_PAT || secrets.GITHUB_TOKEN }}
+      USING_PAT: ${{ secrets.GHCR_CLEANUP_PAT != '' }}
     steps:
+      - name: Verify token capability
+        run: |
+          if [ "$USING_PAT" != "true" ] && [ "$DRY_RUN" != "true" ]; then
+            echo "::error::GHCR_CLEANUP_PAT secret is not set. The default GITHUB_TOKEN cannot DELETE org package versions (GitHub returns 404)."
+            echo "::error::Create a PAT with delete:packages + read:packages scope and add it as repo secret GHCR_CLEANUP_PAT."
+            echo "::error::Token: https://github.com/settings/tokens/new?scopes=delete:packages,read:packages&description=cms+ghcr+cleanup"
+            echo "::error::Add at: https://github.com/webhousecode/cms/settings/secrets/actions"
+            exit 1
+          fi
+          if [ "$USING_PAT" = "true" ]; then
+            echo "Using GHCR_CLEANUP_PAT for delete operations."
+          else
+            echo "Dry-run mode using GITHUB_TOKEN (read-only) — DELETE would 404 in real run."
+          fi
+
       - name: Snapshot before cleanup
         run: |
           total=$(gh api "/orgs/${OWNER}/packages/container/${PACKAGE}/versions" --paginate -q 'length' | awk '{s+=$1} END{print s}')
