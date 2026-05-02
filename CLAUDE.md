@@ -35,6 +35,30 @@ to Christian's phone.
 - You MAY check if the server is up with `curl http://localhost:3010/admin/login` or `pm2 list | grep cms-admin` — read-only is fine
 - Disrupting port 3010 risks data loss and breaks the active development session
 
+## HARD RULE: Live sites are authored + deployed from a remote CMS server, NOT from localhost
+
+**`localhost:3010` cms-admin is for developing the CMS itself. It is NOT a place to register, author content for, or deploy live production sites.**
+
+**Sites destined for any URL other than localhost (trailmem.com, fysiodk-aalborg-sport.dk, sanneandersen.dk, webhouse.dk, etc.) MUST be created and operated on a remote CMS server — `webhouse.app/admin` is the default; another team-owned cms-admin instance is allowed if explicitly authorised.** The only exception is when localhost itself is the live host (rare — kiosks, intranet apps, single-machine demos).
+
+Why this rule exists (the 2026-05-02 trail-landing 5-hour Beam saga is the ground-truth incident):
+
+- **Localhost cms-admin and the remote cms-admin are two separate installations** with separate registries, separate filesystem content stores, separate `.env`s, separate Beam-snapshots. Nothing flows between them automatically.
+- **Beam-import is a one-way snapshot, not sync.** Authoring on localhost after a Beam means: (a) the snapshot decays the moment the next session writes locally, (b) build artefacts (build.ts, node_modules, public/ assets) only exist where the project tree lives, and (c) the rocket button on the *remote* admin then fails with "No build.ts found" because the project source was never beamed — only content was. This is the bug Christian wasted 5 hours on.
+- **Localhost authoring loses content visibility.** Articles written via :3010 sit invisibly on a single laptop's filesystem; teammates and future cc sessions never see them; the live site never receives them; nothing is backed up.
+- **Localhost authoring breeds drift.** Every "I'll just edit it locally and we'll sync later" turns into "wait, prod has a different state, what's the source of truth?" within 24h.
+
+What you MUST do when asked to set up, author for, or deploy a non-localhost site:
+
+1. **Create the site on `webhouse.app/admin`** (or the team's chosen remote cms-admin) — pick the right org, register the site there. Do not register it locally first and "migrate later".
+2. **Author content via the remote admin's UI.** If you need to write content programmatically from inside a cc session, hit the remote admin's REST API, do not shell out to `localhost:3010`.
+3. **Click the rocket from the remote admin.** That is where build + publish must succeed. If it fails, fix the root cause on the remote admin (project files missing, token absent, etc.) — do not work around it by deploying from localhost.
+4. **Use localhost only for**: developing cms-admin itself, building/testing example sites that ship as boilerplates, validating CMS engine changes against fixture sites in the repo. Localhost is for hacking on the CMS, not for running customers' sites.
+
+Smell test: if a session is about to run `pnpm dev` for a customer's site, register a customer's site in the local registry, click the local rocket button to deploy something pointed at a public URL, or `cd /some-customer-project && cms build` for a public-facing target — STOP. You are about to repeat the bug this rule exists to prevent.
+
+The CMS exists to make Christian *faster*, not to add a "where does the data live this time?" guessing game on top of every site. Honour this rule and the friction goes away.
+
 ## Hard Rule: Preview MUST Always Work
 
 **EVERY site built with @webhouse/cms MUST have working preview — both locally and deployed. No exceptions.**
