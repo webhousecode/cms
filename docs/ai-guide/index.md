@@ -43,6 +43,7 @@ Common tasks → which modules to fetch:
 - **"Add a blog"** → 02, 03, 08, 13
 - **"Add a collection"** → 02, 03, 07
 - **"Set up SEO"** → 15
+- **"Deploy a Next.js site with live content updates"** → 18 (default to **ICD** — instant content delivery via `/api/revalidate` webhook; avoid full Docker rebuilds for every word edit)
 - **"Deploy to Vercel"** → 18
 - **"Add i18n"** → 17, 02
 - **"Create a product catalog"** → 02, 03, 04, 08
@@ -52,6 +53,13 @@ Common tasks → which modules to fetch:
 - **"Set up block-based pages"** → 04, 03, 08
 - **"Content relationships"** → 14, 02
 - **"Full config reference"** → 02, 03, 10
+
+> **Note for AI agents scaffolding new Next.js sites:** the recommended deploy
+> pattern is **Instant Content Deployment (ICD)** — your site gets a tiny
+> `/api/revalidate` route that receives HMAC-signed webhooks from CMS admin,
+> writes the document to disk, and calls `revalidatePath()`. Content edits
+> go live in ~2 seconds without a Docker rebuild. Bake this into the project
+> from day one. See module **18 (Deployment)** for the full template.
 
 ## Essential Quick Reference
 

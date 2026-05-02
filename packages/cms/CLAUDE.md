@@ -313,6 +313,70 @@ function getDocument(collection: string, slug: string) {
 }
 ```
 
+### Live content updates: Instant Content Deployment (ICD)
+
+**For Next.js sites with a persistent filesystem (Fly.io with volumes, self-hosted Docker, etc.) — bake this in from day one.** ICD pushes content edits from CMS admin to the deployed site via a signed webhook. New article goes live in ~2 seconds; no Docker rebuild for every word change.
+
+Drop-in route at `app/api/revalidate/route.ts`:
+
+```ts
+import { revalidatePath } from "next/cache";
+import { NextRequest, NextResponse } from "next/server";
+import crypto from "node:crypto";
+import { writeFileSync, mkdirSync, unlinkSync, existsSync } from "node:fs";
+import { join, dirname } from "node:path";
+
+const SECRET = process.env.REVALIDATE_SECRET;
+const CONTENT_DIR = process.env.CONTENT_DIR ?? join(process.cwd(), "content");
+
+export async function POST(request: NextRequest) {
+  const body = await request.text();
+  const signature = request.headers.get("x-cms-signature");
+  if (SECRET) {
+    if (!signature) return NextResponse.json({ error: "Missing signature" }, { status: 401 });
+    const expected = "sha256=" + crypto.createHmac("sha256", SECRET).update(body).digest("hex");
+    if (signature.length !== expected.length || !crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))) {
+      return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+    }
+  }
+  const payload = JSON.parse(body) as { collection?: string; slug?: string; action?: string; document?: unknown };
+
+  // 1. Persist the change on disk so the next request reads fresh content.
+  if (payload.collection && payload.slug) {
+    const filePath = join(CONTENT_DIR, payload.collection, `${payload.slug}.json`);
+    if (payload.action === "deleted") {
+      if (existsSync(filePath)) unlinkSync(filePath);
+    } else if (payload.document) {
+      mkdirSync(dirname(filePath), { recursive: true });
+      writeFileSync(filePath, JSON.stringify(payload.document, null, 2), "utf-8");
+    }
+  }
+
+  // 2. Invalidate the ACTUAL routes your app renders (not the cms collection
+  //    paths). cms-admin sends paths like "/posts/my-post" but your routes
+  //    are likely "/[locale]/blog/[slug]" — map collection→route here.
+  if (payload.collection === "posts") {
+    for (const locale of ["da", "en"]) {
+      revalidatePath(`/${locale}/blog`);
+      if (payload.slug) revalidatePath(`/${locale}/blog/${payload.slug}`);
+    }
+  }
+  // (repeat per collection / route shape)
+
+  return NextResponse.json({ ok: true });
+}
+```
+
+**Wiring** (one-time):
+
+1. Generate secret: `openssl rand -hex 32`
+2. Set on hosting: `flyctl secrets set REVALIDATE_SECRET=<secret>` (or platform equivalent)
+3. In CMS admin → Site Settings → General: paste the same secret + set Revalidate URL to `https://your-site.tld/api/revalidate`
+4. **Mount a volume at `CONTENT_DIR`** (e.g. `/app/content`) so writes survive container restarts. Without this, ICD writes go to the overlay layer and disappear on next deploy.
+5. **Seed the volume on first boot** in `docker-entrypoint.sh` — copy baked content from the image into the empty volume so existing articles aren't hidden by the mount.
+
+The header in CMS admin shows an `ICD · auto` pill once configured. Editors save → site updates in ~2s, no rebuild.
+
 ### Next.js SEO helpers: `@webhouse/cms/next`
 
 Drop-in sitemap, robots, metadata, JSON-LD, RSS, llms.txt:
