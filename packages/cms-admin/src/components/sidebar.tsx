@@ -299,7 +299,10 @@ export function AppSidebar({ collections }: Props) {
                 {collections.map((col) => (
                   <SidebarMenuItem key={col.name}>
                     <SidebarMenuButton
-                      isActive={pathname.startsWith(`/admin/content/${col.name}`)}
+                      // Require exact match OR a trailing slash, otherwise
+                      // collection "vidensbank" lights up alongside
+                      // "vidensbank-categories" because the prefix matches.
+                      isActive={pathname === `/admin/content/${col.name}` || pathname.startsWith(`/admin/content/${col.name}/`)}
                       tooltip={col.label}
                       render={<Link href={`/admin/content/${col.name}`} data-testid={`nav-link-collection-${col.name}`} />}
                       style={{ paddingLeft: "1.75rem" }}
