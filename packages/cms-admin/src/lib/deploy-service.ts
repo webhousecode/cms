@@ -11,11 +11,14 @@ import { execFileSync } from "node:child_process";
 import { getActiveSitePaths, getActiveSiteEntry } from "./site-paths";
 import { readSiteConfig, writeSiteConfig } from "./site-config";
 import { resolveToken } from "./site-pool";
-import { getAdminConfig } from "./cms";
+import { getAdminConfig, getAdminCms } from "./cms";
 import { runSiteBuild } from "./build/run-site-build";
+import { dispatchRevalidation } from "./revalidation";
+import type { SiteEntry } from "./site-registry";
 
 export type DeployProvider =
   | "off"
+  | "icd"
   | "vercel"
   | "netlify"
   | "flyio"
@@ -89,6 +92,45 @@ function resolveFlyToken(perSiteToken: string | undefined): string | undefined {
   return process.env.FLY_API_TOKEN || perSiteToken || process.env.FLY_ACCESS_TOKEN || undefined;
 }
 
+/**
+ * Re-fan-out every published document to the site's /api/revalidate.
+ * Used by the ICD pill's manual "Re-sync" action when no full-rebuild
+ * provider is configured. Useful after a fresh redeploy of the SSR site
+ * (volume just mounted, needs re-seed) or to bust stale ISR caches.
+ */
+async function resyncAllContent(site: SiteEntry): Promise<{ total: number; failed: number }> {
+  const config = await getAdminConfig();
+  const cms = await getAdminCms();
+  let total = 0;
+  let failed = 0;
+
+  for (const col of config.collections) {
+    let docs: Array<Record<string, unknown>> = [];
+    try {
+      const res = await cms.content.findMany(col.name, {});
+      docs = res.documents as unknown as Array<Record<string, unknown>>;
+    } catch {
+      continue;
+    }
+
+    const urlPrefix = (col as { urlPrefix?: string }).urlPrefix;
+    for (const doc of docs) {
+      const slug = (doc as { slug?: string; id?: string }).slug
+        ?? (doc as { slug?: string; id?: string }).id;
+      if (!slug) continue;
+      total++;
+      const result = await dispatchRevalidation(
+        site,
+        { collection: col.name, slug, action: "published", document: doc },
+        urlPrefix,
+      ).catch(() => ({ ok: false }));
+      if (!result.ok) failed++;
+    }
+  }
+
+  return { total, failed };
+}
+
 export async function triggerDeploy(): Promise<DeployEntry> {
   const config = await readSiteConfig();
   let provider = config.deployProvider;
@@ -138,6 +180,25 @@ export async function triggerDeploy(): Promise<DeployEntry> {
   }
 
   if (provider === "off") {
+    // ICD-only site path: site has revalidateUrl in registry but no full
+    // rebuild provider. The "Re-sync" button on the ICD pill expects this
+    // to do a manual re-fan-out of every published document so the live
+    // site rebuilds its volume cache (useful after a fresh deploy of the
+    // SSR site, or to bust ISR caches without a code change).
+    const siteEntry = await getActiveSiteEntry();
+    if (siteEntry?.revalidateUrl) {
+      const result = await resyncAllContent(siteEntry);
+      return {
+        id: uid(),
+        provider: "icd",
+        status: result.failed > 0 ? "error" : "success",
+        timestamp: now(),
+        url: siteEntry.previewUrl ?? siteEntry.revalidateUrl,
+        ...(result.failed > 0
+          ? { error: `${result.failed} of ${result.total} document re-syncs failed (see revalidation log)` }
+          : {}),
+      };
+    }
     return { id: uid(), provider, status: "error", timestamp: now(), error: "No deploy provider configured" };
   }
 

@@ -53,3 +53,26 @@ jobs:
       update_latest: true
       prerelease: false
     secrets: inherit
+
+  notify_docs:
+    # Tell docs.webhouse.app that a new tag exists so it regenerates the
+    # changelog and redeploys. Doesn't depend on the Docker build — fires
+    # in parallel with `build`.
+    needs: version
+    runs-on: ubuntu-latest
+    steps:
+      - name: Dispatch cms-release event to webhousecode/cms-docs
+        env:
+          GH_TOKEN: ${{ secrets.CMS_DOCS_DISPATCH_TOKEN }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::warning::CMS_DOCS_DISPATCH_TOKEN secret not set — skipping docs notification."
+            echo "::warning::Add a fine-grained PAT with contents:write on webhousecode/cms-docs to enable auto-changelog."
+            exit 0
+          fi
+          curl -sS -X POST \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            https://api.github.com/repos/webhousecode/cms-docs/dispatches \
+            -d "{\"event_type\":\"cms-release\",\"client_payload\":{\"version\":\"${{ needs.version.outputs.version }}\"}}"
+          echo "Dispatched cms-release to webhousecode/cms-docs (version ${{ needs.version.outputs.version }})"
