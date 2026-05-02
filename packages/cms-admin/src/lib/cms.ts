@@ -75,21 +75,29 @@ export async function getAdminCms() {
     throw new EmptyOrgError("No sites in active organization");
   }
 
-  const site = findSite(registry, activeOrgId, activeSiteId);
+  let site = findSite(registry, activeOrgId, activeSiteId);
+  let resolvedOrgId = activeOrgId;
   if (!site) {
-    // Try first site in active org, then fall back to default
-    const firstInOrg = activeOrg?.sites[0];
-    if (firstInOrg) {
-      const instance = await getOrCreateInstance(activeOrgId, firstInOrg);
+    // Same stale-cookie recovery as getAdminConfig — search all orgs by
+    // siteId so a moved/renamed-org site still resolves to the right config.
+    for (const org of registry.orgs) {
+      const owned = org.sites.find((s) => s.id === activeSiteId);
+      if (owned) { site = owned; resolvedOrgId = org.id; break; }
+    }
+    if (!site) {
+      const firstInOrg = activeOrg?.sites[0];
+      if (firstInOrg) {
+        const instance = await getOrCreateInstance(activeOrgId, firstInOrg);
+        return instance.cms;
+      }
+      const def = getDefaultSite(registry);
+      if (!def) throw new EmptyOrgError("No sites in active organization");
+      const instance = await getOrCreateInstance(def.org.id, def.site);
       return instance.cms;
     }
-    const def = getDefaultSite(registry);
-    if (!def) throw new EmptyOrgError("No sites in active organization");
-    const instance = await getOrCreateInstance(def.org.id, def.site);
-    return instance.cms;
   }
 
-  const instance = await getOrCreateInstance(activeOrgId, site);
+  const instance = await getOrCreateInstance(resolvedOrgId, site);
   return instance.cms;
 }
 
@@ -117,21 +125,37 @@ export async function getAdminConfig(): Promise<CmsConfig> {
   }
 
   let site = findSite(registry, activeOrgId, activeSiteId);
+  let resolvedOrgId = activeOrgId;
   if (!site) {
-    // Cookie has stale/invalid site ID — try first site in active org
-    // Log so we can trace mismatches
-    console.warn(`[cms] Site "${activeSiteId}" not found in org "${activeOrgId}" — falling back`);
-    const firstInOrg = activeOrg?.sites[0];
-    if (firstInOrg) {
-      site = firstInOrg;
-    } else {
-      const def = getDefaultSite(registry);
-      if (!def) throw new EmptyOrgError("No sites in active organization");
-      site = def.site;
+    // Cookie's (org, site) pair is stale (org renamed/deleted, or site moved
+    // to a different org). FIRST try to find the site by ID in any org —
+    // that way a moved/renamed site still resolves to its real config and
+    // we don't silently serve another tenant's content. Only fall back to
+    // an unrelated default if the site truly doesn't exist anywhere.
+    console.warn(`[cms] Site "${activeSiteId}" not found in org "${activeOrgId}" — searching all orgs`);
+    for (const org of registry.orgs) {
+      const owned = org.sites.find((s) => s.id === activeSiteId);
+      if (owned) {
+        site = owned;
+        resolvedOrgId = org.id;
+        console.warn(`[cms] Recovered site "${activeSiteId}" in org "${org.id}" — cookie's org was stale`);
+        break;
+      }
+    }
+    if (!site) {
+      const firstInOrg = activeOrg?.sites[0];
+      if (firstInOrg) {
+        site = firstInOrg;
+      } else {
+        const def = getDefaultSite(registry);
+        if (!def) throw new EmptyOrgError("No sites in active organization");
+        site = def.site;
+        resolvedOrgId = def.org.id;
+      }
     }
   }
 
-  const instance = await getOrCreateInstance(activeOrgId, site);
+  const instance = await getOrCreateInstance(resolvedOrgId, site);
   return instance.config;
 }
 
@@ -173,13 +197,23 @@ export async function getActiveSiteInfo() {
   const activeOrgId = cookieStore.get("cms-active-org")?.value ?? registry.defaultOrgId;
   const activeSiteId = cookieStore.get("cms-active-site")?.value ?? registry.defaultSiteId;
 
-  const org = registry.orgs.find((o) => o.id === activeOrgId);
-  const site = org?.sites.find((s) => s.id === activeSiteId);
+  let org = registry.orgs.find((o) => o.id === activeOrgId);
+  let site = org?.sites.find((s) => s.id === activeSiteId);
+
+  // Stale-cookie recovery: if the (org,site) pair from cookies doesn't
+  // resolve, find the site by id in any org so the UI shows the correct
+  // org name (matching what getAdminConfig will actually load).
+  if (!site) {
+    for (const o of registry.orgs) {
+      const owned = o.sites.find((s) => s.id === activeSiteId);
+      if (owned) { site = owned; org = o; break; }
+    }
+  }
 
   return {
     registry,
-    activeOrgId,
-    activeSiteId,
+    activeOrgId: org?.id ?? activeOrgId,
+    activeSiteId: site?.id ?? activeSiteId,
     orgName: org?.name ?? activeOrgId,
     siteName: site?.name ?? activeSiteId,
   };
