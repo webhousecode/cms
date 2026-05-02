@@ -3,7 +3,7 @@
 **Status:** planned
 **Owner:** cms-core
 **Priority:** Tier 1 (unblocks "filesystem sites publish from anywhere" — short-term path)
-**Estimat:** 3-5 fokuserede dage
+**Estimat:** 6-8 fokuserede dage (oprindelige 3-5 + auto-detect Phase 4 + dependency lifecycle Phase 5)
 **Created:** 2026-05-02
 **Søsterplan:** F142 (Templated SSG) — F143 er den pragmatiske near-term sti, F142 er langsigtsdrømmen. De koeksisterer.
 
@@ -197,6 +197,117 @@ cms-admin på første rocket-deploy:
 
 Andet site med præcis samme `build.deps` array hitter samme hash → bruger den eksisterende installation. **Intet duplikeret arbejde.**
 
+### Dependency lifecycle + version control (PIN-FIRST)
+
+Det vigtigste princip: **vi opgraderer aldrig automatisk**. Auto-DETECT installerer nye deps; auto-OPGRADERING af eksisterende deps sker kun via eksplicit user action. Det forhindrer at "build virkede i går"-bug klassen.
+
+#### 3 lag af versions-kontrol
+
+**Lag 1 — cms-admin's core-deps (marked, sharp, gray-matter, slugify, marked-highlight)**
+- Pinnes i `packages/cms-admin/package.json` med `^x.y.z` ranges
+- Renovate / Dependabot foreslår PR'er ved nye versioner
+- Hvert PR kører den fulde test-suite + en "build trail-landing"-smoke-test (en kanariesite der bruger alle core deps)
+- Mergning kræver grøn CI = breaking core-dep change kan ikke nå prod uden at vi ser det
+
+**Lag 2 — auto-detected site-deps (uden eksplicit version)**
+- Når auto-scanneren opdager `import foo from 'lodash'` uden at brugeren har specificeret version i `build.deps`, kalder cms-admin `pnpm view lodash version` og **pin'er den exakte version** ved install-tidspunktet
+- Pinned version skrives ind i en **per-site lockfile**: `/var/cms-admin/build-deps/<hash>/pnpm-lock.yaml`
+- Hash'en for build-deps-mappen INKLUDERER de pin'ede versioner — så `lodash@4.17.21` og `lodash@4.17.22` har forskellige hashes og forskellige installationer
+- **Resultat**: en ny site, beamed i dag, får `lodash@4.17.21`. Næste site beamed i morgen får måske `4.17.22` (hvis npm har ny version), men det første site rører IKKE sin pinned version. Det "fryses" i tid
+
+**Lag 3 — manual `cms.config.ts.build.deps` (fuld kontrol)**
+- Brugeren skriver eksplicit semver-range: `'three@^0.158.0'`
+- pnpm respekterer rangen ved install; lockfile pinner den faktiske resolved version
+- Ved manuel upgrade: brugeren ændrer rangen, cms-admin re-installerer, lockfile opdateres
+
+#### Upgrade UI (manuel, ikke auto)
+
+I cms-admin: **Site Settings → Build → Dependencies**:
+
+```
+Site: trail-landing
+─────────────────────────────────
+Core (provided by cms-admin):     marked 15.2.1   gray-matter 4.0.3   sharp 0.34.0   …
+                                  ↑ upgraded by cms-admin team — see CHANGELOG
+
+Auto-detected (pinned at first install):
+  lodash         4.17.21    → [Check for updates]   ⚠ 4.17.22 available (patch)
+  three          0.158.0    → [Check for updates]   ✓ up to date
+  d3-force       3.0.0      → [Check for updates]   ⚠ 4.0.0 available (MAJOR — breaking)
+
+Manual override (cms.config.ts.build.deps):
+  marked         ^15.0.0    → resolves to 15.2.1
+```
+
+Når bruger trykker `[Check for updates]`:
+1. cms-admin kalder `pnpm view <pkg> versions --json`
+2. Viser available versions + changelog link (hvis findes på npm)
+3. Patch updates: green "safe", marked + click-to-apply
+4. Minor updates: yellow "review changelog", click-to-apply
+5. Major updates: red "BREAKING — read changelog first", confirm-to-apply
+6. Når bruger applies: cms-admin kører **smoke-build i sandbox** først (se nedenfor); kun hvis grøn, promote til site
+
+#### Smoke-build før upgrade promotes
+
+Hver upgrade gennemgår en automatisk verifikation før den lander:
+
+```
+1. Klon eksisterende deps-dir: <hash>/ → <hash>-trial/
+2. pnpm install --prefix <hash>-trial <pkg>@<new-version>
+3. Spawn build.ts mod <hash>-trial som NODE_PATH
+4. Sammenlign output:
+   - Exit code 0 ✓
+   - deploy/ directory eksisterer + ikke tom ✓
+   - HTML output diff vs. den seneste successfulde build < 5% ændringer (heuristik for "intet brækket synligt")
+5. Hvis 1-4 alle grønne: rename <hash>-trial → <hash> (atomic), gammel arkiveres som <hash>-prev
+   Hvis fejl: slet <hash>-trial, vis fejl-log + diff i UI, brugeren afviser eller fortsætter manuelt
+```
+
+**Rollback**: hver site holder seneste `<hash>-prev` i 7 dage. UI har "Rollback to previous version" knap. Genaktiverer den tidligere lockfile + node_modules atomisk.
+
+#### Sikkerhedsscanning + advarsler
+
+- `pnpm audit` kører ugentligt mod alle aktive build-deps stores
+- Vulnerabilities (severity ≥ moderate) vises i Site Settings + cms-admin's hjem-dashboard ("3 sites have outdated deps with known CVEs")
+- Brugeren ser konkret: "lodash@4.17.21 has CVE-2026-XXXXX (medium). Patch available in 4.17.22 — [Apply]". Ingen auto-apply
+- Critical CVEs (severity = critical, exploit i wild): cms-admin sender notification + flag på Deploy-knappen ("Last build used vulnerable dep")
+
+#### Drift-detection
+
+Hver gang et site bygges, sammenligner cms-admin lockfile-version mod manual `build.deps` range. Hvis manual range har ændret sig OG resolved version differerer fra lockfile: trigger upgrade-flow med smoke-build (se ovenfor). Forhindrer at en bruger der manuelt redigerer `build.deps` får en stille opgradering uden verifikation.
+
+#### Eksempel-scenarie
+
+```
+Mandag:  AI session tilføjer `import slugify from 'slugify'` til build.ts
+         → auto-detect → pnpm view slugify version → "1.6.6"
+         → install slugify@1.6.6 i ny build-deps dir
+         → lockfile pin'er 1.6.6
+         → site builder + deployer
+
+Tirsdag: slugify@2.0.0 udgives med breaking changes
+         → cms-admin rører IKKE sitet — site fortsætter på 1.6.6
+         → Site Settings viser "slugify 1.6.6 → ⚠ 2.0.0 (MAJOR)"
+
+Onsdag:  Bruger trykker "Update", læser changelog, accepter
+         → cms-admin kloner deps til <hash>-trial
+         → installerer slugify@2.0.0
+         → bygger build.ts mod trial
+         → output diff = 18% (signifikant), exit code 0
+         → UI viser "Build succeeded but output differs significantly. Review preview before promoting."
+         → bruger inspekterer preview, accepterer eller afviser
+
+Hvis bruger AFVISER: <hash>-trial slettes, site forbliver på 1.6.6
+Hvis bruger ACCEPTER: trial bliver til ny <hash>, site bygger fremover med 2.0.0,
+                      <hash>-prev gemmes i 7 dage for rollback
+```
+
+#### Hvad det IKKE løser (eksplicitte non-goals)
+
+- **Transitive deps**: hvis `slugify@1.6.6` bruger `some-internal-dep@^1.0.0` og det opgraderes til `1.5.0` med en bug, fanger vi det først ved næste build (ikke ved install). Acceptabelt — pnpm har en lockfile, så transitive bumps sker også kun ved eksplicit upgrade
+- **Coordinated upgrades på tværs af sites**: hvis 5 sites bruger lodash, og du opgraderer site A, opgraderes B-E ikke. Hvert site er sin egen build-deps-hash. (Senere F kan tilføje "bulk upgrade across sites" UI hvis behov opstår)
+- **Pre-1.0 deps**: pakker på `0.x.y` semver-range har ingen stabilitetsgaranti; cms-admin viser ekstra advarsel ved upgrades
+
 ### Storage budget
 
 | Komponent | Engangsstørrelse | Per site |
@@ -296,10 +407,19 @@ Brugere får samme debug-erfaring som hvis de havde kørt `npx tsx build.ts` lok
   - Beam et site med build.ts der bruger `three` → verificér install starter umiddelbart efter beam-finalize
   - Edit build.ts til at tilføje en ny import → verificér install kører automatisk via filesystem watcher
 
-### Phase 5 — Pilot + cleanup (1 dag)
-- Pilot: trail-landing — slet `apps/landing/node_modules` og `package-lock.json`, behold build.ts. Re-Beam. Verificér auto-detect kører på beam-finalize, marked auto-installeres, og rocket fra webhouse.app virker uden manuel intervention.
+### Phase 5 — Dependency lifecycle (PIN-FIRST + upgrade UI) (2 dage)
+- Auto-detect installer pin'er exact version (via `pnpm view <pkg> version`) i stedet for `latest`
+- Per-deps-set `pnpm-lock.yaml` skrives + indgår i hash-beregning så lockfile-ændringer giver nye build-deps mapper
+- "Site Settings → Build → Dependencies" UI: liste over auto-detected + manual deps, [Check for updates] knap pr dep, semver-koded farveindikator (patch/minor/major)
+- Smoke-build pipeline før upgrade promotes: klon deps-dir til `<hash>-trial`, install ny version, kør build, sammenlign output diff, kun promote ved success + acceptable diff
+- 7-dages `<hash>-prev` rollback-historik pr site
+- Ugentlig `pnpm audit` cron + UI-surface af CVEs
+- Tests: simuler "deploy med slugify@1.6.6, slugify@2.0.0 udgives, smoke-build fejler, ingen auto-promotion"
+
+### Phase 6 — Pilot + cleanup (1 dag)
+- Pilot: trail-landing — slet `apps/landing/node_modules` og `package-lock.json`, behold build.ts. Re-Beam. Verificér auto-detect kører på beam-finalize, marked auto-installeres pinned-version, og rocket fra webhouse.app virker uden manuel intervention.
 - Update Beam UI: vis explicit at "build environment provided by cms-admin" + live install-progress under beam-finalize
-- Document i AI Builder Guide og README — herunder at AI/dev sessions IKKE behøver opdatere `cms.config.ts.build.deps` manuelt; auto-detect står for det
+- Document i AI Builder Guide og README — herunder at AI/dev sessions IKKE behøver opdatere `cms.config.ts.build.deps` manuelt; auto-detect står for det. PIN-FIRST adfærd dokumenteret eksplicit så AI'er ikke forventer auto-upgrade
 
 ## Acceptance criteria
 
@@ -312,6 +432,11 @@ Brugere får samme debug-erfaring som hvis de havde kørt `npx tsx build.ts` lok
 7. **Auto-detect**: Add Site med en build.ts der importerer `lodash` triggerer baggrunds-install af `lodash` UDEN at brugeren manuelt skal opdatere `cms.config.ts.build.deps`
 8. **Auto-detect on beam**: Beam-import af et nyt site triggerer auto-scan + install ved finalize, så Deploy-knappen er enabled fra første sekund efter beam er færdig (eller venter med tydelig progress hvis install stadig kører)
 9. **Auto-detect on edit**: AI/dev session som ændrer build.ts og tilføjer en `import { foo } from 'new-pkg'` får automatisk `new-pkg` installeret uden manuelt indgreb, inden næste deploy
+10. **PIN-FIRST**: Auto-detected dep installeres med exact pinned version. Kald site-deps endpoint næste dag — version er UÆNDRET selvom npm har en nyere udgave. Ingen stille drift
+11. **Upgrade UI**: bruger ser "[Check for updates]" pr dep, semver-koded (green/yellow/red), kan klikke for changelog
+12. **Smoke-build before promote**: bruger trykker upgrade på en dep der har breaking change → cms-admin builder mod trial-deps, output-diff > threshold → upgrade afvises eller kræver eksplicit confirmation
+13. **Rollback**: efter en upgrade, "Rollback to previous version" knap virker; gammel `<hash>-prev` reaktiveres atomisk, site bygger fremover med gamle versioner
+14. **CVE surface**: `pnpm audit` finder en moderate CVE i en site's dep → vises i Site Settings + på cms-admin's hjem-dashboard. Ingen auto-apply
 
 ## Risici + afbødning
 
@@ -325,6 +450,11 @@ Brugere får samme debug-erfaring som hvis de havde kørt `npx tsx build.ts` lok
 | **Auto-scanner false-positive** (matcher en streng der ligner en import) | Meget lav | es-module-lexer er AST-baseret, ikke regex — false positives er praktisk udelukket |
 | **Auto-install på Fly er langsom og blokkerer Beam-finalize** | Mellem | Install kører i baggrund (non-blocking) — beam-finalize returnerer som normalt; Deploy-knap aktiveres når install er færdig (sekunder for almindelige deps fra pnpm content-store) |
 | **Race condition: 2 sites beames samtidigt med samme deps** | Lav | install-queue serialiserer (max 1 concurrent på samme volumen); andet site får "deps ready" instant uden at re-installere |
+| **Smoke-build false-positive** (build succeeder mod ny dep, men site er reelt brækket på en måde HTML-diff ikke fanger) | Mellem | Diff-threshold er heuristik, ikke garanti. UI viser preview-link så bruger kan visuelt verificere før accept. Rollback altid tilgængelig i 7 dage |
+| **Smoke-build false-negative** (build fejler mod ny dep selvom upgrade ER sikker — fx unrelated network glitch under install) | Lav-mellem | Smoke-build retry 3× ved transient errors; bruger kan force-promote efter manual review |
+| **Transitive dep regression** (slugify@1.6.6 OK, men dens transitive `internal-dep@1.5.0` har bug) | Mellem | pnpm-lock pin'er hele træet ved hver install; transitive bumps kan kun ske ved eksplicit upgrade. Smoke-build kører ved upgrade — fanger 80%+ |
+| **Dep med post-install script kører malicious code på Fly volumen** | Mellem | pnpm har `--ignore-scripts` flag; for ekstra sikkerhed kan vi køre installs i sandboxed child_process med begrænset filesystem-access. Default for F143: `--ignore-scripts` ON, brugere kan opt-in via per-site flag |
+| **CVE notification flood** (pnpm audit melder 50 vulnerabilities pr site) | Mellem | Aggreger pr CVE-ID; vis kun én notification per unique CVE selv hvis 10 sites er ramt. Suppress non-actionable info-niveau alerts |
 | Multi-tenant: site A's build kan se site B's secrets | Mellem | child_process env-vars renses per spawn; kun site-relevante secrets passes ind |
 
 ## Relateret incident
