@@ -882,17 +882,22 @@ export default defineConfig({
 
 ## Implementation Steps
 
-### Phase 1 — Product Catalog + Stripe Checkout (days 1-5)
-1. Scaffold `packages/cms-shop` with package.json, tsup.config.ts, tsconfig.json
-2. Implement module registration (`CmsModule` interface)
-3. Define collections: products, categories, orders, customers
-4. Implement Stripe SDK wrapper and product/price sync
-5. Build cart management API (session-based, 48h TTL)
-6. Build `POST /api/shop/checkout` — Stripe Checkout Session
-7. Build `POST /api/shop/webhooks` — handle checkout events, create order
-8. Build Interactive Islands: product-card, cart-island, checkout-island
-9. Static product page rendering with island hydration
-10. Guest checkout + address autocomplete
+### Phase 1 — Product Catalog + Stripe Checkout (days 1-5) ✅ DONE
+1. ✅ Scaffold `packages/cms-shop` with package.json, tsup.config.ts, tsconfig.json — shipped in 0.3.0
+2. ⏳ Module registration (`CmsModule` interface) — collections export ready; cms-admin wiring pending
+3. ✅ Define collections: products, categories, orders, customers — shipped in 0.3.0
+4. ✅ Stripe SDK wrapper and product/price sync — `@webhouse/cms-shop/stripe`
+5. ✅ Cart management API — engine + Request/Response handlers in `@webhouse/cms-shop/cart`
+6. ✅ `POST /api/shop/checkout` Stripe Checkout Session — `@webhouse/cms-shop/checkout`
+7. ✅ `POST /api/shop/webhooks` handler — signature verification + order doc factory in `@webhouse/cms-shop/webhooks`
+8. ✅ Interactive Islands: product-card, cart, checkout-status — `@webhouse/cms-shop/islands`
+9. ✅ Static product page rendering — `renderProductPage`, `renderProductCard` in `@webhouse/cms-shop/storefront`
+10. ✅ Guest checkout (cart works without an account) + DK-first address validation — `validateAddress`, autocomplete extension point
+
+**What's still needed before a real site can transact in Phase 1:**
+- cms-admin: register the cms-shop module so product `afterCreate` / `afterUpdate` hooks call `syncProductToStripe`
+- Per-site config UI for `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET`
+- Boilerplate / dogfood site that mounts the four `/api/shop/*` route handlers and renders a product page
 
 ### Phase 2 — Shipping Integration (days 6-9)
 11. Implement GLS API integration (rates, labels, tracking)
