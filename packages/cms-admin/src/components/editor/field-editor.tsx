@@ -24,6 +24,10 @@ interface Props {
   onChange: (value: unknown) => void;
   locked?: boolean;
   blocksConfig?: BlockConfig[];
+  /** Locale of the document being edited. Relation pickers filter
+   *  related-collection options to documents matching this locale, so
+   *  a DA editor sees only DA categories and not the EN siblings. */
+  documentLocale?: string;
 }
 
 function getVideoEmbedSrc(url: string): string | null {
@@ -53,7 +57,7 @@ function getVideoEmbedSrc(url: string): string | null {
 /* ─── Relation picker ───────────────────────────────────────── */
 type DocOption = { slug: string; label: string };
 
-function useRelationOptions(collection: string, open: boolean) {
+function useRelationOptions(collection: string, open: boolean, documentLocale?: string) {
   const [options, setOptions] = useState<DocOption[]>([]);
   const [loading, setLoading] = useState(false);
   useEffect(() => {
@@ -61,28 +65,35 @@ function useRelationOptions(collection: string, open: boolean) {
     setLoading(true);
     fetch(`/api/cms/${collection}`)
       .then((r) => r.json())
-      .then((docs: Array<{ slug: string; data?: Record<string, unknown> }>) => {
-        setOptions(docs.map((d) => ({
+      .then((docs: Array<{ slug: string; locale?: string; data?: Record<string, unknown> }>) => {
+        // Filter to current document's locale if known. Bilingual sites
+        // store one document per locale linked via translationGroup, so
+        // an unfiltered list shows every category twice (DA + EN).
+        const filtered = documentLocale
+          ? docs.filter((d) => !d.locale || d.locale === documentLocale)
+          : docs;
+        setOptions(filtered.map((d) => ({
           slug: d.slug,
           label: String(d.data?.title ?? d.data?.name ?? d.data?.label ?? d.slug),
         })));
       })
       .catch(() => setOptions([]))
       .finally(() => setLoading(false));
-  }, [open, collection]);
+  }, [open, collection, documentLocale]);
   return { options, loading };
 }
 
-function MultiRelationPicker({ collection, value, onChange, disabled }: {
+function MultiRelationPicker({ collection, value, onChange, disabled, documentLocale }: {
   collection: string;
   value: string[];
   onChange: (v: string[]) => void;
   disabled?: boolean;
+  documentLocale?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const ref = useRef<HTMLDivElement>(null);
-  const { options, loading } = useRelationOptions(collection, open);
+  const { options, loading } = useRelationOptions(collection, open, documentLocale);
 
   useEffect(() => {
     if (!open) return;
@@ -201,16 +212,17 @@ function MultiRelationPicker({ collection, value, onChange, disabled }: {
   );
 }
 
-function RelationPicker({ collection, value, onChange, disabled }: {
+function RelationPicker({ collection, value, onChange, disabled, documentLocale }: {
   collection: string;
   value: string;
   onChange: (v: string) => void;
   disabled?: boolean;
+  documentLocale?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const ref = useRef<HTMLDivElement>(null);
-  const { options, loading } = useRelationOptions(collection, open);
+  const { options, loading } = useRelationOptions(collection, open, documentLocale);
 
   // Close on outside click
   useEffect(() => {
@@ -371,7 +383,7 @@ function SimpleStringArray({ values, onChange, locked }: { values: string[]; onC
   );
 }
 
-export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Props) {
+export function FieldEditor({ field, value, onChange, locked, blocksConfig, documentLocale }: Props) {
   const strVal = String(value ?? "");
   const testId = `field-${field.type}-${field.name}`;
 
@@ -409,9 +421,9 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig }: Pr
       if (!field.collection) return <Input type="text" value={strVal} onChange={(e) => onChange(e.target.value)} disabled={locked} />;
       if (field.multiple) {
         const arrVal = Array.isArray(value) ? (value as string[]) : (value ? [String(value)] : []);
-        return <MultiRelationPicker collection={field.collection} value={arrVal} onChange={onChange} disabled={locked} />;
+        return <MultiRelationPicker collection={field.collection} value={arrVal} onChange={onChange} disabled={locked} documentLocale={documentLocale} />;
       }
-      return <RelationPicker collection={field.collection} value={strVal} onChange={onChange} disabled={locked} />;
+      return <RelationPicker collection={field.collection} value={strVal} onChange={onChange} disabled={locked} documentLocale={documentLocale} />;
 
     case "date":
       return (

@@ -1851,6 +1851,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
                   onChange={() => {}}
                   locked={true}
                   blocksConfig={blocksConfig}
+                  documentLocale={(sourceDoc.locale as string | undefined) ?? defaultLocale}
                 />
               </div>
             ))}
@@ -1997,6 +1998,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
                   onChange={(val) => updateField(field.name, val)}
                   locked={readOnly || isLocked}
                   blocksConfig={blocksConfig}
+                  documentLocale={doc.locale ?? defaultLocale}
                 />
               </div>
             );
