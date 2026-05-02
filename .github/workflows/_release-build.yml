@@ -208,6 +208,15 @@ jobs:
     name: Build + push Docker image
     needs: quality
     runs-on: ubuntu-latest
+    # PAUSED 2026-05-03 — Docker image build moved off the release pipeline.
+    # Multi-arch (amd64+arm64 via QEMU) was adding 30-90 min per release for
+    # an audience of zero (webhouse.app prod uses Fly's own builder, never
+    # pulls from GHCR). When self-host returns as a real product we'll spin
+    # up a dedicated build host (Christian's Ubuntu box or a Fly machine)
+    # so the central CMS feature pipeline doesn't have to wait for it.
+    # Re-enable: set this `if:` back to true (or remove it) AND add `docker`
+    # back to the `release` job's `needs:` array below.
+    if: false
     steps:
       - uses: actions/checkout@v4
 
@@ -246,7 +255,9 @@ jobs:
 
   release:
     name: Create GitHub Release
-    needs: [tarball, docker]
+    # docker job is paused (see if: false comment above) — release only
+    # depends on tarball. To re-enable docker as blocking, add it back here.
+    needs: [tarball]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
