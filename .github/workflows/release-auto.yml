@@ -159,7 +159,21 @@ jobs:
           git push origin HEAD:main
           git push origin "${new_tag}"
 
-          echo "Tagged ${new_tag} — release-stable workflow takes over from here."
+          echo "Tagged ${new_tag}."
+
+      - name: Trigger release-stable build
+        if: steps.ver.outputs.should_release == 'true' && inputs.dry_run != true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # GitHub's GITHUB_TOKEN intentionally does NOT trigger other
+          # workflows on tag-push (recursion guard). workflow_dispatch IS
+          # allowed though, so kick the build that way.
+          new_version="${{ steps.ver.outputs.new_version }}"
+          gh workflow run release-stable.yml \
+            --ref "v${new_version}" \
+            -f version="${new_version}"
+          echo "Dispatched release-stable for v${new_version}"
 
       - name: Dry-run summary
         if: inputs.dry_run == true
