@@ -155,6 +155,8 @@
 | F139 | [Headless Site API & Chat Embedding](#f139-headless-site-api) | Planned | [docs/features/F139-headless-site-api.md](features/F139-headless-site-api.md) |
 | F140 | [Empty-Org UX Regression](#f140-empty-org-ux-regression) | Planned | [docs/features/F140-empty-org-ux-regression.md](features/F140-empty-org-ux-regression.md) |
 | F141 | [Site Switch Context Leak](#f141-site-switch-context-leak) | Planned | [docs/features/F141-site-switch-context-leak.md](features/F141-site-switch-context-leak.md) |
+| F142 | [Templated SSG Runtime](#f142-templated-ssg-runtime) | Planned | [docs/features/F142-templated-ssg-runtime.md](features/F142-templated-ssg-runtime.md) |
+| F143 | [Common Build Server](#f143-common-build-server) | Planned | [docs/features/F143-common-build-server.md](features/F143-common-build-server.md) |
 
 ---
 
@@ -579,3 +581,11 @@ When an org has zero sites, the admin shell strips user-menu chrome (gravatar, "
 ## F141 — Site Switch Context Leak
 
 When the user switches active site, the header chrome updates (top-bar shows the new site name) but the sidebar collections list and content listing remain bound to the previous site's config. UI claims to be in site B, content shown is from site A. Caught when sanne-andersen showed up in the picker but `/admin/content/work` listed webhouse.dk Case Studies. Suspected cause: server-rendered components don't re-execute on switch (no `router.refresh()`), or the CMS config cache keyed by `(orgId, siteId)` isn't invalidated. **Critical first check:** verify whether the API write path is also leaking — if POST to "site B" actually mutates site A's data, that's a security incident, not just a display bug.
+
+## F142 — Templated SSG Runtime
+
+Built-in templated static-site generator inside cms-admin so filesystem-adapter sites can build + deploy from any cms-admin instance (lokal eller webhouse.app), uden per-site `node_modules` eller per-site `build.ts`. Sites definerer design deklarativt via `templates/`-mappe (tagged-template-literal funktioner). Pre-installerede deps (marked, gray-matter, slugify, sharp, marked-highlight) dækker 99% af cases per audit af 20 eksisterende build.ts. Custom `build.ts` forbliver escape hatch (F143). Kerneresponse på 2026-05-02 trail-landing 5-time Beam-saga.
+
+## F143 — Common Build Server
+
+Indbygget build-server-modul i cms-admin. Bevarer `build.ts` som kontrakt, men flytter execution til cms-admin's egen Node-proces (child_process). Pre-installerede core-deps (marked, sharp etc.) genbruges på tværs af alle sites — per-site `node_modules` forsvinder. Sites med eksotiske behov declarer `cms.config.ts.build.deps` → on-demand pnpm install i delt content-addressable store. Pragmatisk near-term path: 3-5 dage at ship, ingen migration af eksisterende sites. Søsterplan til F142 (de koeksisterer).
