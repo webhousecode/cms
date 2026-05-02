@@ -168,12 +168,26 @@ jobs:
         run: |
           # GitHub's GITHUB_TOKEN intentionally does NOT trigger other
           # workflows on tag-push (recursion guard). workflow_dispatch IS
-          # allowed though, so kick the build that way.
+          # allowed though, so kick downstream builds that way.
           new_version="${{ steps.ver.outputs.new_version }}"
           gh workflow run release-stable.yml \
             --ref "v${new_version}" \
             -f version="${new_version}"
           echo "Dispatched release-stable for v${new_version}"
+
+      - name: Trigger npm publish
+        if: steps.ver.outputs.should_release == 'true' && inputs.dry_run != true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # publish.yml uses npm's `version` input as an exact version
+          # (or the keywords patch/minor/major). We pass the bumped
+          # exact version so it stays in sync with the tag we just made.
+          new_version="${{ steps.ver.outputs.new_version }}"
+          gh workflow run publish.yml \
+            --ref main \
+            -f version="${new_version}"
+          echo "Dispatched npm publish for v${new_version}"
 
       - name: Dry-run summary
         if: inputs.dry_run == true
