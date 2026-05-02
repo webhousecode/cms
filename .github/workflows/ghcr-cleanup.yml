@@ -1,0 +1,122 @@
+name: Cleanup old GHCR images
+
+# Why this workflow exists:
+#   Every cms-admin release pushes a new multi-arch Docker image to
+#   ghcr.io/webhousecode/cms-admin. Each build also leaves behind ~5–8
+#   untagged manifests (intermediate platform-specific layers, attestations,
+#   buildx index entries) that nobody can reach via :tag and that nobody
+#   needs once :latest moves on. They accumulate fast (35 versions for 3
+#   real releases at last count) and eat the org's package storage quota.
+#
+# What it does:
+#   1. Delete EVERY untagged version (these are by definition unreachable).
+#   2. Keep the 5 most recent tagged versions (so we can roll back), delete
+#      the rest. `latest` is always preserved because it shares a digest
+#      with the latest semver tag.
+#
+# When it runs:
+#   - Automatically after Release (stable) succeeds — keeps GHCR tidy
+#     without us thinking about it.
+#   - On schedule (Sundays 03:30 UTC) as a safety net for any orphan
+#     versions a failed release left behind.
+#   - Manually via workflow_dispatch with optional `dry_run` for inspection.
+
+on:
+  workflow_run:
+    workflows: ["Release (stable)"]
+    types: [completed]
+  schedule:
+    - cron: "30 3 * * 0"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "List what would be deleted without deleting"
+        type: boolean
+        default: false
+      keep_tagged:
+        description: "Number of tagged versions to keep (most recent first)"
+        type: string
+        default: "5"
+
+permissions:
+  packages: write
+
+jobs:
+  cleanup:
+    # Skip the workflow_run trigger if Release (stable) actually failed —
+    # no fresh image to clean up against, and we don't want to mask the
+    # real failure with cleanup noise.
+    if: |
+      github.event_name != 'workflow_run' ||
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    env:
+      PACKAGE: cms-admin
+      OWNER: webhousecode
+      KEEP_TAGGED: ${{ github.event.inputs.keep_tagged || '5' }}
+      DRY_RUN: ${{ github.event.inputs.dry_run || 'false' }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Snapshot before cleanup
+        run: |
+          total=$(gh api "/orgs/${OWNER}/packages/container/${PACKAGE}/versions" --paginate -q 'length' | awk '{s+=$1} END{print s}')
+          tagged=$(gh api "/orgs/${OWNER}/packages/container/${PACKAGE}/versions" --paginate -q '[.[] | select(.metadata.container.tags | length > 0)] | length' | awk '{s+=$1} END{print s}')
+          echo "Before cleanup: ${total} total versions, ${tagged} tagged."
+          gh api "/orgs/${OWNER}/packages/container/${PACKAGE}/versions" --paginate \
+            -q '.[] | select(.metadata.container.tags | length > 0) | "  \(.created_at)  \(.metadata.container.tags | join(","))"' \
+            | sort -r
+
+      - name: Delete untagged versions
+        run: |
+          set -eo pipefail
+          # Untagged = unreachable via any :tag pull. These come from buildx
+          # multi-arch builds (one per platform plus the index) and from
+          # attestation manifests. They consume storage but are not addressable
+          # by any consumer, so deletion is always safe.
+          ids=$(gh api "/orgs/${OWNER}/packages/container/${PACKAGE}/versions" --paginate \
+            -q '.[] | select(.metadata.container.tags | length == 0) | .id')
+          count=$(printf '%s\n' "$ids" | grep -c . || true)
+          echo "Found ${count} untagged versions."
+          if [ "$count" -eq 0 ]; then
+            echo "Nothing to delete."
+            exit 0
+          fi
+          for id in $ids; do
+            if [ "$DRY_RUN" = "true" ]; then
+              echo "  [dry-run] would delete untagged id=$id"
+            else
+              echo "  deleting untagged id=$id"
+              gh api -X DELETE "/orgs/${OWNER}/packages/container/${PACKAGE}/versions/$id"
+            fi
+          done
+
+      - name: Keep N most recent tagged versions
+        run: |
+          set -eo pipefail
+          # Sort tagged versions newest-first, skip the first KEEP_TAGGED, delete the rest.
+          # `latest` shares a digest with whichever semver tag it points to, so it's
+          # included in that version's tag list — preserved as part of the kept set.
+          stale=$(gh api "/orgs/${OWNER}/packages/container/${PACKAGE}/versions" --paginate \
+            --jq '[.[] | select(.metadata.container.tags | length > 0)] | sort_by(.created_at) | reverse | .['${KEEP_TAGGED}':] | .[].id')
+          count=$(printf '%s\n' "$stale" | grep -c . || true)
+          echo "Found ${count} tagged versions to retire (keeping ${KEEP_TAGGED} most recent)."
+          if [ "$count" -eq 0 ]; then
+            echo "Nothing to retire."
+            exit 0
+          fi
+          for id in $stale; do
+            tags=$(gh api "/orgs/${OWNER}/packages/container/${PACKAGE}/versions/$id" -q '.metadata.container.tags | join(",")')
+            if [ "$DRY_RUN" = "true" ]; then
+              echo "  [dry-run] would retire id=$id tags=$tags"
+            else
+              echo "  retiring id=$id tags=$tags"
+              gh api -X DELETE "/orgs/${OWNER}/packages/container/${PACKAGE}/versions/$id"
+            fi
+          done
+
+      - name: Snapshot after cleanup
+        if: ${{ env.DRY_RUN != 'true' }}
+        run: |
+          total=$(gh api "/orgs/${OWNER}/packages/container/${PACKAGE}/versions" --paginate -q 'length' | awk '{s+=$1} END{print s}')
+          tagged=$(gh api "/orgs/${OWNER}/packages/container/${PACKAGE}/versions" --paginate -q '[.[] | select(.metadata.container.tags | length > 0)] | length' | awk '{s+=$1} END{print s}')
+          echo "After cleanup: ${total} total versions, ${tagged} tagged."
