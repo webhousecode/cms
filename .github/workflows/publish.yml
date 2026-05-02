@@ -59,7 +59,7 @@ jobs:
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
           echo "Bumping all packages to $NEW_VERSION"
 
-          PACKAGES=(cms cms-ai cms-cli cms-mcp-client cms-mcp-server create-cms cms-admin-cli)
+          PACKAGES=(cms cms-ai cms-cli cms-mcp-client cms-mcp-server create-cms cms-admin-cli cms-shop)
           for pkg in "${PACKAGES[@]}"; do
             node -e "
               const fs = require('fs');
@@ -81,8 +81,9 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: |
-          # Publish in dependency order with provenance
-          PACKAGES=(cms cms-ai cms-mcp-client cms-mcp-server cms-cli create-cms)
+          # Publish in dependency order with provenance.
+          # cms-shop depends on @webhouse/cms (workspace:*) — must publish AFTER cms.
+          PACKAGES=(cms cms-ai cms-mcp-client cms-mcp-server cms-cli create-cms cms-shop)
           for pkg in "${PACKAGES[@]}"; do
             echo "📦 Publishing @webhouse/$pkg@${{ env.NEW_VERSION }}..."
             cd packages/$pkg
@@ -93,7 +94,7 @@ jobs:
 
       - name: Restore workspace deps and commit version bump
         run: |
-          PACKAGES=(cms-ai cms-cli cms-mcp-client cms-mcp-server create-cms)
+          PACKAGES=(cms-ai cms-cli cms-mcp-client cms-mcp-server create-cms cms-shop)
           for pkg in "${PACKAGES[@]}"; do
             node -e "
               const fs = require('fs');
