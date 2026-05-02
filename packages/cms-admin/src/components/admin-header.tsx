@@ -277,7 +277,33 @@ function DeployButton() {
   const isAdminUser = userRole === "admin";
 
   const handleDeploy = useCallback(async () => {
-    // Not configured → tell the user
+    // ICD-only site: no rebuild provider configured, but content syncs live
+    // via the revalidate webhook. Clicking the rocket triggers a manual
+    // re-sync of all current content (refreshes the live site's cache).
+    // It is NOT "deploy not configured" — that toast was the bug that
+    // confused everyone with an "ICD · auto" pill next to a rocket
+    // claiming nothing was set up.
+    if (provider === "off" && canPublishContent) {
+      setDeploying(true);
+      setLastResult(null);
+      setDeployPhase("Re-syncing content...");
+      try {
+        const res = await fetch("/api/admin/deploy", { method: "POST", signal: AbortSignal.timeout(120_000) });
+        const data = await res.json() as { status: string; error?: string; url?: string };
+        if (data.status === "success") {
+          toast.success("Content re-synced", { description: "Live site cache refreshed.", duration: 4000 });
+        } else {
+          toast.error("Re-sync failed", { description: data.error ?? "Unknown error", duration: 8000 });
+        }
+      } catch {
+        toast.error("Re-sync failed", { description: "Request failed", duration: 8000 });
+      }
+      setDeploying(false);
+      setDeployPhase("");
+      return;
+    }
+
+    // Truly nothing configured (no ICD, no rebuild) → tell the user
     if (provider === "off") {
       if (isAdminUser) {
         toast.info("Deploy not configured", {
@@ -331,7 +357,7 @@ function DeployButton() {
     }
     setDeploying(false);
     setDeployPhase("");
-  }, [provider, isAdminUser, router]);
+  }, [provider, canPublishContent, isAdminUser, router]);
 
   // "d" shortcut → deploy
   useEffect(() => {
@@ -339,13 +365,14 @@ function DeployButton() {
       if (e.key !== "d" || e.metaKey || e.ctrlKey || e.altKey) return;
       const tag = (document.activeElement?.tagName ?? "").toLowerCase();
       if (tag === "input" || tag === "textarea" || tag === "select" || (document.activeElement as HTMLElement)?.isContentEditable) return;
-      if (provider === "off") return;
+      // Allow the shortcut for ICD-only sites too — handleDeploy distinguishes.
+      if (provider === "off" && !canPublishContent) return;
       e.preventDefault();
       handleDeploy();
     }
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [provider, handleDeploy]);
+  }, [provider, canPublishContent, handleDeploy]);
 
   // Capability probe still in flight — render nothing rather than flashing
   // the rocket and yanking it away.
@@ -381,30 +408,42 @@ function DeployButton() {
     );
   }
 
+  // ICD pill is shown when content auto-syncs to a separate-repo SSR site.
+  // In that mode the rocket is redundant (every save already syncs). Hide
+  // the rocket entirely; the pill carries both the status and a click-to-
+  // resync affordance.
+  if (showIcdPill) {
+    return (
+      <button
+        type="button"
+        onClick={handleDeploy}
+        disabled={deploying}
+        title={deploying ? "Re-syncing..." : (reason ?? "Content auto-syncs on save. Click to manually re-sync everything.")}
+        aria-label="ICD status — click to manually re-sync"
+        style={{
+          fontSize: "0.65rem",
+          padding: "0.2rem 0.55rem",
+          borderRadius: "999px",
+          border: "1px solid var(--border)",
+          color: "var(--muted-foreground)",
+          background: "transparent",
+          fontFamily: "monospace",
+          whiteSpace: "nowrap",
+          cursor: deploying ? "wait" : "pointer",
+        }}
+      >
+        {deploying ? "ICD · syncing…" : "ICD · auto"}
+      </button>
+    );
+  }
+
   return (
     <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
-      {showIcdPill && (
-        <span
-          title={reason ?? "Content edits auto-sync via ICD. Click the rocket to manually trigger a revalidate."}
-          style={{
-            fontSize: "0.65rem",
-            padding: "0.2rem 0.55rem",
-            borderRadius: "999px",
-            border: "1px solid var(--border)",
-            color: "var(--muted-foreground)",
-            background: "transparent",
-            fontFamily: "monospace",
-            whiteSpace: "nowrap",
-          }}
-        >
-          ICD · auto
-        </span>
-      )}
     <button
       type="button"
       onClick={handleDeploy}
       disabled={deploying}
-      title={deploying ? "Publishing..." : lastResult ? (lastResult.ok ? "Published!" : `Publish failed: ${lastResult.error}`) : provider === "off" ? "Deploy not configured" : showIcdPill ? "Manually trigger revalidate" : "Publish changes"}
+      title={deploying ? "Publishing..." : lastResult ? (lastResult.ok ? "Published!" : `Publish failed: ${lastResult.error}`) : provider === "off" ? "Deploy not configured" : "Publish changes"}
       aria-label="Publish changes"
       style={{
         background: "none",
