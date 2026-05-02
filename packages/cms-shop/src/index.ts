@@ -1,16 +1,26 @@
 /**
  * @webhouse/cms-shop — F136 E-commerce module
  *
- * Phase 1 (this release): collection schemas + types. Sites import the
- * collections and use them like any other CMS collection. Stripe sync,
- * checkout, shipping, returns, discounts, AI product creation arrive
- * in subsequent phases — see docs/features/F136-shop-module.md.
+ * Phase 1: collection schemas + Stripe sync + cart engine + Checkout
+ * + webhook handler + Interactive Islands. Sites import the collections
+ * and mount route handlers/islands like any other CMS module.
  *
- * Module-level entry that re-exports the public surface so consumers
- * can write either:
- *   import { productsCollection } from '@webhouse/cms-shop';
+ * Subpath imports for tree-shaking:
  *   import { productsCollection } from '@webhouse/cms-shop/collections';
  *   import type { ShopProduct } from '@webhouse/cms-shop/types';
+ *   import { syncProductToStripe } from '@webhouse/cms-shop/stripe';
+ *   import { createCartHandlers } from '@webhouse/cms-shop/cart';
+ *   import { createCheckoutHandler } from '@webhouse/cms-shop/checkout';
+ *   import { createStripeWebhookHandler } from '@webhouse/cms-shop/webhooks';
+ *   import { renderProductPage } from '@webhouse/cms-shop/storefront';
+ *
+ * The barrel below re-exports the runtime surface so a single
+ * `from '@webhouse/cms-shop'` import is also valid.
  */
 export * from './collections';
 export * from './types';
+export * from './stripe';
+export * from './cart';
+export * from './checkout';
+export * from './webhooks';
+export * from './storefront';

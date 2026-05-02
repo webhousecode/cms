@@ -22,6 +22,36 @@
       "types": "./dist/types.d.ts",
       "import": "./dist/types.js",
       "require": "./dist/types.cjs"
+    },
+    "./stripe": {
+      "types": "./dist/stripe/index.d.ts",
+      "import": "./dist/stripe/index.js",
+      "require": "./dist/stripe/index.cjs"
+    },
+    "./cart": {
+      "types": "./dist/cart/index.d.ts",
+      "import": "./dist/cart/index.js",
+      "require": "./dist/cart/index.cjs"
+    },
+    "./checkout": {
+      "types": "./dist/checkout/index.d.ts",
+      "import": "./dist/checkout/index.js",
+      "require": "./dist/checkout/index.cjs"
+    },
+    "./webhooks": {
+      "types": "./dist/webhooks/index.d.ts",
+      "import": "./dist/webhooks/index.js",
+      "require": "./dist/webhooks/index.cjs"
+    },
+    "./storefront": {
+      "types": "./dist/storefront/index.d.ts",
+      "import": "./dist/storefront/index.js",
+      "require": "./dist/storefront/index.cjs"
+    },
+    "./islands": {
+      "types": "./dist/islands/index.d.ts",
+      "import": "./dist/islands/index.js",
+      "require": "./dist/islands/index.cjs"
     }
   },
   "files": [
@@ -42,7 +72,8 @@
   },
   "homepage": "https://docs.webhouse.app",
   "dependencies": {
-    "@webhouse/cms": "workspace:*"
+    "@webhouse/cms": "workspace:*",
+    "stripe": "^22.1.0"
   },
   "devDependencies": {
     "tsup": "^8.0.0",
