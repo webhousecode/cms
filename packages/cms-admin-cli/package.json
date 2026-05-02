@@ -1,6 +1,6 @@
 {
   "name": "@webhouse/cms-admin-cli",
-  "version": "0.2.17",
+  "version": "0.4.0",
   "description": "Run the CMS admin UI locally — npx @webhouse/cms-admin-cli",
   "type": "module",
   "license": "MIT",
