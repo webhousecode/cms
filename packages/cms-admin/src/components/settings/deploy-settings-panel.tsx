@@ -8,6 +8,7 @@ import { Rocket, ExternalLink, Check, X, Loader2, RefreshCw, Copy, Globe, Search
 import { DeployModal } from "@/components/deploy-modal";
 import { BuildHistory } from "@/components/build-history";
 import { DeployOutputBrowser } from "@/components/deploy-output-browser";
+import { PushSubscriptionToggle } from "@/components/push-subscription-toggle";
 
 type DeployProvider =
   | "off"
@@ -1319,6 +1320,16 @@ export function DeploySettingsPanel() {
         )}
       </SettingsCard>
       </>}
+
+      {/* ── Browser push notifications ── */}
+      {effectiveProvider !== "off" && (
+        <>
+          <SectionHeading>Notifications</SectionHeading>
+          <SettingsCard>
+            <PushSubscriptionToggle />
+          </SettingsCard>
+        </>
+      )}
 
       {/* ── Build output browser ── */}
       {effectiveProvider !== "off" && <DeployOutputSection />}
