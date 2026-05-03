@@ -11,7 +11,13 @@ import { createHash, randomUUID } from "node:crypto";
 import { getActiveSitePaths, getActiveSiteEntry } from "../site-paths";
 import { getAdminCms, getAdminConfig } from "../cms";
 import type { BeamManifest } from "./types";
-import { SECRET_FIELDS, BEAM_REDACTED, EXCLUDED_DATA_DIRS } from "./types";
+import {
+  SECRET_FIELDS,
+  BEAM_REDACTED,
+  EXCLUDED_DATA_DIRS,
+  EXCLUDED_SOURCE_DIRS,
+  SOURCE_ROOT_FILES,
+} from "./types";
 import {
   createBeamSession,
   updateBeamSession,
@@ -64,6 +70,7 @@ export async function pushBeamToTarget(options: PushOptions): Promise<string> {
     contentFiles: 0,
     mediaFiles: 0,
     dataFiles: 0,
+    sourceFiles: 0,
     totalSizeBytes: 0,
     collections: {},
   };
@@ -162,6 +169,44 @@ export async function pushBeamToTarget(options: PushOptions): Promise<string> {
         checksums[archivePath] = checksum;
         files.push({ archivePath, content: Buffer.from(content), checksum });
         stats.dataFiles++;
+      }
+    }
+  }
+
+  // ── F143 P2: Source files (build.ts + package.json + public/) ──
+  // Skipped for github-adapter sites (their projectDir is a temp dir
+  // with only cms.config.ts; actual source lives in the GH repo).
+  const projectDir = sitePaths.projectDir;
+  if (
+    !configPath.startsWith("github://") &&
+    existsSync(projectDir) &&
+    siteEntry?.adapter !== "github"
+  ) {
+    for (const entry of readdirSync(projectDir)) {
+      if (EXCLUDED_SOURCE_DIRS.has(entry)) continue;
+      const abs = path.join(projectDir, entry);
+      let st;
+      try { st = statSync(abs); } catch { continue; }
+
+      if (st.isDirectory()) {
+        // Only recurse into public/ — see export.ts for rationale
+        if (entry !== "public") continue;
+        walkDir(abs, (absPath, relPath) => {
+          if (relPath.startsWith("uploads/") || relPath === "uploads") return;
+          const archivePath = `source/public/${relPath}`;
+          const buf = readFileSync(absPath);
+          const checksum = sha256(buf);
+          checksums[archivePath] = checksum;
+          files.push({ archivePath, content: buf, checksum });
+          stats.sourceFiles = (stats.sourceFiles ?? 0) + 1;
+        });
+      } else if (SOURCE_ROOT_FILES.has(entry)) {
+        const archivePath = `source/${entry}`;
+        const buf = readFileSync(abs);
+        const checksum = sha256(buf);
+        checksums[archivePath] = checksum;
+        files.push({ archivePath, content: buf, checksum });
+        stats.sourceFiles = (stats.sourceFiles ?? 0) + 1;
       }
     }
   }

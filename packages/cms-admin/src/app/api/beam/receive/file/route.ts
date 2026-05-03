@@ -67,6 +67,11 @@ export async function POST(request: NextRequest) {
       targetPath = path.join(siteDir, filePath);
     } else if (filePath === "cms.config.ts" || filePath === "cms.config.json") {
       targetPath = path.join(siteDir, filePath);
+    } else if (filePath.startsWith("source/")) {
+      // F143 P2: strip the source/ namespace and write to siteDir root.
+      // build.ts → siteDir/build.ts, source/public/X → siteDir/public/X.
+      // Symmetric with import.ts and createBeamArchive's source/ section.
+      targetPath = path.join(siteDir, filePath.slice("source/".length));
     } else {
       targetPath = path.join(siteDir, filePath);
     }
