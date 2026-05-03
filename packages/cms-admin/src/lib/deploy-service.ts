@@ -502,6 +502,36 @@ export async function triggerDeploy(): Promise<DeployEntry> {
           if (Object.keys(updates).length > 0) {
             try { await writeSiteConfig(updates); } catch { /* non-fatal */ }
           }
+
+          // Best-effort: ensure GH page_build webhook is registered so we
+          // get a callback when GH Pages finishes deploying (replaces UI
+          // polling). Idempotent — registers once per site, refreshes
+          // secret on subsequent deploys.
+          try {
+            const baseUrl = process.env.NEXTAUTH_URL || "";
+            if (baseUrl) {
+              const { getOrCreatePageBuildSecret, recordHookRegistration } =
+                await import("./deploy/page-build-webhook-secret");
+              const { registerPageBuildHook } = await import("./deploy/page-build-register");
+              const { secret } = await getOrCreatePageBuildSecret();
+              const result = await registerPageBuildHook({
+                repo: useRepo,
+                token: useToken,
+                callbackUrl: `${baseUrl.replace(/\/$/, "")}/api/admin/page-build-webhook`,
+                secret,
+              });
+              if (result.ok && result.hookId) {
+                await recordHookRegistration({ hookId: result.hookId, repo: useRepo });
+                if (result.action !== "noop") {
+                  console.log(`[deploy] page_build webhook ${result.action} (hook ${result.hookId})`);
+                }
+              } else if (!result.ok) {
+                console.log(`[deploy] page_build webhook register skipped: ${result.error}`);
+              }
+            }
+          } catch (e) {
+            console.log(`[deploy] page_build webhook register error:`, e instanceof Error ? e.message : e);
+          }
         }
         entry.status = "success";
       }

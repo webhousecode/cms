@@ -274,52 +274,88 @@ function DeployButton() {
   }
 
   /**
-   * GitHub Pages-specific polling: after the upload-to-Pages API returns
-   * success, the actual page_build job runs async on GitHub's side
-   * (1-3 min typical). Poll `/repos/{repo}/pages/builds/latest` until
-   * status === "built" (or "errored"), then fire a follow-up toast.
+   * GitHub Pages-specific live tracking: opens an SSE channel to receive
+   * `page_build` webhook events instantly when GH finishes deploying.
+   * Falls back to polling if the SSE stream errors (e.g. proxy strips
+   * event-stream Content-Type).
    */
-  function startPagesBuildPolling(liveUrl?: string) {
-    const sinceSec = Math.floor(Date.now() / 1000) - 30; // small slack for clock skew
+  function startPagesBuildTracking(liveUrl?: string) {
     const startedAt = Date.now();
-    if (pollRef.current) clearInterval(pollRef.current);
-    pollRef.current = setInterval(async () => {
-      try {
-        const r = await fetch(`/api/admin/deploy/pages-build-status?since=${sinceSec}`);
-        if (!r.ok) return;
-        const d = await r.json() as {
-          found: boolean;
-          status?: "queued" | "building" | "built" | "errored";
-          isCurrent?: boolean;
-          url?: string;
-          error?: string | null;
-        };
-        // Wait until GitHub registers the build we just kicked off — older
-        // builds (from a previous deploy) shouldn't end the polling early.
-        if (!d.found || !d.isCurrent) return;
-        if (d.status === "built") {
-          if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
-          const elapsed = Math.round((Date.now() - startedAt) / 1000);
-          toast.success("Live on GitHub Pages 🌐", {
-            description: liveUrl ? `${liveUrl} · ready in ${elapsed}s` : `Ready in ${elapsed}s`,
-            duration: 12000,
-            ...(liveUrl && { action: { label: "Open", onClick: () => window.open(liveUrl, "_blank") } }),
-          });
-        } else if (d.status === "errored") {
-          if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
-          toast.error("GitHub Pages build failed", {
-            description: d.error ?? "See repo → Settings → Pages for details.",
-            duration: 12000,
-          });
-        }
-        // queued / building → keep polling
-      } catch { /* keep polling */ }
-    }, 10_000);
+    const siteId = (document.cookie.match(/(?:^|;\s*)cms-active-site=([^;]+)/) ?? [, ""])[1];
+    if (!siteId) return; // no active site → nothing to subscribe to
 
-    // Safety: 10-min ceiling. If still polling, give up quietly.
-    setTimeout(() => {
-      if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
-    }, 600_000);
+    let es: EventSource | null = null;
+    let fellBackToPolling = false;
+    let pollHandle: ReturnType<typeof setInterval> | null = null;
+
+    const finishBuilt = () => {
+      const elapsed = Math.round((Date.now() - startedAt) / 1000);
+      toast.success("Live on GitHub Pages 🌐", {
+        description: liveUrl ? `${liveUrl} · ready in ${elapsed}s` : `Ready in ${elapsed}s`,
+        duration: 12000,
+        ...(liveUrl && { action: { label: "Open", onClick: () => window.open(liveUrl, "_blank") } }),
+      });
+      cleanup();
+    };
+    const finishErrored = (errMsg?: string) => {
+      toast.error("GitHub Pages build failed", {
+        description: errMsg ?? "See repo → Settings → Pages for details.",
+        duration: 12000,
+      });
+      cleanup();
+    };
+    const cleanup = () => {
+      if (es) { es.close(); es = null; }
+      if (pollHandle) { clearInterval(pollHandle); pollHandle = null; }
+    };
+
+    // Primary path: SSE
+    try {
+      es = new EventSource(`/api/admin/deploy/events?site=${encodeURIComponent(decodeURIComponent(siteId))}`);
+      es.addEventListener("page-build", (ev) => {
+        try {
+          const d = JSON.parse((ev as MessageEvent).data) as {
+            status: "queued" | "building" | "built" | "errored";
+            url?: string;
+            error?: string;
+          };
+          if (d.status === "built") finishBuilt();
+          else if (d.status === "errored") finishErrored(d.error);
+        } catch { /* ignore malformed */ }
+      });
+      es.addEventListener("error", () => {
+        if (fellBackToPolling) return;
+        fellBackToPolling = true;
+        if (es) { es.close(); es = null; }
+        startPolling();
+      });
+    } catch {
+      startPolling();
+    }
+
+    // Fallback path: existing polling (only used if SSE never comes up)
+    function startPolling() {
+      const sinceSec = Math.floor(startedAt / 1000) - 30;
+      pollHandle = setInterval(async () => {
+        try {
+          const r = await fetch(`/api/admin/deploy/pages-build-status?since=${sinceSec}`);
+          if (!r.ok) return;
+          const d = await r.json() as {
+            found: boolean;
+            status?: "queued" | "building" | "built" | "errored";
+            isCurrent?: boolean;
+            url?: string;
+            error?: string | null;
+          };
+          if (!d.found || !d.isCurrent) return;
+          if (d.status === "built") finishBuilt();
+          else if (d.status === "errored") finishErrored(d.error ?? undefined);
+        } catch { /* keep polling */ }
+      }, 10_000);
+    }
+
+    // Safety: 10-min ceiling
+    setTimeout(cleanup, 600_000);
   }
 
   const userRole = user?.role ?? user?.siteRole ?? null;
@@ -403,7 +439,7 @@ function DeployButton() {
           ...(data.url && { action: { label: "Open", onClick: () => window.open(data.url, "_blank") } }),
         });
         window.dispatchEvent(new CustomEvent("cms-site-change", { detail: {} }));
-        startPagesBuildPolling(data.url);
+        startPagesBuildTracking(data.url);
         return; // polling fires the "Live" follow-up toast
       } else if (data.status === "success" && data.url) {
         toast.success("Published!", {
