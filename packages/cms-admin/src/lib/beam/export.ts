@@ -12,7 +12,13 @@ import archiver from "archiver";
 import { getActiveSitePaths, getActiveSiteEntry } from "../site-paths";
 import { getAdminCms, getAdminConfig } from "../cms";
 import type { BeamManifest, BeamExportResult } from "./types";
-import { SECRET_FIELDS, BEAM_REDACTED, EXCLUDED_DATA_DIRS } from "./types";
+import {
+  SECRET_FIELDS,
+  BEAM_REDACTED,
+  EXCLUDED_DATA_DIRS,
+  EXCLUDED_SOURCE_DIRS,
+  SOURCE_ROOT_FILES,
+} from "./types";
 
 /**
  * Create a .beam archive from the active site.
@@ -37,6 +43,7 @@ export async function createBeamArchive(): Promise<BeamExportResult> {
     contentFiles: 0,
     mediaFiles: 0,
     dataFiles: 0,
+    sourceFiles: 0,
     totalSizeBytes: 0,
     collections: {},
   };
@@ -162,6 +169,59 @@ export async function createBeamArchive(): Promise<BeamExportResult> {
       archive.append(regJson, { name: "registry-entry.json" });
     }
 
+    // ── F143 P2: Source files (build.ts, package.json, public/, etc.) ──
+    // Skipped for github-adapter sites because their projectDir is a temp
+    // dir with only cms.config.ts (per site-pool.ts). The actual source
+    // lives in the GH repo and the build server pulls from there.
+    if (
+      !configPath.startsWith("github://") &&
+      existsSync(projectDir) &&
+      siteEntry?.adapter !== "github"
+    ) {
+      // Walk projectDir's root for source-relevant files.
+      for (const entry of readdirSync(projectDir)) {
+        // Skip directories the build server should never receive.
+        if (EXCLUDED_SOURCE_DIRS.has(entry)) continue;
+
+        const abs = path.join(projectDir, entry);
+        let stat;
+        try {
+          stat = statSync(abs);
+        } catch {
+          continue; // broken symlink, missing during walk, etc.
+        }
+
+        if (stat.isDirectory()) {
+          // Only recurse into `public/` for now — that's where static
+          // assets, logos, favicons, fonts live. Other root directories
+          // are either excluded above or domain-specific and shouldn't
+          // be auto-shipped.
+          if (entry !== "public") continue;
+          walkDir(abs, (absPath, relPath) => {
+            // public/uploads/ is handled by the dedicated uploads/ section
+            // above — skip it here to avoid duplication + checksum drift.
+            if (relPath.startsWith("uploads/") || relPath === "uploads") return;
+            const archivePath = `source/public/${relPath}`;
+            const buf = readFileSync(absPath);
+            checksums[archivePath] = sha256(buf);
+            archive.file(absPath, { name: archivePath });
+            stats.sourceFiles = (stats.sourceFiles ?? 0) + 1;
+          });
+        } else if (SOURCE_ROOT_FILES.has(entry)) {
+          // Top-level whitelisted files: build.ts, package.json, lockfiles, tsconfig
+          const archivePath = `source/${entry}`;
+          const buf = readFileSync(abs);
+          checksums[archivePath] = sha256(buf);
+          archive.file(abs, { name: archivePath });
+          stats.sourceFiles = (stats.sourceFiles ?? 0) + 1;
+        }
+        // Files NOT in SOURCE_ROOT_FILES are silently skipped — keeps the
+        // archive minimal and predictable. Site-specific custom files at
+        // project root (e.g. README.md, .env.example) are not transported
+        // unless explicitly added to SOURCE_ROOT_FILES.
+      }
+    }
+
     archive.finalize();
   });
 
@@ -169,7 +229,10 @@ export async function createBeamArchive(): Promise<BeamExportResult> {
   const uniqueSecrets = [...new Set(secretsRequired)];
 
   const manifest: BeamManifest = {
-    version: 1,
+    // F143 P2: bumped to 2 to signal source/ section presence. Receivers
+    // on v1 still process the archive (unknown paths fall through the
+    // import-side branch table to the "write to siteDir root" fallback).
+    version: 2,
     beamId,
     sourceInstance: process.env.HOSTNAME || "localhost",
     exportedAt: new Date().toISOString(),

@@ -111,6 +111,16 @@ export async function importBeamArchive(
       stats.dataFiles++;
     } else if (relativePath === "cms.config.ts" || relativePath === "cms.config.json") {
       targetPath = path.join(siteDir, relativePath);
+    } else if (relativePath.startsWith("source/")) {
+      // F143 P2: strip the source/ namespace and write to siteDir root.
+      // build.ts → siteDir/build.ts
+      // source/public/logo.svg → siteDir/public/logo.svg
+      // package.json → siteDir/package.json
+      const stripped = relativePath.slice("source/".length);
+      targetPath = path.join(siteDir, stripped);
+      // sourceFiles stat — ensure object key exists for v2 manifests
+      if (typeof stats.sourceFiles !== "number") stats.sourceFiles = 0;
+      stats.sourceFiles++;
     } else {
       // Unknown path — write to site root
       targetPath = path.join(siteDir, relativePath);
