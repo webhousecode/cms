@@ -177,6 +177,28 @@ export interface BuildConfig {
   /** Timeout in seconds. Default: 300. Max: 900. */
   timeout?: number;
 
+  // ── F143: Common Build Server — extra deps ────────────────
+  /**
+   * Extra npm packages cms-admin should install on-demand for this
+   * site's build, on top of its core pulje (marked, gray-matter,
+   * slugify, sharp, marked-highlight). Each entry is a npm specifier:
+   *
+   *   - `'lodash'` — install latest
+   *   - `'three@^0.158.0'` — pin to range
+   *   - `'@some-scope/pkg@2.1.3'` — exact version
+   *
+   * cms-admin auto-detects most deps by parsing build.ts — this field
+   * is the manual override for cases where:
+   *   - You want to pin a specific version for reproducibility
+   *   - The dep isn't a static `import` (e.g. dynamic eval, CLI spawn)
+   *   - You want the auto-scanner to ignore the file's import scan
+   *
+   * Installed into a content-addressable store on the cms-admin host
+   * (`{dataDir}/build-deps/<hash>/`) and shared across sites with
+   * identical dep-sets.
+   */
+  deps?: string[];
+
   // ── F126 Phase 3: Build Profiles ──────────────────────────
 
   /** Multiple named build profiles. Overrides command/outDir when present. */
