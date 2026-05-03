@@ -83,10 +83,32 @@ export async function resolveToken(token: string): Promise<string> {
       const fs = await import("fs/promises");
       const path = await import("path");
       const tokenPath = path.join(dataDir, "github-service-token.json");
+      console.log(`[resolveToken] step 2: dataDir=${dataDir}, trying ${tokenPath}`);
       const raw = await fs.readFile(tokenPath, "utf-8");
       const stored = JSON.parse(raw) as { token?: string };
+      console.log(`[resolveToken] step 2: read ${raw.length} bytes, token=${stored.token?.slice(0,8)}…`);
       if (stored.token) return stored.token;
-    } catch { /* try site-specific path next */ }
+    } catch (e) {
+      console.log(`[resolveToken] step 2 failed:`, e instanceof Error ? e.message : String(e));
+    }
+
+    // 2.5 Also check the GLOBAL admin _data dir — token may have been
+    // saved there before site-context was active (F143-debug fallback).
+    try {
+      const { getAdminDataDir } = await import("./site-registry");
+      const fs = await import("fs/promises");
+      const path = await import("path");
+      const tokenPath = path.join(getAdminDataDir(), "github-service-token.json");
+      console.log(`[resolveToken] step 2.5: trying ${tokenPath}`);
+      const raw = await fs.readFile(tokenPath, "utf-8");
+      const stored = JSON.parse(raw) as { token?: string };
+      if (stored.token) {
+        console.log(`[resolveToken] step 2.5: returning token=${stored.token.slice(0,8)}…`);
+        return stored.token;
+      }
+    } catch (e) {
+      console.log(`[resolveToken] step 2.5 failed:`, e instanceof Error ? e.message : String(e));
+    }
 
     // 3. Scan all site cache dirs for a service token (survives cookie clear)
     try {
