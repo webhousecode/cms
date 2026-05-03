@@ -264,10 +264,25 @@ build: {
 - **P3** ✅ shipped — Dockerfile generator + source-tar packer + orchestrator (31 tests)
 - **P4** ✅ shipped — `/api/builder/{trigger,callback,status}` + HMAC token + build-log (15 tests)
 - **P5** ✅ shipped — `<BuildHistory>` panel + `/api/builder/list` API
-- **P6** ⏳ in progress — `smokeTestImage()` helper landed (5 tests). Auto-rollback wiring pending.
+- **P6** ✅ shipped — `smokeTestImage()` (5 tests) + `findPreviousGoodImage()` rollback (6 tests)
+- **P7** ✅ shipped — wired into deploy-service as new "fly-ephemeral" provider; UI dropdown + 6 preflight-guard tests
+- **P8** ✅ shipped — `/api/builder/github-webhook` push-driven trigger; HMAC + repo lookup (14 tests)
+
+Total: 89 unit tests passing across F144's 8 phases.
 
 Note: original Phase 5 ("Rollback + smoke-test + UI polish") was split
-into P5 (UI) + P6 (smoke-test/rollback) for clearer tracking.
+into P5 (UI) + P6 (smoke-test/rollback). P7 (deploy-service wiring) +
+P8 (GitHub webhook) are extensions beyond the original 5-phase plan
+that landed during the autonomous F144 build-out on 2026-05-03.
+
+### Remaining manual steps before fly-ephemeral can run end-to-end
+1. Push `cms-builder` image to `ghcr.io/webhousecode/cms-builder:latest`
+   (use `packages/cms-admin/builder/Dockerfile`)
+2. Create the `webhouse-builders` Fly app that hosts the ephemeral VMs
+3. Set `GHCR_PUSH_TOKEN` + `CMS_GITHUB_WEBHOOK_SECRET` Fly secrets on
+   cms-admin
+4. Per-site: configure `deployProvider: "fly-ephemeral"` + GitHub
+   webhook URL `https://webhouse.app/api/builder/github-webhook`
 
 ### Phase 1 — Builder VM image (1 dag)
 - Byg `ghcr.io/webhousecode/cms-builder:latest` (Alpine + Node 22 + pnpm + Bun + docker CLI + entrypoint script)
