@@ -53,7 +53,7 @@ export interface SiteConfig {
   linkCheckTime: string;
 
   /** Deploy configuration */
-  deployProvider: "off" | "vercel" | "netlify" | "flyio" | "flyio-live" | "cloudflare" | "cloudflare-pages" | "github-pages" | "webhook" | "custom";
+  deployProvider: "off" | "vercel" | "netlify" | "flyio" | "flyio-live" | "fly-ephemeral" | "cloudflare" | "cloudflare-pages" | "github-pages" | "webhook" | "custom";
   deployHookUrl: string;
   deployApiToken: string;
   deployAppName: string;  // Fly.io app name or GitHub repo
