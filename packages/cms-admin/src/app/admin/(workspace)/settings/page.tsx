@@ -13,6 +13,7 @@ import { TeamPanel } from "@/components/settings/team-panel";
 import { EmailSettingsPanel } from "@/components/settings/email-settings-panel";
 import { ToolsSettingsPanel } from "@/components/settings/tools-settings-panel";
 import { DeploySettingsPanel } from "@/components/settings/deploy-settings-panel";
+import { BuildSettingsPanel } from "@/components/settings/build-settings-panel";
 import { GeoSettingsPanel } from "@/components/settings/geo-settings-panel";
 import { BackupSettingsPanel } from "@/components/settings/backup-settings-panel";
 import { BeamSettingsPanel } from "@/components/settings/beam-settings-panel";
@@ -58,6 +59,7 @@ export default async function SettingsPage({
     { id: "ai",          label: "AI" },
     { id: "brand-voice", label: "Brand Voice" },
     { id: "deploy",      label: "Deploy" },
+    { id: "build",       label: "Build" },
     { id: "backup",      label: "Backup" },
     { id: "tools",       label: "Automation" },
     { id: "geo",         label: "GEO" },
@@ -279,6 +281,14 @@ export default async function SettingsPage({
           <div className="max-w-lg" data-testid="settings-panel-deploy">
             <div style={{ marginBottom: "1rem" }}><HelpCard articleId="settings-deploy" variant="compact" /></div>
             <DeploySettingsPanel />
+          </div>
+        )}
+
+        {/* Build tab — output browser + SSR build history. Full max-w-4xl
+            (no max-w-lg) so the preview iframe gets the workspace width. */}
+        {tab === "build" && (
+          <div data-testid="settings-panel-build">
+            <BuildSettingsPanel />
           </div>
         )}
 

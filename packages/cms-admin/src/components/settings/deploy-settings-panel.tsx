@@ -6,8 +6,6 @@ import { SettingsCard } from "./settings-card";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { Rocket, ExternalLink, Check, X, Loader2, RefreshCw, Copy, Globe, Search } from "lucide-react";
 import { DeployModal } from "@/components/deploy-modal";
-import { BuildHistory } from "@/components/build-history";
-import { DeployOutputBrowser } from "@/components/deploy-output-browser";
 import { PushSubscriptionToggle } from "@/components/push-subscription-toggle";
 
 type DeployProvider =
@@ -1331,11 +1329,8 @@ export function DeploySettingsPanel() {
         </>
       )}
 
-      {/* ── Build output browser ── */}
-      {effectiveProvider !== "off" && <DeployOutputSection />}
-
-      {/* ── Ephemeral SSR builds (only when there are any) ── */}
-      {effectiveProvider !== "off" && <SSRBuildHistorySection />}
+      {/* Build output + SSR builds moved to dedicated "Build" tab so the
+          preview iframe gets full workspace width. See BuildSettingsPanel. */}
 
       {/* Deploy modal with progress */}
       <DeployModal
@@ -1383,45 +1378,6 @@ function formatTime(iso: string): string {
   } catch { return iso; }
 }
 
-/**
- * Visual file browser for the active site's `deploy/` output. Hidden
- * when no site selected (early render).
- */
-function DeployOutputSection() {
-  const [siteId, setSiteId] = useState<string | null>(null);
-  useEffect(() => {
-    const m = document.cookie.match(/(?:^|;\s*)cms-active-site=([^;]+)/);
-    setSiteId(m && m[1] ? decodeURIComponent(m[1]) : null);
-  }, []);
-  if (!siteId) return null;
-  return (
-    <>
-      <SectionHeading>Build output</SectionHeading>
-      <SettingsCard>
-        <DeployOutputBrowser siteId={siteId} />
-      </SettingsCard>
-    </>
-  );
-}
-
-/**
- * SSR build history. Reads the active-site cookie to know
- * which site to query. Hidden when no site is selected (early render
- * before HeaderDataProvider hydrates) or when no builds exist yet.
- */
-function SSRBuildHistorySection() {
-  const [siteId, setSiteId] = useState<string | null>(null);
-  useEffect(() => {
-    const m = document.cookie.match(/(?:^|;\s*)cms-active-site=([^;]+)/);
-    setSiteId(m && m[1] ? decodeURIComponent(m[1]) : null);
-  }, []);
-  if (!siteId) return null;
-  return (
-    <>
-      <SectionHeading>SSR builds</SectionHeading>
-      <SettingsCard>
-        <BuildHistory siteId={siteId} />
-      </SettingsCard>
-    </>
-  );
-}
+// DeployOutputSection + SSRBuildHistorySection moved to BuildSettingsPanel
+// when the dedicated "Build" tab landed — they need full workspace width
+// which the Deploy tab's max-w-lg constraint blocked.
