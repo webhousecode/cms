@@ -84,7 +84,11 @@ export class FilesystemStorageAdapter implements StorageAdapter {
     const dir = this.collectionDir(collection);
     if (!existsSync(dir)) return null;
 
-    const files = readdirSync(dir).filter(f => f.endsWith('.json'));
+    // Skip macOS AppleDouble metadata files (._*.json) — they end in
+    // `.json` and would otherwise be parsed as content, blowing up with
+    // "Unexpected token" errors. Costs nothing on Linux/Windows where
+    // these never exist.
+    const files = readdirSync(dir).filter(f => f.endsWith('.json') && !f.startsWith('._'));
     for (const file of files) {
       const slug = file.replace('.json', '');
       const doc = this.readDocument(collection, slug);
@@ -101,7 +105,11 @@ export class FilesystemStorageAdapter implements StorageAdapter {
     const dir = this.collectionDir(collection);
     if (!existsSync(dir)) return { documents: [], total: 0 };
 
-    const files = readdirSync(dir).filter(f => f.endsWith('.json'));
+    // Skip macOS AppleDouble metadata files (._*.json) — they end in
+    // `.json` and would otherwise be parsed as content, blowing up with
+    // "Unexpected token" errors. Costs nothing on Linux/Windows where
+    // these never exist.
+    const files = readdirSync(dir).filter(f => f.endsWith('.json') && !f.startsWith('._'));
     let documents: Document[] = [];
 
     for (const file of files) {
