@@ -158,6 +158,7 @@
 | F142 | [Templated SSG Runtime](#f142-templated-ssg-runtime) | Planned | [docs/features/F142-templated-ssg-runtime.md](features/F142-templated-ssg-runtime.md) |
 | F143 | [Common Build Server](#f143-common-build-server) | Planned | [docs/features/F143-common-build-server.md](features/F143-common-build-server.md) |
 | F144 | [Dynamic Site Build Orchestrator](#f144-dynamic-site-build-orchestrator) | Planned | [docs/features/F144-dynamic-site-build-orchestrator.md](features/F144-dynamic-site-build-orchestrator.md) |
+| F145 | [ICD — Instant Content Deployment](#f145-icd-instant-content-deployment) | Core shipped, polish planned | [docs/features/F145-icd-instant-content-deployment.md](features/F145-icd-instant-content-deployment.md) |
 
 ---
 
@@ -594,3 +595,7 @@ Indbygget build-server-modul i cms-admin. Bevarer `build.ts` som kontrakt, men f
 ## F144 — Dynamic Site Build Orchestrator
 
 cms-admin orkestrerer ephemeral Fly Machines som build-VM'er for SSR sites (Next.js, Bun/Hono). Builder pulls source fra GitHub eller cms-admin's egen disk, genererer Dockerfile, builder image, pusher til GHCR, og cms-admin orchestrerer rolling restart af target Fly app. 3 build-triggers støttes: manual rocket i admin, site-repo's egen GHA der POST'er til rebuild API, eller GitHub webhook direkte til cms-admin (zero-touch). Genbruger F143's source-mgmt + dep-scanner + install-queue. Cost: ~$0.01 per Next.js deploy. Erstatter "flyctl deploy fra terminalen" med en knap i admin med live build-logs + smoke-test + auto-rollback. 4-6 dage forudsat F143 er landed.
+
+## F145 — ICD (Instant Content Deployment)
+
+Formaliserer det 3. ben i CMS-deploy-triumviratet (ICD + F143 + F144). Core er shipped: HMAC-signeret POST fra cms-admin til site's `/api/revalidate` ved hver content-edit, propagerer JSON-document + buster Next.js cache for berørte paths. Sub-sekund. Brugt af alle SSR sites (sanneandersen, fysiodk-aalborg-sport, webhouse-app). F145 polish: dedikeret Site Settings UI, secret rotation, retry-logik med exponential backoff + dead-letter, batched revalidation, idempotency keys, kanonisk receiver-impl i nextjs-boilerplates, AI Builder Guide module + bilingual docs page. ~3-4 dages polish.
