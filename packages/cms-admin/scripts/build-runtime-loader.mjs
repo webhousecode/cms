@@ -166,6 +166,14 @@ const EXTRA_DEPS_DIR = process.env.CMS_BUILD_EXTRA_DEPS_DIR || null;
 
 function resolveFromExtraDeps(specifier) {
   if (!EXTRA_DEPS_DIR) return null;
+  // Only intercept BARE specifiers (npm pkg names). Relative + absolute
+  // + URL-scheme imports MUST fall through — otherwise an internal
+  // `import "../core/index.js"` from zod's own files (or any deps-store
+  // package) gets interpreted as a package name lookup, picks up the
+  // storeDir's auto-generated package.json, and resolves to the wrong
+  // path. This was the F143-on-Fly bug that produced ENOENT for
+  // /data/cms-admin/build-deps/<hash>/core/index.js.
+  if (specifier.startsWith(".") || specifier.startsWith("/") || specifier.includes(":")) return null;
   const pkgName = packageNameFromSpecifier(specifier);
   // Hoisted layout (--config.nodeLinker=hoisted): flat dir per pkg
   let pkgDir = path.join(EXTRA_DEPS_DIR, pkgName);
