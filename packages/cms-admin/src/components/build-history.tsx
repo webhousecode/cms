@@ -119,7 +119,7 @@ export function BuildHistory({ siteId, livePollMs = 3000 }: BuildHistoryProps){
   if (builds.length === 0) {
     return (
       <div style={{ color: "var(--muted-foreground)", fontSize: "0.85rem", padding: "0.75rem", border: "1px dashed var(--border)", borderRadius: "6px" }}>
-        No SSR builds yet. The first F144 ephemeral builder run will appear here.
+        No SSR builds yet. Click Deploy on a Next.js / Bun-Hono / custom-Dockerfile site to trigger one.
       </div>
     );
   }
