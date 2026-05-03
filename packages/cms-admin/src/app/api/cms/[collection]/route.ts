@@ -5,13 +5,42 @@ import { getSiteRole } from "@/lib/require-role";
 import { dispatchRevalidation } from "@/lib/revalidation";
 import { getActiveSiteEntry } from "@/lib/site-paths";
 import { saveRevision } from "@/lib/revisions";
+import { withSiteContext } from "@/lib/site-context";
+import { loadRegistry, findSite } from "@/lib/site-registry";
 
 type Ctx = { params: Promise<{ collection: string }> };
+
+/**
+ * Resolve org for a `?site=<id>` token-based call. Without this the
+ * downstream getActiveSitePaths / getAdminCms / getActiveSiteEntry all
+ * fall back to registry.defaultSiteId — which means a token scoped to
+ * site:trail can land documents on webhouse-site by accident. The bug
+ * shipped before site-context was wired into this route.
+ */
+async function resolveSiteCtx(siteId: string | null): Promise<{ orgId: string; siteId: string } | null> {
+  if (!siteId) return null;
+  const registry = await loadRegistry();
+  if (!registry) return null;
+  for (const org of registry.orgs) {
+    if (findSite(registry, org.id, siteId)) return { orgId: org.id, siteId };
+  }
+  return null;
+}
+
+/** Wrap a handler in withSiteContext when ?site= is present. */
+async function runScoped<T>(req: NextRequest, fn: () => Promise<T>): Promise<T | Response> {
+  const overrideSite = req.nextUrl.searchParams.get("site");
+  if (!overrideSite) return fn();
+  const ctx = await resolveSiteCtx(overrideSite);
+  if (!ctx) return NextResponse.json({ error: `site not found: ${overrideSite}` }, { status: 404 });
+  return withSiteContext(ctx, fn);
+}
 
 export async function GET(req: NextRequest, { params }: Ctx) {
   // Viewers can read, but check team membership exists
   const role = await getSiteRole();
   if (!role) return NextResponse.json({ error: "No access to this site" }, { status: 403 });
+  const result = await runScoped(req, async () => {
   try {
     const { collection } = await params;
     const [cms, config] = await Promise.all([getAdminCms(), getAdminConfig()]);
@@ -25,6 +54,8 @@ export async function GET(req: NextRequest, { params }: Ctx) {
     console.error(err);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
+  });
+  return result instanceof Response ? result : result as Response;
 }
 
 export async function POST(req: NextRequest, { params }: Ctx) {
@@ -32,6 +63,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   const role = await getSiteRole();
   if (!role || role === "viewer") return NextResponse.json({ error: "Editors only" }, { status: 403 });
 
+  const result = await runScoped(req, async () => {
   try {
     const { collection } = await params;
     const body = await req.json() as {
@@ -119,4 +151,6 @@ export async function POST(req: NextRequest, { params }: Ctx) {
     console.error(err);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
+  });
+  return result instanceof Response ? result : result as Response;
 }
