@@ -47,7 +47,7 @@ export function DeployOutputBrowser({ siteId }: Props) {
   const [selected, setSelected] = useState<Entry | null>(null);
   const previewRef = useRef<HTMLIFrameElement>(null);
 
-  const fetchDir = useCallback(async (relPath: string): Promise<{ entries: Entry[]; stats?: Stats; rootExists?: boolean }> => {
+  const fetchDir = useCallback(async (relPath: string): Promise<{ entries: Entry[]; stats?: Stats; deployRootExists?: boolean }> => {
     const r = await fetch(`/api/admin/deploy/output?site=${encodeURIComponent(siteId)}&path=${encodeURIComponent(relPath)}`);
     if (!r.ok) throw new Error(await r.text());
     return r.json();
@@ -62,7 +62,7 @@ export function DeployOutputBrowser({ siteId }: Props) {
         const root = await fetchDir("");
         if (cancelled) return;
         setStats(root.stats ?? null);
-        setRootExists(root.rootExists ?? false);
+        setRootExists(root.deployRootExists ?? false);
         setTree({ "": { entries: root.entries, loading: false, expanded: true } });
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : "failed to load");
@@ -102,7 +102,7 @@ export function DeployOutputBrowser({ siteId }: Props) {
     try {
       const root = await fetchDir("");
       setStats(root.stats ?? null);
-      setRootExists(root.rootExists ?? false);
+      setRootExists(root.deployRootExists ?? false);
       setTree({ "": { entries: root.entries, loading: false, expanded: true } });
       setError(null);
     } catch (e) {
