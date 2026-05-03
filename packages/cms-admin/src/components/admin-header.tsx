@@ -273,6 +273,55 @@ function DeployButton() {
     }, 600_000);
   }
 
+  /**
+   * GitHub Pages-specific polling: after the upload-to-Pages API returns
+   * success, the actual page_build job runs async on GitHub's side
+   * (1-3 min typical). Poll `/repos/{repo}/pages/builds/latest` until
+   * status === "built" (or "errored"), then fire a follow-up toast.
+   */
+  function startPagesBuildPolling(liveUrl?: string) {
+    const sinceSec = Math.floor(Date.now() / 1000) - 30; // small slack for clock skew
+    const startedAt = Date.now();
+    if (pollRef.current) clearInterval(pollRef.current);
+    pollRef.current = setInterval(async () => {
+      try {
+        const r = await fetch(`/api/admin/deploy/pages-build-status?since=${sinceSec}`);
+        if (!r.ok) return;
+        const d = await r.json() as {
+          found: boolean;
+          status?: "queued" | "building" | "built" | "errored";
+          isCurrent?: boolean;
+          url?: string;
+          error?: string | null;
+        };
+        // Wait until GitHub registers the build we just kicked off — older
+        // builds (from a previous deploy) shouldn't end the polling early.
+        if (!d.found || !d.isCurrent) return;
+        if (d.status === "built") {
+          if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+          const elapsed = Math.round((Date.now() - startedAt) / 1000);
+          toast.success("Live on GitHub Pages 🌐", {
+            description: liveUrl ? `${liveUrl} · ready in ${elapsed}s` : `Ready in ${elapsed}s`,
+            duration: 12000,
+            ...(liveUrl && { action: { label: "Open", onClick: () => window.open(liveUrl, "_blank") } }),
+          });
+        } else if (d.status === "errored") {
+          if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+          toast.error("GitHub Pages build failed", {
+            description: d.error ?? "See repo → Settings → Pages for details.",
+            duration: 12000,
+          });
+        }
+        // queued / building → keep polling
+      } catch { /* keep polling */ }
+    }, 10_000);
+
+    // Safety: 10-min ceiling. If still polling, give up quietly.
+    setTimeout(() => {
+      if (pollRef.current) { clearInterval(pollRef.current); pollRef.current = null; }
+    }, 600_000);
+  }
+
   const userRole = user?.role ?? user?.siteRole ?? null;
   const isAdminUser = userRole === "admin";
 
@@ -340,7 +389,23 @@ function DeployButton() {
       // Synchronous deploy (local build, flyio, github-pages direct)
       setLastResult({ ok: data.status === "success", error: data.error });
       setTimeout(() => setLastResult(null), 5000);
-      if (data.status === "success" && data.url) {
+      if (data.status === "success" && provider === "github-pages") {
+        // GH-Pages publish-to-API returns success after the API upload,
+        // but the actual page_build job is async (1-3 min typical, up to
+        // 10 min on cold cache). Tell the user upfront, then poll the
+        // pages/builds/latest endpoint and fire a follow-up "live" toast
+        // once status === "built".
+        toast.success("Published 🚀 — building on GitHub Pages", {
+          description: data.url
+            ? `${data.url} · live in 1–3 min (sometimes longer)`
+            : "GitHub Pages typically deploys in 1–3 minutes.",
+          duration: 10000,
+          ...(data.url && { action: { label: "Open", onClick: () => window.open(data.url, "_blank") } }),
+        });
+        window.dispatchEvent(new CustomEvent("cms-site-change", { detail: {} }));
+        startPagesBuildPolling(data.url);
+        return; // polling fires the "Live" follow-up toast
+      } else if (data.status === "success" && data.url) {
         toast.success("Published!", {
           description: data.url,
           duration: 10000,
