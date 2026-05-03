@@ -23,6 +23,7 @@ export type DeployProvider =
   | "netlify"
   | "flyio"
   | "flyio-live"
+  | "fly-ephemeral"
   | "cloudflare"
   | "cloudflare-pages"
   | "github-pages"
@@ -382,6 +383,26 @@ export async function triggerDeploy(): Promise<DeployEntry> {
         if (Object.keys(flyLiveUpdates).length > 0) {
           try { await writeSiteConfig(flyLiveUpdates); } catch { /* non-fatal */ }
         }
+      }
+        break;
+
+      case "fly-ephemeral": {
+        // F144 — ephemeral build VM path. Spawns a Fly Machine using
+        // cms-builder image, builds the site's container image inside
+        // it, pushes to GHCR, then redeploys the target Fly app to the
+        // new image tag. Smoke-test + rollback handled below if the
+        // image-deploy fails.
+        const { runFlyEphemeralDeploy } = await import("./build-orchestrator/run-fly-ephemeral");
+        const result = await runFlyEphemeralDeploy({
+          siteEntry: await getActiveSiteEntry(),
+          configToken: token || config.deployApiToken,
+          configAppName: appName || config.deployAppName,
+          configOrg: config.deployFlyOrg || undefined,
+          callbackBaseUrl: process.env.NEXTAUTH_URL || "",
+        });
+        if (!result.ok) throw new Error(result.error);
+        entry.url = result.appUrl;
+        entry.status = "success";
       }
         break;
 
