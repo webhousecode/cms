@@ -7,6 +7,7 @@ import { CustomSelect } from "@/components/ui/custom-select";
 import { Rocket, ExternalLink, Check, X, Loader2, RefreshCw, Copy, Globe, Search } from "lucide-react";
 import { DeployModal } from "@/components/deploy-modal";
 import { BuildHistory } from "@/components/build-history";
+import { DeployOutputBrowser } from "@/components/deploy-output-browser";
 
 type DeployProvider =
   | "off"
@@ -1319,7 +1320,10 @@ export function DeploySettingsPanel() {
       </SettingsCard>
       </>}
 
-      {/* ── F144 Ephemeral SSR builds (only when there are any) ── */}
+      {/* ── Build output browser ── */}
+      {effectiveProvider !== "off" && <DeployOutputSection />}
+
+      {/* ── Ephemeral SSR builds (only when there are any) ── */}
       {effectiveProvider !== "off" && <SSRBuildHistorySection />}
 
       {/* Deploy modal with progress */}
@@ -1369,7 +1373,28 @@ function formatTime(iso: string): string {
 }
 
 /**
- * F144 P5 — SSR build history. Reads the active-site cookie to know
+ * Visual file browser for the active site's `deploy/` output. Hidden
+ * when no site selected (early render).
+ */
+function DeployOutputSection() {
+  const [siteId, setSiteId] = useState<string | null>(null);
+  useEffect(() => {
+    const m = document.cookie.match(/(?:^|;\s*)cms-active-site=([^;]+)/);
+    setSiteId(m && m[1] ? decodeURIComponent(m[1]) : null);
+  }, []);
+  if (!siteId) return null;
+  return (
+    <>
+      <SectionHeading>Build output</SectionHeading>
+      <SettingsCard>
+        <DeployOutputBrowser siteId={siteId} />
+      </SettingsCard>
+    </>
+  );
+}
+
+/**
+ * SSR build history. Reads the active-site cookie to know
  * which site to query. Hidden when no site is selected (early render
  * before HeaderDataProvider hydrates) or when no builds exist yet.
  */
