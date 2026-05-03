@@ -76,13 +76,22 @@ async function prepareExtraDeps(
   const { scanBuildFile } = await import("../build-server/dep-scanner");
   const { hashDeps, normalizeDeps, isDepsSetInstalled, resolveDepsNodeModulesPath } = await import("../build-server/deps-store");
   const { installDepsSet } = await import("../build-server/installer");
+  const { pinVersions } = await import("../build-server/version-pinning");
   const { getAdminDataDir } = await import("../site-registry");
 
   const buildFile = path.join(projectDir, "build.ts");
   const scanned = await scanBuildFile(buildFile);
   const manualDeps = (cmsConfig.build?.deps ?? []) as string[];
-  const combined = normalizeDeps([...manualDeps, ...scanned.missing]);
 
+  // F143 P5 PIN-FIRST: resolve `latest` for any unversioned auto-detected
+  // dep BEFORE hashing. This way the deps-store hash incorporates the
+  // pinned version, and a future npm release of the same package gives
+  // a different hash → site stays on its original version until user
+  // explicitly upgrades. Manual deps with explicit ranges pass through.
+  const allDeps = [...manualDeps, ...scanned.missing];
+  if (allDeps.length === 0) return null;
+  const pinned = await pinVersions(allDeps);
+  const combined = normalizeDeps(pinned);
   if (combined.length === 0) return null;
 
   const dataDir = getAdminDataDir();
