@@ -472,7 +472,6 @@ export async function triggerDeploy(): Promise<DeployEntry> {
         if (!useToken || !useRepo) {
           throw new Error("GitHub Pages requires a GitHub token. Connect GitHub via OAuth or add a token in Settings → Automation.");
         }
-        console.log(`[deploy] github-pages: token=${useToken.slice(0,8)}…(len=${useToken.length}) repo=${useRepo}`);
         const pagesUrl = await githubPagesBuildAndDeploy(useToken, useRepo);
         if (pagesUrl) {
           entry.url = pagesUrl;
