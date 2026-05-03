@@ -472,11 +472,22 @@ export async function triggerDeploy(): Promise<DeployEntry> {
         if (!useToken || !useRepo) {
           throw new Error("GitHub Pages requires a GitHub token. Connect GitHub via OAuth or add a token in Settings → Automation.");
         }
-        const pagesUrl = await githubPagesBuildAndDeploy(useToken, useRepo);
+        const pagesUrlRaw = await githubPagesBuildAndDeploy(useToken, useRepo);
+        // GH returns http:// until https_enforced is set; once Let's Encrypt
+        // cert is approved we always want https in the UI/log.
+        const pagesUrl = pagesUrlRaw?.replace(/^http:\/\//, "https://");
         if (pagesUrl) {
           entry.url = pagesUrl;
           const updates: Record<string, string> = {};
-          if (!config.deployProductionUrl) updates.deployProductionUrl = pagesUrl;
+          // Auto-update deployProductionUrl whenever GH returns a different
+          // URL than what we have stored. Earlier behaviour only set it
+          // when empty — that left stale subdomain URLs (e.g. trail.webhouse.app)
+          // visible in the Deploy panel after the user moved to a custom
+          // domain like www.trailmem.com. Pages API returns the canonical
+          // current URL (custom domain when configured, else <user>.github.io).
+          if (config.deployProductionUrl !== pagesUrl) {
+            updates.deployProductionUrl = pagesUrl;
+          }
           // Persist provider when auto-detect was used — the user clicked Deploy with
           // provider="off" and we silently routed to github-pages. After success, lock
           // it in so the UI matches reality and users don't see "Off" while their

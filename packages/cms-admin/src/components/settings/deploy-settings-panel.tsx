@@ -432,7 +432,7 @@ export function DeploySettingsPanel() {
     { value: "github-pages", label: "GitHub Pages" },
     { value: "flyio-live", label: "Fly.io Live (instant sync)" },
     { value: "flyio", label: "Fly.io (rebuild)" },
-    { value: "fly-ephemeral", label: "Fly.io ephemeral builder (F144)" },
+    { value: "fly-ephemeral", label: "Fly.io (ephemeral builder)" },
     { value: "cloudflare", label: "Cloudflare (webhook)" },
     { value: "custom", label: "Custom webhook" },
   ];
@@ -452,7 +452,7 @@ export function DeploySettingsPanel() {
     netlify: "Netlify",
     flyio: "Fly.io (rebuild)",
     "flyio-live": "Fly.io Live",
-    "fly-ephemeral": "Fly.io ephemeral builder (F144)",
+    "fly-ephemeral": "Fly.io (ephemeral builder)",
     cloudflare: "Cloudflare (webhook)",
     "cloudflare-pages": "Cloudflare Pages",
     custom: "Custom webhook",
@@ -571,7 +571,7 @@ export function DeploySettingsPanel() {
               {config.deployProvider === "netlify" && "Supports Next.js via adapter, static sites, and serverless functions."}
               {config.deployProvider === "flyio" && "Docker-based rebuild on every deploy. Best for SSR apps (Next.js, Remix) that genuinely need Docker. Slow for content edits — use Fly.io Live for static sites."}
               {config.deployProvider === "flyio-live" && "Your site runs on Fly.io. The first deploy takes about a minute; every edit after goes live in under a second. Best for EU hosting."}
-              {config.deployProvider === "fly-ephemeral" && "F144: a short-lived Fly Machine builds a container image (Next.js standalone, Bun + Hono, or your own Dockerfile) and pushes to GHCR, then your target Fly app rolls to the new tag. Requires GHCR_PUSH_TOKEN + FLY_API_TOKEN secrets on cms-admin."}
+              {config.deployProvider === "fly-ephemeral" && "A short-lived Fly Machine builds a container image (Next.js standalone, Bun + Hono, or your own Dockerfile) and pushes to GHCR, then your target Fly app rolls to the new tag. Requires GHCR_PUSH_TOKEN + FLY_API_TOKEN secrets on cms-admin."}
               {config.deployProvider === "cloudflare" && "Legacy webhook-only — just POSTs to a Cloudflare Pages deploy hook URL. Prefer 'Cloudflare Pages (direct)' for full integration."}
               {config.deployProvider === "cloudflare-pages" && "Direct Cloudflare Pages API upload. 300+ global edge PoPs, free tier covers most small sites. Fastest option for pure-static sites worldwide."}
               {config.deployProvider === "github-pages" && canAutoDeploy && "Ready to deploy — GitHub connected. A repository will be created automatically if needed, and your site files pushed to GitHub Pages in one click."}
@@ -1382,7 +1382,7 @@ function SSRBuildHistorySection() {
   if (!siteId) return null;
   return (
     <>
-      <SectionHeading>SSR Builds (F144)</SectionHeading>
+      <SectionHeading>SSR builds</SectionHeading>
       <SettingsCard>
         <BuildHistory siteId={siteId} />
       </SettingsCard>
