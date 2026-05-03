@@ -54,7 +54,52 @@ export async function runSiteBuild(
   if (profile) {
     return runCustomBuild(projectDir, profile, deployOutDir, basePath);
   }
-  return runNativeBuild(projectDir, deployOutDir, basePath);
+  // F143 P4: prepare extra deps before running native build. Scans build.ts
+  // imports + merges with cms.config.ts.build.deps; installs anything cms-
+  // admin doesn't already provide into the content-addressable deps store.
+  const extraDeps = await prepareExtraDeps(projectDir, cmsConfig);
+  return runNativeBuild(projectDir, deployOutDir, basePath, extraDeps);
+}
+
+/**
+ * F143 P4 — Resolve the full deps-set for a site (manual `build.deps`
+ * + auto-detected from build.ts), install if needed, return the deps-
+ * store node_modules path so runNativeBuild can splice it into NODE_PATH.
+ *
+ * Returns null if no extra deps are needed (cms-admin's core pulje
+ * covers everything the build imports).
+ */
+async function prepareExtraDeps(
+  projectDir: string,
+  cmsConfig: CmsConfig,
+): Promise<string | null> {
+  const { scanBuildFile } = await import("../build-server/dep-scanner");
+  const { hashDeps, normalizeDeps, isDepsSetInstalled, resolveDepsNodeModulesPath } = await import("../build-server/deps-store");
+  const { installDepsSet } = await import("../build-server/installer");
+  const { getAdminDataDir } = await import("../site-registry");
+
+  const buildFile = path.join(projectDir, "build.ts");
+  const scanned = await scanBuildFile(buildFile);
+  const manualDeps = (cmsConfig.build?.deps ?? []) as string[];
+  const combined = normalizeDeps([...manualDeps, ...scanned.missing]);
+
+  if (combined.length === 0) return null;
+
+  const dataDir = getAdminDataDir();
+  const hash = hashDeps(combined);
+
+  if (!isDepsSetInstalled(dataDir, hash)) {
+    console.log(`[deploy] Installing ${combined.length} extra dep(s) into deps-store ${hash.slice(0, 8)}…`);
+    const result = await installDepsSet({ hash, deps: combined, dataDir });
+    if (result.status === "failed") {
+      throw new Error(`Failed to install extra deps: ${result.error}\n${result.logTail}`);
+    }
+    if (result.status === "success") {
+      console.log(`[deploy] Installed extra deps in ${result.durationMs}ms`);
+    }
+  }
+
+  return resolveDepsNodeModulesPath(dataDir, hash);
 }
 
 // ── Custom command build ────────────────────────────────────
@@ -141,6 +186,7 @@ async function runNativeBuild(
   projectDir: string,
   deployOutDir: string,
   basePath?: string,
+  extraDepsNodeModules?: string | null,
 ): Promise<SiteBuildResult> {
   const start = Date.now();
   const { tsxBin, loaderPath, adminRoot } = resolveProvidedRuntime();
@@ -163,6 +209,16 @@ async function runNativeBuild(
           (process.env.NODE_OPTIONS ? " " + process.env.NODE_OPTIONS : ""),
       }
     : {};
+
+  // F143 P4: splice the extra-deps store into NODE_PATH so build.ts
+  // imports of `lodash`, `three`, etc. resolve via that dir AFTER
+  // cms-admin's own node_modules but before npm registry fallback.
+  if (extraDepsNodeModules) {
+    const existing = providedEnv.NODE_PATH ?? process.env.NODE_PATH ?? "";
+    providedEnv.NODE_PATH = existing
+      ? `${existing}:${extraDepsNodeModules}`
+      : extraDepsNodeModules;
+  }
 
   try {
     execFileSync(bin, args, {

@@ -54,6 +54,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.38.4",
+    "es-module-lexer": "^2.1.0",
     "firebase-admin": "^13.7.0",
     "gray-matter": "^4.0.3",
     "jiti": "^2.6.1",
