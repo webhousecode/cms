@@ -8,6 +8,34 @@ import { fireContentEvent } from "@/lib/webhook-events";
 import { GitHubStorageAdapter } from "@webhouse/cms";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { withSiteContext } from "@/lib/site-context";
+import { loadRegistry, findSite } from "@/lib/site-registry";
+
+/**
+ * Token-based callers pass `?site=<id>` because they have no admin
+ * cookies. Without this wrapper every nested call (getAdminCms,
+ * getActiveSiteEntry, dispatchRevalidation) falls back to
+ * registry.defaultSiteId — same bug that hit /api/cms/{collection} POST
+ * (commit 61adbd71). Apply identical pattern here for PATCH/PUT/DELETE/
+ * action-POST.
+ */
+async function resolveSiteCtx(siteId: string | null): Promise<{ orgId: string; siteId: string } | null> {
+  if (!siteId) return null;
+  const registry = await loadRegistry();
+  if (!registry) return null;
+  for (const org of registry.orgs) {
+    if (findSite(registry, org.id, siteId)) return { orgId: org.id, siteId };
+  }
+  return null;
+}
+
+async function runScoped<T>(req: NextRequest, fn: () => Promise<T>): Promise<T | Response> {
+  const overrideSite = req.nextUrl.searchParams.get("site");
+  if (!overrideSite) return fn();
+  const ctx = await resolveSiteCtx(overrideSite);
+  if (!ctx) return NextResponse.json({ error: `site not found: ${overrideSite}` }, { status: 404 });
+  return withSiteContext(ctx, fn);
+}
 
 /** Check if deployOnSave is enabled (lightweight, no deploy) */
 async function checkDeployOnSave(): Promise<boolean> {
@@ -48,16 +76,19 @@ async function dispatchAutoDeployOnSave(revalidationDispatched: boolean) {
 
 type Ctx = { params: Promise<{ collection: string; slug: string }> };
 
-export async function GET(_req: NextRequest, { params }: Ctx) {
-  try {
-    const { collection, slug } = await params;
-    const cms = await getAdminCms();
-    const doc = await cms.content.findBySlug(collection, slug);
-    if (!doc) return NextResponse.json({ error: "Not found" }, { status: 404 });
-    return NextResponse.json(doc);
-  } catch {
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
-  }
+export async function GET(req: NextRequest, { params }: Ctx) {
+  const result = await runScoped(req, async () => {
+    try {
+      const { collection, slug } = await params;
+      const cms = await getAdminCms();
+      const doc = await cms.content.findBySlug(collection, slug);
+      if (!doc) return NextResponse.json({ error: "Not found" }, { status: 404 });
+      return NextResponse.json(doc);
+    } catch {
+      return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    }
+  });
+  return result instanceof Response ? result : (result as Response);
 }
 
 export async function POST(req: NextRequest, { params }: Ctx) {
@@ -65,6 +96,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   if (!postSession || !postSession.siteRole || postSession.siteRole === "viewer") {
     return NextResponse.json({ error: "No write access" }, { status: 403 });
   }
+  const result = await runScoped(req, async () => {
   try {
     const { collection, slug } = await params;
     const body = await req.json() as { action?: string };
@@ -133,6 +165,8 @@ export async function POST(req: NextRequest, { params }: Ctx) {
     console.error(err);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
+  });
+  return result instanceof Response ? result : (result as Response);
 }
 
 export async function PATCH(req: NextRequest, { params }: Ctx) {
@@ -140,6 +174,7 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
   if (!session || !session.siteRole || session.siteRole === "viewer") {
     return NextResponse.json({ error: "No write access" }, { status: 403 });
   }
+  const result = await runScoped(req, async () => {
   try {
     const { collection, slug } = await params;
     const body = await req.json() as { data?: Record<string, unknown>; status?: string; locale?: string; translationOf?: string | null; translationGroup?: string; publishAt?: string | null; unpublishAt?: string | null; slug?: string };
@@ -276,6 +311,8 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
     console.error(err);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
+  });
+  return result instanceof Response ? result : (result as Response);
 }
 
 export async function DELETE(req: NextRequest, { params }: Ctx) {
@@ -283,6 +320,7 @@ export async function DELETE(req: NextRequest, { params }: Ctx) {
   if (!delSession || !delSession.siteRole || delSession.siteRole === "viewer") {
     return NextResponse.json({ error: "No write access" }, { status: 403 });
   }
+  const result = await runScoped(req, async () => {
   try {
     const { collection, slug } = await params;
     const permanent = req.nextUrl.searchParams.get("permanent") === "true";
@@ -332,4 +370,6 @@ export async function DELETE(req: NextRequest, { params }: Ctx) {
     console.error(err);
     return NextResponse.json({ error: "Internal error" }, { status: 500 });
   }
+  });
+  return result instanceof Response ? result : (result as Response);
 }
