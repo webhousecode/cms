@@ -363,7 +363,9 @@ export async function DELETE(req: NextRequest, { params }: Ctx) {
     }
 
     // F35 — fire content webhook
-    fireContentEvent(permanent ? "trashed" : "trashed", collection, slug, doc, `user:${delSession.email}`).catch(() => {});
+    // Distinct events: "deleted" = hard-delete (no recovery), "trashed" = soft-trash.
+    // Webhook consumers can subscribe to one without the other.
+    fireContentEvent(permanent ? "deleted" : "trashed", collection, slug, doc, `user:${delSession.email}`).catch(() => {});
 
     return NextResponse.json({ ok: true });
   } catch (err) {

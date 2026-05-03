@@ -77,10 +77,12 @@ async function deepLink(
 
 /**
  * Content lifecycle event.
- * Action: created, updated, published, unpublished, trashed, restored, cloned
+ * Action: created, updated, published, unpublished, trashed, deleted, restored, cloned
+ *   - trashed   = soft-trash (recoverable from /admin/trash)
+ *   - deleted   = hard-delete (gone, no recovery)
  */
 export async function fireContentEvent(
-  action: "created" | "updated" | "published" | "unpublished" | "trashed" | "restored" | "cloned",
+  action: "created" | "updated" | "published" | "unpublished" | "trashed" | "deleted" | "restored" | "cloned",
   collection: string,
   slug: string,
   doc?: { id?: string; slug?: string; status?: string; data?: unknown } | Record<string, unknown>,
@@ -92,15 +94,19 @@ export async function fireContentEvent(
   const data = (doc as { data?: unknown } | undefined)?.data;
   const title = (data as { title?: string } | undefined)?.title ?? slug;
   const color = action === "published" ? 0x22c55e
-    : action === "unpublished" || action === "trashed" ? 0xef4444
+    : action === "unpublished" || action === "trashed" || action === "deleted" ? 0xef4444
     : action === "restored" ? 0x3b82f6
     : 0xF7BB2E;
 
-  // Deep link to the document — trash and unpublish go to the trash list
+  // Deep link to the document — trash/unpublish go to the trash list
   // because the document no longer lives in the collection list view.
+  // "deleted" is gone for good, no useful link target — point at the
+  // collection list as next-best.
   const linkPath = (action === "trashed" || action === "unpublished")
     ? `/admin/trash`
-    : `/admin/content/${collection}/${slug}`;
+    : action === "deleted"
+      ? `/admin/content/${collection}`
+      : `/admin/content/${collection}/${slug}`;
   const linkUrl = await deepLink(src, linkPath, `content.${action} → ${title}`);
 
   const evt: WebhookEvent = {
