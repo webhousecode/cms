@@ -256,7 +256,18 @@ build: {
 - **F12 (Deploy)**: F144 udvider Deploy-modal med builder-stage tracking + rollback knap.
 - **F126 (Custom build commands)**: respekteres ovenpå — hvis cms.config.ts har `build.command: 'pnpm custom-build'` bruger builder den i stedet for default `pnpm build`.
 
-## Rollout — 5 phases
+## Rollout — 6 phases
+
+### Status (auto-updated 2026-05-03)
+- **P1** ✅ shipped — `packages/cms-admin/builder/` (Dockerfile + entrypoint.sh)
+- **P2** ✅ shipped — `lib/build-orchestrator/fly-machines.ts` (12 tests)
+- **P3** ✅ shipped — Dockerfile generator + source-tar packer + orchestrator (31 tests)
+- **P4** ✅ shipped — `/api/builder/{trigger,callback,status}` + HMAC token + build-log (15 tests)
+- **P5** ✅ shipped — `<BuildHistory>` panel + `/api/builder/list` API
+- **P6** ⏳ in progress — `smokeTestImage()` helper landed (5 tests). Auto-rollback wiring pending.
+
+Note: original Phase 5 ("Rollback + smoke-test + UI polish") was split
+into P5 (UI) + P6 (smoke-test/rollback) for clearer tracking.
 
 ### Phase 1 — Builder VM image (1 dag)
 - Byg `ghcr.io/webhousecode/cms-builder:latest` (Alpine + Node 22 + pnpm + Bun + docker CLI + entrypoint script)
