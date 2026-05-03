@@ -168,6 +168,20 @@ These conflict with CMS admin's built-in UI panels and confuse editors. Use `glo
 
 For bilingual/multilingual static sites with `/da/`, `/en/` locale prefixes, CMS admin still constructs preview URLs as `urlPrefix + "/" + slug` (e.g. `/blog/my-post-da`). The build.ts MUST output redirect HTML files at the CMS-expected slug paths that redirect to the actual locale URL (e.g. `/da/blog/my-post/`). Without this, preview gives 404 for all non-default-locale documents.
 
+## Hard Rule: GitHub Pages custom-domain switch order
+
+When pointing a custom domain at a GitHub Pages site, ALWAYS do these steps in this exact order — never reverse them:
+
+1. **Set DNS first**: CNAME `<host>` → `<owner>.github.io.` (and apex A records to GH Pages IPs `185.199.108-111.153` if root is also moving). Use `mcp__dns-manager__*` tools, never inline registrar UI.
+2. **Wait ~30 seconds for DNS propagation**: verify with `dig +short <host> @8.8.8.8` returns the GH Pages target.
+3. **Then PUT the cname onto the repo**: `PUT /repos/<owner>/<repo>/pages` with `{"cname":"<host>"}`. Now GH's automation runs its DNS check and IMMEDIATELY queues the Let's Encrypt cert request, which lands within 5 min.
+
+**Why this order matters**: GH does a DNS lookup at the moment you PUT the cname. If DNS still points elsewhere (e.g. Fly IPs from a previous deploy), GH's cert provisioner sees a mismatch and parks the request in a much longer queue (we observed 25+ min with no progress, vs <5 min with correct order). The fix when stuck is to PUT cname=null then PUT cname=<host> again — toggling re-runs the DNS check.
+
+**If the custom domain is "already taken"** by another repo (often a localhost-auto-created site on the user's personal GH account from an earlier iteration), find the squat with `GET /user/repos?per_page=100` filtered by `has_pages` then check each repo's `/pages` for the conflicting cname. Release with `PUT /repos/<other>/pages cname=null` (HTTP 204), then re-attempt the original PUT.
+
+**Precedent**: 2026-05-03 trail-landing migration. www.trailmem.com was claimed by `cbroberg/trail-site` (old localhost-auto-created repo). After releasing that claim, first PUT on `broberg-ai/trail` with cname succeeded but cert provisioning sat stuck for 25 min because DNS had been rolled back to Fly during the conflict-resolution dance. Toggling cname null→host once DNS was correct → cert landed within 4 minutes.
+
 ## Hard Rule: Tab Titles Start With a Capital Letter
 
 **EVERY tab title in the CMS admin UI MUST start with a capital letter.** Applies to all tab components — `Tabs`, section tabs, Settings tabs, Account Preferences tabs, inline page tabs, etc. Examples: `"Drafts"`, `"Published"`, `"Media"`, `"Access tokens"` (NOT `"drafts"`, `"published"`, `"access tokens"`). Only the first word is capitalized (sentence case) unless it's a proper noun.
