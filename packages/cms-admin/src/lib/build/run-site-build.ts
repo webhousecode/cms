@@ -181,11 +181,32 @@ function resolveProvidedRuntime(): { tsxBin: string | null; loaderPath: string; 
   // Monorepo root sits two levels up from packages/cms-admin/.
   const repoRoot = path.resolve(adminRoot, "..", "..");
 
+  // F143 P6 fix: prefer Node's built-in --experimental-strip-types over tsx
+  // when running on the standalone Next.js bundle. Next.js's tracer ships
+  // tsx's bin wrapper but bakes WRONG absolute NODE_PATH into it (pointing
+  // at the build-time pnpm store which doesn't exist in the runtime
+  // container). Result: tsx fails at "Cannot find tsx/dist/cli.mjs".
+  //
+  // Native --experimental-strip-types (stable in Node 22.6+) handles all
+  // build.ts patterns we care about (no JSX, no decorators) without any
+  // external runtime. Local dev (where tsx works fine via monorepo node_
+  // modules) still uses tsx for hot-reload speed.
   const tsxCandidates = [
     path.join(repoRoot, "node_modules", ".bin", "tsx"),
     path.join(adminRoot, "node_modules", ".bin", "tsx"),
   ];
-  const tsxBin = tsxCandidates.find((p) => existsSync(p)) ?? null;
+  let tsxBin = tsxCandidates.find((p) => existsSync(p)) ?? null;
+
+  // If tsx exists but its package directory was tree-shaken (Next.js
+  // standalone case), unset it — runNativeBuild will fall through to
+  // direct node + --experimental-strip-types instead.
+  if (tsxBin) {
+    const tsxPkgDir = path.resolve(path.dirname(tsxBin), "..", "tsx", "dist", "cli.mjs");
+    if (!existsSync(tsxPkgDir)) {
+      tsxBin = null;
+    }
+  }
+
   const loaderPath = path.join(adminRoot, "scripts", "build-runtime-loader.mjs");
 
   return { tsxBin, loaderPath, adminRoot };
@@ -200,17 +221,37 @@ async function runNativeBuild(
   const start = Date.now();
   const { tsxBin, loaderPath, adminRoot } = resolveProvidedRuntime();
 
-  // Prefer cms-admin's own tsx + runtime loader. Falls back to `npx tsx` only
-  // if the monorepo layout changed (defensive).
-  const useProvided = tsxBin !== null && existsSync(loaderPath);
-  const bin = useProvided ? tsxBin! : "npx";
-  const args = useProvided ? ["build.ts"] : ["tsx", "build.ts"];
+  // F143 P6: three runtime modes, in preference order:
+  //   1. cms-admin's tsx (fast HMR; works in dev with monorepo node_modules)
+  //   2. node --experimental-strip-types (works on Fly standalone bundle
+  //      where tsx is broken by Next.js tracer baking wrong absolute paths)
+  //   3. `npx tsx` (last-resort fallback — slow first run)
+  const useTsx = tsxBin !== null && existsSync(loaderPath);
+  const useNodeStrip = !useTsx && existsSync(loaderPath);
+
+  let bin: string;
+  let args: string[];
+  let runtimeName: string;
+
+  if (useTsx) {
+    bin = tsxBin!;
+    args = ["build.ts"];
+    runtimeName = "tsx";
+  } else if (useNodeStrip) {
+    bin = process.execPath;  // current node binary
+    args = ["--experimental-strip-types", "--no-warnings=ExperimentalWarning", "build.ts"];
+    runtimeName = "node-strip-types";
+  } else {
+    bin = "npx";
+    args = ["tsx", "build.ts"];
+    runtimeName = "npx";
+  }
 
   console.log(
-    `[deploy] Running native build.ts in ${projectDir} (out=${deployOutDir}/) — runtime=${useProvided ? "cms-admin" : "npx"}`,
+    `[deploy] Running native build.ts in ${projectDir} (out=${deployOutDir}/) — runtime=${runtimeName}`,
   );
 
-  const providedEnv: Record<string, string> = useProvided
+  const providedEnv: Record<string, string> = (useTsx || useNodeStrip)
     ? {
         CMS_ADMIN_ROOT: adminRoot,
         NODE_OPTIONS:
