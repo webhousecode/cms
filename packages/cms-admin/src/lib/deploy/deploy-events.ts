@@ -49,10 +49,37 @@ export function subscribe(orgId: string, siteId: string, fn: Listener): () => vo
 /** Publish an event. All current subscribers for that (org, site) get a sync callback. */
 export function publish(event: DeployEvent): void {
   const set = listeners.get(key(event.orgId, event.siteId));
-  if (!set) return;
-  for (const fn of set) {
-    try { fn(event); } catch { /* one bad listener shouldn't break others */ }
+  if (set) {
+    for (const fn of set) {
+      try { fn(event); } catch { /* one bad listener shouldn't break others */ }
+    }
   }
+  // Side channel: native push (Web Push / iOS / Android) for users who
+  // opted into browser notifications. Fire-and-forget — never blocks SSE
+  // listeners or the calling webhook handler.
+  if (event.status === "built" || event.status === "errored") {
+    void dispatchPush(event).catch((err) => {
+      console.warn("[deploy-events] push dispatch failed:", err);
+    });
+  }
+}
+
+async function dispatchPush(event: DeployEvent): Promise<void> {
+  const { broadcastPush } = await import("../push-send");
+  const isBuilt = event.status === "built";
+  await broadcastPush({
+    title: isBuilt ? "Site is live 🌐" : "Deploy failed",
+    body: isBuilt
+      ? (event.url ?? "Your changes are now live on GitHub Pages.")
+      : (event.error ?? "GitHub Pages build errored — see Site Settings → Deploy."),
+    topic: isBuilt ? "build_succeeded" : "build_failed",
+    ...(event.url && { url: event.url }),
+    data: {
+      siteId: event.siteId,
+      orgId: event.orgId,
+      ...(event.sha && { sha: event.sha }),
+    },
+  });
 }
 
 /** Diagnostic: how many open connections per site. */
