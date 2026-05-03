@@ -257,6 +257,14 @@ async function runNativeBuild(
         NODE_OPTIONS:
           `--loader=${loaderPath}` +
           (process.env.NODE_OPTIONS ? " " + process.env.NODE_OPTIONS : ""),
+        // F143 P6: enable .pnpm-store fallback in build-runtime-loader.mjs
+        // ONLY when running on standalone bundle (where Next.js tracer
+        // dropped pnpm's per-package symlinks). Detected by checking
+        // whether the cms-admin's expected node_modules layout looks
+        // standalone-shaped.
+        ...(useNodeStrip
+          ? { CMS_BUILD_USE_PNPM_FALLBACK: "1" }
+          : {}),
       }
     : {};
 
