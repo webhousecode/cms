@@ -127,9 +127,9 @@ export function DeployOutputBrowser({ siteId }: Props) {
   }
 
   return (
-    <div style={{ display: "grid", gridTemplateColumns: "minmax(220px, 320px) 1fr", gap: "0.75rem" }}>
-      {/* ── Tree ── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", minWidth: 0 }}>
+    <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
+      {/* ── Stats + Refresh + Tree (collapsible) ── */}
+      <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
         {stats && (
           <div style={{
             display: "flex", alignItems: "center", justifyContent: "space-between",
@@ -147,7 +147,10 @@ export function DeployOutputBrowser({ siteId }: Props) {
             </button>
           </div>
         )}
-        <div style={{ border: "1px solid var(--border)", borderRadius: "6px", padding: "0.5rem", maxHeight: "480px", overflow: "auto", fontSize: "0.8rem" }}>
+        <div style={{
+          border: "1px solid var(--border)", borderRadius: "6px", padding: "0.5rem",
+          maxHeight: "320px", overflow: "auto", fontSize: "0.8rem",
+        }}>
           <TreeNode
             relPath=""
             tree={tree}
@@ -159,8 +162,8 @@ export function DeployOutputBrowser({ siteId }: Props) {
         </div>
       </div>
 
-      {/* ── Preview ── */}
-      <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem", minWidth: 0 }}>
+      {/* ── Preview (full width, can grow large) ── */}
+      <div>
         {!selected ? (
           <div style={{ color: "var(--muted-foreground)", fontSize: "0.8rem", padding: "1rem", border: "1px dashed var(--border)", borderRadius: "6px", textAlign: "center" }}>
             Select a file to preview
@@ -266,7 +269,7 @@ function FilePreview({ entry, siteId, iframeRef }: {
         </a>
       </div>
       <div style={{ border: "1px solid var(--border)", borderRadius: "6px", overflow: "hidden", minHeight: "300px", background: "var(--background)" }}>
-        {isHtml && <iframe ref={iframeRef} src={fileUrl} sandbox="allow-same-origin" style={{ width: "100%", height: "480px", border: "none", display: "block" }} title={entry.name} />}
+        {isHtml && <iframe ref={iframeRef} src={fileUrl} sandbox="allow-same-origin" style={{ width: "100%", height: "min(80vh, 900px)", border: "none", display: "block" }} title={entry.name} />}
         {isImg && (
           <div style={{ display: "flex", alignItems: "center", justifyContent: "center", padding: "1rem", minHeight: "300px" }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
