@@ -191,3 +191,7 @@ next-env.d.ts
 # Local TLS dev certs (mkcert) — never commit cert material
 *.pem
 localhost+*.pem
+
+# Claude Code runtime state — local only, never commit
+.claude/scheduled_tasks.lock
+.claude/scheduled_tasks.json
