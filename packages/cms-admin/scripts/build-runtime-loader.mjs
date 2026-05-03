@@ -157,8 +157,47 @@ function packageNameFromSpecifier(spec) {
   return idx === -1 ? spec : spec.slice(0, idx);
 }
 
+// F143 P5 + P6 fix: per-site extra-deps store (zod, lodash, etc. — anything
+// the build.ts imports that cms-admin doesn't ship). NODE_PATH would work
+// for CommonJS but ESM `import` ignores it, so the loader has to handle it.
+// CMS_BUILD_EXTRA_DEPS_DIR is set by run-site-build.ts and points at a
+// flat node_modules dir produced by the deps-store installer.
+const EXTRA_DEPS_DIR = process.env.CMS_BUILD_EXTRA_DEPS_DIR || null;
+
+function resolveFromExtraDeps(specifier) {
+  if (!EXTRA_DEPS_DIR) return null;
+  const pkgName = packageNameFromSpecifier(specifier);
+  // Hoisted layout (--config.nodeLinker=hoisted): flat dir per pkg
+  let pkgDir = path.join(EXTRA_DEPS_DIR, pkgName);
+  if (existsSync(path.join(pkgDir, "package.json"))) {
+    return resolveEntryUrl(pkgDir, pkgName, specifier);
+  }
+  // Default pnpm symlinked layout: <name> resolves via .pnpm/<name>@<ver>
+  const pnpmStore = path.join(EXTRA_DEPS_DIR, ".pnpm");
+  if (existsSync(pnpmStore)) {
+    const dirNamePrefix = pkgName.startsWith("@")
+      ? `${pkgName.replace("/", "+")}@`
+      : `${pkgName}@`;
+    let entries;
+    try { entries = readdirSync(pnpmStore); } catch { return null; }
+    const matches = entries.filter((e) => e.startsWith(dirNamePrefix));
+    matches.sort((a, b) => (a.indexOf("_") > -1 ? 1 : 0) - (b.indexOf("_") > -1 ? 1 : 0));
+    if (matches.length > 0) {
+      pkgDir = path.join(pnpmStore, matches[0], "node_modules", pkgName);
+      if (existsSync(path.join(pkgDir, "package.json"))) {
+        return resolveEntryUrl(pkgDir, pkgName, specifier);
+      }
+    }
+  }
+  return null;
+}
+
 export async function resolve(specifier, context, nextResolve) {
   if (!isProvided(specifier)) {
+    // Try the per-site extra-deps store before falling through. This
+    // catches site-declared `import { z } from "zod"` style cases.
+    const extraUrl = resolveFromExtraDeps(specifier);
+    if (extraUrl) return { url: extraUrl, shortCircuit: true };
     return nextResolve(specifier, context);
   }
 

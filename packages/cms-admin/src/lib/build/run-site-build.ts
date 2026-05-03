@@ -268,14 +268,19 @@ async function runNativeBuild(
       }
     : {};
 
-  // F143 P4: splice the extra-deps store into NODE_PATH so build.ts
-  // imports of `lodash`, `three`, etc. resolve via that dir AFTER
-  // cms-admin's own node_modules but before npm registry fallback.
+  // F143 P4 + P6 fix: surface the extra-deps store to BOTH module
+  // resolvers:
+  //   - NODE_PATH: catches CommonJS require() inside cms-admin libs
+  //     (sharp, marked, etc.) that recurse into the build.
+  //   - CMS_BUILD_EXTRA_DEPS_DIR: read by build-runtime-loader.mjs to
+  //     resolve site `import { z } from "zod"` style ESM specifiers
+  //     that Node ESM does NOT consult NODE_PATH for.
   if (extraDepsNodeModules) {
     const existing = providedEnv.NODE_PATH ?? process.env.NODE_PATH ?? "";
     providedEnv.NODE_PATH = existing
       ? `${existing}:${extraDepsNodeModules}`
       : extraDepsNodeModules;
+    providedEnv.CMS_BUILD_EXTRA_DEPS_DIR = extraDepsNodeModules;
   }
 
   try {

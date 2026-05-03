@@ -134,6 +134,11 @@ async function doInstall(opts: InstallOptions): Promise<InstallResult> {
     "--ignore-scripts",
     "--prod",
     "--config.confirmModulesPurge=false",
+    // F143 P6 fix: produce a flat node_modules (each pkg as a real dir
+    // instead of a pnpm symlink). The build-runtime-loader resolves bare
+    // specifiers via `path.join(EXTRA_DEPS_DIR, pkgName)`, which only
+    // works against a hoisted layout.
+    "--config.nodeLinker=hoisted",
   ];
 
   return new Promise<InstallResult>((resolve) => {
