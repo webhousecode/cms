@@ -9,6 +9,7 @@
 import { NextResponse } from "next/server";
 import { getSiteRole } from "@/lib/require-role";
 import { readSiteConfig } from "@/lib/site-config";
+import { resolveToken } from "@/lib/site-pool";
 
 export interface GitHubRunStatus {
   found: boolean;
@@ -24,8 +25,14 @@ export async function GET() {
   if (!role) return NextResponse.json({ found: false }, { status: 401 });
 
   const config = await readSiteConfig();
-  const token = config.deployApiToken as string | undefined;
+  let token = config.deployApiToken as string | undefined;
   const repo = config.deployAppName as string | undefined; // "owner/repo"
+
+  // "oauth" is a sentinel meaning "use the OAuth cookie token" — must
+  // be resolved to the actual access_token before sending to GitHub.
+  if (token === "oauth") {
+    try { token = await resolveToken("oauth"); } catch { token = undefined; }
+  }
 
   if (!token || !repo) {
     return NextResponse.json({ found: false });

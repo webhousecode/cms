@@ -451,9 +451,13 @@ export async function triggerDeploy(): Promise<DeployEntry> {
         if (!existsSync(ghBuildFile)) {
           throw new Error("No build.ts found — this site doesn't support static builds. Configure a different deploy provider (Fly.io, Vercel) in Site Settings → Deploy.");
         }
-        // Resolve token: explicit config → OAuth cookie → service token → scan all sites
+        // Resolve token: explicit config → OAuth cookie → service token → scan all sites.
+        // The literal string "oauth" is a sentinel meaning "use the OAuth cookie token" —
+        // treat it the same as a missing token so it goes through resolveToken("oauth").
+        // Without this, `Bearer oauth` would be sent to GitHub and every blob create 401s
+        // (root cause of "Failed to create blob for CNAME: 401" on trail-landing pushes).
         let useToken = token || config.deployApiToken;
-        if (!useToken) {
+        if (!useToken || useToken === "oauth") {
           try { useToken = await resolveToken("oauth"); } catch { /* no token */ }
         }
         let useRepo = appName || config.deployAppName;
