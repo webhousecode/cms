@@ -21,7 +21,19 @@ const adminPkgUrl = pathToFileURL(path.join(ADMIN_ROOT, "package.json")).href;
 
 // Packages cms-admin provides to site builds. Any bare specifier matching
 // one of these (exactly, or as `<name>/subpath`) resolves via admin's tree.
-const PROVIDED = ["@webhouse/cms", "marked"];
+//
+// MUST stay in sync with src/lib/build-server/provided-deps.ts —
+// the TS module is the canonical source for code that needs the list at
+// type-check time; this file mirrors it because Node loaders cannot import
+// from .ts modules. A test verifies parity (provided-deps.test.ts).
+const PROVIDED = [
+  "@webhouse/cms",
+  "marked",
+  "marked-highlight",
+  "gray-matter",
+  "slugify",
+  "sharp",
+];
 
 function isProvided(specifier) {
   if (specifier.startsWith(".") || specifier.startsWith("/") || specifier.includes(":")) return false;
