@@ -1,3 +1,4 @@
+2026-05-04T17:32:51Z  weekly  2026.05.04  https://github.com/webhousecode/cms/releases/download/weekly/cms-admin-2026.05.04.tar.gz
 # @webhouse/cms-admin — release feed
 # Newest first. Each line: ISO timestamp, channel, version, tarball URL.
 # See docs.webhouse.app/docs/releases for the full story.
