@@ -64,10 +64,23 @@ export async function getAdminCms() {
     return cms;
   }
 
-  // Multi-site mode — read active org+site from cookies
-  const cookieStore = await cookies();
-  const activeOrgId = cookieStore.get("cms-active-org")?.value ?? registry.defaultOrgId;
-  const activeSiteId = cookieStore.get("cms-active-site")?.value ?? registry.defaultSiteId;
+  // Multi-site mode — token-based API callers (?site=) set an
+  // AsyncLocalStorage override via withSiteContext. Honor it before
+  // falling back to cookie-based lookup. Without this, runScoped
+  // wrappers in /api/cms/* routes have no effect on the actual content
+  // operations because cms.content.* uses this instance.
+  const { getSiteContextOverride } = await import("./site-context");
+  const override = getSiteContextOverride();
+  let activeOrgId: string;
+  let activeSiteId: string;
+  if (override?.orgId && override?.siteId) {
+    activeOrgId = override.orgId;
+    activeSiteId = override.siteId;
+  } else {
+    const cookieStore = await cookies();
+    activeOrgId = cookieStore.get("cms-active-org")?.value ?? registry.defaultOrgId;
+    activeSiteId = cookieStore.get("cms-active-site")?.value ?? registry.defaultSiteId;
+  }
 
   // Check if active org has ANY sites first
   const activeOrg = findOrg(registry, activeOrgId);
@@ -114,9 +127,19 @@ export async function getAdminConfig(): Promise<CmsConfig> {
     return config;
   }
 
-  const cookieStore = await cookies();
-  const activeOrgId = cookieStore.get("cms-active-org")?.value ?? registry.defaultOrgId;
-  const activeSiteId = cookieStore.get("cms-active-site")?.value ?? registry.defaultSiteId;
+  // Same override-then-cookies precedence as getAdminCms (see comment there).
+  const { getSiteContextOverride } = await import("./site-context");
+  const override = getSiteContextOverride();
+  let activeOrgId: string;
+  let activeSiteId: string;
+  if (override?.orgId && override?.siteId) {
+    activeOrgId = override.orgId;
+    activeSiteId = override.siteId;
+  } else {
+    const cookieStore = await cookies();
+    activeOrgId = cookieStore.get("cms-active-org")?.value ?? registry.defaultOrgId;
+    activeSiteId = cookieStore.get("cms-active-site")?.value ?? registry.defaultSiteId;
+  }
 
   // Check if active org has ANY sites first
   const activeOrg = findOrg(registry, activeOrgId);
