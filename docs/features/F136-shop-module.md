@@ -966,3 +966,68 @@ export default defineConfig({
 > - Tests are written BEFORE implementation. All tests must pass before merge.
 
 > **i18n (F48):** This feature produces and manages user-facing content in multiple locales. All product descriptions, shipping info, discount rules, return policies, and UI text MUST respect the site's `defaultLocale` and `locales` settings. Product prices can vary by locale/currency. Use `getLocale()` for runtime locale resolution. See [F48 i18n](F48-i18n.md) for details.
+
+---
+
+## Resume — pick up after compact
+
+**Status as of 2026-05-05**: Phase 1 functionally complete. Code lives at `packages/cms-shop/` (~3000 LOC, 6 test files). Stripe Connect patterns ported from sanneandersen-site. Three Phase 1 wiring items deferred. Phases 2-5 not started.
+
+### What's already on disk
+```
+packages/cms-shop/src/
+  collections/    products, categories, orders, customers (extensible doc collections)
+  stripe/         client wrapper, Connect support (application_fee + transfer_data + on_behalf_of), checkout, webhooks
+  cart/           cart engine + Request/Response handlers
+  checkout/       Stripe Checkout Session creation
+  webhooks/       signed webhook verification + order doc factory
+  islands/        product-card, cart, checkout-status (Interactive Islands)
+  storefront/     renderProductPage, renderProductCard
+  shipping/       (scaffolded only — Phase 2)
+  returns/        (scaffolded only — Phase 3)
+  discounts/      (scaffolded only — Phase 3)
+  ai/             (scaffolded only — Phase 4)
+  search/         (scaffolded only — Phase 5)
+```
+
+### Architecture decisions to remember
+1. **Products/orders/customers are document collections** — same JSON-on-disk model as posts. Editors get the standard document editor; site-specific fields added via `cms.config.ts` extension.
+2. **Stripe Connect for multi-tenant marketplace** — every checkout uses `application_fee_amount` + `transfer_data` + `on_behalf_of` so the platform takes a cut and funds settle to the merchant's connected account. Pattern lifted from `sanneandersen-site/lib/stripe/checkout.ts`.
+3. **Static product pages + Interactive Islands** for cart/checkout — not full SPA. Build.ts pre-renders product pages; cart island hydrates on demand.
+4. **DK-first address validation** with extension point for autocomplete (DAWA already used elsewhere in CMS).
+5. **Guest checkout** — cart works without an account.
+
+### Three Phase 1 items still to do (before any site can transact)
+1. **Module registration** — cms-admin needs to register `@webhouse/cms-shop` as a `CmsModule` and wire product `afterCreate` / `afterUpdate` hooks to call `syncProductToStripe`. The module export is ready (`packages/cms-shop/src/module.ts`), but cms-admin doesn't import it yet.
+2. **Per-site config UI** for `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET` (per merchant) + `STRIPE_CONNECT_ACCOUNT_ID` (the merchant's Connect account). New section in Site Settings → probably a "Shop" tab. Env-var fallback works for single-site dogfooding now.
+3. **Boilerplate / dogfood site** — a working example site that mounts the four `/api/shop/*` route handlers (cart, checkout, webhooks, recommendations) and renders a product page via `renderProductPage`. Without this we can't actually click through a checkout end-to-end.
+
+### Recent commits (chronological)
+- `44e0edd7` — scaffold `@webhouse/cms-shop` with core collections
+- `9c2ed649` — Phase 1 cart engine + Checkout + webhook + islands + storefront
+- `085fdac3` — port Stripe Connect + dashboard-quality patterns from sanneandersen-site
+- `392ee54d` — docs: mark Phase 1 steps 4-10 done, list remaining wiring
+
+### Next-session starting point
+Pick ONE of:
+- **A. Finish Phase 1 wiring** (module registration + config UI + dogfood site) — unblocks first real transaction. Probably 1-2 days.
+- **B. Phase 2 — Shipping** (GLS/DAO/PostNord/Bring) — bigger lift but parallel to A.
+- **C. Decide on dogfood site** first (which product, which merchant?) — drives both A and B.
+
+Recommended: **C → A → B**. Pick a real test merchant with 5-10 products + a Stripe Connect account to actually exercise the flow end-to-end.
+
+### Key dependencies / blockers
+- Stripe account with Connect enabled (platform + at least one connected account for testing)
+- DAO/GLS API credentials (Phase 2 — not yet acquired)
+- F58 Interactive Islands runtime (already shipped — used by cart/checkout islands)
+- F107 Chat tool exposure (Phase 5 — defer until catalog is live)
+
+### Files to reread first
+- `docs/features/F136-shop-module.md` (this file — full plan)
+- `packages/cms-shop/src/index.ts` (module entry)
+- `packages/cms-shop/src/stripe/checkout.ts` (Connect pattern)
+- `packages/cms-shop/src/cart/cart.ts` (cart engine — keep server-side)
+- `examples/sanneandersen-site/` for the source patterns (if it still exists in tree)
+
+### What you were NOT working on (avoid distraction)
+The recent session shipped F143 (Common Build Server) end-to-end + F144 P3-P8 (Dynamic Site Build Orchestrator) + GH page_build SSE/web push pipeline + deploy-output browser. Trail-landing went live on www.trailmem.com via GH Pages. NONE of that is webshop-related — it was a parallel deploy-infra workstream that's now done. Webshop is its own thing.
