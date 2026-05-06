@@ -258,31 +258,49 @@ build: {
 
 ## Rollout — 6 phases
 
-### Status (auto-updated 2026-05-03)
+### Status (auto-updated 2026-05-06)
 - **P1** ✅ shipped — `packages/cms-admin/builder/` (Dockerfile + entrypoint.sh)
 - **P2** ✅ shipped — `lib/build-orchestrator/fly-machines.ts` (12 tests)
 - **P3** ✅ shipped — Dockerfile generator + source-tar packer + orchestrator (31 tests)
+- **P3+ (2026-05-06)** ✅ shipped — `source-fetch.ts` closes gap left by
+  original P3 commit which did NOT implement the planned `git clone --depth=1`
+  source-resolution. New `parseSourceUrl()` + `fetchSource()` (22 tests)
+  resolve `github:owner/repo[:subdir]` (shallow clone + optional token) or
+  `local:/abs/path` (passthrough). `runFlyEphemeralDeploy` reads
+  `deploySource` + `deploySourceBranch` site-config fields and uses the
+  fetched dir as projectDir. Backward-compat: empty `deploySource` falls
+  back to `sitePaths.projectDir` so existing callers are unchanged.
 - **P4** ✅ shipped — `/api/builder/{trigger,callback,status}` + HMAC token + build-log (15 tests)
 - **P5** ✅ shipped — `<BuildHistory>` panel + `/api/builder/list` API
 - **P6** ✅ shipped — `smokeTestImage()` (5 tests) + `findPreviousGoodImage()` rollback (6 tests)
 - **P7** ✅ shipped — wired into deploy-service as new "fly-ephemeral" provider; UI dropdown + 6 preflight-guard tests
 - **P8** ✅ shipped — `/api/builder/github-webhook` push-driven trigger; HMAC + repo lookup (14 tests)
 
-Total: 89 unit tests passing across F144's 8 phases.
+Total: 111 unit tests passing across F144's 8 phases (89 + 22 from P3+).
 
 Note: original Phase 5 ("Rollback + smoke-test + UI polish") was split
 into P5 (UI) + P6 (smoke-test/rollback). P7 (deploy-service wiring) +
 P8 (GitHub webhook) are extensions beyond the original 5-phase plan
-that landed during the autonomous F144 build-out on 2026-05-03.
+that landed during the autonomous F144 build-out on 2026-05-03. The
+`source-fetch` module landed 2026-05-06 after a session realised the
+original P3 commit silently skipped the source-resolution bullet in
+its plan; status doc was rewritten without checking commit scope vs
+plan-bullets — this entry exists so future readers can find the gap.
 
 ### Remaining manual steps before fly-ephemeral can run end-to-end
-1. Push `cms-builder` image to `ghcr.io/webhousecode/cms-builder:latest`
-   (use `packages/cms-admin/builder/Dockerfile`)
-2. Create the `webhouse-builders` Fly app that hosts the ephemeral VMs
-3. Set `GHCR_PUSH_TOKEN` + `CMS_GITHUB_WEBHOOK_SECRET` Fly secrets on
-   cms-admin
-4. Per-site: configure `deployProvider: "fly-ephemeral"` + GitHub
-   webhook URL `https://webhouse.app/api/builder/github-webhook`
+1. ✅ Push `cms-builder` image to `ghcr.io/webhousecode/cms-builder:latest`
+   (auto-built via `cms-builder.yml` GHA on Dockerfile changes; already
+   live as of 2026-05-03)
+2. ✅ Create the `webhouse-builders` Fly app that hosts the ephemeral VMs
+   (created 2026-05-06 in webhouse org)
+3. ✅ Set Fly secrets on cms-admin (2026-05-06): `GHCR_PUSH_TOKEN` (classic
+   PAT, write:packages), `CMS_GITHUB_WEBHOOK_SECRET` (random hex),
+   `CMS_BUILDER_CALLBACK_SECRET` (random hex). Optionally
+   `CMS_GITHUB_SOURCE_TOKEN` if cloning private repos.
+4. Per-site: configure `deployProvider: "fly-ephemeral"`,
+   `deployAppName`, `deploySource` (`github:owner/repo[:subdir]` or
+   `local:/abs/path`), `deploySourceBranch`. Add GitHub webhook URL
+   `https://webhouse.app/api/builder/github-webhook` if push-driven.
 
 ### Phase 1 — Builder VM image (1 dag)
 - Byg `ghcr.io/webhousecode/cms-builder:latest` (Alpine + Node 22 + pnpm + Bun + docker CLI + entrypoint script)

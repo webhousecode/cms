@@ -23,6 +23,7 @@ import type { SiteEntry } from "../site-registry";
 
 import { buildSsrSite } from "./orchestrator";
 import { deployImageToFly } from "./deploy-image";
+import { fetchSource } from "./source-fetch";
 
 export interface RunFlyEphemeralOptions {
   siteEntry: SiteEntry | null;
@@ -33,6 +34,10 @@ export interface RunFlyEphemeralOptions {
   callbackBaseUrl: string;
   /** Override callback secret (for tests). Falls back to env. */
   callbackSecretOverride?: string;
+  /** F144 source URL (github:owner/repo[:subdir] or local:/path). Empty falls back to sitePaths.projectDir. */
+  configSource?: string;
+  /** F144 branch for github sources. Default "main". */
+  configSourceBranch?: string;
 }
 
 export interface RunFlyEphemeralResult {
@@ -95,15 +100,42 @@ export async function runFlyEphemeralDeploy(
   });
   const callbackUrl = `${opts.callbackBaseUrl.replace(/\/$/, "")}/api/builder/callback`;
 
+  // F144 source resolution. If site config has deploySource set, fetch
+  // from that URL (github clone or local pass-through). Otherwise fall
+  // back to sitePaths.projectDir + content/ for legacy behavior.
+  let projectDir = sitePaths.projectDir;
+  let contentDir: string | undefined = existsSync(path.join(sitePaths.projectDir, "content"))
+    ? path.join(sitePaths.projectDir, "content")
+    : undefined;
+  let sourceCleanup: (() => void) = () => {};
+  if (opts.configSource && opts.configSource.trim() !== "") {
+    try {
+      const fetched = await fetchSource({
+        source: opts.configSource,
+        ...(opts.configSourceBranch && { branch: opts.configSourceBranch }),
+        ...(process.env.CMS_GITHUB_SOURCE_TOKEN && { token: process.env.CMS_GITHUB_SOURCE_TOKEN }),
+      });
+      projectDir = fetched.dir;
+      sourceCleanup = fetched.cleanup;
+      // For fetched sources, content dir piggybacks on cms-admin's
+      // sitePaths so editor-side content overlays the cloned tree.
+      contentDir = existsSync(sitePaths.contentDir) ? sitePaths.contentDir : undefined;
+    } catch (err) {
+      return {
+        ok: false,
+        error: `source-fetch failed: ${err instanceof Error ? err.message : String(err)}`,
+        durationMs: Date.now() - start,
+      };
+    }
+  }
+
   let buildResult;
   try {
     buildResult = await buildSsrSite({
       siteId: opts.siteEntry.id,
       sha,
-      projectDir: sitePaths.projectDir,
-      ...(existsSync(path.join(sitePaths.projectDir, "content")) && {
-        contentDir: path.join(sitePaths.projectDir, "content"),
-      }),
+      projectDir,
+      ...(contentDir && { contentDir }),
       targetApp,
       registryToken,
       callbackUrl,
@@ -111,11 +143,14 @@ export async function runFlyEphemeralDeploy(
       flyToken,
     });
   } catch (err) {
+    sourceCleanup();
     return {
       ok: false,
       error: err instanceof Error ? err.message : String(err),
       durationMs: Date.now() - start,
     };
+  } finally {
+    sourceCleanup();
   }
 
   if (!buildResult.success) {
