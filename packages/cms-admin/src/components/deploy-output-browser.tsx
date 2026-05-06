@@ -24,6 +24,8 @@ interface Stats {
   lastModified?: string;
 }
 
+type SiteHint = "icd-only" | "static" | "ssr-ephemeral" | "unknown";
+
 interface DirNode {
   entries: Entry[];
   loading: boolean;
@@ -41,13 +43,14 @@ const IMG_EXT = /\.(png|jpe?g|gif|webp|avif|ico)$/i;
 export function DeployOutputBrowser({ siteId }: Props) {
   const [stats, setStats] = useState<Stats | null>(null);
   const [rootExists, setRootExists] = useState<boolean | null>(null);
+  const [siteHint, setSiteHint] = useState<SiteHint>("unknown");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [tree, setTree] = useState<Record<string, DirNode>>({});
   const [selected, setSelected] = useState<Entry | null>(null);
   const previewRef = useRef<HTMLIFrameElement>(null);
 
-  const fetchDir = useCallback(async (relPath: string): Promise<{ entries: Entry[]; stats?: Stats; deployRootExists?: boolean }> => {
+  const fetchDir = useCallback(async (relPath: string): Promise<{ entries: Entry[]; stats?: Stats; deployRootExists?: boolean; siteHint?: SiteHint }> => {
     const r = await fetch(`/api/admin/deploy/output?site=${encodeURIComponent(siteId)}&path=${encodeURIComponent(relPath)}`);
     if (!r.ok) throw new Error(await r.text());
     return r.json();
@@ -63,6 +66,7 @@ export function DeployOutputBrowser({ siteId }: Props) {
         if (cancelled) return;
         setStats(root.stats ?? null);
         setRootExists(root.deployRootExists ?? false);
+        setSiteHint(root.siteHint ?? "unknown");
         setTree({ "": { entries: root.entries, loading: false, expanded: true } });
       } catch (e) {
         if (!cancelled) setError(e instanceof Error ? e.message : "failed to load");
@@ -103,6 +107,7 @@ export function DeployOutputBrowser({ siteId }: Props) {
       const root = await fetchDir("");
       setStats(root.stats ?? null);
       setRootExists(root.deployRootExists ?? false);
+      setSiteHint(root.siteHint ?? "unknown");
       setTree({ "": { entries: root.entries, loading: false, expanded: true } });
       setError(null);
     } catch (e) {
@@ -119,6 +124,39 @@ export function DeployOutputBrowser({ siteId }: Props) {
     return <div style={{ color: "var(--destructive)", fontSize: "0.85rem" }}>Browser unavailable: {error}</div>;
   }
   if (!rootExists) {
+    if (siteHint === "icd-only") {
+      return (
+        <div style={{ color: "var(--muted-foreground)", fontSize: "0.85rem", padding: "0.85rem 1rem", border: "1px dashed var(--border)", borderRadius: "6px", lineHeight: 1.55 }}>
+          <div style={{ fontWeight: 600, color: "var(--foreground)", marginBottom: "0.4rem" }}>
+            This site is not built by the CMS.
+          </div>
+          The site lives as a separate web application that builds and deploys independently
+          (typically Next.js / Bun on Fly.io, shipped via the site repo&apos;s own CI/CD).
+          Content edits you make here propagate live via{" "}
+          <strong>Instant Content Deployment</strong> — a signed webhook that writes the new
+          document to the live site&apos;s volume and revalidates the affected routes
+          (typically &lt;100&nbsp;ms server-side).
+          <div style={{ marginTop: "0.6rem", fontSize: "0.75rem", color: "var(--muted-foreground)" }}>
+            There is no <code>deploy/</code> directory because the CMS does not generate the
+            site&apos;s HTML or assets — only its content. Code rebuilds happen via{" "}
+            <code>git push</code> to the site&apos;s own repository.
+          </div>
+        </div>
+      );
+    }
+    if (siteHint === "ssr-ephemeral") {
+      return (
+        <div style={{ color: "var(--muted-foreground)", fontSize: "0.85rem", padding: "0.85rem 1rem", border: "1px dashed var(--border)", borderRadius: "6px", lineHeight: 1.55 }}>
+          <div style={{ fontWeight: 600, color: "var(--foreground)", marginBottom: "0.4rem" }}>
+            Builds for this site happen in an ephemeral Fly Machine.
+          </div>
+          The CMS doesn&apos;t produce a local <code>deploy/</code> directory for{" "}
+          <code>fly-ephemeral</code> sites — the build runs in a short-lived VM that pushes a
+          Docker image to GHCR and deploys it directly to the target Fly app. See the{" "}
+          <strong>SSR builds</strong> panel below for the recent build history and live logs.
+        </div>
+      );
+    }
     return (
       <div style={{ color: "var(--muted-foreground)", fontSize: "0.85rem", padding: "0.75rem", border: "1px dashed var(--border)", borderRadius: "6px" }}>
         No <code>deploy/</code> directory yet. Click <strong>Deploy now</strong> to build the site.
