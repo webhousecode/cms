@@ -159,6 +159,8 @@
 | F143 | [Common Build Server](#f143-common-build-server) | Planned | [docs/features/F143-common-build-server.md](features/F143-common-build-server.md) |
 | F144 | [Dynamic Site Build Orchestrator](#f144-dynamic-site-build-orchestrator) | Planned | [docs/features/F144-dynamic-site-build-orchestrator.md](features/F144-dynamic-site-build-orchestrator.md) |
 | F145 | [ICD — Instant Content Deployment](#f145-icd-instant-content-deployment) | Core shipped, polish planned | [docs/features/F145-icd-instant-content-deployment.md](features/F145-icd-instant-content-deployment.md) |
+| F146 | [URL-Based Site Routing](#f146-url-based-site-routing) | Planned (small bridge shipped) | [docs/features/F146-url-based-site-routing.md](features/F146-url-based-site-routing.md) |
+| F147 | [Webapp Blueprint Contract](#f147-webapp-blueprint-contract) | Planned | [docs/features/F147-webapp-blueprint.md](features/F147-webapp-blueprint.md) |
 
 ---
 
@@ -599,3 +601,11 @@ cms-admin orkestrerer ephemeral Fly Machines som build-VM'er for SSR sites (Next
 ## F145 — ICD (Instant Content Deployment)
 
 Formaliserer det 3. ben i CMS-deploy-triumviratet (ICD + F143 + F144). Core er shipped: HMAC-signeret POST fra cms-admin til site's `/api/revalidate` ved hver content-edit, propagerer JSON-document + buster Next.js cache for berørte paths. Sub-sekund. Brugt af alle SSR sites (sanneandersen, fysiodk-aalborg-sport, webhouse-app). F145 polish: dedikeret Site Settings UI, secret rotation, retry-logik med exponential backoff + dead-letter, batched revalidation, idempotency keys, kanonisk receiver-impl i nextjs-boilerplates, AI Builder Guide module + bilingual docs page. ~3-4 dages polish.
+
+## F146 — URL-Based Site Routing
+
+Move active-site state from session cookie into URL path: `/admin/{slug}/...` instead of `/admin/...`. Stable per-site URLs, parallel-tab editing of multiple sites, no more cookie tug-of-war between tabs. Wraps existing `(workspace)` group in dynamic `[siteSlug]` segment + adds layout that calls `withSiteContext`. Login + OAuth callbacks stay non-scoped. ~2.5 dage. Small bridge already shipped: `/admin/switch/<slug>?next=<path>` redirect-route (commit d2695dc0). Plan-doc i `docs/features/F146-url-based-site-routing.md`.
+
+## F147 — Webapp Blueprint Contract
+
+Make the broberg.ai service stack (cms, trail, stripe-connect, MCP) the default backend for every new customer webapp — enforced from commit 1 via a contract-doc, a scaffolder, and an AI Builder Guide module. Stops cc-sessions from rolling their own auth, hardcoding content, or duplicating chat memory. Five capabilities (auth, content, chat, payments, storage) defined as implementation-agnostic interfaces — env-var-addressed so a future Web Application Server gateway (F148-pending-discussion) can replace the implementations without touching webapp code. Phases: inventory (P1), contract spec (P2), expose F59 as public auth API (P3), `create-broberg-webapp` scaffolder (P4), reference implementation (P5), AI Builder Guide module (P6), sanne-andersen migration runbook deferred (P7). ~7 fokuserede dage core. Plan-doc i `docs/features/F147-webapp-blueprint.md`. Motiveret af 2026-05-06 ICD-audit der afslørede at sanneandersen's auth_users aldrig nåede CMS — symptom på en arkitektur der mangler contract-laget.
