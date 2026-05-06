@@ -455,6 +455,54 @@ async function _buildAllTools(activeOrg?: string, activeSite?: string): Promise<
       },
     },
 
+    // ── check_content_drift ───────────────────────────────────
+    {
+      definition: {
+        name: "check_content_drift",
+        description:
+          "Compare cms-admin's content tree against the live site's /api/admin/content-tree. Returns a drift report: which collections/docs exist on only one side. Use when the operator suspects content out-of-sync between CMS and live site.",
+        input_schema: { type: "object", properties: {} },
+      },
+      handler: async () => {
+        try {
+          const { diffActiveSiteContent } = await import("@/lib/content-diff");
+          const diff = await diffActiveSiteContent();
+          const lines: string[] = [];
+          lines.push(`CMS total: ${diff.cmsTotal} docs · Live total: ${diff.liveTotal} docs · Both: ${diff.inBoth}`);
+          if (diff.collectionsOnlyInCms.length === 0 && diff.collectionsOnlyInLive.length === 0 && diff.onlyInCms.length === 0 && diff.onlyInLive.length === 0) {
+            lines.push("✓ No drift — all content is in sync.");
+            return lines.join("\n");
+          }
+          if (diff.collectionsOnlyInLive.length > 0) {
+            lines.push(`Collections on live but NOT in cms-admin (drift orphans): ${diff.collectionsOnlyInLive.join(", ")}`);
+            lines.push("→ Action: either add these collections to cms.config.ts so cms-admin can manage them, or delete them from /data/content on the live volume.");
+          }
+          if (diff.collectionsOnlyInCms.length > 0) {
+            lines.push(`Collections in cms-admin but NOT on live: ${diff.collectionsOnlyInCms.join(", ")}`);
+            lines.push("→ Likely benign — these are usually empty collections defined in cms.config.ts that haven't received any docs yet. They'll appear on live the moment a doc is published.");
+          }
+          if (diff.onlyInCms.length > 0) {
+            const sample = diff.onlyInCms.slice(0, 5).map((e) => `${e.collection}/${e.slug}`).join(", ");
+            lines.push(`${diff.onlyInCms.length} doc(s) in cms-admin but NOT on live (sample: ${sample}). May indicate failed revalidation deliveries.`);
+          }
+          if (diff.onlyInLive.length > 0) {
+            const sample = diff.onlyInLive.slice(0, 5).map((e) => `${e.collection}/${e.slug}`).join(", ");
+            lines.push(`${diff.onlyInLive.length} doc(s) on live but NOT in cms-admin (sample: ${sample}). Likely orphans from removed cms.config.ts entries.`);
+          }
+          return lines.join("\n");
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          if (msg.includes("HTTP")) {
+            return `Could not reach live /api/admin/content-tree endpoint: ${msg}. The endpoint may not be deployed yet on the live site, or the HMAC secret may be misconfigured.`;
+          }
+          if (msg.includes("revalidateUrl")) {
+            return `Active site has no revalidateUrl configured — drift check requires a live endpoint to compare against.`;
+          }
+          return `Drift check failed: ${msg}`;
+        }
+      },
+    },
+
     // ── update_site_settings ──────────────────────────────────
     {
       definition: {
