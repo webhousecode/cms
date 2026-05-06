@@ -303,7 +303,7 @@ async function sendRevalidationAlert(plan: RetryPlan): Promise<void> {
 
 // ─── Delivery log ─────────────────────────────────────────
 
-const MAX_LOG_ENTRIES = 200;
+const MAX_LOG_ENTRIES = 1000;
 
 async function getLogPath(): Promise<string> {
   const { dataDir } = await getActiveSitePaths();
