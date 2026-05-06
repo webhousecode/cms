@@ -4,6 +4,19 @@
  * After CMS commits content (via filesystem or GitHub API), this module
  * dispatches an HMAC-SHA256 signed POST to the site's revalidateUrl,
  * triggering on-demand revalidation of changed paths.
+ *
+ * Reliability model (added 2026-05-06):
+ *   - Sync attempt with 5s timeout — caller receives this result
+ *     immediately (drives auto-deploy fallback decision).
+ *   - On sync failure, async retries fire in the background:
+ *     +1s, +4s, +16s with the same payload. Each attempt logged.
+ *   - If all retries fail and schedulerNotifications is enabled,
+ *     a Discord-formatted alert is POSTed to schedulerWebhookUrl.
+ *
+ * Why fire-and-forget retries: synchronous retry would hang the
+ * editor's save request for ~21s when the live site is unreachable.
+ * The user wants their save to feel snappy; the retries exist to make
+ * eventual delivery reliable, not to block the editor UI.
  */
 import crypto from "node:crypto";
 import fs from "node:fs/promises";
@@ -37,6 +50,8 @@ interface RevalidationLogEntry {
   ok: boolean;
   error?: string;
   durationMs: number;
+  /** Attempt number (1 = sync, 2-4 = async retries). */
+  attempt?: number;
 }
 
 // ─── Path computation ─────────────────────────────────────
@@ -45,6 +60,8 @@ interface SiteEntryLike {
   revalidateUrl?: string;
   revalidateSecret?: string;
   id?: string;
+  /** Optional human label for alerts. Falls back to id. */
+  name?: string;
 }
 
 /**
@@ -64,12 +81,63 @@ function computePaths(collection: string, slug: string, urlPrefix?: string, coll
   return [...new Set(paths)];
 }
 
-// ─── Dispatch ─────────────────────────────────────────────
+// ─── Single attempt ───────────────────────────────────────
+
+const SYNC_TIMEOUT_MS = 5_000;
+const RETRY_TIMEOUT_MS = 8_000;
+const DEFAULT_RETRY_DELAYS_MS = [1_000, 4_000, 16_000];
+
+interface AttemptOptions {
+  url: string;
+  body: string;
+  headers: Record<string, string>;
+  timeoutMs: number;
+  /** Inject fetch for tests. */
+  fetchImpl?: typeof fetch;
+}
+
+async function attemptRevalidation(opts: AttemptOptions): Promise<RevalidationResult> {
+  const start = Date.now();
+  const fetchFn = opts.fetchImpl ?? fetch;
+  try {
+    const res = await fetchFn(opts.url, {
+      method: "POST",
+      headers: opts.headers,
+      body: opts.body,
+      signal: AbortSignal.timeout(opts.timeoutMs),
+    });
+    return {
+      ok: res.ok,
+      status: res.status,
+      durationMs: Date.now() - start,
+    };
+  } catch (err) {
+    return {
+      ok: false,
+      error: String(err),
+      durationMs: Date.now() - start,
+    };
+  }
+}
+
+// ─── Public dispatch ──────────────────────────────────────
+
+export interface DispatchOptions {
+  /** Override retry backoff in ms. Default [1000, 4000, 16000]. */
+  retryDelaysMs?: number[];
+  /** Inject fetch (tests). */
+  fetchImpl?: typeof fetch;
+  /** Skip async retries (tests + sendTestPing). */
+  syncOnly?: boolean;
+  /** Override scheduler timer for tests — defaults to setTimeout. */
+  scheduleAfter?: (ms: number, fn: () => void) => void;
+}
 
 export async function dispatchRevalidation(
   site: SiteEntryLike,
   payload: RevalidationPayload,
   urlPrefix?: string,
+  options?: DispatchOptions,
 ): Promise<RevalidationResult> {
   if (!site.revalidateUrl) return { ok: true }; // No URL configured — skip silently
 
@@ -99,78 +167,198 @@ export async function dispatchRevalidation(
     headers["X-CMS-Signature"] = `sha256=${signature}`;
   }
 
-  const start = Date.now();
+  const url = site.revalidateUrl;
+  const result = await attemptRevalidation({
+    url,
+    body,
+    headers,
+    timeoutMs: SYNC_TIMEOUT_MS,
+    ...(options?.fetchImpl && { fetchImpl: options.fetchImpl }),
+  });
 
-  try {
-    const res = await fetch(site.revalidateUrl, {
-      method: "POST",
-      headers,
+  // Log first attempt
+  logRevalidation(url, paths, payload, result, 1)
+    .catch((e) => console.warn("[revalidation] log write failed:", e));
+
+  // On failure (and not syncOnly mode), schedule async retries
+  if (!result.ok && !options?.syncOnly) {
+    scheduleAsyncRetries({
+      site,
+      url,
       body,
-      signal: AbortSignal.timeout(10_000),
+      headers,
+      paths,
+      payload,
+      retryDelaysMs: options?.retryDelaysMs ?? DEFAULT_RETRY_DELAYS_MS,
+      ...(options?.fetchImpl && { fetchImpl: options.fetchImpl }),
+      ...(options?.scheduleAfter && { scheduleAfter: options.scheduleAfter }),
     });
-    const result: RevalidationResult = {
-      ok: res.ok,
-      status: res.status,
-      durationMs: Date.now() - start,
-    };
+  }
 
-    // Log asynchronously — don't block the response
-    logRevalidation(site.revalidateUrl, paths, payload, result).catch((e) => console.warn("[revalidation] log write failed:", e));
+  return result;
+}
 
-    return result;
-  } catch (err) {
-    const result: RevalidationResult = {
-      ok: false,
-      error: String(err),
-      durationMs: Date.now() - start,
-    };
-    logRevalidation(site.revalidateUrl, paths, payload, result).catch((e) => console.warn("[revalidation] log write failed:", e));
-    return result;
+// ─── Async retries ────────────────────────────────────────
+
+interface RetryPlan {
+  site: SiteEntryLike;
+  url: string;
+  body: string;
+  headers: Record<string, string>;
+  paths: string[];
+  payload: RevalidationPayload;
+  retryDelaysMs: number[];
+  fetchImpl?: typeof fetch;
+  scheduleAfter?: (ms: number, fn: () => void) => void;
+}
+
+function scheduleAsyncRetries(plan: RetryPlan): void {
+  const scheduler = plan.scheduleAfter ?? ((ms, fn) => { setTimeout(fn, ms).unref?.(); });
+  // Fire-and-forget retry chain. Each retry awaits its own attempt then
+  // chains the next via the scheduler callback. The chain bottoms out
+  // either on success or on alert dispatch.
+  let attemptIdx = 0; // 0 = first retry (= overall attempt #2), etc.
+  const tryNext = () => {
+    if (attemptIdx >= plan.retryDelaysMs.length) {
+      // All retries exhausted — fire alert
+      sendRevalidationAlert(plan).catch((e) =>
+        console.warn("[revalidation] alert dispatch failed:", e),
+      );
+      return;
+    }
+    const delay = plan.retryDelaysMs[attemptIdx]!;
+    const overallAttempt = attemptIdx + 2;
+    attemptIdx++;
+    scheduler(delay, () => {
+      void attemptRevalidation({
+        url: plan.url,
+        body: plan.body,
+        headers: plan.headers,
+        timeoutMs: RETRY_TIMEOUT_MS,
+        ...(plan.fetchImpl && { fetchImpl: plan.fetchImpl }),
+      }).then((result) => {
+        logRevalidation(plan.url, plan.paths, plan.payload, result, overallAttempt)
+          .catch((e) => console.warn("[revalidation] log write failed:", e));
+        if (result.ok) return; // Done — eventual delivery achieved
+        tryNext();
+      });
+    });
+  };
+  tryNext();
+}
+
+// ─── Discord-style alert ──────────────────────────────────
+
+async function sendRevalidationAlert(plan: RetryPlan): Promise<void> {
+  // Read scheduler webhook from active site config. Skip silently if
+  // notifications are off or webhook not set — we already logged every
+  // failed attempt to revalidation-log.json so the audit trail exists.
+  let webhookUrl = "";
+  let notificationsEnabled = false;
+  try {
+    const { readSiteConfig } = await import("./site-config");
+    const cfg = await readSiteConfig();
+    webhookUrl = cfg.schedulerWebhookUrl ?? "";
+    notificationsEnabled = !!cfg.schedulerNotifications;
+  } catch {
+    // No site config available — nothing to do
+    return;
+  }
+
+  if (!notificationsEnabled || !webhookUrl) {
+    console.warn(
+      `[revalidation] all retries exhausted for ${plan.site.id ?? "unknown"}/${plan.payload.collection}/${plan.payload.slug} — no alert webhook configured`,
+    );
+    return;
+  }
+
+  const totalAttempts = plan.retryDelaysMs.length + 1;
+  const siteLabel = plan.site.name ?? plan.site.id ?? "unknown";
+  const message =
+    `:rotating_light: **ICD revalidation failed** — ${siteLabel}\n` +
+    `Collection: \`${plan.payload.collection}\`  ` +
+    `Slug: \`${plan.payload.slug}\`  ` +
+    `Action: \`${plan.payload.action}\`\n` +
+    `Webhook URL: \`${plan.url}\`\n` +
+    `Attempts: ${totalAttempts} (sync + ${plan.retryDelaysMs.length} retries)\n` +
+    `Time: ${new Date().toISOString()}\n` +
+    `Live site is now stale for the affected paths until the next successful revalidate. ` +
+    `Check Site Settings → Revalidation log for the latest attempt error.`;
+
+  // Fire-and-forget alert. One quick try, no retries on the alert
+  // itself — if Discord is also down we accept the loss rather than
+  // building yet another retry chain.
+  const fetchFn = plan.fetchImpl ?? fetch;
+  try {
+    await fetchFn(webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content: message }),
+      signal: AbortSignal.timeout(5_000),
+    });
+  } catch (e) {
+    console.warn("[revalidation] alert webhook failed:", e);
   }
 }
 
 // ─── Delivery log ─────────────────────────────────────────
 
-const MAX_LOG_ENTRIES = 50;
+const MAX_LOG_ENTRIES = 200;
 
 async function getLogPath(): Promise<string> {
   const { dataDir } = await getActiveSitePaths();
   return path.join(dataDir, "revalidation-log.json");
 }
 
-async function logRevalidation(
+// Module-level write chain — serializes log writes per process so that
+// concurrent dispatches (sync attempt + 3 async retries firing close
+// together) don't race on the read-modify-write cycle and clobber
+// each other's entries. Each call appends a tail-promise to the chain
+// and awaits its turn.
+let logWriteChain: Promise<void> = Promise.resolve();
+
+function logRevalidation(
   url: string,
   paths: string[],
   payload: RevalidationPayload,
   result: RevalidationResult,
+  attempt: number,
 ): Promise<void> {
-  const logPath = await getLogPath();
-  await fs.mkdir(path.dirname(logPath), { recursive: true });
+  const next = logWriteChain.then(async () => {
+    const logPath = await getLogPath();
+    await fs.mkdir(path.dirname(logPath), { recursive: true });
 
-  let entries: RevalidationLogEntry[] = [];
-  try {
-    entries = JSON.parse(await fs.readFile(logPath, "utf-8"));
-  } catch { /* first write */ }
+    let entries: RevalidationLogEntry[] = [];
+    try {
+      entries = JSON.parse(await fs.readFile(logPath, "utf-8"));
+    } catch { /* first write */ }
 
-  entries.unshift({
-    timestamp: new Date().toISOString(),
-    url,
-    paths,
-    collection: payload.collection,
-    slug: payload.slug,
-    action: payload.action,
-    status: result.status ?? null,
-    ok: result.ok,
-    error: result.error,
-    durationMs: result.durationMs ?? 0,
+    const entry: RevalidationLogEntry = {
+      timestamp: new Date().toISOString(),
+      url,
+      paths,
+      collection: payload.collection,
+      slug: payload.slug,
+      action: payload.action,
+      status: result.status ?? null,
+      ok: result.ok,
+      durationMs: result.durationMs ?? 0,
+      attempt,
+    };
+    if (result.error) entry.error = result.error;
+    entries.unshift(entry);
+
+    // Keep only the last N entries
+    if (entries.length > MAX_LOG_ENTRIES) {
+      entries = entries.slice(0, MAX_LOG_ENTRIES);
+    }
+
+    await fs.writeFile(logPath, JSON.stringify(entries, null, 2));
   });
-
-  // Keep only the last N entries
-  if (entries.length > MAX_LOG_ENTRIES) {
-    entries = entries.slice(0, MAX_LOG_ENTRIES);
-  }
-
-  await fs.writeFile(logPath, JSON.stringify(entries, null, 2));
+  // Swallow errors at the chain level so one failed write doesn't poison
+  // every subsequent write. Caller's .catch() still surfaces it.
+  logWriteChain = next.catch(() => {});
+  return next;
 }
 
 /**
@@ -187,11 +375,14 @@ export async function readRevalidationLog(): Promise<RevalidationLogEntry[]> {
 
 /**
  * Send a test ping to the site's revalidation endpoint.
+ * Sync-only — no async retries, no alerts (test pings are diagnostic
+ * and the user is watching the result live).
  */
 export async function sendTestPing(site: SiteEntryLike): Promise<RevalidationResult> {
-  return dispatchRevalidation(site, {
-    collection: "_test",
-    slug: "ping",
-    action: "updated",
-  });
+  return dispatchRevalidation(
+    site,
+    { collection: "_test", slug: "ping", action: "updated" },
+    undefined,
+    { syncOnly: true },
+  );
 }
