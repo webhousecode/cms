@@ -77,6 +77,13 @@ export interface SiteConfig {
   /** F133 Cloudflare Pages (direct) — project name (slug) */
   deployCloudflareProjectName: string;
 
+  /** F144 fly-ephemeral — source URL for the SSR app being built.
+   *  Format: "github:owner/repo[:subdir]" or "local:/absolute/path".
+   *  Empty string falls back to sitePaths.projectDir (legacy behavior). */
+  deploySource: string;
+  /** F144 fly-ephemeral — branch to clone (github sources only). Default "main". */
+  deploySourceBranch: string;
+
   /** AI Image Analysis: how to handle already-analyzed images in batch
    *  "ask" = prompt user, "skip" = skip existing, "overwrite" = always re-analyze */
   aiImageOverwrite: "ask" | "skip" | "overwrite";
@@ -200,6 +207,8 @@ async function defaults(): Promise<SiteConfig> {
     deployFlyLiveSyncSecret: "",
     deployCloudflareAccountId: "",
     deployCloudflareProjectName: "",
+    deploySource: "",
+    deploySourceBranch: "",
     backupSchedule: "off",
     backupTime: "03:00",
     backupRetentionDays: 30,

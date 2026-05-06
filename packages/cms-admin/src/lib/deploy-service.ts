@@ -399,6 +399,8 @@ export async function triggerDeploy(): Promise<DeployEntry> {
           configAppName: appName || config.deployAppName,
           configOrg: config.deployFlyOrg || undefined,
           callbackBaseUrl: process.env.NEXTAUTH_URL || "",
+          ...(config.deploySource && { configSource: config.deploySource }),
+          ...(config.deploySourceBranch && { configSourceBranch: config.deploySourceBranch }),
         });
         if (!result.ok) throw new Error(result.error);
         entry.url = result.appUrl;
