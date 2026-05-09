@@ -161,7 +161,8 @@
 | F145 | [ICD — Instant Content Deployment](#f145-icd-instant-content-deployment) | Core shipped, polish planned | [docs/features/F145-icd-instant-content-deployment.md](features/F145-icd-instant-content-deployment.md) |
 | F146 | [URL-Based Site Routing](#f146-url-based-site-routing) | Planned (small bridge shipped) | [docs/features/F146-url-based-site-routing.md](features/F146-url-based-site-routing.md) |
 | F147 | [Webapp Blueprint Contract](#f147-webapp-blueprint-contract) | Planned | [docs/features/F147-webapp-blueprint.md](features/F147-webapp-blueprint.md) |
-| F148 | [Web Application Server (broberg-app)](#f148-web-application-server-broberg-app) | Planned (open decisions) | [docs/features/F148-web-application-server.md](features/F148-web-application-server.md) |
+| F148 | [Web Application Server (broberg-app)](#f148-web-application-server-broberg-app) | Rejected (blast radius) | [docs/features/F148-web-application-server.md](features/F148-web-application-server.md) |
+| F149 | [Web App SDK (`@webhouse/*`)](#f149-web-app-sdk-webhouse) | Planned | [docs/features/F149-web-app-sdk.md](features/F149-web-app-sdk.md) |
 
 ---
 
@@ -613,4 +614,8 @@ Make the broberg.ai service stack (cms, trail, stripe-connect, MCP) the default 
 
 ## F148 — Web Application Server (broberg-app)
 
-A small multi-tenant Bun-Hono service at `app.broberg.ai` that hosts the cross-cutting concerns every customer-webapp needs but CMS isn't built for: real two-way Postgres for transactional state (bookings, orders, course-enrollments, sessions), auth + sessions with passkey support (port of F59), Stripe Connect routing with platform-fee enforcement, generic entity-store with row-level security per site_id. Implements F147's webapp blueprint contract from the server side. Solves sanneandersen's user-drift at the architecture level: broberg-app owns auth_users, mirrors to CMS users-collection via webhook on every change. ~11 fokuserede dage MVP across 7 phases (P1-P7) + per-customer migration deferred (P8). Stack: Bun + Hono + Drizzle + Postgres on Neon + Tigris for blob + Fly multi-region. Cost ~$40/mo at MVP, sub-linear per added customer. F148 must come AFTER F147 (contract first, implementation after) so customer-webapps don't hardcode gateway URLs. Plan-doc i `docs/features/F148-web-application-server.md` with open decisions awaiting Christian's input (repo structure, Postgres provider, auth-code reuse strategy).
+**REJECTED 2026-05-09** — blast radius for stor. Christian afviste planen fordi en multi-tenant `app.broberg.ai`-service ville være single-point-of-failure for ALLE customer-webapps. Plan-doc bevares som referencedokument i `docs/features/F148-web-application-server.md`. F149 (library-not-service alternative) er den valgte vej.
+
+## F149 — Web App SDK (`@webhouse/*`)
+
+Distributér broberg.ai-stack'en som vedligeholdte npm-pakker i stedet for som shared runtime. 13 pakker (`@webhouse/auth, @webhouse/db, @webhouse/users, @webhouse/entity-store, @webhouse/mail, @webhouse/notifications, @webhouse/logs, @webhouse/webhooks, @webhouse/stripe, @webhouse/files, @webhouse/cms-content, @webhouse/trail-connect, @webhouse/chat, @webhouse/mcp, @webhouse/ai`) der wrapper alle de cross-cutting concerns Christian's 5+ live customer-webapps i dag duplikerer (auth/db/mail/stripe/logs). Hvert site importerer pakkerne, vælger sin egen runtime (Next.js, Bun-Hono) og sin egen database (SQLite, Postgres, hosted Neon/Supabase). Zero shared SPOF — webapps fejler uafhængigt. Inkluderer scaffolding-site med ægte testdata som copy/paste reference for cc-sessions. ~35-45 fokuserede dage MVP across 8 phases. Plan-doc i `docs/features/F149-web-app-sdk.md`. Erstatter F148; implementerer F147-kontrakten via biblioteker i stedet for gateway. Motiveret af 2026-05-06 ICD-audit der afslørede sanneandersen's user-drift + 2026-05-09 strategisk diskussion hvor F148's blast radius blev afvist.
