@@ -161,7 +161,7 @@
 | F145 | [ICD — Instant Content Deployment](#f145-icd-instant-content-deployment) | Core shipped, polish planned | [docs/features/F145-icd-instant-content-deployment.md](features/F145-icd-instant-content-deployment.md) |
 | F146 | [URL-Based Site Routing](#f146-url-based-site-routing) | Planned (small bridge shipped) | [docs/features/F146-url-based-site-routing.md](features/F146-url-based-site-routing.md) |
 | F147 | [Webapp Blueprint Contract](#f147-webapp-blueprint-contract) | Planned | [docs/features/F147-webapp-blueprint.md](features/F147-webapp-blueprint.md) |
-| F148 | [Web Application Server (broberg-app)](#f148-web-application-server-broberg-app) | Rejected (blast radius) | [docs/features/F148-web-application-server.md](features/F148-web-application-server.md) |
+| F148 | [Web Application Server (broberg-app)](#f148-web-application-server-broberg-app) | Reborn as F149 P10 | [docs/features/F148-web-application-server.md](features/F148-web-application-server.md) |
 | F149 | [Web App SDK (`@webhouse/*`)](#f149-web-app-sdk-webhouse) | Planned | [docs/features/F149-web-app-sdk.md](features/F149-web-app-sdk.md) |
 
 ---
@@ -614,7 +614,7 @@ Make the broberg.ai service stack (cms, trail, stripe-connect, MCP) the default 
 
 ## F148 — Web Application Server (broberg-app)
 
-**REJECTED 2026-05-09** — blast radius for stor. Christian afviste planen fordi en multi-tenant `app.broberg.ai`-service ville være single-point-of-failure for ALLE customer-webapps. Plan-doc bevares som referencedokument i `docs/features/F148-web-application-server.md`. F149 (library-not-service alternative) er den valgte vej.
+**REBORN 2026-05-10 as F149 P10.** Den oprindelige multi-tenant Bun-Hono service-fra-scratch design blev afvist 2026-05-09 pga. blast radius. 2026-05-10 architectural insight: F148 genopstår som en **deploy af F149-packages** — en thin Hono service (~200 linjer) der mounter `server-routes`-exports fra hver F149-package som HTTP-endpoints. Customer-webapps vælger nu Mode A (importér packages direkte, ingen F148-dependency) eller Mode B (HTTP-call F148 for managed infra). SPOF-bekymringen er strukturelt løst: Mode A virker altid som fallback. Migration mellem mode er env-var changes alene. Detaljer i F149's "F148 reborn — App Server as F149-consumer"-sektion. Original F148 plan-doc bevares med ⚠ historisk-marker.
 
 ## F149 — Web App SDK (`@webhouse/*`)
 

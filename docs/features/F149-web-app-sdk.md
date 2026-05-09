@@ -5,7 +5,7 @@
 **Status:** planned (replaces rejected F148)
 **Owner:** cms-core
 **Priority:** Tier 1 (foundational — unblocks every future customer webapp)
-**Estimat:** ~55–75 fokuserede dage across 24 packages + scaffolding site (P1–P11) — revised after 2026-05-09 deep-scan added 11 new packages
+**Estimat:** ~60–85 fokuserede dage across 24 packages + scaffolding site + F148 service deploy (P1–P11) — revised 2026-05-10 after F148-as-F149-consumer architecture decision added server-routes exports + P10 service deploy
 **Created:** 2026-05-09
 
 > **Why F149 not F148:** Christian rejected F148 (multi-tenant Bun-Hono app server) on 2026-05-09 because the blast radius is unacceptable — `app.broberg.ai` down = every customer-webapp degrades. The library-not-service pivot in F149 has the opposite property: customer webapps fail independently, no shared runtime to monitor or scale, each customer can pick their own DB/host. The trade-off is "library version drift" instead of "central runtime fragility" — version drift is easier to manage operationally and easier to debug per-customer.
@@ -317,6 +317,51 @@ Next.js 16 + Supabase + PWA + Capacitor. The "real customer mobile-app" referenc
 
 **Implication for F149:** **Add `@webhouse/mobile`** (Capacitor + APNs/FCM + App Store/Play deploy automation). `@webhouse/db` adapter must include Supabase (it's the second most-common DB choice in the stack after SQLite). `@webhouse/notifications` must include FCM + Web Push (already partially planned). `@webhouse/mail` must support unsubscribe-token flow. `@webhouse/auth` must include cron-auth pattern (signed-secret + IP allowlist for scheduled-task auth).
 
+### FysioDK Sport — extended scan (2026-05-09 supplement)
+
+The original FysioDK section above touched the lib/ surface but didn't dig into the schema, mobile-app distribution model, or workflow domain. Going deeper:
+
+**Schema (30 Supabase migrations):**
+
+- `clinics` (multi-clinic tenant within ONE Supabase project)
+- `profiles` (extends `auth.users`) — roles: `owner | admin | behandler | user`. Includes `legacy_md5_hash` + `needs_password_upgrade` for migration from old system. Pattern reusable for any customer importing legacy users.
+- `injuries` — workflow domain table with status enum (`start | diagnostisering | afsluttet`), `coach_emails TEXT[]` (Postgres array), GDPR `retention_until DATE DEFAULT (CURRENT_DATE + INTERVAL '5 years')`.
+- `device_tokens` — FCM/APNs/web push tokens with platform check (`ios | android | web`), RLS-scoped to user, service-role bypass for cross-user notifications.
+- `injury_areas`, `treatment_types`, `invitations`, `audit_triggers` (DB-level audit log via Postgres triggers — different from app-level audit).
+- `announcements` with `target_roles` array + rich-text body — pattern for in-app notifications.
+- 7 email templates SEEDED in DB (not files) — admin can edit them via UI without code deploy.
+
+**Capacitor distribution model:**
+
+`apps/web/capacitor.config.ts` uses **remote URL mode** — the iOS/Android app shells just point at `https://sport.fdaalborg.dk` in a WebView; the actual app is the Next.js webapp. Bundled `out/` is fallback only. This means:
+
+- App Store / Play Store builds rarely need updating (just shell + permissions changes)
+- Web deploys instantly reach mobile too (no app-store review delay for content changes)
+- Single source-of-truth for behavior between web and mobile
+
+**This is a CRITICAL pattern for `@webhouse/mobile`** — it's the difference between "build a separate React Native app" (high cost) and "wrap your existing webapp in a thin native shell" (low cost). Document this explicitly in the package.
+
+**PWA + service worker:**
+
+`src/app/sw.ts` (Next.js 16 native service worker pattern, not Workbox) + `manifest.json` + `service-worker-register.tsx` component. Offline page at `/offline`. This is the canonical PWA pattern for Next.js 16.
+
+**Docker deploy:**
+
+Dockerfile uses `--mount=type=secret,id=DEPLOY_ENV` for build-time secret injection (preserves newlines for multi-line vars like Firebase Admin keys). Pattern reusable for any Docker deploy needing env-vars at build time.
+
+**Tenancy model:**
+
+Each customer gets their OWN Supabase project (not a multi-tenant shared one). FysioDK has 1 Supabase project for all clinics; another customer would have a separate Supabase project. This argues for `@webhouse/db`'s Supabase adapter to take connection-string config (per-customer), not a shared client.
+
+**Implications for F149 (additions to existing FysioDK section above):**
+
+- `@webhouse/mobile` MUST document the Capacitor remote-URL pattern as the recommended default (it's strictly better than bundled web)
+- `@webhouse/db` Supabase adapter takes per-customer connection-string + service-role-key config
+- `@webhouse/auth` Supabase adapter must support `legacy_md5_hash` + `needs_password_upgrade` migration pattern (any customer importing legacy users will need it)
+- `@webhouse/notifications` `device_tokens` table schema is the canonical multi-platform push-target store
+- `@webhouse/mail` admin-editable email templates (DB-stored, not file-stored) is a useful alternative to React-component templates — both should be supported
+- `@webhouse/forms` should support the `announcements` pattern (in-app notifications with target-roles array)
+
 ### Sanne Andersen (`~/Apps/webhouse/sanneandersen/site`) — deeper review
 
 Beyond the initial scan, sanne's `lib/` reveals:
@@ -399,6 +444,137 @@ Contract management with Danish business-registry integration. Stack: Next.js + 
 **Total package count:** 13 → **24 packages**. Cost in plan-doc estimat: revised below in "Effort" section.
 
 **Architectural insight:** ~80% of the SDK code already exists across these 8 repos. F149 is primarily an **extraction + standardization** project, not a greenfield write. Each package's first commit will largely be "copy from canonical-source repo, generalize, add tests." This shrinks per-package risk but adds coordination overhead across repos.
+
+## F148 reborn — App Server as F149-consumer
+
+The original F148 (a multi-tenant Bun-Hono app server hosting auth + entity-store + Stripe) was rejected on 2026-05-09 because it would have been a single point of failure: if `app.broberg.ai` went down, every customer-webapp depending on it would degrade simultaneously.
+
+Christian's 2026-05-10 architectural insight reframes F148 instead of cancelling it: **F148 is reborn as a deploy of F149's packages, not a from-scratch build.** The two are no longer competing architectures — they are the same code distributed two ways.
+
+### The two consumption modes
+
+A customer-webapp built on F149 chooses ONE of:
+
+**Mode A — SDK direct (the F149 default):**
+
+```ts
+// customer-webapp/src/lib/auth.ts
+import { createAuth } from "@webhouse/auth";
+import { db } from "@/lib/db";
+
+export const auth = createAuth({ db, secret: process.env.AUTH_SECRET! });
+```
+
+The webapp imports packages directly. Runs its own runtime, owns its own DB, no shared service. Standalone. This is the default for all sites; works without F148.
+
+**Mode B — App Server (the F148-as-F149-consumer):**
+
+```ts
+// customer-webapp/src/lib/auth.ts
+import { createAppServerAuth } from "@webhouse/auth/client";
+
+export const auth = createAppServerAuth({
+  baseUrl: process.env.BROBERG_AUTH_URL!,   // → https://app.broberg.ai/v1/auth
+  apiKey: process.env.BROBERG_APP_API_KEY!,
+});
+```
+
+Same `auth.signIn(...)`, `auth.getUser(...)` API surface. But the implementation HTTP-calls a deployed F148 instance. The F148 instance is itself a Bun-Hono service that **internally imports the SAME `@webhouse/auth` package** and exposes its operations as REST endpoints.
+
+### Why this is the elegant unification
+
+1. **Zero duplicate code.** F148 doesn't reimplement auth/entity-store/etc — it uses F149's packages internally. Bug fix in `@webhouse/auth` propagates to BOTH SDK consumers AND the F148 service via a normal version bump.
+
+2. **No SPOF for SDK-mode customers.** If F148 is down, only Mode B customers are affected. Mode A customers keep working — they have no dependency on `app.broberg.ai`. The blast radius that killed the original F148 plan is structurally gone because Mode A always exists as the fallback.
+
+3. **Customers can MIGRATE between modes** without touching business logic. Start in SDK-mode, scale to App-Server-mode when:
+   - Customer wants managed infrastructure (no Postgres to operate themselves)
+   - Multi-customer-shared cache or rate-limit pool makes sense
+   - Compliance audit needs a centralized log of all auth events
+   - Christian wants per-call billing for high-volume customers
+   
+   Migration is just env-var changes (`AUTH_SECRET=local-secret` → `BROBERG_APP_API_KEY=...` and `BROBERG_AUTH_URL=https://app.broberg.ai/v1/auth`). Webapp source code unchanged.
+
+4. **F147 contract is honored cleanly.** F147's env-var-addressed contract was specifically designed to allow swapping implementations. Mode A and Mode B are two implementations of the same contract.
+
+5. **Each package ships TWO entry points:**
+   - `@webhouse/auth` (default export) — direct in-process implementation for SDK-mode
+   - `@webhouse/auth/client` — HTTP-client implementation for App-Server-mode
+   - Both implement the same `Auth` interface (TypeScript-enforced)
+
+### What App-Server-mode requires
+
+For F148-as-F149-consumer to work, each F149 package must define:
+
+1. **An interface** — TypeScript type definitions in `<package>/types.ts`
+2. **A direct implementation** — for SDK-mode (Mode A)
+3. **A client implementation** — for App-Server-mode (Mode B)
+4. **A server-side route definition** — for the F148 service to mount the package's HTTP API
+
+```ts
+// @webhouse/auth/server-routes.ts
+import { Hono } from "hono";
+import { createAuth } from "./direct.js";
+
+export function authRoutes(deps: { db, secret }): Hono {
+  const auth = createAuth(deps);
+  const app = new Hono();
+  app.post("/magic-link", async (c) => {
+    const { email } = await c.req.json();
+    return c.json(await auth.sendMagicLink(email));
+  });
+  app.post("/verify", async (c) => { /* ... */ });
+  app.get("/me", async (c) => { /* ... */ });
+  return app;
+}
+```
+
+F148's repo is then a thin Bun-Hono service that composes these route exports:
+
+```ts
+// broberg-app/src/index.ts
+import { Hono } from "hono";
+import { authRoutes } from "@webhouse/auth/server-routes";
+import { entityStoreRoutes } from "@webhouse/entity-store/server-routes";
+import { stripeRoutes } from "@webhouse/stripe/server-routes";
+import { db } from "./db.js";
+
+const app = new Hono();
+app.route("/v1/auth", authRoutes({ db, secret: process.env.AUTH_SECRET! }));
+app.route("/v1/entity-store", entityStoreRoutes({ db }));
+app.route("/v1/stripe", stripeRoutes({ ... }));
+
+export default { fetch: app.fetch, port: 3000 };
+```
+
+That's most of F148. ~200 lines of Hono routing + middleware (auth check, RLS enforcement via API-key → site_id mapping, rate-limiting). The actual logic is all in the F149 packages.
+
+### Implications for F149 phasing
+
+Each package phase (P2-P7) now includes a **server-routes export** as a first-class deliverable. Cost per package: +0.25-0.5d for the route + integration tests. Total additional cost across 24 packages: **~6-10d**.
+
+**New phase added: P10 — F148 service deploy (3d)**
+- Build the thin Hono service that composes route exports from all server-side packages
+- Deploy to `app.broberg.ai` (Fly multi-region, arn primary)
+- Per-site API key issuance + RLS enforcement
+- Rate-limiting + circuit breakers (per-site)
+- Health endpoint + Discord alert on degradation
+
+**New phase added: P11 — Mode-A → Mode-B migration runbook (1d, deferred)**
+- Document how to migrate a Mode-A customer-webapp to Mode-B (env-var changes + DB-data migration if app-server uses different DB)
+- Document the reverse: how to "lift" a Mode-B customer back to Mode-A (export their data, point env-vars locally)
+- Deferred — only executed when first customer actually wants to migrate
+
+### What this means for the rejection note
+
+The "F148 REJECTED" note in `docs/features/F148-web-application-server.md` is now misleading. F148 is being **reborn** as a F149-consumer. Either:
+
+- (A) Rewrite F148's plan-doc as "F148 — App Server (F149-consumer)" with the new architecture
+- (B) Leave F148 as a historical artifact with a note pointing forward to the F149-section above
+
+Recommendation: (A). The original F148 plan is no longer the design we're building, but the F-number deserves a real plan-doc that reflects the actual design.
+
+This is tracked as a follow-up commit after this one — see "TODO: rewrite F148 plan-doc to reflect F149-consumer architecture" at the end of the F148 doc.
 
 ## Phases
 
@@ -540,6 +716,12 @@ The duplication was tolerable while broberg.ai had 1-2 customer-webapps and Chri
 
 **Total MVP (P1-P8): ~29 fokuserede dage** for the original 13 packages. Padded estimate (35-45d) accounts for cross-package integration overhead.
 
+**Updated phasing after F148-as-F149-consumer architecture decision (2026-05-10):**
+
+- Each package phase (P2-P7) gains a "server-routes export" deliverable: +0.25-0.5d per package, ~6-10d total
+- New P10 — F148 service deploy at `app.broberg.ai`: 3d
+- New P11 — Mode-A ↔ Mode-B migration runbook: 1d (deferred, executed only when first customer wants to migrate)
+
 **Revised after 2026-05-09 deep-scan (11 additional packages):**
 
 | Additional packages | Estimated effort |
@@ -557,7 +739,14 @@ The duplication was tolerable while broberg.ai had 1-2 customer-webapps and Chri
 | `@webhouse/cvr` (Contract Manager) | 0.5d |
 | **Sub-total** | **~21d** |
 
-**Updated total MVP: ~50 fokuserede dage** for 24 packages + scaffolding. Padded to 55-75 days for integration overhead, rework, and the inevitable scope-discovery during extraction.
+**Updated total MVP: ~50 fokuserede dage** for 24 packages + scaffolding (Mode-A only).
+
+**With F148-as-F149-consumer additions (2026-05-10):**
+- Server-routes exports across packages: +6-10d
+- P10 (F148 deploy): +3d
+- **New total MVP: ~60-65 fokuserede dage** for both Mode-A SDK and Mode-B App-Server delivery. Padded to 70-85 days for integration overhead, rework, and scope-discovery during extraction.
+
+P11 (migration runbook) deferred per-customer.
 
 Cost per published package: ~$0 (npm + GitHub Actions OIDC trusted publishing already wired). Cost to maintain: SDK bumps couple to existing cms release cadence (no new ops). With 24 packages, version bumps cost more in changelog-writing time but the publish pipeline scales automatically.
 
