@@ -2,11 +2,31 @@
 
 > A small, multi-tenant Bun-Hono service at `app.broberg.ai` that hosts the cross-cutting concerns every customer-webapp needs but CMS isn't built for: real two-way Postgres for transactional state, auth + sessions with passkeys, Stripe Connect routing with platform-fee enforcement. Implements F147's webapp blueprint contract from the server side. Static content stays in CMS; chat memory stays in trail; this fills the gap in between.
 
-**Status:** planned — strategic discussion ongoing
-**Owner:** cms-core (until handed off)
-**Priority:** Tier 1 (foundational — unlocks customer-webapp scale)
-**Estimat:** ~11 fokuserede dage MVP (P1-P7)
-**Created:** 2026-05-09
+**Status:** **REBORN as F149-consumer (2026-05-10)** — original from-scratch design rejected on blast-radius grounds; new design is a thin Hono service composing F149 packages' server-routes. See `docs/features/F149-web-app-sdk.md` § "F148 reborn — App Server as F149-consumer" for the actual design.
+**Owner:** cms-core
+**Priority:** Tier 1 (delivered as P10 of F149)
+**Estimat:** 3 fokuserede dage (P10 of F149 — composing existing package routes + deploy)
+**Created:** 2026-05-09 (this plan-doc reflects the original rejected design; kept as historical context)
+**Superseded by:** F149 P10 (2026-05-10)
+
+> ## ⚠ This plan-doc is historical
+>
+> The original F148 design (reflected below) was rejected 2026-05-09 because a multi-tenant `app.broberg.ai` service would have been a single point of failure for every customer-webapp.
+>
+> The 2026-05-10 architectural insight reframes F148 as a **deploy of F149 packages**, not a from-scratch build:
+>
+> - F149 ships every capability (auth, entity-store, mail, etc.) as standalone npm packages
+> - Each package exports BOTH a direct in-process implementation AND a server-routes definition
+> - F148 is a thin Hono service (~200 lines) that mounts those server-routes from each package
+> - Customer-webapps choose: import packages directly (Mode A, no F148 dependency) OR HTTP-call F148 (Mode B, managed infra)
+> - SPOF concern is gone: Mode A always works as fallback if F148 is down
+>
+> **For the actual current design, read F149 plan-doc § "F148 reborn — App Server as F149-consumer".**
+>
+> The detailed design below is preserved for context — it documents what cms-core proposed in the 2026-05-08 strategic discussion, why Christian rejected it, and what specifically informed the F149-consumer architecture that replaced it.
+
+---
+
 
 > **Note on plan-doc origin:** This plan-doc reflects cms-core's assessment from the 2026-05-08 discussion. Christian asked for cms-core's thoughts first ("lad os tage dine først") and the plan-doc was written before he gave his own. He should review and amend — sections marked **[awaits-Christian]** are explicit decisions still open.
 
