@@ -5,7 +5,7 @@
 **Status:** planned (replaces rejected F148)
 **Owner:** cms-core
 **Priority:** Tier 1 (foundational — unblocks every future customer webapp)
-**Estimat:** ~35–45 fokuserede dage across 13 packages + scaffolding site (P1–P9)
+**Estimat:** ~55–75 fokuserede dage across 24 packages + scaffolding site (P1–P11) — revised after 2026-05-09 deep-scan added 11 new packages
 **Created:** 2026-05-09
 
 > **Why F149 not F148:** Christian rejected F148 (multi-tenant Bun-Hono app server) on 2026-05-09 because the blast radius is unacceptable — `app.broberg.ai` down = every customer-webapp degrades. The library-not-service pivot in F149 has the opposite property: customer webapps fail independently, no shared runtime to monitor or scale, each customer can pick their own DB/host. The trade-off is "library version drift" instead of "central runtime fragility" — version drift is easier to manage operationally and easier to debug per-customer.
@@ -237,6 +237,169 @@ A fully working reference webapp at `packages/scaffolding-site/` (or `examples/s
 
 The scaffolding site is the **canonical reference** F149 ships. Plan-doc + 13 npm packages alone aren't enough — cc-sessions need a working app to copy/paste from.
 
+## Deep-scan findings (2026-05-09)
+
+After the initial 5-app scan above, a **deeper review** of the 8 most complex projects in `~/Apps/` surfaced architectural patterns and reusable components that justify expanding the package matrix and refining the architecture. This section documents what was found and how it changes F149.
+
+### CMS (`~/Apps/webhouse/cms`)
+
+The cms-admin codebase is the densest source of reusable patterns. Beyond what the initial scan captured (auth, db, mail), `packages/cms-admin/src/lib/` contains 70+ modules implementing:
+
+- **Beam** (`beam/`) — site-content transfer between cms-admin instances. Unique pattern for "snapshot one server's site content + replay on another." Useful for staging→prod promotion, disaster recovery, customer onboarding.
+- **Build orchestrator** (`build-orchestrator/`, `build-server/`) — F143 + F144 ephemeral build VMs (Fly Machines API + Docker image construction). Includes source-fetch (just shipped), Dockerfile templates, callback tokens.
+- **Scheduler infrastructure** (`scheduler.ts`, `scheduler-bus.ts`, `scheduler-log.ts`, `scheduler-notify.ts`, `tools-scheduler.ts`, `cron.ts`, `scheduled-snapshot.ts`) — full-featured cron + scheduled-tasks subsystem with own log + notify channels. Used for backups, link-checks, cleanup jobs.
+- **Workflow runner** (`workflow-runner.ts`) — multi-step automation workflows.
+- **Agent runner + budget** (`agent-runner.ts`, `agent-budget.ts`, `agent-feedback.ts`, `agent-templates.ts`, `agent-workflows.ts`, `agents.ts`) — autonomous agents with cost limits, feedback loops, template-driven prompts, multi-step workflows.
+- **Curation queue** (`curation.ts`) — content moderation review queue.
+- **Forms engine** (`forms/`) — F30 form-builder with submissions inbox + auto-reply.
+- **WP-migration** (`wp-migration/`) — WordPress import tooling.
+- **Document extraction** (`document-extractor.ts`) — PDF/docx → CMS content conversion.
+- **Push notifications** (`push-send.ts`, `push-store.ts`) — Web Push subscription store + send pipeline (VAPID).
+- **Brand voice** (`brand-voice.ts`) — tone-locking for AI-generated content.
+- **Site clone** (`site-clone.ts`) — duplicate site infrastructure (config + content + settings).
+- **Onboarding** (`onboarding/`) — guided first-run setup.
+- **Cockpit** (`cockpit.ts`) — admin dashboard data aggregation across collections.
+- **Storage adapters** in cms-engine (`packages/cms/src/storage/`) — already abstracts filesystem/github/sqlite/supabase. The contract pattern that should inform `@webhouse/db`.
+
+**Implication for F149:** the existing cms-admin lib is ~80% of the SDK already, just not packaged as standalone. Most "new" packages are extractions, not greenfield writes.
+
+### Buddy (`~/Apps/webhouse/buddy`)
+
+Sophisticated multi-process system that orchestrates cc sessions across repos. `apps/server/src/` has 50+ modules implementing patterns nothing else in the stack has:
+
+- **Peer messaging / channel** (`packages/channel/`, `packages/transport/`) — cc-to-cc intercom + service-to-service messaging via SSE. The `secret.ts` pattern for shared-secret authentication is the cleanest in the stack. **This is a NEW SDK package** (`@webhouse/peer-channel`) — nothing else in the matrix covers cross-process messaging.
+- **PTY / tmux / iTerm management** (`pty/sidecar-bootstrap.ts`, `pty/start-session.ts`, `pty/tmux.ts`) — orchestrates terminal sessions, headless cc spawning, tmux backgrounding. Enables F47-style autonomous orchestration.
+- **Brain inbox watcher + flag delegation** (`brain-inbox-watcher.ts`, `flag-delegation-watcher.ts`, `confirmed-flag-to-trail.ts`) — auto-orchestrator polling + dispatch pattern. The pattern future SDK consumers may want for periodic background work.
+- **Discord bot** (`discord-bot.ts`) — Discord ↔ cc bridge. Different pattern from generic "send to webhook" — bidirectional with thread tracking.
+- **Auto-knowledge capture** (`commit-to-trail.ts`, `intercom-to-trail.ts`, `session-distill.ts`, `trail-ingest.ts`) — git-commits + intercoms + session-summaries automatically curated into trail. Production-grade ADR pipeline.
+- **Notify gate** (`notify-gate.ts`) — rate-limit + quiet-hours for notifications. Solves the "spam Christian's phone at 3am" problem.
+- **Repo context auto-discovery** (`repo-context.ts`, `repo.ts`) — figure out which repo a session is in + which sites it manages.
+- **Headless session spawning** (`headless-session.ts`, `cc-invocation.ts`, `orchestration-spawn.ts`) — spawn cc sessions programmatically (matches F47 autonomous-self-improvement).
+- **Voice package** (`packages/voice/`) — voice integration (TTS/STT) for hands-free cc interaction.
+- **Stream** (`stream.ts`) — SSE streaming for live updates.
+
+**Implication for F149:** Buddy's patterns are too valuable to leave un-packaged. **Add `@webhouse/peer-channel` (cc/service messaging), `@webhouse/orchestration` (job/agent/workflow runners), and `@webhouse/voice` (TTS/STT helpers).** The notify-gate and Discord bridge belong inside `@webhouse/notifications`.
+
+### Trail (`~/Apps/broberg/trail`)
+
+The most architecturally advanced AI app in the stack. `packages/` has 6 sub-packages (core, db, pipelines, sdk, shared, storage) and `apps/server/src/services/` has 30+ specialized services:
+
+- **Pipelines** (`packages/pipelines/`) — file-type ingestion (audio, docx, image, pdf, pptx, xlsx). Each pipeline has its own normalization → text+metadata extraction. **Important pattern** — neither CMS's `document-extractor` nor anything else covers all 6 file types.
+- **Storage abstraction** (`packages/storage/`) — clean file-storage adapter (`local.ts` today; can grow Cloudflare R2 / Tigris / S3 adapters).
+- **DB adapter pattern** (`packages/db/libsql-adapter.ts`) — the cleanest example of the adapter-pattern F149's `@webhouse/db` should follow. Has `interface.ts` + concrete adapter + migration runner + FTS (full-text search) integration.
+- **Vision + vision-derivative + transcription + translation** (`apps/server/src/services/`) — AI primitives: image analysis, audio→text, content translation. Reusable beyond trail.
+- **Glossary, entity-aggregate, tag-aggregate, tag-suggester, reference-extractor** — automated metadata extraction patterns. Could be a `@webhouse/content-intelligence` package, but more likely these stay as trail-specific composition of the lower-level AI primitives.
+- **Cost aggregator + credits** (`cost-aggregator.ts`, `credits.ts`) — AI cost tracking + per-user credit allowances. Reusable as part of `@webhouse/ai`.
+- **Contradiction lint + lint-scheduler** (F158) — semantic lint that fires on changes only via signature-skip. Pattern for "expensive AI scans only when content actually changes."
+- **Backup** (`services/backup/`) — full-system backup orchestration.
+- **Activity logger + access tracker + access rollup** — telemetry pattern with daily rollups.
+- **Action recommender** — AI-powered suggestion system.
+- **FX (formulas)** (`fx.ts`) — computed fields / derived metadata.
+
+**Implication for F149:** **Add `@webhouse/pipelines` (file-type-specific ingestion → text+metadata)**. Refine `@webhouse/db` to mirror trail's `packages/db/` adapter pattern (it's strictly better than what was sketched in the original plan). Refine `@webhouse/ai` to include vision + transcription + translation + cost-tracking + credits. Trail's storage abstraction confirms `@webhouse/files` should have a similar interface-first design.
+
+### FysioDK Sport (`~/Apps/webhouse/fysiodk-aalborg-sport`)
+
+Next.js 16 + Supabase + PWA + Capacitor. The "real customer mobile-app" reference. `apps/web/src/lib/` has 21 modules:
+
+- **Supabase pattern** (`supabase/client.ts`, `server.ts`, `middleware.ts`) — ssr + service-role split, RLS-aware. Different DB pattern from sanne's local SQLite.
+- **App Store Connect + Google Play deploy helpers** (`app-store-connect.ts`, `google-play.ts`, `store-monitor.ts`) — mobile-app deployment automation. Niche but reusable for any future mobile app.
+- **Capacitor bridge** (`capacitor-bridge.ts`) — native ↔ web bridge for Capacitor apps.
+- **Firebase Admin** (`firebase-admin.ts`) — push via FCM (Android + iOS).
+- **Web Push with VAPID** (`web-push.ts`, `push.ts`) — browser Web Push subscription + send. Server-side helper.
+- **Image compression** (`image-compression.ts`) — sharp wrapper for upload-time compression.
+- **Cron auth** (`cron-auth.ts`) — authenticate scheduled-task callers (different from user-auth).
+- **Unsubscribe tokens** (`unsubscribe-token.ts`) — signed tokens for one-click unsubscribe in emails.
+- **Gravatar** (`gravatar.ts`) — avatar lookup by email hash.
+- **Tiptap utils** (`tiptap-utils.ts`) — richtext editor utilities.
+- **Audit + audit-server** (`audit.ts`, `audit-server.ts`) — RLS-aware audit-log helpers using service-role client.
+- **API health check** (`api-health-check.ts`) — health/probe endpoint helper.
+
+**Implication for F149:** **Add `@webhouse/mobile`** (Capacitor + APNs/FCM + App Store/Play deploy automation). `@webhouse/db` adapter must include Supabase (it's the second most-common DB choice in the stack after SQLite). `@webhouse/notifications` must include FCM + Web Push (already partially planned). `@webhouse/mail` must support unsubscribe-token flow. `@webhouse/auth` must include cron-auth pattern (signed-secret + IP allowlist for scheduled-task auth).
+
+### Sanne Andersen (`~/Apps/webhouse/sanneandersen/site`) — deeper review
+
+Beyond the initial scan, sanne's `lib/` reveals:
+
+- **Eir AI** (`lib/eir/`) — booking-aware chat assistant. `klippekort.ts` (clip-card), `booking.ts`, `audit.ts`. Domain-specific business logic on top of generic chat — good example of how customer apps compose SDK packages.
+- **Klippekort engine** (`klippekort.ts`) — multi-use prepaid bookings. Niche but pattern reusable for course-credits.
+- **Course system** (`lib/courses/`) — enrollment, progression, certificates.
+- **Qigong subscriptions** (`lib/qigong/db.ts`) — Stripe subscriptions with status sync. The pending-row-then-webhook pattern is the canonical way to handle Stripe events.
+- **8 mail templates** (`lib/mail-templates/`) — magic-link, booking-confirmation, klippekort-purchase, klippekort-expiring, booking-cancellation, refund-confirmation, sanne-new-booking, welcome, user-invite. **All should ship in `@webhouse/mail` as React-component templates** for any customer to use.
+- **Local SQLite + Drizzle + multi-domain DBs** — sanne has separate DBs per domain (qigong, eir, auth) within one site. Argues for `@webhouse/db` supporting multiple database instances per app, not just one.
+
+**Implication for F149:** `@webhouse/mail` ships sanne's 8 templates as the canonical starter set. `@webhouse/stripe` includes the pending-row-then-webhook subscription pattern. `@webhouse/db` API should accept either single-db or multi-db config (each customer chooses).
+
+### Pitch Vault (`~/Apps/cbroberg/pitch`)
+
+Pitch-presentation tool. Stack: better-sqlite3 + Drizzle + Anthropic SDK + WebAuthn + Monaco editor + Playwright (for screenshots).
+
+- **Auth — 4 methods** (`lib/auth/api-key.ts`, `password.ts`, `session.ts`, `webauthn.ts`) — API key + password (bcrypt) + magic-link sessions + passkey. The richest auth surface in the stack.
+- **Storage** (`lib/storage.ts`) — `STORAGE_PATH` env-based directory layout. Clean dependency on env-var for portability.
+- **Screenshot** (`lib/screenshot.ts`) — Playwright + chromium + sharp pipeline for thumbnail generation. Pattern reusable for any "preview an HTML asset" need.
+- **Template files** (`lib/template-files.ts`) — file-based templates separate from CMS content.
+- **WYSIWYG inject** (`lib/wysiwyg-inject.ts`) — same pattern as cms-admin's; should be deduped.
+
+**Implication for F149:** `@webhouse/auth` must support all 4 auth methods (currently planned: magic-link + passkey only — add password + api-key). **Add `@webhouse/screenshot`** (Playwright + sharp wrapper for HTML→PNG). `@webhouse/files` should have the env-var storage-path pattern as the default.
+
+### Coverletter Generator (`~/Apps/cbroberg/coverletter-generator`)
+
+AI-driven cover-letter + CV generator. Stack: Anthropic SDK + NextAuth (with `@auth/drizzle-adapter`) + Drizzle + Google Drive API + Playwright.
+
+- **PDF generation** (`lib/pdf/cover-letter-generator.tsx`, `cv-generator.tsx`, `cv-markdown-parser.ts`, `markdown-parser.tsx`) — markdown → React → PDF rendering pipeline. Pattern reusable for any document export.
+- **Web scraping** (`lib/scraper/`) — `base-scraper.ts`, `generic-scraper.ts`, `jobindex-scraper.ts`, `linkedin-scraper.ts`, `scraper-orchestrator.ts`. Anti-bot patterns + per-site adapters. Niche but valuable for any "ingest from external website" need.
+- **Google Drive integration** (`lib/google-drive/auth.ts`, `uploader.ts`) — OAuth + uploader. Reusable for any Google Drive integration.
+- **AI image search** (`lib/image-search/`) — likely Anthropic vision or Google Images.
+- **References + Interviews** — domain modules (likely entity-store style).
+- **Auth.js / NextAuth via Drizzle adapter** — different from sanne's hand-rolled JWT auth. Argues that `@webhouse/auth` should ALSO have a "compose with Auth.js" mode for sites that prefer that ecosystem.
+
+**Implication for F149:** **Add `@webhouse/pdf`** (markdown → React → PDF pipeline). **Add `@webhouse/scraping`** (web scraping with anti-bot helpers). **Add `@webhouse/google-drive`** (or fold into a broader `@webhouse/integrations` package). `@webhouse/auth` should document Auth.js interop pattern alongside its native flows.
+
+### Contract Manager (`~/Apps/webhouse/contract-manager`)
+
+Contract management with Danish business-registry integration. Stack: Next.js + Drizzle + SQLite + Resend.
+
+- **CVR lookup** (`lib/cvr-lookup.ts`) — Danish business registry API integration. Niche but Denmark-centric customers will need it.
+- **Contract module** (`lib/contract/`) — signing flow + status tracking + tokens.
+- **Tokens** (`lib/tokens.ts`) — contract-specific signed tokens (different from auth sessions).
+- **API auth** (`lib/api-auth.ts`) — API authentication helper for contract endpoints.
+- **Email module** (`lib/email/`) — Resend integration with contract-specific templates.
+
+**Implication for F149:** **Add `@webhouse/cvr`** (Danish business registry — narrow but reusable for any DK customer). The contract-signing flow itself is too domain-specific to package, but the **token-pattern** (signed time-limited URLs for actions) belongs in `@webhouse/auth` as a sibling to magic-link.
+
+### Summary — additions and refinements
+
+**New packages added to the matrix:**
+
+| Package | Source | Why |
+|---|---|---|
+| `@webhouse/peer-channel` | Buddy `packages/channel`, `packages/transport` | cc-to-cc + service-to-service messaging via SSE — nothing else covers it |
+| `@webhouse/orchestration` | Buddy `queue`, `pty`, `headless-session.ts` + CMS `agent-runner.ts`, `workflow-runner.ts` | Job runners, agent execution, workflow orchestration |
+| `@webhouse/scheduler` | CMS `scheduler*.ts`, `cron.ts`, `tools-scheduler.ts` | Cron + scheduled-tasks with own log/notify subsystem |
+| `@webhouse/pipelines` | Trail `packages/pipelines/` (audio/docx/image/pdf/pptx/xlsx) | File-type-specific ingestion → text+metadata |
+| `@webhouse/forms` | CMS `forms/` (F30) | Form-builder + submissions inbox + auto-reply |
+| `@webhouse/screenshot` | Pitch `lib/screenshot.ts` + whop `lib/screenshot/` | Playwright + sharp wrapper for HTML→PNG |
+| `@webhouse/scraping` | Coverletter `lib/scraper/` | Web scraping with anti-bot patterns + per-site adapters |
+| `@webhouse/pdf` | Coverletter `lib/pdf/` | Markdown → React → PDF pipeline |
+| `@webhouse/mobile` | FysioDK `lib/{capacitor-bridge, app-store-connect, google-play, firebase-admin}` | Capacitor + APNs/FCM + App Store/Play deploy automation |
+| `@webhouse/voice` | Buddy `packages/voice` | TTS/STT helpers |
+| `@webhouse/cvr` | Contract Manager `lib/cvr-lookup.ts` | Danish business registry — narrow but reusable for DK customers |
+
+**Refinements to existing packages (from initial 13):**
+
+- **`@webhouse/auth`** — must support 4 methods: magic-link, password (bcrypt), passkey/WebAuthn, API-key. Add cron-auth (signed-secret + IP allowlist) for scheduled-task callers. Add signed time-limited action-tokens (the contract-tokens pattern). Document Auth.js interop for sites preferring that ecosystem.
+- **`@webhouse/db`** — mirror Trail's `packages/db/` adapter pattern (interface.ts + concrete adapter + migration runner + FTS). Drivers: SQLite (better-sqlite3), Postgres (postgres-js), libSQL/Turso, Supabase (RLS-aware service+anon split), in-memory. API accepts EITHER single-db OR multiple-db config (Sanne's pattern).
+- **`@webhouse/mail`** — ship sanne's 8 templates as canonical starter set. Add unsubscribe-token flow.
+- **`@webhouse/notifications`** — channels: Discord, Slack, Web Push (VAPID), FCM (mobile push), APNs, browser notification. Add notify-gate (rate-limit + quiet-hours).
+- **`@webhouse/files`** — env-var storage-path pattern (Pitch). Adapter pattern: Cloudflare R2, Tigris, S3-compatible, local-dev.
+- **`@webhouse/ai`** — extend with vision (image analysis), transcription (audio→text), translation. Add cost-tracking + per-user credits (Trail). Add brand-voice tone-locking (CMS).
+- **`@webhouse/webhooks`** — already covers retry-chain. Add Discord ↔ cc bidirectional bridge pattern (Buddy).
+- **`@webhouse/cms-content`** — extracts content-fetch from cms-admin. Includes Beam pattern for cms-admin → cms-admin transfer. ICD receiver helper.
+
+**Total package count:** 13 → **24 packages**. Cost in plan-doc estimat: revised below in "Effort" section.
+
+**Architectural insight:** ~80% of the SDK code already exists across these 8 repos. F149 is primarily an **extraction + standardization** project, not a greenfield write. Each package's first commit will largely be "copy from canonical-source repo, generalize, add tests." This shrinks per-package risk but adds coordination overhead across repos.
+
 ## Phases
 
 ### Phase 1 — Inventory + scaffolding-site skeleton (2d)
@@ -375,6 +538,27 @@ The duplication was tolerable while broberg.ai had 1-2 customer-webapps and Chri
 | P8 Scaffolding site polish + reference deployment | 3d |
 | P9 Customer-webapp migrations | per-site (1-2d each, deferred) |
 
-**Total MVP (P1-P8): ~29 fokuserede dage.** Padded estimate above (35-45d) accounts for cross-package integration overhead and the inevitable scope-discovery during implementation.
+**Total MVP (P1-P8): ~29 fokuserede dage** for the original 13 packages. Padded estimate (35-45d) accounts for cross-package integration overhead.
 
-Cost per published package: ~$0 (npm + GitHub Actions OIDC trusted publishing already wired). Cost to maintain: SDK bumps couple to existing cms release cadence (no new ops).
+**Revised after 2026-05-09 deep-scan (11 additional packages):**
+
+| Additional packages | Estimated effort |
+|---|---|
+| `@webhouse/peer-channel` (port from Buddy) | 1.5d |
+| `@webhouse/orchestration` (job/agent/workflow runner) | 3d |
+| `@webhouse/scheduler` (port CMS scheduler subsystem) | 2d |
+| `@webhouse/pipelines` (port Trail's 6 file-type pipelines) | 4d |
+| `@webhouse/forms` (port F30 forms engine) | 2d |
+| `@webhouse/screenshot` (Playwright + sharp wrapper) | 1d |
+| `@webhouse/scraping` (port Coverletter scrapers) | 1.5d |
+| `@webhouse/pdf` (port Coverletter pdf generator) | 1.5d |
+| `@webhouse/mobile` (FysioDK Capacitor + APNs/FCM helpers) | 3d |
+| `@webhouse/voice` (Buddy voice package) | 1.5d |
+| `@webhouse/cvr` (Contract Manager) | 0.5d |
+| **Sub-total** | **~21d** |
+
+**Updated total MVP: ~50 fokuserede dage** for 24 packages + scaffolding. Padded to 55-75 days for integration overhead, rework, and the inevitable scope-discovery during extraction.
+
+Cost per published package: ~$0 (npm + GitHub Actions OIDC trusted publishing already wired). Cost to maintain: SDK bumps couple to existing cms release cadence (no new ops). With 24 packages, version bumps cost more in changelog-writing time but the publish pipeline scales automatically.
+
+**Most importantly:** ~80% of the code already exists in canonical-source repos. F149 is primarily an extraction + standardization project, not greenfield. Each new package's first commit is "copy from canonical-source, generalize, test" — bounded risk per package, parallelizable across phases.
