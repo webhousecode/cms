@@ -691,8 +691,16 @@ export function DeploySettingsPanel() {
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
               <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Account ID</label>
-              <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: 0 }}>
-                Cloudflare dashboard → right sidebar → Account ID
+              <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: 0, display: "flex", alignItems: "center", gap: "0.3rem", flexWrap: "wrap" }}>
+                <a
+                  href="https://dash.cloudflare.com/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ color: "var(--muted-foreground)", textDecoration: "underline", display: "inline-flex", alignItems: "center", gap: "0.2rem" }}
+                >
+                  Cloudflare dashboard <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} />
+                </a>
+                → right sidebar → Account ID
               </p>
               <input type="text" value={config.deployCloudflareAccountId} onChange={(e) => updateConfig((c) => ({ ...c, deployCloudflareAccountId: e.target.value }))}
                 placeholder="abcdef0123456789..." style={inputStyle} />
