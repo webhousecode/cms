@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { ExternalLink } from "lucide-react";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { SettingsCard } from "./settings-card";
@@ -351,8 +352,16 @@ export function BackupSettingsPanel() {
                   placeholder="https://<account-id>.r2.cloudflarestorage.com"
                   style={inputStyle}
                 />
-                <p style={{ ...descStyle, marginTop: "0.25rem" }}>
-                  Find your Account ID in Cloudflare dashboard → R2 → Overview
+                <p style={{ ...descStyle, marginTop: "0.25rem", display: "flex", alignItems: "center", gap: "0.3rem", flexWrap: "wrap" }}>
+                  Find your Account ID in
+                  <a
+                    href="https://dash.cloudflare.com/?to=/:account/r2/overview"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ color: "var(--muted-foreground)", textDecoration: "underline", display: "inline-flex", alignItems: "center", gap: "0.2rem" }}
+                  >
+                    Cloudflare dashboard → R2 → Overview <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} />
+                  </a>
                 </p>
               </div>
             )}
