@@ -6,6 +6,7 @@ import { Loader2, Sparkles, Send, ChevronDown, BookOpen, Globe, HardDrive } from
 import { useEffect } from "react";
 import type { AgentTemplate } from "@/lib/agent-templates";
 import { CustomSelect } from "@/components/ui/custom-select";
+import { CustomTimeInput } from "@/components/ui/custom-time-input";
 import { Checkbox, Radio } from "@/components/ui/checkbox-styled";
 
 const ROLES = [
@@ -524,12 +525,7 @@ export default function NewAgentPage() {
               </div>
               <div>
                 <label style={labelStyle}>Time</label>
-                <input
-                  type="time"
-                  value={time}
-                  onChange={(e) => setTime(e.target.value)}
-                  style={inputStyle}
-                />
+                <CustomTimeInput value={time} onChange={setTime} />
               </div>
               <div>
                 <label style={labelStyle}>Max per run</label>

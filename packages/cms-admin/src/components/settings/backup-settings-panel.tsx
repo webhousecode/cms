@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { ExternalLink } from "lucide-react";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { CustomSelect } from "@/components/ui/custom-select";
+import { CustomTimeInput } from "@/components/ui/custom-time-input";
 import { SettingsCard } from "./settings-card";
 import { WebhookList, type WebhookEntry } from "./webhook-list";
 interface BackupConfig {
@@ -211,11 +212,9 @@ export function BackupSettingsPanel() {
           <>
             <div>
               <label style={labelStyle}>Time</label>
-              <input
-                type="time"
+              <CustomTimeInput
                 value={config.backupTime}
-                onChange={(e) => updateConfig((c) => ({ ...c, backupTime: e.target.value }))}
-                style={inputStyle}
+                onChange={(v) => updateConfig((c) => ({ ...c, backupTime: v }))}
               />
             </div>
             <div>

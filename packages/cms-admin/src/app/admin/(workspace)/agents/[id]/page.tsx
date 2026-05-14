@@ -6,6 +6,7 @@ import { Loader2, Sparkles, Trash2, Play, CheckCircle, X, Plus, Copy, ChevronDow
 import Link from "next/link";
 import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
 import { CustomSelect } from "@/components/ui/custom-select";
+import { CustomTimeInput } from "@/components/ui/custom-time-input";
 import { Checkbox, Radio } from "@/components/ui/checkbox-styled";
 import type { AgentConfig } from "@/lib/agents";
 import { TabTitle } from "@/lib/tabs-context";
@@ -707,12 +708,7 @@ export default function AgentDetailPage() {
               </div>
               <div>
                 <label style={labelStyle}>Time</label>
-                <input
-                  type="time"
-                  value={time}
-                  onChange={(e) => setTime(e.target.value)}
-                  style={inputStyle}
-                />
+                <CustomTimeInput value={time} onChange={setTime} />
               </div>
               <div>
                 <label style={labelStyle}>Max per run</label>

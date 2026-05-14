@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { CustomSelect } from "@/components/ui/custom-select";
+import { CustomTimeInput } from "@/components/ui/custom-time-input";
 import { ExternalLink } from "lucide-react";
 
 interface OrgEntry {
@@ -522,8 +523,7 @@ export default function OrgSettingsPage() {
               </div>
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.3rem" }}>
                 <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Backup time</label>
-                <input type="time" value={creds.backupTime} onChange={(e) => setCreds((c) => ({ ...c, backupTime: e.target.value }))}
-                  style={credInputStyle} />
+                <CustomTimeInput value={creds.backupTime} onChange={(v) => setCreds((c) => ({ ...c, backupTime: v }))} />
               </div>
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.3rem" }}>
                 <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Retention (days)</label>
@@ -543,8 +543,7 @@ export default function OrgSettingsPage() {
               </div>
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.3rem" }}>
                 <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Link check time</label>
-                <input type="time" value={creds.linkCheckTime} onChange={(e) => setCreds((c) => ({ ...c, linkCheckTime: e.target.value }))}
-                  style={credInputStyle} />
+                <CustomTimeInput value={creds.linkCheckTime} onChange={(v) => setCreds((c) => ({ ...c, linkCheckTime: v }))} />
               </div>
             </div>
           </div>
