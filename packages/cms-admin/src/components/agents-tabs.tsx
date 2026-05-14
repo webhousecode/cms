@@ -15,6 +15,7 @@ import Link from "next/link";
 import { Plus, Trash2, HardDrive, Globe, Workflow, Play, Loader2, CheckCircle, ChevronRight, Pencil } from "lucide-react";
 import { SortableWorkflowSteps } from "@/components/sortable-workflow-steps";
 import { ModeToggle } from "@/components/ui/mode-toggle";
+import { CustomTimeInput } from "@/components/ui/custom-time-input";
 import { AgentsList } from "@/components/agents-list";
 import type { AgentConfig } from "@/lib/agents";
 import type { AgentTemplate } from "@/lib/agent-templates";
@@ -790,13 +791,10 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
                   </div>
                   <div>
                     <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">Time</label>
-                    <input
-                      type="time"
+                    <CustomTimeInput
                       value={newTime}
-                      onChange={(e) => setNewTime(e.target.value)}
+                      onChange={setNewTime}
                       disabled={newFrequency === "cron"}
-                      title={newFrequency === "cron" ? "Time field ignored when frequency is cron" : undefined}
-                      className="w-full px-2 py-1 rounded border border-border bg-background text-xs disabled:opacity-50"
                     />
                   </div>
                   <div>

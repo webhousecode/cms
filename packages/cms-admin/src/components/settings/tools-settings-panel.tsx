@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { CustomSelect } from "@/components/ui/custom-select";
+import { CustomTimeInput } from "@/components/ui/custom-time-input";
 import { SettingsCard } from "./settings-card";
 import { WebhookList, type WebhookEntry } from "./webhook-list";
 
@@ -123,15 +124,9 @@ export function ToolsSettingsPanel() {
         {config.linkCheckSchedule !== "off" && (
           <div>
             <label style={labelStyle}>Time</label>
-            <input
-              type="time"
+            <CustomTimeInput
               value={config.linkCheckTime}
-              onChange={(e) => updateConfig((c) => ({ ...c, linkCheckTime: e.target.value }))}
-              style={{
-                padding: "0.4rem 0.6rem", borderRadius: "0.375rem",
-                border: "1px solid var(--border)", background: "var(--background)",
-                color: "var(--foreground)", fontSize: "0.8125rem",
-              }}
+              onChange={(v) => updateConfig((c) => ({ ...c, linkCheckTime: v }))}
             />
           </div>
         )}
