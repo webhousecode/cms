@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { Save, Loader2, Check, X } from "lucide-react";
 import type { InlineFormData, InlineFormField } from "./message-list";
+import { CustomDateInput } from "@/components/ui/custom-date-input";
 
 interface InlineFormProps {
   form: InlineFormData;
@@ -241,12 +242,7 @@ function FieldEditor({ field, value, onChange }: { field: InlineFormField; value
       return (
         <div>
           <label style={labelStyle}>{field.label}{field.required && " *"}</label>
-          <input
-            type="date"
-            value={String(value ?? "").slice(0, 10)}
-            onChange={(e) => onChange(e.target.value)}
-            style={{ ...inputStyle, cursor: "pointer" }}
-          />
+          <CustomDateInput value={String(value ?? "").slice(0, 10)} onChange={onChange} />
         </div>
       );
 

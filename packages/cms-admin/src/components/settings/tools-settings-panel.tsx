@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { CustomTimeInput } from "@/components/ui/custom-time-input";
+import { CustomRangeSlider } from "@/components/ui/custom-range-slider";
 import { SettingsCard } from "./settings-card";
 import { WebhookList, type WebhookEntry } from "./webhook-list";
 
@@ -281,14 +282,12 @@ export function ToolsSettingsPanel() {
             <label style={{ fontSize: "0.8rem", fontWeight: 500 }}>
               WebP quality: {config.mediaWebpQuality}
             </label>
-            <input
-              type="range"
+            <CustomRangeSlider
               min={10}
               max={100}
               step={5}
               value={config.mediaWebpQuality}
-              onChange={(e) => updateConfig((c) => ({ ...c, mediaWebpQuality: parseInt(e.target.value, 10) }))}
-              style={{ accentColor: "var(--primary)" }}
+              onChange={(v) => updateConfig((c) => ({ ...c, mediaWebpQuality: v }))}
             />
             <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: 0 }}>
               Higher = better quality, larger files. 80 is recommended.

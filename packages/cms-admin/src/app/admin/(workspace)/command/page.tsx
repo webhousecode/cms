@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Loader2, RefreshCw, Save } from "lucide-react";
 import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
 import { CustomSelect } from "@/components/ui/custom-select";
+import { CustomRangeSlider } from "@/components/ui/custom-range-slider";
 import { Checkbox } from "@/components/ui/checkbox-styled";
 import { useSiteRole } from "@/hooks/use-site-role";
 
@@ -125,18 +126,11 @@ export default function CommandPage() {
                   {params.temperature}
                 </span>
               </div>
-              <input
-                type="range"
+              <CustomRangeSlider
                 min={0}
                 max={100}
                 value={params.temperature}
-                onChange={(e) =>
-                  setParams({
-                    ...params,
-                    temperature: Number(e.target.value),
-                  })
-                }
-                className="w-full accent-[var(--primary)]"
+                onChange={(v) => setParams({ ...params, temperature: v })}
               />
               <div className="flex justify-between text-[10px] text-muted-foreground">
                 <span>Factual</span>
@@ -169,18 +163,11 @@ export default function CommandPage() {
                   {params.seoWeight}
                 </span>
               </div>
-              <input
-                type="range"
+              <CustomRangeSlider
                 min={0}
                 max={100}
                 value={params.seoWeight}
-                onChange={(e) =>
-                  setParams({
-                    ...params,
-                    seoWeight: Number(e.target.value),
-                  })
-                }
-                className="w-full accent-[var(--primary)]"
+                onChange={(v) => setParams({ ...params, seoWeight: v })}
               />
               <div className="flex justify-between text-[10px] text-muted-foreground">
                 <span>Creative freedom</span>

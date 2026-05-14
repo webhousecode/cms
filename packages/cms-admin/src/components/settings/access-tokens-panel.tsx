@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { CustomSelect } from "@/components/ui/custom-select";
+import { CustomDateTimeInput } from "@/components/ui/custom-datetime-input";
 
 // ─── Types (mirror lib/access-tokens.ts) ────────────────────────────
 
@@ -451,12 +452,14 @@ export function AccessTokensPanel() {
           <div>
             <div style={sectionTitleStyle}>TTL <span style={{ fontWeight: 400, color: "var(--muted-foreground)" }}>(optional)</span></div>
             <div style={helpTextStyle}>Optional start and end dates. Leave blank to never expire.</div>
-            <div style={{ display: "flex", gap: "0.5rem" }}>
-              <input type="datetime-local" value={notBefore} onChange={(e) => setNotBefore(e.target.value)}
-                style={{ ...inputStyle, flex: 1 }} />
-              <span style={{ alignSelf: "center", color: "var(--muted-foreground)" }}>→</span>
-              <input type="datetime-local" value={notAfter} onChange={(e) => setNotAfter(e.target.value)}
-                style={{ ...inputStyle, flex: 1 }} />
+            <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
+              <div style={{ flex: 1 }}>
+                <CustomDateTimeInput value={notBefore} onChange={setNotBefore} />
+              </div>
+              <span style={{ color: "var(--muted-foreground)" }}>→</span>
+              <div style={{ flex: 1 }}>
+                <CustomDateTimeInput value={notAfter} onChange={setNotAfter} />
+              </div>
             </div>
           </div>
 

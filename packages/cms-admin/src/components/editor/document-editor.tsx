@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useTransition, useRef, useEffect } from "react";
 import { CustomSelect } from "@/components/ui/custom-select";
+import { CustomDateTimeInput } from "@/components/ui/custom-datetime-input";
 import { useRouter } from "next/navigation";
 import type { CollectionConfig, BlockConfig } from "@webhouse/cms";
 import { FieldEditor } from "./field-editor";
@@ -370,16 +371,7 @@ function ScheduleButton({ publishAt, onSchedule, label = "Scheduled", defaultLab
           <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.05em" }}>
             {popoverLabel}
           </p>
-          <input
-            type="datetime-local"
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            style={{
-              padding: "0.35rem 0.5rem", borderRadius: "5px",
-              border: "1px solid var(--border)", background: "var(--background)",
-              color: "var(--foreground)", fontSize: "0.8rem", width: "100%",
-            }}
-          />
+          <CustomDateTimeInput value={value} onChange={setValue} />
           <div style={{ display: "flex", gap: "0.5rem" }}>
             <button
               type="button"

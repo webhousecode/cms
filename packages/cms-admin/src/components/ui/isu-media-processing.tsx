@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Loader2, Check } from "lucide-react";
+import { CustomRangeSlider } from "./custom-range-slider";
 
 /**
  * Inline Settings Update (ISU) — Media Processing
@@ -102,13 +103,7 @@ export function ISUMediaProcessing() {
         <label style={{ fontSize: "0.68rem", fontWeight: 500, color: "var(--muted-foreground)" }}>
           WebP quality: {quality}
         </label>
-        <input
-          type="range"
-          min={10} max={100} step={5}
-          value={quality}
-          onChange={(e) => setQuality(Number(e.target.value))}
-          style={{ width: "100%", accentColor: "var(--primary)", marginTop: "0.2rem" }}
-        />
+        <CustomRangeSlider min={10} max={100} step={5} value={quality} onChange={setQuality} />
       </div>
 
       {/* Save button */}
