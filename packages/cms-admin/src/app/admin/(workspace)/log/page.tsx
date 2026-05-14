@@ -5,6 +5,7 @@ import { RefreshCw, Download, ShieldCheck, Terminal, Globe2, AlertCircle, AlertT
 import { ActionBar, ActionBarBreadcrumb } from "@/components/action-bar";
 import { TabTitle } from "@/lib/tabs-context";
 import { CustomSelect } from "@/components/ui/custom-select";
+import { CustomDateInput } from "@/components/ui/custom-date-input";
 
 type LogLayer = "audit" | "server" | "client";
 type LogLevel = "info" | "warn" | "error";
@@ -384,33 +385,13 @@ export default function EventLogPage() {
               color: "var(--foreground)", fontSize: "0.72rem", minWidth: 240,
             }}
           />
-          <input
-            type="date"
-            value={dateFrom}
-            onChange={(e) => setDateFrom(e.target.value)}
-            title="From date"
-            style={{
-              height: 28,
-              padding: "0 0.6rem", borderRadius: 6,
-              border: "1px solid var(--border)", background: "var(--background)",
-              color: "var(--foreground)", fontSize: "0.72rem",
-              colorScheme: "dark",
-            }}
-          />
+          <div style={{ minWidth: 150 }}>
+            <CustomDateInput value={dateFrom} onChange={setDateFrom} />
+          </div>
           <span style={{ color: "var(--muted-foreground)", fontSize: "0.72rem" }}>–</span>
-          <input
-            type="date"
-            value={dateTo}
-            onChange={(e) => setDateTo(e.target.value)}
-            title="To date"
-            style={{
-              height: 28,
-              padding: "0 0.6rem", borderRadius: 6,
-              border: "1px solid var(--border)", background: "var(--background)",
-              color: "var(--foreground)", fontSize: "0.72rem",
-              colorScheme: "dark",
-            }}
-          />
+          <div style={{ minWidth: 150 }}>
+            <CustomDateInput value={dateTo} onChange={setDateTo} />
+          </div>
         </div>
 
         {/* Entries — left-aligned, fixed columns. Empty state stays left. */}

@@ -7,6 +7,7 @@ import Link from "next/link";
 import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { CustomTimeInput } from "@/components/ui/custom-time-input";
+import { CustomRangeSlider } from "@/components/ui/custom-range-slider";
 import { Checkbox, Radio } from "@/components/ui/checkbox-styled";
 import type { AgentConfig } from "@/lib/agents";
 import { TabTitle } from "@/lib/tabs-context";
@@ -1057,15 +1058,7 @@ function SliderField({
         <span className="text-xs font-medium">{label}</span>
         <span className="text-xs text-muted-foreground font-mono">{value}</span>
       </div>
-      <input
-        type="range"
-        min={0}
-        max={100}
-        value={value}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className="w-full accent-[var(--primary)]"
-        style={{ height: "6px" }}
-      />
+      <CustomRangeSlider min={0} max={100} value={value} onChange={onChange} />
       <div className="flex justify-between text-[10px] text-muted-foreground mt-0.5">
         <span>{leftLabel}</span>
         <span>{rightLabel}</span>

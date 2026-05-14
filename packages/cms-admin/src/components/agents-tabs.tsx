@@ -16,6 +16,7 @@ import { Plus, Trash2, HardDrive, Globe, Workflow, Play, Loader2, CheckCircle, C
 import { SortableWorkflowSteps } from "@/components/sortable-workflow-steps";
 import { ModeToggle } from "@/components/ui/mode-toggle";
 import { CustomTimeInput } from "@/components/ui/custom-time-input";
+import { CustomRangeSlider } from "@/components/ui/custom-range-slider";
 import { AgentsList } from "@/components/agents-list";
 import type { AgentConfig } from "@/lib/agents";
 import type { AgentTemplate } from "@/lib/agent-templates";
@@ -278,15 +279,15 @@ function TemplatesTab({ readOnly }: { readOnly: boolean }) {
                   <div className="grid grid-cols-3 gap-2">
                     <div>
                       <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">Creativity ({editDraft.temperature})</label>
-                      <input type="range" min={0} max={100} value={editDraft.temperature} onChange={(e) => setEditDraft({ ...editDraft, temperature: Number(e.target.value) })} className="w-full accent-[var(--primary)]" />
+                      <CustomRangeSlider min={0} max={100} value={editDraft.temperature} onChange={(v) => setEditDraft({ ...editDraft, temperature: v })} />
                     </div>
                     <div>
                       <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">Formality ({editDraft.formality})</label>
-                      <input type="range" min={0} max={100} value={editDraft.formality} onChange={(e) => setEditDraft({ ...editDraft, formality: Number(e.target.value) })} className="w-full accent-[var(--primary)]" />
+                      <CustomRangeSlider min={0} max={100} value={editDraft.formality} onChange={(v) => setEditDraft({ ...editDraft, formality: v })} />
                     </div>
                     <div>
                       <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">Verbosity ({editDraft.verbosity})</label>
-                      <input type="range" min={0} max={100} value={editDraft.verbosity} onChange={(e) => setEditDraft({ ...editDraft, verbosity: Number(e.target.value) })} className="w-full accent-[var(--primary)]" />
+                      <CustomRangeSlider min={0} max={100} value={editDraft.verbosity} onChange={(v) => setEditDraft({ ...editDraft, verbosity: v })} />
                     </div>
                   </div>
                   <div className="flex gap-3 text-xs">

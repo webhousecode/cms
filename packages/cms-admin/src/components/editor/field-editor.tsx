@@ -10,6 +10,7 @@ import { HtmlDocEditor } from "./htmldoc-editor";
 import { MapEditor, type MapValue } from "./map-editor";
 import type { GalleryImage } from "./image-gallery-editor";
 import { BlocksEditor } from "./blocks-editor";
+import { CustomDateInput } from "@/components/ui/custom-date-input";
 import { StructuredArrayEditor } from "./structured-array-editor";
 import { StructuredObjectEditor } from "./structured-object-editor";
 import { cn } from "@/lib/utils";
@@ -427,14 +428,9 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig, docu
 
     case "date":
       return (
-        <Input
-          data-testid={testId}
-          type="date"
-          value={strVal}
-          onChange={(e) => onChange(e.target.value)}
-          disabled={locked}
-          className="w-48"
-        />
+        <div data-testid={testId} className="w-48">
+          <CustomDateInput value={strVal} onChange={onChange} disabled={locked} />
+        </div>
       );
 
     case "boolean":
