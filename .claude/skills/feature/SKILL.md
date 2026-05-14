@@ -102,6 +102,11 @@ Create `docs/features/F{number}-{slug}.md` with this **mandatory** structure. Ev
 ## Success Criteria
 {Measurable outcomes: "X works within Y seconds", "Z metric improves by N%". At least 2 criteria.}
 
+## Stories
+- **F{number}.1** — {one-line, shippable in isolation}
+- **F{number}.2** — {...}
+{At least 1; epics typically 3-7. Each story should be a single PR-worthy unit of work. Sub-numbering uses `F{number}.N`; deeper nesting `F{number}.N.a` for tasks under a story.}
+
 ## Impact Analysis
 
 ### Files created (new)
