@@ -1,3 +1,4 @@
+2026-05-18T18:04:09Z  weekly  2026.05.18  https://github.com/webhousecode/cms/releases/download/weekly/cms-admin-2026.05.18.tar.gz
 2026-05-11T17:57:38Z  weekly  2026.05.11  https://github.com/webhousecode/cms/releases/download/weekly/cms-admin-2026.05.11.tar.gz
 2026-05-04T17:32:51Z  weekly  2026.05.04  https://github.com/webhousecode/cms/releases/download/weekly/cms-admin-2026.05.04.tar.gz
 # @webhouse/cms-admin — release feed
