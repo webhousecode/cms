@@ -16,16 +16,18 @@ export default function LighthousePage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Latest now returns BOTH strategies with full payloads (opportunities,
+    // diagnostics, CWV) so the Export-report has complete data for both.
     fetch("/api/admin/lighthouse/latest").then((r) => r.json()).then((d) => {
-      // Latest may be either strategy — load both from history
-      if (d?.scores) {
-        if (d.strategy === "mobile") setMobile(d);
-        else setDesktop(d);
-      }
+      if (d?.mobile) setMobile(d.mobile);
+      if (d?.desktop) setDesktop(d.desktop);
     }).catch(() => {});
     fetch("/api/admin/lighthouse/history").then((r) => r.json()).then((h) => {
       setHistory(h);
-      // Populate from history if we only have one
+      // Score-only fallback if /latest returned nothing for one strategy.
+      // History rows don't carry opportunities/diagnostics, so this is
+      // only enough to populate the small Score card — Export will note
+      // the gap with "—" for the missing fields.
       const sorted = [...h].reverse();
       const lastMobile = sorted.find((e: ScoreHistoryEntry) => e.strategy === "mobile");
       const lastDesktop = sorted.find((e: ScoreHistoryEntry) => e.strategy === "desktop");
