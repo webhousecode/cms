@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Gauge, RefreshCw, Monitor, Smartphone, ChevronDown, ChevronRight, TrendingDown, TrendingUp, Sparkles, Check, Wrench } from "lucide-react";
+import { Gauge, RefreshCw, Monitor, Smartphone, ChevronDown, ChevronRight, TrendingDown, TrendingUp, Sparkles, Check, Wrench, Download } from "lucide-react";
 import { ActionBar, ActionBarBreadcrumb } from "@/components/action-bar";
 import { TabTitle } from "@/lib/tabs-context";
 import { scoreColor, SCORE_COLOR_MAP, type LighthouseResult, type ScoreHistoryEntry } from "@/lib/lighthouse/types";
@@ -78,6 +78,22 @@ export default function LighthousePage() {
   const hasResults = !!(mobile?.scores || desktop?.scores);
   const hasIssues = (mobile?.opportunities?.length ?? 0) + (mobile?.diagnostics?.length ?? 0) + (desktop?.opportunities?.length ?? 0) + (desktop?.diagnostics?.length ?? 0) > 0;
 
+  const handleExport = useCallback(() => {
+    const md = buildLighthouseReport(mobile, desktop, history);
+    const url = mobile?.url || desktop?.url || "site";
+    const host = (() => { try { return new URL(url).hostname.replace(/^www\./, ""); } catch { return "site"; } })();
+    const stamp = new Date().toISOString().slice(0, 10);
+    const blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
+    const dlUrl = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = dlUrl;
+    a.download = `lighthouse-${host}-${stamp}.md`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(dlUrl);
+  }, [mobile, desktop, history]);
+
   return (
     <>
       <TabTitle value="Lighthouse" />
@@ -85,6 +101,23 @@ export default function LighthousePage() {
         helpArticleId="lighthouse-intro"
         actions={
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+          {hasResults && (
+            <button
+              onClick={handleExport}
+              title="Download a Markdown report ready to paste into Claude/ChatGPT or hand to a developer"
+              style={{
+                height: 28, display: "inline-flex", alignItems: "center", gap: "0.35rem",
+                padding: "0 0.75rem", borderRadius: 6,
+                border: "1px solid var(--border)", background: "transparent",
+                color: "var(--foreground)",
+                fontSize: "0.75rem", fontWeight: 500,
+                cursor: "pointer",
+              }}
+            >
+              <Download style={{ width: 13, height: 13 }} />
+              Export report
+            </button>
+          )}
           {hasIssues && (
             <button
               onClick={handleOptimize}
@@ -219,6 +252,146 @@ export default function LighthousePage() {
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
     </>
   );
+}
+
+// ── Report builder (AI- and dev-readable Markdown) ──
+
+function buildLighthouseReport(
+  mobile: LighthouseResult | null,
+  desktop: LighthouseResult | null,
+  history: ScoreHistoryEntry[],
+): string {
+  const primary = mobile ?? desktop;
+  const url = primary?.url ?? "(unknown)";
+  const generatedAt = new Date().toISOString();
+  const engine = primary?.engine ?? "psi";
+
+  const lines: string[] = [];
+  lines.push(`# Lighthouse report — ${url}`);
+  lines.push("");
+  lines.push(`- Generated: ${generatedAt}`);
+  lines.push(`- Engine: ${engine === "psi" ? "PageSpeed Insights" : "Lighthouse (local)"}`);
+  if (mobile?.timestamp) lines.push(`- Mobile scan: ${mobile.timestamp}`);
+  if (desktop?.timestamp) lines.push(`- Desktop scan: ${desktop.timestamp}`);
+  lines.push("");
+
+  // ── How to use this report (prompt for AI) ──
+  lines.push("## How to use this report");
+  lines.push("");
+  lines.push("Paste this file into Claude/ChatGPT/Cursor with a prompt like:");
+  lines.push("");
+  lines.push("> Below is the Lighthouse audit for my site. For each opportunity and diagnostic, propose a concrete code-level fix — file paths, exact changes, and the expected score impact. Prioritise items with the largest `savingsMs`/`savingsBytes` first. If you need code I haven't shown, ask.");
+  lines.push("");
+
+  // ── Scores ──
+  lines.push("## Scores");
+  lines.push("");
+  lines.push("| Category | Mobile | Desktop |");
+  lines.push("|---|---|---|");
+  const fmt = (n?: number) => (n === undefined || n === null ? "—" : String(n));
+  lines.push(`| Performance | ${fmt(mobile?.scores.performance)} | ${fmt(desktop?.scores.performance)} |`);
+  lines.push(`| Accessibility | ${fmt(mobile?.scores.accessibility)} | ${fmt(desktop?.scores.accessibility)} |`);
+  lines.push(`| Best practices | ${fmt(mobile?.scores.bestPractices)} | ${fmt(desktop?.scores.bestPractices)} |`);
+  lines.push(`| SEO | ${fmt(mobile?.scores.seo)} | ${fmt(desktop?.scores.seo)} |`);
+  lines.push("");
+  lines.push("> Scoring (Google official): 90–100 green · 50–89 orange · 0–49 red.");
+  lines.push("");
+
+  // ── Core Web Vitals ──
+  const cwvRow = (label: string, mob?: number, desk?: number, unit = "ms") => {
+    const m = mob === undefined ? "—" : `${mob.toFixed(label === "CLS" ? 2 : 0)}${unit === "ms" ? " ms" : ""}`;
+    const d = desk === undefined ? "—" : `${desk.toFixed(label === "CLS" ? 2 : 0)}${unit === "ms" ? " ms" : ""}`;
+    return `| ${label} | ${m} | ${d} |`;
+  };
+  if (mobile?.coreWebVitals || desktop?.coreWebVitals) {
+    lines.push("## Core Web Vitals (lab data)");
+    lines.push("");
+    lines.push("| Metric | Mobile | Desktop |");
+    lines.push("|---|---|---|");
+    lines.push(cwvRow("LCP", mobile?.coreWebVitals?.lcp, desktop?.coreWebVitals?.lcp));
+    lines.push(cwvRow("CLS", mobile?.coreWebVitals?.cls, desktop?.coreWebVitals?.cls, ""));
+    lines.push(cwvRow("INP", mobile?.coreWebVitals?.inp, desktop?.coreWebVitals?.inp));
+    lines.push(cwvRow("FCP", mobile?.coreWebVitals?.fcp, desktop?.coreWebVitals?.fcp));
+    lines.push(cwvRow("TTFB", mobile?.coreWebVitals?.ttfb, desktop?.coreWebVitals?.ttfb));
+    lines.push("");
+    lines.push("> Targets — LCP: <2500 ms · CLS: <0.10 · INP: <200 ms · FCP: <1800 ms · TTFB: <800 ms.");
+    lines.push("");
+  }
+
+  // ── Field data (real-user CrUX) ──
+  if (mobile?.fieldData || desktop?.fieldData) {
+    lines.push("## Field data (real users, CrUX 28-day p75)");
+    lines.push("");
+    const fd = (f?: { p75: number; category: string }) => (f ? `${f.p75} (${f.category})` : "—");
+    lines.push("| Metric | Mobile | Desktop |");
+    lines.push("|---|---|---|");
+    lines.push(`| LCP | ${fd(mobile?.fieldData?.lcp)} | ${fd(desktop?.fieldData?.lcp)} |`);
+    lines.push(`| CLS | ${fd(mobile?.fieldData?.cls)} | ${fd(desktop?.fieldData?.cls)} |`);
+    lines.push(`| INP | ${fd(mobile?.fieldData?.inp)} | ${fd(desktop?.fieldData?.inp)} |`);
+    lines.push("");
+  }
+
+  // ── Opportunities ──
+  const renderOppList = (label: string, result: LighthouseResult | null) => {
+    if (!result?.opportunities?.length) return;
+    const sorted = [...result.opportunities].sort((a, b) => (b.savingsMs ?? 0) - (a.savingsMs ?? 0));
+    lines.push(`### ${label} — ${sorted.length} opportunit${sorted.length === 1 ? "y" : "ies"}`);
+    lines.push("");
+    for (const o of sorted) {
+      const savings: string[] = [];
+      if (o.savingsMs) savings.push(`${o.savingsMs} ms`);
+      if (o.savingsBytes) savings.push(`${(o.savingsBytes / 1024).toFixed(0)} KB`);
+      const head = savings.length > 0 ? ` — saves ${savings.join(", ")}` : "";
+      lines.push(`- **${o.title}** \`${o.id}\`${head}`);
+      if (o.description) lines.push(`  ${o.description.replace(/\n+/g, " ").trim()}`);
+    }
+    lines.push("");
+  };
+  if ((mobile?.opportunities?.length ?? 0) + (desktop?.opportunities?.length ?? 0) > 0) {
+    lines.push("## Opportunities (impact-ordered)");
+    lines.push("");
+    renderOppList("Mobile", mobile);
+    renderOppList("Desktop", desktop);
+  }
+
+  // ── Diagnostics ──
+  const renderDiagList = (label: string, result: LighthouseResult | null) => {
+    if (!result?.diagnostics?.length) return;
+    lines.push(`### ${label} — ${result.diagnostics.length} diagnostic${result.diagnostics.length === 1 ? "" : "s"}`);
+    lines.push("");
+    for (const d of result.diagnostics) {
+      const value = d.displayValue ? ` — \`${d.displayValue}\`` : "";
+      lines.push(`- **${d.title}** \`${d.id}\`${value}`);
+      if (d.description) lines.push(`  ${d.description.replace(/\n+/g, " ").trim()}`);
+    }
+    lines.push("");
+  };
+  if ((mobile?.diagnostics?.length ?? 0) + (desktop?.diagnostics?.length ?? 0) > 0) {
+    lines.push("## Diagnostics");
+    lines.push("");
+    renderDiagList("Mobile", mobile);
+    renderDiagList("Desktop", desktop);
+  }
+
+  // ── Trend ──
+  if (history.length > 1) {
+    const last5 = history.slice(-5);
+    lines.push("## Recent trend");
+    lines.push("");
+    lines.push("| Date | Strategy | Perf | A11y | BP | SEO |");
+    lines.push("|---|---|---|---|---|---|");
+    for (const h of last5) {
+      const date = new Date(h.timestamp).toISOString().slice(0, 16).replace("T", " ");
+      lines.push(`| ${date} | ${h.strategy} | ${h.scores.performance} | ${h.scores.accessibility} | ${h.scores.bestPractices} | ${h.scores.seo} |`);
+    }
+    lines.push("");
+  }
+
+  lines.push("---");
+  lines.push("");
+  lines.push("Report generated by @webhouse/cms-admin Lighthouse module.");
+  lines.push("");
+  return lines.join("\n");
 }
 
 // ── Strategy Card (Mobile or Desktop) ──
