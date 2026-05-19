@@ -275,8 +275,44 @@ export async function getOrCreateInstance(
 
 export function invalidate(orgId: string, siteId: string): void {
   pool.delete(poolKey(orgId, siteId));
+  poolTimestamps.delete(poolKey(orgId, siteId));
 }
 
 export function invalidateAll(): void {
   pool.clear();
+  poolTimestamps.clear();
+}
+
+/**
+ * Invalidates the cached CmsInstance for the request's active site.
+ * In production the site-pool cache lives forever (no TTL), so any
+ * code that writes to cms.config.ts on disk MUST call this — otherwise
+ * subsequent reads via getAdminConfig return the stale in-memory config
+ * and the change appears not to have saved.
+ *
+ * Resolution order matches getAdminConfig:
+ *   1. withSiteContext(...) override (token-based callers)
+ *   2. cms-active-org + cms-active-site cookies
+ *   3. registry defaults
+ */
+export async function invalidateActiveSite(): Promise<void> {
+  const { getSiteContextOverride } = await import("./site-context");
+  const override = getSiteContextOverride();
+  if (override?.orgId && override?.siteId) {
+    invalidate(override.orgId, override.siteId);
+    return;
+  }
+  const { cookies } = await import("next/headers");
+  const cookieStore = await cookies();
+  const orgId = cookieStore.get("cms-active-org")?.value;
+  const siteId = cookieStore.get("cms-active-site")?.value;
+  if (orgId && siteId) {
+    invalidate(orgId, siteId);
+    return;
+  }
+  const { loadRegistry } = await import("./site-registry");
+  const registry = await loadRegistry();
+  if (registry?.defaultOrgId && registry?.defaultSiteId) {
+    invalidate(registry.defaultOrgId, registry.defaultSiteId);
+  }
 }

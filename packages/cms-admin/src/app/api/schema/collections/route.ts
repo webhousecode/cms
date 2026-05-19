@@ -6,6 +6,7 @@ import type { CollectionDef } from "@/lib/config-writer";
 import { readSiteConfig } from "@/lib/site-config";
 import { getActiveSitePaths } from "@/lib/site-paths";
 import { denyViewers, getSiteRole } from "@/lib/require-role";
+import { invalidateActiveSite } from "@/lib/site-pool";
 
 export async function GET() {
   const config = await getAdminConfig();
@@ -40,5 +41,6 @@ export async function POST(req: NextRequest) {
   }
 
   await writeConfigCollections(configPath, config, [...existing, body]);
+  await invalidateActiveSite();
   return NextResponse.json({ ok: true }, { status: 201 });
 }
