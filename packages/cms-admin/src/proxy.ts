@@ -27,6 +27,9 @@ const PUBLIC_PREFIXES = [
   "/api/beam/receive/",     // Live Beam receive — token-authenticated (not session)
   "/api/mobile/",           // F07 webhouse.app mobile — Bearer JWT in header, no cookies (handlers enforce auth themselves)
   "/api/forms/",            // F30 Form Engine — public submission + schema + widget endpoints
+  "/api/uploads/",          // Public static asset serving (per-site uploads). Path-traversal-protected
+                            // in the handler; sites consume via ?site=<id> query param. Without this,
+                            // ICD sites can't fetch images uploaded in CMS admin (2026-05-19 fix).
   "/_next/",
   "/favicon",
 ];
