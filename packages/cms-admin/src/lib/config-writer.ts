@@ -40,6 +40,49 @@ function serializeCollection(col: CollectionDef): string {
   return lines.join('\n');
 }
 
+/**
+ * Extract a single-line top-level field assignment from the original
+ * cms.config.ts source. Matches `  fieldName: <value>,` where value
+ * may span braces/brackets across multiple lines.
+ *
+ * Precedent: 2026-05-19 sanneandersen incident — locales, defaultLocale
+ * were dropped on every schema edit because the rewriter didn't know
+ * about them. See CLAUDE.md "Rewriting cms.config.ts MUST Preserve ALL
+ * Top-Level Fields" for the full rule. The list of preserved fields is
+ * load-bearing; new top-level fields landing in defineConfig MUST be
+ * added here too.
+ */
+function extractTopLevelField(original: string, fieldName: string): string | null {
+  // Inline value (string, number, boolean, simple array on one line):
+  // matches "  fieldName: ..." up to the comma+newline ending the line,
+  // but only when the line doesn't open a multi-line block.
+  const inlineRe = new RegExp(`^  ${fieldName}:[^\\n]*?,$`, "m");
+  const inlineMatch = original.match(inlineRe);
+  if (inlineMatch) return inlineMatch[0];
+
+  // Multi-line block (array/object) terminated by "  ]," or "  },":
+  const blockRe = new RegExp(`^  ${fieldName}:\\s*[\\[{][\\s\\S]*?\\n  [\\]}],?$`, "m");
+  const blockMatch = original.match(blockRe);
+  if (blockMatch) {
+    // Normalize trailing comma: ensure exactly one trailing ","
+    return blockMatch[0].replace(/,?$/, ",");
+  }
+  return null;
+}
+
+/**
+ * Top-level fields preserved verbatim from the original source on every
+ * rewrite. Order is deterministic (matches typical hand-written config
+ * layout). `collections` is intentionally absent — it's the only field
+ * we serialise from the in-memory CmsConfig.
+ */
+const PRESERVED_TOP_LEVEL_FIELDS = [
+  "locales",
+  "defaultLocale",
+  "localeStrategy",
+  "i18n",
+] as const;
+
 function buildConfigContent(original: string, config: CmsConfig, collections: CollectionDef[]): string {
   const autolinksSection = config.autolinks?.length
     ? `  autolinks: ${JSON.stringify(config.autolinks, null, 2).replace(/\n/g, '\n  ')},\n`
@@ -64,6 +107,11 @@ function buildConfigContent(original: string, config: CmsConfig, collections: Co
     blocksSection = blocksMatch[1].replace(/\],?\s*$/, '],');
   }
 
+  // Preserve locale/i18n fields — see CLAUDE.md hard rule.
+  const preservedFieldLines = PRESERVED_TOP_LEVEL_FIELDS
+    .map((name) => extractTopLevelField(original, name))
+    .filter((line): line is string => line !== null);
+
   const usesDefineBlock = original.includes('defineBlock');
   const importLine = usesDefineBlock
     ? `import { defineConfig, defineCollection, defineBlock } from '@webhouse/cms';`
@@ -73,6 +121,7 @@ function buildConfigContent(original: string, config: CmsConfig, collections: Co
     importLine,
     ``,
     `export default defineConfig({`,
+    ...preservedFieldLines,
     ...(blocksSection ? [blocksSection] : []),
     ...(autolinksSection ? [autolinksSection.trimEnd()] : []),
     `  collections: [`,

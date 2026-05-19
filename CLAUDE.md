@@ -157,6 +157,32 @@ cd /path/to/project && npx cms export-schema --out webhouse-schema.json
 
 The file lives at `{projectDir}/webhouse-schema.json`. Treat it like a generated lockfile — always committed, always in sync. AI agents that forget this break downstream consumers silently. See `docs/ai-guide/21-framework-consumers.md` for the full rule and checklist.
 
+## Hard Rule: Rewriting cms.config.ts MUST Preserve ALL Top-Level Fields
+
+**`config-writer.ts`'s `buildConfigContent()` rebuilds `cms.config.ts` from scratch every time a schema edit lands (PUT/POST/DELETE on `/api/schema/*`). The rewriter MUST preserve every top-level field of `defineConfig({...})` — not just `collections` and `blocks`.**
+
+This rule exists because of 2026-05-19 production incident: Christian was editing collection schemas on sanneandersen.dk via the admin UI. Every save silently dropped `locales: ['da', 'en']` and `defaultLocale: 'da'` from the file. The DA/EN locale filter on the collection list disappeared because `siteLocales={siteConfig.locales?.length ? siteConfig.locales : config.locales}` fell back to `config.locales` which was now `undefined`. Documents kept their per-doc `locale` field, but the site forgot it had multiple locales at all. Bilingual editing was effectively broken for every customer who ever clicked Edit Schema. Restore required hand-patching the file via `flyctl ssh sftp` + fly machine restart.
+
+Concrete failure mode: `buildConfigContent()` had a hardcoded output template covering only `blocks`, `autolinks`, `collections`, `storage`. Any field outside that list — `locales`, `defaultLocale`, `i18n`, future additions — was lost on every write.
+
+**Required pattern when rewriting `cms.config.ts`:**
+
+1. **Extract via regex from the original source**, then re-emit verbatim. Don't try to parse + re-serialise the whole config object — that drops fields you don't know about. Treat each preserved field like the `blocksSection` pattern that already exists in the writer.
+2. **Cover ALL of these fields** (and update this list when new ones land): `locales`, `defaultLocale`, `localeStrategy`, `i18n`, `autolinks`, `blocks`, `storage`. `collections` is the only one we serialise from the in-memory CmsConfig — everything else is preserved as raw text from the original file.
+3. **Add a test in `config-writer.test.ts`** for every preserved field: round-trip a fixture config through `buildConfigContent` and assert the field survives byte-for-byte.
+4. **CHANGELOG-style enforcement:** before merging any change to `config-writer.ts`, grep for `defineConfig({` usage in the repo and verify every top-level field in any example is either (a) preserved verbatim or (b) explicitly serialised. Missing one is a regression.
+
+Defense in depth — when the rewriter runs, the site-pool cache is the SECOND defense:
+
+5. **After any `writeConfigCollections()` call, call `invalidateActiveSite()` from `@/lib/site-pool`.** Without invalidation, the in-memory CmsConfig keeps the stale `collections` and any preserved field comes back from the on-disk file only on cold start. The pool entry MUST be dropped on every write — pre-existing routes that forgot this caused the second half of the 2026-05-19 incident (label edits hit disk but UI kept showing the old value until the machine restarted).
+
+**Smell test before committing config-writer changes:**
+- Did I add a regex-preserve block for every field I might have missed?
+- Did I update `config-writer.test.ts`?
+- Does every API route that calls `writeConfigCollections()` also call `invalidateActiveSite()`?
+
+If any answer is "no" — STOP. Re-do the work. A config rewriter that silently drops fields is a data-loss bug, and the rewriter is invoked thousands of times across every customer's schema-edit history.
+
 ## Hard Rule: Reserved Collection Names
 
 **NEVER name or label a collection with any of these reserved names:**
