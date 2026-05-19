@@ -215,23 +215,30 @@ function RowMenu({ doc, collection, onClone, onToggle, onTrash, cloning, preview
             {isFav ? "Remove from favorites" : "Add to favorites"}
           </button>
           <div style={{ height: "1px", background: "var(--border)", margin: "0.25rem 0" }} />
-          <button
-            type="button"
-            onClick={(e) => {
-              if (confirmTrash) {
-                onTrash(e);
-                setOpen(false);
-                setConfirmTrash(false);
-              } else {
-                setConfirmTrash(true);
-                setTimeout(() => setConfirmTrash(false), 3000);
-              }
-            }}
-            style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.4rem 0.6rem", borderRadius: "5px", fontSize: "0.8rem", color: "var(--destructive)", background: confirmTrash ? "color-mix(in srgb, var(--destructive) 10%, transparent)" : "none", border: "none", cursor: "pointer", width: "100%", fontWeight: confirmTrash ? 600 : 400 }}
-            className="hover:bg-destructive/10"
-          >
-            <FileX style={{ width: "0.8rem", height: "0.8rem" }} /> {confirmTrash ? "OK — click to confirm" : "Move to trash"}
-          </button>
+          {confirmTrash ? (
+            <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.4rem 0.6rem" }}>
+              <span style={{ fontSize: "0.75rem", color: "var(--destructive)", fontWeight: 500, flex: 1 }}>Move to trash?</span>
+              <button
+                type="button"
+                onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); onTrash(e); setOpen(false); setConfirmTrash(false); }}
+                style={{ fontSize: "0.7rem", padding: "0.15rem 0.5rem", borderRadius: "4px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1, fontWeight: 500 }}
+              >Yes</button>
+              <button
+                type="button"
+                onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); setConfirmTrash(false); }}
+                style={{ fontSize: "0.7rem", padding: "0.15rem 0.5rem", borderRadius: "4px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}
+              >No</button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); setConfirmTrash(true); }}
+              style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.4rem 0.6rem", borderRadius: "5px", fontSize: "0.8rem", color: "var(--destructive)", background: "none", border: "none", cursor: "pointer", width: "100%" }}
+              className="hover:bg-destructive/10"
+            >
+              <FileX style={{ width: "0.8rem", height: "0.8rem" }} /> Move to trash
+            </button>
+          )}
         </div>
       )}
     </div>
