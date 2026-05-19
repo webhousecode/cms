@@ -66,7 +66,7 @@ export default async function SettingsPage({
     { id: "mcp",         label: "MCP" },
     { id: "beam",        label: "Beam" },
     ...(globals.length > 0 ? [{ id: "globals", label: "Globals" }] : []),
-    ...(siteConfig.schemaEditEnabled ? [{ id: "schema", label: "Schema" }] : []),
+    { id: "schema", label: "Schema" },
     { id: "prompts", label: "AI Prompts" },
   ];
 
@@ -130,7 +130,7 @@ export default async function SettingsPage({
         )}
 
         {/* Schema tab */}
-        {tab === "schema" && siteConfig.schemaEditEnabled && (
+        {tab === "schema" && (
           <div className="space-y-2">
             <div style={{ marginBottom: "1rem" }}><HelpCard articleId="settings-schema" variant="compact" /></div>
             <div className="flex items-center justify-between mb-6">

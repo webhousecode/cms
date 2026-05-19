@@ -13,16 +13,12 @@ export default async function EditCollectionPage({ params, searchParams }: Props
   const { collection } = await params;
   const { from } = await searchParams;
 
-  // Admin only — editors cannot edit schemas even if they know the URL
+  // Admin only — editors cannot edit schemas even if they know the URL.
+  // schemaEditEnabled flag is for granting NON-admin editors access; admin
+  // always passes (Christian's rule 2026-05-19).
   const { getSiteRole } = await import("@/lib/require-role");
   const role = await getSiteRole();
   if (role !== "admin") redirect("/admin");
-
-  const { readSiteConfig } = await import("@/lib/site-config");
-  const { schemaEditEnabled } = await readSiteConfig();
-  if (!schemaEditEnabled) {
-    redirect("/admin/settings");
-  }
   const config = await getAdminConfig();
 
   if (collection === "new") {

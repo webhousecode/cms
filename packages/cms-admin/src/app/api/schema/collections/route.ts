@@ -5,7 +5,7 @@ import { writeConfigCollections } from "@/lib/config-writer";
 import type { CollectionDef } from "@/lib/config-writer";
 import { readSiteConfig } from "@/lib/site-config";
 import { getActiveSitePaths } from "@/lib/site-paths";
-import { denyViewers } from "@/lib/require-role";
+import { denyViewers, getSiteRole } from "@/lib/require-role";
 
 export async function GET() {
   const config = await getAdminConfig();
@@ -17,9 +17,12 @@ export async function GET() {
 
 export async function POST(req: NextRequest) {
   const denied = await denyViewers(); if (denied) return denied;
-  const { schemaEditEnabled } = await readSiteConfig();
-  if (!schemaEditEnabled) {
-    return NextResponse.json({ error: "Schema editing disabled" }, { status: 403 });
+  const role = await getSiteRole();
+  if (role !== "admin") {
+    const { schemaEditEnabled } = await readSiteConfig();
+    if (!schemaEditEnabled) {
+      return NextResponse.json({ error: "Schema editing disabled" }, { status: 403 });
+    }
   }
   const body = await req.json() as CollectionDef;
   const config = await getAdminConfig();

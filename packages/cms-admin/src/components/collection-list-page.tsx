@@ -98,7 +98,7 @@ export function CollectionListPage({
 
             {!readOnly && (
               <>
-                {schemaEnabled && can("settings.edit") && (
+                {can("settings.edit") && (
                   <Link href={`/admin/settings/${collection}`}>
                     <button type="button" style={{
                       height: "28px", display: "inline-flex", alignItems: "center", gap: "0.35rem",

@@ -5,16 +5,19 @@ import { writeConfigCollections } from "@/lib/config-writer";
 import type { CollectionDef } from "@/lib/config-writer";
 import { readSiteConfig } from "@/lib/site-config";
 import { getActiveSitePaths } from "@/lib/site-paths";
-import { denyViewers } from "@/lib/require-role";
+import { denyViewers, getSiteRole } from "@/lib/require-role";
 
 type Ctx = { params: Promise<{ collection: string }> };
 
 export async function PUT(req: NextRequest, { params }: Ctx) {
   const denied = await denyViewers(); if (denied) return denied;
   try {
-    const { schemaEditEnabled } = await readSiteConfig();
-    if (!schemaEditEnabled) {
-      return NextResponse.json({ error: "Schema editing disabled" }, { status: 403 });
+    const role = await getSiteRole();
+    if (role !== "admin") {
+      const { schemaEditEnabled } = await readSiteConfig();
+      if (!schemaEditEnabled) {
+        return NextResponse.json({ error: "Schema editing disabled" }, { status: 403 });
+      }
     }
     const { collection } = await params;
     const body = await req.json() as CollectionDef;
@@ -41,9 +44,12 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
 
 export async function DELETE(_req: NextRequest, { params }: Ctx) {
   const denied = await denyViewers(); if (denied) return denied;
-  const { schemaEditEnabled } = await readSiteConfig();
-  if (!schemaEditEnabled) {
-    return NextResponse.json({ error: "Schema editing disabled" }, { status: 403 });
+  const role = await getSiteRole();
+  if (role !== "admin") {
+    const { schemaEditEnabled } = await readSiteConfig();
+    if (!schemaEditEnabled) {
+      return NextResponse.json({ error: "Schema editing disabled" }, { status: 403 });
+    }
   }
   const { collection } = await params;
   const config = await getAdminConfig();
