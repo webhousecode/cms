@@ -68,6 +68,13 @@ export function CollectionListPage({
   return (
     <>
       <ActionBar helpArticleId="collection-list-intro"
+        favorite={{
+          type: "collection",
+          label: collectionLabel,
+          path: `/admin/content/${collection}`,
+          icon: "Folder",
+          collection,
+        }}
         actions={
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             {/* View toggle */}
