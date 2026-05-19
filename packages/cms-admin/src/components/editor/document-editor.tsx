@@ -6,6 +6,11 @@ import { CustomDateTimeInput } from "@/components/ui/custom-datetime-input";
 import { useRouter } from "next/navigation";
 import type { CollectionConfig, BlockConfig } from "@webhouse/cms";
 import { FieldEditor } from "./field-editor";
+import {
+  findReadTimeField,
+  findPrimaryBodyField,
+  computeReadingMinutes,
+} from "@/lib/ai/translation-helpers";
 import { Save, Globe, FileText, Trash2, ArrowLeft, Lock, LockOpen, Copy, Clock, History, Eye, Languages, Sparkles, Settings2, Wand2, ChevronDown, ChevronRight, Loader2, Search as SearchIcon, Home as HomeIcon } from "lucide-react";
 import Link from "next/link";
 import { ActionBar, ActionBarBreadcrumb } from "@/components/action-bar";
@@ -1884,7 +1889,9 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
             const isLocked = !!(
               doc.data["_fieldMeta"] as Record<string, unknown> | undefined
             )?.[field.name];
-            const isReadTime = /^read.?time$/i.test(field.name);
+            const readTimeField = findReadTimeField(colConfig);
+            const isReadTime = readTimeField?.name === field.name;
+            const readTimeBodyField = isReadTime ? findPrimaryBodyField(colConfig) : undefined;
 
             // Richtext fields get a collapsible TEXT header (like blocks)
             if (field.type === "richtext") {
@@ -1954,16 +1961,20 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
                       : <><LockOpen style={{ width: "0.7rem", height: "0.7rem" }} /> Lock</>
                     }
                   </button>
-                  {isReadTime && (
+                  {isReadTime && readTimeBodyField && (
                     <button
                       type="button"
                       onClick={() => {
-                        const content = doc.data["content"];
-                        if (typeof content !== "string" || !content.trim()) return;
-                        const stripped = content.replace(/!\[.*?\]\(.*?\)/g, "").replace(/[#*_`>\[\]]/g, "").trim();
-                        const words = stripped.split(/\s+/).filter(Boolean).length;
-                        const mins = Math.max(1, Math.ceil(words / 200));
-                        updateField(field.name, `${mins} min read`);
+                        const body = doc.data[readTimeBodyField.name];
+                        if (typeof body !== "string" || !body.trim()) {
+                          toast.error("No body content to measure");
+                          return;
+                        }
+                        const mins = computeReadingMinutes(body);
+                        if (mins <= 0) return;
+                        // Match field type: number → number, anything else → "N min read"
+                        updateField(field.name, field.type === "number" ? mins : `${mins} min read`);
+                        toast.success(`Read time: ${mins} min`);
                       }}
                       style={{
                         fontSize: "0.65rem", fontFamily: "monospace", letterSpacing: "0.05em",
@@ -1980,7 +1991,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
                         (e.currentTarget as HTMLButtonElement).style.color = "var(--muted-foreground)";
                       }}
                     >
-                      Calculate
+                      Suggest
                     </button>
                   )}
                 </div>

@@ -8,6 +8,12 @@ import { getModel } from "@/lib/ai/model-resolver";
 import { LOCALE_LABELS } from "@/lib/locale";
 import { generateId } from "@webhouse/cms";
 import Anthropic from "@anthropic-ai/sdk";
+import {
+  collectTranslatableFields,
+  findReadTimeField,
+  findPrimaryBodyField,
+  computeReadingMinutes,
+} from "@/lib/ai/translation-helpers";
 
 /**
  * POST /api/admin/translate-bulk
@@ -73,21 +79,17 @@ export async function POST(req: NextRequest) {
       controller.enqueue(encoder.encode(JSON.stringify({ type: "start", total, targetLocale }) + "\n"));
 
       const client = new Anthropic({ apiKey });
-      const TRANSLATABLE_TYPES = new Set(["text", "richtext", "textarea", "slug", "htmldoc", "interactive"]);
       let done = 0;
 
       for (const item of toTranslate) {
         try {
           const colConfig = config.collections.find(c => c.name === item.collection);
-          const translatableFields = colConfig?.fields.filter(f => TRANSLATABLE_TYPES.has(f.type)) ?? [];
-
-          const sourceData: Record<string, string | string[]> = {};
-          for (const field of translatableFields) {
-            const val = item.data[field.name];
-            if (val && typeof val === "string" && val.trim()) {
-              sourceData[field.name] = val;
-            }
-          }
+          const sourceData: Record<string, string | string[]> = colConfig
+            ? collectTranslatableFields(item.data, colConfig.fields)
+            : {};
+          const hasTagsToTranslate = !!colConfig?.fields.some(
+            (f) => f.type === "tags" && Array.isArray(sourceData[f.name]),
+          );
 
           // Include SEO fields for translation (F48 i18n)
           const sourceSeo = item.data._seo as Record<string, unknown> | undefined;
@@ -126,6 +128,10 @@ export async function POST(req: NextRequest) {
 - keywords: translate each keyword naturally, keep as array of strings`
             : "";
 
+          const tagsInstruction = hasTagsToTranslate
+            ? `\nTag/array fields (any field whose source value is a JSON array of strings) must remain a JSON array of strings. Translate each entry naturally for ${targetLang}, keep the count, and use lowercase unless the source uses proper nouns. Do not merge or split tags.`
+            : "";
+
           const systemPrompt = `You are a professional translator. Translate from ${sourceLang} to ${targetLang}.
 ${buildLocaleInstruction(targetLocale)}
 
@@ -134,7 +140,7 @@ Preserve:
 - Proper nouns and brand names
 - Meaning, tone, and formatting
 - Cultural references should be adapted where relevant
-${seoInstruction}
+${seoInstruction}${tagsInstruction}
 Return ONLY a JSON object with the translated fields. No explanation, no preamble.`;
 
           const response = await client.messages.create({
@@ -163,7 +169,8 @@ Return ONLY a JSON object with the translated fields. No explanation, no preambl
             delete translatedData["_seo_keywords"];
           }
 
-          // Merge translated fields with source data (keep non-translatable fields)
+          // Merge translated fields with source data (keep non-translatable fields).
+          // Tags arrays are fully replaced — never a mix of source + target languages.
           const mergedData = { ...item.data };
           for (const [key, val] of Object.entries(translatedData)) {
             mergedData[key] = val;
@@ -172,6 +179,19 @@ Return ONLY a JSON object with the translated fields. No explanation, no preambl
           // Merge SEO: preserve non-translatable SEO fields, override translated ones
           if (Object.keys(translatedSeo).length > 0 && sourceSeo) {
             mergedData._seo = { ...sourceSeo, ...translatedSeo };
+          }
+
+          // Auto-compute reading time from translated body (Danish ≠ English length).
+          if (colConfig) {
+            const readTimeField = findReadTimeField(colConfig);
+            const bodyField = findPrimaryBodyField(colConfig);
+            if (readTimeField && bodyField) {
+              const body = mergedData[bodyField.name];
+              if (typeof body === "string") {
+                const minutes = computeReadingMinutes(body);
+                if (minutes > 0) mergedData[readTimeField.name] = minutes;
+              }
+            }
           }
 
           // Ensure source has a translationGroup

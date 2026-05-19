@@ -7,6 +7,12 @@ import { getModel } from "@/lib/ai/model-resolver";
 import { LOCALE_LABELS } from "@/lib/locale";
 import { GitHubStorageAdapter, generateId } from "@webhouse/cms";
 import Anthropic from "@anthropic-ai/sdk";
+import {
+  collectTranslatableFields,
+  findReadTimeField,
+  findPrimaryBodyField,
+  computeReadingMinutes,
+} from "@/lib/ai/translation-helpers";
 
 type Ctx = { params: Promise<{ collection: string; slug: string }> };
 
@@ -61,19 +67,17 @@ export async function POST(req: NextRequest, { params }: Ctx) {
   const sourceLang = LOCALE_LABELS[sourceLocale] ?? sourceLocale;
   const targetLang = LOCALE_LABELS[targetLocale] ?? targetLocale;
 
-  // Collect translatable fields (text, richtext, textarea, slug, htmldoc, interactive)
-  const TRANSLATABLE_TYPES = new Set(["text", "richtext", "textarea", "slug", "htmldoc", "interactive"]);
-  const translatableFields = colConfig.fields.filter((f) =>
-    TRANSLATABLE_TYPES.has(f.type),
+  // Collect translatable fields (text/richtext/textarea/slug/htmldoc/interactive/tags)
+  const sourceData: Record<string, string | string[]> = collectTranslatableFields(
+    sourceDoc.data,
+    colConfig.fields,
   );
-
-  const sourceData: Record<string, string | string[]> = {};
-  for (const field of translatableFields) {
-    const val = sourceDoc.data[field.name];
-    if (val && typeof val === "string" && val.trim()) {
-      sourceData[field.name] = val;
-    }
-  }
+  const translatableFields = colConfig.fields.filter((f) =>
+    Object.prototype.hasOwnProperty.call(sourceData, f.name),
+  );
+  const hasTagsToTranslate = colConfig.fields.some(
+    (f) => f.type === "tags" && Array.isArray(sourceData[f.name]),
+  );
   // Also include the slug for translation
   sourceData["_slug"] = slug;
 
@@ -117,6 +121,10 @@ export async function POST(req: NextRequest, { params }: Ctx) {
 - keywords: translate each keyword naturally, keep as array of strings`
     : "";
 
+  const tagsInstruction = hasTagsToTranslate
+    ? `\nTag/array fields (any field whose source value is a JSON array of strings) must remain a JSON array of strings. Translate each entry naturally for ${targetLang}, keep the count, and use lowercase unless the source uses proper nouns. Do not merge or split tags.`
+    : "";
+
   const systemPrompt = `You are a professional translator. Translate content from ${sourceLang} to ${targetLang}.
 ${buildLocaleInstruction(targetLocale)}
 
@@ -125,7 +133,7 @@ Preserve:
 - Proper nouns and brand names
 - Meaning, tone, and formatting
 - Cultural references should be adapted where relevant
-${seoInstruction}
+${seoInstruction}${tagsInstruction}
 Include a "_slug" field with a URL-friendly translated slug (lowercase, hyphens, no special chars).
 
 Return ONLY a JSON object with the translated fields. No explanation, no preamble.`;
@@ -177,10 +185,24 @@ Return ONLY a JSON object with the translated fields. No explanation, no preambl
       delete translatedData["_seo_keywords"];
     }
 
-    // Merge: keep non-translatable fields from source, override with translations
+    // Merge: keep non-translatable fields from source, override with translations.
+    // For tags this means the source-language tags are fully replaced by the
+    // AI's translated array — exactly what we want, never a mix of languages.
     const mergedData = { ...sourceDoc.data };
     for (const [key, val] of Object.entries(translatedData)) {
       mergedData[key] = val;
+    }
+
+    // Auto-compute reading time from the translated body so the suggested
+    // value matches the translated word count (Danish ≠ English length).
+    const readTimeField = findReadTimeField(colConfig);
+    const bodyField = findPrimaryBodyField(colConfig);
+    if (readTimeField && bodyField) {
+      const body = mergedData[bodyField.name];
+      if (typeof body === "string") {
+        const minutes = computeReadingMinutes(body);
+        if (minutes > 0) mergedData[readTimeField.name] = minutes;
+      }
     }
 
     // Merge SEO: preserve non-translatable SEO fields (ogImage, canonical, score), override translated ones
