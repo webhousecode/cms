@@ -5,11 +5,29 @@ import { join } from "node:path";
 import { generateVariants, isProcessableImage, extractExif } from "@/lib/media/image-processor";
 import { getActiveSitePaths } from "@/lib/site-paths";
 import { denyViewers } from "@/lib/require-role";
+import { withSiteContext } from "@/lib/site-context";
+import { loadRegistry, findSite } from "@/lib/site-registry";
 
 const UPLOAD_BASE = process.env.UPLOAD_BASE ?? "";
 
-export async function POST(req: NextRequest) {
-  const denied = await denyViewers(); if (denied) return denied;
+/**
+ * Resolve `?site=<id>` to (orgId, siteId). Required for token-based
+ * callers (Bearer / X-CMS-Service-Token) that have no cms-active-site
+ * cookie. Without this wrapper, uploads silently landed in the registry
+ * default site instead of the caller's intended one — reported via
+ * sanne-andersen intercom #1286 (2026-05-19).
+ */
+async function resolveSiteCtx(siteId: string | null): Promise<{ orgId: string; siteId: string } | null> {
+  if (!siteId) return null;
+  const registry = await loadRegistry();
+  if (!registry) return null;
+  for (const org of registry.orgs) {
+    if (findSite(registry, org.id, siteId)) return { orgId: org.id, siteId };
+  }
+  return null;
+}
+
+async function handleUpload(req: NextRequest): Promise<NextResponse> {
   const formData = await req.formData();
   const file = formData.get("file") as File | null;
   if (!file) return NextResponse.json({ error: "No file" }, { status: 400 });
@@ -144,4 +162,13 @@ export async function POST(req: NextRequest) {
     console.error("[upload] error:", err);
     return NextResponse.json({ error: String(err) }, { status: 500 });
   }
+}
+
+export async function POST(req: NextRequest) {
+  const denied = await denyViewers(); if (denied) return denied;
+  const overrideSite = req.nextUrl.searchParams.get("site");
+  if (!overrideSite) return handleUpload(req);
+  const ctx = await resolveSiteCtx(overrideSite);
+  if (!ctx) return NextResponse.json({ error: `site not found: ${overrideSite}` }, { status: 404 });
+  return withSiteContext(ctx, () => handleUpload(req));
 }
