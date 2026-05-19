@@ -983,7 +983,7 @@ function RevalidationSection() {
 	const [pinging, setPinging] = useState(false);
 	const [pingResult, setPingResult] = useState<{ ok: boolean; status?: number; error?: string } | null>(null);
 	const [copied, setCopied] = useState<"url" | "secret" | null>(null);
-	const [log, setLog] = useState<Array<{ timestamp: string; paths: string[]; ok: boolean; status: number | null; durationMs: number }>>([]);
+	const [log, setLog] = useState<Array<{ timestamp: string; paths: string[]; ok: boolean; status: number | null; durationMs: number; error?: string; collection?: string; slug?: string }>>([]);
 	const [previewUrl, setPreviewUrl] = useState("");
 	const [logOpen, setLogOpen] = useState(false);
 
@@ -1237,8 +1237,24 @@ function RevalidationSection() {
 				</Card>
 
 				{/* Recent delivery log */}
-				{log.length > 0 && (
-					<div style={{ marginTop: "0.25rem" }}>
+				{log.length > 0 && (() => {
+					// Detect file-ownership drift: EACCES errors on the site's volume
+					// mean files were copied in via SSH/SFTP as root and the runtime
+					// nextjs user can't overwrite them. Surface explicitly so the
+					// operator doesn't have to grep fly logs to discover it.
+					const eaccesEntries = log.filter((e) => !e.ok && (e.error?.includes("EACCES") || e.error?.includes("permission denied")));
+					const eaccesPaths = Array.from(new Set(eaccesEntries.flatMap((e) => e.collection && e.slug ? [`${e.collection}/${e.slug}`] : []))).slice(0, 10);
+					return <div style={{ marginTop: "0.25rem" }}>
+						{eaccesPaths.length > 0 && (
+							<div style={{
+								padding: "0.6rem 0.75rem", marginBottom: "0.5rem", borderRadius: "6px",
+								background: "color-mix(in srgb, var(--destructive) 10%, transparent)",
+								border: "1px solid color-mix(in srgb, var(--destructive) 35%, transparent)",
+								fontSize: "0.7rem", color: "var(--destructive)",
+							}}>
+								<strong>File ownership drift detected.</strong> {eaccesEntries.length} write(s) failed with EACCES on these paths: <code style={{ fontFamily: "monospace" }}>{eaccesPaths.join(", ")}</code>. The files exist on the site volume but are owned by another user (typically <code>root</code> from a manual SFTP upload). Fix: <code style={{ fontFamily: "monospace" }}>flyctl ssh console --app &lt;site-app&gt; --command &apos;find /data/content -type f ! -uid 1001 -exec chown nextjs:nodejs {} +&apos;</code>
+							</div>
+						)}
 						<button
 							type="button"
 							onClick={() => setLogOpen((v) => !v)}
@@ -1277,8 +1293,8 @@ function RevalidationSection() {
 								</div>
 							))}
 						</div>}
-					</div>
-				)}
+					</div>;
+				})()}
 			</form>
 		</div></SectionWrapper>
 	);

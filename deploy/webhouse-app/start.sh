@@ -40,6 +40,23 @@ mkdir -p "$DATA_DIR/node_modules/@webhouse"
 rm -f "$DATA_DIR/node_modules/@webhouse/cms"
 ln -s /app/packages/cms "$DATA_DIR/node_modules/@webhouse/cms"
 
+# ── Defensive ownership-audit ─────────────────────────────────
+# nextjs uid=1001 owns the volume by design (Dockerfile chowns /data).
+# If anyone copies files in via `flyctl ssh sftp put` (which runs as
+# root), those files end up uid=0 and every ContentService write
+# silently fails EACCES. Same problem hit sanneandersen-site 2026-05-19:
+# 6 of 141 ICD pushes failed for root-owned files until we manually
+# chown'ed them. We can't chown here (start.sh runs as nextjs), but
+# logging at boot makes the drift discoverable before it causes
+# mysterious "edits don't save" tickets.
+bad=$(find "$DATA_DIR" -type f ! -uid 1001 2>/dev/null | wc -l)
+if [ "$bad" -gt 0 ]; then
+  echo "[start] WARN: $bad files in $DATA_DIR not owned by nextjs (uid=1001) — writes will EACCES"
+  find "$DATA_DIR" -type f ! -uid 1001 2>/dev/null | head -20 | while read -r f; do
+    echo "[start] WARN:   not-nextjs: $f"
+  done
+fi
+
 # ── Start cms-admin ───────────────────────────────────────────
 export CMS_CONFIG_PATH="$CONFIG_PATH"
 export UPLOAD_DIR="$UPLOADS_DIR"
