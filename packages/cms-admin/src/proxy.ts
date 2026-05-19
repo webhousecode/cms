@@ -58,6 +58,52 @@ export async function proxy(request: NextRequest) {
   const isApi = pathname.startsWith("/api/");
   if (!isAdminPath && !isApi) return NextResponse.next();
 
+  // `?site=<id>` URL override for /api/* routes.
+  //
+  // Before this lived in proxy: every /api/* route that touched per-site
+  // state had to wrap itself in `withSiteContext` to honour `?site=`. We
+  // had ~52 write-routes and only ~8 actually did this. The rest silently
+  // mis-routed writes to the registry-default site when a token caller
+  // (Bearer / X-CMS-Service-Token) passed `?site=foo` (which is the only
+  // way they CAN target a tenant — they have no cms-active-* cookies).
+  // Precedent: sanne-andersen intercom #1286 — `/api/upload?site=sanneandersen`
+  // wrote to `webhouse-site`'s volume; the file landed but on the wrong
+  // tenant.
+  //
+  // Now resolved here once. If `?site=<id>` matches a real site in the
+  // registry, we inject `cms-active-org=<orgId>` + `cms-active-site=<id>`
+  // cookies on the forwarded request. Every downstream handler that
+  // calls getActiveSitePaths / getAdminConfig / getAdminCms / etc. then
+  // sees the right tenant automatically. Per-route `withSiteContext`
+  // wrappers still work (the cookie path is what they read), so no
+  // existing code breaks.
+  //
+  // Scoped to /api/* to avoid surprising the admin UI: pages use the
+  // user-selected site via cookies and don't normally pass `?site=`.
+  let siteOverrideCookies: string[] = [];
+  if (isApi) {
+    const overrideSite = request.nextUrl.searchParams.get("site");
+    if (overrideSite) {
+      const { loadRegistry, findSite } = await import("./lib/site-registry");
+      const registry = await loadRegistry();
+      if (registry) {
+        for (const org of registry.orgs) {
+          if (findSite(registry, org.id, overrideSite)) {
+            siteOverrideCookies = [`cms-active-org=${org.id}`, `cms-active-site=${overrideSite}`];
+            break;
+          }
+        }
+      }
+    }
+  }
+  if (siteOverrideCookies.length > 0) {
+    const existing = requestHeaders.get("cookie") ?? "";
+    requestHeaders.set(
+      "cookie",
+      existing ? `${existing}; ${siteOverrideCookies.join("; ")}` : siteOverrideCookies.join("; "),
+    );
+  }
+
   // Allow internal service calls with X-CMS-Service-Token header (matches CMS_JWT_SECRET).
   // Mint a system-admin JWT and inject as cookie so downstream handlers that check
   // session/role see a valid admin identity (same pattern as Bearer token handling below).
@@ -76,7 +122,6 @@ export async function proxy(request: NextRequest) {
         .setIssuedAt()
         .setExpirationTime("5m")
         .sign(getJwtSecret());
-      const requestHeaders = new Headers(request.headers);
       const existingCookies = requestHeaders.get("cookie") ?? "";
       const extras = [`${COOKIE_NAME}=${jwt}`];
       const activeOrg = request.headers.get("x-cms-active-org");
@@ -102,7 +147,6 @@ export async function proxy(request: NextRequest) {
         .setProtectedHeader({ alg: "HS256" })
         .setExpirationTime("5m")
         .sign(getJwtSecret());
-      const requestHeaders = new Headers(request.headers);
       const existingCookies = requestHeaders.get("cookie") ?? "";
       requestHeaders.set("cookie", `${existingCookies}; ${COOKIE_NAME}=${jwt}`);
       return NextResponse.next({ request: { headers: requestHeaders } });
@@ -124,7 +168,7 @@ export async function proxy(request: NextRequest) {
             .setProtectedHeader({ alg: "HS256" })
             .setExpirationTime("5m")
             .sign(getJwtSecret());
-          const requestHeaders = new Headers(request.headers);
+          const innerHeaders = new Headers(requestHeaders);
           const existingCookies = requestHeaders.get("cookie") ?? "";
           requestHeaders.set("cookie", `${existingCookies}; ${COOKIE_NAME}=${jwt}`);
           return NextResponse.next({ request: { headers: requestHeaders } });

@@ -183,6 +183,53 @@ Defense in depth — when the rewriter runs, the site-pool cache is the SECOND d
 
 If any answer is "no" — STOP. Re-do the work. A config rewriter that silently drops fields is a data-loss bug, and the rewriter is invoked thousands of times across every customer's schema-edit history.
 
+## Hard Rule: Site-Context Resolution Lives in proxy.ts, Not in Routes
+
+**`?site=<id>` URL override is resolved ONCE in `proxy.ts` middleware. It injects `cms-active-org=<orgId>` + `cms-active-site=<siteId>` cookies on the forwarded request, and every downstream handler that calls `getActiveSitePaths()` / `getAdminConfig()` / `getAdminCms()` / `getMediaAdapter()` / `readSiteConfig()` automatically sees the right tenant.**
+
+This rule exists because of 2026-05-20 sweep: we had ~52 /api/* write-routes that touched per-site filesystem state, and only 8 of them wrapped themselves in `withSiteContext` to honour `?site=`. The other 44 silently mis-routed writes to `registry.defaultSiteId` when a token caller (Bearer / X-CMS-Service-Token) passed `?site=foo` — the only mechanism they have to target a tenant since they hold no cms-active-* cookies. Precedent: sanne-andersen intercom #1286 — `POST /api/upload?site=sanneandersen` with a Bearer token returned 200 + valid URL, but the file landed on `webhouse-site`'s volume instead. Same pattern would have hit `/api/media/rotate`, `/api/media/rename`, `/api/admin/import/execute`, every interactives mutation, every schema-drift fix, etc.
+
+**What proxy does now (do NOT replicate per-route):**
+
+```ts
+// proxy.ts, runs before every /api/* handler:
+if (isApi) {
+  const overrideSite = request.nextUrl.searchParams.get("site");
+  if (overrideSite) {
+    // Resolve via registry — silently no-op if siteId doesn't exist
+    // (handlers will then return their normal "site not found" error).
+    const registry = await loadRegistry();
+    for (const org of registry?.orgs ?? []) {
+      if (findSite(registry, org.id, overrideSite)) {
+        requestHeaders.set("cookie",
+          `${existing}; cms-active-org=${org.id}; cms-active-site=${overrideSite}`);
+        break;
+      }
+    }
+  }
+}
+```
+
+**What this means for new write-routes:**
+
+- ✅ Use `getActiveSitePaths()` / `getAdminConfig()` / `getAdminCms()` directly. They read cookies. Cookies are correct for cookie-callers (admin UI) AND for token-callers using `?site=` (because proxy injected them). One code path.
+- ✅ `denyViewers()` / `getSiteRole()` continue to work — same cookie chain.
+- ❌ Do NOT wrap new routes in `runScoped` / `withSiteContext` unless you need a NESTED override (e.g. a route that operates on one site and then needs to also touch another — rare; the existing routes that do this stay as-is).
+- ❌ Do NOT read `request.nextUrl.searchParams.get("site")` yourself in a route handler to "set site context" — that's the proxy's job. Doing it in routes leaks the responsibility and re-creates the bug-class the sweep was meant to close.
+
+**For non-API site-context shifts (CRON jobs, internal service calls):**
+
+- HTTP path: use `X-CMS-Service-Token: $CMS_JWT_SECRET` + `X-CMS-Active-Site: <id>` headers (proxy converts to cookies).
+- In-process path: use `withSiteContext({ orgId, siteId }, fn)` directly. This bypasses cookies for code that's not inside a request handler at all (background workers, instrumentation hooks).
+
+**Smell test for new /api/* write-routes:**
+
+- Did I read `?site=` myself? → STOP. Delete that code, let proxy handle it.
+- Did I add `withSiteContext` around the whole handler? → STOP. Cookies set by proxy are enough.
+- Does my new route mutate per-site filesystem (uploads, content, config)? → confirm tests cover the case where caller is Bearer-token-only with `?site=tenantX` and verify the write lands in tenantX's volume, not the registry default.
+
+Going forward, the only routes that should keep their `withSiteContext` wrapper are the ones that pre-date this fix — they still work because proxy's cookies are what `withSiteContext` reads. New routes should be plain.
+
 ## Hard Rule: Reserved Collection Names
 
 **NEVER name or label a collection with any of these reserved names:**
