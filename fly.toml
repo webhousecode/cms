@@ -39,9 +39,16 @@ primary_region = "arn"
     port = 443
 
   [services.concurrency]
+    # Raised from 25/20 (2026-05-19): cms-admin fans out 10-15 concurrent
+    # API calls on every page (header-data, content lists, schema reads,
+    # lighthouse polls, deploy status, revalidation log, etc.). The old
+    # 25 hard limit was hit on every page load with 2+ tabs open, queuing
+    # new requests behind in-flight ones — looked like the site was
+    # hanging. 250 hard / 200 soft matches what Next.js standalone can
+    # serve from a shared-cpu-1x without back-pressure stalling.
     type = "connections"
-    hard_limit = 25
-    soft_limit = 20
+    hard_limit = 250
+    soft_limit = 200
 
   [[services.http_checks]]
     interval = 15000
