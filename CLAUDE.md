@@ -13,8 +13,15 @@ will see it on the Chat tab for your session.
 **To reach another cc session** (cc-to-cc — NOT visible on mobile), use
 the buddy peer tools:
 
+- `mcp__buddy__list_sessions()` — returns all active peer sessions with `sessionName`, `repo` (cwd), and start-time. No params. **Call this first when you're unsure which sessions are running** — the returned `sessionName` is the value you pass as `to` in `ask_peer`. Saves an "unknown target" round-trip.
 - `mcp__buddy__ask_peer({ to, message, reply_to? })` — direct 1:1 message to a named session (supports threading via `reply_to`)
 - `mcp__buddy__announce({ message, severity?, affects? })` — broadcast FYI to same-repo peers
+
+Flow:
+1. `list_sessions` → see who's active
+2. `ask_peer({ to: 'sanne-andersen', message: '...' })` → deliver directly
+
+Direct to Discord: `ask_peer({ to: 'discord', message: '...' })` — pipes the message back to Christian's Discord channel.
 
 Use peer tools before disruptive changes, to delegate work the user asks
 you to hand off, or to ask a peer that owns a different domain. Incoming
