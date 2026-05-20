@@ -157,6 +157,52 @@ cd /path/to/project && npx cms export-schema --out webhouse-schema.json
 
 The file lives at `{projectDir}/webhouse-schema.json`. Treat it like a generated lockfile — always committed, always in sync. AI agents that forget this break downstream consumers silently. See `docs/ai-guide/21-framework-consumers.md` for the full rule and checklist.
 
+## Hard Rule: SSH/SFTP Touch Means Root-Ownership — Use the API
+
+**`flyctl ssh console`, `flyctl ssh sftp put`, and any other shell-into-Fly path logs in as `root`. Every file you create, copy, or modify that way ends up owned by `uid=0`. The runtime app process runs as a non-root user (e.g. `nextjs` uid=1001). Root-owned files in the runtime's writable paths → all subsequent app writes to those files fail `EACCES` silently.**
+
+This rule exists because of a recurring incident chain (2026-05-19 + 2026-05-20):
+
+- CMS-admin ICD push wrote document JSON to `/data/cms-admin/beam-sites/sanneandersen/content/*` as `nextjs` ✓
+- A cc-session (or human) used `flyctl ssh sftp put` to "fix" something on the same volume → those files re-emerged as `root:root`
+- Next ICD push tried to overwrite → `EACCES: permission denied` → "Re-sync failed: N of M" toast
+- We chowned manually → fixed for a few hours → next SSH-fix-run dropped new root-owned files → loop
+- Forensic trace: `/data/backup-1779229185/` directory (epoch timestamp = manual script signature) + recently-modified files all `root:root`
+
+**Required behavior for any cc-session — IRON RULE:**
+
+1. **NEVER use `flyctl ssh sftp put` or `flyctl ssh console "cat > file"` on a path that the app writes to at runtime.** Period. The app's own write-path is the only legitimate writer for runtime-mutable files (content/, uploads/, _data/site-config.json, etc.).
+2. **If you need to repair runtime state from outside the app, use the app's HTTP API.** Examples:
+   - Content: `POST/PATCH /api/cms/{collection}/{slug}?site=<id>` (token-auth via `X-CMS-Service-Token`)
+   - Uploads: `POST /api/upload?site=<id>` (multipart)
+   - Site config: `POST /api/admin/site-config?site=<id>`
+   - Schema: `PUT /api/schema/{collection}?site=<id>`
+3. **ONLY use SSH for paths the app does NOT write to at runtime** — i.e. one-shot OS-level ops like:
+   - Reading logs (`tail`, `grep`)
+   - Inspecting state (`ls`, `stat`, `cat` for diagnosis)
+   - Restarting the machine (`flyctl machine restart`)
+   - Setting env vars (`flyctl secrets set`)
+4. **When SSH-mutation of an app-writable file is genuinely the only option** (e.g. recovering from a corruption the API can't fix), it is allowed if and only if you immediately `chown` to the runtime user afterwards in the same SSH session:
+   ```bash
+   flyctl ssh console --app X --command "
+     # your fix
+     # ... write/modify file ...
+     # ALWAYS finish with:
+     chown -R nextjs:nodejs /data/affected/path
+   "
+   ```
+   Document the why in the session log so the next operator doesn't repeat the cleanup.
+
+**Defense already in place (don't rely on it as the primary protection):**
+- The sanneandersen-site `docker-entrypoint.sh` runs `chown -R nextjs:nodejs /data` at every boot via `gosu` (deployed 2026-05-20 in commit `eb3e818`). So drift heals on next deploy/restart, but the rule above prevents the drift from happening in the first place.
+
+**Smell test before running ANY `flyctl ssh sftp put` or `flyctl ssh console "... > file"`:**
+- Is this a runtime-writable path? Yes → STOP. Use the API.
+- Am I committing to chowning back to the runtime user in the same session? No → STOP.
+- Am I documenting why SSH was the only option? No → STOP.
+
+If you skip any of these, you're directly causing the bug-class Christian has lived through 35 times. Don't.
+
 ## Hard Rule: Rewriting cms.config.ts MUST Preserve ALL Top-Level Fields
 
 **`config-writer.ts`'s `buildConfigContent()` rebuilds `cms.config.ts` from scratch every time a schema edit lands (PUT/POST/DELETE on `/api/schema/*`). The rewriter MUST preserve every top-level field of `defineConfig({...})` — not just `collections` and `blocks`.**
