@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { Trash2, Copy, Check, Upload, LayoutGrid, List, FolderOpen, Folder, ChevronLeft, ChevronRight, Search, X, ZoomIn, ExternalLink, FileWarning, Music, Video, FileText, Code, File, Pencil, Sparkles, RefreshCw, Loader2, CheckSquare, Zap, RotateCw, RotateCcw, MoreVertical } from "lucide-react";
+import { Trash2, Copy, Check, Upload, LayoutGrid, List, FolderOpen, Folder, ChevronLeft, ChevronRight, Search, X, ZoomIn, ExternalLink, FileWarning, Music, Video, FileText, Code, File, Pencil, Sparkles, RefreshCw, Loader2, CheckSquare, Zap, RotateCw, RotateCcw, MoreVertical, Download } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { ActionBar, ActionBarBreadcrumb, ActionButton } from "@/components/action-bar";
 import type { UsageRef } from "@/app/api/cms/media/usage/route";
@@ -1313,6 +1313,30 @@ function Lightbox({ files, index, onNavigate, onClose, onCopy, copied, onDelete,
     setRotating(false);
   }
 
+  // Download the original file. fetch → blob → object URL → trigger anchor
+  // with download attr. Works cross-origin AND overrides any inline
+  // Content-Disposition so the browser always saves instead of navigating.
+  // Filename derives from file.name with folder prefix stripped.
+  async function downloadFile() {
+    try {
+      const res = await fetch(file.url);
+      if (!res.ok) throw new Error(`fetch failed: ${res.status}`);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = file.name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error("[download] failed:", err);
+      // Fallback: open in new tab so user can save manually
+      window.open(file.url, "_blank");
+    }
+  }
+
   useEffect(() => {
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
@@ -1352,6 +1376,15 @@ function Lightbox({ files, index, onNavigate, onClose, onCopy, copied, onDelete,
         >
           <ExternalLink style={{ width: "0.875rem", height: "0.875rem" }} />
         </a>
+        <button
+          type="button"
+          title={`Download ${file.name}`}
+          onClick={(e) => { e.stopPropagation(); downloadFile(); }}
+          style={{ display: "flex", alignItems: "center", padding: "0.3rem", borderRadius: "6px", color: "rgba(255,255,255,0.5)", border: "none", background: "transparent", cursor: "pointer" }}
+          className="hover:text-white hover:bg-white/10 transition-colors"
+        >
+          <Download style={{ width: "0.875rem", height: "0.875rem" }} />
+        </button>
         <button type="button" title="Copy URL" onClick={(e) => { e.stopPropagation(); onCopy(file.url); }}
           style={{ display: "flex", alignItems: "center", padding: "0.3rem", borderRadius: "6px", color: copied === file.url ? "#4ade80" : "rgba(255,255,255,0.5)", border: "none", background: "transparent", cursor: "pointer" }}
           className="hover:text-white hover:bg-white/10 transition-colors"
