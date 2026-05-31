@@ -19,6 +19,7 @@
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^3.0.64",
+    "@upmetrics/sdk": "^0.1.0",
     "@ai-sdk/google": "^3.0.53",
     "@anthropic-ai/sdk": "^0.37.0",
     "@base-ui/react": "^1.2.0",
