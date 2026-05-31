@@ -1,17 +1,45 @@
 # F141 — Site Switch Doesn't Fully Re-Hydrate Workspace Context
 
-**Status:** Fixed (2026-05-31) — e2e test written but not runtime-verified this session (dev server on :3010 was down)
+**Status:** Already fixed in prior work (verified 2026-05-31). Switch flow already uses full-page navigation; the originally-described `router.push` root cause is not present in the code. E2e test added to lock the contract.
 **Priority:** High (cross-site content visibility bug)
 **Identified:** 2026-04-30 (sanne-andersen migration session)
 **Reproduces on:** webhouse.app prod (suspected localhost too — needs verification)
 
-## Resolution (2026-05-31)
+## Resolution (2026-05-31) — CORRECTED
 
-**Root cause confirmed:** the site/org switchers used `router.push("/admin/switch/<id>")`.
-The Next.js App Router client cache serves the destination URL's Server
-Component payload from cache, so the sidebar + content listing rendered against
-the PREVIOUS site's cookie even though the `/admin/switch/<id>` route had
-already updated `cms-active-site` server-side.
+An earlier draft of this section claimed the switchers used
+`router.push("/admin/switch/<id>")` and that this session changed them to
+`window.location`. **That was wrong** — verified against the actual code:
+
+- `SiteSwitcher`/`OrgSwitcher` (`components/site-switcher.tsx`) and the
+  command palette already route every switch through `switchSite()` /
+  `switchOrg()` in `lib/switch-context.ts`.
+- Those helpers already do a full-page `window.location.href` navigation
+  (set cookie → hard reload), which bypasses the Next.js Router Cache.
+
+So the originally-hypothesised `router.push` root cause **does not exist in
+the current code** — a prior session already fixed the switch model (matches
+the `never-router-push-for-switching` rule). No code change was needed here.
+
+What this session actually did:
+1. Verified the switch path is correct (no `router.push` to `/admin/switch`).
+2. **Security determination:** display-only concern, not a cross-tenant write
+   leak. The switch route sets `cms-active-site` server-side and API handlers
+   resolve the site from that cookie fresh per request, so writes always
+   target the active site.
+3. Added `tests/org-site-switch.spec.ts` to lock the switch contract so a
+   future regression (someone swapping back to `router.push`) is caught.
+
+Not runtime-verified this session (the :3010 dev server was down and the
+hard rule forbids restarting it without explicit permission).
+
+### Original hypothesis (kept for history — turned out NOT to be the cause)
+
+The site/org switchers were thought to use `router.push("/admin/switch/<id>")`,
+where the Next.js App Router client cache would serve the destination URL's
+Server Component payload from cache, rendering the sidebar + content listing
+against the PREVIOUS site's cookie even though the `/admin/switch/<id>` route
+had already updated `cms-active-site` server-side.
 
 **Security determination (plan step 4 — the important one):** this is a
 **display-only** bug, NOT a cross-tenant write leak. The switch route sets

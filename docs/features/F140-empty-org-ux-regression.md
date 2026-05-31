@@ -1,20 +1,31 @@
 # F140 — Empty-Org UX Regression
 
-**Status:** Fixed (2026-05-31) — render regression test deferred (dev server on :3010 was down this session)
+**Status:** Fixed (2026-05-31). Render regression test deferred (dev server on :3010 was down this session).
 **Priority:** High (blocks new-org onboarding flow)
 **Identified:** 2026-04-30 (sanne-andersen migration session)
 **Reproduces on:** webhouse.app prod AND localhost:3010 (confirmed code bug, not state)
 
 ## Resolution (2026-05-31)
 
-**Root cause:** the empty-org branch in `app/admin/(workspace)/layout.tsx`
-rendered `<AdminHeader />` directly inside `SidebarProvider` only. But
-`AdminHeader` reads `useWorkspace()` + `useHeaderData()`, and the normal path
-(`WorkspaceShell`) wraps the header in `WorkspaceProvider` + `HeaderDataProvider`.
-The empty-org shell omitted both providers, so those contexts returned their
-null/default values → UserMenu (gravatar, account prefs, org settings) and
-OrgSwitcher ("+ New org", "All orgs") rendered empty and the user got stuck
-in the empty org with no way out.
+**Root cause (verified against actual code):** `app/admin/(workspace)/layout.tsx`
+has FOUR branches that render `<AdminHeader />` directly inside `SidebarProvider`
+without `HeaderDataProvider`: the no-active-site branch, the empty-org branch,
+the `EmptyOrgError` stragglers fallback, and the config-validation repair branch.
+The normal path (`WorkspaceShell`) wraps the header in `HeaderDataProvider`.
+`AdminHeader` reads `useHeaderData()` (user + siteConfig + isAdminEmpty), so in
+those four un-wrapped branches the context returned its null defaults → UserMenu
+(gravatar, account prefs, org settings) and OrgSwitcher ("+ New org", "All orgs")
+rendered empty and the user got stuck in the empty org with no way out.
+
+(An earlier draft of this section wrongly blamed a missing `WorkspaceProvider` /
+`useWorkspace()` — those do not exist in this codebase. The only provider the
+header needs is `HeaderDataProvider`. `usePermissions()` and `useThemeAxes()`
+are plain fetch/localStorage hooks and need no provider.)
+
+**Fix:** wrap all four un-wrapped `<AdminHeader />` branches in
+`HeaderDataProvider initialIsAdminEmpty={adminEmpty}` (the same provider
+`WorkspaceShell` uses). Sidebar stays the stripped `OrgSidebar` per plan scope.
+Only `layout.tsx` changed (1 import + 4 wraps).
 
 **Fix:** wrap the empty-org shell in the same `WorkspaceProvider`
 (`initialUser={user}`, `initialOrg={org}`, `initialSite={null}`) +

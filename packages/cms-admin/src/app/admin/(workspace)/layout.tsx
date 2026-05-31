@@ -6,6 +6,7 @@ import { getAdminConfig, getActiveSiteInfo, EmptyOrgError } from "@/lib/cms";
 import { readSiteConfig } from "@/lib/site-config";
 import { TabsProvider } from "@/lib/tabs-context";
 import { AdminHeader } from "@/components/admin-header";
+import { HeaderDataProvider } from "@/lib/header-data-context";
 import { WorkspaceShell } from "@/components/workspace-shell";
 import { cookies, headers } from "next/headers";
 import { isAdminEmpty } from "@/lib/admin-empty";
@@ -67,12 +68,17 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   const siteInfo = await getActiveSiteInfo();
 
   // Multi-site mode with no site selected → minimal layout (Sites Dashboard)
+  // AdminHeader reads useHeaderData()/usePermissions() (both backed by
+  // HeaderDataProvider), so it MUST be wrapped — otherwise the user-menu
+  // (gravatar, account prefs) and org-switcher render empty (F140).
   if (siteInfo && !siteInfo.activeSiteId) {
     return (
-      <div style={{ minHeight: "100vh", background: "var(--background)" }}>
-        <AdminHeader />
-        {children}
-      </div>
+      <HeaderDataProvider initialIsAdminEmpty={adminEmpty}>
+        <div style={{ minHeight: "100vh", background: "var(--background)" }}>
+          <AdminHeader />
+          {children}
+        </div>
+      </HeaderDataProvider>
     );
   }
 
@@ -87,16 +93,22 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     if (reg) {
       const org = findOrg(reg, activeOrgCookie);
       if (org && org.sites.length === 0) {
+        // Empty org: sidebar stays stripped (OrgSidebar), but the header MUST
+        // keep full user-scoped chrome. AdminHeader reads useHeaderData(), so
+        // without HeaderDataProvider the gravatar + org-switcher render empty
+        // and the user gets stuck in the empty org with no way out (F140).
         return (
-          <SidebarProvider>
-            <OrgSidebar />
-            <SidebarInset>
-              <TabsProvider siteId="no-site">
-                <AdminHeader />
-                {children}
-              </TabsProvider>
-            </SidebarInset>
-          </SidebarProvider>
+          <HeaderDataProvider initialIsAdminEmpty={adminEmpty}>
+            <SidebarProvider>
+              <OrgSidebar />
+              <SidebarInset>
+                <TabsProvider siteId="no-site">
+                  <AdminHeader />
+                  {children}
+                </TabsProvider>
+              </SidebarInset>
+            </SidebarProvider>
+          </HeaderDataProvider>
         );
       }
     }
@@ -123,7 +135,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     if (err instanceof Error && err.name === "EmptyOrgError") {
       // Already handled above, but catch any stragglers
       return (
-        <SidebarProvider><OrgSidebar /><SidebarInset><TabsProvider siteId="no-site"><AdminHeader />{children}</TabsProvider></SidebarInset></SidebarProvider>
+        <HeaderDataProvider initialIsAdminEmpty={adminEmpty}><SidebarProvider><OrgSidebar /><SidebarInset><TabsProvider siteId="no-site"><AdminHeader />{children}</TabsProvider></SidebarInset></SidebarProvider></HeaderDataProvider>
       );
     }
     const message = err instanceof Error ? err.message : "";
@@ -147,15 +159,17 @@ export default async function AdminLayout({ children }: { children: React.ReactN
       const siteName = nameMatch?.[1] ?? "Unknown site";
       const rawErrors = message.slice(message.indexOf(":") + 1).trim();
       return (
-        <SidebarProvider>
-          <OrgSidebar />
-          <SidebarInset>
-            <TabsProvider siteId="repair-mode">
-              <AdminHeader />
-              <ConfigRepairPanel siteName={siteName} rawErrors={rawErrors} />
-            </TabsProvider>
-          </SidebarInset>
-        </SidebarProvider>
+        <HeaderDataProvider initialIsAdminEmpty={adminEmpty}>
+          <SidebarProvider>
+            <OrgSidebar />
+            <SidebarInset>
+              <TabsProvider siteId="repair-mode">
+                <AdminHeader />
+                <ConfigRepairPanel siteName={siteName} rawErrors={rawErrors} />
+              </TabsProvider>
+            </SidebarInset>
+          </SidebarProvider>
+        </HeaderDataProvider>
       );
     }
     throw err;
