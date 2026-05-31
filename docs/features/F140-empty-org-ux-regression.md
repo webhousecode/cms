@@ -1,9 +1,36 @@
 # F140 — Empty-Org UX Regression
 
-**Status:** Planned
+**Status:** Fixed (2026-05-31) — render regression test deferred (dev server on :3010 was down this session)
 **Priority:** High (blocks new-org onboarding flow)
 **Identified:** 2026-04-30 (sanne-andersen migration session)
 **Reproduces on:** webhouse.app prod AND localhost:3010 (confirmed code bug, not state)
+
+## Resolution (2026-05-31)
+
+**Root cause:** the empty-org branch in `app/admin/(workspace)/layout.tsx`
+rendered `<AdminHeader />` directly inside `SidebarProvider` only. But
+`AdminHeader` reads `useWorkspace()` + `useHeaderData()`, and the normal path
+(`WorkspaceShell`) wraps the header in `WorkspaceProvider` + `HeaderDataProvider`.
+The empty-org shell omitted both providers, so those contexts returned their
+null/default values → UserMenu (gravatar, account prefs, org settings) and
+OrgSwitcher ("+ New org", "All orgs") rendered empty and the user got stuck
+in the empty org with no way out.
+
+**Fix:** wrap the empty-org shell in the same `WorkspaceProvider`
+(`initialUser={user}`, `initialOrg={org}`, `initialSite={null}`) +
+`HeaderDataProvider` as `WorkspaceShell`. The header now has the user + org
+context it needs, so all user-scoped chrome returns. The sidebar stays the
+stripped `OrgSidebar` per plan scope (no point showing Posts/Pages when there
+are no sites). Surgical — only `layout.tsx` changed (2 imports + provider
+wrapping).
+
+**Out of scope (as planned):** the suspected per-org "lost admin role" lookup
+in the empty-org path is a separate concern and was not touched.
+
+**Test:** a render regression test (RTL/Playwright asserting the empty-org
+header keeps gravatar + org-switcher) is deferred — the :3010 dev server was
+down this session and the hard rule forbids restarting it without explicit
+permission.
 
 ## Problem
 
