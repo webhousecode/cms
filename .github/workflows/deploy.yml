@@ -47,7 +47,7 @@ jobs:
       - uses: superfly/flyctl-actions/setup-flyctl@master
 
       - name: Deploy to Fly.io
-        run: flyctl deploy --remote-only
+        run: flyctl deploy --remote-only --build-arg NEXT_PUBLIC_UPMETRICS_DSN="${{ vars.NEXT_PUBLIC_UPMETRICS_DSN }}"
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
