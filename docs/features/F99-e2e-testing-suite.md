@@ -106,7 +106,7 @@ import { SignJWT } from "jose";
 
 const JWT_SECRET = process.env.CMS_JWT_SECRET
   ?? process.env.JWT_SECRET
-  ?? "***REMOVED-JWT-SECRET***";
+  ?? "";
 
 type AuthFixtures = {
   authedPage: import("@playwright/test").Page;
@@ -193,7 +193,7 @@ export async function seedAndCleanup(page: Page, collection: string, slug: strin
 import { SignJWT } from "jose";
 
 const BASE = "http://localhost:3010";
-const SECRET = process.env.CMS_JWT_SECRET ?? "***REMOVED-JWT-SECRET***";
+const SECRET = process.env.CMS_JWT_SECRET ?? "";
 
 let cachedToken: string | null = null;
 

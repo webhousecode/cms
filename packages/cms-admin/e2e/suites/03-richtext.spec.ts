@@ -82,8 +82,7 @@ test.describe("Richtext editor content roundtrip", () => {
     const { SignJWT } = await import("jose");
     const JWT_SECRET =
       process.env.CMS_JWT_SECRET ??
-      process.env.JWT_SECRET ??
-      "***REMOVED-JWT-SECRET***";
+      process.env.JWT_SECRET ?? "";
 
     const context = await browser.newContext();
     const secret = new TextEncoder().encode(JWT_SECRET);

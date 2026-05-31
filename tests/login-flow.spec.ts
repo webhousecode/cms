@@ -38,7 +38,7 @@ test.describe("Login flow", () => {
 
     // Fill in credentials
     await page.fill('input[type="email"]', "cb@webhouse.dk");
-    await page.fill('input[type="password"]', "***REMOVED-PASSWORD***");
+    await page.fill('input[type="password"]', (process.env.CMS_DEV_PASSWORD ?? ""));
 
     // Submit
     await page.click('button[type="submit"]');

@@ -2,7 +2,7 @@ import { test, expect, Page } from "playwright/test";
 
 const BASE_URL = "http://localhost:3010";
 const EMAIL = "cb@webhouse.dk";
-const PASSWORD = "***REMOVED-PASSWORD***";
+const PASSWORD = (process.env.CMS_DEV_PASSWORD ?? "");
 
 /**
  * Registry data for verification:

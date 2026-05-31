@@ -9,7 +9,7 @@
 import { test, expect, type Page, type BrowserContext } from "@playwright/test";
 import { SignJWT } from "jose";
 
-const JWT_SECRET = "***REMOVED-JWT-SECRET***";
+const JWT_SECRET = process.env.CMS_JWT_SECRET ?? process.env.JWT_SECRET ?? "";
 const TEST_SLUG = "cms-chronicle-00-why-we-are-building-this";
 const COLLECTION = "posts";
 const UNIQUE_MARKER = `E2E-ROUNDTRIP-${Date.now()}`;

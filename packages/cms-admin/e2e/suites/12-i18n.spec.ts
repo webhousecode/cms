@@ -13,8 +13,7 @@ import { SignJWT } from "jose";
 // ── Custom fixture with Examples/Simple Blog org/site cookies ────
 
 const JWT_SECRET =
-  process.env.CMS_JWT_SECRET ??
-  "***REMOVED-JWT-SECRET***";
+  process.env.CMS_JWT_SECRET ?? "";
 
 // Use "dev-token" sub which bypasses team lookup in require-role.ts
 const test = base.extend({

@@ -104,7 +104,7 @@ import { test as base } from "@playwright/test";
 
 const BASE_URL = "http://localhost:3010";
 const EMAIL = "cb@webhouse.dk";
-const PASSWORD = "***REMOVED-PASSWORD***";
+const PASSWORD = (process.env.CMS_DEV_PASSWORD ?? "");
 
 async function loginWithCredentials(page: import("@playwright/test").Page) {
   await page.goto(`${BASE_URL}/admin/login`, { waitUntil: "domcontentloaded" });

@@ -13,8 +13,7 @@ import { SignJWT } from "jose";
 const BASE = process.env.TEST_BASE_URL ?? "http://localhost:3010";
 const SECRET =
   process.env.CMS_JWT_SECRET ??
-  process.env.JWT_SECRET ??
-  "***REMOVED-JWT-SECRET***";
+  process.env.JWT_SECRET ?? "";
 
 let cachedToken: string | null = null;
 

@@ -14,7 +14,7 @@ test("local login flow", async ({ page }) => {
   console.log(`[page loaded] ${page.url()}`);
 
   await page.fill('input[type="email"]', "cb@webhouse.dk");
-  await page.fill('input[type="password"]', "***REMOVED-PASSWORD***");
+  await page.fill('input[type="password"]', (process.env.CMS_DEV_PASSWORD ?? ""));
   await page.click('button[type="submit"]');
 
   await page.waitForTimeout(8000);

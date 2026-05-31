@@ -36,7 +36,7 @@ async function main() {
   const page = await context.newPage();
   console.log("  🔑 Logging in via API...");
   const loginRes = await page.request.post(`${BASE}/api/auth/login`, {
-    data: { email: "cb@webhouse.dk", password: "***REMOVED-PASSWORD***" },
+    data: { email: "cb@webhouse.dk", password: (process.env.CMS_DEV_PASSWORD ?? "") },
   });
   if (!loginRes.ok()) throw new Error(`Login failed: ${loginRes.status()}`);
   console.log("  ✅ Logged in");

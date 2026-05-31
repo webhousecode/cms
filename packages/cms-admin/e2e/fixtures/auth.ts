@@ -13,8 +13,7 @@ import { SignJWT } from "jose";
 
 const JWT_SECRET =
   process.env.CMS_JWT_SECRET ??
-  process.env.JWT_SECRET ??
-  "***REMOVED-JWT-SECRET***";
+  process.env.JWT_SECRET ?? "";
 
 type AuthFixtures = {
   authedPage: import("@playwright/test").Page;

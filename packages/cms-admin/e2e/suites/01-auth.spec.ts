@@ -73,8 +73,7 @@ import { SignJWT } from "jose";
 
 const JWT_SECRET =
   process.env.CMS_JWT_SECRET ??
-  process.env.JWT_SECRET ??
-  "***REMOVED-JWT-SECRET***";
+  process.env.JWT_SECRET ?? "";
 
 const viewerTest = base.extend<{ viewerPage: import("@playwright/test").Page }>({
   viewerPage: async ({ page, context }, use) => {

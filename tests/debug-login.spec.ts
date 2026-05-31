@@ -37,7 +37,7 @@ test("debug login - trace every step", async ({ page, context }) => {
   // Step 3: Fill and submit
   console.log("\n=== STEP 3: Fill and submit ===");
   await page.fill('input[type="email"]', "cb@webhouse.dk");
-  await page.fill('input[type="password"]', "***REMOVED-PASSWORD***");
+  await page.fill('input[type="password"]', (process.env.CMS_DEV_PASSWORD ?? ""));
   await page.click('button[type="submit"]');
 
   // Step 4: Watch what happens
