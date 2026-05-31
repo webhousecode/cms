@@ -45,6 +45,11 @@ FROM deps AS builder
 
 COPY . .
 
+# Upmetrics DSN (public, not a secret) from a gh repo Variable via build-arg →
+# Next inlines NEXT_PUBLIC_UPMETRICS_DSN into the cms-admin client bundle.
+ARG NEXT_PUBLIC_UPMETRICS_DSN=""
+ENV NEXT_PUBLIC_UPMETRICS_DSN=$NEXT_PUBLIC_UPMETRICS_DSN
+
 # BuildKit cache mounts for tsup + Next.js incremental caches.
 # When only cms-admin source changed, the unchanged workspace packages
 # (cms, cms-ai, cms-mcp-*) reuse their tsup output instead of rebuilding.
