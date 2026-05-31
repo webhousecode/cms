@@ -315,8 +315,8 @@ importers:
         specifier: ^3.0.0
         version: 3.0.0
       '@upmetrics/sdk':
-        specifier: ^0.1.0
-        version: 0.1.0
+        specifier: ^0.1.1
+        version: 0.1.1
       '@webhouse/cms':
         specifier: workspace:*
         version: link:../cms
@@ -2998,8 +2998,8 @@ packages:
   '@types/ws@8.18.1':
     resolution: {integrity: sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg==}
 
-  '@upmetrics/sdk@0.1.0':
-    resolution: {integrity: sha512-MY7TptSYjuw0bNqNe5Pm4e5+cS9zKCHfC0tBpA8P4qy/h7xP/V51nX95+Ro9q4i6E2sDrcnA4vuuEdF9jH0UnQ==}
+  '@upmetrics/sdk@0.1.1':
+    resolution: {integrity: sha512-g3BydhDlSrZ8Jajkk3VrhuD/DZxKRxOfAeTHr/Fhgxliu02vz6gL5pd+cjZkc2U6nKVJvi9n6QzaaPu92Ut+Bg==}
 
   '@vercel/oidc@3.1.0':
     resolution: {integrity: sha512-Fw28YZpRnA3cAHHDlkt7xQHiJ0fcL+NRcIqsocZQUSmbzeIKRpwttJjik5ZGanXP+vlA4SbTg+AbA3bP363l+w==}
@@ -8895,7 +8895,7 @@ snapshots:
     dependencies:
       '@types/node': 22.19.15
 
-  '@upmetrics/sdk@0.1.0': {}
+  '@upmetrics/sdk@0.1.1': {}
 
   '@vercel/oidc@3.1.0': {}
 
