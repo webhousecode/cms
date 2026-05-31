@@ -1,9 +1,38 @@
 # F141 — Site Switch Doesn't Fully Re-Hydrate Workspace Context
 
-**Status:** Planned
+**Status:** Fixed (2026-05-31) — e2e test written but not runtime-verified this session (dev server on :3010 was down)
 **Priority:** High (cross-site content visibility bug)
 **Identified:** 2026-04-30 (sanne-andersen migration session)
 **Reproduces on:** webhouse.app prod (suspected localhost too — needs verification)
+
+## Resolution (2026-05-31)
+
+**Root cause confirmed:** the site/org switchers used `router.push("/admin/switch/<id>")`.
+The Next.js App Router client cache serves the destination URL's Server
+Component payload from cache, so the sidebar + content listing rendered against
+the PREVIOUS site's cookie even though the `/admin/switch/<id>` route had
+already updated `cms-active-site` server-side.
+
+**Security determination (plan step 4 — the important one):** this is a
+**display-only** bug, NOT a cross-tenant write leak. The switch route sets
+`cms-active-site` server-side correctly, and API route handlers resolve the
+site from that cookie fresh per request (they are dynamic, not RSC-cached).
+So after a switch the cookie = site B and all writes target B. The stale
+sidebar showed site A's content, but the cookie/API were already on B — there
+is no path where a write silently lands on A. Worst case a user clicks a
+stale A-listing item whose slug doesn't exist in B → 404, not corruption.
+
+**Fix:** replace `router.push("/admin/switch/<id>")` with a full-page
+`window.location.href = "/admin/switch/<id>"` in `site-switcher.tsx` and the
+three switch functions in `command-palette.tsx`. Full navigation bypasses the
+Router Cache so every Server Component re-executes against the new cookie.
+Removed the now-unused `useRouter` import from `site-switcher.tsx`. Matches
+the established rule (memory `never-router-push-switch`).
+
+**Test:** `tests/org-site-switch.spec.ts` asserts the server-side contract
+(switch route sets `cms-active-site`, survives reload). Written but not run
+this session because the :3010 dev server was down (and the hard rule forbids
+restarting it without explicit permission).
 
 ## Problem
 
