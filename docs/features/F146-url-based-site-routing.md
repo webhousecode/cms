@@ -1,6 +1,30 @@
 ## F146 — URL-Based Site Routing
 
+**Status:** Shipped 2026-06-01 (core + sidebar + tests). Live on webhouse.app.
+
 > Move active-site state from a session cookie into the URL path so admin pages live under `/admin/{site-slug}/...`. Stable per-site URLs, parallel-tab editing of multiple sites, no more "wait, which site am I on?" moments.
+
+## Shipped (2026-06-01)
+
+Built via the **proxy-rewrite** approach (NOT the 25-folder move originally
+sketched below) — far lower risk, no big-bang link codemod.
+
+| Commit | Scope |
+|--------|-------|
+| `4ad306b3` | Core: `lib/site-slug-routing.ts` (reserved set + parse + `siteAdminPath`), proxy.ts slug-resolution + cookie-injection + rewrite, **strip existing cms-active-* before inject** so URL wins over a duplicate cookie. 13 unit tests. |
+| `1a58a305` | `switchSite()` navigates to `/admin/{slug}`. |
+| `d1fff35a` | Sidebar nav links slug-prefixed via `useActiveSiteSlug()`/`useSiteLink()`; slug stripped before `isActive` checks. |
+| `91345587` | Live :3010 integration tests (URL-wins-over-cookie, no-slug fallback, unknown→307, reserved→200, F140 empty-org renders). |
+
+Verified live: `/admin/trail/settings` → Trail, `/admin/sanneandersen/settings`
+→ Sanne Andersen; URL slug beats a conflicting cookie in all cross-site cases;
+prod webhouse.app `/admin/{slug}` returns 307→login (slug recognised) not 500.
+
+**Remaining (optional, low-priority):** the other ~33 static `/admin/...`
+links outside the sidebar (settings panels, agent pages, dashboard cards) still
+emit unscoped paths. They work fine via the cookie fallback — migrating them to
+`useSiteLink()` is pure URL-prettiness, do it opportunistically. Site-slug ==
+collection-name ambiguity rule stands: first segment is always the site.
 
 ## Implementation notes (discovery 2026-05-31 — read before building)
 
