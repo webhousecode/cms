@@ -159,7 +159,7 @@
 | F143 | [Common Build Server](#f143-common-build-server) | Planned | [docs/features/F143-common-build-server.md](features/F143-common-build-server.md) |
 | F144 | [Dynamic Site Build Orchestrator](#f144-dynamic-site-build-orchestrator) | Planned | [docs/features/F144-dynamic-site-build-orchestrator.md](features/F144-dynamic-site-build-orchestrator.md) |
 | F145 | [ICD — Instant Content Deployment](#f145-icd-instant-content-deployment) | Core shipped, polish planned | [docs/features/F145-icd-instant-content-deployment.md](features/F145-icd-instant-content-deployment.md) |
-| F146 | [URL-Based Site Routing](#f146-url-based-site-routing) | Planned (small bridge shipped) | [docs/features/F146-url-based-site-routing.md](features/F146-url-based-site-routing.md) |
+| F146 | [URL-Based Site Routing](#f146-url-based-site-routing) | Shipped 2026-06-01 | [docs/features/F146-url-based-site-routing.md](features/F146-url-based-site-routing.md) |
 | F147 | [Webapp Blueprint Contract](#f147-webapp-blueprint-contract) | Planned | [docs/features/F147-webapp-blueprint.md](features/F147-webapp-blueprint.md) |
 | F148 | [Web Application Server (broberg-app)](#f148-web-application-server-broberg-app) | Reborn as F149 P10 | [docs/features/F148-web-application-server.md](features/F148-web-application-server.md) |
 | F149 | [Web App SDK (`@webhouse/*`)](#f149-web-app-sdk-webhouse) | Planned | [docs/features/F149-web-app-sdk.md](features/F149-web-app-sdk.md) |
