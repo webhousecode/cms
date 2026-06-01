@@ -12,6 +12,8 @@
  * 4. Hard-navigate via window.location.href (bypasses Next.js Router Cache)
  */
 
+import { siteAdminPath } from "./site-slug-routing";
+
 function setCookie(name: string, value: string) {
   document.cookie = `${name}=${encodeURIComponent(value)};path=/;max-age=${60 * 60 * 24 * 365};samesite=lax`;
 }
@@ -30,14 +32,18 @@ function persistProfile(orgId: string, siteId: string | null) {
 
 /**
  * Switch to a different site within the current or specified org.
- * Navigates to /admin (dashboard) via hard reload.
+ * Navigates to the site's URL-scoped dashboard `/admin/{siteId}` via hard
+ * reload (F146 — siteId is the URL slug). The cookie is still set as a
+ * fallback for cookie-only callers (mobile, login redirect). Pass an
+ * explicit `destination` (an unscoped /admin path) to land on a specific
+ * page — it gets slug-prefixed automatically.
  */
 export function switchSite(siteId: string, orgId: string, destination = "/admin") {
   setCookie("cms-active-site", siteId);
   setCookie("cms-active-org", orgId);
   sessionStorage.setItem("site-switched", "1");
   persistProfile(orgId, siteId);
-  window.location.href = destination;
+  window.location.href = siteAdminPath(destination, siteId);
 }
 
 /**

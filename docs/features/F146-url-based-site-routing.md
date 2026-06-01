@@ -2,6 +2,44 @@
 
 > Move active-site state from a session cookie into the URL path so admin pages live under `/admin/{site-slug}/...`. Stable per-site URLs, parallel-tab editing of multiple sites, no more "wait, which site am I on?" moments.
 
+## Implementation notes (discovery 2026-05-31 — read before building)
+
+A session started this and surfaced two findings that change the recommended approach. No code was written (the discovery showed it needs a fresh, full-context session). Captured here so it isn't lost:
+
+**1. Prefer proxy-rewrite over physically moving 25 route folders.**
+`proxy.ts` already does exactly the needed pattern for `?site=` on `/api/*`:
+it resolves the target site and injects `cms-active-org` + `cms-active-site`
+cookies on the forwarded request (lines ~83-105). The clean way to do F146 is
+to extend that: in `proxy.ts`, detect `/admin/{slug}/...` where `{slug}` is a
+known registry site, inject the cookies, and `NextResponse.rewrite()` back to
+`/admin/...` (slug stripped). The browser keeps the pretty `/admin/{slug}/`
+URL; Next renders the existing routes unchanged. This gives all 5 acceptance
+criteria **without** moving a single folder or running the 22-file link codemod
+up front (links can be migrated incrementally via a `siteAdminPath()` helper).
+Far lower risk than the folder-move described below.
+
+**2. BLOCKER to resolve first: `/admin/[collection]` is a legacy catch-all.**
+`app/admin/(workspace)/[collection]/page.tsx` is a legacy redirect that turns
+`/admin/{X}` into `/admin/content/{X}`. So `/admin/trail` today means "redirect
+to collection 'trail'", which **collides** with treating `{slug}` as a site.
+The rewrite approach resolves it by precedence (proxy checks "is `{slug}` a
+known site?" before Next routing runs, so a real site slug wins; non-site
+first-segments fall through to the legacy redirect). But there's a genuine
+ambiguity to design around: **a site slug that equals a collection name**
+(e.g. site "blog" vs collection "blog"). Decide the rule explicitly — current
+recommendation: first URL segment is always the site; collections are only
+reachable at `/admin/{site}/content/{collection}`.
+
+**Reserved first-segments** (must NOT be treated as a site slug): `account
+agents approve backup command content curation deploy favorites forms
+interactives lighthouse link-checker log media organizations performance
+preview scheduled seo settings sites trash visibility` + `goto switch` + the
+`(auth)` pages. Build this set from the filesystem so it stays in sync.
+
+**Verification requires the :3010 dev server (HTTPS).** Probe with
+`curl -skS https://localhost:3010/...` — it serves HTTPS via mkcert, plain
+`http://` returns an empty reply that looks like a crash but isn't.
+
 ## Problem
 
 Today the active site is implicit:

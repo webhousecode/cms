@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify, SignJWT } from "jose";
+import { parseSiteSlugPath } from "./lib/site-slug-routing";
 
 const COOKIE_NAME = "cms-session";
 
@@ -17,6 +18,23 @@ const PUBLIC_PATHS = [
 const PUBLIC_PREFIXES_ADMIN = [
   "/admin/invite/", // Public invite accept pages
 ];
+
+/**
+ * Remove any cms-active-org / cms-active-site pairs from a Cookie header
+ * string. Used before injecting fresh values so a URL slug (or ?site=)
+ * can't lose to a duplicate same-named cookie that the parser resolves
+ * to the stale FIRST occurrence.
+ */
+function stripActiveSiteCookies(cookieHeader: string): string {
+  if (!cookieHeader) return "";
+  return cookieHeader
+    .split(/;\s*/)
+    .filter((c) => {
+      const name = c.split("=")[0]?.trim();
+      return name !== "cms-active-org" && name !== "cms-active-site";
+    })
+    .join("; ");
+}
 
 const PUBLIC_PREFIXES = [
   "/api/auth/",
@@ -58,6 +76,50 @@ export async function proxy(request: NextRequest) {
   const isApi = pathname.startsWith("/api/");
   if (!isAdminPath && !isApi) return NextResponse.next();
 
+  // ── F146: URL-based site routing ──────────────────────────────────────
+  // `/admin/{slug}/...` carries the active site in the URL so parallel tabs,
+  // bookmarks, and shared links all resolve to the right site (cookie was a
+  // single global before → tab tug-of-war). When the first segment is a known
+  // registry site, inject cms-active-* cookies AND rewrite the URL back to
+  // `/admin/...` so the existing route tree renders unchanged. The browser
+  // keeps the pretty `/admin/{slug}/` URL. Reserved segments (content,
+  // settings, …) and unknown slugs fall through untouched.
+  let slugRewriteUrl: URL | null = null;
+  if (isAdminPath) {
+    const parsed = parseSiteSlugPath(pathname);
+    if (parsed) {
+      const { loadRegistry, findSite } = await import("./lib/site-registry");
+      const registry = await loadRegistry();
+      if (registry) {
+        for (const org of registry.orgs) {
+          if (findSite(registry, org.id, parsed.slug)) {
+            // STRIP any existing cms-active-* before injecting — appending a
+            // second cms-active-site=… leaves two cookies of the same name and
+            // the cookie parser keeps the FIRST (the stale one), so the URL
+            // slug would lose to the cookie. The URL must always win.
+            const cleaned = stripActiveSiteCookies(requestHeaders.get("cookie") ?? "");
+            const injected = `cms-active-org=${org.id}; cms-active-site=${parsed.slug}`;
+            requestHeaders.set("cookie", cleaned ? `${cleaned}; ${injected}` : injected);
+            // Rewrite to the slug-stripped path so existing routes render.
+            slugRewriteUrl = new URL(parsed.rest, request.url);
+            slugRewriteUrl.search = request.nextUrl.search;
+            requestHeaders.set("x-pathname", parsed.rest);
+            break;
+          }
+        }
+      }
+    }
+  }
+
+  // Forward the (authenticated) request to the app. When a site slug was
+  // resolved above we rewrite to the slug-stripped path; otherwise pass
+  // through unchanged. Both carry the augmented requestHeaders (cookies +
+  // x-pathname). All success-paths below go through this.
+  const forwardOk = () =>
+    slugRewriteUrl
+      ? NextResponse.rewrite(slugRewriteUrl, { request: { headers: requestHeaders } })
+      : NextResponse.next({ request: { headers: requestHeaders } });
+
   // `?site=<id>` URL override for /api/* routes.
   //
   // Before this lived in proxy: every /api/* route that touched per-site
@@ -97,7 +159,9 @@ export async function proxy(request: NextRequest) {
     }
   }
   if (siteOverrideCookies.length > 0) {
-    const existing = requestHeaders.get("cookie") ?? "";
+    // Strip first (same reason as the slug path): a token caller could in
+    // principle send a cms-active-* cookie that would otherwise shadow ?site=.
+    const existing = stripActiveSiteCookies(requestHeaders.get("cookie") ?? "");
     requestHeaders.set(
       "cookie",
       existing ? `${existing}; ${siteOverrideCookies.join("; ")}` : siteOverrideCookies.join("; "),
@@ -129,7 +193,7 @@ export async function proxy(request: NextRequest) {
       if (activeOrg) extras.push(`cms-active-org=${activeOrg}`);
       if (activeSite) extras.push(`cms-active-site=${activeSite}`);
       requestHeaders.set("cookie", `${existingCookies}; ${extras.join("; ")}`);
-      return NextResponse.next({ request: { headers: requestHeaders } });
+      return forwardOk();
     }
   }
 
@@ -149,7 +213,7 @@ export async function proxy(request: NextRequest) {
         .sign(getJwtSecret());
       const existingCookies = requestHeaders.get("cookie") ?? "";
       requestHeaders.set("cookie", `${existingCookies}; ${COOKIE_NAME}=${jwt}`);
-      return NextResponse.next({ request: { headers: requestHeaders } });
+      return forwardOk();
     }
 
     // wh_ access tokens — created in Account Preferences → Access Tokens
@@ -171,7 +235,7 @@ export async function proxy(request: NextRequest) {
           const innerHeaders = new Headers(requestHeaders);
           const existingCookies = requestHeaders.get("cookie") ?? "";
           requestHeaders.set("cookie", `${existingCookies}; ${COOKIE_NAME}=${jwt}`);
-          return NextResponse.next({ request: { headers: requestHeaders } });
+          return forwardOk();
         }
       } catch {
         // Token verification failed — fall through to cookie auth
@@ -198,7 +262,7 @@ export async function proxy(request: NextRequest) {
 
   try {
     await jwtVerify(token, getJwtSecret());
-    return NextResponse.next({ request: { headers: requestHeaders } });
+    return forwardOk();
   } catch (err) {
     // RSC prefetch with invalid token — don't redirect, just reject silently
     const isRsc = request.headers.get("rsc") === "1" || request.nextUrl.searchParams.has("_rsc");
