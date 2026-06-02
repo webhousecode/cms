@@ -261,6 +261,7 @@ function SidebarTrigger({
 
   return (
     <Button
+      data-testid="sidebar-trigger"
       data-sidebar="trigger"
       data-slot="sidebar-trigger"
       variant="ghost"
@@ -283,6 +284,7 @@ function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
 
   return (
     <button
+      data-testid="sidebar-rail"
       data-sidebar="rail"
       data-slot="sidebar-rail"
       aria-label="Toggle Sidebar"

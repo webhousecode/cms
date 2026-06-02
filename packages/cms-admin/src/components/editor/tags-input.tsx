@@ -41,6 +41,7 @@ export function TagsInput({ value, onChange, disabled }: Props) {
           #{tag}
           {!disabled && (
             <button
+              data-testid="tags-remove-button"
               onClick={(e) => {
                 e.stopPropagation();
                 removeTag(tag);
@@ -54,6 +55,7 @@ export function TagsInput({ value, onChange, disabled }: Props) {
       ))}
       {!disabled && (
         <input
+          data-testid="tags-input"
           ref={inputRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}

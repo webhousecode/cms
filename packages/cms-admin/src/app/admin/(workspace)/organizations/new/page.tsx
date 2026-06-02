@@ -69,6 +69,7 @@ export default function NewOrganizationPage() {
           <div>
             <label style={{ fontSize: "0.85rem", fontWeight: 600, display: "block", marginBottom: "0.35rem" }}>Name</label>
             <input
+              data-testid="org-new-name-input"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -137,6 +138,7 @@ export default function NewOrganizationPage() {
           {/* Actions */}
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", paddingTop: "0.5rem", borderTop: "1px solid var(--border)" }}>
             <button
+              data-testid="org-new-cancel-button"
               type="button"
               onClick={() => router.push("/admin/organizations")}
               style={{
@@ -148,6 +150,7 @@ export default function NewOrganizationPage() {
               Cancel
             </button>
             <button
+              data-testid="org-new-submit-button"
               type="button"
               onClick={handleCreate}
               disabled={creating || !name.trim()}

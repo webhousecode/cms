@@ -136,6 +136,7 @@ export function ImageGalleryEditor({ value: rawValue = [], onChange, disabled }:
       {!disabled && (
         <div style={{ display: "flex", gap: "0.35rem" }}>
           <button
+            data-testid="gallery-browse-media"
             type="button"
             onClick={() => setMediaBrowserOpen(true)}
             style={actionBtnStyle}
@@ -145,6 +146,7 @@ export function ImageGalleryEditor({ value: rawValue = [], onChange, disabled }:
             Browse Media
           </button>
           <button
+            data-testid="gallery-add-url"
             type="button"
             onClick={() => setShowUrlInput(!showUrlInput)}
             style={actionBtnStyle}
@@ -160,6 +162,7 @@ export function ImageGalleryEditor({ value: rawValue = [], onChange, disabled }:
       {showUrlInput && (
         <div style={{ display: "flex", gap: "0.35rem" }}>
           <input
+            data-testid="gallery-url-input"
             type="url"
             value={urlInputValue}
             onChange={(e) => setUrlInputValue(e.target.value)}
@@ -179,6 +182,7 @@ export function ImageGalleryEditor({ value: rawValue = [], onChange, disabled }:
             }}
           />
           <button
+            data-testid="gallery-url-add"
             type="button"
             onClick={() => {
               if (urlInputValue.trim()) {
@@ -211,12 +215,12 @@ export function ImageGalleryEditor({ value: rawValue = [], onChange, disabled }:
                 <ImageIcon style={{ width: 16, height: 16, display: "inline", verticalAlign: "text-bottom", marginRight: "0.4rem" }} />
                 Media Library
               </span>
-              <button type="button" onClick={() => setMediaBrowserOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.25rem" }}>
+              <button data-testid="media-browser-close" type="button" onClick={() => setMediaBrowserOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.25rem" }}>
                 <X style={{ width: 16, height: 16 }} />
               </button>
             </div>
             <div style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid var(--border)" }}>
-              <input type="text" value={mediaSearch} onChange={(e) => setMediaSearch(e.target.value)} placeholder="Search images…" autoFocus
+              <input data-testid="media-search-input" type="text" value={mediaSearch} onChange={(e) => setMediaSearch(e.target.value)} placeholder="Search images…" autoFocus
                 style={{ width: "100%", padding: "0.35rem 0.5rem", borderRadius: "6px", border: "1px solid var(--border)", background: "color-mix(in srgb, var(--input) 30%, var(--background))", color: "var(--foreground)", fontSize: "0.8rem", outline: "none" }} />
             </div>
             <div style={{ overflowY: "auto", padding: "0.75rem" }}>
@@ -225,7 +229,7 @@ export function ImageGalleryEditor({ value: rawValue = [], onChange, disabled }:
               {!mediaLoading && mediaItems.length > 0 && (
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))", gap: "0.5rem" }}>
                   {mediaItems.filter((item) => !mediaSearch || item.name.toLowerCase().includes(mediaSearch.toLowerCase())).map((item) => (
-                    <button key={item.url} type="button" onClick={() => {
+                    <button data-testid={`media-item-${item.name}`} key={item.url} type="button" onClick={() => {
                       let storedUrl = item.url;
                       try { storedUrl = new URL(item.url).pathname; } catch { /* already relative */ }
                       onChange([...value, { url: storedUrl, alt: item.name.replace(/\.[^.]+$/, "") }]);

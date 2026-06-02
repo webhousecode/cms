@@ -220,6 +220,7 @@ export default function EventLogPage() {
         actions={
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <button
+              data-testid="log-refresh-button"
               type="button"
               onClick={load}
               disabled={loading}
@@ -236,6 +237,7 @@ export default function EventLogPage() {
               Refresh
             </button>
             <button
+              data-testid="log-export-csv-button"
               type="button"
               onClick={() => exportLog("csv")}
               title="Export filtered events as CSV (for GDPR data requests)"
@@ -251,6 +253,7 @@ export default function EventLogPage() {
               CSV
             </button>
             <button
+              data-testid="log-export-json-button"
               type="button"
               onClick={() => exportLog("json")}
               title="Export filtered events as JSON"

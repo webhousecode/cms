@@ -92,6 +92,7 @@ export function ArtifactCard({ title, html }: ArtifactCardProps) {
             { id: "code" as const, label: "Code", icon: Code },
           ]).map(({ id, label, icon: Icon }) => (
             <button
+              data-testid={`artifact-tab-${id}`}
               key={id}
               onClick={() => setTab(id)}
               style={{
@@ -137,6 +138,7 @@ export function ArtifactCard({ title, html }: ArtifactCardProps) {
       ) : (
         <div style={{ position: "relative" }}>
           <button
+            data-testid="artifact-code-copy"
             onClick={handleCopy}
             style={{
               position: "absolute",
@@ -190,6 +192,7 @@ export function ArtifactCard({ title, html }: ArtifactCardProps) {
         }}
       >
         <button
+          data-testid="artifact-save-button"
           onClick={handleSave}
           disabled={saving || saved}
           style={{
@@ -218,6 +221,7 @@ export function ArtifactCard({ title, html }: ArtifactCardProps) {
         </button>
 
         <button
+          data-testid="artifact-download-button"
           onClick={handleDownload}
           style={{
             display: "flex",

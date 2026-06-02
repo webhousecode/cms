@@ -479,6 +479,7 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
         <div style={{ position: "relative", flex: "1", minWidth: "180px" }}>
           <Search style={{ position: "absolute", left: "0.625rem", top: "50%", transform: "translateY(-50%)", width: "0.8rem", height: "0.8rem", color: "var(--muted-foreground)", pointerEvents: "none" }} />
           <input
+            data-testid="collection-search-input"
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -489,6 +490,7 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
         <div style={{ display: "flex", gap: "0.25rem", flexWrap: "wrap" }}>
           {filterOptions.map((opt) => (
             <button
+              data-testid={`filter-${opt.value}`}
               key={opt.value}
               type="button"
               onClick={() => setStatusFilter(opt.value)}
@@ -515,6 +517,7 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
               ...siteLocales.map((l) => ({ value: l, label: `${LOCALE_FLAGS[l] ?? ""} ${l.toUpperCase()}` })),
             ].map((opt) => (
               <button
+                data-testid={`locale-filter-${opt.value}`}
                 key={opt.value}
                 type="button"
                 onClick={() => setLocaleFilter(opt.value)}

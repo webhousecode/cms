@@ -134,6 +134,7 @@ export function FavoritesList() {
         {/* Type filter */}
         <div style={{ display: "flex", gap: "0.25rem", alignItems: "center" }}>
           <button
+            data-testid="favorites-filter-all"
             type="button"
             onClick={() => setTypeFilter("all")}
             style={{
@@ -148,6 +149,7 @@ export function FavoritesList() {
           </button>
           {types.map((t) => (
             <button
+              data-testid={`favorites-filter-${t}`}
               key={t}
               type="button"
               onClick={() => setTypeFilter(t)}
@@ -168,6 +170,7 @@ export function FavoritesList() {
         <div style={{ display: "flex", border: "1px solid var(--border)", borderRadius: "6px", overflow: "hidden" }}>
           {(["grid", "list"] as ViewMode[]).map((v) => (
             <button
+              data-testid={`favorites-view-toggle-${v}`}
               key={v}
               type="button"
               onClick={() => setView(v)}
@@ -242,6 +245,7 @@ export function FavoritesList() {
                     </td>
                     <td style={{ padding: "0.625rem 0.5rem", whiteSpace: "nowrap", textAlign: "right" }}>
                       <button
+                        data-testid={`favorites-remove-${fav.id}`}
                         type="button"
                         onClick={() => remove(fav.path)}
                         title="Remove from favorites"
@@ -338,6 +342,7 @@ export function FavoritesList() {
                   </div>
                 </Link>
                 <button
+                  data-testid={`favorites-remove-grid-${fav.id}`}
                   type="button"
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); remove(fav.path); }}
                   title="Remove from favorites"

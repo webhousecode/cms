@@ -106,6 +106,7 @@ export function AIPromptsPanel() {
             </div>
             <span className="flex items-center gap-1.5">
               <button
+                data-testid="ai-prompts-copy-button"
                 type="button"
                 onClick={() => { navigator.clipboard.writeText(p.value); setCopiedId(p.id); setTimeout(() => setCopiedId(null), 2000); }}
                 className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded border border-border"
@@ -117,13 +118,14 @@ export function AIPromptsPanel() {
               {confirmResetId === p.id ? (
                 <span className="flex items-center gap-1">
                   <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Reset?</span>
-                  <button type="button" onClick={() => { setConfirmResetId(null); resetPrompt(p.id); }}
+                  <button data-testid="ai-prompts-reset-confirm-button" type="button" onClick={() => { setConfirmResetId(null); resetPrompt(p.id); }}
                     style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
-                  <button type="button" onClick={() => setConfirmResetId(null)}
+                  <button data-testid="ai-prompts-reset-cancel-button" type="button" onClick={() => setConfirmResetId(null)}
                     style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
                 </span>
               ) : (
                 <button
+                  data-testid="ai-prompts-reset-button"
                   type="button"
                   onClick={() => setConfirmResetId(p.id)}
                   className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded border border-border"
@@ -136,6 +138,7 @@ export function AIPromptsPanel() {
             </span>
           </div>
           <textarea
+            data-testid="ai-prompts-textarea"
             value={p.value}
             onChange={(e) => {
               setPrompts((prev) =>

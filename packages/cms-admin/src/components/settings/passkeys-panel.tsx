@@ -156,12 +156,14 @@ export function PasskeysPanel() {
                   <>
                     <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
                     <button
+                      data-testid={`passkey-remove-yes-${p.id}`}
                       onClick={() => handleRemove(p.id)}
                       style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}
                     >
                       Yes
                     </button>
                     <button
+                      data-testid={`passkey-remove-no-${p.id}`}
                       onClick={() => setConfirmId(null)}
                       style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}
                     >
@@ -170,6 +172,7 @@ export function PasskeysPanel() {
                   </>
                 ) : (
                   <button
+                    data-testid={`passkey-remove-trigger-${p.id}`}
                     onClick={() => setConfirmId(p.id)}
                     style={{ fontSize: "0.7rem", padding: "0.1rem 0.4rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer" }}
                   >

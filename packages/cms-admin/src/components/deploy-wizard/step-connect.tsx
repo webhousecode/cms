@@ -84,6 +84,7 @@ export function StepConnect({ flyToken, flyOrg, onUpdate }: Props) {
           </label>
           <div style={{ display: "flex", gap: "0.5rem" }}>
             <input
+              data-testid="step-connect-token-input"
               type="password"
               value={flyToken}
               onChange={(e) => {
@@ -95,6 +96,7 @@ export function StepConnect({ flyToken, flyOrg, onUpdate }: Props) {
               style={{ ...inputStyle, flex: 1 }}
             />
             <button
+              data-testid="step-connect-verify-button"
               onClick={handleVerify}
               disabled={!flyToken || verifying}
               style={{
@@ -155,6 +157,7 @@ export function StepConnect({ flyToken, flyOrg, onUpdate }: Props) {
             <div style={{ display: "flex", flexDirection: "column", gap: "0.4rem" }}>
               {orgs.map((org) => (
                 <button
+                  data-testid={`step-connect-org-${org.slug}`}
                   key={org.slug}
                   onClick={() => onUpdate({ flyOrg: org.slug })}
                   type="button"

@@ -72,6 +72,7 @@ export function BeamProgressModal({ beamId, targetUrl, onClose, onMinimize }: Pr
 
   return (
     <div
+      data-testid="beam-progress-backdrop"
       role="dialog"
       aria-modal="true"
       style={{
@@ -83,6 +84,7 @@ export function BeamProgressModal({ beamId, targetUrl, onClose, onMinimize }: Pr
       onClick={(e) => { if (e.target === e.currentTarget && !done && !error) onMinimize(); }}
     >
       <div
+        data-testid="beam-progress-content"
         style={{
           background: "var(--card)",
           border: "1px solid var(--border)",
@@ -107,6 +109,7 @@ export function BeamProgressModal({ beamId, targetUrl, onClose, onMinimize }: Pr
           <div style={{ display: "flex", gap: "0.4rem" }}>
             {!done && !error && (
               <button
+                data-testid="beam-progress-minimize-button"
                 type="button"
                 onClick={onMinimize}
                 title="Run in background"
@@ -123,6 +126,7 @@ export function BeamProgressModal({ beamId, targetUrl, onClose, onMinimize }: Pr
               </button>
             )}
             <button
+              data-testid="beam-progress-close-button"
               type="button"
               onClick={onClose}
               title="Close"
@@ -192,6 +196,7 @@ export function BeamProgressModal({ beamId, targetUrl, onClose, onMinimize }: Pr
         {/* Actions on success */}
         {done && (
           <button
+            data-testid="beam-progress-done-button"
             type="button"
             onClick={onClose}
             style={{

@@ -247,6 +247,7 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
           of this site — content, media, config, agents, and settings. Secrets are automatically stripped.
         </p>
         <button
+          data-testid="beam-export-button"
           onClick={handleExport}
           disabled={exporting}
           style={{
@@ -304,6 +305,7 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
               Target URL
             </label>
             <input
+              data-testid="beam-target-url-input"
               type="url"
               value={targetUrl}
               onChange={(e) => setTargetUrl(e.target.value)}
@@ -325,6 +327,7 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
               Beam Token
             </label>
             <input
+              data-testid="beam-token-input"
               type="text"
               value={pushToken}
               onChange={(e) => setPushToken(e.target.value)}
@@ -345,6 +348,7 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
         </div>
 
         <button
+          data-testid="beam-push-button"
           onClick={handlePush}
           disabled={pushing || !targetUrl || !pushToken}
           style={{
@@ -459,6 +463,7 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
         </p>
 
         <button
+          data-testid="beam-generate-token-button"
           onClick={handleGenerateToken}
           disabled={generatingToken}
           style={{
@@ -493,6 +498,7 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
                 {beamToken.token}
               </code>
               <button
+                data-testid="beam-copy-token-button"
                 onClick={handleCopyToken}
                 style={{
                   display: "inline-flex",
@@ -547,6 +553,7 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
             }}
           />
           <button
+            data-testid="beam-choose-file-button"
             type="button"
             onClick={() => fileRef.current?.click()}
             style={{
@@ -566,6 +573,7 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
             {importFileName ?? "Choose .beam file…"}
           </button>
           <button
+            data-testid="beam-import-button"
             onClick={handleImport}
             style={{
               display: "inline-flex",

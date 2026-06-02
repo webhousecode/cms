@@ -33,6 +33,7 @@ function CopyButton({ text }: { text: string }) {
   }, [text]);
   return (
     <button
+      data-testid="markdown-copy-button"
       onClick={handleCopy}
       title="Copy"
       style={{
@@ -452,6 +453,7 @@ function DocPill({ collection, slug, variant }: { collection: string; slug: stri
   const label = variant === "edit" ? "Edit" : "View";
   return (
     <button
+      data-testid="markdown-doc-pill"
       type="button"
       onClick={async (e) => {
         e.preventDefault();
@@ -580,6 +582,7 @@ function InlineRich({ text }: { text: string }) {
         const formName = formMatch[1];
         parts.push(
           <button
+            data-testid="markdown-form-inbox-button"
             key={match.index}
             onClick={() => {
               window.dispatchEvent(new CustomEvent("cms:navigate-to-doc", { detail: { path: `/admin/forms/${formName}` } }));

@@ -63,7 +63,7 @@ function ThemeItems() {
         { value: "light" as const, label: "Light", icon: Sun },
         { value: "system" as const, label: "System", icon: Monitor },
       ]).map(({ value, label, icon: Icon }) => (
-        <DropdownMenuItem key={value} onClick={() => setBrightness(value)}>
+        <DropdownMenuItem data-testid={`theme-brightness-${value}`} key={value} onClick={() => setBrightness(value)}>
           <Icon className="mr-2 h-4 w-4" />
           {label}
           {brightness === value && <Check className="ml-auto h-4 w-4" />}
@@ -74,6 +74,7 @@ function ThemeItems() {
         <div style={{ display: "flex", borderRadius: "6px", border: "1px solid var(--border)", padding: "2px", gap: "2px" }}>
           {TEMP_OPTIONS.map(({ value, label }) => (
             <button
+              data-testid={`theme-temperature-${value}`}
               key={value}
               onClick={(e) => { e.stopPropagation(); setTemperature(value); }}
               style={{
@@ -113,7 +114,7 @@ function UserNav({ user }: { user: SessionUser | null }) {
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring bg-transparent border-0 p-0 cursor-pointer" aria-label={`User menu: ${displayName}`}>
+      <DropdownMenuTrigger data-testid="user-menu-trigger" className="rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring bg-transparent border-0 p-0 cursor-pointer" aria-label={`User menu: ${displayName}`}>
         <Avatar className="h-8 w-8">
           {user?.gravatarUrl && <AvatarImage src={user.gravatarUrl} alt={displayName} />}
           <AvatarFallback className="text-xs">
@@ -132,12 +133,12 @@ function UserNav({ user }: { user: SessionUser | null }) {
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem onClick={() => { window.dispatchEvent(new CustomEvent("cms:navigate-admin", { detail: { path: "/admin/account" } })); router.push("/admin/account"); }}>
+          <DropdownMenuItem data-testid="user-menu-account" onClick={() => { window.dispatchEvent(new CustomEvent("cms:navigate-admin", { detail: { path: "/admin/account" } })); router.push("/admin/account"); }}>
             <Settings className="mr-2 h-4 w-4" />
             Account Preferences
           </DropdownMenuItem>
           {can("settings.edit") && !isAdminEmpty && (
-            <DropdownMenuItem onClick={() => { window.dispatchEvent(new CustomEvent("cms:navigate-admin", { detail: { path: "/admin/settings" } })); router.push("/admin/settings"); }}>
+            <DropdownMenuItem data-testid="user-menu-site-settings" onClick={() => { window.dispatchEvent(new CustomEvent("cms:navigate-admin", { detail: { path: "/admin/settings" } })); router.push("/admin/settings"); }}>
               <Settings className="mr-2 h-4 w-4" />
               Site Settings
             </DropdownMenuItem>
@@ -147,7 +148,7 @@ function UserNav({ user }: { user: SessionUser | null }) {
             // currently shown org in the OrgSwitcher — no need to pass orgId
             // through the URL. Saves the user from clicking "All organizations"
             // → row → kebab → Settings just to tweak the active org.
-            <DropdownMenuItem onClick={() => { window.dispatchEvent(new CustomEvent("cms:navigate-admin", { detail: { path: "/admin/organizations/settings" } })); router.push("/admin/organizations/settings"); }}>
+            <DropdownMenuItem data-testid="user-menu-org-settings" onClick={() => { window.dispatchEvent(new CustomEvent("cms:navigate-admin", { detail: { path: "/admin/organizations/settings" } })); router.push("/admin/organizations/settings"); }}>
               <Building2 className="mr-2 h-4 w-4" />
               Organization Settings
             </DropdownMenuItem>
@@ -157,7 +158,7 @@ function UserNav({ user }: { user: SessionUser | null }) {
         <ThemeItems />
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem onClick={logout} className="text-muted-foreground">
+          <DropdownMenuItem data-testid="user-menu-logout" onClick={logout} className="text-muted-foreground">
             <LogOut className="mr-2 h-4 w-4" />
             Sign out
           </DropdownMenuItem>
@@ -516,6 +517,7 @@ function DeployButton() {
   if (showIcdPill) {
     return (
       <button
+        data-testid="deploy-icd-button"
         type="button"
         onClick={handleDeploy}
         disabled={deploying}
@@ -541,6 +543,7 @@ function DeployButton() {
   return (
     <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}>
     <button
+      data-testid="deploy-rocket-button"
       type="button"
       onClick={handleDeploy}
       disabled={deploying}
@@ -616,6 +619,7 @@ function BeamPill() {
 
   return (
     <button
+      data-testid="beam-pill-button"
       type="button"
       onClick={() => router.push(`/admin/settings?tab=beam&active=${activeBeamId}`)}
       title="Beam in progress — click to view"
@@ -687,6 +691,7 @@ function BuildButton() {
     <>
       <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
         <button
+          data-testid="build-button"
           type="button"
           onClick={() => setPanelOpen((o) => !o)}
           title="Build (b)"
@@ -708,6 +713,7 @@ function BuildButton() {
         </button>
         {hasMultipleProfiles && (
           <button
+            data-testid="build-profile-dropdown"
             type="button"
             onClick={() => setDropdownOpen((o) => !o)}
             title="Select build profile"
@@ -746,6 +752,7 @@ function BuildButton() {
           >
             {profiles.map((p) => (
               <button
+                data-testid={`build-profile-${p.name}`}
                 key={p.name}
                 type="button"
                 onClick={() => {
@@ -882,6 +889,7 @@ function PreviewButton() {
   if (!liveUrl) {
     return (
       <button
+        data-testid="preview-button"
         type="button"
         onClick={openPreview}
         style={{
@@ -903,6 +911,7 @@ function PreviewButton() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger
+        data-testid="preview-dropdown-trigger"
         style={{
           background: "none", border: "1.5px solid var(--border)",
           cursor: "pointer",
@@ -916,13 +925,14 @@ function PreviewButton() {
         <ExternalLink style={{ width: "0.9rem", height: "0.9rem" }} />
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" style={{ width: "200px" }}>
-        <DropdownMenuItem onClick={openPreview}>
+        <DropdownMenuItem data-testid="preview-dropdown-preview" onClick={openPreview}>
           <ExternalLink className="mr-2 h-4 w-4" />
           Preview
           {previewDown && <span className="ml-auto text-xs text-yellow-500">sirv</span>}
           {!previewDown && <span className="ml-auto text-xs text-muted-foreground">p</span>}
         </DropdownMenuItem>
         <DropdownMenuItem
+          data-testid="preview-dropdown-live"
           onClick={openLive}
           disabled={liveDown}
           style={liveDown

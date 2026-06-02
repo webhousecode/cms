@@ -116,6 +116,7 @@ export function MapEditor({ value, onChange, defaultCenter, defaultZoom, locked 
         <div style={{ position: "relative", flex: 1 }}>
           <MapPin style={{ position: "absolute", left: 8, top: "50%", transform: "translateY(-50%)", width: 14, height: 14, color: "var(--muted-foreground)" }} />
           <input
+            data-testid="map-editor-address-input"
             type="text"
             value={address}
             onChange={(e) => setAddress(e.target.value)}
@@ -126,6 +127,7 @@ export function MapEditor({ value, onChange, defaultCenter, defaultZoom, locked 
           />
         </div>
         <button
+          data-testid="map-editor-search-button"
           type="button"
           onClick={() => handleSearch(address)}
           disabled={searching || !address.trim() || locked}

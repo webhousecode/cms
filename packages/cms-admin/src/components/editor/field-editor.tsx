@@ -125,6 +125,7 @@ function MultiRelationPicker({ collection, value, onChange, disabled, documentLo
     <div ref={ref} style={{ position: "relative" }}>
       {/* chips + open button */}
       <div
+        data-testid="relation-multi-picker-toggle"
         onClick={() => !disabled && setOpen((o) => !o)}
         style={{
           display: "flex", flexWrap: "wrap", gap: "0.4rem", alignItems: "center",
@@ -146,6 +147,7 @@ function MultiRelationPicker({ collection, value, onChange, disabled, documentLo
             {labelFor(slug)}
             {!disabled && (
               <button
+                data-testid="relation-remove-chip-button"
                 type="button"
                 onClick={(e) => { e.stopPropagation(); removeSlug(slug); }}
                 style={{ background: "none", border: "none", cursor: "pointer", padding: 0, lineHeight: 1, color: "var(--muted-foreground)" }}
@@ -170,6 +172,7 @@ function MultiRelationPicker({ collection, value, onChange, disabled, documentLo
         }}>
           <div style={{ padding: "0.5rem" }}>
             <input
+              data-testid="relation-multi-search-field"
               autoFocus
               type="text"
               value={query}
@@ -192,6 +195,7 @@ function MultiRelationPicker({ collection, value, onChange, disabled, documentLo
             )}
             {filtered.map((opt) => (
               <button
+                data-testid="relation-multi-option-button"
                 key={opt.slug}
                 type="button"
                 onClick={() => addSlug(opt.slug)}
@@ -242,6 +246,7 @@ function RelationPicker({ collection, value, onChange, disabled, documentLocale 
   return (
     <div ref={ref} style={{ position: "relative", display: "inline-block", minWidth: "200px", maxWidth: "360px" }}>
       <button
+        data-testid="relation-single-picker-toggle"
         type="button"
         disabled={disabled}
         onClick={() => setOpen((o) => !o)}
@@ -268,6 +273,7 @@ function RelationPicker({ collection, value, onChange, disabled, documentLocale 
         }}>
           <div style={{ padding: "0.5rem" }}>
             <input
+              data-testid="relation-single-search-field"
               autoFocus
               type="text"
               value={query}
@@ -289,6 +295,7 @@ function RelationPicker({ collection, value, onChange, disabled, documentLocale 
             {/* Clear option */}
             {value && (
               <button
+                data-testid="relation-single-clear-button"
                 type="button"
                 onClick={() => { onChange(""); setOpen(false); setQuery(""); }}
                 style={{ width: "100%", textAlign: "left", padding: "0.5rem 1rem", fontSize: "0.8rem", color: "var(--muted-foreground)", background: "transparent", border: "none", cursor: "pointer" }}
@@ -298,6 +305,7 @@ function RelationPicker({ collection, value, onChange, disabled, documentLocale 
             )}
             {filtered.map((opt) => (
               <button
+                data-testid="relation-single-option-button"
                 key={opt.slug}
                 type="button"
                 onClick={() => { onChange(opt.slug); setOpen(false); setQuery(""); }}
@@ -355,13 +363,13 @@ function SimpleStringArray({ values, onChange, locked }: { values: string[]; onC
               {confirmIdx === i ? (
                 <>
                   <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
-                  <button type="button" onClick={() => { if (confirmTimer.current) clearTimeout(confirmTimer.current); setConfirmIdx(null); onChange(values.filter((_, j) => j !== i)); }}
+                  <button data-testid="string-array-delete-confirm-yes" type="button" onClick={() => { if (confirmTimer.current) clearTimeout(confirmTimer.current); setConfirmIdx(null); onChange(values.filter((_, j) => j !== i)); }}
                     style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
-                  <button type="button" onClick={() => { if (confirmTimer.current) clearTimeout(confirmTimer.current); setConfirmIdx(null); }}
+                  <button data-testid="string-array-delete-confirm-no" type="button" onClick={() => { if (confirmTimer.current) clearTimeout(confirmTimer.current); setConfirmIdx(null); }}
                     style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
                 </>
               ) : (
-                <button type="button" onClick={() => {
+                <button data-testid="string-array-delete-button" type="button" onClick={() => {
                   if (!item.trim()) { onChange(values.filter((_, j) => j !== i)); return; }
                   if (confirmTimer.current) clearTimeout(confirmTimer.current);
                   setConfirmIdx(i);
@@ -373,7 +381,7 @@ function SimpleStringArray({ values, onChange, locked }: { values: string[]; onC
         </div>
       ))}
       {!locked && (
-        <button type="button" onClick={() => onChange([...values, ""])}
+        <button data-testid="string-array-add-button" type="button" onClick={() => onChange([...values, ""])}
           style={{ alignSelf: "flex-start", background: "none", border: "1px dashed var(--border)", borderRadius: "5px", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "0.75rem", padding: "0.25rem 0.75rem", marginTop: "0.1rem" }}
           className="hover:border-primary hover:text-primary transition-colors"
         >
@@ -570,6 +578,7 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig, docu
           {!locked && (
             <div style={{ display: "flex", gap: "0.35rem" }}>
               <label
+                data-testid="image-field-upload-label"
                 title="Upload image"
                 style={{
                   display: "inline-flex", alignItems: "center", gap: "0.3rem",
@@ -585,6 +594,7 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig, docu
                 {imgUploading ? "..." : "Upload"}
               </label>
               <button
+                data-testid="image-field-browse-button"
                 type="button"
                 onClick={openMediaBrowser}
                 title="Browse Media"
@@ -646,6 +656,7 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig, docu
                     Media Library
                   </span>
                   <button
+                    data-testid="media-browser-close-button"
                     type="button"
                     onClick={() => setMediaBrowserOpen(false)}
                     style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.25rem" }}
@@ -656,6 +667,7 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig, docu
                 {/* Search */}
                 <div style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid var(--border)" }}>
                   <input
+                    data-testid="media-browser-search-field"
                     type="text"
                     value={mediaSearch}
                     onChange={(e) => setMediaSearch(e.target.value)}
@@ -689,6 +701,7 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig, docu
                     }}>
                       {mediaItems.filter((item) => !mediaSearch || item.name.toLowerCase().includes(mediaSearch.toLowerCase())).map((item) => (
                         <button
+                          data-testid="media-browser-item-button"
                           key={item.url}
                           type="button"
                           onClick={() => {

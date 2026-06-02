@@ -107,6 +107,7 @@ export default function SetupPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
             <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "hsl(0 0% 70%)" }}>Name</label>
             <input
+              data-testid="setup-name-input"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -122,6 +123,7 @@ export default function SetupPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
             <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "hsl(0 0% 70%)" }}>Email</label>
             <input
+              data-testid="setup-email-input"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -136,6 +138,7 @@ export default function SetupPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
             <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "hsl(0 0% 70%)" }}>Password</label>
             <input
+              data-testid="setup-password-input"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -153,6 +156,7 @@ export default function SetupPage() {
           )}
 
           <button
+            data-testid="setup-submit-button"
             type="submit"
             disabled={loading}
             style={{ padding: "0.6rem", borderRadius: "7px", border: "none", background: loading ? "hsl(0 0% 25%)" : "hsl(38 92% 50%)", color: loading ? "hsl(0 0% 50%)" : "hsl(38 30% 10%)", fontSize: "0.875rem", fontWeight: 600, cursor: loading ? "wait" : "pointer", marginTop: "0.25rem", transition: "opacity 150ms" }}
@@ -167,6 +171,7 @@ export default function SetupPage() {
           <div style={{ flex: 1, height: "1px", background: "hsl(0 0% 20%)" }} />
         </div>
         <a
+          data-testid="setup-github-link"
           href="/api/auth/github?login=true"
           style={{
             display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem",

@@ -103,6 +103,7 @@ export function InlineForm({ form, onSaved }: InlineFormProps) {
         }}
       >
         <button
+          data-testid="inline-form-save-button"
           onClick={handleSave}
           disabled={saving}
           style={{

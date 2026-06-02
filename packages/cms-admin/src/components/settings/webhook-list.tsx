@@ -109,6 +109,7 @@ export function WebhookList({ webhooks, onChange: onChangeRaw }: Props) {
 
               {/* Test */}
               <button
+                data-testid={`webhook-test-${wh.id}`}
                 type="button"
                 onClick={() => sendTest(wh.url, wh.id)}
                 disabled={testing === wh.id}
@@ -129,6 +130,7 @@ export function WebhookList({ webhooks, onChange: onChangeRaw }: Props) {
 
               {/* Copy */}
               <button
+                data-testid={`webhook-copy-${wh.id}`}
                 type="button"
                 onClick={() => copyUrl(wh.url, wh.id)}
                 title="Copy URL"
@@ -144,6 +146,7 @@ export function WebhookList({ webhooks, onChange: onChangeRaw }: Props) {
 
               {/* Move up */}
               <button
+                data-testid={`webhook-moveup-${wh.id}`}
                 type="button"
                 onClick={() => moveUp(idx)}
                 disabled={idx === 0}
@@ -160,6 +163,7 @@ export function WebhookList({ webhooks, onChange: onChangeRaw }: Props) {
 
               {/* Move down */}
               <button
+                data-testid={`webhook-movedown-${wh.id}`}
                 type="button"
                 onClick={() => moveDown(idx)}
                 disabled={idx === webhooks.length - 1}
@@ -190,6 +194,7 @@ export function WebhookList({ webhooks, onChange: onChangeRaw }: Props) {
                 </span>
               ) : (
                 <button
+                  data-testid={`webhook-remove-${wh.id}`}
                   type="button"
                   onClick={() => setConfirmRemove(wh.id)}
                   title="Remove webhook"
@@ -221,6 +226,7 @@ export function WebhookList({ webhooks, onChange: onChangeRaw }: Props) {
           }}
         />
         <button
+          data-testid="webhook-add-button"
           type="button"
           onClick={add}
           disabled={!newUrl.trim()}

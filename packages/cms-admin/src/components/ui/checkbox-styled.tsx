@@ -14,6 +14,7 @@ export function Checkbox({ checked, onChange, label, description, disabled }: {
   return (
     <label style={{ display: "flex", alignItems: "flex-start", gap: "0.5rem", cursor: disabled ? "default" : "pointer", opacity: disabled ? 0.5 : 1 }}>
       <div
+        data-testid="checkbox-styled-box"
         onClick={(e) => { e.preventDefault(); if (!disabled) onChange(!checked); }}
         style={{
           flexShrink: 0,
@@ -59,6 +60,7 @@ export function Radio({ checked, onChange, label, description, disabled }: {
   return (
     <label style={{ display: "flex", alignItems: "flex-start", gap: "0.5rem", cursor: disabled ? "default" : "pointer", opacity: disabled ? 0.5 : 1 }}>
       <div
+        data-testid="radio-styled-box"
         onClick={(e) => { e.preventDefault(); if (!disabled) onChange(); }}
         style={{
           flexShrink: 0,

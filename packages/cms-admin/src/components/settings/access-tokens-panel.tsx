@@ -256,13 +256,13 @@ export function AccessTokensPanel() {
             }}>
               {newToken}
             </code>
-            <button type="button"
+            <button data-testid="token-copy-button" type="button"
               onClick={() => { navigator.clipboard.writeText(newToken); }}
               style={{ ...inputStyle, background: "var(--primary)", color: "#0D0D0D", fontWeight: 600, cursor: "pointer", border: "none" }}>
               Copy
             </button>
           </div>
-          <button type="button" onClick={() => setNewToken(null)}
+          <button data-testid="token-dismiss-button" type="button" onClick={() => setNewToken(null)}
             style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", background: "none", border: "none", cursor: "pointer", alignSelf: "flex-start" }}>
             Dismiss
           </button>
@@ -272,11 +272,11 @@ export function AccessTokensPanel() {
       {/* Create form toggle */}
       {!showForm ? (
         <div style={{ display: "flex", gap: "0.5rem" }}>
-          <button type="button" onClick={() => setShowForm(true)}
+          <button data-testid="token-create-custom-button" type="button" onClick={() => setShowForm(true)}
             style={{ ...inputStyle, background: "var(--primary)", color: "#0D0D0D", fontWeight: 600, cursor: "pointer", border: "none" }}>
             + Create custom token
           </button>
-          <button type="button" onClick={() => { resetForm(); setName("Admin token"); handleCreate("admin"); }}
+          <button data-testid="token-quick-admin-button" type="button" onClick={() => { resetForm(); setName("Admin token"); handleCreate("admin"); }}
             style={{ ...inputStyle, cursor: "pointer" }}>
             Quick: admin token
           </button>
@@ -288,7 +288,7 @@ export function AccessTokensPanel() {
         }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <h3 style={{ fontSize: "1rem", fontWeight: 600, margin: 0 }}>Create custom token</h3>
-            <button type="button" onClick={() => { setShowForm(false); resetForm(); }}
+            <button data-testid="token-form-cancel-button" type="button" onClick={() => { setShowForm(false); resetForm(); }}
               style={{ background: "none", border: "none", color: "var(--muted-foreground)", cursor: "pointer", fontSize: "0.8rem" }}>
               ← Cancel
             </button>
@@ -297,21 +297,21 @@ export function AccessTokensPanel() {
           {/* Presets */}
           <div style={{ display: "flex", gap: "0.4rem", flexWrap: "wrap" }}>
             <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", alignSelf: "center" }}>Presets:</span>
-            <button type="button" onClick={() => applyPreset("admin")} style={presetBtn}>Admin (full)</button>
-            <button type="button" onClick={() => applyPreset("deploy-bot")} style={presetBtn}>Site deploy bot</button>
-            <button type="button" onClick={() => applyPreset("reader")} style={presetBtn}>Read everything</button>
+            <button data-testid="token-preset-admin" type="button" onClick={() => applyPreset("admin")} style={presetBtn}>Admin (full)</button>
+            <button data-testid="token-preset-deploy-bot" type="button" onClick={() => applyPreset("deploy-bot")} style={presetBtn}>Site deploy bot</button>
+            <button data-testid="token-preset-reader" type="button" onClick={() => applyPreset("reader")} style={presetBtn}>Read everything</button>
           </div>
 
           {/* Name + Description */}
           <div>
             <div style={labelStyle}>Token name</div>
-            <input type="text" value={name} onChange={(e) => setName(e.target.value)}
+            <input data-testid="token-name-input" type="text" value={name} onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Fysiodk Deploy Bot"
               style={{ ...inputStyle, width: "100%" }} />
           </div>
           <div>
             <div style={labelStyle}>Description <span style={{ color: "var(--muted-foreground)", fontWeight: 400 }}>(optional — helps locate this token later)</span></div>
-            <input type="text" value={description} onChange={(e) => setDescription(e.target.value)}
+            <input data-testid="token-description-input" type="text" value={description} onChange={(e) => setDescription(e.target.value)}
               placeholder="e.g. CI job running from fysiodk-ci.example.com, owned by ops@"
               style={{ ...inputStyle, width: "100%" }} />
           </div>
@@ -352,11 +352,11 @@ export function AccessTokensPanel() {
                     }
                   />
                 </div>
-                <button type="button" onClick={() => setPermRows(permRows.filter((_, idx) => idx !== i))}
+                <button data-testid={`token-perm-remove-${i}`} type="button" onClick={() => setPermRows(permRows.filter((_, idx) => idx !== i))}
                   style={smallIconBtn} disabled={permRows.length === 1}>×</button>
               </div>
             ))}
-            <button type="button" onClick={() => setPermRows([...permRows, { scope: "Site", category: "Content", action: "Read" }])}
+            <button data-testid="token-perm-add-button" type="button" onClick={() => setPermRows([...permRows, { scope: "Site", category: "Content", action: "Read" }])}
               style={addBtn}>+ Add permission</button>
           </div>
 
@@ -411,11 +411,11 @@ export function AccessTokensPanel() {
                     <span style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", alignSelf: "center" }}>(matches org:settings)</span>
                   )}
                 </div>
-                <button type="button" onClick={() => setResourceFilters(resourceFilters.filter((_, idx) => idx !== i))}
+                <button data-testid={`token-resource-remove-${i}`} type="button" onClick={() => setResourceFilters(resourceFilters.filter((_, idx) => idx !== i))}
                   style={smallIconBtn}>×</button>
               </div>
             ))}
-            <button type="button" onClick={() => setResourceFilters([...resourceFilters, { scope: "site", effect: "include", targets: [] }])}
+            <button data-testid="token-resource-add-button" type="button" onClick={() => setResourceFilters([...resourceFilters, { scope: "site", effect: "include", targets: [] }])}
               style={addBtn}>+ Add resource filter</button>
           </div>
 
@@ -440,11 +440,11 @@ export function AccessTokensPanel() {
                 <input type="text" value={f.cidrs.join(", ")} placeholder="e.g. 203.0.113.4/32"
                   onChange={(e) => setIpFilters(ipFilters.map((x, idx) => idx === i ? { ...x, cidrs: e.target.value.split(",").map((c) => c.trim()).filter(Boolean) } : x))}
                   style={{ ...inputStyle, flex: 1 }} />
-                <button type="button" onClick={() => setIpFilters(ipFilters.filter((_, idx) => idx !== i))}
+                <button data-testid={`token-ip-remove-${i}`} type="button" onClick={() => setIpFilters(ipFilters.filter((_, idx) => idx !== i))}
                   style={smallIconBtn}>×</button>
               </div>
             ))}
-            <button type="button" onClick={() => setIpFilters([...ipFilters, { op: "in", cidrs: [] }])}
+            <button data-testid="token-ip-add-button" type="button" onClick={() => setIpFilters([...ipFilters, { op: "in", cidrs: [] }])}
               style={addBtn}>+ Add IP filter</button>
           </div>
 
@@ -476,9 +476,9 @@ export function AccessTokensPanel() {
 
           {/* Submit */}
           <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
-            <button type="button" onClick={() => { setShowForm(false); resetForm(); }}
+            <button data-testid="token-form-cancel-submit" type="button" onClick={() => { setShowForm(false); resetForm(); }}
               style={{ ...inputStyle, cursor: "pointer" }}>Cancel</button>
-            <button type="button" disabled={creating || !name.trim() || compilePermissions(null).length === 0}
+            <button data-testid="token-create-submit" type="button" disabled={creating || !name.trim() || compilePermissions(null).length === 0}
               onClick={() => handleCreate(null)}
               style={{ ...inputStyle, background: "var(--primary)", color: "#0D0D0D", fontWeight: 600, cursor: "pointer", border: "none", opacity: creating ? 0.6 : 1 }}>
               {creating ? "Creating…" : "Create token"}
@@ -546,7 +546,7 @@ export function AccessTokensPanel() {
                 {confirmDelete === t.id ? (
                   <span style={{ display: "flex", gap: "0.2rem", alignItems: "center" }}>
                     <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Revoke?</span>
-                    <button onClick={() => handleDelete(t.id)}
+                    <button data-testid={`token-revoke-confirm-${t.id}`} onClick={() => handleDelete(t.id)}
                       style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
                         border: "none", background: "var(--destructive)", color: "#fff",
                         cursor: "pointer", lineHeight: 1 }}>Yes</button>

@@ -206,6 +206,7 @@ export function AIPanel({ collection, colConfig, doc, onClose, onInsert }: Props
           <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>AI Assistant</span>
         </div>
         <button
+          data-testid="ai-panel-close-button"
           type="button"
           onClick={onClose}
           style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.25rem" }}
@@ -417,6 +418,7 @@ export function AIPanel({ collection, colConfig, doc, onClose, onInsert }: Props
         flexShrink: 0,
       }}>
         <textarea
+          data-testid="ai-panel-input"
           ref={inputRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -440,6 +442,7 @@ export function AIPanel({ collection, colConfig, doc, onClose, onInsert }: Props
           onBlur={(e) => { e.target.style.borderColor = "var(--border)"; }}
         />
         <button
+          data-testid="ai-panel-send-button"
           type="button"
           onClick={send}
           disabled={!input.trim() || streaming}

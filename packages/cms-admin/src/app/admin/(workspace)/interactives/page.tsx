@@ -309,6 +309,7 @@ export default function InteractivesPage() {
           <div style={{ display: "flex", border: "1px solid var(--border)", borderRadius: "6px", overflow: "hidden" }}>
             {(["grid", "list"] as ViewMode[]).map((v) => (
               <button
+                data-testid={`interactives-view-toggle-${v}`}
                 key={v}
                 type="button"
                 onClick={() => setView(v)}
@@ -326,6 +327,7 @@ export default function InteractivesPage() {
           {/* Create with AI button */}
           {!readOnly && (
             <button
+              data-testid="interactives-create-ai-button"
               type="button"
               onClick={() => setAiModalOpen(true)}
               className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-md border border-border bg-card text-foreground hover:bg-accent transition-colors"
@@ -338,6 +340,7 @@ export default function InteractivesPage() {
           {/* Upload button */}
           {!readOnly && (
             <button
+              data-testid="interactives-upload-button"
               type="button"
               onClick={() => inputRef.current?.click()}
               disabled={uploading}

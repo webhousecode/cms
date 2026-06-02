@@ -84,6 +84,7 @@ export function HelpCard({ articleId, variant = "inline" }: HelpCardProps) {
     }}>
       {/* Header — always visible, clickable to toggle */}
       <button
+        data-testid="help-card-toggle"
         type="button"
         onClick={() => setExpanded(!expanded)}
         style={{
@@ -115,7 +116,7 @@ export function HelpCard({ articleId, variant = "inline" }: HelpCardProps) {
                 <div key={i} style={{ display: "flex", alignItems: "center", gap: "0.375rem", fontSize: "0.72rem" }}>
                   <span style={{ color: "#F7BB2E" }}>→</span>
                   {action.href ? (
-                    <a href={action.href} style={{ color: "var(--foreground)", textDecoration: "none" }}>{action.label}</a>
+                    <a data-testid={`help-action-${i}`} href={action.href} style={{ color: "var(--foreground)", textDecoration: "none" }}>{action.label}</a>
                   ) : (
                     <span style={{ color: "var(--foreground)" }}>{action.label}</span>
                   )}
@@ -128,6 +129,7 @@ export function HelpCard({ articleId, variant = "inline" }: HelpCardProps) {
           {article.learnMorePath && (
             <div style={{ marginTop: "0.75rem" }}>
               <a
+                data-testid="help-learn-more-link"
                 href={`https://docs.webhouse.app${article.learnMorePath}`}
                 target="_blank"
                 rel="noopener noreferrer"

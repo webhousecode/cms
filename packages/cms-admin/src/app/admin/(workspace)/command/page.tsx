@@ -253,7 +253,7 @@ export default function CommandPage() {
             <h2 className="font-semibold text-foreground">Budget</h2>
             <div>
               <label style={labelStyle}>Monthly budget (USD)</label>
-              <input
+              <input data-testid="command-monthly-budget-input"
                 type="number"
                 min={0}
                 step={1}
@@ -311,7 +311,7 @@ export default function CommandPage() {
 
           {/* Sync */}
           {!readOnly && (
-            <button
+            <button data-testid="command-sync-button"
               type="button"
               onClick={handleSync}
               disabled={syncing}
@@ -343,7 +343,7 @@ function SegmentedControl({
   return (
     <div className="flex border border-border rounded-lg overflow-hidden">
       {options.map((opt) => (
-        <button
+        <button data-testid="command-segment-button"
           key={opt.value}
           type="button"
           onClick={() => onChange(opt.value)}

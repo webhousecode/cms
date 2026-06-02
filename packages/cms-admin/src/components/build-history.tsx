@@ -132,6 +132,7 @@ export function BuildHistory({ siteId, livePollMs = 3000 }: BuildHistoryProps){
         return (
           <div key={b.sha} style={{ border: "1px solid var(--border)", borderRadius: "6px", overflow: "hidden" }}>
             <button
+              data-testid={`build-history-expand-${b.sha}`}
               onClick={() => setExpanded(isExpanded ? null : b.sha)}
               style={{
                 width: "100%",

@@ -72,6 +72,7 @@ export function ISUMediaProcessing() {
       {/* Toggle */}
       <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer" }}>
         <input
+          data-testid="isu-media-enabled-checkbox"
           type="checkbox"
           checked={enabled}
           onChange={(e) => setEnabled(e.target.checked)}
@@ -86,6 +87,7 @@ export function ISUMediaProcessing() {
           Variant widths (px)
         </label>
         <input
+          data-testid="isu-media-widths-input"
           type="text"
           value={widths}
           onChange={(e) => setWidths(e.target.value)}
@@ -108,6 +110,7 @@ export function ISUMediaProcessing() {
 
       {/* Save button */}
       <button
+        data-testid="isu-media-save-button"
         type="button"
         onClick={save}
         disabled={saving}

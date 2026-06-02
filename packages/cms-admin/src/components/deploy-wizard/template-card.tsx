@@ -15,6 +15,7 @@ interface Props {
 export function TemplateCard({ name, description, tags, screenshotUrl, selected, onClick }: Props) {
   return (
     <button
+      data-testid="deploy-template-card"
       onClick={onClick}
       type="button"
       style={{
@@ -41,6 +42,7 @@ export function TemplateCard({ name, description, tags, screenshotUrl, selected,
         {screenshotUrl && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
+            data-testid="deploy-template-screenshot"
             src={screenshotUrl}
             alt={name}
             loading="lazy"

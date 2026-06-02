@@ -212,7 +212,7 @@ export function ImportWizard({
               Step {step} of 4
             </span>
           </div>
-          <button onClick={onClose} style={{
+          <button data-testid="import-wizard-close-button" onClick={onClose} style={{
             background: "none", border: "none", cursor: "pointer",
             color: "var(--muted-foreground)", padding: "4px",
           }}>
@@ -236,6 +236,7 @@ export function ImportWizard({
           {step === 1 && (
             <div>
               <div
+                data-testid="import-upload-drop-zone"
                 onClick={() => fileRef.current?.click()}
                 onDragEnter={(e) => { e.preventDefault(); dragCounter.current++; setDragOver(true); }}
                 onDragLeave={(e) => { e.preventDefault(); dragCounter.current--; if (dragCounter.current === 0) setDragOver(false); }}
@@ -273,6 +274,7 @@ export function ImportWizard({
                 </div>
               </div>
               <input
+                data-testid="import-file-input"
                 ref={fileRef}
                 type="file"
                 accept=".csv,.json,.md,.markdown,.tsv"
@@ -282,6 +284,7 @@ export function ImportWizard({
               />
               <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem" }}>
                 <button
+                  data-testid="import-upload-button"
                   onClick={handleUpload}
                   disabled={loading || !hasFile}
                   style={btnPrimary(loading || !hasFile)}
@@ -323,7 +326,7 @@ export function ImportWizard({
                       onChange={(v) => updateMapping(i, { transform: v })}
                       style={{ width: 130, fontSize: "0.72rem" }}
                     />
-                    <button onClick={() => removeMapping(i)} style={{
+                    <button data-testid="import-mapping-remove-button" onClick={() => removeMapping(i)} style={{
                       background: "none", border: "none", cursor: "pointer",
                       color: "var(--muted-foreground)", padding: "2px",
                     }}>
@@ -333,7 +336,7 @@ export function ImportWizard({
                 ))}
               </div>
 
-              <button onClick={addMapping} style={{
+              <button data-testid="import-add-mapping-button" onClick={addMapping} style={{
                 fontSize: "0.72rem", color: "var(--muted-foreground)",
                 background: "none", border: "1px dashed var(--border)",
                 borderRadius: 6, padding: "0.3rem 0.6rem", cursor: "pointer",
@@ -343,10 +346,10 @@ export function ImportWizard({
               </button>
 
               <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <button onClick={() => setStep(1)} style={btnSecondary()}>
+                <button data-testid="import-back-button" onClick={() => setStep(1)} style={btnSecondary()}>
                   <ArrowLeft style={{ width: 14, height: 14 }} /> Back
                 </button>
-                <button onClick={handlePreview} disabled={loading || mappings.length === 0} style={btnPrimary(loading)}>
+                <button data-testid="import-preview-button" onClick={handlePreview} disabled={loading || mappings.length === 0} style={btnPrimary(loading)}>
                   {loading ? "Previewing..." : "Preview"} <ArrowRight style={{ width: 14, height: 14 }} />
                 </button>
               </div>
@@ -404,10 +407,11 @@ export function ImportWizard({
               </div>
 
               <div style={{ display: "flex", justifyContent: "space-between" }}>
-                <button onClick={() => setStep(2)} style={btnSecondary()}>
+                <button data-testid="import-preview-back-button" onClick={() => setStep(2)} style={btnSecondary()}>
                   <ArrowLeft style={{ width: 14, height: 14 }} /> Back
                 </button>
                 <button
+                  data-testid="import-execute-button"
                   onClick={handleExecute}
                   disabled={loading || validRows === 0}
                   style={btnPrimary(loading)}
@@ -445,7 +449,7 @@ export function ImportWizard({
               )}
 
               <div style={{ display: "flex", justifyContent: "flex-end" }}>
-                <button onClick={() => { onComplete(); onClose(); }} style={btnPrimary(false)}>
+                <button data-testid="import-done-button" onClick={() => { onComplete(); onClose(); }} style={btnPrimary(false)}>
                   Done
                 </button>
               </div>

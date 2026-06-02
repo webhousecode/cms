@@ -680,6 +680,7 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
               }}>
                 <div style={{ display: "flex", gap: "0" }}>
                   <button
+                    data-testid="chat-drawer-tab-conversations"
                     onClick={() => setDrawerTab("conversations")}
                     style={{
                       background: "none", border: "none", cursor: "pointer", padding: "6px 12px 10px",
@@ -692,6 +693,7 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
                     Chats
                   </button>
                   <button
+                    data-testid="chat-drawer-tab-memory"
                     onClick={() => { setDrawerTab("memory"); loadMemories(); }}
                     style={{
                       background: "none", border: "none", cursor: "pointer", padding: "6px 12px 10px",
@@ -715,6 +717,7 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
                   </button>
                 </div>
                 <button
+                  data-testid="chat-drawer-close"
                   onClick={() => setShowHistory(false)}
                   style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "4px" }}
                 >
@@ -736,6 +739,7 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
                     }}>
                       <Search style={{ width: "12px", height: "12px", color: "var(--muted-foreground)", flexShrink: 0 }} />
                       <input
+                        data-testid="chat-drawer-search-input"
                         value={convSearch}
                         onChange={(e) => setConvSearch(e.target.value)}
                         onKeyDown={(e) => { if (e.key === "Enter") searchChats(); }}
@@ -747,6 +751,7 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
                       />
                       {convSearch && (
                         <button
+                          data-testid="chat-drawer-search-clear"
                           onClick={async () => {
                             setConvSearch("");
                             const res = await fetch("/api/cms/chat/conversations");
@@ -832,6 +837,7 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
                   </div>
                   <div style={{ display: "flex", gap: "6px" }}>
                     <button
+                      data-testid="chat-drawer-import-confirm"
                       onClick={confirmImport}
                       style={{
                         flex: 1, padding: "6px 12px", borderRadius: "6px", fontSize: "0.7rem", fontWeight: 600,
@@ -842,6 +848,7 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
                       Merge {importPreview.chats.new + importPreview.memories.new} items
                     </button>
                     <button
+                      data-testid="chat-drawer-import-cancel"
                       onClick={cancelImport}
                       style={{
                         padding: "6px 12px", borderRadius: "6px", fontSize: "0.7rem",
@@ -870,6 +877,7 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
               {!importPreview && (
                 <div style={{ display: "flex", gap: "6px" }}>
                   <button
+                    data-testid="chat-drawer-export-all"
                     onClick={exportAll}
                     style={{
                       flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
@@ -882,6 +890,7 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
                     Export all
                   </button>
                   <button
+                    data-testid="chat-drawer-import-all"
                     onClick={importAll}
                     style={{
                       flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: "6px",
@@ -921,6 +930,7 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
         lastUserMessage={messages.filter((m) => m.role === "user").pop()?.content}
       >
         <button
+          data-testid="chat-input-thinking-toggle"
           type="button"
           onClick={() => { const next = !showThinking; setShowThinking(next); localStorage.setItem("cms-chat-show-thinking", String(next)); }}
           title={showThinking ? "Hide thinking process" : "Show thinking process"}
@@ -978,6 +988,7 @@ function HistoryItem({ id, title, updatedAt, isActive, starred, onLoad, onRename
         }}
       >
         <input
+          data-testid="chat-history-item-rename-input"
           ref={inputRef}
           value={editValue}
           onChange={(e) => setEditValue(e.target.value)}
@@ -991,11 +1002,11 @@ function HistoryItem({ id, title, updatedAt, isActive, starred, onLoad, onRename
             color: "var(--foreground)", outline: "none", fontFamily: "inherit",
           }}
         />
-        <button onClick={() => { onRename(editValue); setEditing(false); }}
+        <button data-testid="chat-history-item-rename-confirm" onClick={() => { onRename(editValue); setEditing(false); }}
           style={{ background: "none", border: "none", cursor: "pointer", color: "rgb(74 222 128)", padding: "2px" }}>
           <Check style={{ width: "14px", height: "14px" }} />
         </button>
-        <button onClick={() => { setEditValue(title); setEditing(false); }}
+        <button data-testid="chat-history-item-rename-cancel" onClick={() => { setEditValue(title); setEditing(false); }}
           style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "2px" }}>
           <X style={{ width: "14px", height: "14px" }} />
         </button>
@@ -1023,6 +1034,7 @@ function HistoryItem({ id, title, updatedAt, isActive, starred, onLoad, onRename
         <Star style={{ width: "10px", height: "10px", color: "#F7BB2E", fill: "#F7BB2E", flexShrink: 0, marginLeft: "10px" }} />
       )}
       <button
+        data-testid="chat-history-item-load"
         onClick={onLoad}
         style={{
           flex: 1, textAlign: "left", padding: starred ? "10px 8px 10px 6px" : "10px 16px",
@@ -1040,6 +1052,7 @@ function HistoryItem({ id, title, updatedAt, isActive, starred, onLoad, onRename
 
       {/* More button */}
       <button
+        data-testid="chat-history-item-menu-toggle"
         onClick={(e) => { e.stopPropagation(); setMenuOpen(!menuOpen); setConfirmDelete(false); }}
         style={{
           background: "none", border: "none", cursor: "pointer",
@@ -1065,6 +1078,7 @@ function HistoryItem({ id, title, updatedAt, isActive, starred, onLoad, onRename
           }}
         >
           <button
+            data-testid="chat-history-menu-star"
             onClick={(e) => { e.stopPropagation(); onStar(); setMenuOpen(false); }}
             style={menuItemStyle}
             onMouseEnter={(e) => { e.currentTarget.style.background = "var(--muted)"; }}
@@ -1074,6 +1088,7 @@ function HistoryItem({ id, title, updatedAt, isActive, starred, onLoad, onRename
             {starred ? "Unstar" : "Star"}
           </button>
           <button
+            data-testid="chat-history-menu-copy-id"
             onClick={(e) => { e.stopPropagation(); navigator.clipboard.writeText(id); setMenuOpen(false); }}
             style={menuItemStyle}
             onMouseEnter={(e) => { e.currentTarget.style.background = "var(--muted)"; }}
@@ -1083,6 +1098,7 @@ function HistoryItem({ id, title, updatedAt, isActive, starred, onLoad, onRename
             Copy ID
           </button>
           <button
+            data-testid="chat-history-menu-rename"
             onClick={(e) => { e.stopPropagation(); setMenuOpen(false); setEditing(true); }}
             style={menuItemStyle}
             onMouseEnter={(e) => { e.currentTarget.style.background = "var(--muted)"; }}
@@ -1105,6 +1121,7 @@ function HistoryItem({ id, title, updatedAt, isActive, starred, onLoad, onRename
             </div>
           ) : (
             <button
+              data-testid="chat-history-menu-delete"
               onClick={(e) => { e.stopPropagation(); setConfirmDelete(true); }}
               style={{ ...menuItemStyle, color: "var(--destructive)" }}
               onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(239,68,68,0.1)"; }}
@@ -1159,6 +1176,7 @@ function MemoryPanel({ memories, search, onSearchChange, onSearch, onAdd, onDele
         }}>
           <Search style={{ width: "12px", height: "12px", color: "var(--muted-foreground)", flexShrink: 0 }} />
           <input
+            data-testid="chat-memory-search-input"
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
             onKeyDown={(e) => { if (e.key === "Enter") onSearch(); }}
@@ -1170,6 +1188,7 @@ function MemoryPanel({ memories, search, onSearchChange, onSearch, onAdd, onDele
           />
         </div>
         <button
+          data-testid="chat-memory-add-button"
           onClick={() => setAddMode(true)}
           title="Add memory"
           style={{
@@ -1182,6 +1201,7 @@ function MemoryPanel({ memories, search, onSearchChange, onSearch, onAdd, onDele
           <Plus style={{ width: "14px", height: "14px" }} />
         </button>
         <button
+          data-testid="chat-memory-import-button"
           onClick={onImport}
           title="Import memories"
           style={{
@@ -1194,6 +1214,7 @@ function MemoryPanel({ memories, search, onSearchChange, onSearch, onAdd, onDele
           <Upload style={{ width: "14px", height: "14px" }} />
         </button>
         <button
+          data-testid="chat-memory-export-button"
           onClick={onExport}
           title="Export memories"
           style={{
@@ -1211,6 +1232,7 @@ function MemoryPanel({ memories, search, onSearchChange, onSearch, onAdd, onDele
       {addMode && (
         <div style={{ padding: "4px 16px 8px", display: "flex", gap: "6px" }}>
           <input
+            data-testid="chat-memory-add-input"
             ref={inputRef}
             value={addValue}
             onChange={(e) => setAddValue(e.target.value)}
@@ -1230,6 +1252,7 @@ function MemoryPanel({ memories, search, onSearchChange, onSearch, onAdd, onDele
             }}
           />
           <button
+            data-testid="chat-memory-add-save"
             onClick={() => {
               if (addValue.trim()) {
                 onAdd(addValue.trim());
@@ -1246,6 +1269,7 @@ function MemoryPanel({ memories, search, onSearchChange, onSearch, onAdd, onDele
             Save
           </button>
           <button
+            data-testid="chat-memory-add-cancel"
             onClick={() => { setAddValue(""); setAddMode(false); }}
             style={{
               background: "transparent", border: "1px solid var(--border)",
@@ -1323,6 +1347,7 @@ function MemoryRow({ memory, onDelete }: { memory: MemoryItem; onDelete: () => v
             </div>
           ) : (
             <button
+              data-testid="chat-memory-row-delete"
               onClick={() => setConfirm(true)}
               style={{
                 background: "none", border: "none", cursor: "pointer",
