@@ -90,6 +90,7 @@ export function FavoritesList() {
     return (
       <th style={{ ...thStyle, width }}>
         <button
+          data-testid={`favorites-sort-${sk}`}
           type="button"
           onClick={() => toggleSort(sk)}
           style={{ display: "flex", alignItems: "center", gap: "0.25rem", background: "none", border: "none", cursor: "pointer", color: active ? "var(--foreground)" : "var(--muted-foreground)", fontSize: "0.72rem", fontWeight: active ? 600 : 500, padding: 0 }}

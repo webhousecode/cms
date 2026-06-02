@@ -373,6 +373,7 @@ export default function LinkCheckerPage() {
               <button
                 key={key}
                 type="button"
+                data-testid={`links-filter-${key}`}
                 onClick={() => setFilter(key)}
                 style={{
                   display: "flex", alignItems: "center", gap: "0.5rem",

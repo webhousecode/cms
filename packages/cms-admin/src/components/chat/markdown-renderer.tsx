@@ -604,6 +604,7 @@ function InlineRich({ text }: { text: string }) {
       if (linkMatch) {
         parts.push(
           <a
+            data-testid="markdown-inline-link"
             key={match.index}
             href={linkMatch[2]}
             target="_blank"

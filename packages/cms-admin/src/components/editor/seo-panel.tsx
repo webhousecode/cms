@@ -258,7 +258,7 @@ Rules:
         {/* Meta title */}
         <div>
           <p style={lbl}>Meta title</p>
-          <input data-testid="seo-meta-title-input" type="text" value={metaTitle} onChange={(e) => setMetaTitle(e.target.value)} placeholder={title} style={input} maxLength={70} />
+          <input data-testid="seo-meta-title-field" type="text" value={metaTitle} onChange={(e) => setMetaTitle(e.target.value)} placeholder={title} style={input} maxLength={70} />
           <p style={{ fontSize: "0.65rem", color: metaTitle.length > 60 ? "#f87171" : "var(--muted-foreground)", marginTop: "0.2rem", textAlign: "right" }}>
             {metaTitle.length}/60
           </p>
@@ -267,7 +267,7 @@ Rules:
         {/* Meta description */}
         <div>
           <p style={lbl}>Meta description</p>
-          <textarea data-testid="seo-meta-description-textarea" value={metaDesc} onChange={(e) => setMetaDesc(e.target.value)} placeholder="Compelling description for search results..." style={{ ...input, minHeight: 100, resize: "vertical" }} maxLength={200} />
+          <textarea data-testid="seo-meta-description-field" value={metaDesc} onChange={(e) => setMetaDesc(e.target.value)} placeholder="Compelling description for search results..." style={{ ...input, minHeight: 100, resize: "vertical" }} maxLength={200} />
           <p style={{ fontSize: "0.65rem", color: metaDesc.length > 160 ? "#f87171" : "var(--muted-foreground)", marginTop: "0.2rem", textAlign: "right" }}>
             {metaDesc.length}/160
           </p>
@@ -286,7 +286,7 @@ Rules:
             ))}
           </div>
           <div style={{ display: "flex", gap: "0.25rem" }}>
-            <input data-testid="seo-keyword-input" type="text" value={keywordInput} onChange={(e) => setKeywordInput(e.target.value)}
+            <input data-testid="seo-keyword-field" type="text" value={keywordInput} onChange={(e) => setKeywordInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addKeyword(); } }}
               placeholder="Add keyword..." style={{ ...input, flex: 1 }} />
           </div>
@@ -295,7 +295,7 @@ Rules:
         {/* OG Image */}
         <div>
           <p style={lbl}>Social image (OG)</p>
-          <input data-testid="seo-og-image-input" type="text" value={ogImage} onChange={(e) => setOgImage(e.target.value)} placeholder="/uploads/..." style={input} />
+          <input data-testid="seo-og-image-field" type="text" value={ogImage} onChange={(e) => setOgImage(e.target.value)} placeholder="/uploads/..." style={input} />
           {ogImage && ogImage.startsWith("/uploads/") && (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={ogImage} alt="OG preview"

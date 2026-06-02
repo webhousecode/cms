@@ -132,6 +132,7 @@ export function StructuredArrayEditor({ field, value, onChange, locked, blocksCo
               >
                 {/* Header */}
                 <div
+                  data-testid={`array-item-header-${i}`}
                   onClick={() => toggle(i)}
                   style={{
                     display: "flex",
@@ -148,7 +149,7 @@ export function StructuredArrayEditor({ field, value, onChange, locked, blocksCo
                     {getItemLabel(item, fields, i)}
                   </span>
                   {!locked && (
-                    <span style={{ display: "flex", gap: "0.25rem", alignItems: "center" }} onClick={(e) => e.stopPropagation()}>
+                    <span data-testid={`array-item-actions-${i}`} style={{ display: "flex", gap: "0.25rem", alignItems: "center" }} onClick={(e) => e.stopPropagation()}>
                       <button data-testid={`array-move-up-${i}`} type="button" disabled={i === 0} onClick={() => moveItem(i, -1)} style={{ background: "none", border: "none", cursor: i === 0 ? "not-allowed" : "pointer", color: "var(--muted-foreground)", padding: "2px", opacity: i === 0 ? 0.3 : 1 }}>
                         <ArrowUp style={{ width: 14, height: 14 }} />
                       </button>

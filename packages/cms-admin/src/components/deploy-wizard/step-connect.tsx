@@ -117,6 +117,7 @@ export function StepConnect({ flyToken, flyOrg, onUpdate }: Props) {
             </button>
           </div>
           <a
+            data-testid="step-connect-get-token-link"
             href="https://fly.io/dashboard/personal/tokens"
             target="_blank"
             rel="noopener noreferrer"

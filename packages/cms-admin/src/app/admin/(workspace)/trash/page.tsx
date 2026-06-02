@@ -41,8 +41,8 @@ function ConfirmDialog({ message, confirmLabel = "Confirm", onConfirm, onCancel 
           <p style={{ fontSize: "0.9rem", color: "var(--foreground)", margin: 0 }}>{message}</p>
         </div>
         <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem" }}>
-          <button type="button" onClick={onCancel} style={{ padding: "0.4rem 0.875rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", fontSize: "0.8rem", cursor: "pointer" }}>Cancel</button>
-          <button type="button" onClick={onConfirm} style={{ padding: "0.4rem 0.875rem", borderRadius: "6px", border: "none", background: "var(--destructive)", color: "#fff", fontSize: "0.8rem", cursor: "pointer" }}>{confirmLabel}</button>
+          <button data-testid="trash-confirm-dialog-cancel" type="button" onClick={onCancel} style={{ padding: "0.4rem 0.875rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", fontSize: "0.8rem", cursor: "pointer" }}>Cancel</button>
+          <button data-testid="trash-confirm-dialog-confirm" type="button" onClick={onConfirm} style={{ padding: "0.4rem 0.875rem", borderRadius: "6px", border: "none", background: "var(--destructive)", color: "#fff", fontSize: "0.8rem", cursor: "pointer" }}>{confirmLabel}</button>
         </div>
       </div>
     </div>
@@ -186,7 +186,7 @@ export default function TrashPage() {
               style={{ width: "100%", padding: "0.4rem 0.75rem 0.4rem 2rem", borderRadius: "6px", border: "1px solid var(--border)", background: "var(--input)", color: "var(--foreground)", fontSize: "0.85rem", outline: "none" }}
             />
             {search && (
-              <button type="button" onClick={() => setSearch("")} style={{ position: "absolute", right: "0.5rem", top: "50%", transform: "translateY(-50%)", background: "transparent", border: "none", cursor: "pointer", color: "var(--muted-foreground)", display: "flex" }}>
+              <button data-testid="trash-clear-search" type="button" onClick={() => setSearch("")} style={{ position: "absolute", right: "0.5rem", top: "50%", transform: "translateY(-50%)", background: "transparent", border: "none", cursor: "pointer", color: "var(--muted-foreground)", display: "flex" }}>
                 <X style={{ width: "13px", height: "13px" }} />
               </button>
             )}

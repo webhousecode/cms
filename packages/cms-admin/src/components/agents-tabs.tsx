@@ -715,6 +715,7 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
             <div>
               <label className="text-xs font-semibold text-muted-foreground block mb-1">Workflow JSON</label>
               <textarea
+                data-testid="workflow-json-textarea"
                 value={jsonDraft}
                 onChange={(e) => setJsonDraft(e.target.value)}
                 rows={18}
@@ -781,6 +782,7 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
           <div className="rounded-md border border-border p-3 space-y-2">
             <label className="flex items-center gap-2 text-xs font-semibold cursor-pointer">
               <input
+                data-testid="workflow-schedule-checkbox"
                 type="checkbox"
                 checked={newScheduleEnabled}
                 onChange={(e) => setNewScheduleEnabled(e.target.checked)}
@@ -794,6 +796,7 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
                   <div>
                     <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">Frequency</label>
                     <select
+                      data-testid="workflow-frequency-select"
                       value={newFrequency}
                       onChange={(e) => setNewFrequency(e.target.value as "daily" | "weekly" | "manual" | "cron")}
                       className="w-full px-2 py-1 rounded border border-border bg-background text-xs"
@@ -815,6 +818,7 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
                   <div>
                     <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">Max per run</label>
                     <input
+                      data-testid="workflow-maxperrun-input"
                       type="number"
                       min={1}
                       max={10}
@@ -830,6 +834,7 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
                       Cron expression
                     </label>
                     <input
+                      data-testid="workflow-cron-input"
                       type="text"
                       value={newCron}
                       onChange={(e) => setNewCron(e.target.value)}
@@ -854,6 +859,7 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
                     Default prompt (sent to step 1 on each scheduled run)
                   </label>
                   <textarea
+                    data-testid="workflow-defaultprompt-textarea"
                     value={newDefaultPrompt}
                     onChange={(e) => setNewDefaultPrompt(e.target.value)}
                     rows={2}
@@ -965,6 +971,7 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
                 <div className="mt-3 pt-3 border-t border-border flex items-end gap-2">
                   <div className="flex-1">
                     <textarea
+                      data-testid={`workflow-run-prompt-${wf.id}`}
                       value={runPrompt[wf.id] ?? ""}
                       onChange={(e) => setRunPrompt((p) => ({ ...p, [wf.id]: e.target.value }))}
                       rows={2}

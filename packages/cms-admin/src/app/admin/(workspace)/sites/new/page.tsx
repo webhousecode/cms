@@ -365,7 +365,7 @@ export default function NewSitePage() {
                       Connected as <strong>{ghUser}</strong>
                     </span>
                     <span style={{ display: "flex", gap: "0.75rem" }}>
-                      <a href={`https://github.com/settings/connections/applications/${process.env.NEXT_PUBLIC_GITHUB_OAUTH_CLIENT_ID ?? ""}`} target="_blank" rel="noopener noreferrer" style={{ color: "var(--muted-foreground)", fontSize: "0.75rem", textDecoration: "underline", cursor: "pointer" }}>
+                      <a data-testid="new-site-manage-github-access" href={`https://github.com/settings/connections/applications/${process.env.NEXT_PUBLIC_GITHUB_OAUTH_CLIENT_ID ?? ""}`} target="_blank" rel="noopener noreferrer" style={{ color: "var(--muted-foreground)", fontSize: "0.75rem", textDecoration: "underline", cursor: "pointer" }}>
                         Manage access
                       </a>
                       <button data-testid="new-site-github-disconnect" type="button" onClick={disconnectGitHub} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "0.75rem", textDecoration: "underline" }}>

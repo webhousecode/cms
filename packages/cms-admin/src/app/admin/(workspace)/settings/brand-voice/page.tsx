@@ -384,7 +384,7 @@ function ImportExportMenu({ bv, onImport }: { bv: BrandVoice; onImport: (v: Bran
             { label: "Export JSON", action: doExport },
             { label: "Import JSON", action: openImport },
           ].map(({ label, action }) => (
-            <button key={label} type="button" data-testid={`import-export-${label.toLowerCase().replace(/\s+/g, '-')}`} onClick={action}
+            <button key={label} type="button" data-testid={`menu-${label.toLowerCase().replace(/\s+/g, '-')}`} onClick={action}
               style={{ display: "block", width: "100%", padding: "0.5rem 0.875rem", textAlign: "left", background: "none", border: "none", color: "var(--foreground)", fontSize: "0.8rem", cursor: "pointer" }}
               onMouseEnter={(e) => { e.currentTarget.style.background = "var(--accent)"; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = "none"; }}>

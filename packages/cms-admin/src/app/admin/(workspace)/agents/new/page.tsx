@@ -257,6 +257,7 @@ export default function NewAgentPage() {
           </span>
           {formFilled && (
             <button
+              data-testid="agent-toggle-form-button"
               type="button"
               onClick={() => setFormCollapsed((v) => !v)}
               style={{ display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.72rem", color: "var(--muted-foreground)", background: "none", border: "none", cursor: "pointer", padding: 0 }}

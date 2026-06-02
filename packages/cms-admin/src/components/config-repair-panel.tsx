@@ -314,6 +314,7 @@ export function ConfigRepairPanel({ siteName, rawErrors }: Props) {
                   {phase === "fixing" ? "Fixing…" : "Ja, overskriv"}
                 </button>
                 <button
+                  data-testid="config-repair-cancel-fix-button"
                   onClick={() => setPhase("report")}
                   disabled={phase === "fixing"}
                   style={{

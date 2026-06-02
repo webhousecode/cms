@@ -395,6 +395,7 @@ export function ChatInput({ onSend, disabled, placeholder, visible, lastUserMess
             )}
           </button>
           <input
+            data-testid="chat-file-input"
             ref={fileInputRef}
             type="file"
             accept={ACCEPT_TYPES}

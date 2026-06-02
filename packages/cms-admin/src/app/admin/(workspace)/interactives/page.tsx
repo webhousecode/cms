@@ -469,7 +469,7 @@ export default function InteractivesPage() {
               <tr>
                 {([["Name", "name"], ["Status", "status"], ["Size", "size"], ["Updated", "updatedAt"]] as const).map(([label, sk]) => (
                   <th key={sk} style={thStyle}>
-                    <button
+                    <button data-testid="interactives-list-sort-button"
                       type="button"
                       onClick={() => toggleSort(sk)}
                       style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", background: "none", border: "none", cursor: "pointer", padding: 0, font: "inherit", color: sortKey === sk ? "var(--foreground)" : "inherit", fontWeight: sortKey === sk ? 600 : 500 }}
@@ -648,7 +648,7 @@ function ActionsMenu({ item, onEdit, onTogglePublish, onClone, onTrash }: {
   item: InteractiveMeta; onEdit: () => void; onTogglePublish: () => void; onClone: () => void; onTrash: () => void;
 }) {
   return (
-    <div
+    <div data-testid="interactives-item-actions"
       style={{ position: "absolute", top: "0.5rem", right: "0.5rem", opacity: 0, transition: "opacity 150ms" }}
       className="group-hover:!opacity-100"
       onClick={(e) => e.stopPropagation()}
