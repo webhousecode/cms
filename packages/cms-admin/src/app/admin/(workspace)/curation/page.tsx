@@ -487,6 +487,7 @@ export default function CurationPage() {
                   </span>
                   {/* Active = primary contentData (always first chip) */}
                   <button
+                    data-testid={`curation-model-active-${item.id}`}
                     type="button"
                     disabled
                     className="px-2 py-1 rounded-md text-[0.7rem] font-mono border border-primary text-primary bg-primary/10 cursor-default"
@@ -519,6 +520,7 @@ export default function CurationPage() {
               {rejectingId === item.id && (
                 <div className="mt-3 flex gap-2">
                   <textarea
+                    data-testid={`curation-reject-feedback-${item.id}`}
                     value={rejectFeedback}
                     onChange={(e) => setRejectFeedback(e.target.value)}
                     placeholder="Feedback for the agent..."
@@ -563,6 +565,7 @@ export default function CurationPage() {
                         </label>
                         {field.type === "select" && field.options ? (
                           <select
+                            data-testid={`curation-field-select-${item.id}-${field.name}`}
                             value={String(editDraft[field.name] ?? "")}
                             onChange={(e) => setEditDraft((prev) => ({ ...prev, [field.name]: e.target.value }))}
                             style={{ flex: 1, padding: "0.25rem 0.5rem", borderRadius: "5px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.8rem" }}

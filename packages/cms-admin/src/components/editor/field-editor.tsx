@@ -879,6 +879,7 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig, docu
           {!locked && (
             <div style={{ display: "flex", gap: "0.35rem" }}>
               <label
+                data-testid="audio-field-upload-label"
                 title="Upload audio"
                 style={{
                   display: "inline-flex", alignItems: "center", gap: "0.3rem",
@@ -894,6 +895,7 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig, docu
                 {audioUploading ? "..." : "Upload"}
               </label>
               <button
+                data-testid="audio-field-browse-button"
                 type="button"
                 onClick={openAudioBrowser}
                 title="Browse Media"
@@ -926,14 +928,14 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig, docu
                   </button>
                 </div>
                 <div style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid var(--border)" }}>
-                  <input type="text" value={audioSearch} onChange={(e) => setAudioSearch(e.target.value)} placeholder="Search media…" autoFocus
+                  <input data-testid="audio-browser-search-field" type="text" value={audioSearch} onChange={(e) => setAudioSearch(e.target.value)} placeholder="Search media…" autoFocus
                     style={{ width: "100%", padding: "0.35rem 0.5rem", borderRadius: "6px", border: "1px solid var(--border)", background: "color-mix(in srgb, var(--input) 30%, var(--background))", color: "var(--foreground)", fontSize: "0.8rem", outline: "none" }} />
                 </div>
                 <div style={{ overflowY: "auto", padding: "0.75rem" }}>
                   {audioLoading && <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>Loading media...</div>}
                   {!audioLoading && audioItems.length === 0 && <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>No media found</div>}
                   {!audioLoading && audioItems.filter((item) => !audioSearch || item.name.toLowerCase().includes(audioSearch.toLowerCase())).map((item) => (
-                    <button key={item.url} type="button" onClick={() => {
+                    <button data-testid="audio-browser-item-button" key={item.url} type="button" onClick={() => {
                       let storedUrl = item.url;
                       try { storedUrl = new URL(item.url).pathname; } catch {}
                       onChange(storedUrl);
@@ -1025,11 +1027,12 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig, docu
                 }}
                 className="hover:border-primary hover:text-primary transition-colors"
               >
-                <input ref={intInputRef} type="file" accept=".html,.htm,.zip" onChange={handleIntUpload} disabled={locked || intUploading} style={{ display: "none" }} />
+                <input data-testid="int-field-file-input" ref={intInputRef} type="file" accept=".html,.htm,.zip" onChange={handleIntUpload} disabled={locked || intUploading} style={{ display: "none" }} />
                 <Upload style={{ width: 12, height: 12 }} />
                 {intUploading ? "..." : "Upload"}
               </label>
               <button
+                data-testid="int-field-browse-button"
                 type="button"
                 onClick={openIntBrowser}
                 title="Browse Interactives"
@@ -1051,18 +1054,19 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig, docu
           {/* Interactive browser modal */}
           {intBrowserOpen && (
             <div
+              data-testid="int-browser-overlay"
               style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.5)" }}
               onClick={(e) => { if (e.target === e.currentTarget) setIntBrowserOpen(false); }}
             >
               <div style={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: "12px", boxShadow: "0 8px 40px rgba(0,0,0,0.4)", width: "min(480px, 90vw)", maxHeight: "70vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.75rem 1rem", borderBottom: "1px solid var(--border)" }}>
                   <span style={{ fontWeight: 500, fontSize: "0.9rem" }}>Interactives</span>
-                  <button type="button" onClick={() => setIntBrowserOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.25rem" }}>
+                  <button data-testid="int-browser-close-button" type="button" onClick={() => setIntBrowserOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.25rem" }}>
                     <X style={{ width: "16px", height: "16px" }} />
                   </button>
                 </div>
                 <div style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid var(--border)" }}>
-                  <input type="text" value={intSearch} onChange={(e) => setIntSearch(e.target.value)} placeholder="Search interactives…" autoFocus
+                  <input data-testid="int-browser-search-field" type="text" value={intSearch} onChange={(e) => setIntSearch(e.target.value)} placeholder="Search interactives…" autoFocus
                     style={{ width: "100%", padding: "0.35rem 0.5rem", borderRadius: "6px", border: "1px solid var(--border)", background: "color-mix(in srgb, var(--input) 30%, var(--background))", color: "var(--foreground)", fontSize: "0.8rem", outline: "none" }} />
                 </div>
                 <div style={{ overflowY: "auto", padding: "0.5rem" }}>

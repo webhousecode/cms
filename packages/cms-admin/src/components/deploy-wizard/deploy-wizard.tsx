@@ -92,6 +92,7 @@ export function DeployWizard() {
       {state.step < 4 && (
         <div style={{ display: "flex", justifyContent: "space-between", marginTop: "2rem", paddingTop: "1.5rem", borderTop: "1px solid var(--border)" }}>
           <button
+            data-testid="deploy-wizard-back-button"
             onClick={() => update({ step: Math.max(1, state.step - 1) as WizardState["step"] })}
             disabled={state.step === 1}
             style={{
@@ -109,6 +110,7 @@ export function DeployWizard() {
           </button>
 
           <button
+            data-testid="deploy-wizard-next-button"
             onClick={() => update({ step: Math.min(4, state.step + 1) as WizardState["step"] })}
             disabled={!canNext}
             style={{

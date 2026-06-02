@@ -1066,6 +1066,7 @@ export function AdminHeader({ mode, onToggleMode, onNewChat, onToggleHistory, sh
             )}
             {onToggleHistory && (
               <button
+                data-testid="header-history-button"
                 onClick={onToggleHistory}
                 title="Conversation history"
                 style={{ background: showHistory ? "var(--muted)" : "none", border: "none", cursor: "pointer", color: showHistory ? "var(--foreground)" : "var(--muted-foreground)", padding: "4px", borderRadius: "4px", display: "flex", alignItems: "center", gap: "3px", fontSize: "0.75rem" }}
