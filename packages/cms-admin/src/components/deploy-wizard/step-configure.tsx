@@ -64,6 +64,7 @@ export function StepConfigure({ appName, region, vmSize, adminEmail, onUpdate }:
         <div>
           <label style={labelStyle}>App name</label>
           <input
+            data-testid="deploy-app-name-input"
             type="text"
             value={appName}
             onChange={(e) => onUpdate({ appName: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "") })}
@@ -84,6 +85,7 @@ export function StepConfigure({ appName, region, vmSize, adminEmail, onUpdate }:
         <div>
           <label style={labelStyle}>Admin email</label>
           <input
+            data-testid="deploy-admin-email-input"
             type="email"
             value={adminEmail}
             onChange={(e) => onUpdate({ adminEmail: e.target.value })}

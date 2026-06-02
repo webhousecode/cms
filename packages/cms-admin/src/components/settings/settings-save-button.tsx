@@ -40,6 +40,7 @@ export function SettingsSaveButton() {
 
   return (
     <button
+      data-testid="settings-save-button"
       type="button"
       onClick={handleSave}
       disabled={saving}

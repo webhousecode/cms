@@ -77,6 +77,7 @@ export function NoAccessGate() {
           Ask an administrator to invite you.
         </p>
         <a
+          data-testid="gate-sign-out-link"
           href="/api/auth/logout"
           style={{
             fontSize: "0.8rem",
@@ -104,6 +105,7 @@ export function ConnectGitHubGate({ message, showButton = true }: { message?: st
         </p>
         {showButton && (
           <a
+            data-testid="gate-github-connect-link"
             href="/api/auth/github"
             style={{
               display: "inline-flex",
@@ -153,6 +155,7 @@ export function GitHubErrorGate({ message }: { message: string }) {
         </p>
         <div style={{ display: "flex", gap: "0.75rem", justifyContent: "center" }}>
           <button
+            data-testid="gate-switch-local-button"
             type="button"
             onClick={() => switchSite("default")}
             style={{
@@ -164,6 +167,7 @@ export function GitHubErrorGate({ message }: { message: string }) {
             Switch to local site
           </button>
           <button
+            data-testid="gate-retry-button"
             type="button"
             onClick={() => window.location.reload()}
             style={{
@@ -215,6 +219,7 @@ export function SiteConfigErrorGate({ siteName, errors }: { siteName: string; er
           {errors}
         </pre>
         <button
+          data-testid="gate-switch-another-site-button"
           type="button"
           onClick={switchSite}
           style={{

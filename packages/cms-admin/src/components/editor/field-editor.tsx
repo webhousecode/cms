@@ -445,6 +445,7 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig, docu
       return (
         <label data-testid={testId} className="flex items-center gap-3 cursor-pointer w-fit">
           <div
+            data-testid="boolean-field-toggle-div"
             onClick={() => !locked && onChange(!value)}
             className={cn(
               "w-10 h-5 rounded-full transition-colors relative cursor-pointer",
@@ -589,7 +590,7 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig, docu
                 }}
                 className="hover:border-primary hover:text-primary transition-colors"
               >
-                <input ref={imgInputRef} type="file" accept="image/*" onChange={handleImageUpload} disabled={locked || imgUploading} style={{ display: "none" }} />
+                <input data-testid="image-field-file-input" ref={imgInputRef} type="file" accept="image/*" onChange={handleImageUpload} disabled={locked || imgUploading} style={{ display: "none" }} />
                 <Upload style={{ width: 12, height: 12 }} />
                 {imgUploading ? "..." : "Upload"}
               </label>
@@ -852,13 +853,13 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig, docu
                   {audioConfirm ? (
                     <>
                       <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
-                      <button type="button" onClick={() => { if (audioConfirmTimer.current) clearTimeout(audioConfirmTimer.current); setAudioConfirm(false); onChange(""); }}
+                      <button data-testid="audio-field-delete-confirm-yes" type="button" onClick={() => { if (audioConfirmTimer.current) clearTimeout(audioConfirmTimer.current); setAudioConfirm(false); onChange(""); }}
                         style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
-                      <button type="button" onClick={() => { if (audioConfirmTimer.current) clearTimeout(audioConfirmTimer.current); setAudioConfirm(false); }}
+                      <button data-testid="audio-field-delete-confirm-no" type="button" onClick={() => { if (audioConfirmTimer.current) clearTimeout(audioConfirmTimer.current); setAudioConfirm(false); }}
                         style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
                     </>
                   ) : (
-                    <button type="button" onClick={() => { setAudioConfirm(true); audioConfirmTimer.current = setTimeout(() => setAudioConfirm(false), 3000); }}
+                    <button data-testid="audio-field-delete-button" type="button" onClick={() => { setAudioConfirm(true); audioConfirmTimer.current = setTimeout(() => setAudioConfirm(false), 3000); }}
                       style={{ width: "18px", height: "18px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: "0.9rem", lineHeight: 1 }} title="Remove audio">×</button>
                   )}
                 </div>

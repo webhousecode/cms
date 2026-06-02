@@ -330,6 +330,7 @@ export default function CurationPage() {
       <div className="flex gap-1 mb-6 border-b border-border">
         {TABS.map((t) => (
           <button
+            data-testid={`curation-tab-${t.id}`}
             key={t.id}
             type="button"
             onClick={() => switchTab(t.id)}
@@ -396,6 +397,7 @@ export default function CurationPage() {
 
                 <div className="flex items-center gap-1.5 shrink-0">
                   <button
+                    data-testid={`curation-speak-${item.id}`}
                     type="button"
                     title={speakingId === item.id ? "Stop" : "Read aloud"}
                     onClick={() => speakingId === item.id ? handleStop() : handleSpeak(item)}
@@ -406,6 +408,7 @@ export default function CurationPage() {
                   {/* Preview is available in all tabs (not just ready) so
                       curators can also see what was approved/rejected. */}
                   <button
+                    data-testid={`curation-preview-${item.id}`}
                     type="button"
                     onClick={() => setPreviewItem(item)}
                     title="Preview rendered content"
@@ -417,6 +420,7 @@ export default function CurationPage() {
                   {!readOnly && (tab === "ready" || tab === "in_review") && (
                     <>
                       <button
+                        data-testid={`curation-fields-${item.id}`}
                         type="button"
                         onClick={() => handleEditFields(item)}
                         title="Edit fields before approving"
@@ -426,6 +430,7 @@ export default function CurationPage() {
                         Fields
                       </button>
                       <button
+                        data-testid={`curation-approve-${item.id}`}
                         type="button"
                         title="Approve & Publish"
                         onClick={() => handleApprove(item.id)}
@@ -436,6 +441,7 @@ export default function CurationPage() {
                       </button>
                       {tab === "ready" && (
                         <button
+                          data-testid={`curation-edit-${item.id}`}
                           type="button"
                           onClick={() => handleEditFirst(item)}
                           className="flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium border border-border hover:bg-secondary transition-colors"
@@ -446,6 +452,7 @@ export default function CurationPage() {
                       )}
                       {tab === "in_review" && (
                         <button
+                          data-testid={`curation-open-editor-${item.id}`}
                           type="button"
                           onClick={() => handleEditFirst(item)}
                           className="flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium border border-border hover:bg-secondary transition-colors"
@@ -455,6 +462,7 @@ export default function CurationPage() {
                         </button>
                       )}
                       <button
+                        data-testid={`curation-reject-${item.id}`}
                         type="button"
                         title="Reject"
                         onClick={() => setRejectingId(item.id)}
@@ -488,6 +496,7 @@ export default function CurationPage() {
                   </button>
                   {item.alternatives.map((alt, i) => (
                     <button
+                      data-testid={`curation-model-alt-${item.id}-${i}`}
                       key={`${alt.model}-${i}`}
                       type="button"
                       onClick={() => handlePickAlternative(item, i)}
@@ -518,6 +527,7 @@ export default function CurationPage() {
                   />
                   <div className="flex flex-col gap-1">
                     <button
+                      data-testid={`curation-reject-confirm-${item.id}`}
                       type="button"
                       onClick={() => handleReject(item.id)}
                       disabled={!rejectFeedback.trim()}
@@ -526,6 +536,7 @@ export default function CurationPage() {
                       Confirm
                     </button>
                     <button
+                      data-testid={`curation-reject-cancel-${item.id}`}
                       type="button"
                       onClick={() => {
                         setRejectingId(null);

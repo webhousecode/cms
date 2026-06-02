@@ -29,6 +29,7 @@ export function GenerateDocumentButton({ collection, collectionLabel }: Props) {
   return (
     <>
       <button
+        data-testid="generate-document-button"
         type="button"
         onClick={() => setOpen(true)}
         className="flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-md border border-border hover:border-primary/40 hover:bg-secondary transition-all text-muted-foreground"

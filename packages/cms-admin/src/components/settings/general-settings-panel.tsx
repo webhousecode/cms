@@ -14,6 +14,7 @@ import { Checkbox } from "@/components/ui/checkbox-styled";
 function SaveButton({ saving, saved }: { saving: boolean; saved: boolean }) {
 	return (
 		<button
+			data-testid="general-settings-save-button"
 			type="submit"
 			disabled={saving}
 			style={{

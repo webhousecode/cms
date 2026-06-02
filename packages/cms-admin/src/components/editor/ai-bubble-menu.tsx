@@ -98,6 +98,7 @@ export function AIBubbleMenu({ editor }: Props) {
           </div>
           {QUICK_ACTIONS.map((action) => (
             <button
+              data-testid="ai-bubble-action-button"
               key={action.label}
               type="button"
               disabled={loading}

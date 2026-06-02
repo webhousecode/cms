@@ -193,6 +193,7 @@ function FieldEditor({ field, value, onChange }: { field: InlineFormField; value
         <div>
           <label style={labelStyle}>{field.label}{field.required && " *"}</label>
           <select
+            data-testid="inline-form-select-field"
             value={String(value ?? "")}
             onChange={(e) => onChange(e.target.value)}
             style={{ ...inputStyle, cursor: "pointer" }}
@@ -209,6 +210,7 @@ function FieldEditor({ field, value, onChange }: { field: InlineFormField; value
       return (
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <button
+            data-testid="inline-form-toggle-button"
             type="button"
             onClick={() => onChange(!value)}
             style={{

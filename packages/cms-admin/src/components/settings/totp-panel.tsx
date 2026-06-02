@@ -150,6 +150,7 @@ export function TotpPanel() {
             {backupCodes.join("\n")}
           </pre>
           <button
+            data-testid="totp-backup-codes-saved-button"
             onClick={() => setBackupCodes(null)}
             style={{
               marginTop: "0.5rem", fontSize: "0.7rem", padding: "0.25rem 0.6rem",
@@ -192,6 +193,7 @@ export function TotpPanel() {
           />
           <div style={{ display: "flex", gap: "0.5rem" }}>
             <button
+              data-testid="totp-verify-enable-button"
               onClick={confirmEnroll}
               disabled={busy || enrollCode.length < 6}
               style={{
@@ -203,6 +205,7 @@ export function TotpPanel() {
               {busy ? "..." : "Verify & enable"}
             </button>
             <button
+              data-testid="totp-enroll-cancel-button"
               onClick={() => { setEnrolling(false); setQrDataUrl(""); setSecret(""); setEnrollCode(""); }}
               style={{
                 fontSize: "0.75rem", padding: "0.4rem 0.9rem", borderRadius: "5px",
@@ -241,6 +244,7 @@ export function TotpPanel() {
                     }}
                   />
                   <button
+                    data-testid="totp-disable-button"
                     onClick={handleDisable}
                     disabled={busy}
                     style={{
@@ -252,6 +256,7 @@ export function TotpPanel() {
                     {busy ? "..." : "Disable"}
                   </button>
                   <button
+                    data-testid="totp-disable-cancel-button"
                     onClick={() => { setConfirmDisable(false); setDisableCode(""); }}
                     style={{
                       fontSize: "0.7rem", padding: "0.3rem 0.7rem", borderRadius: "4px",
@@ -264,6 +269,7 @@ export function TotpPanel() {
                 </div>
               ) : (
                 <button
+                  data-testid="totp-disable-trigger-button"
                   onClick={() => setConfirmDisable(true)}
                   className="text-xs px-3 py-1.5 rounded-md border border-border bg-card text-foreground hover:bg-accent transition-colors cursor-pointer"
                 >
@@ -273,6 +279,7 @@ export function TotpPanel() {
             </div>
           ) : (
             <button
+              data-testid="totp-add-app-button"
               onClick={startEnroll}
               disabled={busy}
               className="text-xs px-3 py-1.5 rounded-md border border-border bg-card text-foreground hover:bg-accent transition-colors cursor-pointer"

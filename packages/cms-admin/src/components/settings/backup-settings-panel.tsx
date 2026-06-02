@@ -304,6 +304,7 @@ export function BackupSettingsPanel() {
 
             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginTop: "0.5rem" }}>
               <button
+                data-testid="backup-pcloud-test-button"
                 type="button"
                 onClick={testConnection}
                 disabled={testing || !config.backupPcloudEmail || !config.backupPcloudPassword}
@@ -354,6 +355,7 @@ export function BackupSettingsPanel() {
                 <p style={{ ...descStyle, marginTop: "0.25rem", display: "flex", alignItems: "center", gap: "0.3rem", flexWrap: "wrap" }}>
                   Find your Account ID in
                   <a
+                    data-testid="backup-r2-link"
                     href="https://dash.cloudflare.com/?to=/:account/r2/overview"
                     target="_blank"
                     rel="noopener noreferrer"
@@ -449,6 +451,7 @@ export function BackupSettingsPanel() {
 
             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginTop: "0.5rem" }}>
               <button
+                data-testid="backup-s3-test-button"
                 type="button"
                 onClick={testConnection}
                 disabled={testing || !config.backupS3Bucket || !config.backupS3AccessKeyId || !config.backupS3SecretAccessKey}

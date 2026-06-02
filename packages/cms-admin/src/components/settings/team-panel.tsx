@@ -235,6 +235,7 @@ export function TeamPanel() {
         <form onSubmit={handleInvite} style={{ display: "flex", gap: "0.5rem", alignItems: "flex-start" }}>
           <div style={{ flex: 1, position: "relative" }}>
             <input
+              data-testid="team-invite-email-input"
               ref={inputRef}
               type="email"
               placeholder="email@example.com"
@@ -289,6 +290,7 @@ export function TeamPanel() {
               >
                 {(inviteEmail.length === 0 ? availableUsers : filteredSuggestions(inviteEmail)).map((u) => (
                   <button
+                    data-testid={`team-suggest-${u.id}`}
                     key={u.id}
                     type="button"
                     onClick={() => {
@@ -329,7 +331,7 @@ export function TeamPanel() {
               onChange={setInviteRole}
             />
           </div>
-          <Button type="submit" size="sm" disabled={inviting} className="gap-1.5">
+          <Button data-testid="team-invite-submit" type="submit" size="sm" disabled={inviting} className="gap-1.5">
             <UserPlus className="w-3.5 h-3.5" />
             {inviting ? "Sending..." : "Invite"}
           </Button>
@@ -450,6 +452,7 @@ export function TeamPanel() {
                       {confirmDeleteId === user.id ? (
                         <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
                           <button
+                            data-testid={`team-user-delete-confirm-${user.id}`}
                             type="button"
                             onClick={() => handleDeleteUser(user.id)}
                             style={{
@@ -465,6 +468,7 @@ export function TeamPanel() {
                             OK
                           </button>
                           <button
+                            data-testid={`team-user-delete-cancel-${user.id}`}
                             type="button"
                             onClick={() => setConfirmDeleteId(null)}
                             style={{
@@ -482,6 +486,7 @@ export function TeamPanel() {
                         </div>
                       ) : (
                         <button
+                          data-testid={`team-user-delete-button-${user.id}`}
                           type="button"
                           onClick={() => setConfirmDeleteId(user.id)}
                           title="Remove user"
@@ -559,6 +564,7 @@ export function TeamPanel() {
                   {confirmRevokeId === inv.id ? (
                     <div style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
                       <button
+                        data-testid={`team-invite-revoke-confirm-${inv.id}`}
                         type="button"
                         onClick={() => handleRevokeInvite(inv.id)}
                         style={{
@@ -574,6 +580,7 @@ export function TeamPanel() {
                         OK
                       </button>
                       <button
+                        data-testid={`team-invite-revoke-cancel-${inv.id}`}
                         type="button"
                         onClick={() => setConfirmRevokeId(null)}
                         style={{
@@ -591,6 +598,7 @@ export function TeamPanel() {
                     </div>
                   ) : (
                     <button
+                      data-testid={`team-invite-revoke-button-${inv.id}`}
                       type="button"
                       onClick={() => setConfirmRevokeId(inv.id)}
                       title="Revoke invitation"

@@ -186,6 +186,7 @@ export function PasskeysPanel() {
       )}
 
       <button
+        data-testid="passkey-add-button"
         type="button"
         onClick={handleAdd}
         disabled={adding}

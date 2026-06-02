@@ -1055,6 +1055,7 @@ export function AdminHeader({ mode, onToggleMode, onNewChat, onToggleHistory, sh
             </span>
             {onNewChat && (
               <button
+                data-testid="header-new-chat-button"
                 onClick={onNewChat}
                 title="New conversation"
                 style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "4px", borderRadius: "4px", display: "flex", alignItems: "center", gap: "3px", fontSize: "0.75rem", marginLeft: "8px" }}

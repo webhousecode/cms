@@ -550,13 +550,13 @@ export function AccessTokensPanel() {
                       style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
                         border: "none", background: "var(--destructive)", color: "#fff",
                         cursor: "pointer", lineHeight: 1 }}>Yes</button>
-                    <button onClick={() => setConfirmDelete(null)}
+                    <button data-testid={`token-revoke-cancel-${t.id}`} onClick={() => setConfirmDelete(null)}
                       style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
                         border: "1px solid var(--border)", background: "transparent",
                         color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
                   </span>
                 ) : (
-                  <button type="button" onClick={() => setConfirmDelete(t.id)}
+                  <button data-testid={`token-revoke-button-${t.id}`} type="button" onClick={() => setConfirmDelete(t.id)}
                     style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", background: "none", border: "none", cursor: "pointer" }}>
                     Revoke
                   </button>
