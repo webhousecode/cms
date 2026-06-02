@@ -71,6 +71,7 @@ function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
   return (
     <button
+      data-testid="copy-invite-link-button"
       type="button"
       onClick={async () => {
         await navigator.clipboard.writeText(text);
@@ -232,7 +233,7 @@ export function TeamPanel() {
         <p className="text-xs text-muted-foreground" style={{ marginTop: "-0.5rem", marginBottom: "1rem" }}>
           Invite an existing user or a new email address to this site.
         </p>
-        <form onSubmit={handleInvite} style={{ display: "flex", gap: "0.5rem", alignItems: "flex-start" }}>
+        <form data-testid="team-invite-form" onSubmit={handleInvite} style={{ display: "flex", gap: "0.5rem", alignItems: "flex-start" }}>
           <div style={{ flex: 1, position: "relative" }}>
             <input
               data-testid="team-invite-email-input"

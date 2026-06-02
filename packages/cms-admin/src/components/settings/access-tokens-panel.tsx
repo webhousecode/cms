@@ -402,7 +402,7 @@ export function AccessTokensPanel() {
                     />
                   )}
                   {f.scope === "admin-area" && (
-                    <input type="text" value={Array.isArray(f.targets) ? f.targets.join(", ") : ""}
+                    <input data-testid={`token-adminarea-targets-${i}`} type="text" value={Array.isArray(f.targets) ? f.targets.join(", ") : ""}
                       placeholder="e.g. deploy, tokens, team"
                       onChange={(e) => setResourceFilters(resourceFilters.map((r, idx) => idx === i ? { ...r, targets: e.target.value.split(",").map((t) => t.trim()).filter(Boolean) } : r))}
                       style={{ ...inputStyle, flex: 1 }} />
@@ -437,7 +437,7 @@ export function AccessTokensPanel() {
                     }
                   />
                 </div>
-                <input type="text" value={f.cidrs.join(", ")} placeholder="e.g. 203.0.113.4/32"
+                <input data-testid={`token-ip-cidrs-${i}`} type="text" value={f.cidrs.join(", ")} placeholder="e.g. 203.0.113.4/32"
                   onChange={(e) => setIpFilters(ipFilters.map((x, idx) => idx === i ? { ...x, cidrs: e.target.value.split(",").map((c) => c.trim()).filter(Boolean) } : x))}
                   style={{ ...inputStyle, flex: 1 }} />
                 <button data-testid={`token-ip-remove-${i}`} type="button" onClick={() => setIpFilters(ipFilters.filter((_, idx) => idx !== i))}
@@ -598,6 +598,7 @@ function SiteChipPicker({
         const active = selected.includes(s.id);
         return (
           <button
+            data-testid={`token-site-chip-${s.id}`}
             key={s.id}
             type="button"
             onClick={() => toggle(s.id)}

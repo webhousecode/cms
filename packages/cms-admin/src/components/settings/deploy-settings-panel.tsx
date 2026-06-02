@@ -590,7 +590,7 @@ export function DeploySettingsPanel() {
               {config.deployProvider === "cloudflare" && "Cloudflare → Pages → Settings → Builds → Deploy hooks"}
               {config.deployProvider === "custom" && "Any URL that accepts a POST request to trigger a build"}
             </p>
-            <input type="url" value={config.deployHookUrl} onChange={(e) => updateConfig((c) => ({ ...c, deployHookUrl: e.target.value }))}
+            <input data-testid="deploy-input-1" type="url" value={config.deployHookUrl} onChange={(e) => updateConfig((c) => ({ ...c, deployHookUrl: e.target.value }))}
               placeholder="https://api.vercel.com/v1/integrations/deploy/..." style={inputStyle} />
           </div>
         )}
@@ -608,7 +608,7 @@ export function DeploySettingsPanel() {
                   style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>Get key <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
               )}
             </div>
-            <input type="password" value={config.deployApiToken} onChange={(e) => updateConfig((c) => ({ ...c, deployApiToken: e.target.value }))}
+            <input data-testid="deploy-input-2" type="password" value={config.deployApiToken} onChange={(e) => updateConfig((c) => ({ ...c, deployApiToken: e.target.value }))}
               placeholder="Token..." style={{ ...inputStyle, fontFamily: "inherit" }} />
           </div>
         )}
@@ -618,7 +618,7 @@ export function DeploySettingsPanel() {
             <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>
               {config.deployProvider === "flyio" || config.deployProvider === "flyio-live" ? "App name" : "Repository (owner/repo)"}
             </label>
-            <input type="text" value={config.deployAppName} onChange={(e) => updateConfig((c) => ({ ...c, deployAppName: e.target.value }))}
+            <input data-testid="deploy-input-3" type="text" value={config.deployAppName} onChange={(e) => updateConfig((c) => ({ ...c, deployAppName: e.target.value }))}
               placeholder={config.deployProvider === "flyio" || config.deployProvider === "flyio-live" ? "my-app" : "owner/repo"} style={inputStyle} />
           </div>
         )}
@@ -629,7 +629,7 @@ export function DeploySettingsPanel() {
             <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: 0 }}>
               Fly.io org slug — auto-detected from token if left empty
             </p>
-            <input type="text" value={config.deployFlyOrg} onChange={(e) => updateConfig((c) => ({ ...c, deployFlyOrg: e.target.value }))}
+            <input data-testid="deploy-input-4" type="text" value={config.deployFlyOrg} onChange={(e) => updateConfig((c) => ({ ...c, deployFlyOrg: e.target.value }))}
               placeholder="Auto-detect from token" style={inputStyle} />
           </div>
         )}
@@ -637,7 +637,7 @@ export function DeploySettingsPanel() {
         {config.deployProvider === "flyio" && (
           <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
             <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Or: Deploy hook URL (alternative)</label>
-            <input type="url" value={config.deployHookUrl} onChange={(e) => updateConfig((c) => ({ ...c, deployHookUrl: e.target.value }))}
+            <input data-testid="deploy-input-5" type="url" value={config.deployHookUrl} onChange={(e) => updateConfig((c) => ({ ...c, deployHookUrl: e.target.value }))}
               placeholder="https://..." style={inputStyle} />
           </div>
         )}
@@ -649,12 +649,12 @@ export function DeploySettingsPanel() {
               <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: 0 }}>
                 Fly region code for the volume. Cannot be changed after first deploy.
               </p>
-              <input type="text" value={config.deployFlyLiveRegion} onChange={(e) => updateConfig((c) => ({ ...c, deployFlyLiveRegion: e.target.value }))}
+              <input data-testid="deploy-input-6" type="text" value={config.deployFlyLiveRegion} onChange={(e) => updateConfig((c) => ({ ...c, deployFlyLiveRegion: e.target.value }))}
                 placeholder="arn" style={inputStyle} />
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
               <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Volume name</label>
-              <input type="text" value={config.deployFlyLiveVolumeName} onChange={(e) => updateConfig((c) => ({ ...c, deployFlyLiveVolumeName: e.target.value }))}
+              <input data-testid="deploy-input-7" type="text" value={config.deployFlyLiveVolumeName} onChange={(e) => updateConfig((c) => ({ ...c, deployFlyLiveVolumeName: e.target.value }))}
                 placeholder="site_data" style={inputStyle} />
             </div>
             {config.deployFlyLiveSyncSecret && (
@@ -686,7 +686,7 @@ export function DeploySettingsPanel() {
               <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: 0 }}>
                 Permission: "Account → Cloudflare Pages → Edit"
               </p>
-              <input type="password" value={config.deployApiToken} onChange={(e) => updateConfig((c) => ({ ...c, deployApiToken: e.target.value }))}
+              <input data-testid="deploy-input-8" type="password" value={config.deployApiToken} onChange={(e) => updateConfig((c) => ({ ...c, deployApiToken: e.target.value }))}
                 placeholder="Token..." style={{ ...inputStyle, fontFamily: "inherit" }} />
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
@@ -702,7 +702,7 @@ export function DeploySettingsPanel() {
                 </a>
                 → right sidebar → Account ID
               </p>
-              <input type="text" value={config.deployCloudflareAccountId} onChange={(e) => updateConfig((c) => ({ ...c, deployCloudflareAccountId: e.target.value }))}
+              <input data-testid="deploy-input-9" type="text" value={config.deployCloudflareAccountId} onChange={(e) => updateConfig((c) => ({ ...c, deployCloudflareAccountId: e.target.value }))}
                 placeholder="abcdef0123456789..." style={inputStyle} />
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
@@ -710,7 +710,7 @@ export function DeploySettingsPanel() {
               <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: 0 }}>
                 Lowercase letters, digits, hyphens. Auto-created on first deploy if missing.
               </p>
-              <input type="text" value={config.deployCloudflareProjectName} onChange={(e) => updateConfig((c) => ({ ...c, deployCloudflareProjectName: e.target.value }))}
+              <input data-testid="deploy-input-10" type="text" value={config.deployCloudflareProjectName} onChange={(e) => updateConfig((c) => ({ ...c, deployCloudflareProjectName: e.target.value }))}
                 placeholder="my-site" style={inputStyle} />
             </div>
           </>
@@ -785,9 +785,9 @@ export function DeploySettingsPanel() {
               {rebuildConfirm && !rebuilding && (
                 <div style={{ display: "flex", alignItems: "center", gap: "0.3rem" }}>
                   <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Rebuild?</span>
-                  <button onClick={handleRebuildInfra}
+                  <button data-testid="deploy-button-1" onClick={handleRebuildInfra}
                     style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
-                  <button onClick={() => setRebuildConfirm(false)}
+                  <button data-testid="deploy-button-2" onClick={() => setRebuildConfirm(false)}
                     style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
                 </div>
               )}
@@ -1319,7 +1319,7 @@ export function DeploySettingsPanel() {
           </div>
         )}
         {deploys.length > 0 && (
-          <button type="button" onClick={loadData}
+          <button data-testid="deploy-button-3" type="button" onClick={loadData}
             style={{ display: "flex", alignItems: "center", gap: "0.3rem", padding: "0.3rem 0", border: "none", background: "none", color: "var(--muted-foreground)", fontSize: "0.7rem", cursor: "pointer" }}>
             <RefreshCw style={{ width: "0.65rem", height: "0.65rem" }} /> Refresh
           </button>

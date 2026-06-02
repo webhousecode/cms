@@ -190,13 +190,13 @@ export function ScheduledCalendar({ events, calendarToken, orgId, siteId }: { ev
                 : `${MONTHS[month]} ${year}`}
           </h2>
           <div className="flex items-center gap-0.5">
-            <button type="button" onClick={() => navigate(-1)} className="p-1.5 rounded-md hover:bg-secondary transition-colors text-muted-foreground">
+            <button data-testid="calendar-button-1" type="button" onClick={() => navigate(-1)} className="p-1.5 rounded-md hover:bg-secondary transition-colors text-muted-foreground">
               <ChevronLeft className="w-4 h-4" />
             </button>
-            <button type="button" onClick={goToday} className="px-3 py-1 rounded-md text-xs font-medium border border-border hover:bg-secondary transition-colors text-muted-foreground">
+            <button data-testid="calendar-button-2" type="button" onClick={goToday} className="px-3 py-1 rounded-md text-xs font-medium border border-border hover:bg-secondary transition-colors text-muted-foreground">
               Today
             </button>
-            <button type="button" onClick={() => navigate(1)} className="p-1.5 rounded-md hover:bg-secondary transition-colors text-muted-foreground">
+            <button data-testid="calendar-button-3" type="button" onClick={() => navigate(1)} className="p-1.5 rounded-md hover:bg-secondary transition-colors text-muted-foreground">
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>

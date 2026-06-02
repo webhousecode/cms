@@ -64,7 +64,7 @@ function renderMarkdown(md: string): string {
         return `<span style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.4rem 0.7rem;margin:0.5rem 0;border:1px dashed var(--destructive);border-radius:6px;color:var(--destructive);font-size:0.75rem;">⚠ Invalid image URL <code style="opacity:0.7;">${url.slice(0, 60)}${url.length > 60 ? "…" : ""}</code></span>`;
       })
       // links: [text](url)
-      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noreferrer" style="color:var(--primary);text-decoration:underline;">$1</a>')
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a data-testid="curation-preview-link" href="$2" target="_blank" rel="noreferrer" style="color:var(--primary);text-decoration:underline;">$1</a>')
       // bold
       .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
       // italic
@@ -663,6 +663,7 @@ export default function CurationPage() {
           }}
         >
           <button
+            data-testid="curation-preview-modal-close"
             type="button"
             onClick={() => setPreviewItem(null)}
             title="Close preview"
