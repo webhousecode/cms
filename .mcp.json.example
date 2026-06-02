@@ -1,0 +1,15 @@
+{
+  "_comment": "Copy this file to .mcp.json and replace <PLAINTEXT_KEY> with a real key. Generate via Settings → MCP Keys at https://www.cardmem.com or the cardmem_generate_mcp_key MCP tool. .mcp.json is gitignored — never commit your key.",
+  "mcpServers": {
+    "cardmem": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote",
+        "https://services.cardmem.com/mcp",
+        "--header",
+        "Authorization: Bearer <PLAINTEXT_KEY>"
+      ]
+    }
+  }
+}
