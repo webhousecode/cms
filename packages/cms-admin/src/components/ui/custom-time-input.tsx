@@ -80,6 +80,7 @@ export function CustomTimeInput({ value, onChange, disabled = false, style }: Pr
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "0.2rem", ...style }}>
       <input
+        data-testid="custom-time-input"
         type="text"
         inputMode="numeric"
         autoComplete="off"
