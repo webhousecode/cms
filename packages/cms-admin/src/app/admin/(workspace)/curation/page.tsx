@@ -577,6 +577,7 @@ export default function CurationPage() {
                           </select>
                         ) : field.type === "tags" ? (
                           <input
+                            data-testid={`curation-field-tags-${item.id}-${field.name}`}
                             type="text"
                             value={((editDraft[field.name] as string[]) ?? []).join(", ")}
                             onChange={(e) =>
@@ -598,6 +599,7 @@ export default function CurationPage() {
                           />
                         ) : (
                           <input
+                            data-testid={`curation-field-input-${item.id}-${field.name}`}
                             type={field.type === "date" ? "date" : field.type === "number" ? "number" : "text"}
                             value={String(editDraft[field.name] ?? "")}
                             onChange={(e) => setEditDraft((prev) => ({ ...prev, [field.name]: e.target.value }))}
@@ -608,6 +610,7 @@ export default function CurationPage() {
                     ))}
                   <div className="flex gap-2 pt-1">
                     <button
+                      data-testid={`curation-field-save-${item.id}`}
                       type="button"
                       onClick={() => handleSaveFields(item)}
                       className="px-3 py-1.5 rounded-md text-xs bg-primary text-primary-foreground hover:opacity-90"
@@ -615,6 +618,7 @@ export default function CurationPage() {
                       Save fields
                     </button>
                     <button
+                      data-testid={`curation-field-cancel-${item.id}`}
                       type="button"
                       onClick={() => setEditingId(null)}
                       className="px-3 py-1.5 rounded-md text-xs border border-border hover:bg-secondary"
@@ -640,6 +644,7 @@ export default function CurationPage() {
     {/* Preview modal — full rendered post for the selected queue item */}
     {previewItem && (
       <div
+        data-testid="curation-preview-modal-backdrop"
         onClick={() => setPreviewItem(null)}
         style={{
           position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 100,
@@ -648,6 +653,7 @@ export default function CurationPage() {
         }}
       >
         <div
+          data-testid="curation-preview-modal-content"
           onClick={(e) => e.stopPropagation()}
           style={{
             background: "var(--card)", color: "var(--foreground)",

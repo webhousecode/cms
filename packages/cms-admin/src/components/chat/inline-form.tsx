@@ -167,6 +167,7 @@ function FieldEditor({ field, value, onChange }: { field: InlineFormField; value
         <div>
           <label style={labelStyle}>{field.label}{field.required && " *"}</label>
           <input
+            data-testid="inline-form-text-input"
             type="text"
             value={String(value ?? "")}
             onChange={(e) => onChange(e.target.value)}
@@ -180,6 +181,7 @@ function FieldEditor({ field, value, onChange }: { field: InlineFormField; value
         <div>
           <label style={labelStyle}>{field.label}{field.required && " *"}</label>
           <textarea
+            data-testid="inline-form-textarea-input"
             value={String(value ?? "")}
             onChange={(e) => onChange(e.target.value)}
             rows={4}
@@ -254,6 +256,7 @@ function FieldEditor({ field, value, onChange }: { field: InlineFormField; value
         <div>
           <label style={labelStyle}>{field.label}</label>
           <input
+            data-testid="inline-form-tags-input"
             type="text"
             value={Array.isArray(value) ? (value as string[]).join(", ") : String(value ?? "")}
             onChange={(e) => onChange(e.target.value.split(",").map((t) => t.trim()).filter(Boolean))}
