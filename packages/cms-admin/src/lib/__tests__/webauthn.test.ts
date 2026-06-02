@@ -56,6 +56,10 @@ beforeEach(async () => {
   const configPath = path.join(tmpDir, "cms.config.ts");
   await fs.writeFile(configPath, "// dummy");
   process.env.CMS_CONFIG_PATH = configPath;
+  // getAdminDataDir() resolves the data dir from WEBHOUSE_DATA_DIR (explicit
+  // override) → <tmpDir>/_data; without it, it falls back to the real
+  // ~/.webhouse/cms-admin and the seeded user is never found.
+  process.env.WEBHOUSE_DATA_DIR = tmpDir;
   // Seed a single user
   const dataDir = path.join(tmpDir, "_data");
   await fs.mkdir(dataDir, { recursive: true });
@@ -77,6 +81,7 @@ beforeEach(async () => {
 afterEach(async () => {
   await fs.rm(tmpDir, { recursive: true, force: true });
   delete process.env.CMS_CONFIG_PATH;
+  delete process.env.WEBHOUSE_DATA_DIR;
   vi.resetModules();
 });
 

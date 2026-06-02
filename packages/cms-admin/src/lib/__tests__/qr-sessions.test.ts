@@ -68,7 +68,7 @@ describe("qr-sessions", () => {
   it("expired sessions cannot be approved", () => {
     vi.useFakeTimers();
     const s = createQrSession();
-    vi.advanceTimersByTime(6 * 60 * 1000); // > 5 min TTL
+    vi.advanceTimersByTime(16 * 60 * 1000); // > 15 min TTL (TTL_MS in qr-sessions.ts)
     expect(() => approveQrSession(s.id, "user-1")).toThrow();
     expect(getQrSession(s.id)?.status).toBe("expired");
   });
