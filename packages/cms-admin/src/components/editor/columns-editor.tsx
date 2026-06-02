@@ -150,6 +150,7 @@ export function ColumnsEditor({ block, onChange, locked, blocksConfig = [] }: Co
           <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap", alignItems: "center" }}>
             {LAYOUT_PRESETS.map((preset) => (
               <button
+                data-testid={`columns-layout-${preset.value}`}
                 key={preset.value}
                 type="button"
                 onClick={() => requestLayout(preset.value)}

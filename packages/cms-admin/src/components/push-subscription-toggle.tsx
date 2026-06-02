@@ -161,6 +161,7 @@ export function PushSubscriptionToggle(): React.ReactNode {
           {state === "enabled" && <span style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", background: "color-mix(in srgb, var(--primary) 20%, transparent)", color: "var(--primary)", borderRadius: "999px" }}>ON</span>}
         </div>
         <button
+          data-testid="push-notification-toggle"
           onClick={state === "enabled" ? disable : enable}
           disabled={state === "loading"}
           style={{

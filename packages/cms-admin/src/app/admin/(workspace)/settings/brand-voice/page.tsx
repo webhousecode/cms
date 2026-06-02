@@ -89,7 +89,7 @@ function BrandVoiceHistoryPanel({ versions, onRestore, onClose }: {
     <div style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: "380px", zIndex: 100, background: "var(--card)", borderLeft: "1px solid var(--border)", boxShadow: "-4px 0 20px rgba(0,0,0,0.3)", display: "flex", flexDirection: "column" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.75rem 1rem", borderBottom: "1px solid var(--border)" }}>
         <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>Revision history</span>
-        <button type="button" onClick={onClose} style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1.1rem", lineHeight: 1 }}>×</button>
+        <button data-testid="history-panel-close" type="button" onClick={onClose} style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1.1rem", lineHeight: 1 }}>×</button>
       </div>
       <div style={{ flex: 1, overflowY: "auto", padding: "0.5rem 0" }}>
         {versions.length === 0 && (
@@ -111,14 +111,14 @@ function BrandVoiceHistoryPanel({ versions, onRestore, onClose }: {
                     {v.language}{prev ? ` · ${changedFields.length} changed field${changedFields.length !== 1 ? "s" : ""}` : " · initial version"}
                   </p>
                   {changedFields.length > 0 && (
-                    <button type="button" onClick={() => setExpanded(isOpen ? null : v.id)}
+                    <button data-testid="version-diff-toggle" type="button" onClick={() => setExpanded(isOpen ? null : v.id)}
                       style={{ fontSize: "0.65rem", color: "var(--primary)", background: "transparent", border: "none", cursor: "pointer", padding: 0, marginTop: "0.2rem" }}>
                       {isOpen ? "Hide diff" : "Show diff"}
                     </button>
                   )}
                 </div>
                 {!v.active && (
-                  <button type="button" onClick={() => restore(v)} disabled={restoring === v.id}
+                  <button data-testid="version-restore-button" type="button" onClick={() => restore(v)} disabled={restoring === v.id}
                     style={{ fontSize: "0.7rem", padding: "0.25rem 0.5rem", borderRadius: "4px", border: "1px solid var(--border)", cursor: restoring === v.id ? "wait" : "pointer", background: "transparent", color: "var(--foreground)", whiteSpace: "nowrap", flexShrink: 0 }}>
                     {restoring === v.id ? "…" : "Restore"}
                   </button>
@@ -264,6 +264,7 @@ function EditForm({ version, onSaved, onCancel }: {
 
       <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.5rem" }}>
         <button
+          data-testid="edit-form-save-button"
           type="button"
           onClick={save}
           disabled={saving}
@@ -273,6 +274,7 @@ function EditForm({ version, onSaved, onCancel }: {
           Save changes
         </button>
         <button
+          data-testid="edit-form-cancel-button"
           type="button"
           onClick={onCancel}
           style={{ padding: "0.5rem 1rem", borderRadius: "7px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.875rem", cursor: "pointer" }}
@@ -369,8 +371,8 @@ function ImportExportMenu({ bv, onImport }: { bv: BrandVoice; onImport: (v: Bran
 
   return (
     <div style={{ position: "relative" }}>
-      <input ref={fileRef} type="file" accept=".json,application/json" style={{ display: "none" }} onChange={handleFile} />
-      <button type="button" onClick={() => setOpen((o) => !o)} disabled={importing} style={btnStyle}>
+      <input data-testid="import-export-file-input" ref={fileRef} type="file" accept=".json,application/json" style={{ display: "none" }} onChange={handleFile} />
+      <button data-testid="import-export-menu-button" type="button" onClick={() => setOpen((o) => !o)} disabled={importing} style={btnStyle}>
         {importing ? <Loader2 style={{ width: "12px", height: "12px" }} className="animate-spin" /> : <ArrowUpDown style={{ width: "12px", height: "12px" }} />}
         <ChevronDown style={{ width: "10px", height: "10px" }} />
       </button>
@@ -795,6 +797,7 @@ export default function BrandVoicePage() {
           </div>
           {activeVoice && (
             <button
+              data-testid="interview-cancel-button"
               type="button"
               onClick={() => { setInterviewActive(false); setMessages([]); }}
               style={{ marginTop: "0.25rem", padding: "0.35rem 0.75rem", borderRadius: "7px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: "pointer", flexShrink: 0 }}
@@ -1023,7 +1026,7 @@ export default function BrandVoicePage() {
             ))}
           </ul>
         </div>
-        <button type="button" onClick={startInterview}
+        <button data-testid="start-interview-button" type="button" onClick={startInterview}
           style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.6rem 1.25rem", borderRadius: "8px", border: "none", background: "var(--primary)", color: "var(--primary-foreground)", fontSize: "0.875rem", fontWeight: 600, cursor: "pointer" }}>
           <Pencil style={{ width: "14px", height: "14px" }} />
           Start interview

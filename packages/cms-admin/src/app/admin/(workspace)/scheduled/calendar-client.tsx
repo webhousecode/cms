@@ -144,6 +144,7 @@ export function ScheduledCalendar({ events, calendarToken, orgId, siteId }: { ev
           <div className="flex items-center gap-0.5 rounded-lg border border-border p-0.5">
             {(["day", "week", "month", "year"] as ViewMode[]).map((v) => (
               <button
+                data-testid={`calendar-view-${v}`}
                 key={v}
                 type="button"
                 onClick={() => setView(v)}
@@ -155,6 +156,7 @@ export function ScheduledCalendar({ events, calendarToken, orgId, siteId }: { ev
           </div>
           <div className="flex items-center gap-1">
             <button
+              data-testid="calendar-subscribe-button"
               type="button"
               onClick={() => {
                 const feedPath = `/api/cms/scheduled/calendar.ics?token=${calendarToken}&org=${orgId}&site=${siteId}`;

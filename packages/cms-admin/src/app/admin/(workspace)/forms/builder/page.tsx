@@ -152,6 +152,7 @@ export default function FormBuilderPage() {
           <div>
             <label style={{ fontSize: "0.75rem", fontWeight: 600, display: "block", marginBottom: "0.25rem" }}>Form ID</label>
             <input
+              data-testid="form-builder-name-input"
               value={name}
               onChange={(e) => setName(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
               placeholder="contact"
@@ -162,7 +163,7 @@ export default function FormBuilderPage() {
           </div>
           <div>
             <label style={{ fontSize: "0.75rem", fontWeight: 600, display: "block", marginBottom: "0.25rem" }}>Label</label>
-            <input value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Contact Form" style={inputStyle} />
+            <input data-testid="form-builder-label-input" value={label} onChange={(e) => setLabel(e.target.value)} placeholder="Contact Form" style={inputStyle} />
           </div>
         </div>
 

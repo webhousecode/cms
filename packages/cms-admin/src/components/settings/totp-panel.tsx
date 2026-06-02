@@ -180,6 +180,7 @@ export function TotpPanel() {
             </details>
           )}
           <input
+            data-testid="totp-enroll-code-input"
             type="text"
             inputMode="numeric"
             value={enrollCode}
@@ -232,6 +233,7 @@ export function TotpPanel() {
               {confirmDisable ? (
                 <div style={{ display: "flex", gap: "0.4rem", alignItems: "center", flexWrap: "wrap" }}>
                   <input
+                    data-testid="totp-disable-code-input"
                     type="text"
                     inputMode="numeric"
                     value={disableCode}

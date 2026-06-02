@@ -619,8 +619,8 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
 
                 return (
                   <tr
+                    data-testid={`collection-list-item-${doc.slug}`}
                     key={doc.id ?? doc.slug}
-                    data-testid={`collection-item-${doc.slug}`}
                     style={{ borderTop: i === 0 ? "none" : "1px solid var(--border)", transition: "background 120ms" }}
                     className="hover:bg-secondary/50"
                   >

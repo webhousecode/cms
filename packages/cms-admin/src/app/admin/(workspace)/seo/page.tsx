@@ -317,6 +317,7 @@ export default function SeoPage() {
                     }}
                   />
                   <button
+                    data-testid="keyword-add-button"
                     type="submit"
                     disabled={addingKeyword || !newKeyword.trim()}
                     style={{

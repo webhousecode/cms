@@ -280,6 +280,7 @@ CRITICAL: Dollar signs in JavaScript strings MUST be preserved literally. Write 
       {/* Input */}
       <div style={{ padding: "0.625rem 0.75rem 2rem", borderTop: "1px solid var(--border)", display: "flex", gap: "0.5rem", alignItems: "flex-end" }}>
         <textarea
+          data-testid="interactive-ai-input"
           ref={textareaRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}

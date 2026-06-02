@@ -105,6 +105,7 @@ export default function LighthousePage() {
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
           {hasResults && (
             <button
+              data-testid="lighthouse-export-button"
               onClick={handleExport}
               title="Download a Markdown report ready to paste into Claude/ChatGPT or hand to a developer"
               style={{
@@ -122,6 +123,7 @@ export default function LighthousePage() {
           )}
           {hasIssues && (
             <button
+              data-testid="lighthouse-optimize-button"
               onClick={handleOptimize}
               disabled={optimizing}
               style={{
@@ -139,6 +141,7 @@ export default function LighthousePage() {
             </button>
           )}
           <button
+            data-testid="lighthouse-scan-button"
             onClick={handleScan}
             disabled={scanning}
             style={{
@@ -240,7 +243,7 @@ export default function LighthousePage() {
             <div style={{ fontSize: "0.78rem", color: "var(--muted-foreground)", marginBottom: "1rem" }}>
               Run your first scan to see performance, accessibility, SEO, and best practices — for both mobile and desktop.
             </div>
-            <button onClick={handleScan} disabled={scanning} style={{
+            <button data-testid="lighthouse-first-scan-button" onClick={handleScan} disabled={scanning} style={{
               padding: "0.5rem 1.25rem", borderRadius: 6, border: "none",
               background: "#F7BB2E", color: "#0D0D0D", fontSize: "0.82rem",
               fontWeight: 600, cursor: "pointer",
@@ -505,7 +508,7 @@ function OpportunitiesSection({ mobile, desktop }: { mobile: LighthouseResult | 
     <div style={{ marginBottom: "2rem" }}>
       {opps.length > 0 && (
         <div style={{ marginBottom: "1rem" }}>
-          <button onClick={() => setExpandOpps(!expandOpps)} style={{
+          <button data-testid="lighthouse-opportunities-toggle" onClick={() => setExpandOpps(!expandOpps)} style={{
             display: "flex", alignItems: "center", gap: "0.3rem", background: "none", border: "none",
             cursor: "pointer", color: "var(--foreground)", fontSize: "0.82rem", fontWeight: 600, padding: 0, marginBottom: "0.5rem",
           }}>
@@ -540,7 +543,7 @@ function OpportunitiesSection({ mobile, desktop }: { mobile: LighthouseResult | 
 
       {diags.length > 0 && (
         <div>
-          <button onClick={() => setExpandDiag(!expandDiag)} style={{
+          <button data-testid="lighthouse-diagnostics-toggle" onClick={() => setExpandDiag(!expandDiag)} style={{
             display: "flex", alignItems: "center", gap: "0.3rem", background: "none", border: "none",
             cursor: "pointer", color: "var(--foreground)", fontSize: "0.82rem", fontWeight: 600, padding: 0, marginBottom: "0.5rem",
           }}>

@@ -315,6 +315,7 @@ export default function SitesDashboard() {
       <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.5rem" }}>
         <div style={{ display: "flex", border: "1px solid var(--border)", borderRadius: "6px", overflow: "hidden" }}>
           <button
+            data-testid="sites-view-toggle-grid"
             type="button"
             title="Grid view"
             onClick={() => { setViewMode("grid"); localStorage.setItem("cms-sites-view", "grid"); }}
@@ -328,6 +329,7 @@ export default function SitesDashboard() {
             <LayoutGrid style={{ width: "0.875rem", height: "0.875rem" }} />
           </button>
           <button
+            data-testid="sites-view-toggle-list"
             type="button"
             title="List view"
             onClick={() => { setViewMode("list"); localStorage.setItem("cms-sites-view", "list"); }}

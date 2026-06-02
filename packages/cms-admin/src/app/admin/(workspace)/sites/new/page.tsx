@@ -336,6 +336,7 @@ export default function NewSitePage() {
             <>
               {!ghConnected ? (
                 <button
+                  data-testid="new-site-github-connect"
                   type="button"
                   onClick={connectGitHub}
                   style={{
@@ -366,7 +367,7 @@ export default function NewSitePage() {
                       <a href={`https://github.com/settings/connections/applications/${process.env.NEXT_PUBLIC_GITHUB_OAUTH_CLIENT_ID ?? ""}`} target="_blank" rel="noopener noreferrer" style={{ color: "var(--muted-foreground)", fontSize: "0.75rem", textDecoration: "underline", cursor: "pointer" }}>
                         Manage access
                       </a>
-                      <button type="button" onClick={disconnectGitHub} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "0.75rem", textDecoration: "underline" }}>
+                      <button data-testid="new-site-github-disconnect" type="button" onClick={disconnectGitHub} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "0.75rem", textDecoration: "underline" }}>
                         Disconnect
                       </button>
                     </span>
@@ -400,6 +401,7 @@ export default function NewSitePage() {
                       <div>
                         <label style={labelStyle}>Repository name</label>
                         <input
+                          data-testid="new-site-repo-name"
                           type="text"
                           value={ghNewRepoName}
                           onChange={(e) => {
@@ -461,7 +463,7 @@ export default function NewSitePage() {
                   {/* Site name */}
                   <div>
                     <label style={labelStyle}>Site Name</label>
-                    <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="My Site" style={inputStyle} />
+                    <input data-testid="new-site-name-github" type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="My Site" style={inputStyle} />
                     {name && <p style={{ margin: "0.25rem 0 0", fontSize: "0.7rem", color: "var(--muted-foreground)", fontFamily: "monospace" }}>ID: {siteId()}</p>}
                   </div>
 
@@ -538,6 +540,7 @@ export default function NewSitePage() {
                   />
                   {isMac && (
                     <button
+                      data-testid="new-site-browse-folder"
                       type="button"
                       onClick={handleBrowse}
                       style={{
@@ -551,6 +554,7 @@ export default function NewSitePage() {
                     </button>
                   )}
                   <button
+                    data-testid="new-site-import-button"
                     type="button"
                     onClick={handleImport}
                     disabled={importing || !importPath.trim()}
@@ -586,7 +590,7 @@ export default function NewSitePage() {
 
               <div>
                 <label style={labelStyle}>Site Name</label>
-                <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="My Site" style={inputStyle} />
+                <input data-testid="new-site-name-filesystem" type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="My Site" style={inputStyle} />
                 {name && <p style={{ margin: "0.25rem 0 0", fontSize: "0.7rem", color: "var(--muted-foreground)", fontFamily: "monospace" }}>ID: {siteId()}</p>}
               </div>
               <div>
@@ -626,6 +630,7 @@ export default function NewSitePage() {
         {adapter !== "migrate" && (
           <div style={{ display: "flex", gap: "0.75rem", marginTop: "0.5rem" }}>
             <button
+              data-testid="new-site-create-button"
               type="button"
               onClick={handleCreate}
               disabled={saving || (adapter === "github" && !ghConnected)}

@@ -448,6 +448,7 @@ export function HelpButton() {
   return (
     <>
       <button
+        data-testid="help-button"
         type="button"
         onClick={() => { setPage("help"); setOpen(true); }}
         style={{

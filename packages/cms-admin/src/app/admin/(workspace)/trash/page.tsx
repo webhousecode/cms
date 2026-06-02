@@ -160,6 +160,7 @@ export default function TrashPage() {
           </span>
           {canEmpty && items.length > 0 && (
             <button
+              data-testid="trash-empty-button"
               type="button"
               onClick={() => setConfirmEmpty(true)}
               style={{ display: "flex", alignItems: "center", gap: "0.375rem", padding: "0.35rem 0.75rem", borderRadius: "6px", border: "1px solid color-mix(in oklch, var(--destructive) 40%, transparent)", background: "transparent", color: "var(--destructive)", fontSize: "0.75rem", cursor: "pointer" }}
@@ -177,6 +178,7 @@ export default function TrashPage() {
           <div style={{ position: "relative", marginBottom: "1.25rem", maxWidth: "400px" }}>
             <Search style={{ position: "absolute", left: "0.625rem", top: "50%", transform: "translateY(-50%)", width: "14px", height: "14px", color: "var(--muted-foreground)", pointerEvents: "none" }} />
             <input
+              data-testid="trash-search-input"
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -232,6 +234,7 @@ export default function TrashPage() {
                   {!readOnly && (
                     <div style={{ display: "flex", gap: "0.375rem", flexShrink: 0 }}>
                       <button
+                        data-testid="trash-restore-button"
                         type="button"
                         disabled={isWorking}
                         onClick={() => restore(item)}
@@ -242,6 +245,7 @@ export default function TrashPage() {
                         Restore
                       </button>
                       <button
+                        data-testid="trash-delete-button"
                         type="button"
                         disabled={isWorking}
                         onClick={() => {

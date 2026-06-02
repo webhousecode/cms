@@ -154,7 +154,7 @@ export function MCPSettingsPanel() {
             { label: "Public (read-only, rate-limited)", url: publicEndpoint },
             { label: "Admin (authenticated, full access)", url: adminEndpoint },
           ].map(({ label, url }) => (
-            <div key={url} style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.6rem 0.75rem", borderRadius: "8px", border: "1px solid var(--border)", background: "var(--card)" }}>
+            <div data-testid="mcp-endpoint-item" key={url} style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.6rem 0.75rem", borderRadius: "8px", border: "1px solid var(--border)", background: "var(--card)" }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", marginBottom: "0.15rem" }}>{label}</p>
                 <code style={{ fontSize: "0.75rem", color: "var(--foreground)", wordBreak: "break-all" }}>{url}</code>

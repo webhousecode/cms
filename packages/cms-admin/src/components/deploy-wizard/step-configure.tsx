@@ -130,6 +130,7 @@ export function StepConfigure({ appName, region, vmSize, adminEmail, onUpdate }:
           Prefer to self-host? Download a Docker package with everything you need.
         </p>
         <button
+          data-testid="deploy-download-docker-button"
           onClick={handleDownloadZip}
           disabled={!appName}
           style={{

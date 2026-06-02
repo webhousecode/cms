@@ -270,6 +270,7 @@ export default function NewAgentPage() {
         {/* Input area */}
         <div style={{ padding: "0 1rem 1rem", display: "flex", flexDirection: "column", gap: "0.625rem" }}>
           <textarea
+            data-testid="agent-describe-textarea"
             ref={textareaRef}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -293,6 +294,7 @@ export default function NewAgentPage() {
 
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
             <button
+              data-testid="agent-generate-button"
               type="button"
               onClick={handleDescribe}
               disabled={aiLoading || !description.trim()}
@@ -343,6 +345,7 @@ export default function NewAgentPage() {
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "0.625rem" }}>
                 {localTemplates.map((t) => (
                   <button
+                    data-testid={`agent-template-local-${t.id}`}
                     key={t.id}
                     type="button"
                     onClick={() => applyTemplate(t)}
@@ -374,6 +377,7 @@ export default function NewAgentPage() {
               <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "0.625rem" }}>
                 {marketplaceTemplates.map((t) => (
                   <button
+                    data-testid={`agent-template-marketplace-${t.id}`}
                     key={t.id}
                     type="button"
                     onClick={() => applyTemplate(t)}
@@ -411,11 +415,12 @@ export default function NewAgentPage() {
 
       {/* ── Manual form (collapsible after AI fill) ─────────────── */}
       {!formCollapsed && (
-      <form id="agent-form-anchor" onSubmit={handleSubmit} className="space-y-6">
+      <form data-testid="agent-form" id="agent-form-anchor" onSubmit={handleSubmit} className="space-y-6">
         {/* Name */}
         <div>
           <label style={labelStyle}>Agent Name</label>
           <input
+            data-testid="agent-name-input"
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -441,6 +446,7 @@ export default function NewAgentPage() {
               System Prompt
             </label>
             <button
+              data-testid="agent-generate-prompt-button"
               type="button"
               onClick={handleGeneratePrompt}
               disabled={generating}
@@ -455,6 +461,7 @@ export default function NewAgentPage() {
             </button>
           </div>
           <textarea
+            data-testid="agent-prompt-textarea"
             value={systemPrompt}
             onChange={(e) => setSystemPrompt(e.target.value)}
             rows={6}
@@ -531,6 +538,7 @@ export default function NewAgentPage() {
               <div>
                 <label style={labelStyle}>Max per run</label>
                 <input
+                  data-testid="agent-max-per-run-input"
                   type="number"
                   min={1}
                   max={10}
@@ -551,6 +559,7 @@ export default function NewAgentPage() {
         )}
 
         <button
+          data-testid="agent-submit-button"
           type="submit"
           disabled={saving}
           className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity disabled:opacity-60"

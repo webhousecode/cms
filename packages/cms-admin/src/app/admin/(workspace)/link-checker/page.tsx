@@ -110,6 +110,7 @@ function FixButton({ link, onFixed }: { link: LinkResult; onFixed: (newUrl: stri
             <div className="text-[10px] text-muted-foreground">{fix.reason}</div>
             <div className="flex gap-1.5 mt-0.5">
               <button
+                data-testid="link-fix-apply"
                 type="button"
                 onClick={applySuggestion}
                 disabled={fix.loading}
@@ -119,6 +120,7 @@ function FixButton({ link, onFixed }: { link: LinkResult; onFixed: (newUrl: stri
                 Apply
               </button>
               <button
+                data-testid="link-fix-cancel"
                 type="button"
                 onClick={() => setFix({ loading: false })}
                 className="flex items-center gap-1 text-[11px] px-2 py-0.5 rounded border border-border hover:bg-accent"
@@ -137,6 +139,7 @@ function FixButton({ link, onFixed }: { link: LinkResult; onFixed: (newUrl: stri
 
   return (
     <button
+      data-testid="link-fix-suggest"
       type="button"
       onClick={getSuggestion}
       disabled={fix.loading}
@@ -332,7 +335,7 @@ export default function LinkCheckerPage() {
             <Link2 style={{ width: "3rem", height: "3rem", opacity: 0.2 }} />
             <p className="text-sm">Checks all links and images across every richtext and image field.</p>
             <p className="text-xs opacity-60">Internal links verify the target document exists. Internal images verify the file exists on disk. External URLs send a HEAD request.</p>
-            <button type="button" onClick={runCheck}
+            <button data-testid="link-checker-start" type="button" onClick={runCheck}
               className="mt-2 flex items-center gap-2 text-sm px-4 py-2 rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-opacity">
               <Play style={{ width: "0.875rem", height: "0.875rem" }} />
               Run check

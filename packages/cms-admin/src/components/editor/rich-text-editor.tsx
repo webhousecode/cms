@@ -85,6 +85,7 @@ function CtxBtn({ title, active, danger, onClick, children }: {
 }) {
   return (
     <button
+      data-testid="ctx-btn"
       type="button"
       title={title}
       onMouseDown={(e) => { e.preventDefault(); onClick(); }}
@@ -257,13 +258,13 @@ function ImageNodeView({ node, updateAttributes, deleteNode, selected }: NodeVie
             {del.confirming ? (
               <>
                 <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
-                <button type="button" onMouseDown={(e) => { e.preventDefault(); del.confirm(); }}
+                <button data-testid="image-delete-confirm" type="button" onMouseDown={(e) => { e.preventDefault(); del.confirm(); }}
                   style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
-                <button type="button" onMouseDown={(e) => { e.preventDefault(); del.cancel(); }}
+                <button data-testid="image-delete-cancel" type="button" onMouseDown={(e) => { e.preventDefault(); del.cancel(); }}
                   style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
               </>
             ) : (
-              <button type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); del.request(); }}
+              <button data-testid="image-delete-trigger" type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); del.request(); }}
                 style={{ width: "18px", height: "18px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: "0.9rem", lineHeight: 1, flexShrink: 0 }}
                 title="Remove image">×</button>
             )}
@@ -271,6 +272,7 @@ function ImageNodeView({ node, updateAttributes, deleteNode, selected }: NodeVie
         )}
         {selected && (
           <div
+            data-testid="image-resize-handle"
             title="Drag to resize"
             onMouseDown={handleResizeMouseDown}
             style={{
@@ -398,11 +400,12 @@ function BlockMarkerView({ node, deleteNode, editor, getPos }: NodeViewProps) {
         {del.confirming ? (
           <>
             <span style={{ fontSize: "0.75rem", color: "var(--destructive)", fontWeight: 500 }}>Remove block?</span>
-            <button type="button" onMouseDown={(e) => { e.preventDefault(); del.confirm(); }} style={{ ...btnSm, background: "var(--destructive)", color: "#fff", border: "none" }}>Confirm</button>
-            <button type="button" onMouseDown={(e) => { e.preventDefault(); del.cancel(); }} style={btnSm}>Cancel</button>
+            <button data-testid="block-delete-confirm" type="button" onMouseDown={(e) => { e.preventDefault(); del.confirm(); }} style={{ ...btnSm, background: "var(--destructive)", color: "#fff", border: "none" }}>Confirm</button>
+            <button data-testid="block-delete-cancel" type="button" onMouseDown={(e) => { e.preventDefault(); del.cancel(); }} style={btnSm}>Cancel</button>
           </>
         ) : (
           <button
+            data-testid="block-delete-trigger"
             type="button"
             onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); del.request(); }}
             style={{
@@ -635,6 +638,7 @@ function VideoNodeView({ node, updateAttributes, deleteNode, selected }: NodeVie
         {/* Resize handle — absolute inside container (no overflow:hidden here), above footer */}
         {selected && !editing && (
           <div
+            data-testid="video-resize-handle"
             title="Træk for at ændre størrelse"
             onMouseDown={handleResizeMouseDown}
             style={{
@@ -657,13 +661,13 @@ function VideoNodeView({ node, updateAttributes, deleteNode, selected }: NodeVie
         <div style={{ display: "flex", alignItems: "center", gap: "2px", padding: "0.2rem 0.375rem", borderTop: "1px solid var(--border)", backgroundColor: "var(--muted)", borderRadius: "0 0 6px 6px" }}>
           {editing ? (
             <>
-              <input ref={urlInputRef} type="url" value={draft} onChange={(e) => setDraft(e.target.value)}
+              <input data-testid="video-url-input" ref={urlInputRef} type="url" value={draft} onChange={(e) => setDraft(e.target.value)}
                 onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); confirm(); } if (e.key === "Escape") { e.preventDefault(); setEditing(false); } }}
                 placeholder="YouTube or Vimeo URL"
                 style={{ flex: 1, minWidth: 0, fontSize: "0.75rem", padding: "0.2rem 0.5rem", borderRadius: "4px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontFamily: "monospace" }}
               />
               <span style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", whiteSpace: "nowrap", padding: "0 4px" }}>Start:</span>
-              <input type="number" value={draftStart} onChange={(e) => setDraftStart(e.target.value)}
+              <input data-testid="video-start-input" type="number" value={draftStart} onChange={(e) => setDraftStart(e.target.value)}
                 min={0} placeholder="0"
                 style={{ width: "52px", fontSize: "0.75rem", padding: "0.2rem 0.35rem", borderRadius: "4px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)" }}
               />
@@ -681,18 +685,18 @@ function VideoNodeView({ node, updateAttributes, deleteNode, selected }: NodeVie
                 <span style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", fontFamily: "monospace", background: "var(--accent)", borderRadius: "3px", padding: "0.1rem 0.3rem", flexShrink: 0 }}>⏱ {startAt}s</span>
               )}
               <span style={{ flex: 1 }} />
-              <button type="button" onMouseDown={(e) => { e.preventDefault(); setDraft(url); setDraftStart(String(startAt || 0)); setEditing(true); }}
+              <button data-testid="video-edit-button" type="button" onMouseDown={(e) => { e.preventDefault(); setDraft(url); setDraftStart(String(startAt || 0)); setEditing(true); }}
                 style={{ fontSize: "0.7rem", padding: "0.15rem 0.375rem", borderRadius: "3px", border: "1px solid var(--border)", cursor: "pointer", background: "transparent", color: "var(--foreground)" }}>Edit</button>
               {del.confirming ? (
                 <>
                   <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
-                  <button type="button" onMouseDown={(e) => { e.preventDefault(); del.confirm(); }}
+                  <button data-testid="video-delete-confirm" type="button" onMouseDown={(e) => { e.preventDefault(); del.confirm(); }}
                     style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
-                  <button type="button" onMouseDown={(e) => { e.preventDefault(); del.cancel(); }}
+                  <button data-testid="video-delete-cancel" type="button" onMouseDown={(e) => { e.preventDefault(); del.cancel(); }}
                     style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
                 </>
               ) : (
-                <button type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); del.request(); }}
+                <button data-testid="video-delete-trigger" type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); del.request(); }}
                   style={{ width: "18px", height: "18px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: "0.9rem", lineHeight: 1, flexShrink: 0 }}
                   title="Remove video">×</button>
               )}
@@ -835,6 +839,7 @@ function AudioNodeView({ node, updateAttributes, deleteNode, selected }: NodeVie
       <NodeViewWrapper draggable contentEditable={false} style={{ display: "flex", justifyContent: wrapperJustify, margin: "0.75rem 0", position: "relative" }}>
         <DragHandle />
         <div
+          data-testid="audio-upload-zone"
           onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
           onDragLeave={() => setDragOver(false)}
           onDrop={(e) => { e.preventDefault(); setDragOver(false); const f = e.dataTransfer.files?.[0]; if (f) handleUpload(f); }}
@@ -848,7 +853,7 @@ function AudioNodeView({ node, updateAttributes, deleteNode, selected }: NodeVie
           }}
         >
           {uploading ? "Uploading…" : "Drop or click to upload audio"}
-          <input ref={fileRef} type="file" accept="audio/*" style={{ display: "none" }}
+          <input data-testid="audio-file-input" ref={fileRef} type="file" accept="audio/*" style={{ display: "none" }}
             onChange={(e) => { const f = e.target.files?.[0]; if (f) handleUpload(f); e.target.value = ""; }} />
         </div>
       </NodeViewWrapper>
@@ -876,15 +881,15 @@ function AudioNodeView({ node, updateAttributes, deleteNode, selected }: NodeVie
             display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem",
           }}>
             <span style={{ fontSize: "0.8rem", color: "var(--destructive)", fontWeight: 600 }}>Remove audio?</span>
-            <button type="button" onMouseDown={(e) => { e.preventDefault(); del.confirm(); }} style={{ ...btnSm, background: "var(--destructive)", color: "#fff", border: "none" }}>Confirm</button>
-            <button type="button" onMouseDown={(e) => { e.preventDefault(); del.cancel(); }} style={btnSm}>Cancel</button>
+            <button data-testid="audio-delete-confirm" type="button" onMouseDown={(e) => { e.preventDefault(); del.confirm(); }} style={{ ...btnSm, background: "var(--destructive)", color: "#fff", border: "none" }}>Confirm</button>
+            <button data-testid="audio-delete-cancel" type="button" onMouseDown={(e) => { e.preventDefault(); del.cancel(); }} style={btnSm}>Cancel</button>
           </div>
         )}
         <div style={{ display: "flex", alignItems: "center", gap: "4px", padding: "0.2rem 0.375rem", borderTop: "1px solid var(--border)", backgroundColor: "var(--muted)", borderRadius: "0 0 6px 6px" }}>
           <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", padding: "0 4px", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
             {title || "Audio"}
           </span>
-          <button type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); del.request(); }}
+          <button data-testid="audio-delete-trigger" type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); del.request(); }}
             style={{ width: "18px", height: "18px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: "0.9rem", lineHeight: 1, flexShrink: 0 }}
             title="Remove audio">×</button>
         </div>
@@ -1075,13 +1080,13 @@ function InteractiveNodeView({ node, deleteNode, updateAttributes, selected }: N
           {del.confirming ? (
             <>
               <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
-              <button type="button" onMouseDown={(e) => { e.preventDefault(); del.confirm(); }}
+              <button data-testid="interactive-delete-confirm" type="button" onMouseDown={(e) => { e.preventDefault(); del.confirm(); }}
                 style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
-              <button type="button" onMouseDown={(e) => { e.preventDefault(); del.cancel(); }}
+              <button data-testid="interactive-delete-cancel" type="button" onMouseDown={(e) => { e.preventDefault(); del.cancel(); }}
                 style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
             </>
           ) : (
-            <button type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); del.request(); }}
+            <button data-testid="interactive-delete-trigger" type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); del.request(); }}
               style={{ width: "18px", height: "18px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: "0.9rem", lineHeight: 1, flexShrink: 0 }}
               title="Remove interactive">×</button>
           )}
@@ -1089,6 +1094,7 @@ function InteractiveNodeView({ node, deleteNode, updateAttributes, selected }: N
         {/* Resize knob (same as Image) */}
         {selected && (
           <div
+            data-testid="interactive-resize-handle"
             title="Drag to resize"
             onMouseDown={handleResizeMouseDown}
             style={{
@@ -1308,20 +1314,20 @@ function MapEmbedNodeView({ node, updateAttributes, deleteNode, selected }: Node
             }}>
               <span>📍 {address}</span>
               <span style={{ display: "flex", gap: "0.25rem" }}>
-                <button type="button" onClick={() => { setEditing(true); setInputVal(address); }}
+                <button data-testid="map-edit-button" type="button" onClick={() => { setEditing(true); setInputVal(address); }}
                   style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>
                   Edit
                 </button>
                 {del.confirming ? (
                   <>
                     <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
-                    <button type="button" onClick={del.confirm}
+                    <button data-testid="map-delete-confirm" type="button" onClick={del.confirm}
                       style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
-                    <button type="button" onClick={del.cancel}
+                    <button data-testid="map-delete-cancel" type="button" onClick={del.cancel}
                       style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
                   </>
                 ) : (
-                  <button type="button" onClick={del.request}
+                  <button data-testid="map-delete-trigger" type="button" onClick={del.request}
                     style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", cursor: "pointer", lineHeight: 1 }}>×</button>
                 )}
               </span>
@@ -1330,7 +1336,7 @@ function MapEmbedNodeView({ node, updateAttributes, deleteNode, selected }: Node
         ) : (
           <div style={{ padding: "1.5rem", display: "flex", flexDirection: "column", alignItems: "center", gap: "0.5rem", background: "var(--card)" }}>
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--muted-foreground)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-            <form onSubmit={(e) => {
+            <form data-testid="map-address-form" onSubmit={(e) => {
               e.preventDefault();
               if (inputVal.trim()) {
                 // Destroy old map before re-rendering
@@ -1343,6 +1349,7 @@ function MapEmbedNodeView({ node, updateAttributes, deleteNode, selected }: Node
               }
             }} style={{ display: "flex", gap: "0.25rem", width: "100%", maxWidth: 320 }}>
               <input
+                data-testid="map-address-input"
                 type="text"
                 value={inputVal}
                 onChange={(e) => setInputVal(e.target.value)}
@@ -1354,7 +1361,7 @@ function MapEmbedNodeView({ node, updateAttributes, deleteNode, selected }: Node
                   color: "var(--foreground)", outline: "none",
                 }}
               />
-              <button type="submit" style={{
+              <button data-testid="map-show-button" type="submit" style={{
                 padding: "0.35rem 0.75rem", borderRadius: "6px", border: "none",
                 background: "#F7BB2E", color: "#0D0D0D", fontSize: "0.75rem",
                 fontWeight: 600, cursor: "pointer",
@@ -1509,6 +1516,7 @@ function FileNodeView({ node, updateAttributes, deleteNode, selected }: NodeView
 
   const mediaBrowserModal = mediaBrowserOpen && (
     <div
+      data-testid="file-media-browser-modal"
       style={{
         position: "fixed", inset: 0, zIndex: 100,
         display: "flex", alignItems: "center", justifyContent: "center",
@@ -1532,6 +1540,7 @@ function FileNodeView({ node, updateAttributes, deleteNode, selected }: NodeView
             Media Library
           </span>
           <button
+            data-testid="file-media-browser-close"
             type="button"
             onClick={() => setMediaBrowserOpen(false)}
             style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.25rem", fontSize: "1.1rem", lineHeight: 1 }}
@@ -1542,6 +1551,7 @@ function FileNodeView({ node, updateAttributes, deleteNode, selected }: NodeView
         {/* Search */}
         <div style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid var(--border)" }}>
           <input
+            data-testid="file-media-search-input"
             type="text"
             value={mediaSearch}
             onChange={(e) => setMediaSearch(e.target.value)}
@@ -1582,6 +1592,7 @@ function FileNodeView({ node, updateAttributes, deleteNode, selected }: NodeView
               }}>
                 {filtered.map((item) => (
                   <button
+                    data-testid="file-media-item-button"
                     key={item.url}
                     type="button"
                     onClick={() => {
@@ -1668,18 +1679,18 @@ function FileNodeView({ node, updateAttributes, deleteNode, selected }: NodeView
             <>
               <span style={{ fontSize: "0.8rem" }}>Drop file here or</span>
               <div style={{ display: "flex", gap: "0.5rem" }}>
-                <button type="button" onClick={(e) => { e.stopPropagation(); fileRef.current?.click(); }}
+                <button data-testid="file-upload-button" type="button" onClick={(e) => { e.stopPropagation(); fileRef.current?.click(); }}
                   style={btnStyle} className="hover:border-primary hover:text-primary">
                   <IconAttachment /> Upload file
                 </button>
-                <button type="button" onClick={(e) => { e.stopPropagation(); openMediaBrowser(); }}
+                <button data-testid="file-browse-media-button" type="button" onClick={(e) => { e.stopPropagation(); openMediaBrowser(); }}
                   style={btnStyle} className="hover:border-primary hover:text-primary">
                   <IconFile /> Browse Media
                 </button>
               </div>
             </>
           )}
-          <input ref={fileRef} type="file" accept="*" style={{ display: "none" }}
+          <input data-testid="file-input" ref={fileRef} type="file" accept="*" style={{ display: "none" }}
             onChange={(e) => { const f = e.target.files?.[0]; if (f) handleUpload(f); e.target.value = ""; }} />
         </div>
         {mediaBrowserModal}
@@ -1710,7 +1721,7 @@ function FileNodeView({ node, updateAttributes, deleteNode, selected }: NodeView
         {/* Footer bar — download + delete (matches Image/Video/Int pattern) */}
         <div style={{ display: "flex", alignItems: "center", gap: "4px", padding: "0.15rem 0.375rem", borderTop: "1px solid var(--border)", backgroundColor: "var(--muted)" }}>
           <span style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", padding: "0 4px", opacity: 0.6, flex: 1 }}>File</span>
-          <a href={src} download={filename} target="_blank" rel="noopener noreferrer"
+          <a data-testid="file-download-link" href={src} download={filename} target="_blank" rel="noopener noreferrer"
             onMouseDown={(e) => e.stopPropagation()}
             style={{ width: "18px", height: "18px", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", flexShrink: 0 }}
             title="Download">
@@ -1719,13 +1730,13 @@ function FileNodeView({ node, updateAttributes, deleteNode, selected }: NodeView
           {del.confirming ? (
             <>
               <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
-              <button type="button" onMouseDown={(e) => { e.preventDefault(); del.confirm(); }}
+              <button data-testid="file-delete-confirm" type="button" onMouseDown={(e) => { e.preventDefault(); del.confirm(); }}
                 style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
-              <button type="button" onMouseDown={(e) => { e.preventDefault(); del.cancel(); }}
+              <button data-testid="file-delete-cancel" type="button" onMouseDown={(e) => { e.preventDefault(); del.cancel(); }}
                 style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
             </>
           ) : (
-            <button type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); del.request(); }}
+            <button data-testid="file-delete-trigger" type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); del.request(); }}
               style={{ width: "18px", height: "18px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: "0.9rem", lineHeight: 1, flexShrink: 0 }}
               title="Remove file">×</button>
           )}
@@ -1870,6 +1881,7 @@ function CalloutNodeView({ node, updateAttributes, deleteNode, selected }: NodeV
 
   const btnVariant = (v: CalloutVariant, label: string) => (
     <button
+      data-testid={`callout-variant-${v}`}
       type="button"
       onMouseDown={(e) => { e.preventDefault(); updateAttributes({ variant: v }); }}
       style={{
@@ -1907,11 +1919,11 @@ function CalloutNodeView({ node, updateAttributes, deleteNode, selected }: NodeV
           {del.confirming ? (
             <>
               <span style={{ fontSize: "0.7rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
-              <button type="button" onMouseDown={(e) => { e.preventDefault(); del.confirm(); }} style={{ ...btnSm, background: "var(--destructive)", color: "#fff", border: "none", fontSize: "0.65rem" }}>Yes</button>
-              <button type="button" onMouseDown={(e) => { e.preventDefault(); del.cancel(); }} style={{ ...btnSm, fontSize: "0.65rem" }}>No</button>
+              <button data-testid="callout-delete-confirm" type="button" onMouseDown={(e) => { e.preventDefault(); del.confirm(); }} style={{ ...btnSm, background: "var(--destructive)", color: "#fff", border: "none", fontSize: "0.65rem" }}>Yes</button>
+              <button data-testid="callout-delete-cancel" type="button" onMouseDown={(e) => { e.preventDefault(); del.cancel(); }} style={{ ...btnSm, fontSize: "0.65rem" }}>No</button>
             </>
           ) : (
-            <button type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); del.request(); }}
+            <button data-testid="callout-delete-trigger" type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); del.request(); }}
               style={{ width: "16px", height: "16px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--muted-foreground)", fontSize: "0.8rem", lineHeight: 1, flexShrink: 0 }}
               title="Remove callout">×</button>
           )}
@@ -2036,6 +2048,7 @@ function SnippetNodeView({ node, selected, deleteNode }: NodeViewProps) {
         }}
       >
         <div
+          data-testid="snippet-header"
           onClick={() => setExpanded(!expanded)}
           style={{
             padding: "0.5rem 0.75rem",
@@ -2063,13 +2076,13 @@ function SnippetNodeView({ node, selected, deleteNode }: NodeViewProps) {
           {del.confirming ? (
             <span style={{ display: "flex", alignItems: "center", gap: "0.2rem" }}>
               <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
-              <button type="button" onClick={(e) => { e.stopPropagation(); del.confirm(); }}
+              <button data-testid="snippet-delete-confirm" type="button" onClick={(e) => { e.stopPropagation(); del.confirm(); }}
                 style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
-              <button type="button" onClick={(e) => { e.stopPropagation(); del.cancel(); }}
+              <button data-testid="snippet-delete-cancel" type="button" onClick={(e) => { e.stopPropagation(); del.cancel(); }}
                 style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
             </span>
           ) : (
-            <button type="button" onClick={(e) => { e.stopPropagation(); del.request(); }}
+            <button data-testid="snippet-delete-trigger" type="button" onClick={(e) => { e.stopPropagation(); del.request(); }}
               style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0 2px", fontSize: "0.7rem", lineHeight: 1 }}>×</button>
           )}
         </div>
@@ -2225,6 +2238,7 @@ function SvgNodeView({ node, selected, updateAttributes, deleteNode }: NodeViewP
           </div>
         )}
         <input
+          data-testid="svg-caption-input"
           type="text"
           value={captionDraft}
           onChange={(e) => setCaptionDraft(e.target.value)}
@@ -2254,13 +2268,13 @@ function SvgNodeView({ node, selected, updateAttributes, deleteNode }: NodeViewP
           {del.confirming ? (
             <>
               <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
-              <button type="button" onClick={del.confirm}
+              <button data-testid="svg-delete-confirm" type="button" onClick={del.confirm}
                 style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
-              <button type="button" onClick={del.cancel}
+              <button data-testid="svg-delete-cancel" type="button" onClick={del.cancel}
                 style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
             </>
           ) : (
-            <button type="button" onClick={del.request}
+            <button data-testid="svg-delete-trigger" type="button" onClick={del.request}
               style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0 2px", fontSize: "0.7rem", lineHeight: 1 }}>×</button>
           )}
         </div>
@@ -2463,6 +2477,7 @@ function LinkPopup({ onConfirm, onRemove, onClose, initial }: {
       {/* Input */}
       <div style={{ position: "relative" }}>
         <input
+          data-testid="link-url-input"
           ref={inputRef}
           value={url}
           onChange={(e) => setUrl(e.target.value)}
@@ -2477,6 +2492,7 @@ function LinkPopup({ onConfirm, onRemove, onClose, initial }: {
           <div style={{ position: "relative", marginBottom: "0.5rem", border: "1px solid var(--border)", borderTop: "none", borderRadius: "0 0 0.5rem 0.5rem", overflow: "hidden", maxHeight: "200px", overflowY: "auto" }}>
             {suggestions.map((s, i) => (
               <button
+                data-testid="link-suggestion-button"
                 key={s.url}
                 type="button"
                 onMouseDown={(e) => { e.preventDefault(); confirm(s.url); }}
@@ -2509,6 +2525,7 @@ function LinkPopup({ onConfirm, onRemove, onClose, initial }: {
       {/* Actions */}
       <div style={{ display: "flex", gap: "0.5rem" }}>
         <button
+          data-testid="link-apply-button"
           type="button"
           onClick={() => confirm(url)}
           style={{ flex: 1, padding: "0.375rem 0.75rem", borderRadius: "0.5rem", backgroundColor: "var(--primary)", color: "var(--primary-foreground)", fontSize: "0.8rem", fontWeight: 600, border: "none", cursor: "pointer" }}
@@ -2517,6 +2534,7 @@ function LinkPopup({ onConfirm, onRemove, onClose, initial }: {
         </button>
         {initial && (
           <button
+            data-testid="link-remove-button"
             type="button"
             onClick={onRemove}
             style={{ padding: "0.375rem 0.75rem", borderRadius: "0.5rem", backgroundColor: "transparent", color: "var(--destructive)", fontSize: "0.8rem", border: "1px solid var(--destructive)", cursor: "pointer" }}
@@ -3082,6 +3100,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                     const isHovered = hoveredKey === h.key;
                     return (
                       <button
+                        data-testid={`heading-option-${h.key}`}
                         key={h.key}
                         type="button"
                         onMouseDown={(e) => { e.preventDefault(); applyHeading(h.key); }}
@@ -3211,7 +3230,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                     { color: "#e9d5ff", label: "Purple" },
                     { color: "#fed7aa", label: "Orange" },
                   ].map(({ color, label }) => (
-                    <button key={color} type="button" title={label}
+                    <button data-testid={`highlight-color-${label.toLowerCase()}`} key={color} type="button" title={label}
                       onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().toggleHighlight({ color }).run(); setHighlightOpen(false); }}
                       style={{
                         width: 22, height: 22, borderRadius: "50%",
@@ -3221,7 +3240,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                         outlineOffset: "1px",
                       }} />
                   ))}
-                  <button type="button" title="Clear highlight"
+                  <button data-testid="highlight-clear-button" type="button" title="Clear highlight"
                     onMouseDown={(e) => { e.preventDefault(); editor.chain().focus().unsetHighlight().run(); setHighlightOpen(false); }}
                     style={{
                       width: 22, height: 22, borderRadius: "50%",
@@ -3280,7 +3299,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                 }}>
                   {mediaSubMenu === null && (<>
                     {/* Image — has sub-options */}
-                    <button type="button" style={{
+                    <button data-testid="media-menu-image" type="button" style={{
                       display: "flex", alignItems: "center", justifyContent: "space-between",
                       width: "100%", padding: "0.5rem 0.75rem", border: "none",
                       background: "transparent", color: "var(--foreground)",
@@ -3294,7 +3313,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
                     </button>
                     {/* Video */}
-                    <button type="button" style={{
+                    <button data-testid="media-menu-video" type="button" style={{
                       display: "flex", alignItems: "center", gap: "0.5rem",
                       width: "100%", padding: "0.5rem 0.75rem", border: "none",
                       background: "transparent", color: "var(--foreground)",
@@ -3307,7 +3326,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                       <IconVideo />Video
                     </button>
                     {/* Audio — has sub-options */}
-                    <button type="button" style={{
+                    <button data-testid="media-menu-audio" type="button" style={{
                       display: "flex", alignItems: "center", justifyContent: "space-between",
                       width: "100%", padding: "0.5rem 0.75rem", border: "none",
                       background: "transparent", color: "var(--foreground)",
@@ -3321,7 +3340,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
                     </button>
                     {/* File attachment */}
-                    <button type="button" style={{
+                    <button data-testid="media-menu-file" type="button" style={{
                       display: "flex", alignItems: "center", gap: "0.5rem",
                       width: "100%", padding: "0.5rem 0.75rem", border: "none",
                       background: "transparent", color: "var(--foreground)",
@@ -3337,7 +3356,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                       <IconAttachment />File attachment
                     </button>
                     {/* Map embed */}
-                    <button type="button" style={{
+                    <button data-testid="media-menu-map" type="button" style={{
                       display: "flex", alignItems: "center", gap: "0.5rem",
                       width: "100%", padding: "0.5rem 0.75rem", border: "none",
                       background: "transparent", color: "var(--foreground)",
@@ -3357,7 +3376,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
 
                   {/* Image sub-menu */}
                   {mediaSubMenu === "image" && (<>
-                    <button type="button" style={{
+                    <button data-testid="media-submenu-back-image" type="button" style={{
                       display: "flex", alignItems: "center", gap: "0.5rem",
                       width: "100%", padding: "0.4rem 0.75rem", border: "none",
                       background: "transparent", color: "var(--muted-foreground)",
@@ -3371,7 +3390,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                       Image
                     </button>
                     <div style={{ height: "1px", background: "var(--border)", margin: "2px 0" }} />
-                    <button type="button" style={{
+                    <button data-testid="media-submenu-upload-image" type="button" style={{
                       display: "flex", alignItems: "center", gap: "0.5rem",
                       width: "100%", padding: "0.5rem 0.75rem", border: "none",
                       background: "transparent", color: "var(--foreground)",
@@ -3383,7 +3402,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                     >
                       Upload file
                     </button>
-                    <button type="button" style={{
+                    <button data-testid="media-submenu-browse-image" type="button" style={{
                       display: "flex", alignItems: "center", gap: "0.5rem",
                       width: "100%", padding: "0.5rem 0.75rem", border: "none",
                       background: "transparent", color: "var(--foreground)",
@@ -3399,7 +3418,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
 
                   {/* Audio sub-menu */}
                   {mediaSubMenu === "audio" && (<>
-                    <button type="button" style={{
+                    <button data-testid="media-submenu-back-audio" type="button" style={{
                       display: "flex", alignItems: "center", gap: "0.5rem",
                       width: "100%", padding: "0.4rem 0.75rem", border: "none",
                       background: "transparent", color: "var(--muted-foreground)",
@@ -3413,7 +3432,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                       Audio
                     </button>
                     <div style={{ height: "1px", background: "var(--border)", margin: "2px 0" }} />
-                    <button type="button" style={{
+                    <button data-testid="media-submenu-upload-audio" type="button" style={{
                       display: "flex", alignItems: "center", gap: "0.5rem",
                       width: "100%", padding: "0.5rem 0.75rem", border: "none",
                       background: "transparent", color: "var(--foreground)",
@@ -3425,7 +3444,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                     >
                       Upload file
                     </button>
-                    <button type="button" style={{
+                    <button data-testid="media-submenu-browse-audio" type="button" style={{
                       display: "flex", alignItems: "center", gap: "0.5rem",
                       width: "100%", padding: "0.5rem 0.75rem", border: "none",
                       background: "transparent", color: "var(--foreground)",
@@ -3441,7 +3460,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
 
                   {/* Map sub-menu */}
                   {mediaSubMenu === "map" && (<>
-                    <button type="button" style={{
+                    <button data-testid="media-submenu-back-map" type="button" style={{
                       display: "flex", alignItems: "center", gap: "0.5rem",
                       width: "100%", padding: "0.4rem 0.75rem", border: "none",
                       background: "transparent", color: "var(--muted-foreground)",
@@ -3455,7 +3474,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                       Map
                     </button>
                     <div style={{ height: "1px", background: "var(--border)", margin: "2px 0" }} />
-                    <form
+                    <form data-testid="media-submenu-map-form"
                       onSubmit={(e) => {
                         e.preventDefault();
                         const input = (e.currentTarget.elements.namedItem("mapAddress") as HTMLInputElement);
@@ -3469,6 +3488,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                       style={{ padding: "0.375rem 0.75rem", display: "flex", gap: "0.25rem" }}
                     >
                       <input
+                        data-testid="media-submenu-map-address-input"
                         name="mapAddress"
                         type="text"
                         placeholder="Address or place..."
@@ -3479,7 +3499,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                           color: "var(--foreground)", outline: "none",
                         }}
                       />
-                      <button type="submit" style={{
+                      <button data-testid="media-submenu-map-submit" type="submit" style={{
                         padding: "0.3rem 0.5rem", borderRadius: "4px", border: "none",
                         background: "#F7BB2E", color: "#0D0D0D", fontSize: "0.7rem",
                         fontWeight: 600, cursor: "pointer",
@@ -3493,6 +3513,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
             </div>
             {/* Hidden file inputs for image and audio upload */}
             <input
+              data-testid="toolbar-image-file-input"
               ref={imageInputRef}
               type="file"
               accept="image/*"
@@ -3599,18 +3620,18 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
 
             {/* Zoom */}
             <div style={{ display: "flex", alignItems: "center", gap: "4px", marginRight: "0.25rem" }}>
-              <button type="button" title="Zoom out"
+              <button data-testid="zoom-out-button" type="button" title="Zoom out"
                 onMouseDown={(e) => { e.preventDefault(); setZoom(z => Math.max(50, z - 10)); }}
                 disabled={zoom <= 50}
                 style={{ width: 28, height: 28, borderRadius: 4, border: "none", background: "transparent", cursor: zoom <= 50 ? "not-allowed" : "pointer", color: "var(--muted-foreground)", display: "flex", alignItems: "center", justifyContent: "center", opacity: zoom <= 50 ? 0.3 : 1, fontSize: "1rem" }}>
                 −
               </button>
-              <button type="button" title="Reset zoom"
+              <button data-testid="zoom-reset-button" type="button" title="Reset zoom"
                 onMouseDown={(e) => { e.preventDefault(); setZoom(100); }}
                 style={{ fontSize: "0.75rem", fontFamily: "monospace", color: zoom === 100 ? "var(--muted-foreground)" : "var(--foreground)", background: "transparent", border: "none", cursor: "pointer", padding: "0 4px", minWidth: "2.5rem", textAlign: "center", fontWeight: 500 }}>
                 {zoom}%
               </button>
-              <button type="button" title="Zoom in"
+              <button data-testid="zoom-in-button" type="button" title="Zoom in"
                 onMouseDown={(e) => { e.preventDefault(); setZoom(z => Math.min(200, z + 10)); }}
                 disabled={zoom >= 200}
                 style={{ width: 28, height: 28, borderRadius: 4, border: "none", background: "transparent", cursor: zoom >= 200 ? "not-allowed" : "pointer", color: "var(--muted-foreground)", display: "flex", alignItems: "center", justifyContent: "center", opacity: zoom >= 200 ? 0.3 : 1, fontSize: "1rem" }}>
@@ -3861,6 +3882,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
             This prevents EditorContent (and its React NodeViews) from unmounting
             and remounting, which triggers flushSync warnings in React 19 + TipTap v3. */}
         <textarea
+          data-testid="source-editor-textarea"
           value={sourceText}
           onChange={(e) => setSourceText(e.target.value)}
           spellCheck={false}
@@ -3965,15 +3987,15 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
               borderRadius: "0 0 0.5rem 0.5rem", flexWrap: "wrap",
               position: "sticky", bottom: 0, zIndex: 20,
             }}>
-              <button type="button" style={{ ...btnStyle, color: "var(--destructive)" }} onClick={rejectAll}>Reject all</button>
-              <button type="button" style={{ ...btnStyle, color: "#4ade80" }} onClick={acceptAll}>Accept all</button>
+              <button data-testid="proofread-reject-all-button" type="button" style={{ ...btnStyle, color: "var(--destructive)" }} onClick={rejectAll}>Reject all</button>
+              <button data-testid="proofread-accept-all-button" type="button" style={{ ...btnStyle, color: "#4ade80" }} onClick={acceptAll}>Accept all</button>
 
               <div style={{ display: "flex", alignItems: "center", gap: "0.25rem", margin: "0 0.25rem" }}>
-                <button type="button" style={{ ...btnStyle, padding: "0.25rem 0.375rem" }} onClick={() => navigate(-1)}>←</button>
+                <button data-testid="proofread-prev-button" type="button" style={{ ...btnStyle, padding: "0.25rem 0.375rem" }} onClick={() => navigate(-1)}>←</button>
                 <span style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", minWidth: "3rem", textAlign: "center" }}>
                   {proofreadIndex + 1} / {proofreadMatches.length}
                 </span>
-                <button type="button" style={{ ...btnStyle, padding: "0.25rem 0.375rem" }} onClick={() => navigate(1)}>→</button>
+                <button data-testid="proofread-next-button" type="button" style={{ ...btnStyle, padding: "0.25rem 0.375rem" }} onClick={() => navigate(1)}>→</button>
               </div>
 
               {current && (
@@ -3988,12 +4010,12 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
 
               {current && (
                 <div style={{ display: "flex", gap: "0.25rem", marginLeft: "auto" }}>
-                  <button type="button" style={{ ...btnStyle, color: "var(--destructive)" }} onClick={() => reject(current)}>✕ Reject</button>
-                  <button type="button" style={{ ...btnStyle, color: "#4ade80", borderColor: "#4ade80" }} onClick={() => accept(current)}>✓ Accept</button>
+                  <button data-testid="proofread-reject-button" type="button" style={{ ...btnStyle, color: "var(--destructive)" }} onClick={() => reject(current)}>✕ Reject</button>
+                  <button data-testid="proofread-accept-button" type="button" style={{ ...btnStyle, color: "#4ade80", borderColor: "#4ade80" }} onClick={() => accept(current)}>✓ Accept</button>
                 </div>
               )}
 
-              <button type="button" style={{ ...btnStyle, padding: "0.25rem 0.375rem", marginLeft: current ? "0" : "auto" }} onClick={close} title="Close proofread">✕</button>
+              <button data-testid="proofread-close-button" type="button" style={{ ...btnStyle, padding: "0.25rem 0.375rem", marginLeft: current ? "0" : "auto" }} onClick={close} title="Close proofread">✕</button>
             </div>
           );
         })()}
@@ -4019,12 +4041,13 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
               {/* Header */}
               <div style={{ padding: "1rem 1.25rem", borderBottom: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <span style={{ fontSize: "0.95rem", fontWeight: 600, color: "var(--foreground)" }}>Insert Interactive</span>
-                <button type="button" onClick={() => setShowInteractivePicker(false)}
+                <button data-testid="interactive-picker-close-button" type="button" onClick={() => setShowInteractivePicker(false)}
                   style={{ width: "24px", height: "24px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1.1rem", display: "flex", alignItems: "center", justifyContent: "center" }}>×</button>
               </div>
               {/* Search */}
               <div style={{ padding: "0.75rem 1.25rem", borderBottom: "1px solid var(--border)" }}>
                 <input
+                  data-testid="interactive-picker-search-input"
                   type="text"
                   value={intSearch}
                   onChange={(e) => setIntSearch(e.target.value)}
@@ -4050,6 +4073,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                 )}
                 {filtered.map(item => (
                   <button
+                    data-testid={`interactive-picker-item-${item.id}`}
                     key={item.id}
                     type="button"
                     onClick={() => {
@@ -4099,12 +4123,12 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                   <Braces style={{ width: 16, height: 16, color: "#F7BB2E" }} />
                   <span style={{ fontSize: "0.95rem", fontWeight: 600 }}>Insert Snippet</span>
                 </div>
-                <button type="button" onClick={() => setShowSnippetPicker(false)}
+                <button data-testid="snippet-picker-close-button" type="button" onClick={() => setShowSnippetPicker(false)}
                   style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1.1rem" }}>×</button>
               </div>
               {/* Search */}
               <div style={{ padding: "0 1.25rem 0.5rem" }}>
-                <input type="text" value={snippetSearch} onChange={(e) => setSnippetSearch(e.target.value)}
+                <input data-testid="snippet-picker-search-input" type="text" value={snippetSearch} onChange={(e) => setSnippetSearch(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Escape") { e.stopPropagation(); setShowSnippetPicker(false); } }}
                   placeholder="Search snippets…" autoFocus
                   style={{
@@ -4126,6 +4150,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                 )}
                 {filtered.map(item => (
                   <button
+                    data-testid={`snippet-picker-item-${item.slug}`}
                     key={item.slug}
                     type="button"
                     onClick={() => {
@@ -4177,11 +4202,11 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                   <Shapes style={{ width: 16, height: 16, color: "#F7BB2E" }} />
                   <span style={{ fontSize: "0.95rem", fontWeight: 600 }}>Insert SVG figure</span>
                 </div>
-                <button type="button" onClick={() => setShowSvgPicker(false)}
+                <button data-testid="svg-picker-close-button" type="button" onClick={() => setShowSvgPicker(false)}
                   style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1.1rem" }}>×</button>
               </div>
               <div style={{ padding: "0 1.25rem 0.5rem" }}>
-                <input type="text" value={svgSearch} onChange={(e) => setSvgSearch(e.target.value)}
+                <input data-testid="svg-picker-search-input" type="text" value={svgSearch} onChange={(e) => setSvgSearch(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Escape") { e.stopPropagation(); setShowSvgPicker(false); } }}
                   placeholder="Search SVG files…" autoFocus
                   style={{
@@ -4202,6 +4227,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                 )}
                 {filtered.map(item => (
                   <button
+                    data-testid={`svg-picker-item-${item.slug}`}
                     key={item.name}
                     type="button"
                     onClick={() => {
@@ -4244,6 +4270,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
           }}>
             <span style={{ fontSize: "0.95rem", fontWeight: 600 }}>Insert Video</span>
             <input
+              data-testid="video-dialog-url-input"
               type="url"
               value={videoUrl}
               onChange={(e) => setVideoUrl(e.target.value)}
@@ -4263,11 +4290,11 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
               }}
             />
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem" }}>
-              <button type="button" onClick={() => setShowVideoDialog(false)}
+              <button data-testid="video-dialog-cancel-button" type="button" onClick={() => setShowVideoDialog(false)}
                 style={{ padding: "0.4rem 0.875rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", fontSize: "0.8rem", cursor: "pointer" }}>
                 Cancel
               </button>
-              <button type="button" disabled={!videoUrl.trim()} onClick={() => {
+              <button data-testid="video-dialog-insert-button" type="button" disabled={!videoUrl.trim()} onClick={() => {
                 editor?.chain().focus().insertContent({ type: "videoEmbed", attrs: { url: videoUrl.trim() } }).run();
                 setShowVideoDialog(false);
               }}
@@ -4300,11 +4327,12 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                 <p style={{ fontSize: "0.75rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--muted-foreground)" }}>
                   {replacePos !== null ? "Replace Content Block" : "Insert Content Block"}
                 </p>
-                <button type="button" onClick={closeBlockPicker} style={{ background: "none", border: "none", color: "var(--muted-foreground)", cursor: "pointer", fontSize: "1.2rem", lineHeight: 1 }}>×</button>
+                <button data-testid="block-picker-close-button" type="button" onClick={closeBlockPicker} style={{ background: "none", border: "none", color: "var(--muted-foreground)", cursor: "pointer", fontSize: "1.2rem", lineHeight: 1 }}>×</button>
               </div>
 
               {/* Search */}
               <input
+                data-testid="block-picker-search-input"
                 autoFocus
                 type="text"
                 placeholder="Search blocks…"
@@ -4336,6 +4364,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                 )}
                 {filtered.map(block => (
                   <button
+                    data-testid={`block-picker-item-${block.slug}`}
                     key={block.slug}
                     type="button"
                     onClick={() => insertBlock(block.slug, block.label)}
@@ -4387,11 +4416,12 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                 <span style={{ fontWeight: 500, fontSize: "0.9rem", display: "flex", alignItems: "center", gap: "0.4rem" }}>
                   <IconImage /> Select Image
                 </span>
-                <button type="button" onClick={() => setShowImageMediaBrowser(false)}
+                <button data-testid="media-browser-image-close-button" type="button" onClick={() => setShowImageMediaBrowser(false)}
                   style={{ width: "24px", height: "24px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1.1rem", display: "flex", alignItems: "center", justifyContent: "center" }}>&times;</button>
               </div>
               <div style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid var(--border)" }}>
                 <input
+                  data-testid="media-browser-image-search-input"
                   type="text"
                   value={mediaBrowserSearch}
                   onChange={(e) => { setMediaBrowserSearch(e.target.value); setMediaBrowserPage(1); }}
@@ -4425,6 +4455,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))", gap: "0.5rem" }}>
                       {visible.map((item) => (
                         <button
+                          data-testid={`media-browser-image-item-${item.slug}`}
                           key={item.url}
                           type="button"
                           onClick={() => {
@@ -4453,7 +4484,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                       ))}
                     </div>
                     {hasMore && (
-                      <button type="button" onClick={() => setMediaBrowserPage((p) => p + 1)}
+                      <button data-testid="media-browser-image-show-more-button" type="button" onClick={() => setMediaBrowserPage((p) => p + 1)}
                         style={{ display: "block", margin: "0.75rem auto 0", padding: "0.4rem 1.25rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: "pointer" }}>
                         Show more ({filtered.length - visible.length} remaining)
                       </button>
@@ -4491,11 +4522,12 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                 <span style={{ fontWeight: 500, fontSize: "0.9rem", display: "flex", alignItems: "center", gap: "0.4rem" }}>
                   <IconAudio /> Select Audio
                 </span>
-                <button type="button" onClick={() => setShowAudioMediaBrowser(false)}
+                <button data-testid="media-browser-audio-close-button" type="button" onClick={() => setShowAudioMediaBrowser(false)}
                   style={{ width: "24px", height: "24px", borderRadius: "50%", border: "none", background: "transparent", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1.1rem", display: "flex", alignItems: "center", justifyContent: "center" }}>&times;</button>
               </div>
               <div style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid var(--border)" }}>
                 <input
+                  data-testid="media-browser-audio-search-input"
                   type="text"
                   value={mediaBrowserSearch}
                   onChange={(e) => setMediaBrowserSearch(e.target.value)}
@@ -4525,6 +4557,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                     <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem" }}>
                       {filtered.map((item) => (
                         <button
+                          data-testid={`media-browser-audio-item-${item.slug}`}
                           key={item.url}
                           type="button"
                           onClick={() => {

@@ -270,17 +270,17 @@ export default function OrgSettingsPage() {
 
       {/* Tabs */}
       <div style={{ display: "flex", gap: "0", borderBottom: "1px solid var(--border)", marginTop: "1.5rem", marginBottom: "1.5rem" }}>
-        <button type="button" style={tabStyle("general")} onClick={() => setTab("general")}>General</button>
-        <button type="button" style={tabStyle("deploy")} onClick={() => setTab("deploy")}>Deploy</button>
-        <button type="button" style={tabStyle("ai")} onClick={() => setTab("ai")}>AI</button>
-        <button type="button" style={tabStyle("email")} onClick={() => setTab("email")}>Email</button>
-        <button type="button" style={tabStyle("automation")} onClick={() => setTab("automation")}>Automation</button>
+        <button data-testid="org-settings-tab-general" type="button" style={tabStyle("general")} onClick={() => setTab("general")}>General</button>
+        <button data-testid="org-settings-tab-deploy" type="button" style={tabStyle("deploy")} onClick={() => setTab("deploy")}>Deploy</button>
+        <button data-testid="org-settings-tab-ai" type="button" style={tabStyle("ai")} onClick={() => setTab("ai")}>AI</button>
+        <button data-testid="org-settings-tab-email" type="button" style={tabStyle("email")} onClick={() => setTab("email")}>Email</button>
+        <button data-testid="org-settings-tab-automation" type="button" style={tabStyle("automation")} onClick={() => setTab("automation")}>Automation</button>
       </div>
 
       {/* ── Save button (shared across all non-general tabs) ── */}
       {tab !== "general" && (
         <div style={{ display: "flex", justifyContent: "flex-end", position: "sticky", top: "0.5rem", zIndex: 10, marginBottom: "1rem" }}>
-          <button type="button" onClick={handleSaveCreds} disabled={credsSaving}
+          <button data-testid="org-settings-save-creds" type="button" onClick={handleSaveCreds} disabled={credsSaving}
             style={{ padding: "0.45rem 1rem", borderRadius: "6px", border: "none", background: "var(--primary)", color: "var(--primary-foreground)", fontSize: "0.8rem", fontWeight: 600, cursor: credsSaving ? "wait" : "pointer" }}>
             {credsSaving ? "Saving..." : credsSaved ? "Saved" : "Save"}
           </button>
@@ -300,51 +300,51 @@ export default function OrgSettingsPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Fly.io API Token</label>{configuredBadge(creds.deployApiToken)}</span>
-              <a href="https://fly.io/dashboard" target="_blank" rel="noopener noreferrer"
+              <a data-testid="deploy-flyio-docs-link" href="https://fly.io/dashboard" target="_blank" rel="noopener noreferrer"
                 style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>fly.io/dashboard <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
             </div>
-            <input type="password" value={creds.deployApiToken} onChange={(e) => setCreds((c) => ({ ...c, deployApiToken: e.target.value }))}
+            <input data-testid="deploy-flyio-api-token" type="password" value={creds.deployApiToken} onChange={(e) => setCreds((c) => ({ ...c, deployApiToken: e.target.value }))}
               placeholder="FlyV1 ..." style={{ ...credInputStyle, fontFamily: "inherit" }} />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
             <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Fly.io Organization</label>
-            <input type="text" value={creds.deployFlyOrg} onChange={(e) => setCreds((c) => ({ ...c, deployFlyOrg: e.target.value }))}
+            <input data-testid="deploy-flyio-org" type="text" value={creds.deployFlyOrg} onChange={(e) => setCreds((c) => ({ ...c, deployFlyOrg: e.target.value }))}
               placeholder="Auto-detect from token" style={credInputStyle} />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><label style={{ fontSize: "0.75rem", fontWeight: 500 }}>GitHub Personal Access Token</label>{configuredBadge(creds.deployGitHubToken)}</span>
-              <a href="https://github.com/settings/tokens/new?scopes=repo&description=webhouse-deploy" target="_blank" rel="noopener noreferrer"
+              <a data-testid="deploy-github-token-link" href="https://github.com/settings/tokens/new?scopes=repo&description=webhouse-deploy" target="_blank" rel="noopener noreferrer"
                 style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>Create token <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
             </div>
-            <input type="password" value={creds.deployGitHubToken} onChange={(e) => setCreds((c) => ({ ...c, deployGitHubToken: e.target.value }))}
+            <input data-testid="deploy-github-token" type="password" value={creds.deployGitHubToken} onChange={(e) => setCreds((c) => ({ ...c, deployGitHubToken: e.target.value }))}
               placeholder="ghp_..." style={{ ...credInputStyle, fontFamily: "inherit" }} />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Vercel Deploy Hook</label>{configuredBadge(creds.deployVercelHookUrl)}</span>
-              <a href="https://vercel.com/docs/deploy-hooks" target="_blank" rel="noopener noreferrer"
+              <a data-testid="deploy-vercel-docs-link" href="https://vercel.com/docs/deploy-hooks" target="_blank" rel="noopener noreferrer"
                 style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>Docs <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
             </div>
-            <input type="url" value={creds.deployVercelHookUrl} onChange={(e) => setCreds((c) => ({ ...c, deployVercelHookUrl: e.target.value }))}
+            <input data-testid="deploy-vercel-hook-url" type="url" value={creds.deployVercelHookUrl} onChange={(e) => setCreds((c) => ({ ...c, deployVercelHookUrl: e.target.value }))}
               placeholder="https://api.vercel.com/v1/integrations/deploy/..." style={credInputStyle} />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Netlify Build Hook</label>{configuredBadge(creds.deployNetlifyHookUrl)}</span>
-              <a href="https://docs.netlify.com/configure-builds/build-hooks/" target="_blank" rel="noopener noreferrer"
+              <a data-testid="deploy-netlify-docs-link" href="https://docs.netlify.com/configure-builds/build-hooks/" target="_blank" rel="noopener noreferrer"
                 style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>Docs <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
             </div>
-            <input type="url" value={creds.deployNetlifyHookUrl} onChange={(e) => setCreds((c) => ({ ...c, deployNetlifyHookUrl: e.target.value }))}
+            <input data-testid="deploy-netlify-hook-url" type="url" value={creds.deployNetlifyHookUrl} onChange={(e) => setCreds((c) => ({ ...c, deployNetlifyHookUrl: e.target.value }))}
               placeholder="https://api.netlify.com/build_hooks/..." style={credInputStyle} />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Cloudflare Pages Deploy Hook</label>{configuredBadge(creds.deployCloudflareHookUrl)}</span>
-              <a href="https://developers.cloudflare.com/pages/configuration/deploy-hooks/" target="_blank" rel="noopener noreferrer"
+              <a data-testid="deploy-cloudflare-docs-link" href="https://developers.cloudflare.com/pages/configuration/deploy-hooks/" target="_blank" rel="noopener noreferrer"
                 style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>Docs <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
             </div>
-            <input type="url" value={creds.deployCloudflareHookUrl} onChange={(e) => setCreds((c) => ({ ...c, deployCloudflareHookUrl: e.target.value }))}
+            <input data-testid="deploy-cloudflare-hook-url" type="url" value={creds.deployCloudflareHookUrl} onChange={(e) => setCreds((c) => ({ ...c, deployCloudflareHookUrl: e.target.value }))}
               placeholder="https://api.cloudflare.com/client/v4/pages/webhooks/deploy_hooks/..." style={credInputStyle} />
           </div>
         </div>
@@ -359,28 +359,28 @@ export default function OrgSettingsPage() {
             <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Anthropic API Key</label>{configuredBadge(creds.aiAnthropicApiKey)}</span>
-                <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer"
+                <a data-testid="ai-anthropic-key-link" href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener noreferrer"
                   style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>Get key <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
               </div>
-              <input type="password" value={creds.aiAnthropicApiKey} onChange={(e) => setCreds((c) => ({ ...c, aiAnthropicApiKey: e.target.value }))}
+              <input data-testid="ai-anthropic-api-key" type="password" value={creds.aiAnthropicApiKey} onChange={(e) => setCreds((c) => ({ ...c, aiAnthropicApiKey: e.target.value }))}
                 placeholder="sk-ant-..." style={{ ...credInputStyle, fontFamily: "inherit" }} />
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><label style={{ fontSize: "0.75rem", fontWeight: 500 }}>OpenAI API Key</label>{configuredBadge(creds.aiOpenaiApiKey)}</span>
-                <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer"
+                <a data-testid="ai-openai-key-link" href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer"
                   style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>Get key <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
               </div>
-              <input type="password" value={creds.aiOpenaiApiKey} onChange={(e) => setCreds((c) => ({ ...c, aiOpenaiApiKey: e.target.value }))}
+              <input data-testid="ai-openai-api-key" type="password" value={creds.aiOpenaiApiKey} onChange={(e) => setCreds((c) => ({ ...c, aiOpenaiApiKey: e.target.value }))}
                 placeholder="sk-..." style={{ ...credInputStyle, fontFamily: "inherit" }} />
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Google Gemini API Key</label>{configuredBadge(creds.aiGeminiApiKey)}</span>
-                <a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer"
+                <a data-testid="ai-gemini-key-link" href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer"
                   style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>Get key <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
               </div>
-              <input type="password" value={creds.aiGeminiApiKey} onChange={(e) => setCreds((c) => ({ ...c, aiGeminiApiKey: e.target.value }))}
+              <input data-testid="ai-gemini-api-key" type="password" value={creds.aiGeminiApiKey} onChange={(e) => setCreds((c) => ({ ...c, aiGeminiApiKey: e.target.value }))}
                 placeholder="AI..." style={{ ...credInputStyle, fontFamily: "inherit" }} />
             </div>
           </div>
@@ -390,7 +390,7 @@ export default function OrgSettingsPage() {
           <div style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "10px", padding: "1.25rem", display: "flex", flexDirection: "column", gap: "1rem", marginBottom: "1.5rem" }}>
             <div style={{ display: "flex", gap: "0.5rem" }}>
               {(["brave", "tavily"] as const).map((p) => (
-                <button key={p} type="button" onClick={() => setCreds((c) => ({ ...c, aiWebSearchProvider: p }))}
+                <button data-testid={`ai-web-search-${p}`} key={p} type="button" onClick={() => setCreds((c) => ({ ...c, aiWebSearchProvider: p }))}
                   style={{ padding: "0.35rem 0.75rem", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer",
                     border: creds.aiWebSearchProvider === p ? "1px solid var(--primary)" : "1px solid var(--border)",
                     background: creds.aiWebSearchProvider === p ? "color-mix(in srgb, var(--primary) 10%, transparent)" : "transparent",
@@ -401,19 +401,19 @@ export default function OrgSettingsPage() {
             <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Brave Search API Key</label>{configuredBadge(creds.aiBraveApiKey)}</span>
-                <a href="https://brave.com/search/api/" target="_blank" rel="noopener noreferrer"
+                <a data-testid="ai-brave-key-link" href="https://brave.com/search/api/" target="_blank" rel="noopener noreferrer"
                   style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>Get key <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
               </div>
-              <input type="password" value={creds.aiBraveApiKey} onChange={(e) => setCreds((c) => ({ ...c, aiBraveApiKey: e.target.value }))}
+              <input data-testid="ai-brave-api-key" type="password" value={creds.aiBraveApiKey} onChange={(e) => setCreds((c) => ({ ...c, aiBraveApiKey: e.target.value }))}
                 placeholder="BSA..." style={{ ...credInputStyle, fontFamily: "inherit" }} />
             </div>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Tavily API Key</label>{configuredBadge(creds.aiTavilyApiKey)}</span>
-                <a href="https://tavily.com/" target="_blank" rel="noopener noreferrer"
+                <a data-testid="ai-tavily-key-link" href="https://tavily.com/" target="_blank" rel="noopener noreferrer"
                   style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>Get key <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
               </div>
-              <input type="password" value={creds.aiTavilyApiKey} onChange={(e) => setCreds((c) => ({ ...c, aiTavilyApiKey: e.target.value }))}
+              <input data-testid="ai-tavily-api-key" type="password" value={creds.aiTavilyApiKey} onChange={(e) => setCreds((c) => ({ ...c, aiTavilyApiKey: e.target.value }))}
                 placeholder="tvly-..." style={{ ...credInputStyle, fontFamily: "inherit" }} />
             </div>
           </div>
@@ -424,24 +424,24 @@ export default function OrgSettingsPage() {
             <div style={{ display: "flex", gap: "1rem" }}>
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.3rem" }}>
                 <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Content writing model</label>
-                <input type="text" value={creds.aiContentModel} onChange={(e) => setCreds((c) => ({ ...c, aiContentModel: e.target.value }))}
+                <input data-testid="ai-content-model" type="text" value={creds.aiContentModel} onChange={(e) => setCreds((c) => ({ ...c, aiContentModel: e.target.value }))}
                   placeholder="claude-haiku-4-5-20251001" style={credInputStyle} />
               </div>
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.3rem" }}>
                 <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Max tokens</label>
-                <input type="number" value={creds.aiContentMaxTokens || ""} onChange={(e) => setCreds((c) => ({ ...c, aiContentMaxTokens: parseInt(e.target.value) || 0 }))}
+                <input data-testid="ai-content-max-tokens" type="number" value={creds.aiContentMaxTokens || ""} onChange={(e) => setCreds((c) => ({ ...c, aiContentMaxTokens: parseInt(e.target.value) || 0 }))}
                   placeholder="4096" style={credInputStyle} />
               </div>
             </div>
             <div style={{ display: "flex", gap: "1rem" }}>
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.3rem" }}>
                 <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Interactives model</label>
-                <input type="text" value={creds.aiInteractivesModel} onChange={(e) => setCreds((c) => ({ ...c, aiInteractivesModel: e.target.value }))}
+                <input data-testid="ai-interactives-model" type="text" value={creds.aiInteractivesModel} onChange={(e) => setCreds((c) => ({ ...c, aiInteractivesModel: e.target.value }))}
                   placeholder="claude-sonnet-4-6" style={credInputStyle} />
               </div>
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.3rem" }}>
                 <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Max tokens</label>
-                <input type="number" value={creds.aiInteractivesMaxTokens || ""} onChange={(e) => setCreds((c) => ({ ...c, aiInteractivesMaxTokens: parseInt(e.target.value) || 0 }))}
+                <input data-testid="ai-interactives-max-tokens" type="number" value={creds.aiInteractivesMaxTokens || ""} onChange={(e) => setCreds((c) => ({ ...c, aiInteractivesMaxTokens: parseInt(e.target.value) || 0 }))}
                   placeholder="16384" style={credInputStyle} />
               </div>
             </div>
@@ -449,17 +449,17 @@ export default function OrgSettingsPage() {
             <div style={{ display: "flex", gap: "1rem" }}>
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.3rem" }}>
                 <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Chat model</label>
-                <input type="text" value={creds.aiChatModel} onChange={(e) => setCreds((c) => ({ ...c, aiChatModel: e.target.value }))}
+                <input data-testid="ai-chat-model" type="text" value={creds.aiChatModel} onChange={(e) => setCreds((c) => ({ ...c, aiChatModel: e.target.value }))}
                   placeholder="claude-sonnet-4-6" style={credInputStyle} />
               </div>
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.3rem" }}>
                 <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Max tokens</label>
-                <input type="number" value={creds.aiChatMaxTokens || ""} onChange={(e) => setCreds((c) => ({ ...c, aiChatMaxTokens: parseInt(e.target.value) || 0 }))}
+                <input data-testid="ai-chat-max-tokens" type="number" value={creds.aiChatMaxTokens || ""} onChange={(e) => setCreds((c) => ({ ...c, aiChatMaxTokens: parseInt(e.target.value) || 0 }))}
                   placeholder="8192" style={credInputStyle} />
               </div>
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.3rem" }}>
                 <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Tool iterations</label>
-                <input type="number" value={creds.aiChatMaxToolIterations || ""} onChange={(e) => setCreds((c) => ({ ...c, aiChatMaxToolIterations: parseInt(e.target.value) || 0 }))}
+                <input data-testid="ai-chat-max-tool-iterations" type="number" value={creds.aiChatMaxToolIterations || ""} onChange={(e) => setCreds((c) => ({ ...c, aiChatMaxToolIterations: parseInt(e.target.value) || 0 }))}
                   placeholder="25" style={credInputStyle} />
               </div>
             </div>
@@ -470,7 +470,7 @@ export default function OrgSettingsPage() {
               <p style={{ fontSize: "0.68rem", color: "var(--muted-foreground)", margin: "0.25rem 0 0.5rem" }}>
                 Default for all sites in this org. Sites can override.
               </p>
-              <select
+              <select data-testid="ai-image-overwrite"
                 value={creds.aiImageOverwrite}
                 onChange={(e) => setCreds((c) => ({ ...c, aiImageOverwrite: e.target.value }))}
                 style={{ ...credInputStyle, fontFamily: "inherit", cursor: "pointer" }}
@@ -491,20 +491,20 @@ export default function OrgSettingsPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <span style={{ display: "flex", alignItems: "center", gap: "0.4rem" }}><label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Resend API Key</label>{configuredBadge(creds.resendApiKey)}</span>
-              <a href="https://resend.com/api-keys" target="_blank" rel="noopener noreferrer"
+              <a data-testid="email-resend-link" href="https://resend.com/api-keys" target="_blank" rel="noopener noreferrer"
                 style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>resend.com <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
             </div>
-            <input type="password" value={creds.resendApiKey} onChange={(e) => setCreds((c) => ({ ...c, resendApiKey: e.target.value }))}
+            <input data-testid="email-resend-api-key" type="password" value={creds.resendApiKey} onChange={(e) => setCreds((c) => ({ ...c, resendApiKey: e.target.value }))}
               placeholder="re_..." style={{ ...credInputStyle, fontFamily: "inherit" }} />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
             <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Sender email address</label>
-            <input type="email" value={creds.emailFrom} onChange={(e) => setCreds((c) => ({ ...c, emailFrom: e.target.value }))}
+            <input data-testid="email-from-address" type="email" value={creds.emailFrom} onChange={(e) => setCreds((c) => ({ ...c, emailFrom: e.target.value }))}
               placeholder="noreply@example.com" style={credInputStyle} />
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
             <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Sender display name</label>
-            <input type="text" value={creds.emailFromName} onChange={(e) => setCreds((c) => ({ ...c, emailFromName: e.target.value }))}
+            <input data-testid="email-from-name" type="text" value={creds.emailFromName} onChange={(e) => setCreds((c) => ({ ...c, emailFromName: e.target.value }))}
               placeholder="webhouse.app" style={{ ...credInputStyle, fontFamily: "inherit" }} />
           </div>
         </div>
@@ -518,16 +518,16 @@ export default function OrgSettingsPage() {
             <div style={{ display: "flex", gap: "1rem" }}>
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.3rem" }}>
                 <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Backup schedule</label>
-                <CustomSelect value={creds.backupSchedule || "off"} onChange={(v) => setCreds((c) => ({ ...c, backupSchedule: v }))}
+                <CustomSelect data-testid="automation-backup-schedule" value={creds.backupSchedule || "off"} onChange={(v) => setCreds((c) => ({ ...c, backupSchedule: v }))}
                   options={[{ value: "off", label: "Off" }, { value: "daily", label: "Daily" }, { value: "weekly", label: "Weekly" }]} />
               </div>
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.3rem" }}>
                 <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Backup time</label>
-                <CustomTimeInput value={creds.backupTime} onChange={(v) => setCreds((c) => ({ ...c, backupTime: v }))} />
+                <CustomTimeInput data-testid="automation-backup-time" value={creds.backupTime} onChange={(v) => setCreds((c) => ({ ...c, backupTime: v }))} />
               </div>
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.3rem" }}>
                 <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Retention (days)</label>
-                <input type="number" value={creds.backupRetentionDays || ""} onChange={(e) => setCreds((c) => ({ ...c, backupRetentionDays: parseInt(e.target.value) || 0 }))}
+                <input data-testid="automation-backup-retention" type="number" value={creds.backupRetentionDays || ""} onChange={(e) => setCreds((c) => ({ ...c, backupRetentionDays: parseInt(e.target.value) || 0 }))}
                   placeholder="30" style={credInputStyle} />
               </div>
             </div>
@@ -538,12 +538,12 @@ export default function OrgSettingsPage() {
             <div style={{ display: "flex", gap: "1rem" }}>
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.3rem" }}>
                 <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Link check schedule</label>
-                <CustomSelect value={creds.linkCheckSchedule || "off"} onChange={(v) => setCreds((c) => ({ ...c, linkCheckSchedule: v }))}
+                <CustomSelect data-testid="automation-link-check-schedule" value={creds.linkCheckSchedule || "off"} onChange={(v) => setCreds((c) => ({ ...c, linkCheckSchedule: v }))}
                   options={[{ value: "off", label: "Off" }, { value: "daily", label: "Daily" }, { value: "weekly", label: "Weekly" }]} />
               </div>
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.3rem" }}>
                 <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Link check time</label>
-                <CustomTimeInput value={creds.linkCheckTime} onChange={(v) => setCreds((c) => ({ ...c, linkCheckTime: v }))} />
+                <CustomTimeInput data-testid="automation-link-check-time" value={creds.linkCheckTime} onChange={(v) => setCreds((c) => ({ ...c, linkCheckTime: v }))} />
               </div>
             </div>
           </div>
@@ -563,7 +563,7 @@ export default function OrgSettingsPage() {
           {/* Name */}
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem 1.25rem", borderBottom: "1px solid var(--border)" }}>
             <label style={{ fontSize: "0.85rem", fontWeight: 500, minWidth: "160px" }}>Organization name</label>
-            <input
+            <input data-testid="general-org-name"
               type="text"
               value={orgName}
               onChange={(e) => setOrgName(e.target.value)}
@@ -581,7 +581,7 @@ export default function OrgSettingsPage() {
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem 1.25rem", borderBottom: "1px solid var(--border)" }}>
             <label style={{ fontSize: "0.85rem", fontWeight: 500, minWidth: "160px" }}>Type</label>
             <div style={{ maxWidth: "320px", width: "100%" }}>
-              <CustomSelect
+              <CustomSelect data-testid="general-org-type"
                 options={[
                   { value: "agency", label: "Agency" },
                   { value: "company", label: "Company" },
@@ -598,7 +598,7 @@ export default function OrgSettingsPage() {
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem 1.25rem" }}>
             <label style={{ fontSize: "0.85rem", fontWeight: 500, minWidth: "160px" }}>Plan</label>
             <div style={{ maxWidth: "320px", width: "100%" }}>
-              <CustomSelect
+              <CustomSelect data-testid="general-org-plan"
                 options={[
                   { value: "free", label: "Free — $0/month" },
                   { value: "pro", label: "Pro — $25/month" },
@@ -611,7 +611,7 @@ export default function OrgSettingsPage() {
           </div>
         </div>
         <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem", marginTop: "0.75rem" }}>
-          <button
+          <button data-testid="general-cancel"
             type="button"
             onClick={() => router.push("/admin/organizations")}
             style={{
@@ -622,7 +622,7 @@ export default function OrgSettingsPage() {
           >
             Cancel
           </button>
-          <button
+          <button data-testid="general-save"
             type="button"
             onClick={handleSave}
             disabled={saving}
@@ -678,7 +678,7 @@ export default function OrgSettingsPage() {
           <p style={{ fontSize: "0.75rem", color: "var(--muted-foreground)", marginBottom: "0.75rem" }}>
             Make sure you have made a backup of your projects if you want to keep your data.
           </p>
-          <button
+          <button data-testid="general-delete-org"
             type="button"
             onClick={() => setShowDeleteDialog(true)}
             style={{
@@ -696,7 +696,7 @@ export default function OrgSettingsPage() {
 
       {/* Delete confirmation dialog */}
       {showDeleteDialog && (
-        <div
+        <div data-testid="delete-org-dialog"
           style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)" }}
           onClick={(e) => { if (e.target === e.currentTarget) { setShowDeleteDialog(false); setDeleteConfirm(""); } }}
         >
@@ -706,7 +706,7 @@ export default function OrgSettingsPage() {
           }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "1rem" }}>
               <h3 style={{ fontSize: "1rem", fontWeight: 700 }}>Delete organization</h3>
-              <button type="button" onClick={() => { setShowDeleteDialog(false); setDeleteConfirm(""); }}
+              <button data-testid="delete-org-close" type="button" onClick={() => { setShowDeleteDialog(false); setDeleteConfirm(""); }}
                 style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1.25rem" }}>×</button>
             </div>
 
@@ -717,7 +717,7 @@ export default function OrgSettingsPage() {
             <p style={{ fontSize: "0.8rem", marginBottom: "0.5rem", marginTop: "1rem" }}>
               Type <code style={{ background: "var(--muted)", padding: "0.15rem 0.4rem", borderRadius: "4px", fontSize: "0.75rem", fontFamily: "monospace" }}>{deleteCode}</code> to confirm.
             </p>
-            <input
+            <input data-testid="delete-org-confirm-input"
               type="text"
               value={deleteConfirm}
               onChange={(e) => setDeleteConfirm(e.target.value)}
@@ -730,7 +730,7 @@ export default function OrgSettingsPage() {
                 marginBottom: "1rem",
               }}
             />
-            <button
+            <button data-testid="delete-org-confirm"
               type="button"
               disabled={deleteConfirm !== deleteCode || deleting}
               onClick={async () => {

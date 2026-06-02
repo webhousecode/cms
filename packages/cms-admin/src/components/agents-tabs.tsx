@@ -253,6 +253,7 @@ function TemplatesTab({ readOnly }: { readOnly: boolean }) {
                   <div>
                     <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">Description</label>
                     <input
+                      data-testid="template-description-input"
                       type="text"
                       value={editDraft.description}
                       onChange={(e) => setEditDraft({ ...editDraft, description: e.target.value })}
@@ -262,6 +263,7 @@ function TemplatesTab({ readOnly }: { readOnly: boolean }) {
                   <div>
                     <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">Category</label>
                     <input
+                      data-testid="template-category-input"
                       type="text"
                       value={editDraft.category}
                       onChange={(e) => setEditDraft({ ...editDraft, category: e.target.value })}
@@ -272,6 +274,7 @@ function TemplatesTab({ readOnly }: { readOnly: boolean }) {
                   <div>
                     <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">System prompt</label>
                     <textarea
+                      data-testid="template-system-prompt-textarea"
                       value={editDraft.systemPrompt}
                       onChange={(e) => setEditDraft({ ...editDraft, systemPrompt: e.target.value })}
                       rows={6}

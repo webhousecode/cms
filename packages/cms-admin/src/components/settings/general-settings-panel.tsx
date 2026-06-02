@@ -36,6 +36,7 @@ function Toggle({ checked, onChange, label, description }: {
 }) {
 	return (
 		<button
+			data-testid="toggle-button"
 			type="button"
 			onClick={() => { onChange(!checked); window.dispatchEvent(new CustomEvent("cms:settings-dirty")); }}
 			style={{
@@ -86,6 +87,7 @@ function InputRow({ label, description, copiable, ...inputProps }: {
 			{description && <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", margin: 0 }}>{description}</p>}
 			<div style={{ display: "flex", gap: "0.375rem", alignItems: "center" }}>
 				<input
+					data-testid="input-row-input"
 					{...inputProps}
 					style={{
 						flex: 1, padding: "0.45rem 0.75rem", borderRadius: "7px",
@@ -97,7 +99,11 @@ function InputRow({ label, description, copiable, ...inputProps }: {
 					onBlur={(e) => { e.target.style.borderColor = "var(--border)"; }}
 				/>
 				{copiable && inputProps.value && (
-					<button type="button" onClick={handleCopy} title="Copy to clipboard"
+					<button
+						data-testid="input-row-copy-button"
+						type="button"
+						onClick={handleCopy}
+						title="Copy to clipboard"
 						style={{
 							width: "32px", height: "32px", borderRadius: "6px",
 							border: "1px solid var(--border)", background: "transparent",
@@ -150,7 +156,11 @@ function ValidateSiteButton({ configPath, contentDir }: { configPath: string; co
 	return (
 		<div style={{ borderTop: "1px solid var(--border)", paddingTop: "0.75rem" }}>
 			<div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-				<button type="button" onClick={validate} disabled={validating || !configPath}
+				<button
+					data-testid="validate-site-button"
+					type="button"
+					onClick={validate}
+					disabled={validating || !configPath}
 					style={{
 						display: "inline-flex", alignItems: "center", gap: "0.3rem",
 						padding: "0.35rem 0.75rem", borderRadius: "6px", border: "none",
@@ -263,7 +273,11 @@ function ExportSchemaSection({ configPath }: { configPath: string }) {
 				</div>
 			</div>
 			<div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
-				<button type="button" onClick={downloadSchema} disabled={exporting || !enabled}
+				<button
+					data-testid="download-schema-button"
+					type="button"
+					onClick={downloadSchema}
+					disabled={exporting || !enabled}
 					style={{
 						display: "inline-flex", alignItems: "center", gap: "0.3rem",
 						padding: "0.35rem 0.75rem", borderRadius: "6px", border: "none",
@@ -274,7 +288,11 @@ function ExportSchemaSection({ configPath }: { configPath: string }) {
 					}}>
 					{exporting ? "Exporting..." : "⬇ Download schema"}
 				</button>
-				<button type="button" onClick={saveToProject} disabled={saving || !enabled}
+				<button
+					data-testid="save-to-project-button"
+					type="button"
+					onClick={saveToProject}
+					disabled={saving || !enabled}
 					style={{
 						display: "inline-flex", alignItems: "center", gap: "0.3rem",
 						padding: "0.35rem 0.75rem", borderRadius: "6px",
@@ -378,7 +396,10 @@ function ProfileSection() {
 		<div>
 			<SectionHeading>Profile</SectionHeading>
 			<Card>
-				<form onSubmit={saveProfile} style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
+				<form
+					data-testid="profile-form"
+					onSubmit={saveProfile}
+					style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
 					<InputRow label="Name" value={name} onChange={(e) => setName(e.target.value)} required />
 					<InputRow label="Email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} required copiable />
 					<div>
@@ -390,6 +411,7 @@ function ProfileSection() {
 								{ value: false, label: "Wordmark" },
 							] as const).map(({ value, label }) => (
 								<button
+									data-testid={`logo-option-${value}`}
 									key={String(value)}
 									type="button"
 									onClick={() => {
@@ -597,7 +619,12 @@ function SiteSection() {
 	}, []);
 
 	return (
-		<form ref={formRef} onSubmit={handleSave} onChange={() => window.dispatchEvent(new CustomEvent("cms:settings-dirty"))} style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
+		<form
+			data-testid="site-settings-form"
+			ref={formRef}
+			onSubmit={handleSave}
+			onChange={() => window.dispatchEvent(new CustomEvent("cms:settings-dirty"))}
+			style={{ display: "flex", flexDirection: "column", gap: "1.5rem" }}>
 			<div>
 				<SectionHeading first>Site</SectionHeading>
 				<Card>
@@ -706,6 +733,7 @@ function SiteSection() {
 						</div>
 						<div style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
 							<input
+								data-testid="trash-retention-days-input"
 								type="number"
 								min={1}
 								max={365}
@@ -726,6 +754,7 @@ function SiteSection() {
 						</div>
 						<div style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
 							<input
+								data-testid="curation-retention-days-input"
 								type="number"
 								min={1}
 								max={365}
@@ -864,6 +893,7 @@ function LanguageSection({ cfg, setCfg: _setCfg }: {
 									)}
 									{l !== cfg.defaultLocale && (
 										<button
+											data-testid={`locale-remove-${l}`}
 											type="button"
 											onClick={() => removeLocale(l)}
 											style={{
@@ -893,6 +923,7 @@ function LanguageSection({ cfg, setCfg: _setCfg }: {
 								placeholder="Select language to add"
 							/>
 							<button
+								data-testid="language-cancel-button"
 								type="button"
 								onClick={() => setAdding(false)}
 								style={{
@@ -906,6 +937,7 @@ function LanguageSection({ cfg, setCfg: _setCfg }: {
 						</div>
 					) : (
 						<button
+							data-testid="add-language-button"
 							type="button"
 							onClick={() => setAdding(true)}
 							style={{
@@ -949,6 +981,7 @@ function LanguageSection({ cfg, setCfg: _setCfg }: {
 								</p>
 							</div>
 							<button
+								data-testid="auto-translate-toggle"
 								type="button"
 								onClick={() => setCfg((c: any) => ({ ...c, autoRetranslateOnUpdate: !c.autoRetranslateOnUpdate }))}
 								style={{
@@ -1092,7 +1125,12 @@ function RevalidationSection() {
 	return (
 		<SectionWrapper><div>
 			<SectionHeading>Revalidation</SectionHeading>
-			<form ref={revalFormRef} onSubmit={handleSave} onChange={() => window.dispatchEvent(new CustomEvent("cms:settings-dirty"))} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+			<form
+				data-testid="revalidation-form"
+				ref={revalFormRef}
+				onSubmit={handleSave}
+				onChange={() => window.dispatchEvent(new CustomEvent("cms:settings-dirty"))}
+				style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
 				<Card>
 					<div style={{ display: "flex", alignItems: "flex-start", gap: "0.5rem" }}>
 						<Zap style={{ width: "1rem", height: "1rem", color: "var(--primary)", flexShrink: 0, marginTop: "0.15rem" }} />
@@ -1106,6 +1144,7 @@ function RevalidationSection() {
 						<label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Revalidation URL</label>
 						<div style={{ display: "flex", gap: "0.375rem" }}>
 							<input
+								data-testid="revalidation-url-input"
 								type="url"
 								value={url}
 								onChange={(e) => setUrl(e.target.value)}
@@ -1120,6 +1159,7 @@ function RevalidationSection() {
 							/>
 							{!url && previewUrl && (
 								<button
+									data-testid="auto-generate-revalidation-url"
 									type="button"
 									onClick={autoGenerateUrl}
 									style={{ padding: "0.4rem 0.65rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "0.75rem", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: "0.3rem" }}
@@ -1131,6 +1171,7 @@ function RevalidationSection() {
 							)}
 							{url && (
 								<button
+									data-testid="copy-revalidation-url"
 									type="button"
 									onClick={() => copyToClipboard(url, "url")}
 									style={{ padding: "0.4rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", cursor: "pointer", color: "var(--muted-foreground)", display: "flex", alignItems: "center" }}
@@ -1152,6 +1193,7 @@ function RevalidationSection() {
 						<div style={{ display: "flex", gap: "0.375rem" }}>
 							<div style={{ position: "relative", flex: 1 }}>
 								<input
+									data-testid="webhook-secret-input"
 									type={showSecret ? "text" : "password"}
 									value={secret}
 									onChange={(e) => setSecret(e.target.value)}
@@ -1167,6 +1209,7 @@ function RevalidationSection() {
 									onBlur={(e) => { e.target.style.borderColor = "var(--border)"; }}
 								/>
 								<button
+									data-testid="toggle-secret-visibility"
 									type="button"
 									onClick={() => setShowSecret((v) => !v)}
 									style={{ position: "absolute", right: "0.5rem", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.1rem" }}
@@ -1175,6 +1218,7 @@ function RevalidationSection() {
 								</button>
 							</div>
 							<button
+								data-testid="generate-webhook-secret"
 								type="button"
 								onClick={generateSecret}
 								style={{ padding: "0.4rem 0.65rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "0.75rem", whiteSpace: "nowrap", display: "flex", alignItems: "center", gap: "0.3rem" }}
@@ -1185,6 +1229,7 @@ function RevalidationSection() {
 							</button>
 							{secret && (
 								<button
+									data-testid="copy-webhook-secret"
 									type="button"
 									onClick={() => copyToClipboard(secret, "secret")}
 									style={{ padding: "0.4rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", cursor: "pointer", color: "var(--muted-foreground)", display: "flex", alignItems: "center" }}
@@ -1204,6 +1249,7 @@ function RevalidationSection() {
 						<div style={{ display: "flex", gap: "0.5rem" }}>
 							{url && (
 								<button
+									data-testid="send-test-ping"
 									type="button"
 									onClick={sendPing}
 									disabled={pinging}
@@ -1257,6 +1303,7 @@ function RevalidationSection() {
 							</div>
 						)}
 						<button
+							data-testid="toggle-recent-deliveries"
 							type="button"
 							onClick={() => setLogOpen((v) => !v)}
 							style={{ fontSize: "0.7rem", fontWeight: 600, color: "var(--muted-foreground)", textTransform: "uppercase", letterSpacing: "0.05em", marginBottom: logOpen ? "0.5rem" : 0, background: "none", border: "none", cursor: "pointer", padding: 0, display: "flex", alignItems: "center", gap: "0.35rem" }}
@@ -1380,6 +1427,7 @@ function DangerZone() {
 					</div>
 					{!confirm && !done && (
 						<button
+							data-testid="purge-trash-button"
 							type="button"
 							onClick={() => setConfirm(true)}
 							style={{ flexShrink: 0, padding: "0.4rem 0.875rem", borderRadius: "6px", border: "1px solid color-mix(in srgb, var(--destructive) 40%, transparent)", background: "transparent", color: "var(--destructive)", fontSize: "0.8rem", cursor: "pointer", whiteSpace: "nowrap" }}
@@ -1398,8 +1446,17 @@ function DangerZone() {
 					<div style={{ display: "flex", alignItems: "center", gap: "0.625rem", padding: "0.75rem", background: "var(--card)", borderRadius: "7px", border: "1px solid var(--border)" }}>
 						<AlertTriangle style={{ width: "0.9rem", height: "0.9rem", color: "var(--destructive)", flexShrink: 0 }} />
 						<span style={{ fontSize: "0.8rem", flex: 1 }}>This cannot be undone. Are you sure?</span>
-						<button type="button" onClick={() => setConfirm(false)} style={{ padding: "0.3rem 0.625rem", borderRadius: "5px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: "pointer" }}>Cancel</button>
-						<button type="button" onClick={purgeTrash} disabled={purging} style={{ padding: "0.3rem 0.625rem", borderRadius: "5px", border: "none", background: "var(--destructive)", color: "#fff", fontSize: "0.75rem", cursor: purging ? "wait" : "pointer" }}>
+						<button
+							data-testid="purge-trash-cancel"
+							type="button"
+							onClick={() => setConfirm(false)}
+							style={{ padding: "0.3rem 0.625rem", borderRadius: "5px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: "pointer" }}>Cancel</button>
+						<button
+							data-testid="purge-trash-confirm"
+							type="button"
+							onClick={purgeTrash}
+							disabled={purging}
+							style={{ padding: "0.3rem 0.625rem", borderRadius: "5px", border: "none", background: "var(--destructive)", color: "#fff", fontSize: "0.75rem", cursor: purging ? "wait" : "pointer" }}>
 							{purging ? "Purging…" : "Yes, purge"}
 						</button>
 					</div>
@@ -1426,6 +1483,7 @@ function DangerZone() {
 											/>
 										</div>
 										<button
+											data-testid="move-site-button"
 											type="button"
 											disabled={!targetOrgId}
 											onClick={() => setMoveConfirm(true)}
@@ -1449,8 +1507,17 @@ function DangerZone() {
 								<span style={{ fontSize: "0.8rem", flex: 1 }}>
 									Move <strong>{activeSiteName || activeSiteId}</strong> to <strong>{targetOrgName}</strong>? Settings and content will be preserved.
 								</span>
-								<button type="button" onClick={() => setMoveConfirm(false)} style={{ padding: "0.3rem 0.625rem", borderRadius: "5px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: "pointer" }}>No</button>
-								<button type="button" onClick={handleMove} disabled={moving} style={{ padding: "0.3rem 0.625rem", borderRadius: "5px", border: "none", background: "var(--destructive)", color: "#fff", fontSize: "0.75rem", cursor: moving ? "wait" : "pointer" }}>
+								<button
+									data-testid="move-site-cancel"
+									type="button"
+									onClick={() => setMoveConfirm(false)}
+									style={{ padding: "0.3rem 0.625rem", borderRadius: "5px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: "pointer" }}>No</button>
+								<button
+									data-testid="move-site-confirm"
+									type="button"
+									onClick={handleMove}
+									disabled={moving}
+									style={{ padding: "0.3rem 0.625rem", borderRadius: "5px", border: "none", background: "var(--destructive)", color: "#fff", fontSize: "0.75rem", cursor: moving ? "wait" : "pointer" }}>
 									{moving ? "Moving…" : "Yes"}
 								</button>
 							</div>
@@ -1590,17 +1657,28 @@ export function PasswordChangePanel() {
 		<div>
 			<SectionHeading>Change password</SectionHeading>
 			<Card>
-				<form onSubmit={savePassword} style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
+				<form
+					data-testid="change-password-form"
+					onSubmit={savePassword}
+					style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
 					<div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
 						<label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Current password</label>
 						<div style={{ position: "relative" }}>
 							<input
-								type={showCur ? "text" : "password"} value={curPw} onChange={(e) => setCurPw(e.target.value)} required
+								data-testid="current-password-input"
+								type={showCur ? "text" : "password"}
+								value={curPw}
+								onChange={(e) => setCurPw(e.target.value)}
+								required
 								style={{ padding: "0.45rem 2.25rem 0.45rem 0.75rem", borderRadius: "7px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.875rem", outline: "none", width: "100%", boxSizing: "border-box" }}
 								onFocus={(e) => { e.target.style.borderColor = "var(--primary)"; }}
 								onBlur={(e) => { e.target.style.borderColor = "var(--border)"; }}
 							/>
-							<button type="button" onClick={() => setShowCur((v) => !v)} style={{ position: "absolute", right: "0.5rem", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.1rem" }}>
+							<button
+								data-testid="toggle-current-password-visibility"
+								type="button"
+								onClick={() => setShowCur((v) => !v)}
+								style={{ position: "absolute", right: "0.5rem", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.1rem" }}>
 								{showCur ? <EyeOff style={{ width: "0.9rem", height: "0.9rem" }} /> : <Eye style={{ width: "0.9rem", height: "0.9rem" }} />}
 							</button>
 						</div>
@@ -1609,12 +1687,22 @@ export function PasswordChangePanel() {
 						<label style={{ fontSize: "0.75rem", fontWeight: 500 }}>New password</label>
 						<div style={{ position: "relative" }}>
 							<input
-								type={showNew ? "text" : "password"} value={newPw} onChange={(e) => setNewPw(e.target.value)} required minLength={8} placeholder="Min 8 characters"
+								data-testid="new-password-input"
+								type={showNew ? "text" : "password"}
+								value={newPw}
+								onChange={(e) => setNewPw(e.target.value)}
+								required
+								minLength={8}
+								placeholder="Min 8 characters"
 								style={{ padding: "0.45rem 2.25rem 0.45rem 0.75rem", borderRadius: "7px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.875rem", outline: "none", width: "100%", boxSizing: "border-box" }}
 								onFocus={(e) => { e.target.style.borderColor = "var(--primary)"; }}
 								onBlur={(e) => { e.target.style.borderColor = "var(--border)"; }}
 							/>
-							<button type="button" onClick={() => setShowNew((v) => !v)} style={{ position: "absolute", right: "0.5rem", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.1rem" }}>
+							<button
+								data-testid="toggle-new-password-visibility"
+								type="button"
+								onClick={() => setShowNew((v) => !v)}
+								style={{ position: "absolute", right: "0.5rem", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.1rem" }}>
 								{showNew ? <EyeOff style={{ width: "0.9rem", height: "0.9rem" }} /> : <Eye style={{ width: "0.9rem", height: "0.9rem" }} />}
 							</button>
 						</div>
@@ -1724,6 +1812,7 @@ function SchedulerNotificationsSection() {
 								Webhook URL
 							</label>
 							<input
+								data-testid="scheduler-webhook-url-input"
 								type="url"
 								value={webhookUrl}
 								onChange={(e) => setWebhookUrl(e.target.value)}
@@ -1737,6 +1826,7 @@ function SchedulerNotificationsSection() {
 
 						<div style={{ display: "flex", gap: "0.5rem" }}>
 							<button
+								data-testid="scheduler-notifications-save"
 								type="button"
 								onClick={save}
 								disabled={saving}
@@ -1750,6 +1840,7 @@ function SchedulerNotificationsSection() {
 							</button>
 							{webhookUrl && (
 								<button
+									data-testid="scheduler-notifications-test"
 									type="button"
 									onClick={testWebhook}
 									disabled={testing}

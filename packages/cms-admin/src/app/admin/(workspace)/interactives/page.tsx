@@ -359,6 +359,7 @@ export default function InteractivesPage() {
         <ActionBarBreadcrumb items={["Interactives"]} /></ActionBar>
 
       <input
+        data-testid="interactives-file-input"
         ref={inputRef}
         type="file"
         accept=".html,.htm"
@@ -373,6 +374,7 @@ export default function InteractivesPage() {
           <div style={{ position: "relative", flex: 1, minWidth: "180px" }}>
             <Search style={{ position: "absolute", left: "0.625rem", top: "50%", transform: "translateY(-50%)", width: "0.8rem", height: "0.8rem", color: "var(--muted-foreground)", pointerEvents: "none" }} />
             <input
+              data-testid="interactives-search-input"
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
@@ -387,6 +389,7 @@ export default function InteractivesPage() {
               { value: "draft" as const, label: "Draft", count: counts.draft, color: "rgb(234 179 8)" },
             ] as const).filter((o) => o.value === "all" || o.count > 0).map((opt) => (
               <button
+                data-testid={`interactives-status-filter-${opt.value}`}
                 key={opt.value}
                 type="button"
                 onClick={() => setStatusFilter(opt.value)}
@@ -414,7 +417,7 @@ export default function InteractivesPage() {
           <Zap style={{ width: "2.5rem", height: "2.5rem", opacity: 0.3 }} />
           <p style={{ fontSize: "0.875rem" }}>{query ? `No interactives matching "${query}"` : "No interactives yet"}</p>
           {!query && (
-            <button type="button" onClick={() => inputRef.current?.click()} style={{ fontSize: "0.8rem", padding: "0.5rem 1rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", cursor: "pointer" }}>
+            <button data-testid="interactives-empty-upload-button" type="button" onClick={() => inputRef.current?.click()} style={{ fontSize: "0.8rem", padding: "0.5rem 1rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", cursor: "pointer" }}>
               Upload HTML files or drag &amp; drop
             </button>
           )}
@@ -424,6 +427,7 @@ export default function InteractivesPage() {
         <div style={{ padding: "0 2rem 2rem", display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(220px, 1fr))", gap: "1rem" }}>
           {filtered.map((item) => (
             <div
+              data-testid={`interactives-grid-item-${item.id}`}
               key={item.id}
               className="group relative rounded-lg border border-border bg-card"
               style={{ cursor: "pointer", transition: "border-color 150ms" }}
@@ -449,7 +453,7 @@ export default function InteractivesPage() {
                     {item.locale && <span style={{ fontSize: "0.6rem", fontWeight: 600, padding: "0 4px", borderRadius: "3px", background: "rgba(247,187,46,0.12)", color: "#F7BB2E" }}>{item.locale.toUpperCase()}</span>}
                   </p>
                 </div>
-                <div onClick={(e) => e.stopPropagation()}>
+                <div data-testid={`interactives-item-menu-${item.id}`} onClick={(e) => e.stopPropagation()}>
                   <ItemDropdown item={item} onEdit={() => router.push(`/admin/interactives/${item.id}`)} onTogglePublish={() => togglePublish(item)} onClone={() => cloneItem(item)} onTrash={() => setConfirmTrash(item)} />
                 </div>
               </div>
@@ -481,6 +485,7 @@ export default function InteractivesPage() {
             <tbody>
               {filtered.map((item, i) => (
                 <tr
+                  data-testid={`interactives-list-item-${item.id}`}
                   key={item.id}
                   style={{ borderTop: i === 0 ? "none" : "1px solid var(--border)", transition: "background 120ms", cursor: "pointer" }}
                   className="hover:bg-secondary/50"
@@ -509,7 +514,7 @@ export default function InteractivesPage() {
                   <td style={{ padding: "0.625rem 0.75rem", fontSize: "0.8rem", color: "var(--muted-foreground)", whiteSpace: "nowrap" }}>
                     {formatDate(item.updatedAt)}
                   </td>
-                  <td style={{ padding: "0.625rem 0.5rem", textAlign: "right" }} onClick={(e) => e.stopPropagation()}>
+                  <td data-testid={`interactives-list-menu-${item.id}`} style={{ padding: "0.625rem 0.5rem", textAlign: "right" }} onClick={(e) => e.stopPropagation()}>
                     <ItemDropdown item={item} onEdit={() => router.push(`/admin/interactives/${item.id}`)} onTogglePublish={() => togglePublish(item)} onClone={() => cloneItem(item)} onTrash={() => setConfirmTrash(item)} />
                   </td>
                 </tr>
@@ -522,7 +527,7 @@ export default function InteractivesPage() {
 
       {/* Trash confirm dialog */}
       {confirmTrash && (
-        <div style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}>
+        <div data-testid="interactives-trash-dialog" style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}>
           <div style={{ background: "var(--card)", border: "1px solid rgb(239 68 68 / 0.3)", borderRadius: "12px", padding: "1.5rem", maxWidth: "420px", width: "90%", display: "flex", flexDirection: "column", gap: "1rem" }}>
             <div style={{ display: "flex", alignItems: "flex-start", gap: "0.75rem" }}>
               <AlertTriangle style={{ width: "1.25rem", height: "1.25rem", color: "rgb(239 68 68)", flexShrink: 0, marginTop: "1px" }} />
@@ -545,6 +550,7 @@ export default function InteractivesPage() {
       {/* Create with AI modal */}
       {aiModalOpen && (
         <div
+          data-testid="interactives-ai-modal"
           style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
           onClick={(e) => { if (e.target === e.currentTarget && !aiGenerating) setAiModalOpen(false); }}
         >
@@ -557,6 +563,7 @@ export default function InteractivesPage() {
               Describe the interactive component you want. AI will generate a complete standalone HTML file.
             </p>
             <textarea
+              data-testid="interactives-ai-prompt-textarea"
               ref={aiTextareaRef}
               value={aiPrompt}
               onChange={(e) => setAiPrompt(e.target.value)}
@@ -581,6 +588,7 @@ export default function InteractivesPage() {
                   "Timeline of events with scroll animation",
                 ].map((s) => (
                   <button
+                    data-testid={`interactives-ai-suggestion-${s.replace(/\s+/g, '-').toLowerCase()}`}
                     key={s}
                     type="button"
                     onClick={() => { setAiPrompt(s); aiTextareaRef.current?.focus(); }}

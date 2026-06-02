@@ -234,6 +234,7 @@ export function ToolsSettingsPanel() {
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
             <input
+              data-testid="tools-media-auto-optimize"
               type="checkbox"
               checked={config.mediaAutoOptimize}
               onChange={(e) => updateConfig((c) => ({ ...c, mediaAutoOptimize: e.target.checked }))}

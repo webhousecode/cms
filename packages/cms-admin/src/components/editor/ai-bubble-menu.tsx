@@ -121,6 +121,7 @@ export function AIBubbleMenu({ editor }: Props) {
             </button>
           ))}
           <button
+            data-testid="ai-bubble-custom-button"
             type="button"
             disabled={loading}
             onClick={() => setShowCustom((o) => !o)}
@@ -145,6 +146,7 @@ export function AIBubbleMenu({ editor }: Props) {
         {showCustom && (
           <div style={{ padding: "0.5rem", display: "flex", gap: "0.375rem" }}>
             <input
+              data-testid="ai-bubble-custom-input"
               type="text"
               value={customInstruction}
               onChange={(e) => setCustomInstruction(e.target.value)}
@@ -168,6 +170,7 @@ export function AIBubbleMenu({ editor }: Props) {
               }}
             />
             <button
+              data-testid="ai-bubble-custom-submit"
               type="button"
               disabled={loading || !customInstruction.trim()}
               onClick={() => rewrite(customInstruction)}

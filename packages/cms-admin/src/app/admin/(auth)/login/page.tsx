@@ -252,7 +252,7 @@ function LoginForm() {
           </div>
 
           {totpRequired ? (
-            <form onSubmit={handleTotpSubmit} style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
+            <form data-testid="login-totp-form" onSubmit={handleTotpSubmit} style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
               <div>
                 <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "hsl(0 0% 70%)" }}>
                   Authenticator code
@@ -261,6 +261,7 @@ function LoginForm() {
                   Enter the 6-digit code from your authenticator app, or a backup code.
                 </p>
                 <input
+                  data-testid="login-totp-input"
                   type="text"
                   inputMode="numeric"
                   autoComplete="one-time-code"
@@ -278,6 +279,7 @@ function LoginForm() {
               </div>
               {error && <p style={{ fontSize: "0.8rem", color: "hsl(0 70% 60%)", background: "hsl(0 50% 15% / 0.5)", padding: "0.5rem 0.75rem", borderRadius: "6px", margin: 0 }}>{error}</p>}
               <button
+                data-testid="login-totp-submit"
                 type="submit"
                 disabled={loading}
                 style={{
@@ -290,6 +292,7 @@ function LoginForm() {
                 {loading ? "Verifying…" : "Verify"}
               </button>
               <button
+                data-testid="login-totp-back"
                 type="button"
                 onClick={() => { setTotpRequired(false); setTotpCode(""); setError(""); }}
                 style={{
@@ -303,10 +306,11 @@ function LoginForm() {
             </form>
           ) : (
           <>
-          <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
+          <form data-testid="login-password-form" onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
             <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
               <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "hsl(0 0% 70%)" }}>Email</label>
               <input
+                data-testid="login-email-input"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -332,6 +336,7 @@ function LoginForm() {
             <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
               <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "hsl(0 0% 70%)" }}>Password</label>
               <input
+                data-testid="login-password-input"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
@@ -365,6 +370,7 @@ function LoginForm() {
             )}
 
             <button
+              data-testid="login-submit"
               type="submit"
               disabled={loading}
               style={{
@@ -384,6 +390,7 @@ function LoginForm() {
             </button>
 
             <button
+              data-testid="login-passkey-button"
               type="button"
               onClick={handlePasskeyLogin}
               disabled={loading}
@@ -418,6 +425,7 @@ function LoginForm() {
                 <div style={{ flex: 1, height: "1px", background: "hsl(0 0% 20%)" }} />
               </div>
               <a
+                data-testid="login-github-link"
                 href={`/api/auth/github?login=true`}
                 style={{
                   display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem",
@@ -479,6 +487,7 @@ function LoginForm() {
                   {qrStatus === "expired" ? "Expired" : "Rejected"}
                 </span>
                 <button
+                  data-testid="login-qr-refresh-button"
                   onClick={() => window.location.reload()}
                   style={{
                     fontSize: "0.7rem", padding: "0.3rem 0.7rem", borderRadius: "4px",
@@ -508,6 +517,7 @@ function LoginForm() {
           Powered by <span style={{ color: "hsl(38 80% 55%)", fontWeight: 500 }}>@webhouse/cms</span>
           {" · "}
           <a
+            data-testid="login-docs-link"
             href="https://docs.webhouse.app"
             target="_blank"
             rel="noopener noreferrer"

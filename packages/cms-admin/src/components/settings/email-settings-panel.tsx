@@ -200,6 +200,7 @@ export function EmailSettingsPanel() {
               {isEditing ? (
                 <div style={{ display: "flex", gap: "0.375rem" }}>
                   <input
+                    data-testid={`email-field-${f.id}`}
                     type={f.type === "secret" ? "text" : "text"}
                     value={editing[f.id] ?? ""}
                     onChange={(e) => setEditing((prev) => ({ ...prev, [f.id]: e.target.value }))}
@@ -210,6 +211,7 @@ export function EmailSettingsPanel() {
                     onBlur={(e) => { e.target.style.borderColor = "var(--border)"; }}
                   />
                   <button
+                    data-testid={`email-cancel-${f.id}`}
                     type="button"
                     onClick={() => setEditing((prev) => { const n = { ...prev }; delete n[f.id]; return n; })}
                     style={{ padding: "0.5rem 0.625rem", borderRadius: "7px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: "pointer" }}
@@ -219,6 +221,7 @@ export function EmailSettingsPanel() {
                 </div>
               ) : (
                 <button
+                  data-testid={`email-edit-${f.id}`}
                   type="button"
                   onClick={() => setEditing((prev) => ({ ...prev, [f.id]: "" }))}
                   style={{
@@ -252,6 +255,7 @@ export function EmailSettingsPanel() {
         </div>
         <div style={{ display: "flex", gap: "0.375rem" }}>
           <input
+            data-testid="email-test-input"
             type="email"
             value={testEmail}
             onChange={(e) => setTestEmail(e.target.value)}
@@ -261,6 +265,7 @@ export function EmailSettingsPanel() {
             onBlur={(e) => { e.target.style.borderColor = "var(--border)"; }}
           />
           <button
+            data-testid="email-test-button"
             type="button"
             onClick={handleTest}
             disabled={testing || !testEmail.trim()}

@@ -463,6 +463,7 @@ export default function EventLogPage() {
               <label>
                 Per page:
                 <select
+                  data-testid="log-page-size-select"
                   value={pageSize}
                   onChange={(e) => setPageSize(parseInt(e.target.value, 10))}
                   style={{
