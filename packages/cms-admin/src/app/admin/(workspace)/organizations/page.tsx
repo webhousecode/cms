@@ -81,7 +81,7 @@ export default function OrganizationsPage() {
     : orgs;
 
   return (
-    <>
+    <div data-testid="organizations-root">
     <ActionBar
       actions={
         <ActionButton variant="primary" onClick={() => router.push("/admin/organizations/new")} icon={<Plus style={{ width: 14, height: 14 }} />}>
@@ -176,6 +176,6 @@ export default function OrganizationsPage() {
         </div>
       )}
     </div>
-    </>
+    </div>
   );
 }

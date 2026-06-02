@@ -204,7 +204,7 @@ export default function SeoPage() {
   };
 
   return (
-    <>
+    <div data-testid="seo-root">
       <TabTitle value="SEO" />
       <ActionBar helpArticleId="seo-dashboard-intro" actions={
         <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
@@ -568,6 +568,6 @@ export default function SeoPage() {
           })()}
         </div>
       )}
-    </>
+    </div>
   );
 }

@@ -202,16 +202,18 @@ function LoginForm() {
   }
 
   return (
-    <div style={{
-      position: "fixed",
-      inset: 0,
-      zIndex: 200,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      background: "linear-gradient(135deg, hsl(0 0% 5%) 0%, hsl(0 0% 10%) 50%, hsl(35 20% 10%) 100%)",
-      overflow: "hidden",
-    }}>
+    <div
+      data-testid="login-root"
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 200,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "linear-gradient(135deg, hsl(0 0% 5%) 0%, hsl(0 0% 10%) 50%, hsl(35 20% 10%) 100%)",
+        overflow: "hidden",
+      }}>
       {/* Subtle grid pattern */}
       <div style={{
         position: "absolute",

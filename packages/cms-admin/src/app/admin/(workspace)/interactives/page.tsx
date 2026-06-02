@@ -295,6 +295,7 @@ export default function InteractivesPage() {
   }
 
   return (
+    <div data-testid="interactives-root">
     <fieldset disabled={readOnly} style={{ border: "none", padding: 0, margin: 0 }}>
     <div
       className="flex flex-col"
@@ -620,6 +621,7 @@ export default function InteractivesPage() {
       )}
     </div>
     </fieldset>
+    </div>
   );
 }
 

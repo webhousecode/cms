@@ -301,7 +301,7 @@ export default function SitesDashboard() {
   }
 
   return (
-    <>
+    <div data-testid="sites-root">
     <ActionBar
       actions={isAdmin ? (
         <ActionButton variant="primary" onClick={() => router.push("/admin/sites/new")} icon={<Plus style={{ width: 14, height: 14 }} />}>
@@ -728,7 +728,7 @@ export default function SitesDashboard() {
         </div>
       </div>
     )}
-    </>
+    </div>
   );
 }
 

@@ -316,6 +316,7 @@ export default function CurationPage() {
   }
 
   return (
+    <div data-testid="curation-root">
     <fieldset disabled={readOnly} style={{ border: "none", padding: 0, margin: 0 }}>
     <div className="p-8 max-w-5xl">
       <TabTitle value="Curation Queue" />
@@ -727,5 +728,6 @@ export default function CurationPage() {
       </div>
     )}
     </fieldset>
+    </div>
   );
 }

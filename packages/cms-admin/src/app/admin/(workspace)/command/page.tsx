@@ -97,7 +97,7 @@ export default function CommandPage() {
     budgetPct > 90 ? "bg-red-500" : budgetPct > 70 ? "bg-yellow-500" : "bg-green-500";
 
   return (
-    <>
+    <div data-testid="command-root">
     <ActionBar helpArticleId="cockpit-intro"
       actions={!readOnly ? (
         <ActionButton variant="primary" onClick={handleSave} disabled={saving}
@@ -327,7 +327,7 @@ export default function CommandPage() {
       </div>
       </fieldset>
     </div>
-    </>
+    </div>
   );
 }
 

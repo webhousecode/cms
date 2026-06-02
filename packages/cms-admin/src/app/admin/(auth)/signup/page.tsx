@@ -71,16 +71,18 @@ function SignupForm() {
   }
 
   return (
-    <div style={{
-      position: "fixed",
-      inset: 0,
-      zIndex: 200,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      background: "linear-gradient(135deg, hsl(0 0% 5%) 0%, hsl(0 0% 10%) 50%, hsl(35 20% 10%) 100%)",
-      overflow: "auto",
-    }}>
+    <div
+      data-testid="signup-root"
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 200,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "linear-gradient(135deg, hsl(0 0% 5%) 0%, hsl(0 0% 10%) 50%, hsl(35 20% 10%) 100%)",
+        overflow: "auto",
+      }}>
       {/* Grid pattern */}
       <div style={{
         position: "fixed",

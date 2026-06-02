@@ -215,7 +215,7 @@ export default function EventLogPage() {
   }
 
   return (
-    <>
+    <div data-testid="log-root">
       <TabTitle value="Event Log" />
       <ActionBar
         actions={
@@ -524,6 +524,6 @@ export default function EventLogPage() {
           </div>
         )}
       </div>
-    </>
+    </div>
   );
 }

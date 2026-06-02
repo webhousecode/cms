@@ -18,18 +18,20 @@ export default async function CollectionPage({ params }: Props) {
   if (!colConfig) notFound();
 
   return (
-    <CollectionPageClient
-      collection={collection}
-      collectionLabel={colConfig.label ?? collection}
-      titleField={colConfig.fields[0]?.name ?? "title"}
-      fields={colConfig.fields}
-      readOnly={siteRole === "viewer"}
-      urlPrefix={colConfig.urlPrefix}
-      urlPattern={(colConfig as any).urlPattern}
-      localeStrategy={siteConfig.localeStrategy ?? "prefix-other"}
-      schemaEnabled={siteConfig.schemaEditEnabled}
-      defaultLocale={siteConfig.defaultLocale || config.defaultLocale}
-      siteLocales={siteConfig.locales?.length ? siteConfig.locales : config.locales}
-    />
+    <div data-testid="content-root">
+      <CollectionPageClient
+        collection={collection}
+        collectionLabel={colConfig.label ?? collection}
+        titleField={colConfig.fields[0]?.name ?? "title"}
+        fields={colConfig.fields}
+        readOnly={siteRole === "viewer"}
+        urlPrefix={colConfig.urlPrefix}
+        urlPattern={(colConfig as any).urlPattern}
+        localeStrategy={siteConfig.localeStrategy ?? "prefix-other"}
+        schemaEnabled={siteConfig.schemaEditEnabled}
+        defaultLocale={siteConfig.defaultLocale || config.defaultLocale}
+        siteLocales={siteConfig.locales?.length ? siteConfig.locales : config.locales}
+      />
+    </div>
   );
 }

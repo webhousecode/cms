@@ -294,7 +294,7 @@ export default function LinkCheckerPage() {
 
   return (
     <fieldset disabled={readOnly} style={{ border: "none", padding: 0, margin: 0 }}>
-    <div className="flex flex-col">
+    <div data-testid="link-checker-root" className="flex flex-col">
       <ActionBar helpArticleId="linkchecker-intro"
         actions={<>
           {state === "done" && allBroken.length > 0 && (

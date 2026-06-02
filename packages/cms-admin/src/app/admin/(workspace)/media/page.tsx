@@ -353,6 +353,7 @@ export default function MediaPage() {
 
   /* ─── Render ─────────────────────────────────────────────── */
   return (
+    <div data-testid="media-root">
     <fieldset disabled={readOnly} style={{ border: "none", padding: 0, margin: 0 }}>
     <TooltipProvider>
     <div
@@ -914,6 +915,7 @@ export default function MediaPage() {
     </div>
     </TooltipProvider>
     </fieldset>
+    </div>
   );
 }
 

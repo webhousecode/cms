@@ -108,7 +108,7 @@ export default function BackupPage() {
   }
 
   return (
-    <>
+    <div data-testid="backup-root">
       <TabTitle value="Backup" />
       <ActionBar helpArticleId="backup-intro"
         actions={
@@ -304,6 +304,6 @@ export default function BackupPage() {
         </div>
       )}
     </div>
-    </>
+    </div>
   );
 }

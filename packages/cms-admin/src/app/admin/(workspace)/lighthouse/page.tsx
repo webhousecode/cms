@@ -97,7 +97,7 @@ export default function LighthousePage() {
   }, [mobile, desktop, history]);
 
   return (
-    <>
+    <div data-testid="lighthouse-root">
       <TabTitle value="Lighthouse" />
       <ActionBar
         helpArticleId="lighthouse-intro"
@@ -255,7 +255,7 @@ export default function LighthousePage() {
       </div>
 
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
-    </>
+    </div>
   );
 }
 

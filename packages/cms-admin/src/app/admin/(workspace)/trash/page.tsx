@@ -143,7 +143,7 @@ export default function TrashPage() {
   });
 
   return (
-    <div>
+    <div data-testid="trash-root">
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem 1.5rem", borderBottom: "1px solid var(--border)", position: "sticky", top: 84, zIndex: 30, backgroundColor: "var(--card)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.625rem" }}>

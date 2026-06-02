@@ -103,7 +103,7 @@ export default function VisibilityPage() {
   const combinedScore = data ? Math.round((data.avgScore * 0.5) + (data.avgGeoScore * 0.5)) : 0;
 
   return (
-    <>
+    <div data-testid="visibility-root">
       <ActionBar helpArticleId="visibility-intro"
         actions={
           <ActionButton onClick={fetchData} disabled={loading}>
@@ -330,7 +330,7 @@ export default function VisibilityPage() {
           </>
         )}
       </div>
-    </>
+    </div>
   );
 }
 

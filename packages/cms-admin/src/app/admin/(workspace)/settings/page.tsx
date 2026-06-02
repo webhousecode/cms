@@ -71,7 +71,7 @@ export default async function SettingsPage({
   ];
 
   return (
-    <>
+    <div data-testid="settings-root">
       <SettingsAnchorScroll />
       <ActionBar
         actions={<SettingsSaveButton />}
@@ -349,6 +349,6 @@ export default async function SettingsPage({
         )}
         </div>
       </div>
-    </>
+    </div>
   );
 }
