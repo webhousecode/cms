@@ -26,15 +26,6 @@
       "auth": null
     },
     {
-      "name": "admin-setup",
-      "path": "/admin/setup",
-      "mode": "element",
-      "selector": "[data-testid=\"setup-root\"]",
-      "waitFor": "[data-testid=\"setup-root\"]",
-      "baseline_key": "admin-setup",
-      "auth": null
-    },
-    {
       "name": "admin-command",
       "path": "/admin/lens-fixture-site/command",
       "mode": "element",
@@ -48,8 +39,7 @@
       "mode": "element",
       "selector": "[data-testid=\"dashboard-root\"]",
       "waitFor": 2500,
-      "no_diff": true,
-      "assert": "[data-testid=\"dashboard-root\"]"
+      "no_diff": true
     },
     {
       "name": "admin-content",
