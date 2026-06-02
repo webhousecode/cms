@@ -4455,7 +4455,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))", gap: "0.5rem" }}>
                       {visible.map((item) => (
                         <button
-                          data-testid={`media-browser-image-item-${item.slug}`}
+                          data-testid={`media-browser-image-item-${item.name}`}
                           key={item.url}
                           type="button"
                           onClick={() => {
@@ -4557,7 +4557,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                     <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem" }}>
                       {filtered.map((item) => (
                         <button
-                          data-testid={`media-browser-audio-item-${item.slug}`}
+                          data-testid={`media-browser-audio-item-${item.name}`}
                           key={item.url}
                           type="button"
                           onClick={() => {
