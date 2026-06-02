@@ -110,6 +110,7 @@ export function HelpButton({ articleId }: HelpButtonProps) {
   return (
     <>
       <button
+        data-testid="help-button-trigger"
         ref={buttonRef}
         type="button"
         onClick={handleOpen}
@@ -139,7 +140,7 @@ export function HelpButton({ articleId }: HelpButtonProps) {
               <Lightbulb style={{ width: "0.8rem", height: "0.8rem", color: "#F7BB2E" }} />
               <span style={{ fontSize: "0.8rem", fontWeight: 600 }}>{article.title}</span>
             </div>
-            <button type="button" onClick={() => setOpen(false)}
+            <button data-testid="help-button-close" type="button" onClick={() => setOpen(false)}
               style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.15rem" }}>
               <X style={{ width: "0.7rem", height: "0.7rem" }} />
             </button>
@@ -156,6 +157,7 @@ export function HelpButton({ articleId }: HelpButtonProps) {
                   return (
                     <div key={i}>
                       <button
+                        data-testid={`help-button-isu-${action.isu}`}
                         type="button"
                         onClick={() => setActiveISU(activeISU === action.isu ? null : action.isu!)}
                         style={{
