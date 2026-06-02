@@ -4,7 +4,7 @@
  * Uses a temp dir as CMS_CONFIG_PATH so each test starts clean.
  */
 
-import { describe, it, expect, beforeEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import fs from "node:fs/promises";
 import path from "node:path";
 import os from "node:os";
@@ -25,8 +25,19 @@ beforeEach(async () => {
   tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "wha-push-test-"));
   // The store reads CMS_CONFIG_PATH and writes alongside it under _data/
   process.env.CMS_CONFIG_PATH = path.join(tmpDir, "cms.config.ts");
+  // Pin the data dir to the temp dir — getAdminDataDir() honours
+  // WEBHOUSE_DATA_DIR as an explicit override. Without it the store writes
+  // to the real ~/.webhouse/cms-admin and tests both leak into real data
+  // and lose per-test isolation.
+  process.env.WEBHOUSE_DATA_DIR = tmpDir;
   // Touch a fake config so getActiveSitePaths fallback isn't used
   await fs.writeFile(process.env.CMS_CONFIG_PATH, "// test", "utf-8");
+});
+
+afterEach(async () => {
+  await fs.rm(tmpDir, { recursive: true, force: true });
+  delete process.env.CMS_CONFIG_PATH;
+  delete process.env.WEBHOUSE_DATA_DIR;
 });
 
 describe("push-store — tokens", () => {
