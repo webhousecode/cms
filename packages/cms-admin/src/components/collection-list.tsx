@@ -142,6 +142,7 @@ function RowMenu({ doc, collection, onClone, onToggle, onTrash, cloning, preview
   return (
     <div style={{ position: "relative" }}>
       <button
+        data-testid={`collection-row-menu-${doc.slug}`}
         ref={btnRef}
         type="button"
         onClick={openMenu}
@@ -220,10 +221,12 @@ function RowMenu({ doc, collection, onClone, onToggle, onTrash, cloning, preview
               <span style={{ fontSize: "0.75rem", color: "var(--destructive)", fontWeight: 500, flex: 1 }}>Move to trash?</span>
               <button
                 type="button"
+                data-testid="collection-trash-confirm"
                 onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); onTrash(e); setOpen(false); setConfirmTrash(false); }}
                 style={{ fontSize: "0.7rem", padding: "0.15rem 0.5rem", borderRadius: "4px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1, fontWeight: 500 }}
               >Yes</button>
               <button
+                data-testid="collection-trash-cancel"
                 type="button"
                 onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); setConfirmTrash(false); }}
                 style={{ fontSize: "0.7rem", padding: "0.15rem 0.5rem", borderRadius: "4px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}
@@ -231,6 +234,7 @@ function RowMenu({ doc, collection, onClone, onToggle, onTrash, cloning, preview
             </div>
           ) : (
             <button
+              data-testid="collection-trash-button"
               type="button"
               onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); setConfirmTrash(true); }}
               style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.4rem 0.6rem", borderRadius: "5px", fontSize: "0.8rem", color: "var(--destructive)", background: "none", border: "none", cursor: "pointer", width: "100%" }}

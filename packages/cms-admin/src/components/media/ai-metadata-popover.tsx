@@ -135,6 +135,7 @@ export function AIMetadataPopover({ imageUrl, variant = "button", onAnalyzed, on
       {/* Trigger button */}
       {isCtx ? (
         <button
+          data-testid="ai-metadata-trigger-ctx"
           type="button"
           title="AI metadata"
           onClick={() => setOpen((o) => !o)}
@@ -150,6 +151,7 @@ export function AIMetadataPopover({ imageUrl, variant = "button", onAnalyzed, on
         </button>
       ) : (
         <button
+          data-testid="ai-metadata-trigger-button"
           type="button"
           onClick={() => setOpen((o) => !o)}
           style={{
@@ -191,6 +193,7 @@ export function AIMetadataPopover({ imageUrl, variant = "button", onAnalyzed, on
             </span>
             {meta && (
               <button
+                data-testid="ai-metadata-reanalyze"
                 type="button"
                 title="Re-analyze"
                 disabled={analyzing}
@@ -224,6 +227,7 @@ export function AIMetadataPopover({ imageUrl, variant = "button", onAnalyzed, on
                   No AI analysis yet.
                 </p>
                 <button
+                  data-testid="ai-metadata-analyze"
                   type="button"
                   onClick={runAnalysis}
                   disabled={analyzing}
@@ -312,6 +316,7 @@ export function AIMetadataPopover({ imageUrl, variant = "button", onAnalyzed, on
                           </span>
                         ) : (
                           <button
+                            data-testid="ai-metadata-apply-alt"
                             type="button"
                             title="Apply alt-text to image"
                             onClick={() => { onApplyAlt(displayAlt); setApplied(true); }}

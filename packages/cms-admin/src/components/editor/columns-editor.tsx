@@ -150,7 +150,7 @@ export function ColumnsEditor({ block, onChange, locked, blocksConfig = [] }: Co
           <div style={{ display: "flex", gap: "0.35rem", flexWrap: "wrap", alignItems: "center" }}>
             {LAYOUT_PRESETS.map((preset) => (
               <button
-                data-testid={`columns-layout-${preset.value}`}
+                data-testid="columns-layout-preset-button"
                 key={preset.value}
                 type="button"
                 onClick={() => requestLayout(preset.value)}
@@ -173,11 +173,11 @@ export function ColumnsEditor({ block, onChange, locked, blocksConfig = [] }: Co
             {/* Open all / Close all — right-aligned */}
             {totalBlocks >= 2 && (
               <div style={{ display: "flex", gap: "0.25rem", marginLeft: "auto" }}>
-                <button type="button" onClick={() => toggleAllColumns(true)} disabled={allOpen}
+                <button data-testid="columns-open-all-button" type="button" onClick={() => toggleAllColumns(true)} disabled={allOpen}
                   style={{ background: "none", border: "none", cursor: allOpen ? "default" : "pointer", fontSize: "0.6rem", color: "var(--muted-foreground)", opacity: allOpen ? 0.4 : 1, padding: "0.1rem 0.3rem" }}
                   className={allOpen ? "" : "hover:text-foreground transition-colors"}>Open all</button>
                 <span style={{ fontSize: "0.6rem", color: "var(--muted-foreground)", opacity: 0.3 }}>|</span>
-                <button type="button" onClick={() => toggleAllColumns(false)} disabled={allClosed}
+                <button data-testid="columns-close-all-button" type="button" onClick={() => toggleAllColumns(false)} disabled={allClosed}
                   style={{ background: "none", border: "none", cursor: allClosed ? "default" : "pointer", fontSize: "0.6rem", color: "var(--muted-foreground)", opacity: allClosed ? 0.4 : 1, padding: "0.1rem 0.3rem" }}
                   className={allClosed ? "" : "hover:text-foreground transition-colors"}>Close all</button>
               </div>
@@ -198,9 +198,9 @@ export function ColumnsEditor({ block, onChange, locked, blocksConfig = [] }: Co
               <span style={{ color: "var(--destructive)", fontWeight: 500 }}>
                 Column {droppedColumnsWithContent(pendingLayout).join(", ")} content will be removed.
               </span>
-              <button type="button" onClick={() => applyLayout(pendingLayout)}
+              <button data-testid="columns-layout-confirm-ok" type="button" onClick={() => applyLayout(pendingLayout)}
                 style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>OK</button>
-              <button type="button" onClick={() => setPendingLayout(null)}
+              <button data-testid="columns-layout-confirm-cancel" type="button" onClick={() => setPendingLayout(null)}
                 style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>Cancel</button>
             </div>
           )}
@@ -240,6 +240,7 @@ export function ColumnsEditor({ block, onChange, locked, blocksConfig = [] }: Co
               Editing Column {focusedCol + 1}
             </span>
             <button
+              data-testid="columns-focused-close-button"
               type="button"
               onClick={() => setFocusedCol(null)}
               style={{
@@ -316,6 +317,7 @@ export function ColumnsEditor({ block, onChange, locked, blocksConfig = [] }: Co
                   Column {colIdx + 1}
                 </span>
                 <button
+                  data-testid="columns-expand-button"
                   type="button"
                   onClick={() => setFocusedCol(colIdx)}
                   title="Expand column editor"

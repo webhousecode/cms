@@ -72,6 +72,7 @@ function RecheckButton({ busy, justRan, onClick }: { busy: boolean; justRan: boo
   const success = justRan && !busy;
   return (
     <button
+      data-testid="recheck-dns-button"
       onClick={onClick}
       disabled={busy}
       onMouseEnter={() => setHover(true)}
@@ -490,6 +491,7 @@ export function DeploySettingsPanel() {
             </div>
           </div>
           <button
+            data-testid="drift-banner-rebuild-button"
             onClick={() => {
               const infraSection = document.querySelector('[data-rebuild-infra-section]');
               infraSection?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -524,6 +526,7 @@ export function DeploySettingsPanel() {
           </div>
         </div>
         <a
+          data-testid="docker-wizard-link"
           href="/admin/deploy/docker"
           style={{
             padding: "0.35rem 0.8rem",
@@ -600,11 +603,11 @@ export function DeploySettingsPanel() {
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
               <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>API Token</label>
               {(config.deployProvider === "flyio" || config.deployProvider === "flyio-live") && (
-                <a href="https://fly.io/dashboard/personal/tokens" target="_blank" rel="noopener noreferrer"
+                <a data-testid="flyio-token-link" href="https://fly.io/dashboard/personal/tokens" target="_blank" rel="noopener noreferrer"
                   style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>Get token <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
               )}
               {config.deployProvider === "github-pages" && (
-                <a href="https://github.com/settings/tokens/new?scopes=repo&description=webhouse-deploy" target="_blank" rel="noopener noreferrer"
+                <a data-testid="github-token-link" href="https://github.com/settings/tokens/new?scopes=repo&description=webhouse-deploy" target="_blank" rel="noopener noreferrer"
                   style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>Get key <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
               )}
             </div>
@@ -680,7 +683,7 @@ export function DeploySettingsPanel() {
             <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
                 <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>API Token</label>
-                <a href="https://dash.cloudflare.com/profile/api-tokens" target="_blank" rel="noopener noreferrer"
+                <a data-testid="cloudflare-token-link" href="https://dash.cloudflare.com/profile/api-tokens" target="_blank" rel="noopener noreferrer"
                   style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", textDecoration: "none", display: "flex", alignItems: "center", gap: "0.2rem" }}>Get token <ExternalLink style={{ width: "0.6rem", height: "0.6rem" }} /></a>
               </div>
               <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: 0 }}>
@@ -693,6 +696,7 @@ export function DeploySettingsPanel() {
               <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Account ID</label>
               <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: 0, display: "flex", alignItems: "center", gap: "0.3rem", flexWrap: "wrap" }}>
                 <a
+                  data-testid="cloudflare-dashboard-link"
                   href="https://dash.cloudflare.com/"
                   target="_blank"
                   rel="noopener noreferrer"
@@ -757,7 +761,7 @@ export function DeploySettingsPanel() {
               {flyLiveStatus.url && (
                 <>
                   <span style={{ color: "var(--muted-foreground)" }}>URL</span>
-                  <a href={flyLiveStatus.url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)" }}>{flyLiveStatus.url}</a>
+                  <a data-testid="fly-live-url-link" href={flyLiveStatus.url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)" }}>{flyLiveStatus.url}</a>
                 </>
               )}
             </div>
@@ -771,6 +775,7 @@ export function DeploySettingsPanel() {
               </div>
               {!rebuildConfirm && !rebuilding && (
                 <button
+                  data-testid="rebuild-infra-button"
                   onClick={() => setRebuildConfirm(true)}
                   style={{
                     padding: "0.35rem 0.8rem", borderRadius: "6px",
@@ -826,7 +831,7 @@ export function DeploySettingsPanel() {
                   <div>
                     <p style={{ fontSize: "0.8rem", fontWeight: 500, margin: 0 }}>Have a GitHub account</p>
                     <p style={{ fontSize: "0.72rem", color: "var(--muted-foreground)", margin: "0.15rem 0 0" }}>
-                      Don&apos;t have one? <a href="https://github.com/signup" target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)", textDecoration: "none" }}>Create a free account →</a>
+                      Don&apos;t have one? <a data-testid="github-signup-link" href="https://github.com/signup" target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)", textDecoration: "none" }}>Create a free account →</a>
                     </p>
                   </div>
                 </div>
@@ -850,6 +855,7 @@ export function DeploySettingsPanel() {
                 </div>
               </div>
               <a
+                data-testid="connect-github-link"
                 href="/api/auth/github"
                 style={{
                   display: "inline-flex", alignItems: "center", gap: "0.5rem",
@@ -892,6 +898,7 @@ export function DeploySettingsPanel() {
                 )}
               </div>
               <button
+                data-testid="deploy-now-button"
                 type="button"
                 onClick={() => setShowDeployModal(true)}
                 disabled={deploying}
@@ -910,7 +917,7 @@ export function DeploySettingsPanel() {
             </div>
 
             {config.deployProductionUrl && (
-              <a href={config.deployProductionUrl} target="_blank" rel="noopener noreferrer"
+              <a data-testid="production-url-link" href={config.deployProductionUrl} target="_blank" rel="noopener noreferrer"
                 style={{ display: "flex", alignItems: "center", gap: "0.35rem", fontSize: "0.75rem", color: "var(--primary)", textDecoration: "none" }}>
                 <ExternalLink style={{ width: "0.7rem", height: "0.7rem" }} />
                 {config.deployProductionUrl}
@@ -919,6 +926,7 @@ export function DeploySettingsPanel() {
 
             <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer" }}>
               <input
+                data-testid="deploy-on-save-checkbox"
                 type="checkbox"
                 checked={config.deployOnSave}
                 onChange={(e) => updateConfig((c) => ({ ...c, deployOnSave: e.target.checked }))}
@@ -962,6 +970,7 @@ export function DeploySettingsPanel() {
             </div>
             <div style={{ display: "flex", gap: "0.4rem", alignItems: "center" }}>
               <input
+                data-testid="custom-domain-input"
                 type="text"
                 value={config.deployCustomDomain}
                 onChange={(e) => updateConfig((c) => ({ ...c, deployCustomDomain: e.target.value }))}
@@ -980,6 +989,7 @@ export function DeploySettingsPanel() {
                 <div style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.65rem", color: "var(--muted-foreground)" }}>
                   <span>Suggestion:</span>
                   <button
+                    data-testid="use-suggested-domain-button"
                     type="button"
                     onClick={() => updateConfig((c) => ({ ...c, deployCustomDomain: suggested }))}
                     style={{
@@ -1053,6 +1063,7 @@ export function DeploySettingsPanel() {
                 </div>
                 {dnsStatus.zoneManagedByApi && dnsStatus.expectedTarget && dnsStatus.state !== "ok" && (
                   <button
+                    data-testid="create-cname-button"
                     onClick={handleCreateCname}
                     disabled={dnsBusy || domainCheck.state === "taken"}
                     title={domainCheck.state === "taken" ? "Subdomain is already used by another site" : undefined}
@@ -1131,6 +1142,7 @@ export function DeploySettingsPanel() {
               <>
                 <div style={{ display: "flex", gap: "0.4rem" }}>
                   <input
+                    data-testid="registrar-search-input"
                     type="text"
                     value={registrarQuery}
                     onChange={(e) => setRegistrarQuery(e.target.value)}
@@ -1144,6 +1156,7 @@ export function DeploySettingsPanel() {
                     }}
                   />
                   <button
+                    data-testid="registrar-search-button"
                     onClick={handleRegistrarSearch}
                     disabled={registrarSearching || !registrarQuery.trim()}
                     style={{
@@ -1192,6 +1205,7 @@ export function DeploySettingsPanel() {
                           )}
                           {r.registrable && (
                             <button
+                              data-testid={`register-domain-button-${r.name.replace(/\./g, '-')}`}
                               onClick={() => handleRegistrarInitiate(r.name)}
                               style={{
                                 padding: "0.25rem 0.55rem", borderRadius: "4px",
@@ -1234,6 +1248,7 @@ export function DeploySettingsPanel() {
                 )}
                 <div style={{ display: "flex", gap: "0.4rem", alignItems: "center" }}>
                   <button
+                    data-testid="confirm-domain-registration-button"
                     onClick={handleRegistrarConfirm}
                     disabled={registrarConfirming}
                     style={{
@@ -1249,6 +1264,7 @@ export function DeploySettingsPanel() {
                     {registrarConfirming ? "Registering..." : "Yes, register domain"}
                   </button>
                   <button
+                    data-testid="cancel-domain-registration-button"
                     onClick={() => { setRegistrarPending(null); setRegistrarError(null); }}
                     style={{
                       padding: "0.35rem 0.7rem", borderRadius: "5px",
@@ -1307,7 +1323,7 @@ export function DeploySettingsPanel() {
                 </span>
                 <span>
                   {d.url ? (
-                    <a href={d.url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)", fontSize: "0.7rem" }}>
+                    <a data-testid={`deploy-result-link-${d.id}`} href={d.url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)", fontSize: "0.7rem" }}>
                       <ExternalLink style={{ width: "0.65rem", height: "0.65rem" }} />
                     </a>
                   ) : d.error ? (
@@ -1358,6 +1374,7 @@ function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
   return (
     <button
+      data-testid="copy-domain-button"
       type="button"
       title="Copy to clipboard"
       onClick={async () => {

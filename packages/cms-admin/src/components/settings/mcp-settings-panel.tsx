@@ -37,7 +37,7 @@ function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
   return (
     <button
-      data-testid="mcp-copy-button"
+      data-testid="mcp-copy-btn"
       type="button"
       title="Copy to clipboard"
       onClick={async () => {

@@ -146,7 +146,7 @@ export function StepDeploy({ state }: Props) {
           const isActive = isCurrent || isCompleted;
 
           return (
-            <div data-testid={`deploy-step-${step.key}`} key={step.key} style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <div key={step.key} data-testid={`deploy-step-${step.key}`} style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
               <div style={{
                 width: 22,
                 height: 22,

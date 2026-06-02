@@ -109,8 +109,8 @@ export function WebhookList({ webhooks, onChange: onChangeRaw }: Props) {
 
               {/* Test */}
               <button
-                data-testid={`webhook-test-${wh.id}`}
                 type="button"
+                data-testid={`webhook-test-${wh.id}`}
                 onClick={() => sendTest(wh.url, wh.id)}
                 disabled={testing === wh.id}
                 title="Send test"
@@ -130,8 +130,8 @@ export function WebhookList({ webhooks, onChange: onChangeRaw }: Props) {
 
               {/* Copy */}
               <button
-                data-testid={`webhook-copy-${wh.id}`}
                 type="button"
+                data-testid={`webhook-copy-${wh.id}`}
                 onClick={() => copyUrl(wh.url, wh.id)}
                 title="Copy URL"
                 style={{
@@ -146,8 +146,8 @@ export function WebhookList({ webhooks, onChange: onChangeRaw }: Props) {
 
               {/* Move up */}
               <button
-                data-testid={`webhook-moveup-${wh.id}`}
                 type="button"
+                data-testid={`webhook-moveup-${wh.id}`}
                 onClick={() => moveUp(idx)}
                 disabled={idx === 0}
                 title="Move up"
@@ -163,8 +163,8 @@ export function WebhookList({ webhooks, onChange: onChangeRaw }: Props) {
 
               {/* Move down */}
               <button
-                data-testid={`webhook-movedown-${wh.id}`}
                 type="button"
+                data-testid={`webhook-movedown-${wh.id}`}
                 onClick={() => moveDown(idx)}
                 disabled={idx === webhooks.length - 1}
                 title="Move down"
@@ -194,8 +194,8 @@ export function WebhookList({ webhooks, onChange: onChangeRaw }: Props) {
                 </span>
               ) : (
                 <button
-                  data-testid={`webhook-remove-${wh.id}`}
                   type="button"
+                  data-testid={`webhook-remove-${wh.id}`}
                   onClick={() => setConfirmRemove(wh.id)}
                   title="Remove webhook"
                   style={{

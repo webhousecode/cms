@@ -110,8 +110,8 @@ function FixButton({ link, onFixed }: { link: LinkResult; onFixed: (newUrl: stri
             <div className="text-[10px] text-muted-foreground">{fix.reason}</div>
             <div className="flex gap-1.5 mt-0.5">
               <button
-                data-testid="link-fix-apply"
                 type="button"
+                data-testid="link-fix-apply"
                 onClick={applySuggestion}
                 disabled={fix.loading}
                 className="flex items-center gap-1 text-[11px] px-2 py-0.5 rounded bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50"
@@ -120,8 +120,8 @@ function FixButton({ link, onFixed }: { link: LinkResult; onFixed: (newUrl: stri
                 Apply
               </button>
               <button
-                data-testid="link-fix-cancel"
                 type="button"
+                data-testid="link-fix-cancel"
                 onClick={() => setFix({ loading: false })}
                 className="flex items-center gap-1 text-[11px] px-2 py-0.5 rounded border border-border hover:bg-accent"
               >
@@ -139,8 +139,8 @@ function FixButton({ link, onFixed }: { link: LinkResult; onFixed: (newUrl: stri
 
   return (
     <button
-      data-testid="link-fix-suggest"
       type="button"
+      data-testid="link-fix-suggest"
       onClick={getSuggestion}
       disabled={fix.loading}
       className="flex items-center gap-1 text-[11px] px-2 py-1 rounded border border-border hover:bg-accent hover:border-primary/40 transition-colors disabled:opacity-50"

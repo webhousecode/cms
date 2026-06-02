@@ -172,6 +172,7 @@ export default function InviteAcceptPage() {
                 This invitation link is invalid or has expired.
               </p>
               <a
+                data-testid="invite-go-to-login"
                 href="/admin/login"
                 style={{ fontSize: "0.8rem", color: "hsl(38 80% 55%)", textDecoration: "none" }}
               >
@@ -243,6 +244,7 @@ export default function InviteAcceptPage() {
                   )}
 
                   <button
+                    data-testid="invite-accept-existing"
                     type="button"
                     onClick={handleAcceptExisting}
                     disabled={submitting}
@@ -263,10 +265,11 @@ export default function InviteAcceptPage() {
                 </div>
               ) : (
                 /* ── New user: name + password form ── */
-                <form onSubmit={handleSubmitNew} style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
+                <form data-testid="invite-form" onSubmit={handleSubmitNew} style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
                   <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
                     <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "hsl(0 0% 70%)" }}>Your name</label>
                     <input
+                      data-testid="invite-name-input"
                       type="text"
                       value={name}
                       onChange={(e) => setName(e.target.value)}
@@ -282,6 +285,7 @@ export default function InviteAcceptPage() {
                   <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
                     <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "hsl(0 0% 70%)" }}>Choose a password</label>
                     <input
+                      data-testid="invite-password-input"
                       type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
@@ -306,6 +310,7 @@ export default function InviteAcceptPage() {
                   )}
 
                   <button
+                    data-testid="invite-create-account"
                     type="submit"
                     disabled={submitting}
                     style={{

@@ -297,15 +297,15 @@ function TemplatesTab({ readOnly }: { readOnly: boolean }) {
                   </div>
                   <div className="flex gap-3 text-xs">
                     <label className="flex items-center gap-1.5 cursor-pointer">
-                      <input type="checkbox" checked={editDraft.webSearch} onChange={(e) => setEditDraft({ ...editDraft, webSearch: e.target.checked })} className="accent-primary" />
+                      <input data-testid="template-websearch-checkbox" type="checkbox" checked={editDraft.webSearch} onChange={(e) => setEditDraft({ ...editDraft, webSearch: e.target.checked })} className="accent-primary" />
                       Web search
                     </label>
                     <label className="flex items-center gap-1.5 cursor-pointer">
-                      <input type="checkbox" checked={editDraft.internalDatabase} onChange={(e) => setEditDraft({ ...editDraft, internalDatabase: e.target.checked })} className="accent-primary" />
+                      <input data-testid="template-internal-db-checkbox" type="checkbox" checked={editDraft.internalDatabase} onChange={(e) => setEditDraft({ ...editDraft, internalDatabase: e.target.checked })} className="accent-primary" />
                       Internal database
                     </label>
                     <label className="flex items-center gap-1.5 cursor-pointer">
-                      <input type="checkbox" checked={editDraft.imageGeneration} onChange={(e) => setEditDraft({ ...editDraft, imageGeneration: e.target.checked })} className="accent-primary" />
+                      <input data-testid="template-imggen-checkbox" type="checkbox" checked={editDraft.imageGeneration} onChange={(e) => setEditDraft({ ...editDraft, imageGeneration: e.target.checked })} className="accent-primary" />
                       Image generation
                     </label>
                   </div>
@@ -733,6 +733,7 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
           <div>
             <label className="text-xs font-semibold text-muted-foreground block mb-1">Name</label>
             <input
+              data-testid="workflow-name-input"
               type="text"
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
@@ -764,6 +765,7 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
             <div className="flex flex-wrap gap-1.5">
               {agents.filter((a) => a.active).map((a) => (
                 <button
+                  data-testid={`workflow-add-agent-${a.id}`}
                   key={a.id}
                   type="button"
                   onClick={() => addStep(a.id)}

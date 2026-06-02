@@ -297,6 +297,7 @@ CRITICAL: Dollar signs in JavaScript strings MUST be preserved literally. Write 
           onBlur={(e) => { e.target.style.borderColor = "var(--border)"; }}
         />
         <Button
+          data-testid="interactive-ai-send-button"
           size="sm"
           onClick={send}
           disabled={!input.trim() || streaming}

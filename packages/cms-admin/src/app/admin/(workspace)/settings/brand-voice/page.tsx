@@ -202,6 +202,7 @@ function EditForm({ version, onSaved, onCancel }: {
       </label>
       {multiline ? (
         <textarea
+          data-testid={`edit-form-${key}`}
           value={form[key]}
           onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
           style={{ padding: "0.5rem 0.75rem", borderRadius: "7px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.875rem", resize: "vertical", minHeight: "80px", fontFamily: "inherit" }}
@@ -209,6 +210,7 @@ function EditForm({ version, onSaved, onCancel }: {
       ) : (
         <input
           type="text"
+          data-testid={`edit-form-${key}`}
           value={form[key]}
           onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
           style={{ padding: "0.5rem 0.75rem", borderRadius: "7px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.875rem" }}
@@ -382,7 +384,7 @@ function ImportExportMenu({ bv, onImport }: { bv: BrandVoice; onImport: (v: Bran
             { label: "Export JSON", action: doExport },
             { label: "Import JSON", action: openImport },
           ].map(({ label, action }) => (
-            <button key={label} type="button" onClick={action}
+            <button key={label} type="button" data-testid={`import-export-${label.toLowerCase().replace(/\s+/g, '-')}`} onClick={action}
               style={{ display: "block", width: "100%", padding: "0.5rem 0.875rem", textAlign: "left", background: "none", border: "none", color: "var(--foreground)", fontSize: "0.8rem", cursor: "pointer" }}
               onMouseEnter={(e) => { e.currentTarget.style.background = "var(--accent)"; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = "none"; }}>
@@ -451,6 +453,7 @@ function BrandVoiceCard({ bv, onReinterview, onEdit, onTranslate, onHistory, onI
             <div style={{ position: "relative" }}>
               <button
                 type="button"
+                data-testid="translate-button"
                 onClick={() => setLangOpen((o) => !o)}
                 disabled={translating}
                 style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.4rem 0.75rem", borderRadius: "7px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: translating ? "not-allowed" : "pointer" }}
@@ -467,6 +470,7 @@ function BrandVoiceCard({ bv, onReinterview, onEdit, onTranslate, onHistory, onI
                     <button
                       key={lang}
                       type="button"
+                      data-testid={`translate-lang-${lang.toLowerCase()}`}
                       onClick={async () => {
                         setLangOpen(false);
                         setTranslating(true);
@@ -484,17 +488,17 @@ function BrandVoiceCard({ bv, onReinterview, onEdit, onTranslate, onHistory, onI
             </div>
           )}
 
-          <button type="button" onClick={onEdit}
+          <button type="button" data-testid="card-edit-button" onClick={onEdit}
             style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.4rem 0.75rem", borderRadius: "7px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: "pointer" }}>
             <Pencil style={{ width: "12px", height: "12px" }} /> Edit
           </button>
           {!hideHistory && (
-            <button type="button" onClick={onHistory}
+            <button type="button" data-testid="card-history-button" onClick={onHistory}
               style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.4rem 0.75rem", borderRadius: "7px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: "pointer" }}>
               <History style={{ width: "12px", height: "12px" }} /> History
             </button>
           )}
-          <button type="button" onClick={onReinterview}
+          <button type="button" data-testid="card-reinterview-button" onClick={onReinterview}
             style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.4rem 0.75rem", borderRadius: "7px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: "pointer" }}>
             <RefreshCw style={{ width: "12px", height: "12px" }} /> {retranslateLabel || "Re-interview"}
           </button>
@@ -832,6 +836,7 @@ export default function BrandVoicePage() {
         <div style={{ flexShrink: 0, display: "flex", gap: "0.5rem", alignItems: "flex-end", padding: "0.75rem", borderRadius: "12px", border: "1px solid var(--border)", background: "var(--card)" }}>
           <textarea
             ref={inputRef}
+            data-testid="interview-input"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onInput={autoResize}
@@ -841,7 +846,7 @@ export default function BrandVoicePage() {
             rows={1}
             style={{ flex: 1, border: "none", background: "transparent", color: "var(--foreground)", fontSize: "0.9rem", outline: "none", resize: "none", lineHeight: 1.5, overflow: "hidden" }}
           />
-          <button type="button" onClick={handleSend} disabled={streaming || !input.trim()}
+          <button type="button" data-testid="interview-send-button" onClick={handleSend} disabled={streaming || !input.trim()}
             style={{ flexShrink: 0, width: "34px", height: "34px", borderRadius: "8px", border: "none", background: streaming || !input.trim() ? "var(--muted)" : "var(--primary)", color: streaming || !input.trim() ? "var(--muted-foreground)" : "var(--primary-foreground)", cursor: streaming || !input.trim() ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
             {streaming ? <Loader2 style={{ width: "14px", height: "14px" }} className="animate-spin" /> : <Send style={{ width: "14px", height: "14px" }} />}
           </button>
@@ -865,6 +870,7 @@ export default function BrandVoicePage() {
         {/* Primary tab */}
         <button
           type="button"
+          data-testid="locale-tab-primary"
           onClick={() => switchLocale(null)}
           style={{
             display: "flex", alignItems: "center", gap: "0.35rem",
@@ -883,6 +889,7 @@ export default function BrandVoicePage() {
           <button
             key={locale}
             type="button"
+            data-testid={`locale-tab-${locale}`}
             onClick={() => switchLocale(locale)}
             style={{
               display: "flex", alignItems: "center", gap: "0.35rem",
@@ -917,6 +924,7 @@ export default function BrandVoicePage() {
             </p>
             <button
               type="button"
+              data-testid="locale-translate-button"
               disabled={translatingLocale === activeLocale}
               onClick={() => translateToLocale(activeLocale!)}
               style={{

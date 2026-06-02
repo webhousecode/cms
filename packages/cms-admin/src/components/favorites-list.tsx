@@ -119,6 +119,7 @@ export function FavoritesList() {
         <div style={{ position: "relative", flex: "1", minWidth: "180px" }}>
           <Search style={{ position: "absolute", left: "0.625rem", top: "50%", transform: "translateY(-50%)", width: "0.85rem", height: "0.85rem", color: "var(--muted-foreground)" }} />
           <input
+            data-testid="favorites-search-input"
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}

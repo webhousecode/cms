@@ -160,6 +160,7 @@ export function ConfigRepairPanel({ siteName, rawErrors }: Props) {
                   {diagnosis.issues.length} {diagnosis.issues.length === 1 ? "issue" : "issues"} found
                 </h2>
                 <button
+                  data-testid="config-repair-copy-button"
                   onClick={handleCopy}
                   title="Copy all issues as markdown — paste into AI site builder"
                   style={{
@@ -206,6 +207,7 @@ export function ConfigRepairPanel({ siteName, rawErrors }: Props) {
                     )}
                   </div>
                   <button
+                    data-testid="config-repair-expand-button"
                     onClick={() => setExpanded((p) => ({ ...p, [i]: !p[i] }))}
                     style={{
                       marginTop: "0.4rem", fontSize: "0.7rem", color: "var(--primary)",
@@ -261,6 +263,7 @@ export function ConfigRepairPanel({ siteName, rawErrors }: Props) {
                   )}
                   <div style={{ display: "flex", gap: "0.5rem", alignItems: "center", flexWrap: "wrap" }}>
                     <button
+                      data-testid="config-repair-fix-button"
                       onClick={() => setPhase("confirming")}
                       style={{
                         padding: "0.5rem 1.1rem", borderRadius: "7px",
@@ -295,6 +298,7 @@ export function ConfigRepairPanel({ siteName, rawErrors }: Props) {
               )}
               <div style={{ display: "flex", gap: "0.5rem" }}>
                 <button
+                  data-testid="config-repair-confirm-fix-button"
                   onClick={handleFix}
                   disabled={phase === "fixing"}
                   style={{

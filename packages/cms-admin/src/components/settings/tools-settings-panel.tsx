@@ -105,7 +105,7 @@ export function ToolsSettingsPanel() {
   const webhookLabel = { display: "block", fontSize: "0.75rem", fontWeight: 500, marginBottom: "0.35rem", marginTop: "0.75rem" } as const;
 
   return (
-    <div data-testid="panel-tools">
+    <div data-testid="tools-settings-panel">
       {/* ── Link Checker ───────────────────────────────────── */}
       <SectionHeading>Link Checker</SectionHeading>
       <SettingsCard>

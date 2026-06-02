@@ -188,6 +188,7 @@ export function EmailSettingsPanel() {
                 )}
                 {"docsUrl" in f && f.docsUrl && (
                   <a
+                    data-testid={`email-docs-${f.id}`}
                     href={f.docsUrl}
                     target="_blank"
                     rel="noopener noreferrer"

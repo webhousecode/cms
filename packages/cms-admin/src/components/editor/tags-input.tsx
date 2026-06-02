@@ -27,6 +27,7 @@ export function TagsInput({ value, onChange, disabled }: Props) {
 
   return (
     <div
+      data-testid="tags-input-container"
       onClick={() => inputRef.current?.focus()}
       className={cn(
         "flex flex-wrap gap-2 p-2 rounded-md bg-input border border-border focus-within:ring-1 focus-within:ring-ring transition-colors min-h-[42px] cursor-text",

@@ -290,6 +290,7 @@ export function ChatInput({ onSend, disabled, placeholder, visible, lastUserMess
                 </>
               )}
               <button
+                data-testid={`chat-remove-upload-${i}`}
                 onClick={() => removeUpload(i)}
                 style={{
                   position: "absolute",
@@ -339,6 +340,7 @@ export function ChatInput({ onSend, disabled, placeholder, visible, lastUserMess
       >
         {/* Textarea — full width top row */}
         <textarea
+          data-testid="chat-input-textarea"
           ref={textareaRef}
           value={value}
           onChange={(e) => setValue(e.target.value)}
@@ -366,6 +368,7 @@ export function ChatInput({ onSend, disabled, placeholder, visible, lastUserMess
         {/* Bottom row: + on left, send on right */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: "6px" }}>
           <button
+            data-testid="chat-upload-button"
             onClick={() => fileInputRef.current?.click()}
             disabled={disabled || uploading}
             title="Upload files"
@@ -404,6 +407,7 @@ export function ChatInput({ onSend, disabled, placeholder, visible, lastUserMess
           />
 
           <button
+            data-testid="chat-send-button"
             onClick={handleSend}
             disabled={disabled || (!value.trim() && uploads.length === 0)}
             style={{

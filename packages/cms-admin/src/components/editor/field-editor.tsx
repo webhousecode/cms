@@ -172,7 +172,7 @@ function MultiRelationPicker({ collection, value, onChange, disabled, documentLo
         }}>
           <div style={{ padding: "0.5rem" }}>
             <input
-              data-testid="relation-multi-search-field"
+              data-testid="relation-multi-search-input"
               autoFocus
               type="text"
               value={query}
@@ -273,7 +273,7 @@ function RelationPicker({ collection, value, onChange, disabled, documentLocale 
         }}>
           <div style={{ padding: "0.5rem" }}>
             <input
-              data-testid="relation-single-search-field"
+              data-testid="relation-single-search-input"
               autoFocus
               type="text"
               value={query}

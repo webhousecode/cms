@@ -84,7 +84,7 @@ export function StepConnect({ flyToken, flyOrg, onUpdate }: Props) {
           </label>
           <div style={{ display: "flex", gap: "0.5rem" }}>
             <input
-              data-testid="step-connect-token-input"
+              data-testid="step-connect-fly-token"
               type="password"
               value={flyToken}
               onChange={(e) => {

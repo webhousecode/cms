@@ -600,6 +600,7 @@ export default function SitesDashboard() {
         >
           <h3 style={{ fontSize: "0.95rem", fontWeight: 600, margin: "0 0 1rem" }}>Rename Site</h3>
           <input
+            data-testid="sites-rename-input"
             autoFocus
             value={renameValue}
             onChange={(e) => setRenameValue(e.target.value)}
@@ -616,6 +617,7 @@ export default function SitesDashboard() {
           />
           <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end", marginTop: "1rem" }}>
             <button
+              data-testid="sites-rename-cancel"
               type="button"
               onClick={() => setRenamingSiteId(null)}
               style={{
@@ -625,6 +627,7 @@ export default function SitesDashboard() {
               }}
             >No</button>
             <button
+              data-testid="sites-rename-confirm"
               type="button"
               onClick={() => renameSite(renamingSiteId, renameValue)}
               style={{
@@ -660,6 +663,7 @@ export default function SitesDashboard() {
             New site name
           </label>
           <input
+            data-testid="sites-clone-input"
             autoFocus
             value={cloneName}
             onChange={(e) => setCloneName(e.target.value)}
@@ -684,6 +688,7 @@ export default function SitesDashboard() {
           )}
           <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end", marginTop: "1rem" }}>
             <button
+              data-testid="sites-clone-cancel"
               type="button"
               onClick={() => setCloningSite(null)}
               disabled={cloneInProgress}
@@ -695,6 +700,7 @@ export default function SitesDashboard() {
               }}
             >Cancel</button>
             <button
+              data-testid="sites-clone-confirm"
               type="button"
               onClick={handleClone}
               disabled={cloneInProgress || !cloneName.trim()}

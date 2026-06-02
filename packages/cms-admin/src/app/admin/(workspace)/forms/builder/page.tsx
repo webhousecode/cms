@@ -174,22 +174,22 @@ export default function FormBuilderPage() {
             {fields.map((f, idx) => (
               <div key={idx} style={{ display: "flex", gap: "0.5rem", alignItems: "center", padding: "0.5rem 0.65rem", border: "1px solid var(--border)", borderRadius: 6, background: "var(--card)" }}>
                 <GripVertical size={14} style={{ color: "var(--muted-foreground)", flexShrink: 0, cursor: "grab" }} />
-                <input value={f.label} onChange={(e) => updateField(idx, { label: e.target.value })} placeholder="Label" style={{ ...inputStyle, flex: "1 1 120px" }} />
-                <input value={f.name} onChange={(e) => updateField(idx, { name: e.target.value })} placeholder="field_name" style={{ ...inputStyle, flex: "0 1 120px", fontFamily: "var(--font-mono, monospace)", fontSize: "0.78rem" }} />
-                <select value={f.type} onChange={(e) => updateField(idx, { type: e.target.value })} style={{ ...inputStyle, flex: "0 0 100px" }}>
+                <input data-testid={`form-field-label-${idx}`} value={f.label} onChange={(e) => updateField(idx, { label: e.target.value })} placeholder="Label" style={{ ...inputStyle, flex: "1 1 120px" }} />
+                <input data-testid={`form-field-name-${idx}`} value={f.name} onChange={(e) => updateField(idx, { name: e.target.value })} placeholder="field_name" style={{ ...inputStyle, flex: "0 1 120px", fontFamily: "var(--font-mono, monospace)", fontSize: "0.78rem" }} />
+                <select data-testid={`form-field-type-${idx}`} value={f.type} onChange={(e) => updateField(idx, { type: e.target.value })} style={{ ...inputStyle, flex: "0 0 100px" }}>
                   {FIELD_TYPES.map((t) => <option key={t.value} value={t.value}>{t.label}</option>)}
                 </select>
                 <label style={{ display: "flex", alignItems: "center", gap: "0.3rem", fontSize: "0.75rem", whiteSpace: "nowrap", cursor: "pointer" }}>
-                  <input type="checkbox" checked={f.required} onChange={(e) => updateField(idx, { required: e.target.checked })} />
+                  <input data-testid={`form-field-required-${idx}`} type="checkbox" checked={f.required} onChange={(e) => updateField(idx, { required: e.target.checked })} />
                   Req
                 </label>
-                <button onClick={() => removeField(idx)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--destructive)", padding: 4 }}>
+                <button data-testid={`form-field-delete-${idx}`} onClick={() => removeField(idx)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--destructive)", padding: 4 }}>
                   <Trash2 size={14} />
                 </button>
               </div>
             ))}
           </div>
-          <button onClick={addField} style={{ marginTop: "0.5rem", display: "inline-flex", alignItems: "center", gap: "0.3rem", fontSize: "0.78rem", padding: "0.35rem 0.7rem", borderRadius: 5, border: "1px solid var(--border)", background: "var(--card)", color: "var(--foreground)", cursor: "pointer" }}>
+          <button data-testid="form-add-field-button" onClick={addField} style={{ marginTop: "0.5rem", display: "inline-flex", alignItems: "center", gap: "0.3rem", fontSize: "0.78rem", padding: "0.35rem 0.7rem", borderRadius: 5, border: "1px solid var(--border)", background: "var(--card)", color: "var(--foreground)", cursor: "pointer" }}>
             <Plus size={14} /> Add field
           </button>
         </div>
@@ -197,39 +197,40 @@ export default function FormBuilderPage() {
         {/* Success message */}
         <div>
           <label style={{ fontSize: "0.75rem", fontWeight: 600, display: "block", marginBottom: "0.25rem" }}>Success message</label>
-          <input value={successMessage} onChange={(e) => setSuccessMessage(e.target.value)} style={inputStyle} />
+          <input data-testid="form-builder-success-message" value={successMessage} onChange={(e) => setSuccessMessage(e.target.value)} style={inputStyle} />
         </div>
 
         {/* Notifications */}
         <div>
           <label style={{ fontSize: "0.75rem", fontWeight: 600, display: "block", marginBottom: "0.25rem" }}>Notification emails (comma-separated)</label>
-          <input value={notifyEmails} onChange={(e) => setNotifyEmails(e.target.value)} placeholder="admin@example.com" style={inputStyle} />
+          <input data-testid="form-builder-notify-emails" value={notifyEmails} onChange={(e) => setNotifyEmails(e.target.value)} placeholder="admin@example.com" style={inputStyle} />
         </div>
 
         {/* Auto-reply */}
         <div style={{ border: "1px solid var(--border)", borderRadius: 8, padding: "1rem" }}>
           <label style={{ display: "flex", alignItems: "center", gap: "0.4rem", fontSize: "0.8rem", fontWeight: 600, cursor: "pointer" }}>
-            <input type="checkbox" checked={autoReplyEnabled} onChange={(e) => setAutoReplyEnabled(e.target.checked)} />
+            <input data-testid="form-builder-autoreply-toggle" type="checkbox" checked={autoReplyEnabled} onChange={(e) => setAutoReplyEnabled(e.target.checked)} />
             Send auto-reply to submitter
           </label>
           {autoReplyEnabled && (
             <div style={{ marginTop: "0.75rem", display: "flex", flexDirection: "column", gap: "0.5rem" }}>
               <div>
                 <label style={{ fontSize: "0.7rem", color: "var(--muted-foreground)" }}>Subject</label>
-                <input value={autoReplySubject} onChange={(e) => setAutoReplySubject(e.target.value)} style={inputStyle} />
+                <input data-testid="form-builder-autoreply-subject" value={autoReplySubject} onChange={(e) => setAutoReplySubject(e.target.value)} style={inputStyle} />
               </div>
               <div>
                 <label style={{ fontSize: "0.7rem", color: "var(--muted-foreground)" }}>Body (supports {"{{fieldName}}"} placeholders)</label>
-                <textarea value={autoReplyBody} onChange={(e) => setAutoReplyBody(e.target.value)} rows={4} style={{ ...inputStyle, resize: "vertical" }} />
+                <textarea data-testid="form-builder-autoreply-body" value={autoReplyBody} onChange={(e) => setAutoReplyBody(e.target.value)} rows={4} style={{ ...inputStyle, resize: "vertical" }} />
               </div>
             </div>
           )}
         </div>
 
         {/* Actions */}
-        {error && <p style={{ fontSize: "0.8rem", color: "var(--destructive)" }}>{error}</p>}
+        {error && <p data-testid="form-builder-error" style={{ fontSize: "0.8rem", color: "var(--destructive)" }}>{error}</p>}
         <div style={{ display: "flex", gap: "0.5rem" }}>
           <button
+            data-testid="form-builder-save-button"
             onClick={handleSave}
             disabled={saving}
             style={{
@@ -241,6 +242,7 @@ export default function FormBuilderPage() {
             {saving ? "Saving…" : isEdit ? "Update form" : "Create form"}
           </button>
           <button
+            data-testid="form-builder-cancel-button"
             onClick={() => router.push("/admin/forms")}
             style={{
               padding: "0.5rem 1.25rem", borderRadius: 6,

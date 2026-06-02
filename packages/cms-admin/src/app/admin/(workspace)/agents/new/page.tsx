@@ -420,7 +420,7 @@ export default function NewAgentPage() {
         <div>
           <label style={labelStyle}>Agent Name</label>
           <input
-            data-testid="agent-name-input"
+            data-testid="agent-form-name-input"
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -461,7 +461,7 @@ export default function NewAgentPage() {
             </button>
           </div>
           <textarea
-            data-testid="agent-prompt-textarea"
+            data-testid="agent-form-prompt-textarea"
             value={systemPrompt}
             onChange={(e) => setSystemPrompt(e.target.value)}
             rows={6}
@@ -538,7 +538,7 @@ export default function NewAgentPage() {
               <div>
                 <label style={labelStyle}>Max per run</label>
                 <input
-                  data-testid="agent-max-per-run-input"
+                  data-testid="agent-form-max-per-run-input"
                   type="number"
                   min={1}
                   max={10}
@@ -559,7 +559,7 @@ export default function NewAgentPage() {
         )}
 
         <button
-          data-testid="agent-submit-button"
+          data-testid="agent-form-submit-button"
           type="submit"
           disabled={saving}
           className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg bg-primary text-primary-foreground font-semibold text-sm hover:opacity-90 transition-opacity disabled:opacity-60"
