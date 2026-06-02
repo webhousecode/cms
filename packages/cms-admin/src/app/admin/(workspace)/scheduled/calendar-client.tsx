@@ -296,6 +296,7 @@ function MonthView({ year, month, todayKey, selectedDate, eventsMap, onSelectDat
           const isToday = cell.key === todayKey;
           return (
             <button
+              data-testid={`calendar-day-${cell.key}`}
               key={cell.key}
               type="button"
               onClick={() => onSelectDate(cell.key)}
@@ -465,6 +466,7 @@ function WeekView({ selectedDate, todayKey, eventsMap, onSelectDate, scrollToNow
           const isToday = day.key === todayKey;
           return (
             <button
+              data-testid={`calendar-week-day-${day.key}`}
               key={day.key}
               type="button"
               onClick={() => onSelectDate(day.key)}
@@ -708,6 +710,7 @@ function YearView({ year, todayKey, eventsMap, onSelectMonth }: {
 
         return (
           <button
+            data-testid={`calendar-month-${m}`}
             key={m}
             type="button"
             onClick={() => onSelectMonth(m)}

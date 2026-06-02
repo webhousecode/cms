@@ -397,7 +397,7 @@ function ImportExportMenu({ bv, onImport }: { bv: BrandVoice; onImport: (v: Bran
         <div style={{ position: "absolute", top: "calc(100% + 4px)", right: 0, zIndex: 50, background: "var(--popover)", border: "1px solid var(--destructive)", borderRadius: "8px", boxShadow: "0 4px 16px rgba(0,0,0,0.15)", padding: "0.75rem 1rem", minWidth: "320px", maxWidth: "420px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.5rem" }}>
             <p style={{ margin: 0, fontSize: "0.75rem", fontWeight: 600, color: "var(--destructive)" }}>Import failed</p>
-            <button type="button" onClick={() => setErrors(null)} style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1rem", lineHeight: 1, padding: 0 }}>×</button>
+            <button data-testid="import-export-error-close" type="button" onClick={() => setErrors(null)} style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1rem", lineHeight: 1, padding: 0 }}>×</button>
           </div>
           <ul style={{ margin: "0 0 0.75rem", paddingLeft: "1.1rem", display: "flex", flexDirection: "column", gap: "0.2rem" }}>
             {errors.map((e) => <li key={e} style={{ fontSize: "0.75rem", color: "var(--destructive)" }}>{e}</li>)}

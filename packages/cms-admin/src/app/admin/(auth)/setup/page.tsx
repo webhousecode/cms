@@ -103,7 +103,7 @@ export default function SetupPage() {
           <p style={{ fontSize: "0.8rem", color: "hsl(0 0% 50%)", margin: 0 }}>Create your admin account to get started</p>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
+        <form data-testid="setup-form" onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
             <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "hsl(0 0% 70%)" }}>Name</label>
             <input

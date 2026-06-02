@@ -168,6 +168,7 @@ function RowMenu({ doc, collection, onClone, onToggle, onTrash, cloning, preview
           </Link>
           {previewUrl && (
             <button
+              data-testid={`collection-row-preview-${doc.slug}`}
               type="button"
               onClick={(e) => { e.preventDefault(); e.stopPropagation(); window.open(previewUrl, "_blank"); setOpen(false); }}
               style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.4rem 0.6rem", borderRadius: "5px", fontSize: "0.8rem", color: "var(--foreground)", background: "none", border: "none", cursor: "pointer", width: "100%" }}
@@ -177,6 +178,7 @@ function RowMenu({ doc, collection, onClone, onToggle, onTrash, cloning, preview
             </button>
           )}
           <button
+            data-testid={`collection-row-publish-${doc.slug}`}
             type="button"
             onClick={(e) => { onToggle(e); setOpen(false); }}
             style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.4rem 0.6rem", borderRadius: "5px", fontSize: "0.8rem", color: "var(--foreground)", background: "none", border: "none", cursor: "pointer", width: "100%" }}
@@ -186,6 +188,7 @@ function RowMenu({ doc, collection, onClone, onToggle, onTrash, cloning, preview
             {doc.status === "published" ? "Unpublish" : "Publish"}
           </button>
           <button
+            data-testid={`collection-row-clone-${doc.slug}`}
             type="button"
             onClick={(e) => { onClone(e); setOpen(false); }}
             disabled={cloning}
@@ -195,6 +198,7 @@ function RowMenu({ doc, collection, onClone, onToggle, onTrash, cloning, preview
             <Copy style={{ width: "0.8rem", height: "0.8rem" }} /> {cloning ? "Cloning…" : "Clone"}
           </button>
           <button
+            data-testid={`collection-row-favorite-${doc.slug}`}
             type="button"
             onClick={(e) => {
               e.preventDefault();
@@ -413,6 +417,7 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
     return (
       <th style={thStyle}>
         <button
+          data-testid={`collection-sort-${sk}`}
           type="button"
           onClick={() => toggleSort(sk)}
           style={{ display: "flex", alignItems: "center", gap: "0.25rem", background: "none", border: "none", cursor: "pointer", color: active ? "var(--foreground)" : "var(--muted-foreground)", fontSize: "0.72rem", fontWeight: active ? 600 : 500, padding: 0 }}
@@ -661,7 +666,7 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
 
                     {/* Status */}
                     <td style={{ padding: "0.625rem 0.75rem", whiteSpace: "nowrap" }}>
-                      <button type="button" onClick={(e) => !readOnly && toggleStatus(e, doc)} title={readOnly ? doc.status : doc.status === "published" ? "Click to unpublish" : "Click to publish"} style={{ background: "none", border: "none", cursor: readOnly ? "default" : "pointer", padding: 0 }}>
+                      <button data-testid={`collection-status-toggle-${doc.slug}`} type="button" onClick={(e) => !readOnly && toggleStatus(e, doc)} title={readOnly ? doc.status : doc.status === "published" ? "Click to unpublish" : "Click to publish"} style={{ background: "none", border: "none", cursor: readOnly ? "default" : "pointer", padding: 0 }}>
                         <span style={{ display: "inline-flex", alignItems: "center", gap: "0.35rem" }}>
                           {isScheduled ? (
                             <Badge variant="outline" className="bg-violet-500/10 text-violet-400 border-violet-500/20 gap-1">

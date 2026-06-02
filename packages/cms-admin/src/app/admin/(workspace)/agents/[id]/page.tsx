@@ -595,6 +595,7 @@ export default function AgentDetailPage() {
               >
                 {availableCollections.find((c) => c.name === col)?.label ?? col}
                 <button
+                  data-testid={`agent-target-collection-remove-${col}`}
                   type="button"
                   onClick={() => setTargetCollections((prev) => prev.filter((c) => c !== col))}
                   style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "inherit", display: "flex", lineHeight: 1 }}
@@ -647,6 +648,7 @@ export default function AgentDetailPage() {
                     />
                   ) : (
                     <input
+                      data-testid={`agent-field-default-value-${i}`}
                       type={fieldDef?.type === "number" ? "number" : "text"}
                       value={fd.value}
                       onChange={(e) => setFieldDefaults((prev) => prev.map((f, j) => j === i ? { ...f, value: e.target.value } : f))}
@@ -790,6 +792,7 @@ export default function AgentDetailPage() {
             <div>
               <label style={labelStyle}>Weekly</label>
               <input
+                data-testid="agent-weekly-budget"
                 type="number"
                 min={0}
                 step={0.01}
@@ -802,6 +805,7 @@ export default function AgentDetailPage() {
             <div>
               <label style={labelStyle}>Monthly</label>
               <input
+                data-testid="agent-monthly-budget"
                 type="number"
                 min={0}
                 step={0.01}
@@ -861,6 +865,7 @@ export default function AgentDetailPage() {
       {!readOnly && (
         <div className="mt-6 pt-6 border-t border-border">
           <button
+            data-testid="agent-delete-trigger"
             type="button"
             onClick={() => setShowDelete(true)}
             className="flex items-center gap-1.5 text-sm text-destructive hover:opacity-80 transition-opacity"

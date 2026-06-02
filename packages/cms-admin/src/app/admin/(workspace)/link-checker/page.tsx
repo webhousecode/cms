@@ -432,6 +432,7 @@ export default function LinkCheckerPage() {
                     </td>
                     <td style={{ padding: "0.5rem 0.875rem" }}>
                       <button
+                        data-testid={`link-checker-doc-button-${r.docCollection}-${r.docSlug}`}
                         type="button"
                         onClick={() => openTab(`/admin/content/${r.docCollection}/${r.docSlug}`, r.docTitle)}
                         className="hover:underline text-left"

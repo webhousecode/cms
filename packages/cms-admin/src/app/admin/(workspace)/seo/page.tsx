@@ -304,13 +304,13 @@ export default function SeoPage() {
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
                 <form
-                  data-testid="keyword-add-form"
+                  data-testid="seo-keyword-form"
                   onSubmit={(e) => { e.preventDefault(); handleAddKeyword(); }}
                   style={{ display: "flex", gap: "0.375rem", alignItems: "center" }}
                 >
                   <input
+                    data-testid="seo-keyword-input"
                     type="text"
-                    data-testid="keyword-input"
                     value={newKeyword}
                     onChange={(e) => setNewKeyword(e.target.value)}
                     placeholder="Add keyword..."
@@ -321,8 +321,8 @@ export default function SeoPage() {
                     }}
                   />
                   <button
+                    data-testid="seo-keyword-add-button"
                     type="submit"
-                    data-testid="keyword-add-button"
                     disabled={addingKeyword || !newKeyword.trim()}
                     style={{
                       display: "inline-flex", alignItems: "center", gap: "0.2rem",
@@ -441,7 +441,7 @@ export default function SeoPage() {
                                   {kw.documents.map((d) => (
                                     <tr key={`${d.collection}/${d.slug}`} style={{ borderTop: "1px solid var(--border)" }}>
                                       <td style={{ padding: "0.375rem 0.5rem" }}>
-                                        <a href={`/admin/content/${d.collection}/${d.slug}`} style={{ color: "var(--foreground)", textDecoration: "none" }}>
+                                        <a data-testid={`seo-keyword-doc-link-${d.collection}-${d.slug}`} href={`/admin/content/${d.collection}/${d.slug}`} style={{ color: "var(--foreground)", textDecoration: "none" }}>
                                           {d.title}
                                         </a>
                                       </td>

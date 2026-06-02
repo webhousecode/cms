@@ -890,7 +890,7 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig, docu
                 }}
                 className="hover:border-primary hover:text-primary transition-colors"
               >
-                <input ref={audioInputRef} type="file" accept="audio/*" onChange={handleAudioUpload} disabled={locked || audioUploading} style={{ display: "none" }} />
+                <input data-testid="audio-field-upload-input" ref={audioInputRef} type="file" accept="audio/*" onChange={handleAudioUpload} disabled={locked || audioUploading} style={{ display: "none" }} />
                 <Upload style={{ width: 12, height: 12 }} />
                 {audioUploading ? "..." : "Upload"}
               </label>
@@ -917,13 +917,14 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig, docu
           {/* Media browser modal — same as image field */}
           {audioBrowserOpen && (
             <div
+              data-testid="audio-browser-modal"
               style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.5)" }}
               onClick={(e) => { if (e.target === e.currentTarget) setAudioBrowserOpen(false); }}
             >
               <div style={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: "12px", boxShadow: "0 8px 40px rgba(0,0,0,0.4)", width: "min(640px, 90vw)", maxHeight: "70vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.75rem 1rem", borderBottom: "1px solid var(--border)" }}>
                   <span style={{ fontWeight: 500, fontSize: "0.9rem" }}>Media Library</span>
-                  <button type="button" onClick={() => setAudioBrowserOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.25rem" }}>
+                  <button data-testid="audio-browser-close-button" type="button" onClick={() => setAudioBrowserOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.25rem" }}>
                     <X style={{ width: "16px", height: "16px" }} />
                   </button>
                 </div>
@@ -1160,11 +1161,12 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig, docu
                 }}
                 className="hover:border-primary hover:text-primary transition-colors"
               >
-                <input ref={fileInputRef} type="file" onChange={handleFileUpload} disabled={locked || fileUploading} style={{ display: "none" }} />
+                <input data-testid="file-field-upload-input" ref={fileInputRef} type="file" onChange={handleFileUpload} disabled={locked || fileUploading} style={{ display: "none" }} />
                 <Upload style={{ width: 12, height: 12 }} />
                 {fileUploading ? "..." : "Upload"}
               </label>
               <button
+                data-testid="file-field-browse-button"
                 type="button"
                 onClick={openFileBrowser}
                 title="Browse Media"
@@ -1186,25 +1188,26 @@ export function FieldEditor({ field, value, onChange, locked, blocksConfig, docu
           {/* Media browser modal */}
           {fileBrowserOpen && (
             <div
+              data-testid="file-browser-modal"
               style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.5)" }}
               onClick={(e) => { if (e.target === e.currentTarget) setFileBrowserOpen(false); }}
             >
               <div style={{ background: "var(--popover)", border: "1px solid var(--border)", borderRadius: "12px", boxShadow: "0 8px 40px rgba(0,0,0,0.4)", width: "min(640px, 90vw)", maxHeight: "70vh", display: "flex", flexDirection: "column", overflow: "hidden" }}>
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.75rem 1rem", borderBottom: "1px solid var(--border)" }}>
                   <span style={{ fontWeight: 500, fontSize: "0.9rem" }}>Media Library</span>
-                  <button type="button" onClick={() => setFileBrowserOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.25rem" }}>
+                  <button data-testid="file-browser-close-button" type="button" onClick={() => setFileBrowserOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.25rem" }}>
                     <X style={{ width: "16px", height: "16px" }} />
                   </button>
                 </div>
                 <div style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid var(--border)" }}>
-                  <input type="text" value={fileSearch} onChange={(e) => setFileSearch(e.target.value)} placeholder="Search media…" autoFocus
+                  <input data-testid="file-browser-search-input" type="text" value={fileSearch} onChange={(e) => setFileSearch(e.target.value)} placeholder="Search media…" autoFocus
                     style={{ width: "100%", padding: "0.35rem 0.5rem", borderRadius: "6px", border: "1px solid var(--border)", background: "color-mix(in srgb, var(--input) 30%, var(--background))", color: "var(--foreground)", fontSize: "0.8rem", outline: "none" }} />
                 </div>
                 <div style={{ overflowY: "auto", padding: "0.75rem" }}>
                   {fileLoading && <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>Loading media...</div>}
                   {!fileLoading && fileItems.length === 0 && <div style={{ padding: "2rem", textAlign: "center", fontSize: "0.85rem", color: "var(--muted-foreground)" }}>No media found</div>}
                   {!fileLoading && fileItems.filter((item) => !fileSearch || item.name.toLowerCase().includes(fileSearch.toLowerCase())).map((item) => (
-                    <button key={item.url} type="button" onClick={() => {
+                    <button data-testid={`file-browser-item-${item.url.replace(/[^a-z0-9]/g, '-')}`} key={item.url} type="button" onClick={() => {
                       let storedUrl = item.url;
                       try { storedUrl = new URL(item.url).pathname; } catch {}
                       onChange(storedUrl);

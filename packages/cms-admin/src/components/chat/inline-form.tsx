@@ -271,6 +271,7 @@ function FieldEditor({ field, value, onChange }: { field: InlineFormField; value
         <div>
           <label style={labelStyle}>{field.label}</label>
           <input
+            data-testid="inline-form-text-input"
             type="text"
             value={String(value ?? "")}
             onChange={(e) => onChange(e.target.value)}

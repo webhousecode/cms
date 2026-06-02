@@ -216,6 +216,7 @@ export function StepDeploy({ state }: Props) {
       {isDone && finalUrl && (
         <div style={{ marginTop: "1.5rem" }}>
           <a
+            data-testid="deploy-success-url"
             href={finalUrl}
             target="_blank"
             rel="noopener noreferrer"

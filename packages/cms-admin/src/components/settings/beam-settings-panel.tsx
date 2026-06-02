@@ -542,6 +542,7 @@ export function BeamSettingsPanel({ orgId }: { orgId: string }) {
         </p>
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", flexWrap: "wrap" }}>
           <input
+            data-testid="beam-file-input"
             ref={fileRef}
             type="file"
             accept=".beam"

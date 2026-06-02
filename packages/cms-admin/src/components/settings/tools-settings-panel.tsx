@@ -251,6 +251,7 @@ export function ToolsSettingsPanel() {
           <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
             <label style={{ fontSize: "0.8rem", fontWeight: 500 }}>Variant widths (px)</label>
             <input
+              data-testid="tools-settings-media-variant-widths"
               type="text"
               value={config.mediaVariantWidths.join(", ")}
               onChange={(e) => {

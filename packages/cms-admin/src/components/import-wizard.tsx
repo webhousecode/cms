@@ -188,7 +188,7 @@ export function ImportWizard({
   const validRows = previewRows.filter((r) => r.valid).length;
 
   return (
-    <div style={{
+    <div data-testid="import-wizard-overlay" style={{
       position: "fixed", inset: 0, zIndex: 1000,
       display: "flex", alignItems: "center", justifyContent: "center",
       background: "rgba(0,0,0,0.5)",
@@ -212,7 +212,7 @@ export function ImportWizard({
               Step {step} of 4
             </span>
           </div>
-          <button data-testid="import-wizard-close-button" onClick={onClose} style={{
+          <button data-testid="import-close-button" onClick={onClose} style={{
             background: "none", border: "none", cursor: "pointer",
             color: "var(--muted-foreground)", padding: "4px",
           }}>

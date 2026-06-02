@@ -33,6 +33,7 @@ function CopyBtn({ text, label }: { text: string; label: string }) {
   const [copied, setCopied] = useState(false);
   return (
     <button
+      data-testid={`ai-metadata-copy-${label.toLowerCase().replace(/\s+/g, '-')}`}
       type="button"
       title={`Copy ${label}`}
       onClick={() => {
@@ -271,6 +272,7 @@ export function AIMetadataPopover({ imageUrl, variant = "button", onAnalyzed, on
                   <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
                     {locales.map((l) => (
                       <button
+                        data-testid={`ai-metadata-locale-${l}`}
                         key={l}
                         type="button"
                         onClick={() => setActiveLocale(l)}

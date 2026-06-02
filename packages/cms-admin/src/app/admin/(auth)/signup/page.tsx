@@ -148,7 +148,7 @@ function SignupForm() {
 
           {/* ── STEP 1: Account ── */}
           {step === 1 && (
-            <form onSubmit={handleStep1} style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
+            <form data-testid="signup-step1-form" onSubmit={handleStep1} style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
               <div style={fieldGap}>
                 <label style={labelStyle}>Email</label>
                 <input
@@ -212,14 +212,14 @@ function SignupForm() {
 
               <p style={{ textAlign: "center", fontSize: "0.8rem", color: "hsl(0 0% 45%)", margin: 0 }}>
                 Already have an account?{" "}
-                <a href="/login" style={{ color: "hsl(38 80% 55%)", textDecoration: "none" }}>Sign in</a>
+                <a data-testid="signup-login-link" href="/login" style={{ color: "hsl(38 80% 55%)", textDecoration: "none" }}>Sign in</a>
               </p>
             </form>
           )}
 
           {/* ── STEP 2: Personalize ── */}
           {step === 2 && (
-            <form onSubmit={handleStep2} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
+            <form data-testid="signup-step2-form" onSubmit={handleStep2} style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
               {/* Site type — card select */}
               <div style={fieldGap}>
                 <label style={labelStyle}>What are you building?</label>
@@ -372,6 +372,7 @@ function SignupForm() {
                 when your account is ready.
               </p>
               <a
+                data-testid="signup-home-link"
                 href="/"
                 style={{
                   display: "inline-block",

@@ -365,6 +365,7 @@ Rules:
           <p style={lbl}>Rewrite for keyword</p>
           <div style={{ display: "flex", gap: "0.25rem" }}>
             <input
+              data-testid="seo-rewrite-keyword-input"
               type="text"
               value={rewriteKeyword}
               onChange={(e) => setRewriteKeyword(e.target.value)}
@@ -372,7 +373,7 @@ Rules:
               placeholder="Target keyword..."
               style={{ ...input, flex: 1 }}
             />
-            <button type="button" onClick={rewriteForKeyword} disabled={rewriting || !rewriteKeyword.trim()}
+            <button data-testid="seo-rewrite-button" type="button" onClick={rewriteForKeyword} disabled={rewriting || !rewriteKeyword.trim()}
               style={{
                 display: "flex", alignItems: "center", gap: "0.2rem",
                 padding: "0.35rem 0.5rem", borderRadius: "6px", border: "none",
@@ -491,6 +492,7 @@ Rules:
                           {f.label}{f.required ? " *" : ""}
                         </p>
                         <input
+                          data-testid={`seo-jsonld-field-${f.key}`}
                           type="text"
                           value={jsonLdValues[f.key] ?? ""}
                           placeholder={f.placeholder}

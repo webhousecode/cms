@@ -357,7 +357,7 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
                   {confirmRemoveIdx === i ? (
                     <>
                       <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px", whiteSpace: "nowrap" }}>Remove?</span>
-                      <button type="button" onClick={() => {
+                      <button data-testid={`block-remove-confirm-${i}`} type="button" onClick={() => {
                         if (confirmTimer.current) clearTimeout(confirmTimer.current);
                         setConfirmRemoveIdx(null);
                         removeBlock(i);

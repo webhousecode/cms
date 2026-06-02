@@ -687,20 +687,20 @@ function ExternalMcpServers() {
             {Object.entries(newEnvPairs).map(([k, v]) => (
               <div key={k} style={{ display: "flex", gap: "0.375rem", marginBottom: "0.25rem" }}>
                 <code style={{ fontSize: "0.75rem", padding: "0.3rem 0.5rem", background: "var(--secondary)", borderRadius: "4px", minWidth: "120px" }}>{k}</code>
-                <input type="text" value={v} onChange={(e) => setNewEnvPairs((p) => ({ ...p, [k]: e.target.value }))} placeholder="value"
+                <input data-testid={`mcp-env-value-${k}`} type="text" value={v} onChange={(e) => setNewEnvPairs((p) => ({ ...p, [k]: e.target.value }))} placeholder="value"
                   style={{ flex: 1, padding: "0.3rem 0.5rem", borderRadius: "4px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.75rem", fontFamily: "monospace", outline: "none" }} />
-                <button type="button" onClick={() => setNewEnvPairs((p) => { const n = { ...p }; delete n[k]; return n; })}
+                <button data-testid={`mcp-env-remove-${k}`} type="button" onClick={() => setNewEnvPairs((p) => { const n = { ...p }; delete n[k]; return n; })}
                   style={{ background: "none", border: "none", cursor: "pointer", color: "var(--destructive)", padding: "0.2rem" }}>
                   <X style={{ width: "0.7rem", height: "0.7rem" }} />
                 </button>
               </div>
             ))}
             <div style={{ display: "flex", gap: "0.375rem" }}>
-              <input type="text" value={newEnvKey} onChange={(e) => setNewEnvKey(e.target.value)} placeholder="KEY_NAME"
+              <input data-testid="mcp-env-key-input" type="text" value={newEnvKey} onChange={(e) => setNewEnvKey(e.target.value)} placeholder="KEY_NAME"
                 style={{ width: "120px", padding: "0.3rem 0.5rem", borderRadius: "4px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.75rem", fontFamily: "monospace", outline: "none" }} />
-              <input type="text" value={newEnvVal} onChange={(e) => setNewEnvVal(e.target.value)} placeholder="value"
+              <input data-testid="mcp-env-val-input" type="text" value={newEnvVal} onChange={(e) => setNewEnvVal(e.target.value)} placeholder="value"
                 style={{ flex: 1, padding: "0.3rem 0.5rem", borderRadius: "4px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.75rem", fontFamily: "monospace", outline: "none" }} />
-              <button type="button" onClick={() => { if (newEnvKey.trim()) { setNewEnvPairs((p) => ({ ...p, [newEnvKey]: newEnvVal })); setNewEnvKey(""); setNewEnvVal(""); } }}
+              <button data-testid="mcp-env-add-button" type="button" onClick={() => { if (newEnvKey.trim()) { setNewEnvPairs((p) => ({ ...p, [newEnvKey]: newEnvVal })); setNewEnvKey(""); setNewEnvVal(""); } }}
                 style={{ padding: "0.3rem 0.5rem", borderRadius: "4px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", fontSize: "0.7rem", cursor: "pointer" }}>
                 Add
               </button>

@@ -559,6 +559,7 @@ export default function InteractiveDetailPage() {
             {siteLocales.length > 1 && (detail.locale || defaultLocale) && (
               <div style={{ position: "relative" }}>
                 <button
+                  data-testid="interactive-locale-selector"
                   type="button"
                   onClick={() => siblings.length > 0 ? setLocaleDropdownOpen(o => !o) : undefined}
                   title={siblings.length > 0 ? "Switch between translations" : `Language: ${(detail.locale || defaultLocale).toUpperCase()}`}
@@ -790,6 +791,7 @@ export default function InteractiveDetailPage() {
           ))}
           {siblings.length > 0 && (
             <button
+              data-testid="interactive-side-by-side-toggle"
               type="button"
               onClick={() => { const v = !sideBySide; setSideBySide(v); try { localStorage.setItem("cms-side-by-side", v ? "1" : "0"); } catch {} }}
               style={{
@@ -813,6 +815,7 @@ export default function InteractiveDetailPage() {
             if (available.length === 0) return null;
             return (
               <button
+                data-testid="interactive-add-translation"
                 type="button"
                 disabled={translating}
                 onClick={async () => {
@@ -870,7 +873,7 @@ export default function InteractiveDetailPage() {
         }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.75rem 1rem", borderBottom: "1px solid var(--border)" }}>
             <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>Properties</span>
-            <button type="button" onClick={() => setPropertiesOpen(false)} style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1.1rem", lineHeight: 1 }}>×</button>
+            <button data-testid="interactive-properties-close" type="button" onClick={() => setPropertiesOpen(false)} style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1.1rem", lineHeight: 1 }}>×</button>
           </div>
 
           <div style={{ flex: 1, overflowY: "auto", padding: "1rem", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
@@ -885,6 +888,7 @@ export default function InteractiveDetailPage() {
               <p style={labelStyle}>Name</p>
               <div style={{ display: "flex", gap: "0.5rem" }}>
                 <input
+                  data-testid="interactive-properties-name-input"
                   type="text"
                   value={editName}
                   onChange={(e) => setEditName(e.target.value)}
@@ -898,6 +902,7 @@ export default function InteractiveDetailPage() {
                 />
                 {editName !== detail.name && (
                   <button
+                    data-testid="interactive-properties-name-save"
                     type="button"
                     onClick={() => renameTo(editName)}
                     style={{

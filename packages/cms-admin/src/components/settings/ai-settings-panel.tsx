@@ -133,7 +133,7 @@ export function AISettingsPanel() {
   }
 
   return (
-    <form ref={aiFormRef} onSubmit={handleSave} onChange={() => window.dispatchEvent(new CustomEvent("cms:settings-dirty"))} data-testid="panel-ai">
+    <form data-testid="panel-ai" ref={aiFormRef} onSubmit={handleSave} onChange={() => window.dispatchEvent(new CustomEvent("cms:settings-dirty"))}>
       <SettingsCard>
       {/* Default provider */}
       <div style={{ marginBottom: "1.5rem" }}>
@@ -144,7 +144,7 @@ export function AISettingsPanel() {
         <div style={{ display: "flex", gap: "0.5rem" }}>
           {PROVIDERS.map((p) => (
             <button
-              data-testid="ai-provider-button"
+              data-testid={`ai-provider-${p.id}`}
               key={p.id}
               type="button"
               onClick={() => setConfig((c) => ({ ...c, defaultProvider: p.id }))}
@@ -194,6 +194,7 @@ export function AISettingsPanel() {
                   )
                 )}
                 <a
+                  data-testid={`ai-docs-link-${p.id}`}
                   href={p.docsUrl}
                   target="_blank"
                   rel="noopener noreferrer"

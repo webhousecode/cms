@@ -657,6 +657,7 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
         <>
           {/* Backdrop */}
           <div
+            data-testid="chat-history-backdrop"
             onClick={() => setShowHistory(false)}
             style={{
               position: "fixed", inset: 0, zIndex: 998,
@@ -1110,11 +1111,11 @@ function HistoryItem({ id, title, updatedAt, isActive, starred, onLoad, onRename
           {confirmDelete ? (
             <div style={{ display: "flex", alignItems: "center", gap: "4px", padding: "5px 12px" }}>
               <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Delete?</span>
-              <button onClick={(e) => { e.stopPropagation(); onDelete(); setMenuOpen(false); }}
+              <button data-testid="chat-history-delete-confirm-yes" onClick={(e) => { e.stopPropagation(); onDelete(); setMenuOpen(false); }}
                 style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
                   border: "none", background: "var(--destructive)", color: "#fff",
                   cursor: "pointer", lineHeight: 1 }}>Yes</button>
-              <button onClick={(e) => { e.stopPropagation(); setConfirmDelete(false); }}
+              <button data-testid="chat-history-delete-confirm-no" onClick={(e) => { e.stopPropagation(); setConfirmDelete(false); }}
                 style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
                   border: "1px solid var(--border)", background: "transparent",
                   color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
@@ -1336,11 +1337,11 @@ function MemoryRow({ memory, onDelete }: { memory: MemoryItem; onDelete: () => v
           {confirm ? (
             <div style={{ display: "flex", alignItems: "center", gap: "4px" }}>
               <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
-              <button onClick={onDelete}
+              <button data-testid="chat-memory-delete-confirm-yes" onClick={onDelete}
                 style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
                   border: "none", background: "var(--destructive)", color: "#fff",
                   cursor: "pointer", lineHeight: 1 }}>Yes</button>
-              <button onClick={() => setConfirm(false)}
+              <button data-testid="chat-memory-delete-confirm-no" onClick={() => setConfirm(false)}
                 style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
                   border: "1px solid var(--border)", background: "transparent",
                   color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
