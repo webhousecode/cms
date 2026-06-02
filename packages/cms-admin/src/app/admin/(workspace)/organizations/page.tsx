@@ -97,6 +97,7 @@ export default function OrganizationsPage() {
         <div style={{ position: "relative", flex: 1, maxWidth: "280px" }}>
           <Search style={{ position: "absolute", left: "0.6rem", top: "50%", transform: "translateY(-50%)", width: "0.875rem", height: "0.875rem", color: "var(--muted-foreground)" }} />
           <input
+            data-testid="organizations-search-input"
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -118,6 +119,7 @@ export default function OrganizationsPage() {
       }}>
         {filtered.map((org) => (
           <div
+            data-testid={`organizations-card-${org.id}`}
             key={org.id}
             onClick={() => switchToOrg(org)}
             style={{
