@@ -2,7 +2,10 @@
   "project": "cms",
   "base_url": "https://localhost:3010",
   "diff_threshold": 0.01,
-  "auth": { "adapter": "storageState", "stateEnv": "LENS_STORAGE_STATE" },
+  "auth": {
+    "adapter": "storageState",
+    "statePath": "./.lens/storage-state.json"
+  },
   "surfaces": [
     {
       "name": "admin-login",
@@ -44,7 +47,7 @@
       "path": "/admin/lens-fixture-site",
       "mode": "element",
       "selector": "[data-testid=\"dashboard-root\"]",
-      "waitFor": "[data-testid=\"dashboard-root\"]",
+      "waitFor": 2500,
       "no_diff": true,
       "assert": "[data-testid=\"dashboard-root\"]"
     },
@@ -53,7 +56,7 @@
       "path": "/admin/lens-fixture-site/content/posts",
       "mode": "element",
       "selector": "[data-testid=\"content-root\"]",
-      "waitFor": "[data-testid=\"content-root\"]",
+      "waitFor": 2500,
       "no_diff": true
     },
     {
@@ -61,7 +64,7 @@
       "path": "/admin/lens-fixture-site/media",
       "mode": "element",
       "selector": "[data-testid=\"media-root\"]",
-      "waitFor": "[data-testid=\"media-root\"]",
+      "waitFor": 2500,
       "no_diff": true
     },
     {
@@ -69,7 +72,7 @@
       "path": "/admin/lens-fixture-site/forms",
       "mode": "element",
       "selector": "[data-testid=\"forms-root\"]",
-      "waitFor": "[data-testid=\"forms-root\"]",
+      "waitFor": 2500,
       "no_diff": true
     },
     {
@@ -77,7 +80,7 @@
       "path": "/admin/lens-fixture-site/interactives",
       "mode": "element",
       "selector": "[data-testid=\"interactives-root\"]",
-      "waitFor": "[data-testid=\"interactives-root\"]",
+      "waitFor": 2500,
       "no_diff": true
     },
     {
@@ -85,7 +88,7 @@
       "path": "/admin/lens-fixture-site/agents",
       "mode": "element",
       "selector": "[data-testid=\"agents-root\"]",
-      "waitFor": "[data-testid=\"agents-root\"]",
+      "waitFor": 2500,
       "no_diff": true
     },
     {
@@ -93,7 +96,7 @@
       "path": "/admin/lens-fixture-site/curation",
       "mode": "element",
       "selector": "[data-testid=\"curation-root\"]",
-      "waitFor": "[data-testid=\"curation-root\"]",
+      "waitFor": 2500,
       "no_diff": true
     },
     {
@@ -101,7 +104,7 @@
       "path": "/admin/lens-fixture-site/log",
       "mode": "element",
       "selector": "[data-testid=\"log-root\"]",
-      "waitFor": "[data-testid=\"log-root\"]",
+      "waitFor": 2500,
       "no_diff": true
     },
     {
@@ -109,7 +112,7 @@
       "path": "/admin/lens-fixture-site/scheduled",
       "mode": "element",
       "selector": "[data-testid=\"scheduled-root\"]",
-      "waitFor": "[data-testid=\"scheduled-root\"]",
+      "waitFor": 2500,
       "no_diff": true
     },
     {
@@ -117,7 +120,7 @@
       "path": "/admin/lens-fixture-site/backup",
       "mode": "element",
       "selector": "[data-testid=\"backup-root\"]",
-      "waitFor": "[data-testid=\"backup-root\"]",
+      "waitFor": 2500,
       "no_diff": true
     },
     {
@@ -125,7 +128,7 @@
       "path": "/admin/lens-fixture-site/trash",
       "mode": "element",
       "selector": "[data-testid=\"trash-root\"]",
-      "waitFor": "[data-testid=\"trash-root\"]",
+      "waitFor": 2500,
       "no_diff": true
     },
     {
@@ -133,7 +136,7 @@
       "path": "/admin/lens-fixture-site/seo",
       "mode": "element",
       "selector": "[data-testid=\"seo-root\"]",
-      "waitFor": "[data-testid=\"seo-root\"]",
+      "waitFor": 2500,
       "no_diff": true
     },
     {
@@ -141,7 +144,7 @@
       "path": "/admin/lens-fixture-site/lighthouse",
       "mode": "element",
       "selector": "[data-testid=\"lighthouse-root\"]",
-      "waitFor": "[data-testid=\"lighthouse-root\"]",
+      "waitFor": 2500,
       "no_diff": true
     },
     {
@@ -149,7 +152,7 @@
       "path": "/admin/lens-fixture-site/link-checker",
       "mode": "element",
       "selector": "[data-testid=\"link-checker-root\"]",
-      "waitFor": "[data-testid=\"link-checker-root\"]",
+      "waitFor": 2500,
       "no_diff": true
     },
     {
@@ -157,7 +160,7 @@
       "path": "/admin/lens-fixture-site/performance",
       "mode": "element",
       "selector": "[data-testid=\"performance-root\"]",
-      "waitFor": "[data-testid=\"performance-root\"]",
+      "waitFor": 2500,
       "no_diff": true
     },
     {
@@ -165,7 +168,7 @@
       "path": "/admin/lens-fixture-site/sites",
       "mode": "element",
       "selector": "[data-testid=\"sites-root\"]",
-      "waitFor": "[data-testid=\"sites-root\"]",
+      "waitFor": 2500,
       "no_diff": true
     },
     {
@@ -173,7 +176,7 @@
       "path": "/admin/lens-fixture-site/organizations",
       "mode": "element",
       "selector": "[data-testid=\"organizations-root\"]",
-      "waitFor": "[data-testid=\"organizations-root\"]",
+      "waitFor": 2500,
       "no_diff": true
     },
     {
@@ -181,7 +184,7 @@
       "path": "/admin/lens-fixture-site/visibility",
       "mode": "element",
       "selector": "[data-testid=\"visibility-root\"]",
-      "waitFor": "[data-testid=\"visibility-root\"]",
+      "waitFor": 2500,
       "no_diff": true
     },
     {
@@ -189,7 +192,7 @@
       "path": "/admin/lens-fixture-site/favorites",
       "mode": "element",
       "selector": "[data-testid=\"favorites-root\"]",
-      "waitFor": "[data-testid=\"favorites-root\"]",
+      "waitFor": 2500,
       "no_diff": true
     },
     {
@@ -197,7 +200,7 @@
       "path": "/admin/lens-fixture-site/preview",
       "mode": "element",
       "selector": "[data-testid=\"preview-root\"]",
-      "waitFor": "[data-testid=\"preview-root\"]",
+      "waitFor": 2500,
       "no_diff": true
     },
     {
@@ -205,7 +208,7 @@
       "path": "/admin/lens-fixture-site/settings",
       "mode": "element",
       "selector": "[data-testid=\"settings-root\"]",
-      "waitFor": "[data-testid=\"settings-root\"]",
+      "waitFor": 2500,
       "no_diff": true
     },
     {
@@ -213,7 +216,7 @@
       "path": "/admin/lens-fixture-site/account",
       "mode": "element",
       "selector": "[data-testid=\"account-root\"]",
-      "waitFor": "[data-testid=\"account-root\"]",
+      "waitFor": 2500,
       "no_diff": true
     }
   ]

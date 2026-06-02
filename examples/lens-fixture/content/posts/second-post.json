@@ -1,0 +1,12 @@
+{
+  "slug": "second-post",
+  "status": "draft",
+  "data": {
+    "title": "A Second Fixture Post",
+    "excerpt": "A draft post so the content list shows mixed statuses.",
+    "content": "A second deterministic post, kept as a draft so the collection list renders both a published and a draft row.",
+    "date": "2026-01-02"
+  },
+  "id": "lens-fixture-post-second",
+  "_fieldMeta": {}
+}
