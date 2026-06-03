@@ -1,4 +1,4 @@
-import OpenAI from 'openai';
+import { createAI, openaiAdapter, type AiClient } from '@broberg/ai-sdk';
 import type { AiProvider, TextGenerationOptions, TextGenerationResult } from './types.js';
 
 const PRICING: Record<string, { input: number; output: number }> = {
@@ -9,10 +9,17 @@ const PRICING: Record<string, { input: number; output: number }> = {
 export class OpenAiProvider implements AiProvider {
   name = 'openai';
   defaultModel = 'gpt-4o';
-  private client: OpenAI;
+  private ai: AiClient;
 
   constructor(apiKey?: string) {
-    this.client = new OpenAI({ apiKey: apiKey ?? process.env['OPENAI_API_KEY'] });
+    // Route through the shared @broberg/ai-sdk facade instead of the raw
+    // OpenAI SDK, so all LLM traffic goes through one cost/fallback layer.
+    const key = apiKey ?? process.env['OPENAI_API_KEY'];
+    this.ai = createAI({
+      providers: {
+        openai: openaiAdapter(key ? { apiKey: key } : {}),
+      },
+    });
   }
 
   estimateCost(inputTokens: number, outputTokens: number, model?: string): number {
@@ -23,19 +30,18 @@ export class OpenAiProvider implements AiProvider {
 
   async generate(prompt: string, options: TextGenerationOptions = {}): Promise<TextGenerationResult> {
     const model = options.model ?? this.defaultModel;
-    const response = await this.client.chat.completions.create({
-      model,
-      max_tokens: options.maxTokens ?? 4096,
+    const { text, usage } = await this.ai.chat({
+      tier: 'smart',
+      override: { provider: 'openai', model, transport: 'http' },
+      maxTokens: options.maxTokens ?? 4096,
       temperature: options.temperature ?? 0.7,
-      messages: [
-        ...(options.systemPrompt ? [{ role: 'system' as const, content: options.systemPrompt }] : []),
-        { role: 'user' as const, content: prompt },
-      ],
+      ...(options.systemPrompt ? { system: options.systemPrompt } : {}),
+      messages: [{ role: 'user', content: prompt }],
+      purpose: 'cms-ai.generate',
     });
 
-    const text = response.choices[0]?.message.content ?? '';
-    const inputTokens = response.usage?.prompt_tokens ?? 0;
-    const outputTokens = response.usage?.completion_tokens ?? 0;
+    const inputTokens = usage.inputTokens;
+    const outputTokens = usage.outputTokens;
 
     return {
       text,

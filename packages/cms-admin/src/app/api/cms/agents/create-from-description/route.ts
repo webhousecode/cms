@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import { getAI, anthropicModel } from "@/lib/ai/client";
 import { getApiKey } from "@/lib/ai-config";
 import { getModel } from "@/lib/ai/model-resolver";
 import { denyViewers } from "@/lib/require-role";
@@ -59,7 +59,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "description is required" }, { status: 400 });
   }
 
-  const client = new Anthropic({ apiKey });
+  const ai = await getAI();
   const siteConfig = await readSiteConfig();
   const langName = LOCALE_LABELS[siteConfig.defaultLocale] ?? siteConfig.defaultLocale;
   const localeInstr = buildLocaleInstruction(siteConfig.defaultLocale || "en");
@@ -69,20 +69,16 @@ export async function POST(request: NextRequest) {
 
   try {
     const codeModel = await getModel("code");
-    const message = await client.messages.create({
-      model: codeModel,
-      max_tokens: 1024,
+    const { text: raw } = await ai.chat({
+      ...anthropicModel(codeModel),
+      maxTokens: 1024,
+      responseFormat: "json",
       system: systemPrompt,
       messages: [{ role: "user", content: description.trim() }],
+      purpose: "agent.create-from-description",
     });
 
-    const raw = message.content
-      .filter((b) => b.type === "text")
-      .map((b) => (b as { type: "text"; text: string }).text)
-      .join("")
-      .trim();
-
-    const config = JSON.parse(raw);
+    const config = JSON.parse(raw.trim());
     return NextResponse.json({ config });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "AI error";

@@ -1,4 +1,4 @@
-import Anthropic from '@anthropic-ai/sdk';
+import { createAI, anthropicAdapter, type AiClient } from '@broberg/ai-sdk';
 import type { AiProvider, TextGenerationOptions, TextGenerationResult } from './types.js';
 
 // Pricing per 1M tokens (USD) — as of early 2026
@@ -11,10 +11,17 @@ const PRICING: Record<string, { input: number; output: number }> = {
 export class AnthropicProvider implements AiProvider {
   name = 'anthropic';
   defaultModel = 'claude-sonnet-4-6';
-  private client: Anthropic;
+  private ai: AiClient;
 
   constructor(apiKey?: string) {
-    this.client = new Anthropic({ apiKey: apiKey ?? process.env['ANTHROPIC_API_KEY'] });
+    // Route through the shared @broberg/ai-sdk facade instead of the raw
+    // Anthropic SDK, so all LLM traffic goes through one cost/fallback layer.
+    const key = apiKey ?? process.env['ANTHROPIC_API_KEY'];
+    this.ai = createAI({
+      providers: {
+        anthropic: anthropicAdapter(key ? { apiKey: key } : {}),
+      },
+    });
   }
 
   estimateCost(inputTokens: number, outputTokens: number, model?: string): number {
@@ -25,21 +32,18 @@ export class AnthropicProvider implements AiProvider {
 
   async generate(prompt: string, options: TextGenerationOptions = {}): Promise<TextGenerationResult> {
     const model = options.model ?? this.defaultModel;
-    const response = await this.client.messages.create({
-      model,
-      max_tokens: options.maxTokens ?? 4096,
+    const { text, usage } = await this.ai.chat({
+      tier: 'smart',
+      override: { provider: 'anthropic', model, transport: 'http' },
+      maxTokens: options.maxTokens ?? 4096,
       temperature: options.temperature ?? 0.7,
       system: options.systemPrompt ?? 'You are a helpful content writer.',
       messages: [{ role: 'user', content: prompt }],
+      purpose: 'cms-ai.generate',
     });
 
-    const text = response.content
-      .filter(b => b.type === 'text')
-      .map(b => (b as { type: 'text'; text: string }).text)
-      .join('');
-
-    const inputTokens = response.usage.input_tokens;
-    const outputTokens = response.usage.output_tokens;
+    const inputTokens = usage.inputTokens;
+    const outputTokens = usage.outputTokens;
 
     return {
       text,

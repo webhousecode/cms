@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import type { ChatInput, ContentPart, Message, Tool } from "@broberg/ai-sdk";
 import { getApiKey } from "@/lib/ai-config";
+import { getAI, anthropicModel } from "@/lib/ai/client";
 import { gatherSiteContext, buildChatSystemPrompt, getMemoryContext } from "@/lib/chat/system-prompt";
 import { buildChatTools } from "@/lib/chat/tools";
 import { extractMemories } from "@/lib/chat/memory-extractor";
@@ -48,7 +49,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "messages required" }, { status: 400 });
   }
 
-  const client = new Anthropic({ apiKey });
+  const ai = await getAI();
 
   // Build system prompt with full site context + memory injection
   let siteContext;
@@ -73,12 +74,31 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-  const anthropicTools: Anthropic.Tool[] = toolPairs.map((t) => ({
+  const sdkTools: Tool[] = toolPairs.map((t) => ({
     name: t.definition.name,
     description: t.definition.description,
-    input_schema: t.definition.input_schema as Anthropic.Tool.InputSchema,
+    parameters: t.definition.input_schema as Record<string, unknown>,
   }));
   const handlers = new Map(toolPairs.map((t) => [t.definition.name, t.handler]));
+
+  // Convert incoming message content (string, or Anthropic-format content
+  // blocks for vision images) to the SDK's Message/ContentPart shape.
+  function toSdkContent(content: unknown): string | ContentPart[] {
+    if (typeof content === "string") return content;
+    if (Array.isArray(content)) {
+      return content.map((b): ContentPart => {
+        const block = b as Record<string, unknown>;
+        if (block.type === "image") {
+          const source = block.source as { type?: string; media_type?: string; data?: string } | undefined;
+          if (source?.type === "base64" && source.data) {
+            return { type: "image", image: Buffer.from(source.data, "base64"), mimeType: source.media_type };
+          }
+        }
+        return { type: "text", text: typeof block.text === "string" ? block.text : "" };
+      });
+    }
+    return String(content);
+  }
 
   // Read configurable limits from site config (inherits from org)
   const siteConfig = await readSiteConfig();
@@ -103,66 +123,53 @@ export async function POST(request: NextRequest) {
       }
 
       try {
-        // Convert messages to Anthropic format
-        const anthropicMessages: Anthropic.MessageParam[] = messages.map((m) => ({
+        // Convert incoming messages to the SDK Message shape (supports both
+        // string content and Anthropic-format content blocks for vision images)
+        const chatMessages: Message[] = messages.map((m) => ({
           role: m.role,
-          // Support both string content and array content blocks (vision images)
-          content: m.content as any,
+          content: toSdkContent(m.content),
         }));
 
         for (let i = 0; i < chatMaxIterations; i++) {
-          const response = await client.messages.create({
-            model: resolvedModel,
-            max_tokens: chatMaxTokens,
+          const { text, toolCalls } = await ai.chat({
+            ...anthropicModel(resolvedModel),
+            maxTokens: chatMaxTokens,
             system: systemPrompt,
-            messages: anthropicMessages,
-            tools: anthropicTools,
+            // Cast bridges the SDK's hand-written Message type and its stricter
+            // zod-inferred ChatInput.messages (Uint8Array<ArrayBuffer>); the
+            // runtime values are already correct.
+            messages: chatMessages as ChatInput["messages"],
+            tools: sdkTools,
+            purpose: "chat.agent",
           });
 
-          // Process response blocks
-          const toolUseBlocks = response.content.filter(
-            (b): b is Anthropic.ContentBlock & { type: "tool_use"; id: string; name: string; input: Record<string, unknown> } =>
-              b.type === "tool_use"
-          );
-          const textBlocks = response.content.filter(
-            (b): b is Anthropic.TextBlock => b.type === "text"
-          );
-
           // If no tool calls, stream the final text and we're done
-          if (toolUseBlocks.length === 0 || response.stop_reason === "end_turn") {
-            for (const block of textBlocks) {
-              if (block.text) {
-                sendEvent("text", { text: block.text });
-              }
-            }
+          if (!toolCalls || toolCalls.length === 0) {
+            if (text) sendEvent("text", { text });
             break;
           }
 
           // Stream intermediate reasoning text so the UI can show it
-          for (const block of textBlocks) {
-            if (block.text) {
-              sendEvent("thinking", { text: block.text });
-            }
-          }
+          if (text) sendEvent("thinking", { text });
 
-          // Execute tool calls
-          const toolResults: Anthropic.ToolResultBlockParam[] = [];
-          for (const block of toolUseBlocks) {
+          // Execute tool calls; each result becomes its own `tool` message
+          const toolResultMessages: Message[] = [];
+          for (const tc of toolCalls) {
             sendEvent("tool_call", {
-              tool: block.name,
-              input: block.input,
+              tool: tc.name,
+              input: tc.arguments,
             });
 
-            const handler = handlers.get(block.name);
+            const handler = handlers.get(tc.name);
             let result: string;
             if (handler) {
               try {
-                result = await handler(block.input);
+                result = await handler(tc.arguments);
               } catch (err) {
                 result = `Error: ${err instanceof Error ? err.message : "unknown error"}`;
               }
             } else {
-              result = `Unknown tool: ${block.name}`;
+              result = `Unknown tool: ${tc.name}`;
             }
 
             // Check for inline form response
@@ -180,20 +187,21 @@ export async function POST(request: NextRequest) {
             }
 
             sendEvent("tool_result", {
-              tool: block.name,
+              tool: tc.name,
               result: result.slice(0, 3000),
             });
 
-            toolResults.push({
-              type: "tool_result",
-              tool_use_id: block.id,
+            toolResultMessages.push({
+              role: "tool",
+              toolCallId: tc.id,
               content: result,
             });
           }
 
-          // Continue the conversation with tool results
-          anthropicMessages.push({ role: "assistant", content: response.content });
-          anthropicMessages.push({ role: "user", content: toolResults });
+          // Continue the conversation: assistant turn (with its tool calls) +
+          // one tool-result message per call.
+          chatMessages.push({ role: "assistant", content: text, toolCalls });
+          chatMessages.push(...toolResultMessages);
         }
 
         sendEvent("done", {});

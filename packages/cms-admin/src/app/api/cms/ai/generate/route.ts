@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import type { ChatInput, Message, Tool } from "@broberg/ai-sdk";
 import { getApiKey } from "@/lib/ai-config";
+import { getAI, anthropicModel } from "@/lib/ai/client";
 import { getAdminConfig } from "@/lib/cms";
 import { getBrandVoiceForLocale, brandVoiceToPromptContext } from "@/lib/brand-voice";
 import { readCockpit, addCost } from "@/lib/cockpit";
@@ -40,7 +41,6 @@ ${fieldList}
 
 /** Tool-use loop — same pattern as agent-runner */
 async function callWithTools(params: {
-  client: Anthropic;
   model: string;
   systemPrompt: string;
   userPrompt: string;
@@ -48,58 +48,48 @@ async function callWithTools(params: {
   tools: ToolDefinition[];
   handlers: Map<string, ToolHandler>;
 }): Promise<{ rawText: string; inputTokens: number; outputTokens: number }> {
-  const { client, model, systemPrompt, userPrompt, maxTokens, tools, handlers } = params;
+  const { model, systemPrompt, userPrompt, maxTokens, tools, handlers } = params;
+  const ai = await getAI();
 
-  const messages: Anthropic.MessageParam[] = [{ role: "user", content: userPrompt }];
-  const anthropicTools: Anthropic.Tool[] = tools.map((t) => ({
+  const messages: Message[] = [{ role: "user", content: userPrompt }];
+  const sdkTools: Tool[] = tools.map((t) => ({
     name: t.name,
     description: t.description,
-    input_schema: t.input_schema as Anthropic.Tool.InputSchema,
+    parameters: t.input_schema as Record<string, unknown>,
   }));
 
   let totalIn = 0;
   let totalOut = 0;
 
   for (let i = 0; i < 10; i++) {
-    const response = await client.messages.create({
-      model,
-      max_tokens: maxTokens,
+    const { text, toolCalls, usage } = await ai.chat({
+      ...anthropicModel(model),
+      maxTokens,
       system: systemPrompt,
-      messages,
-      ...(anthropicTools.length > 0 ? { tools: anthropicTools } : {}),
+      messages: messages as ChatInput["messages"],
+      ...(sdkTools.length > 0 ? { tools: sdkTools } : {}),
+      purpose: "content.generate",
     });
 
-    totalIn += response.usage.input_tokens;
-    totalOut += response.usage.output_tokens;
+    totalIn += usage.inputTokens;
+    totalOut += usage.outputTokens;
 
-    const toolBlocks = response.content.filter(
-      (b): b is Anthropic.ContentBlock & { type: "tool_use"; id: string; name: string; input: Record<string, unknown> } =>
-        b.type === "tool_use"
-    );
-
-    if (toolBlocks.length === 0 || response.stop_reason === "end_turn") {
-      const text = response.content
-        .filter((b): b is Anthropic.TextBlock => b.type === "text")
-        .map((b) => b.text)
-        .join("");
+    if (!toolCalls || toolCalls.length === 0) {
       return { rawText: text, inputTokens: totalIn, outputTokens: totalOut };
     }
 
-    messages.push({ role: "assistant", content: response.content });
-
-    const results: Anthropic.ToolResultBlockParam[] = [];
-    for (const block of toolBlocks) {
-      const handler = handlers.get(block.name);
+    messages.push({ role: "assistant", content: text, toolCalls });
+    for (const tc of toolCalls) {
+      const handler = handlers.get(tc.name);
       let result: string;
       if (handler) {
-        try { result = await handler(block.input); }
+        try { result = await handler(tc.arguments); }
         catch (err) { result = `Tool error: ${err instanceof Error ? err.message : "unknown"}`; }
       } else {
-        result = `Unknown tool: ${block.name}`;
+        result = `Unknown tool: ${tc.name}`;
       }
-      results.push({ type: "tool_result", tool_use_id: block.id, content: result });
+      messages.push({ role: "tool", toolCallId: tc.id, content: result });
     }
-    messages.push({ role: "user", content: results });
   }
 
   return { rawText: "[Max tool iterations reached]", inputTokens: totalIn, outputTokens: totalOut };
@@ -161,10 +151,8 @@ export async function POST(request: NextRequest) {
     const cockpit = await readCockpit();
     const model = cockpit.primaryModel || await getModel("code");
 
-    const client = new Anthropic({ apiKey });
-
     const { rawText, inputTokens, outputTokens } = await callWithTools({
-      client, model, systemPrompt: systemParts, userPrompt: userMessage, maxTokens: 4096,
+      model, systemPrompt: systemParts, userPrompt: userMessage, maxTokens: 4096,
       tools: toolRegistry.definitions,
       handlers: toolRegistry.handlers,
     });

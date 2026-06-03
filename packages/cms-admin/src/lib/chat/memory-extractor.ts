@@ -5,7 +5,7 @@
  * Runs after a conversation ends. Deduplicates against existing memories
  * using MiniSearch similarity.
  */
-import Anthropic from "@anthropic-ai/sdk";
+import { getAI, anthropicModel } from "@/lib/ai/client";
 import { getApiKey } from "@/lib/ai-config";
 import { getModel } from "@/lib/ai/model-resolver";
 import type { ChatMemory } from "./memory-store";
@@ -94,7 +94,7 @@ export async function extractMemories(
   if (!apiKey) return { added: 0, updated: 0 };
 
   const model = await getModel("content"); // Haiku for extraction (cheap + fast)
-  const client = new Anthropic({ apiKey });
+  const ai = await getAI();
 
   const index = await readMemories();
   const existingMemories = index.memories;
@@ -105,16 +105,13 @@ export async function extractMemories(
 
   let facts: ExtractedFact[];
   try {
-    const response = await client.messages.create({
-      model,
-      max_tokens: 2048,
+    const { text } = await ai.chat({
+      ...anthropicModel(model),
+      maxTokens: 2048,
       messages: [{ role: "user", content: prompt }],
+      responseFormat: "json",
+      purpose: "memory.extract",
     });
-
-    const text = response.content
-      .filter((b): b is Anthropic.TextBlock => b.type === "text")
-      .map((b) => b.text)
-      .join("");
 
     facts = JSON.parse(text);
     if (!Array.isArray(facts)) facts = [];

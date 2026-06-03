@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
 import { getApiKey } from "@/lib/ai-config";
+import { getAI, anthropicModel } from "@/lib/ai/client";
 import { getModel } from "@/lib/ai/model-resolver";
 import { denyViewers } from "@/lib/require-role";
 import { buildLocaleInstruction } from "@/lib/ai/locale-prompt";
@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
       { status: 503 },
     );
   }
-  const client = new Anthropic({ apiKey });
+  const ai = await getAI();
 
   try {
     const { instruction, html, locale: bodyLocale } = (await request.json()) as {
@@ -44,9 +44,9 @@ Rules:
 - If the instruction is unclear, make your best interpretation and apply it`;
 
     const contentModel = await getModel("content");
-    const stream = await client.messages.stream({
-      model: contentModel,
-      max_tokens: 16384,
+    const stream = ai.chatStream({
+      ...anthropicModel(contentModel),
+      maxTokens: 16384,
       system: systemPrompt,
       messages: [
         {
@@ -54,17 +54,15 @@ Rules:
           content: `Here is the HTML document:\n\n${html}\n\n---\n\nInstruction: ${instruction}`,
         },
       ],
+      purpose: "content.htmldoc",
     });
 
     const encoder = new TextEncoder();
     const readable = new ReadableStream({
       async start(controller) {
-        for await (const chunk of stream) {
-          if (
-            chunk.type === "content_block_delta" &&
-            chunk.delta.type === "text_delta"
-          ) {
-            controller.enqueue(encoder.encode(chunk.delta.text));
+        for await (const ev of stream) {
+          if (ev.type === "text") {
+            controller.enqueue(encoder.encode(ev.delta));
           }
         }
         controller.close();
