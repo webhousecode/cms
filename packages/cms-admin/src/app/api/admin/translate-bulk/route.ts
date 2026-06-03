@@ -7,7 +7,7 @@ import { buildLocaleInstruction, getSeoLimits } from "@/lib/ai/locale-prompt";
 import { getModel } from "@/lib/ai/model-resolver";
 import { LOCALE_LABELS } from "@/lib/locale";
 import { generateId } from "@webhouse/cms";
-import Anthropic from "@anthropic-ai/sdk";
+import { getAI, anthropicModel } from "@/lib/ai/client";
 import {
   collectTranslatableFields,
   findReadTimeField,
@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
     async start(controller) {
       controller.enqueue(encoder.encode(JSON.stringify({ type: "start", total, targetLocale }) + "\n"));
 
-      const client = new Anthropic({ apiKey });
+      const ai = await getAI();
       let done = 0;
 
       for (const item of toTranslate) {
@@ -143,14 +143,15 @@ Preserve:
 ${seoInstruction}${tagsInstruction}
 Return ONLY a JSON object with the translated fields. No explanation, no preamble.`;
 
-          const response = await client.messages.create({
-            model,
-            max_tokens: 4096,
+          const { text: aiText } = await ai.chat({
+            ...anthropicModel(model),
+            maxTokens: 4096,
             system: systemPrompt,
             messages: [{ role: "user", content: `Translate these fields from ${sourceLang} to ${targetLang}:\n\n${JSON.stringify(sourceData, null, 2)}` }],
+            responseFormat: "json",
+            purpose: "translate.bulk",
           });
 
-          const aiText = response.content.find(c => c.type === "text")?.text ?? "";
           const jsonMatch = aiText.match(/\{[\s\S]*\}/);
           const translatedData = JSON.parse(jsonMatch?.[0] ?? aiText);
 

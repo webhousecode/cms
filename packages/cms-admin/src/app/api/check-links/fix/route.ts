@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminCms, getAdminConfig } from "@/lib/cms";
-import Anthropic from "@anthropic-ai/sdk";
+import { getAI, anthropicModel } from "@/lib/ai/client";
 import { getModel } from "@/lib/ai/model-resolver";
 import { denyViewers } from "@/lib/require-role";
 import { buildLocaleInstruction } from "@/lib/ai/locale-prompt";
@@ -69,16 +69,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ suggestion: null, reason: "No similar document found and no AI key configured" });
   }
 
-  const anthropic = new Anthropic({ apiKey });
+  const ai = await getAI();
   const urlList = availableUrls.map((u) => `${u.url} — ${u.title} (${u.collection})`).join("\n");
 
   const siteConfig = await readSiteConfig();
   const localeInstruction = buildLocaleInstruction(siteConfig.defaultLocale);
 
   const contentModel = await getModel("content");
-  const msg = await anthropic.messages.create({
-    model: contentModel,
-    max_tokens: 256,
+  const { text } = await ai.chat({
+    ...anthropicModel(contentModel),
+    maxTokens: 256,
+    responseFormat: "json",
     system: localeInstruction,
     messages: [
       {
@@ -98,10 +99,10 @@ Respond in JSON only: {"suggestion": "/correct/url", "reason": "brief explanatio
 If no good match exists, respond: {"suggestion": null, "reason": "why"}`,
       },
     ],
+    purpose: "check-links.fix",
   });
 
   try {
-    const text = msg.content[0].type === "text" ? msg.content[0].text : "";
     const jsonMatch = text.match(/\{[\s\S]*\}/);
     if (!jsonMatch) return NextResponse.json({ suggestion: null, reason: "AI returned no suggestion" });
     const parsed = JSON.parse(jsonMatch[0]);

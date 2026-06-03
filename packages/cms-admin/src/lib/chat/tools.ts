@@ -1,4 +1,5 @@
 import { getAdminCms, getAdminConfig } from "@/lib/cms";
+import { getAI, anthropicModel } from "@/lib/ai/client";
 import { readSiteConfig } from "@/lib/site-config";
 import { loadRegistry, findSite } from "@/lib/site-registry";
 import { saveRevision } from "@/lib/revisions";
@@ -899,22 +900,23 @@ async function _buildAllTools(activeOrg?: string, activeSite?: string): Promise<
           const docContent = String(data.content ?? data.body ?? "").slice(0, 2000);
           if (needsSeo && docTitle) {
             const { getApiKey: getKey } = await import("@/lib/ai-config");
-            const Anthropic = (await import("@anthropic-ai/sdk")).default;
             const seoApiKey = await getKey("anthropic");
             if (seoApiKey) {
               const { getModel } = await import("@/lib/ai/model-resolver");
               const seoModel = await getModel("content");
-              const seoClient = new Anthropic({ apiKey: seoApiKey });
+              const seoAi = await getAI();
               const seoLocale = docLocale || siteConfig.defaultLocale || "en";
               const seoLimits = getSeoLimits(seoLocale);
               const seoLocaleInstr = buildLocaleInstruction(seoLocale);
-              const seoRes = await seoClient.messages.create({
-                model: seoModel,
-                max_tokens: 512,
+              const { text: seoRaw } = await seoAi.chat({
+                ...anthropicModel(seoModel),
+                maxTokens: 512,
+                responseFormat: "json",
                 system: `${seoLocaleInstr}\nYou generate SEO metadata. Return ONLY a JSON object, no explanation.`,
                 messages: [{ role: "user", content: `Generate SEO for this page:\nTitle: ${docTitle}\nContent: ${docContent}\n\nReturn JSON:\n{\n  "metaTitle": "SEO title (${seoLimits.titleMin}-${seoLimits.titleMax} chars)",\n  "metaDescription": "description (${seoLimits.descMin}-${seoLimits.descMax} chars)",\n  "keywords": ["kw1", "kw2", "kw3", "kw4", "kw5"]\n}` }],
+                purpose: "chat.seo-autogen",
               });
-              const raw = (seoRes.content[0] as { text: string }).text.trim();
+              const raw = seoRaw.trim();
               const parsed = JSON.parse(raw.replace(/^```json?\n?/, "").replace(/\n?```$/, ""));
 
               // Auto-extract OG image from content or image fields
@@ -1230,11 +1232,10 @@ async function _buildAllTools(activeOrg?: string, activeSite?: string): Promise<
 
         // Use the existing AI chat endpoint internally
         const { getApiKey } = await import("@/lib/ai-config");
-        const Anthropic = (await import("@anthropic-ai/sdk")).default;
         const apiKey = await getApiKey("anthropic");
         if (!apiKey) return "Error: Anthropic API key not configured.";
 
-        const client = new Anthropic({ apiKey });
+        const genAi = await getAI();
         const config = await getAdminConfig();
         const col = config.collections.find((c) => c.name === collection);
         const fieldDef = col?.fields?.find((f: any) => f.name === field) as any;
@@ -1250,17 +1251,13 @@ async function _buildAllTools(activeOrg?: string, activeSite?: string): Promise<
         const genLocaleConfig = await readSiteConfig();
         const genLocale = genLocaleConfig.defaultLocale || "en";
         const genLocaleInstr = buildLocaleInstruction(genLocale);
-        const response = await client.messages.create({
-          model: genModel,
-          max_tokens: 2048,
+        const { text: generated } = await genAi.chat({
+          ...anthropicModel(genModel),
+          maxTokens: 2048,
           system: `${genLocaleInstr}\nYou are a content writer. Generate content for the "${fieldDef?.label ?? field}" field. ${constraint}\nExisting document: ${JSON.stringify(doc.data, null, 2)}`,
           messages: [{ role: "user", content: prompt }],
+          purpose: "chat.generate-field",
         });
-
-        const generated = response.content
-          .filter((b: any) => b.type === "text")
-          .map((b: any) => b.text)
-          .join("");
 
         // Save to document
         await saveRevision(collection, doc).catch(() => {});
@@ -1304,7 +1301,6 @@ async function _buildAllTools(activeOrg?: string, activeSite?: string): Promise<
         if (!currentValue) return `Error: Field "${field}" is empty on ${collection}/${slug}.`;
 
         const { getApiKey } = await import("@/lib/ai-config");
-        const Anthropic = (await import("@anthropic-ai/sdk")).default;
         const apiKey = await getApiKey("anthropic");
         if (!apiKey) return "Error: Anthropic API key not configured.";
 
@@ -1313,21 +1309,17 @@ async function _buildAllTools(activeOrg?: string, activeSite?: string): Promise<
         const rwLocaleConfig = await readSiteConfig();
         const rwLocale = rwLocaleConfig.defaultLocale || "en";
         const rwLocaleInstr = buildLocaleInstruction(rwLocale);
-        const client = new Anthropic({ apiKey });
-        const response = await client.messages.create({
-          model: rwModel,
-          max_tokens: 2048,
+        const rwAi = await getAI();
+        const { text: rewritten } = await rwAi.chat({
+          ...anthropicModel(rwModel),
+          maxTokens: 2048,
           system: `${rwLocaleInstr}\nYou are a content rewriter. Output ONLY the rewritten content. No preamble, no explanation.`,
           messages: [{
             role: "user",
             content: `Rewrite this content. Instruction: ${instruction}\n\nOriginal:\n${String(currentValue)}`,
           }],
+          purpose: "chat.rewrite-field",
         });
-
-        const rewritten = response.content
-          .filter((b: any) => b.type === "text")
-          .map((b: any) => b.text)
-          .join("");
 
         await saveRevision(collection, doc).catch(() => {});
         await cms.content.update(collection, doc.id, {
@@ -1363,7 +1355,6 @@ async function _buildAllTools(activeOrg?: string, activeSite?: string): Promise<
         const description = String(input.description);
 
         const { getApiKey } = await import("@/lib/ai-config");
-        const Anthropic = (await import("@anthropic-ai/sdk")).default;
         const apiKey = await getApiKey("anthropic");
         if (!apiKey) return "Error: Anthropic API key not configured.";
 
@@ -1390,18 +1381,14 @@ DESIGN GUIDELINES:
 
         const { getModel: getM3 } = await import("@/lib/ai/model-resolver");
         const intModel = await getM3("code");
-        const client = new Anthropic({ apiKey });
-        const response = await client.messages.create({
-          model: intModel,
-          max_tokens: 8192,
+        const intAi = await getAI();
+        const { text: rawText } = await intAi.chat({
+          ...anthropicModel(intModel),
+          maxTokens: 8192,
           system: systemPrompt,
           messages: [{ role: "user", content: `Create: ${title}\n\n${description}` }],
+          purpose: "chat.generate-interactive",
         });
-
-        const rawText = response.content
-          .filter((b: any) => b.type === "text")
-          .map((b: any) => b.text)
-          .join("");
 
         // Extract HTML from response (may be wrapped in ```html fences)
         let html = rawText;

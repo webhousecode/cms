@@ -1,4 +1,5 @@
-import Anthropic from "@anthropic-ai/sdk";
+import type { AiClient, ChatInput, Message, Tool } from "@broberg/ai-sdk";
+import { getAI, anthropicModel } from "@/lib/ai/client";
 import { getAgent } from "@/lib/agents";
 import { readCockpit, addCost } from "@/lib/cockpit";
 import { getBrandVoiceForLocale, brandVoiceToPromptContext } from "@/lib/brand-voice";
@@ -139,7 +140,7 @@ function estimateCost(model: string, inputTokens: number, outputTokens: number):
  * Max 10 iterations to prevent runaway loops.
  */
 async function callModelWithTools(params: {
-  client: Anthropic;
+  ai: AiClient;
   model: string;
   systemPrompt: string;
   userPrompt: string;
@@ -147,13 +148,13 @@ async function callModelWithTools(params: {
   tools: ToolDefinition[];
   handlers: Map<string, ToolHandler>;
 }): Promise<{ rawText: string; totalInputTokens: number; totalOutputTokens: number }> {
-  const { client, model, systemPrompt, userPrompt, maxTokens, tools, handlers } = params;
+  const { ai, model, systemPrompt, userPrompt, maxTokens, tools, handlers } = params;
 
-  const messages: Anthropic.MessageParam[] = [{ role: "user", content: userPrompt }];
-  const anthropicTools: Anthropic.Tool[] = tools.map((t) => ({
+  const messages: Message[] = [{ role: "user", content: userPrompt }];
+  const sdkTools: Tool[] = tools.map((t) => ({
     name: t.name,
     description: t.description,
-    input_schema: t.input_schema as Anthropic.Tool.InputSchema,
+    parameters: t.input_schema as Record<string, unknown>,
   }));
 
   let totalInputTokens = 0;
@@ -161,52 +162,40 @@ async function callModelWithTools(params: {
   const MAX_ITERATIONS = 10;
 
   for (let i = 0; i < MAX_ITERATIONS; i++) {
-    const response = await client.messages.create({
-      model,
-      max_tokens: maxTokens,
+    const { text, toolCalls, usage } = await ai.chat({
+      ...anthropicModel(model),
+      maxTokens,
       system: systemPrompt,
-      messages,
-      ...(anthropicTools.length > 0 ? { tools: anthropicTools } : {}),
+      messages: messages as ChatInput["messages"],
+      ...(sdkTools.length > 0 ? { tools: sdkTools } : {}),
+      purpose: "agent.run",
     });
 
-    totalInputTokens += response.usage.input_tokens;
-    totalOutputTokens += response.usage.output_tokens;
+    totalInputTokens += usage.inputTokens;
+    totalOutputTokens += usage.outputTokens;
 
-    // Check if the model wants to use tools
-    const toolUseBlocks = response.content.filter(
-      (b): b is Anthropic.ContentBlock & { type: "tool_use"; id: string; name: string; input: Record<string, unknown> } =>
-        b.type === "tool_use"
-    );
-
-    if (toolUseBlocks.length === 0 || response.stop_reason === "end_turn") {
-      // No tool calls — extract final text
-      const text = response.content
-        .filter((b): b is Anthropic.TextBlock => b.type === "text")
-        .map((b) => b.text)
-        .join("");
+    if (!toolCalls || toolCalls.length === 0) {
+      // No tool calls — return final text
       return { rawText: text, totalInputTokens, totalOutputTokens };
     }
 
-    // Process tool calls
-    messages.push({ role: "assistant", content: response.content });
-
-    const toolResults: Anthropic.ToolResultBlockParam[] = [];
-    for (const block of toolUseBlocks) {
-      const handler = handlers.get(block.name);
+    // Continue the conversation: assistant turn (with its tool calls) +
+    // one tool-result message per call.
+    messages.push({ role: "assistant", content: text, toolCalls });
+    for (const tc of toolCalls) {
+      const handler = handlers.get(tc.name);
       let result: string;
       if (handler) {
         try {
-          result = await handler(block.input);
+          result = await handler(tc.arguments);
         } catch (err) {
           result = `Tool error: ${err instanceof Error ? err.message : "unknown"}`;
         }
       } else {
-        result = `Unknown tool: ${block.name}`;
+        result = `Unknown tool: ${tc.name}`;
       }
-      toolResults.push({ type: "tool_result", tool_use_id: block.id, content: result });
+      messages.push({ role: "tool", toolCallId: tc.id, content: result });
     }
-
-    messages.push({ role: "user", content: toolResults });
   }
 
   // Hit max iterations — extract whatever text we have
@@ -283,11 +272,11 @@ export async function runAgent(agentId: string, userPrompt: string, overrideColl
 
   const model = selectModel(cockpit.primaryModel, cockpit.speedQuality);
   const maxTokens = cockpit.speedQuality === "thorough" ? 4096 : 2048;
-  const client = new Anthropic({ apiKey });
+  const ai = await getAI();
 
   // Primary model call with tool-use
   const { rawText, totalInputTokens, totalOutputTokens } = await callModelWithTools({
-    client, model, systemPrompt, userPrompt, maxTokens,
+    ai, model, systemPrompt, userPrompt, maxTokens,
     tools: toolRegistry.definitions,
     handlers: toolRegistry.handlers,
   });
@@ -341,7 +330,7 @@ export async function runAgent(agentId: string, userPrompt: string, overrideColl
       altModels.map(async (altModel) => {
         const { rawText: altRaw, totalInputTokens: altIn, totalOutputTokens: altOut } =
           await callModelWithTools({
-            client, model: altModel, systemPrompt, userPrompt, maxTokens,
+            ai, model: altModel, systemPrompt, userPrompt, maxTokens,
             tools: toolRegistry.definitions,
             handlers: toolRegistry.handlers,
           });
@@ -615,10 +604,10 @@ export async function executeAgentRaw(
 
     const model = selectModel(cockpit.primaryModel, cockpit.speedQuality);
     const maxTokens = cockpit.speedQuality === "thorough" ? 4096 : 2048;
-    const client = new Anthropic({ apiKey });
+    const ai = await getAI();
 
     const { rawText, totalInputTokens, totalOutputTokens } = await callModelWithTools({
-      client, model, systemPrompt, userPrompt, maxTokens,
+      ai, model, systemPrompt, userPrompt, maxTokens,
       tools: toolRegistry.definitions,
       handlers: toolRegistry.handlers,
     });

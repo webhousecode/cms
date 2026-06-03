@@ -6,7 +6,7 @@ import { buildLocaleInstruction } from "@/lib/ai/locale-prompt";
 import { getModel } from "@/lib/ai/model-resolver";
 import { LOCALE_LABELS } from "@/lib/locale";
 import { GitHubStorageAdapter, generateId } from "@webhouse/cms";
-import Anthropic from "@anthropic-ai/sdk";
+import { getAI, anthropicModel } from "@/lib/ai/client";
 import {
   collectTranslatableFields,
   findReadTimeField,
@@ -108,7 +108,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
 
   // Call AI to translate
   const model = await getModel("content");
-  const client = new Anthropic();
+  const ai = await getAI();
 
   // Import SEO limits for target locale
   const { getSeoLimits } = await import("@/lib/ai/locale-prompt");
@@ -141,16 +141,16 @@ Return ONLY a JSON object with the translated fields. No explanation, no preambl
   const userMessage = `Translate these fields from ${sourceLang} to ${targetLang}:\n\n${JSON.stringify(sourceData, null, 2)}`;
 
   try {
-    const response = await client.messages.create({
-      model,
-      max_tokens: 4096,
+    const { text: aiText } = await ai.chat({
+      ...anthropicModel(model),
+      maxTokens: 4096,
       system: systemPrompt,
       messages: [{ role: "user", content: userMessage }],
+      responseFormat: "json",
+      purpose: "translate.document",
     });
 
     // Parse translated content
-    const aiText =
-      response.content.find((c) => c.type === "text")?.text ?? "";
     let translatedData: Record<string, string>;
     try {
       // Extract JSON from response (may have markdown code fence)

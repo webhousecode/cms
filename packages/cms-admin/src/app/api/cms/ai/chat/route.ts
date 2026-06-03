@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
 import { getApiKey } from "@/lib/ai-config";
+import { getAI, anthropicModel } from "@/lib/ai/client";
 import { buildContentContext } from "@/lib/content-context";
 import { readSiteConfig } from "@/lib/site-config";
 import { getModel } from "@/lib/ai/model-resolver";
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
   if (!apiKey) {
     return NextResponse.json({ error: "Anthropic API key not configured — add it in Settings → AI" }, { status: 503 });
   }
-  const client = new Anthropic({ apiKey });
+  const ai = await getAI();
 
   try {
     const { message, docData, collectionName, fields, systemPrompt: customSystem, context, maxTokens, model: requestedModel, purpose, targetField } = (await request.json()) as {
@@ -109,22 +109,20 @@ ${contentContext}`;
       : (ALLOWED_MODELS.includes(defaultModel as typeof ALLOWED_MODELS[number]) ? defaultModel : await getModel("content"));
     const resolvedMaxTokens = Math.min(Math.max(maxTokens ?? defaultMaxTokens, 256), 16384);
 
-    const stream = await client.messages.stream({
-      model: resolvedModel,
-      max_tokens: resolvedMaxTokens,
+    const stream = ai.chatStream({
+      ...anthropicModel(resolvedModel),
+      maxTokens: resolvedMaxTokens,
       system: systemPrompt,
       messages: [{ role: "user", content: contextMessage }],
+      purpose: "content.chat",
     });
 
     const encoder = new TextEncoder();
     const readable = new ReadableStream({
       async start(controller) {
-        for await (const chunk of stream) {
-          if (
-            chunk.type === "content_block_delta" &&
-            chunk.delta.type === "text_delta"
-          ) {
-            controller.enqueue(encoder.encode(chunk.delta.text));
+        for await (const ev of stream) {
+          if (ev.type === "text") {
+            controller.enqueue(encoder.encode(ev.delta));
           }
         }
         controller.close();

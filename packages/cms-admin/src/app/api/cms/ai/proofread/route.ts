@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import { getAI, anthropicModel } from "@/lib/ai/client";
 import { getApiKey } from "@/lib/ai-config";
 import { getModel } from "@/lib/ai/model-resolver";
 import { denyViewers } from "@/lib/require-role";
@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
   if (!apiKey) {
     return NextResponse.json({ error: "Anthropic API key not configured — add it in Settings → AI" }, { status: 503 });
   }
-  const client = new Anthropic({ apiKey });
+  const ai = await getAI();
 
   try {
     const { text, locale: bodyLocale } = (await request.json()) as { text?: string; locale?: string };
@@ -24,9 +24,10 @@ export async function POST(request: NextRequest) {
     const locale = bodyLocale || siteConfig.defaultLocale || "en";
 
     const contentModel = await getModel("content");
-    const message = await client.messages.create({
-      model: contentModel,
-      max_tokens: 4096,
+    const { text: raw } = await ai.chat({
+      ...anthropicModel(contentModel),
+      maxTokens: 4096,
+      responseFormat: "json",
       system: `${buildLocaleInstruction(locale)}\nYou are a professional proofreader. Auto-detect the language of the text and check for spelling, grammar, and style errors.
 
 Return a JSON object with this exact structure:
@@ -55,11 +56,11 @@ Rules:
       messages: [
         { role: "user", content: `Proofread this text:\n\n${text}` },
       ],
+      purpose: "content.proofread",
     });
 
-    const raw = (message.content[0] as { text: string }).text.trim();
     // Parse JSON from response (may be wrapped in ```json...```)
-    const jsonStr = raw.replace(/^```json?\n?/, "").replace(/\n?```$/, "").trim();
+    const jsonStr = raw.trim().replace(/^```json?\n?/, "").replace(/\n?```$/, "").trim();
     const result = JSON.parse(jsonStr);
 
     // Validate offsets — AI may hallucinate positions, so verify and fix

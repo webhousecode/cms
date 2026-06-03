@@ -5,7 +5,7 @@ import { readSiteConfig } from "@/lib/site-config";
 import { buildLocaleInstruction } from "@/lib/ai/locale-prompt";
 import { getModel } from "@/lib/ai/model-resolver";
 import { LOCALE_LABELS } from "@/lib/locale";
-import Anthropic from "@anthropic-ai/sdk";
+import { getAI, anthropicModel } from "@/lib/ai/client";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -71,7 +71,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
 
   // Translate HTML content via AI
   const model = await getModel("content");
-  const client = new Anthropic();
+  const ai = await getAI();
 
   const systemPrompt = `You are a professional translator. Translate the text content in this HTML document from ${sourceLang} to ${actualTargetLang}.
 ${buildLocaleInstruction(actualTarget)}
@@ -85,14 +85,13 @@ CRITICAL RULES:
 - Return the COMPLETE translated HTML document. No explanation, no code fences.`;
 
   try {
-    const response = await client.messages.create({
-      model,
-      max_tokens: 16384,
+    const { text: translatedHtml } = await ai.chat({
+      ...anthropicModel(model),
+      maxTokens: 16384,
       system: systemPrompt,
       messages: [{ role: "user", content: `Translate this HTML interactive from ${sourceLang} to ${actualTargetLang}:\n\n${source.content}` }],
+      purpose: "translate.interactive",
     });
-
-    const translatedHtml = response.content.find(c => c.type === "text")?.text ?? "";
     // Strip markdown code fences if present
     const cleanHtml = translatedHtml.replace(/^```html?\n?/i, "").replace(/\n?```$/i, "").trim();
 

@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAdminConfig } from "@/lib/cms";
 import { getActiveSitePaths } from "@/lib/site-paths";
 import { getSiteRole } from "@/lib/require-role";
-import { getApiKey } from "@/lib/ai-config";
 import { readFileSync, writeFileSync, readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { invalidate } from "@/lib/site-pool";
 import { cookies } from "next/headers";
 import { loadRegistry, findSite } from "@/lib/site-registry";
+import { getAI, anthropicModel } from "@/lib/ai/client";
 
 /**
  * POST /api/cms/schema-drift/add-to-schema
@@ -76,11 +76,6 @@ export async function POST(req: NextRequest) {
 
     const configSource = readFileSync(configPath, "utf-8");
 
-    const apiKey = await getApiKey("anthropic");
-    if (!apiKey) {
-      return NextResponse.json({ error: "Anthropic API key not configured — set it in AI Settings or ANTHROPIC_API_KEY env" }, { status: 503 });
-    }
-
     const system = `You are a TypeScript code editor for @webhouse/cms configuration files.
 
 Given a cms.config.ts file, a collection name, and orphaned field names with content samples, add field definitions to that collection's fields array.
@@ -114,35 +109,25 @@ ${JSON.stringify(colConfig.fields.map((f) => ({ name: f.name, type: f.type, labe
 cms.config.ts:
 ${configSource.slice(0, 8000)}`;
 
-    const res = await fetch("https://api.anthropic.com/v1/messages", {
-      method: "POST",
-      headers: {
-        "x-api-key": apiKey,
-        "anthropic-version": "2023-06-01",
-        "content-type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "claude-haiku-4-5-20251001",
-        max_tokens: 4096,
+    let updated: string;
+    try {
+      const ai = await getAI();
+      const { text } = await ai.chat({
+        ...anthropicModel("claude-haiku-4-5-20251001"),
+        maxTokens: 4096,
         system,
         messages: [{ role: "user", content: user }],
-      }),
-    });
-
-    if (!res.ok) {
-      const body = await res.text().catch(() => "");
-      const snippet = body.slice(0, 500);
-      console.error(
-        `[schema-drift/add-to-schema] Anthropic API ${res.status} ${res.statusText}: ${snippet}`,
-      );
+        purpose: "schema-drift.add-to-schema",
+      });
+      updated = text;
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error(`[schema-drift/add-to-schema] AI call failed: ${msg}`);
       return NextResponse.json(
-        { error: `AI type inference failed (Anthropic ${res.status}): ${snippet || res.statusText}` },
+        { error: `AI type inference failed: ${msg}` },
         { status: 502 },
       );
     }
-
-    const payload = await res.json() as { content: Array<{ type: string; text?: string }> };
-    let updated = payload.content.find((c) => c.type === "text")?.text ?? "";
 
     // Strip markdown fences if model added them anyway
     updated = updated.replace(/^```(?:typescript|ts)?\n?/m, "").replace(/\n?```\s*$/m, "").trim();

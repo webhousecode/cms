@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import type { AiClient, ChatInput, Message, Tool } from "@broberg/ai-sdk";
 import { getApiKey } from "@/lib/ai-config";
+import { getAI, anthropicModel } from "@/lib/ai/client";
 import { getModel } from "@/lib/ai/model-resolver";
 import { denyViewers } from "@/lib/require-role";
 import { buildLocaleInstruction } from "@/lib/ai/locale-prompt";
@@ -48,10 +49,10 @@ __SYNTHESIS__
 ## Start
 Begin the interview with a single, warm opening question about the site's purpose.`;
 
-const FETCH_URL_TOOL: Anthropic.Tool = {
+const FETCH_URL_TOOL: Tool = {
   name: "fetch_url",
   description: "Fetches the text content of a URL. Use this to read a website the user mentions so you can reference what you find in your questions.",
-  input_schema: {
+  parameters: {
     type: "object",
     properties: {
       url: { type: "string", description: "The full URL to fetch (must start with http:// or https://)" },
@@ -83,57 +84,41 @@ async function fetchUrl(url: string): Promise<string> {
   }
 }
 
-type ConversationMessage =
-  | { role: "user"; content: string | Anthropic.ToolResultBlockParam[] }
-  | { role: "assistant"; content: string | Anthropic.ContentBlock[] };
-
 /** Runs the agentic tool-use loop, returns final assistant text. */
 async function runWithTools(
-  client: Anthropic,
-  apiMessages: ConversationMessage[],
+  ai: AiClient,
+  apiMessages: Message[],
   systemPrompt: string
 ): Promise<string> {
-  let messages = [...apiMessages];
+  const messages = [...apiMessages];
 
   for (let i = 0; i < 10; i++) {
     const premiumModel = await getModel("premium");
-    const response = await client.messages.create({
-      model: premiumModel,
-      max_tokens: 1024,
+    const { text, toolCalls } = await ai.chat({
+      ...anthropicModel(premiumModel),
+      maxTokens: 1024,
       system: systemPrompt,
       tools: [FETCH_URL_TOOL],
-      messages: messages as Anthropic.MessageParam[],
+      messages: messages as ChatInput["messages"],
+      purpose: "brand-voice.interview",
     });
 
-    if (response.stop_reason === "end_turn") {
-      return response.content
-        .filter((b): b is Anthropic.TextBlock => b.type === "text")
-        .map((b) => b.text)
-        .join("");
+    // No tool calls → final answer
+    if (!toolCalls || toolCalls.length === 0) {
+      return text;
     }
 
-    if (response.stop_reason === "tool_use") {
-      // Add assistant turn with tool calls
-      messages.push({ role: "assistant", content: response.content });
-
-      // Execute each tool call
-      const toolResults: Anthropic.ToolResultBlockParam[] = [];
-      for (const block of response.content) {
-        if (block.type === "tool_use" && block.name === "fetch_url") {
-          const input = block.input as { url: string };
-          const content = await fetchUrl(input.url);
-          toolResults.push({ type: "tool_result", tool_use_id: block.id, content });
-        }
+    // Add assistant turn with tool calls, then one tool-result message per call
+    messages.push({ role: "assistant", content: text, toolCalls });
+    for (const tc of toolCalls) {
+      if (tc.name === "fetch_url") {
+        const input = tc.arguments as { url: string };
+        const content = await fetchUrl(input.url);
+        messages.push({ role: "tool", toolCallId: tc.id, content });
+      } else {
+        messages.push({ role: "tool", toolCallId: tc.id, content: `Unknown tool: ${tc.name}` });
       }
-      messages.push({ role: "user", content: toolResults });
-      continue;
     }
-
-    // Unexpected stop reason — return whatever text we have
-    return response.content
-      .filter((b): b is Anthropic.TextBlock => b.type === "text")
-      .map((b) => b.text)
-      .join("");
   }
 
   return "Something went wrong — please try again.";
@@ -153,11 +138,11 @@ export async function POST(request: NextRequest) {
     messages: { role: "user" | "assistant"; content: string }[];
   };
 
-  const apiMessages: ConversationMessage[] = messages.length === 0
+  const apiMessages: Message[] = messages.length === 0
     ? [{ role: "user", content: "Start the interview." }]
     : messages.map((m) => ({ role: m.role, content: m.content }));
 
-  const client = new Anthropic({ apiKey });
+  const ai = await getAI();
   const siteConfig = await readSiteConfig();
   const localeInstruction = buildLocaleInstruction(siteConfig.defaultLocale);
   const systemPrompt = `${localeInstruction}\n\n${SYSTEM}`;
@@ -167,7 +152,7 @@ export async function POST(request: NextRequest) {
   const readable = new ReadableStream({
     async start(controller) {
       try {
-        const text = await runWithTools(client, apiMessages, systemPrompt);
+        const text = await runWithTools(ai, apiMessages, systemPrompt);
 
         // Stream the response in chunks for UI feel
         const CHUNK = 4;

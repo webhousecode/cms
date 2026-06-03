@@ -3,7 +3,7 @@ import { getAdminCms, getAdminConfig } from "@/lib/cms";
 import { getApiKey } from "@/lib/ai-config";
 import { getModel } from "@/lib/ai/model-resolver";
 import { denyViewers } from "@/lib/require-role";
-import Anthropic from "@anthropic-ai/sdk";
+import { getAI, anthropicModel } from "@/lib/ai/client";
 import type { SeoFields } from "@/lib/seo/score";
 import { buildLocaleInstruction, getSeoLimits } from "@/lib/ai/locale-prompt";
 import { readSiteConfig } from "@/lib/site-config";
@@ -22,8 +22,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Anthropic API key not configured" }, { status: 503 });
   }
 
-  const [cms, config, seoModel, siteConfig] = await Promise.all([getAdminCms(), getAdminConfig(), getModel("content"), readSiteConfig()]);
-  const client = new Anthropic({ apiKey });
+  const [cms, config, seoModel, siteConfig, ai] = await Promise.all([getAdminCms(), getAdminConfig(), getModel("content"), readSiteConfig(), getAI()]);
 
   // Optional filter
   let targetSlugs: Set<string> | null = null;
@@ -71,9 +70,9 @@ export async function POST(req: NextRequest) {
           const docLocale = (doc.data.locale as string) || siteConfig.defaultLocale || "en";
           const limits = getSeoLimits(docLocale);
 
-          const message = await client.messages.create({
-            model: seoModel,
-            max_tokens: 1024,
+          const { text: raw } = await ai.chat({
+            ...anthropicModel(seoModel),
+            maxTokens: 1024,
             system: `${buildLocaleInstruction(docLocale)}\nYou generate SEO metadata. Return ONLY a JSON object, no explanation.`,
             messages: [{
               role: "user",
@@ -88,10 +87,11 @@ Return JSON:
   "keywords": ["primary-keyword", "kw2", "kw3", "kw4", "kw5"]
 }`,
             }],
+            responseFormat: "json",
+            purpose: "seo.optimize",
           });
 
-          const raw = (message.content[0] as { text: string }).text.trim();
-          const parsed = JSON.parse(raw.replace(/^```json?\n?/, "").replace(/\n?```$/, ""));
+          const parsed = JSON.parse(raw.trim().replace(/^```json?\n?/, "").replace(/\n?```$/, ""));
 
           // Auto-extract OG image
           const rawContent = String(doc.data.content ?? doc.data.body ?? "");

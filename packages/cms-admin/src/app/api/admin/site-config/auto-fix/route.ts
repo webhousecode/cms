@@ -4,6 +4,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import { requirePermission } from "@/lib/permissions";
 import { loadRegistry, findSite } from "@/lib/site-registry";
 import { invalidate } from "@/lib/site-pool";
+import { getAI, anthropicModel } from "@/lib/ai/client";
 
 export async function POST(req: Request) {
   const denied = await requirePermission("sites.write");
@@ -33,11 +34,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Could not read config file" }, { status: 500 });
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
-    return NextResponse.json({ error: "ANTHROPIC_API_KEY not configured" }, { status: 503 });
-  }
-
   const system = `You are a TypeScript code fixer for @webhouse/cms configuration files.
 
 Given a cms.config.ts file and a list of validation errors, return the COMPLETE corrected TypeScript file.
@@ -56,27 +52,20 @@ ${rawErrors}
 Original cms.config.ts:
 ${original}`;
 
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-      "content-type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 4096,
+  let fixed: string;
+  try {
+    const ai = await getAI();
+    const { text } = await ai.chat({
+      ...anthropicModel("claude-haiku-4-5-20251001"),
+      maxTokens: 4096,
       system,
       messages: [{ role: "user", content: user }],
-    }),
-  });
-
-  if (!res.ok) {
+      purpose: "site-config.auto-fix",
+    });
+    fixed = text;
+  } catch {
     return NextResponse.json({ error: "AI fix generation failed" }, { status: 502 });
   }
-
-  const payload = await res.json() as { content: Array<{ type: string; text?: string }> };
-  let fixed = payload.content.find((c) => c.type === "text")?.text ?? "";
 
   // Strip markdown fences if model added them anyway
   fixed = fixed.replace(/^```(?:typescript|ts)?\n?/m, "").replace(/\n?```\s*$/m, "").trim();

@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { readFile } from "node:fs/promises";
 import { requirePermission } from "@/lib/permissions";
 import { loadRegistry, findSite } from "@/lib/site-registry";
+import { getAI, anthropicModel, parseJsonLoose } from "@/lib/ai/client";
 
 export interface DiagnoseIssue {
   field: string;
@@ -53,8 +54,7 @@ export async function POST(req: Request) {
     }
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
-  if (!apiKey) {
+  if (!process.env.ANTHROPIC_API_KEY) {
     // Return a basic diagnosis without LLM
     return NextResponse.json({
       siteName: site.name,
@@ -116,35 +116,29 @@ Config: GitHub-backed (${site.configPath})
 Validation errors:
 ${rawErrors}`;
 
-  const res = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "x-api-key": apiKey,
-      "anthropic-version": "2023-06-01",
-      "content-type": "application/json",
-    },
-    body: JSON.stringify({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 1200,
+  let aiText: string;
+  try {
+    const ai = await getAI();
+    const { text } = await ai.chat({
+      ...anthropicModel("claude-haiku-4-5-20251001"),
+      maxTokens: 1200,
       system,
       messages: [{ role: "user", content: user }],
-    }),
-  });
-
-  if (!res.ok) {
+      responseFormat: "json",
+      purpose: "site-config.diagnose",
+    });
+    aiText = text;
+  } catch {
     return NextResponse.json({ error: "AI diagnosis unavailable" }, { status: 502 });
   }
 
-  const payload = await res.json() as { content: Array<{ type: string; text?: string }> };
-  const text = payload.content.find((c) => c.type === "text")?.text ?? "{}";
-
   let parsed: { summary?: string; issues?: DiagnoseIssue[]; canAutoFix?: boolean; autoFixNotes?: string } = {};
   try {
-    const match = /\{[\s\S]*\}/.exec(text);
-    if (match) parsed = JSON.parse(match[0]);
+    parsed = (parseJsonLoose(aiText) as typeof parsed) ?? {};
   } catch {
     // fall through — return raw text as summary
   }
+  const text = aiText;
 
   return NextResponse.json({
     siteName: site.name,

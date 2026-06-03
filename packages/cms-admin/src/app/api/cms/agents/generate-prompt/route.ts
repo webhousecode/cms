@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import { getAI, anthropicModel } from "@/lib/ai/client";
 import { getApiKey } from "@/lib/ai-config";
 import { getModel } from "@/lib/ai/model-resolver";
 import { denyViewers } from "@/lib/require-role";
@@ -27,14 +27,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "role required" }, { status: 400 });
     }
 
-    const client = new Anthropic({ apiKey });
+    const ai = await getAI();
     const siteConfig = await readSiteConfig();
     const localeInstruction = buildLocaleInstruction(siteConfig.defaultLocale);
 
     const contentModel = await getModel("content");
-    const msg = await client.messages.create({
-      model: contentModel,
-      max_tokens: 1024,
+    const { text } = await ai.chat({
+      ...anthropicModel(contentModel),
+      maxTokens: 1024,
       system:
         `You are a CMS configuration assistant. Generate a concise, professional system prompt for an AI content agent. The prompt should define the agent's role, tone, constraints, and output format. Write the prompt in English but include a language directive so the agent produces content in the site's language. ${localeInstruction} — include this language directive in the generated prompt. Return only the system prompt text — no explanations or markdown.`,
       messages: [
@@ -48,10 +48,8 @@ export async function POST(request: NextRequest) {
 The prompt should be specific to the role and suitable for content generation in a CMS.`,
         },
       ],
+      purpose: "agent.generate-prompt",
     });
-
-    const text =
-      msg.content[0].type === "text" ? msg.content[0].text : "";
 
     return NextResponse.json({ prompt: text });
   } catch (err) {

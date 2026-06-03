@@ -73,7 +73,8 @@ export async function GET(request: NextRequest) {
   const anthropicKey = await getApiKey("anthropic");
   if (anthropicKey) {
     const cmsAi = await import("@webhouse/cms-ai" as any);
-    const Anthropic = (await import("@anthropic-ai/sdk")).default;
+    const { createAIWithKeys, anthropicModel } = await import("@/lib/ai/client");
+    const aiClient = createAIWithKeys({ anthropic: anthropicKey });
     const provider = new cmsAi.AnthropicProvider({ apiKey: anthropicKey });
     const agent = new cmsAi.ContentAgent(provider);
 
@@ -96,25 +97,24 @@ export async function GET(request: NextRequest) {
       async generateContent(collection: string, slug: string, field: string, prompt: string) {
         const { buildLocaleInstruction } = await import("@/lib/ai/locale-prompt");
         const model = "claude-sonnet-4-6"; // Use code model directly — no cookie-dependent getModel()
-        const client = new Anthropic({ apiKey: anthropicKey });
         const doc = await cms.content.findBySlug(collection, slug);
-        const response = await client.messages.create({
-          model,
-          max_tokens: 2048,
+        const { text } = await aiClient.chat({
+          ...anthropicModel(model),
+          maxTokens: 2048,
           system: `${buildLocaleInstruction(siteLocale)}\nYou are a content writer. Generate content for the "${field}" field.\nExisting document: ${JSON.stringify(doc?.data ?? {}, null, 2)}`,
           messages: [{ role: "user", content: prompt }],
+          purpose: "mcp.generate-content",
         });
-        return response.content.filter((b: any) => b.type === "text").map((b: any) => b.text).join("");
+        return text;
       },
       async generateInteractive(title: string, description: string) {
-        const client = new Anthropic({ apiKey: anthropicKey });
-        const response = await client.messages.create({
-          model: "claude-sonnet-4-6",
-          max_tokens: 8192,
+        const { text: raw } = await aiClient.chat({
+          ...anthropicModel("claude-sonnet-4-6"),
+          maxTokens: 8192,
           system: `You are an expert HTML/CSS/JavaScript developer. Generate a COMPLETE, self-contained HTML document. ALL CSS inline in <style>, ALL JS inline in <script>. NO external dependencies. Responsive, dark mode support. Start with <!DOCTYPE html>, end with </html>.`,
           messages: [{ role: "user", content: `Create: ${title}\n\n${description}` }],
+          purpose: "mcp.generate-interactive",
         });
-        const raw = response.content.filter((b: any) => b.type === "text").map((b: any) => b.text).join("");
         const fenceMatch = raw.match(/```html\s*([\s\S]*?)```/);
         if (fenceMatch) return fenceMatch[1].trim();
         const docMatch = raw.match(/(<!DOCTYPE html[\s\S]*<\/html>)/i);

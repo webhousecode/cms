@@ -1,27 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
-import { getApiKey } from "@/lib/ai-config";
 import { getModel } from "@/lib/ai/model-resolver";
 import type { BrandVoice } from "@/lib/brand-voice";
 import { denyViewers } from "@/lib/require-role";
 import { buildLocaleInstruction } from "@/lib/ai/locale-prompt";
+import { getAI, anthropicModel, parseJsonLoose } from "@/lib/ai/client";
 
 export async function POST(request: NextRequest) {
   const denied = await denyViewers(); if (denied) return denied;
-  const apiKey = await getApiKey("anthropic");
-  if (!apiKey) return NextResponse.json({ error: "Anthropic API key not configured" }, { status: 503 });
 
   const { brandVoice, targetLanguage } = (await request.json()) as {
     brandVoice: BrandVoice;
     targetLanguage: string;
   };
 
-  const client = new Anthropic({ apiKey });
-
   const premiumModel = await getModel("premium");
-  const response = await client.messages.create({
-    model: premiumModel,
-    max_tokens: 2048,
+  const ai = await getAI();
+  const { text: raw } = await ai.chat({
+    ...anthropicModel(premiumModel),
+    maxTokens: 2048,
     system: buildLocaleInstruction(targetLanguage),
     messages: [
       {
@@ -40,18 +36,12 @@ Input:
 ${JSON.stringify(brandVoice, null, 2)}`,
       },
     ],
+    purpose: "brand-voice.translate",
   });
 
-  const raw = response.content
-    .filter((b): b is Anthropic.TextBlock => b.type === "text")
-    .map((b) => b.text)
-    .join("")
-    .trim();
-
   try {
-    // Strip accidental markdown fences
-    const json = raw.replace(/^```[a-z]*\n?/i, "").replace(/\n?```$/i, "").trim();
-    const translated = JSON.parse(json) as BrandVoice;
+    const translated = parseJsonLoose(raw) as BrandVoice;
+    if (!translated) throw new Error("null result");
     return NextResponse.json(translated);
   } catch {
     return NextResponse.json({ error: "Failed to parse translated JSON", raw }, { status: 500 });

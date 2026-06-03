@@ -1,27 +1,21 @@
 /**
- * AI image generation via Google Gemini 2.5 Flash Image (Nano Banana).
- *
- * Calls the Google Generative Language REST API directly so we don't
- * get pinned to a specific @ai-sdk/google version that may or may not
- * expose Gemini's multimodal image output. Returns raw bytes + mime
- * type so the caller can pipe them through the existing media
+ * AI image generation via Google Gemini (Nano Banana), routed through the
+ * central @broberg/ai-sdk facade (ai.image, gemini provider — F013). Returns
+ * raw bytes + mime type so the caller can pipe them through the existing media
  * processing pipeline (Sharp variants, EXIF, F44 vision analysis).
  *
- * Pricing as of 2026-04: $0.039 per image. Recorded against the
- * cockpit budget by callers via cockpit.addCost().
+ * Pricing as of 2026-04: $0.039 per image. The SDK stamps the real cost on
+ * usage.costUsd and forwards it to the cost sink; the exported constant remains
+ * for callers that report it against the cockpit budget via cockpit.addCost().
  */
 import { readAiConfig } from "@/lib/ai-config";
+import { getAI } from "@/lib/ai/client";
 
 /** Pricing snapshot — keep in sync with Google's published rate. */
 export const NANO_BANANA_COST_PER_IMAGE_USD = 0.039;
 
-// "Nano Banana 2" — Gemini 3 Pro Image. Verified live against the
-// Generative Language API on 2026-04-07. The previous "preview" suffix
-// on the 2.5 model is dead; the live IDs are gemini-2.5-flash-image
-// (stable, larger PNGs ~1.4MB) and gemini-3-pro-image-preview (newer,
-// smaller JPEGs ~550kb, better quality). We default to Nano Banana 2.
+// "Nano Banana 2" — Gemini 3 Pro Image (newer, smaller JPEGs, better quality).
 const MODEL_ID = "gemini-3-pro-image-preview";
-const ENDPOINT = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_ID}:generateContent`;
 
 export interface GeneratedImage {
   /** Raw image bytes (typically PNG). */
@@ -50,18 +44,15 @@ export async function getGeminiImageKey(): Promise<string | null> {
 }
 
 /**
- * Generate an image from a text prompt using Gemini 2.5 Flash Image
- * (Nano Banana). Optionally accepts a reference image (e.g. for
- * style/content editing).
+ * Generate an image from a text prompt using Gemini (Nano Banana) via
+ * `ai.image()`. The gemini adapter returns the image inline as a
+ * `data:<mime>;base64,…` URL, which we decode back to raw bytes for the media
+ * pipeline.
  */
 export async function generateImage(params: {
   prompt: string;
-  /** Optional input image to edit / use as reference. */
-  referenceImage?: { buffer: Buffer; mimeType: string };
-  /** For dependency injection in tests. */
-  fetchImpl?: typeof fetch;
 }): Promise<GeneratedImage> {
-  const { prompt, referenceImage, fetchImpl = fetch } = params;
+  const { prompt } = params;
 
   if (!prompt || !prompt.trim()) {
     throw new Error("Image generation prompt is required");
@@ -77,67 +68,27 @@ export async function generateImage(params: {
     );
   }
 
-  // Build the request: text prompt, optional reference image as second part.
-  const parts: Array<Record<string, unknown>> = [{ text: prompt }];
-  if (referenceImage) {
-    parts.push({
-      inlineData: {
-        mimeType: referenceImage.mimeType,
-        data: referenceImage.buffer.toString("base64"),
-      },
-    });
-  }
-
-  const res = await fetchImpl(`${ENDPOINT}?key=${encodeURIComponent(key)}`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [{ role: "user", parts }],
-      // Gemini's multimodal image model can return text + image; ask for both.
-      generationConfig: {
-        responseModalities: ["TEXT", "IMAGE"],
-      },
-    }),
+  const ai = await getAI();
+  const { url, usage } = await ai.image({
+    prompt,
+    override: { provider: "gemini", model: MODEL_ID, transport: "http" },
+    purpose: "media.image-generation",
   });
 
-  if (!res.ok) {
-    const body = await res.text().catch(() => "");
-    throw new Error(`Gemini image generation failed: HTTP ${res.status} ${body.slice(0, 300)}`);
+  // F013 returns a data:<mime>;base64,… URL (Gemini gives inline bytes, not a
+  // hosted URL). Decode back to raw bytes + mime for the Sharp/EXIF pipeline.
+  const comma = url.indexOf(",");
+  const semi = url.indexOf(";");
+  if (!url.startsWith("data:") || comma < 0 || semi < 0) {
+    throw new Error("Gemini did not return an inline image (unexpected ai.image url shape)");
   }
+  const mimeType = url.slice(5, semi);
+  const buffer = Buffer.from(url.slice(comma + 1), "base64");
 
-  const data = (await res.json()) as {
-    candidates?: Array<{
-      content?: {
-        parts?: Array<{
-          text?: string;
-          inlineData?: { mimeType?: string; data?: string };
-          // Camel-cased alias seen on some responses
-          inline_data?: { mime_type?: string; data?: string };
-        }>;
-      };
-    }>;
-    promptFeedback?: { blockReason?: string };
+  return {
+    buffer,
+    mimeType,
+    provider: MODEL_ID,
+    costUsd: usage.costUsd || NANO_BANANA_COST_PER_IMAGE_USD,
   };
-
-  if (data.promptFeedback?.blockReason) {
-    throw new Error(`Image prompt blocked: ${data.promptFeedback.blockReason}`);
-  }
-
-  const partsOut = data.candidates?.[0]?.content?.parts ?? [];
-  for (const part of partsOut) {
-    const camel = part.inlineData;
-    const snake = part.inline_data;
-    const mime = camel?.mimeType ?? snake?.mime_type;
-    const b64 = camel?.data ?? snake?.data;
-    if (mime && b64) {
-      return {
-        buffer: Buffer.from(b64, "base64"),
-        mimeType: mime,
-        provider: MODEL_ID,
-        costUsd: NANO_BANANA_COST_PER_IMAGE_USD,
-      };
-    }
-  }
-
-  throw new Error("Gemini did not return an image (response contained no inline image data)");
 }
