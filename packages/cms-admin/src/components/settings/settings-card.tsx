@@ -42,6 +42,7 @@ export function SettingsInput({ label, description, copiable, ...inputProps }: {
       {description && <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", margin: 0 }}>{description}</p>}
       <div style={{ position: "relative" }}>
         <input
+          data-testid="settings-input-field"
           {...inputProps}
           style={{
             padding: "0.45rem 0.75rem",
@@ -60,6 +61,7 @@ export function SettingsInput({ label, description, copiable, ...inputProps }: {
         />
         {copiable && inputProps.value && (
           <button
+            data-testid="settings-input-copy-button"
             type="button"
             onClick={handleCopy}
             title="Copy to clipboard"

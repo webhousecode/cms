@@ -64,6 +64,7 @@ export default function ApproveQrPage({ params }: { params: Promise<{ id: string
         </p>
         <div style={{ display: "flex", gap: "0.5rem", justifyContent: "center" }}>
           <button
+            data-testid="qr-approve-button"
             onClick={() => decide(false)}
             disabled={busy}
             style={{
@@ -75,6 +76,7 @@ export default function ApproveQrPage({ params }: { params: Promise<{ id: string
             {busy ? "..." : "Approve"}
           </button>
           <button
+            data-testid="qr-reject-button"
             onClick={() => decide(true)}
             disabled={busy}
             style={{

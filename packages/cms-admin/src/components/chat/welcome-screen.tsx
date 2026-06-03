@@ -89,6 +89,7 @@ export function WelcomeScreen({ siteName, onSuggestionClick }: WelcomeScreenProp
       >
         {SUGGESTIONS.map(({ icon: Icon, label, message }) => (
           <button
+            data-testid="welcome-suggestion-button"
             key={label}
             onClick={() => onSuggestionClick(message)}
             style={{

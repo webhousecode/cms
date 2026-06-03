@@ -35,6 +35,7 @@ export function StructuredObjectEditor({ field, value, onChange, locked, blocksC
   return (
     <div style={{ border: "1px solid var(--border)", borderRadius: "8px", background: "var(--card)", overflow: "hidden" }}>
       <div
+        data-testid={`object-editor-toggle-${field.name}`}
         onClick={() => setCollapsed((c) => !c)}
         style={{
           display: "flex", alignItems: "center", gap: "0.5rem",

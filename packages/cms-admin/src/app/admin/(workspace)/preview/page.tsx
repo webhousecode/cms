@@ -50,7 +50,7 @@ function PreviewFrame() {
   }, [url]);
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 84px)" }}>
+    <div data-testid="preview-root" style={{ display: "flex", flexDirection: "column", height: "calc(100vh - 84px)" }}>
       {/* Slim toolbar */}
       <div style={{
         display: "flex", alignItems: "center", gap: "0.5rem",
@@ -76,6 +76,7 @@ function PreviewFrame() {
 
         {/* Rebuild button */}
         <button
+          data-testid="preview-rebuild-button"
           type="button"
           onClick={rebuild}
           disabled={building}
@@ -95,6 +96,7 @@ function PreviewFrame() {
 
         {/* Reload button */}
         <button
+          data-testid="preview-reload-button"
           type="button"
           onClick={reload}
           title="Reload preview"
@@ -109,6 +111,7 @@ function PreviewFrame() {
 
         {/* External link */}
         <a
+          data-testid="preview-external-link"
           href={url}
           target="_blank"
           rel="noopener noreferrer"

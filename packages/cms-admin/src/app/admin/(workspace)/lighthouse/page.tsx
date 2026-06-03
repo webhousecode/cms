@@ -97,7 +97,7 @@ export default function LighthousePage() {
   }, [mobile, desktop, history]);
 
   return (
-    <>
+    <div data-testid="lighthouse-root">
       <TabTitle value="Lighthouse" />
       <ActionBar
         helpArticleId="lighthouse-intro"
@@ -105,6 +105,7 @@ export default function LighthousePage() {
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
           {hasResults && (
             <button
+              data-testid="lighthouse-export-button"
               onClick={handleExport}
               title="Download a Markdown report ready to paste into Claude/ChatGPT or hand to a developer"
               style={{
@@ -122,6 +123,7 @@ export default function LighthousePage() {
           )}
           {hasIssues && (
             <button
+              data-testid="lighthouse-optimize-button"
               onClick={handleOptimize}
               disabled={optimizing}
               style={{
@@ -139,6 +141,7 @@ export default function LighthousePage() {
             </button>
           )}
           <button
+            data-testid="lighthouse-scan-button"
             onClick={handleScan}
             disabled={scanning}
             style={{
@@ -240,7 +243,7 @@ export default function LighthousePage() {
             <div style={{ fontSize: "0.78rem", color: "var(--muted-foreground)", marginBottom: "1rem" }}>
               Run your first scan to see performance, accessibility, SEO, and best practices — for both mobile and desktop.
             </div>
-            <button onClick={handleScan} disabled={scanning} style={{
+            <button data-testid="lighthouse-first-scan-button" onClick={handleScan} disabled={scanning} style={{
               padding: "0.5rem 1.25rem", borderRadius: 6, border: "none",
               background: "#F7BB2E", color: "#0D0D0D", fontSize: "0.82rem",
               fontWeight: 600, cursor: "pointer",
@@ -252,7 +255,7 @@ export default function LighthousePage() {
       </div>
 
       <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
-    </>
+    </div>
   );
 }
 
@@ -505,7 +508,7 @@ function OpportunitiesSection({ mobile, desktop }: { mobile: LighthouseResult | 
     <div style={{ marginBottom: "2rem" }}>
       {opps.length > 0 && (
         <div style={{ marginBottom: "1rem" }}>
-          <button onClick={() => setExpandOpps(!expandOpps)} style={{
+          <button data-testid="lighthouse-opportunities-toggle" onClick={() => setExpandOpps(!expandOpps)} style={{
             display: "flex", alignItems: "center", gap: "0.3rem", background: "none", border: "none",
             cursor: "pointer", color: "var(--foreground)", fontSize: "0.82rem", fontWeight: 600, padding: 0, marginBottom: "0.5rem",
           }}>
@@ -540,7 +543,7 @@ function OpportunitiesSection({ mobile, desktop }: { mobile: LighthouseResult | 
 
       {diags.length > 0 && (
         <div>
-          <button onClick={() => setExpandDiag(!expandDiag)} style={{
+          <button data-testid="lighthouse-diagnostics-toggle" onClick={() => setExpandDiag(!expandDiag)} style={{
             display: "flex", alignItems: "center", gap: "0.3rem", background: "none", border: "none",
             cursor: "pointer", color: "var(--foreground)", fontSize: "0.82rem", fontWeight: 600, padding: 0, marginBottom: "0.5rem",
           }}>
@@ -651,13 +654,13 @@ function PsiKeySetup() {
         Get a free key (25,000 scans/day):
       </div>
       <ol style={{ margin: "0 0 0.5rem 1.25rem", padding: 0, color: "var(--muted-foreground)", lineHeight: 1.7 }}>
-        <li><a href="https://console.cloud.google.com/apis/library/pagespeedonline.googleapis.com" target="_blank" rel="noopener" style={{ color: "#F7BB2E" }}>Enable PageSpeed Insights API</a></li>
-        <li><a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener" style={{ color: "#F7BB2E" }}>Create API Key</a></li>
+        <li><a data-testid="lighthouse-setup-psi-api-link" href="https://console.cloud.google.com/apis/library/pagespeedonline.googleapis.com" target="_blank" rel="noopener" style={{ color: "#F7BB2E" }}>Enable PageSpeed Insights API</a></li>
+        <li><a data-testid="lighthouse-setup-api-credentials-link" href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener" style={{ color: "#F7BB2E" }}>Create API Key</a></li>
         <li>Paste below</li>
       </ol>
       <div style={{ display: "flex", gap: "0.4rem" }}>
-        <input type="password" value={key} onChange={(e) => setKey(e.target.value)} placeholder="AIzaSy..." style={{ flex: 1, padding: "0.35rem 0.6rem", borderRadius: 5, border: "1px solid var(--border)", background: "var(--background)", fontSize: "0.78rem", color: "var(--foreground)", outline: "none" }} />
-        <button onClick={handleSave} disabled={saving || !key.trim() || saved} style={{ padding: "0.35rem 0.75rem", borderRadius: 5, border: "none", background: saved ? "#0cce6b" : "#F7BB2E", color: "#0D0D0D", fontSize: "0.75rem", fontWeight: 600, cursor: saving ? "wait" : "pointer", opacity: saving || !key.trim() ? 0.6 : 1 }}>
+        <input data-testid="lighthouse-api-key-input" type="password" value={key} onChange={(e) => setKey(e.target.value)} placeholder="AIzaSy..." style={{ flex: 1, padding: "0.35rem 0.6rem", borderRadius: 5, border: "1px solid var(--border)", background: "var(--background)", fontSize: "0.78rem", color: "var(--foreground)", outline: "none" }} />
+        <button data-testid="lighthouse-api-key-save-button" onClick={handleSave} disabled={saving || !key.trim() || saved} style={{ padding: "0.35rem 0.75rem", borderRadius: 5, border: "none", background: saved ? "#0cce6b" : "#F7BB2E", color: "#0D0D0D", fontSize: "0.75rem", fontWeight: 600, cursor: saving ? "wait" : "pointer", opacity: saving || !key.trim() ? 0.6 : 1 }}>
           {saved ? "Saved ✓" : "Save key"}
         </button>
       </div>

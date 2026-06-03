@@ -261,6 +261,7 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
       {blocks.length >= 2 && (
         <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.25rem" }}>
           <button
+            data-testid="blocks-open-all-button"
             type="button"
             onClick={() => toggleAll(true)}
             disabled={allOpen}
@@ -275,6 +276,7 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
           </button>
           <span style={{ fontSize: "0.6rem", color: "var(--muted-foreground)", opacity: 0.3 }}>|</span>
           <button
+            data-testid="blocks-close-all-button"
             type="button"
             onClick={() => toggleAll(false)}
             disabled={allClosed}
@@ -306,6 +308,7 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
           <div
             key={i}
             ref={flashIdx === i ? flashRef : undefined}
+            data-testid={`block-item-${i}`}
             style={{
               border: flashIdx === i ? "1px solid var(--primary)" : "1px solid var(--border)",
               borderRadius: "8px",
@@ -317,6 +320,7 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
           >
             {/* Header */}
             <div
+              data-testid={`block-header-${i}`}
               onClick={() => toggle(i)}
               style={{
                 display: "flex",
@@ -349,16 +353,16 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
                 {getBlockLabel(block, config)}
               </span>
               {!locked && (
-                <span style={{ display: "flex", gap: "0.25rem", alignItems: "center" }} onClick={(e) => e.stopPropagation()}>
+                <span data-testid={`block-actions-${i}`} style={{ display: "flex", gap: "0.25rem", alignItems: "center" }} onClick={(e) => e.stopPropagation()}>
                   {confirmRemoveIdx === i ? (
                     <>
                       <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px", whiteSpace: "nowrap" }}>Remove?</span>
-                      <button type="button" onClick={() => {
+                      <button data-testid={`block-remove-confirm-${i}`} type="button" onClick={() => {
                         if (confirmTimer.current) clearTimeout(confirmTimer.current);
                         setConfirmRemoveIdx(null);
                         removeBlock(i);
                       }} style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
-                      <button type="button" onClick={() => {
+                      <button data-testid={`block-remove-cancel-${i}`} type="button" onClick={() => {
                         if (confirmTimer.current) clearTimeout(confirmTimer.current);
                         setConfirmRemoveIdx(null);
                       }} style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
@@ -366,20 +370,20 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
                   ) : (
                     <>
                     {config?.propertyFields && config.propertyFields.length > 0 && (
-                      <button type="button" onClick={() => setPropsOpenIdx(propsOpenIdx === i ? null : i)} title="Properties" style={{ background: "none", border: "none", cursor: "pointer", color: propsOpenIdx === i ? "var(--primary)" : "var(--muted-foreground)", padding: "2px" }} className="hover:text-primary transition-colors">
+                      <button data-testid={`block-properties-${i}`} type="button" onClick={() => setPropsOpenIdx(propsOpenIdx === i ? null : i)} title="Properties" style={{ background: "none", border: "none", cursor: "pointer", color: propsOpenIdx === i ? "var(--primary)" : "var(--muted-foreground)", padding: "2px" }} className="hover:text-primary transition-colors">
                         <Settings2 style={{ width: 14, height: 14 }} />
                       </button>
                     )}
-                    <button type="button" disabled={i === 0} onClick={() => moveBlock(i, -1)} style={{ background: "none", border: "none", cursor: i === 0 ? "not-allowed" : "pointer", color: "var(--muted-foreground)", padding: "2px", opacity: i === 0 ? 0.3 : 1 }}>
+                    <button data-testid={`block-move-up-${i}`} type="button" disabled={i === 0} onClick={() => moveBlock(i, -1)} style={{ background: "none", border: "none", cursor: i === 0 ? "not-allowed" : "pointer", color: "var(--muted-foreground)", padding: "2px", opacity: i === 0 ? 0.3 : 1 }}>
                       <ArrowUp style={{ width: 14, height: 14 }} />
                     </button>
-                    <button type="button" disabled={i === blocks.length - 1} onClick={() => moveBlock(i, 1)} style={{ background: "none", border: "none", cursor: i === blocks.length - 1 ? "not-allowed" : "pointer", color: "var(--muted-foreground)", padding: "2px", opacity: i === blocks.length - 1 ? 0.3 : 1 }}>
+                    <button data-testid={`block-move-down-${i}`} type="button" disabled={i === blocks.length - 1} onClick={() => moveBlock(i, 1)} style={{ background: "none", border: "none", cursor: i === blocks.length - 1 ? "not-allowed" : "pointer", color: "var(--muted-foreground)", padding: "2px", opacity: i === blocks.length - 1 ? 0.3 : 1 }}>
                       <ArrowDown style={{ width: 14, height: 14 }} />
                     </button>
-                    <button type="button" onClick={() => cloneBlock(i)} title="Clone block" style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "2px" }} className="hover:text-primary transition-colors">
+                    <button data-testid={`block-clone-${i}`} type="button" onClick={() => cloneBlock(i)} title="Clone block" style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "2px" }} className="hover:text-primary transition-colors">
                       <Copy style={{ width: 14, height: 14 }} />
                     </button>
-                    <button type="button" onClick={() => {
+                    <button data-testid={`block-remove-trigger-${i}`} type="button" onClick={() => {
                       if (confirmTimer.current) clearTimeout(confirmTimer.current);
                       setConfirmRemoveIdx(i);
                       confirmTimer.current = setTimeout(() => setConfirmRemoveIdx(null), 3000);
@@ -493,6 +497,7 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
         <div ref={pickerContainerRef} style={{ display: "flex", alignItems: "flex-start", gap: "0.5rem", marginTop: "0.25rem" }}>
           {!showPicker ? (
             <button
+              data-testid="blocks-add-button"
               type="button"
               onClick={() => { setShowPicker(true); setPickerHighlight(0); }}
               style={{
@@ -530,6 +535,7 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
           ) : (
             <div style={{ width: "220px" }}>
               <input
+                data-testid="blocks-picker-input"
                 ref={pickerInputRef}
                 type="text"
                 value={pickerQuery}
@@ -580,6 +586,7 @@ export function BlocksEditor({ field, value, onChange, locked, blocksConfig = []
                       const highlighted = pickerHighlight === idx;
                       return (
                         <button
+                          data-testid={`blocks-picker-option-${name}`}
                           key={name}
                           type="button"
                           onMouseDown={(e) => { e.preventDefault(); addBlock(name); setShowPicker(false); setPickerQuery(""); setPickerHighlight(-1); }}

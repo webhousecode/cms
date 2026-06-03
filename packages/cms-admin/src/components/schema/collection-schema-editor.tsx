@@ -147,6 +147,7 @@ export function CollectionSchemaEditor({ collection, isNew }: Props) {
               <p className="text-xs text-muted-foreground">Allow translation of documents in this collection</p>
             </div>
             <button
+              data-testid="schema-translatable-toggle"
               type="button"
               onClick={() => setTranslatable(!translatable)}
               style={{
@@ -168,6 +169,7 @@ export function CollectionSchemaEditor({ collection, isNew }: Props) {
               <p className="text-xs text-muted-foreground">Documents have individual pages on the site</p>
             </div>
             <button
+              data-testid="schema-previewable-toggle"
               type="button"
               onClick={() => setPreviewable(!previewable)}
               style={{
@@ -252,6 +254,7 @@ export function CollectionSchemaEditor({ collection, isNew }: Props) {
       {/* Delete collection confirmation dialog */}
       {deleteOpen && (
         <div
+          data-testid="schema-delete-overlay"
           style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
           onClick={(e) => { if (e.target === e.currentTarget && !deleting) setDeleteOpen(false); }}
         >
@@ -402,6 +405,7 @@ function FieldRow({
 
       {/* Delete */}
       <button
+        data-testid={`field-remove-${index}`}
         onClick={() => {
           if (confirmRemove) {
             if (confirmTimer.current) clearTimeout(confirmTimer.current);

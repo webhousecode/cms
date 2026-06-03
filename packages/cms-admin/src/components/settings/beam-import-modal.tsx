@@ -211,6 +211,7 @@ export function BeamImportModal({ file, orgId, onClose, onDone }: Props) {
             </h2>
           </div>
           <button
+            data-testid="beam-import-close-button"
             type="button"
             onClick={onClose}
             disabled={phase === "uploading" || phase === "processing"}
@@ -301,6 +302,7 @@ export function BeamImportModal({ file, orgId, onClose, onDone }: Props) {
               )}
             </div>
             <button
+              data-testid="beam-import-done-button"
               type="button"
               onClick={onClose}
               style={{
@@ -330,6 +332,7 @@ export function BeamImportModal({ file, orgId, onClose, onDone }: Props) {
               {error ?? "Unknown error"}
             </div>
             <button
+              data-testid="beam-import-error-close-button"
               type="button"
               onClick={onClose}
               style={{

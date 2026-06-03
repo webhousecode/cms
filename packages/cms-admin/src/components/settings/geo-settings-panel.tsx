@@ -111,6 +111,7 @@ export function GeoSettingsPanel() {
             <div style={{ marginTop: "0.75rem" }}>
               <p style={{ fontSize: "0.65rem", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: "var(--muted-foreground)", marginBottom: "0.25rem" }}>Custom rules</p>
               <textarea
+                data-testid="geo-robots-custom-rules"
                 value={config.robotsCustomRules}
                 onChange={(e) => update("robotsCustomRules", e.target.value)}
                 placeholder={"User-agent: GPTBot\nDisallow: /"}

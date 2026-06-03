@@ -139,6 +139,7 @@ export function SchemaDriftBanner({ collection, collectionName, fields }: Props)
           {/* Primary: Add to schema */}
           {!confirmAdd && !confirmRemove && (
             <button
+              data-testid="schema-drift-add-button"
               type="button"
               onClick={() => setConfirmAdd(true)}
               style={{
@@ -159,6 +160,7 @@ export function SchemaDriftBanner({ collection, collectionName, fields }: Props)
                 Add {fields.length} field{fields.length > 1 ? "s" : ""} to cms.config.ts?
               </span>
               <button
+                data-testid="schema-drift-confirm-add-yes"
                 onClick={handleAdd}
                 disabled={adding}
                 style={{
@@ -171,6 +173,7 @@ export function SchemaDriftBanner({ collection, collectionName, fields }: Props)
                 Yes
               </button>
               <button
+                data-testid="schema-drift-confirm-add-no"
                 onClick={() => setConfirmAdd(false)}
                 disabled={adding}
                 style={{
@@ -187,6 +190,7 @@ export function SchemaDriftBanner({ collection, collectionName, fields }: Props)
           {/* Secondary: Remove from content (only visible when not in confirm flow) */}
           {!confirmAdd && !confirmRemove && (
             <button
+              data-testid="schema-drift-remove-button"
               type="button"
               onClick={() => setConfirmRemove(true)}
               style={{
@@ -208,6 +212,7 @@ export function SchemaDriftBanner({ collection, collectionName, fields }: Props)
                 Remove {fields.length} field{fields.length > 1 ? "s" : ""} from all documents?
               </span>
               <button
+                data-testid="schema-drift-confirm-remove-yes"
                 onClick={handleRemove}
                 disabled={removing}
                 style={{
@@ -220,6 +225,7 @@ export function SchemaDriftBanner({ collection, collectionName, fields }: Props)
                 Yes
               </button>
               <button
+                data-testid="schema-drift-confirm-remove-no"
                 onClick={() => setConfirmRemove(false)}
                 disabled={removing}
                 style={{
@@ -235,6 +241,7 @@ export function SchemaDriftBanner({ collection, collectionName, fields }: Props)
         </div>
       </div>
       <button
+        data-testid="schema-drift-dismiss"
         type="button"
         onClick={() => { sessionStorage.setItem(storageKey, "1"); setDismissed(true); }}
         title="Dismiss for this session"

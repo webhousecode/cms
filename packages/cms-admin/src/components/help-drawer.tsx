@@ -104,6 +104,7 @@ export function HelpDrawer({ open, onClose, initialPage = "help" }: { open: bool
           }}>
             <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>Help & Support</span>
             <button
+              data-testid="help-close-button"
               type="button"
               onClick={onClose}
               style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.25rem" }}
@@ -118,6 +119,7 @@ export function HelpDrawer({ open, onClose, initialPage = "help" }: { open: bool
               { id: "ai-tools" as const, label: "AI Chat", icon: <Bot style={{ width: "0.8rem", height: "0.8rem" }} /> },
             ]).map((tab) => (
               <button
+                data-testid={`help-tab-${tab.id}`}
                 key={tab.id}
                 type="button"
                 onClick={() => setPage(tab.id)}
@@ -173,6 +175,7 @@ function HelpPage() {
         <div style={{ borderRadius: "10px", border: "1px solid var(--border)", overflow: "hidden" }}>
           {HELP_LINKS.map((link, i) => (
             <a
+              data-testid={`help-link-${link.label.toLowerCase().replace(" ", "-")}`}
               key={link.label}
               href={link.href}
               target="_blank"
@@ -200,6 +203,7 @@ function HelpPage() {
           Join our Discord to get support, report bugs, or discuss features. Many questions are answered in minutes.
         </p>
         <a
+          data-testid="help-discord-link"
           href="https://discord.gg/jtjnEkVX8D"
           target="_blank"
           rel="noopener noreferrer"
@@ -444,6 +448,7 @@ export function HelpButton() {
   return (
     <>
       <button
+        data-testid="help-button"
         type="button"
         onClick={() => { setPage("help"); setOpen(true); }}
         style={{

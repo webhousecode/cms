@@ -103,7 +103,7 @@ export default function VisibilityPage() {
   const combinedScore = data ? Math.round((data.avgScore * 0.5) + (data.avgGeoScore * 0.5)) : 0;
 
   return (
-    <>
+    <div data-testid="visibility-root">
       <ActionBar helpArticleId="visibility-intro"
         actions={
           <ActionButton onClick={fetchData} disabled={loading}>
@@ -193,6 +193,7 @@ export default function VisibilityPage() {
             <div style={{ display: "flex", gap: 0, borderBottom: "1px solid var(--border)", marginBottom: "1rem" }}>
               {(["overview", "documents", "build"] as const).map((tab) => (
                 <button
+                  data-testid={`visibility-tab-${tab}`}
                   key={tab}
                   type="button"
                   onClick={() => setActiveTab(tab)}
@@ -274,7 +275,7 @@ export default function VisibilityPage() {
                       return (
                         <tr key={`${doc.collection}/${doc.slug}`} style={{ borderBottom: "1px solid var(--border)" }}>
                           <td style={{ padding: "0.625rem 0.75rem" }}>
-                            <a href={`/admin/content/${doc.collection}/${doc.slug}`} style={{ color: "var(--foreground)", textDecoration: "none" }}>
+                            <a data-testid={`visibility-doc-link-${doc.collection}-${doc.slug}`} href={`/admin/content/${doc.collection}/${doc.slug}`} style={{ color: "var(--foreground)", textDecoration: "none" }}>
                               <span style={{ fontWeight: 500 }}>{doc.title}</span>
                               <span style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", marginLeft: "0.5rem", fontFamily: "monospace" }}>
                                 {doc.collectionLabel}
@@ -329,7 +330,7 @@ export default function VisibilityPage() {
           </>
         )}
       </div>
-    </>
+    </div>
   );
 }
 

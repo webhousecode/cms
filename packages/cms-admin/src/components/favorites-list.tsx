@@ -90,6 +90,7 @@ export function FavoritesList() {
     return (
       <th style={{ ...thStyle, width }}>
         <button
+          data-testid={`favorites-sort-${sk}`}
           type="button"
           onClick={() => toggleSort(sk)}
           style={{ display: "flex", alignItems: "center", gap: "0.25rem", background: "none", border: "none", cursor: "pointer", color: active ? "var(--foreground)" : "var(--muted-foreground)", fontSize: "0.72rem", fontWeight: active ? 600 : 500, padding: 0 }}
@@ -119,6 +120,7 @@ export function FavoritesList() {
         <div style={{ position: "relative", flex: "1", minWidth: "180px" }}>
           <Search style={{ position: "absolute", left: "0.625rem", top: "50%", transform: "translateY(-50%)", width: "0.85rem", height: "0.85rem", color: "var(--muted-foreground)" }} />
           <input
+            data-testid="favorites-search-input"
             type="text"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
@@ -134,6 +136,7 @@ export function FavoritesList() {
         {/* Type filter */}
         <div style={{ display: "flex", gap: "0.25rem", alignItems: "center" }}>
           <button
+            data-testid="favorites-filter-all"
             type="button"
             onClick={() => setTypeFilter("all")}
             style={{
@@ -148,6 +151,7 @@ export function FavoritesList() {
           </button>
           {types.map((t) => (
             <button
+              data-testid={`favorites-filter-${t}`}
               key={t}
               type="button"
               onClick={() => setTypeFilter(t)}
@@ -168,6 +172,7 @@ export function FavoritesList() {
         <div style={{ display: "flex", border: "1px solid var(--border)", borderRadius: "6px", overflow: "hidden" }}>
           {(["grid", "list"] as ViewMode[]).map((v) => (
             <button
+              data-testid={`favorites-view-toggle-${v}`}
               key={v}
               type="button"
               onClick={() => setView(v)}
@@ -242,6 +247,7 @@ export function FavoritesList() {
                     </td>
                     <td style={{ padding: "0.625rem 0.5rem", whiteSpace: "nowrap", textAlign: "right" }}>
                       <button
+                        data-testid={`favorites-remove-${fav.id}`}
                         type="button"
                         onClick={() => remove(fav.path)}
                         title="Remove from favorites"
@@ -338,6 +344,7 @@ export function FavoritesList() {
                   </div>
                 </Link>
                 <button
+                  data-testid={`favorites-remove-grid-${fav.id}`}
                   type="button"
                   onClick={(e) => { e.preventDefault(); e.stopPropagation(); remove(fav.path); }}
                   title="Remove from favorites"

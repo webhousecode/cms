@@ -109,6 +109,7 @@ export function BeamTokensPanel() {
               overflow: "auto", whiteSpace: "nowrap",
             }}>{newToken.token}</code>
             <button
+              data-testid="beam-token-copy"
               type="button"
               onClick={copy}
               style={{
@@ -139,6 +140,7 @@ export function BeamTokensPanel() {
 
       <div style={{ display: "flex", gap: "0.5rem" }}>
         <button
+          data-testid="beam-token-generate"
           type="button"
           onClick={generate}
           disabled={generating}
@@ -155,6 +157,7 @@ export function BeamTokensPanel() {
           {generating ? "Generating..." : "Generate new token"}
         </button>
         <button
+          data-testid="beam-token-refresh"
           type="button"
           onClick={refresh}
           disabled={loading}

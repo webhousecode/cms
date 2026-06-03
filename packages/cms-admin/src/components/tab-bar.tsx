@@ -110,6 +110,7 @@ export function TabBar() {
         const isActive = tab.id === activeId;
         return (
           <div
+            data-testid={`tab-${tab.id}`}
             key={tab.id}
             role="tab"
             aria-selected={isActive}
@@ -173,6 +174,7 @@ export function TabBar() {
 
             {/* Close button */}
             <button
+              data-testid={`tab-close-${tab.id}`}
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
@@ -203,6 +205,7 @@ export function TabBar() {
 
       {/* New tab button — always last in the wrap flow */}
       <button
+        data-testid="tab-new-button"
         type="button"
         onClick={() => openTab("/admin", "Dashboard", true)}
         style={{
@@ -227,6 +230,7 @@ export function TabBar() {
       {/* Close All pill — only when user setting is on and there are multiple tabs */}
       {showCloseAll && tabs.length > 1 && (
         <button
+          data-testid="tab-close-all-button"
           type="button"
           onClick={() => setConfirmOpen(true)}
           style={{
@@ -263,8 +267,8 @@ export function TabBar() {
               </p>
             </div>
             <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem" }}>
-              <button type="button" onClick={() => setConfirmOpen(false)} style={{ padding: "0.4rem 0.875rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", fontSize: "0.8rem", cursor: "pointer" }}>Cancel</button>
-              <button type="button" onClick={() => { setConfirmOpen(false); closeAllTabs(); }} style={{ padding: "0.4rem 0.875rem", borderRadius: "6px", border: "none", background: "var(--destructive)", color: "#fff", fontSize: "0.8rem", cursor: "pointer" }}>Close all</button>
+              <button data-testid="tab-close-all-cancel" type="button" onClick={() => setConfirmOpen(false)} style={{ padding: "0.4rem 0.875rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", fontSize: "0.8rem", cursor: "pointer" }}>Cancel</button>
+              <button data-testid="tab-close-all-confirm" type="button" onClick={() => { setConfirmOpen(false); closeAllTabs(); }} style={{ padding: "0.4rem 0.875rem", borderRadius: "6px", border: "none", background: "var(--destructive)", color: "#fff", fontSize: "0.8rem", cursor: "pointer" }}>Close all</button>
             </div>
           </div>
         </div>

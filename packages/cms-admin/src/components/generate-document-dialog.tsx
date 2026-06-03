@@ -120,6 +120,7 @@ export function GenerateDocumentDialog({
 
   return (
     <div
+      data-testid="generate-dialog-backdrop"
       style={{
         position: "fixed", inset: 0, zIndex: 100,
         display: "flex", alignItems: "center", justifyContent: "center",
@@ -128,6 +129,7 @@ export function GenerateDocumentDialog({
       onClick={onClose}
     >
       <div
+        data-testid="generate-dialog-content"
         style={{
           background: "var(--card)", border: "1px solid var(--border)",
           borderRadius: "12px", padding: "1.5rem", maxWidth: "500px", width: "90%",
@@ -141,6 +143,7 @@ export function GenerateDocumentDialog({
             {existingData ? "Generate content" : `Generate ${collectionLabel}`}
           </span>
           <button
+            data-testid="generate-dialog-header-close-button"
             type="button"
             onClick={onClose}
             style={{ marginLeft: "auto", background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.25rem" }}
@@ -152,6 +155,7 @@ export function GenerateDocumentDialog({
         {/* Prompt input */}
         {!generating && (
           <textarea
+            data-testid="generate-dialog-prompt-textarea"
             ref={inputRef}
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
@@ -223,6 +227,7 @@ export function GenerateDocumentDialog({
         {!generating && (
           <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem", marginTop: "1rem" }}>
             <button
+              data-testid="generate-dialog-cancel-button"
               type="button"
               onClick={onClose}
               style={{
@@ -234,6 +239,7 @@ export function GenerateDocumentDialog({
               Cancel
             </button>
             <button
+              data-testid="generate-dialog-generate-button"
               type="button"
               onClick={handleGenerate}
               disabled={!prompt.trim()}

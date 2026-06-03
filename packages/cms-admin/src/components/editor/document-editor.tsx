@@ -53,12 +53,12 @@ function ConfirmDialog({ message, confirmLabel = "Delete", onConfirm, onCancel }
       }}>
         <p style={{ fontSize: "0.9rem", color: "var(--foreground)", margin: 0 }}>{message}</p>
         <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem" }}>
-          <button type="button" onClick={onCancel} style={{
+          <button data-testid="confirm-dialog-cancel" type="button" onClick={onCancel} style={{
             padding: "0.4rem 0.875rem", borderRadius: "6px",
             border: "1px solid var(--border)", background: "transparent",
             color: "var(--foreground)", fontSize: "0.8rem", cursor: "pointer",
           }}>Cancel</button>
-          <button type="button" onClick={onConfirm} style={{
+          <button data-testid="confirm-dialog-confirm" type="button" onClick={onConfirm} style={{
             padding: "0.4rem 0.875rem", borderRadius: "6px",
             border: "none", background: "var(--destructive)",
             color: "#fff", fontSize: "0.8rem", cursor: "pointer",
@@ -108,6 +108,7 @@ function RichtextCollapsible({ field, value, onChange, locked, blocksConfig, def
     <div style={{ border: "1px solid var(--border)", borderRadius: "8px", background: "var(--card)" }}>
       {/* Header */}
       <div
+        data-testid="richtext-collapsible-header"
         onClick={toggle}
         style={{
           display: "flex", alignItems: "center", gap: "0.5rem",
@@ -126,7 +127,7 @@ function RichtextCollapsible({ field, value, onChange, locked, blocksConfig, def
           {open ? (field.label ?? field.name) : (previewShort || (field.label ?? field.name))}
         </span>
         {/* Lock button */}
-        <span onClick={(e) => { e.stopPropagation(); onToggleLock(); }} style={{
+        <span data-testid="richtext-collapsible-lock" onClick={(e) => { e.stopPropagation(); onToggleLock(); }} style={{
           display: "flex", alignItems: "center", gap: "0.2rem",
           fontSize: "0.65rem", color: locked ? "var(--primary)" : "var(--muted-foreground)",
           opacity: locked ? 1 : 0.45, cursor: "pointer", fontFamily: "monospace",
@@ -271,6 +272,7 @@ function CreateTranslationDialog({
           <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
             <label style={{ fontSize: "0.7rem", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--muted-foreground)" }}>Slug for translation</label>
             <input
+              data-testid="create-translation-slug-input"
               type="text"
               value={newSlug}
               onChange={e => setNewSlug(e.target.value)}
@@ -284,6 +286,7 @@ function CreateTranslationDialog({
 
         <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", cursor: "pointer" }}>
           <input
+            data-testid="create-translation-ai-checkbox"
             type="checkbox"
             checked={useAi}
             onChange={e => setUseAi(e.target.checked)}
@@ -303,8 +306,8 @@ function CreateTranslationDialog({
         {error && <p style={{ fontSize: "0.75rem", color: "var(--destructive)", margin: 0 }}>{error}</p>}
 
         <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem" }}>
-          <button type="button" onClick={onClose} style={{ padding: "0.4rem 0.875rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", fontSize: "0.8rem", cursor: "pointer" }}>Cancel</button>
-          <button type="button" onClick={create} disabled={creating} style={{ padding: "0.4rem 0.875rem", borderRadius: "6px", border: "none", background: "var(--primary)", color: "var(--primary-foreground)", fontSize: "0.8rem", cursor: creating ? "wait" : "pointer", display: "inline-flex", alignItems: "center", gap: "0.4rem" }}>
+          <button data-testid="create-translation-cancel" type="button" onClick={onClose} style={{ padding: "0.4rem 0.875rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", fontSize: "0.8rem", cursor: "pointer" }}>Cancel</button>
+          <button data-testid="create-translation-confirm" type="button" onClick={create} disabled={creating} style={{ padding: "0.4rem 0.875rem", borderRadius: "6px", border: "none", background: "var(--primary)", color: "var(--primary-foreground)", fontSize: "0.8rem", cursor: creating ? "wait" : "pointer", display: "inline-flex", alignItems: "center", gap: "0.4rem" }}>
             {creating && <Loader2 size={14} className="animate-spin" />}
             {creating ? (useAi ? "Translating…" : "Creating…") : (useAi ? "Translate & create" : "Create translation")}
           </button>
@@ -351,6 +354,7 @@ function ScheduleButton({ publishAt, onSchedule, label = "Scheduled", defaultLab
   return (
     <div ref={ref} style={{ position: "relative" }}>
       <button
+        data-testid="schedule-button-trigger"
         type="button"
         onClick={() => setOpen((o) => !o)}
         title={isScheduled ? `${label}: ${publishAt!.replace("T", " ")}` : defaultLabel}
@@ -379,6 +383,7 @@ function ScheduleButton({ publishAt, onSchedule, label = "Scheduled", defaultLab
           <CustomDateTimeInput value={value} onChange={setValue} />
           <div style={{ display: "flex", gap: "0.5rem" }}>
             <button
+              data-testid="schedule-button-set"
               type="button"
               onClick={() => {
                 onSchedule(value ? value + ":00" : undefined);
@@ -390,6 +395,7 @@ function ScheduleButton({ publishAt, onSchedule, label = "Scheduled", defaultLab
             </button>
             {publishAt && (
               <button
+                data-testid="schedule-button-clear"
                 type="button"
                 onClick={() => { onSchedule(undefined); setValue(""); setOpen(false); }}
                 style={{ padding: "0.35rem 0.625rem", borderRadius: "5px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.8rem", cursor: "pointer" }}
@@ -521,7 +527,7 @@ function RevisionPanel({ collection, slug, currentData, onRestore, onClose }: {
     }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.75rem 1rem", borderBottom: "1px solid var(--border)" }}>
         <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>Revision history</span>
-        <button type="button" onClick={onClose} style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1.1rem", lineHeight: 1 }}>×</button>
+        <button data-testid="revision-panel-close" type="button" onClick={onClose} style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1.1rem", lineHeight: 1 }}>×</button>
       </div>
       <div style={{ flex: 1, overflowY: "auto", padding: "0.5rem 0" }}>
         {loading && <p style={{ padding: "1rem", fontSize: "0.8rem", color: "var(--muted-foreground)" }}>Loading…</p>}
@@ -548,6 +554,7 @@ function RevisionPanel({ collection, slug, currentData, onRestore, onClose }: {
                   </p>
                   {changedFields.length > 0 && (
                     <button
+                      data-testid="revision-diff-toggle"
                       type="button"
                       onClick={() => setExpanded(isOpen ? null : idx)}
                       style={{ fontSize: "0.65rem", color: "var(--primary)", background: "transparent", border: "none", cursor: "pointer", padding: 0, marginTop: "0.2rem" }}
@@ -557,6 +564,7 @@ function RevisionPanel({ collection, slug, currentData, onRestore, onClose }: {
                   )}
                 </div>
                 <button
+                  data-testid="revision-restore"
                   type="button"
                   onClick={() => restore(idx)}
                   disabled={restoring === idx}
@@ -698,6 +706,7 @@ function TranslationGroupSection({ doc, collection, onSaved, labelStyle, valueSt
       )}
       {!linking ? (
         <button
+          data-testid="translation-group-link-button"
           type="button"
           onClick={() => setLinking(true)}
           style={{
@@ -712,6 +721,7 @@ function TranslationGroupSection({ doc, collection, onSaved, labelStyle, valueSt
       ) : (
         <div style={{ marginTop: "0.4rem", display: "flex", flexDirection: "column", gap: "0.35rem" }}>
           <input
+            data-testid="translation-group-search-input"
             type="text"
             value={search}
             onChange={(e) => { setSearch(e.target.value); searchDocs(e.target.value); }}
@@ -725,6 +735,7 @@ function TranslationGroupSection({ doc, collection, onSaved, labelStyle, valueSt
           />
           {results.map(r => (
             <button
+              data-testid="translation-group-result"
               key={r.slug}
               type="button"
               onClick={() => linkDoc(r.slug)}
@@ -740,6 +751,7 @@ function TranslationGroupSection({ doc, collection, onSaved, labelStyle, valueSt
             </button>
           ))}
           <button
+            data-testid="translation-group-cancel"
             type="button"
             onClick={() => { setLinking(false); setSearch(""); setResults([]); setLinkError(""); }}
             style={{
@@ -833,6 +845,7 @@ function PropertiesPanel({ doc, collection, locales, onClose, onSaved }: {
     <>
     {/* Backdrop — click outside to close */}
     <div
+      data-testid="properties-panel-backdrop"
       style={{ position: "fixed", inset: 0, zIndex: 99 }}
       onClick={onClose}
     />
@@ -844,7 +857,7 @@ function PropertiesPanel({ doc, collection, locales, onClose, onSaved }: {
     }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.75rem 1rem", borderBottom: "1px solid var(--border)" }}>
         <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>Properties</span>
-        <button type="button" onClick={onClose} style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1.1rem", lineHeight: 1 }}>×</button>
+        <button data-testid="properties-panel-close" type="button" onClick={onClose} style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1.1rem", lineHeight: 1 }}>×</button>
       </div>
 
       <div style={{ flex: 1, overflowY: "auto", padding: "1rem", display: "flex", flexDirection: "column", gap: "1.25rem" }}>
@@ -852,6 +865,7 @@ function PropertiesPanel({ doc, collection, locales, onClose, onSaved }: {
         <div>
           <p style={labelStyle}>ID</p>
           <p
+            data-testid="properties-id-copy"
             style={{ ...valueStyle, color: "var(--muted-foreground)", fontSize: "0.72rem", cursor: "pointer" }}
             title="Click to copy"
             onClick={() => { navigator.clipboard.writeText(doc.id); }}
@@ -863,6 +877,7 @@ function PropertiesPanel({ doc, collection, locales, onClose, onSaved }: {
           <p style={labelStyle}>Slug</p>
           <div style={{ display: "flex", gap: "0.5rem" }}>
             <input
+              data-testid="properties-slug-input"
               type="text"
               value={slug}
               onChange={e => { setSlug(e.target.value); setError(""); }}
@@ -877,6 +892,7 @@ function PropertiesPanel({ doc, collection, locales, onClose, onSaved }: {
             />
             {slugChanged && (
               <button
+                data-testid="properties-slug-save"
                 type="button"
                 onClick={saveSlug}
                 disabled={saving || !!slugError}
@@ -908,6 +924,7 @@ function PropertiesPanel({ doc, collection, locales, onClose, onSaved }: {
             if (!suggested || suggested === slug) return null;
             return (
               <button
+                data-testid="properties-slug-from-title"
                 type="button"
                 onClick={() => setSlug(suggested)}
                 style={{
@@ -942,6 +959,7 @@ function PropertiesPanel({ doc, collection, locales, onClose, onSaved }: {
             <p style={labelStyle}>Locale</p>
             <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: "0.15rem 0 0.4rem" }}>Change locale</p>
             <select
+              data-testid="properties-locale-select"
               value={docLocale}
               onChange={async (e) => {
                 const newLocale = e.target.value;
@@ -1456,6 +1474,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
           {locales && locales.length > 1 && (
             <div style={{ position: "relative" }} ref={localeRef}>
               <button
+                data-testid="locale-selector-button"
                 type="button"
                 onClick={() => translations.length > 0 ? setLocaleOpen(o => !o) : undefined}
                 title={translations.length > 0 ? "Switch between translations" : locale ? `Document language: ${locale.toUpperCase()}` : "No locale set — use Properties to assign"}
@@ -1768,6 +1787,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
           ))}
           {sourceDoc && (
             <button
+              data-testid="side-by-side-toggle"
               type="button"
               onClick={() => setSideBySide(!sideBySide)}
               title="Show source document side-by-side"
@@ -1791,6 +1811,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
             const available = (locales ?? []).filter(l => !existingLocs.includes(l));
             return available.length > 0 ? (
               <button
+                data-testid="add-translation-button"
                 type="button"
                 onClick={() => setCreateTranslationOpen(true)}
                 style={{
@@ -1820,6 +1841,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
             <div style={{ display: "flex", alignItems: "center", gap: 0, fontSize: "0.7rem", fontFamily: "monospace", borderBottom: "1px solid var(--border)", marginBottom: "0.5rem" }}>
               {siblings.length > 1 ? siblings.map(s => (
                 <button
+                  data-testid="sibling-locale-selector"
                   key={s.locale}
                   type="button"
                   onClick={() => setSbsLocale(s.locale)}
@@ -1860,6 +1882,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
             <span>Created {formatDate(doc.createdAt)}</span>
             <span>Updated {formatDate(doc.updatedAt)}</span>
             <span
+              data-testid="document-id-copy"
               title="Click to copy document ID"
               onClick={() => { navigator.clipboard.writeText(doc.id); }}
               style={{ cursor: "pointer", opacity: 0.5 }}
@@ -1928,6 +1951,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
                   </label>
                   {field.required && <span className="text-xs text-primary">*</span>}
                   <button
+                    data-testid="field-lock-button"
                     type="button"
                     title={isLocked ? "AI locked — click to unlock" : "Click to AI lock this field"}
                     onClick={() => {
@@ -1963,6 +1987,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
                   </button>
                   {isReadTime && readTimeBodyField && (
                     <button
+                      data-testid="readtime-suggest"
                       type="button"
                       onClick={() => {
                         const body = doc.data[readTimeBodyField.name];

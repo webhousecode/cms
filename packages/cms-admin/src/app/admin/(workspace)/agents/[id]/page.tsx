@@ -483,11 +483,12 @@ export default function AgentDetailPage() {
         </div>
       )}
 
-      <form id="agent-form" onSubmit={handleSubmit} className="space-y-6">
+      <form data-testid="agent-form" id="agent-form" onSubmit={handleSubmit} className="space-y-6">
         {/* Name */}
         <div>
           <label style={labelStyle}>Agent Name</label>
           <input
+            data-testid="agent-name-input"
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -512,6 +513,7 @@ export default function AgentDetailPage() {
               System Prompt
             </label>
             <button
+              data-testid="agent-generate-prompt"
               type="button"
               onClick={handleGeneratePrompt}
               disabled={generating}
@@ -526,6 +528,7 @@ export default function AgentDetailPage() {
             </button>
           </div>
           <textarea
+            data-testid="agent-system-prompt"
             value={systemPrompt}
             onChange={(e) => setSystemPrompt(e.target.value)}
             rows={6}
@@ -592,6 +595,7 @@ export default function AgentDetailPage() {
               >
                 {availableCollections.find((c) => c.name === col)?.label ?? col}
                 <button
+                  data-testid={`agent-target-collection-remove-${col}`}
                   type="button"
                   onClick={() => setTargetCollections((prev) => prev.filter((c) => c !== col))}
                   style={{ background: "none", border: "none", cursor: "pointer", padding: 0, color: "inherit", display: "flex", lineHeight: 1 }}
@@ -644,6 +648,7 @@ export default function AgentDetailPage() {
                     />
                   ) : (
                     <input
+                      data-testid={`agent-field-default-value-${i}`}
                       type={fieldDef?.type === "number" ? "number" : "text"}
                       value={fd.value}
                       onChange={(e) => setFieldDefaults((prev) => prev.map((f, j) => j === i ? { ...f, value: e.target.value } : f))}
@@ -653,13 +658,14 @@ export default function AgentDetailPage() {
                   )}
                   {confirmDeleteDefault === i ? (
                     <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
-                      <button type="button" onClick={() => { setFieldDefaults((prev) => prev.filter((_, j) => j !== i)); setConfirmDeleteDefault(null); }}
+                      <button data-testid={`agent-field-default-delete-confirm-${i}`} type="button" onClick={() => { setFieldDefaults((prev) => prev.filter((_, j) => j !== i)); setConfirmDeleteDefault(null); }}
                         style={{ fontSize: "0.6rem", padding: "0.15rem 0.4rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer" }}>Sure?</button>
-                      <button type="button" onClick={() => setConfirmDeleteDefault(null)}
+                      <button data-testid={`agent-field-default-delete-cancel-${i}`} type="button" onClick={() => setConfirmDeleteDefault(null)}
                         style={{ fontSize: "0.6rem", padding: "0.15rem 0.4rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer" }}>No</button>
                     </span>
                   ) : (
                     <button
+                      data-testid={`agent-field-default-delete-${i}`}
                       type="button"
                       onClick={() => setConfirmDeleteDefault(i)}
                       style={{ padding: "0.3rem", color: "var(--destructive)", background: "none", border: "none", cursor: "pointer", borderRadius: "4px" }}
@@ -672,6 +678,7 @@ export default function AgentDetailPage() {
               );
             })}
             <button
+              data-testid="agent-field-default-add"
               type="button"
               onClick={() => setFieldDefaults((prev) => [...prev, { key: "", value: "" }])}
               className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
@@ -714,6 +721,7 @@ export default function AgentDetailPage() {
               <div>
                 <label style={labelStyle}>Max per run</label>
                 <input
+                  data-testid="agent-max-per-run"
                   type="number"
                   min={1}
                   max={10}
@@ -771,6 +779,7 @@ export default function AgentDetailPage() {
             <div>
               <label style={labelStyle}>Daily</label>
               <input
+                data-testid="agent-daily-budget"
                 type="number"
                 min={0}
                 step={0.01}
@@ -783,6 +792,7 @@ export default function AgentDetailPage() {
             <div>
               <label style={labelStyle}>Weekly</label>
               <input
+                data-testid="agent-weekly-budget"
                 type="number"
                 min={0}
                 step={0.01}
@@ -795,6 +805,7 @@ export default function AgentDetailPage() {
             <div>
               <label style={labelStyle}>Monthly</label>
               <input
+                data-testid="agent-monthly-budget"
                 type="number"
                 min={0}
                 step={0.01}
@@ -821,6 +832,7 @@ export default function AgentDetailPage() {
             Run agent now
           </p>
           <textarea
+            data-testid="agent-run-prompt"
             value={runPrompt}
             onChange={(e) => setRunPrompt(e.target.value)}
             rows={2}
@@ -829,6 +841,7 @@ export default function AgentDetailPage() {
           />
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
             <button
+              data-testid="agent-run-button"
               type="button"
               onClick={handleRun}
               disabled={running || !runPrompt.trim()}
@@ -852,6 +865,7 @@ export default function AgentDetailPage() {
       {!readOnly && (
         <div className="mt-6 pt-6 border-t border-border">
           <button
+            data-testid="agent-delete-trigger"
             type="button"
             onClick={() => setShowDelete(true)}
             className="flex items-center gap-1.5 text-sm text-destructive hover:opacity-80 transition-opacity"
@@ -893,6 +907,7 @@ export default function AgentDetailPage() {
             </p>
             <div className="flex gap-2 justify-end">
               <button
+                data-testid="agent-delete-cancel"
                 type="button"
                 onClick={() => setShowDelete(false)}
                 className="px-4 py-2 text-sm rounded-md border border-border bg-transparent hover:bg-secondary transition-colors"
@@ -900,6 +915,7 @@ export default function AgentDetailPage() {
                 Cancel
               </button>
               <button
+                data-testid="agent-delete-confirm"
                 type="button"
                 onClick={handleDelete}
                 disabled={deleting}
@@ -967,6 +983,7 @@ function FieldAutocomplete({
   return (
     <div ref={containerRef} style={{ position: "relative", ...style }}>
       <input
+        data-testid="agent-field-autocomplete-input"
         type="text"
         value={query}
         onChange={(e) => { setQuery(e.target.value); setOpen(true); }}
@@ -1009,6 +1026,7 @@ function FieldAutocomplete({
         }}>
           {filtered.map((s) => (
             <button
+              data-testid={`agent-field-autocomplete-option-${s.name}`}
               key={s.name}
               type="button"
               onMouseDown={(e) => { e.preventDefault(); commit(s.name); }}

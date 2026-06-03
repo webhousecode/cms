@@ -120,6 +120,7 @@ export function DevInspector() {
     <>
       {/* Toggle badge — always visible, clickable */}
       <button
+        data-testid="dev-inspector-toggle-button"
         type="button"
         onClick={toggle}
         title="Toggle dev inspector (Ctrl+I)"

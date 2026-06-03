@@ -89,7 +89,7 @@ function BrandVoiceHistoryPanel({ versions, onRestore, onClose }: {
     <div style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: "380px", zIndex: 100, background: "var(--card)", borderLeft: "1px solid var(--border)", boxShadow: "-4px 0 20px rgba(0,0,0,0.3)", display: "flex", flexDirection: "column" }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0.75rem 1rem", borderBottom: "1px solid var(--border)" }}>
         <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>Revision history</span>
-        <button type="button" onClick={onClose} style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1.1rem", lineHeight: 1 }}>×</button>
+        <button data-testid="history-panel-close" type="button" onClick={onClose} style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1.1rem", lineHeight: 1 }}>×</button>
       </div>
       <div style={{ flex: 1, overflowY: "auto", padding: "0.5rem 0" }}>
         {versions.length === 0 && (
@@ -111,14 +111,14 @@ function BrandVoiceHistoryPanel({ versions, onRestore, onClose }: {
                     {v.language}{prev ? ` · ${changedFields.length} changed field${changedFields.length !== 1 ? "s" : ""}` : " · initial version"}
                   </p>
                   {changedFields.length > 0 && (
-                    <button type="button" onClick={() => setExpanded(isOpen ? null : v.id)}
+                    <button data-testid="version-diff-toggle" type="button" onClick={() => setExpanded(isOpen ? null : v.id)}
                       style={{ fontSize: "0.65rem", color: "var(--primary)", background: "transparent", border: "none", cursor: "pointer", padding: 0, marginTop: "0.2rem" }}>
                       {isOpen ? "Hide diff" : "Show diff"}
                     </button>
                   )}
                 </div>
                 {!v.active && (
-                  <button type="button" onClick={() => restore(v)} disabled={restoring === v.id}
+                  <button data-testid="version-restore-button" type="button" onClick={() => restore(v)} disabled={restoring === v.id}
                     style={{ fontSize: "0.7rem", padding: "0.25rem 0.5rem", borderRadius: "4px", border: "1px solid var(--border)", cursor: restoring === v.id ? "wait" : "pointer", background: "transparent", color: "var(--foreground)", whiteSpace: "nowrap", flexShrink: 0 }}>
                     {restoring === v.id ? "…" : "Restore"}
                   </button>
@@ -202,6 +202,7 @@ function EditForm({ version, onSaved, onCancel }: {
       </label>
       {multiline ? (
         <textarea
+          data-testid={`edit-form-${key}`}
           value={form[key]}
           onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
           style={{ padding: "0.5rem 0.75rem", borderRadius: "7px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.875rem", resize: "vertical", minHeight: "80px", fontFamily: "inherit" }}
@@ -209,6 +210,7 @@ function EditForm({ version, onSaved, onCancel }: {
       ) : (
         <input
           type="text"
+          data-testid={`edit-form-${key}`}
           value={form[key]}
           onChange={(e) => setForm((f) => ({ ...f, [key]: e.target.value }))}
           style={{ padding: "0.5rem 0.75rem", borderRadius: "7px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.875rem" }}
@@ -264,6 +266,7 @@ function EditForm({ version, onSaved, onCancel }: {
 
       <div style={{ display: "flex", gap: "0.5rem", marginTop: "0.5rem" }}>
         <button
+          data-testid="edit-form-save-button"
           type="button"
           onClick={save}
           disabled={saving}
@@ -273,6 +276,7 @@ function EditForm({ version, onSaved, onCancel }: {
           Save changes
         </button>
         <button
+          data-testid="edit-form-cancel-button"
           type="button"
           onClick={onCancel}
           style={{ padding: "0.5rem 1rem", borderRadius: "7px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.875rem", cursor: "pointer" }}
@@ -369,8 +373,8 @@ function ImportExportMenu({ bv, onImport }: { bv: BrandVoice; onImport: (v: Bran
 
   return (
     <div style={{ position: "relative" }}>
-      <input ref={fileRef} type="file" accept=".json,application/json" style={{ display: "none" }} onChange={handleFile} />
-      <button type="button" onClick={() => setOpen((o) => !o)} disabled={importing} style={btnStyle}>
+      <input data-testid="import-export-file-input" ref={fileRef} type="file" accept=".json,application/json" style={{ display: "none" }} onChange={handleFile} />
+      <button data-testid="import-export-menu-button" type="button" onClick={() => setOpen((o) => !o)} disabled={importing} style={btnStyle}>
         {importing ? <Loader2 style={{ width: "12px", height: "12px" }} className="animate-spin" /> : <ArrowUpDown style={{ width: "12px", height: "12px" }} />}
         <ChevronDown style={{ width: "10px", height: "10px" }} />
       </button>
@@ -380,7 +384,7 @@ function ImportExportMenu({ bv, onImport }: { bv: BrandVoice; onImport: (v: Bran
             { label: "Export JSON", action: doExport },
             { label: "Import JSON", action: openImport },
           ].map(({ label, action }) => (
-            <button key={label} type="button" onClick={action}
+            <button key={label} type="button" data-testid={`menu-${label.toLowerCase().replace(/\s+/g, '-')}`} onClick={action}
               style={{ display: "block", width: "100%", padding: "0.5rem 0.875rem", textAlign: "left", background: "none", border: "none", color: "var(--foreground)", fontSize: "0.8rem", cursor: "pointer" }}
               onMouseEnter={(e) => { e.currentTarget.style.background = "var(--accent)"; }}
               onMouseLeave={(e) => { e.currentTarget.style.background = "none"; }}>
@@ -393,7 +397,7 @@ function ImportExportMenu({ bv, onImport }: { bv: BrandVoice; onImport: (v: Bran
         <div style={{ position: "absolute", top: "calc(100% + 4px)", right: 0, zIndex: 50, background: "var(--popover)", border: "1px solid var(--destructive)", borderRadius: "8px", boxShadow: "0 4px 16px rgba(0,0,0,0.15)", padding: "0.75rem 1rem", minWidth: "320px", maxWidth: "420px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "0.5rem" }}>
             <p style={{ margin: 0, fontSize: "0.75rem", fontWeight: 600, color: "var(--destructive)" }}>Import failed</p>
-            <button type="button" onClick={() => setErrors(null)} style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1rem", lineHeight: 1, padding: 0 }}>×</button>
+            <button data-testid="import-export-error-close" type="button" onClick={() => setErrors(null)} style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1rem", lineHeight: 1, padding: 0 }}>×</button>
           </div>
           <ul style={{ margin: "0 0 0.75rem", paddingLeft: "1.1rem", display: "flex", flexDirection: "column", gap: "0.2rem" }}>
             {errors.map((e) => <li key={e} style={{ fontSize: "0.75rem", color: "var(--destructive)" }}>{e}</li>)}
@@ -449,6 +453,7 @@ function BrandVoiceCard({ bv, onReinterview, onEdit, onTranslate, onHistory, onI
             <div style={{ position: "relative" }}>
               <button
                 type="button"
+                data-testid="translate-button"
                 onClick={() => setLangOpen((o) => !o)}
                 disabled={translating}
                 style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.4rem 0.75rem", borderRadius: "7px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: translating ? "not-allowed" : "pointer" }}
@@ -465,6 +470,7 @@ function BrandVoiceCard({ bv, onReinterview, onEdit, onTranslate, onHistory, onI
                     <button
                       key={lang}
                       type="button"
+                      data-testid={`translate-lang-${lang.toLowerCase()}`}
                       onClick={async () => {
                         setLangOpen(false);
                         setTranslating(true);
@@ -482,17 +488,17 @@ function BrandVoiceCard({ bv, onReinterview, onEdit, onTranslate, onHistory, onI
             </div>
           )}
 
-          <button type="button" onClick={onEdit}
+          <button type="button" data-testid="card-edit-button" onClick={onEdit}
             style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.4rem 0.75rem", borderRadius: "7px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: "pointer" }}>
             <Pencil style={{ width: "12px", height: "12px" }} /> Edit
           </button>
           {!hideHistory && (
-            <button type="button" onClick={onHistory}
+            <button type="button" data-testid="card-history-button" onClick={onHistory}
               style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.4rem 0.75rem", borderRadius: "7px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: "pointer" }}>
               <History style={{ width: "12px", height: "12px" }} /> History
             </button>
           )}
-          <button type="button" onClick={onReinterview}
+          <button type="button" data-testid="card-reinterview-button" onClick={onReinterview}
             style={{ display: "flex", alignItems: "center", gap: "0.4rem", padding: "0.4rem 0.75rem", borderRadius: "7px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: "pointer" }}>
             <RefreshCw style={{ width: "12px", height: "12px" }} /> {retranslateLabel || "Re-interview"}
           </button>
@@ -795,6 +801,7 @@ export default function BrandVoicePage() {
           </div>
           {activeVoice && (
             <button
+              data-testid="interview-cancel-button"
               type="button"
               onClick={() => { setInterviewActive(false); setMessages([]); }}
               style={{ marginTop: "0.25rem", padding: "0.35rem 0.75rem", borderRadius: "7px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: "pointer", flexShrink: 0 }}
@@ -829,6 +836,7 @@ export default function BrandVoicePage() {
         <div style={{ flexShrink: 0, display: "flex", gap: "0.5rem", alignItems: "flex-end", padding: "0.75rem", borderRadius: "12px", border: "1px solid var(--border)", background: "var(--card)" }}>
           <textarea
             ref={inputRef}
+            data-testid="interview-input"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onInput={autoResize}
@@ -838,7 +846,7 @@ export default function BrandVoicePage() {
             rows={1}
             style={{ flex: 1, border: "none", background: "transparent", color: "var(--foreground)", fontSize: "0.9rem", outline: "none", resize: "none", lineHeight: 1.5, overflow: "hidden" }}
           />
-          <button type="button" onClick={handleSend} disabled={streaming || !input.trim()}
+          <button type="button" data-testid="interview-send-button" onClick={handleSend} disabled={streaming || !input.trim()}
             style={{ flexShrink: 0, width: "34px", height: "34px", borderRadius: "8px", border: "none", background: streaming || !input.trim() ? "var(--muted)" : "var(--primary)", color: streaming || !input.trim() ? "var(--muted-foreground)" : "var(--primary-foreground)", cursor: streaming || !input.trim() ? "not-allowed" : "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>
             {streaming ? <Loader2 style={{ width: "14px", height: "14px" }} className="animate-spin" /> : <Send style={{ width: "14px", height: "14px" }} />}
           </button>
@@ -862,6 +870,7 @@ export default function BrandVoicePage() {
         {/* Primary tab */}
         <button
           type="button"
+          data-testid="locale-tab-primary"
           onClick={() => switchLocale(null)}
           style={{
             display: "flex", alignItems: "center", gap: "0.35rem",
@@ -880,6 +889,7 @@ export default function BrandVoicePage() {
           <button
             key={locale}
             type="button"
+            data-testid={`locale-tab-${locale}`}
             onClick={() => switchLocale(locale)}
             style={{
               display: "flex", alignItems: "center", gap: "0.35rem",
@@ -914,6 +924,7 @@ export default function BrandVoicePage() {
             </p>
             <button
               type="button"
+              data-testid="locale-translate-button"
               disabled={translatingLocale === activeLocale}
               onClick={() => translateToLocale(activeLocale!)}
               style={{
@@ -1023,7 +1034,7 @@ export default function BrandVoicePage() {
             ))}
           </ul>
         </div>
-        <button type="button" onClick={startInterview}
+        <button data-testid="start-interview-button" type="button" onClick={startInterview}
           style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0.6rem 1.25rem", borderRadius: "8px", border: "none", background: "var(--primary)", color: "var(--primary-foreground)", fontSize: "0.875rem", fontWeight: 600, cursor: "pointer" }}>
           <Pencil style={{ width: "14px", height: "14px" }} />
           Start interview

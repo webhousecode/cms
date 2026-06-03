@@ -108,7 +108,7 @@ export default function BackupPage() {
   }
 
   return (
-    <>
+    <div data-testid="backup-root">
       <TabTitle value="Backup" />
       <ActionBar helpArticleId="backup-intro"
         actions={
@@ -220,6 +220,7 @@ export default function BackupPage() {
                 <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
                   {/* Download */}
                   <a
+                    data-testid="backup-download-link"
                     href={`/api/admin/backups/${snap.id}`}
                     download
                     title="Download zip"
@@ -239,17 +240,18 @@ export default function BackupPage() {
                       <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>
                         {restoring === snap.id ? "Restoring..." : "Restore?"}
                       </span>
-                      <button type="button" onClick={() => handleRestore(snap.id)} disabled={restoring === snap.id}
+                      <button data-testid="backup-restore-confirm-yes" type="button" onClick={() => handleRestore(snap.id)} disabled={restoring === snap.id}
                         style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
                           border: "none", background: "var(--destructive)", color: "#fff",
                           cursor: "pointer", lineHeight: 1 }}>Yes</button>
-                      <button type="button" onClick={() => setConfirmRestore(null)}
+                      <button data-testid="backup-restore-confirm-no" type="button" onClick={() => setConfirmRestore(null)}
                         style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
                           border: "1px solid var(--border)", background: "transparent",
                           color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
                     </span>
                   ) : (
                     <button
+                      data-testid="backup-restore-button"
                       type="button"
                       onClick={() => setConfirmRestore(snap.id)}
                       title="Restore from this backup"
@@ -269,17 +271,18 @@ export default function BackupPage() {
                   {confirmDelete === snap.id ? (
                     <span style={{ display: "flex", alignItems: "center", gap: "0.25rem" }}>
                       <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
-                      <button type="button" onClick={() => handleDelete(snap.id)} disabled={deleting === snap.id}
+                      <button data-testid="backup-delete-confirm-yes" type="button" onClick={() => handleDelete(snap.id)} disabled={deleting === snap.id}
                         style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
                           border: "none", background: "var(--destructive)", color: "#fff",
                           cursor: "pointer", lineHeight: 1 }}>Yes</button>
-                      <button type="button" onClick={() => setConfirmDelete(null)}
+                      <button data-testid="backup-delete-confirm-no" type="button" onClick={() => setConfirmDelete(null)}
                         style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
                           border: "1px solid var(--border)", background: "transparent",
                           color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
                     </span>
                   ) : (
                     <button
+                      data-testid="backup-delete-button"
                       type="button"
                       onClick={() => setConfirmDelete(snap.id)}
                       title="Delete this backup"
@@ -301,6 +304,6 @@ export default function BackupPage() {
         </div>
       )}
     </div>
-    </>
+    </div>
   );
 }

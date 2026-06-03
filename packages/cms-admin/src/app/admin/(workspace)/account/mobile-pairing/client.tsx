@@ -81,6 +81,7 @@ export function MobilePairingClient() {
           <>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
+              data-testid="mobile-pairing-qr"
               src={data.qrDataUrl}
               alt="Mobile pairing QR code"
               width={260}
@@ -105,6 +106,7 @@ export function MobilePairingClient() {
         )}
 
         <button
+          data-testid="mobile-pairing-generate-button"
           type="button"
           onClick={generate}
           disabled={loading}

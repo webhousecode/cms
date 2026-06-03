@@ -110,6 +110,7 @@ export function HelpButton({ articleId }: HelpButtonProps) {
   return (
     <>
       <button
+        data-testid="help-button-trigger"
         ref={buttonRef}
         type="button"
         onClick={handleOpen}
@@ -139,8 +140,12 @@ export function HelpButton({ articleId }: HelpButtonProps) {
               <Lightbulb style={{ width: "0.8rem", height: "0.8rem", color: "#F7BB2E" }} />
               <span style={{ fontSize: "0.8rem", fontWeight: 600 }}>{article.title}</span>
             </div>
-            <button type="button" onClick={() => setOpen(false)}
-              style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.15rem" }}>
+            <button
+              data-testid="help-button-close"
+              type="button"
+              onClick={() => setOpen(false)}
+              style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.15rem" }}
+            >
               <X style={{ width: "0.7rem", height: "0.7rem" }} />
             </button>
           </div>
@@ -156,6 +161,7 @@ export function HelpButton({ articleId }: HelpButtonProps) {
                   return (
                     <div key={i}>
                       <button
+                        data-testid={`help-button-isu-${action.isu}`}
                         type="button"
                         onClick={() => setActiveISU(activeISU === action.isu ? null : action.isu!)}
                         style={{
@@ -184,7 +190,14 @@ export function HelpButton({ articleId }: HelpButtonProps) {
                   <div key={i} style={{ display: "flex", alignItems: "center", gap: "0.375rem", fontSize: "0.72rem" }}>
                     <span style={{ color: "#F7BB2E" }}>→</span>
                     {action.href ? (
-                      <a href={action.href} onClick={() => setOpen(false)} style={{ color: "var(--foreground)", textDecoration: "none" }}>{action.label}</a>
+                      <a
+                        data-testid={`help-button-action-${i}`}
+                        href={action.href}
+                        onClick={() => setOpen(false)}
+                        style={{ color: "var(--foreground)", textDecoration: "none" }}
+                      >
+                        {action.label}
+                      </a>
                     ) : (
                       <span style={{ color: "var(--foreground)" }}>{action.label}</span>
                     )}
@@ -197,6 +210,7 @@ export function HelpButton({ articleId }: HelpButtonProps) {
           {article.learnMorePath && (
             <div style={{ marginTop: "0.75rem", paddingTop: "0.5rem", borderTop: "1px solid var(--border)" }}>
               <a
+                data-testid="help-button-learn-more"
                 href={`https://docs.webhouse.app${article.learnMorePath}`}
                 target="_blank" rel="noopener noreferrer"
                 style={{ fontSize: "0.7rem", color: "#F7BB2E", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "0.25rem" }}

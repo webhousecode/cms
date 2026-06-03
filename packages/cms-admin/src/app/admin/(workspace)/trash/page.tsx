@@ -41,8 +41,8 @@ function ConfirmDialog({ message, confirmLabel = "Confirm", onConfirm, onCancel 
           <p style={{ fontSize: "0.9rem", color: "var(--foreground)", margin: 0 }}>{message}</p>
         </div>
         <div style={{ display: "flex", justifyContent: "flex-end", gap: "0.5rem" }}>
-          <button type="button" onClick={onCancel} style={{ padding: "0.4rem 0.875rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", fontSize: "0.8rem", cursor: "pointer" }}>Cancel</button>
-          <button type="button" onClick={onConfirm} style={{ padding: "0.4rem 0.875rem", borderRadius: "6px", border: "none", background: "var(--destructive)", color: "#fff", fontSize: "0.8rem", cursor: "pointer" }}>{confirmLabel}</button>
+          <button data-testid="trash-confirm-dialog-cancel" type="button" onClick={onCancel} style={{ padding: "0.4rem 0.875rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", fontSize: "0.8rem", cursor: "pointer" }}>Cancel</button>
+          <button data-testid="trash-confirm-dialog-confirm" type="button" onClick={onConfirm} style={{ padding: "0.4rem 0.875rem", borderRadius: "6px", border: "none", background: "var(--destructive)", color: "#fff", fontSize: "0.8rem", cursor: "pointer" }}>{confirmLabel}</button>
         </div>
       </div>
     </div>
@@ -143,7 +143,7 @@ export default function TrashPage() {
   });
 
   return (
-    <div>
+    <div data-testid="trash-root">
       {/* Header */}
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem 1.5rem", borderBottom: "1px solid var(--border)", position: "sticky", top: 84, zIndex: 30, backgroundColor: "var(--card)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.625rem" }}>
@@ -160,6 +160,7 @@ export default function TrashPage() {
           </span>
           {canEmpty && items.length > 0 && (
             <button
+              data-testid="trash-empty-button"
               type="button"
               onClick={() => setConfirmEmpty(true)}
               style={{ display: "flex", alignItems: "center", gap: "0.375rem", padding: "0.35rem 0.75rem", borderRadius: "6px", border: "1px solid color-mix(in oklch, var(--destructive) 40%, transparent)", background: "transparent", color: "var(--destructive)", fontSize: "0.75rem", cursor: "pointer" }}
@@ -177,6 +178,7 @@ export default function TrashPage() {
           <div style={{ position: "relative", marginBottom: "1.25rem", maxWidth: "400px" }}>
             <Search style={{ position: "absolute", left: "0.625rem", top: "50%", transform: "translateY(-50%)", width: "14px", height: "14px", color: "var(--muted-foreground)", pointerEvents: "none" }} />
             <input
+              data-testid="trash-search-input"
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -184,7 +186,7 @@ export default function TrashPage() {
               style={{ width: "100%", padding: "0.4rem 0.75rem 0.4rem 2rem", borderRadius: "6px", border: "1px solid var(--border)", background: "var(--input)", color: "var(--foreground)", fontSize: "0.85rem", outline: "none" }}
             />
             {search && (
-              <button type="button" onClick={() => setSearch("")} style={{ position: "absolute", right: "0.5rem", top: "50%", transform: "translateY(-50%)", background: "transparent", border: "none", cursor: "pointer", color: "var(--muted-foreground)", display: "flex" }}>
+              <button data-testid="trash-clear-search" type="button" onClick={() => setSearch("")} style={{ position: "absolute", right: "0.5rem", top: "50%", transform: "translateY(-50%)", background: "transparent", border: "none", cursor: "pointer", color: "var(--muted-foreground)", display: "flex" }}>
                 <X style={{ width: "13px", height: "13px" }} />
               </button>
             )}
@@ -232,6 +234,7 @@ export default function TrashPage() {
                   {!readOnly && (
                     <div style={{ display: "flex", gap: "0.375rem", flexShrink: 0 }}>
                       <button
+                        data-testid="trash-restore-button"
                         type="button"
                         disabled={isWorking}
                         onClick={() => restore(item)}
@@ -242,6 +245,7 @@ export default function TrashPage() {
                         Restore
                       </button>
                       <button
+                        data-testid="trash-delete-button"
                         type="button"
                         disabled={isWorking}
                         onClick={() => {

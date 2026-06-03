@@ -55,6 +55,7 @@ export function AgentsTabs({ agents, readOnly }: { agents: AgentConfig[]; readOn
       <div className="flex gap-1 mb-6 border-b border-border">
         {TABS.map((t) => (
           <button
+            data-testid={`agents-tab-${t.id}`}
             key={t.id}
             type="button"
             onClick={() => switchTab(t.id)}
@@ -242,6 +243,7 @@ function TemplatesTab({ readOnly }: { readOnly: boolean }) {
                   <div>
                     <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">Name</label>
                     <input
+                      data-testid="template-name-input"
                       type="text"
                       value={editDraft.name}
                       onChange={(e) => setEditDraft({ ...editDraft, name: e.target.value })}
@@ -251,6 +253,7 @@ function TemplatesTab({ readOnly }: { readOnly: boolean }) {
                   <div>
                     <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">Description</label>
                     <input
+                      data-testid="template-description-input"
                       type="text"
                       value={editDraft.description}
                       onChange={(e) => setEditDraft({ ...editDraft, description: e.target.value })}
@@ -260,6 +263,7 @@ function TemplatesTab({ readOnly }: { readOnly: boolean }) {
                   <div>
                     <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">Category</label>
                     <input
+                      data-testid="template-category-input"
                       type="text"
                       value={editDraft.category}
                       onChange={(e) => setEditDraft({ ...editDraft, category: e.target.value })}
@@ -270,6 +274,7 @@ function TemplatesTab({ readOnly }: { readOnly: boolean }) {
                   <div>
                     <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">System prompt</label>
                     <textarea
+                      data-testid="template-system-prompt-textarea"
                       value={editDraft.systemPrompt}
                       onChange={(e) => setEditDraft({ ...editDraft, systemPrompt: e.target.value })}
                       rows={6}
@@ -292,20 +297,21 @@ function TemplatesTab({ readOnly }: { readOnly: boolean }) {
                   </div>
                   <div className="flex gap-3 text-xs">
                     <label className="flex items-center gap-1.5 cursor-pointer">
-                      <input type="checkbox" checked={editDraft.webSearch} onChange={(e) => setEditDraft({ ...editDraft, webSearch: e.target.checked })} className="accent-primary" />
+                      <input data-testid="template-websearch-checkbox" type="checkbox" checked={editDraft.webSearch} onChange={(e) => setEditDraft({ ...editDraft, webSearch: e.target.checked })} className="accent-primary" />
                       Web search
                     </label>
                     <label className="flex items-center gap-1.5 cursor-pointer">
-                      <input type="checkbox" checked={editDraft.internalDatabase} onChange={(e) => setEditDraft({ ...editDraft, internalDatabase: e.target.checked })} className="accent-primary" />
+                      <input data-testid="template-internal-db-checkbox" type="checkbox" checked={editDraft.internalDatabase} onChange={(e) => setEditDraft({ ...editDraft, internalDatabase: e.target.checked })} className="accent-primary" />
                       Internal database
                     </label>
                     <label className="flex items-center gap-1.5 cursor-pointer">
-                      <input type="checkbox" checked={editDraft.imageGeneration} onChange={(e) => setEditDraft({ ...editDraft, imageGeneration: e.target.checked })} className="accent-primary" />
+                      <input data-testid="template-imggen-checkbox" type="checkbox" checked={editDraft.imageGeneration} onChange={(e) => setEditDraft({ ...editDraft, imageGeneration: e.target.checked })} className="accent-primary" />
                       Image generation
                     </label>
                   </div>
                   <div className="flex gap-2 pt-1">
                     <button
+                      data-testid="template-save-button"
                       type="button"
                       onClick={() => handleSaveEdit(t)}
                       disabled={saving || !editDraft.name.trim()}
@@ -314,6 +320,7 @@ function TemplatesTab({ readOnly }: { readOnly: boolean }) {
                       {saving ? "Saving…" : "Save changes"}
                     </button>
                     <button
+                      data-testid="template-cancel-button"
                       type="button"
                       onClick={cancelEdit}
                       className="px-3 py-1.5 rounded-md text-xs border border-border hover:bg-secondary"
@@ -343,6 +350,7 @@ function TemplatesTab({ readOnly }: { readOnly: boolean }) {
                       <div className="flex items-center gap-1 shrink-0">
                         <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
                         <button
+                          data-testid="template-confirm-delete"
                           type="button"
                           onClick={() => handleDelete(t.id)}
                           disabled={deleting === t.id}
@@ -351,6 +359,7 @@ function TemplatesTab({ readOnly }: { readOnly: boolean }) {
                           Yes
                         </button>
                         <button
+                          data-testid="template-cancel-delete"
                           type="button"
                           onClick={() => setConfirming(null)}
                           style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}
@@ -361,6 +370,7 @@ function TemplatesTab({ readOnly }: { readOnly: boolean }) {
                     ) : (
                       <div className="flex items-center gap-1 shrink-0">
                         <button
+                          data-testid="template-edit-button"
                           type="button"
                           onClick={() => startEditTemplate(t)}
                           title="Edit template"
@@ -369,6 +379,7 @@ function TemplatesTab({ readOnly }: { readOnly: boolean }) {
                           <Pencil className="w-3.5 h-3.5" />
                         </button>
                         <button
+                          data-testid="template-delete-button"
                           type="button"
                           onClick={() => setConfirming(t.id)}
                           title="Delete template"
@@ -682,6 +693,7 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
         </p>
         {!readOnly && !creating && (
           <button
+            data-testid="workflow-create-button"
             type="button"
             onClick={() => setCreating(true)}
             className="flex items-center gap-1 px-3 py-1.5 rounded-md text-xs font-medium bg-primary text-primary-foreground hover:opacity-90"
@@ -703,6 +715,7 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
             <div>
               <label className="text-xs font-semibold text-muted-foreground block mb-1">Workflow JSON</label>
               <textarea
+                data-testid="workflow-json-textarea"
                 value={jsonDraft}
                 onChange={(e) => setJsonDraft(e.target.value)}
                 rows={18}
@@ -721,6 +734,7 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
           <div>
             <label className="text-xs font-semibold text-muted-foreground block mb-1">Name</label>
             <input
+              data-testid="workflow-name-input"
               type="text"
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
@@ -752,6 +766,7 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
             <div className="flex flex-wrap gap-1.5">
               {agents.filter((a) => a.active).map((a) => (
                 <button
+                  data-testid={`workflow-add-agent-${a.id}`}
                   key={a.id}
                   type="button"
                   onClick={() => addStep(a.id)}
@@ -767,6 +782,7 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
           <div className="rounded-md border border-border p-3 space-y-2">
             <label className="flex items-center gap-2 text-xs font-semibold cursor-pointer">
               <input
+                data-testid="workflow-schedule-checkbox"
                 type="checkbox"
                 checked={newScheduleEnabled}
                 onChange={(e) => setNewScheduleEnabled(e.target.checked)}
@@ -780,6 +796,7 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
                   <div>
                     <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">Frequency</label>
                     <select
+                      data-testid="workflow-frequency-select"
                       value={newFrequency}
                       onChange={(e) => setNewFrequency(e.target.value as "daily" | "weekly" | "manual" | "cron")}
                       className="w-full px-2 py-1 rounded border border-border bg-background text-xs"
@@ -801,6 +818,7 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
                   <div>
                     <label className="text-[0.65rem] font-mono uppercase text-muted-foreground block mb-0.5">Max per run</label>
                     <input
+                      data-testid="workflow-maxperrun-input"
                       type="number"
                       min={1}
                       max={10}
@@ -816,6 +834,7 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
                       Cron expression
                     </label>
                     <input
+                      data-testid="workflow-cron-input"
                       type="text"
                       value={newCron}
                       onChange={(e) => setNewCron(e.target.value)}
@@ -840,6 +859,7 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
                     Default prompt (sent to step 1 on each scheduled run)
                   </label>
                   <textarea
+                    data-testid="workflow-defaultprompt-textarea"
                     value={newDefaultPrompt}
                     onChange={(e) => setNewDefaultPrompt(e.target.value)}
                     rows={2}
@@ -855,6 +875,7 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
 
           <div className="flex gap-2">
             <button
+              data-testid="workflow-save-button"
               type="button"
               onClick={handleSave}
               disabled={formMode === "ui" ? (!newName.trim() || newSteps.length === 0) : !jsonDraft.trim()}
@@ -863,6 +884,7 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
               {editingId ? "Save changes" : "Create"}
             </button>
             <button
+              data-testid="workflow-cancel-button"
               type="button"
               onClick={resetForm}
               className="px-3 py-1.5 rounded-md text-xs border border-border hover:bg-secondary"
@@ -911,11 +933,11 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
                   confirming === wf.id ? (
                     <div className="flex items-center gap-1 shrink-0">
                       <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
-                      <button type="button" onClick={() => handleDelete(wf.id)}
+                      <button data-testid="workflow-confirm-delete" type="button" onClick={() => handleDelete(wf.id)}
                         style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>
                         Yes
                       </button>
-                      <button type="button" onClick={() => setConfirming(null)}
+                      <button data-testid="workflow-cancel-delete" type="button" onClick={() => setConfirming(null)}
                         style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>
                         No
                       </button>
@@ -923,6 +945,7 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
                   ) : (
                     <div className="flex items-center gap-1 shrink-0">
                       <button
+                        data-testid="workflow-edit-button"
                         type="button"
                         onClick={() => startEdit(wf)}
                         title="Edit workflow"
@@ -931,6 +954,7 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
                         <Pencil className="w-3.5 h-3.5" />
                       </button>
                       <button
+                        data-testid="workflow-delete-button"
                         type="button"
                         onClick={() => setConfirming(wf.id)}
                         title="Delete workflow"
@@ -947,6 +971,7 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
                 <div className="mt-3 pt-3 border-t border-border flex items-end gap-2">
                   <div className="flex-1">
                     <textarea
+                      data-testid={`workflow-run-prompt-${wf.id}`}
                       value={runPrompt[wf.id] ?? ""}
                       onChange={(e) => setRunPrompt((p) => ({ ...p, [wf.id]: e.target.value }))}
                       rows={2}
@@ -956,6 +981,7 @@ function WorkflowsTab({ agents, readOnly }: { agents: AgentConfig[]; readOnly: b
                     />
                   </div>
                   <button
+                    data-testid="workflow-run-button"
                     type="button"
                     onClick={() => handleRun(wf.id)}
                     disabled={runningId === wf.id || !(runPrompt[wf.id] ?? "").trim()}

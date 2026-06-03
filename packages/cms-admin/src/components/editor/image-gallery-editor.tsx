@@ -93,6 +93,7 @@ export function ImageGalleryEditor({ value: rawValue = [], onChange, disabled }:
 
       {/* Upload zone */}
       <div
+        data-testid="gallery-upload-zone"
         onClick={() => !disabled && inputRef.current?.click()}
         onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
         onDragLeave={() => setDragOver(false)}
@@ -120,6 +121,7 @@ export function ImageGalleryEditor({ value: rawValue = [], onChange, disabled }:
         </p>
       </div>
       <input
+        data-testid="gallery-file-input"
         ref={inputRef}
         type="file"
         accept="image/*"
@@ -136,6 +138,7 @@ export function ImageGalleryEditor({ value: rawValue = [], onChange, disabled }:
       {!disabled && (
         <div style={{ display: "flex", gap: "0.35rem" }}>
           <button
+            data-testid="gallery-browse-media"
             type="button"
             onClick={() => setMediaBrowserOpen(true)}
             style={actionBtnStyle}
@@ -145,6 +148,7 @@ export function ImageGalleryEditor({ value: rawValue = [], onChange, disabled }:
             Browse Media
           </button>
           <button
+            data-testid="gallery-add-url"
             type="button"
             onClick={() => setShowUrlInput(!showUrlInput)}
             style={actionBtnStyle}
@@ -160,6 +164,7 @@ export function ImageGalleryEditor({ value: rawValue = [], onChange, disabled }:
       {showUrlInput && (
         <div style={{ display: "flex", gap: "0.35rem" }}>
           <input
+            data-testid="gallery-url-input"
             type="url"
             value={urlInputValue}
             onChange={(e) => setUrlInputValue(e.target.value)}
@@ -179,6 +184,7 @@ export function ImageGalleryEditor({ value: rawValue = [], onChange, disabled }:
             }}
           />
           <button
+            data-testid="gallery-url-add"
             type="button"
             onClick={() => {
               if (urlInputValue.trim()) {
@@ -198,6 +204,7 @@ export function ImageGalleryEditor({ value: rawValue = [], onChange, disabled }:
       {/* Media browser modal */}
       {mediaBrowserOpen && (
         <div
+          data-testid="gallery-media-browser-backdrop"
           style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.5)" }}
           onClick={(e) => { if (e.target === e.currentTarget) setMediaBrowserOpen(false); }}
         >
@@ -211,12 +218,12 @@ export function ImageGalleryEditor({ value: rawValue = [], onChange, disabled }:
                 <ImageIcon style={{ width: 16, height: 16, display: "inline", verticalAlign: "text-bottom", marginRight: "0.4rem" }} />
                 Media Library
               </span>
-              <button type="button" onClick={() => setMediaBrowserOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.25rem" }}>
+              <button data-testid="media-browser-close" type="button" onClick={() => setMediaBrowserOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.25rem" }}>
                 <X style={{ width: 16, height: 16 }} />
               </button>
             </div>
             <div style={{ padding: "0.5rem 0.75rem", borderBottom: "1px solid var(--border)" }}>
-              <input type="text" value={mediaSearch} onChange={(e) => setMediaSearch(e.target.value)} placeholder="Search images…" autoFocus
+              <input data-testid="media-search-input" type="text" value={mediaSearch} onChange={(e) => setMediaSearch(e.target.value)} placeholder="Search images…" autoFocus
                 style={{ width: "100%", padding: "0.35rem 0.5rem", borderRadius: "6px", border: "1px solid var(--border)", background: "color-mix(in srgb, var(--input) 30%, var(--background))", color: "var(--foreground)", fontSize: "0.8rem", outline: "none" }} />
             </div>
             <div style={{ overflowY: "auto", padding: "0.75rem" }}>
@@ -225,7 +232,7 @@ export function ImageGalleryEditor({ value: rawValue = [], onChange, disabled }:
               {!mediaLoading && mediaItems.length > 0 && (
                 <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(110px, 1fr))", gap: "0.5rem" }}>
                   {mediaItems.filter((item) => !mediaSearch || item.name.toLowerCase().includes(mediaSearch.toLowerCase())).map((item) => (
-                    <button key={item.url} type="button" onClick={() => {
+                    <button data-testid={`media-item-${item.name}`} key={item.url} type="button" onClick={() => {
                       let storedUrl = item.url;
                       try { storedUrl = new URL(item.url).pathname; } catch { /* already relative */ }
                       onChange([...value, { url: storedUrl, alt: item.name.replace(/\.[^.]+$/, "") }]);
@@ -261,6 +268,7 @@ export function ImageGalleryEditor({ value: rawValue = [], onChange, disabled }:
             >
               {/* Thumbnail */}
               <div
+                data-testid={`gallery-img-thumbnail-${idx}`}
                 style={{ aspectRatio: "16/9", overflow: "hidden", cursor: disabled ? "default" : "pointer" }}
                 onClick={() => !disabled && setEditingUrlIdx(editingUrlIdx === idx ? null : idx)}
                 title="Click to edit URL"
@@ -276,6 +284,7 @@ export function ImageGalleryEditor({ value: rawValue = [], onChange, disabled }:
               {/* URL editor (shown when thumbnail clicked) */}
               {editingUrlIdx === idx && (
                 <input
+                  data-testid={`gallery-img-url-edit-${idx}`}
                   value={img.url}
                   onChange={(e) => updateUrl(idx, e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter" || e.key === "Escape") setEditingUrlIdx(null); }}
@@ -296,6 +305,7 @@ export function ImageGalleryEditor({ value: rawValue = [], onChange, disabled }:
 
               {/* Alt text */}
               <input
+                data-testid={`gallery-img-alt-${idx}`}
                 value={img.alt}
                 onChange={(e) => updateAlt(idx, e.target.value)}
                 placeholder="Alt text…"
@@ -319,6 +329,7 @@ export function ImageGalleryEditor({ value: rawValue = [], onChange, disabled }:
               }}>
                 {idx > 0 && (
                   <button
+                    data-testid={`gallery-img-move-left-${idx}`}
                     type="button"
                     title="Move left"
                     onClick={() => moveImage(idx, idx - 1)}
@@ -327,6 +338,7 @@ export function ImageGalleryEditor({ value: rawValue = [], onChange, disabled }:
                 )}
                 {idx < value.length - 1 && (
                   <button
+                    data-testid={`gallery-img-move-right-${idx}`}
                     type="button"
                     title="Move right"
                     onClick={() => moveImage(idx, idx + 1)}
@@ -336,13 +348,13 @@ export function ImageGalleryEditor({ value: rawValue = [], onChange, disabled }:
                 {confirmRemoveIdx === idx ? (
                   <>
                     <span style={{ fontSize: "0.6rem", color: "var(--destructive)", fontWeight: 500, padding: "0 1px" }}>Remove?</span>
-                    <button type="button" onClick={() => { if (confirmTimer.current) clearTimeout(confirmTimer.current); setConfirmRemoveIdx(null); removeImage(idx); }}
+                    <button data-testid={`gallery-img-confirm-yes-${idx}`} type="button" onClick={() => { if (confirmTimer.current) clearTimeout(confirmTimer.current); setConfirmRemoveIdx(null); removeImage(idx); }}
                       style={{ ...iconBtn, fontSize: "0.55rem", padding: "0 4px", width: "auto", background: "var(--destructive)", color: "#fff", borderRadius: "3px" }}>Yes</button>
-                    <button type="button" onClick={() => { if (confirmTimer.current) clearTimeout(confirmTimer.current); setConfirmRemoveIdx(null); }}
+                    <button data-testid={`gallery-img-confirm-no-${idx}`} type="button" onClick={() => { if (confirmTimer.current) clearTimeout(confirmTimer.current); setConfirmRemoveIdx(null); }}
                       style={{ ...iconBtn, fontSize: "0.55rem", padding: "0 4px", width: "auto", border: "1px solid var(--border)", borderRadius: "3px" }}>No</button>
                   </>
                 ) : (
-                  <button type="button" title="Remove" onClick={() => { if (confirmTimer.current) clearTimeout(confirmTimer.current); setConfirmRemoveIdx(idx); confirmTimer.current = setTimeout(() => setConfirmRemoveIdx(null), 3000); }}
+                  <button data-testid={`gallery-img-remove-${idx}`} type="button" title="Remove" onClick={() => { if (confirmTimer.current) clearTimeout(confirmTimer.current); setConfirmRemoveIdx(idx); confirmTimer.current = setTimeout(() => setConfirmRemoveIdx(null), 3000); }}
                     style={{ ...iconBtn, color: "var(--destructive)", fontSize: "0.75rem", fontWeight: 700 }}>×</button>
                 )}
               </div>

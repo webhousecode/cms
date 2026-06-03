@@ -14,7 +14,7 @@ export default async function AgentsPage() {
   const canManageAgents = perms.includes("agents.manage");
 
   return (
-    <>
+    <div data-testid="agents-root">
       <TabTitle value="Agents" />
       <ActionBar helpArticleId="agents-intro"
         actions={canManageAgents ? (
@@ -30,6 +30,6 @@ export default async function AgentsPage() {
       <div className="p-8 max-w-5xl">
         <AgentsTabs agents={agents} readOnly={siteRole === "viewer"} />
       </div>
-    </>
+    </div>
   );
 }

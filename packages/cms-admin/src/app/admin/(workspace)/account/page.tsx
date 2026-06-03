@@ -27,7 +27,7 @@ export default async function AccountPage({
   ];
 
   return (
-    <>
+    <div data-testid="account-root">
       <ActionBar>
         <ActionBarBreadcrumb items={["Account"]} />
       </ActionBar>
@@ -101,7 +101,7 @@ export default async function AccountPage({
           </div>
         )}
       </div>
-    </>
+    </div>
   );
 }
 

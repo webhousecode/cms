@@ -27,7 +27,7 @@ export default function FormsListPage() {
   }, []);
 
   return (
-    <>
+    <div data-testid="forms-root">
       <ActionBar>
         <ActionBarBreadcrumb items={["Forms"]} />
         <Link
@@ -110,6 +110,6 @@ export default function FormsListPage() {
           </div>
         )}
       </div>
-    </>
+    </div>
   );
 }

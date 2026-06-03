@@ -64,6 +64,7 @@ function MessageCopyButton({ text }: { text: string }) {
   }, [text]);
   return (
     <button
+      data-testid="message-copy-button"
       onClick={handleCopy}
       title="Copy response"
       style={{
@@ -221,6 +222,7 @@ export function MessageList({ messages, isThinking, thinkingText, thinkingStartT
         {isThinking && (
           <div style={{ padding: "16px 0" }}>
             <div
+              data-testid="message-thinking-container"
               style={{
                 display: "flex",
                 gap: "12px",

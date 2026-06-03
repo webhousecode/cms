@@ -10,13 +10,13 @@ export default async function FavoritesPage() {
   if (!session) redirect("/admin/login");
 
   return (
-    <>
+    <div data-testid="favorites-root">
       <ActionBar>
         <ActionBarBreadcrumb items={["Favorites"]} />
       </ActionBar>
       <div className="p-8">
         <FavoritesList />
       </div>
-    </>
+    </div>
   );
 }

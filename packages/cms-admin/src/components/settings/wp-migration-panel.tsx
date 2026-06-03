@@ -127,6 +127,7 @@ export function WpMigrationPanel({ orgId, onComplete }: { orgId: string; onCompl
           <div style={{ display: "flex", gap: "0.5rem" }}>
             <input
               type="url"
+              data-testid="wp-url-input"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               placeholder="https://example.com"
@@ -139,6 +140,8 @@ export function WpMigrationPanel({ orgId, onComplete }: { orgId: string; onCompl
               }}
             />
             <button
+              type="button"
+              data-testid="wp-probe-button"
               onClick={handleProbe}
               disabled={probing || !url.trim()}
               style={{
@@ -226,6 +229,7 @@ export function WpMigrationPanel({ orgId, onComplete }: { orgId: string; onCompl
             </label>
             <input
               type="text"
+              data-testid="wp-sitename-input"
               value={siteName}
               onChange={(e) => setSiteName(e.target.value)}
               style={{
@@ -248,10 +252,12 @@ export function WpMigrationPanel({ orgId, onComplete }: { orgId: string; onCompl
           )}
 
           <div style={{ display: "flex", justifyContent: "space-between" }}>
-            <button onClick={() => setStep("url")} style={btnSecondary}>
+            <button type="button" data-testid="wp-back-button" onClick={() => setStep("url")} style={btnSecondary}>
               ← Back
             </button>
             <button
+              type="button"
+              data-testid="wp-migrate-button"
               onClick={handleMigrate}
               disabled={!probe.restApiAvailable || !siteName.trim()}
               style={{
@@ -310,6 +316,8 @@ export function WpMigrationPanel({ orgId, onComplete }: { orgId: string; onCompl
 
           <div style={{ display: "flex", gap: "0.5rem" }}>
             <button
+              type="button"
+              data-testid="wp-open-site-button"
               onClick={() => {
                 if (onComplete) {
                   onComplete(result.siteId);
@@ -322,7 +330,7 @@ export function WpMigrationPanel({ orgId, onComplete }: { orgId: string; onCompl
             >
               Open site in CMS →
             </button>
-            <button onClick={() => { setStep("url"); setProbe(null); setResult(null); setUrl(""); }} style={btnSecondary}>
+            <button type="button" data-testid="wp-another-button" onClick={() => { setStep("url"); setProbe(null); setResult(null); setUrl(""); }} style={btnSecondary}>
               Migrate another
             </button>
           </div>

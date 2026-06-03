@@ -206,6 +206,7 @@ export function AIPanel({ collection, colConfig, doc, onClose, onInsert }: Props
           <span style={{ fontWeight: 600, fontSize: "0.875rem" }}>AI Assistant</span>
         </div>
         <button
+          data-testid="ai-panel-close-button"
           type="button"
           onClick={onClose}
           style={{ background: "transparent", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.25rem" }}
@@ -246,6 +247,7 @@ export function AIPanel({ collection, colConfig, doc, onClose, onInsert }: Props
 
             {/* Generate new version — primary action */}
             <button
+              data-testid="ai-panel-generate-version"
               type="button"
               onClick={() => {
                 const prompt = `Generate a completely new version of this document. Use the existing title and topic as a guide, but write fresh content with a new structure and angle. Return only the content for the "${insertTarget || richTextFields[0]?.name || "content"}" field.`;
@@ -314,6 +316,7 @@ export function AIPanel({ collection, colConfig, doc, onClose, onInsert }: Props
               "Make the title more engaging",
             ].map((suggestion) => (
               <button
+                data-testid={`ai-panel-suggestion-${suggestion.toLowerCase().replace(/\s+/g, '-')}`}
                 key={suggestion}
                 type="button"
                 onClick={() => { setInput(suggestion); inputRef.current?.focus(); }}
@@ -361,6 +364,7 @@ export function AIPanel({ collection, colConfig, doc, onClose, onInsert }: Props
             {msg.role === "assistant" && msg.content && (
               <div style={{ display: "flex", gap: "0.375rem", paddingLeft: "0.25rem" }}>
                 <button
+                  data-testid={`ai-panel-copy-message-${idx}`}
                   type="button"
                   onClick={() => copyMessage(msg.content, idx)}
                   title="Copy"
@@ -382,6 +386,7 @@ export function AIPanel({ collection, colConfig, doc, onClose, onInsert }: Props
                 </button>
                 {insertTarget && (
                   <button
+                    data-testid={`ai-panel-insert-message-${idx}`}
                     type="button"
                     onClick={() => insertMessage(msg.content)}
                     style={{
@@ -417,6 +422,7 @@ export function AIPanel({ collection, colConfig, doc, onClose, onInsert }: Props
         flexShrink: 0,
       }}>
         <textarea
+          data-testid="ai-panel-input"
           ref={inputRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -440,6 +446,7 @@ export function AIPanel({ collection, colConfig, doc, onClose, onInsert }: Props
           onBlur={(e) => { e.target.style.borderColor = "var(--border)"; }}
         />
         <button
+          data-testid="ai-panel-send-button"
           type="button"
           onClick={send}
           disabled={!input.trim() || streaming}

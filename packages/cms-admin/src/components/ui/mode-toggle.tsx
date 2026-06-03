@@ -11,6 +11,7 @@ import { Code, LayoutList } from "lucide-react";
 export function ModeToggle({ mode, onToggle }: { mode: "ui" | "json"; onToggle: () => void }) {
   return (
     <button
+      data-testid="mode-toggle-button"
       type="button"
       onClick={onToggle}
       title={mode === "ui" ? "Switch to JSON" : "Switch to UI"}

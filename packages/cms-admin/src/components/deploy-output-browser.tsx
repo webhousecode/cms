@@ -177,7 +177,7 @@ export function DeployOutputBrowser({ siteId }: Props) {
               {stats.totalFiles} files · {stats.htmlPages} HTML · {fmtBytes(stats.totalBytes)}
               {stats.lastModified && ` · ${fmtRel(stats.lastModified)}`}
             </span>
-            <button onClick={refresh} title="Refresh"
+            <button data-testid="deploy-browser-refresh-button" onClick={refresh} title="Refresh"
               style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", padding: "0.15rem 0.4rem",
                 background: "transparent", border: "1px solid var(--border)", borderRadius: "4px",
                 color: "var(--muted-foreground)", fontSize: "0.65rem", cursor: "pointer" }}>
@@ -234,7 +234,7 @@ function TreeNode({ relPath, tree, depth, onToggle, onSelect, selected }: {
           const expanded = child?.expanded ?? false;
           return (
             <div key={e.path}>
-              <button onClick={() => onToggle(e.path)}
+              <button data-testid="deploy-browser-dir-toggle" onClick={() => onToggle(e.path)}
                 style={{ display: "flex", alignItems: "center", gap: "0.35rem", padding: "0.15rem 0.25rem",
                   background: "transparent", border: "none", color: "var(--foreground)", cursor: "pointer", width: "100%", textAlign: "left",
                   paddingLeft: depth * 14 + 4 }}>
@@ -249,7 +249,7 @@ function TreeNode({ relPath, tree, depth, onToggle, onSelect, selected }: {
         const isSelected = selected?.path === e.path;
         const Icon = IMG_EXT.test(e.name) ? ImageIcon : FileText;
         return (
-          <button key={e.path}
+          <button data-testid="deploy-browser-file-select" key={e.path}
             onClick={() => onSelect(e)}
             style={{
               display: "flex", alignItems: "center", gap: "0.35rem", padding: "0.15rem 0.25rem",
@@ -301,7 +301,7 @@ function FilePreview({ entry, siteId, iframeRef }: {
     <div style={{ display: "flex", flexDirection: "column", gap: "0.25rem", minWidth: 0 }}>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", fontSize: "0.7rem", color: "var(--muted-foreground)" }}>
         <code style={{ fontFamily: "var(--font-mono)", fontSize: "0.7rem" }}>deploy/{entry.path}</code>
-        <a href={fileUrl} target="_blank" rel="noopener noreferrer"
+        <a data-testid="deploy-browser-open-raw-link" href={fileUrl} target="_blank" rel="noopener noreferrer"
           style={{ display: "inline-flex", alignItems: "center", gap: "0.2rem", color: "var(--primary)", textDecoration: "none" }}>
           <ExternalLink size={10} /> Open raw
         </a>
