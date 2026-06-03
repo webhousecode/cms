@@ -157,6 +157,7 @@ export function CustomDateInput({
     <div ref={wrapRef} style={{ position: "relative", display: "flex", flexDirection: "column", gap: "0.2rem", ...style }}>
       <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
         <input
+          data-testid="custom-date-input-field"
           type="text"
           inputMode="numeric"
           autoComplete="off"
@@ -186,6 +187,7 @@ export function CustomDateInput({
           }}
         />
         <button
+          data-testid="custom-date-calendar-trigger"
           type="button"
           onClick={() => {
             if (disabled) return;
@@ -237,6 +239,7 @@ export function CustomDateInput({
           <style>{`@keyframes csDown{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:translateY(0)}}`}</style>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.4rem" }}>
             <button
+              data-testid="custom-date-prev-month"
               type="button"
               onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))}
               style={navBtnStyle}
@@ -248,6 +251,7 @@ export function CustomDateInput({
               {MONTHS[cursor.getMonth()]} {cursor.getFullYear()}
             </span>
             <button
+              data-testid="custom-date-next-month"
               type="button"
               onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))}
               style={navBtnStyle}
@@ -278,6 +282,7 @@ export function CustomDateInput({
               const enabled = inRange(d);
               return (
                 <button
+                  data-testid={`custom-date-day-${d.getDate()}`}
                   key={i}
                   type="button"
                   disabled={!enabled}
@@ -312,11 +317,12 @@ export function CustomDateInput({
             })}
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: "0.5rem" }}>
-            <button type="button" onClick={() => pickDate(new Date())} style={footBtnStyle}>
+            <button data-testid="custom-date-today" type="button" onClick={() => pickDate(new Date())} style={footBtnStyle}>
               Today
             </button>
             {value && (
               <button
+                data-testid="custom-date-clear"
                 type="button"
                 onClick={() => {
                   setDraft("");

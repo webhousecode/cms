@@ -78,6 +78,7 @@ export function AgentsList({ agents, readOnly }: { agents: Agent[]; readOnly?: b
             { value: "inactive" as Filter, label: `Inactive (${inactiveCount})` },
           ]).map((f) => (
             <button
+              data-testid={`agent-filter-${f.value}`}
               key={f.value}
               type="button"
               onClick={() => setFilter(f.value)}
@@ -91,6 +92,7 @@ export function AgentsList({ agents, readOnly }: { agents: Agent[]; readOnly?: b
         {/* View toggle */}
         <div className="flex items-center gap-1 rounded-lg border border-border p-0.5">
           <button
+            data-testid="view-grid"
             type="button"
             onClick={() => toggleView("grid")}
             className={`p-1.5 rounded-md transition-colors ${view === "grid" ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground"}`}
@@ -99,6 +101,7 @@ export function AgentsList({ agents, readOnly }: { agents: Agent[]; readOnly?: b
             <LayoutGrid className="w-3.5 h-3.5" />
           </button>
           <button
+            data-testid="view-list"
             type="button"
             onClick={() => toggleView("list")}
             className={`p-1.5 rounded-md transition-colors ${view === "list" ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground"}`}

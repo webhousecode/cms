@@ -202,6 +202,7 @@ export function BackupSettingsPanel() {
         <div>
           <label style={labelStyle}>Frequency</label>
           <CustomSelect
+            data-testid="backup-schedule-select"
             value={config.backupSchedule}
             onChange={(v) => updateConfig((c) => ({ ...c, backupSchedule: v as BackupConfig["backupSchedule"] }))}
             options={scheduleOptions}
@@ -213,6 +214,7 @@ export function BackupSettingsPanel() {
             <div>
               <label style={labelStyle}>Time</label>
               <CustomTimeInput
+                data-testid="backup-time-input"
                 value={config.backupTime}
                 onChange={(v) => updateConfig((c) => ({ ...c, backupTime: v }))}
               />
@@ -220,6 +222,7 @@ export function BackupSettingsPanel() {
             <div>
               <label style={labelStyle}>Retention</label>
               <CustomSelect
+                data-testid="backup-retention-select"
                 value={String(config.backupRetentionDays)}
                 onChange={(v) => updateConfig((c) => ({ ...c, backupRetentionDays: parseInt(v, 10) }))}
                 options={retentionOptions}
@@ -229,6 +232,7 @@ export function BackupSettingsPanel() {
             <div>
               <label style={labelStyle}>Max storage (GB)</label>
               <input
+                data-testid="backup-max-storage-input"
                 type="number"
                 min={0}
                 step={1}
@@ -259,6 +263,7 @@ export function BackupSettingsPanel() {
         <div>
           <label style={labelStyle}>Provider</label>
           <CustomSelect
+            data-testid="backup-provider-select"
             value={config.backupProvider}
             onChange={(v) => {
               updateConfig((c) => ({ ...c, backupProvider: v as BackupConfig["backupProvider"] }));
@@ -273,6 +278,7 @@ export function BackupSettingsPanel() {
             <div>
               <label style={labelStyle}>Email</label>
               <input
+                data-testid="backup-pcloud-email-input"
                 type="email"
                 value={config.backupPcloudEmail}
                 onChange={(e) => updateConfig((c) => ({ ...c, backupPcloudEmail: e.target.value }))}
@@ -284,6 +290,7 @@ export function BackupSettingsPanel() {
             <div>
               <label style={labelStyle}>Password</label>
               <input
+                data-testid="backup-pcloud-password-input"
                 type="password"
                 value={config.backupPcloudPassword}
                 onChange={(e) => updateConfig((c) => ({ ...c, backupPcloudPassword: e.target.value }))}
@@ -294,6 +301,7 @@ export function BackupSettingsPanel() {
 
             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginTop: "0.25rem" }}>
               <input
+                data-testid="backup-pcloud-eu-checkbox"
                 type="checkbox"
                 checked={config.backupPcloudEu}
                 onChange={(e) => updateConfig((c) => ({ ...c, backupPcloudEu: e.target.checked }))}
@@ -304,6 +312,7 @@ export function BackupSettingsPanel() {
 
             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginTop: "0.5rem" }}>
               <button
+                data-testid="backup-pcloud-test-button"
                 type="button"
                 onClick={testConnection}
                 disabled={testing || !config.backupPcloudEmail || !config.backupPcloudPassword}
@@ -335,6 +344,7 @@ export function BackupSettingsPanel() {
             <div>
               <label style={labelStyle}>Provider</label>
               <CustomSelect
+                data-testid="backup-s3-preset-select"
                 value={config.backupS3Provider || "r2"}
                 onChange={(v) => applyS3Preset(v)}
                 options={s3PresetOptions}
@@ -345,6 +355,7 @@ export function BackupSettingsPanel() {
               <div>
                 <label style={labelStyle}>Endpoint</label>
                 <input
+                  data-testid="backup-s3-r2-endpoint-input"
                   type="text"
                   value={config.backupS3Endpoint}
                   onChange={(e) => updateConfig((c) => ({ ...c, backupS3Endpoint: e.target.value }))}
@@ -354,6 +365,7 @@ export function BackupSettingsPanel() {
                 <p style={{ ...descStyle, marginTop: "0.25rem", display: "flex", alignItems: "center", gap: "0.3rem", flexWrap: "wrap" }}>
                   Find your Account ID in
                   <a
+                    data-testid="backup-r2-link"
                     href="https://dash.cloudflare.com/?to=/:account/r2/overview"
                     target="_blank"
                     rel="noopener noreferrer"
@@ -369,6 +381,7 @@ export function BackupSettingsPanel() {
               <div>
                 <label style={labelStyle}>Endpoint</label>
                 <input
+                  data-testid="backup-s3-b2-endpoint-input"
                   type="text"
                   value={config.backupS3Endpoint}
                   onChange={(e) => updateConfig((c) => ({ ...c, backupS3Endpoint: e.target.value }))}
@@ -383,6 +396,7 @@ export function BackupSettingsPanel() {
                 <div>
                   <label style={labelStyle}>Endpoint</label>
                   <input
+                    data-testid="backup-s3-custom-endpoint-input"
                     type="text"
                     value={config.backupS3Endpoint}
                     onChange={(e) => updateConfig((c) => ({ ...c, backupS3Endpoint: e.target.value }))}
@@ -393,6 +407,7 @@ export function BackupSettingsPanel() {
                 <div>
                   <label style={labelStyle}>Region</label>
                   <input
+                    data-testid="backup-s3-custom-region-input"
                     type="text"
                     value={config.backupS3Region}
                     onChange={(e) => updateConfig((c) => ({ ...c, backupS3Region: e.target.value }))}
@@ -406,6 +421,7 @@ export function BackupSettingsPanel() {
             <div>
               <label style={labelStyle}>Bucket</label>
               <input
+                data-testid="backup-s3-bucket-input"
                 type="text"
                 value={config.backupS3Bucket}
                 onChange={(e) => updateConfig((c) => ({ ...c, backupS3Bucket: e.target.value }))}
@@ -417,6 +433,7 @@ export function BackupSettingsPanel() {
             <div>
               <label style={labelStyle}>Access Key ID</label>
               <input
+                data-testid="backup-s3-access-key-input"
                 type="text"
                 value={config.backupS3AccessKeyId}
                 onChange={(e) => updateConfig((c) => ({ ...c, backupS3AccessKeyId: e.target.value }))}
@@ -428,6 +445,7 @@ export function BackupSettingsPanel() {
             <div>
               <label style={labelStyle}>Secret Access Key</label>
               <input
+                data-testid="backup-s3-secret-key-input"
                 type="password"
                 value={config.backupS3SecretAccessKey}
                 onChange={(e) => updateConfig((c) => ({ ...c, backupS3SecretAccessKey: e.target.value }))}
@@ -439,6 +457,7 @@ export function BackupSettingsPanel() {
             <div>
               <label style={labelStyle}>Prefix (folder)</label>
               <input
+                data-testid="backup-s3-prefix-input"
                 type="text"
                 value={config.backupS3Prefix}
                 onChange={(e) => updateConfig((c) => ({ ...c, backupS3Prefix: e.target.value }))}
@@ -449,6 +468,7 @@ export function BackupSettingsPanel() {
 
             <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginTop: "0.5rem" }}>
               <button
+                data-testid="backup-s3-test-button"
                 type="button"
                 onClick={testConnection}
                 disabled={testing || !config.backupS3Bucket || !config.backupS3AccessKeyId || !config.backupS3SecretAccessKey}

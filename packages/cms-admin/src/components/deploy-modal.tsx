@@ -123,6 +123,7 @@ export function DeployModal({ open, onClose, configured, providerLabel, appName,
 
   return (
     <div
+      data-testid="deploy-modal-backdrop"
       style={{
         position: "fixed", inset: 0, zIndex: 9999,
         display: "flex", alignItems: "center", justifyContent: "center",
@@ -131,6 +132,7 @@ export function DeployModal({ open, onClose, configured, providerLabel, appName,
       onClick={handleClose}
     >
       <div
+        data-testid="deploy-modal-content"
         style={{
           background: "var(--card)", border: "1px solid var(--border)",
           borderRadius: "16px", padding: "2rem", width: "28rem",
@@ -147,6 +149,7 @@ export function DeployModal({ open, onClose, configured, providerLabel, appName,
             </h2>
           </div>
           <button
+            data-testid="deploy-modal-close-button"
             type="button"
             onClick={handleClose}
             style={{
@@ -178,6 +181,7 @@ export function DeployModal({ open, onClose, configured, providerLabel, appName,
             </div>
 
             <button
+              data-testid="deploy-modal-deploy-button"
               type="button"
               onClick={handleDeploy}
               style={{
@@ -196,6 +200,7 @@ export function DeployModal({ open, onClose, configured, providerLabel, appName,
               marginTop: "1rem", cursor: "pointer",
             }}>
               <input
+                data-testid="deploy-modal-skip-dialog-checkbox"
                 type="checkbox"
                 checked={skipDialog}
                 onChange={(e) => {
@@ -295,6 +300,7 @@ export function DeployModal({ open, onClose, configured, providerLabel, appName,
             {/* Success */}
             {isDone && finalUrl && (
               <a
+                data-testid="deploy-modal-success-link"
                 href={finalUrl}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -315,6 +321,7 @@ export function DeployModal({ open, onClose, configured, providerLabel, appName,
             {/* Close button when done/error */}
             {(isDone || isError) && (
               <button
+                data-testid="deploy-modal-final-close-button"
                 type="button"
                 onClick={handleClose}
                 style={{

@@ -22,6 +22,7 @@ export function CloneAgentButton({ id }: { id: string }) {
 
   return (
     <button
+      data-testid="clone-agent-button"
       type="button"
       onClick={handleClone}
       disabled={cloning}

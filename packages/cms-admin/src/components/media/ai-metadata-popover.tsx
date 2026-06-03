@@ -33,6 +33,7 @@ function CopyBtn({ text, label }: { text: string; label: string }) {
   const [copied, setCopied] = useState(false);
   return (
     <button
+      data-testid={`ai-metadata-copy-${label.toLowerCase().replace(/\s+/g, '-')}`}
       type="button"
       title={`Copy ${label}`}
       onClick={() => {
@@ -135,6 +136,7 @@ export function AIMetadataPopover({ imageUrl, variant = "button", onAnalyzed, on
       {/* Trigger button */}
       {isCtx ? (
         <button
+          data-testid="ai-metadata-trigger-ctx"
           type="button"
           title="AI metadata"
           onClick={() => setOpen((o) => !o)}
@@ -150,6 +152,7 @@ export function AIMetadataPopover({ imageUrl, variant = "button", onAnalyzed, on
         </button>
       ) : (
         <button
+          data-testid="ai-metadata-trigger-button"
           type="button"
           onClick={() => setOpen((o) => !o)}
           style={{
@@ -191,6 +194,7 @@ export function AIMetadataPopover({ imageUrl, variant = "button", onAnalyzed, on
             </span>
             {meta && (
               <button
+                data-testid="ai-metadata-reanalyze"
                 type="button"
                 title="Re-analyze"
                 disabled={analyzing}
@@ -224,6 +228,7 @@ export function AIMetadataPopover({ imageUrl, variant = "button", onAnalyzed, on
                   No AI analysis yet.
                 </p>
                 <button
+                  data-testid="ai-metadata-analyze"
                   type="button"
                   onClick={runAnalysis}
                   disabled={analyzing}
@@ -267,6 +272,7 @@ export function AIMetadataPopover({ imageUrl, variant = "button", onAnalyzed, on
                   <div style={{ display: "flex", gap: "4px", flexWrap: "wrap" }}>
                     {locales.map((l) => (
                       <button
+                        data-testid={`ai-metadata-locale-${l}`}
                         key={l}
                         type="button"
                         onClick={() => setActiveLocale(l)}
@@ -312,6 +318,7 @@ export function AIMetadataPopover({ imageUrl, variant = "button", onAnalyzed, on
                           </span>
                         ) : (
                           <button
+                            data-testid="ai-metadata-apply-alt"
                             type="button"
                             title="Apply alt-text to image"
                             onClick={() => { onApplyAlt(displayAlt); setApplied(true); }}

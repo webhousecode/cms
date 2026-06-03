@@ -18,6 +18,7 @@ export function FavoriteToggle({ type, label, path, icon, collection, slug, size
 
   return (
     <button
+      data-testid={`favorite-toggle-${slug}`}
       type="button"
       onClick={() => toggle({ type, label, path, icon, collection, slug })}
       title={active ? "Remove from favorites" : "Add to favorites"}

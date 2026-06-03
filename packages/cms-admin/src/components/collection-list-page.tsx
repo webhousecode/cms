@@ -81,6 +81,7 @@ export function CollectionListPage({
             <div style={{ display: "flex", border: "1px solid var(--border)", borderRadius: "6px", overflow: "hidden" }}>
               {(["grid", "list"] as ViewMode[]).map((v) => (
                 <button
+                  data-testid={`collection-view-toggle-${v}`}
                   key={v}
                   type="button"
                   onClick={() => changeView(v)}
@@ -100,7 +101,7 @@ export function CollectionListPage({
               <>
                 {can("settings.edit") && (
                   <Link href={`/admin/settings/${collection}`}>
-                    <button type="button" style={{
+                    <button data-testid={`collection-edit-schema-button-${collection}`} type="button" style={{
                       height: "28px", display: "inline-flex", alignItems: "center", gap: "0.35rem",
                       padding: "0 0.65rem", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 500,
                       background: "transparent", color: "var(--foreground)", border: "1px solid var(--border)",
@@ -112,7 +113,7 @@ export function CollectionListPage({
                   </Link>
                 )}
                 {can("import.execute") && (
-                  <button type="button" onClick={() => setImportOpen(true)} style={{
+                  <button data-testid={`collection-import-button-${collection}`} type="button" onClick={() => setImportOpen(true)} style={{
                     height: "28px", display: "inline-flex", alignItems: "center", gap: "0.35rem",
                     padding: "0 0.65rem", borderRadius: "6px", fontSize: "0.75rem", fontWeight: 500,
                     background: "transparent", color: "var(--foreground)", border: "1px solid var(--border)",

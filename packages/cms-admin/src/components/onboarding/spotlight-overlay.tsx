@@ -46,6 +46,7 @@ export function SpotlightOverlay({ targetEl, padding = 8, onClick }: SpotlightOv
 
   return (
     <div
+      data-testid="spotlight-overlay"
       onClick={onClick}
       style={{
         position: "fixed",

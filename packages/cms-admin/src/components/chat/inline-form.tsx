@@ -103,6 +103,7 @@ export function InlineForm({ form, onSaved }: InlineFormProps) {
         }}
       >
         <button
+          data-testid="inline-form-save-button"
           onClick={handleSave}
           disabled={saving}
           style={{
@@ -166,6 +167,7 @@ function FieldEditor({ field, value, onChange }: { field: InlineFormField; value
         <div>
           <label style={labelStyle}>{field.label}{field.required && " *"}</label>
           <input
+            data-testid="inline-form-text-input"
             type="text"
             value={String(value ?? "")}
             onChange={(e) => onChange(e.target.value)}
@@ -179,6 +181,7 @@ function FieldEditor({ field, value, onChange }: { field: InlineFormField; value
         <div>
           <label style={labelStyle}>{field.label}{field.required && " *"}</label>
           <textarea
+            data-testid="inline-form-textarea-input"
             value={String(value ?? "")}
             onChange={(e) => onChange(e.target.value)}
             rows={4}
@@ -192,6 +195,7 @@ function FieldEditor({ field, value, onChange }: { field: InlineFormField; value
         <div>
           <label style={labelStyle}>{field.label}{field.required && " *"}</label>
           <select
+            data-testid="inline-form-select-field"
             value={String(value ?? "")}
             onChange={(e) => onChange(e.target.value)}
             style={{ ...inputStyle, cursor: "pointer" }}
@@ -208,6 +212,7 @@ function FieldEditor({ field, value, onChange }: { field: InlineFormField; value
       return (
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <button
+            data-testid="inline-form-toggle-button"
             type="button"
             onClick={() => onChange(!value)}
             style={{
@@ -251,6 +256,7 @@ function FieldEditor({ field, value, onChange }: { field: InlineFormField; value
         <div>
           <label style={labelStyle}>{field.label}</label>
           <input
+            data-testid="inline-form-tags-input"
             type="text"
             value={Array.isArray(value) ? (value as string[]).join(", ") : String(value ?? "")}
             onChange={(e) => onChange(e.target.value.split(",").map((t) => t.trim()).filter(Boolean))}
@@ -265,6 +271,7 @@ function FieldEditor({ field, value, onChange }: { field: InlineFormField; value
         <div>
           <label style={labelStyle}>{field.label}</label>
           <input
+            data-testid="inline-form-text-input"
             type="text"
             value={String(value ?? "")}
             onChange={(e) => onChange(e.target.value)}

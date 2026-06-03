@@ -83,6 +83,7 @@ function EmptyState({ onChange, locked }: { onChange: (html: string) => void; lo
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
       <div
+        data-testid="htmldoc-upload-area"
         onDragOver={(e) => { e.preventDefault(); setDragging(true); }}
         onDragLeave={() => setDragging(false)}
         onDrop={handleDrop}
@@ -106,6 +107,7 @@ function EmptyState({ onChange, locked }: { onChange: (html: string) => void; lo
         <Upload style={{ width: "24px", height: "24px", opacity: 0.5 }} />
         <span>Drop an HTML file here or click to upload</span>
         <input
+          data-testid="htmldoc-file-input"
           ref={fileRef}
           type="file"
           accept=".html,.htm"
@@ -123,6 +125,7 @@ function EmptyState({ onChange, locked }: { onChange: (html: string) => void; lo
       </div>
 
       <Textarea
+        data-testid="htmldoc-paste-textarea"
         value={pasteValue}
         onChange={(e) => setPasteValue(e.target.value)}
         placeholder="Paste HTML here..."
@@ -134,6 +137,7 @@ function EmptyState({ onChange, locked }: { onChange: (html: string) => void; lo
 
       {pasteValue.trim() && (
         <button
+          data-testid="htmldoc-use-paste-button"
           type="button"
           onClick={() => onChange(pasteValue)}
           style={{
@@ -318,7 +322,7 @@ export function HtmlDocEditor({ field, value, onChange, locked }: Props) {
       <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
         <div style={TAB_CONTAINER_STYLE}>
           {(["preview", "code"] as EditMode[]).map((m) => (
-            <button key={m} type="button" style={tabStyle(mode === m)} onClick={() => setMode(m)}>
+            <button data-testid={`htmldoc-mode-${m}`} key={m} type="button" style={tabStyle(mode === m)} onClick={() => setMode(m)}>
               {m === "preview" && <Eye style={ICON_SIZE} />}
               {m === "code" && <Code2 style={ICON_SIZE} />}
               {m === "preview" ? "Preview" : "Code"}
@@ -356,6 +360,7 @@ export function HtmlDocEditor({ field, value, onChange, locked }: Props) {
         <div style={TAB_CONTAINER_STYLE}>
           {(["preview", "visual", "ai", "code"] as EditMode[]).map((m) => (
             <button
+              data-testid={`htmldoc-tab-${m}`}
               key={m}
               type="button"
               style={tabStyle(mode === m)}
@@ -389,6 +394,7 @@ export function HtmlDocEditor({ field, value, onChange, locked }: Props) {
             {dirty && (
               <>
                 <button
+                  data-testid="htmldoc-visual-reset-button"
                   type="button"
                   onClick={handleVisualReset}
                   style={{
@@ -402,6 +408,7 @@ export function HtmlDocEditor({ field, value, onChange, locked }: Props) {
                   Reset
                 </button>
                 <button
+                  data-testid="htmldoc-visual-save-button"
                   type="button"
                   onClick={handleVisualSave}
                   disabled={saving}
@@ -423,6 +430,7 @@ export function HtmlDocEditor({ field, value, onChange, locked }: Props) {
 
         {/* Fullscreen toggle (all modes) */}
         <button
+          data-testid="htmldoc-fullscreen-toggle"
           type="button"
           onClick={() => setFullscreen((f) => !f)}
           style={{
@@ -575,6 +583,7 @@ export function HtmlDocEditor({ field, value, onChange, locked }: Props) {
                   </div>
                   <div style={{ display: "flex", gap: "0.4rem" }}>
                     <button
+                      data-testid="htmldoc-ai-apply-button"
                       type="button"
                       onClick={handleAiApply}
                       style={{
@@ -589,6 +598,7 @@ export function HtmlDocEditor({ field, value, onChange, locked }: Props) {
                       Apply
                     </button>
                     <button
+                      data-testid="htmldoc-ai-revert-button"
                       type="button"
                       onClick={handleAiRevert}
                       style={{
@@ -617,6 +627,7 @@ export function HtmlDocEditor({ field, value, onChange, locked }: Props) {
               }}
             >
               <textarea
+                data-testid="htmldoc-ai-instruction-textarea"
                 value={aiInstruction}
                 onChange={(e) => setAiInstruction(e.target.value)}
                 placeholder="e.g. Make the hero section use a dark blue gradient..."
@@ -641,6 +652,7 @@ export function HtmlDocEditor({ field, value, onChange, locked }: Props) {
                 }}
               />
               <button
+                data-testid="htmldoc-ai-send-button"
                 type="button"
                 onClick={handleAiSend}
                 disabled={!aiInstruction.trim() || aiLoading || locked}
@@ -665,6 +677,7 @@ export function HtmlDocEditor({ field, value, onChange, locked }: Props) {
       {/* ── Code mode ───────────────────────────────────────────────── */}
       {mode === "code" && (
         <Textarea
+          data-testid="htmldoc-code-textarea"
           value={codeValue}
           onChange={(e) => setCodeValue(e.target.value)}
           onBlur={handleCodeBlur}

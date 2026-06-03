@@ -211,7 +211,7 @@ Rules:
           <span title="GEO Score" style={{ fontSize: "0.65rem", fontWeight: 600, fontFamily: "monospace", color: geoColor }}>
             GEO {geoScore?.score ?? 0}
           </span>
-          <button type="button" disabled={saving}
+          <button data-testid="seo-panel-save" type="button" disabled={saving}
             onClick={async () => {
               setSaving(true);
               setSaved(false);
@@ -231,7 +231,7 @@ Rules:
             }}>
             {saving ? "Saving…" : saved ? "Saved ✓" : "Save"}
           </button>
-          <button type="button" onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1.1rem" }}>&times;</button>
+          <button data-testid="seo-panel-close" type="button" onClick={onClose} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "1.1rem" }}>&times;</button>
         </div>
       </div>
 
@@ -258,7 +258,7 @@ Rules:
         {/* Meta title */}
         <div>
           <p style={lbl}>Meta title</p>
-          <input type="text" value={metaTitle} onChange={(e) => setMetaTitle(e.target.value)} placeholder={title} style={input} maxLength={70} />
+          <input data-testid="seo-meta-title-field" type="text" value={metaTitle} onChange={(e) => setMetaTitle(e.target.value)} placeholder={title} style={input} maxLength={70} />
           <p style={{ fontSize: "0.65rem", color: metaTitle.length > 60 ? "#f87171" : "var(--muted-foreground)", marginTop: "0.2rem", textAlign: "right" }}>
             {metaTitle.length}/60
           </p>
@@ -267,7 +267,7 @@ Rules:
         {/* Meta description */}
         <div>
           <p style={lbl}>Meta description</p>
-          <textarea value={metaDesc} onChange={(e) => setMetaDesc(e.target.value)} placeholder="Compelling description for search results..." style={{ ...input, minHeight: 100, resize: "vertical" }} maxLength={200} />
+          <textarea data-testid="seo-meta-description-field" value={metaDesc} onChange={(e) => setMetaDesc(e.target.value)} placeholder="Compelling description for search results..." style={{ ...input, minHeight: 100, resize: "vertical" }} maxLength={200} />
           <p style={{ fontSize: "0.65rem", color: metaDesc.length > 160 ? "#f87171" : "var(--muted-foreground)", marginTop: "0.2rem", textAlign: "right" }}>
             {metaDesc.length}/160
           </p>
@@ -280,13 +280,13 @@ Rules:
             {keywords.map((kw) => (
               <span key={kw} style={{ fontSize: "0.7rem", padding: "2px 8px", borderRadius: "9999px", background: "rgba(247,187,46,0.12)", border: "1px solid rgba(247,187,46,0.25)", color: "var(--foreground)", display: "inline-flex", alignItems: "center", gap: "4px" }}>
                 {kw}
-                <button type="button" onClick={() => setKeywords(keywords.filter((k) => k !== kw))}
+                <button data-testid={`seo-keyword-remove-${kw}`} type="button" onClick={() => setKeywords(keywords.filter((k) => k !== kw))}
                   style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: 0, fontSize: "0.8rem", lineHeight: 1 }}>&times;</button>
               </span>
             ))}
           </div>
           <div style={{ display: "flex", gap: "0.25rem" }}>
-            <input type="text" value={keywordInput} onChange={(e) => setKeywordInput(e.target.value)}
+            <input data-testid="seo-keyword-field" type="text" value={keywordInput} onChange={(e) => setKeywordInput(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addKeyword(); } }}
               placeholder="Add keyword..." style={{ ...input, flex: 1 }} />
           </div>
@@ -295,7 +295,7 @@ Rules:
         {/* OG Image */}
         <div>
           <p style={lbl}>Social image (OG)</p>
-          <input type="text" value={ogImage} onChange={(e) => setOgImage(e.target.value)} placeholder="/uploads/..." style={input} />
+          <input data-testid="seo-og-image-field" type="text" value={ogImage} onChange={(e) => setOgImage(e.target.value)} placeholder="/uploads/..." style={input} />
           {ogImage && ogImage.startsWith("/uploads/") && (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={ogImage} alt="OG preview"
@@ -310,7 +310,7 @@ Rules:
             <p style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", margin: 0 }}>
               Optimized: {new Date(lastOptimized).toLocaleDateString()}
             </p>
-            <button type="button" onClick={() => setConfirmReoptimize(true)}
+            <button data-testid="seo-reoptimize-trigger" type="button" onClick={() => setConfirmReoptimize(true)}
               style={{
                 display: "flex", alignItems: "center", justifyContent: "center", gap: "0.375rem",
                 padding: "0.4rem 0.75rem", borderRadius: "6px",
@@ -327,7 +327,7 @@ Rules:
               This will overwrite existing SEO fields.
             </p>
             <div style={{ display: "flex", gap: "0.375rem" }}>
-              <button type="button" onClick={aiOptimize} disabled={optimizing}
+              <button data-testid="seo-reoptimize-confirm" type="button" onClick={aiOptimize} disabled={optimizing}
                 style={{
                   display: "flex", alignItems: "center", gap: "0.25rem",
                   padding: "0.3rem 0.6rem", borderRadius: "5px", border: "none",
@@ -337,7 +337,7 @@ Rules:
                 {optimizing ? <Loader2 style={{ width: 10, height: 10, animation: "spin 1s linear infinite" }} /> : null}
                 Yes, re-optimize
               </button>
-              <button type="button" onClick={() => setConfirmReoptimize(false)}
+              <button data-testid="seo-reoptimize-cancel" type="button" onClick={() => setConfirmReoptimize(false)}
                 style={{
                   padding: "0.3rem 0.6rem", borderRadius: "5px",
                   border: "1px solid var(--border)", background: "transparent",
@@ -348,7 +348,7 @@ Rules:
             </div>
           </div>
         ) : (
-          <button type="button" onClick={aiOptimize} disabled={optimizing}
+          <button data-testid="seo-ai-optimize-button" type="button" onClick={aiOptimize} disabled={optimizing}
             style={{
               display: "flex", alignItems: "center", justifyContent: "center", gap: "0.375rem",
               padding: "0.5rem 1rem", borderRadius: "6px", border: "none",
@@ -365,6 +365,7 @@ Rules:
           <p style={lbl}>Rewrite for keyword</p>
           <div style={{ display: "flex", gap: "0.25rem" }}>
             <input
+              data-testid="seo-rewrite-keyword-input"
               type="text"
               value={rewriteKeyword}
               onChange={(e) => setRewriteKeyword(e.target.value)}
@@ -372,7 +373,7 @@ Rules:
               placeholder="Target keyword..."
               style={{ ...input, flex: 1 }}
             />
-            <button type="button" onClick={rewriteForKeyword} disabled={rewriting || !rewriteKeyword.trim()}
+            <button data-testid="seo-rewrite-button" type="button" onClick={rewriteForKeyword} disabled={rewriting || !rewriteKeyword.trim()}
               style={{
                 display: "flex", alignItems: "center", gap: "0.2rem",
                 padding: "0.35rem 0.5rem", borderRadius: "6px", border: "none",
@@ -417,7 +418,7 @@ Rules:
         )}
 
         {/* Advanced */}
-        <button type="button" onClick={() => setShowAdvanced(!showAdvanced)}
+        <button data-testid="seo-advanced-toggle" type="button" onClick={() => setShowAdvanced(!showAdvanced)}
           style={{ display: "flex", alignItems: "center", gap: "0.25rem", background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "0.75rem", padding: 0 }}>
           {showAdvanced ? <ChevronUp style={{ width: 12, height: 12 }} /> : <ChevronDown style={{ width: 12, height: 12 }} />}
           Advanced
@@ -426,7 +427,7 @@ Rules:
           <div style={{ display: "flex", flexDirection: "column", gap: "0.75rem" }}>
             <div>
               <p style={lbl}>Canonical URL</p>
-              <input type="text" value={canonical} onChange={(e) => setCanonical(e.target.value)}
+              <input data-testid="seo-canonical-url-input" type="text" value={canonical} onChange={(e) => setCanonical(e.target.value)}
                 placeholder="https://... (default: self)" style={input} />
             </div>
             <div>
@@ -491,6 +492,7 @@ Rules:
                           {f.label}{f.required ? " *" : ""}
                         </p>
                         <input
+                          data-testid={`seo-jsonld-field-${f.key}`}
                           type="text"
                           value={jsonLdValues[f.key] ?? ""}
                           placeholder={f.placeholder}
@@ -527,7 +529,7 @@ Rules:
         )}
 
         {/* Google Preview — collapsible */}
-        <button type="button" onClick={() => setShowPreview(!showPreview)}
+        <button data-testid="seo-google-preview-toggle" type="button" onClick={() => setShowPreview(!showPreview)}
           style={{ display: "flex", alignItems: "center", gap: "0.25rem", background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "0.75rem", padding: 0 }}>
           {showPreview ? <ChevronUp style={{ width: 12, height: 12 }} /> : <ChevronDown style={{ width: 12, height: 12 }} />}
           Google preview
@@ -545,7 +547,7 @@ Rules:
         )}
 
         {/* Social preview (Facebook/LinkedIn) — collapsible */}
-        <button type="button" onClick={() => setShowSocialPreview(!showSocialPreview)}
+        <button data-testid="seo-social-preview-toggle" type="button" onClick={() => setShowSocialPreview(!showSocialPreview)}
           style={{ display: "flex", alignItems: "center", gap: "0.25rem", background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "0.75rem", padding: 0 }}>
           {showSocialPreview ? <ChevronUp style={{ width: 12, height: 12 }} /> : <ChevronDown style={{ width: 12, height: 12 }} />}
           Social preview

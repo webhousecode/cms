@@ -113,6 +113,7 @@ export function CustomSelect({
     <div ref={ref} style={{ position: "relative", ...style }}>
       {/* Trigger */}
       <button
+        data-testid="custom-select-trigger"
         ref={triggerRef}
         type="button"
         onClick={toggle}
@@ -179,6 +180,7 @@ export function CustomSelect({
             const isFoc = i === focused;
             return (
               <div
+                data-testid={`custom-select-option-${opt.value}`}
                 key={opt.value}
                 onMouseEnter={() => !opt.disabled && setFocused(i)}
                 onClick={() => !opt.disabled && select(opt.value)}

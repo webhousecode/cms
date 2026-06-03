@@ -119,6 +119,7 @@ function SortableStep({
       className="flex items-center gap-2 p-2 rounded-md border border-border"
     >
       <button
+        data-testid={`workflow-step-drag-${id}`}
         type="button"
         {...attributes}
         {...listeners}
@@ -132,6 +133,7 @@ function SortableStep({
       <span className="text-sm flex-1 font-medium">{agentName}</span>
       {onCollectionChange && (
         <input
+          data-testid={`workflow-step-collection-${id}`}
           type="text"
           value={overrideCollection ?? ""}
           onChange={(e) => onCollectionChange(e.target.value)}
@@ -143,6 +145,7 @@ function SortableStep({
         />
       )}
       <button
+        data-testid={`workflow-step-remove-${id}`}
         type="button"
         onClick={onRemove}
         title="Remove step"

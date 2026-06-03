@@ -37,6 +37,7 @@ function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false);
   return (
     <button
+      data-testid="mcp-copy-btn"
       type="button"
       title="Copy to clipboard"
       onClick={async () => {
@@ -153,7 +154,7 @@ export function MCPSettingsPanel() {
             { label: "Public (read-only, rate-limited)", url: publicEndpoint },
             { label: "Admin (authenticated, full access)", url: adminEndpoint },
           ].map(({ label, url }) => (
-            <div key={url} style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.6rem 0.75rem", borderRadius: "8px", border: "1px solid var(--border)", background: "var(--card)" }}>
+            <div data-testid="mcp-endpoint-item" key={url} style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.6rem 0.75rem", borderRadius: "8px", border: "1px solid var(--border)", background: "var(--card)" }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", marginBottom: "0.15rem" }}>{label}</p>
                 <code style={{ fontSize: "0.75rem", color: "var(--foreground)", wordBreak: "break-all" }}>{url}</code>
@@ -173,6 +174,7 @@ export function MCPSettingsPanel() {
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.75rem" }}>
           <h2 className="text-muted-foreground dark:text-white" style={{ fontSize: "0.8rem", fontWeight: 700, letterSpacing: "0.07em", textTransform: "uppercase", margin: 0 }}>API Keys</h2>
           <button
+            data-testid="mcp-new-key-button"
             type="button"
             onClick={() => { setShowAddForm(true); setNewKey(generateKey()); }}
             style={{
@@ -218,17 +220,18 @@ export function MCPSettingsPanel() {
               </div>
               {confirmRemoveKey === k.id ? (
                 <div style={{ display: "flex", alignItems: "center", gap: "0.375rem" }}>
-                  <button type="button" onClick={() => setConfirmRemoveKey(null)}
+                  <button data-testid="mcp-key-remove-cancel" type="button" onClick={() => setConfirmRemoveKey(null)}
                     style={{ padding: "0.3rem 0.5rem", borderRadius: "5px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.7rem", cursor: "pointer" }}>
                     Cancel
                   </button>
-                  <button type="button" onClick={() => { handleRemove(k.id); setConfirmRemoveKey(null); }} disabled={removing === k.id}
+                  <button data-testid="mcp-key-remove-confirm" type="button" onClick={() => { handleRemove(k.id); setConfirmRemoveKey(null); }} disabled={removing === k.id}
                     style={{ padding: "0.3rem 0.5rem", borderRadius: "5px", border: "none", background: "var(--destructive)", color: "#fff", fontSize: "0.7rem", cursor: "pointer", opacity: removing === k.id ? 0.5 : 1 }}>
                     {removing === k.id ? "Removing…" : "Confirm"}
                   </button>
                 </div>
               ) : (
                 <button
+                  data-testid="mcp-key-remove-trigger"
                   type="button"
                   onClick={() => setConfirmRemoveKey(k.id)}
                   style={{
@@ -255,6 +258,7 @@ export function MCPSettingsPanel() {
             <div>
               <label style={{ fontSize: "0.75rem", fontWeight: 500, display: "block", marginBottom: "0.35rem" }}>Label</label>
               <input
+                data-testid="mcp-add-label-input"
                 type="text"
                 value={newLabel}
                 onChange={(e) => setNewLabel(e.target.value)}
@@ -267,6 +271,7 @@ export function MCPSettingsPanel() {
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.35rem" }}>
                 <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Key</label>
                 <button
+                  data-testid="mcp-add-key-regenerate"
                   type="button"
                   onClick={() => setNewKey(generateKey())}
                   style={{ display: "flex", alignItems: "center", gap: "0.2rem", fontSize: "0.7rem", color: "var(--muted-foreground)", background: "none", border: "none", cursor: "pointer" }}
@@ -276,6 +281,7 @@ export function MCPSettingsPanel() {
               </div>
               <div style={{ display: "flex", gap: "0.375rem" }}>
                 <input
+                  data-testid="mcp-add-key-input"
                   type="text"
                   value={newKey}
                   onChange={(e) => setNewKey(e.target.value)}
@@ -314,6 +320,7 @@ export function MCPSettingsPanel() {
 
             <div style={{ display: "flex", gap: "0.5rem" }}>
               <button
+                data-testid="mcp-add-key-save"
                 type="button"
                 onClick={handleAdd}
                 disabled={adding}
@@ -328,6 +335,7 @@ export function MCPSettingsPanel() {
                 {adding ? "Saving…" : "Save key"}
               </button>
               <button
+                data-testid="mcp-add-key-cancel"
                 type="button"
                 onClick={() => { setShowAddForm(false); setAddError(""); }}
                 style={{
@@ -482,6 +490,7 @@ function ExternalMcpServers() {
           </p>
         </div>
         <button
+          data-testid="mcp-server-add-button"
           type="button"
           onClick={() => setShowAdd(true)}
           style={{
@@ -521,13 +530,13 @@ function ExternalMcpServers() {
               </div>
               {confirmDeleteId === s.id ? (
                 <span style={{ display: "flex", alignItems: "center", gap: "0.375rem", flexShrink: 0, minWidth: "12rem", justifyContent: "flex-end" }}>
-                  <button type="button" onClick={() => setConfirmDeleteId(null)}
+                  <button data-testid="mcp-server-delete-cancel" type="button" onClick={() => setConfirmDeleteId(null)}
                     style={{ padding: "0.3rem 0.6rem", borderRadius: "6px",
                       border: "1px solid var(--border)", background: "transparent",
                       color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: "pointer" }}>
                     Cancel
                   </button>
-                  <button type="button" onClick={() => { removeServer(s.id); setConfirmDeleteId(null); }}
+                  <button data-testid="mcp-server-delete-confirm" type="button" onClick={() => { removeServer(s.id); setConfirmDeleteId(null); }}
                     style={{ padding: "0.3rem 0.6rem", borderRadius: "6px",
                       border: "none", background: "var(--destructive)", color: "#fff",
                       fontSize: "0.75rem", fontWeight: 600, cursor: "pointer" }}>
@@ -536,11 +545,11 @@ function ExternalMcpServers() {
                 </span>
               ) : (
                 <span style={{ display: "flex", alignItems: "center", gap: "0.375rem", flexShrink: 0, minWidth: "12rem", justifyContent: "flex-end" }}>
-                  <button type="button" onClick={() => startEdit(s)} title="Edit JSON config"
+                  <button data-testid="mcp-server-edit-json" type="button" onClick={() => startEdit(s)} title="Edit JSON config"
                     style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.25rem" }}>
                     <Pencil style={{ width: "0.8rem", height: "0.8rem" }} />
                   </button>
-                  <button type="button" onClick={() => {
+                  <button data-testid="mcp-server-toggle-json" type="button" onClick={() => {
                       if (editingId === s.id) { setEditingId(null); } else { startEdit(s); }
                     }} title="Toggle JSON view"
                     style={{
@@ -554,11 +563,11 @@ function ExternalMcpServers() {
                     <Braces style={{ width: "0.65rem", height: "0.65rem" }} />
                     JSON
                   </button>
-                  <button type="button" onClick={() => toggleEnabled(s.id, !s.enabled)} title={s.enabled ? "Disable server" : "Enable server"}
+                  <button data-testid="mcp-server-toggle-enabled" type="button" onClick={() => toggleEnabled(s.id, !s.enabled)} title={s.enabled ? "Disable server" : "Enable server"}
                     style={{ background: "none", border: "none", cursor: "pointer", color: s.enabled ? "var(--primary)" : "var(--muted-foreground)", padding: "0.25rem" }}>
                     {s.enabled ? <Power style={{ width: "0.9rem", height: "0.9rem" }} /> : <PowerOff style={{ width: "0.9rem", height: "0.9rem" }} />}
                   </button>
-                  <button type="button" onClick={() => setConfirmDeleteId(s.id)} title="Remove server"
+                  <button data-testid="mcp-server-delete-trigger" type="button" onClick={() => setConfirmDeleteId(s.id)} title="Remove server"
                     style={{
                       display: "flex", alignItems: "center", gap: "0.3rem",
                       padding: "0.35rem 0.6rem", borderRadius: "6px",
@@ -576,6 +585,7 @@ function ExternalMcpServers() {
             {editingId === s.id && (
               <div style={{ padding: "0 0.75rem 0.75rem", borderTop: "1px solid var(--border)", marginTop: "0" }}>
                 <textarea
+                  data-testid="mcp-server-json-editor"
                   value={editJson}
                   onChange={(e) => setEditJson(e.target.value)}
                   rows={Math.max(6, editJson.split("\n").length + 1)}
@@ -590,12 +600,12 @@ function ExternalMcpServers() {
                 />
                 {editError && <p style={{ fontSize: "0.72rem", color: "var(--destructive)", marginTop: "0.25rem" }}>{editError}</p>}
                 <div style={{ display: "flex", gap: "0.375rem", marginTop: "0.5rem" }}>
-                  <button type="button" onClick={saveEdit}
+                  <button data-testid="mcp-server-json-save" type="button" onClick={saveEdit}
                     style={{ padding: "0.35rem 0.75rem", borderRadius: "6px", border: "none", background: "var(--primary)", color: "var(--primary-foreground)", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer" }}>
                     Save
                   </button>
                   <CopyButton text={editJson} />
-                  <button type="button" onClick={() => setEditingId(null)}
+                  <button data-testid="mcp-server-json-cancel" type="button" onClick={() => setEditingId(null)}
                     style={{ padding: "0.35rem 0.75rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: "pointer" }}>
                     Cancel
                   </button>
@@ -619,7 +629,7 @@ function ExternalMcpServers() {
         <div style={{ marginTop: "0.75rem", padding: "1rem", borderRadius: "8px", border: "1px solid var(--border)", background: "var(--card)", display: "flex", flexDirection: "column", gap: "0.75rem" }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <p style={{ fontSize: "0.8rem", fontWeight: 600 }}>Add MCP Server</p>
-            <button type="button" onClick={() => setShowAdd(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)" }}>
+            <button data-testid="mcp-add-server-close" type="button" onClick={() => setShowAdd(false)} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)" }}>
               <X style={{ width: "0.8rem", height: "0.8rem" }} />
             </button>
           </div>
@@ -630,6 +640,7 @@ function ExternalMcpServers() {
             <div style={{ display: "flex", flexWrap: "wrap", gap: "0.375rem" }}>
               {PRESETS.filter((p) => !servers.some((s) => s.name === p.name)).map((preset) => (
                 <button
+                  data-testid={`mcp-preset-${preset.name.toLowerCase().replace(/\s+/g, '-')}`}
                   key={preset.name}
                   type="button"
                   onClick={() => addPreset(preset)}
@@ -655,18 +666,18 @@ function ExternalMcpServers() {
           <div style={{ display: "flex", gap: "0.5rem" }}>
             <div style={{ flex: 1 }}>
               <label style={{ fontSize: "0.7rem", fontWeight: 500, display: "block", marginBottom: "0.2rem" }}>Name</label>
-              <input type="text" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="My Server"
+              <input data-testid="mcp-custom-server-name" type="text" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="My Server"
                 style={{ width: "100%", padding: "0.4rem 0.6rem", borderRadius: "6px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.8rem", outline: "none", boxSizing: "border-box" }} />
             </div>
             <div style={{ width: "80px" }}>
               <label style={{ fontSize: "0.7rem", fontWeight: 500, display: "block", marginBottom: "0.2rem" }}>Command</label>
-              <input type="text" value={newCommand} onChange={(e) => setNewCommand(e.target.value)} placeholder="npx"
+              <input data-testid="mcp-custom-server-command" type="text" value={newCommand} onChange={(e) => setNewCommand(e.target.value)} placeholder="npx"
                 style={{ width: "100%", padding: "0.4rem 0.6rem", borderRadius: "6px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.8rem", fontFamily: "monospace", outline: "none", boxSizing: "border-box" }} />
             </div>
           </div>
           <div>
             <label style={{ fontSize: "0.7rem", fontWeight: 500, display: "block", marginBottom: "0.2rem" }}>Arguments (space-separated)</label>
-            <input type="text" value={newArgs} onChange={(e) => setNewArgs(e.target.value)} placeholder="-y @anthropic/mcp-memory"
+            <input data-testid="mcp-custom-server-args" type="text" value={newArgs} onChange={(e) => setNewArgs(e.target.value)} placeholder="-y @anthropic/mcp-memory"
               style={{ width: "100%", padding: "0.4rem 0.6rem", borderRadius: "6px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.8rem", fontFamily: "monospace", outline: "none", boxSizing: "border-box" }} />
           </div>
 
@@ -676,20 +687,20 @@ function ExternalMcpServers() {
             {Object.entries(newEnvPairs).map(([k, v]) => (
               <div key={k} style={{ display: "flex", gap: "0.375rem", marginBottom: "0.25rem" }}>
                 <code style={{ fontSize: "0.75rem", padding: "0.3rem 0.5rem", background: "var(--secondary)", borderRadius: "4px", minWidth: "120px" }}>{k}</code>
-                <input type="text" value={v} onChange={(e) => setNewEnvPairs((p) => ({ ...p, [k]: e.target.value }))} placeholder="value"
+                <input data-testid={`mcp-env-value-${k}`} type="text" value={v} onChange={(e) => setNewEnvPairs((p) => ({ ...p, [k]: e.target.value }))} placeholder="value"
                   style={{ flex: 1, padding: "0.3rem 0.5rem", borderRadius: "4px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.75rem", fontFamily: "monospace", outline: "none" }} />
-                <button type="button" onClick={() => setNewEnvPairs((p) => { const n = { ...p }; delete n[k]; return n; })}
+                <button data-testid={`mcp-env-remove-${k}`} type="button" onClick={() => setNewEnvPairs((p) => { const n = { ...p }; delete n[k]; return n; })}
                   style={{ background: "none", border: "none", cursor: "pointer", color: "var(--destructive)", padding: "0.2rem" }}>
                   <X style={{ width: "0.7rem", height: "0.7rem" }} />
                 </button>
               </div>
             ))}
             <div style={{ display: "flex", gap: "0.375rem" }}>
-              <input type="text" value={newEnvKey} onChange={(e) => setNewEnvKey(e.target.value)} placeholder="KEY_NAME"
+              <input data-testid="mcp-env-key-input" type="text" value={newEnvKey} onChange={(e) => setNewEnvKey(e.target.value)} placeholder="KEY_NAME"
                 style={{ width: "120px", padding: "0.3rem 0.5rem", borderRadius: "4px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.75rem", fontFamily: "monospace", outline: "none" }} />
-              <input type="text" value={newEnvVal} onChange={(e) => setNewEnvVal(e.target.value)} placeholder="value"
+              <input data-testid="mcp-env-val-input" type="text" value={newEnvVal} onChange={(e) => setNewEnvVal(e.target.value)} placeholder="value"
                 style={{ flex: 1, padding: "0.3rem 0.5rem", borderRadius: "4px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.75rem", fontFamily: "monospace", outline: "none" }} />
-              <button type="button" onClick={() => { if (newEnvKey.trim()) { setNewEnvPairs((p) => ({ ...p, [newEnvKey]: newEnvVal })); setNewEnvKey(""); setNewEnvVal(""); } }}
+              <button data-testid="mcp-env-add-button" type="button" onClick={() => { if (newEnvKey.trim()) { setNewEnvPairs((p) => ({ ...p, [newEnvKey]: newEnvVal })); setNewEnvKey(""); setNewEnvVal(""); } }}
                 style={{ padding: "0.3rem 0.5rem", borderRadius: "4px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", fontSize: "0.7rem", cursor: "pointer" }}>
                 Add
               </button>
@@ -697,6 +708,7 @@ function ExternalMcpServers() {
           </div>
 
           <button
+            data-testid="mcp-custom-server-add"
             type="button"
             disabled={saving || !newName.trim() || !newArgs.trim()}
             onClick={() => addServer(newName, newCommand, newArgs.split(/\s+/).filter(Boolean), newEnvPairs)}

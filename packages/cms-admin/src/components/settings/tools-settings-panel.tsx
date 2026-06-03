@@ -105,7 +105,7 @@ export function ToolsSettingsPanel() {
   const webhookLabel = { display: "block", fontSize: "0.75rem", fontWeight: 500, marginBottom: "0.35rem", marginTop: "0.75rem" } as const;
 
   return (
-    <div data-testid="panel-tools">
+    <div data-testid="tools-settings-panel">
       {/* ── Link Checker ───────────────────────────────────── */}
       <SectionHeading>Link Checker</SectionHeading>
       <SettingsCard>
@@ -234,6 +234,7 @@ export function ToolsSettingsPanel() {
         <div style={{ display: "flex", flexDirection: "column", gap: "1rem" }}>
           <div style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}>
             <input
+              data-testid="tools-media-auto-optimize"
               type="checkbox"
               checked={config.mediaAutoOptimize}
               onChange={(e) => updateConfig((c) => ({ ...c, mediaAutoOptimize: e.target.checked }))}
@@ -250,6 +251,7 @@ export function ToolsSettingsPanel() {
           <div style={{ display: "flex", flexDirection: "column", gap: "0.5rem" }}>
             <label style={{ fontSize: "0.8rem", fontWeight: 500 }}>Variant widths (px)</label>
             <input
+              data-testid="tools-settings-media-variant-widths"
               type="text"
               value={config.mediaVariantWidths.join(", ")}
               onChange={(e) => {

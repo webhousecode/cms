@@ -1,0 +1,12 @@
+{
+  "slug": "welcome",
+  "status": "published",
+  "data": {
+    "title": "Welcome to the Lens Fixture",
+    "excerpt": "A deterministic post used by Lens visual-regression baselines.",
+    "content": "This is fixture content for the Lens visual-regression suite. It never changes, so admin surfaces render predictably for stable screenshots.\n\n## Section one\n\nDeterministic body text for the content surface.",
+    "date": "2026-01-01"
+  },
+  "id": "lens-fixture-post-welcome",
+  "_fieldMeta": {}
+}

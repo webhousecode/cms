@@ -27,6 +27,7 @@ export function TagsInput({ value, onChange, disabled }: Props) {
 
   return (
     <div
+      data-testid="tags-input-container"
       onClick={() => inputRef.current?.focus()}
       className={cn(
         "flex flex-wrap gap-2 p-2 rounded-md bg-input border border-border focus-within:ring-1 focus-within:ring-ring transition-colors min-h-[42px] cursor-text",
@@ -41,6 +42,7 @@ export function TagsInput({ value, onChange, disabled }: Props) {
           #{tag}
           {!disabled && (
             <button
+              data-testid="tags-remove-button"
               onClick={(e) => {
                 e.stopPropagation();
                 removeTag(tag);
@@ -54,6 +56,7 @@ export function TagsInput({ value, onChange, disabled }: Props) {
       ))}
       {!disabled && (
         <input
+          data-testid="tags-input"
           ref={inputRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}

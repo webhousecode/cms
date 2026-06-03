@@ -144,6 +144,7 @@ export function ScheduledCalendar({ events, calendarToken, orgId, siteId }: { ev
           <div className="flex items-center gap-0.5 rounded-lg border border-border p-0.5">
             {(["day", "week", "month", "year"] as ViewMode[]).map((v) => (
               <button
+                data-testid={`calendar-view-${v}`}
                 key={v}
                 type="button"
                 onClick={() => setView(v)}
@@ -155,6 +156,7 @@ export function ScheduledCalendar({ events, calendarToken, orgId, siteId }: { ev
           </div>
           <div className="flex items-center gap-1">
             <button
+              data-testid="calendar-subscribe-button"
               type="button"
               onClick={() => {
                 const feedPath = `/api/cms/scheduled/calendar.ics?token=${calendarToken}&org=${orgId}&site=${siteId}`;
@@ -190,13 +192,13 @@ export function ScheduledCalendar({ events, calendarToken, orgId, siteId }: { ev
                 : `${MONTHS[month]} ${year}`}
           </h2>
           <div className="flex items-center gap-0.5">
-            <button type="button" onClick={() => navigate(-1)} className="p-1.5 rounded-md hover:bg-secondary transition-colors text-muted-foreground">
+            <button data-testid="calendar-button-prev" type="button" onClick={() => navigate(-1)} className="p-1.5 rounded-md hover:bg-secondary transition-colors text-muted-foreground">
               <ChevronLeft className="w-4 h-4" />
             </button>
-            <button type="button" onClick={goToday} className="px-3 py-1 rounded-md text-xs font-medium border border-border hover:bg-secondary transition-colors text-muted-foreground">
+            <button data-testid="calendar-button-today" type="button" onClick={goToday} className="px-3 py-1 rounded-md text-xs font-medium border border-border hover:bg-secondary transition-colors text-muted-foreground">
               Today
             </button>
-            <button type="button" onClick={() => navigate(1)} className="p-1.5 rounded-md hover:bg-secondary transition-colors text-muted-foreground">
+            <button data-testid="calendar-button-3" type="button" onClick={() => navigate(1)} className="p-1.5 rounded-md hover:bg-secondary transition-colors text-muted-foreground">
               <ChevronRight className="w-4 h-4" />
             </button>
           </div>
@@ -294,6 +296,7 @@ function MonthView({ year, month, todayKey, selectedDate, eventsMap, onSelectDat
           const isToday = cell.key === todayKey;
           return (
             <button
+              data-testid={`calendar-day-${cell.key}`}
               key={cell.key}
               type="button"
               onClick={() => onSelectDate(cell.key)}
@@ -463,6 +466,7 @@ function WeekView({ selectedDate, todayKey, eventsMap, onSelectDate, scrollToNow
           const isToday = day.key === todayKey;
           return (
             <button
+              data-testid={`calendar-week-day-${day.key}`}
               key={day.key}
               type="button"
               onClick={() => onSelectDate(day.key)}
@@ -706,6 +710,7 @@ function YearView({ year, todayKey, eventsMap, onSelectMonth }: {
 
         return (
           <button
+            data-testid={`calendar-month-${m}`}
             key={m}
             type="button"
             onClick={() => onSelectMonth(m)}

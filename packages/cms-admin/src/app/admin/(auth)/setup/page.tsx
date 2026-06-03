@@ -55,16 +55,18 @@ export default function SetupPage() {
   }
 
   return (
-    <div style={{
-      position: "fixed",
-      inset: 0,
-      zIndex: 200,
-      display: "flex",
-      alignItems: "center",
-      justifyContent: "center",
-      background: "linear-gradient(135deg, hsl(0 0% 5%) 0%, hsl(0 0% 10%) 50%, hsl(35 20% 10%) 100%)",
-      overflow: "hidden",
-    }}>
+    <div
+      data-testid="setup-root"
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 200,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "linear-gradient(135deg, hsl(0 0% 5%) 0%, hsl(0 0% 10%) 50%, hsl(35 20% 10%) 100%)",
+        overflow: "hidden",
+      }}>
       {/* Subtle grid pattern */}
       <div style={{
         position: "absolute",
@@ -103,10 +105,11 @@ export default function SetupPage() {
           <p style={{ fontSize: "0.8rem", color: "hsl(0 0% 50%)", margin: 0 }}>Create your admin account to get started</p>
         </div>
 
-        <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
+        <form data-testid="setup-form" onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: "0.875rem" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
             <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "hsl(0 0% 70%)" }}>Name</label>
             <input
+              data-testid="setup-name-input"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -122,6 +125,7 @@ export default function SetupPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
             <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "hsl(0 0% 70%)" }}>Email</label>
             <input
+              data-testid="setup-email-input"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -136,6 +140,7 @@ export default function SetupPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: "0.35rem" }}>
             <label style={{ fontSize: "0.75rem", fontWeight: 500, color: "hsl(0 0% 70%)" }}>Password</label>
             <input
+              data-testid="setup-password-input"
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
@@ -153,6 +158,7 @@ export default function SetupPage() {
           )}
 
           <button
+            data-testid="setup-submit-button"
             type="submit"
             disabled={loading}
             style={{ padding: "0.6rem", borderRadius: "7px", border: "none", background: loading ? "hsl(0 0% 25%)" : "hsl(38 92% 50%)", color: loading ? "hsl(0 0% 50%)" : "hsl(38 30% 10%)", fontSize: "0.875rem", fontWeight: 600, cursor: loading ? "wait" : "pointer", marginTop: "0.25rem", transition: "opacity 150ms" }}
@@ -167,6 +173,7 @@ export default function SetupPage() {
           <div style={{ flex: 1, height: "1px", background: "hsl(0 0% 20%)" }} />
         </div>
         <a
+          data-testid="setup-github-link"
           href="/api/auth/github?login=true"
           style={{
             display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem",

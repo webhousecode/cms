@@ -122,7 +122,7 @@ export function AIDefaultsPanel() {
   }
 
   return (
-    <form ref={defaultsFormRef} onSubmit={handleSave} onChange={() => window.dispatchEvent(new CustomEvent("cms:settings-dirty"))}>
+    <form data-testid="panel-ai-defaults" ref={defaultsFormRef} onSubmit={handleSave} onChange={() => window.dispatchEvent(new CustomEvent("cms:settings-dirty"))}>
       <SettingsCard>
       {/* Content — cheap/fast text tasks */}
       <div style={{ marginBottom: "2rem" }}>

@@ -17,5 +17,5 @@ export default async function AdminDashboard() {
     throw err;
   }
 
-  return <DashboardStats />;
+  return <div data-testid="dashboard-root"><DashboardStats /></div>;
 }

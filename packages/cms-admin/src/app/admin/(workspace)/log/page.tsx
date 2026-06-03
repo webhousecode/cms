@@ -76,6 +76,7 @@ function FilterChip({ label, onRemove }: { label: string; onRemove: () => void }
       {label}
       <button
         type="button"
+        data-testid={`filter-chip-remove-${label.toLowerCase().replace(/\s+/g, '-')}`}
         onClick={onRemove}
         aria-label={`Remove ${label} filter`}
         style={{
@@ -214,13 +215,14 @@ export default function EventLogPage() {
   }
 
   return (
-    <>
+    <div data-testid="log-root">
       <TabTitle value="Event Log" />
       <ActionBar
         actions={
           <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
             <button
               type="button"
+              data-testid="log-refresh-button"
               onClick={load}
               disabled={loading}
               style={{
@@ -237,6 +239,7 @@ export default function EventLogPage() {
             </button>
             <button
               type="button"
+              data-testid="log-export-csv-button"
               onClick={() => exportLog("csv")}
               title="Export filtered events as CSV (for GDPR data requests)"
               style={{
@@ -252,6 +255,7 @@ export default function EventLogPage() {
             </button>
             <button
               type="button"
+              data-testid="log-export-json-button"
               onClick={() => exportLog("json")}
               title="Export filtered events as JSON"
               style={{
@@ -311,6 +315,7 @@ export default function EventLogPage() {
           {(level !== "all" || actionFilter || dateFrom || dateTo || layers.size < 3) && (
             <button
               type="button"
+              data-testid="filter-clear-all"
               onClick={() => {
                 setLevel("all");
                 setActionFilter("");
@@ -345,6 +350,7 @@ export default function EventLogPage() {
               <button
                 key={l}
                 type="button"
+                data-testid={`filter-layer-${l}`}
                 onClick={() => toggleLayer(l)}
                 style={{
                   display: "flex", alignItems: "center", gap: "0.3rem",
@@ -375,6 +381,7 @@ export default function EventLogPage() {
           />
           <input
             type="text"
+            data-testid="filter-action-input"
             value={actionFilter}
             onChange={(e) => setActionFilter(e.target.value)}
             placeholder="Filter action (e.g. document.)"
@@ -461,6 +468,7 @@ export default function EventLogPage() {
                 Per page:
                 <select
                   value={pageSize}
+                  data-testid="log-page-size-select"
                   onChange={(e) => setPageSize(parseInt(e.target.value, 10))}
                   style={{
                     marginLeft: "0.35rem",
@@ -479,6 +487,7 @@ export default function EventLogPage() {
             <div style={{ display: "flex", alignItems: "center", gap: "0.35rem" }}>
               <button
                 type="button"
+                data-testid="pagination-prev"
                 onClick={() => setPage(Math.max(1, page - 1))}
                 disabled={page === 1}
                 style={{
@@ -497,6 +506,7 @@ export default function EventLogPage() {
               </span>
               <button
                 type="button"
+                data-testid="pagination-next"
                 onClick={() => setPage(page + 1)}
                 disabled={page * pageSize >= total}
                 style={{
@@ -514,6 +524,6 @@ export default function EventLogPage() {
           </div>
         )}
       </div>
-    </>
+    </div>
   );
 }

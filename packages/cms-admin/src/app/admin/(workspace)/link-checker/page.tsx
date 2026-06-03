@@ -111,6 +111,7 @@ function FixButton({ link, onFixed }: { link: LinkResult; onFixed: (newUrl: stri
             <div className="flex gap-1.5 mt-0.5">
               <button
                 type="button"
+                data-testid="link-fix-apply"
                 onClick={applySuggestion}
                 disabled={fix.loading}
                 className="flex items-center gap-1 text-[11px] px-2 py-0.5 rounded bg-primary text-primary-foreground hover:opacity-90 disabled:opacity-50"
@@ -120,6 +121,7 @@ function FixButton({ link, onFixed }: { link: LinkResult; onFixed: (newUrl: stri
               </button>
               <button
                 type="button"
+                data-testid="link-fix-cancel"
                 onClick={() => setFix({ loading: false })}
                 className="flex items-center gap-1 text-[11px] px-2 py-0.5 rounded border border-border hover:bg-accent"
               >
@@ -138,6 +140,7 @@ function FixButton({ link, onFixed }: { link: LinkResult; onFixed: (newUrl: stri
   return (
     <button
       type="button"
+      data-testid="link-fix-suggest"
       onClick={getSuggestion}
       disabled={fix.loading}
       className="flex items-center gap-1 text-[11px] px-2 py-1 rounded border border-border hover:bg-accent hover:border-primary/40 transition-colors disabled:opacity-50"
@@ -291,7 +294,7 @@ export default function LinkCheckerPage() {
 
   return (
     <fieldset disabled={readOnly} style={{ border: "none", padding: 0, margin: 0 }}>
-    <div className="flex flex-col">
+    <div data-testid="link-checker-root" className="flex flex-col">
       <ActionBar helpArticleId="linkchecker-intro"
         actions={<>
           {state === "done" && allBroken.length > 0 && (
@@ -332,7 +335,7 @@ export default function LinkCheckerPage() {
             <Link2 style={{ width: "3rem", height: "3rem", opacity: 0.2 }} />
             <p className="text-sm">Checks all links and images across every richtext and image field.</p>
             <p className="text-xs opacity-60">Internal links verify the target document exists. Internal images verify the file exists on disk. External URLs send a HEAD request.</p>
-            <button type="button" onClick={runCheck}
+            <button data-testid="link-checker-start" type="button" onClick={runCheck}
               className="mt-2 flex items-center gap-2 text-sm px-4 py-2 rounded-md bg-primary text-primary-foreground hover:opacity-90 transition-opacity">
               <Play style={{ width: "0.875rem", height: "0.875rem" }} />
               Run check
@@ -370,6 +373,7 @@ export default function LinkCheckerPage() {
               <button
                 key={key}
                 type="button"
+                data-testid={`links-filter-${key}`}
                 onClick={() => setFilter(key)}
                 style={{
                   display: "flex", alignItems: "center", gap: "0.5rem",
@@ -428,6 +432,7 @@ export default function LinkCheckerPage() {
                     </td>
                     <td style={{ padding: "0.5rem 0.875rem" }}>
                       <button
+                        data-testid={`link-checker-doc-button-${r.docCollection}-${r.docSlug}`}
                         type="button"
                         onClick={() => openTab(`/admin/content/${r.docCollection}/${r.docSlug}`, r.docTitle)}
                         className="hover:underline text-left"

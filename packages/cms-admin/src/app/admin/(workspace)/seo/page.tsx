@@ -204,7 +204,7 @@ export default function SeoPage() {
   };
 
   return (
-    <>
+    <div data-testid="seo-root">
       <TabTitle value="SEO" />
       <ActionBar helpArticleId="seo-dashboard-intro" actions={
         <div style={{ display: "flex", gap: "0.5rem", alignItems: "center" }}>
@@ -283,6 +283,8 @@ export default function SeoPage() {
             {(["documents", "keywords"] as const).map((tab) => (
               <button
                 key={tab}
+                type="button"
+                data-testid={`seo-tab-${tab}`}
                 onClick={() => setActiveTab(tab)}
                 style={{
                   padding: "0.5rem 1rem", border: "none", background: "none", cursor: "pointer",
@@ -302,10 +304,12 @@ export default function SeoPage() {
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", marginBottom: "0.75rem" }}>
                 <form
+                  data-testid="seo-keyword-form"
                   onSubmit={(e) => { e.preventDefault(); handleAddKeyword(); }}
                   style={{ display: "flex", gap: "0.375rem", alignItems: "center" }}
                 >
                   <input
+                    data-testid="seo-keyword-input"
                     type="text"
                     value={newKeyword}
                     onChange={(e) => setNewKeyword(e.target.value)}
@@ -317,6 +321,7 @@ export default function SeoPage() {
                     }}
                   />
                   <button
+                    data-testid="seo-keyword-add-button"
                     type="submit"
                     disabled={addingKeyword || !newKeyword.trim()}
                     style={{
@@ -391,16 +396,22 @@ export default function SeoPage() {
                               <span style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
                                 <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
                                 <button
+                                  type="button"
+                                  data-testid={`keyword-confirm-yes-${kw.keyword}`}
                                   onClick={(e) => { e.stopPropagation(); handleRemoveKeyword(kw.keyword); }}
                                   style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}
                                 >Yes</button>
                                 <button
+                                  type="button"
+                                  data-testid={`keyword-confirm-no-${kw.keyword}`}
                                   onClick={(e) => { e.stopPropagation(); setConfirmRemove(null); }}
                                   style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}
                                 >No</button>
                               </span>
                             ) : (
                               <button
+                                type="button"
+                                data-testid={`keyword-delete-${kw.keyword}`}
                                 onClick={(e) => { e.stopPropagation(); setConfirmRemove(kw.keyword); }}
                                 style={{
                                   display: "inline-flex", alignItems: "center", padding: "0.2rem",
@@ -430,7 +441,7 @@ export default function SeoPage() {
                                   {kw.documents.map((d) => (
                                     <tr key={`${d.collection}/${d.slug}`} style={{ borderTop: "1px solid var(--border)" }}>
                                       <td style={{ padding: "0.375rem 0.5rem" }}>
-                                        <a href={`/admin/content/${d.collection}/${d.slug}`} style={{ color: "var(--foreground)", textDecoration: "none" }}>
+                                        <a data-testid={`seo-keyword-doc-link-${d.collection}-${d.slug}`} href={`/admin/content/${d.collection}/${d.slug}`} style={{ color: "var(--foreground)", textDecoration: "none" }}>
                                           {d.title}
                                         </a>
                                       </td>
@@ -469,6 +480,8 @@ export default function SeoPage() {
               {[{ value: "all", label: "All" }, ...siteLocales.map((l) => ({ value: l, label: `${LOCALE_FLAGS[l] ?? ""} ${l.toUpperCase()}` }))].map((opt) => (
                 <button
                   key={opt.value}
+                  type="button"
+                  data-testid={`seo-locale-filter-${opt.value}`}
                   onClick={() => setLocaleFilter(opt.value)}
                   style={{
                     padding: "0.2rem 0.5rem",
@@ -503,6 +516,7 @@ export default function SeoPage() {
                 <tr key={`${doc.collection}/${doc.slug}`} style={{ borderBottom: "1px solid var(--border)" }}>
                   <td style={{ padding: "0.625rem 0.75rem" }}>
                     <a
+                      data-testid={`seo-doc-link-${doc.collection}-${doc.slug}`}
                       href={`/admin/content/${doc.collection}/${doc.slug}`}
                       style={{ color: "var(--foreground)", textDecoration: "none", fontWeight: 500, display: "flex", alignItems: "center", gap: "0.5rem" }}
                     >
@@ -531,6 +545,8 @@ export default function SeoPage() {
                   <td style={{ textAlign: "right", padding: "0.5rem 0.75rem" }}>
                     {!doc.optimized && (
                       <button
+                        type="button"
+                        data-testid={`seo-optimize-${doc.collection}-${doc.slug}`}
                         onClick={() => optimizeSingle(doc.collection, doc.slug)}
                         style={{
                           display: "inline-flex", alignItems: "center", gap: "0.25rem",
@@ -552,6 +568,6 @@ export default function SeoPage() {
           })()}
         </div>
       )}
-    </>
+    </div>
   );
 }

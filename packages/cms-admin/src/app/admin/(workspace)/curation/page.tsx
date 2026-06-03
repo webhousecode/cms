@@ -64,7 +64,7 @@ function renderMarkdown(md: string): string {
         return `<span style="display:inline-flex;align-items:center;gap:0.4rem;padding:0.4rem 0.7rem;margin:0.5rem 0;border:1px dashed var(--destructive);border-radius:6px;color:var(--destructive);font-size:0.75rem;">⚠ Invalid image URL <code style="opacity:0.7;">${url.slice(0, 60)}${url.length > 60 ? "…" : ""}</code></span>`;
       })
       // links: [text](url)
-      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noreferrer" style="color:var(--primary);text-decoration:underline;">$1</a>')
+      .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a data-testid="curation-preview-link" href="$2" target="_blank" rel="noreferrer" style="color:var(--primary);text-decoration:underline;">$1</a>')
       // bold
       .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
       // italic
@@ -316,6 +316,7 @@ export default function CurationPage() {
   }
 
   return (
+    <div data-testid="curation-root">
     <fieldset disabled={readOnly} style={{ border: "none", padding: 0, margin: 0 }}>
     <div className="p-8 max-w-5xl">
       <TabTitle value="Curation Queue" />
@@ -330,6 +331,7 @@ export default function CurationPage() {
       <div className="flex gap-1 mb-6 border-b border-border">
         {TABS.map((t) => (
           <button
+            data-testid={`curation-tab-${t.id}`}
             key={t.id}
             type="button"
             onClick={() => switchTab(t.id)}
@@ -396,6 +398,7 @@ export default function CurationPage() {
 
                 <div className="flex items-center gap-1.5 shrink-0">
                   <button
+                    data-testid={`curation-speak-${item.id}`}
                     type="button"
                     title={speakingId === item.id ? "Stop" : "Read aloud"}
                     onClick={() => speakingId === item.id ? handleStop() : handleSpeak(item)}
@@ -406,6 +409,7 @@ export default function CurationPage() {
                   {/* Preview is available in all tabs (not just ready) so
                       curators can also see what was approved/rejected. */}
                   <button
+                    data-testid={`curation-preview-${item.id}`}
                     type="button"
                     onClick={() => setPreviewItem(item)}
                     title="Preview rendered content"
@@ -417,6 +421,7 @@ export default function CurationPage() {
                   {!readOnly && (tab === "ready" || tab === "in_review") && (
                     <>
                       <button
+                        data-testid={`curation-fields-${item.id}`}
                         type="button"
                         onClick={() => handleEditFields(item)}
                         title="Edit fields before approving"
@@ -426,6 +431,7 @@ export default function CurationPage() {
                         Fields
                       </button>
                       <button
+                        data-testid={`curation-approve-${item.id}`}
                         type="button"
                         title="Approve & Publish"
                         onClick={() => handleApprove(item.id)}
@@ -436,6 +442,7 @@ export default function CurationPage() {
                       </button>
                       {tab === "ready" && (
                         <button
+                          data-testid={`curation-edit-${item.id}`}
                           type="button"
                           onClick={() => handleEditFirst(item)}
                           className="flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium border border-border hover:bg-secondary transition-colors"
@@ -446,6 +453,7 @@ export default function CurationPage() {
                       )}
                       {tab === "in_review" && (
                         <button
+                          data-testid={`curation-open-editor-${item.id}`}
                           type="button"
                           onClick={() => handleEditFirst(item)}
                           className="flex items-center gap-1 px-2.5 py-1.5 rounded-md text-xs font-medium border border-border hover:bg-secondary transition-colors"
@@ -455,6 +463,7 @@ export default function CurationPage() {
                         </button>
                       )}
                       <button
+                        data-testid={`curation-reject-${item.id}`}
                         type="button"
                         title="Reject"
                         onClick={() => setRejectingId(item.id)}
@@ -479,6 +488,7 @@ export default function CurationPage() {
                   </span>
                   {/* Active = primary contentData (always first chip) */}
                   <button
+                    data-testid={`curation-model-active-${item.id}`}
                     type="button"
                     disabled
                     className="px-2 py-1 rounded-md text-[0.7rem] font-mono border border-primary text-primary bg-primary/10 cursor-default"
@@ -488,6 +498,7 @@ export default function CurationPage() {
                   </button>
                   {item.alternatives.map((alt, i) => (
                     <button
+                      data-testid={`curation-model-alt-${item.id}-${i}`}
                       key={`${alt.model}-${i}`}
                       type="button"
                       onClick={() => handlePickAlternative(item, i)}
@@ -510,6 +521,7 @@ export default function CurationPage() {
               {rejectingId === item.id && (
                 <div className="mt-3 flex gap-2">
                   <textarea
+                    data-testid={`curation-reject-feedback-${item.id}`}
                     value={rejectFeedback}
                     onChange={(e) => setRejectFeedback(e.target.value)}
                     placeholder="Feedback for the agent..."
@@ -518,6 +530,7 @@ export default function CurationPage() {
                   />
                   <div className="flex flex-col gap-1">
                     <button
+                      data-testid={`curation-reject-confirm-${item.id}`}
                       type="button"
                       onClick={() => handleReject(item.id)}
                       disabled={!rejectFeedback.trim()}
@@ -526,6 +539,7 @@ export default function CurationPage() {
                       Confirm
                     </button>
                     <button
+                      data-testid={`curation-reject-cancel-${item.id}`}
                       type="button"
                       onClick={() => {
                         setRejectingId(null);
@@ -552,6 +566,7 @@ export default function CurationPage() {
                         </label>
                         {field.type === "select" && field.options ? (
                           <select
+                            data-testid={`curation-field-select-${item.id}-${field.name}`}
                             value={String(editDraft[field.name] ?? "")}
                             onChange={(e) => setEditDraft((prev) => ({ ...prev, [field.name]: e.target.value }))}
                             style={{ flex: 1, padding: "0.25rem 0.5rem", borderRadius: "5px", border: "1px solid var(--border)", background: "var(--background)", color: "var(--foreground)", fontSize: "0.8rem" }}
@@ -563,6 +578,7 @@ export default function CurationPage() {
                           </select>
                         ) : field.type === "tags" ? (
                           <input
+                            data-testid={`curation-field-tags-${item.id}-${field.name}`}
                             type="text"
                             value={((editDraft[field.name] as string[]) ?? []).join(", ")}
                             onChange={(e) =>
@@ -584,6 +600,7 @@ export default function CurationPage() {
                           />
                         ) : (
                           <input
+                            data-testid={`curation-field-input-${item.id}-${field.name}`}
                             type={field.type === "date" ? "date" : field.type === "number" ? "number" : "text"}
                             value={String(editDraft[field.name] ?? "")}
                             onChange={(e) => setEditDraft((prev) => ({ ...prev, [field.name]: e.target.value }))}
@@ -594,6 +611,7 @@ export default function CurationPage() {
                     ))}
                   <div className="flex gap-2 pt-1">
                     <button
+                      data-testid={`curation-field-save-${item.id}`}
                       type="button"
                       onClick={() => handleSaveFields(item)}
                       className="px-3 py-1.5 rounded-md text-xs bg-primary text-primary-foreground hover:opacity-90"
@@ -601,6 +619,7 @@ export default function CurationPage() {
                       Save fields
                     </button>
                     <button
+                      data-testid={`curation-field-cancel-${item.id}`}
                       type="button"
                       onClick={() => setEditingId(null)}
                       className="px-3 py-1.5 rounded-md text-xs border border-border hover:bg-secondary"
@@ -626,6 +645,7 @@ export default function CurationPage() {
     {/* Preview modal — full rendered post for the selected queue item */}
     {previewItem && (
       <div
+        data-testid="curation-preview-modal-backdrop"
         onClick={() => setPreviewItem(null)}
         style={{
           position: "fixed", inset: 0, background: "rgba(0,0,0,0.7)", zIndex: 100,
@@ -634,6 +654,7 @@ export default function CurationPage() {
         }}
       >
         <div
+          data-testid="curation-preview-modal-content"
           onClick={(e) => e.stopPropagation()}
           style={{
             background: "var(--card)", color: "var(--foreground)",
@@ -643,6 +664,7 @@ export default function CurationPage() {
           }}
         >
           <button
+            data-testid="curation-preview-modal-close"
             type="button"
             onClick={() => setPreviewItem(null)}
             title="Close preview"
@@ -706,5 +728,6 @@ export default function CurationPage() {
       </div>
     )}
     </fieldset>
+    </div>
   );
 }

@@ -111,6 +111,7 @@ export function TourTooltip({
       >
         {/* Close button */}
         <button
+          data-testid="tour-tooltip-close-button"
           onClick={onSkip}
           style={{
             position: "absolute",
@@ -173,6 +174,7 @@ export function TourTooltip({
           </span>
 
           <button
+            data-testid="tour-tooltip-action-button"
             onClick={onNext}
             style={{
               background: "#F7BB2E",

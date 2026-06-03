@@ -262,6 +262,7 @@ export default function SitesDashboard() {
           </p>
           <div style={{ display: "flex", gap: "0.5rem" }}>
             <button
+              data-testid="sites-empty-new-button"
               type="button"
               onClick={() => router.push("/admin/sites/new")}
               style={{
@@ -276,6 +277,7 @@ export default function SitesDashboard() {
             </button>
             {isAdmin && (
               <button
+                data-testid="sites-empty-beam-button"
                 type="button"
                 onClick={() => router.push("/admin/account?tab=beam")}
                 title="Generate a Beam token to receive a site from another CMS"
@@ -299,7 +301,7 @@ export default function SitesDashboard() {
   }
 
   return (
-    <>
+    <div data-testid="sites-root">
     <ActionBar
       actions={isAdmin ? (
         <ActionButton variant="primary" onClick={() => router.push("/admin/sites/new")} icon={<Plus style={{ width: 14, height: 14 }} />}>
@@ -315,6 +317,7 @@ export default function SitesDashboard() {
       <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", marginBottom: "1.5rem" }}>
         <div style={{ display: "flex", border: "1px solid var(--border)", borderRadius: "6px", overflow: "hidden" }}>
           <button
+            data-testid="sites-view-toggle-grid"
             type="button"
             title="Grid view"
             onClick={() => { setViewMode("grid"); localStorage.setItem("cms-sites-view", "grid"); }}
@@ -328,6 +331,7 @@ export default function SitesDashboard() {
             <LayoutGrid style={{ width: "0.875rem", height: "0.875rem" }} />
           </button>
           <button
+            data-testid="sites-view-toggle-list"
             type="button"
             title="List view"
             onClick={() => { setViewMode("list"); localStorage.setItem("cms-sites-view", "list"); }}
@@ -506,6 +510,7 @@ export default function SitesDashboard() {
                   const busy = pm2Busy === port;
                   return (
                     <button
+                      data-testid={`site-card-pm2-toggle-${site.id}`}
                       type="button"
                       disabled={busy}
                       onClick={(e) => { e.stopPropagation(); if (port) togglePm2(port, isOnline ? "stop" : "start"); }}
@@ -528,6 +533,7 @@ export default function SitesDashboard() {
                 })()}
               </div>
               <button
+                data-testid={`site-card-preview-button-${site.id}`}
                 type="button"
                 onClick={async (e) => {
                   e.stopPropagation();
@@ -559,6 +565,7 @@ export default function SitesDashboard() {
               </button>
               {liveUrls[site.id] && (
                 <a
+                  data-testid={`site-card-live-link-${site.id}`}
                   href={liveUrls[site.id]}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -589,15 +596,18 @@ export default function SitesDashboard() {
     {/* Rename modal */}
     {renamingSiteId && (
       <div
+        data-testid="sites-rename-modal-overlay"
         style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.5)" }}
         onClick={() => setRenamingSiteId(null)}
       >
         <div
+          data-testid="sites-rename-modal"
           style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "12px", padding: "1.5rem", width: "24rem", boxShadow: "0 8px 30px rgba(0,0,0,0.4)" }}
           onClick={(e) => e.stopPropagation()}
         >
           <h3 style={{ fontSize: "0.95rem", fontWeight: 600, margin: "0 0 1rem" }}>Rename Site</h3>
           <input
+            data-testid="sites-rename-input"
             autoFocus
             value={renameValue}
             onChange={(e) => setRenameValue(e.target.value)}
@@ -614,6 +624,7 @@ export default function SitesDashboard() {
           />
           <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end", marginTop: "1rem" }}>
             <button
+              data-testid="sites-rename-cancel"
               type="button"
               onClick={() => setRenamingSiteId(null)}
               style={{
@@ -623,6 +634,7 @@ export default function SitesDashboard() {
               }}
             >No</button>
             <button
+              data-testid="sites-rename-confirm"
               type="button"
               onClick={() => renameSite(renamingSiteId, renameValue)}
               style={{
@@ -639,10 +651,12 @@ export default function SitesDashboard() {
     {/* Clone modal */}
     {cloningSite && (
       <div
+        data-testid="sites-clone-modal-overlay"
         style={{ position: "fixed", inset: 0, zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.5)" }}
         onClick={() => !cloneInProgress && setCloningSite(null)}
       >
         <div
+          data-testid="sites-clone-modal"
           style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "12px", padding: "1.5rem", width: "26rem", boxShadow: "0 8px 30px rgba(0,0,0,0.4)" }}
           onClick={(e) => e.stopPropagation()}
         >
@@ -658,6 +672,7 @@ export default function SitesDashboard() {
             New site name
           </label>
           <input
+            data-testid="sites-clone-input"
             autoFocus
             value={cloneName}
             onChange={(e) => setCloneName(e.target.value)}
@@ -682,6 +697,7 @@ export default function SitesDashboard() {
           )}
           <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end", marginTop: "1rem" }}>
             <button
+              data-testid="sites-clone-cancel"
               type="button"
               onClick={() => setCloningSite(null)}
               disabled={cloneInProgress}
@@ -693,6 +709,7 @@ export default function SitesDashboard() {
               }}
             >Cancel</button>
             <button
+              data-testid="sites-clone-confirm"
               type="button"
               onClick={handleClone}
               disabled={cloneInProgress || !cloneName.trim()}
@@ -711,7 +728,7 @@ export default function SitesDashboard() {
         </div>
       </div>
     )}
-    </>
+    </div>
   );
 }
 
@@ -797,6 +814,7 @@ function SiteListView({ sites, stats, healthMap, liveUrls, onEnter, onSettings, 
     return (
       <th style={{ ...thBase, textAlign: align }}>
         <button
+          data-testid={`sites-list-sort-${sk}`}
           type="button"
           onClick={() => toggleSort(sk)}
           style={{
@@ -830,6 +848,7 @@ function SiteListView({ sites, stats, healthMap, liveUrls, onEnter, onSettings, 
         {sorted.map((site) => (
           <tr
             key={site.id}
+            data-testid={`sites-list-row-${site.id}`}
             onClick={() => onEnter(site)}
             style={{ borderBottom: "1px solid var(--border)", cursor: "pointer", transition: "background 0.15s" }}
             className="hover:bg-accent/50"
@@ -856,6 +875,7 @@ function SiteListView({ sites, stats, healthMap, liveUrls, onEnter, onSettings, 
               <div style={{ display: "flex", gap: "0.375rem", alignItems: "center" }}>
                 {liveUrls[site.id] && (
                   <a
+                    data-testid={`sites-list-live-link-${site.id}`}
                     href={liveUrls[site.id]}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -883,6 +903,7 @@ function SiteListView({ sites, stats, healthMap, liveUrls, onEnter, onSettings, 
             <td style={{ padding: "0.6rem 0.75rem", textAlign: "right" }}>
               <div style={{ display: "flex", gap: "0.25rem", justifyContent: "flex-end", alignItems: "center" }}>
                 <button
+                  data-testid={`sites-list-preview-button-${site.id}`}
                   type="button"
                   onClick={(e) => { e.stopPropagation(); onPreview(site); }}
                   style={{
@@ -971,6 +992,7 @@ function SiteFilters({ sites, liveUrls, filter, onFilter }: {
       {tabs.map((t) => (
         <button
           key={t.key}
+          data-testid={`sites-filter-${t.key}`}
           type="button"
           onClick={() => onFilter(t.key)}
           style={{

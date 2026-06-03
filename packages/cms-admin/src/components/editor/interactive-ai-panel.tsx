@@ -206,6 +206,7 @@ CRITICAL: Dollar signs in JavaScript strings MUST be preserved literally. Write 
             <div style={{ display: "flex", flexDirection: "column", gap: "0.375rem", maxWidth: "260px", margin: "0 auto" }}>
               {["Add a smooth fade-in animation", "Make it responsive for mobile", "Change the color scheme to dark blue", "Add a hover tooltip on data points"].map((s) => (
                 <button
+                  data-testid={`interactive-ai-suggestion-${s.toLowerCase().replace(/\s+/g, '-')}`}
                   key={s}
                   onClick={() => { setInput(s); textareaRef.current?.focus(); }}
                   style={{
@@ -256,6 +257,7 @@ CRITICAL: Dollar signs in JavaScript strings MUST be preserved literally. Write 
                   )}
                   <div style={{ display: "flex", gap: "0.375rem", justifyContent: "flex-end" }}>
                     <button
+                      data-testid={`interactive-ai-copy-message-${i}`}
                       onClick={() => copyMessage(msg.content, i)}
                       style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem", padding: "0.25rem 0.5rem", borderRadius: "5px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.65rem", cursor: "pointer" }}
                     >
@@ -263,6 +265,7 @@ CRITICAL: Dollar signs in JavaScript strings MUST be preserved literally. Write 
                     </button>
                     {html && (
                       <button
+                        data-testid={`interactive-ai-apply-message-${i}`}
                         onClick={() => applyHtml(msg.content)}
                         style={{ display: "inline-flex", alignItems: "center", gap: "0.375rem", padding: "0.375rem 0.75rem", borderRadius: "6px", border: "none", background: "var(--primary)", color: "var(--primary-foreground)", fontSize: "0.75rem", fontWeight: 600, cursor: "pointer" }}
                       >
@@ -280,6 +283,7 @@ CRITICAL: Dollar signs in JavaScript strings MUST be preserved literally. Write 
       {/* Input */}
       <div style={{ padding: "0.625rem 0.75rem 2rem", borderTop: "1px solid var(--border)", display: "flex", gap: "0.5rem", alignItems: "flex-end" }}>
         <textarea
+          data-testid="interactive-ai-input"
           ref={textareaRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}
@@ -296,6 +300,7 @@ CRITICAL: Dollar signs in JavaScript strings MUST be preserved literally. Write 
           onBlur={(e) => { e.target.style.borderColor = "var(--border)"; }}
         />
         <Button
+          data-testid="interactive-ai-send-button"
           size="sm"
           onClick={send}
           disabled={!input.trim() || streaming}

@@ -85,6 +85,7 @@ export function StepTemplate({ selected, onSelect }: Props) {
           }}>
             {sites.map((site) => (
               <button
+                data-testid={`deploy-site-select-${site.id}`}
                 key={site.id}
                 type="button"
                 onClick={() => onSelect(`site:${site.id}`)}

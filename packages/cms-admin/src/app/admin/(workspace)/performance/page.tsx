@@ -131,7 +131,7 @@ export default function PerformancePage() {
   const hasData = runs.length > 0 || agents.length > 0;
 
   return (
-    <>
+    <div data-testid="performance-root">
     <ActionBar helpArticleId="performance-intro"
       actions={
         <ActionButton variant="primary" onClick={fetchAll} disabled={loading} icon={<RefreshCw style={{ width: 14, height: 14 }} className={loading ? "animate-spin" : ""} />}>
@@ -481,7 +481,7 @@ export default function PerformancePage() {
         </div>
       )}
     </div>
-    </>
+    </div>
   );
 }
 

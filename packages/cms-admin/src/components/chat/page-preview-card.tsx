@@ -135,6 +135,7 @@ export function PagePreviewCard({ pagePath }: PagePreviewCardProps) {
                 <RefreshCw style={{ width: "20px", height: "20px", opacity: 0.5 }} className="animate-spin" />
                 Building preview...
                 <button
+                  data-testid="preview-cancel-button"
                   onClick={() => setStatus("error")}
                   style={{
                     marginTop: "4px", background: "none", border: "1px solid var(--border)",
@@ -172,6 +173,7 @@ export function PagePreviewCard({ pagePath }: PagePreviewCardProps) {
         </div>
         {fullUrl && (
           <a
+            data-testid="preview-open-link"
             href={fullUrl}
             target="_blank"
             rel="noopener noreferrer"

@@ -146,7 +146,7 @@ export function StepDeploy({ state }: Props) {
           const isActive = isCurrent || isCompleted;
 
           return (
-            <div key={step.key} style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+            <div key={step.key} data-testid={`deploy-step-${step.key}`} style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
               <div style={{
                 width: 22,
                 height: 22,
@@ -216,6 +216,7 @@ export function StepDeploy({ state }: Props) {
       {isDone && finalUrl && (
         <div style={{ marginTop: "1.5rem" }}>
           <a
+            data-testid="deploy-success-url"
             href={finalUrl}
             target="_blank"
             rel="noopener noreferrer"

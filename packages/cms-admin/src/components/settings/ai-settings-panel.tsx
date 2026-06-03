@@ -133,7 +133,7 @@ export function AISettingsPanel() {
   }
 
   return (
-    <form ref={aiFormRef} onSubmit={handleSave} onChange={() => window.dispatchEvent(new CustomEvent("cms:settings-dirty"))} data-testid="panel-ai">
+    <form data-testid="panel-ai" ref={aiFormRef} onSubmit={handleSave} onChange={() => window.dispatchEvent(new CustomEvent("cms:settings-dirty"))}>
       <SettingsCard>
       {/* Default provider */}
       <div style={{ marginBottom: "1.5rem" }}>
@@ -144,6 +144,7 @@ export function AISettingsPanel() {
         <div style={{ display: "flex", gap: "0.5rem" }}>
           {PROVIDERS.map((p) => (
             <button
+              data-testid={`ai-provider-${p.id}`}
               key={p.id}
               type="button"
               onClick={() => setConfig((c) => ({ ...c, defaultProvider: p.id }))}
@@ -193,6 +194,7 @@ export function AISettingsPanel() {
                   )
                 )}
                 <a
+                  data-testid={`ai-docs-link-${p.id}`}
                   href={p.docsUrl}
                   target="_blank"
                   rel="noopener noreferrer"
@@ -204,6 +206,7 @@ export function AISettingsPanel() {
               {isEditing ? (
                 <div style={{ display: "flex", gap: "0.375rem" }}>
                   <input
+                    data-testid="ai-api-key-input"
                     type="text"
                     value={editing[p.field] ?? ""}
                     onChange={(e) => setEditing((prev) => ({ ...prev, [p.field]: e.target.value }))}
@@ -214,6 +217,7 @@ export function AISettingsPanel() {
                     onBlur={(e) => { e.target.style.borderColor = "var(--border)"; }}
                   />
                   <button
+                    data-testid="ai-api-key-cancel-button"
                     type="button"
                     onClick={() => setEditing((prev) => { const n = { ...prev }; delete n[p.field]; return n; })}
                     style={{ padding: "0.5rem 0.625rem", borderRadius: "7px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: "pointer" }}
@@ -223,6 +227,7 @@ export function AISettingsPanel() {
                 </div>
               ) : (
                 <button
+                  data-testid="ai-api-key-edit-button"
                   type="button"
                   onClick={() => setEditing((prev) => ({ ...prev, [p.field]: "" }))}
                   style={{
@@ -255,6 +260,7 @@ export function AISettingsPanel() {
             { id: "tavily" as const, label: "Tavily", url: "https://tavily.com/" },
           ]).map((p) => (
             <button
+              data-testid="websearch-provider-button"
               key={p.id}
               type="button"
               onClick={() => setConfig((c) => ({ ...c, webSearchProvider: p.id }))}
@@ -301,6 +307,7 @@ export function AISettingsPanel() {
               {keyField in editing ? (
                 <div style={{ display: "flex", gap: "0.375rem" }}>
                   <input
+                    data-testid="websearch-api-key-input"
                     type="text"
                     value={editing[keyField] ?? ""}
                     onChange={(e) => setEditing((prev) => ({ ...prev, [keyField]: e.target.value }))}
@@ -311,6 +318,7 @@ export function AISettingsPanel() {
                     onBlur={(e) => { e.target.style.borderColor = "var(--border)"; }}
                   />
                   <button
+                    data-testid="websearch-api-key-cancel-button"
                     type="button"
                     onClick={() => setEditing((prev) => { const n = { ...prev }; delete n[keyField]; return n; })}
                     style={{ padding: "0.5rem 0.625rem", borderRadius: "7px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.75rem", cursor: "pointer" }}
@@ -320,6 +328,7 @@ export function AISettingsPanel() {
                 </div>
               ) : (
                 <button
+                  data-testid="websearch-api-key-edit-button"
                   type="button"
                   onClick={() => setEditing((prev) => ({ ...prev, [keyField]: "" }))}
                   style={{ ...fieldStyle, textAlign: "left", cursor: "pointer", color: "var(--muted-foreground)", opacity: currentKey ? 1 : 0.6 }}

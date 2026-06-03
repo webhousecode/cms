@@ -645,36 +645,36 @@ footer .footer-links a:hover { color: var(--gold); }
 
 <!-- NAV -->
 <nav id="nav">
-  <a href="/" class="nav-logo">
+  <a data-testid="landing-nav-logo-link" href="/" class="nav-logo">
     <img class="nav-icon" src="/webhouse-icon.svg" alt="" />
     <img class="nav-wordmark" src="/webhouse-wordmark-dark.svg" alt="webhouse.app" />
   </a>
   <div class="nav-links">
-    <a href="#features">Features</a>
-    <a href="#architecture">Architecture</a>
-    <a href="#mcp">MCP</a>
-    <a href="https://docs.webhouse.app" target="_blank">Docs</a>
-    <a href="https://github.com/webhousecode/cms" target="_blank">GitHub</a>
-    <a href="/login">Log In</a>
-    <a href="/signup" class="nav-cta">Sign Up</a>
+    <a data-testid="landing-nav-features-link" href="#features">Features</a>
+    <a data-testid="landing-nav-architecture-link" href="#architecture">Architecture</a>
+    <a data-testid="landing-nav-mcp-link" href="#mcp">MCP</a>
+    <a data-testid="landing-nav-docs-link" href="https://docs.webhouse.app" target="_blank">Docs</a>
+    <a data-testid="landing-nav-github-link" href="https://github.com/webhousecode/cms" target="_blank">GitHub</a>
+    <a data-testid="landing-nav-login-link" href="/login">Log In</a>
+    <a data-testid="landing-nav-signup-button" href="/signup" class="nav-cta">Sign Up</a>
   </div>
-  <button class="nav-hamburger" id="nav-hamburger" aria-label="Open menu">
+  <button data-testid="nav-hamburger-button" class="nav-hamburger" id="nav-hamburger" aria-label="Open menu">
     <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
   </button>
 </nav>
 
 <!-- MOBILE MENU -->
 <div class="nav-mobile-menu" id="mobile-menu">
-  <button class="nav-mobile-close" id="mobile-close" aria-label="Close menu">
+  <button data-testid="nav-mobile-close-button" class="nav-mobile-close" id="mobile-close" aria-label="Close menu">
     <svg width="28" height="28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
   </button>
-  <a href="#features" class="mobile-nav-link">Features</a>
-  <a href="#architecture" class="mobile-nav-link">Architecture</a>
-  <a href="#mcp" class="mobile-nav-link">MCP</a>
-  <a href="https://docs.webhouse.app" target="_blank" class="mobile-nav-link">Docs</a>
-  <a href="https://github.com/webhousecode/cms" target="_blank">GitHub</a>
-  <a href="/login">Log In</a>
-  <a href="/signup" class="mobile-cta">Sign Up</a>
+  <a data-testid="landing-mobile-features-link" href="#features" class="mobile-nav-link">Features</a>
+  <a data-testid="landing-mobile-architecture-link" href="#architecture" class="mobile-nav-link">Architecture</a>
+  <a data-testid="landing-mobile-mcp-link" href="#mcp" class="mobile-nav-link">MCP</a>
+  <a data-testid="landing-mobile-docs-link" href="https://docs.webhouse.app" target="_blank" class="mobile-nav-link">Docs</a>
+  <a data-testid="landing-mobile-github-link" href="https://github.com/webhousecode/cms" target="_blank">GitHub</a>
+  <a data-testid="landing-mobile-login-link" href="/login">Log In</a>
+  <a data-testid="landing-mobile-signup-button" href="/signup" class="mobile-cta">Sign Up</a>
 </div>
 
 <!-- HERO -->
@@ -701,11 +701,11 @@ footer .footer-links a:hover { color: var(--gold); }
   <p class="hero-tagline reveal reveal-delay-2">AI-native content engine</p>
 
   <div class="hero-actions reveal reveal-delay-3">
-    <a href="/signup" class="btn-primary">
+    <a data-testid="hero-signup-button" href="/signup" class="btn-primary">
       <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
       Get Started Free
     </a>
-    <a href="/login" class="btn-secondary">
+    <a data-testid="hero-login-button" href="/login" class="btn-secondary">
       Log In →
     </a>
   </div>
@@ -841,11 +841,11 @@ footer .footer-links a:hover { color: var(--gold); }
   <h2 class="cta-title reveal reveal-delay-1">Describe what you want.<br>Get a <span style="color: var(--gold);">production-ready</span> site.</h2>
   <p class="cta-subtitle reveal reveal-delay-2">Then keep iterating with AI or by hand.</p>
   <div class="hero-actions reveal reveal-delay-3" style="justify-content: center;">
-    <a href="/signup" class="btn-primary">
+    <a data-testid="cta-signup-button" href="/signup" class="btn-primary">
       <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
       Create Free Account
     </a>
-    <a href="https://github.com/webhousecode/cms" class="btn-secondary" target="_blank">
+    <a data-testid="cta-github-button" href="https://github.com/webhousecode/cms" class="btn-secondary" target="_blank">
       <svg width="16" height="16" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg>
       View on GitHub →
     </a>
@@ -869,11 +869,11 @@ footer .footer-links a:hover { color: var(--gold); }
     <span>© 2026 WebHouse · webhouse.app</span>
   </div>
   <div class="footer-links">
-    <a href="https://docs.webhouse.app" target="_blank">Docs</a>
-    <a href="https://github.com/webhousecode" target="_blank">GitHub</a>
-    <a href="https://www.npmjs.com/package/@webhouse/cms" target="_blank">npm</a>
-    <a href="https://www.linkedin.com/company/webhouse" target="_blank">LinkedIn</a>
-    <a href="mailto:info@webhouse.net">Contact</a>
+    <a data-testid="landing-footer-docs-link" href="https://docs.webhouse.app" target="_blank">Docs</a>
+    <a data-testid="landing-footer-github-link" href="https://github.com/webhousecode" target="_blank">GitHub</a>
+    <a data-testid="landing-footer-npm-link" href="https://www.npmjs.com/package/@webhouse/cms" target="_blank">npm</a>
+    <a data-testid="landing-footer-linkedin-link" href="https://www.linkedin.com/company/webhouse" target="_blank">LinkedIn</a>
+    <a data-testid="landing-footer-contact-link" href="mailto:info@webhouse.net">Contact</a>
   </div>
 </footer>
 

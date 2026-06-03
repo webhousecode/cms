@@ -42,6 +42,7 @@ export function SiteIntroCard() {
 
   return (
     <a
+      data-testid="site-intro-card-link"
       href="#"
       onClick={handleClick}
       className="group block rounded-xl border border-border bg-card hover:border-primary/40 transition-all duration-200 overflow-hidden"

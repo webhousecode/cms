@@ -475,6 +475,7 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
 
   return (
     <div
+      data-testid="command-palette-backdrop"
       onClick={onBackdropClick}
       style={{
         position: "fixed", inset: 0, zIndex: 200,
@@ -500,6 +501,7 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
         <div style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.875rem 1rem", borderBottom: "1px solid var(--border)" }}>
           <Search style={{ width: "1.1rem", height: "1.1rem", color: "var(--muted-foreground)", flexShrink: 0 }} />
           <input
+            data-testid="command-palette-search-input"
             ref={inputRef}
             type="text"
             value={query}
@@ -514,11 +516,12 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
             spellCheck={false}
           />
           {query && (
-            <button type="button" onClick={() => setQuery("")} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.125rem" }}>
+            <button data-testid="command-palette-clear-search" type="button" onClick={() => setQuery("")} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.125rem" }}>
               <X style={{ width: "0.875rem", height: "0.875rem" }} />
             </button>
           )}
           <button
+            data-testid="command-palette-close"
             type="button"
             onClick={onClose}
             style={{ padding: "0.2rem", borderRadius: "4px", border: "none", color: "var(--muted-foreground)", flexShrink: 0, background: "none", cursor: "pointer", display: "flex", alignItems: "center" }}
@@ -558,6 +561,7 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
                 const globalIdx = group.startIdx + localIdx;
                 return (
                   <button
+                    data-testid={`command-palette-item-${item.id}`}
                     key={item.id}
                     type="button"
                     data-idx={globalIdx}

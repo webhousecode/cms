@@ -315,6 +315,7 @@ export default function NewSitePage() {
               // { value: "migrate" as const, label: "Migrate", icon: Globe },
             ]).map(({ value, label, icon: Icon }) => (
               <button
+                data-testid={`new-site-adapter-${value}`}
                 key={value}
                 type="button"
                 onClick={() => setAdapter(value)}
@@ -336,6 +337,7 @@ export default function NewSitePage() {
             <>
               {!ghConnected ? (
                 <button
+                  data-testid="new-site-github-connect"
                   type="button"
                   onClick={connectGitHub}
                   style={{
@@ -363,10 +365,10 @@ export default function NewSitePage() {
                       Connected as <strong>{ghUser}</strong>
                     </span>
                     <span style={{ display: "flex", gap: "0.75rem" }}>
-                      <a href={`https://github.com/settings/connections/applications/${process.env.NEXT_PUBLIC_GITHUB_OAUTH_CLIENT_ID ?? ""}`} target="_blank" rel="noopener noreferrer" style={{ color: "var(--muted-foreground)", fontSize: "0.75rem", textDecoration: "underline", cursor: "pointer" }}>
+                      <a data-testid="new-site-manage-github-access" href={`https://github.com/settings/connections/applications/${process.env.NEXT_PUBLIC_GITHUB_OAUTH_CLIENT_ID ?? ""}`} target="_blank" rel="noopener noreferrer" style={{ color: "var(--muted-foreground)", fontSize: "0.75rem", textDecoration: "underline", cursor: "pointer" }}>
                         Manage access
                       </a>
-                      <button type="button" onClick={disconnectGitHub} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "0.75rem", textDecoration: "underline" }}>
+                      <button data-testid="new-site-github-disconnect" type="button" onClick={disconnectGitHub} style={{ background: "none", border: "none", cursor: "pointer", color: "var(--muted-foreground)", fontSize: "0.75rem", textDecoration: "underline" }}>
                         Disconnect
                       </button>
                     </span>
@@ -379,6 +381,7 @@ export default function NewSitePage() {
                       { value: false, label: "Import existing" },
                     ] as const).map(({ value, label }) => (
                       <button
+                        data-testid={`new-site-gh-tab-${value ? 'new' : 'existing'}`}
                         key={label}
                         type="button"
                         onClick={() => { setGhCreateNew(value); setGhSelectedRepo(""); setGhNewRepoName(""); }}
@@ -400,6 +403,7 @@ export default function NewSitePage() {
                       <div>
                         <label style={labelStyle}>Repository name</label>
                         <input
+                          data-testid="new-site-gh-repo-name"
                           type="text"
                           value={ghNewRepoName}
                           onChange={(e) => {
@@ -461,7 +465,7 @@ export default function NewSitePage() {
                   {/* Site name */}
                   <div>
                     <label style={labelStyle}>Site Name</label>
-                    <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="My Site" style={inputStyle} />
+                    <input data-testid="new-site-name-gh" type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="My Site" style={inputStyle} />
                     {name && <p style={{ margin: "0.25rem 0 0", fontSize: "0.7rem", color: "var(--muted-foreground)", fontFamily: "monospace" }}>ID: {siteId()}</p>}
                   </div>
 
@@ -469,11 +473,11 @@ export default function NewSitePage() {
                   <div style={{ display: "flex", gap: "0.75rem" }}>
                     <div style={{ flex: 1 }}>
                       <label style={labelStyle}>Branch</label>
-                      <input type="text" value={branch} onChange={(e) => setBranch(e.target.value)} placeholder="main" style={inputStyle} />
+                      <input data-testid="new-site-branch" type="text" value={branch} onChange={(e) => setBranch(e.target.value)} placeholder="main" style={inputStyle} />
                     </div>
                     <div style={{ flex: 1 }}>
                       <label style={labelStyle}>Content Directory</label>
-                      <input type="text" value={contentDir} onChange={(e) => setContentDir(e.target.value)} placeholder="content" style={inputStyle} />
+                      <input data-testid="new-site-content-dir" type="text" value={contentDir} onChange={(e) => setContentDir(e.target.value)} placeholder="content" style={inputStyle} />
                     </div>
                   </div>
                 </>
@@ -529,6 +533,7 @@ export default function NewSitePage() {
                 </label>
                 <div style={{ display: "flex", gap: "0.5rem" }}>
                   <input
+                    data-testid="new-site-import-path"
                     type="text"
                     value={importPath}
                     onChange={(e) => setImportPath(e.target.value)}
@@ -538,6 +543,7 @@ export default function NewSitePage() {
                   />
                   {isMac && (
                     <button
+                      data-testid="new-site-browse-folder"
                       type="button"
                       onClick={handleBrowse}
                       style={{
@@ -551,6 +557,7 @@ export default function NewSitePage() {
                     </button>
                   )}
                   <button
+                    data-testid="new-site-import-button"
                     type="button"
                     onClick={handleImport}
                     disabled={importing || !importPath.trim()}
@@ -586,16 +593,16 @@ export default function NewSitePage() {
 
               <div>
                 <label style={labelStyle}>Site Name</label>
-                <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="My Site" style={inputStyle} />
+                <input data-testid="new-site-name-fs" type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="My Site" style={inputStyle} />
                 {name && <p style={{ margin: "0.25rem 0 0", fontSize: "0.7rem", color: "var(--muted-foreground)", fontFamily: "monospace" }}>ID: {siteId()}</p>}
               </div>
               <div>
                 <label style={labelStyle}>Config Path (absolute)</label>
-                <input type="text" value={configPath} onChange={(e) => setConfigPath(e.target.value)} placeholder="/Users/.../cms.config.ts" style={{ ...inputStyle, fontFamily: "monospace", fontSize: "0.8rem" }} />
+                <input data-testid="new-site-config-path" type="text" value={configPath} onChange={(e) => setConfigPath(e.target.value)} placeholder="/Users/.../cms.config.ts" style={{ ...inputStyle, fontFamily: "monospace", fontSize: "0.8rem" }} />
               </div>
               <div>
                 <label style={labelStyle}>Content Directory (absolute, optional)</label>
-                <input type="text" value={fsContentDir} onChange={(e) => setFsContentDir(e.target.value)} placeholder="/Users/.../content" style={{ ...inputStyle, fontFamily: "monospace", fontSize: "0.8rem" }} />
+                <input data-testid="new-site-fs-content-dir" type="text" value={fsContentDir} onChange={(e) => setFsContentDir(e.target.value)} placeholder="/Users/.../content" style={{ ...inputStyle, fontFamily: "monospace", fontSize: "0.8rem" }} />
               </div>
             </>
           )}
@@ -612,12 +619,12 @@ export default function NewSitePage() {
           {adapter !== "migrate" && (
             <div>
               <label style={labelStyle}>Preview URL (optional)</label>
-              <input type="url" value={previewUrl} onChange={(e) => setPreviewUrl(e.target.value)} placeholder="https://my-site.example.com" style={inputStyle} />
+              <input data-testid="new-site-preview-url" type="url" value={previewUrl} onChange={(e) => setPreviewUrl(e.target.value)} placeholder="https://my-site.example.com" style={inputStyle} />
             </div>
           )}
 
         {error && (
-          <p style={{ margin: 0, fontSize: "0.8rem", color: "var(--destructive)", padding: "0.5rem 0.75rem", borderRadius: "6px", background: "color-mix(in srgb, var(--destructive) 10%, transparent)" }}>
+          <p data-testid="new-site-error" style={{ margin: 0, fontSize: "0.8rem", color: "var(--destructive)", padding: "0.5rem 0.75rem", borderRadius: "6px", background: "color-mix(in srgb, var(--destructive) 10%, transparent)" }}>
             {error}
           </p>
         )}
@@ -626,6 +633,7 @@ export default function NewSitePage() {
         {adapter !== "migrate" && (
           <div style={{ display: "flex", gap: "0.75rem", marginTop: "0.5rem" }}>
             <button
+              data-testid="new-site-create-button"
               type="button"
               onClick={handleCreate}
               disabled={saving || (adapter === "github" && !ghConnected)}
@@ -639,7 +647,7 @@ export default function NewSitePage() {
             >
               {saving ? "Creating..." : "Create site"}
             </button>
-            <button type="button" onClick={() => router.push("/admin/sites")} style={{ padding: "0.5rem 1rem", borderRadius: "8px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.85rem", cursor: "pointer" }}>
+            <button data-testid="new-site-cancel-button" type="button" onClick={() => router.push("/admin/sites")} style={{ padding: "0.5rem 1rem", borderRadius: "8px", border: "1px solid var(--border)", background: "transparent", color: "var(--muted-foreground)", fontSize: "0.85rem", cursor: "pointer" }}>
               Cancel
             </button>
           </div>

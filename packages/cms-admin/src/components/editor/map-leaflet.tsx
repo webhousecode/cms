@@ -102,5 +102,5 @@ export default function MapLeaflet({ lat, lng, zoom, hasMarker, onMarkerDrag, on
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lat, lng, zoom, hasMarker]);
 
-  return <div ref={containerRef} style={{ width: "100%", height: "100%" }} />;
+  return <div data-testid="map-leaflet-container" ref={containerRef} style={{ width: "100%", height: "100%" }} />;
 }

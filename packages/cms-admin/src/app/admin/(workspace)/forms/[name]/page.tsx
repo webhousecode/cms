@@ -77,6 +77,7 @@ export default function FormInboxPage({ params }: { params: Promise<{ name: stri
       <ActionBar>
         <ActionBarBreadcrumb items={["Forms", name]} />
         <a
+          data-testid="form-inbox-export"
           href={`/api/admin/forms/${name}/export`}
           download
           style={{
@@ -102,6 +103,7 @@ export default function FormInboxPage({ params }: { params: Promise<{ name: stri
         <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1rem" }}>
           {(["all", "new", "read", "archived"] as const).map((f) => (
             <button
+              data-testid={`form-filter-${f}`}
               key={f}
               onClick={() => setFilter(f)}
               style={{
@@ -134,6 +136,7 @@ export default function FormInboxPage({ params }: { params: Promise<{ name: stri
             <div style={{ flex: "1 1 0", minWidth: 0, display: "flex", flexDirection: "column", gap: "0.25rem" }}>
               {subs.map((sub) => (
                 <button
+                  data-testid={`form-submission-${sub.id}`}
                   key={sub.id}
                   onClick={() => {
                     setSelected(sub.id);
@@ -205,6 +208,7 @@ export default function FormInboxPage({ params }: { params: Promise<{ name: stri
                 <div style={{ marginTop: "1.25rem", display: "flex", gap: "0.5rem", flexWrap: "wrap" }}>
                   {selectedSub.status !== "archived" && (
                     <button
+                      data-testid="form-submission-archive"
                       onClick={() => archive(selectedSub.id)}
                       style={{ fontSize: "0.7rem", padding: "0.3rem 0.7rem", borderRadius: 4, border: "1px solid var(--border)", background: "var(--card)", color: "var(--foreground)", cursor: "pointer" }}
                     >
@@ -215,12 +219,14 @@ export default function FormInboxPage({ params }: { params: Promise<{ name: stri
                     <>
                       <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px", alignSelf: "center" }}>Delete?</span>
                       <button
+                        data-testid="form-submission-delete-confirm"
                         onClick={() => deleteSub(selectedSub.id)}
                         style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}
                       >
                         Yes
                       </button>
                       <button
+                        data-testid="form-submission-delete-cancel"
                         onClick={() => setConfirmDelete(null)}
                         style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}
                       >
@@ -229,6 +235,7 @@ export default function FormInboxPage({ params }: { params: Promise<{ name: stri
                     </>
                   ) : (
                     <button
+                      data-testid="form-submission-delete"
                       onClick={() => setConfirmDelete(selectedSub.id)}
                       style={{ fontSize: "0.7rem", padding: "0.3rem 0.7rem", borderRadius: 4, border: "1px solid var(--destructive)", background: "transparent", color: "var(--destructive)", cursor: "pointer" }}
                     >

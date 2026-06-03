@@ -353,6 +353,7 @@ export default function MediaPage() {
 
   /* ─── Render ─────────────────────────────────────────────── */
   return (
+    <div data-testid="media-root">
     <fieldset disabled={readOnly} style={{ border: "none", padding: 0, margin: 0 }}>
     <TooltipProvider>
     <div
@@ -430,11 +431,11 @@ export default function MediaPage() {
               {confirmBulk && (
                 <>
                   <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
-                  <button onClick={bulkDelete}
+                  <button data-testid="media-bulk-delete-yes" onClick={bulkDelete}
                     style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
                       border: "none", background: "var(--destructive)", color: "#fff",
                       cursor: "pointer", lineHeight: 1 }}>Yes</button>
-                  <button onClick={() => setConfirmBulk(false)}
+                  <button data-testid="media-bulk-delete-no" onClick={() => setConfirmBulk(false)}
                     style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
                       border: "1px solid var(--border)", background: "transparent",
                       color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
@@ -443,10 +444,10 @@ export default function MediaPage() {
               <ActionButton variant="secondary" onClick={() => {
                 // Select all visible files
                 setSelected(new Set(filtered.map((f) => f.url)));
-              }}>
+              }} data-testid="media-select-all">
                 All
               </ActionButton>
-              <ActionButton variant="secondary" onClick={() => { setSelecting(false); setSelected(new Set()); setConfirmBulk(false); }}>
+              <ActionButton variant="secondary" onClick={() => { setSelecting(false); setSelected(new Set()); setConfirmBulk(false); }} data-testid="media-select-cancel">
                 Cancel
               </ActionButton>
             </>
@@ -488,6 +489,7 @@ export default function MediaPage() {
             {(["grid", "list"] as ViewMode[]).map((v) => (
               <button
                 key={v}
+                data-testid={`media-view-${v}`}
                 type="button"
                 onClick={() => setView(v)}
                 style={{
@@ -508,6 +510,7 @@ export default function MediaPage() {
               {(["S", "M", "L"] as const).map((s) => (
                 <button
                   key={s}
+                  data-testid={`media-thumb-size-${s}`}
                   type="button"
                   onClick={() => { setThumbSize(s); localStorage.setItem("cms-media-thumb-size", s); }}
                   style={{
@@ -537,6 +540,7 @@ export default function MediaPage() {
               </ActionButton>
               <input
                 ref={inputRef}
+                data-testid="media-file-input"
                 type="file"
                 multiple
                 accept="*/*"
@@ -634,6 +638,7 @@ export default function MediaPage() {
               return (
                 <button
                   key={t.value}
+                  data-testid={`media-type-filter-${t.value || "all"}`}
                   type="button"
                   onClick={() => setTypeFilter(t.value)}
                   style={{
@@ -673,6 +678,7 @@ export default function MediaPage() {
               return (
                 <button
                   key={t.value}
+                  data-testid={`media-ai-filter-${t.value || "all"}`}
                   type="button"
                   onClick={() => setAiFilter(t.value)}
                   style={{
@@ -702,6 +708,7 @@ export default function MediaPage() {
                 Tags
               </p>
               <button
+                data-testid="media-tag-filter-all"
                 type="button"
                 onClick={() => setTagFilter("")}
                 style={{
@@ -718,6 +725,7 @@ export default function MediaPage() {
               {allTags.map((t) => (
                 <button
                   key={t.tag}
+                  data-testid={`media-tag-filter-${t.tag}`}
                   type="button"
                   onClick={() => setTagFilter(tagFilter === t.tag ? "" : t.tag)}
                   style={{
@@ -749,6 +757,7 @@ export default function MediaPage() {
             ]).map((t) => (
               <button
                 key={t.value}
+                data-testid={`media-sort-${t.value}`}
                 type="button"
                 onClick={() => setSortBy(t.value)}
                 style={{
@@ -775,6 +784,7 @@ export default function MediaPage() {
               <div style={{ position: "relative", flex: 1, minWidth: "180px" }}>
                 <Search style={{ position: "absolute", left: "0.625rem", top: "50%", transform: "translateY(-50%)", width: "0.8rem", height: "0.8rem", color: "var(--muted-foreground)", pointerEvents: "none" }} />
                 <input
+                  data-testid="media-search-input"
                   type="text"
                   value={query}
                   onChange={(e) => setQueryDebounced(e.target.value)}
@@ -783,6 +793,7 @@ export default function MediaPage() {
                 />
                 {query && (
                   <button
+                    data-testid="media-search-clear"
                     onClick={() => setQueryDebounced("")}
                     style={{ position: "absolute", right: "0.5rem", top: "50%", transform: "translateY(-50%)", background: "none", border: "none", padding: 0, cursor: "pointer", color: "var(--muted-foreground)", display: "flex", alignItems: "center" }}
                   >
@@ -811,6 +822,7 @@ export default function MediaPage() {
               {totalPages > 1 && (
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem", padding: "1.25rem", borderTop: "1px solid var(--border)" }}>
                   <button
+                    data-testid="media-pagination-first"
                     type="button"
                     onClick={() => setPage(1)}
                     disabled={currentPage === 1}
@@ -820,6 +832,7 @@ export default function MediaPage() {
                     1
                   </button>
                   <button
+                    data-testid="media-pagination-prev"
                     type="button"
                     onClick={() => setPage((p) => Math.max(1, p - 1))}
                     disabled={currentPage === 1}
@@ -831,6 +844,7 @@ export default function MediaPage() {
                     {currentPage} / {totalPages} &nbsp;·&nbsp; {sorted.length} files
                   </span>
                   <button
+                    data-testid="media-pagination-next"
                     type="button"
                     onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                     disabled={currentPage === totalPages}
@@ -839,6 +853,7 @@ export default function MediaPage() {
                     <ChevronRight style={{ width: "0.875rem", height: "0.875rem" }} />
                   </button>
                   <button
+                    data-testid="media-pagination-last"
                     type="button"
                     onClick={() => setPage(totalPages)}
                     disabled={currentPage === totalPages}
@@ -900,6 +915,7 @@ export default function MediaPage() {
     </div>
     </TooltipProvider>
     </fieldset>
+    </div>
   );
 }
 
@@ -948,6 +964,7 @@ function FolderBtn({ label, count, active, icon, onClick }: {
 }) {
   return (
     <button
+      data-testid={`media-folder-${label.toLowerCase().replace(/\s+/g, "-")}`}
       type="button"
       onClick={onClick}
       style={{
@@ -967,11 +984,12 @@ function FolderBtn({ label, count, active, icon, onClick }: {
 
 function EmptyState({ query, onUpload }: { query: string; onUpload: () => void }) {
   return (
-    <div style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "1rem", padding: "4rem 2rem", color: "var(--muted-foreground)" }}>
+    <div data-testid="media-empty-state" style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: "1rem", padding: "4rem 2rem", color: "var(--muted-foreground)" }}>
       <Upload style={{ width: "2.5rem", height: "2.5rem", opacity: 0.3 }} />
       <p style={{ fontSize: "0.875rem" }}>{query ? `No files matching "${query}"` : "No files yet"}</p>
       {!query && (
         <button
+          data-testid="media-empty-upload-btn"
           type="button"
           onClick={onUpload}
           style={{ fontSize: "0.8rem", padding: "0.5rem 1rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", cursor: "pointer" }}
@@ -1033,6 +1051,7 @@ function GridView({ files, copied, deleting, usageMap, aiAnalyzedSet, aiGenerate
             )}
             {/* Thumbnail */}
             <div
+              data-testid={`media-grid-thumb-${file.name}`}
               style={{ width: "100%", height: "72%", background: "var(--muted)", display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden", borderRadius: "0.5rem 0.5rem 0 0", cursor: selecting ? "pointer" : (file.isImage || file.mediaType === "video") ? "pointer" : "default", position: "relative" }}
               onClick={!selecting ? () => (file.isImage || file.mediaType === "video") && onOpen(file) : undefined}
             >
@@ -1122,9 +1141,10 @@ function GridView({ files, copied, deleting, usageMap, aiAnalyzedSet, aiGenerate
 
             {/* Context menu (⋮) */}
             {!selecting && (
-              <div className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
+              <div data-testid={`media-grid-actions-${file.name}`} className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity" onClick={(e) => e.stopPropagation()}>
                 <DropdownMenu>
                   <DropdownMenuTrigger
+                    data-testid={`media-grid-menu-${file.name}`}
                     className="p-1 rounded-md hover:bg-accent transition-colors focus-visible:outline-none bg-black/50 backdrop-blur border-0 cursor-pointer"
                   >
                     <MoreVertical style={{ width: "0.875rem", height: "0.875rem", color: "white" }} />
@@ -1195,7 +1215,7 @@ function ListView({ files, copied, deleting, usageMap, aiAnalyzedSet, aiGenerate
                 <td style={{ padding: "0.5rem 1rem", display: "flex", alignItems: "center", gap: "0.625rem" }}>
                   {file.isImage ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={file.url} alt="" loading="lazy" onClick={() => onOpen(file)} style={{ width: "2rem", height: "2rem", objectFit: "cover", borderRadius: "4px", flexShrink: 0, background: "var(--muted)", cursor: "zoom-in" }} />
+                    <img data-testid={`media-list-thumb-${file.name}`} src={file.url} alt="" loading="lazy" onClick={() => onOpen(file)} style={{ width: "2rem", height: "2rem", objectFit: "cover", borderRadius: "4px", flexShrink: 0, background: "var(--muted)", cursor: "zoom-in" }} />
                   ) : (
                     <span style={{ width: "2rem", height: "2rem", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                       <MediaIcon mediaType={file.mediaType} size="1.25rem" />
@@ -1351,11 +1371,13 @@ function Lightbox({ files, index, onNavigate, onClose, onCopy, copied, onDelete,
 
   return (
     <div
+      data-testid="media-lightbox"
       style={{ position: "fixed", inset: 0, zIndex: 90, display: "flex", flexDirection: "column", background: "rgba(0,0,0,0.92)", backdropFilter: "blur(8px)" }}
       onClick={onClose}
     >
       {/* Top bar */}
       <div
+        data-testid="media-lightbox-topbar"
         style={{ display: "flex", alignItems: "center", gap: "0.75rem", padding: "0.75rem 1rem", flexShrink: 0, borderBottom: "1px solid rgba(255,255,255,0.08)" }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -1366,6 +1388,7 @@ function Lightbox({ files, index, onNavigate, onClose, onCopy, copied, onDelete,
           {index + 1} / {files.length}
         </span>
         <a
+          data-testid="media-lightbox-open-original"
           href={file.url}
           target="_blank"
           rel="noopener noreferrer"
@@ -1377,6 +1400,7 @@ function Lightbox({ files, index, onNavigate, onClose, onCopy, copied, onDelete,
           <ExternalLink style={{ width: "0.875rem", height: "0.875rem" }} />
         </a>
         <button
+          data-testid="media-lightbox-download"
           type="button"
           title={`Download ${file.name}`}
           onClick={(e) => { e.stopPropagation(); downloadFile(); }}
@@ -1385,7 +1409,7 @@ function Lightbox({ files, index, onNavigate, onClose, onCopy, copied, onDelete,
         >
           <Download style={{ width: "0.875rem", height: "0.875rem" }} />
         </button>
-        <button type="button" title="Copy URL" onClick={(e) => { e.stopPropagation(); onCopy(file.url); }}
+        <button data-testid="media-lightbox-copy-url" type="button" title="Copy URL" onClick={(e) => { e.stopPropagation(); onCopy(file.url); }}
           style={{ display: "flex", alignItems: "center", padding: "0.3rem", borderRadius: "6px", color: copied === file.url ? "#4ade80" : "rgba(255,255,255,0.5)", border: "none", background: "transparent", cursor: "pointer" }}
           className="hover:text-white hover:bg-white/10 transition-colors"
         >
@@ -1393,13 +1417,13 @@ function Lightbox({ files, index, onNavigate, onClose, onCopy, copied, onDelete,
         </button>
         {file.mediaType !== "video" && (
           <div style={{ display: "flex", alignItems: "center", gap: "2px", border: "1px solid rgba(255,255,255,0.15)", borderRadius: "6px", padding: "1px" }}>
-            <button type="button" title="Rotate left" disabled={rotating} onClick={(e) => { e.stopPropagation(); rotateImage(-90); }}
+            <button data-testid="media-lightbox-rotate-left" type="button" title="Rotate left" disabled={rotating} onClick={(e) => { e.stopPropagation(); rotateImage(-90); }}
               style={{ display: "flex", alignItems: "center", padding: "0.3rem", borderRadius: "4px", color: "rgba(255,255,255,0.7)", border: "none", background: "transparent", cursor: rotating ? "wait" : "pointer", opacity: rotating ? 0.4 : 1 }}
               className="hover:text-white hover:bg-white/15 transition-colors"
             >
               <RotateCcw style={{ width: "0.875rem", height: "0.875rem" }} />
             </button>
-            <button type="button" title="Rotate right" disabled={rotating} onClick={(e) => { e.stopPropagation(); rotateImage(90); }}
+            <button data-testid="media-lightbox-rotate-right" type="button" title="Rotate right" disabled={rotating} onClick={(e) => { e.stopPropagation(); rotateImage(90); }}
               style={{ display: "flex", alignItems: "center", padding: "0.3rem", borderRadius: "4px", color: "rgba(255,255,255,0.7)", border: "none", background: "transparent", cursor: rotating ? "wait" : "pointer", opacity: rotating ? 0.4 : 1 }}
               className="hover:text-white hover:bg-white/15 transition-colors"
             >
@@ -1407,13 +1431,13 @@ function Lightbox({ files, index, onNavigate, onClose, onCopy, copied, onDelete,
             </button>
           </div>
         )}
-        <button type="button" title="Delete" onClick={(e) => { e.stopPropagation(); onDelete(file); }}
+        <button data-testid="media-lightbox-delete" type="button" title="Delete" onClick={(e) => { e.stopPropagation(); onDelete(file); }}
           style={{ display: "flex", alignItems: "center", padding: "0.3rem", borderRadius: "6px", color: "rgba(255,255,255,0.4)", border: "none", background: "transparent", cursor: "pointer" }}
           className="hover:text-red-400 hover:bg-white/10 transition-colors"
         >
           <Trash2 style={{ width: "0.875rem", height: "0.875rem" }} />
         </button>
-        <button type="button" title="Close (Esc)" onClick={onClose}
+        <button data-testid="media-lightbox-close" type="button" title="Close (Esc)" onClick={onClose}
           style={{ display: "flex", alignItems: "center", padding: "0.3rem", borderRadius: "6px", color: "rgba(255,255,255,0.5)", border: "none", background: "transparent", cursor: "pointer" }}
           className="hover:text-white hover:bg-white/10 transition-colors"
         >
@@ -1422,11 +1446,11 @@ function Lightbox({ files, index, onNavigate, onClose, onCopy, copied, onDelete,
       </div>
 
       {/* Image area + AI panel */}
-      <div style={{ flex: 1, display: "flex", overflow: "hidden" }} onClick={onClose}>
+      <div data-testid="media-lightbox-content" style={{ flex: 1, display: "flex", overflow: "hidden" }} onClick={onClose}>
         {/* Image */}
         <div style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", position: "relative" }}>
           {hasPrev && (
-            <button type="button" onClick={(e) => { e.stopPropagation(); onNavigate(index - 1); }}
+            <button data-testid="media-lightbox-prev" type="button" onClick={(e) => { e.stopPropagation(); onNavigate(index - 1); }}
               style={{ position: "absolute", left: "1rem", zIndex: 2, width: "2.5rem", height: "2.5rem", borderRadius: "50%", border: "1px solid rgba(255,255,255,0.2)", background: "rgba(0,0,0,0.5)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}
               className="hover:bg-white/20 transition-colors"
             >
@@ -1436,6 +1460,7 @@ function Lightbox({ files, index, onNavigate, onClose, onCopy, copied, onDelete,
 
           {file.mediaType === "video" ? (
             <video
+              data-testid="media-lightbox-video"
               src={file.url}
               controls
               autoPlay
@@ -1445,6 +1470,7 @@ function Lightbox({ files, index, onNavigate, onClose, onCopy, copied, onDelete,
           ) : (
             // eslint-disable-next-line @next/next/no-img-element
             <img
+              data-testid="media-lightbox-image"
               src={imgKey ? `${file.url}?v=${imgKey}` : file.url}
               alt={file.name}
               style={{ maxWidth: "calc(100% - 8rem)", maxHeight: "100%", objectFit: "contain", borderRadius: "4px", boxShadow: "0 8px 40px rgba(0,0,0,0.6)" }}
@@ -1453,7 +1479,7 @@ function Lightbox({ files, index, onNavigate, onClose, onCopy, copied, onDelete,
           )}
 
           {hasNext && (
-            <button type="button" onClick={(e) => { e.stopPropagation(); onNavigate(index + 1); }}
+            <button data-testid="media-lightbox-next" type="button" onClick={(e) => { e.stopPropagation(); onNavigate(index + 1); }}
               style={{ position: "absolute", right: "1rem", zIndex: 2, width: "2.5rem", height: "2.5rem", borderRadius: "50%", border: "1px solid rgba(255,255,255,0.2)", background: "rgba(0,0,0,0.5)", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: "white" }}
               className="hover:bg-white/20 transition-colors"
             >
@@ -1465,6 +1491,7 @@ function Lightbox({ files, index, onNavigate, onClose, onCopy, copied, onDelete,
         {/* Metadata panel — right side */}
         {(file.isImage || file.mediaType === "video") && (
           <div
+            data-testid="media-lightbox-metadata"
             onClick={(e) => e.stopPropagation()}
             style={{ width: "300px", flexShrink: 0, borderLeft: "1px solid rgba(255,255,255,0.08)", display: "flex", flexDirection: "column", overflowY: "auto" }}
           >
@@ -1477,6 +1504,7 @@ function Lightbox({ files, index, onNavigate, onClose, onCopy, copied, onDelete,
 
       {/* Bottom info */}
       <div
+        data-testid="media-lightbox-footer"
         style={{ padding: "0.625rem 1rem", borderTop: "1px solid rgba(255,255,255,0.08)", display: "flex", gap: "1.5rem", flexShrink: 0 }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -1563,7 +1591,7 @@ function LightboxAIPanel({ imageUrl }: { imageUrl: string }) {
   }
 
   const CopyIcon = ({ text, field }: { text: string; field: string }) => (
-    <button type="button" title={`Copy ${field}`} onClick={() => copyText(text, field)}
+    <button data-testid={`media-ai-copy-${field}`} type="button" title={`Copy ${field}`} onClick={() => copyText(text, field)}
       style={{ display: "inline-flex", alignItems: "center", justifyContent: "center", width: 20, height: 20, borderRadius: 4, border: "none", background: "transparent", cursor: "pointer", color: copiedField === field ? "#4ade80" : "rgba(255,255,255,0.4)", flexShrink: 0 }}>
       {copiedField === field ? <Check style={{ width: 12, height: 12 }} /> : <Copy style={{ width: 12, height: 12 }} />}
     </button>
@@ -1576,7 +1604,7 @@ function LightboxAIPanel({ imageUrl }: { imageUrl: string }) {
           <Sparkles style={{ width: 14, height: 14 }} /> AI Analysis
         </span>
         {hasAiData && !analyzing && (
-          <button type="button" title="Re-analyze" onClick={runAnalysis}
+          <button data-testid="media-ai-reanalyze" type="button" title="Re-analyze" onClick={runAnalysis}
             style={{ display: "flex", alignItems: "center", border: "none", background: "transparent", cursor: "pointer", color: "rgba(255,255,255,0.4)" }}>
             <RefreshCw style={{ width: 12, height: 12 }} />
           </button>
@@ -1592,7 +1620,7 @@ function LightboxAIPanel({ imageUrl }: { imageUrl: string }) {
       {!loading && !hasAiData && !analyzing && (
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "0.75rem", paddingTop: "2rem" }}>
           <p style={{ fontSize: "0.8rem", color: "rgba(255,255,255,0.4)" }}>No AI analysis yet.</p>
-          <button type="button" onClick={runAnalysis}
+          <button data-testid="media-ai-analyze-btn" type="button" onClick={runAnalysis}
             style={{ display: "inline-flex", alignItems: "center", gap: "0.375rem", padding: "0.4rem 1rem", borderRadius: "6px", border: "none", background: "#F7BB2E", color: "#0D0D0D", cursor: "pointer", fontSize: "0.8rem", fontWeight: 600 }}>
             <Sparkles style={{ width: 14, height: 14 }} /> Analyze
           </button>
@@ -1626,6 +1654,7 @@ function LightboxAIPanel({ imageUrl }: { imageUrl: string }) {
               {locales.map((l) => (
                 <button
                   key={l}
+                  data-testid={`media-ai-locale-${l}`}
                   type="button"
                   onClick={() => setActiveLocale(l)}
                   style={{
@@ -1747,13 +1776,13 @@ function LightboxTagPanel({ fileKey, onTagsChanged }: { fileKey: string; onTagsC
                 {confirmRemove === tag ? (
                   <>
                     <span style={{ fontSize: "0.6rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
-                    <button onClick={() => removeTag(tag)}
+                    <button data-testid={`media-tag-remove-yes-${tag}`} onClick={() => removeTag(tag)}
                       style={{ fontSize: "0.55rem", padding: "0.05rem 0.25rem", borderRadius: "3px", border: "none", background: "var(--destructive)", color: "#fff", cursor: "pointer", lineHeight: 1 }}>Yes</button>
-                    <button onClick={() => setConfirmRemove(null)}
+                    <button data-testid={`media-tag-remove-no-${tag}`} onClick={() => setConfirmRemove(null)}
                       style={{ fontSize: "0.55rem", padding: "0.05rem 0.25rem", borderRadius: "3px", border: "1px solid rgba(255,255,255,0.2)", background: "transparent", color: "rgba(255,255,255,0.6)", cursor: "pointer", lineHeight: 1 }}>No</button>
                   </>
                 ) : (
-                  <button onClick={() => setConfirmRemove(tag)}
+                  <button data-testid={`media-tag-remove-${tag}`} onClick={() => setConfirmRemove(tag)}
                     style={{ background: "none", border: "none", cursor: "pointer", color: "rgba(255,255,255,0.3)", padding: 0, fontSize: "0.75rem", lineHeight: 1 }}>&times;</button>
                 )}
               </span>
@@ -1761,6 +1790,7 @@ function LightboxTagPanel({ fileKey, onTagsChanged }: { fileKey: string; onTagsC
           </div>
           <div style={{ display: "flex", gap: "0.25rem" }}>
             <input
+              data-testid="media-tag-input"
               type="text"
               value={input}
               onChange={(e) => {
@@ -1781,7 +1811,7 @@ function LightboxTagPanel({ fileKey, onTagsChanged }: { fileKey: string; onTagsC
               }}
             />
             {input.trim() && (
-              <button onClick={() => addTag()}
+              <button data-testid="media-tag-add" onClick={() => addTag()}
                 style={{ padding: "0.25rem 0.5rem", borderRadius: "5px", border: "none", background: "#F7BB2E", color: "#0D0D0D", fontSize: "0.7rem", fontWeight: 600, cursor: "pointer" }}>
                 +
               </button>
@@ -1873,6 +1903,7 @@ function LightboxExifPanel({ imageUrl }: { imageUrl: string }) {
             <div style={row}>
               <span style={lbl}>GPS</span>
               <a
+                data-testid="media-exif-gps-link"
                 href={`https://maps.google.com/?q=${exif.gpsLat},${exif.gpsLon}`}
                 target="_blank"
                 rel="noopener noreferrer"
@@ -1932,6 +1963,7 @@ function DeleteConfirmDialog({ file, usages, onConfirm, onCancel }: {
               {usages.map((u) => (
                 <li key={`${u.collection}/${u.slug}`}>
                   <a
+                    data-testid={`media-delete-usage-${u.collection}-${u.slug}`}
                     href={`/admin/content/${u.collection}/${u.slug}`}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -1951,10 +1983,10 @@ function DeleteConfirmDialog({ file, usages, onConfirm, onCancel }: {
         )}
 
         <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
-          <button type="button" onClick={onCancel} style={{ padding: "0.4rem 1rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", cursor: "pointer", fontSize: "0.875rem" }}>
+          <button data-testid="media-delete-cancel" type="button" onClick={onCancel} style={{ padding: "0.4rem 1rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", cursor: "pointer", fontSize: "0.875rem" }}>
             Cancel
           </button>
-          <button type="button" onClick={onConfirm} style={{ padding: "0.4rem 1rem", borderRadius: "6px", border: "none", background: "var(--destructive)", color: "white", cursor: "pointer", fontSize: "0.875rem" }}>
+          <button data-testid="media-delete-confirm" type="button" onClick={onConfirm} style={{ padding: "0.4rem 1rem", borderRadius: "6px", border: "none", background: "var(--destructive)", color: "white", cursor: "pointer", fontSize: "0.875rem" }}>
             {inUse ? "Trash anyway" : "Move to trash"}
           </button>
         </div>
@@ -1991,10 +2023,11 @@ function RenameDialog({ file, onConfirm, onCancel }: {
   const isValid = sanitized.length > 0 && newName !== file.name;
 
   return (
-    <div style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
+    <div data-testid="media-rename-dialog" style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
       onClick={onCancel}
     >
       <div
+        data-testid="media-rename-dialog-content"
         style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "12px", padding: "1.5rem", maxWidth: "420px", width: "90%", display: "flex", flexDirection: "column", gap: "1rem" }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -2007,8 +2040,9 @@ function RenameDialog({ file, onConfirm, onCancel }: {
           <p style={{ fontSize: "0.7rem", color: "var(--muted-foreground)", marginBottom: "0.375rem", fontFamily: "monospace" }}>
             {file.folder ? `${file.folder}/` : ""}<span style={{ opacity: 0.5 }}>*{ext}</span>
           </p>
-          <form onSubmit={(e) => { e.preventDefault(); if (isValid) onConfirm(newName); }}>
+          <form data-testid="media-rename-form" onSubmit={(e) => { e.preventDefault(); if (isValid) onConfirm(newName); }}>
             <input
+              data-testid="media-rename-input"
               ref={inputRef}
               type="text"
               value={value}
@@ -2030,10 +2064,11 @@ function RenameDialog({ file, onConfirm, onCancel }: {
         </div>
 
         <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
-          <button type="button" onClick={onCancel} style={{ padding: "0.4rem 1rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", cursor: "pointer", fontSize: "0.875rem" }}>
+          <button data-testid="media-rename-cancel" type="button" onClick={onCancel} style={{ padding: "0.4rem 1rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", cursor: "pointer", fontSize: "0.875rem" }}>
             Cancel
           </button>
           <button
+            data-testid="media-rename-confirm"
             type="button"
             onClick={() => isValid && onConfirm(newName)}
             disabled={!isValid}
@@ -2151,10 +2186,12 @@ function BatchAnalyzeDialog({ onClose, selectedFiles }: { onClose: () => void; s
 
   return (
     <div
+      data-testid="media-batch-analyze-dialog"
       style={{ position: "fixed", inset: 0, zIndex: 100, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(0,0,0,0.6)", backdropFilter: "blur(4px)" }}
       onClick={onClose}
     >
       <div
+        data-testid="media-batch-analyze-dialog-content"
         style={{ background: "var(--card)", border: "1px solid var(--border)", borderRadius: "12px", padding: "1.5rem", maxWidth: "560px", width: "90%", display: "flex", flexDirection: "column", gap: "1rem", maxHeight: "80vh" }}
         onClick={(e) => e.stopPropagation()}
       >
@@ -2166,7 +2203,7 @@ function BatchAnalyzeDialog({ onClose, selectedFiles }: { onClose: () => void; s
               ? `AI Analyze ${selectedFiles.length} Selected`
               : "AI Analyze All Images"}
           </p>
-          <button type="button" onClick={onClose} style={{ display: "flex", alignItems: "center", border: "none", background: "transparent", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.25rem" }}>
+          <button data-testid="media-batch-analyze-close-header" type="button" onClick={onClose} style={{ display: "flex", alignItems: "center", border: "none", background: "transparent", cursor: "pointer", color: "var(--muted-foreground)", padding: "0.25rem" }}>
             <X style={{ width: "1rem", height: "1rem" }} />
           </button>
         </div>
@@ -2181,6 +2218,7 @@ function BatchAnalyzeDialog({ onClose, selectedFiles }: { onClose: () => void; s
             {overwriteSetting === "ask" && (
               <label style={{ display: "flex", alignItems: "center", gap: "0.5rem", fontSize: "0.8rem", color: "var(--foreground)", cursor: "pointer" }}>
                 <input
+                  data-testid="media-batch-analyze-overwrite"
                   type="checkbox"
                   checked={overwriteChoice}
                   onChange={(e) => setOverwriteChoice(e.target.checked)}
@@ -2262,21 +2300,21 @@ function BatchAnalyzeDialog({ onClose, selectedFiles }: { onClose: () => void; s
         <div style={{ display: "flex", gap: "0.5rem", justifyContent: "flex-end" }}>
           {state === "idle" && (
             <>
-              <button type="button" onClick={onClose} style={{ padding: "0.4rem 1rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", cursor: "pointer", fontSize: "0.875rem" }}>
+              <button data-testid="media-batch-analyze-cancel" type="button" onClick={onClose} style={{ padding: "0.4rem 1rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", cursor: "pointer", fontSize: "0.875rem" }}>
                 Cancel
               </button>
-              <button type="button" onClick={runBatch} style={{ padding: "0.4rem 1rem", borderRadius: "6px", border: "none", background: "#F7BB2E", color: "#0D0D0D", cursor: "pointer", fontSize: "0.875rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "0.375rem" }}>
+              <button data-testid="media-batch-analyze-start" type="button" onClick={runBatch} style={{ padding: "0.4rem 1rem", borderRadius: "6px", border: "none", background: "#F7BB2E", color: "#0D0D0D", cursor: "pointer", fontSize: "0.875rem", fontWeight: 600, display: "flex", alignItems: "center", gap: "0.375rem" }}>
                 <Sparkles style={{ width: 14, height: 14 }} /> Start Analysis
               </button>
             </>
           )}
           {state === "running" && (
-            <button type="button" onClick={stop} style={{ padding: "0.4rem 1rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", cursor: "pointer", fontSize: "0.875rem" }}>
+            <button data-testid="media-batch-analyze-stop" type="button" onClick={stop} style={{ padding: "0.4rem 1rem", borderRadius: "6px", border: "1px solid var(--border)", background: "transparent", cursor: "pointer", fontSize: "0.875rem" }}>
               Stop
             </button>
           )}
           {state === "done" && (
-            <button type="button" onClick={onClose} style={{ padding: "0.4rem 1rem", borderRadius: "6px", border: "none", background: "var(--primary)", color: "var(--primary-foreground)", cursor: "pointer", fontSize: "0.875rem" }}>
+            <button data-testid="media-batch-analyze-close" type="button" onClick={onClose} style={{ padding: "0.4rem 1rem", borderRadius: "6px", border: "none", background: "var(--primary)", color: "var(--primary-foreground)", cursor: "pointer", fontSize: "0.875rem" }}>
               Close
             </button>
           )}

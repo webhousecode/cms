@@ -110,6 +110,7 @@ export function WebhookList({ webhooks, onChange: onChangeRaw }: Props) {
               {/* Test */}
               <button
                 type="button"
+                data-testid={`webhook-test-${wh.id}`}
                 onClick={() => sendTest(wh.url, wh.id)}
                 disabled={testing === wh.id}
                 title="Send test"
@@ -130,6 +131,7 @@ export function WebhookList({ webhooks, onChange: onChangeRaw }: Props) {
               {/* Copy */}
               <button
                 type="button"
+                data-testid={`webhook-copy-${wh.id}`}
                 onClick={() => copyUrl(wh.url, wh.id)}
                 title="Copy URL"
                 style={{
@@ -145,6 +147,7 @@ export function WebhookList({ webhooks, onChange: onChangeRaw }: Props) {
               {/* Move up */}
               <button
                 type="button"
+                data-testid={`webhook-moveup-${wh.id}`}
                 onClick={() => moveUp(idx)}
                 disabled={idx === 0}
                 title="Move up"
@@ -161,6 +164,7 @@ export function WebhookList({ webhooks, onChange: onChangeRaw }: Props) {
               {/* Move down */}
               <button
                 type="button"
+                data-testid={`webhook-movedown-${wh.id}`}
                 onClick={() => moveDown(idx)}
                 disabled={idx === webhooks.length - 1}
                 title="Move down"
@@ -179,11 +183,11 @@ export function WebhookList({ webhooks, onChange: onChangeRaw }: Props) {
               {confirmRemove === wh.id ? (
                 <span style={{ display: "flex", alignItems: "center", gap: "0.25rem", flexShrink: 0 }}>
                   <span style={{ fontSize: "0.65rem", color: "var(--destructive)", fontWeight: 500, padding: "0 2px" }}>Remove?</span>
-                  <button type="button" onClick={() => remove(wh.id)}
+                  <button data-testid={`webhook-remove-confirm-yes-${wh.id}`} type="button" onClick={() => remove(wh.id)}
                     style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
                       border: "none", background: "var(--destructive)", color: "#fff",
                       cursor: "pointer", lineHeight: 1 }}>Yes</button>
-                  <button type="button" onClick={() => setConfirmRemove(null)}
+                  <button data-testid={`webhook-remove-confirm-no-${wh.id}`} type="button" onClick={() => setConfirmRemove(null)}
                     style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px",
                       border: "1px solid var(--border)", background: "transparent",
                       color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}>No</button>
@@ -191,6 +195,7 @@ export function WebhookList({ webhooks, onChange: onChangeRaw }: Props) {
               ) : (
                 <button
                   type="button"
+                  data-testid={`webhook-remove-${wh.id}`}
                   onClick={() => setConfirmRemove(wh.id)}
                   title="Remove webhook"
                   style={{
@@ -209,6 +214,7 @@ export function WebhookList({ webhooks, onChange: onChangeRaw }: Props) {
       {/* Add new webhook */}
       <div style={{ display: "flex", gap: "0.375rem" }}>
         <input
+          data-testid="webhook-input-url"
           type="url"
           value={newUrl}
           onChange={(e) => setNewUrl(e.target.value)}
@@ -221,6 +227,7 @@ export function WebhookList({ webhooks, onChange: onChangeRaw }: Props) {
           }}
         />
         <button
+          data-testid="webhook-add-button"
           type="button"
           onClick={add}
           disabled={!newUrl.trim()}
