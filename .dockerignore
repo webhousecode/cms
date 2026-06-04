@@ -47,3 +47,11 @@ playwright-report
 # CMS admin local data (lives outside the image; mounted as Fly volume)
 **/_data
 **/_admin
+
+# Example upload blobs + build artifacts — never shipped (the runner stage
+# only COPYs packages/*; examples/*/package.json are copied explicitly before
+# COPY . .). These were silently bloating the build context to ~5 GB →
+# multi-minute uploads. examples/**/uploads = blog public + deploy uploads (~4 GB);
+# **/.build = swift-vapor-blog Swift artifacts (~1.3 GB).
+examples/**/uploads
+**/.build
