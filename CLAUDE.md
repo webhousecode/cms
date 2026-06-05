@@ -629,3 +629,35 @@ Transform tasks into verifiable goals:
 
 Strong success criteria let you loop independently. Weak criteria ("make it work") require constant clarification.
 
+
+## Scheduled dispatch — buddy as "cron-as-a-service" (F062)
+
+Any repo/session can register a **recurring job** with the always-on buddy
+daemon instead of hand-rolling its own poll-loop. This is the fleet-wide
+canonical setup — copy this section into every repo's CLAUDE.md.
+
+**Tools** (`mcp__buddy__*`): `schedule_job`, `list_jobs`, `cancel_job`,
+`pause_all`.
+
+- **`schedule_job`** — register a recurring dispatch. Two kinds:
+  - `interval` — every N seconds (min 60) send `command` to `targetSession`.
+  - `probe` — poll an HTTP endpoint first; only dispatch when it reports
+    pending work, deduped (same pending set isn't re-fired until it drains;
+    drain is inferred when the probe returns 0). Probe config:
+    `{ url, method?, headers?, pendingPath, idsPath? }` (`pendingPath` = dot-path
+    to the pending array/number; `idsPath` = stable id list for dedup).
+  - `command` is delivered as an **intercom turn** to the running session — act
+    on it as a binding directive (run the `/skill`/command immediately).
+  - `offSessionPolicy`: `auto_launch` (buddy opens an **interactive** Max
+    session — `$0`, NEVER headless `claude -p` — requires `spawnCwd`) or `wait`.
+- **`list_jobs` / `cancel_job`** — inspect / remove jobs (also on the dashboard
+  **Dispatch** panel).
+- **`pause_all({on, reason?, until?})`** — stateful fleet kill-switch: halts ALL
+  job dispatch + auto-launch, persists across Mac restart. Prefer over
+  `broadcast_all` for pausing. Resume with `{on:false}`.
+
+**$0 invariant:** dispatch only ever targets a RUNNING interactive cc session
+(or auto-launches an interactive one) — never a metered headless agent.
+
+Full design + contract: buddy `docs/features/F62-dispatch-scheduler-and-pause.md`.
+
