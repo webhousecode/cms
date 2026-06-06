@@ -168,6 +168,8 @@ cardmem_create_card({
 
 ### 5c. Create sub-story cards (use `create_cards` for batch)
 
+> **HARD RULE (F104) — an epic MUST have ≥1 story.** An epic is only a plan + a holder; it is NOT a visual card — a human can't see, click or flip an epic, only its stories. A story-less epic is an *invisible delivery*: nothing on the board says it must happen or that it happened. So **never create an epic without at least one story, and never hand an epic to Review/Done story-less** — the server rejects that move with a 422 (F104.1) and the Health Matrix flags it RED (F104.4). Even a one-line feature gets one story. This is non-skippable.
+
 ```
 cardmem_create_cards({
   project_id,
@@ -207,6 +209,7 @@ When writing plans, internalize these. They apply at code-time, not skill-time �
 - **Knapper SKAL give feedback.** `:active`, `:hover`, loading >100ms, post-action confirmation, error state.
 - **Ingen quick-fixes.** No deprecated APIs, symptom-hides, empty catch blocks. Find root cause.
 - **Aldrig native dialogs eller form-controls.** No `window.alert/confirm/prompt`, no `<select>`, no `<input type="date">`. Build custom or reuse from the repo's own UI primitives folder (see `## Project layout` for its path).
+- **An epic MUST have ≥1 story (F104).** Only stories are visible/clickable/flippable; a story-less epic is an invisible delivery. The server rejects epic→Review/Done with 0 stories. Story-first, always.
 - **ALDRIG hardcoded values.** One source per value — URL/domain → env, secrets → flyctl, fee tiers → central config, theme tokens → CSS vars in `@theme`.
 - **HTTP-services: altid auth.** Fjern aldrig auth som workaround.
 - **Destruktive commands** (rm -rf, DROP TABLE, force push, fly destroy, DNS-deletion, kill, chmod 777) only on explicit user order.
