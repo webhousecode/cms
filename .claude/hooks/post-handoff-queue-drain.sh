@@ -63,6 +63,10 @@ You MUST call cardmem_pickup_card NOW in the same turn:
 
   cardmem_pickup_card({ card_id_or_slug: '${next_card_id}', session_id: '${session_id}' })
 
+If that card is an EPIC (e.g. an inbox idea seeded via Push): story-first —
+create >=1 story under it BEFORE building. A story-less epic is an invisible
+delivery; the server rejects epic->Review/Done with 0 stories (F104).
+
 DO NOT:
 - ask the user whether to continue
 - explain what you're about to do before doing it
