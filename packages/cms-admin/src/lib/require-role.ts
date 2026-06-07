@@ -23,8 +23,11 @@ export async function getSiteRole(): Promise<UserRole | null> {
   const session = await getSessionUser(cookieStore);
   if (!session) return null;
 
-  // Dev/API/service tokens carry their role in the JWT — no team lookup needed
-  if (session.sub === "dev-token" || session.sub === "service-token") return session.role;
+  // Dev/API/service/lens tokens carry their role in the JWT — no team lookup needed.
+  // F151: the lens principal (sub "lens") has no team membership; its admin role
+  // comes from the minted JWT so it can render every surface (read-only is the
+  // proxy.ts write-guard's job, not the role's).
+  if (session.sub === "dev-token" || session.sub === "service-token" || session.sub === "lens") return session.role;
 
   const members = await getTeamMembers();
   const membership = members.find((m) => m.userId === session.sub);
