@@ -41,6 +41,7 @@ const PUBLIC_PREFIXES = [
   "/api/admin/invitations/", // Invite accept flow (user not yet logged in)
   "/api/cms/scheduled/calendar.ics", // Auth via ?token= query param
   "/api/mcp",               // MCP servers have their own auth (Bearer token)
+  "/api/lens-session",      // F151 Lens mint-endpoint — bearer-authed (LENS_MINT_SECRET); it MINTS the session
   "/api/publish-scheduled", // Called by cron/instrumentation, no user session
   "/api/beam/receive/",     // Live Beam receive — token-authenticated (not session)
   "/api/mobile/",           // F07 webhouse.app mobile — Bearer JWT in header, no cookies (handlers enforce auth themselves)
@@ -261,7 +262,13 @@ export async function proxy(request: NextRequest) {
   }
 
   try {
-    await jwtVerify(token, getJwtSecret());
+    const { payload } = await jwtVerify(token, getJwtSecret());
+    // F151: the Lens principal is read-only — block every mutating method.
+    // No-op for all real users (no `lens` claim); the only read-only boundary
+    // for the minted lens session (its role is admin so surfaces still render).
+    if (payload.lens === true && ["POST", "PUT", "PATCH", "DELETE"].includes(request.method)) {
+      return NextResponse.json({ error: "Lens session is read-only" }, { status: 403 });
+    }
     return forwardOk();
   } catch (err) {
     // RSC prefetch with invalid token — don't redirect, just reject silently
