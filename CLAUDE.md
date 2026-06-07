@@ -552,14 +552,23 @@ The AI-facing documentation (for Claude Code sessions building sites) is at `pac
 
 ## Project layout
 
-> **Fill this in for THIS repo.** Every cardmem-compatible repo MUST have a `## Project layout` section with the columns `Area | Path | Notes`. The cardmem Init flow (or the `feature` skill) populates it from the repo's actual structure — replace the example rows below.
+pnpm + Turbo monorepo. Most feature work lands in `packages/cms-admin` (the Next.js admin app, dev on port 3010); the engine and contracts live in `packages/cms`.
 
 | Area | Path | Notes |
 |---|---|---|
-| _(example — replace)_ App | `src/` | Main application code |
-| _(example — replace)_ Tests | `tests/` | Test suites |
-
-Replace the example rows above with this repo's real layout before relying on cardmem skills to scope changes.
+| Core engine | `packages/cms/` | `@webhouse/cms` — schema (`defineConfig`/`defineCollection`), storage adapters (filesystem/sqlite/supabase/github), builtin blocks. Engine-facing AI guide in `packages/cms/CLAUDE.md` |
+| Admin app | `packages/cms-admin/` | `@webhouse/cms-admin` — Next.js admin UI + all `/api/*` routes. **Main dev target** (`npx next dev -p 3010`); deployed as `webhouse-app` on Fly |
+| → routes/pages | `packages/cms-admin/src/app/admin/(workspace)/` | Authed admin pages; API under `src/app/api/{cms,admin,media,mobile,schema}/` |
+| → components | `packages/cms-admin/src/components/` | UI; richtext + document editor in `components/editor/`, shared primitives in `components/ui/` |
+| → server/client libs | `packages/cms-admin/src/lib/` | `auth.ts`, `config-writer.ts`, `site-pool.ts`, `require-role.ts`, `permissions-shared.ts`, `goto-links.ts`; tests in `lib/__tests__/` |
+| AI agents | `packages/cms-ai/` | `@webhouse/cms-ai` — agent runners (all AI via `@broberg/ai-sdk`) |
+| Mobile app | `packages/cms-mobile/` | F07 native app (Capacitor); server-agnostic JSON-API client, never a WebView |
+| CLIs + scaffolder | `packages/cms-cli/`, `packages/cms-admin-cli/`, `packages/create-cms/` | `@webhouse/cms-cli`, `@webhouse/cms-admin-cli`, `create-@webhouse/cms` |
+| MCP servers | `packages/cms-mcp-server/`, `packages/cms-mcp-client/` | Authenticated MCP + public read MCP |
+| Feature docs | `docs/features/F<n>-*.md`, `docs/FEATURES.md`, `docs/ROADMAP.md` | F-numbered plan-docs + indices |
+| Example/fixture sites | `examples/` | Boilerplates (static/nextjs/preact), `landing`, `blog`, `lens-fixture` |
+| Prod deploy | `deploy/webhouse-app/`, `fly.toml` | Dockerfile + base `cms.config.ts` for the `webhouse-app` Fly deploy |
+| Scripts | `scripts/` | `security-scan.ts`, `code-audit.sh`, security-gate hooks |
 
 
 ## Working with cardmem
