@@ -3159,10 +3159,18 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
               <IconSubscript />
             </Btn>}
 
-            {/* F150: strip all formatting from the selection (inline marks + block type) */}
+            {/* F150: strip formatting (inline marks + block type). With a
+                selection it clears just that; with nothing selected it cleans
+                the WHOLE field (select-all first) so a click always does
+                something visible instead of silently no-op'ing on an empty
+                selection. */}
             {(has("bold") || has("italic") || has("strike") || has("code")) && <Btn
-              tooltip="Clear formatting" testId="clear-formatting-button"
-              onClick={() => editor.chain().focus().unsetAllMarks().clearNodes().run()}>
+              tooltip="Clear formatting (whole field if nothing selected)" testId="clear-formatting-button"
+              onClick={() => {
+                const chain = editor.chain().focus();
+                if (editor.state.selection.empty) chain.selectAll();
+                chain.unsetAllMarks().clearNodes().run();
+              }}>
               <RemoveFormatting size={16} />
             </Btn>}
 
