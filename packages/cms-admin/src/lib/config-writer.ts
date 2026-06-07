@@ -1,136 +1,117 @@
 import { readFileSync, writeFileSync } from 'node:fs';
 import type { CmsConfig, FieldConfig } from '@webhouse/cms';
+import { findMatchingBracket } from './schema-field-infer';
 
 export interface CollectionDef {
   name: string;
   label?: string;
   urlPrefix?: string;
+  urlPattern?: string;
   translatable?: boolean;
   previewable?: boolean;
   fields: FieldConfig[];
+  /** Permissive: any other collection-level prop is preserved verbatim. */
+  [key: string]: unknown;
 }
 
-function serializeField(f: FieldConfig): string {
-  const props: string[] = [];
-  props.push(`name: ${JSON.stringify(f.name)}`);
-  props.push(`type: ${JSON.stringify(f.type)}`);
-  if (f.label) props.push(`label: ${JSON.stringify(f.label)}`);
-  if (f.required) props.push(`required: true`);
-  if (f.options?.length) {
-    const opts = f.options.map(o => `{ label: ${JSON.stringify(o.label)}, value: ${JSON.stringify(o.value)} }`).join(', ');
-    props.push(`options: [${opts}]`);
+/**
+ * config-writer rewrites the `collections` array of a cms.config.ts when the
+ * schema editor changes it. The hard part is NOT losing anything else.
+ *
+ * History of data-loss bugs this module has caused:
+ *  - 2026-05-19: dropped `locales` / `defaultLocale` on every schema edit
+ *    (the rewriter only knew a fixed allow-list of top-level fields).
+ *  - 2026-06-07: the previous serializer also silently dropped `urlPattern`,
+ *    nested array `fields`, `forms`, and most FieldConfig props (defaultValue,
+ *    maxLength, options-on-nested, features, ai, aiLock, …) because it emitted
+ *    only a hand-listed subset of properties.
+ *
+ * Root-cause fix: stop rebuilding the file from an allow-list. Instead replace
+ * ONLY the `collections: [ … ]` array span in the original source and leave
+ * every other byte untouched (locales, i18n, blocks, autolinks, forms, storage,
+ * comments, formatting, and any future top-level field — all preserved for
+ * free). The collections themselves are serialized GENERICALLY, so no field or
+ * collection property can be dropped regardless of its name.
+ */
+
+// ─── Generic value serializer ────────────────────────────
+
+function emitKey(k: string): string {
+  return /^[A-Za-z_$][A-Za-z0-9_$]*$/.test(k) ? k : JSON.stringify(k);
+}
+
+/** Serialize any plain JSON-ish value to a single-line TS literal. Lossless. */
+function emitInline(v: unknown): string {
+  if (v === null) return 'null';
+  const t = typeof v;
+  if (t === 'string') return JSON.stringify(v);
+  if (t === 'number' || t === 'boolean') return String(v);
+  if (Array.isArray(v)) {
+    return `[${v.map(emitInline).join(', ')}]`;
   }
-  if (f.collection) props.push(`collection: ${JSON.stringify(f.collection)}`);
-  return `        { ${props.join(', ')} }`;
+  if (t === 'object') {
+    const entries = Object.entries(v as Record<string, unknown>).filter(([, val]) => val !== undefined);
+    if (entries.length === 0) return '{}';
+    return `{ ${entries.map(([k, val]) => `${emitKey(k)}: ${emitInline(val)}`).join(', ')} }`;
+  }
+  // functions/symbols/undefined have no place in a serialized config field.
+  return 'null';
 }
 
 function serializeCollection(col: CollectionDef): string {
-  const lines: string[] = [`    defineCollection({`];
-  lines.push(`      name: ${JSON.stringify(col.name)},`);
-  if (col.label) lines.push(`      label: ${JSON.stringify(col.label)},`);
-  if (col.urlPrefix) lines.push(`      urlPrefix: ${JSON.stringify(col.urlPrefix)},`);
-  if (col.translatable === false) lines.push(`      translatable: false,`);
-  if (col.previewable === false) lines.push(`      previewable: false,`);
-  lines.push(`      fields: [`);
-  for (const f of col.fields) {
-    lines.push(serializeField(f) + ',');
+  const { fields, ...rest } = col;
+  const lines: string[] = ['    defineCollection({'];
+  for (const [k, v] of Object.entries(rest)) {
+    if (v === undefined) continue;
+    lines.push(`      ${emitKey(k)}: ${emitInline(v)},`);
   }
-  lines.push(`      ],`);
-  lines.push(`    })`);
+  lines.push('      fields: [');
+  for (const f of fields ?? []) {
+    lines.push(`        ${emitInline(f)},`);
+  }
+  lines.push('      ],');
+  lines.push('    })');
   return lines.join('\n');
 }
 
-/**
- * Extract a single-line top-level field assignment from the original
- * cms.config.ts source. Matches `  fieldName: <value>,` where value
- * may span braces/brackets across multiple lines.
- *
- * Precedent: 2026-05-19 sanneandersen incident — locales, defaultLocale
- * were dropped on every schema edit because the rewriter didn't know
- * about them. See CLAUDE.md "Rewriting cms.config.ts MUST Preserve ALL
- * Top-Level Fields" for the full rule. The list of preserved fields is
- * load-bearing; new top-level fields landing in defineConfig MUST be
- * added here too.
- */
-function extractTopLevelField(original: string, fieldName: string): string | null {
-  // Inline value (string, number, boolean, simple array on one line):
-  // matches "  fieldName: ..." up to the comma+newline ending the line,
-  // but only when the line doesn't open a multi-line block.
-  const inlineRe = new RegExp(`^  ${fieldName}:[^\\n]*?,$`, "m");
-  const inlineMatch = original.match(inlineRe);
-  if (inlineMatch) return inlineMatch[0];
+function buildCollectionsArray(collections: CollectionDef[]): string {
+  if (collections.length === 0) return '[]';
+  return `[\n${collections.map(serializeCollection).join(',\n')}\n  ]`;
+}
 
-  // Multi-line block (array/object) terminated by "  ]," or "  },":
-  const blockRe = new RegExp(`^  ${fieldName}:\\s*[\\[{][\\s\\S]*?\\n  [\\]}],?$`, "m");
-  const blockMatch = original.match(blockRe);
-  if (blockMatch) {
-    // Normalize trailing comma: ensure exactly one trailing ","
-    return blockMatch[0].replace(/,?$/, ",");
-  }
-  return null;
+function escapeRegExp(s: string): string {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 /**
- * Top-level fields preserved verbatim from the original source on every
- * rewrite. Order is deterministic (matches typical hand-written config
- * layout). `collections` is intentionally absent — it's the only field
- * we serialise from the in-memory CmsConfig.
+ * Replace only the top-level `collections: [ … ]` array in `source`,
+ * preserving every other byte. Throws (so the caller does NOT write) if the
+ * array can't be located or is unbalanced.
  */
-const PRESERVED_TOP_LEVEL_FIELDS = [
-  "locales",
-  "defaultLocale",
-  "localeStrategy",
-  "i18n",
-] as const;
+export function replaceCollectionsArray(source: string, collections: CollectionDef[]): string {
+  const m = /(^|\n)([ \t]*)collections[ \t]*:[ \t]*\[/.exec(source);
+  if (!m) {
+    throw new Error('config-writer: could not locate top-level `collections:` array in cms.config.ts');
+  }
+  const bracketIdx = m.index + m[0].length - 1; // index of the opening '['
+  const closeIdx = findMatchingBracket(source, bracketIdx);
+  if (closeIdx < 0) {
+    throw new Error('config-writer: unbalanced `collections` array in cms.config.ts');
+  }
+  return source.slice(0, bracketIdx) + buildCollectionsArray(collections) + source.slice(closeIdx + 1);
+}
 
-function buildConfigContent(original: string, config: CmsConfig, collections: CollectionDef[]): string {
-  const autolinksSection = config.autolinks?.length
-    ? `  autolinks: ${JSON.stringify(config.autolinks, null, 2).replace(/\n/g, '\n  ')},\n`
-    : '';
-
-  let storageSection = '';
-  if (config.storage) {
-    const storageObj = config.storage as Record<string, unknown>;
-    const adapterName = config.storage.adapter;
-    if (adapterName) {
-      const adapterConfig = storageObj[adapterName];
-      storageSection = `  storage: {\n    adapter: ${JSON.stringify(adapterName)},\n    ${adapterName}: ${JSON.stringify(adapterConfig, null, 4).replace(/\n/g, '\n    ')},\n  },`;
-    } else {
-      storageSection = `  storage: ${JSON.stringify(config.storage, null, 2).replace(/\n/g, '\n  ')},`;
+/** Guardrail: never persist a result that lost defineConfig or a collection. */
+function assertConfigIntact(original: string, updated: string, collections: CollectionDef[]): void {
+  if (!updated.includes('defineConfig')) {
+    throw new Error('config-writer: refusing to write — result no longer contains defineConfig');
+  }
+  for (const c of collections) {
+    const re = new RegExp(`name:\\s*["']${escapeRegExp(c.name)}["']`);
+    if (!re.test(updated)) {
+      throw new Error(`config-writer: refusing to write — collection "${c.name}" missing from result`);
     }
   }
-
-  // Preserve blocks section from original file if present
-  let blocksSection = '';
-  const blocksMatch = original.match(/(  blocks:\s*\[[\s\S]*?\n  \]),?/);
-  if (blocksMatch) {
-    blocksSection = blocksMatch[1].replace(/\],?\s*$/, '],');
-  }
-
-  // Preserve locale/i18n fields — see CLAUDE.md hard rule.
-  const preservedFieldLines = PRESERVED_TOP_LEVEL_FIELDS
-    .map((name) => extractTopLevelField(original, name))
-    .filter((line): line is string => line !== null);
-
-  const usesDefineBlock = original.includes('defineBlock');
-  const importLine = usesDefineBlock
-    ? `import { defineConfig, defineCollection, defineBlock } from '@webhouse/cms';`
-    : `import { defineConfig, defineCollection } from '@webhouse/cms';`;
-
-  return [
-    importLine,
-    ``,
-    `export default defineConfig({`,
-    ...preservedFieldLines,
-    ...(blocksSection ? [blocksSection] : []),
-    ...(autolinksSection ? [autolinksSection.trimEnd()] : []),
-    `  collections: [`,
-    collections.map(serializeCollection).join(',\n'),
-    `  ],`,
-    ...(storageSection ? [storageSection] : []),
-    `});`,
-    ``,
-  ].join('\n');
 }
 
 // ─── GitHub helpers ──────────────────────────────────────
@@ -188,25 +169,33 @@ async function writeGitHubFile(owner: string, repo: string, filePath: string, co
 
 // ─── Public API ──────────────────────────────────────────
 
-/** Write config — works for both local filesystem and GitHub-backed sites */
+/**
+ * Write the collections of a cms.config.ts — works for filesystem and
+ * GitHub-backed sites. Only the `collections` array is changed; everything
+ * else in the file is preserved verbatim. The original is validated before
+ * write and backed up to `<config>.bak`.
+ *
+ * `config` is kept for signature stability; it is no longer needed to
+ * reconstruct top-level fields (they're preserved from the source directly).
+ */
 export async function writeConfigCollections(
   configPath: string,
-  config: CmsConfig,
+  _config: CmsConfig,
   collections: CollectionDef[],
 ): Promise<void> {
   const gh = parseGitHubPath(configPath);
 
   if (gh) {
-    // GitHub-backed site — read/write via API
     const token = await getGitHubToken();
     const { content: original, sha } = await readGitHubFile(gh.owner, gh.repo, gh.path, token);
-    const newContent = buildConfigContent(original, config, collections);
-    await writeGitHubFile(gh.owner, gh.repo, gh.path, newContent, sha, token);
+    const updated = replaceCollectionsArray(original, collections);
+    assertConfigIntact(original, updated, collections);
+    await writeGitHubFile(gh.owner, gh.repo, gh.path, updated, sha, token);
   } else {
-    // Local filesystem
     const original = readFileSync(configPath, 'utf-8');
+    const updated = replaceCollectionsArray(original, collections);
+    assertConfigIntact(original, updated, collections);
     writeFileSync(configPath + '.bak', original, 'utf-8');
-    const newContent = buildConfigContent(original, config, collections);
-    writeFileSync(configPath, newContent, 'utf-8');
+    writeFileSync(configPath, updated, 'utf-8');
   }
 }

@@ -25,15 +25,13 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
     const config = await getAdminConfig();
     const { configPath } = await getActiveSitePaths();
 
-    const collections: CollectionDef[] = config.collections.map((col) => {
-      const base = {
-        name: col.name,
-        label: col.label,
-        urlPrefix: (col as { urlPrefix?: string }).urlPrefix,
-        fields: col.fields,
-      };
-      return col.name === collection ? { ...base, ...body } : base;
-    });
+    // Pass the FULL collection objects through — never reduce to a subset of
+    // props, or the writer would drop urlPattern/previewable/nested fields/etc.
+    // The edited collection is merged so the client's changes win while any
+    // prop it didn't send is preserved from the existing definition.
+    const collections = config.collections.map((col) =>
+      col.name === collection ? { ...col, ...body } : col,
+    ) as unknown as CollectionDef[];
 
     await writeConfigCollections(configPath, config, collections);
     // Cache invalidation: site-pool keeps config in memory forever in prod,
@@ -73,14 +71,9 @@ export async function DELETE(_req: NextRequest, { params }: Ctx) {
     // Continue with schema removal even if document cleanup fails
   }
 
-  const collections: CollectionDef[] = config.collections
-    .filter((col) => col.name !== collection)
-    .map((col) => ({
-      name: col.name,
-      label: col.label,
-      urlPrefix: (col as { urlPrefix?: string }).urlPrefix,
-      fields: col.fields,
-    }));
+  // Keep the remaining collections as full objects (no prop reduction).
+  const collections = config.collections
+    .filter((col) => col.name !== collection) as unknown as CollectionDef[];
 
   await writeConfigCollections(configPath, config, collections);
   await invalidateActiveSite();
