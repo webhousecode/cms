@@ -4,16 +4,31 @@ import { getActiveSitePaths } from "@/lib/site-paths";
 import { getSiteRole } from "@/lib/require-role";
 import { readFileSync, writeFileSync, readdirSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import { invalidate } from "@/lib/site-pool";
-import { cookies } from "next/headers";
-import { loadRegistry, findSite } from "@/lib/site-registry";
-import { getAI, anthropicModel } from "@/lib/ai/client";
+import { invalidateActiveSite } from "@/lib/site-pool";
+import {
+  inferFieldType,
+  serializeFieldLine,
+  insertFieldsIntoCollection,
+  assertConfigStructureIntact,
+} from "@/lib/schema-field-infer";
 
 /**
  * POST /api/cms/schema-drift/add-to-schema
  *
- * Adds orphaned fields to the collection schema in cms.config.ts.
- * Uses Haiku to infer types from content samples and insert field definitions.
+ * Adds orphaned fields (present in content, missing from schema) to a
+ * collection's `fields` array in cms.config.ts.
+ *
+ * DETERMINISTIC — no AI. Field types are inferred from sample values with
+ * fixed rules, and the new field lines are INSERTED surgically into the
+ * target collection's fields array; every other byte of the file (urlPattern,
+ * nested array fields, forms, blocks, autolinks, storage, locales) is left
+ * untouched. The result is structurally validated before it is written, and
+ * the original is backed up to `<config>.bak` first.
+ *
+ * (The previous implementation asked an LLM to rewrite the whole file and
+ * wrote the raw output to disk unvalidated — it destroyed webhouse-site's
+ * config on 2026-06-07. See lib/schema-field-infer.ts for the full story.)
+ *
  * Body: { collection: string, fields: string[] }
  */
 export async function POST(req: NextRequest) {
@@ -34,123 +49,52 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: `Collection "${collection}" not found` }, { status: 404 });
     }
 
-    // Only add fields that are truly NOT in the schema
+    // Only add fields that are truly NOT in the schema.
     const schemaKeys = new Set(colConfig.fields.map((f) => f.name));
     const newFields = fields.filter((f) => !schemaKeys.has(f));
     if (newFields.length === 0) {
       return NextResponse.json({ error: "All specified fields already exist in schema" }, { status: 400 });
     }
 
-    // Sample content to infer types
     const { contentDir, configPath } = await getActiveSitePaths();
     if (configPath.startsWith("github://")) {
       return NextResponse.json({ error: "Add-to-schema is only available for filesystem sites" }, { status: 400 });
     }
 
+    // Path-traversal guard on the collection directory.
     const collectionDir = join(contentDir, collection);
-    if (!collectionDir.startsWith(contentDir + "/")) {
+    if (collectionDir !== contentDir && !collectionDir.startsWith(contentDir + "/")) {
       return NextResponse.json({ error: "Invalid collection path" }, { status: 400 });
     }
 
-    let samples: Record<string, unknown>[] = [];
+    // Sample content to infer types (read a generous slice of docs).
+    const samples: Record<string, unknown>[] = [];
     if (existsSync(collectionDir)) {
-      const jsonFiles = readdirSync(collectionDir)
-        .filter((f) => f.endsWith(".json"))
-        .slice(0, 3);
+      const jsonFiles = readdirSync(collectionDir).filter((f) => f.endsWith(".json")).slice(0, 25);
       for (const file of jsonFiles) {
         try {
           const doc = JSON.parse(readFileSync(join(collectionDir, file), "utf-8"));
-          if (doc.data) samples.push(doc.data);
-        } catch { /* skip */ }
+          if (doc.data) samples.push(doc.data as Record<string, unknown>);
+        } catch { /* skip unparseable doc */ }
       }
     }
 
-    // Extract sample values for the orphaned fields
-    const fieldSamples: Record<string, unknown[]> = {};
-    for (const field of newFields) {
-      fieldSamples[field] = samples
-        .map((d) => d[field])
-        .filter((v) => v !== undefined && v !== null)
-        .slice(0, 2);
-    }
+    // Build deterministic field lines for each orphaned field.
+    const fieldLines = newFields.map((field) => {
+      const values = samples.map((d) => d[field]);
+      return serializeFieldLine(field, inferFieldType(values));
+    });
 
-    const configSource = readFileSync(configPath, "utf-8");
+    const source = readFileSync(configPath, "utf-8");
+    const updated = insertFieldsIntoCollection(source, collection, fieldLines); // throws if not locatable
+    assertConfigStructureIntact(source, updated, config.collections.map((c) => c.name), newFields);
 
-    const system = `You are a TypeScript code editor for @webhouse/cms configuration files.
-
-Given a cms.config.ts file, a collection name, and orphaned field names with content samples, add field definitions to that collection's fields array.
-
-@webhouse/cms field types: text, textarea, richtext, number, boolean, date, select, multiselect, image, file, array, blocks, relation.
-
-Rules for type inference:
-- string value, no line breaks, short (<200 chars) → "text"
-- string value with HTML or line breaks → "richtext" or "textarea"
-- number → "number"
-- boolean → "boolean"
-- ISO date string → "date"
-- array of objects → "array" with nested fields
-- object → "blocks" or "text" (use "text" if unsure)
-- url/path string → "text"
-
-Add each new field with { name: "fieldName", type: "inferred-type", label: "Human Label" }.
-For "select" or "multiselect" type, add an options array only if you see clear enum values in the samples.
-
-Insert the new field definitions at the END of the fields array for the specified collection. Do not change anything else.
-
-Return ONLY the complete raw TypeScript source code. No markdown fences, no explanations.`;
-
-    const user = `Collection: ${collection}
-New fields to add (with sample values from content):
-${JSON.stringify(fieldSamples, null, 2)}
-
-Existing schema for this collection's fields:
-${JSON.stringify(colConfig.fields.map((f) => ({ name: f.name, type: f.type, label: f.label })), null, 2)}
-
-cms.config.ts:
-${configSource.slice(0, 8000)}`;
-
-    let updated: string;
-    try {
-      const ai = await getAI();
-      const { text } = await ai.chat({
-        ...anthropicModel("claude-haiku-4-5-20251001"),
-        maxTokens: 4096,
-        system,
-        messages: [{ role: "user", content: user }],
-        purpose: "schema-drift.add-to-schema",
-      });
-      updated = text;
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      console.error(`[schema-drift/add-to-schema] AI call failed: ${msg}`);
-      return NextResponse.json(
-        { error: `AI type inference failed: ${msg}` },
-        { status: 502 },
-      );
-    }
-
-    // Strip markdown fences if model added them anyway
-    updated = updated.replace(/^```(?:typescript|ts)?\n?/m, "").replace(/\n?```\s*$/m, "").trim();
-
-    if (!updated || updated.length < 50) {
-      return NextResponse.json({ error: "AI returned an empty or unusable result" }, { status: 502 });
-    }
-
+    // Back up the original, then write. Both happen only after validation passes.
+    writeFileSync(configPath + ".bak", source, "utf-8");
     writeFileSync(configPath, updated, "utf-8");
 
-    // Invalidate site pool cache so the next request picks up the updated config
-    const cookieStore = await cookies();
-    const activeOrgId = cookieStore.get("cms-active-org")?.value;
-    const activeSiteId = cookieStore.get("cms-active-site")?.value;
-    if (activeOrgId && activeSiteId) {
-      invalidate(activeOrgId, activeSiteId);
-    } else {
-      const registry = await loadRegistry();
-      if (registry) {
-        const site = findSite(registry, registry.defaultOrgId ?? "", registry.defaultSiteId ?? "");
-        if (site) invalidate(registry.defaultOrgId ?? "", registry.defaultSiteId ?? "");
-      }
-    }
+    // Drop the in-memory site-pool entry so the next read re-parses the config.
+    await invalidateActiveSite();
 
     return NextResponse.json({ ok: true, addedFields: newFields });
   } catch (err) {
