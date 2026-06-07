@@ -35,7 +35,7 @@ import {
   IconUnderline, IconSuperscript, IconSubscript, IconHighlight,
   IconZoomIn, IconZoomOut, IconProofread,
 } from "./editor-icons";
-import { Image as LucideImage, Zap, MessageSquareWarning, Code2, ChevronDown, Braces, Shapes } from "lucide-react";
+import { Image as LucideImage, Zap, MessageSquareWarning, Code2, ChevronDown, Braces, Shapes, RemoveFormatting } from "lucide-react";
 import { toast } from "sonner";
 import { AIMetadataPopover } from "@/components/media/ai-metadata-popover";
 import { ProofreadPlugin, proofreadKey, textOffsetToPos } from "./proofread-plugin";
@@ -3163,7 +3163,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
             {(has("bold") || has("italic") || has("strike") || has("code")) && <Btn
               tooltip="Clear formatting" testId="clear-formatting-button"
               onClick={() => editor.chain().focus().unsetAllMarks().clearNodes().run()}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 7V4h16v3"/><path d="M5 20h6"/><path d="M13 4 8 20"/><path d="m15 15 5 5"/><path d="m20 15-5 5"/></svg>
+              <RemoveFormatting size={16} />
             </Btn>}
 
             {(has("bold") || has("italic") || has("strike") || has("code")) && <Sep />}
