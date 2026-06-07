@@ -1760,7 +1760,10 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
           display: "flex", alignItems: "center", gap: "0.5rem",
           padding: "0.35rem 1rem", borderBottom: "1px solid var(--border)",
           backgroundColor: "var(--background)", flexWrap: "wrap",
-          position: "sticky", top: 132, zIndex: 20,
+          // sits directly below the ActionBar (48px tall) which itself anchors
+          // to --cms-chrome-top (header + wrapped tab-bar height). 132px
+          // fallback = 84 + 48 for SSR / single-row tabs.
+          position: "sticky", top: "calc(var(--cms-chrome-top, 84px) + 48px)", zIndex: 20,
         }}>
           <span style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.06em" }}>
             Translations
