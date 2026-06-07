@@ -183,7 +183,7 @@ describe("Webhook Dispatch", () => {
     });
 
     it("returns empty array for empty webhooks list", async () => {
-      const results = await dispatchWebhooks([], baseEvent, mockFetch);
+      const results = await dispatchWebhooks([], baseEvent, mockFetch as unknown as typeof fetch);
       expect(results).toEqual([]);
       expect(mockFetch).not.toHaveBeenCalled();
     });
@@ -194,7 +194,7 @@ describe("Webhook Dispatch", () => {
         { id: "2", url: "https://hooks.slack.com/services/T/B/x" },
         { id: "3", url: "https://example.com/hook" },
       ];
-      const results = await dispatchWebhooks(webhooks, baseEvent, mockFetch);
+      const results = await dispatchWebhooks(webhooks, baseEvent, mockFetch as unknown as typeof fetch);
       expect(mockFetch).toHaveBeenCalledTimes(3);
       expect(results).toHaveLength(3);
       expect(results.every((r) => r.success)).toBe(true);
@@ -211,7 +211,7 @@ describe("Webhook Dispatch", () => {
         { id: "2", url: "https://example.com/b" },
         { id: "3", url: "https://example.com/c" },
       ];
-      const results = await dispatchWebhooks(webhooks, baseEvent, mockFetch);
+      const results = await dispatchWebhooks(webhooks, baseEvent, mockFetch as unknown as typeof fetch);
       expect(results[0].success).toBe(true);
       expect(results[1].success).toBe(false);
       expect(results[1].error).toContain("Connection refused");
@@ -221,7 +221,7 @@ describe("Webhook Dispatch", () => {
     it("reports HTTP error status codes", async () => {
       mockFetch.mockResolvedValue({ ok: false, status: 404 });
       const webhooks: WebhookEntry[] = [{ id: "1", url: "https://example.com/hook" }];
-      const results = await dispatchWebhooks(webhooks, baseEvent, mockFetch);
+      const results = await dispatchWebhooks(webhooks, baseEvent, mockFetch as unknown as typeof fetch);
       expect(results[0].success).toBe(false);
       expect(results[0].statusCode).toBe(404);
     });
@@ -232,7 +232,7 @@ describe("Webhook Dispatch", () => {
         { id: "2", url: "https://hooks.slack.com/services/T/B/x" },
         { id: "3", url: "https://example.com/hook" },
       ];
-      await dispatchWebhooks(webhooks, baseEvent, mockFetch);
+      await dispatchWebhooks(webhooks, baseEvent, mockFetch as unknown as typeof fetch);
 
       // Discord
       const discordBody = JSON.parse(mockFetch.mock.calls[0][1].body);
