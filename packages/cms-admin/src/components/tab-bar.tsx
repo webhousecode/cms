@@ -38,7 +38,7 @@ function getTabIcon(path: string) {
   if (parts.length === 1) return FolderOpen;
   return LayoutDashboard;
 }
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 
 const STATUS_DOT: Record<string, { color: string; title: string }> = {
   published: { color: "rgb(74 222 128)",  title: "Published" },
@@ -56,6 +56,27 @@ export function TabBar() {
   const { tabs, activeId, openTab, closeTab, closeAllTabs, switchTab } = useTabs();
   const [showCloseAll, setShowCloseAll] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const stripRef = useRef<HTMLDivElement>(null);
+
+  // The tab strip wraps to multiple rows when many tabs are open, so its height
+  // is variable. Sticky bars below it (ActionBar, translations bar) can't use a
+  // hardcoded offset or they slide UNDER the wrapped tabs. Publish the real
+  // bottom edge (48px header + strip height) as --cms-chrome-top for them to
+  // anchor against. Re-measured on every resize/wrap via ResizeObserver.
+  useEffect(() => {
+    const el = stripRef.current;
+    if (!el) {
+      document.documentElement.style.removeProperty("--cms-chrome-top");
+      return;
+    }
+    const update = () => {
+      document.documentElement.style.setProperty("--cms-chrome-top", `${48 + el.offsetHeight}px`);
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [tabs.length]);
 
   useEffect(() => {
     fetch("/api/admin/profile", { cache: "no-store" })
@@ -95,6 +116,7 @@ export function TabBar() {
 
   return (
     <div
+      ref={stripRef}
       style={{
         display: "flex",
         flexWrap: "wrap",

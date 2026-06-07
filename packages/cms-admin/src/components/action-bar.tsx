@@ -24,7 +24,10 @@ export function ActionBar({ children, actions, helpArticleId, favorite }: Action
   return (
     <div data-testid="action-bar" style={{
       position: "sticky",
-      top: 84, // header 48px + tab bar 36px
+      // header 48px + actual tab-bar height (tabs wrap to multiple rows when
+      // many are open). --cms-chrome-top is published by TabBar; 84px fallback
+      // = 48 header + 36 single-row tab bar for SSR / no-tabs.
+      top: "var(--cms-chrome-top, 84px)",
       zIndex: 29,
       height: "48px",
       display: "flex",

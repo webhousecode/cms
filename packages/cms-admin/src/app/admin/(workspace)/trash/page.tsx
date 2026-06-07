@@ -145,7 +145,7 @@ export default function TrashPage() {
   return (
     <div data-testid="trash-root">
       {/* Header */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem 1.5rem", borderBottom: "1px solid var(--border)", position: "sticky", top: 84, zIndex: 30, backgroundColor: "var(--card)" }}>
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "1rem 1.5rem", borderBottom: "1px solid var(--border)", position: "sticky", top: "var(--cms-chrome-top, 84px)", zIndex: 30, backgroundColor: "var(--card)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: "0.625rem" }}>
           <Trash2 style={{ width: "16px", height: "16px", color: "var(--muted-foreground)" }} />
           <span style={{ fontWeight: 600, fontSize: "0.9rem" }}>Trash</span>{!loading && items.length > 0 && (

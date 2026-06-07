@@ -764,7 +764,7 @@ export default function InteractiveDetailPage() {
           display: "flex", alignItems: "center", gap: "0.5rem",
           padding: "0.35rem 1rem", borderBottom: "1px solid var(--border)",
           backgroundColor: "var(--background)", flexWrap: "wrap",
-          position: "sticky", top: 132, zIndex: 20,
+          position: "sticky", top: "calc(var(--cms-chrome-top, 84px) + 48px)", zIndex: 20,
         }}>
           <span style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.06em" }}>
             Translations
