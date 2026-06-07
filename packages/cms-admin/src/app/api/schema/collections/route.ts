@@ -29,12 +29,9 @@ export async function POST(req: NextRequest) {
   const config = await getAdminConfig();
   const { configPath } = await getActiveSitePaths();
 
-  const existing = config.collections.map((col) => ({
-    name: col.name,
-    label: col.label,
-    urlPrefix: (col as { urlPrefix?: string }).urlPrefix,
-    fields: col.fields,
-  }));
+  // Keep existing collections as full objects (no prop reduction) so the
+  // writer can't drop urlPattern/previewable/nested fields on a sibling.
+  const existing = config.collections as unknown as CollectionDef[];
 
   if (existing.find((c) => c.name === body.name)) {
     return NextResponse.json({ error: "Collection already exists" }, { status: 409 });

@@ -31,9 +31,12 @@ let writeConfigCollections: (
   config: CmsConfig,
   collections: CollectionDef[],
 ) => Promise<void>;
+let replaceCollectionsArray: (source: string, collections: CollectionDef[]) => string;
 
 beforeAll(async () => {
-  writeConfigCollections = (await import("../config-writer")).writeConfigCollections;
+  const mod = await import("../config-writer");
+  writeConfigCollections = mod.writeConfigCollections;
+  replaceCollectionsArray = mod.replaceCollectionsArray;
 });
 
 const minimalConfig: CmsConfig = {
@@ -152,5 +155,116 @@ export default defineConfig({
     await writeConfigCollections(path, minimalConfig, [sampleCollection]);
     const second = read(path);
     expect(second).toBe(first);
+  });
+});
+
+describe("replaceCollectionsArray — preserves everything outside collections", () => {
+  // A realistic config exercising every previously-dropped construct.
+  const FULL = `import { defineConfig, defineCollection, defineBlock } from '@webhouse/cms';
+
+export default defineConfig({
+  locales: ['da', 'en'],
+  defaultLocale: 'da',
+  blocks: [
+    defineBlock({ name: "carousel", label: "Carousel", fields: [{ name: "images", type: "image-gallery" }] }),
+  ],
+  autolinks: [{ term: "X", href: "/x" }],
+  myCustomTopLevel: { keep: "me" },
+  collections: [
+    defineCollection({
+      name: "posts",
+      label: "Posts",
+      urlPrefix: "/blog",
+      urlPattern: "/:category/:slug",
+      previewable: true,
+      fields: [
+        { name: "title", type: "text", required: true },
+        { name: "stats", type: "array", fields: [{ name: "value", type: "text" }] },
+      ],
+    }),
+  ],
+  forms: [
+    { name: "contact", label: "Contact", fields: [{ name: "email", type: "email" }] },
+  ],
+  storage: { adapter: "filesystem", filesystem: { contentDir: "content" } },
+});
+`;
+
+  it("preserves blocks, autolinks, forms, storage and a CUSTOM top-level field", () => {
+    const out = replaceCollectionsArray(FULL, [
+      { name: "posts", label: "Posts", urlPrefix: "/blog", urlPattern: "/:category/:slug", fields: [{ name: "title", type: "text" }] },
+    ]);
+    expect(out).toContain("locales: ['da', 'en'],");
+    expect(out).toContain(`defineBlock({ name: "carousel"`);
+    expect(out).toContain(`autolinks: [{ term: "X", href: "/x" }],`);
+    expect(out).toContain(`myCustomTopLevel: { keep: "me" },`); // no allow-list — arbitrary fields survive
+    expect(out).toContain(`forms: [`);
+    expect(out).toContain(`name: "contact"`);
+    expect(out).toContain(`storage: { adapter: "filesystem"`);
+  });
+
+  it("preserves urlPattern and nested array fields on the edited collection", () => {
+    const out = replaceCollectionsArray(FULL, [
+      {
+        name: "posts",
+        label: "Posts",
+        urlPrefix: "/blog",
+        urlPattern: "/:category/:slug",
+        previewable: true,
+        fields: [
+          { name: "title", type: "text", required: true },
+          { name: "stats", type: "array", fields: [{ name: "value", type: "text" }] },
+        ],
+      },
+    ]);
+    expect(out).toContain(`urlPattern: "/:category/:slug"`);
+    expect(out).toContain(`previewable: true`);
+    // nested field array survives (undefined labels are dropped, not emitted)
+    expect(out).toContain(`{ name: "stats", type: "array", fields: [{ name: "value", type: "text" }] }`);
+  });
+
+  it("preserves all FieldConfig props (defaultValue, maxLength, options, features, ai)", () => {
+    const out = replaceCollectionsArray(FULL, [
+      {
+        name: "posts",
+        fields: [
+          {
+            name: "category",
+            type: "select",
+            label: "Category",
+            required: true,
+            defaultValue: "news",
+            maxLength: 80,
+            options: [{ label: "News", value: "news" }, { label: "Blog", value: "blog" }],
+            features: ["bold", "italic"],
+            ai: { hint: "pick one", tone: "formal" },
+          } as unknown as CollectionDef["fields"][number],
+        ],
+      },
+    ]);
+    expect(out).toContain(`defaultValue: "news"`);
+    expect(out).toContain(`maxLength: 80`);
+    expect(out).toContain(`options: [{ label: "News", value: "news" }, { label: "Blog", value: "blog" }]`);
+    expect(out).toContain(`features: ["bold", "italic"]`);
+    expect(out).toContain(`ai: { hint: "pick one", tone: "formal" }`);
+  });
+
+  it("handles labels containing literal brackets without truncating the array", () => {
+    const src = FULL.replace('label: "Posts",', 'label: "Posts [archive]",');
+    const out = replaceCollectionsArray(src, [{ name: "posts", fields: [{ name: "title", type: "text" }] }]);
+    // forms after collections must survive — proves bracket matching skipped "[archive]"
+    expect(out).toContain(`forms: [`);
+    expect(out).toContain(`storage: { adapter: "filesystem"`);
+  });
+
+  it("can empty the collections array (delete-all) without touching the rest", () => {
+    const out = replaceCollectionsArray(FULL, []);
+    expect(out).toContain("collections: []");
+    expect(out).toContain(`forms: [`);
+    expect(out).toContain("locales: ['da', 'en'],");
+  });
+
+  it("throws (does not corrupt) when collections array is absent", () => {
+    expect(() => replaceCollectionsArray("export default defineConfig({});", [])).toThrow();
   });
 });
