@@ -20,6 +20,7 @@ import { TextStyle } from "@tiptap/extension-text-style";
 import { Markdown } from "tiptap-markdown";
 import { useEffect, useState, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
+import { sanitizeWordPasteHtml } from "@/lib/paste-sanitizer";
 import {
   Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
 } from "@/components/ui/tooltip";
@@ -2373,10 +2374,10 @@ const SvgEmbed = TipTapNode.create({
 
 /* ─── Toolbar button ─────────────────────────────────────────── */
 function Btn({
-  tooltip, active, disabled, onClick, children,
+  tooltip, active, disabled, onClick, children, testId,
 }: {
   tooltip: string; active?: boolean; disabled?: boolean;
-  onClick: () => void; children: React.ReactNode;
+  onClick: () => void; children: React.ReactNode; testId?: string;
 }) {
   return (
     <Tooltip>
@@ -2384,6 +2385,7 @@ function Btn({
         render={
           <button
             type="button"
+            data-testid={testId}
             onMouseDown={(e) => { e.preventDefault(); onClick(); }}
             disabled={disabled}
             aria-label={tooltip}
@@ -2702,6 +2704,9 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
       onChange(md);
     },
     editorProps: {
+      // F150: strip Word/Office paste cruft before ProseMirror parses, so the
+      // junk never round-trips into stored Markdown (html:true serialiser).
+      transformPastedHTML: (html) => sanitizeWordPasteHtml(html),
       attributes: {
         class: "rte outline-none min-h-[120px]",
         // Block browser extensions (Grammarly, spell-checkers) from injecting
@@ -3152,6 +3157,13 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
             {has("subscript") && <Btn tooltip="Subscript (⌘,)" active={toolbarState?.isSubscript ?? false}
               onClick={() => editor.chain().focus().toggleSubscript().run()}>
               <IconSubscript />
+            </Btn>}
+
+            {/* F150: strip all formatting from the selection (inline marks + block type) */}
+            {(has("bold") || has("italic") || has("strike") || has("code")) && <Btn
+              tooltip="Clear formatting" testId="clear-formatting-button"
+              onClick={() => editor.chain().focus().unsetAllMarks().clearNodes().run()}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 7V4h16v3"/><path d="M5 20h6"/><path d="M13 4 8 20"/><path d="m15 15 5 5"/><path d="m20 15-5 5"/></svg>
             </Btn>}
 
             {(has("bold") || has("italic") || has("strike") || has("code")) && <Sep />}
