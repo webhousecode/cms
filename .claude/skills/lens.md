@@ -10,6 +10,20 @@ The browser (Playwright/Chromium) lives in the **cardmem daemon** (`127.0.0.1:74
 not in this repo. You call it; it returns pass/fail + a screenshot, an optional
 pixel-diff vs an approved baseline, and an optional DOM assertion.
 
+## HARD RULE — Lens, never raw Playwright (F112)
+
+For **ANY** browser automation — drive, screenshot, verify, or E2E-test a UI — you
+MUST use Lens (this skill / the `cardmem-lens` MCP / the daemon). **Never write a raw
+`playwright` / `puppeteer` / `chromium` script.** The daemon owns the browser, so
+anything you could script locally with Playwright, Lens does **by proxy** — there is
+no Playwright capability Lens cannot expose.
+
+If Lens genuinely cannot do what you need 100%, that is **not** a licence to drop to a
+one-off script — it's a Lens gap to close: **file a capability request to cardmem**
+(`cardmem_capture_idea` tagged `lens-gap`, or ask the cardmem session via intercom),
+get it built INTO Lens, then use it. Reaching for raw Playwright is a contract
+violation (a PreToolUse hook will remind you at the moment of the reach). No exceptions.
+
 **`data-testid` is the contract.** Anchor every verification on a stable
 `[data-testid="…"]`, never a CSS/text guess. See `TESTID-CONVENTION.md`.
 

@@ -38,6 +38,14 @@
             "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/pre-tool-use-branch-guard.sh"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/pre-tool-use-lens-guard.sh"
+          }
+        ]
       }
     ],
     "PostToolUse": [
