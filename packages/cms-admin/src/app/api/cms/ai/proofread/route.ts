@@ -24,11 +24,8 @@ export async function POST(request: NextRequest) {
     const locale = bodyLocale || siteConfig.defaultLocale || "en";
 
     const contentModel = await getModel("content");
-    const { text: raw } = await ai.chat({
-      ...anthropicModel(contentModel),
-      maxTokens: 4096,
-      responseFormat: "json",
-      system: `${buildLocaleInstruction(locale)}\nYou are a professional proofreader. Auto-detect the language of the text and check for spelling, grammar, and style errors.
+    const proofreaderPrompt = `${buildLocaleInstruction(locale)}
+You are a professional proofreader. Auto-detect the language of the text and check for spelling, grammar, and style errors.
 
 Return a JSON object with this exact structure:
 {
@@ -52,9 +49,21 @@ Rules:
 - Only flag ACTUAL errors — not style preferences or regional spelling variants
 - Preserve the author's voice and tone
 - If no errors found, return empty corrections array
-- Return ONLY the JSON object, nothing else`,
+- Return ONLY the JSON object — no markdown, no prose, no headings`;
+
+    const { text: raw } = await ai.chat({
+      ...anthropicModel(contentModel),
+      maxTokens: 4096,
+      responseFormat: "json",
+      // The instructions ride in the USER turn, not only `system`: the ai-sdk
+      // path doesn't reliably deliver `system` to the model, and with only a
+      // bare "Proofread this text" user turn the model returns a friendly
+      // markdown summary instead of JSON (the "# Proofreading" bug). The user
+      // message is always forwarded, so the JSON contract survives. `system`
+      // stays as belt-and-braces for paths that do honor it.
+      system: proofreaderPrompt,
       messages: [
-        { role: "user", content: `Proofread this text:\n\n${text}` },
+        { role: "user", content: `${proofreaderPrompt}\n\n---\nProofread this text:\n\n${text}` },
       ],
       purpose: "content.proofread",
     });
