@@ -29,6 +29,10 @@ fi
 
 repo=$(resolve_repo)
 branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "main")
+# F047.9 — the model this session runs (e.g. "claude-opus-4-8"). Only the
+# SessionStart hook payload carries it (.model); pass it so the Card Detail
+# drawer can show which model a live agent is running.
+model=$(printf '%s' "$input" | jq -r '.model // empty')
 
 # F075.5 — pass our applied template version (from the marker the daemon writes
 # on Update templates) so the server can flag whether we're behind canonical.
@@ -43,6 +47,7 @@ args=$(
     --arg repo "$repo" \
     --arg branch "$branch" \
     --arg buddy "${BUDDY_SESSION_NAME:-}" \
+    --arg model "$model" \
     --arg spawnedCard "${CARDMEM_SPAWNED_CARD_ID:-${PROJECTS_SPAWNED_CARD_ID:-}}" \
     --arg spawnedBranch "${CARDMEM_SPAWNED_BRANCH:-${PROJECTS_SPAWNED_BRANCH:-}}" \
     --arg parent "${CARDMEM_PARENT_SESSION_ID:-${PROJECTS_PARENT_SESSION_ID:-}}" \
@@ -51,6 +56,7 @@ args=$(
        + (if $repo  != "" then { repo:  $repo  } else {} end)
        + (if $branch!= "" then { branch:$branch} else {} end)
        + (if $buddy != "" then { buddy_session_name: $buddy } else {} end)
+       + (if $model != "" then { model: $model } else {} end)
        + (if $spawnedCard  != "" then { spawned_card_id: $spawnedCard } else {} end)
        + (if $spawnedBranch!= "" then { spawned_branch: $spawnedBranch } else {} end)
        + (if $parent       != "" then { parent_session_id: $parent } else {} end)
@@ -78,12 +84,17 @@ fi
 printf '<projects:state>\n'
 
 active=$(printf '%s' "$result" | jq -r '.active_project // empty')
+repo_unmatched=$(printf '%s' "$result" | jq -r '.repo_unmatched // false')
 if [[ -n "$active" ]]; then
   proj_name=$(printf '%s' "$result" | jq -r '.active_project.name')
   proj_repo=$(printf '%s' "$result" | jq -r '.active_project.github_repo_full_name // ""')
   printf '  Project: %s' "$proj_name"
   [[ -n "$proj_repo" ]] && printf ' (%s)' "$proj_repo"
   printf '\n'
+elif [[ "$repo_unmatched" == "true" ]]; then
+  # F116 — repo was sent but no cardmem project maps to it. Say so explicitly
+  # instead of silently mapping this session to another project's board.
+  printf '  Project: (none — repo %s is not enrolled in cardmem; ask the cardmem session to scan/enroll it)\n' "${repo:-this repo}"
 fi
 
 # F064 — surface queue-drain mode so a session can verify whether it
