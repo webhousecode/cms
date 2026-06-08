@@ -59,9 +59,29 @@ Rules:
       purpose: "content.proofread",
     });
 
-    // Parse JSON from response (may be wrapped in ```json...```)
-    const jsonStr = raw.trim().replace(/^```json?\n?/, "").replace(/\n?```$/, "").trim();
-    const result = JSON.parse(jsonStr);
+    // Extract the JSON object from the response. The model is asked for pure
+    // JSON, but can still wrap it in prose/markdown (e.g. a "# Proofreading"
+    // heading) — never blindly JSON.parse the raw output, or a stray prefix
+    // crashes the route and leaks "Unexpected token '#'" to the editor.
+    let jsonStr = raw.trim().replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/i, "").trim();
+    const firstBrace = jsonStr.indexOf("{");
+    const lastBrace = jsonStr.lastIndexOf("}");
+    if (firstBrace !== -1 && lastBrace > firstBrace) {
+      jsonStr = jsonStr.slice(firstBrace, lastBrace + 1);
+    }
+
+    type Correction = { original: string; suggestion?: string; reason?: string; type?: string; offset?: number; length?: number; _invalid?: boolean };
+    let result: { language?: string; corrections?: Correction[] };
+    try {
+      result = JSON.parse(jsonStr);
+    } catch {
+      // No usable JSON in the response — fail cleanly (no raw parser message).
+      return NextResponse.json(
+        { error: "The proofreader returned an unreadable response — please try again." },
+        { status: 502 },
+      );
+    }
+    if (!Array.isArray(result.corrections)) result.corrections = [];
 
     // Validate offsets — AI may hallucinate positions, so verify and fix
     if (Array.isArray(result.corrections)) {
