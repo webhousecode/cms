@@ -46,7 +46,11 @@ For each card (`cardmem_list_cards({column:"review"})`, or the one you were give
 5. **Aggregate + decide** — `cardmem_card_verdict({card_id_or_slug})` returns
    `ready_for_done`, plus the fix-loop cap: `fix_rounds` (how many times this card has
    re-entered Review after a failed pass), `max_fix_rounds` (the project setting), and
-   `escalate` (true when not ready AND the cap is reached). Branch on it:
+   `escalate` (true when not ready AND the cap is reached). It also returns
+   **`plan_doc.present`** (F115): if `false` on an epic/story, note "⚠ missing plan-doc"
+   in the review summary and tell the human — this is a **soft, non-blocking** signal
+   (it does NOT feed `ready_for_done`, so don't record a blocking flag for it; the board
+   already shows the epic RED). Then branch:
 
    - **`ready_for_done === true`** → `cardmem_review_report({card_id_or_slug})` to attach
      the evidence bundle, then move the card to **Done** (`cardmem_move_card` /

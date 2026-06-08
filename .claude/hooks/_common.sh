@@ -37,11 +37,28 @@ if [[ -z "$CARDMEM_MCP_URL" ]]; then
     if [[ -n "$_candidate" && -f "$_candidate" ]]; then _mcp_json="$_candidate"; break; fi
   done
   if [[ -n "$_mcp_json" ]] && command -v jq >/dev/null 2>&1; then
-    # args: [ "-y", "mcp-remote", "<url>", "--header", "Authorization: Bearer <key>" ]
-    CARDMEM_MCP_URL="$(jq -r '.mcpServers.cardmem.args[]? | select(type=="string" and test("^https?://"))' "$_mcp_json" 2>/dev/null | head -1)"
-    _auth_arg="$(jq -r '.mcpServers.cardmem.args[]? | select(type=="string" and startswith("Authorization:"))' "$_mcp_json" 2>/dev/null | head -1)"
-    if [[ -n "$_auth_arg" ]]; then
-      CARDMEM_MCP_KEY="${_auth_arg#Authorization: Bearer }"
+    # Two .mcp.json shapes (buddy bug 2026-06-08): the hooks must read BOTH.
+    #  1. MODERN native http transport (preferred):
+    #       { "type":"http", "url":"https://…/mcp",
+    #         "headers":{ "Authorization":"Bearer pa_…" } }
+    #  2. LEGACY mcp-remote bridge:
+    #       { "args":[ "-y","mcp-remote","<url>","--header","Authorization: Bearer <key>" ] }
+    # The old code only parsed shape 2 → a modern config returned empty → the
+    # URL fell through to localhost:7474 (a local server that doesn't host the
+    # project) → session_start "no project resolved" → queue-drain never fired.
+    # Read the modern fields FIRST, fall back to args[].
+    CARDMEM_MCP_URL="$(jq -r '.mcpServers.cardmem.url // empty' "$_mcp_json" 2>/dev/null)"
+    _auth_hdr="$(jq -r '.mcpServers.cardmem.headers.Authorization // .mcpServers.cardmem.headers.authorization // empty' "$_mcp_json" 2>/dev/null)"
+    if [[ -z "$CARDMEM_MCP_URL" ]]; then
+      # Legacy mcp-remote shape: pull the URL + auth header out of args[].
+      CARDMEM_MCP_URL="$(jq -r '.mcpServers.cardmem.args[]? | select(type=="string" and test("^https?://"))' "$_mcp_json" 2>/dev/null | head -1)"
+      _auth_hdr="$(jq -r '.mcpServers.cardmem.args[]? | select(type=="string" and startswith("Authorization:"))' "$_mcp_json" 2>/dev/null | head -1)"
+    fi
+    if [[ -n "$_auth_hdr" ]]; then
+      # Strip an optional "Authorization: " prefix then "Bearer " → bare token.
+      _auth_hdr="${_auth_hdr#Authorization: }"
+      _auth_hdr="${_auth_hdr#authorization: }"
+      CARDMEM_MCP_KEY="${_auth_hdr#Bearer }"
     fi
   fi
 fi
