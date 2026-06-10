@@ -62,28 +62,35 @@ maybe_record_run_report() {
   local newjson
   newjson=$(tail -c +"$((last_byte + 1))" "$transcript" 2>/dev/null | tail -c 4000000)
 
-  # Mutation tool calls this turn (cc moving the board). record_run_report is
-  # excluded (it's reporting, not work) to avoid a self-trigger loop.
-  local MUT='cardmem_move_card|cardmem_move_card_to_project|cardmem_handoff_card|cardmem_create_card|cardmem_create_cards|cardmem_update_card|cardmem_write_plan|cardmem_reparent_card|cardmem_archive_card|cardmem_promote_idea|cardmem_promote_ideas|cardmem_dispatch_idea|cardmem_dispatch_card'
   local tool_names
   tool_names=$(printf '%s' "$newjson" | jq -Rrc 'fromjson? | select(.type=="assistant") | .message.content[]? | select(.type=="tool_use") | .name' 2>/dev/null)
-  local moved_board="no"
-  printf '%s' "$tool_names" | grep -qE "^($MUT)$" && moved_board="yes"
 
-  # Commits since the last report.
+  # MILESTONE = a deliverable actually reached a reportable state — the only
+  # thing worth a run report. A card SHIPPED (handoff → Review, or move_card to
+  # Done/Review) OR a feature PLANNED (write_plan) OR a review bundle filed
+  # (review_report). A bare commit, a card edit, an idea capture, or a
+  # conversational reply is NOT report-worthy (Christian: "det er IKKE den slags
+  # der er værd at lave en rapport på"). This is the bar for the changelog-of-self.
+  local MILESTONE='cardmem_handoff_card|cardmem_write_plan|cardmem_review_report'
+  local milestone="no"
+  printf '%s' "$tool_names" | grep -qE "^($MILESTONE)$" && milestone="yes"
+  if [[ "$milestone" == "no" ]]; then
+    printf '%s' "$newjson" \
+      | jq -Rrc 'fromjson? | select(.type=="assistant") | .message.content[]? | select(.type=="tool_use" and .name=="cardmem_move_card") | (.input.to_column // empty)' 2>/dev/null \
+      | grep -qiE '^(done|review)$' && milestone="yes"
+  fi
+
+  # Commits since the last report — payload only, NOT a trigger on their own.
   local commits_json="[]"
   if [[ -n "$head_sha" && -n "$last_sha" && "$head_sha" != "$last_sha" ]]; then
     commits_json=$(git log --format='%h' "${last_sha}..${head_sha}" 2>/dev/null | head -20 | jq -R . | jq -sc . 2>/dev/null || echo '[]')
   fi
-  local pushed="no"
-  [[ "$commits_json" != "[]" ]] && pushed="yes"
 
   # Always advance the marker so we never re-process this turn.
   jq -nc --argjson b "${cur_byte:-0}" --arg s "$head_sha" '{last_byte:$b,last_sha:$s}' >"$marker" 2>/dev/null || true
 
-  # Threshold (Christian: max useful coverage) — record on ANY board/repo
-  # mutation; a pure-conversation turn is silent.
-  if [[ "$moved_board" == "no" && "$pushed" == "no" ]]; then
+  # Gate: only a milestone is report-worthy. Everything else is silent.
+  if [[ "$milestone" == "no" ]]; then
     return 0
   fi
 
@@ -93,6 +100,14 @@ maybe_record_run_report() {
     | jq -Rrc 'fromjson? | select(.type=="assistant") | (.message.content[]? | select(.type=="text") | .text)' 2>/dev/null \
     | tail -1 | head -c 8000)
   [[ -z "$body" ]] && body="(no wrap-up captured)"
+
+  # Even on a milestone turn, skip if the wrap-up is just a question to the user
+  # (a chat reply, not a work summary) — a report whose body is "Vil du have …?"
+  # is noise.
+  if [[ "$body" =~ \?[[:space:]]*$ ]]; then
+    hook_log "run-report: wrap-up is a question; skip"
+    return 0
+  fi
 
   # Card slugs/f-numbers the turn touched: from tool_use inputs + F-numbers in
   # the wrap-up + commit subjects. The server resolves them into the rich list.
@@ -135,7 +150,7 @@ maybe_record_run_report() {
        + (if $sname!="" then {session_name:$sname} else {} end)
        + (if $model!="" then {model:$model} else {} end)')
   call_mcp cardmem_record_run_report "$args" >/dev/null 2>&1 || true
-  hook_log "run-report: recorded session=$session_id moved=$moved_board pushed=$pushed refs=$(printf '%s' "$refs_json" | jq 'length' 2>/dev/null)"
+  hook_log "run-report: recorded session=$session_id milestone=$milestone refs=$(printf '%s' "$refs_json" | jq 'length' 2>/dev/null)"
 }
 
 maybe_record_run_report || true

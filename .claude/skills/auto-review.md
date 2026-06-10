@@ -33,11 +33,25 @@ For each card (`cardmem_list_cards({column:"review"})`, or the one you were give
    Then record the AC pillar: `cardmem_record_review({type:"ac", status: <all data/visual
    AC met ? "passed" : "flagged">, summary, evidence})`.
 
-2. **Lens** — verify the card's visual surfaces (the `verify_route`/`verify_selector`
-   of its visual AC, or the repo's `lens.manifest.json` surfaces the card touched).
-   `cardmem_record_review({type:"lens", status, summary:"<n surfaces, m green>",
-   evidence:"<lens run ids>"})`. If the card has no UI, skip Lens (the verdict treats
-   a missing lens row as non-blocking).
+2. **Lens (+ composition critic, F126)** — verify the card's visual surfaces (the
+   `verify_route`/`verify_selector` of its visual AC, or the repo's `lens.manifest.json`
+   surfaces the card touched). **Pass a `critic` to every `lens_verify`/`lens_capture`**:
+   read the project's setting once (`cardmem_get_settings` → `composition_critic`) and pass
+   `critic:"both"` when `.vision` is `true`, else `critic:"dom"` (geometry is free + always
+   on); when vision is on also pass `critic_vision_model: composition_critic.vision_model`
+   (`"haiku"` default | `"sonnet"`). The critic checks the screen actually *holds together* — nothing
+   overlapping, covered, clipped, or off-screen — which presence + pixel-diff can't see.
+   The response carries a `critic` block (`high`/`medium`/`low` counts + `dom`/`vision`
+   findings); a **high-severity** finding folds the verify `status` to `fail`, so **record
+   the Lens pillar `failed` and FIX it** like any other fail (the named element + box is in
+   the finding). **Lower-severity** findings → list them in the Lens `summary` as advisory,
+   non-blocking notes. `cardmem_record_review({type:"lens", status, summary:"<n surfaces, m
+   green; composition: H high / M med>", findings:<the critic dom+vision findings, each with
+   its selector/region + box>, evidence:"<lens run ids>"})` — passing the findings persists
+   them into the report (F097). **Waiver:** if a flagged overlap is genuinely intentional,
+   record the Lens pillar `passed` with an evidence note saying why (the same explicit-
+   satisfy path any AC has) — don't let a deliberate design choice block forever. If the
+   card has no UI, skip Lens (the verdict treats a missing lens row as non-blocking).
 
 3. **Code review** — run `/code-review <F-number>` (records `type:"code"`).
 
