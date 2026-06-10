@@ -23,11 +23,14 @@ Do NOT use it for backend-only work, or as a substitute for the `feature` skill
 
 ## The hard rule — self-contained HTML only
 
-The mockup renders in a **sandboxed iframe** (`sandbox=""` — no scripts, no
-same-origin). So the HTML MUST be self-contained:
+The mockup renders in a **sandboxed iframe** (`sandbox="allow-scripts"` — inline
+JS runs, but in a null origin with no access to cardmem's cookies/DOM). So the
+HTML MUST be self-contained:
 
 - **Inline `<style>` only.** No `<link rel="stylesheet" href="http…">`.
-- **No external `<script src="http…">`** (scripts won't run anyway).
+- **Inline `<script>` IS allowed and RUNS** — so mockups can be interactive
+  (theme toggles, filters, tabs, JS-rendered grids). Keep it inline.
+- **No external `<script src="http…">`** (rejected — bundle/inline it instead).
 - **No remote `@import`.** Inline every token + font fallback you need.
 - Remote `<img>` is tolerated but avoid it — prefer inline SVG / CSS shapes /
   data-URIs so the mock is portable and renders offline.
@@ -54,8 +57,9 @@ and card chrome — it should look like a real screen of the app.
 
 Write ONE `<!doctype html>` file: `<head>` with an inline `<style>` block
 carrying the repo tokens, `<body>` with the proposed screen. Keep it ~5–15 KB.
-Static visual only (no interactivity — it's a proposal, and scripts don't run in
-the sandbox). Show realistic content, not lorem ipsum.
+It can be a static visual OR interactive — inline `<script>` runs in the
+sandbox, so add toggles / filters / tabs when they make the proposal clearer.
+Show realistic content, not lorem ipsum.
 
 ## Step 3 — save it to cardmem
 
