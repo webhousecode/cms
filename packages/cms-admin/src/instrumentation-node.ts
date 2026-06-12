@@ -127,7 +127,40 @@ async function snapshotTick() {
   }
 }
 
+// ── 0. Deploy self-report (F019 upmetrics deploy-observe) ─────
+// One fire-and-forget POST on healthy boot. deploy_id = git sha → upmetrics
+// upserts on (project, deploy_id), so re-boots of the same image self-dedupe
+// (a plain machine restart re-reports the same sha = no new deploy event).
+// Never throws into boot; absent key/sha (e.g. local dev) → no-op.
+async function reportDeploy() {
+  const key = process.env.UPMETRICS_API_KEY;
+  const sha = process.env.GIT_SHA;
+  if (!key || !sha) return;
+  const base = process.env.UPMETRICS_BASE_URL || "https://upmetrics.org";
+  try {
+    await fetch(`${base}/api/deploys`, {
+      method: "POST",
+      headers: { "X-Upmetrics-Key": key, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        site: "webhouse.app",
+        deploy_id: sha,
+        status: "success",
+        sha,
+        version: sha.slice(0, 7),
+        originator: "cms",
+        provider: "fly",
+      }),
+    });
+    console.log(`[deploy-observe] reported deploy ${sha.slice(0, 7)} to upmetrics`);
+  } catch (err) {
+    console.warn("[deploy-observe] deploy report failed (non-fatal):", err instanceof Error ? err.message : err);
+  }
+}
+
 export function startSchedulers() {
+  // 0. Deploy self-report — once, shortly after boot (fire-and-forget)
+  setTimeout(() => { void reportDeploy(); }, 5_000);
+
   // 1. Publish scheduler — first run 10s after startup, then every 60s
   setTimeout(publishTick, 10_000);
   setInterval(publishTick, 60_000);

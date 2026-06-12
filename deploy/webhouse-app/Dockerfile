@@ -107,6 +107,12 @@ USER nextjs
 
 WORKDIR /app/packages/cms-admin
 
+# Git sha for the F019 deploy self-report (read by instrumentation-node's
+# reportDeploy on boot). Placed last so it only busts the trivial trailing
+# layers, not the expensive COPY layers above.
+ARG GIT_SHA=""
+ENV GIT_SHA=$GIT_SHA
+
 EXPOSE 3010
 
 CMD ["/start.sh"]
