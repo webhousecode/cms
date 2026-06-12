@@ -11,6 +11,10 @@ export interface SiteConfig {
   curationRetentionDays: number;
   schemaEditEnabled: boolean;
   devInspector: boolean;
+  /** F153 — per-tenant feature toggles. Only stores EXPLICIT overrides; any
+   *  unset capability resolves ON (see resolveCapabilities). Absent/empty =
+   *  the "full" profile (= today's behaviour for every existing tenant). */
+  capabilities: Record<string, boolean>;
   /** Default AI model for interactive generation/editing (legacy alias for aiCodeModel) */
   aiInteractivesModel: string;
   /** Default max tokens for interactive generation/editing */
@@ -179,6 +183,7 @@ async function defaults(): Promise<SiteConfig> {
     curationRetentionDays: 30,
     schemaEditEnabled: process.env.SCHEMA_EDIT_ENABLED === "true",
     devInspector: process.env.DEV_INSPECTOR === "true",
+    capabilities: {},
     aiInteractivesModel: "claude-sonnet-4-6",
     aiInteractivesMaxTokens: 16384,
     aiContentModel: "claude-haiku-4-5-20251001",

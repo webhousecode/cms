@@ -12,6 +12,7 @@ import { AIDefaultsPanel } from "@/components/settings/ai-defaults-panel";
 import { TeamPanel } from "@/components/settings/team-panel";
 import { EmailSettingsPanel } from "@/components/settings/email-settings-panel";
 import { ToolsSettingsPanel } from "@/components/settings/tools-settings-panel";
+import { CapabilitiesSettingsPanel } from "@/components/settings/capabilities-settings-panel";
 import { DeploySettingsPanel } from "@/components/settings/deploy-settings-panel";
 import { BuildSettingsPanel } from "@/components/settings/build-settings-panel";
 import { GeoSettingsPanel } from "@/components/settings/geo-settings-panel";
@@ -54,6 +55,7 @@ export default async function SettingsPage({
 
   const tabs = [
     { id: "general",     label: "General" },
+    { id: "capabilities", label: "Features" },
     { id: "team",        label: "Team" },
     { id: "email",       label: "Email" },
     { id: "ai",          label: "AI" },
@@ -305,6 +307,13 @@ export default async function SettingsPage({
           <div className="max-w-lg" data-testid="settings-panel-tools">
             <div style={{ marginBottom: "1rem" }}><HelpCard articleId="settings-tools" variant="compact" /></div>
             <ToolsSettingsPanel />
+          </div>
+        )}
+
+        {/* Features tab — F153 per-tenant capability toggles */}
+        {tab === "capabilities" && (
+          <div className="max-w-lg" data-testid="settings-panel-capabilities">
+            <CapabilitiesSettingsPanel />
           </div>
         )}
 
