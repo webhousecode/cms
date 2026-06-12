@@ -29,6 +29,7 @@ export const PERMISSIONS = {
   "agents.run": "Run agents manually",
   "agents.manage": "Create / edit agents + workflows",
   "settings.edit": "Change site settings",
+  "capabilities.manage": "Manage feature capabilities (per-tenant toggles)",
   "backup.manage": "Create / restore backups",
   "beam.transfer": "Beam sites",
   "site.clone": "Clone sites",
