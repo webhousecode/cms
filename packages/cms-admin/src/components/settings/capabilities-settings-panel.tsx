@@ -15,6 +15,7 @@ import { useEffect, useState, useCallback } from "react";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { SettingsCard } from "./settings-card";
+import { Button } from "@/components/ui/button";
 import {
   CAPABILITIES,
   CAPABILITY_KEYS,
@@ -32,7 +33,10 @@ const PROFILE_OPTIONS = [
   { value: "custom", label: "Custom" },
 ];
 
-export function CapabilitiesSettingsPanel() {
+export function CapabilitiesSettingsPanel({
+  endpoint = "/api/admin/site-config",
+  selfSave = false,
+}: { endpoint?: string; selfSave?: boolean } = {}) {
   const [caps, setCaps] = useState<CapabilityMap>(() => resolveCapabilities({}));
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -43,19 +47,19 @@ export function CapabilitiesSettingsPanel() {
   }
 
   useEffect(() => {
-    fetch("/api/admin/site-config")
+    fetch(endpoint)
       .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (data) setCaps(resolveCapabilities(data.capabilities));
       })
       .catch(() => {});
-  }, []);
+  }, [endpoint]);
 
   const handleSave = useCallback(async () => {
     setSaving(true);
     setSaved(false);
     try {
-      await fetch("/api/admin/site-config", {
+      await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ capabilities: caps }),
@@ -66,7 +70,7 @@ export function CapabilitiesSettingsPanel() {
       setSaving(false);
       window.dispatchEvent(new CustomEvent("cms:settings-saved"));
     }
-  }, [caps]);
+  }, [caps, endpoint]);
 
   useEffect(() => {
     function onSave() { void handleSave(); }
@@ -141,6 +145,16 @@ export function CapabilitiesSettingsPanel() {
             <p data-testid="capabilities-saved" style={{ fontSize: "0.72rem", color: "rgb(74 222 128)", margin: 0 }}>
               Saved.
             </p>
+          )}
+          {selfSave && (
+            <Button
+              data-testid="capabilities-save"
+              onClick={() => void handleSave()}
+              disabled={saving}
+              style={{ alignSelf: "flex-start" }}
+            >
+              {saving ? "Saving…" : "Save features"}
+            </Button>
           )}
         </div>
       </SettingsCard>

@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { CustomTimeInput } from "@/components/ui/custom-time-input";
+import { CapabilitiesSettingsPanel } from "@/components/settings/capabilities-settings-panel";
 import { ExternalLink } from "lucide-react";
 
 interface OrgEntry {
@@ -24,7 +25,7 @@ function getCookie(name: string): string | null {
   return match ? decodeURIComponent(match[1]) : null;
 }
 
-type OrgTab = "general" | "deploy" | "ai" | "email" | "automation";
+type OrgTab = "general" | "deploy" | "ai" | "email" | "automation" | "features";
 
 interface OrgCreds {
   // Deploy
@@ -275,6 +276,7 @@ export default function OrgSettingsPage() {
         <button data-testid="org-settings-tab-ai" type="button" style={tabStyle("ai")} onClick={() => setTab("ai")}>AI</button>
         <button data-testid="org-settings-tab-email" type="button" style={tabStyle("email")} onClick={() => setTab("email")}>Email</button>
         <button data-testid="org-settings-tab-automation" type="button" style={tabStyle("automation")} onClick={() => setTab("automation")}>Automation</button>
+        <button data-testid="org-settings-tab-features" type="button" style={tabStyle("features")} onClick={() => setTab("features")}>Features</button>
       </div>
 
       {/* ── Save button (shared across all non-general tabs) ── */}
@@ -551,6 +553,16 @@ export default function OrgSettingsPage() {
       )}
 
       {/* ── General tab ─────────────────────────────────────── */}
+      {tab === "features" && (
+        <div style={{ maxWidth: "32rem" }} data-testid="org-settings-panel-features">
+          <p style={{ fontSize: "0.78rem", color: "var(--muted-foreground)", margin: "0 0 1rem" }}>
+            Set feature capabilities for the whole organization. Each site inherits these as
+            defaults and can override individual features in its own Site Settings → Features.
+          </p>
+          <CapabilitiesSettingsPanel endpoint="/api/admin/org-settings" selfSave />
+        </div>
+      )}
+
       {tab === "general" && <>
 
       {/* Organization details */}
