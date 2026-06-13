@@ -7,6 +7,7 @@ import { parseSiteSlugPath } from "@/lib/site-slug-routing";
 import { useState, useEffect, useMemo } from "react";
 import { useTheme } from "next-themes";
 import { useHeaderData } from "@/lib/header-data-context";
+import { useCapabilities } from "@/hooks/use-capabilities";
 import {
   LayoutDashboard,
   Cpu,
@@ -88,6 +89,9 @@ export function AppSidebar({ collections }: Props) {
 
   // Load logo preference from shared context (profile)
   const { user: ctxUser, profile: ctxProfile, isAdminEmpty } = useHeaderData();
+  // F153: per-tenant capability gate — hide whole feature areas this tenant has
+  // turned off. Defaults ON (canUse → true) so untouched sites are unchanged.
+  const canUse = useCapabilities();
   useEffect(() => {
     if (ctxProfile && typeof (ctxProfile as any).showLogoIcon === "boolean") {
       setShowLogoIcon((ctxProfile as any).showLogoIcon);
@@ -244,6 +248,7 @@ export function AppSidebar({ collections }: Props) {
                 </SidebarMenuButton>
               </SidebarMenuItem>
             )}
+            {canUse("agents") && (
             <SidebarMenuItem>
               <SidebarMenuButton
                 isActive={pathname.startsWith("/admin/agents")}
@@ -254,6 +259,8 @@ export function AppSidebar({ collections }: Props) {
                 <span>Agents</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
+            )}
+            {canUse("ai") && (
             <SidebarMenuItem>
               <SidebarMenuButton
                 isActive={pathname === "/admin/curation"}
@@ -269,6 +276,7 @@ export function AppSidebar({ collections }: Props) {
                 )}
               </SidebarMenuButton>
             </SidebarMenuItem>
+            )}
             <SidebarMenuItem>
               <SidebarMenuButton
                 isActive={pathname === "/admin/scheduled"}

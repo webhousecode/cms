@@ -21,6 +21,7 @@ import { useTabs } from "@/lib/tabs-context";
 import { AIPanel } from "./ai-panel";
 import { SeoPanel } from "./seo-panel";
 import { GenerateDocumentDialog } from "@/components/generate-document-dialog";
+import { useCapabilities } from "@/hooks/use-capabilities";
 import { LOCALE_LABELS } from "@/lib/locale";
 
 // Fallback to env vars for backwards compatibility — overridden by props from server
@@ -1138,6 +1139,9 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
   const [saving, setSaving] = useState(false);
   const [savedAt, setSavedAt] = useState<Date | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
+  // F153: hide AI editor tools when this tenant has the `ai` capability off.
+  // Defaults ON, so untouched sites keep every AI button.
+  const canUse = useCapabilities();
   const [aiPanelOpen, setAiPanelOpen] = useState(false);
   const [propertiesOpen, setPropertiesOpen] = useState(false);
   const [seoPanelOpen, setSeoPanelOpen] = useState(false);
@@ -1545,7 +1549,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
             </Button>
           )}
 
-          {!readOnly && (
+          {!readOnly && canUse("ai") && (
             <Button
               variant="ghost"
               size="sm"
@@ -1558,7 +1562,7 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
             </Button>
           )}
 
-          {!readOnly && (
+          {!readOnly && canUse("ai") && (
             <Button
               variant="ghost"
               size="sm"

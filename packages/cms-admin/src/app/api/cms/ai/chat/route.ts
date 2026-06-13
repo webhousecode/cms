@@ -5,6 +5,7 @@ import { buildContentContext } from "@/lib/content-context";
 import { readSiteConfig } from "@/lib/site-config";
 import { getModel } from "@/lib/ai/model-resolver";
 import { denyViewers } from "@/lib/require-role";
+import { requireCapability } from "@/lib/capabilities";
 import { buildLocaleInstruction } from "@/lib/ai/locale-prompt";
 import { getDocLocale } from "@/lib/locale";
 
@@ -21,6 +22,7 @@ const ALLOWED_MODELS = [
 
 export async function POST(request: NextRequest) {
   const denied = await denyViewers(); if (denied) return denied;
+  const capDenied = await requireCapability("chat"); if (capDenied) return capDenied;
   const apiKey = await getApiKey("anthropic");
   if (!apiKey) {
     return NextResponse.json({ error: "Anthropic API key not configured — add it in Settings → AI" }, { status: 503 });

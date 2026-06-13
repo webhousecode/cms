@@ -9,6 +9,7 @@ import { getModel } from "@/lib/ai/model-resolver";
 import { buildContentContext } from "@/lib/content-context";
 import { buildToolRegistry, type ToolDefinition, type ToolHandler } from "@/lib/tools";
 import { denyViewers } from "@/lib/require-role";
+import { requireCapability } from "@/lib/capabilities";
 import { buildLocaleInstruction } from "@/lib/ai/locale-prompt";
 import { readSiteConfig } from "@/lib/site-config";
 
@@ -97,6 +98,7 @@ async function callWithTools(params: {
 
 export async function POST(request: NextRequest) {
   const denied = await denyViewers(); if (denied) return denied;
+  const capDenied = await requireCapability("ai"); if (capDenied) return capDenied;
   const apiKey = await getApiKey("anthropic");
   if (!apiKey) {
     return NextResponse.json({ error: "Anthropic API key not configured" }, { status: 503 });

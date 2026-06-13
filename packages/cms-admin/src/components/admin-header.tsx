@@ -19,6 +19,7 @@ import type { AdminMode } from "@/lib/hooks/use-admin-mode";
 import { HelpButton } from "@/components/help-drawer";
 import { BuildLogPanel } from "@/components/build/build-log-panel";
 import { usePermissions } from "@/hooks/use-permissions";
+import { useCapabilities } from "@/hooks/use-capabilities";
 import { useThemeAxes, type Temperature } from "@/lib/hooks/use-theme-axes";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
@@ -1028,6 +1029,8 @@ export function AdminHeader({ mode, onToggleMode, onNewChat, onToggleHistory, sh
   const activeTab = tabs.find((t) => t.id === activeId);
   const title = activeTab?.title;
   const { user: headerUser } = useHeaderData();
+  // F153: hide the Chat-mode toggle when the tenant has `chat` turned off.
+  const canUse = useCapabilities();
   const user: SessionUser | null = headerUser ? {
     id: headerUser.id,
     email: headerUser.email,
@@ -1086,7 +1089,7 @@ export function AdminHeader({ mode, onToggleMode, onNewChat, onToggleHistory, sh
         ) : null}
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: "0.5rem", padding: "0 1rem" }}>
-        {mode && onToggleMode && <ModeToggle mode={mode} onToggle={onToggleMode} />}
+        {mode && onToggleMode && canUse("chat") && <ModeToggle mode={mode} onToggle={onToggleMode} />}
         <div style={{ width: "1px", height: "1rem", backgroundColor: "var(--border)" }} />
         <SiteSwitcher />
         <LocaleIndicator />

@@ -3,6 +3,7 @@
 import { memo } from "react";
 import { useEditor, EditorContent, useEditorState, NodeViewWrapper, ReactNodeViewRenderer } from "@tiptap/react";
 import { AIBubbleMenu } from "./ai-bubble-menu";
+import { useCapabilities } from "@/hooks/use-capabilities";
 import type { NodeViewProps } from "@tiptap/react";
 import { Node as TipTapNode, Extension } from "@tiptap/core";
 import { Plugin, PluginKey } from "prosemirror-state";
@@ -2609,6 +2610,9 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
   const [proofreadIndex, setProofreadIndex] = useState(0);
   const [proofreadLoading, setProofreadLoading] = useState(false);
 
+  // F153: hide the ✨ AI bubble menu when the tenant has `ai` turned off.
+  const canUse = useCapabilities();
+
   const editor = useEditor({
     immediatelyRender: false,
     shouldRerenderOnTransaction: false,
@@ -3930,7 +3934,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
           }}
         >
           <EditorContent editor={editor} />
-          {editor && <AIBubbleMenu editor={editor} />}
+          {editor && canUse("ai") && <AIBubbleMenu editor={editor} />}
         </div>
 
         {/* ── F109 Proofread correction toolbar ── */}
