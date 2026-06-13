@@ -1,6 +1,6 @@
 # F153 — Per-tenant capabilities (feature toggles per customer)
 
-> **Status: PLAN FOR REVIEW.** Christian captured this idea and asked for "en god plan i første omgang" to discuss when he's back. Nothing is built yet — this doc is the discussion starter. Decisions still open are collected in **§9**.
+> **Status: IN PROGRESS.** F153.1 (foundation + Features settings UI) shipped, all-default-ON. F153.2 **AI phase** shipped — the `ai` / `agents` / `chat` capabilities now gate their nav, editor buttons, command-palette entries, chat-mode toggle and the model-invoking API routes (server-side, runtime-proven). SEO / Maps / Interactives gates are the remaining F153.2 work. Decisions still open are collected in **§9** (the architecture chosen so far uses the recommended answers).
 
 ## 1. Motivation
 
@@ -74,6 +74,8 @@ Start with **~10 coarse capability groups** (AI, SEO, Maps, Interactives, Agents
 
 - **F153.1 — Foundation (already a story):** `capabilities-shared.ts` catalog + profiles, site-config field + org-default resolution, `hasCapability`/`requireCapability`/`canUse` helpers, Site Settings → Features UI (switches + profile picker, `capabilities.manage` permission, data-testid on every control). Default all-on. No gates wired yet (so nothing changes) — ship + verify the config round-trips.
 - **F153.2 — Wire the headline gates:** AI (nav + editor AI buttons + `ai.*` API routes + chat + agents), then SEO, Maps, Interactives. Each gate = capability ∧ permission. Verify a "Minimal"-profile tenant in the browser (via Lens) shows the stripped CMS.
+  - **AI phase — SHIPPED.** Server gates (`requireCapability`) on the model-invoking routes: `ai` → proofread/generate/rewrite/htmldoc/prompts; `chat` → chat; `agents` → agents run/create-from-description/generate-prompt. Client gates (`canUse`): sidebar Agents (`agents`) + Curation (`ai`), editor Generate/AI-panel/✨-bubble-menu + collection Generate button (`ai`), command-palette AI entries (`agents`/`ai`/`chat`), Chat-mode toggle in the header (`chat`). Server-side `redirect` layouts for `/admin/agents*` (`agents`) and `/admin/curation` (`ai`). Runtime-proven: `ai` off → proofread 404; `ai` on → 200. All default-ON ⇒ zero change for current tenants.
+  - **Remaining:** SEO (`/admin/seo`, `/admin/visibility`, SEO-panel AI), Maps (map field + map routes), Interactives (`/admin/interactives` + AI-panel). Same capability ∧ permission pattern.
 - **F153.3 — Remaining groups + org inheritance + onboarding profile pick** (new tenant/onboarding chooses Minimal/Standard/Full).
 - **F153.4 (later/optional):** map capabilities to a future pricing tier (a plan sets a profile) — explicitly out of scope now, noted so we don't design ourselves into a corner.
 

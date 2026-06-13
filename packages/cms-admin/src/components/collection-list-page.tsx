@@ -7,6 +7,7 @@ import { ActionBar, ActionBarBreadcrumb } from "@/components/action-bar";
 import { CollectionList, type ViewMode } from "@/components/collection-list";
 import { NewDocumentButton } from "@/components/new-document-button";
 import { GenerateDocumentButton } from "@/components/generate-document-button";
+import { useCapabilities } from "@/hooks/use-capabilities";
 import { ImportWizard } from "@/components/import-wizard";
 import { usePermissions } from "@/hooks/use-permissions";
 import { Upload } from "lucide-react";
@@ -50,6 +51,7 @@ export function CollectionListPage({
   readOnly, urlPrefix, urlPattern, localeStrategy, schemaEnabled, defaultLocale, siteLocales,
 }: Props) {
   const can = usePermissions();
+  const canUse = useCapabilities();
   const storageKey = `cms-view-${collection}`;
   const [view, setView] = useState<ViewMode>("list");
   const [importOpen, setImportOpen] = useState(false);
@@ -123,7 +125,7 @@ export function CollectionListPage({
                     Import
                   </button>
                 )}
-                <GenerateDocumentButton collection={collection} collectionLabel={collectionLabel} />
+                {canUse("ai") && <GenerateDocumentButton collection={collection} collectionLabel={collectionLabel} />}
                 <NewDocumentButton collection={collection} titleField={titleField} defaultLocale={defaultLocale} siteLocales={siteLocales} />
               </>
             )}

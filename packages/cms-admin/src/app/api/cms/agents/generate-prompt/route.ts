@@ -3,11 +3,13 @@ import { getAI, anthropicModel } from "@/lib/ai/client";
 import { getApiKey } from "@/lib/ai-config";
 import { getModel } from "@/lib/ai/model-resolver";
 import { denyViewers } from "@/lib/require-role";
+import { requireCapability } from "@/lib/capabilities";
 import { buildLocaleInstruction } from "@/lib/ai/locale-prompt";
 import { readSiteConfig } from "@/lib/site-config";
 
 export async function POST(request: NextRequest) {
   const denied = await denyViewers(); if (denied) return denied;
+  const capDenied = await requireCapability("agents"); if (capDenied) return capDenied;
   const apiKey = await getApiKey("anthropic");
   if (!apiKey) {
     return NextResponse.json(

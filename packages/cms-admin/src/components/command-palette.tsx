@@ -13,6 +13,7 @@ import {
 import { cn } from "@/lib/utils";
 import { switchSite, switchOrg } from "@/lib/switch-context";
 import { usePermissions } from "@/hooks/use-permissions";
+import { useCapabilities } from "@/hooks/use-capabilities";
 
 /* ─── Quick actions (Spotlight-style) ────────────────────────── */
 
@@ -29,6 +30,8 @@ interface QuickAction {
   newTab?: boolean; // open in new browser tab
   /** If set, only show this item when the user has this permission. */
   permission?: string;
+  /** F153: if set, only show this item when the tenant has this capability. */
+  capability?: string;
 }
 
 const ICON_SIZE = { width: "0.9rem", height: "0.9rem" };
@@ -39,18 +42,18 @@ function buildQuickActions(logout: () => void): QuickAction[] {
     // Navigation
     { id: "nav-dashboard", label: "Dashboard", sublabel: "Overview", category: "navigation", icon: <LayoutDashboard style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin", keywords: ["home", "oversigt"], featured: true },
     { id: "nav-sites", label: "Sites", sublabel: "Manage sites", category: "navigation", icon: <Globe style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/sites", keywords: ["site", "sider"] },
-    { id: "nav-agents", label: "AI Agents", sublabel: "Automated content generation", category: "navigation", icon: <Bot style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/agents", keywords: ["agent", "ai", "bot", "automation"], featured: true },
+    { id: "nav-agents", capability: "agents", label: "AI Agents", sublabel: "Automated content generation", category: "navigation", icon: <Bot style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/agents", keywords: ["agent", "ai", "bot", "automation"], featured: true },
     // Phase 6 — Templates and Workflows are tabs on /admin/agents but
     // it's nice to deep-link to them from the palette so curators can
     // jump straight in. The localStorage key cms:agents-tab is read by
     // AgentsTabs on mount, so we set it before navigating.
-    { id: "nav-agent-templates", label: "Agent Templates", sublabel: "Local + marketplace agent presets", category: "navigation", icon: <Bot style={{ ...ICON_SIZE, color: MUTED }} />, keywords: ["template", "templates", "marketplace", "preset", "agent"], action: () => { try { localStorage.setItem("cms:agents-tab", "templates"); } catch {} window.location.href = "/admin/agents"; } },
-    { id: "nav-workflows", label: "Agent Workflows", sublabel: "Multi-agent pipelines", category: "navigation", icon: <Bot style={{ ...ICON_SIZE, color: MUTED }} />, keywords: ["workflow", "workflows", "pipeline", "chain", "agent"], action: () => { try { localStorage.setItem("cms:agents-tab", "workflows"); } catch {} window.location.href = "/admin/agents"; } },
+    { id: "nav-agent-templates", capability: "agents", label: "Agent Templates", sublabel: "Local + marketplace agent presets", category: "navigation", icon: <Bot style={{ ...ICON_SIZE, color: MUTED }} />, keywords: ["template", "templates", "marketplace", "preset", "agent"], action: () => { try { localStorage.setItem("cms:agents-tab", "templates"); } catch {} window.location.href = "/admin/agents"; } },
+    { id: "nav-workflows", capability: "agents", label: "Agent Workflows", sublabel: "Multi-agent pipelines", category: "navigation", icon: <Bot style={{ ...ICON_SIZE, color: MUTED }} />, keywords: ["workflow", "workflows", "pipeline", "chain", "agent"], action: () => { try { localStorage.setItem("cms:agents-tab", "workflows"); } catch {} window.location.href = "/admin/agents"; } },
     { id: "nav-media", label: "Media", sublabel: "Images and files", category: "navigation", icon: <Image style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/media", keywords: ["billeder", "images", "files", "upload"], featured: true },
     { id: "nav-ints", label: "Interactives", sublabel: "HTML interactives", category: "navigation", icon: <Puzzle style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/interactives", keywords: ["ints", "interactive", "html"] },
     { id: "nav-calendar", label: "Calendar", sublabel: "Scheduled content", category: "navigation", icon: <Calendar style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/scheduled", keywords: ["kalender", "schedule", "planned"], featured: true },
-    { id: "nav-curation", label: "Curation Queue", sublabel: "Review AI-generated content", category: "navigation", icon: <ListChecks style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/curation", keywords: ["queue", "review", "approve"] },
-    { id: "nav-chat", label: "Chat", sublabel: "Chat with your site", category: "navigation", icon: <Terminal style={{ ...ICON_SIZE, color: MUTED }} />, keywords: ["chat", "ai", "spørg"], featured: true, action: () => { window.dispatchEvent(new CustomEvent("cms:set-admin-mode", { detail: "chat" })); } },
+    { id: "nav-curation", capability: "ai", label: "Curation Queue", sublabel: "Review AI-generated content", category: "navigation", icon: <ListChecks style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/curation", keywords: ["queue", "review", "approve"] },
+    { id: "nav-chat", capability: "chat", label: "Chat", sublabel: "Chat with your site", category: "navigation", icon: <Terminal style={{ ...ICON_SIZE, color: MUTED }} />, keywords: ["chat", "ai", "spørg"], featured: true, action: () => { window.dispatchEvent(new CustomEvent("cms:set-admin-mode", { detail: "chat" })); } },
     { id: "nav-seo", label: "SEO", sublabel: "SEO dashboard & optimization", category: "navigation", icon: <Search style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/seo", keywords: ["seo", "meta", "keywords", "optimize", "søgemaskine"], featured: true },
     { id: "nav-visibility", label: "Visibility", sublabel: "SEO + GEO combined score", category: "navigation", icon: <BarChart3 style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/visibility", keywords: ["visibility", "synlighed", "geo", "ai", "score", "ranking"] },
     { id: "nav-analytics", label: "AI Analytics", sublabel: "Content performance insights", category: "navigation", icon: <BarChart3 style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/performance", keywords: ["analytics", "performance", "stats", "statistik", "ai analytics"] },
@@ -60,8 +63,8 @@ function buildQuickActions(logout: () => void): QuickAction[] {
     { id: "nav-trash", label: "Trash", sublabel: "Deleted items", category: "navigation", icon: <Trash2 style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/trash", keywords: ["slettet", "deleted", "papirkurv"] },
 
     // Actions — create
-    { id: "act-new-agent", label: "New Agent", sublabel: "Create a new AI agent", category: "action", icon: <Plus style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/agents/new", keywords: ["new", "agent", "create", "ny", "opret"], featured: true, permission: "agents.manage" },
-    { id: "act-new-workflow", label: "New Workflow", sublabel: "Chain agents into a pipeline", category: "action", icon: <Plus style={{ ...ICON_SIZE, color: MUTED }} />, keywords: ["new", "workflow", "pipeline", "chain", "create", "ny", "opret"], action: () => { try { localStorage.setItem("cms:agents-tab", "workflows"); localStorage.setItem("cms:agents-workflows-create", "1"); } catch {} window.location.href = "/admin/agents"; }, permission: "agents.manage" },
+    { id: "act-new-agent", capability: "agents", label: "New Agent", sublabel: "Create a new AI agent", category: "action", icon: <Plus style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/agents/new", keywords: ["new", "agent", "create", "ny", "opret"], featured: true, permission: "agents.manage" },
+    { id: "act-new-workflow", capability: "agents", label: "New Workflow", sublabel: "Chain agents into a pipeline", category: "action", icon: <Plus style={{ ...ICON_SIZE, color: MUTED }} />, keywords: ["new", "workflow", "pipeline", "chain", "create", "ny", "opret"], action: () => { try { localStorage.setItem("cms:agents-tab", "workflows"); localStorage.setItem("cms:agents-workflows-create", "1"); } catch {} window.location.href = "/admin/agents"; }, permission: "agents.manage" },
     { id: "act-new-site", label: "New site", sublabel: "Create a new site", category: "action", icon: <Plus style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/sites/new", keywords: ["new", "site", "create", "ny", "opret"], permission: "settings.edit" },
     { id: "act-new-org", label: "New organization", sublabel: "Create a new organization", category: "action", icon: <Plus style={{ ...ICON_SIZE, color: MUTED }} />, href: "/admin/organizations/new", keywords: ["new", "org", "organization", "create", "ny", "opret"], permission: "settings.edit" },
 
@@ -153,6 +156,7 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const can = usePermissions();
+  const canUse = useCapabilities();
 
   const logout = useCallback(() => {
     fetch("/api/auth/logout", { method: "POST" }).then(() => {
@@ -187,7 +191,8 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
 
   const quickActions = useMemo(() => {
     const actions = buildQuickActions(logout)
-      .filter((a) => !a.permission || can(a.permission));
+      .filter((a) => !a.permission || can(a.permission))
+      .filter((a) => !a.capability || canUse(a.capability));
     // Add dynamic collection navigation
     for (const col of collections) {
       actions.push({
