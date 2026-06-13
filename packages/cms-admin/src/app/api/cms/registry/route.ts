@@ -4,6 +4,7 @@ import { mkdir, writeFile } from "node:fs/promises";
 import { join, dirname, resolve } from "node:path";
 import { getSessionUser, type UserRole } from "@/lib/auth";
 import { requirePermission } from "@/lib/permissions";
+import { CAPABILITY_PROFILES } from "@/lib/capabilities-shared";
 import { getAccessibleSiteIds } from "@/lib/team-access";
 import {
   loadRegistry,
@@ -157,6 +158,19 @@ export async function POST(request: NextRequest) {
       const team = [{ userId: session.sub, role: "admin", addedAt: new Date().toISOString() }];
       await mkdir(dataDir, { recursive: true });
       await writeFile(teamFile, JSON.stringify(team, null, 2));
+
+      // F153: a brand-new site starts on the Minimal profile (content + media
+      // only) per the F153.3 onboarding decision. Existing sites are untouched
+      // (no stored capabilities → all-on). Admins enable features in
+      // Site Settings → Features. `flag: "wx"` never clobbers an existing config.
+      try {
+        const siteConfigFile = join(dataDir, "site-config.json");
+        await writeFile(
+          siteConfigFile,
+          JSON.stringify({ capabilities: CAPABILITY_PROFILES.minimal }, null, 2),
+          { flag: "wx" },
+        );
+      } catch { /* config already exists or non-fatal */ }
 
       if (site.adapter !== "github" && !site.configPath.startsWith("github://")) {
         const projDir = dirname(resolve(site.configPath));

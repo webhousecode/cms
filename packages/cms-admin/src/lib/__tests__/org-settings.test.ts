@@ -98,7 +98,14 @@ function mergeConfigs(
   }
 
   // Step 3: Merge in order: defaults ← org ← site
-  return { ...defaults, ...filteredOrg, ...filteredSite };
+  const merged = { ...defaults, ...filteredOrg, ...filteredSite };
+  // F153: capabilities deep-merge (org ← site), mirrors the real mergeConfigs.
+  const orgCaps = (filteredOrg.capabilities as Record<string, boolean> | undefined) ?? {};
+  const siteCaps = (filteredSite.capabilities as Record<string, boolean> | undefined) ?? {};
+  if (Object.keys(orgCaps).length || Object.keys(siteCaps).length) {
+    merged.capabilities = { ...orgCaps, ...siteCaps };
+  }
+  return merged;
 }
 
 // ── Test Suite ─────────────────────────────────────────────────
@@ -177,6 +184,21 @@ describe("F87 Org-Level Settings — mergeConfigs", () => {
   });
 
   // ── Empty string handling (CRITICAL) ───────────────────────
+
+  describe("F153 capabilities deep-merge", () => {
+    it("merges org + site capability maps instead of replacing", () => {
+      const result = mergeConfigs(DEFAULTS, { capabilities: { ai: false } }, { capabilities: { seo: false } });
+      expect(result.capabilities).toEqual({ ai: false, seo: false });
+    });
+    it("site capability overrides the org's value for the same key", () => {
+      const result = mergeConfigs(DEFAULTS, { capabilities: { ai: false } }, { capabilities: { ai: true } });
+      expect((result.capabilities as Record<string, boolean>).ai).toBe(true);
+    });
+    it("org capabilities inherit when the site sets none", () => {
+      const result = mergeConfigs(DEFAULTS, { capabilities: { ai: false } }, {});
+      expect(result.capabilities).toEqual({ ai: false });
+    });
+  });
 
   describe("empty string handling", () => {
     it("empty string in site config does NOT override org value for inheritable fields", () => {

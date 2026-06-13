@@ -56,6 +56,10 @@ export interface OrgSettings {
 
   // Default webhooks (F13 + F35)
   publishWebhooks?: { id: string; url: string; secret?: string; label?: string }[];
+
+  // F153 — per-tenant capabilities set at ORG level. Sites deep-merge these as
+  // defaults and may override individual keys. Resolution applies default-ON.
+  capabilities?: Record<string, boolean>;
   backupWebhooks?: { id: string; url: string; secret?: string; label?: string }[];
   linkCheckWebhooks?: { id: string; url: string; secret?: string; label?: string }[];
   agentDefaultWebhooks?: { id: string; url: string; secret?: string; label?: string }[];
@@ -166,7 +170,19 @@ export function mergeConfigs(
   }
 
   // Step 3: Merge in order
-  return { ...defaults, ...filteredOrg, ...filteredSite };
+  const merged = { ...defaults, ...filteredOrg, ...filteredSite };
+
+  // F153: capabilities is a per-feature map — deep-merge it (org defaults ←
+  // site overrides) instead of the shallow object-replace the spread does, so
+  // a site can turn ONE feature back on without dropping the org's other
+  // toggles. Resolution (default-ON + requires-cascade) happens later.
+  const orgCaps = (filteredOrg.capabilities as Record<string, boolean> | undefined) ?? {};
+  const siteCaps = (filteredSite.capabilities as Record<string, boolean> | undefined) ?? {};
+  if (Object.keys(orgCaps).length || Object.keys(siteCaps).length) {
+    merged.capabilities = { ...orgCaps, ...siteCaps };
+  }
+
+  return merged;
 }
 
 // ── Org resolution ───────────────────────────────────────────
