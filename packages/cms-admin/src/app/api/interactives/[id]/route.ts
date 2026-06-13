@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getMediaAdapter } from "@/lib/media";
 import { denyViewers } from "@/lib/require-role";
+import { requireCapability } from "@/lib/capabilities";
 
 /* ─── GET: get interactive metadata + content ────────────────── */
 export async function GET(
@@ -25,6 +26,7 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const denied = await denyViewers(); if (denied) return denied;
+  const capDenied = await requireCapability("interactives"); if (capDenied) return capDenied;
   try {
     const { id } = await params;
     const body = await req.json();
@@ -52,6 +54,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const denied = await denyViewers(); if (denied) return denied;
+  const capDenied = await requireCapability("interactives"); if (capDenied) return capDenied;
   try {
     const { id } = await params;
     const adapter = await getMediaAdapter();

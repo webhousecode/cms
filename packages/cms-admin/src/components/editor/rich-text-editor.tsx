@@ -3380,6 +3380,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                       <IconAttachment />File attachment
                     </button>
                     {/* Map embed */}
+                    {canUse("maps") && (
                     <button data-testid="media-menu-map" type="button" style={{
                       display: "flex", alignItems: "center", gap: "0.5rem",
                       width: "100%", padding: "0.5rem 0.75rem", border: "none",
@@ -3396,6 +3397,7 @@ function RichTextEditorInner({ value, onChange, disabled, stickyOffset = 132, fe
                       </span>
                       <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
                     </button>
+                    )}
                   </>)}
 
                   {/* Image sub-menu */}

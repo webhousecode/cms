@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getMediaAdapter } from "@/lib/media";
 import { denyViewers } from "@/lib/require-role";
+import { requireCapability } from "@/lib/capabilities";
 
 /* ─── GET: list all interactives ─────────────────────────────── */
 export async function GET() {
@@ -19,6 +20,7 @@ export async function GET() {
 /* ─── POST: upload new interactive ───────────────────────────── */
 export async function POST(req: NextRequest) {
   const denied = await denyViewers(); if (denied) return denied;
+  const capDenied = await requireCapability("interactives"); if (capDenied) return capDenied;
   try {
     const formData = await req.formData();
     const file = formData.get("file") as File | null;

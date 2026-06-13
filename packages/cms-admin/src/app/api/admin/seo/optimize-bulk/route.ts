@@ -3,6 +3,7 @@ import { getAdminCms, getAdminConfig } from "@/lib/cms";
 import { getApiKey } from "@/lib/ai-config";
 import { getModel } from "@/lib/ai/model-resolver";
 import { denyViewers } from "@/lib/require-role";
+import { requireCapability } from "@/lib/capabilities";
 import { getAI, anthropicModel } from "@/lib/ai/client";
 import type { SeoFields } from "@/lib/seo/score";
 import { buildLocaleInstruction, getSeoLimits } from "@/lib/ai/locale-prompt";
@@ -17,6 +18,7 @@ import { readSiteConfig } from "@/lib/site-config";
  */
 export async function POST(req: NextRequest) {
   const denied = await denyViewers(); if (denied) return denied;
+  const capDenied = await requireCapability("seo"); if (capDenied) return capDenied;
   const apiKey = await getApiKey("anthropic");
   if (!apiKey) {
     return NextResponse.json({ error: "Anthropic API key not configured" }, { status: 503 });

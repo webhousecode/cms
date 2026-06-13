@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getMediaAdapter } from "@/lib/media";
 import { denyViewers } from "@/lib/require-role";
+import { requireCapability } from "@/lib/capabilities";
 import { readSiteConfig } from "@/lib/site-config";
 import { buildLocaleInstruction } from "@/lib/ai/locale-prompt";
 import { getModel } from "@/lib/ai/model-resolver";
@@ -17,6 +18,7 @@ type Ctx = { params: Promise<{ id: string }> };
  */
 export async function POST(req: NextRequest, { params }: Ctx) {
   const denied = await denyViewers(); if (denied) return denied;
+  const capDenied = await requireCapability("interactives"); if (capDenied) return capDenied;
 
   const { id } = await params;
   const { targetLocale } = await req.json() as { targetLocale: string };
