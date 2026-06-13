@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { deleteBackup, getBackupFilePath, restoreBackup } from "@/lib/backup-service";
 import { createReadStream, statSync } from "node:fs";
 import { requirePermission } from "@/lib/permissions";
+import { requireCapability } from "@/lib/capabilities";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -29,6 +30,7 @@ export async function GET(_req: NextRequest, ctx: Ctx) {
 /** POST /api/admin/backups/[id] — restore from this backup */
 export async function POST(_req: NextRequest, ctx: Ctx) {
   const denied = await requirePermission("backup.manage"); if (denied) return denied;
+  const capDenied = await requireCapability("backup"); if (capDenied) return capDenied;
   const { id } = await ctx.params;
   const result = await restoreBackup(id);
   if (result.error) {
@@ -40,6 +42,7 @@ export async function POST(_req: NextRequest, ctx: Ctx) {
 /** DELETE /api/admin/backups/[id] — delete this backup */
 export async function DELETE(_req: NextRequest, ctx: Ctx) {
   const denied = await requirePermission("backup.manage"); if (denied) return denied;
+  const capDenied = await requireCapability("backup"); if (capDenied) return capDenied;
   const { id } = await ctx.params;
   const deleted = await deleteBackup(id);
   if (!deleted) {

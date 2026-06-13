@@ -277,6 +277,7 @@ export function AppSidebar({ collections }: Props) {
               </SidebarMenuButton>
             </SidebarMenuItem>
             )}
+            {canUse("scheduling") && (
             <SidebarMenuItem>
               <SidebarMenuButton
                 isActive={pathname === "/admin/scheduled"}
@@ -287,6 +288,7 @@ export function AppSidebar({ collections }: Props) {
                 <span>Calendar</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
+            )}
           </SidebarMenu>
         </SidebarGroup>
 
@@ -360,6 +362,7 @@ export function AppSidebar({ collections }: Props) {
                 <span>Media</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
+            {canUse("forms") && (
             <SidebarMenuItem>
               <SidebarMenuButton
                 isActive={pathname.startsWith("/admin/forms")}
@@ -375,6 +378,7 @@ export function AppSidebar({ collections }: Props) {
                 )}
               </SidebarMenuButton>
             </SidebarMenuItem>
+            )}
           </SidebarMenu>
         </SidebarGroup>
 
@@ -403,6 +407,7 @@ export function AppSidebar({ collections }: Props) {
           {toolsOpen && (
             <SidebarGroupContent>
               <SidebarMenu>
+                {canUse("quality") && (
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     isActive={pathname === "/admin/link-checker"}
@@ -414,6 +419,7 @@ export function AppSidebar({ collections }: Props) {
                     <span>Link Checker</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
+                )}
                 {canUse("seo") && (
                 <SidebarMenuItem>
                   <SidebarMenuButton
@@ -427,7 +433,7 @@ export function AppSidebar({ collections }: Props) {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 )}
-                {siteRole === "admin" && (
+                {siteRole === "admin" && canUse("backup") && (
                   <SidebarMenuItem>
                     <SidebarMenuButton
                       isActive={pathname === "/admin/backup"}
@@ -440,6 +446,7 @@ export function AppSidebar({ collections }: Props) {
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 )}
+                {canUse("quality") && (
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     isActive={pathname === "/admin/performance"}
@@ -451,6 +458,7 @@ export function AppSidebar({ collections }: Props) {
                     <span>AI Analytics</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
+                )}
                 {canUse("seo") && (
                 <SidebarMenuItem>
                   <SidebarMenuButton
@@ -464,6 +472,7 @@ export function AppSidebar({ collections }: Props) {
                   </SidebarMenuButton>
                 </SidebarMenuItem>
                 )}
+                {canUse("quality") && (
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     isActive={pathname === "/admin/lighthouse"}
@@ -475,6 +484,7 @@ export function AppSidebar({ collections }: Props) {
                     <span>Lighthouse</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
+                )}
                 {ctxUser?.permissions?.includes("logs.view") && (
                   <SidebarMenuItem>
                     <SidebarMenuButton

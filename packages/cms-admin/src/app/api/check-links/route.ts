@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { runLinkCheck, type LinkResult } from "@/lib/link-check-runner";
 import { writeLinkCheckResult } from "@/lib/link-check-store";
 import { denyViewers } from "@/lib/require-role";
+import { requireCapability } from "@/lib/capabilities";
 
 export type { LinkResult };
 
@@ -49,6 +50,7 @@ export async function GET() {
  */
 export async function POST(request: NextRequest) {
   const denied = await denyViewers(); if (denied) return denied;
+  const capDenied = await requireCapability("quality"); if (capDenied) return capDenied;
   const cronSecret = process.env.CMS_CRON_SECRET;
   if (!cronSecret) {
     return NextResponse.json({ error: "CMS_CRON_SECRET not configured" }, { status: 503 });

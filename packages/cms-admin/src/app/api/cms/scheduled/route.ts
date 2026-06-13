@@ -1,8 +1,10 @@
 import { getAdminCms, getAdminConfig } from "@/lib/cms";
 import { getSiteRole } from "@/lib/require-role";
 import { NextResponse } from "next/server";
+import { requireCapability } from "@/lib/capabilities";
 
 export async function GET() {
+  const capDenied = await requireCapability("scheduling"); if (capDenied) return capDenied;
   const role = await getSiteRole();
   if (!role) return NextResponse.json({ error: "No access" }, { status: 403 });
 

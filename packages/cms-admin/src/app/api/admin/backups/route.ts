@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { listBackups, createBackup } from "@/lib/backup-service";
 import { requirePermission } from "@/lib/permissions";
+import { requireCapability } from "@/lib/capabilities";
 
 /** GET /api/admin/backups — list all snapshots */
 export async function GET() {
@@ -11,6 +12,7 @@ export async function GET() {
 /** POST /api/admin/backups — create a new backup */
 export async function POST(req: NextRequest) {
   const denied = await requirePermission("backup.manage"); if (denied) return denied;
+  const capDenied = await requireCapability("backup"); if (capDenied) return capDenied;
   const body = await req.json().catch(() => ({})) as { trigger?: string };
   const trigger = body.trigger === "scheduled" ? "scheduled" : "manual";
   const snapshot = await createBackup(trigger as "manual" | "scheduled");

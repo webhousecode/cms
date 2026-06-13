@@ -7,8 +7,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { runAudit } from "@/lib/lighthouse/runner";
 import { readSiteConfig } from "@/lib/site-config";
+import { requireCapability } from "@/lib/capabilities";
 
 export async function POST(request: NextRequest) {
+  const capDenied = await requireCapability("quality"); if (capDenied) return capDenied;
   try {
     const body = await request.json().catch(() => ({}));
     let url = body.url as string | undefined;
