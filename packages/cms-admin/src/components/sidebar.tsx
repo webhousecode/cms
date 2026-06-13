@@ -338,6 +338,7 @@ export function AppSidebar({ collections }: Props) {
         {/* Interactives & Media */}
         <SidebarGroup style={{ padding: "0 0.5rem" }}>
           <SidebarMenu>
+            {canUse("interactives") && (
             <SidebarMenuItem>
               <SidebarMenuButton
                 isActive={pathname.startsWith("/admin/interactives")}
@@ -348,6 +349,7 @@ export function AppSidebar({ collections }: Props) {
                 <span>Interactives</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
+            )}
             <SidebarMenuItem>
               <SidebarMenuButton
                 isActive={pathname === "/admin/media"}
@@ -412,6 +414,7 @@ export function AppSidebar({ collections }: Props) {
                     <span>Link Checker</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
+                {canUse("seo") && (
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     isActive={pathname === "/admin/seo"}
@@ -423,6 +426,7 @@ export function AppSidebar({ collections }: Props) {
                     <span>SEO</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
+                )}
                 {siteRole === "admin" && (
                   <SidebarMenuItem>
                     <SidebarMenuButton
@@ -447,6 +451,7 @@ export function AppSidebar({ collections }: Props) {
                     <span>AI Analytics</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
+                {canUse("seo") && (
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     isActive={pathname === "/admin/visibility"}
@@ -458,6 +463,7 @@ export function AppSidebar({ collections }: Props) {
                     <span>Visibility</span>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
+                )}
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     isActive={pathname === "/admin/lighthouse"}

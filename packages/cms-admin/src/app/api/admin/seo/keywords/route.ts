@@ -8,6 +8,7 @@ import {
 } from "@/lib/seo/keywords";
 import { getAdminCms, getAdminConfig } from "@/lib/cms";
 import { denyViewers } from "@/lib/require-role";
+import { requireCapability } from "@/lib/capabilities";
 import type { SeoFields } from "@/lib/seo/score";
 
 /** Strip HTML/markdown to plain text for keyword density analysis */
@@ -76,6 +77,7 @@ export async function GET() {
  */
 export async function POST(request: NextRequest) {
   const denied = await denyViewers(); if (denied) return denied;
+  const capDenied = await requireCapability("seo"); if (capDenied) return capDenied;
   try {
     const body = await request.json() as {
       action: "add" | "remove";

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAdminCms } from "@/lib/cms";
 import { generateOgImage } from "@/lib/seo/og-image";
 import { denyViewers } from "@/lib/require-role";
+import { requireCapability } from "@/lib/capabilities";
 
 /**
  * POST /api/admin/seo/og-image
@@ -13,6 +14,7 @@ import { denyViewers } from "@/lib/require-role";
  */
 export async function POST(req: NextRequest) {
   const denied = await denyViewers(); if (denied) return denied;
+  const capDenied = await requireCapability("seo"); if (capDenied) return capDenied;
   try {
     const { collection, slug } = (await req.json()) as { collection?: string; slug?: string };
     if (!collection || !slug) {

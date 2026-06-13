@@ -16,6 +16,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useSiteRole } from "@/hooks/use-site-role";
+import { useCapabilities } from "@/hooks/use-capabilities";
 
 const MonacoEditor = dynamic(() => import("@monaco-editor/react").then(m => m.default), { ssr: false });
 
@@ -313,6 +314,9 @@ export default function InteractiveDetailPage() {
   const router = useRouter();
   const id = params.id as string;
   const siteRole = useSiteRole();
+  // F153: the interactive AI panel is an AI feature — hide it when `ai` is off
+  // (the section itself is gated by `interactives` via the route layout).
+  const canUse = useCapabilities();
   const readOnly = siteRole === null || siteRole === "viewer";
 
   const [detail, setDetail] = useState<InteractiveDetail | null>(null);
@@ -1036,6 +1040,7 @@ export default function InteractiveDetailPage() {
                 style={{ width: "100%", flex: 1, border: "none", background: "white" }}
               />
             </div>
+            {canUse("ai") && (
             <div style={{ width: "430px", flexShrink: 0, background: "var(--background)" }}>
               <InteractiveAIPanel
                 interactiveId={id}
@@ -1044,6 +1049,7 @@ export default function InteractiveDetailPage() {
                 onApply={(html) => setCodeValue(html)}
               />
             </div>
+            )}
           </div>
         )}
         </div>
