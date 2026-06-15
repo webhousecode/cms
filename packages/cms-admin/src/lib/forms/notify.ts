@@ -7,6 +7,7 @@
 
 import type { FormConfig } from "@webhouse/cms";
 import type { FormSubmission } from "./types";
+import { getMailer } from "../mailer";
 
 /**
  * Send all configured notifications for a form submission.
@@ -61,18 +62,10 @@ async function sendEmailNotification(form: FormConfig, sub: FormSubmission): Pro
 
   const subject = `[${form.label}] New submission`;
   const to = form.notifications!.email!;
+  const from = process.env.CMS_EMAIL_FROM || "forms@webhouse.app";
 
-  // Try Resend first (F29), fall back to console
-  try {
-    const { Resend } = await import("resend");
-    const key = process.env.RESEND_API_KEY;
-    if (!key) throw new Error("RESEND_API_KEY not set");
-    const resend = new Resend(key);
-    const from = process.env.CMS_EMAIL_FROM || "forms@webhouse.app";
-    await resend.emails.send({ from, to, subject, html });
-  } catch {
-    console.log(`[F30] Email notification (no email transport configured):`, { to, subject });
-  }
+  // Delivery via the shared mailer (ship-dark + logged if no key configured).
+  await getMailer(process.env.RESEND_API_KEY).send({ from, to, subject, html });
 }
 
 async function forwardToWebhook(url: string, form: FormConfig, sub: FormSubmission): Promise<void> {
@@ -119,15 +112,8 @@ async function sendAutoReply(form: FormConfig, sub: FormSubmission): Promise<voi
   const html = `<div style="font-family:-apple-system,sans-serif;font-size:14px;line-height:1.6;color:#333">${escHtml(textBody).replace(/\n/g, "<br>")}</div>`;
   const from = form.autoReply!.from || process.env.CMS_EMAIL_FROM || "forms@webhouse.app";
 
-  try {
-    const { Resend } = await import("resend");
-    const key = process.env.RESEND_API_KEY;
-    if (!key) throw new Error("RESEND_API_KEY not set");
-    const resend = new Resend(key);
-    await resend.emails.send({ from, to: [to], subject, html });
-  } catch {
-    console.log(`[F30] Auto-reply (no email transport):`, { to, subject, textBody });
-  }
+  // Delivery via the shared mailer; plain-text part included for deliverability.
+  await getMailer(process.env.RESEND_API_KEY).send({ from, to, subject, html, text: textBody });
 }
 
 function escHtml(s: string): string {

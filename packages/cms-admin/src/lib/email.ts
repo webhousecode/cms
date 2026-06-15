@@ -1,4 +1,4 @@
-import { Resend } from "resend";
+import { getMailer, buildFrom } from "./mailer";
 import { readSiteConfig } from "./site-config";
 
 export interface SendEmailOptions {
@@ -16,21 +16,13 @@ export async function sendEmail(opts: SendEmailOptions): Promise<{ ok: boolean; 
   const fromEmail = config.emailFrom || "noreply@webhouse.app";
   const fromName = config.emailFromName || "webhouse.app";
 
-  const resend = new Resend(apiKey);
-  try {
-    const { error } = await resend.emails.send({
-      from: `${fromName} <${fromEmail}>`,
-      to: opts.to,
-      subject: opts.subject,
-      html: opts.html,
-    });
-    if (error) {
-      return { ok: false, error: error.message };
-    }
-    return { ok: true };
-  } catch (err: unknown) {
-    return { ok: false, error: err instanceof Error ? err.message : "Failed to send email" };
-  }
+  const r = await getMailer(apiKey).send({
+    from: buildFrom(fromName, fromEmail),
+    to: opts.to,
+    subject: opts.subject,
+    html: opts.html,
+  });
+  return r.ok ? { ok: true } : { ok: false, error: r.error };
 }
 
 /**
