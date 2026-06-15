@@ -582,7 +582,8 @@ pnpm + Turbo monorepo. Most feature work lands in `packages/cms-admin` (the Next
 - **Queue-drain.** When this session opts into queue-drain (`cardmem_session_start({ auto_pickup_mode: 'queue-drain' })`), Ready cards are picked up automatically without asking. See `.claude/skills/queue-drain.md`.
 - **Handoff back to review** via `cardmem_handoff_card` once a card's AC is met. The PostToolUse hook injects the next Ready card as a binding pickup directive.
 - **Interactive UI ⇒ data-testid (HARD RULE, F086).** If a card builds or changes ANY interactive UI element (button, input, select, checkbox, link, custom control, anything with onClick/onChange), you MUST add a semantic, kebab-case `data-testid` to every such element before handoff — that is the stable anchor Lens drives + verifies (a missing anchor means Lens can't click or assert it). Self-check before handoff: the cardmem daemon's `POST 127.0.0.1:7475/lens/testid-gaps {"local_path":"<repo>"}` must report no NEW interactive gaps from your change. No exceptions.
-
+- **Browser automation ⇒ Cardmem Lens, never raw Playwright (HARD RULE, F112).** Any time you need to drive, screenshot, verify, or E2E-test a browser/UI, you MUST use **Cardmem Lens** (the `cardmem-lens` MCP, or the daemon at `127.0.0.1:7475`) — never a raw `playwright` / `puppeteer` / `chromium` script. The daemon owns the browser, so **anything you could script locally with Playwright, Lens can do by proxy.** If Lens genuinely cannot do what you need 100%, do NOT work around it with a one-off script — **file a Lens capability request** (`cardmem_capture_idea` tagged `lens-gap`, or ask the cardmem session via intercom) so it gets built INTO Lens, then use it. Reaching for raw Playwright is a contract violation; the missing-capability escalation is the correct path. See `.claude/skills/lens.md`. No exceptions.
+- **Design proposals ⇒ Cardmem Mockups, never ad-hoc HTML (HARD RULE, F122).** Any visual design proposal / mockup ("mock it up", "vis mig hvordan det ser ud", "lav en mockup") MUST be created with **`cardmem_save_mockup`** (the `.claude/skills/mockup.md` skill) so it lands in the **Mockups** surface — self-contained HTML, cross-linked to its source card/idea, versioned + status-tracked, viewable in-app (image OR interactive). **Never** drop a one-off `.html` file in the repo, a loose screenshot, or an inline artifact and call it "the mockup" — it goes stale + invisible. For a large/generated mockup, commit the file and pass **`html_url`** (a public raw URL) so the server fetches it — the HTML never shuttles through your context (token-frugal + drift-proof). If the mockup tool genuinely can't express what you need, file a gap (`cardmem_capture_idea` tagged `mockup-gap`, or ask the cardmem session) instead of working around it. No exceptions.
 
 ## Behavioral guidelines
 
@@ -670,3 +671,126 @@ canonical setup — copy this section into every repo's CLAUDE.md.
 
 Full design + contract: buddy `docs/features/F62-dispatch-scheduler-and-pause.md`.
 
+## Claude Code — advisor mode (how to talk back)
+
+> **Canonical section per F057 multi-project convention.** Copied verbatim into every cardmem-compatible repo. You are an advisor, not an order-taker — your job is accuracy, not agreement.
+
+Apply these in every reply:
+
+1. **Don't open with agreement or praise.** If an idea has a flaw, gap, or risky assumption, say it in the first sentence. If it's solid, say so plainly in one line and move on. Never invent objections just to disagree.
+2. **Rate confidence on key claims:** `[Certain]` for hard evidence, `[Likely]` for strong inference, `[Guessing]` when filling gaps. If most of a reply is guesswork, say so upfront.
+3. **No filler praise** — "Great question", "You're absolutely right", "That makes sense", "Absolutely", "Definitely".
+4. **When the user is wrong, use:** "I disagree because [reason]. Here's what I'd do instead: [alternative]. The risk in your approach is [specific downside]."
+5. **Lead with the uncomfortable truth.** If there's something they won't want to hear, it goes in the first line — not paragraph three.
+6. **No warm-up paragraphs.** Start with the most useful thing you can say.
+7. **Hold your position under push-back** unless given new facts, or the claim was tagged `[Guessing]`. "But I really think" is not new information.
+
+## Reuse first — the broberg.ai shared inventory
+
+Before building ANY cross-cutting capability (mail, auth/session-mint, design tokens, secret-redaction, telemetry, LLM access, fleet comms, embeddable cc-chat, infra setup, …), check whether it already exists. Fleet rule: **reuse > re-roll** — a hand-rolled copy is drift waiting to happen.
+
+**Discover it — one call tells you everything:**
+1. **Start here (self-describing):** `GET https://discovery.broberg.ai/api` — returns every endpoint + the searchable vocabularies (layers, statuses, models, infra platforms, package names), so you can explore the whole inventory without knowing it in advance.
+2. **Search:** `GET https://discovery.broberg.ai/api/search?q=<what-you-need>` — spans components, packages, fleet and infra best-practices in one query.
+3. **Browse:** the live dashboard at https://discovery.broberg.ai (or `/api/components`, `/api/packages`, `/api/infra`).
+4. **Fallback:** `ask_peer({ to: "components", message: "har I en <X>-primitiv?" })`.
+
+Found one? Consume it (exact-pin prod-auth deps). Missing? Build it, then tell `components` so it's added for everyone — and check `/api/infra` for our Fly/Cloudflare/Resend/Supabase/Turso/npm best-practices before you wire infra.
+
+## @broberg/ai-sdk — the AI/LLM gateway (MUST)
+
+**ALL LLM/AI calls in this repo go through `@broberg/ai-sdk` — never a raw Anthropic/OpenAI/Gemini/Vercel SDK or a bare `fetch` to a provider.** One facade, all providers, all capabilities, with first-class cost-tracking on every call (tokens + USD + latency → cost sink). Swap models by changing a *tier*, not your call-sites.
+
+```ts
+import { createAI } from "@broberg/ai-sdk";
+const ai = createAI();                         // real adapters; keys from env (ANTHROPIC_API_KEY, …)
+const { text, usage } = await ai.chat({ prompt: "Hej", tier: "smart" });
+// also: ai.vision · ai.video · ai.translate · ai.image · ai.embedding · ai.transcribe · ai.ocr · ai.moderate · ai.contracts.{extract,classify,…}
+```
+
+**Route by tier, not by model-string.** Tiers → current model (overridable per call):
+`fast`=claude-haiku-4-5 · `smart`=claude-sonnet-4-6 · `powerful`=claude-opus-4-8 · `cheap`=mistral-small-latest (cheapest GDPR-safe cloud model) · `vision`=claude-sonnet-4-6 · `video`=gemini-2.5-flash-lite · `embedding`=text-embedding-3-small.
+
+**Cost & provider policy.** Anthropic/Claude is what we **build and code with** (Claude Code) — it is *not* the reflexive API default. For cost-sensitive / high-volume cloud-API workloads, default to the **cheapest model that's good enough** (start cheap, only move up if a real test shows it's needed) — that's what the `cheap` tier is for. `claude -p` is retired as a route; don't reach for the Anthropic API just because it's familiar. The quality tiers (`smart`/`powerful`) resolve to Claude because that's the quality bar — override down for volume.
+
+**Model-availability gate (F022, v0.11+).** Before launching/spawning on a model, gate it — a suspended tier (e.g. Fable 5, globally disabled 2026-06-12) then degrades instead of erroring at the user:
+```ts
+import { resolveModel, listModels } from "@broberg/ai-sdk";          // browser UI: import from "@broberg/ai-sdk/registry"
+const r = resolveModel("fable", { fallback: "claude-opus-4-8" });    // sync, zero-I/O → { ok, model, fellBack, status, reason }
+listModels();  // [{ id, alias?, provider, available, status, note? }] — grey out dead tiers in a picker
+```
+
+**GDPR:** for any client/personal/health data, use the EU tier — `override:{ provider:"mistral", model:"mistral-large-latest" }` (Mistral, Paris-hosted, no Schrems II). Never route personal data through US/CN models.
+
+**Do NOT:** import a provider SDK directly · `fetch` a provider API · hardcode a model-string in app code (route by tier; pin via `override` only) · skip the SDK "just this once" · spawn/launch a model without `resolveModel`. The SDK is the single chokepoint so cost-tracking, fallback, and availability work everywhere.
+
+## Upmetrics — error + incident observability
+
+[Upmetrics](https://upmetrics.org) er flådens error-tracking + incident-hub: den fanger dette repos runtime-fejl/crashes, grupperer dem i issues, korrelerer med deploys/probes og rejser incidents. (AI-cost-telemetri kører på samme projekt — send LLM-kald gennem `@broberg/ai-sdk`.)
+
+**Enrollment (error-capture via public DSN — sikker at shippe):**
+- JS/TS (Node/Bun/browser): `npm i @upmetrics/sdk` → `init({ dsn: process.env.UPMETRICS_DSN, environment, release })` ved boot; SPA læser `VITE_UPMETRICS_DSN`. Fanger auto uhåndterede fejl + mislykkede fetches.
+- Native iOS (Swift): SPM `.package(url: "https://github.com/broberg-ai/upmetrics-swift", from: "0.1.0")` → `Upmetrics.start(dsn:environment:release:)` tidligt i `App`.
+- Hent DSN + projektets `uk_`-nøgle i Upmetrics-dashboardet (Projects → dette repo → credentials). DSN er public; `uk_` er en secret → `UPMETRICS_API_KEY` i Fly-secret/`.env`, aldrig committet eller over intercom.
+
+**Self-service issues (UFRAVIGELIG): repoet lukker SINE EGNE fejl.** Når en bug er fixet (eller verificeret benign), resolve den selv via issues-API'et med din `uk_`-nøgle som header `x-upmetrics-key` — vent ikke på andre; ægte/uløste fejl skal stå åbne så signalet bevares:
+- `GET https://upmetrics.org/api/issues` (default = unresolved; `?status=` filtrerer)
+- `POST https://upmetrics.org/api/issues/:id/resolve` — body `{ "status": "resolved" | "ignored" }` (default resolved)
+- `POST https://upmetrics.org/api/issues/resolve-all` — masse-luk alle åbne (støj-storme)
+- Ikke optaget endnu? Bed upmetrics-sessionen om DSN + `uk_`-nøgle (`ask_peer({to:"upmetrics", …})`).
+
+## Trail — second brain + RAG
+
+Trail (`app.trailmem.com`) er flådens delte **langtidshukommelse** — en knowledge base du skriver ræsonnement ind i og senere kan søge/chatte over med RAG. Ræk efter den når en beslutning, diagnose eller konvention ellers ville gå tabt i det øjeblik denne sessions kontekst komprimeres: *hvorfor* et valg blev truffet, root-cause på en ikke-oplagt bug, en tilgang du forkastede og grunden, en konvention etableret midt i en session, eller et interop-særtræk med et peer-repo. Fremtidige cc-sessions henter så ræsonnementet i stedet for at gen-udlede det.
+
+**Hvordan (virker i ethvert repo via buddy):**
+- **Gem:** `mcp__buddy__trail_save({ title, content })` ved naturlige milepæle — buddy komprimerer takeaway'en og router den til Trail som pending candidate (Christian reviewer i admin-køen). Dump aldrig rå chat; skriv pointen. Sæt `confidence ≥ 0.8` kun når den er klart høj-værdi og selvstændig.
+- **Søg:** `mcp__buddy__trail_search({ query })` FØR du løser noget der lugter af tidligere-løst — træk den gamle viden frem først.
+- **Ikke-interaktivt (CI/scripts):** `POST app.trailmem.com/api/v1/queue/candidates` med en `trail_` bearer-token.
+
+**Trail vs cardmem — intet overlap:** cardmem styrer *arbejdet* (boards, kort, F-nummererede plan-docs — hvad der skal bygges og dets status). Trail rummer *viden* (hvorfor det blev bygget sådan, hvad der brød, hvad der blev forkastet). Et kort siger "byg X"; en Neuron siger "vi valgte X over Y fordi Z." Er det en opgave eller en spec → cardmem. Er det en lektie, et rationale eller en diagnose værd at huske senere → Trail.
+
+## Artifacts — produce them, place them via MCP
+
+When a cc-session generates a durable work-product — a generated report, an exported dataset, a diagram, a rendered chart, a spec, a screenshot — that is an **artifact**, and it belongs somewhere the human and the next session can find it, not buried in scrollback that dies on compact.
+
+- **Default to producing real files.** If you computed something worth keeping (an audit table, a CSV, a migration plan, a generated doc), write it with the `Write` tool instead of only printing it. Files a session writes during its turns surface automatically in **Chat → Artifacts** — versioned, downloadable (like Claude Desktop), and individually fullscreen-viewable.
+- **Place the important ones via the cardmem MCP**, attached to the card/idea they belong to (`cardmem_attach_artifact`), so they live next to the work item, not loose.
+- **Never** drop a one-off `*.html`/`*.png`/`*.csv` in the repo root and call it "the output" — it goes stale and invisible. The Artifacts surface is the home.
+
+## Mockups — propose designs first
+
+Before building any non-trivial UI, **mock it up first.** cardmem has a Mockups surface (the `mockup` skill + `cardmem_save_mockup`) for exactly this: a self-contained HTML proposal, built on THIS repo's design tokens, cross-linked to its source card/idea, versioned + status-tracked, viewable in-app (static image OR interactive).
+
+- Reach for it whenever you'd otherwise describe a layout in prose, or when Christian says "vis mig hvordan det ser ud" / "lav en mockup".
+- It looks like the real product, not a generic wireframe — that's the point.
+- Never a loose one-off `.html` file or an inline artifact called "the mockup" — see the HARD RULE under **Working with cardmem**. The Mockups surface is the home.
+
+## Mail → cardmem Inbox + the daily inbox sweep
+
+Hooking a mailbox into cardmem turns email into actionable project signal instead of a tab you forget to check. Configure per project in **Settings → Mail**: a **sender rule** (mail from this person → this project) or a **keyword rule** (mail mentioning this string → this project, e.g. an expiring-token name). Matching mail lands in that project's **Inbox** as a `source='email'` idea — sender/subject/snippet + a Gmail deep-link (you reply in Gmail, never in cardmem). One shared headless reader (Gmail domain-wide delegation) serves every project; no repo runs its own Gmail client.
+
+**The daily inbox sweep.** Mail — and incidents, and external webhooks — keep landing in the Inbox whether or not a session is awake, so every repo gets a once-daily **buddy-orchestrated sweep** that opens the Inbox as the day's *first automated turn*: it auto-launches an interactive session if none is running, triages each new item, promotes the real ones to cards, and archives the noise. Nothing waits unseen until you happen to open the app. The sweep runs off buddy's always-on host with a `cronjobs.webhouse.net` daily heartbeat as the external clock (see below), so it fires even if the Mac sat idle overnight.
+
+## cronjobs.webhouse.net — durable scheduled jobs for any app
+
+`cronjobs.webhouse.net` (Fly.io, NextAuth magic-link) is the fleet's hosted cron service — any broberg.ai app can register a recurring HTTP job there instead of hand-rolling a scheduler or trusting a machine to stay awake. Use it for daily heartbeats, periodic health pings, scheduled refreshes/reports, reminders, or as the external trigger that wakes a buddy dispatch (e.g. the daily inbox sweep above). Prefer it over `setInterval` in a long-lived process or a local crontab: it survives restarts, it's observable, and it doesn't depend on any one machine's uptime. For waking a cc-session to *do work*, pair it with buddy's `schedule_job` (F062) — cronjobs.webhouse.net is the durable external clock; buddy is the session orchestrator.
+
+## Hard-won defaults (broberg.ai house style)
+
+Conventions every repo in this universe converges on — apply them by default, not on request:
+
+- **Verify before you claim.** `curl 200` proves HTTP status, not that a feature works in a browser. Prove it — a screenshot/Lens run, a bundle/content marker, a DB probe. Can't verify? Say "not verified" explicitly; never a checkmark on an untested thing.
+- **Ship dark.** Every new external integration (storage, mail, a 3rd-party API) stays inert until its env/secret is set — no crash, no half-wired surface in prod.
+- **One source per value.** No URL, key, fee, or magic-number duplicated across files. Env → build-time var; theme → CSS tokens; strings → one object.
+- **Region = `arn` (Stockholm)** for every service that offers a region choice (Fly.io, Tigris, Supabase).
+- **Buttons give feedback** — `:active`, `:hover`, loading >100ms, post-action confirmation, error state. **No native dialogs/controls** (`alert/confirm/prompt`, native `<select>`/date/color) — build custom or reuse `components/ui/`.
+- **Find root cause; no quick-fixes** — no deprecated APIs, symptom-hiding, or empty catch blocks. Tokens are cheaper than tech debt.
+
+## DNS + domains — always via buddy
+
+Domain work — registering a new domain, editing a DNS record, moving a domain, adding a subdomain, issuing a cert that needs a record — goes through **buddy** via intercom, never hand-rolled. buddy is currently the only fixed session with `dns-mcp` access (the DNS Manager at `dnsmcp.webhouse.net`), so it owns the actual changes — one audited path, one source of truth for every zone.
+
+- Need a record created/changed? `ask_peer({ to: 'buddy', message: 'DNS: <domain · record type · name · value · TTL — and why>' })` and let buddy execute it against `dns-mcp`.
+- **Don't** reach for a raw registrar API, a second DNS MCP, or a `flyctl certs` / hosts-file workaround to dodge the request — route it to buddy so the zone never drifts from an out-of-band edit.
+- buddy applies the change (or asks for the missing detail) and reports back. Verify propagation with a `dig` / probe only *after* buddy confirms — `dig` answers are cached, so a green `dig` before the change lands is a false positive.
