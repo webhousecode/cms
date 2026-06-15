@@ -697,6 +697,13 @@ Before building ANY cross-cutting capability (mail, auth/session-mint, design to
 
 Found one? Consume it (exact-pin prod-auth deps). Missing? Build it, then tell `components` so it's added for everyone — and check `/api/infra` for our Fly/Cloudflare/Resend/Supabase/Turso/npm best-practices before you wire infra.
 
+**Enroll when you adopt (close the loop).** When this repo starts (or stops) using a `@broberg/*` package, tell Discovery so the shared roster updates itself — no intercom to components:
+
+- **Your status anytime:** `GET https://discovery.broberg.ai/api/sessions/<this-session>` → what you're enrolled in, the newest published versions, and your **gap** (shipped packages you haven't adopted yet — your reuse to-do list).
+- **Self-report an adoption.** Generate your OWN key once — `openssl rand -hex 32` → your repo's gitignored `.env` as `DISCOVERY_ENROLL_KEY`. Then `POST https://discovery.broberg.ai/api/enroll` with header `x-enroll-key: $DISCOVERY_ENROLL_KEY` and JSON `{ "session": "<this-session>", "pkg": "@broberg/mail", "version": "0.1.0", "role": "uses" }`. `role` = `"uses"` (consumer) or `"src"` (you originated the pattern); optional `commit`, `notes`. Your FIRST enroll binds the key to your session (trust-on-first-use); later enrolls must reuse the same key. No shared fleet key, no human in the loop.
+
+Reads (the gap check) need no key; only `POST /api/enroll` uses your `DISCOVERY_ENROLL_KEY`.
+
 ## @broberg/ai-sdk — the AI/LLM gateway (MUST)
 
 **ALL LLM/AI calls in this repo go through `@broberg/ai-sdk` — never a raw Anthropic/OpenAI/Gemini/Vercel SDK or a bare `fetch` to a provider.** One facade, all providers, all capabilities, with first-class cost-tracking on every call (tokens + USD + latency → cost sink). Swap models by changing a *tier*, not your call-sites.
@@ -770,7 +777,7 @@ Before building any non-trivial UI, **mock it up first.** cardmem has a Mockups 
 
 Hooking a mailbox into cardmem turns email into actionable project signal instead of a tab you forget to check. Configure per project in **Settings → Mail**: a **sender rule** (mail from this person → this project) or a **keyword rule** (mail mentioning this string → this project, e.g. an expiring-token name). Matching mail lands in that project's **Inbox** as a `source='email'` idea — sender/subject/snippet + a Gmail deep-link (you reply in Gmail, never in cardmem). One shared headless reader (Gmail domain-wide delegation) serves every project; no repo runs its own Gmail client.
 
-**The daily inbox sweep.** Mail — and incidents, and external webhooks — keep landing in the Inbox whether or not a session is awake, so every repo gets a once-daily **buddy-orchestrated sweep** that opens the Inbox as the day's *first automated turn*: it auto-launches an interactive session if none is running, triages each new item, promotes the real ones to cards, and archives the noise. Nothing waits unseen until you happen to open the app. The sweep runs off buddy's always-on host with a `cronjobs.webhouse.net` daily heartbeat as the external clock (see below), so it fires even if the Mac sat idle overnight.
+**The daily inbox sweep.** Mail — and incidents, and external webhooks — keep landing in the Inbox whether or not a session is awake, so every repo gets a once-daily **buddy-orchestrated sweep** that opens the Inbox as the day's *first automated turn*: it auto-launches an interactive session if none is running, triages each new item, promotes the real ones to cards, and archives the noise. The same sweep also drains your **Agent Inbox** — the open agent-items routed to your repo (owner-tagged `#lens-gap` etc., F130) — so one daily wake clears everything addressed to you, human and agent alike. Nothing waits unseen until you happen to open the app. The sweep runs off buddy's always-on host with a `cronjobs.webhouse.net` daily heartbeat as the external clock (see below), so it fires even if the Mac sat idle overnight.
 
 ## cronjobs.webhouse.net — durable scheduled jobs for any app
 
