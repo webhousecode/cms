@@ -101,7 +101,7 @@ diff let the user compare iterations.
 
 | Tool | Purpose |
 |---|---|
-| `cardmem_save_mockup` | Create a mockup (v1) or append a version. |
+| `cardmem_save_mockup` | Create a mockup (v1) or append a version. Pass inline `html` for small ad-hoc mockups, OR **`html_url`** (a public raw URL of a committed mockup file) for a large/generated one — the server fetches it, so the HTML never shuttles through your context (token-frugal + drift-proof: re-save the same URL to refresh). |
 | `cardmem_list_mockups` | Gallery list / a source's mockups. |
 | `cardmem_get_mockup` | One mockup: versions + notes + source. |
 | `cardmem_set_mockup_status` | proposed → approved / changes / rejected. |
@@ -111,7 +111,10 @@ diff let the user compare iterations.
 ## Don'ts
 
 - Don't reach for raw HTML files on disk as the deliverable — the mockup lives in
-  cardmem (so it's cross-linked + versioned + reviewable). Save it.
+  cardmem (so it's cross-linked + versioned + reviewable). Save it. **HARD RULE
+  (F122):** a design proposal that isn't saved via `cardmem_save_mockup` doesn't
+  count — a loose `.html`/screenshot goes stale + invisible. For a big generated
+  mockup, commit it + pass `html_url` (don't paste 75KB through your context).
 - Don't pull external CSS/JS/fonts — inline everything (the sandbox is strict).
 - Don't invent a new mockup for an iteration — append a version.
 - Don't skip the source ref — the cross-link back to the idea/epic/card is the
