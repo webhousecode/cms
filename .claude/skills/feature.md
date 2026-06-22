@@ -75,6 +75,9 @@ Create `docs/features/F<nn>-<slug>.md` with this **mandatory** structure. Every 
 
 > <One-line description. Tier, effort, status.>
 
+## Summary
+<1-3 plain sentences: what this feature is and what it delivers, readable on its own. This is the FIRST section and it is MANDATORY — the chat plan-ref drawer (F158) shows exactly this block when someone clicks an F-number in chat, and `extractPlanSummary` reads it as the plan's stored summary (`plans.summary`). Keep it jargon-light and self-contained — no "see below", no F-number cross-refs.>
+
 ## Motivation
 <What's missing today, why does the user / project need this. Lead with the symptom Christian (or the team) saw, then the underlying gap.>
 
@@ -125,6 +128,7 @@ The plan must be specific: real file paths drawn from the repo's `## Project lay
 
 ### Critical rules
 
+0. **`## Summary` is mandatory and comes first** (right after the H1 + status line). 1-3 self-contained sentences — the chat plan-ref drawer (F158) renders exactly this block and `cardmem_write_plan` stores it as `plans.summary`. A plan without a usable `## Summary` shows "no summary yet" in chat. Never skip it.
 1. **Every section must exist.** Write "None" if empty. Never omit.
 2. **Non-goals are mandatory.** Even if obvious, write them — prevents scope creep during implementation.
 3. **Acceptance criteria must be measurable.** Not "it works" — "MCP tool returns in <200ms", "Playwright suite passes".

@@ -163,6 +163,21 @@ loop is: add `data-testid`s → `propose-flow` or hand-write a manuscript →
 
 ## Auth (authed routes)
 
+> **HARD RULE (Christian, 2026-06-11) — NEVER screenshot a login wall on one of
+> OUR OWN products; ALWAYS log Lens in.** Christian decided every cardmem-fleet
+> product MUST expose the F019 mint endpoint so Lens can authenticate every time —
+> a capture is of the REAL authed surface, not the sign-in screen. If a capture of
+> your own product bounces to login, do **not** report the login page and do **not**
+> stop to ask — apply the `mintEndpoint` auth and re-capture, automatically. For
+> **cardmem's own prod** the config is fixed (secret armed on prod + the daemon;
+> mints a 10-min READ-ONLY lens principal, never cb@; cookie domain `.cardmem.com`
+> covers www/apex):
+> ```json
+> "auth": { "adapter": "mintEndpoint",
+>           "url": "https://services.cardmem.com/api/lens-session",
+>           "secretEnv": "LENS_MINT_SECRET" }
+> ```
+
 The credential lives on the **daemon side**, never in the call. Mark **public**
 surfaces `auth: null` (a logged-in visitor often gets redirected off them).
 Three adapters, in order of how clean they are:
