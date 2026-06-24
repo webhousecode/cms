@@ -751,7 +751,7 @@ listModels();  // [{ id, alias?, provider, available, status, note? }] — grey 
 Trail (`app.trailmem.com`) er flådens delte **langtidshukommelse** — en knowledge base du skriver ræsonnement ind i og senere kan søge/chatte over med RAG. Ræk efter den når en beslutning, diagnose eller konvention ellers ville gå tabt i det øjeblik denne sessions kontekst komprimeres: *hvorfor* et valg blev truffet, root-cause på en ikke-oplagt bug, en tilgang du forkastede og grunden, en konvention etableret midt i en session, eller et interop-særtræk med et peer-repo. Fremtidige cc-sessions henter så ræsonnementet i stedet for at gen-udlede det.
 
 **Hvordan (virker i ethvert repo via buddy):**
-- **Gem:** `mcp__buddy__trail_save({ title, content })` ved naturlige milepæle — buddy komprimerer takeaway'en og router den til Trail som pending candidate (Christian reviewer i admin-køen). Dump aldrig rå chat; skriv pointen. Sæt `confidence ≥ 0.8` kun når den er klart høj-værdi og selvstændig.
+- **Gem:** `mcp__buddy__trail_save({ title, content })` ved naturlige milepæle — buddy router din `{title, content}` **verbatim** til Trails pending-candidate-kø (Christian reviewer i admin-køen); den komprimerer IKKE for dig, så skriv selv den færdige takeaway (dump aldrig rå chat; skriv pointen). Sæt `confidence ≥ 0.8` kun når den er klart høj-værdi og selvstændig.
 - **Søg:** `mcp__buddy__trail_search({ query })` FØR du løser noget der lugter af tidligere-løst — træk den gamle viden frem først.
 - **Ikke-interaktivt (CI/scripts):** `POST app.trailmem.com/api/v1/queue/candidates` med en `trail_` bearer-token.
 
