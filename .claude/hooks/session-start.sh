@@ -106,6 +106,17 @@ if [[ "$qd_session" == "queue-drain" || "$qd_project" == "queue-drain" ]]; then
   printf '  Queue-drain: session=%s project=%s active=%s\n' "$qd_session" "$qd_project" "$qd_active"
 fi
 
+# F168.1 — Ready cards = the durable pickup queue. A human/promote flip to Ready
+# is a BINDING pickup directive, so surface it FIRST and explicitly. This is the
+# offline drain guarantee: a card promoted to Ready while nothing was running is
+# seen the moment any session boots, not left to rot on the board.
+pickup_count=$(printf '%s' "$result" | jq '.pending_pickup | length')
+if [[ "$pickup_count" -gt 0 ]]; then
+  printf '  Ready — pending pickup (a human/promote flip to Ready is BINDING; drain these):\n'
+  printf '%s' "$result" | jq -r \
+    '.pending_pickup[] | "    - " + (.f_number // .global_slug) + " · " + .title + " (" + .priority + (if .from_mockup then " · 🎨 approved mockup → build" else "" end) + ")"'
+fi
+
 in_progress_count=$(printf '%s' "$result" | jq '.in_progress | length')
 if [[ "$in_progress_count" -gt 0 ]]; then
   printf '  In progress:\n'
