@@ -283,6 +283,19 @@ if (isApi) {
 
 Going forward, the only routes that should keep their `withSiteContext` wrapper are the ones that pre-date this fix — they still work because proxy's cookies are what `withSiteContext` reads. New routes should be plain.
 
+## Hard Rule: Module-Level Caches Must Self-Invalidate — Middleware and Route Handlers Are Separate Instances
+
+**Next.js runs `proxy.ts` (middleware) and `/api/*` route handlers as SEPARATE module instances with SEPARATE module-level state.** A `let _cached` in a lib imported by both has TWO copies. A write through one instance is invisible to the other unless the cache re-checks a shared signal (file mtime) or is explicitly invalidated.
+
+This rule exists because of the 2026-06-25 broberg-ai incident: a site was added to the registry via the add-site route handler. `loadRegistry()` cached `_cached` FOREVER in production (`if (_cached && NODE_ENV==='production') return _cached`). The route handler's `_cached` updated, but the MIDDLEWARE's `_cached` did not — so the F146 `/admin/{slug}` site router (which runs in middleware) never saw the new site. Every `/admin/broberg-ai/*` 404'd (fell through to the legacy `[collection]` redirect → `/admin/content/broberg-ai` → not-found) until the machine was restarted. The API path worked the whole time (route-handler cache was fresh), which made it look like a routing bug instead of a cache-coherence bug.
+
+**Fix (shipped in `site-registry.ts`):** `loadRegistry()` now `fs.stat`s `registry.json` and reloads when the mtime changes. A registry write through ANY instance surfaces in EVERY instance on the next request — no restart. Tests in `lib/__tests__/site-registry-cache.test.ts` seal it.
+
+**The general rule for ANY module-level cache that backs both middleware and route handlers:**
+- Invalidate on a SHARED signal — file mtime (cheap `fs.stat` per call) or explicit cross-call invalidation. NEVER cache forever.
+- The **site-pool** (compiled-config cache in `site-pool.ts`) has the SAME shape: it lives forever in prod, so any code that writes `cms.config.ts` MUST call `invalidateActiveSite()` (schema routes do). To surface an out-of-band config edit without a deploy, POST `/api/cms/registry` `{action:"update-site", updates:{configPath}}` — `pathsChanged` triggers `invalidate(orgId, siteId)`.
+- Smell test: "If I write X through a route handler, does the middleware see it on the next request?" If the answer depends on a restart, the cache is broken.
+
 ## Hard Rule: Reserved Collection Names
 
 **NEVER name or label a collection with any of these reserved names:**
