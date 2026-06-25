@@ -700,15 +700,20 @@ Apply these in every reply:
 
 ## Reuse first — the broberg.ai shared inventory
 
-Before building ANY cross-cutting capability (mail, auth/session-mint, design tokens, secret-redaction, telemetry, LLM access, fleet comms, embeddable cc-chat, infra setup, …), check whether it already exists. Fleet rule: **reuse > re-roll** — a hand-rolled copy is drift waiting to happen.
+**This is a CONTINUOUS obligation, not a one-time check before "building".** Every time you reach for a cross-cutting capability — mail, auth/session-mint, web-push, design tokens, secret-redaction, telemetry, LLM access, fleet comms, embeddable cc-chat, cron, infra setup, … — it goes through the shared `@broberg/*` inventory owned by `components`. Fleet rule: **reuse > re-roll** — a hand-rolled copy is drift waiting to happen.
 
-**Discover it — one call tells you everything:**
-1. **Start here (self-describing):** `GET https://discovery.broberg.ai/api` — returns every endpoint + the searchable vocabularies (layers, statuses, models, infra platforms, package names), so you can explore the whole inventory without knowing it in advance.
-2. **Search:** `GET https://discovery.broberg.ai/api/search?q=<what-you-need>` — spans components, packages, fleet and infra best-practices in one query.
-3. **Browse:** the live dashboard at https://discovery.broberg.ai (or `/api/components`, `/api/packages`, `/api/infra`).
-4. **Fallback:** `ask_peer({ to: "components", message: "har I en <X>-primitiv?" })`.
+**The anti-pattern is a RAW provider integration.** A bare `fetch` to `api.resend.com`, a `new Resend()`, a raw Stripe/Twilio/S3/provider SDK wired directly into a repo — that IS the violation, even when it works and even when you didn't think of it as "building a capability". The test Christian applies: *if I want to swap the provider, do I change it in ONE place or in seventeen?* It must be one. So: **no raw provider SDKs/`fetch`es for anything a `@broberg/*` package owns** (mail → `@broberg/mail`, push → `@broberg/webpush`, LLM → `@broberg/ai-sdk`, …). "We don't use the shared package" is NOT a valid answer when you already have a raw integration doing that package's job — that's the thing to migrate, today.
 
-Found one? Consume it (exact-pin prod-auth deps). Missing? Build it, then tell `components` so it's added for everyone — and check `/api/infra` for our Fly/Cloudflare/Resend/Supabase/Turso/npm best-practices before you wire infra.
+**If the shared package is MISSING something you need: EXTEND it, never work around it.** Tell `components` (intercom or PR) so the capability lands in the npm for *everyone* — a local workaround is the exact drift this rule exists to prevent. Precedent: `@broberg/webpush` gained `sendSilent()` because a consumer filed the gap instead of hand-rolling it; the package grew, the whole fleet benefits.
+
+**Discover it — `discovery.broberg.ai` is the source of truth, no auth on reads:**
+1. **Full roster:** `GET https://discovery.broberg.ai/api/packages` — every published `@broberg/*` package. Skim it so you KNOW what exists before you wire anything.
+2. **Self-describing:** `GET https://discovery.broberg.ai/api` — every endpoint + searchable vocabularies (layers, statuses, models, infra platforms, package names).
+3. **Search:** `GET https://discovery.broberg.ai/api/search?q=<what-you-need>` — spans components, packages, fleet + infra best-practices in one query.
+4. **Browse:** the live dashboard at https://discovery.broberg.ai (or `/api/components`, `/api/infra`).
+5. **Fallback:** `ask_peer({ to: "components", message: "har I en <X>-primitiv?" })`.
+
+Found one? Consume it (exact-pin prod-auth deps). Missing? Build it (or ask `components` to), then tell `components` so it's added for everyone — and check `/api/infra` for our Fly/Cloudflare/Resend/Supabase/Turso/npm best-practices before you wire infra.
 
 **Enroll when you adopt (close the loop).** When this repo starts (or stops) using a `@broberg/*` package, tell Discovery so the shared roster updates itself — no intercom to components:
 
