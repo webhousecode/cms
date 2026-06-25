@@ -131,14 +131,37 @@ function getRegistryPath(): string {
 // ─── Load / Save ──────────────────────────────────────────
 
 let _cached: Registry | null = null;
+let _cachedMtimeMs = 0;
 
 export async function loadRegistry(): Promise<Registry | null> {
-  if (_cached && process.env.NODE_ENV === "production") return _cached;
-
   const registryPath = getRegistryPath();
+
+  // Production caches the parsed registry, BUT must invalidate when the file
+  // changes on disk. Next.js runs middleware (the /admin/{slug} site router)
+  // and route handlers (add-site, the read API) as SEPARATE module instances
+  // with SEPARATE `_cached`. A write through one instance is invisible to the
+  // other unless we re-check the file — which is exactly how a site added at
+  // runtime used to 404 in slug-routing until the machine was restarted
+  // (2026-06-25 broberg-ai incident). A single fs.stat per call (cheap) keeps
+  // every instance fresh with no restart.
+  if (_cached && process.env.NODE_ENV === "production") {
+    try {
+      const { mtimeMs } = await fs.stat(registryPath);
+      if (mtimeMs === _cachedMtimeMs) return _cached;
+    } catch {
+      return _cached; // stat failed (file briefly absent?) — keep last good copy
+    }
+  }
+
   try {
+    // stat BEFORE read so a write landing mid-read only costs one redundant
+    // reload next call (content newer than mtime → mismatch → reload), never
+    // a permanent stale (content older than mtime).
+    let mtimeMs = 0;
+    try { mtimeMs = (await fs.stat(registryPath)).mtimeMs; } catch { /* read will surface the error */ }
     const raw = await fs.readFile(registryPath, "utf-8");
     _cached = JSON.parse(raw) as Registry;
+    _cachedMtimeMs = mtimeMs;
     return _cached;
   } catch {
     return null; // No registry → single-site mode
@@ -159,6 +182,9 @@ export async function saveRegistry(registry: Registry): Promise<void> {
     await fs.mkdir(dir, { recursive: true });
     await fs.writeFile(registryPath, JSON.stringify(registry, null, 2));
     _cached = registry;
+    // Record the freshly-written file's mtime so this instance's own cache
+    // stays valid; OTHER instances detect the changed mtime and reload.
+    try { _cachedMtimeMs = (await fs.stat(registryPath)).mtimeMs; } catch { _cachedMtimeMs = 0; }
   } finally {
     resolve!();
   }
