@@ -81,11 +81,32 @@ export async function createCms(
   // Strict mode: enforce absolute paths so we can't silently read content from
   // the wrong tenant's directory due to a process.chdir race. See cms-admin's
   // lib/site-pool.ts (`absolutizeConfigPaths`) for the call site that uses this.
-  if (options?.strict) {
-    const fs = validated.storage?.adapter === "filesystem" ? validated.storage.filesystem : undefined;
-    if (fs?.contentDir && !(await import("node:path")).isAbsolute(fs.contentDir)) {
+  if (options?.strict && validated.storage?.adapter === "filesystem") {
+    const { isAbsolute } = await import("node:path");
+    const nested = validated.storage.filesystem?.contentDir;
+    // F154: a contentDir placed flat on `storage` (instead of nested under
+    // `filesystem`) is silently ignored by the adapter, which then defaults to a
+    // relative './content' resolved against the app bundle (ephemeral — wiped on
+    // every deploy). This is the 2026-06-27 broberg-ai content-wipe root cause.
+    const flat = (config.storage as { contentDir?: string } | undefined)?.contentDir;
+    if (flat !== undefined && !nested) {
       throw new Error(
-        `createCms (strict): filesystem.contentDir must be absolute, got "${fs.contentDir}". ` +
+        `createCms (strict): 'storage.contentDir' is misplaced — nest it as 'storage.filesystem.contentDir'. ` +
+        `Got storage.contentDir="${flat}", which is ignored, so the filesystem adapter falls back to a relative ` +
+        `'./content' that resolves against the app bundle (ephemeral — wiped on every deploy). ` +
+        `Fix: storage: { adapter: 'filesystem', filesystem: { contentDir: '<absolute path>' } }.`,
+      );
+    }
+    if (!nested) {
+      throw new Error(
+        `createCms (strict): filesystem.contentDir is required and must be absolute. ` +
+        `Without it the adapter defaults to a relative './content' resolved against the app bundle ` +
+        `(ephemeral — wiped on every deploy). Set storage.filesystem.contentDir to an absolute path.`,
+      );
+    }
+    if (!isAbsolute(nested)) {
+      throw new Error(
+        `createCms (strict): filesystem.contentDir must be absolute, got "${nested}". ` +
         `Resolve it via path.join(projectDir, contentDir) before calling createCms — ` +
         `relative paths race against process.cwd() in multi-tenant hosts and can leak content across sites.`,
       );
