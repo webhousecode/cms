@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getApiKey } from "@/lib/ai-config";
-import { getAI, anthropicModel } from "@/lib/ai/client";
+import { getAI, mistralModel } from "@/lib/ai/client";
 import { getModel } from "@/lib/ai/model-resolver";
 import { denyViewers } from "@/lib/require-role";
 import { requireCapability } from "@/lib/capabilities";
@@ -10,7 +10,7 @@ import { readSiteConfig } from "@/lib/site-config";
 export async function POST(request: NextRequest) {
   const denied = await denyViewers(); if (denied) return denied;
   const capDenied = await requireCapability("ai"); if (capDenied) return capDenied;
-  const apiKey = await getApiKey("anthropic");
+  const apiKey = await getApiKey("mistral");
   if (!apiKey) {
     return NextResponse.json({ error: "Anthropic API key not configured — add it in Settings → AI" }, { status: 503 });
   }
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
 
     const contentModel = await getModel("content");
     const { text: result } = await ai.chat({
-      ...anthropicModel(contentModel),
+      ...mistralModel(contentModel),
       maxTokens: 2048,
       system:
         `${buildLocaleInstruction(locale)}\nYou are a professional content editor. Rewrite the provided text according to the instruction. Return ONLY the rewritten text — no explanation, no quotes, no preamble.`,

@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { readFile } from "node:fs/promises";
 import { requirePermission } from "@/lib/permissions";
 import { loadRegistry, findSite } from "@/lib/site-registry";
-import { getAI, anthropicModel, parseJsonLoose } from "@/lib/ai/client";
+import { getAI, mistralModel, parseJsonLoose } from "@/lib/ai/client";
 
 export interface DiagnoseIssue {
   field: string;
@@ -120,7 +120,7 @@ ${rawErrors}`;
   try {
     const ai = await getAI();
     const { text } = await ai.chat({
-      ...anthropicModel("claude-haiku-4-5-20251001"),
+      ...mistralModel("mistral-small-latest"),
       maxTokens: 1200,
       system,
       messages: [{ role: "user", content: user }],

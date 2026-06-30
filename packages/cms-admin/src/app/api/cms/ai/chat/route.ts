@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getApiKey } from "@/lib/ai-config";
-import { getAI, anthropicModel } from "@/lib/ai/client";
+import { getAI, mistralModel } from "@/lib/ai/client";
 import { buildContentContext } from "@/lib/content-context";
 import { readSiteConfig } from "@/lib/site-config";
 import { getModel } from "@/lib/ai/model-resolver";
@@ -23,7 +23,7 @@ const ALLOWED_MODELS = [
 export async function POST(request: NextRequest) {
   const denied = await denyViewers(); if (denied) return denied;
   const capDenied = await requireCapability("chat"); if (capDenied) return capDenied;
-  const apiKey = await getApiKey("anthropic");
+  const apiKey = await getApiKey("mistral");
   if (!apiKey) {
     return NextResponse.json({ error: "Anthropic API key not configured — add it in Settings → AI" }, { status: 503 });
   }
@@ -112,7 +112,7 @@ ${contentContext}`;
     const resolvedMaxTokens = Math.min(Math.max(maxTokens ?? defaultMaxTokens, 256), 16384);
 
     const stream = ai.chatStream({
-      ...anthropicModel(resolvedModel),
+      ...mistralModel(resolvedModel),
       maxTokens: resolvedMaxTokens,
       system: systemPrompt,
       messages: [{ role: "user", content: contextMessage }],

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { ChatInput, Message, Tool } from "@broberg/ai-sdk";
 import { getApiKey } from "@/lib/ai-config";
-import { getAI, anthropicModel } from "@/lib/ai/client";
+import { getAI, mistralModel } from "@/lib/ai/client";
 import { getAdminConfig } from "@/lib/cms";
 import { getBrandVoiceForLocale, brandVoiceToPromptContext } from "@/lib/brand-voice";
 import { readCockpit, addCost } from "@/lib/cockpit";
@@ -64,7 +64,7 @@ async function callWithTools(params: {
 
   for (let i = 0; i < 10; i++) {
     const { text, toolCalls, usage } = await ai.chat({
-      ...anthropicModel(model),
+      ...mistralModel(model),
       maxTokens,
       system: systemPrompt,
       messages: messages as ChatInput["messages"],
@@ -99,7 +99,7 @@ async function callWithTools(params: {
 export async function POST(request: NextRequest) {
   const denied = await denyViewers(); if (denied) return denied;
   const capDenied = await requireCapability("ai"); if (capDenied) return capDenied;
-  const apiKey = await getApiKey("anthropic");
+  const apiKey = await getApiKey("mistral");
   if (!apiKey) {
     return NextResponse.json({ error: "Anthropic API key not configured" }, { status: 503 });
   }

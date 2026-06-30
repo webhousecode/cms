@@ -63,16 +63,7 @@ ${langMap[language] ?? langMap.en}`;
 async function getVisionSpec(): Promise<{ override: TierSpec; provider: string }> {
   const config = await readAiConfig();
 
-  // 1. Anthropic — best vision quality, reliable structured output
-  const anthropicKey = config.anthropicApiKey ?? process.env.ANTHROPIC_API_KEY;
-  if (anthropicKey) {
-    return {
-      override: { provider: "anthropic", model: "claude-sonnet-4-20250514", transport: "http" },
-      provider: "claude-sonnet-4-20250514",
-    };
-  }
-
-  // 2. Google Gemini — fallback (free tier but less reliable structured output)
+  // Primary: Google Gemini (EU-safe for non-PII image tasks like alt-text/tags)
   const geminiKey = config.geminiApiKey ?? process.env.GOOGLE_GENERATIVE_AI_API_KEY ?? process.env.GEMINI_API_KEY;
   if (geminiKey) {
     return {
@@ -81,7 +72,7 @@ async function getVisionSpec(): Promise<{ override: TierSpec; provider: string }
     };
   }
 
-  throw new Error("No AI API key configured. Add an Anthropic or Gemini key in Cockpit → Settings.");
+  throw new Error("No vision API key configured. Add a Gemini key in Cockpit → Settings.");
 }
 
 export async function analyzeImage(

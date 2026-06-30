@@ -6,7 +6,7 @@ import { readSiteConfig } from "@/lib/site-config";
 import { buildLocaleInstruction } from "@/lib/ai/locale-prompt";
 import { getModel } from "@/lib/ai/model-resolver";
 import { LOCALE_LABELS } from "@/lib/locale";
-import { getAI, anthropicModel } from "@/lib/ai/client";
+import { getAI, mistralModel } from "@/lib/ai/client";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -88,7 +88,7 @@ CRITICAL RULES:
 
   try {
     const { text: translatedHtml } = await ai.chat({
-      ...anthropicModel(model),
+      ...mistralModel(model),
       maxTokens: 16384,
       system: systemPrompt,
       messages: [{ role: "user", content: `Translate this HTML interactive from ${sourceLang} to ${actualTargetLang}:\n\n${source.content}` }],

@@ -21,9 +21,9 @@ import { readSiteConfig } from "@/lib/site-config";
 export type ModelPurpose = "content" | "code" | "premium";
 
 const DEFAULTS: Record<ModelPurpose, string> = {
-  content: "claude-haiku-4-5-20251001",
-  code: "claude-sonnet-4-6",
-  premium: "claude-opus-4-6",
+  content: "mistral-small-latest",
+  code: "mistral-large-latest",
+  premium: "mistral-large-latest",
 };
 
 const CONFIG_KEYS: Record<ModelPurpose, string> = {

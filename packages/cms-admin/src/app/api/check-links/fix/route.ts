@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminCms, getAdminConfig } from "@/lib/cms";
-import { getAI, anthropicModel } from "@/lib/ai/client";
+import { getAI, mistralModel } from "@/lib/ai/client";
 import { getModel } from "@/lib/ai/model-resolver";
 import { denyViewers } from "@/lib/require-role";
 import { buildLocaleInstruction } from "@/lib/ai/locale-prompt";
@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
 
   const contentModel = await getModel("content");
   const { text } = await ai.chat({
-    ...anthropicModel(contentModel),
+    ...mistralModel(contentModel),
     maxTokens: 256,
     responseFormat: "json",
     system: localeInstruction,

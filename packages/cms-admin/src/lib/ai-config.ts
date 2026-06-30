@@ -4,7 +4,8 @@ import { getActiveSitePaths } from "./site-paths";
 import { SECRET_FIELDS, clearRedactedSecrets } from "./beam/types";
 
 export interface AiConfig {
-  defaultProvider: "anthropic" | "openai" | "gemini";
+  defaultProvider: "mistral" | "anthropic" | "openai" | "gemini";
+  mistralApiKey?: string;
   anthropicApiKey?: string;
   openaiApiKey?: string;
   geminiApiKey?: string;
@@ -17,6 +18,7 @@ export interface AiConfig {
 
 export interface AiConfigMasked {
   defaultProvider: AiConfig["defaultProvider"];
+  mistralApiKey?: string;
   anthropicApiKey?: string;
   openaiApiKey?: string;
   geminiApiKey?: string;
@@ -59,7 +61,7 @@ export async function readAiConfig(): Promise<AiConfig> {
       if (org.aiTavilyApiKey) orgAi.tavilyApiKey = org.aiTavilyApiKey;
 
       // Merge: defaults ← org ← site (empty strings in site don't override org)
-      const merged: AiConfig = { defaultProvider: "anthropic", ...orgAi };
+      const merged: AiConfig = { defaultProvider: "mistral", ...orgAi };
       for (const [k, v] of Object.entries(stored)) {
         if (v !== undefined && v !== null && v !== "") {
           (merged as unknown as Record<string, unknown>)[k] = v;
@@ -69,7 +71,7 @@ export async function readAiConfig(): Promise<AiConfig> {
     }
   } catch { /* org-settings not available */ }
 
-  return { defaultProvider: "anthropic", ...stored };
+  return { defaultProvider: "mistral", ...stored };
 }
 
 export async function writeAiConfig(config: AiConfig): Promise<void> {
@@ -90,6 +92,7 @@ export function maskAiConfig(config: AiConfig): AiConfigMasked {
 
   return {
     defaultProvider: config.defaultProvider,
+    mistralApiKey: mask(config.mistralApiKey),
     anthropicApiKey: mask(config.anthropicApiKey),
     openaiApiKey: mask(config.openaiApiKey),
     geminiApiKey: mask(config.geminiApiKey),
@@ -118,6 +121,7 @@ export async function getApiKey(provider?: string): Promise<string | null> {
   const config = await readAiConfig();
   const p = provider ?? config.defaultProvider;
   switch (p) {
+    case "mistral":   return config.mistralApiKey ?? process.env.MISTRAL_API_KEY ?? null;
     case "anthropic": return config.anthropicApiKey ?? process.env.ANTHROPIC_API_KEY ?? null;
     case "openai":    return config.openaiApiKey ?? process.env.OPENAI_API_KEY ?? null;
     case "gemini":    return config.geminiApiKey ?? process.env.GEMINI_API_KEY ?? null;

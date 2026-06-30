@@ -6,12 +6,13 @@
  * they all go through `getAI()`. This gives us one cost-tracking sink, one
  * fallback story, and per-tenant BYO-key resolution in one place.
  *
+ * Primary provider: Mistral EU (GDPR-safe). Gemini for vision.
  * Model selection stays in `model-resolver.ts` (getModel(purpose)); pass the
- * resolved model string into `anthropicModel(model)` to pin it 1:1 per call.
+ * resolved model string into `mistralModel(model)` to pin it 1:1 per call.
  */
 import {
   createAI,
-  anthropicAdapter,
+  mistralAdapter,
   geminiAdapter,
   openaiAdapter,
   upmetricsSink,
@@ -45,12 +46,12 @@ function buildCostSink(): CostSink {
  * site). Passing keys directly avoids re-resolving against the wrong tenant.
  */
 export function createAIWithKeys(keys: {
-  anthropic?: string;
+  mistral?: string;
   gemini?: string;
   openai?: string;
 }): AiClient {
   const providers: Record<string, ProviderAdapter> = {
-    anthropic: anthropicAdapter({ apiKey: keys.anthropic }),
+    mistral: mistralAdapter({ apiKey: keys.mistral }),
     gemini: geminiAdapter({ apiKey: keys.gemini }),
     openai: openaiAdapter({ apiKey: keys.openai }),
   };
@@ -70,7 +71,7 @@ export function createAIWithKeys(keys: {
 export async function getAI(): Promise<AiClient> {
   const cfg = await readAiConfig().catch(() => null);
   return createAIWithKeys({
-    anthropic: cfg?.anthropicApiKey ?? process.env.ANTHROPIC_API_KEY,
+    mistral: cfg?.mistralApiKey ?? process.env.MISTRAL_API_KEY,
     gemini:
       cfg?.geminiApiKey ??
       process.env.GEMINI_API_KEY ??
@@ -82,10 +83,10 @@ export async function getAI(): Promise<AiClient> {
 
 type ModelOpts = { tier: Tier; override: TierSpec };
 
-/** Pin an Anthropic model 1:1 for a single call. Spread into chat/chatStream:
- *  `ai.chat({ messages, ...anthropicModel(model) })`. */
-export function anthropicModel(model: string): ModelOpts {
-  return { tier: "smart", override: { provider: "anthropic", model, transport: "http" } };
+/** Pin a Mistral model 1:1 for a single call. Spread into chat/chatStream:
+ *  `ai.chat({ messages, ...mistralModel(model) })`. */
+export function mistralModel(model: string): ModelOpts {
+  return { tier: "cheap", override: { provider: "mistral", model, transport: "http" } };
 }
 
 /** Pin a Gemini model 1:1 (vision / image). */

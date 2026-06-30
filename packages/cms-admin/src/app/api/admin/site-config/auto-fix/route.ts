@@ -4,7 +4,7 @@ import { readFile, writeFile } from "node:fs/promises";
 import { requirePermission } from "@/lib/permissions";
 import { loadRegistry, findSite } from "@/lib/site-registry";
 import { invalidate } from "@/lib/site-pool";
-import { getAI, anthropicModel } from "@/lib/ai/client";
+import { getAI, mistralModel } from "@/lib/ai/client";
 
 export async function POST(req: Request) {
   const denied = await requirePermission("sites.write");
@@ -56,7 +56,7 @@ ${original}`;
   try {
     const ai = await getAI();
     const { text } = await ai.chat({
-      ...anthropicModel("claude-haiku-4-5-20251001"),
+      ...mistralModel("mistral-small-latest"),
       maxTokens: 4096,
       system,
       messages: [{ role: "user", content: user }],
