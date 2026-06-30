@@ -70,13 +70,10 @@ export async function GET(request: NextRequest) {
 
   // ── AI Generator ────────────────────────────────────────────────
   let ai: AiGenerator | undefined;
-  const anthropicKey = await getApiKey("anthropic");
-  if (anthropicKey) {
-    const cmsAi = await import("@webhouse/cms-ai" as any);
-    const { createAIWithKeys, anthropicModel } = await import("@/lib/ai/client");
-    const aiClient = createAIWithKeys({ anthropic: anthropicKey });
-    const provider = new cmsAi.AnthropicProvider({ apiKey: anthropicKey });
-    const agent = new cmsAi.ContentAgent(provider);
+  const mistralKey = await getApiKey("mistral");
+  if (mistralKey) {
+    const { createAIWithKeys, mistralModel, parseJsonLoose } = await import("@/lib/ai/client");
+    const aiClient = createAIWithKeys({ mistral: mistralKey });
 
     // Read locale from resolved site config (not cookies)
     const siteConfigData = await readJson<Record<string, unknown>>("site-config.json");
@@ -84,22 +81,36 @@ export async function GET(request: NextRequest) {
 
     ai = {
       async generate(intent: string, collectionName: string) {
+        const { buildLocaleInstruction } = await import("@/lib/ai/locale-prompt");
         const col = config.collections.find(c => c.name === collectionName);
         if (!col) throw new Error(`Collection "${collectionName}" not found`);
-        const result = await agent.generate(intent, { collection: col }) as { fields: Record<string, string>; slug: string };
-        return { fields: result.fields, slug: result.slug };
+        const fields = col.fields.map((f: { name: string }) => f.name).join(", ");
+        const { text: raw } = await aiClient.chat({
+          ...mistralModel("mistral-large-latest"),
+          maxTokens: 2048,
+          system: `${buildLocaleInstruction(siteLocale)}\nYou are a content writer. Return ONLY a JSON object with these fields: ${fields}. Also include a "slug" field (kebab-case, based on the title/name field).`,
+          messages: [{ role: "user", content: intent }],
+          purpose: "mcp.generate",
+        });
+        const parsed = parseJsonLoose(raw) as Record<string, string>;
+        return { fields: parsed, slug: (parsed.slug ?? "") as string };
       },
       async rewriteField(_collection: string, _slug: string, field: string, instruction: string, currentValue: string) {
-        const col = config.collections[0]!;
-        const result = await agent.rewrite({ [field]: currentValue }, { instruction, collection: col }) as { fields: Record<string, string> };
-        return result.fields[field] ?? currentValue;
+        const { buildLocaleInstruction } = await import("@/lib/ai/locale-prompt");
+        const { text } = await aiClient.chat({
+          ...mistralModel("mistral-large-latest"),
+          maxTokens: 1024,
+          system: `${buildLocaleInstruction(siteLocale)}\nRewrite the provided text according to the instruction. Return only the rewritten text, no explanation.`,
+          messages: [{ role: "user", content: `Field: ${field}\nInstruction: ${instruction}\nCurrent value: ${currentValue}` }],
+          purpose: "mcp.rewrite-field",
+        });
+        return text.trim();
       },
       async generateContent(collection: string, slug: string, field: string, prompt: string) {
         const { buildLocaleInstruction } = await import("@/lib/ai/locale-prompt");
-        const model = "claude-sonnet-4-6"; // Use code model directly — no cookie-dependent getModel()
         const doc = await cms.content.findBySlug(collection, slug);
         const { text } = await aiClient.chat({
-          ...anthropicModel(model),
+          ...mistralModel("mistral-large-latest"),
           maxTokens: 2048,
           system: `${buildLocaleInstruction(siteLocale)}\nYou are a content writer. Generate content for the "${field}" field.\nExisting document: ${JSON.stringify(doc?.data ?? {}, null, 2)}`,
           messages: [{ role: "user", content: prompt }],
@@ -109,7 +120,7 @@ export async function GET(request: NextRequest) {
       },
       async generateInteractive(title: string, description: string) {
         const { text: raw } = await aiClient.chat({
-          ...anthropicModel("claude-sonnet-4-6"),
+          ...mistralModel("mistral-large-latest"),
           maxTokens: 8192,
           system: `You are an expert HTML/CSS/JavaScript developer. Generate a COMPLETE, self-contained HTML document. ALL CSS inline in <style>, ALL JS inline in <script>. NO external dependencies. Responsive, dark mode support. Start with <!DOCTYPE html>, end with </html>.`,
           messages: [{ role: "user", content: `Create: ${title}\n\n${description}` }],

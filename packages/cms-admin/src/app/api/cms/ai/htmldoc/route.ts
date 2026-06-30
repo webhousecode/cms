@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getApiKey } from "@/lib/ai-config";
-import { getAI, anthropicModel } from "@/lib/ai/client";
+import { getAI, mistralModel } from "@/lib/ai/client";
 import { getModel } from "@/lib/ai/model-resolver";
 import { denyViewers } from "@/lib/require-role";
 import { requireCapability } from "@/lib/capabilities";
@@ -10,7 +10,7 @@ import { readSiteConfig } from "@/lib/site-config";
 export async function POST(request: NextRequest) {
   const denied = await denyViewers(); if (denied) return denied;
   const capDenied = await requireCapability("ai"); if (capDenied) return capDenied;
-  const apiKey = await getApiKey("anthropic");
+  const apiKey = await getApiKey("mistral");
   if (!apiKey) {
     return NextResponse.json(
       { error: "Anthropic API key not configured — add it in Settings > AI" },
@@ -47,7 +47,7 @@ Rules:
 
     const contentModel = await getModel("content");
     const stream = ai.chatStream({
-      ...anthropicModel(contentModel),
+      ...mistralModel(contentModel),
       maxTokens: 16384,
       system: systemPrompt,
       messages: [

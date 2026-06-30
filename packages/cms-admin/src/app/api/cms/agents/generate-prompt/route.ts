@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAI, anthropicModel } from "@/lib/ai/client";
+import { getAI, mistralModel } from "@/lib/ai/client";
 import { getApiKey } from "@/lib/ai-config";
 import { getModel } from "@/lib/ai/model-resolver";
 import { denyViewers } from "@/lib/require-role";
@@ -10,7 +10,7 @@ import { readSiteConfig } from "@/lib/site-config";
 export async function POST(request: NextRequest) {
   const denied = await denyViewers(); if (denied) return denied;
   const capDenied = await requireCapability("agents"); if (capDenied) return capDenied;
-  const apiKey = await getApiKey("anthropic");
+  const apiKey = await getApiKey("mistral");
   if (!apiKey) {
     return NextResponse.json(
       { error: "Anthropic API key not configured — add it in Settings → AI" },
@@ -35,7 +35,7 @@ export async function POST(request: NextRequest) {
 
     const contentModel = await getModel("content");
     const { text } = await ai.chat({
-      ...anthropicModel(contentModel),
+      ...mistralModel(contentModel),
       maxTokens: 1024,
       system:
         `You are a CMS configuration assistant. Generate a concise, professional system prompt for an AI content agent. The prompt should define the agent's role, tone, constraints, and output format. Write the prompt in English but include a language directive so the agent produces content in the site's language. ${localeInstruction} — include this language directive in the generated prompt. Return only the system prompt text — no explanations or markdown.`,

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import type { ChatInput, ContentPart, Message, Tool } from "@broberg/ai-sdk";
 import { getApiKey } from "@/lib/ai-config";
-import { getAI, anthropicModel } from "@/lib/ai/client";
+import { getAI, mistralModel } from "@/lib/ai/client";
 import { gatherSiteContext, buildChatSystemPrompt, getMemoryContext } from "@/lib/chat/system-prompt";
 import { buildChatTools } from "@/lib/chat/tools";
 import { extractMemories } from "@/lib/chat/memory-extractor";
@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
   const session = await getSessionWithSiteRole();
   if (!session) return NextResponse.json({ error: "No access" }, { status: 403 });
 
-  const apiKey = await getApiKey("anthropic");
+  const apiKey = await getApiKey("mistral");
   if (!apiKey) {
     return NextResponse.json(
       { error: "Anthropic API key not configured — add it in Settings → AI" },
@@ -132,7 +132,7 @@ export async function POST(request: NextRequest) {
 
         for (let i = 0; i < chatMaxIterations; i++) {
           const { text, toolCalls } = await ai.chat({
-            ...anthropicModel(resolvedModel),
+            ...mistralModel(resolvedModel),
             maxTokens: chatMaxTokens,
             system: systemPrompt,
             // Cast bridges the SDK's hand-written Message type and its stricter

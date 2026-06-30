@@ -5,7 +5,7 @@
  * Runs after a conversation ends. Deduplicates against existing memories
  * using MiniSearch similarity.
  */
-import { getAI, anthropicModel } from "@/lib/ai/client";
+import { getAI, mistralModel } from "@/lib/ai/client";
 import { getApiKey } from "@/lib/ai-config";
 import { getModel } from "@/lib/ai/model-resolver";
 import type { ChatMemory } from "./memory-store";
@@ -90,7 +90,7 @@ export async function extractMemories(
     return { added: 0, updated: 0 };
   }
 
-  const apiKey = await getApiKey("anthropic");
+  const apiKey = await getApiKey("mistral");
   if (!apiKey) return { added: 0, updated: 0 };
 
   const model = await getModel("content"); // Haiku for extraction (cheap + fast)
@@ -106,7 +106,7 @@ export async function extractMemories(
   let facts: ExtractedFact[];
   try {
     const { text } = await ai.chat({
-      ...anthropicModel(model),
+      ...mistralModel(model),
       maxTokens: 2048,
       messages: [{ role: "user", content: prompt }],
       responseFormat: "json",

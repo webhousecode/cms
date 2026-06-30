@@ -3,7 +3,7 @@ import { getModel } from "@/lib/ai/model-resolver";
 import type { BrandVoice } from "@/lib/brand-voice";
 import { denyViewers } from "@/lib/require-role";
 import { buildLocaleInstruction } from "@/lib/ai/locale-prompt";
-import { getAI, anthropicModel, parseJsonLoose } from "@/lib/ai/client";
+import { getAI, mistralModel, parseJsonLoose } from "@/lib/ai/client";
 
 export async function POST(request: NextRequest) {
   const denied = await denyViewers(); if (denied) return denied;
@@ -16,7 +16,7 @@ export async function POST(request: NextRequest) {
   const premiumModel = await getModel("premium");
   const ai = await getAI();
   const { text: raw } = await ai.chat({
-    ...anthropicModel(premiumModel),
+    ...mistralModel(premiumModel),
     maxTokens: 2048,
     system: buildLocaleInstruction(targetLanguage),
     messages: [

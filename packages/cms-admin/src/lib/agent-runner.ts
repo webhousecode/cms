@@ -1,5 +1,5 @@
 import type { AiClient, ChatInput, Message, Tool } from "@broberg/ai-sdk";
-import { getAI, anthropicModel } from "@/lib/ai/client";
+import { getAI, mistralModel } from "@/lib/ai/client";
 import { getAgent } from "@/lib/agents";
 import { readCockpit, addCost } from "@/lib/cockpit";
 import { getBrandVoiceForLocale, brandVoiceToPromptContext } from "@/lib/brand-voice";
@@ -163,7 +163,7 @@ async function callModelWithTools(params: {
 
   for (let i = 0; i < MAX_ITERATIONS; i++) {
     const { text, toolCalls, usage } = await ai.chat({
-      ...anthropicModel(model),
+      ...mistralModel(model),
       maxTokens,
       system: systemPrompt,
       messages: messages as ChatInput["messages"],
@@ -223,7 +223,7 @@ export async function runAgent(agentId: string, userPrompt: string, overrideColl
     fireAgentEvent("started", agent.name ?? agentId).catch(() => {});
   }
 
-  const apiKey = await getApiKey("anthropic");
+  const apiKey = await getApiKey("mistral");
   if (!apiKey) throw new Error("Anthropic API key not configured");
 
   const targetCollection = overrideCollection ?? agent.targetCollections[0] ?? "posts";
@@ -554,7 +554,7 @@ export async function executeAgentRaw(
     throw new Error(budgetExceededMessage(agent, budgetResult));
   }
 
-  const apiKey = await getApiKey("anthropic");
+  const apiKey = await getApiKey("mistral");
   if (!apiKey) throw new Error("Anthropic API key not configured");
 
   const targetCollection = opts.overrideCollection ?? agent.targetCollections[0] ?? "posts";

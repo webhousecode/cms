@@ -7,7 +7,7 @@ import { buildLocaleInstruction, getSeoLimits } from "@/lib/ai/locale-prompt";
 import { getModel } from "@/lib/ai/model-resolver";
 import { LOCALE_LABELS } from "@/lib/locale";
 import { generateId } from "@webhouse/cms";
-import { getAI, anthropicModel } from "@/lib/ai/client";
+import { getAI, mistralModel } from "@/lib/ai/client";
 import {
   collectTranslatableFields,
   findReadTimeField,
@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
   const role = await getSiteRole();
   if (role !== "admin") return NextResponse.json({ error: "Admin only" }, { status: 403 });
 
-  const apiKey = await getApiKey("anthropic");
+  const apiKey = await getApiKey("mistral");
   if (!apiKey) {
     return NextResponse.json({ error: "Anthropic API key not configured" }, { status: 503 });
   }
@@ -144,7 +144,7 @@ ${seoInstruction}${tagsInstruction}
 Return ONLY a JSON object with the translated fields. No explanation, no preamble.`;
 
           const { text: aiText } = await ai.chat({
-            ...anthropicModel(model),
+            ...mistralModel(model),
             maxTokens: 4096,
             system: systemPrompt,
             messages: [{ role: "user", content: `Translate these fields from ${sourceLang} to ${targetLang}:\n\n${JSON.stringify(sourceData, null, 2)}` }],

@@ -4,7 +4,7 @@ import { getApiKey } from "@/lib/ai-config";
 import { getModel } from "@/lib/ai/model-resolver";
 import { denyViewers } from "@/lib/require-role";
 import { requireCapability } from "@/lib/capabilities";
-import { getAI, anthropicModel } from "@/lib/ai/client";
+import { getAI, mistralModel } from "@/lib/ai/client";
 import type { SeoFields } from "@/lib/seo/score";
 import { buildLocaleInstruction, getSeoLimits } from "@/lib/ai/locale-prompt";
 import { readSiteConfig } from "@/lib/site-config";
@@ -19,7 +19,7 @@ import { readSiteConfig } from "@/lib/site-config";
 export async function POST(req: NextRequest) {
   const denied = await denyViewers(); if (denied) return denied;
   const capDenied = await requireCapability("seo"); if (capDenied) return capDenied;
-  const apiKey = await getApiKey("anthropic");
+  const apiKey = await getApiKey("mistral");
   if (!apiKey) {
     return NextResponse.json({ error: "Anthropic API key not configured" }, { status: 503 });
   }
@@ -73,7 +73,7 @@ export async function POST(req: NextRequest) {
           const limits = getSeoLimits(docLocale);
 
           const { text: raw } = await ai.chat({
-            ...anthropicModel(seoModel),
+            ...mistralModel(seoModel),
             maxTokens: 1024,
             system: `${buildLocaleInstruction(docLocale)}\nYou generate SEO metadata. Return ONLY a JSON object, no explanation.`,
             messages: [{
