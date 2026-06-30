@@ -63,16 +63,7 @@ ${langMap[language] ?? langMap.en}`;
 async function getVisionSpec(): Promise<{ override: TierSpec; provider: string }> {
   const config = await readAiConfig();
 
-  // Primary: Google Gemini (EU-safe for non-PII image tasks like alt-text/tags)
-  const geminiKey = config.geminiApiKey ?? process.env.GOOGLE_GENERATIVE_AI_API_KEY ?? process.env.GEMINI_API_KEY;
-  if (geminiKey) {
-    return {
-      override: { provider: "gemini", model: "gemini-2.5-flash", transport: "http" },
-      provider: "gemini-2.5-flash",
-    };
-  }
-
-  // Fallback: Mistral pixtral-large-latest (EU, GDPR-safe)
+  // Primary: Mistral pixtral-large-latest (EU, GDPR-safe — default CMS provider)
   const mistralKey = config.mistralApiKey ?? process.env.MISTRAL_API_KEY;
   if (mistralKey) {
     return {
@@ -81,7 +72,16 @@ async function getVisionSpec(): Promise<{ override: TierSpec; provider: string }
     };
   }
 
-  throw new Error("No vision API key configured. Add a Gemini or Mistral key in Cockpit → Settings.");
+  // Fallback: Google Gemini (when explicitly configured without Mistral)
+  const geminiKey = config.geminiApiKey ?? process.env.GOOGLE_GENERATIVE_AI_API_KEY ?? process.env.GEMINI_API_KEY;
+  if (geminiKey) {
+    return {
+      override: { provider: "gemini", model: "gemini-2.5-flash", transport: "http" },
+      provider: "gemini-2.5-flash",
+    };
+  }
+
+  throw new Error("No vision API key configured. Add a Mistral or Gemini key in Cockpit → Settings.");
 }
 
 export async function analyzeImage(
