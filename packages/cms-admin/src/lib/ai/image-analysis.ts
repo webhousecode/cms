@@ -72,7 +72,16 @@ async function getVisionSpec(): Promise<{ override: TierSpec; provider: string }
     };
   }
 
-  throw new Error("No vision API key configured. Add a Gemini key in Cockpit → Settings.");
+  // Fallback: Mistral pixtral-large-latest (EU, GDPR-safe)
+  const mistralKey = config.mistralApiKey ?? process.env.MISTRAL_API_KEY;
+  if (mistralKey) {
+    return {
+      override: { provider: "mistral", model: "pixtral-large-latest", transport: "http" },
+      provider: "pixtral-large-latest",
+    };
+  }
+
+  throw new Error("No vision API key configured. Add a Gemini or Mistral key in Cockpit → Settings.");
 }
 
 export async function analyzeImage(
