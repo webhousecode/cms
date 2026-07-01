@@ -310,6 +310,9 @@ export interface FormConfig {
     subject: string;
     /** Plain-text body. Supports {{fieldName}} placeholders. */
     body: string;
+    /** Optional "read more" links appended below the body (e.g. relevant
+     *  pages/articles). Static per-form config — not dynamically computed. */
+    readMoreLinks?: Array<{ label: string; url: string }>;
   };
   spam?: {
     honeypot?: boolean;
