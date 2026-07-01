@@ -1,11 +1,10 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { createHash } from "crypto";
+import { gravatarUrl } from "@broberg/gravatar";
 import { createToken, verifyPassword } from "@/lib/auth";
 
-function resolveAvatarUrl(user: { email: string; githubUsername?: string }): string {
-  if (user.githubUsername) return `https://github.com/${user.githubUsername}.png?size=128`;
-  const hash = createHash("md5").update(user.email.toLowerCase().trim()).digest("hex");
-  return `https://www.gravatar.com/avatar/${hash}?s=128&d=404`;
+function resolveAvatarUrl(user: { email: string; githubUsername?: string }): Promise<string> {
+  if (user.githubUsername) return Promise.resolve(`https://github.com/${user.githubUsername}.png?size=128`);
+  return gravatarUrl(user.email, { size: 128 });
 }
 
 /**
@@ -54,7 +53,7 @@ export async function POST(req: NextRequest) {
       id: user.id,
       email: user.email,
       name: user.name,
-      avatarUrl: resolveAvatarUrl(user),
+      avatarUrl: await resolveAvatarUrl(user),
     },
   });
 }
