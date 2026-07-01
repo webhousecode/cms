@@ -1,6 +1,6 @@
 import { findLanHost } from "@/lib/lan-host";
 import { NextResponse, type NextRequest } from "next/server";
-import { createHash } from "crypto";
+import { gravatarUrl } from "@broberg/gravatar";
 import os from "os";
 import path from "path";
 import { existsSync } from "fs";
@@ -21,12 +21,11 @@ function rewriteLocalhostUrl(url: string | undefined): string | undefined {
   return url.replace(/\/(localhost|127\.0\.0\.1|0\.0\.0\.0)/, `/${lan}`);
 }
 
-function resolveAvatarUrl(user: { email: string; githubUsername?: string }): string {
+function resolveAvatarUrl(user: { email: string; githubUsername?: string }): Promise<string> {
   if (user.githubUsername) {
-    return `https://github.com/${user.githubUsername}.png?size=128`;
+    return Promise.resolve(`https://github.com/${user.githubUsername}.png?size=128`);
   }
-  const hash = createHash("md5").update(user.email.toLowerCase().trim()).digest("hex");
-  return `https://www.gravatar.com/avatar/${hash}?s=128&d=404`;
+  return gravatarUrl(user.email, { size: 128 });
 }
 
 /**
@@ -160,7 +159,7 @@ export async function GET(req: NextRequest) {
       email: user.email,
       name: user.name,
       role,
-      avatarUrl: resolveAvatarUrl(user),
+      avatarUrl: await resolveAvatarUrl(user),
     },
     permissions: resolvePermissions(role),
     sites,
