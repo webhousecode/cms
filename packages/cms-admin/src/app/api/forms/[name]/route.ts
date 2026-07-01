@@ -3,7 +3,7 @@ import { getActiveSitePaths } from "@/lib/site-paths";
 import { getAllForms } from "@/lib/forms/store";
 import { readSiteConfig } from "@/lib/site-config";
 import { FormService } from "@/lib/forms/service";
-import { isHoneypotTriggered, hashIp, isRateLimited, HONEYPOT_FIELD, validateTurnstile, TURNSTILE_TEST_SECRET_KEY } from "@/lib/forms/spam";
+import { isHoneypotTriggered, hashIp, isRateLimited, HONEYPOT_FIELD, validateTurnstile, TURNSTILE_TEST_SECRET_KEY, EMAIL_PATTERN, PHONE_PATTERN } from "@/lib/forms/spam";
 import { notifyFormSubmission } from "@/lib/forms/notify";
 
 function corsHeaders(origin: string | null, allowed: string[]): Record<string, string> {
@@ -103,8 +103,17 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ nam
     if (field.required && (val === undefined || val === null || val === "")) {
       errors.push(`${field.label || field.name} is required`);
     }
-    if (val !== undefined && val !== "" && field.validation?.pattern) {
-      if (!new RegExp(field.validation.pattern).test(String(val))) {
+    if (val !== undefined && val !== "") {
+      // Built-in format check by field type — runs even without a custom
+      // validation.pattern, so "email"/"phone" fields are never accepted
+      // unvalidated just because no one configured a regex.
+      if (field.type === "email" && !EMAIL_PATTERN.test(String(val))) {
+        errors.push(`${field.label || field.name} is not a valid email address`);
+      }
+      if (field.type === "phone" && !PHONE_PATTERN.test(String(val))) {
+        errors.push(`${field.label || field.name} is not a valid phone number`);
+      }
+      if (field.validation?.pattern && !new RegExp(field.validation.pattern).test(String(val))) {
         errors.push(`${field.label || field.name} is invalid`);
       }
     }

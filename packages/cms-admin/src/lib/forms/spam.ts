@@ -20,6 +20,12 @@ export function isHoneypotTriggered(body: Record<string, unknown>): boolean {
 
 export { HONEYPOT_FIELD };
 
+// ── Built-in format checks for "email"/"phone" typed fields ─────────
+// Deliberately permissive (matches what a browser's own type="email"/
+// type="tel" catches) — this is spam/typo hygiene, not an RFC-5322 validator.
+export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+export const PHONE_PATTERN = /^(?=.*\d)\+?[0-9()\s-]{6,20}$/;
+
 // ── IP Rate Limiter ──────────────────────────────────────────────
 
 interface RateEntry {

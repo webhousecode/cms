@@ -162,6 +162,28 @@ describe("spam protection", () => {
     expect(h).toMatch(/^[a-f0-9]{8}$/);
   });
 
+  describe("EMAIL_PATTERN / PHONE_PATTERN", () => {
+    it("accepts valid emails, rejects malformed ones", async () => {
+      const { EMAIL_PATTERN } = await import("../forms/spam");
+      expect(EMAIL_PATTERN.test("alice@example.com")).toBe(true);
+      expect(EMAIL_PATTERN.test("a.b+tag@sub.example.co.uk")).toBe(true);
+      expect(EMAIL_PATTERN.test("not-an-email")).toBe(false);
+      expect(EMAIL_PATTERN.test("missing@domain")).toBe(false);
+      expect(EMAIL_PATTERN.test("@example.com")).toBe(false);
+      expect(EMAIL_PATTERN.test("spaces in@example.com")).toBe(false);
+    });
+
+    it("accepts common phone formats, rejects junk", async () => {
+      const { PHONE_PATTERN } = await import("../forms/spam");
+      expect(PHONE_PATTERN.test("+45 12345678")).toBe(true);
+      expect(PHONE_PATTERN.test("(212) 555-0100")).toBe(true);
+      expect(PHONE_PATTERN.test("12345678")).toBe(true);
+      expect(PHONE_PATTERN.test("not a number")).toBe(false);
+      expect(PHONE_PATTERN.test("12")).toBe(false); // too short
+      expect(PHONE_PATTERN.test("      ")).toBe(false); // no digits
+    });
+  });
+
   describe("validateTurnstile", () => {
     const originalFetch = global.fetch;
     afterEach(() => {
