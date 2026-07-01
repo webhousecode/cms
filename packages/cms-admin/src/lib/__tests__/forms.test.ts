@@ -161,4 +161,36 @@ describe("spam protection", () => {
     const h = hashIp("192.168.1.1");
     expect(h).toMatch(/^[a-f0-9]{8}$/);
   });
+
+  describe("validateTurnstile", () => {
+    const originalFetch = global.fetch;
+    afterEach(() => {
+      global.fetch = originalFetch;
+    });
+
+    it("returns true when Cloudflare siteverify reports success", async () => {
+      global.fetch = (async () =>
+        new Response(JSON.stringify({ success: true }))) as unknown as typeof fetch;
+      const { validateTurnstile } = await import("../forms/spam");
+      expect(await validateTurnstile("good-token", "secret")).toBe(true);
+    });
+
+    it("returns false when Cloudflare siteverify reports failure", async () => {
+      global.fetch = (async () =>
+        new Response(JSON.stringify({ success: false }))) as unknown as typeof fetch;
+      const { validateTurnstile } = await import("../forms/spam");
+      expect(await validateTurnstile("bad-token", "secret")).toBe(false);
+    });
+
+    it("posts remoteip when provided", async () => {
+      let capturedBody = "";
+      global.fetch = (async (_url: unknown, init?: RequestInit) => {
+        capturedBody = String(init?.body ?? "");
+        return new Response(JSON.stringify({ success: true }));
+      }) as unknown as typeof fetch;
+      const { validateTurnstile } = await import("../forms/spam");
+      await validateTurnstile("tok", "secret", "1.2.3.4");
+      expect(capturedBody).toContain("remoteip=1.2.3.4");
+    });
+  });
 });

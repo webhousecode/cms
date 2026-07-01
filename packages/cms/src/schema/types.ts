@@ -314,6 +314,11 @@ export interface FormConfig {
   spam?: {
     honeypot?: boolean;
     rateLimit?: number;
+    /** Cloudflare Turnstile verification. Opt-in only (default off) — unlike
+     *  honeypot/rateLimit, this requires the CLIENT to render a widget and
+     *  submit a token, so enabling it for a form whose client hasn't been
+     *  updated yet would block every legitimate submission. */
+    turnstile?: boolean;
   };
   /** "config" = defined in cms.config.ts (read-only in admin). "admin" = created in admin UI. */
   _source?: "config" | "admin";

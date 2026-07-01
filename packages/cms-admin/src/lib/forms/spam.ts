@@ -73,18 +73,29 @@ export function _resetRateLimiter() {
   store.clear();
 }
 
-// ── Turnstile (optional) ─────────────────────────────────────────
+// ── Turnstile (optional, opt-in per form via spam.turnstile) ────────
+
+/**
+ * Cloudflare's official ALWAYS-PASS test keys — safe to commit. Used as the
+ * fallback when TURNSTILE_SITE_KEY / TURNSTILE_SECRET_KEY aren't set, so a
+ * form with spam.turnstile:true stays fully working (ship-dark) until real
+ * keys are configured as a Fly secret.
+ */
+export const TURNSTILE_TEST_SITE_KEY = "1x00000000000000000000AA";
+export const TURNSTILE_TEST_SECRET_KEY = "1x0000000000000000000000000000000AA";
 
 /**
  * Validate a Cloudflare Turnstile token. Returns true if valid.
- * Only called when TURNSTILE_SECRET_KEY is set.
+ * `remoteip` is optional (Cloudflare recommends it but doesn't require it).
  */
-export async function validateTurnstile(token: string, secret: string): Promise<boolean> {
+export async function validateTurnstile(token: string, secret: string, remoteip?: string): Promise<boolean> {
+  const body = new URLSearchParams({ secret, response: token });
+  if (remoteip) body.set("remoteip", remoteip);
   const res = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
     method: "POST",
     headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({ secret, response: token }),
+    body,
   });
-  const data = (await res.json()) as { success: boolean };
-  return data.success;
+  const data = (await res.json()) as { success?: boolean };
+  return data.success === true;
 }

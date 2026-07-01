@@ -3,7 +3,7 @@ import { getActiveSitePaths } from "@/lib/site-paths";
 import { getAllForms } from "@/lib/forms/store";
 import { readSiteConfig } from "@/lib/site-config";
 import { FormService } from "@/lib/forms/service";
-import { isHoneypotTriggered, hashIp, isRateLimited, HONEYPOT_FIELD } from "@/lib/forms/spam";
+import { isHoneypotTriggered, hashIp, isRateLimited, HONEYPOT_FIELD, validateTurnstile, TURNSTILE_TEST_SECRET_KEY } from "@/lib/forms/spam";
 import { notifyFormSubmission } from "@/lib/forms/notify";
 
 function corsHeaders(origin: string | null, allowed: string[]): Record<string, string> {
@@ -80,6 +80,19 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ nam
   const maxPerHour = form.spam?.rateLimit ?? 5;
   if (isRateLimited(ipHash, name, maxPerHour)) {
     return NextResponse.json({ error: "Too many submissions — try again later" }, { status: 429, headers: cors });
+  }
+
+  // Spam: Cloudflare Turnstile — opt-in only (spam.turnstile === true). Unlike
+  // honeypot/rateLimit this is NOT on-by-default: it requires the calling
+  // client to render a widget and submit a token, so defaulting it to enabled
+  // would block every submission from a form whose client hasn't adopted it.
+  if (form.spam?.turnstile === true) {
+    const token = String(body.turnstileToken ?? "");
+    const secret = process.env.TURNSTILE_SECRET_KEY || TURNSTILE_TEST_SECRET_KEY;
+    const ok = token.length > 0 && (await validateTurnstile(token, secret, ip !== "unknown" ? ip : undefined));
+    if (!ok) {
+      return NextResponse.json({ error: "Verification failed — please try again" }, { status: 400, headers: cors });
+    }
   }
 
   // Schema validation — check required fields
