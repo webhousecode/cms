@@ -1,13 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createHash } from "crypto";
+import { gravatarUrl } from "@broberg/gravatar";
 import { verifyToken, getUsers, COOKIE_NAME, type UserRole } from "@/lib/auth";
 import { getTeamMembers, addTeamMember } from "@/lib/team";
 import { resolvePermissions } from "@/lib/permissions";
-
-function gravatarUrl(email: string, size = 80): string {
-  const hash = createHash("md5").update(email.toLowerCase().trim()).digest("hex");
-  return `https://www.gravatar.com/avatar/${hash}?s=${size}&d=404`;
-}
 
 export async function GET(request: NextRequest) {
   const token = request.cookies.get(COOKIE_NAME)?.value;
@@ -34,7 +29,7 @@ export async function GET(request: NextRequest) {
   // Prefer GitHub avatar for linked users, fall back to Gravatar
   const avatarUrl = user?.githubUsername
     ? `https://github.com/${user.githubUsername}.png?size=64`
-    : gravatarUrl(payload.email);
+    : await gravatarUrl(payload.email);
 
   const siteRole = (membership?.role ?? null) as UserRole | null;
   return NextResponse.json({
