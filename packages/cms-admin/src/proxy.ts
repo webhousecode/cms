@@ -67,15 +67,30 @@ export async function proxy(request: NextRequest) {
     return NextResponse.rewrite(new URL("/home.html", request.url));
   }
 
-  // Allow public paths
+  // Allow public paths (non-API — these never call getActiveSitePaths(), so
+  // there's no ?site= tenant-resolution concern to preserve for them).
   if (PUBLIC_PATHS.includes(pathname)) return NextResponse.next();
-  if (PUBLIC_PREFIXES.some((p) => pathname.startsWith(p))) return NextResponse.next();
   if (PUBLIC_PREFIXES_ADMIN.some((p) => pathname.startsWith(p))) return NextResponse.next();
 
   // Protect ALL admin pages and API routes
   const isAdminPath = pathname.startsWith("/admin");
   const isApi = pathname.startsWith("/api/");
   if (!isAdminPath && !isApi) return NextResponse.next();
+
+  // Public API prefixes (forms, uploads, mcp, …) skip the session-required
+  // gate further down, but — bug fixed here — MUST still run through the
+  // ?site= tenant-resolution block below first. "Public" (no login required)
+  // and "which tenant" are separate concerns; returning NextResponse.next()
+  // for these paths BEFORE ?site= resolution meant every public-prefix route
+  // silently ignored ?site=<id> and fell back to registry.defaultSiteId —
+  // e.g. POST /api/forms/contact?site=broberg-ai wrote the submission to
+  // webhouse-site (the registry default) instead of broberg-ai. Reproduced
+  // 2026-07-01: a broberg-ai contact-form submission landed in webhouse-site's
+  // inbox. Same bug class as the sanne-andersen upload-misroute precedent
+  // referenced below — this is exactly the kind of route that precedent was
+  // meant to prevent, just carved out of the fix by the early PUBLIC_PREFIXES
+  // return.
+  const isPublicPrefix = PUBLIC_PREFIXES.some((p) => pathname.startsWith(p));
 
   // ── F146: URL-based site routing ──────────────────────────────────────
   // `/admin/{slug}/...` carries the active site in the URL so parallel tabs,
@@ -197,6 +212,11 @@ export async function proxy(request: NextRequest) {
       return forwardOk();
     }
   }
+
+  // Public API prefixes forward here, AFTER ?site= resolution above — the
+  // route itself (or the handler it calls) enforces its own auth, if any
+  // (e.g. F30 forms: honeypot + rate-limit, no login).
+  if (isPublicPrefix) return forwardOk();
 
   // Bearer token auth: supports CMS_DEV_TOKEN and wh_ access tokens.
   // Mints a short-lived JWT and injects it into the request cookie header
