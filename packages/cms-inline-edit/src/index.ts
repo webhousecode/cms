@@ -39,13 +39,48 @@ export async function initInlineEdit(options: InlineEditOptions): Promise<void> 
   const enabled = await checkEnabled(resolved);
   if (!enabled) return;
 
-  const token = localStorage.getItem(resolved.storageKey);
-  if (token && !isExpired(token)) {
+  const token = getConnectedToken(options);
+  if (token) {
     activateEditMode(token, resolved);
   } else {
-    if (token) localStorage.removeItem(resolved.storageKey);
     showConnectPrompt(resolved);
   }
+}
+
+/**
+ * A valid (non-expired) token already connected in this browser for this
+ * site, or null. Also captures a fresh `?cms_edit=` token from the URL
+ * first, so a page can call this directly right after the connect redirect
+ * without going through initInlineEdit(). Exposed so a site's own /admin
+ * page (or any other tool built on the same connected session) can reuse
+ * the same storage/expiry logic instead of re-implementing it.
+ */
+export function getConnectedToken(options: InlineEditOptions): string | null {
+  if (typeof window === "undefined") return null;
+  const resolved = resolveOptions(options);
+  captureTokenFromUrl(resolved);
+  const token = localStorage.getItem(resolved.storageKey);
+  if (!token) return null;
+  if (isExpired(token)) {
+    localStorage.removeItem(resolved.storageKey);
+    return null;
+  }
+  return token;
+}
+
+/** The URL that mints a fresh 30-day site-scoped token and redirects back to `returnUrl`. */
+export function buildConnectUrl(options: InlineEditOptions, returnUrl: string): string {
+  const resolved = resolveOptions(options);
+  return (
+    `${resolved.cmsBaseUrl}/admin/inline-edit/connect?site=${encodeURIComponent(resolved.siteId)}` +
+    `&return=${encodeURIComponent(returnUrl)}`
+  );
+}
+
+/** Clears the connected token in this browser (e.g. a "log out" action in a site's own /admin panel). */
+export function disconnect(options: InlineEditOptions): void {
+  if (typeof window === "undefined") return;
+  localStorage.removeItem(resolveOptions(options).storageKey);
 }
 
 /** Captures a token minted by /admin/inline-edit/connect, then strips it from the URL. */
@@ -76,10 +111,7 @@ function isExpired(token: string): boolean {
 }
 
 function showConnectPrompt(options: ResolvedOptions): void {
-  const returnUrl = window.location.href;
-  const connectUrl =
-    `${options.cmsBaseUrl}/admin/inline-edit/connect?site=${encodeURIComponent(options.siteId)}` +
-    `&return=${encodeURIComponent(returnUrl)}`;
+  const connectUrl = buildConnectUrl(options, window.location.href);
 
   const link = document.createElement("a");
   link.href = connectUrl;
@@ -212,17 +244,17 @@ function showActiveBadge(token: string, options: ResolvedOptions): void {
   label.textContent = `✏️ Redigerer som ${name}`;
   badge.appendChild(label);
 
-  const disconnect = document.createElement("button");
-  disconnect.type = "button";
-  disconnect.textContent = "Afbryd";
-  disconnect.style.cssText =
+  const disconnectBtn = document.createElement("button");
+  disconnectBtn.type = "button";
+  disconnectBtn.textContent = "Afbryd";
+  disconnectBtn.style.cssText =
     "background:none;border:none;color:#8ab4ff;font:600 11px system-ui,sans-serif;" +
     "cursor:pointer;padding:0;text-decoration:underline;";
-  disconnect.addEventListener("click", () => {
-    localStorage.removeItem(options.storageKey);
+  disconnectBtn.addEventListener("click", () => {
+    disconnect(options);
     window.location.reload();
   });
-  badge.appendChild(disconnect);
+  badge.appendChild(disconnectBtn);
 
   document.body.appendChild(badge);
 }
