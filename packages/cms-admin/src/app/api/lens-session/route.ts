@@ -11,9 +11,19 @@ import { SignJWT } from "jose";
  *   lens principal (`lens@webhouse.app`, role admin so it can RENDER admin
  *   surfaces — never cb@webhouse.dk, never a real user). Read-only is enforced by
  *   the `lens:true` write-guard in proxy.ts, NOT by the role.
+ * - Optional body `{ org, site }` — validated against the registry — targets
+ *   ANY site's admin pages on demand (was env-only before 2026-07-02; a
+ *   single-site LENS_ACTIVE_ORG/SITE meant every other site's admin pages
+ *   404'd into NoAccessGate, which is what led to a fabricated screenshot
+ *   that night instead of an honest "can't verify"). Falls back to
+ *   LENS_ACTIVE_ORG/LENS_ACTIVE_SITE env vars when omitted.
  * - Returns a Playwright `storageState` the Lens daemon applies verbatim.
  *
- * Contract: broberg-ai/cardmem/docs/LENS-MINT-ENDPOINT.md
+ * Contract: broberg-ai/cardmem/docs/LENS-MINT-ENDPOINT.md — the org/site body
+ * param and the admin/(workspace)/layout.tsx membership-gate whitelist for
+ * sub:"lens" (added alongside this) should both land in the canonical
+ * contract too, so every app implementing this endpoint gets the fix, not
+ * just this repo.
  */
 
 const TTL_SECONDS = 600; // ~10 minutes — cookie + JWT share this expiry
@@ -40,11 +50,22 @@ function cookieDomain(request: NextRequest): string {
 
 /**
  * Active org/site for the minted session so site-scoped surfaces render instead
- * of an empty workspace. Env-driven (LENS_ACTIVE_ORG/LENS_ACTIVE_SITE); when
- * unset, callers can target a site per-surface via `?site=<id>` (proxy resolves
- * it). Kept env-only to avoid a registry dependency in the mint path.
+ * of an empty workspace. Priority: an explicit `{org, site}` in the POST body
+ * (validated against the registry — Lens can target ANY site on demand this
+ * way, not just one fixed env-configured site) — then LENS_ACTIVE_ORG/
+ * LENS_ACTIVE_SITE env vars — then unset (`?site=<id>` still resolves for
+ * API-route captures, since proxy.ts handles that independently).
  */
-function resolveActiveSite(): { org: string; site: string } | null {
+async function resolveActiveSite(
+  requested: { org?: unknown; site?: unknown } | null,
+): Promise<{ org: string; site: string } | null> {
+  if (typeof requested?.org === "string" && typeof requested?.site === "string") {
+    const { loadRegistry, findSite } = await import("@/lib/site-registry");
+    const registry = await loadRegistry();
+    if (registry && findSite(registry, requested.org, requested.site)) {
+      return { org: requested.org, site: requested.site };
+    }
+  }
   const org = process.env.LENS_ACTIVE_ORG;
   const site = process.env.LENS_ACTIVE_SITE;
   return org && site ? { org, site } : null;
@@ -57,6 +78,8 @@ export async function POST(request: NextRequest) {
   if (!secret || !bearer || bearer !== secret) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+
+  const body = (await request.json().catch(() => null)) as { org?: string; site?: string } | null;
 
   const now = Math.floor(Date.now() / 1000);
   const expires = now + TTL_SECONDS;
@@ -85,7 +108,7 @@ export async function POST(request: NextRequest) {
   };
 
   const cookies: Array<typeof sessionCookie> = [sessionCookie];
-  const active = resolveActiveSite();
+  const active = await resolveActiveSite(body);
   if (active) {
     // active-org/site are read client-side too → not httpOnly (matches the app).
     cookies.push({ ...sessionCookie, name: "cms-active-org", value: active.org, httpOnly: false });

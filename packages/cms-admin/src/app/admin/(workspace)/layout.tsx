@@ -115,9 +115,18 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   }
 
   // ── Team membership gate ─────────────────────────────────
+  // System principals (dev-token/service-token/lens) carry their role
+  // directly in the JWT and have no team.json row anywhere — same whitelist
+  // require-role.ts's getSiteRole() already uses. This file had fallen out
+  // of sync with only "dev-token" listed, which is exactly why the F151
+  // Lens principal hit this gate despite a valid, correctly-signed session
+  // (2026-07-02 incident — Lens couldn't verify a real screenshot, an agent
+  // fabricated a mockup instead of saying so).
   if (session) {
     const members = await getTeamMembers();
-    const isMember = session.sub === "dev-token" || members.some((m) => m.userId === session.sub);
+    const isMember =
+      session.sub === "dev-token" || session.sub === "service-token" || session.sub === "lens" ||
+      members.some((m) => m.userId === session.sub);
     if (!isMember) {
       const accessible = await findFirstAccessibleSite(session.sub);
       if (accessible) {
