@@ -1,0 +1,58 @@
+{
+  "name": "@webhouse/cms-inline-edit",
+  "version": "0.1.0",
+  "description": "Click-to-edit inline editing for live @webhouse/cms-powered sites — copy-owned, framework-agnostic",
+  "type": "module",
+  "license": "MIT",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./server": {
+      "types": "./dist/server/index.d.ts",
+      "import": "./dist/server/index.js",
+      "require": "./dist/server/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/webhousecode/cms.git",
+    "directory": "packages/cms-inline-edit"
+  },
+  "homepage": "https://docs.webhouse.app",
+  "bugs": {
+    "url": "https://github.com/webhousecode/cms/issues"
+  },
+  "keywords": [
+    "cms",
+    "inline-editing",
+    "visual-editing",
+    "webhouse"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2"
+  }
+}

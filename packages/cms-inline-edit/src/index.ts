@@ -1,0 +1,185 @@
+/**
+ * Browser entry — zero dependencies. Activates click-to-edit on any element
+ * carrying data-cms-collection/data-cms-slug/data-cms-field (F129's attribute
+ * convention), when a valid edit-session token is present.
+ */
+
+export interface InlineEditOptions {
+  /** Base URL of the CMS API, e.g. "https://webhouse.app". */
+  cmsBaseUrl: string;
+  /** Site id passed as ?site= on every CMS API call, e.g. "broberg-ai". */
+  siteId: string;
+  /** URL query param carrying the short-lived edit-session token. Default "cms_edit". */
+  tokenParam?: string;
+  /** sessionStorage key the token is persisted under across page loads. Default "wh-inline-edit-token". */
+  storageKey?: string;
+}
+
+interface ResolvedOptions extends Required<InlineEditOptions> {}
+
+function resolveOptions(options: InlineEditOptions): ResolvedOptions {
+  return {
+    tokenParam: "cms_edit",
+    storageKey: "wh-inline-edit-token",
+    ...options,
+  };
+}
+
+export function initInlineEdit(options: InlineEditOptions): void {
+  if (typeof window === "undefined") return;
+  const resolved = resolveOptions(options);
+  const token = bootstrapToken(resolved);
+  if (!token) return;
+  activateEditMode(token, resolved);
+}
+
+function bootstrapToken(options: ResolvedOptions): string | null {
+  const url = new URL(window.location.href);
+  const urlToken = url.searchParams.get(options.tokenParam);
+  if (urlToken) {
+    sessionStorage.setItem(options.storageKey, urlToken);
+    url.searchParams.delete(options.tokenParam);
+    window.history.replaceState({}, "", url.toString());
+    return urlToken;
+  }
+  return sessionStorage.getItem(options.storageKey);
+}
+
+function activateEditMode(token: string, options: ResolvedOptions): void {
+  injectStyles();
+  showActiveBadge(token);
+
+  const fields = document.querySelectorAll<HTMLElement>("[data-cms-field]");
+  fields.forEach((el) => wireField(el, token, options));
+}
+
+function wireField(el: HTMLElement, token: string, options: ResolvedOptions): void {
+  el.addEventListener("click", () => {
+    if (el.getAttribute("contenteditable") === "true") return;
+    el.dataset.cmsOriginalValue = el.textContent ?? "";
+    el.setAttribute("contenteditable", "true");
+    el.focus();
+  });
+
+  el.addEventListener("blur", () => {
+    el.removeAttribute("contenteditable");
+    const original = el.dataset.cmsOriginalValue ?? "";
+    const current = el.textContent ?? "";
+    if (current.trim() === original.trim()) return;
+    void saveField(el, token, options);
+  });
+
+  el.addEventListener("paste", (e) => {
+    e.preventDefault();
+    const text = e.clipboardData?.getData("text/plain") ?? "";
+    document.execCommand("insertText", false, text);
+  });
+
+  el.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      el.blur();
+    }
+  });
+}
+
+async function saveField(el: HTMLElement, token: string, options: ResolvedOptions): Promise<void> {
+  const collection = el.dataset.cmsCollection;
+  const slug = el.dataset.cmsSlug;
+  const field = el.dataset.cmsField;
+  if (!collection || !slug || !field) return;
+  const value = el.textContent?.trim() ?? "";
+
+  showPill(el, "saving");
+  try {
+    const getRes = await fetch(
+      `${options.cmsBaseUrl}/api/cms/${collection}/${slug}?site=${options.siteId}`,
+      { headers: { Authorization: `Bearer ${token}` } },
+    );
+    if (!getRes.ok) throw new Error(`GET failed: ${getRes.status}`);
+    const doc = (await getRes.json()) as { data?: Record<string, unknown> };
+    const mergedData = { ...doc.data, [field]: value };
+
+    const patchRes = await fetch(
+      `${options.cmsBaseUrl}/api/cms/${collection}/${slug}?site=${options.siteId}`,
+      {
+        method: "PATCH",
+        headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ data: mergedData }),
+      },
+    );
+    if (!patchRes.ok) throw new Error(`PATCH failed: ${patchRes.status}`);
+    showPill(el, "saved");
+  } catch {
+    showPill(el, "error");
+  }
+}
+
+const pills = new WeakMap<HTMLElement, HTMLElement>();
+
+function showPill(el: HTMLElement, state: "saving" | "saved" | "error"): void {
+  let pill = pills.get(el);
+  if (!pill) {
+    pill = document.createElement("span");
+    pill.setAttribute("data-cms-inline-edit-pill", "");
+    document.body.appendChild(pill);
+    pills.set(el, pill);
+  }
+  const rect = el.getBoundingClientRect();
+  pill.style.cssText =
+    `position:fixed;top:${rect.top - 26}px;left:${rect.left}px;font:600 11px system-ui,sans-serif;` +
+    `padding:3px 9px;border-radius:5px;z-index:2147483647;pointer-events:none;` +
+    `box-shadow:0 2px 8px rgba(0,0,0,.25);`;
+
+  if (state === "saving") {
+    pill.textContent = "Gemmer…";
+    pill.style.background = "#1c2027";
+    pill.style.color = "#fff";
+  } else if (state === "saved") {
+    pill.textContent = "Gemt ✓";
+    pill.style.background = "#16a34a";
+    pill.style.color = "#fff";
+    setTimeout(() => {
+      pill?.remove();
+      pills.delete(el);
+    }, 1500);
+  } else {
+    pill.textContent = "Fejl — prøv igen";
+    pill.style.background = "#dc2626";
+    pill.style.color = "#fff";
+  }
+}
+
+function showActiveBadge(token: string): void {
+  const claims = decodeJwtPayload(token);
+  const name = (claims?.name as string) || (claims?.email as string) || "ukendt";
+  const badge = document.createElement("div");
+  badge.setAttribute("data-cms-inline-edit-badge", "");
+  badge.textContent = `✏️ Redigerer som ${name}`;
+  badge.style.cssText =
+    "position:fixed;bottom:16px;left:16px;background:#1c2027;color:#fff;" +
+    "font:600 12px system-ui,sans-serif;padding:8px 14px;border-radius:999px;" +
+    "z-index:2147483647;box-shadow:0 4px 16px rgba(0,0,0,.3);";
+  document.body.appendChild(badge);
+}
+
+/** Reads JWT claims for DISPLAY ONLY — never used for authorization decisions. */
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
+  try {
+    const payload = token.split(".")[1];
+    if (!payload) return null;
+    return JSON.parse(atob(payload.replace(/-/g, "+").replace(/_/g, "/")));
+  } catch {
+    return null;
+  }
+}
+
+function injectStyles(): void {
+  const style = document.createElement("style");
+  style.textContent = `
+    [data-cms-field] { outline: 1px dashed transparent; outline-offset: 2px; cursor: text; transition: outline-color .15s; }
+    [data-cms-field]:hover { outline-color: rgba(0,178,255,.5); }
+    [data-cms-field][contenteditable="true"] { outline: 2px solid #00b2ff; outline-offset: 2px; }
+  `;
+  document.head.appendChild(style);
+}

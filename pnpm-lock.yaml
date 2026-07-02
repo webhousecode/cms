@@ -561,6 +561,18 @@ importers:
         specifier: ^5.7.2
         version: 5.9.3
 
+  packages/cms-inline-edit:
+    devDependencies:
+      '@types/node':
+        specifier: ^22.10.2
+        version: 22.19.15
+      tsup:
+        specifier: ^8.3.5
+        version: 8.5.1(jiti@2.6.1)(postcss@8.5.8)(tsx@4.21.0)(typescript@5.9.3)(yaml@2.8.2)
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
   packages/cms-mcp-client:
     dependencies:
       '@modelcontextprotocol/sdk':
@@ -8668,7 +8680,7 @@ snapshots:
 
   '@types/better-sqlite3@7.6.13':
     dependencies:
-      '@types/node': 22.19.15
+      '@types/node': 25.4.0
 
   '@types/caseless@0.12.5':
     optional: true
@@ -8748,7 +8760,7 @@ snapshots:
 
   '@types/readdir-glob@1.1.5':
     dependencies:
-      '@types/node': 22.19.15
+      '@types/node': 25.4.0
 
   '@types/request@2.48.13':
     dependencies:
@@ -8774,7 +8786,7 @@ snapshots:
 
   '@types/ws@8.18.1':
     dependencies:
-      '@types/node': 22.19.15
+      '@types/node': 25.4.0
 
   '@upmetrics/sdk@0.1.5': {}
 
