@@ -196,3 +196,4 @@ localhost+*.pem
 .claude/scheduled_tasks.lock
 .claude/scheduled_tasks.json
 .lens/
+.mcp.json.bak
