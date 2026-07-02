@@ -4,9 +4,20 @@
 
 Click directly on visible text on a LIVE @webhouse/cms-powered site, edit it in place, and have it save automatically — no trip through cms-admin's document editor. Built as a publishable, **"copy-owned" npm package** from day one (not a one-off hack inside one site's repo), so other sites with completely different frontends (starting with Sanne Andersen's, later) can install it and own their own integration/version, rather than depending on a centrally-hosted script. Scope is explicitly **visible text only** — no image/media editing, no structural changes.
 
+## Relationship to F129 (Edit What You See)
+
+**F129** (backlog, 2026-04-09) already covers this same vision — click-to-edit on rendered pages, saving back to the CMS — and independently converged on the same `data-cms-*` attribute convention (there: `data-cms-collection`/`data-cms-slug`/`data-cms-field`). This doc adopts F129's exact attribute names rather than inventing new ones.
+
+The scope is genuinely different, though, which is why this is a separate epic rather than a duplicate:
+
+- **F129** targets sites CMS itself renders — `build.ts` static-site output and framework-consumer examples — edited *through cms-admin's own preview panel* (same-origin iframe, already-authenticated admin session, no cross-domain problem to solve). Strategy B (DOM-path + content-matching, ported from Pitch Vault) is F129's fallback for sites where CMS doesn't control the template.
+- **F156** targets a bespoke, hand-built site (broberg-ai-site — Bun+Hono+Preact, not a `packages/cms`-rendered site at all) edited *directly on its live public URL*, outside cms-admin entirely, and packaged as a standalone npm package other sites with unrelated frontends can install independently. This requires an auth bridge (token minting, `proxy.ts` allowlist, CORS) that F129 never needed, because F129's editing always happens inside an already-authenticated admin context.
+
+Both share the same end-state attribute contract, so a future site rendered by `packages/cms`'s own pipeline could adopt either F129's in-preview editing or F156's live-site package depending on how it's deployed. Track as `related` in cardmem, not parent/child.
+
 ## Research findings
 
-Zero prior art in the codebase for this — no data-attribute convention linking rendered HTML back to CMS fields, no auth bridge between cms-admin's session and any public site, and the write API (`PATCH /api/cms/{collection}/{slug}`) replaces `.data` wholesale (documented GET→merge→PATCH pattern must be followed — see memory `schema-drift-add-to-schema-dataloss` and the `store.put` full-replacement precedent). Two existing patterns were reused instead of inventing new ones:
+Zero prior art in the codebase for **this specific slice** (live-site, cross-domain, portable-package editing) — no auth bridge between cms-admin's session and any public site outside its own preview iframe, and the write API (`PATCH /api/cms/{collection}/{slug}`) replaces `.data` wholesale (documented GET→merge→PATCH pattern must be followed — see memory `schema-drift-add-to-schema-dataloss` and the `store.put` full-replacement precedent). Two existing patterns were reused instead of inventing new ones:
 
 - `packages/cms-admin/src/app/api/lens-session/route.ts` — a dedicated mint-endpoint issuing a *purpose-tagged*, short-lived JWT, enforced by a hard allowlist in `proxy.ts`. The new edit-session token is modeled on this exact shape.
 - `packages/cms-admin/src/app/api/forms/[name]/route.ts` — CORS reflecting the site's existing `previewSiteUrl` config (no new config field needed). Already proven live: broberg-ai-site's `enhance.ts` `contactForm()` already does a direct cross-origin browser `fetch()` to `webhouse.app` today. The mobile app's `Authorization: Bearer <jwt>` pattern (`/api/mobile/*`) is the existing precedent for non-cookie JWT auth.
@@ -47,7 +58,7 @@ Prove the whole mechanism end-to-end on **broberg.ai's own homepage** (Hero, Abo
 
 Scaffolded like `cms-mcp-client` (`package.json`/`tsconfig.json`/`tsup.config.ts` — ESM+CJS+dts via tsup), multi-entry `exports` map like `cms-shop`'s (`.`, `./server`):
 
-- **`.` (browser entry, zero Node deps)** — `initInlineEdit({ collectionScope, saveEndpoint: "https://webhouse.app" })`. On load: checks `sessionStorage` for a token; if present, scans the DOM for `[data-cms-field]` elements, makes them `contenteditable` on click, and on blur does GET (current doc) → merge changed field into `.data` → PATCH (full merged object) directly against `webhouse.app/api/cms/{collection}/{slug}` using the token as a Bearer header. Small custom "Gemmer…/Gemt ✓/Fejl" pill next to the edited element — no native browser dialogs.
+- **`.` (browser entry, zero Node deps)** — `initInlineEdit({ collectionScope, saveEndpoint: "https://webhouse.app" })`. On load: checks `sessionStorage` for a token; if present, scans the DOM for `[data-cms-field]` elements, makes them `contenteditable` on click, and on blur does GET (current doc) → merge changed field into `.data` → PATCH (full merged object) directly against `webhouse.app/api/cms/{collection}/{slug}` using the token as a Bearer header. Small custom "Gemmer…/Gemt ✓/Fejl" pill next to the edited element — no native browser dialogs. Attribute names reuse F129's convention exactly (see below), not a new scheme.
 - **`./server` (optional, Node/Bun)** — thin helpers (`verifyEditSession()`, `saveInlineEditField()`) wrapping the same GET→merge→PATCH dance, for a future site that wants a server-side relay instead of direct-from-browser calls.
 - Field-path convention: dot-path matching the actual CMS schema field name (e.g. `eyebrow`, `ctaLabel`) — becomes a cross-repo contract the moment a second site adopts the package, so lock it down precisely against the real PATCH merge behavior before shipping v0.1.0.
 - Add to `.github/workflows/publish.yml` (PACKAGES array + publish order, after `cms`) and follow the standard "new package" npm setup (create on npmjs.com, trusted-publisher config) per this repo's existing process.
@@ -57,7 +68,7 @@ Scaffolded like `cms-mcp-client` (`package.json`/`tsconfig.json`/`tsup.config.ts
 Repo: `/Users/cb/Apps/broberg/broberg-ai-site` (separate repo, not part of this monorepo).
 
 - `src/content/compose.ts` — for these 3 section loaders, return `{ data, cmsRef: { collection, slug, locale } }` instead of bare `SectionData` (raw doc identity is available right before `mapSection()` strips it — thread it through as a sibling object).
-- `src/components/sections.tsx` — add `data-cms-field="<fieldPath>"` + `data-cms-doc="<collection>:<slug>:<locale>"` attributes on plain-text elements in scope: eyebrow text, CTA/button labels, pill labels. Explicitly excluded: any field rendered via `dangerouslySetInnerHTML` (richtext/markdown-derived HTML) — editing rendered HTML and mapping back to source Markdown is lossy, out of scope for v1.
+- `src/components/sections.tsx` — add `data-cms-collection="<collection>"` + `data-cms-slug="<slug>"` + `data-cms-field="<fieldPath>"` attributes (F129's exact convention, not a new scheme) on plain-text elements in scope: eyebrow text, CTA/button labels, pill labels. Explicitly excluded: any field rendered via `dangerouslySetInnerHTML` (richtext/markdown-derived HTML) — editing rendered HTML and mapping back to source Markdown is lossy, out of scope for v1.
 - `src/client/enhance.ts` — new `inlineEdit()` feature function (same `safe()`-wrapped pattern as existing features), importing `initInlineEdit` from `@webhouse/cms-inline-edit`.
 - Add `@webhouse/cms-inline-edit` as a real npm dependency (published package, not a workspace symlink).
 
@@ -74,6 +85,6 @@ Repo: `/Users/cb/Apps/broberg/broberg-ai-site` (separate repo, not part of this 
 ## Future phases (not this doc)
 
 - Full site-wide field coverage on broberg.ai.
-- Richtext/markdown field support.
+- **Richtext/markdown field support.** Excluded from Phase 1 mainly because mapping a `contenteditable` DOM edit back to source Markdown losslessly is hard — but there's a real second reason to flag now: the moment inline-editing writes back into a field that later renders via `dangerouslySetInnerHTML` (as `titleHtml`/`leadHtml`/bio fields do today), whatever HTML the editor produces becomes stored content that gets re-injected as raw markup on every future page load. Today those fields are safe because content is admin-authored/trusted and never round-trips through a browser `contenteditable` surface. Inline-editing changes that: a `contenteditable` region can pick up pasted HTML with scripts/handlers from the clipboard. Before any richtext phase ships, the save path MUST run the captured HTML through a sanitizer (`DOMPurify` is the standard combination with `dangerouslySetInnerHTML` — same rendering API, but the dangerous surface is closed by cleaning the input first) rather than relying on "admin-authored" trust, which no longer holds once editing happens through a contenteditable surface fed by clipboard paste.
 - Port to a second site (Sanne Andersen) to prove the "copy-owned" npm package model across a genuinely different frontend.
 - Static-export site support (rebuild-triggering or direct build-artifact patch).
