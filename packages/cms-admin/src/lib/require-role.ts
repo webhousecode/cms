@@ -83,8 +83,12 @@ export async function getSessionWithSiteRole(): Promise<{
   const session = await getSessionUser(cookieStore);
   if (!session) return null;
 
-  // Dev/API/service tokens carry their role in the JWT — no team lookup needed
-  if (session.sub === "dev-token" || session.sub === "service-token") {
+  // Dev/API/service/lens tokens carry their role in the JWT — no team lookup
+  // needed. Kept in sync with getSiteRole()'s allowlist above — this one had
+  // fallen behind (missing "lens"), which silently 403'd every F157 inline-edit
+  // PATCH minted via the Lens principal with "No write access" even though the
+  // token was valid and proxy.ts had already let it through.
+  if (session.sub === "dev-token" || session.sub === "service-token" || session.sub === "lens") {
     return { userId: session.sub, email: session.email, name: session.name, siteRole: session.role };
   }
 
