@@ -51,7 +51,12 @@ export interface EditSessionUser {
   role: string;
 }
 
-/** Calls the CMS's existing GET /api/auth/me with the token as a Bearer header. */
+/**
+ * Calls the CMS's existing GET /api/auth/me with the token as a Bearer header.
+ * That endpoint always returns 200 — {"user": null} for anonymous/invalid
+ * tokens, never a 401 — so absence of a user is read from the body, not the
+ * status code.
+ */
 export async function verifyEditSession(
   options: VerifyEditSessionOptions,
 ): Promise<EditSessionUser | null> {
@@ -59,6 +64,6 @@ export async function verifyEditSession(
     headers: { Authorization: `Bearer ${options.token}` },
   });
   if (!res.ok) return null;
-  const body = (await res.json()) as { user?: EditSessionUser } & Partial<EditSessionUser>;
-  return body.user ?? (body as EditSessionUser);
+  const body = (await res.json()) as { user?: EditSessionUser | null };
+  return body.user ?? null;
 }

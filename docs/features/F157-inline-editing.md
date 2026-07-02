@@ -54,7 +54,7 @@ Prove the whole mechanism end-to-end on **broberg.ai's own homepage** (Hero, Abo
 
    **Known tradeoff, stated explicitly**: the token briefly lives in browser JS (`sessionStorage`), more exposed to XSS than an `HttpOnly` cookie would be. Mitigated by the short TTL + collection-scope above. Acceptable for a first-party, low-traffic site like broberg.ai; revisit before extending to a customer site with a less-controlled XSS posture.
 
-### New package: `packages/cms-inline-edit/` (publishable, `@webhouse/cms-inline-edit`)
+### New package: `packages/cms-inline-edit/` (publishable, `@broberg/cms-inline-edit`)
 
 Scaffolded like `cms-mcp-client` (`package.json`/`tsconfig.json`/`tsup.config.ts` — ESM+CJS+dts via tsup), multi-entry `exports` map like `cms-shop`'s (`.`, `./server`):
 
@@ -69,8 +69,8 @@ Repo: `/Users/cb/Apps/broberg/broberg-ai-site` (separate repo, not part of this 
 
 - `src/content/compose.ts` — for these 3 section loaders, return `{ data, cmsRef: { collection, slug, locale } }` instead of bare `SectionData` (raw doc identity is available right before `mapSection()` strips it — thread it through as a sibling object).
 - `src/components/sections.tsx` — add `data-cms-collection="<collection>"` + `data-cms-slug="<slug>"` + `data-cms-field="<fieldPath>"` attributes (F129's exact convention, not a new scheme) on plain-text elements in scope: eyebrow text, CTA/button labels, pill labels. Explicitly excluded: any field rendered via `dangerouslySetInnerHTML` (richtext/markdown-derived HTML) — editing rendered HTML and mapping back to source Markdown is lossy, out of scope for v1.
-- `src/client/enhance.ts` — new `inlineEdit()` feature function (same `safe()`-wrapped pattern as existing features), importing `initInlineEdit` from `@webhouse/cms-inline-edit`.
-- Add `@webhouse/cms-inline-edit` as a real npm dependency (published package, not a workspace symlink).
+- `src/client/enhance.ts` — new `inlineEdit()` feature function (same `safe()`-wrapped pattern as existing features), importing `initInlineEdit` from `@broberg/cms-inline-edit`.
+- Add `@broberg/cms-inline-edit` as a real npm dependency (published package, not a workspace symlink).
 
 ## Verification plan
 

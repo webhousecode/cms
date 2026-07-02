@@ -1,4 +1,4 @@
-# @webhouse/cms-inline-edit
+# @broberg/cms-inline-edit
 
 Click-to-edit inline editing for live [@webhouse/cms](https://docs.webhouse.app)-powered sites. Copy-owned: each site installs this as a normal npm dependency and owns its own integration/version — no centrally-hosted script.
 
@@ -15,7 +15,7 @@ Mark the plain-text elements a document's rendering code prints from CMS fields 
 Then, once per page load:
 
 ```ts
-import { initInlineEdit } from "@webhouse/cms-inline-edit";
+import { initInlineEdit } from "@broberg/cms-inline-edit";
 
 initInlineEdit({
   cmsBaseUrl: "https://webhouse.app",
@@ -32,7 +32,7 @@ Only plain text fields are supported. Do not attach these attributes to elements
 Thin Node/Bun helpers for a site that wants a same-origin relay instead of the browser calling the CMS directly:
 
 ```ts
-import { saveInlineEditField, verifyEditSession } from "@webhouse/cms-inline-edit/server";
+import { saveInlineEditField, verifyEditSession } from "@broberg/cms-inline-edit/server";
 ```
 
 See `docs/features/F157-inline-editing.md` in the [@webhouse/cms](https://github.com/webhousecode/cms) repo for the full design.

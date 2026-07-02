@@ -59,7 +59,7 @@ jobs:
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
           echo "Bumping all packages to $NEW_VERSION"
 
-          PACKAGES=(cms cms-ai cms-cli cms-mcp-client cms-mcp-server create-cms cms-admin-cli cms-shop cms-inline-edit)
+          PACKAGES=(cms cms-ai cms-cli cms-mcp-client cms-mcp-server create-cms cms-admin-cli cms-shop)
           for pkg in "${PACKAGES[@]}"; do
             node -e "
               const fs = require('fs');
@@ -83,8 +83,7 @@ jobs:
         run: |
           # Publish in dependency order with provenance.
           # cms-shop depends on @webhouse/cms (workspace:*) — must publish AFTER cms.
-          # cms-inline-edit has zero deps — order doesn't matter, listed last.
-          PACKAGES=(cms cms-ai cms-mcp-client cms-mcp-server cms-cli create-cms cms-shop cms-inline-edit)
+          PACKAGES=(cms cms-ai cms-mcp-client cms-mcp-server cms-cli create-cms cms-shop)
           for pkg in "${PACKAGES[@]}"; do
             echo "📦 Publishing @webhouse/$pkg@${{ env.NEW_VERSION }}..."
             cd packages/$pkg

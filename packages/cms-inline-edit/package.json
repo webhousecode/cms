@@ -1,5 +1,5 @@
 {
-  "name": "@webhouse/cms-inline-edit",
+  "name": "@broberg/cms-inline-edit",
   "version": "0.1.0",
   "description": "Click-to-edit inline editing for live @webhouse/cms-powered sites — copy-owned, framework-agnostic",
   "type": "module",
