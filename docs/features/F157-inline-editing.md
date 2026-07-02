@@ -1,4 +1,4 @@
-# F156 — Inline Editing (live site + reusable npm package)
+# F157 — Inline Editing (live site + reusable npm package)
 
 ## Motivation
 
@@ -11,9 +11,9 @@ Click directly on visible text on a LIVE @webhouse/cms-powered site, edit it in 
 The scope is genuinely different, though, which is why this is a separate epic rather than a duplicate:
 
 - **F129** targets sites CMS itself renders — `build.ts` static-site output and framework-consumer examples — edited *through cms-admin's own preview panel* (same-origin iframe, already-authenticated admin session, no cross-domain problem to solve). Strategy B (DOM-path + content-matching, ported from Pitch Vault) is F129's fallback for sites where CMS doesn't control the template.
-- **F156** targets a bespoke, hand-built site (broberg-ai-site — Bun+Hono+Preact, not a `packages/cms`-rendered site at all) edited *directly on its live public URL*, outside cms-admin entirely, and packaged as a standalone npm package other sites with unrelated frontends can install independently. This requires an auth bridge (token minting, `proxy.ts` allowlist, CORS) that F129 never needed, because F129's editing always happens inside an already-authenticated admin context.
+- **F157** targets a bespoke, hand-built site (broberg-ai-site — Bun+Hono+Preact, not a `packages/cms`-rendered site at all) edited *directly on its live public URL*, outside cms-admin entirely, and packaged as a standalone npm package other sites with unrelated frontends can install independently. This requires an auth bridge (token minting, `proxy.ts` allowlist, CORS) that F129 never needed, because F129's editing always happens inside an already-authenticated admin context.
 
-Both share the same end-state attribute contract, so a future site rendered by `packages/cms`'s own pipeline could adopt either F129's in-preview editing or F156's live-site package depending on how it's deployed. Track as `related` in cardmem, not parent/child.
+Both share the same end-state attribute contract, so a future site rendered by `packages/cms`'s own pipeline could adopt either F129's in-preview editing or F157's live-site package depending on how it's deployed. Track as `related` in cardmem, not parent/child.
 
 ## Research findings
 
