@@ -133,8 +133,13 @@ function activateEditMode(token: string, options: ResolvedOptions): void {
 }
 
 function wireField(el: HTMLElement, token: string, options: ResolvedOptions): void {
-  el.addEventListener("click", () => {
+  el.addEventListener("click", (e) => {
     if (el.getAttribute("contenteditable") === "true") return;
+    // Many editable fields (card titles/blurbs) sit inside a clickable <a>/
+    // <button> ancestor (the card itself) — without this, "click to edit"
+    // would immediately navigate away instead of focusing the field.
+    e.preventDefault();
+    e.stopPropagation();
     el.dataset.cmsOriginalValue = el.textContent ?? "";
     el.setAttribute("contenteditable", "true");
     el.focus();
