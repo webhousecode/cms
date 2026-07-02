@@ -37,6 +37,45 @@ async function runScoped<T>(req: NextRequest, fn: () => Promise<T>): Promise<T |
   return withSiteContext(ctx, fn);
 }
 
+/**
+ * F157.1 — CORS for the inline-edit package's direct browser calls (GET to
+ * fetch-before-merge, PATCH to save). Mirrors forms/[name]/route.ts's
+ * previewSiteUrl-reflecting allowlist exactly — same site config field, same
+ * "no new config" reuse. POST/DELETE are unaffected (not used by inline-edit,
+ * cms-admin's own UI calls those same-origin).
+ */
+function corsHeaders(origin: string | null, allowed: string[]): Record<string, string> {
+  const headers: Record<string, string> = {
+    "Access-Control-Allow-Methods": "GET, PATCH, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Max-Age": "86400",
+  };
+  if (origin && allowed.some((a) => origin === a || a === "*")) {
+    headers["Access-Control-Allow-Origin"] = origin;
+  }
+  return headers;
+}
+
+async function getAllowedOrigins(): Promise<string[]> {
+  const origins: string[] = [];
+  try {
+    const { readSiteConfig } = await import("@/lib/site-config");
+    const siteConfig = await readSiteConfig();
+    if (siteConfig.previewSiteUrl) origins.push(siteConfig.previewSiteUrl);
+  } catch { /* no site config */ }
+  if (process.env.NODE_ENV !== "production") {
+    origins.push("http://localhost:3000", "http://localhost:3009", "http://localhost:3011", "https://localhost:3010");
+  }
+  return origins;
+}
+
+/** OPTIONS — CORS preflight for the inline-edit package's cross-origin GET/PATCH. */
+export async function OPTIONS(req: NextRequest) {
+  const origin = req.headers.get("origin");
+  const allowed = await getAllowedOrigins();
+  return new NextResponse(null, { status: 204, headers: corsHeaders(origin, allowed) });
+}
+
 /** Check if deployOnSave is enabled (lightweight, no deploy) */
 async function checkDeployOnSave(): Promise<boolean> {
   try {
@@ -77,15 +116,16 @@ async function dispatchAutoDeployOnSave(revalidationDispatched: boolean) {
 type Ctx = { params: Promise<{ collection: string; slug: string }> };
 
 export async function GET(req: NextRequest, { params }: Ctx) {
+  const cors = corsHeaders(req.headers.get("origin"), await getAllowedOrigins());
   const result = await runScoped(req, async () => {
     try {
       const { collection, slug } = await params;
       const cms = await getAdminCms();
       const doc = await cms.content.findBySlug(collection, slug);
-      if (!doc) return NextResponse.json({ error: "Not found" }, { status: 404 });
-      return NextResponse.json(doc);
+      if (!doc) return NextResponse.json({ error: "Not found" }, { status: 404, headers: cors });
+      return NextResponse.json(doc, { headers: cors });
     } catch {
-      return NextResponse.json({ error: "Internal error" }, { status: 500 });
+      return NextResponse.json({ error: "Internal error" }, { status: 500, headers: cors });
     }
   });
   return result instanceof Response ? result : (result as Response);
@@ -170,9 +210,10 @@ export async function POST(req: NextRequest, { params }: Ctx) {
 }
 
 export async function PATCH(req: NextRequest, { params }: Ctx) {
+  const cors = corsHeaders(req.headers.get("origin"), await getAllowedOrigins());
   const session = await getSessionWithSiteRole();
   if (!session || !session.siteRole || session.siteRole === "viewer") {
-    return NextResponse.json({ error: "No write access" }, { status: 403 });
+    return NextResponse.json({ error: "No write access" }, { status: 403, headers: cors });
   }
   const result = await runScoped(req, async () => {
   try {
@@ -186,12 +227,12 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
     }
 
     const doc = await cms.content.findBySlug(collection, slug);
-    if (!doc) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    if (!doc) return NextResponse.json({ error: "Not found" }, { status: 404, headers: cors });
 
     // Validate new slug if provided
     if (body.slug !== undefined && body.slug !== slug) {
       const existing = await cms.content.findBySlug(collection, body.slug);
-      if (existing) return NextResponse.json({ error: "Slug already exists" }, { status: 409 });
+      if (existing) return NextResponse.json({ error: "Slug already exists" }, { status: 409, headers: cors });
     }
 
     // Save revision snapshot before overwriting
@@ -306,10 +347,10 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
       fireContentEvent(action, collection, newSlug, updated ?? undefined, `user:${session.email}`).catch(() => {});
     }
 
-    return NextResponse.json({ ...updated, _deployTriggered: willDeploy });
+    return NextResponse.json({ ...updated, _deployTriggered: willDeploy }, { headers: cors });
   } catch (err) {
     console.error(err);
-    return NextResponse.json({ error: "Internal error" }, { status: 500 });
+    return NextResponse.json({ error: "Internal error" }, { status: 500, headers: cors });
   }
   });
   return result instanceof Response ? result : (result as Response);

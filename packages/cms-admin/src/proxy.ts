@@ -36,6 +36,27 @@ function stripActiveSiteCookies(cookieHeader: string): string {
     .join("; ");
 }
 
+/**
+ * F157.1 — positive allowlist for editSession-scoped bearer tokens: only
+ * GET/PATCH on the token's own site+collection under /api/cms/, plus GET
+ * /api/auth/me (used to bootstrap the "Redigerer som X" badge). Everything
+ * else is denied — this is the actual security boundary for inline editing.
+ */
+function isAllowedForEditSession(
+  pathname: string,
+  method: string,
+  requestSite: string,
+  tokenSite: string,
+  tokenCollection: string,
+): boolean {
+  if (pathname === "/api/auth/me") return method === "GET";
+  const match = pathname.match(/^\/api\/cms\/([^/]+)\/([^/]+)\/?$/);
+  if (!match) return false;
+  if (method !== "GET" && method !== "PATCH") return false;
+  const [, collection] = match;
+  return collection === tokenCollection && requestSite === tokenSite;
+}
+
 const PUBLIC_PREFIXES = [
   "/api/auth/",
   "/api/admin/invitations/", // Invite accept flow (user not yet logged in)
@@ -218,6 +239,14 @@ export async function proxy(request: NextRequest) {
   // (e.g. F30 forms: honeypot + rate-limit, no login).
   if (isPublicPrefix) return forwardOk();
 
+  // F157.1: CORS preflight (OPTIONS) on /api/cms/{collection}/{slug} never
+  // carries credentials — the route's own OPTIONS handler answers with its
+  // CORS headers. GET/PATCH/etc. on the same path still hit the full auth
+  // gate below.
+  if (request.method === "OPTIONS" && /^\/api\/cms\/[^/]+\/[^/]+\/?$/.test(pathname)) {
+    return forwardOk();
+  }
+
   // Bearer token auth: supports CMS_DEV_TOKEN and wh_ access tokens.
   // Mints a short-lived JWT and injects it into the request cookie header
   // so downstream route handlers can read it via cookies().
@@ -261,6 +290,33 @@ export async function proxy(request: NextRequest) {
       } catch {
         // Token verification failed — fall through to cookie auth
       }
+    }
+
+    // F157.1 — inline-edit session tokens: already cms-session-shaped JWTs
+    // (minted by POST /api/inline-edit/token), carrying editSession/site/
+    // collection claims. Forward as-is, but ONLY for the exact GET/PATCH
+    // /api/cms/{collection}/{slug} (matching collection+site) + GET
+    // /api/auth/me allowlist — everything else 403s. This is the actual
+    // security boundary; the token's short TTL + collection-scope alone are
+    // not sufficient (see docs/features/F157-inline-editing.md).
+    try {
+      const { payload } = await jwtVerify(bearerToken, getJwtSecret());
+      if (payload.editSession === true) {
+        const tokenSite = typeof payload.site === "string" ? payload.site : "";
+        const tokenCollection = typeof payload.collection === "string" ? payload.collection : "";
+        const requestSite = request.nextUrl.searchParams.get("site") ?? "";
+        if (!isAllowedForEditSession(pathname, request.method, requestSite, tokenSite, tokenCollection)) {
+          return NextResponse.json(
+            { error: "Inline-edit session is scoped to GET/PATCH on its own site + collection" },
+            { status: 403 },
+          );
+        }
+        const existingCookies = requestHeaders.get("cookie") ?? "";
+        requestHeaders.set("cookie", `${existingCookies}; ${COOKIE_NAME}=${bearerToken}`);
+        return forwardOk();
+      }
+    } catch {
+      // Not an editSession token — fall through to cookie auth
     }
   }
 
