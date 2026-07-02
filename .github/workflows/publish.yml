@@ -85,11 +85,12 @@ jobs:
           # cms-shop depends on @webhouse/cms (workspace:*) — must publish AFTER cms.
           PACKAGES=(cms cms-ai cms-mcp-client cms-mcp-server cms-cli create-cms cms-shop cms-inline-edit)
           for pkg in "${PACKAGES[@]}"; do
-            echo "📦 Publishing @webhouse/$pkg@${{ env.NEW_VERSION }}..."
+            PKG_NAME=$(node -p "require('./packages/$pkg/package.json').name")
+            echo "📦 Publishing $PKG_NAME@${{ env.NEW_VERSION }}..."
             cd packages/$pkg
             npm publish --access public --provenance
             cd ../..
-            echo "✅ @webhouse/$pkg published"
+            echo "✅ $PKG_NAME published"
           done
 
       - name: Restore workspace deps and commit version bump
