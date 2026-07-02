@@ -37,24 +37,23 @@ function stripActiveSiteCookies(cookieHeader: string): string {
 }
 
 /**
- * F157.1 — positive allowlist for editSession-scoped bearer tokens: only
- * GET/PATCH on the token's own site+collection under /api/cms/, plus GET
- * /api/auth/me (used to bootstrap the "Redigerer som X" badge). Everything
- * else is denied — this is the actual security boundary for inline editing.
+ * F157 — positive allowlist for editSession-scoped bearer tokens: only
+ * GET/PATCH under /api/cms/ for the token's own site (any collection —
+ * site-wide, not per-document), plus GET /api/auth/me (used to bootstrap the
+ * "Redigerer som X" badge). Everything else is denied — this is the actual
+ * security boundary for inline editing.
  */
 function isAllowedForEditSession(
   pathname: string,
   method: string,
   requestSite: string,
   tokenSite: string,
-  tokenCollection: string,
 ): boolean {
   if (pathname === "/api/auth/me") return method === "GET";
   const match = pathname.match(/^\/api\/cms\/([^/]+)\/([^/]+)\/?$/);
   if (!match) return false;
   if (method !== "GET" && method !== "PATCH") return false;
-  const [, collection] = match;
-  return collection === tokenCollection && requestSite === tokenSite;
+  return requestSite === tokenSite;
 }
 
 const PUBLIC_PREFIXES = [
@@ -67,6 +66,7 @@ const PUBLIC_PREFIXES = [
   "/api/beam/receive/",     // Live Beam receive — token-authenticated (not session)
   "/api/mobile/",           // F07 webhouse.app mobile — Bearer JWT in header, no cookies (handlers enforce auth themselves)
   "/api/forms/",            // F30 Form Engine — public submission + schema + widget endpoints
+  "/api/inline-edit/status", // F157 — public read of the Site Settings toggle, no session implications
   "/api/uploads/",          // Public static asset serving (per-site uploads). Path-traversal-protected
                             // in the handler; sites consume via ?site=<id> query param. Without this,
                             // ICD sites can't fetch images uploaded in CMS admin (2026-05-19 fix).
@@ -292,22 +292,21 @@ export async function proxy(request: NextRequest) {
       }
     }
 
-    // F157.1 — inline-edit session tokens: already cms-session-shaped JWTs
-    // (minted by POST /api/inline-edit/token), carrying editSession/site/
-    // collection claims. Forward as-is, but ONLY for the exact GET/PATCH
-    // /api/cms/{collection}/{slug} (matching collection+site) + GET
-    // /api/auth/me allowlist — everything else 403s. This is the actual
-    // security boundary; the token's short TTL + collection-scope alone are
-    // not sufficient (see docs/features/F157-inline-editing.md).
+    // F157 — inline-edit session tokens: already cms-session-shaped JWTs
+    // (minted by GET /admin/inline-edit/connect), carrying editSession/site
+    // claims. Forward as-is, but ONLY for GET/PATCH /api/cms/{collection}/
+    // {slug} on the token's own site (any collection — site-wide, not
+    // per-document) + GET /api/auth/me allowlist — everything else 403s.
+    // This is the actual security boundary; the token's 30-day TTL + site-
+    // scope alone are not sufficient (see docs/features/F157-inline-editing.md).
     try {
       const { payload } = await jwtVerify(bearerToken, getJwtSecret());
       if (payload.editSession === true) {
         const tokenSite = typeof payload.site === "string" ? payload.site : "";
-        const tokenCollection = typeof payload.collection === "string" ? payload.collection : "";
         const requestSite = request.nextUrl.searchParams.get("site") ?? "";
-        if (!isAllowedForEditSession(pathname, request.method, requestSite, tokenSite, tokenCollection)) {
+        if (!isAllowedForEditSession(pathname, request.method, requestSite, tokenSite)) {
           return NextResponse.json(
-            { error: "Inline-edit session is scoped to GET/PATCH on its own site + collection" },
+            { error: "Inline-edit session is scoped to GET/PATCH on its own site" },
             { status: 403 },
           );
         }

@@ -172,6 +172,11 @@ export interface SiteConfig {
   geoOrganizationLogo: string;
   /** F98 Lighthouse — Google PageSpeed Insights API key */
   psiApiKey: string;
+  /** F157 — site-wide inline editing on the live site. When true, the
+   *  @broberg/cms-inline-edit client (if the site consumes it) offers a
+   *  "connect" prompt to authenticated editors and makes data-cms-field
+   *  elements click-to-edit across every page — no per-document step. */
+  inlineEditEnabled: boolean;
 }
 
 async function getConfigPath(): Promise<string> {
@@ -265,6 +270,7 @@ async function defaults(): Promise<SiteConfig> {
     geoOrganizationUrl: "",
     geoOrganizationLogo: "",
     psiApiKey: process.env.GOOGLE_PSI_API_KEY ?? "",
+    inlineEditEnabled: false,
   };
 }
 

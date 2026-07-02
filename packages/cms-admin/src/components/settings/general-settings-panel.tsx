@@ -449,6 +449,7 @@ function SiteSection() {
 	const [cfg, setCfg] = useState({
 		previewSiteUrl: "",
 		previewInIframe: false,
+		inlineEditEnabled: false,
 		trashRetentionDays: 30,
 		curationRetentionDays: 30,
 		schemaEditEnabled: false,
@@ -675,6 +676,18 @@ function SiteSection() {
 						description="Open preview inside the admin panel instead of a new browser tab."
 						checked={cfg.previewInIframe}
 						onChange={(v) => setCfg((c) => ({ ...c, previewInIframe: v }))}
+					/>
+				</Card>
+			</div>
+
+			<div>
+				<SectionHeading>Inline editing</SectionHeading>
+				<Card>
+					<Toggle
+						label="Enable inline editing site-wide"
+						description="Lets editors click text directly on the live site and save changes there — once connected, it works on every page, no per-document step. Requires the site to consume @broberg/cms-inline-edit."
+						checked={cfg.inlineEditEnabled}
+						onChange={(v) => setCfg((c) => ({ ...c, inlineEditEnabled: v }))}
 					/>
 				</Card>
 			</div>

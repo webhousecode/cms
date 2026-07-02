@@ -11,7 +11,7 @@ import {
   findPrimaryBodyField,
   computeReadingMinutes,
 } from "@/lib/ai/translation-helpers";
-import { Save, Globe, FileText, Trash2, ArrowLeft, Lock, LockOpen, Copy, Clock, History, Eye, Pencil, Languages, Sparkles, Settings2, Wand2, ChevronDown, ChevronRight, Loader2, Search as SearchIcon, Home as HomeIcon } from "lucide-react";
+import { Save, Globe, FileText, Trash2, ArrowLeft, Lock, LockOpen, Copy, Clock, History, Eye, Languages, Sparkles, Settings2, Wand2, ChevronDown, ChevronRight, Loader2, Search as SearchIcon, Home as HomeIcon } from "lucide-react";
 import Link from "next/link";
 import { ActionBar, ActionBarBreadcrumb } from "@/components/action-bar";
 import { formatDate, cn, previewPath } from "@/lib/utils";
@@ -1412,33 +1412,6 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
     }
   }
 
-  /** F157.2 — mint a scoped edit-session token, open the live page with it, always a real new tab (never the preview iframe). */
-  async function openLiveEdit() {
-    if (!PREVIEW_SITE_URL) {
-      toast.error("Redigér live kræver en Preview Site URL i Site Settings");
-      return;
-    }
-    const pagePath = buildPagePath();
-    if (pagePath === null) return;
-
-    try {
-      const res = await fetch("/api/inline-edit/token", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ collection }),
-      });
-      if (!res.ok) {
-        toast.error("Kunne ikke starte live-redigering");
-        return;
-      }
-      const { token } = (await res.json()) as { token: string };
-      const url = `${PREVIEW_SITE_URL}${pagePath}${pagePath.includes("?") ? "&" : "?"}cms_edit=${encodeURIComponent(token)}`;
-      window.open(url, "_blank", "noopener,noreferrer");
-    } catch {
-      toast.error("Kunne ikke starte live-redigering");
-    }
-  }
-
   async function cloneDoc() {
     setCloning(true);
     const res = await fetch(`/api/cms/${collection}/${doc.slug}`, {
@@ -1664,17 +1637,6 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
             </Button>
           )}
 
-          {colConfig.urlPrefix && !readOnly && (
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={openLiveEdit}
-              className="text-muted-foreground hover:text-foreground"
-              title="Redigér live"
-            >
-              <Pencil className="w-4 h-4" />
-            </Button>
-          )}
 
           {!readOnly && (
             <>
