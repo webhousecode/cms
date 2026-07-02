@@ -1,7 +1,9 @@
 /**
- * Browser entry — zero dependencies. Activates click-to-edit on any element
- * carrying data-cms-collection/data-cms-slug/data-cms-field (F129's attribute
- * convention), when a valid edit-session token is present.
+ * Browser entry — zero dependencies. Site-wide: activated once per browser
+ * via a "connect" link (see docs/features/F157-inline-editing.md), then
+ * every page load on the site automatically offers click-to-edit on any
+ * element carrying data-cms-collection/data-cms-slug/data-cms-field
+ * (F129's attribute convention) — no per-document step.
  */
 
 export interface InlineEditOptions {
@@ -9,10 +11,12 @@ export interface InlineEditOptions {
   cmsBaseUrl: string;
   /** Site id passed as ?site= on every CMS API call, e.g. "broberg-ai". */
   siteId: string;
-  /** URL query param carrying the short-lived edit-session token. Default "cms_edit". */
+  /** URL query param carrying a freshly-minted token from the connect redirect. Default "cms_edit". */
   tokenParam?: string;
-  /** sessionStorage key the token is persisted under across page loads. Default "wh-inline-edit-token". */
+  /** localStorage key the token is persisted under — survives across sessions/tabs. Default "wh-inline-edit-token". */
   storageKey?: string;
+  /** Label for the "not connected yet" prompt. Default "🔒 Log ind for at redigere". */
+  connectLabel?: string;
 }
 
 interface ResolvedOptions extends Required<InlineEditOptions> {}
@@ -21,33 +25,76 @@ function resolveOptions(options: InlineEditOptions): ResolvedOptions {
   return {
     tokenParam: "cms_edit",
     storageKey: "wh-inline-edit-token",
+    connectLabel: "🔒 Log ind for at redigere",
     ...options,
   };
 }
 
-export function initInlineEdit(options: InlineEditOptions): void {
+export async function initInlineEdit(options: InlineEditOptions): Promise<void> {
   if (typeof window === "undefined") return;
   const resolved = resolveOptions(options);
-  const token = bootstrapToken(resolved);
-  if (!token) return;
-  activateEditMode(token, resolved);
+
+  captureTokenFromUrl(resolved);
+
+  const enabled = await checkEnabled(resolved);
+  if (!enabled) return;
+
+  const token = localStorage.getItem(resolved.storageKey);
+  if (token && !isExpired(token)) {
+    activateEditMode(token, resolved);
+  } else {
+    if (token) localStorage.removeItem(resolved.storageKey);
+    showConnectPrompt(resolved);
+  }
 }
 
-function bootstrapToken(options: ResolvedOptions): string | null {
+/** Captures a token minted by /admin/inline-edit/connect, then strips it from the URL. */
+function captureTokenFromUrl(options: ResolvedOptions): void {
   const url = new URL(window.location.href);
   const urlToken = url.searchParams.get(options.tokenParam);
-  if (urlToken) {
-    sessionStorage.setItem(options.storageKey, urlToken);
-    url.searchParams.delete(options.tokenParam);
-    window.history.replaceState({}, "", url.toString());
-    return urlToken;
+  if (!urlToken) return;
+  localStorage.setItem(options.storageKey, urlToken);
+  url.searchParams.delete(options.tokenParam);
+  window.history.replaceState({}, "", url.toString());
+}
+
+async function checkEnabled(options: ResolvedOptions): Promise<boolean> {
+  try {
+    const res = await fetch(`${options.cmsBaseUrl}/api/inline-edit/status?site=${options.siteId}`);
+    if (!res.ok) return false;
+    const body = (await res.json()) as { enabled?: boolean };
+    return body.enabled === true;
+  } catch {
+    return false;
   }
-  return sessionStorage.getItem(options.storageKey);
+}
+
+function isExpired(token: string): boolean {
+  const claims = decodeJwtPayload(token);
+  const exp = typeof claims?.exp === "number" ? claims.exp : 0;
+  return exp <= Date.now() / 1000;
+}
+
+function showConnectPrompt(options: ResolvedOptions): void {
+  const returnUrl = window.location.href;
+  const connectUrl =
+    `${options.cmsBaseUrl}/admin/inline-edit/connect?site=${encodeURIComponent(options.siteId)}` +
+    `&return=${encodeURIComponent(returnUrl)}`;
+
+  const link = document.createElement("a");
+  link.href = connectUrl;
+  link.textContent = options.connectLabel;
+  link.setAttribute("data-cms-inline-edit-connect", "");
+  link.style.cssText =
+    "position:fixed;bottom:16px;left:16px;background:#1c2027;color:#fff;" +
+    "font:600 12px system-ui,sans-serif;padding:8px 14px;border-radius:999px;" +
+    "text-decoration:none;z-index:2147483647;box-shadow:0 4px 16px rgba(0,0,0,.3);";
+  document.body.appendChild(link);
 }
 
 function activateEditMode(token: string, options: ResolvedOptions): void {
   injectStyles();
-  showActiveBadge(token);
+  showActiveBadge(token, options);
 
   const fields = document.querySelectorAll<HTMLElement>("[data-cms-field]");
   fields.forEach((el) => wireField(el, token, options));
@@ -150,16 +197,33 @@ function showPill(el: HTMLElement, state: "saving" | "saved" | "error"): void {
   }
 }
 
-function showActiveBadge(token: string): void {
+function showActiveBadge(token: string, options: ResolvedOptions): void {
   const claims = decodeJwtPayload(token);
   const name = (claims?.name as string) || (claims?.email as string) || "ukendt";
+
   const badge = document.createElement("div");
   badge.setAttribute("data-cms-inline-edit-badge", "");
-  badge.textContent = `✏️ Redigerer som ${name}`;
   badge.style.cssText =
-    "position:fixed;bottom:16px;left:16px;background:#1c2027;color:#fff;" +
-    "font:600 12px system-ui,sans-serif;padding:8px 14px;border-radius:999px;" +
-    "z-index:2147483647;box-shadow:0 4px 16px rgba(0,0,0,.3);";
+    "position:fixed;bottom:16px;left:16px;display:flex;align-items:center;gap:8px;" +
+    "background:#1c2027;color:#fff;font:600 12px system-ui,sans-serif;padding:8px 14px;" +
+    "border-radius:999px;z-index:2147483647;box-shadow:0 4px 16px rgba(0,0,0,.3);";
+
+  const label = document.createElement("span");
+  label.textContent = `✏️ Redigerer som ${name}`;
+  badge.appendChild(label);
+
+  const disconnect = document.createElement("button");
+  disconnect.type = "button";
+  disconnect.textContent = "Afbryd";
+  disconnect.style.cssText =
+    "background:none;border:none;color:#8ab4ff;font:600 11px system-ui,sans-serif;" +
+    "cursor:pointer;padding:0;text-decoration:underline;";
+  disconnect.addEventListener("click", () => {
+    localStorage.removeItem(options.storageKey);
+    window.location.reload();
+  });
+  badge.appendChild(disconnect);
+
   document.body.appendChild(badge);
 }
 
