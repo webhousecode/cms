@@ -39,6 +39,12 @@ export interface SiteConfig {
   emailFrom: string;
   /** Display name for outgoing emails */
   emailFromName: string;
+  /** Accent color (hex) for the branded email shell — defaults to webhouse.app gold */
+  emailAccentColor: string;
+  /** Secondary gradient stop for the email accent bar */
+  emailAccentColor2: string;
+  /** Footer line under the email card, e.g. "Sent by broberg.ai" */
+  emailFooterName: string;
   /** Secret used to generate per-user calendar feed tokens */
   calendarSecret: string;
   /** Webhook URL for scheduled task notifications (Discord, Slack, etc.) */
@@ -196,6 +202,9 @@ async function defaults(): Promise<SiteConfig> {
     resendApiKey: "",
     emailFrom: "",
     emailFromName: "webhouse.app",
+    emailAccentColor: "#F7BB2E",
+    emailAccentColor2: "#f59e0b",
+    emailFooterName: "webhouse.app",
     calendarSecret: crypto.randomBytes(32).toString("hex"),
     schedulerWebhookUrl: "",
     schedulerNotifications: false,

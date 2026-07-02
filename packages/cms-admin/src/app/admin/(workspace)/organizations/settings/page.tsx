@@ -55,6 +55,9 @@ interface OrgCreds {
   resendApiKey: string;
   emailFrom: string;
   emailFromName: string;
+  emailAccentColor: string;
+  emailAccentColor2: string;
+  emailFooterName: string;
   // Automation
   backupSchedule: string;
   backupTime: string;
@@ -89,6 +92,9 @@ const CREDS_DEFAULTS: OrgCreds = {
   resendApiKey: "",
   emailFrom: "",
   emailFromName: "",
+  emailAccentColor: "",
+  emailAccentColor2: "",
+  emailFooterName: "",
   backupSchedule: "",
   backupTime: "",
   backupRetentionDays: 0,
@@ -155,6 +161,7 @@ export default function OrgSettingsPage() {
           aiInteractivesModel: s("aiInteractivesModel"), aiInteractivesMaxTokens: n("aiInteractivesMaxTokens"),
           aiChatModel: s("aiChatModel"), aiChatMaxTokens: n("aiChatMaxTokens"), aiChatMaxToolIterations: n("aiChatMaxToolIterations"),
           resendApiKey: s("resendApiKey"), emailFrom: s("emailFrom"), emailFromName: s("emailFromName"),
+          emailAccentColor: s("emailAccentColor"), emailAccentColor2: s("emailAccentColor2"), emailFooterName: s("emailFooterName"),
           backupSchedule: s("backupSchedule"), backupTime: s("backupTime"),
           backupRetentionDays: n("backupRetentionDays"),
           linkCheckSchedule: s("linkCheckSchedule"), linkCheckTime: s("linkCheckTime"),
@@ -507,6 +514,23 @@ export default function OrgSettingsPage() {
           <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
             <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Sender display name</label>
             <input data-testid="email-from-name" type="text" value={creds.emailFromName} onChange={(e) => setCreds((c) => ({ ...c, emailFromName: e.target.value }))}
+              placeholder="webhouse.app" style={{ ...credInputStyle, fontFamily: "inherit" }} />
+          </div>
+          <div style={{ display: "flex", gap: "1rem" }}>
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+              <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Accent color (hex)</label>
+              <input data-testid="email-accent-color" type="text" value={creds.emailAccentColor} onChange={(e) => setCreds((c) => ({ ...c, emailAccentColor: e.target.value }))}
+                placeholder="#F7BB2E" style={{ ...credInputStyle, fontFamily: "inherit" }} />
+            </div>
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+              <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Accent color 2 (hex)</label>
+              <input data-testid="email-accent-color-2" type="text" value={creds.emailAccentColor2} onChange={(e) => setCreds((c) => ({ ...c, emailAccentColor2: e.target.value }))}
+                placeholder="#f59e0b" style={{ ...credInputStyle, fontFamily: "inherit" }} />
+            </div>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: "0.3rem" }}>
+            <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Footer name ("Sent by …")</label>
+            <input data-testid="email-footer-name" type="text" value={creds.emailFooterName} onChange={(e) => setCreds((c) => ({ ...c, emailFooterName: e.target.value }))}
               placeholder="webhouse.app" style={{ ...credInputStyle, fontFamily: "inherit" }} />
           </div>
         </div>
