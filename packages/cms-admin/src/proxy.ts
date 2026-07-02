@@ -39,9 +39,11 @@ function stripActiveSiteCookies(cookieHeader: string): string {
 /**
  * F157 — positive allowlist for editSession-scoped bearer tokens: only
  * GET/PATCH under /api/cms/ for the token's own site (any collection —
- * site-wide, not per-document), plus GET /api/auth/me (used to bootstrap the
- * "Redigerer som X" badge). Everything else is denied — this is the actual
- * security boundary for inline editing.
+ * site-wide, not per-document), GET /api/auth/me (bootstraps the "Redigerer
+ * som X" badge), and POST /api/inline-edit/toggle (the on-site /admin panel
+ * flipping its own site's setting — the route itself still requires the
+ * token's role to be "admin"). Everything else is denied — this is the
+ * actual security boundary for inline editing.
  */
 function isAllowedForEditSession(
   pathname: string,
@@ -50,6 +52,7 @@ function isAllowedForEditSession(
   tokenSite: string,
 ): boolean {
   if (pathname === "/api/auth/me") return method === "GET";
+  if (pathname === "/api/inline-edit/toggle") return method === "POST" && requestSite === tokenSite;
   const match = pathname.match(/^\/api\/cms\/([^/]+)\/([^/]+)\/?$/);
   if (!match) return false;
   if (method !== "GET" && method !== "PATCH") return false;
@@ -239,11 +242,14 @@ export async function proxy(request: NextRequest) {
   // (e.g. F30 forms: honeypot + rate-limit, no login).
   if (isPublicPrefix) return forwardOk();
 
-  // F157.1: CORS preflight (OPTIONS) on /api/cms/{collection}/{slug} never
-  // carries credentials — the route's own OPTIONS handler answers with its
-  // CORS headers. GET/PATCH/etc. on the same path still hit the full auth
-  // gate below.
-  if (request.method === "OPTIONS" && /^\/api\/cms\/[^/]+\/[^/]+\/?$/.test(pathname)) {
+  // F157: CORS preflight (OPTIONS) on /api/cms/{collection}/{slug} or
+  // /api/inline-edit/toggle never carries credentials — the route's own
+  // OPTIONS handler answers with its CORS headers. The actual GET/POST/PATCH
+  // on the same path still hits the full auth gate below.
+  if (
+    request.method === "OPTIONS" &&
+    (/^\/api\/cms\/[^/]+\/[^/]+\/?$/.test(pathname) || pathname === "/api/inline-edit/toggle")
+  ) {
     return forwardOk();
   }
 
