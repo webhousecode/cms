@@ -167,6 +167,28 @@ function wireField(el: HTMLElement, token: string, options: ResolvedOptions): vo
   });
 }
 
+/**
+ * Sets a value at a dot-path into a plain-data tree, where a numeric segment
+ * indexes into an array (e.g. "slides.2.eyebrow" — flagship-style nested
+ * content; a flat "heroEyebrow" is still just a 1-segment path). Bails
+ * silently (no throw) if the path doesn't resolve — a stale/malformed path
+ * must never crash the save, just fail to apply.
+ */
+function setDeepField(data: Record<string, unknown>, path: string, value: string): void {
+  const parts = path.split(".");
+  let obj: any = data;
+  for (let i = 0; i < parts.length - 1; i++) {
+    const part = parts[i] ?? "";
+    const key: string | number = /^\d+$/.test(part) ? Number(part) : part;
+    if (obj == null || typeof obj !== "object" || obj[key] === undefined) return;
+    obj = obj[key];
+  }
+  const last = parts[parts.length - 1] ?? "";
+  const lastKey: string | number = /^\d+$/.test(last) ? Number(last) : last;
+  if (obj == null || typeof obj !== "object") return;
+  obj[lastKey] = value;
+}
+
 async function saveField(el: HTMLElement, token: string, options: ResolvedOptions): Promise<void> {
   const collection = el.dataset.cmsCollection;
   const slug = el.dataset.cmsSlug;
@@ -182,7 +204,14 @@ async function saveField(el: HTMLElement, token: string, options: ResolvedOption
     );
     if (!getRes.ok) throw new Error(`GET failed: ${getRes.status}`);
     const doc = (await getRes.json()) as { data?: Record<string, unknown> };
-    const mergedData = { ...doc.data, [field]: value };
+    // Deep-clone so mutating a nested array/object (dot-path saves) never
+    // aliases the fetched doc — same safety whether field is flat or nested.
+    const mergedData = JSON.parse(JSON.stringify(doc.data ?? {})) as Record<string, unknown>;
+    if (field.includes(".")) {
+      setDeepField(mergedData, field, value);
+    } else {
+      mergedData[field] = value;
+    }
 
     const patchRes = await fetch(
       `${options.cmsBaseUrl}/api/cms/${collection}/${slug}?site=${options.siteId}`,
