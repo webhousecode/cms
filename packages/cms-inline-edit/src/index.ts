@@ -133,11 +133,19 @@ function activateEditMode(token: string, options: ResolvedOptions): void {
 }
 
 function wireField(el: HTMLElement, token: string, options: ResolvedOptions): void {
-  // Rich fields (article bodies — data-cms-richtext="true") get the floating
-  // formatting toolbar + save-as-Markdown path; everything else stays a plain
-  // single-line contenteditable that saves textContent.
+  // Rich fields get the floating formatting toolbar. Two save modes:
+  //  - data-cms-richtext="true" → save as Markdown (article bodies; cms
+  //    `richtext` contract renders Markdown via marked).
+  //  - data-cms-html="true"     → save innerHTML VERBATIM (intentional-HTML
+  //    fields: headings/bios/hero with a branded <em class="o"> accent that
+  //    has no Markdown equivalent — converting would strip it).
+  // Everything else stays a plain single-line contenteditable saving textContent.
   if (el.dataset.cmsRichtext === "true") {
-    wireRichField(el, token, options);
+    wireRichField(el, token, options, "markdown");
+    return;
+  }
+  if (el.dataset.cmsHtml === "true") {
+    wireRichField(el, token, options, "html");
     return;
   }
 
@@ -182,43 +190,49 @@ function wireField(el: HTMLElement, token: string, options: ResolvedOptions): vo
  * Markdown (the cms `richtext` contract: fields store Markdown, not HTML) and
  * saved. Only ONE region is active at a time. */
 
+type RichMode = "markdown" | "html";
 interface RichContext {
   el: HTMLElement;
   token: string;
   options: ResolvedOptions;
   originalHtml: string;
+  mode: RichMode;
 }
 let richCtx: RichContext | null = null;
 let richToolbar: HTMLElement | null = null;
 
-function wireRichField(el: HTMLElement, token: string, options: ResolvedOptions): void {
+function wireRichField(el: HTMLElement, token: string, options: ResolvedOptions, mode: RichMode): void {
   el.addEventListener("click", (e) => {
     if (richCtx && richCtx.el === el) return; // already editing this region
     e.preventDefault();
     e.stopPropagation();
-    activateRich(el, token, options);
+    activateRich(el, token, options, mode);
   });
 }
 
-function activateRich(el: HTMLElement, token: string, options: ResolvedOptions): void {
+function activateRich(el: HTMLElement, token: string, options: ResolvedOptions, mode: RichMode): void {
   deactivateRich(); // commit any previously-active region first
-  richCtx = { el, token, options, originalHtml: el.innerHTML };
+  richCtx = { el, token, options, originalHtml: el.innerHTML, mode };
   el.setAttribute("contenteditable", "true");
   el.classList.add("cms-rich-editing");
   el.focus();
   showRichToolbar();
+  // Let the host page react (e.g. pause a rotating hero carousel while editing).
+  document.dispatchEvent(new CustomEvent("cms-inline-edit:activate", { detail: { el } }));
 }
 
 function deactivateRich(): void {
   if (!richCtx) return;
-  const { el, token, options, originalHtml } = richCtx;
+  const { el, token, options, originalHtml, mode } = richCtx;
   richCtx = null;
   el.removeAttribute("contenteditable");
   el.classList.remove("cms-rich-editing");
   hideRichToolbar();
   if (el.innerHTML !== originalHtml) {
-    void saveField(el, htmlToMarkdown(el.innerHTML), token, options);
+    const value = mode === "html" ? el.innerHTML : htmlToMarkdown(el.innerHTML);
+    void saveField(el, value, token, options);
   }
+  document.dispatchEvent(new CustomEvent("cms-inline-edit:deactivate", { detail: { el } }));
 }
 
 function showRichToolbar(): void {
