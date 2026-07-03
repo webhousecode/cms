@@ -48,7 +48,36 @@ export async function initInlineEdit(options: InlineEditOptions): Promise<void> 
     activateEditMode(token, resolved);
   } else {
     showConnectPrompt(resolved);
+    // F158 — the connect flow opens in a popup; it posts the freshly-minted
+    // token back to this tab. Arm the (origin-validated) receiver.
+    listenForTokenMessage(resolved);
   }
+}
+
+/**
+ * F158 — receive the edit token from the connect popup via postMessage.
+ * Hard origin check (message MUST come from cmsBaseUrl) + type + site + expiry
+ * guards before the token is trusted. On success: persist, swap the connect
+ * prompt for edit mode — no page reload.
+ */
+function listenForTokenMessage(options: ResolvedOptions): void {
+  let cmsOrigin: string;
+  try {
+    cmsOrigin = new URL(options.cmsBaseUrl).origin;
+  } catch {
+    return;
+  }
+  window.addEventListener("message", (event: MessageEvent) => {
+    if (event.origin !== cmsOrigin) return;
+    const data = event.data as { type?: string; token?: string; site?: string } | null;
+    if (!data || data.type !== "wh-inline-edit-token" || typeof data.token !== "string") return;
+    if (data.site && data.site !== options.siteId) return;
+    if (isExpired(data.token)) return;
+    if (document.querySelector("[data-cms-inline-edit-badge]")) return; // already active
+    localStorage.setItem(options.storageKey, data.token);
+    document.querySelector("[data-cms-inline-edit-connect]")?.remove();
+    activateEditMode(data.token, options);
+  });
 }
 
 /**
@@ -146,6 +175,18 @@ function showConnectPrompt(options: ResolvedOptions): void {
   const text = document.createElement("span");
   text.textContent = options.connectLabel;
   link.append(makeIcon(), text);
+  // F158 — open the connect flow in a popup so the CMS confirmation screen can
+  // say "close this window". A user-gesture window.open is not popup-blocked;
+  // if it is blocked anyway, fall back to the same-tab redirect (F157 path).
+  link.addEventListener("click", (e) => {
+    e.preventDefault();
+    const popup = window.open(
+      connectUrl,
+      "wh-inline-edit-connect",
+      "width=460,height=640,menubar=no,toolbar=no,location=yes,status=no",
+    );
+    if (!popup) window.location.href = connectUrl;
+  });
   document.body.appendChild(link);
 }
 
