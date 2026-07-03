@@ -15,9 +15,9 @@ export interface InlineEditOptions {
   tokenParam?: string;
   /** localStorage key the token is persisted under — survives across sessions/tabs. Default "wh-inline-edit-token". */
   storageKey?: string;
-  /** Label for the "not connected yet" prompt. Default "🔒 Log ind for at redigere". */
+  /** Text for the "not connected yet" prompt (a square-pen icon is prepended). Default "Log ind for at redigere". */
   connectLabel?: string;
-  /** Label for the "connected" badge. `{name}` is replaced with the editor's name. Default "✏️ Redigerer som {name}". */
+  /** Text for the "connected" badge (icon prepended). `{name}` is replaced with the editor's name. Default "Redigerer som {name}". */
   editingAsLabel?: string;
   /** Label for the disconnect button on the connected badge. Default "Afbryd". */
   disconnectLabel?: string;
@@ -29,8 +29,9 @@ function resolveOptions(options: InlineEditOptions): ResolvedOptions {
   return {
     tokenParam: "cms_edit",
     storageKey: "wh-inline-edit-token",
-    connectLabel: "🔒 Log ind for at redigere",
-    editingAsLabel: "✏️ Redigerer som {name}",
+    // No emoji in defaults — the square-pen SVG is the icon; some sites ban emoji.
+    connectLabel: "Log ind for at redigere",
+    editingAsLabel: "Redigerer som {name}",
     disconnectLabel: "Afbryd",
     ...options,
   };
@@ -116,17 +117,38 @@ function isExpired(token: string): boolean {
   return exp <= Date.now() / 1000;
 }
 
+// Lucide "square-pen" (https://lucide.dev/icons/square-pen), MIT. Inline SVG so
+// the pill needs no icon-font/runtime dep and inherits `currentColor`. Emoji are
+// deliberately avoided — some consumer sites ban them outright.
+const SQUARE_PEN_SVG =
+  '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" ' +
+  'fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" ' +
+  'stroke-linejoin="round" aria-hidden="true">' +
+  '<path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>' +
+  '<path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/>' +
+  "</svg>";
+
+function makeIcon(): HTMLSpanElement {
+  const icon = document.createElement("span");
+  icon.style.cssText = "display:inline-flex;line-height:0;flex:0 0 auto";
+  icon.innerHTML = SQUARE_PEN_SVG;
+  return icon;
+}
+
 function showConnectPrompt(options: ResolvedOptions): void {
   const connectUrl = buildConnectUrl(options, window.location.href);
 
   const link = document.createElement("a");
   link.href = connectUrl;
-  link.textContent = options.connectLabel;
   link.setAttribute("data-cms-inline-edit-connect", "");
   link.style.cssText =
     "position:fixed;bottom:16px;left:16px;background:#1c2027;color:#fff;" +
     "font:600 12px system-ui,sans-serif;padding:8px 14px;border-radius:999px;" +
-    "text-decoration:none;z-index:2147483647;box-shadow:0 4px 16px rgba(0,0,0,.3);";
+    "text-decoration:none;z-index:2147483647;box-shadow:0 4px 16px rgba(0,0,0,.3);" +
+    "display:inline-flex;align-items:center;gap:7px;";
+  const text = document.createElement("span");
+  text.textContent = options.connectLabel;
+  link.append(makeIcon(), text);
   document.body.appendChild(link);
 }
 
@@ -675,7 +697,10 @@ function showActiveBadge(token: string, options: ResolvedOptions): void {
     "border-radius:999px;z-index:2147483647;box-shadow:0 4px 16px rgba(0,0,0,.3);";
 
   const label = document.createElement("span");
-  label.textContent = options.editingAsLabel.replace("{name}", name);
+  label.style.cssText = "display:inline-flex;align-items:center;gap:7px";
+  const labelText = document.createElement("span");
+  labelText.textContent = options.editingAsLabel.replace("{name}", name);
+  label.append(makeIcon(), labelText);
   badge.appendChild(label);
 
   const disconnectBtn = document.createElement("button");
