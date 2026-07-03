@@ -4,6 +4,8 @@ import { requirePermission } from "@/lib/permissions";
 import { getActiveSiteEntry } from "@/lib/site-paths";
 import { getSessionWithSiteRole } from "@/lib/require-role";
 import { readSiteConfig } from "@/lib/site-config";
+import { loadRegistry } from "@/lib/site-registry";
+import { withSiteContext } from "@/lib/site-context";
 
 /**
  * F157/F158 (site-wide) — "Log ind for at redigere" connect flow.
@@ -58,41 +60,64 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: "site and return are required" }, { status: 400 });
   }
 
-  const denied = await requirePermission("content.edit");
-  if (denied) return denied;
-
-  const site = await getActiveSiteEntry();
-  if (!site || site.id !== siteId) {
-    return NextResponse.json({ error: "Active site does not match ?site=" }, { status: 400 });
+  // F158.1 — self-resolve ?site=. proxy.ts only injects the cms-active-site
+  // cookie for /api/* paths, not /admin/*, so without this the flow depended on
+  // the editor's active workspace already being the target site (→ 400). Look
+  // up the org that owns this site and run the whole handler under that site
+  // context, so requirePermission/getActiveSiteEntry/readSiteConfig all resolve
+  // to the TARGET site regardless of the caller's active workspace.
+  const registry = await loadRegistry();
+  let orgId: string | undefined;
+  for (const org of registry?.orgs ?? []) {
+    if (org.sites.some((s) => s.id === siteId)) {
+      orgId = org.id;
+      break;
+    }
+  }
+  if (!orgId) {
+    return NextResponse.json({ error: "site not found" }, { status: 404 });
   }
 
-  if (!(await isReturnAllowed(returnUrl))) {
-    return NextResponse.json({ error: "return origin not allowed" }, { status: 400 });
-  }
+  return withSiteContext({ orgId, siteId }, async () => {
+    // Permission is checked against the TARGET site (via the override) — a user
+    // without content.edit on this site gets 403, so self-resolving ?site= is
+    // not a privilege escalation.
+    const denied = await requirePermission("content.edit");
+    if (denied) return denied;
 
-  const session = await getSessionWithSiteRole();
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+    const site = await getActiveSiteEntry();
+    if (!site || site.id !== siteId) {
+      return NextResponse.json({ error: "site not found" }, { status: 404 });
+    }
 
-  const now = Math.floor(Date.now() / 1000);
-  const expires = now + TTL_SECONDS;
-  const token = await new SignJWT({
-    sub: session.userId,
-    email: session.email,
-    name: session.name,
-    role: session.siteRole ?? "editor",
-    editSession: true,
-    site: site.id,
-  })
-    .setProtectedHeader({ alg: "HS256" })
-    .setIssuedAt(now)
-    .setExpirationTime(expires)
-    .sign(getJwtSecret());
+    if (!(await isReturnAllowed(returnUrl))) {
+      return NextResponse.json({ error: "return origin not allowed" }, { status: 400 });
+    }
 
-  return new NextResponse(renderConnectWelcome({ token, returnUrl, site: site.id }), {
-    status: 200,
-    headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" },
+    const session = await getSessionWithSiteRole();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const now = Math.floor(Date.now() / 1000);
+    const expires = now + TTL_SECONDS;
+    const token = await new SignJWT({
+      sub: session.userId,
+      email: session.email,
+      name: session.name,
+      role: session.siteRole ?? "editor",
+      editSession: true,
+      site: site.id,
+    })
+      .setProtectedHeader({ alg: "HS256" })
+      .setIssuedAt(now)
+      .setExpirationTime(expires)
+      .sign(getJwtSecret());
+
+    return new NextResponse(renderConnectWelcome({ token, returnUrl, site: site.id }), {
+      status: 200,
+      headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" },
+    });
   });
 }
 
