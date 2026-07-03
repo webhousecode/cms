@@ -338,7 +338,11 @@ export async function proxy(request: NextRequest) {
       return new NextResponse(null, { status: 204 });
     }
     const loginUrl = new URL("/admin/login", request.url);
-    loginUrl.searchParams.set("from", pathname);
+    // Preserve the query string too — routes like /admin/inline-edit/connect
+    // carry required params (?site=&return=) that must survive the login
+    // round-trip, else they come back bare and 400. (login page redirects to
+    // the decoded `from` verbatim via window.location.href.)
+    loginUrl.searchParams.set("from", pathname + request.nextUrl.search);
     return NextResponse.redirect(loginUrl);
   }
 
