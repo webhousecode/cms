@@ -17,6 +17,10 @@ export interface InlineEditOptions {
   storageKey?: string;
   /** Label for the "not connected yet" prompt. Default "🔒 Log ind for at redigere". */
   connectLabel?: string;
+  /** Label for the "connected" badge. `{name}` is replaced with the editor's name. Default "✏️ Redigerer som {name}". */
+  editingAsLabel?: string;
+  /** Label for the disconnect button on the connected badge. Default "Afbryd". */
+  disconnectLabel?: string;
 }
 
 interface ResolvedOptions extends Required<InlineEditOptions> {}
@@ -26,6 +30,8 @@ function resolveOptions(options: InlineEditOptions): ResolvedOptions {
     tokenParam: "cms_edit",
     storageKey: "wh-inline-edit-token",
     connectLabel: "🔒 Log ind for at redigere",
+    editingAsLabel: "✏️ Redigerer som {name}",
+    disconnectLabel: "Afbryd",
     ...options,
   };
 }
@@ -669,12 +675,12 @@ function showActiveBadge(token: string, options: ResolvedOptions): void {
     "border-radius:999px;z-index:2147483647;box-shadow:0 4px 16px rgba(0,0,0,.3);";
 
   const label = document.createElement("span");
-  label.textContent = `✏️ Redigerer som ${name}`;
+  label.textContent = options.editingAsLabel.replace("{name}", name);
   badge.appendChild(label);
 
   const disconnectBtn = document.createElement("button");
   disconnectBtn.type = "button";
-  disconnectBtn.textContent = "Afbryd";
+  disconnectBtn.textContent = options.disconnectLabel;
   disconnectBtn.style.cssText =
     "background:none;border:none;color:#8ab4ff;font:600 11px system-ui,sans-serif;" +
     "cursor:pointer;padding:0;text-decoration:underline;";
