@@ -1,6 +1,6 @@
 {
   "name": "@webhouse/cms-shop",
-  "version": "0.4.6",
+  "version": "0.4.7",
   "description": "E-commerce module for @webhouse/cms — products, cart, Stripe checkout, shipping (GLS/DAO/PostNord/Bring), returns, discounts, AI product creation",
   "type": "module",
   "license": "MIT",
