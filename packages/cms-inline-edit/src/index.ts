@@ -17,9 +17,7 @@ export interface InlineEditOptions {
   storageKey?: string;
   /** Text for the "not connected yet" prompt (a square-pen icon is prepended). Default "Log ind for at redigere". */
   connectLabel?: string;
-  /** Text for the "connected" badge (icon prepended). `{name}` is replaced with the editor's name. Default "Redigerer som {name}". */
-  editingAsLabel?: string;
-  /** Label for the disconnect button on the connected badge. Default "Afbryd". */
+  /** Text for the "connected" badge — the whole pill is the exit-edit action (icon prepended). Default "Afbryd". */
   disconnectLabel?: string;
 }
 
@@ -31,7 +29,6 @@ function resolveOptions(options: InlineEditOptions): ResolvedOptions {
     storageKey: "wh-inline-edit-token",
     // No emoji in defaults — the square-pen SVG is the icon; some sites ban emoji.
     connectLabel: "Log ind for at redigere",
-    editingAsLabel: "Redigerer som {name}",
     disconnectLabel: "Afbryd",
     ...options,
   };
@@ -154,7 +151,7 @@ function showConnectPrompt(options: ResolvedOptions): void {
 
 function activateEditMode(token: string, options: ResolvedOptions): void {
   injectStyles();
-  showActiveBadge(token, options);
+  showActiveBadge(options);
 
   const fields = document.querySelectorAll<HTMLElement>("[data-cms-field]");
   fields.forEach((el) => wireField(el, token, options));
@@ -685,40 +682,26 @@ function showPill(el: HTMLElement, state: "saving" | "saved" | "error"): void {
   }
 }
 
-function showActiveBadge(token: string, options: ResolvedOptions): void {
-  const claims = decodeJwtPayload(token);
-  const name = (claims?.name as string) || (claims?.email as string) || "ukendt";
-
-  const badge = document.createElement("div");
+function showActiveBadge(options: ResolvedOptions): void {
+  // The connected badge IS the exit-edit action: [icon] "Afslut redigering".
+  // No "Redigerer som {name}" — the whole pill is one click to leave edit mode.
+  const badge = document.createElement("button");
+  badge.type = "button";
   badge.setAttribute("data-cms-inline-edit-badge", "");
   badge.style.cssText =
-    "position:fixed;bottom:16px;left:16px;display:flex;align-items:center;gap:8px;" +
+    "position:fixed;bottom:16px;left:16px;display:inline-flex;align-items:center;gap:7px;" +
     "background:#1c2027;color:#fff;font:600 12px system-ui,sans-serif;padding:8px 14px;" +
-    "border-radius:999px;z-index:2147483647;box-shadow:0 4px 16px rgba(0,0,0,.3);";
-
-  const label = document.createElement("span");
-  label.style.cssText = "display:inline-flex;align-items:center;gap:7px";
-  const labelText = document.createElement("span");
-  labelText.textContent = options.editingAsLabel.replace("{name}", name);
-  label.append(makeIcon(), labelText);
-  badge.appendChild(label);
-
-  const disconnectBtn = document.createElement("button");
-  disconnectBtn.type = "button";
-  disconnectBtn.textContent = options.disconnectLabel;
-  // Match the connect label's font (white 600 12px, no underline) so the
-  // "exit edit mode" action reads like the "Rediger" prompt, not a blue link.
-  disconnectBtn.style.cssText =
-    "background:none;border:none;color:#fff;font:600 12px system-ui,sans-serif;" +
-    "cursor:pointer;padding:0;opacity:.75;transition:opacity .15s;";
-  disconnectBtn.addEventListener("mouseenter", () => (disconnectBtn.style.opacity = "1"));
-  disconnectBtn.addEventListener("mouseleave", () => (disconnectBtn.style.opacity = ".75"));
-  disconnectBtn.addEventListener("click", () => {
+    "border-radius:999px;z-index:2147483647;box-shadow:0 4px 16px rgba(0,0,0,.3);" +
+    "border:none;cursor:pointer;opacity:.9;transition:opacity .15s;";
+  const text = document.createElement("span");
+  text.textContent = options.disconnectLabel;
+  badge.append(makeIcon(), text);
+  badge.addEventListener("mouseenter", () => (badge.style.opacity = "1"));
+  badge.addEventListener("mouseleave", () => (badge.style.opacity = ".9"));
+  badge.addEventListener("click", () => {
     disconnect(options);
     window.location.reload();
   });
-  badge.appendChild(disconnectBtn);
-
   document.body.appendChild(badge);
 }
 
