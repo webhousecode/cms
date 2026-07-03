@@ -706,9 +706,13 @@ function showActiveBadge(token: string, options: ResolvedOptions): void {
   const disconnectBtn = document.createElement("button");
   disconnectBtn.type = "button";
   disconnectBtn.textContent = options.disconnectLabel;
+  // Match the connect label's font (white 600 12px, no underline) so the
+  // "exit edit mode" action reads like the "Rediger" prompt, not a blue link.
   disconnectBtn.style.cssText =
-    "background:none;border:none;color:#8ab4ff;font:600 11px system-ui,sans-serif;" +
-    "cursor:pointer;padding:0;text-decoration:underline;";
+    "background:none;border:none;color:#fff;font:600 12px system-ui,sans-serif;" +
+    "cursor:pointer;padding:0;opacity:.75;transition:opacity .15s;";
+  disconnectBtn.addEventListener("mouseenter", () => (disconnectBtn.style.opacity = "1"));
+  disconnectBtn.addEventListener("mouseleave", () => (disconnectBtn.style.opacity = ".75"));
   disconnectBtn.addEventListener("click", () => {
     disconnect(options);
     window.location.reload();
