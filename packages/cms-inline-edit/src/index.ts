@@ -6,6 +6,25 @@
  * (F129's attribute convention) — no per-document step.
  */
 
+/**
+ * Labels for the in-editor UI — the rich-text toolbar (bold/italic/underline
+ * tooltips, the visible "colour" + "done" buttons, the emoji tooltip) and the
+ * save-status pill. Every field is optional; unset fields keep the Danish
+ * default. Pass an English (or any-locale) set on a non-Danish site so the
+ * toolbar and status text match the page language.
+ */
+export interface InlineEditLabels {
+  bold?: string;
+  italic?: string;
+  underline?: string;
+  color?: string;
+  emoji?: string;
+  done?: string;
+  saving?: string;
+  saved?: string;
+  error?: string;
+}
+
 export interface InlineEditOptions {
   /** Base URL of the CMS API, e.g. "https://webhouse.app". */
   cmsBaseUrl: string;
@@ -19,9 +38,30 @@ export interface InlineEditOptions {
   connectLabel?: string;
   /** Text for the "connected" badge — the whole pill is the exit-edit action (icon prepended). Default "Afbryd". */
   disconnectLabel?: string;
+  /** Localised labels for the toolbar + save-status pill. Defaults are Danish. */
+  labels?: InlineEditLabels;
 }
 
-interface ResolvedOptions extends Required<InlineEditOptions> {}
+interface ResolvedOptions extends Required<Omit<InlineEditOptions, "labels">> {
+  labels: Required<InlineEditLabels>;
+}
+
+const DEFAULT_LABELS: Required<InlineEditLabels> = {
+  bold: "Fed",
+  italic: "Kursiv",
+  underline: "Understreget",
+  color: "Farve",
+  emoji: "Indsæt emoji",
+  done: "Færdig",
+  saving: "Gemmer…",
+  saved: "Gemt ✓",
+  error: "Fejl — prøv igen",
+};
+
+// Set once from resolved options in initInlineEdit(); read by the (singleton)
+// toolbar and the save-status pill so their signatures stay unchanged. One edit
+// session per page → a single module-level value is safe.
+let uiLabels: Required<InlineEditLabels> = DEFAULT_LABELS;
 
 function resolveOptions(options: InlineEditOptions): ResolvedOptions {
   return {
@@ -31,12 +71,14 @@ function resolveOptions(options: InlineEditOptions): ResolvedOptions {
     connectLabel: "Log ind for at redigere",
     disconnectLabel: "Afbryd",
     ...options,
+    labels: { ...DEFAULT_LABELS, ...(options.labels ?? {}) },
   };
 }
 
 export async function initInlineEdit(options: InlineEditOptions): Promise<void> {
   if (typeof window === "undefined") return;
   const resolved = resolveOptions(options);
+  uiLabels = resolved.labels;
 
   captureTokenFromUrl(resolved);
 
@@ -340,9 +382,9 @@ function buildRichToolbar(): HTMLElement {
     "z-index:2147483647;box-shadow:0 8px 32px rgba(0,0,0,.5);" +
     "font-family:system-ui,sans-serif;";
 
-  t.appendChild(toolbarButton("<b>B</b>", "Fed", () => document.execCommand("bold")));
-  t.appendChild(toolbarButton("<i>I</i>", "Kursiv", () => document.execCommand("italic")));
-  t.appendChild(toolbarButton("<u>U</u>", "Understreget", () => document.execCommand("underline")));
+  t.appendChild(toolbarButton("<b>B</b>", uiLabels.bold, () => document.execCommand("bold")));
+  t.appendChild(toolbarButton("<i>I</i>", uiLabels.italic, () => document.execCommand("italic")));
+  t.appendChild(toolbarButton("<u>U</u>", uiLabels.underline, () => document.execCommand("underline")));
 
   const sep = () => {
     const s = document.createElement("div");
@@ -354,7 +396,7 @@ function buildRichToolbar(): HTMLElement {
   // Text color — execCommand foreColor applies to the current selection.
   const clrLabel = document.createElement("label");
   clrLabel.style.cssText = "display:flex;align-items:center;gap:5px;color:#9aa4b2;font-size:12px;cursor:pointer;";
-  clrLabel.textContent = "Farve";
+  clrLabel.textContent = uiLabels.color;
   const clr = document.createElement("input");
   clr.type = "color";
   clr.style.cssText = "width:28px;height:24px;border:1px solid #3a3f4a;border-radius:5px;cursor:pointer;padding:1px;background:none;";
@@ -365,7 +407,7 @@ function buildRichToolbar(): HTMLElement {
 
   t.appendChild(sep());
 
-  const emojiBtn = toolbarButton("😀", "Indsæt emoji", () => toggleEmojiPicker(emojiBtn));
+  const emojiBtn = toolbarButton("😀", uiLabels.emoji, () => toggleEmojiPicker(emojiBtn));
   emojiBtn.style.fontSize = "16px";
   t.appendChild(emojiBtn);
 
@@ -373,7 +415,7 @@ function buildRichToolbar(): HTMLElement {
 
   const done = document.createElement("button");
   done.type = "button";
-  done.textContent = "Færdig";
+  done.textContent = uiLabels.done;
   done.style.cssText =
     "background:#00b2ff;border:none;color:#04121c;padding:0 14px;height:30px;" +
     "border-radius:6px;cursor:pointer;font-size:12px;font-weight:700;";
@@ -705,11 +747,11 @@ function showPill(el: HTMLElement, state: "saving" | "saved" | "error"): void {
     `box-shadow:0 2px 8px rgba(0,0,0,.25);`;
 
   if (state === "saving") {
-    pill.textContent = "Gemmer…";
+    pill.textContent = uiLabels.saving;
     pill.style.background = "#1c2027";
     pill.style.color = "#fff";
   } else if (state === "saved") {
-    pill.textContent = "Gemt ✓";
+    pill.textContent = uiLabels.saved;
     pill.style.background = "#16a34a";
     pill.style.color = "#fff";
     setTimeout(() => {
@@ -717,7 +759,7 @@ function showPill(el: HTMLElement, state: "saving" | "saved" | "error"): void {
       pills.delete(el);
     }, 1500);
   } else {
-    pill.textContent = "Fejl — prøv igen";
+    pill.textContent = uiLabels.error;
     pill.style.background = "#dc2626";
     pill.style.color = "#fff";
   }
