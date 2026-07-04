@@ -81,3 +81,27 @@ the consumer site's brand — because you logged into the CMS, not the site.
 Package bump + npm publish → cms-admin connect-route deploy (webhouse-app) →
 broberg dep bump + deploy. Existing `?cms_edit=` capture stays working the whole
 time (replace-then-prove, never a naked cutover).
+
+## F158.2 — Confirmation only after a real login (not every connect)
+
+**Problem (reported 2026-07-04):** the confirmation popup showed on *every*
+"Rediger" click and sat there waiting for a manual "Luk vindue" — even when the
+editor was already logged into webhouse.app and no login had happened. Christian:
+*"den skal jo kun komme hvis jeg IKKE er logget ind og efter et login."*
+
+**Fix (server-only, `connect/route.ts`):** gate the screen on a *fresh*
+`cms-session` cookie. The cookie's `iat` is set only at login (and profile
+update) — there is no sliding per-request refresh — so `now - iat ≤ 120s` means
+"a login just happened in this flow". The route passes `freshLogin` into the
+rendered page:
+
+- **Already logged in** (`freshLogin=false`) → the popup `postMessage`s the token
+  and **auto-closes silently**; the site tab already shows the "Afslut redigering"
+  pill, so there is nothing to confirm.
+- **Fresh login** (`freshLogin=true`) → the "Du er logget ind" screen shows
+  briefly, then **auto-closes** (no manual "Luk vindue" step).
+- **Same-tab fallback** (no opener) → unchanged "Tilbage til dit website →".
+
+No package bump (the `@broberg/cms-inline-edit` runtime is untouched). Verified
+in prod (webhouse-app): no cookie → 307 login; fresh `iat` → `freshLogin:true`;
+old `iat` → `freshLogin:false`, silent-close branch present.
