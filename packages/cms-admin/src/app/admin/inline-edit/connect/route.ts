@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import { SignJWT } from "jose";
 import { requirePermission } from "@/lib/permissions";
 import { getActiveSiteEntry } from "@/lib/site-paths";
 import { getSessionWithSiteRole } from "@/lib/require-role";
+import { getSessionUser } from "@/lib/auth";
 import { readSiteConfig } from "@/lib/site-config";
 import { loadRegistry } from "@/lib/site-registry";
 import { withSiteContext } from "@/lib/site-context";
@@ -16,15 +18,26 @@ import { withSiteContext } from "@/lib/site-context";
  *   lands back here after signing in (Next.js `from` param round-trip).
  * - Gated by `content.edit` on the given site.
  * - Mints a 30-day, site-scoped (not per-document) editSession token, then
- *   (F158) serves a webhouse-CMS-branded confirmation screen instead of a
- *   silent redirect. Opened as a popup (window.opener present) it posts the
- *   token to the site tab via origin-validated postMessage and invites the
- *   editor to close the window. Opened same-tab (no opener, e.g. popup
+ *   (F158) serves a webhouse-CMS-branded page. Opened as a popup (window.opener
+ *   present) it posts the token to the site tab via origin-validated
+ *   postMessage. (F158.2) The "Du er logget ind" confirmation is a login
+ *   acknowledgement, not a per-connect nag: it only lingers when a login just
+ *   happened in this flow (fresh cms-session cookie). If the editor was already
+ *   logged in, the popup delivers the token and closes silently — the site tab
+ *   already shows the connected pill. Opened same-tab (no opener, e.g. popup
  *   blocked) it links back to the site with `?cms_edit=<token>` — the F157
  *   capture path — so nothing regresses.
  */
 
 const TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
+
+// F158.2 — the webhouse-CMS confirmation screen ("Du er logget ind") is a
+// login acknowledgement, not a per-connect nag. We only show it when a login
+// actually happened in THIS flow. Signal: a freshly-minted cms-session cookie.
+// The cookie's `iat` is only set at login (and profile update) — there is no
+// sliding per-request refresh — so `now - iat` under this window means "just
+// logged in". A generous window covers a slow login (typing + optional TOTP).
+const FRESH_LOGIN_WINDOW_SECONDS = 120;
 
 function getJwtSecret(): Uint8Array {
   return new TextEncoder().encode(
@@ -100,6 +113,15 @@ export async function GET(request: NextRequest) {
     }
 
     const now = Math.floor(Date.now() / 1000);
+
+    // Did a login just happen in this flow? If the editor already had a valid
+    // webhouse.app session (no login round-trip), connect silently instead of
+    // showing the confirmation screen every time. `iat` comes off the raw
+    // session cookie (getSessionWithSiteRole strips it).
+    const rawSession = await getSessionUser(await cookies());
+    const iat = (rawSession as { iat?: number } | null)?.iat ?? 0;
+    const freshLogin = iat > 0 && now - iat <= FRESH_LOGIN_WINDOW_SECONDS;
+
     const expires = now + TTL_SECONDS;
     const token = await new SignJWT({
       sub: session.userId,
@@ -114,7 +136,7 @@ export async function GET(request: NextRequest) {
       .setExpirationTime(expires)
       .sign(getJwtSecret());
 
-    return new NextResponse(renderConnectWelcome({ token, returnUrl, site: site.id }), {
+    return new NextResponse(renderConnectWelcome({ token, returnUrl, site: site.id, freshLogin }), {
       status: 200,
       headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" },
     });
@@ -126,7 +148,7 @@ function jsSafe(value: unknown): string {
   return JSON.stringify(value).replace(/</g, "\\u003c");
 }
 
-function renderConnectWelcome(data: { token: string; returnUrl: string; site: string }): string {
+function renderConnectWelcome(data: { token: string; returnUrl: string; site: string; freshLogin: boolean }): string {
   return `<!doctype html>
 <html lang="da">
 <head>
@@ -207,18 +229,38 @@ function renderConnectWelcome(data: { token: string; returnUrl: string; site: st
   var opener = null;
   try { opener = window.opener; } catch (e) {}
   var hasOpener = !!opener && !!returnOrigin;
-  if (hasOpener) {
-    try { opener.postMessage({ type: "wh-inline-edit-token", token: DATA.token, site: DATA.site }, returnOrigin); } catch (e) {}
-  }
+
   var btn = document.getElementById("wh-return-btn");
   var label = document.getElementById("wh-btn-label");
   var arrow = document.getElementById("wh-btn-arrow");
   var note = document.getElementById("wh-close-note");
-  if (hasOpener) {
+  var card = document.querySelector(".card");
+
+  function armManualClose() {
+    if (card) card.style.display = "";
     label.textContent = "Luk vindue";
     if (arrow) arrow.style.display = "none";
     btn.setAttribute("href", "#");
     btn.addEventListener("click", function (e) { e.preventDefault(); window.close(); });
+  }
+
+  if (hasOpener) {
+    // The site tab needs the token either way — deliver it first.
+    try { opener.postMessage({ type: "wh-inline-edit-token", token: DATA.token, site: DATA.site }, returnOrigin); } catch (e) {}
+
+    if (!DATA.freshLogin) {
+      // Already logged in — no login just happened. The site tab now shows the
+      // connected pill, so this popup has nothing to confirm. Close silently.
+      if (card) card.style.display = "none";
+      setTimeout(function () { window.close(); }, 80);
+      // If the browser refused to close the window (edge), reveal a manual close.
+      setTimeout(function () { armManualClose(); }, 500);
+      return;
+    }
+
+    // Fresh login — acknowledge it briefly, then auto-close (no manual step).
+    armManualClose();
+    setTimeout(function () { window.close(); }, 2200);
   } else {
     // Same-tab fallback: carry the token back via the F157 capture URL.
     if (note) note.style.display = "none";
