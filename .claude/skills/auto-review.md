@@ -64,7 +64,10 @@ For each card (`cardmem_list_cards({column:"review"})`, or the one you were give
    **`plan_doc.present`** (F115): if `false` on an epic/story, note "⚠ missing plan-doc"
    in the review summary and tell the human — this is a **soft, non-blocking** signal
    (it does NOT feed `ready_for_done`, so don't record a blocking flag for it; the board
-   already shows the epic RED). Then branch:
+   already shows the epic RED). It also returns **`reuse_section.present`** (F217.3): if
+   `false` while `plan_doc.present` is `true` (a plan-doc that skipped its Discovery reuse
+   check), note "⚠ no ## Reuse section" — same **soft, non-blocking** posture (never gates
+   `ready_for_done`; don't record a blocking flag). Then branch:
 
    - **`ready_for_done === true`** → `cardmem_review_report({card_id_or_slug})` to attach
      the evidence bundle, then move the card to **Done** (`cardmem_move_card` /

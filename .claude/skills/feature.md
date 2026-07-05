@@ -66,6 +66,18 @@ Before writing, **read this repo's `CLAUDE.md` — specifically its `## Project 
 
 > If the repo's `CLAUDE.md` is missing the `## Project layout` section, STOP. The skill cannot scope work without it. Either add the section first (see cardmem's own CLAUDE.md as the reference impl: a markdown table with `Area | Path | Notes` columns), or fall back to inspecting the file tree directly and propose the section as part of the plan-doc.
 
+## Step 3.5: Discovery reuse check — reuse before you build
+
+> Canonical per **F217**. The fleet's shared `@broberg/*` inventory is the source of truth — a hand-rolled copy of a capability it already covers is drift. Do this **BEFORE** writing the plan, so the plan reflects reuse decisions instead of re-discovering them at code-time.
+
+For every cross-cutting capability the feature needs (mail, auth/session, web-push, LLM/AI, storage, telemetry, cron, design tokens, secret-redaction, fleet comms, browser automation, …):
+
+1. **Search Discovery** (no auth on reads): `GET https://discovery.broberg.ai/api/search?q=<capability>` — spans components + `@broberg/*` packages + infra best-practices. Skim `GET https://discovery.broberg.ai/api/packages` for the full roster if unsure what exists.
+2. **Decide reuse-vs-build** per capability: a matching package → consume it (exact-pin prod deps); no match → build it (and tell `components` so it lands for everyone).
+3. **Record the outcome in the plan-doc's `## Reuse` section** (in the template below) — one line per capability: the package to reuse, or an explicit "no match — build".
+
+The session-start `discovery_reuse` block (F217.1) already hands you THIS repo's *gap* (shipped packages it hasn't adopted); this step is the per-feature version at plan-time. If Discovery is unreachable, note that in `## Reuse` and proceed — the check is required, but a network outage never blocks a plan.
+
 ## Step 4: Write the plan-doc
 
 Create `docs/features/F<nn>-<slug>.md` with this **mandatory** structure. Every section must be present — write "None" / "Not applicable" if a section has no content.
@@ -83,6 +95,9 @@ Create `docs/features/F<nn>-<slug>.md` with this **mandatory** structure. Every 
 
 ## Solution
 <High-level approach, 2-3 sentences>
+
+## Reuse
+<Per F217 — the result of the Discovery reuse check (Step 3.5). One line per cross-cutting capability: the `@broberg/*` package to reuse (with version), OR an explicit "no match in Discovery — build (and notify components)". Write "None — no cross-cutting capabilities" only when the feature is genuinely repo-local.>
 
 ## Scope
 
@@ -134,6 +149,7 @@ The plan must be specific: real file paths drawn from the repo's `## Project lay
 3. **Acceptance criteria must be measurable.** Not "it works" — "MCP tool returns in <200ms", "Playwright suite passes".
 4. **Stories must be shippable in isolation.** Each story should produce a green commit + a board move from Backlog → Review.
 5. **Open Questions must be honest.** If "Electron vs Tauri" is undecided, write it. "I'll decide later" is not a plan.
+6. **`## Reuse` is mandatory (F217).** Run the Discovery reuse check (Step 3.5) and record the reuse-vs-build decision per capability. A plan-doc with no `## Reuse` section trips the F217.3 advisory. Write "None — no cross-cutting capabilities" only when the feature is genuinely repo-local.
 
 ## Step 5: Create the board entries via MCP
 

@@ -148,7 +148,7 @@ The server rejects a story carrying a top-level (dotless) F-number — stories n
 
 No F-docs yet, but a real spec. Read it fully, then for each logical epic:
 
-1. Use the local `feature` skill to author the epic's plan-doc.
+1. Use the local `feature` skill to author the epic's plan-doc — this includes the **Discovery reuse check** (feature Step 3.5, F217): before writing each epic's plan, `GET https://discovery.broberg.ai/api/search?q=<capability>` for every cross-cutting capability and record reuse-vs-build in the plan-doc's `## Reuse` section. Matching a new repo's plan against the shared `@broberg/*` inventory — instead of re-rolling a capability that already exists — is a core aim of adoption.
 2. `cardmem_create_card({ kind: 'epic', plan_md: <plan-doc> })` so the file lands at `docs/features/F<n>-<slug>.md` **and** in the Reader.
 3. **Decompose it into stories** — same as 6b step 4: stories with `parent_card_id`, AC, dependencies, each a small pick-up-able prompt. An epic with no stories is a rule violation.
 4. Everything starts in **Backlog** (nothing shipped yet — fresh planning).
@@ -200,5 +200,6 @@ Once `init_completed_at` is set, this skill stops being forced — the repo is f
 - **One F-doc / one epic per turn** for active adoption — keep context fresh. (Full-history bulk adoption may swarm, but **Haiku-only**.)
 - **Load every plan into the DB/Reader**, not just onto disk — a file-only plan is invisible to cardmem.
 - **No stories = no work.** Every adopted epic must end with workable, pick-up-able stories — that's what queue-drain runs on.
+- **Reuse before you build (F217).** Before authoring any epic plan-doc, run the Discovery reuse check (feature skill Step 3.5): search `discovery.broberg.ai/api/search` per cross-cutting capability and record the reuse-vs-build decision in the plan-doc's `## Reuse` section. The session-start `discovery_reuse` block also lists this repo's gap. Reuse a `@broberg/*` package over a hand-rolled copy.
 - **When status, scope, or dependencies are ambiguous, ask the user.** Never guess "Done".
 - **Stay in scope.** Your job is adoption. Don't drift into editing `CLAUDE.md`, refactoring, or other "while I'm here" work — that's how the previous attempt failed.

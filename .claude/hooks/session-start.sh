@@ -156,6 +156,16 @@ if [[ "$tmpl_outdated" == "true" ]]; then
   printf '  ⚠ Templates outdated vs canonical v%s — run the cardmem audit / Update templates.\n' "$cur"
 fi
 
+# F217.1 — reuse-first: this repo's Discovery gap (shipped @broberg/* packages
+# not yet adopted). reuse > re-roll — surfaced so a session matches its work
+# against the shared inventory before building. Silent when empty or unavailable.
+reuse_gap=$(printf '%s' "$result" | jq '(.discovery_reuse.gap // []) | length')
+if [[ "$reuse_gap" =~ ^[0-9]+$ && "$reuse_gap" -gt 0 ]]; then
+  printf '  ♻ Reuse-first (F217): %s shared @broberg/* package(s) this repo has NOT adopted — check before you build:\n' "$reuse_gap"
+  printf '%s' "$result" | jq -r \
+    '.discovery_reuse.gap[] | if type=="string" then "    - " + . else "    - " + (.pkg // .name // .package // (.|tostring)) + (if .version then " (" + (.version|tostring) + ")" else "" end) end' 2>/dev/null | head -12
+fi
+
 printf '\n  Tools available via projects MCP. /board /pickup /handoff for shortcuts.\n'
 printf '</projects:state>\n'
 
