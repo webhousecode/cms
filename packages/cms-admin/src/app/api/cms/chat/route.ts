@@ -11,16 +11,9 @@ import { readSiteConfig } from "@/lib/site-config";
 import { resolvePermissions } from "@/lib/permissions-shared";
 import type { UserRole } from "@/lib/auth";
 import { getModel } from "@/lib/ai/model-resolver";
+import { resolveChatModel } from "@/lib/chat/resolve-chat-model";
 
 export const maxDuration = 300;
-
-const ALLOWED_MODELS = [
-  "claude-haiku-4-5-20251001",
-  "claude-sonnet-4-20250514",
-  "claude-sonnet-4-6",
-  "claude-opus-4-20250514",
-  "claude-opus-4-6",
-] as const;
 
 interface ChatRequestMessage {
   role: "user" | "assistant";
@@ -105,12 +98,15 @@ export async function POST(request: NextRequest) {
   const chatMaxTokens = Math.min(siteConfig.aiChatMaxTokens || 16384, 32768);
   const chatMaxIterations = Math.min(siteConfig.aiChatMaxToolIterations || 25, 50);
 
-  // Resolve model: request param → site config → code default
-  const defaultModel = siteConfig.aiChatModel || await getModel("code");
-  const resolvedModel =
-    requestedModel && ALLOWED_MODELS.includes(requestedModel as any)
-      ? requestedModel
-      : defaultModel;
+  // Resolve model: request param → site config → code default. The chat is
+  // pinned to the Mistral (EU/GDPR) provider, so resolveChatModel guards against
+  // a non-Mistral id (e.g. a stale "claude-…" aiChatModel) reaching Mistral and
+  // 400-ing — it falls back to the code-tier Mistral model in that case.
+  const resolvedModel = resolveChatModel(
+    requestedModel,
+    siteConfig.aiChatModel,
+    await getModel("code"),
+  );
 
   // SSE stream
   const encoder = new TextEncoder();
