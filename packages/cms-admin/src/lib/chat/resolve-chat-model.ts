@@ -10,8 +10,14 @@
  *
  * This resolver is the guard: whatever id we land on, if it isn't a Mistral
  * model we fall back to the code-tier Mistral model (`codeModel`, which the
- * caller passes as `getModel("code")` = `mistral-large-latest`).
+ * caller passes as `getModel("code")`). And because that fallback is ALSO
+ * site-config-driven (`aiCodeModel`) and can be poisoned with a Claude id on
+ * the same sites, we finally guarantee a Mistral id via the canonical
+ * `DEFAULTS.code` constant — so the chat can never send a non-Mistral model to
+ * Mistral no matter how the config drifted.
  */
+
+import { DEFAULTS } from "../ai/model-defaults";
 
 /** Models a chat request may explicitly ask for via the `model` param. */
 export const CHAT_REQUESTABLE_MODELS = [
@@ -38,7 +44,10 @@ export function resolveChatModel(
     requestedModel && (CHAT_REQUESTABLE_MODELS as readonly string[]).includes(requestedModel)
       ? requestedModel
       : siteModel || codeModel;
-  // Guard: the chat can only talk to Mistral. Anything non-Mistral (esp. a
-  // stale Claude aiChatModel) falls back to the code-tier Mistral model.
-  return isMistralModel(candidate) ? candidate : codeModel;
+  // Guard: the chat can only talk to Mistral. Prefer the candidate, else the
+  // code-tier model — but both are site-config-driven and can be Claude-poisoned
+  // on the same site, so the last resort is the canonical Mistral default.
+  if (isMistralModel(candidate)) return candidate;
+  if (isMistralModel(codeModel)) return codeModel;
+  return DEFAULTS.code;
 }

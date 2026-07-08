@@ -20,6 +20,13 @@ describe("resolveChatModel — Mistral pin guard", () => {
     expect(resolveChatModel(undefined, "", CODE)).toBe(CODE);
   });
 
+  it("guarantees Mistral even when BOTH aiChatModel AND aiCodeModel are poisoned (the webhouse-site case)", () => {
+    // getModel("code") reads aiCodeModel, which is ALSO a Claude id on poisoned
+    // sites — the fallback must still land on a real Mistral model.
+    expect(resolveChatModel(undefined, "claude-sonnet-4-6", "claude-sonnet-4-6")).toBe("mistral-large-latest");
+    expect(resolveChatModel("claude-opus-4-6", "claude-opus-4-6", "claude-haiku-4-5-20251001")).toBe("mistral-large-latest");
+  });
+
   it("never sends a requested Claude model to Mistral (requestable list is Claude → overridden)", () => {
     expect(resolveChatModel("claude-sonnet-4-6", "mistral-small-latest", CODE)).toBe(CODE);
   });

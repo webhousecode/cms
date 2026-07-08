@@ -17,14 +17,10 @@
  */
 
 import { readSiteConfig } from "@/lib/site-config";
+import { DEFAULTS, type ModelPurpose } from "./model-defaults";
 
-export type ModelPurpose = "content" | "code" | "premium";
-
-const DEFAULTS: Record<ModelPurpose, string> = {
-  content: "mistral-small-latest",
-  code: "mistral-large-latest",
-  premium: "mistral-large-latest",
-};
+export { DEFAULTS };
+export type { ModelPurpose };
 
 const CONFIG_KEYS: Record<ModelPurpose, string> = {
   content: "aiContentModel",
