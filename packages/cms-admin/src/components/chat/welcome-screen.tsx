@@ -14,34 +14,40 @@ const SUGGESTIONS = [
     icon: BarChart3,
     label: "Site overview",
     quickKey: "overview",
+    testid: "welcome-suggestion-overview",
     message: "Give me an overview of my site — how many collections, documents, drafts.",
   },
   {
     icon: FileText,
     label: "Show drafts",
     quickKey: "drafts",
+    testid: "welcome-suggestion-drafts",
     message: "Show me all unpublished drafts across all collections.",
   },
   {
     icon: Search,
     label: "Search content",
+    testid: "welcome-suggestion-search",
     message: "Search my content for ",
   },
   {
     icon: Settings,
     label: "Site info",
     quickKey: "site-info",
+    testid: "welcome-suggestion-site-info",
     message: "Tell me everything about my site — collections, fields, settings, deploy config, and content stats.",
   },
   {
     icon: Wrench,
     label: "What can you do?",
     quickKey: "capabilities",
+    testid: "welcome-suggestion-capabilities",
     message: "List all the tools and capabilities you have — what can I ask you to do?",
   },
   {
     icon: PenLine,
     label: "Edit a page",
+    testid: "welcome-suggestion-edit",
     message: "I want to edit the ",
   },
 ];
@@ -93,9 +99,9 @@ export function WelcomeScreen({ siteName, onSuggestionClick }: WelcomeScreenProp
           maxWidth: "620px",
         }}
       >
-        {SUGGESTIONS.map(({ icon: Icon, label, message, quickKey }) => (
+        {SUGGESTIONS.map(({ icon: Icon, label, message, quickKey, testid }) => (
           <button
-            data-testid="welcome-suggestion-button"
+            data-testid={testid}
             key={label}
             onClick={() => onSuggestionClick(message, quickKey)}
             style={{
