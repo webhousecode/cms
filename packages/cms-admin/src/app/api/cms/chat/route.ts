@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import type { ChatInput, ContentPart, Message, Tool } from "@broberg/ai-sdk";
+import type { ChatInput, ContentPart, Message, Tool, ToolCall } from "@broberg/ai-sdk";
 import { getApiKey } from "@/lib/ai-config";
 import { getAI, mistralModel } from "@/lib/ai/client";
 import { gatherSiteContext, buildChatSystemPrompt, getMemoryContext } from "@/lib/chat/system-prompt";
@@ -127,26 +127,48 @@ export async function POST(request: NextRequest) {
         }));
 
         for (let i = 0; i < chatMaxIterations; i++) {
-          const { text, toolCalls } = await ai.chat({
+          // Stream this turn token-by-token: emit each text delta as a `text`
+          // event (the client accumulates them) so the answer appears live
+          // instead of arriving in one lump after the whole 30-60s turn. The
+          // full text + tool calls are accumulated for the agentic loop below.
+          // Cast bridges the SDK's hand-written Message type and its stricter
+          // zod-inferred ChatInput.messages; the runtime values are correct.
+          const turnReq = {
             ...mistralModel(resolvedModel),
             maxTokens: chatMaxTokens,
             system: systemPrompt,
-            // Cast bridges the SDK's hand-written Message type and its stricter
-            // zod-inferred ChatInput.messages (Uint8Array<ArrayBuffer>); the
-            // runtime values are already correct.
             messages: chatMessages as ChatInput["messages"],
             tools: sdkTools,
             purpose: "chat.agent",
-          });
-
-          // If no tool calls, stream the final text and we're done
-          if (!toolCalls || toolCalls.length === 0) {
-            if (text) sendEvent("text", { text });
-            break;
+          };
+          let text = "";
+          const toolCalls: ToolCall[] = [];
+          let emitted = false;
+          try {
+            for await (const ev of ai.chatStream(turnReq)) {
+              if (ev.type === "text") {
+                text += ev.delta;
+                if (ev.delta) { sendEvent("text", { text: ev.delta }); emitted = true; }
+              } else if (ev.type === "tool_call") {
+                toolCalls.push({ id: ev.id, name: ev.name, arguments: ev.args });
+              } else if (ev.type === "error") {
+                throw new Error(ev.message);
+              }
+              // `usage` / `finish` events don't affect loop control.
+            }
+          } catch (streamErr) {
+            // No naked cutover: if streaming fails BEFORE any output, fall back to
+            // the non-streaming path (the answer just arrives in one lump). A
+            // half-streamed turn can't be safely retried, so re-throw those.
+            if (emitted || toolCalls.length) throw streamErr;
+            const res = await ai.chat(turnReq);
+            text = res.text ?? "";
+            if (res.toolCalls?.length) toolCalls.push(...res.toolCalls);
+            if (text && !toolCalls.length) sendEvent("text", { text });
           }
 
-          // Stream intermediate reasoning text so the UI can show it
-          if (text) sendEvent("thinking", { text });
+          // No tool calls → the streamed text WAS the final answer; done.
+          if (toolCalls.length === 0) break;
 
           // Execute tool calls; each result becomes its own `tool` message
           const toolResultMessages: Message[] = [];
