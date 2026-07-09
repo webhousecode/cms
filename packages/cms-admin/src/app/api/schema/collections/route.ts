@@ -40,6 +40,6 @@ export async function POST(req: NextRequest) {
 
   await writeConfigCollections(configPath, config, [...existing, body]);
   await invalidateActiveSite();
-  void invalidateQuickCacheOnWrite(); // F158: new collection → refresh site-info/overview
+  await invalidateQuickCacheOnWrite(); // F158: new collection → refresh site-info/overview
   return NextResponse.json({ ok: true }, { status: 201 });
 }

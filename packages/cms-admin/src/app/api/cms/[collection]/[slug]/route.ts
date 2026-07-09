@@ -171,7 +171,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
       // F35 — fire content webhook
       fireContentEvent("restored", collection, slug, updated ?? undefined, `user:${postSession.email}`).catch(() => {});
 
-      void invalidateQuickCacheOnWrite(); // F158: doc restored → refresh overview/drafts
+      await invalidateQuickCacheOnWrite(); // F158: doc restored → refresh overview/drafts
       return NextResponse.json(updated);
     }
 
@@ -199,7 +199,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
       // F35 — fire content webhook
       fireContentEvent("cloned", collection, newSlug, cloned, `user:${postSession.email}`).catch(() => {});
 
-      void invalidateQuickCacheOnWrite(); // F158: doc cloned → refresh overview/drafts
+      await invalidateQuickCacheOnWrite(); // F158: doc cloned → refresh overview/drafts
       return NextResponse.json(cloned);
     }
 
@@ -350,7 +350,7 @@ export async function PATCH(req: NextRequest, { params }: Ctx) {
       fireContentEvent(action, collection, newSlug, updated ?? undefined, `user:${session.email}`).catch(() => {});
     }
 
-    void invalidateQuickCacheOnWrite(); // F158: content changed → refresh overview/drafts
+    await invalidateQuickCacheOnWrite(); // F158: content changed → refresh overview/drafts
     return NextResponse.json({ ...updated, _deployTriggered: willDeploy }, { headers: cors });
   } catch (err) {
     console.error(err);
@@ -412,7 +412,7 @@ export async function DELETE(req: NextRequest, { params }: Ctx) {
     // Webhook consumers can subscribe to one without the other.
     fireContentEvent(permanent ? "deleted" : "trashed", collection, slug, doc, `user:${delSession.email}`).catch(() => {});
 
-    void invalidateQuickCacheOnWrite(); // F158: content deleted/trashed → refresh overview/drafts
+    await invalidateQuickCacheOnWrite(); // F158: content deleted/trashed → refresh overview/drafts
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error(err);

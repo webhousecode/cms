@@ -29,8 +29,11 @@ async function updateAndAudit(request: NextRequest): Promise<NextResponse> {
   const updated = await writeSiteConfig(patch);
 
   // F158: settings changed → drop stale quick-action answers + pre-warm.
+  // Awaited (not fire-and-forget): this route resolves the site via cookies, so
+  // the cookie reads must finish inside the live request — a detached
+  // continuation could resolve the default site and invalidate the wrong tenant.
   const { invalidateQuickCacheOnWrite } = await import("@/lib/chat/quick-prewarm");
-  void invalidateQuickCacheOnWrite();
+  await invalidateQuickCacheOnWrite();
 
   // F61: audit settings updates (field names only — never values)
   try {
