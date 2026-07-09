@@ -7,6 +7,7 @@ import { getActiveSiteEntry } from "@/lib/site-paths";
 import { saveRevision } from "@/lib/revisions";
 import { withSiteContext } from "@/lib/site-context";
 import { loadRegistry, findSite } from "@/lib/site-registry";
+import { invalidateQuickCacheOnWrite } from "@/lib/chat/quick-prewarm";
 
 type Ctx = { params: Promise<{ collection: string }> };
 
@@ -146,6 +147,7 @@ export async function POST(req: NextRequest, { params }: Ctx) {
       } catch { /* non-fatal */ }
     }
 
+    void invalidateQuickCacheOnWrite(); // F158: content created → refresh overview/drafts
     return NextResponse.json({ ...doc, _deployTriggered: deployTriggered }, { status: 201 });
   } catch (err) {
     console.error(err);

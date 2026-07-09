@@ -4,18 +4,22 @@ import { MessageSquare, Search, FileText, BarChart3, Settings, Wrench, PenLine }
 
 interface WelcomeScreenProps {
   siteName: string;
-  onSuggestionClick: (message: string) => void;
+  onSuggestionClick: (message: string, quickKey?: string) => void;
 }
 
+// `quickKey` matches a cached quick-action (see lib/chat/quick-actions.ts) so a
+// warm cache renders instantly (F158). Input-fillers (Search/Edit) have no key.
 const SUGGESTIONS = [
   {
     icon: BarChart3,
     label: "Site overview",
+    quickKey: "overview",
     message: "Give me an overview of my site — how many collections, documents, drafts.",
   },
   {
     icon: FileText,
     label: "Show drafts",
+    quickKey: "drafts",
     message: "Show me all unpublished drafts across all collections.",
   },
   {
@@ -26,11 +30,13 @@ const SUGGESTIONS = [
   {
     icon: Settings,
     label: "Site info",
+    quickKey: "site-info",
     message: "Tell me everything about my site — collections, fields, settings, deploy config, and content stats.",
   },
   {
     icon: Wrench,
     label: "What can you do?",
+    quickKey: "capabilities",
     message: "List all the tools and capabilities you have — what can I ask you to do?",
   },
   {
@@ -87,11 +93,11 @@ export function WelcomeScreen({ siteName, onSuggestionClick }: WelcomeScreenProp
           maxWidth: "620px",
         }}
       >
-        {SUGGESTIONS.map(({ icon: Icon, label, message }) => (
+        {SUGGESTIONS.map(({ icon: Icon, label, message, quickKey }) => (
           <button
             data-testid="welcome-suggestion-button"
             key={label}
-            onClick={() => onSuggestionClick(message)}
+            onClick={() => onSuggestionClick(message, quickKey)}
             style={{
               display: "flex",
               alignItems: "center",

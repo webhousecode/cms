@@ -626,17 +626,45 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
   }
 
   const handleSuggestionClick = useCallback(
-    (message: string) => {
-      // If the suggestion ends with a space (e.g. "Search my content for "),
-      // don't send — focus the input instead
+    async (message: string, quickKey?: string) => {
+      // F158: a cacheable quick-action tries the warm cache first. A hit renders
+      // instantly as an assistant message (kept in the conversation so a
+      // follow-up has context); a miss falls back to the normal streaming path
+      // (and the cold GET schedules a server-side regen so the next click is
+      // instant).
+      if (quickKey) {
+        try {
+          const res = await fetch(`/api/cms/chat/quick/${quickKey}`);
+          if (res.ok) {
+            const data = (await res.json()) as { cached?: boolean; markdown?: string };
+            if (data.cached && data.markdown) {
+              const userMsg: ChatMessageUI = { id: safeUUID(), role: "user", content: message };
+              const assistantMsg: ChatMessageUI = {
+                id: safeUUID(),
+                role: "assistant",
+                content: data.markdown,
+                toolCalls: [],
+                isStreaming: false,
+              };
+              const next = [...messages, userMsg, assistantMsg];
+              setMessages(next);
+              saveConversation(conversationId, next);
+              return;
+            }
+          }
+        } catch { /* fall through to streaming */ }
+        handleSend(message);
+        return;
+      }
+      // Input-fillers (e.g. "Search my content for ") — trailing space means
+      // "prefill", so just send the trimmed prompt.
       if (message.endsWith(" ")) {
-        // We'll handle this by setting initial text — for now just send
         handleSend(message.trimEnd());
       } else {
         handleSend(message);
       }
     },
-    [handleSend]
+    [handleSend, messages, conversationId]
   );
 
   const hasMessages = messages.length > 0;

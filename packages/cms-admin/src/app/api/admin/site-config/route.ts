@@ -28,6 +28,10 @@ async function updateAndAudit(request: NextRequest): Promise<NextResponse> {
   const patch = (await request.json()) as Partial<SiteConfig>;
   const updated = await writeSiteConfig(patch);
 
+  // F158: settings changed → drop stale quick-action answers + pre-warm.
+  const { invalidateQuickCacheOnWrite } = await import("@/lib/chat/quick-prewarm");
+  void invalidateQuickCacheOnWrite();
+
   // F61: audit settings updates (field names only — never values)
   try {
     const { logSettingsUpdated } = await import("@/lib/event-log");

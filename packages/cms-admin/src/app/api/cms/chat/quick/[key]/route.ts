@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSessionWithSiteRole } from "@/lib/require-role";
 import { peekQuick, storeQuick } from "@/lib/chat/quick-cache";
+import { scheduleLazyRegen } from "@/lib/chat/quick-prewarm";
+import { getActiveSiteEntry } from "@/lib/site-paths";
 
 /**
  * F158 — cached quick-action answers.
@@ -15,6 +17,12 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ key
   if (!session) return NextResponse.json({ error: "No access" }, { status: 403 });
   const { key } = await params;
   const result = await peekQuick(key);
+  // Cold miss on a known key → warm it in the background so the next click is
+  // instant (fire-and-forget, deduped + ship-dark inside scheduleLazyRegen).
+  if (!result.cached) {
+    const site = await getActiveSiteEntry().catch(() => null);
+    if (site?.id) scheduleLazyRegen(key, site.id);
+  }
   return NextResponse.json(result);
 }
 

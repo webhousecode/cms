@@ -7,6 +7,7 @@ import { readSiteConfig } from "@/lib/site-config";
 import { getActiveSitePaths } from "@/lib/site-paths";
 import { denyViewers, getSiteRole } from "@/lib/require-role";
 import { invalidateActiveSite } from "@/lib/site-pool";
+import { invalidateQuickCacheOnWrite } from "@/lib/chat/quick-prewarm";
 
 type Ctx = { params: Promise<{ collection: string }> };
 
@@ -39,6 +40,7 @@ export async function PUT(req: NextRequest, { params }: Ctx) {
     // "save didn't work" (precedent: sanneandersen 2026-05-19, label edits
     // hit disk but UI kept showing the previous value).
     await invalidateActiveSite();
+    void invalidateQuickCacheOnWrite(); // F158: schema changed → refresh site-info/overview
     return NextResponse.json({ ok: true });
   } catch (err) {
     console.error("[schema PUT error]", err);
@@ -77,5 +79,6 @@ export async function DELETE(_req: NextRequest, { params }: Ctx) {
 
   await writeConfigCollections(configPath, config, collections);
   await invalidateActiveSite();
+  void invalidateQuickCacheOnWrite(); // F158: collection removed → refresh site-info/overview
   return NextResponse.json({ ok: true });
 }
