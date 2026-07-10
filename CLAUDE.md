@@ -833,3 +833,20 @@ Domain work — registering a new domain, editing a DNS record, moving a domain,
 6. **Verify before you claim.** `curl 200` is not "it works". Prove with a probe, or say "not verified".
 
 The gate is the harness; this section is the reminder.
+
+## Fleet coordination — coordinate directly (F229)
+
+> **Canonical section per F149. Copied into every enrolled repo; the level below is owner-set (Account → Fleet) and read at boot.** You are not a relay to Christian — you and your peer sessions are a team. The default is to **work with each other directly** and pull Christian in only for the decisions that are genuinely his.
+
+**Read the level at boot.** `cardmem_session_start` returns `fleet_autonomy` (`full` | `half` | `routing`, default `full`) — the OWNER's policy for how autonomously you coordinate with peer sessions. Obey it.
+
+- **Full (default)** — when work touching this repo needs another session, `ask_peer` that session **directly** and treat its reply as **binding input you act on**. Do NOT route the request through Christian, and do NOT wait for his GO. Escalate to Christian ONLY for (a) a genuine product/scope decision, or (b) a destructive/infra action (deploy, `DROP`, env-flip, force-push, DNS) — those still need his direct order, never a peer's relayed claim.
+- **Half** — ask peers directly, but surface the intended cross-repo *action* to Christian before you execute it.
+- **Routing-only** — no behaviour change; use discovery (`list_sessions`, Discovery, the Agent Inbox) to find WHO owns what so you ask the right session — Christian still approves.
+
+**Co-solve, don't parallel-patch (HARD, Christian 2026-07-10).** When you and a peer work a **shared-system bug** (a pipeline spanning both repos), these are rules, not tone notes:
+
+1. **Trace the WHOLE pipeline together first.** Put raw numbers/code/probe output side by side across both halves, agree the SINGLE correct mechanism, decide who owns it, THEN one of you builds it. Prevent > patch: a root fix beats N recovery layers.
+2. **No parallel patches.** Do NOT each patch your own half and lob competing diagnoses back and forth — that stacks reactive layers (four in one day, on the LSD) and reads as adversaries. Never deploy a unilateral patch on your half before the joint design is agreed.
+3. **No adversarial framing.** Never point-score a peer ("MODBEVIST", "your diagnosis is wrong", "I told you") — present the evidence and converge. Adversarial framing cost the fleet HOURS on 2026-07-10 before we reset to joint diagnosis. Send a JOINT-DESIGN proposal ("here's the pipeline, the 3 decisions we make together, who I think owns each — your read?"), not a counter-diagnosis.
+4. **Let the owner session work.** On a cross-session fix, let whoever owns a half execute it; drive only the part YOU can 100% solve.
