@@ -117,3 +117,22 @@ export async function warmQuickAction(
     return false;
   }
 }
+
+/**
+ * The polished chat-markdown stylesheet — inline-code chips, clean bottom-border
+ * tables, styled code blocks / blockquotes / headings — ported from the
+ * @webhouse/cms admin chat so every consumer renders identically instead of
+ * re-styling per site. Render your markdown (e.g. `marked()` output) into a
+ * `.chat-md` element and inject this once (a `<style>` tag). Wrap `<table>` in
+ * `.chat-table-wrap` so wide tables scroll instead of overflowing on mobile:
+ *
+ *   html.replace(/<table>/g, '<div class="chat-table-wrap"><table>')
+ *       .replace(/<\/table>/g, '</table></div>')
+ *
+ * Themeable via CSS custom properties (dark defaults shown); set them on
+ * `.chat-md` or any ancestor to match a light or branded theme:
+ *   --chat-fg (text)  --chat-td (table cell)  --chat-border  --chat-code-bg
+ *   (inline-code chip)  --chat-pre-bg (code block)  --chat-accent (links,
+ *   inline-code text, blockquote rule)  --chat-quote-bg (blockquote fill)
+ */
+export const CHAT_MARKDOWN_CSS = `.chat-md{overflow-wrap:break-word;word-break:break-word;max-width:100%;color:var(--chat-fg,#f0f4f8)}.chat-md p{margin:.5em 0}.chat-md h1,.chat-md h2,.chat-md h3{color:var(--chat-fg,#f0f4f8);font-weight:650;line-height:1.3}.chat-md h1{font-size:1.25rem;margin:20px 0 8px}.chat-md h2{font-size:1.1rem;margin:16px 0 6px}.chat-md h3{font-size:.98rem;margin:12px 0 4px}.chat-md a{color:var(--chat-accent,#ff6a45);text-decoration:none}.chat-md a:hover{text-decoration:underline}.chat-md strong{color:var(--chat-fg,#f0f4f8);font-weight:650}.chat-md ul,.chat-md ol{margin:6px 0;padding-left:20px}.chat-md li{margin:3px 0}.chat-md hr{border:none;border-top:1px solid var(--chat-border,#2a2a2a);margin:16px 0}.chat-md blockquote{margin:8px 0;padding:8px 14px;border-left:3px solid var(--chat-accent,#ff6a45);background:var(--chat-quote-bg,rgba(255,106,69,.06));border-radius:0 6px 6px 0}.chat-md code{font-family:ui-monospace,monospace;font-size:.82em;padding:2px 6px;border-radius:4px;background:var(--chat-code-bg,#1c1c1c);border:1px solid var(--chat-border,#2a2a2a);color:var(--chat-accent,#ff6a45)}.chat-md pre{max-width:100%;background:var(--chat-pre-bg,#161616);border:1px solid var(--chat-border,#2a2a2a);border-radius:8px;padding:12px 14px;overflow-x:auto;font-size:.8rem;line-height:1.5;margin:.5em 0}.chat-md pre code{padding:0;border:none;background:none;color:inherit;font-size:1em}.chat-table-wrap{overflow-x:auto;max-width:100%;margin:.5em 0}.chat-md table{border-collapse:collapse;width:100%;font-size:.8rem}.chat-md th{padding:8px 12px;text-align:left;font-weight:600;border-bottom:2px solid var(--chat-border,#2a2a2a);color:var(--chat-fg,#f0f4f8);white-space:nowrap}.chat-md td{padding:6px 12px;border-bottom:1px solid var(--chat-border,#2a2a2a);color:var(--chat-td,#b8bdc4);overflow-wrap:break-word;word-break:break-word}`;
