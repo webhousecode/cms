@@ -7,13 +7,21 @@ on:
         description: "Version bump (patch, minor, major, or exact like 0.2.0)"
         required: true
         default: "patch"
+  # F160: a git tag `cms-chat-client-v<ver>` triggers the token-free OIDC publish
+  # of @broberg/cms-chat-client ONLY (see publish-cms-chat-client-oidc below).
+  push:
+    tags:
+      - "cms-chat-client-v*"
 
 permissions:
   contents: write
   id-token: write
 
 jobs:
+  # Fleet publish — MANUAL ONLY. The `if` guard keeps a `cms-chat-client-v*` tag
+  # push from re-publishing the whole fleet (that path is the OIDC job below).
   publish:
+    if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     environment: npm
     steps:
@@ -27,6 +35,9 @@ jobs:
         with:
           node-version: 24
           registry-url: "https://registry.npmjs.org"
+
+      - name: Pin npm to 11.5.1 (npm 12 breaks `npm publish --provenance`)
+        run: npm install -g npm@11.5.1
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -117,3 +128,58 @@ jobs:
           git tag "v${{ env.NEW_VERSION }}"
           git pull --rebase origin main
           git push && git push --tags
+
+  # F160.1: token-free OIDC publish of @broberg/cms-chat-client, triggered by a
+  # `cms-chat-client-v<ver>` tag. No NPM_TOKEN — npm >=11.5.1 does the OIDC
+  # token exchange itself against the package's Trusted Publisher (repo
+  # webhousecode/cms, workflow publish.yml, env blank). NO `environment:` here —
+  # the TP was configured with a blank environment, so a named one would fail
+  # the OIDC claim match.
+  publish-cms-chat-client-oidc:
+    if: startsWith(github.ref, 'refs/tags/cms-chat-client-v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Pin npm to 11.5.1 (npm 12 breaks --provenance; 11.5.1 does OIDC exchange)
+        run: npm install -g npm@11.5.1
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm --filter @broberg/cms-chat-client build
+
+      - name: Guard — tag matches package.json version
+        working-directory: packages/cms-chat-client
+        run: |
+          PKG=$(node -p "require('./package.json').version")
+          TAG="${GITHUB_REF_NAME#cms-chat-client-v}"
+          if [ "$PKG" != "$TAG" ]; then
+            echo "::error::tag cms-chat-client-v$TAG does not match version $PKG"
+            exit 1
+          fi
+
+      - name: Guard — version not already on npm
+        working-directory: packages/cms-chat-client
+        run: |
+          PKG=$(node -p "require('./package.json').version")
+          if npm view "@broberg/cms-chat-client@$PKG" version >/dev/null 2>&1; then
+            echo "::error::@broberg/cms-chat-client@$PKG already published — bump the version first."
+            exit 1
+          fi
+          echo "Publishing @broberg/cms-chat-client@$PKG"
+
+      - name: Publish (OIDC, token-free)
+        working-directory: packages/cms-chat-client
+        run: npm publish --access public --provenance
