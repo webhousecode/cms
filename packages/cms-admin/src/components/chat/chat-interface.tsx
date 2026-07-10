@@ -7,6 +7,7 @@ import { ChatInput } from "./chat-input";
 import { WelcomeScreen } from "./welcome-screen";
 import { Pencil, Check, X, Trash2, MoreHorizontal, Star, Copy, Brain, Plus, Search, Download, Upload, Package } from "lucide-react";
 import { useHeaderData } from "@/lib/header-data-context";
+import { peekQuickAction } from "@broberg/cms-chat-client";
 
 interface ChatInterfaceProps {
   collections: Array<{ name: string; label: string }>;
@@ -627,32 +628,28 @@ export function ChatInterface({ collections, activeSiteId, visible }: ChatInterf
 
   const handleSuggestionClick = useCallback(
     async (message: string, quickKey?: string) => {
-      // F158: a cacheable quick-action tries the warm cache first. A hit renders
-      // instantly as an assistant message (kept in the conversation so a
-      // follow-up has context); a miss falls back to the normal streaming path
-      // (and the cold GET schedules a server-side regen so the next click is
-      // instant).
+      // F158: a cacheable quick-action tries the warm cache first via the shared
+      // @broberg/cms-chat-client (peekQuickAction — the ONE client all consumers
+      // use, incl. broberg + sanne). A hit renders instantly as an assistant
+      // message (kept in the conversation so a follow-up has context); a miss
+      // falls back to the normal streaming path (and the cold GET schedules a
+      // server-side regen so the next click is instant). peek never throws.
       if (quickKey) {
-        try {
-          const res = await fetch(`/api/cms/chat/quick/${quickKey}`);
-          if (res.ok) {
-            const data = (await res.json()) as { cached?: boolean; markdown?: string };
-            if (data.cached && data.markdown) {
-              const userMsg: ChatMessageUI = { id: safeUUID(), role: "user", content: message };
-              const assistantMsg: ChatMessageUI = {
-                id: safeUUID(),
-                role: "assistant",
-                content: data.markdown,
-                toolCalls: [],
-                isStreaming: false,
-              };
-              const next = [...messages, userMsg, assistantMsg];
-              setMessages(next);
-              saveConversation(conversationId, next);
-              return;
-            }
-          }
-        } catch { /* fall through to streaming */ }
+        const { cached, markdown } = await peekQuickAction(quickKey);
+        if (cached && markdown) {
+          const userMsg: ChatMessageUI = { id: safeUUID(), role: "user", content: message };
+          const assistantMsg: ChatMessageUI = {
+            id: safeUUID(),
+            role: "assistant",
+            content: markdown,
+            toolCalls: [],
+            isStreaming: false,
+          };
+          const next = [...messages, userMsg, assistantMsg];
+          setMessages(next);
+          saveConversation(conversationId, next);
+          return;
+        }
         handleSend(message);
         return;
       }
