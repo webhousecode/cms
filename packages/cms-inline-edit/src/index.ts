@@ -5,6 +5,8 @@
  * element carrying data-cms-collection/data-cms-slug/data-cms-field
  * (F129's attribute convention) — no per-document step.
  */
+import { applyFieldSlice } from "./field-slice";
+export { applyFieldSlice } from "./field-slice";
 
 /**
  * Labels for the in-editor UI — the rich-text toolbar (bold/italic/underline
@@ -17,6 +19,8 @@ export interface InlineEditLabels {
   bold?: string;
   italic?: string;
   underline?: string;
+  orderedList?: string;
+  unorderedList?: string;
   color?: string;
   emoji?: string;
   done?: string;
@@ -50,6 +54,8 @@ const DEFAULT_LABELS: Required<InlineEditLabels> = {
   bold: "Fed",
   italic: "Kursiv",
   underline: "Understreget",
+  orderedList: "Nummereret liste",
+  unorderedList: "Punktliste",
   color: "Farve",
   emoji: "Indsæt emoji",
   done: "Færdig",
@@ -194,6 +200,26 @@ const SQUARE_PEN_SVG =
   'stroke-linejoin="round" aria-hidden="true">' +
   '<path d="M12 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>' +
   '<path d="M18.375 2.625a1 1 0 0 1 3 3l-9.013 9.014a2 2 0 0 1-.853.505l-2.873.84a.5.5 0 0 1-.62-.62l.84-2.873a2 2 0 0 1 .506-.852z"/>' +
+  "</svg>";
+
+// Toolbar list-button faces (lucide "list" / "list-ordered"), inline so no
+// icon-font/runtime dep; stroke inherits the button's white `currentColor`.
+const UL_SVG =
+  '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" ' +
+  'fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" ' +
+  'stroke-linejoin="round" aria-hidden="true">' +
+  '<line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/>' +
+  '<line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/>' +
+  '<line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/>' +
+  "</svg>";
+
+const OL_SVG =
+  '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" ' +
+  'fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" ' +
+  'stroke-linejoin="round" aria-hidden="true">' +
+  '<line x1="10" x2="21" y1="6" y2="6"/><line x1="10" x2="21" y1="12" y2="12"/>' +
+  '<line x1="10" x2="21" y1="18" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/>' +
+  '<path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/>' +
   "</svg>";
 
 function makeIcon(): HTMLSpanElement {
@@ -391,6 +417,13 @@ function buildRichToolbar(): HTMLElement {
     s.style.cssText = "width:1px;height:20px;background:#3a3f4a;";
     return s;
   };
+  t.appendChild(sep());
+
+  // Bullet + numbered lists — native execCommand, and the Markdown serializer
+  // already round-trips <ul>/<ol> to "- " / "1. " so no save-path change needed.
+  t.appendChild(toolbarButton(UL_SVG, uiLabels.unorderedList, () => document.execCommand("insertUnorderedList")));
+  t.appendChild(toolbarButton(OL_SVG, uiLabels.orderedList, () => document.execCommand("insertOrderedList")));
+
   t.appendChild(sep());
 
   // Text color — execCommand foreColor applies to the current selection.
@@ -697,6 +730,7 @@ async function saveField(el: HTMLElement, value: string, token: string, options:
   const slug = el.dataset.cmsSlug;
   const field = el.dataset.cmsField;
   if (!collection || !slug || !field) return;
+  const slice = el.dataset.cmsSlice;
 
   showPill(el, "saving");
   try {
@@ -709,7 +743,12 @@ async function saveField(el: HTMLElement, value: string, token: string, options:
     // Deep-clone so mutating a nested array/object (dot-path saves) never
     // aliases the fetched doc — same safety whether field is flat or nested.
     const mergedData = JSON.parse(JSON.stringify(doc.data ?? {})) as Record<string, unknown>;
-    if (field.includes(".")) {
+    if (slice !== undefined) {
+      // Field-slice save: replace just this segment inside the full field value,
+      // preserving every other segment + embed. Aborts on a non-unique match.
+      const currentVal = typeof mergedData[field] === "string" ? (mergedData[field] as string) : "";
+      mergedData[field] = applyFieldSlice(currentVal, slice, value);
+    } else if (field.includes(".")) {
       setDeepField(mergedData, field, value);
     } else {
       mergedData[field] = value;
@@ -724,6 +763,9 @@ async function saveField(el: HTMLElement, value: string, token: string, options:
       },
     );
     if (!patchRes.ok) throw new Error(`PATCH failed: ${patchRes.status}`);
+    // The slice we just wrote is now the current text — track it so a second
+    // edit of the same segment (no reload) matches against the new value.
+    if (slice !== undefined) el.dataset.cmsSlice = value;
     showPill(el, "saved");
   } catch {
     showPill(el, "error");
