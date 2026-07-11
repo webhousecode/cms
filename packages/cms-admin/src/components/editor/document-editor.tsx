@@ -11,7 +11,7 @@ import {
   findPrimaryBodyField,
   computeReadingMinutes,
 } from "@/lib/ai/translation-helpers";
-import { Save, Globe, FileText, Trash2, ArrowLeft, Lock, LockOpen, Copy, Clock, History, Eye, Languages, Sparkles, Settings2, Wand2, ChevronDown, ChevronRight, Loader2, Search as SearchIcon, Home as HomeIcon } from "lucide-react";
+import { Save, Globe, FileText, Trash2, ArrowLeft, Lock, LockOpen, Copy, Clock, History, Eye, Languages, Sparkles, Settings2, Wand2, ChevronDown, ChevronRight, Loader2, RefreshCw, Search as SearchIcon, Home as HomeIcon } from "lucide-react";
 import Link from "next/link";
 import { ActionBar, ActionBarBreadcrumb } from "@/components/action-bar";
 import { formatDate, cn, previewPath } from "@/lib/utils";
@@ -1189,6 +1189,40 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
   const router = useRouter();
   const { openTab, setTabStatus } = useTabs();
 
+  // F161.1: re-translate an existing TARGET sibling from the SOURCE (default-locale)
+  // doc. The source is always the default-locale doc, so re-translate can never
+  // clobber it. Backend (/translate) upserts the existing target by
+  // translationGroup+locale, so this reuses the machinery — no backend change.
+  const [retranslateConfirm, setRetranslateConfirm] = useState<string | null>(null);
+  const [retranslatingLocale, setRetranslatingLocale] = useState<string | null>(null);
+  const retranslateSourceSlug =
+    (locale || defaultLocale) === defaultLocale
+      ? doc.slug
+      : (translations.find((t) => t.locale === defaultLocale)?.slug ?? null);
+  const runRetranslate = async (targetLocale: string) => {
+    if (!retranslateSourceSlug) return;
+    setRetranslateConfirm(null);
+    setRetranslatingLocale(targetLocale);
+    try {
+      const res = await fetch(
+        `/api/cms/${collection}/${encodeURIComponent(retranslateSourceSlug)}/translate`,
+        { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ targetLocale }) },
+      );
+      if (res.ok) {
+        toast.success(`Re-translated ${LOCALE_LABELS[targetLocale] ?? targetLocale.toUpperCase()} from source`);
+        router.refresh();
+        window.dispatchEvent(new Event("cms:content-changed"));
+      } else {
+        const body = await res.json().catch(() => ({}));
+        toast.error(body?.error ?? "Re-translation failed");
+      }
+    } catch {
+      toast.error("Re-translation failed");
+    } finally {
+      setRetranslatingLocale(null);
+    }
+  };
+
   // Sync document status to active tab (for the colored dot)
   useEffect(() => {
     const now = new Date();
@@ -1779,9 +1813,11 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
           <span style={{ fontSize: "0.65rem", color: "var(--muted-foreground)", fontFamily: "monospace", textTransform: "uppercase", letterSpacing: "0.06em" }}>
             Translations
           </span>
-          {translations.map(t => (
+          {translations.map(t => {
+              const canRetranslate = !readOnly && !!retranslateSourceSlug && !!t.locale && t.locale !== defaultLocale;
+              return (
+              <div key={t.slug} style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
               <Link
-                key={t.slug}
                 href={`/admin/content/${collection}/${t.slug}`}
                 style={{
                   display: "inline-flex", alignItems: "center", gap: "0.3rem",
@@ -1798,7 +1834,45 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
                   backgroundColor: t.status === "published" ? "rgb(74 222 128)" : "rgb(234 179 8)",
                 }} />
               </Link>
-          ))}
+              {canRetranslate && (retranslateConfirm === t.locale ? (
+                <span style={{ display: "inline-flex", alignItems: "center", gap: "0.25rem" }}>
+                  <span style={{ fontSize: "0.62rem", color: "var(--muted-foreground)", fontWeight: 500 }}>Re-translate?</span>
+                  <button
+                    data-testid={`retranslate-yes-${t.locale}`}
+                    type="button"
+                    onClick={() => runRetranslate(t.locale!)}
+                    style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "none", background: "var(--primary)", color: "var(--primary-foreground)", cursor: "pointer", lineHeight: 1 }}
+                  >Yes</button>
+                  <button
+                    data-testid={`retranslate-no-${t.locale}`}
+                    type="button"
+                    onClick={() => setRetranslateConfirm(null)}
+                    style={{ fontSize: "0.6rem", padding: "0.1rem 0.35rem", borderRadius: "3px", border: "1px solid var(--border)", background: "transparent", color: "var(--foreground)", cursor: "pointer", lineHeight: 1 }}
+                  >No</button>
+                </span>
+              ) : (
+                <button
+                  data-testid={`retranslate-${t.locale}`}
+                  type="button"
+                  title={`Re-translate ${t.locale?.toUpperCase()} from ${LOCALE_LABELS[defaultLocale] ?? defaultLocale}`}
+                  onClick={() => setRetranslateConfirm(t.locale!)}
+                  disabled={retranslatingLocale === t.locale}
+                  style={{
+                    display: "inline-flex", alignItems: "center", justifyContent: "center",
+                    width: "22px", height: "22px", borderRadius: "4px",
+                    border: "1px solid var(--border)", background: "var(--card)",
+                    color: "var(--muted-foreground)", cursor: retranslatingLocale === t.locale ? "wait" : "pointer",
+                    padding: 0,
+                  }}
+                >
+                  {retranslatingLocale === t.locale
+                    ? <Loader2 size={11} className="animate-spin" />
+                    : <RefreshCw size={11} />}
+                </button>
+              ))}
+              </div>
+              );
+          })}
           {sourceDoc && (
             <button
               data-testid="side-by-side-toggle"
