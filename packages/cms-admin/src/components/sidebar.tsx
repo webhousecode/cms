@@ -8,6 +8,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useTheme } from "next-themes";
 import { useHeaderData } from "@/lib/header-data-context";
 import { useCapabilities } from "@/hooks/use-capabilities";
+import { sanitizeFavorites } from "@/lib/favorites";
 import {
   LayoutDashboard,
   Cpu,
@@ -83,7 +84,7 @@ export function AppSidebar({ collections }: Props) {
     if (typeof window === "undefined") return [];
     try {
       const cached = localStorage.getItem("cms-favorites");
-      return cached ? JSON.parse(cached) : [];
+      return cached ? sanitizeFavorites(JSON.parse(cached)) : [];
     } catch { return []; }
   });
 
@@ -107,8 +108,9 @@ export function AppSidebar({ collections }: Props) {
         if (typeof state.sidebarContentOpen === "boolean") setContentOpen(state.sidebarContentOpen);
         if (typeof state.sidebarToolsOpen === "boolean") setToolsOpen(state.sidebarToolsOpen);
         if (Array.isArray(state.favorites)) {
-          setFavorites(state.favorites);
-          try { localStorage.setItem("cms-favorites", JSON.stringify(state.favorites)); } catch {}
+          const clean = sanitizeFavorites(state.favorites);
+          setFavorites(clean);
+          try { localStorage.setItem("cms-favorites", JSON.stringify(clean)); } catch {}
         }
       })
       .catch(() => {});
@@ -116,7 +118,7 @@ export function AppSidebar({ collections }: Props) {
     // Listen for favorites changes from FavoriteToggle across the app
     function onFavChange(e: Event) {
       const detail = (e as CustomEvent).detail;
-      if (Array.isArray(detail)) setFavorites(detail);
+      if (Array.isArray(detail)) setFavorites(sanitizeFavorites(detail));
     }
     window.addEventListener("cms:favorites-changed", onFavChange);
     return () => window.removeEventListener("cms:favorites-changed", onFavChange);

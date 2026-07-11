@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import type { SearchResult } from "@/app/api/search/route";
+import { sanitizeFavorites } from "@/lib/favorites";
 import {
   Search, FileText, Globe, X, LayoutDashboard, Image, Bot, Calendar,
   ListChecks, Terminal, Settings2, Sparkles, UserCircle, LogOut, Lock,
@@ -179,11 +180,11 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
   useEffect(() => {
     try {
       const cached = localStorage.getItem("cms-favorites");
-      if (cached) setFavorites(JSON.parse(cached));
+      if (cached) setFavorites(sanitizeFavorites(JSON.parse(cached)));
     } catch { /* ignore */ }
     function onChange(e: Event) {
       const detail = (e as CustomEvent).detail;
-      if (Array.isArray(detail)) setFavorites(detail);
+      if (Array.isArray(detail)) setFavorites(sanitizeFavorites(detail));
     }
     window.addEventListener("cms:favorites-changed", onChange);
     return () => window.removeEventListener("cms:favorites-changed", onChange);
@@ -379,7 +380,7 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
         // Media result — show thumbnail, navigate to media with search query
         result.push({
           id: `media-${r.slug}`,
-          label: r.title,
+          label: r.title || r.slug,
           sublabel: r.slug,
           category: "content",
           icon: <img src={r.mediaThumbnail ?? r.mediaUrl} alt="" style={{ width: "0.9rem", height: "0.9rem", objectFit: "cover", borderRadius: "2px" }} />,
@@ -388,7 +389,7 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
       } else {
         result.push({
           id: `content-${r.collection}-${r.slug}`,
-          label: r.title,
+          label: r.title || r.slug,
           sublabel: r.matchedIn === "body"
             ? `${r.collectionLabel} · found in body`
             : `${r.collectionLabel} · ${r.slug}`,
@@ -615,7 +616,11 @@ function CommandPalette({ onClose }: { onClose: () => void }) {
 }
 
 /* ─── Highlight matching characters ─────────────────────────── */
-function Highlight({ text, query }: { text: string; query: string }) {
+function Highlight({ text, query }: { text?: string; query: string }) {
+  // A content result can lack a title (undefined) — guard before .toLowerCase()
+  // or the whole palette (and app) crashes to the error boundary on the first
+  // keystroke that returns such a result.
+  if (!text) return <>{text ?? ""}</>;
   if (!query) return <>{text}</>;
   const idx = text.toLowerCase().indexOf(query.toLowerCase());
   if (idx === -1) return <>{text}</>;
