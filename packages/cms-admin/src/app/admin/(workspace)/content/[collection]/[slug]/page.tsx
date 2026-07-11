@@ -5,6 +5,7 @@ import { DocumentEditor } from "@/components/editor/document-editor";
 import { TabTitle } from "@/lib/tabs-context";
 import { readSiteConfig } from "@/lib/site-config";
 import { getSiteRole } from "@/lib/require-role";
+import { getActiveSiteEntry } from "@/lib/site-paths";
 
 type Props = {
   params: Promise<{ collection: string; slug: string }>;
@@ -14,7 +15,7 @@ type Props = {
 export default async function DocumentPage({ params, searchParams }: Props) {
   const { collection, slug } = await params;
   const { from } = await searchParams;
-  const [cms, config, siteConfig, siteRole] = await Promise.all([getAdminCms(), getAdminConfig(), readSiteConfig(), getSiteRole()]);
+  const [cms, config, siteConfig, siteRole, siteEntry] = await Promise.all([getAdminCms(), getAdminConfig(), readSiteConfig(), getSiteRole(), getActiveSiteEntry()]);
 
   const colConfig = config.collections.find((c) => c.name === collection);
   if (!colConfig) notFound();
@@ -54,6 +55,8 @@ export default async function DocumentPage({ params, searchParams }: Props) {
         siblingData={[]}
         previewSiteUrl={siteConfig.previewSiteUrl}
         previewInIframe={siteConfig.previewInIframe}
+        siteId={siteEntry?.id}
+        inlineEditEnabled={siteConfig.inlineEditEnabled}
         localeStrategy={siteConfig.localeStrategy ?? "prefix-other"}
         backHref={from === "curation" ? "/admin/curation" : undefined}
         readOnly={siteRole === "viewer"}
