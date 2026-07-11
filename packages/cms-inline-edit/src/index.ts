@@ -5,6 +5,8 @@
  * element carrying data-cms-collection/data-cms-slug/data-cms-field
  * (F129's attribute convention) — no per-document step.
  */
+import { applyFieldSlice } from "./field-slice";
+export { applyFieldSlice } from "./field-slice";
 
 /**
  * Labels for the in-editor UI — the rich-text toolbar (bold/italic/underline
@@ -728,6 +730,7 @@ async function saveField(el: HTMLElement, value: string, token: string, options:
   const slug = el.dataset.cmsSlug;
   const field = el.dataset.cmsField;
   if (!collection || !slug || !field) return;
+  const slice = el.dataset.cmsSlice;
 
   showPill(el, "saving");
   try {
@@ -740,7 +743,12 @@ async function saveField(el: HTMLElement, value: string, token: string, options:
     // Deep-clone so mutating a nested array/object (dot-path saves) never
     // aliases the fetched doc — same safety whether field is flat or nested.
     const mergedData = JSON.parse(JSON.stringify(doc.data ?? {})) as Record<string, unknown>;
-    if (field.includes(".")) {
+    if (slice !== undefined) {
+      // Field-slice save: replace just this segment inside the full field value,
+      // preserving every other segment + embed. Aborts on a non-unique match.
+      const currentVal = typeof mergedData[field] === "string" ? (mergedData[field] as string) : "";
+      mergedData[field] = applyFieldSlice(currentVal, slice, value);
+    } else if (field.includes(".")) {
       setDeepField(mergedData, field, value);
     } else {
       mergedData[field] = value;
@@ -755,6 +763,9 @@ async function saveField(el: HTMLElement, value: string, token: string, options:
       },
     );
     if (!patchRes.ok) throw new Error(`PATCH failed: ${patchRes.status}`);
+    // The slice we just wrote is now the current text — track it so a second
+    // edit of the same segment (no reload) matches against the new value.
+    if (slice !== undefined) el.dataset.cmsSlice = value;
     showPill(el, "saved");
   } catch {
     showPill(el, "error");
