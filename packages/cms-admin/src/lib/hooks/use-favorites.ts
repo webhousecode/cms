@@ -11,6 +11,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import type { Favorite } from "@/lib/user-state";
+import { sanitizeFavorites } from "@/lib/favorites";
 
 const STORAGE_KEY = "cms-favorites";
 const EVENT_NAME = "cms:favorites-changed";
@@ -23,15 +24,16 @@ export function useFavorites() {
   useEffect(() => {
     try {
       const cached = localStorage.getItem(STORAGE_KEY);
-      if (cached) setFavorites(JSON.parse(cached));
+      if (cached) setFavorites(sanitizeFavorites(JSON.parse(cached)));
     } catch { /* ignore */ }
 
     fetch("/api/admin/user-state")
       .then((r) => (r.ok ? r.json() : null))
       .then((state) => {
         if (state?.favorites) {
-          setFavorites(state.favorites);
-          try { localStorage.setItem(STORAGE_KEY, JSON.stringify(state.favorites)); } catch { /* ignore */ }
+          const clean = sanitizeFavorites(state.favorites);
+          setFavorites(clean);
+          try { localStorage.setItem(STORAGE_KEY, JSON.stringify(clean)); } catch { /* ignore */ }
         }
         setLoaded(true);
       })
@@ -40,7 +42,7 @@ export function useFavorites() {
     // Listen for changes from other components
     const onChange = (e: Event) => {
       const detail = (e as CustomEvent<Favorite[]>).detail;
-      if (Array.isArray(detail)) setFavorites(detail);
+      if (Array.isArray(detail)) setFavorites(sanitizeFavorites(detail));
     };
     window.addEventListener(EVENT_NAME, onChange);
     return () => window.removeEventListener(EVENT_NAME, onChange);
