@@ -18,8 +18,6 @@ import { formatDate, cn, previewPath } from "@/lib/utils";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useTabs } from "@/lib/tabs-context";
-import { useHeaderData } from "@/lib/header-data-context";
-import { hasPermission } from "@/lib/permissions-shared";
 import { AIPanel } from "./ai-panel";
 import { SeoPanel } from "./seo-panel";
 import { GenerateDocumentDialog } from "@/components/generate-document-dialog";
@@ -1067,6 +1065,8 @@ interface Props {
   siteId?: string;
   /** Master switch: only show "Redigér live" when the site has inline-edit enabled. */
   inlineEditEnabled?: boolean;
+  /** content.edit resolved server-side from the site role (same source as readOnly). */
+  canEditContent?: boolean;
 }
 
 // Global cache: survives unmount/remount from tab navigation + HMR.
@@ -1085,14 +1085,9 @@ function cacheSet(key: string, value: DocSnapshot) {
   }
 }
 
-export function DocumentEditor({ collection, colConfig, blocksConfig = [], locales = [], defaultLocale = "en", initialDoc, translations: initialTranslations = [], siblingData: initialSiblingData, previewSiteUrl, previewInIframe, localeStrategy = "prefix-other", backHref, readOnly = false, siteId, inlineEditEnabled = false }: Props) {
+export function DocumentEditor({ collection, colConfig, blocksConfig = [], locales = [], defaultLocale = "en", initialDoc, translations: initialTranslations = [], siblingData: initialSiblingData, previewSiteUrl, previewInIframe, localeStrategy = "prefix-other", backHref, readOnly = false, siteId, inlineEditEnabled = false, canEditContent = false }: Props) {
   const PREVIEW_SITE_URL = (previewSiteUrl ?? PREVIEW_SITE_URL_DEFAULT).replace(/\/$/, "");
   const PREVIEW_IN_IFRAME = previewInIframe ?? PREVIEW_IN_IFRAME_DEFAULT;
-
-  // "Redigér live" (F157.4) — the site-side inline-edit launcher. Only editors
-  // with content.edit see it, and only when the site has inline-edit switched on.
-  const { user: ctxUser } = useHeaderData();
-  const canEditContent = hasPermission(ctxUser?.permissions ?? [], "content.edit");
 
   // Lazy-load translations client-side if not provided by server
   const [translations, setTranslations] = useState(initialTranslations);

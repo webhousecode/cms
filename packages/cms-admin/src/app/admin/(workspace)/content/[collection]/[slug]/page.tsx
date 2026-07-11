@@ -6,6 +6,7 @@ import { TabTitle } from "@/lib/tabs-context";
 import { readSiteConfig } from "@/lib/site-config";
 import { getSiteRole } from "@/lib/require-role";
 import { getActiveSiteEntry } from "@/lib/site-paths";
+import { hasPermission, ROLE_PERMISSIONS } from "@/lib/permissions-shared";
 
 type Props = {
   params: Promise<{ collection: string; slug: string }>;
@@ -57,6 +58,7 @@ export default async function DocumentPage({ params, searchParams }: Props) {
         previewInIframe={siteConfig.previewInIframe}
         siteId={siteEntry?.id}
         inlineEditEnabled={siteConfig.inlineEditEnabled}
+        canEditContent={siteRole ? hasPermission(ROLE_PERMISSIONS[siteRole] ?? [], "content.edit") : false}
         localeStrategy={siteConfig.localeStrategy ?? "prefix-other"}
         backHref={from === "curation" ? "/admin/curation" : undefined}
         readOnly={siteRole === "viewer"}
