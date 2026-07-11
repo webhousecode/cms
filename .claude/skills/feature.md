@@ -235,4 +235,4 @@ When writing plans, internalize these. They apply at code-time, not skill-time ‚
 - **Destruktive commands** (rm -rf, DROP TABLE, force push, fly destroy, DNS-deletion, kill, chmod 777) only on explicit user order.
 - **CC udf√∏rer ALT manuelt arbejde.** Never ask Christian to run a command, redeploy, copy-paste output, or open a browser to verify something MCP can verify.
 
-Plans that ignore these will be flagged by buddy F47 review.
+Plans that ignore these will be flagged by buddy's auto-review gate.
