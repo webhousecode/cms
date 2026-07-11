@@ -11,13 +11,15 @@ import {
   findPrimaryBodyField,
   computeReadingMinutes,
 } from "@/lib/ai/translation-helpers";
-import { Save, Globe, FileText, Trash2, ArrowLeft, Lock, LockOpen, Copy, Clock, History, Eye, Languages, Sparkles, Settings2, Wand2, ChevronDown, ChevronRight, Loader2, RefreshCw, Search as SearchIcon, Home as HomeIcon } from "lucide-react";
+import { Save, Globe, FileText, Trash2, ArrowLeft, Lock, LockOpen, Copy, Clock, History, Eye, SquarePen, Languages, Sparkles, Settings2, Wand2, ChevronDown, ChevronRight, Loader2, RefreshCw, Search as SearchIcon, Home as HomeIcon } from "lucide-react";
 import Link from "next/link";
 import { ActionBar, ActionBarBreadcrumb } from "@/components/action-bar";
 import { formatDate, cn, previewPath } from "@/lib/utils";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { useTabs } from "@/lib/tabs-context";
+import { useHeaderData } from "@/lib/header-data-context";
+import { hasPermission } from "@/lib/permissions-shared";
 import { AIPanel } from "./ai-panel";
 import { SeoPanel } from "./seo-panel";
 import { GenerateDocumentDialog } from "@/components/generate-document-dialog";
@@ -1061,6 +1063,10 @@ interface Props {
   localeStrategy?: string;
   backHref?: string;
   readOnly?: boolean;
+  /** Active site id — needed to launch the inline-edit connect flow (?site=). */
+  siteId?: string;
+  /** Master switch: only show "Redigér live" when the site has inline-edit enabled. */
+  inlineEditEnabled?: boolean;
 }
 
 // Global cache: survives unmount/remount from tab navigation + HMR.
@@ -1079,9 +1085,14 @@ function cacheSet(key: string, value: DocSnapshot) {
   }
 }
 
-export function DocumentEditor({ collection, colConfig, blocksConfig = [], locales = [], defaultLocale = "en", initialDoc, translations: initialTranslations = [], siblingData: initialSiblingData, previewSiteUrl, previewInIframe, localeStrategy = "prefix-other", backHref, readOnly = false }: Props) {
+export function DocumentEditor({ collection, colConfig, blocksConfig = [], locales = [], defaultLocale = "en", initialDoc, translations: initialTranslations = [], siblingData: initialSiblingData, previewSiteUrl, previewInIframe, localeStrategy = "prefix-other", backHref, readOnly = false, siteId, inlineEditEnabled = false }: Props) {
   const PREVIEW_SITE_URL = (previewSiteUrl ?? PREVIEW_SITE_URL_DEFAULT).replace(/\/$/, "");
   const PREVIEW_IN_IFRAME = previewInIframe ?? PREVIEW_IN_IFRAME_DEFAULT;
+
+  // "Redigér live" (F157.4) — the site-side inline-edit launcher. Only editors
+  // with content.edit see it, and only when the site has inline-edit switched on.
+  const { user: ctxUser } = useHeaderData();
+  const canEditContent = hasPermission(ctxUser?.permissions ?? [], "content.edit");
 
   // Lazy-load translations client-side if not provided by server
   const [translations, setTranslations] = useState(initialTranslations);
@@ -1446,6 +1457,20 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
     }
   }
 
+  /** F157.4 — launch inline editing on the live site for this exact page.
+   *  Opens the connect/mint route (auth-gated, content.edit-checked, returns a
+   *  branded "you're connected" page). Opened with noopener so the connect page
+   *  takes its same-tab fallback and bakes the token into its return link
+   *  (?cms_edit=…) — the F157 capture path. (A postMessage delivery would fail
+   *  here anyway: the admin tab's origin never matches the site's origin.) */
+  function openLiveEdit() {
+    const pagePath = buildPagePath();
+    if (pagePath === null || !PREVIEW_SITE_URL || !siteId) return;
+    const returnUrl = `${PREVIEW_SITE_URL}${pagePath}`;
+    const connectUrl = `/admin/inline-edit/connect?site=${encodeURIComponent(siteId)}&return=${encodeURIComponent(returnUrl)}`;
+    window.open(connectUrl, "_blank", "noopener,noreferrer");
+  }
+
   async function cloneDoc() {
     setCloning(true);
     const res = await fetch(`/api/cms/${collection}/${doc.slug}`, {
@@ -1668,6 +1693,20 @@ export function DocumentEditor({ collection, colConfig, blocksConfig = [], local
               title="Preview"
             >
               <Eye className="w-4 h-4" />
+            </Button>
+          )}
+
+          {inlineEditEnabled && canEditContent && colConfig.urlPrefix && siteId && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={openLiveEdit}
+              className="gap-1.5"
+              data-testid="live-edit-button"
+              title="Rediger teksten direkte på det færdige website"
+            >
+              <SquarePen className="w-3.5 h-3.5" />
+              Redigér live
             </Button>
           )}
 
