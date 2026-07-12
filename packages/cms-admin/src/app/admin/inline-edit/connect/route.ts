@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
-import { SignJWT } from "jose";
+import { mintEditSessionToken } from "@/lib/inline-edit-token";
 import { requirePermission } from "@/lib/permissions";
 import { getActiveSiteEntry } from "@/lib/site-paths";
 import { getSessionWithSiteRole } from "@/lib/require-role";
@@ -29,8 +29,6 @@ import { withSiteContext } from "@/lib/site-context";
  *   capture path — so nothing regresses.
  */
 
-const TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
-
 // F158.2 — the webhouse-CMS confirmation screen ("Du er logget ind") is a
 // login acknowledgement, not a per-connect nag. We only show it when a login
 // actually happened in THIS flow. Signal: a freshly-minted cms-session cookie.
@@ -38,12 +36,6 @@ const TTL_SECONDS = 60 * 60 * 24 * 30; // 30 days
 // sliding per-request refresh — so `now - iat` under this window means "just
 // logged in". A generous window covers a slow login (typing + optional TOTP).
 const FRESH_LOGIN_WINDOW_SECONDS = 120;
-
-function getJwtSecret(): Uint8Array {
-  return new TextEncoder().encode(
-    process.env.CMS_JWT_SECRET ?? "cms-dev-secret-change-me-in-production",
-  );
-}
 
 /** returnUrl must be the site's own origin — never post a token to an
  *  attacker-controlled origin. Source of truth is site-config previewSiteUrl. */
@@ -122,19 +114,13 @@ export async function GET(request: NextRequest) {
     const iat = (rawSession as { iat?: number } | null)?.iat ?? 0;
     const freshLogin = iat > 0 && now - iat <= FRESH_LOGIN_WINDOW_SECONDS;
 
-    const expires = now + TTL_SECONDS;
-    const token = await new SignJWT({
-      sub: session.userId,
+    const { token } = await mintEditSessionToken({
+      userId: session.userId,
       email: session.email,
       name: session.name,
       role: session.siteRole ?? "editor",
-      editSession: true,
-      site: site.id,
-    })
-      .setProtectedHeader({ alg: "HS256" })
-      .setIssuedAt(now)
-      .setExpirationTime(expires)
-      .sign(getJwtSecret());
+      siteId: site.id,
+    });
 
     return new NextResponse(renderConnectWelcome({ token, returnUrl, site: site.id, freshLogin }), {
       status: 200,
