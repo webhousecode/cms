@@ -10,6 +10,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { withSiteContext } from "@/lib/site-context";
 import { loadRegistry, findSite } from "@/lib/site-registry";
+import { originAllowed } from "@/lib/cors-origin";
 import { invalidateQuickCacheOnWrite } from "@/lib/chat/quick-prewarm";
 
 /**
@@ -51,8 +52,8 @@ function corsHeaders(origin: string | null, allowed: string[]): Record<string, s
     "Access-Control-Allow-Headers": "Content-Type, Authorization",
     "Access-Control-Max-Age": "86400",
   };
-  if (origin && allowed.some((a) => origin === a || a === "*")) {
-    headers["Access-Control-Allow-Origin"] = origin;
+  if (originAllowed(origin, allowed)) {
+    headers["Access-Control-Allow-Origin"] = origin!;
   }
   return headers;
 }

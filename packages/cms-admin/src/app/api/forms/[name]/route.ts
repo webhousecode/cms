@@ -5,6 +5,7 @@ import { readSiteConfig } from "@/lib/site-config";
 import { FormService } from "@/lib/forms/service";
 import { isHoneypotTriggered, hashIp, isRateLimited, HONEYPOT_FIELD, validateTurnstile, TURNSTILE_TEST_SECRET_KEY, EMAIL_PATTERN, PHONE_PATTERN } from "@/lib/forms/spam";
 import { notifyFormSubmission } from "@/lib/forms/notify";
+import { originAllowed } from "@/lib/cors-origin";
 
 function corsHeaders(origin: string | null, allowed: string[]): Record<string, string> {
   const headers: Record<string, string> = {
@@ -12,8 +13,8 @@ function corsHeaders(origin: string | null, allowed: string[]): Record<string, s
     "Access-Control-Allow-Headers": "Content-Type",
     "Access-Control-Max-Age": "86400",
   };
-  if (origin && allowed.some((a) => origin === a || a === "*")) {
-    headers["Access-Control-Allow-Origin"] = origin;
+  if (originAllowed(origin, allowed)) {
+    headers["Access-Control-Allow-Origin"] = origin!;
   }
   return headers;
 }
