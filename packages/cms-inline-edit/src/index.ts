@@ -7,6 +7,7 @@
  */
 import { applyFieldSlice } from "./field-slice";
 export { applyFieldSlice } from "./field-slice";
+import { serializeTokenSafe, hasTokenChips, lockTokenChips } from "./token-safe";
 
 /**
  * Labels for the in-editor UI — the rich-text toolbar (bold/italic/underline
@@ -435,15 +436,20 @@ function wireField(el: HTMLElement, token: string, options: ResolvedOptions): vo
     // would immediately navigate away instead of focusing the field.
     e.preventDefault();
     e.stopPropagation();
-    el.dataset.cmsOriginalValue = el.textContent ?? "";
+    // Token-safe fields render {år}-style auto-values as atomic chips. Read the
+    // TEMPLATE form (chips → their tokens) so the saved value keeps its tokens,
+    // and lock the chips so each edits as one unbreakable unit.
+    const tokenSafe = hasTokenChips(el);
+    el.dataset.cmsOriginalValue = tokenSafe ? serializeTokenSafe(el) : (el.textContent ?? "");
     el.setAttribute("contenteditable", "true");
+    if (tokenSafe) lockTokenChips(el);
     el.focus();
   });
 
   el.addEventListener("blur", () => {
     el.removeAttribute("contenteditable");
     const original = el.dataset.cmsOriginalValue ?? "";
-    const current = el.textContent ?? "";
+    const current = hasTokenChips(el) ? serializeTokenSafe(el) : (el.textContent ?? "");
     if (current.trim() === original.trim()) return;
     void saveField(el, current.trim(), token, options);
   });
