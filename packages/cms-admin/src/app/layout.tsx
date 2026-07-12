@@ -30,8 +30,12 @@ export const viewport: Viewport = {
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  // translate="no" + notranslate: webhouse.app is an app UI, not translatable
+  // content. Browser auto-translation (Google Translate) mutates React-managed
+  // text nodes and then crashes the whole app with removeChild/insertBefore
+  // NotFoundError — reproduced by editors using ⌘K search on a Danish Chrome.
   return (
-    <html lang="en" suppressHydrationWarning className={cn("font-sans", geist.variable)}>
+    <html lang="en" translate="no" suppressHydrationWarning className={cn("notranslate font-sans", geist.variable)}>
       <body>
         <UpmetricsProvider />
         <ThemeProvider
