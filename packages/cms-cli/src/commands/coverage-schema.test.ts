@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   parseCoverageSchema,
   summarizeCoverage,
+  unionByDocument,
   type CoverageReport,
 } from './coverage-schema.js';
 
@@ -89,6 +90,38 @@ describe('parseCoverageSchema', () => {
     expect(parseCoverageSchema(null)).toEqual({});
     expect(parseCoverageSchema('nope')).toEqual({});
     expect(parseCoverageSchema({ collections: { x: { junk: true } } })).toEqual({});
+  });
+});
+
+describe('unionByDocument', () => {
+  it('unions present fields across pages so a card context is not a false gap', () => {
+    // Post "a" appears twice: as a card on the front page (only title/excerpt),
+    // and on its detail page (title/excerpt/content). Neither alone is complete.
+    const report: CoverageReport = {
+      pages: [
+        { collection: 'posts', slug: 'a', present: ['title', 'excerpt'], expected: ['title', 'excerpt', 'content'], missing: ['content'], orphans: [], coveragePct: 67 },
+        { collection: 'posts', slug: 'a', present: ['title', 'content'], expected: ['title', 'excerpt', 'content'], missing: ['excerpt'], orphans: [], coveragePct: 67 },
+      ],
+    };
+    const merged = unionByDocument(report);
+    expect(merged.pages).toHaveLength(1);
+    const p = merged.pages[0]!;
+    expect(p.present.sort()).toEqual(['content', 'excerpt', 'title']);
+    expect(p.missing).toEqual([]); // covered somewhere → not a gap
+    expect(p.coveragePct).toBe(100);
+    expect(summarizeCoverage(merged).pass).toBe(true);
+  });
+
+  it('still reports a field that is missing on EVERY page', () => {
+    const report: CoverageReport = {
+      pages: [
+        { collection: 'posts', slug: 'b', present: ['title'], expected: ['title', 'body'], missing: ['body'], orphans: [], coveragePct: 50 },
+        { collection: 'posts', slug: 'b', present: ['title'], expected: ['title', 'body'], missing: ['body'], orphans: [], coveragePct: 50 },
+      ],
+    };
+    const merged = unionByDocument(report);
+    expect(merged.pages[0]!.missing).toEqual(['body']);
+    expect(summarizeCoverage(merged).pass).toBe(false);
   });
 });
 

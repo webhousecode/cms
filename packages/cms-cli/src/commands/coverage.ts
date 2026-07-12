@@ -14,6 +14,7 @@ import { logger } from '../utils/logger.js';
 import {
   parseCoverageSchema,
   summarizeCoverage,
+  unionByDocument,
   type CoverageSchema,
   type CoverageReport,
 } from './coverage-schema.js';
@@ -104,7 +105,9 @@ export async function coverageCommand(options: CoverageCommandOptions): Promise<
     pages.push(...engine.computeCoverage(html, schema, { ignoreFields }).pages);
   }
 
-  const report: CoverageReport = { pages };
+  // Union per document across all scanned pages: a field is covered if editable
+  // on ANY page the document appears on (card on the front page vs full detail).
+  const report = unionByDocument({ pages });
   const summary = summarizeCoverage(report);
 
   if (options.json) {
