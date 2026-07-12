@@ -314,6 +314,10 @@ function setupFields(token: string, options: ResolvedOptions): void {
 function enterEditMode(): void {
   if (!stateOptions || editingActive) return;
   editingActive = true;
+  // Marks the page as actively editing → unlocks the field hover-outline +
+  // text-cursor affordance (see injectStyles). In idle the fields look/behave
+  // like normal text; the edit affordance appears only after "Rediger".
+  document.body.setAttribute("data-cms-editing", "true");
   removeIdlePill();
   showActiveBadge(stateOptions);
 }
@@ -322,6 +326,7 @@ function exitEditMode(): void {
   if (!stateOptions || !editingActive) return;
   deactivateRich(); // commit any active rich region first
   editingActive = false;
+  document.body.removeAttribute("data-cms-editing");
   document.querySelector("[data-cms-inline-edit-badge]")?.remove();
   showIdlePill();
 }
@@ -332,6 +337,12 @@ function removeIdlePill(): void {
 
 function showIdlePill(): void {
   if (!stateOptions) return;
+  // Invariant: the idle pill is showing ⟹ we are NOT editing. Force the flag
+  // false here so "Rediger" (enterEditMode) can never become a no-op if the
+  // state ever diverged from the visible pill (defensive — enterEditMode bails
+  // when editingActive is already true).
+  editingActive = false;
+  document.body.removeAttribute("data-cms-editing");
   const options = stateOptions;
   removeIdlePill();
   const wrap = document.createElement("div");
@@ -945,11 +956,15 @@ function decodeJwtPayload(token: string): Record<string, unknown> | null {
 
 function injectStyles(): void {
   const style = document.createElement("style");
+  // The hover-outline + text-cursor affordance is gated on body[data-cms-editing]
+  // so it appears ONLY while actively editing (after "Rediger"). In idle a
+  // connected editor's fields look + behave like normal page text — no dashed
+  // outline, no text cursor — so the page never looks editable before you opt in.
   style.textContent = `
-    [data-cms-field] { outline: 1px dashed transparent; outline-offset: 2px; cursor: text; transition: outline-color .15s; }
-    [data-cms-field]:hover { outline-color: rgba(0,178,255,.5); }
+    [data-cms-field] { outline: 1px dashed transparent; outline-offset: 2px; transition: outline-color .15s; }
+    body[data-cms-editing="true"] [data-cms-field] { cursor: text; }
+    body[data-cms-editing="true"] [data-cms-field]:hover { outline-color: rgba(0,178,255,.5); }
     [data-cms-field][contenteditable="true"] { outline: 2px solid #00b2ff; outline-offset: 2px; }
-    [data-cms-field][data-cms-richtext="true"] { cursor: text; }
     .cms-rich-editing { outline: 2px solid #00b2ff !important; outline-offset: 6px; border-radius: 4px; }
   `;
   document.head.appendChild(style);
