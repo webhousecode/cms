@@ -58,6 +58,14 @@
     "chokidar": "^4.0.3",
     "picocolors": "^1.1.1"
   },
+  "peerDependencies": {
+    "@broberg/lens-engine": ">=0.4.0"
+  },
+  "peerDependenciesMeta": {
+    "@broberg/lens-engine": {
+      "optional": true
+    }
+  },
   "devDependencies": {
     "@types/node": "^22.10.2",
     "typescript": "^5.7.2",

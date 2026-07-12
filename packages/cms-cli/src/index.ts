@@ -25,6 +25,7 @@ import { aiGenerateCommand, aiRewriteCommand, aiSeoCommand } from './commands/ai
 import { mcpKeygenCommand, mcpTestCommand, mcpStatusCommand } from './commands/mcp.js';
 import { mcpServeCommand } from './commands/mcp-serve.js';
 import { exportSchemaCommand } from './commands/export-schema.js';
+import { coverageCommand } from './commands/coverage.js';
 
 const init = defineCommand({
   meta: { name: 'init', description: 'Initialize a new CMS project' },
@@ -180,13 +181,36 @@ const exportSchema = defineCommand({
   },
 });
 
+const coverage = defineCommand({
+  meta: {
+    name: 'coverage',
+    description: 'Check inline-edit coverage — every rendered CMS field must be editable (F162)',
+  },
+  args: {
+    schema: { type: 'string', description: 'Path or URL to webhouse-schema.json', required: true },
+    url: { type: 'string', description: 'Base URL of a running/served site (e.g. http://localhost:5000)', required: true },
+    pages: { type: 'string', description: 'Comma-separated page paths to check', default: '/' },
+    ignore: { type: 'string', description: 'Comma-separated fields that are intentionally NOT editable', required: false },
+    json: { type: 'boolean', description: 'Emit the raw report as JSON', default: false },
+  },
+  async run({ args }) {
+    await coverageCommand({
+      schema: args.schema,
+      url: args.url,
+      pages: args.pages,
+      json: args.json,
+      ...(args.ignore !== undefined && { ignore: args.ignore }),
+    });
+  },
+});
+
 const main = defineCommand({
   meta: {
     name: 'cms',
     description: '@webhouse/cms — AI-native CMS engine',
     version: '0.1.1',
   },
-  subCommands: { init, dev, build, serve, ai, mcp, 'export-schema': exportSchema },
+  subCommands: { init, dev, build, serve, ai, mcp, 'export-schema': exportSchema, coverage },
 });
 
 runMain(main);
