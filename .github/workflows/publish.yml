@@ -9,9 +9,13 @@ on:
         default: "patch"
   # F160: a git tag `cms-chat-client-v<ver>` triggers the token-free OIDC publish
   # of @broberg/cms-chat-client ONLY (see publish-cms-chat-client-oidc below).
+  # F162: a git tag `cms-cli-v<ver>` publishes @webhouse/cms-cli ONLY (see
+  # publish-cms-cli below) — isolated so the fleet job's all-bump does NOT drag
+  # unrelated held-back packages (e.g. token-safe cms-inline-edit) out with it.
   push:
     tags:
       - "cms-chat-client-v*"
+      - "cms-cli-v*"
 
 permissions:
   contents: write
@@ -182,4 +186,75 @@ jobs:
 
       - name: Publish (OIDC, token-free)
         working-directory: packages/cms-chat-client
+        run: npm publish --access public --provenance
+
+  # F162: isolated publish of @webhouse/cms-cli ONLY, triggered by a
+  # `cms-cli-v<ver>` tag. Deliberately does NOT touch any other package — the
+  # fleet job (workflow_dispatch) bumps everything together and would drag
+  # held-back packages (e.g. token-safe @broberg/cms-inline-edit) out with it.
+  publish-cms-cli:
+    if: startsWith(github.ref, 'refs/tags/cms-cli-v')
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Pin npm to 11.5.1 (npm 12 breaks `npm publish --provenance`)
+        run: npm install -g npm@11.5.1
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build cms-cli
+        run: pnpm build --filter @webhouse/cms-cli
+
+      - name: Guard — tag matches package.json version
+        working-directory: packages/cms-cli
+        run: |
+          PKG=$(node -p "require('./package.json').version")
+          TAG="${GITHUB_REF_NAME#cms-cli-v}"
+          if [ "$PKG" != "$TAG" ]; then
+            echo "::error::tag cms-cli-v$TAG does not match version $PKG"
+            exit 1
+          fi
+
+      - name: Guard — version not already on npm
+        working-directory: packages/cms-cli
+        run: |
+          PKG=$(node -p "require('./package.json').version")
+          if npm view "@webhouse/cms-cli@$PKG" version >/dev/null 2>&1; then
+            echo "::error::@webhouse/cms-cli@$PKG already published — bump the version first."
+            exit 1
+          fi
+          echo "Publishing @webhouse/cms-cli@$PKG"
+
+      - name: Resolve workspace:* deps to published versions
+        run: |
+          node -e "
+            const fs = require('fs');
+            const path = './packages/cms-cli/package.json';
+            const p = JSON.parse(fs.readFileSync(path, 'utf-8'));
+            const ver = (dir) => JSON.parse(fs.readFileSync('./packages/' + dir + '/package.json', 'utf-8')).version;
+            const map = { '@webhouse/cms': 'cms', '@webhouse/cms-ai': 'cms-ai', '@webhouse/cms-mcp-client': 'cms-mcp-client' };
+            for (const [dep, dir] of Object.entries(map)) {
+              if (p.dependencies && p.dependencies[dep] === 'workspace:*') p.dependencies[dep] = '^' + ver(dir);
+            }
+            fs.writeFileSync(path, JSON.stringify(p, null, 2) + '\n');
+            console.log('deps:', JSON.stringify(p.dependencies));
+          "
+
+      - name: Publish
+        working-directory: packages/cms-cli
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npm publish --access public --provenance
