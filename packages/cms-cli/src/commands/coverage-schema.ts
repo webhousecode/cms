@@ -76,6 +76,28 @@ export function parseCoverageSchema(input: unknown): CoverageSchema {
   const root = asObject(input);
   if (!root) return {};
 
+  // Shape from webhouse.app's `GET /api/schema?site=<id>`:
+  //   { collections: [ { name, label, fields: [ { name, type } ] } ] }
+  // (the live CmsConfig collections, the schema source for bespoke sites that
+  //  have no local webhouse-schema.json). Keep only text-editable field names.
+  if (Array.isArray(root.collections)) {
+    const out: CoverageSchema = {};
+    for (const raw of root.collections) {
+      const col = asObject(raw);
+      if (!col || typeof col.name !== 'string') continue;
+      const defs = Array.isArray(col.fields) ? col.fields : [];
+      const fields = defs
+        .map(asObject)
+        .filter(
+          (f): f is JsonLike =>
+            !!f && typeof f.name === 'string' && typeof f.type === 'string' && TEXT_FIELD_TYPES.has(f.type),
+        )
+        .map((f) => f.name as string);
+      out[col.name] = { fields };
+    }
+    return out;
+  }
+
   // Already a plain CoverageSchema? pass it through untouched.
   if (root.collections === undefined && isCoverageSchema(root)) {
     return root as unknown as CoverageSchema;

@@ -57,6 +57,29 @@ describe('parseCoverageSchema', () => {
     expect(schema.globals!.fields).toEqual(['footerText']); // boolean dropped
   });
 
+  it('parses webhouse.app GET /api/schema shape (collections array with typed fields)', () => {
+    // The live CmsConfig shape returned by webhouse.app for bespoke sites.
+    const apiSchema = {
+      collections: [
+        {
+          name: 'sections',
+          label: 'Sektioner',
+          fields: [
+            { name: 'heading', type: 'text' },
+            { name: 'body', type: 'richtext' },
+            { name: 'ctaUrl', type: 'text' }, // text-typed but caller ignores via --ignore
+            { name: 'order', type: 'number' }, // non-text → dropped
+            { name: 'image', type: 'image' }, // non-text → dropped
+          ],
+        },
+        { name: 'empty', label: 'Empty', fields: [] },
+      ],
+    };
+    const schema = parseCoverageSchema(apiSchema);
+    expect(schema.sections!.fields).toEqual(['heading', 'body', 'ctaUrl']);
+    expect(schema.empty!.fields).toEqual([]);
+  });
+
   it('passes an already-parsed CoverageSchema through untouched', () => {
     const already = { posts: { fields: ['title', 'body'] } };
     expect(parseCoverageSchema(already)).toEqual(already);
