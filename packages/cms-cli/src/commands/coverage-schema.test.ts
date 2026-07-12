@@ -159,4 +159,25 @@ describe('summarizeCoverage', () => {
     expect(summarizeCoverage({ pages: [] }).coveragePct).toBe(100);
     expect(summarizeCoverage({ pages: [] }).pass).toBe(true);
   });
+
+  it('baseline (collection/field) accepts current gaps but still fails NEW ones', () => {
+    const report: CoverageReport = {
+      pages: [
+        { collection: 'posts', slug: 'a', present: ['title'], expected: ['title', 'author', 'quote'], missing: ['author', 'quote'], orphans: [], coveragePct: 33 },
+      ],
+    };
+    // baseline accepts posts/author + posts/quote → pass
+    const accepted = summarizeCoverage(report, new Set(['posts/author', 'posts/quote']));
+    expect(accepted.pass).toBe(true);
+    expect(accepted.totalMissing).toBe(0);
+    // a NEW gap (posts/body) not in the baseline → fails
+    const withNew: CoverageReport = {
+      pages: [
+        { collection: 'posts', slug: 'a', present: ['title'], expected: ['title', 'author', 'body'], missing: ['author', 'body'], orphans: [], coveragePct: 33 },
+      ],
+    };
+    const caught = summarizeCoverage(withNew, new Set(['posts/author', 'posts/quote']));
+    expect(caught.pass).toBe(false);
+    expect(caught.gaps).toEqual([{ collection: 'posts', slug: 'a', missing: ['body'] }]);
+  });
 });

@@ -8,7 +8,7 @@
  * `@broberg/lens-engine` coverage engine (owned by components) — cms only owns
  * the CMS-specific glue (schema parsing + the CI verdict).
  */
-import { readFileSync } from 'node:fs';
+import { readFileSync, existsSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { logger } from '../utils/logger.js';
 import {
@@ -50,9 +50,25 @@ export interface CoverageCommandOptions {
   pages?: string;
   /** Comma-separated field names that are intentionally NOT inline-editable. */
   ignore?: string;
+  /** Path to a baseline file of accepted `collection/field` gaps (F086 model). */
+  baseline?: string;
   /** Emit the raw report as JSON instead of a human summary. */
   json?: boolean;
   cwd?: string;
+}
+
+/** Load a baseline file: one `collection/field` per line, `#` comments + blanks
+ *  ignored. Accepted gaps today → only NEW un-editable fields fail the gate. */
+export function loadBaseline(path: string | undefined, cwd: string): Set<string> {
+  if (!path) return new Set();
+  const abs = resolve(cwd, path);
+  if (!existsSync(abs)) return new Set();
+  return new Set(
+    readFileSync(abs, 'utf-8')
+      .split('\n')
+      .map((l) => l.trim())
+      .filter((l) => l && !l.startsWith('#')),
+  );
 }
 
 async function loadSchema(schemaRef: string, cwd: string): Promise<CoverageSchema> {
@@ -108,7 +124,8 @@ export async function coverageCommand(options: CoverageCommandOptions): Promise<
   // Union per document across all scanned pages: a field is covered if editable
   // on ANY page the document appears on (card on the front page vs full detail).
   const report = unionByDocument({ pages });
-  const summary = summarizeCoverage(report);
+  const baseline = loadBaseline(options.baseline, cwd);
+  const summary = summarizeCoverage(report, baseline.size ? baseline : undefined);
 
   if (options.json) {
     process.stdout.write(JSON.stringify(report, null, 2) + '\n');

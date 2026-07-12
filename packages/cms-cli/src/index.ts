@@ -192,6 +192,7 @@ const coverage = defineCommand({
     url: { type: 'string', description: 'Base URL of a running/served site (e.g. http://localhost:5000)', required: true },
     pages: { type: 'string', description: 'Comma-separated page paths to check', default: '/' },
     ignore: { type: 'string', description: 'Comma-separated fields that are intentionally NOT editable', required: false },
+    baseline: { type: 'string', description: 'Path to a baseline file of accepted collection/field gaps (F086 no-new-gaps)', required: false },
     json: { type: 'boolean', description: 'Emit the raw report as JSON', default: false },
   },
   async run({ args }) {
@@ -201,6 +202,7 @@ const coverage = defineCommand({
       pages: args.pages,
       json: args.json,
       ...(args.ignore !== undefined && { ignore: args.ignore }),
+      ...(args.baseline !== undefined && { baseline: args.baseline }),
     });
   },
 });
