@@ -297,11 +297,17 @@ function showConnectPrompt(options: ResolvedOptions): void {
 // Leaving edit mode returns to idle and KEEPS the token — the editor stays
 // logged in and can re-enter with one click, on every page, for the token's
 // whole life. Only an explicit "Log ud" clears the token (→ logged-out state:
-// no pill at all, same as a customer). Fields are wired ONCE; their click
-// handlers no-op while editingActive is false, so idle is truly inert.
+// no pill at all, same as a customer). A field is wired at most ONCE (idempotent
+// via wiredFields); their click handlers no-op while editingActive is false, so
+// idle is truly inert. On an SPA (soft-navigation, no full reload) new pages add
+// fresh [data-cms-field] nodes to the DOM AFTER init — the consumer calls
+// rescanFields() (e.g. on route change) to wire those late arrivals.
 let editingActive = false;
 let fieldsWired = false;
 let stateOptions: ResolvedOptions | null = null;
+// Elements whose listeners are already attached — makes wireField idempotent so
+// setupFields (once) and rescanFields (N times) can both run without double-wiring.
+const wiredFields = new WeakSet<HTMLElement>();
 
 function setupFields(token: string, options: ResolvedOptions): void {
   stateOptions = options;
@@ -309,6 +315,30 @@ function setupFields(token: string, options: ResolvedOptions): void {
   injectStyles();
   document.querySelectorAll<HTMLElement>("[data-cms-field]").forEach((el) => wireField(el, token, options));
   fieldsWired = true;
+}
+
+/**
+ * Wire any [data-cms-field] elements added to the DOM since the last scan.
+ * Needed on single-page apps (Next.js et al.): the layout mounts once → init +
+ * setupFields run once → only the first page's fields get listeners. Soft
+ * navigation swaps in new pages' fields WITHOUT re-running init, so their
+ * click-to-edit never activates. A consumer calls this on every route change.
+ *
+ * Safe + idempotent by design:
+ *  - No-ops unless a connected, non-expired token exists (same guard as init) —
+ *    a consumer may call it unconditionally without leaking an edit affordance.
+ *  - wireField skips already-wired elements (wiredFields WeakSet), so re-scanning
+ *    the whole document costs nothing for existing fields.
+ *  - Does NOT touch edit-mode state: editingActive (module-level) and
+ *    body[data-cms-editing] persist across a soft-nav, so freshly-wired fields
+ *    are immediately live when the editor is mid-session — no re-enter needed.
+ * MPA consumers (broberg: full reload per navigation re-runs init) never need it.
+ */
+export function rescanFields(): void {
+  if (typeof window === "undefined" || !stateOptions) return;
+  const token = localStorage.getItem(stateOptions.storageKey);
+  if (!token || isExpired(token)) return;
+  document.querySelectorAll<HTMLElement>("[data-cms-field]").forEach((el) => wireField(el, token, stateOptions!));
 }
 
 function enterEditMode(): void {
@@ -379,6 +409,8 @@ function showIdlePill(): void {
 }
 
 function wireField(el: HTMLElement, token: string, options: ResolvedOptions): void {
+  if (wiredFields.has(el)) return; // idempotent — safe to re-scan (rescanFields)
+  wiredFields.add(el);
   // Rich fields get the floating formatting toolbar. Two save modes:
   //  - data-cms-richtext="true" → save as Markdown (article bodies; cms
   //    `richtext` contract renders Markdown via marked).
