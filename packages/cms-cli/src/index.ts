@@ -26,6 +26,7 @@ import { mcpKeygenCommand, mcpTestCommand, mcpStatusCommand } from './commands/m
 import { mcpServeCommand } from './commands/mcp-serve.js';
 import { exportSchemaCommand } from './commands/export-schema.js';
 import { coverageCommand } from './commands/coverage.js';
+import { checkTextCommand } from './commands/check-text.js';
 
 const init = defineCommand({
   meta: { name: 'init', description: 'Initialize a new CMS project' },
@@ -204,13 +205,32 @@ const coverage = defineCommand({
   },
 });
 
+const checkText = defineCommand({
+  meta: {
+    name: 'check-text',
+    description: 'Gate B — flag user-visible hardcoded text not wired to CMS (F162)',
+  },
+  args: {
+    dir: { type: 'string', description: 'Source directory to scan', default: 'src' },
+    allowlist: { type: 'string', description: 'Path to a file of accepted literals (one per line)', required: false },
+    json: { type: 'boolean', description: 'Emit findings as JSON', default: false },
+  },
+  async run({ args }) {
+    await checkTextCommand({
+      dir: args.dir,
+      json: args.json,
+      ...(args.allowlist !== undefined && { allowlist: args.allowlist }),
+    });
+  },
+});
+
 const main = defineCommand({
   meta: {
     name: 'cms',
     description: '@webhouse/cms — AI-native CMS engine',
     version: '0.1.1',
   },
-  subCommands: { init, dev, build, serve, ai, mcp, 'export-schema': exportSchema, coverage },
+  subCommands: { init, dev, build, serve, ai, mcp, 'export-schema': exportSchema, coverage, 'check-text': checkText },
 });
 
 runMain(main);
