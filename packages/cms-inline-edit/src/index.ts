@@ -40,8 +40,16 @@ export interface InlineEditOptions {
   storageKey?: string;
   /** Text for the "not connected yet" prompt (a square-pen icon is prepended). Default "Log ind for at redigere". */
   connectLabel?: string;
-  /** Text for the "connected" badge — the whole pill is the exit-edit action (icon prepended). Default "Afbryd". */
+  /** Text for the "connected + editing" badge — clicking it LEAVES edit mode but keeps the login (icon prepended). Default "Afbryd". */
   disconnectLabel?: string;
+  /** Text for the explicit "log out" action on the idle pill — clicking it clears the token (back to the logged-out state). Default "Log ud". */
+  logoutLabel?: string;
+  /** Show an on-site "connect" pill to LOGGED-OUT visitors (click → connect flow).
+   *  Default FALSE — customer-safe: a visitor without a token sees NOTHING. Only
+   *  enable for a site with no real customers (e.g. an internal/first-party site)
+   *  where a self-contained on-site login entry is wanted. The safe entry for a
+   *  customer site is always the "Redigér live" button in webhouse.app CMS-admin. */
+  connectPrompt?: boolean;
   /** Localised labels for the toolbar + save-status pill. Defaults are Danish. */
   labels?: InlineEditLabels;
 }
@@ -76,6 +84,8 @@ function resolveOptions(options: InlineEditOptions): ResolvedOptions {
     // No emoji in defaults — the square-pen SVG is the icon; some sites ban emoji.
     connectLabel: "Log ind for at redigere",
     disconnectLabel: "Afbryd",
+    logoutLabel: "Log ud",
+    connectPrompt: false,
     ...options,
     labels: { ...DEFAULT_LABELS, ...(options.labels ?? {}) },
   };
@@ -86,20 +96,36 @@ export async function initInlineEdit(options: InlineEditOptions): Promise<void> 
   const resolved = resolveOptions(options);
   uiLabels = resolved.labels;
 
-  captureTokenFromUrl(resolved);
+  // Capture BEFORE checkEnabled so we know whether the token JUST arrived from
+  // the connect redirect (→ drop straight into edit mode) vs. a normal load
+  // with a stored token (→ idle "Rediger" pill, don't force edit mode).
+  const freshFromUrl = captureTokenFromUrl(resolved);
 
   const enabled = await checkEnabled(resolved);
   if (!enabled) return;
 
   const token = getConnectedToken(options);
-  if (token) {
-    activateEditMode(token, resolved);
-  } else {
-    showConnectPrompt(resolved);
-    // F158 — the connect flow opens in a popup; it posts the freshly-minted
-    // token back to this tab. Arm the (origin-validated) receiver.
-    listenForTokenMessage(resolved);
+  if (!token) {
+    // Logged-out visitor / customer. DEFAULT: show NOTHING (customer-safe) —
+    // the consumer can now call initInlineEdit() unconditionally without leaking
+    // an edit affordance. Only sites that opt in (connectPrompt: true) get the
+    // on-site connect pill + its popup token receiver.
+    if (resolved.connectPrompt) {
+      showConnectPrompt(resolved);
+      // F158 — the connect flow opens in a popup; it posts the freshly-minted
+      // token back to this tab. Arm the (origin-validated) receiver.
+      listenForTokenMessage(resolved);
+    }
+    return;
   }
+
+  // Connected editor. Wire fields once, then pick the entry state: arrived from
+  // connect → edit now; normal load with a stored token → idle "Rediger" pill
+  // (one click enters edit mode; the token persists so "Rediger" stays visible
+  // on every page while logged in — no trip back to admin).
+  setupFields(token, resolved);
+  if (freshFromUrl) enterEditMode();
+  else showIdlePill();
 }
 
 /**
@@ -124,7 +150,9 @@ function listenForTokenMessage(options: ResolvedOptions): void {
     if (document.querySelector("[data-cms-inline-edit-badge]")) return; // already active
     localStorage.setItem(options.storageKey, data.token);
     document.querySelector("[data-cms-inline-edit-connect]")?.remove();
-    activateEditMode(data.token, options);
+    // Fresh connect via popup → wire fields + drop straight into edit mode.
+    setupFields(data.token, options);
+    enterEditMode();
   });
 }
 
@@ -164,14 +192,18 @@ export function disconnect(options: InlineEditOptions): void {
   localStorage.removeItem(resolveOptions(options).storageKey);
 }
 
-/** Captures a token minted by /admin/inline-edit/connect, then strips it from the URL. */
-function captureTokenFromUrl(options: ResolvedOptions): void {
+/** Captures a token minted by /admin/inline-edit/connect, then strips it from
+ *  the URL. Returns true when a FRESH token was just captured from the URL
+ *  (i.e. this is the connect-redirect landing) so the caller can auto-enter
+ *  edit mode; false on a normal load where the token comes from localStorage. */
+function captureTokenFromUrl(options: ResolvedOptions): boolean {
   const url = new URL(window.location.href);
   const urlToken = url.searchParams.get(options.tokenParam);
-  if (!urlToken) return;
+  if (!urlToken) return false;
   localStorage.setItem(options.storageKey, urlToken);
   url.searchParams.delete(options.tokenParam);
   window.history.replaceState({}, "", url.toString());
+  return true;
 }
 
 async function checkEnabled(options: ResolvedOptions): Promise<boolean> {
@@ -258,12 +290,81 @@ function showConnectPrompt(options: ResolvedOptions): void {
   document.body.appendChild(link);
 }
 
-function activateEditMode(token: string, options: ResolvedOptions): void {
-  injectStyles();
-  showActiveBadge(options);
+// ─── Connected-editor state machine ────────────────────────────────────────
+// A connected editor (valid token) is ALWAYS in one of two visible states:
+//   idle    → a "Rediger" pill (options.connectLabel); one click enters editing.
+//   editing → fields are contenteditable + an "Afslut redigering" pill.
+// Leaving edit mode returns to idle and KEEPS the token — the editor stays
+// logged in and can re-enter with one click, on every page, for the token's
+// whole life. Only an explicit "Log ud" clears the token (→ logged-out state:
+// no pill at all, same as a customer). Fields are wired ONCE; their click
+// handlers no-op while editingActive is false, so idle is truly inert.
+let editingActive = false;
+let fieldsWired = false;
+let stateOptions: ResolvedOptions | null = null;
 
-  const fields = document.querySelectorAll<HTMLElement>("[data-cms-field]");
-  fields.forEach((el) => wireField(el, token, options));
+function setupFields(token: string, options: ResolvedOptions): void {
+  stateOptions = options;
+  if (fieldsWired) return;
+  injectStyles();
+  document.querySelectorAll<HTMLElement>("[data-cms-field]").forEach((el) => wireField(el, token, options));
+  fieldsWired = true;
+}
+
+function enterEditMode(): void {
+  if (!stateOptions || editingActive) return;
+  editingActive = true;
+  removeIdlePill();
+  showActiveBadge(stateOptions);
+}
+
+function exitEditMode(): void {
+  if (!stateOptions || !editingActive) return;
+  deactivateRich(); // commit any active rich region first
+  editingActive = false;
+  document.querySelector("[data-cms-inline-edit-badge]")?.remove();
+  showIdlePill();
+}
+
+function removeIdlePill(): void {
+  document.querySelector("[data-cms-inline-edit-idle]")?.remove();
+}
+
+function showIdlePill(): void {
+  if (!stateOptions) return;
+  const options = stateOptions;
+  removeIdlePill();
+  const wrap = document.createElement("div");
+  wrap.setAttribute("data-cms-inline-edit-idle", "");
+  wrap.style.cssText =
+    "position:fixed;bottom:16px;left:16px;display:inline-flex;align-items:stretch;" +
+    "z-index:2147483647;box-shadow:0 4px 16px rgba(0,0,0,.3);border-radius:999px;overflow:hidden;";
+  // Main action: "Rediger" → enter edit mode (no server round-trip; the token
+  // already exists locally).
+  const edit = document.createElement("button");
+  edit.type = "button";
+  edit.setAttribute("data-cms-inline-edit-enter", "");
+  edit.style.cssText =
+    "display:inline-flex;align-items:center;gap:7px;background:#1c2027;color:#fff;" +
+    "font:600 12px system-ui,sans-serif;padding:8px 14px;border:none;cursor:pointer;";
+  const editText = document.createElement("span");
+  editText.textContent = options.connectLabel;
+  edit.append(makeIcon(), editText);
+  edit.addEventListener("click", enterEditMode);
+  // Secondary: "Log ud" → clear the token (back to the logged-out state).
+  const out = document.createElement("button");
+  out.type = "button";
+  out.setAttribute("data-cms-inline-edit-logout", "");
+  out.textContent = options.logoutLabel;
+  out.style.cssText =
+    "background:#141821;color:#9aa4b2;font:600 11px system-ui,sans-serif;padding:8px 12px;" +
+    "border:none;border-left:1px solid rgba(255,255,255,.12);cursor:pointer;";
+  out.addEventListener("click", () => {
+    disconnect(options);
+    removeIdlePill();
+  });
+  wrap.append(edit, out);
+  document.body.appendChild(wrap);
 }
 
 function wireField(el: HTMLElement, token: string, options: ResolvedOptions): void {
@@ -284,6 +385,7 @@ function wireField(el: HTMLElement, token: string, options: ResolvedOptions): vo
   }
 
   el.addEventListener("click", (e) => {
+    if (!editingActive) return; // idle: the field behaves normally, not editable
     if (el.getAttribute("contenteditable") === "true") return;
     // Many editable fields (card titles/blurbs) sit inside a clickable <a>/
     // <button> ancestor (the card itself) — without this, "click to edit"
@@ -337,6 +439,7 @@ let richToolbar: HTMLElement | null = null;
 
 function wireRichField(el: HTMLElement, token: string, options: ResolvedOptions, mode: RichMode): void {
   el.addEventListener("click", (e) => {
+    if (!editingActive) return; // idle: the field behaves normally, not editable
     if (richCtx && richCtx.el === el) return; // already editing this region
     e.preventDefault();
     e.stopPropagation();
@@ -823,10 +926,9 @@ function showActiveBadge(options: ResolvedOptions): void {
   badge.append(makeIcon(), text);
   badge.addEventListener("mouseenter", () => (badge.style.opacity = "1"));
   badge.addEventListener("mouseleave", () => (badge.style.opacity = ".9"));
-  badge.addEventListener("click", () => {
-    disconnect(options);
-    window.location.reload();
-  });
+  // Clicking the badge LEAVES edit mode but KEEPS the login → back to the idle
+  // "Rediger" pill (not a logout). Explicit logout lives on the idle pill.
+  badge.addEventListener("click", exitEditMode);
   document.body.appendChild(badge);
 }
 
