@@ -68,7 +68,9 @@ export function scanEditable(
   for (const el of main.querySelectorAll(contentSel)) {
     const text = (el.text || '').replace(/\s+/g, ' ').trim();
     if (text.length < 3) continue; // trivial / icon-only
-    if (el.closest('[data-cms-field]')) continue; // editable (self or ancestor)
+    if (el.closest('[data-cms-field]')) continue; // inline-editable (self or ancestor)
+    if (el.closest('[data-cms-html]')) continue; // CMS richtext/HTML field — CMS-managed, deliberately not inline-editable
+    if (el.closest('a[href]')) continue; // inside a link → preview/card; the canonical editable copy is the linked page
     if (el.closest(NOISE_SEL)) continue; // chrome / UI / form
     if (el.querySelector(CONTAINER_SEL)) continue; // container, not a text leaf
     if (ignoreText.some((s) => text.includes(s))) {

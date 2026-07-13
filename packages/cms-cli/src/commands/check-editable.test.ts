@@ -18,6 +18,16 @@ describe('scanEditable', () => {
     expect(r.gaps).toEqual([]);
   });
 
+  it('accepts CMS richtext/HTML fields marked [data-cms-html] (not a gap)', () => {
+    const r = scanEditable('<main><h2 data-cms-html="heading">Rich <em>formatted</em> heading</h2></main>');
+    expect(r.gaps).toEqual([]);
+  });
+
+  it('skips prose inside a link — a preview/card, not the canonical editable copy', () => {
+    const r = scanEditable('<main><a href="/blog/x"><h3>Article title preview</h3><p>Card excerpt here</p></a></main>');
+    expect(r.gaps).toEqual([]);
+  });
+
   it('ignores chrome/noise (nav, footer, button)', () => {
     const html =
       '<main><nav><p>nav promo text</p></nav><footer><p>copyright notice here</p></footer>' +
