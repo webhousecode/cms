@@ -26,6 +26,7 @@ import { mcpKeygenCommand, mcpTestCommand, mcpStatusCommand } from './commands/m
 import { mcpServeCommand } from './commands/mcp-serve.js';
 import { exportSchemaCommand } from './commands/export-schema.js';
 import { coverageCommand } from './commands/coverage.js';
+import { checkEditableCommand } from './commands/check-editable.js';
 import { checkTextCommand } from './commands/check-text.js';
 
 const init = defineCommand({
@@ -226,13 +227,36 @@ const checkText = defineCommand({
   },
 });
 
+const checkEditable = defineCommand({
+  meta: {
+    name: 'check-editable',
+    description: 'Gate A.1 — flag visible page text that is NOT inline-editable (F162)',
+  },
+  args: {
+    url: { type: 'string', description: 'Base URL of a running/served site (e.g. https://broberg.ai)', required: true },
+    pages: { type: 'string', description: 'Comma-separated page paths to check', default: '/' },
+    'ignore-text': { type: 'string', description: 'Comma-separated text substrings that are intentionally NOT inline-editable (token fields)', required: false },
+    'content-sel': { type: 'string', description: 'Override the content-leaf selector', required: false },
+    json: { type: 'boolean', description: 'Emit the raw report as JSON', default: false },
+  },
+  async run({ args }) {
+    await checkEditableCommand({
+      url: args.url,
+      pages: args.pages,
+      json: args.json,
+      ...(args['ignore-text'] !== undefined && { ignoreText: args['ignore-text'] }),
+      ...(args['content-sel'] !== undefined && { contentSel: args['content-sel'] }),
+    });
+  },
+});
+
 const main = defineCommand({
   meta: {
     name: 'cms',
     description: '@webhouse/cms — AI-native CMS engine',
     version: '0.1.1',
   },
-  subCommands: { init, dev, build, serve, ai, mcp, 'export-schema': exportSchema, coverage, 'check-text': checkText },
+  subCommands: { init, dev, build, serve, ai, mcp, 'export-schema': exportSchema, coverage, 'check-text': checkText, 'check-editable': checkEditable },
 });
 
 runMain(main);
