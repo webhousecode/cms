@@ -45,23 +45,35 @@ pnpm add -D @webhouse/cms-cli@^0.4.23 @broberg/lens-engine@^0.4.0   # or: bun ad
   Install it in the coverage job; set `PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1` (the
   engine is pure jsdom, no browser needed).
 
-## 2. Single-source your routes
+## 2. Let the SITE own its page list — `--sitemap`
 
-Both A.1 and A.2 scan the same page list — derive it **once**, import it in both.
-Never duplicate a `--pages` list in `package.json`.
+**The site must expose a real `sitemap.xml`, and the gates discover pages from it.**
+Do NOT hand-maintain a `--pages` list — that is exactly how phantom/duplicate slugs
+creep in and how real pages get silently missed. The site already knows every URL it
+serves (its router + i18n + CMS content); make it emit that as `sitemap.xml`, and
+point the gates at it:
 
-- **File-based router (Next.js):** walk the App Router `page.tsx` tree, strip
-  auth/transactional routes, sample one slug per dynamic route. (See sanne's
-  `site/scripts/lib/public-routes.mjs`.)
-- **Programmatic router (Hono/Express):** a curated `PUBLIC_ROUTES` array. Keep a
-  separate `PENDING_CONTENT` array for planned-but-unbuilt pages so the gate stays
-  green on real pages while the stubs stay visibly tracked (never silently dropped).
-  (See broberg's `scripts/lib/public-routes.mjs`.)
-
-```js
-export const PUBLIC_ROUTES = ["/", "/losninger", "/universet", /* … */];
-export function publicRoutes() { return PUBLIC_ROUTES; }
+```jsonc
+"gate:editable": "cms check-editable --sitemap https://YOUR-SITE/sitemap.xml",
+"gate:coverage": "cms coverage --schema .cms-coverage-schema.json --sitemap https://YOUR-SITE/sitemap.xml --ignore … --baseline .cms-coverage-baseline"
 ```
+
+`--sitemap` fetches the sitemap, reads every `<loc>`, and scans them all — a sitemap
+index is followed one level deep. The list is always current: publish a new page and
+the next gate run covers it automatically. `--pages <csv>` + `--url <base>` remains as
+a manual override for the rare page not in the sitemap.
+
+**Your sitemap must be built from ONE source of truth** — the same enumeration your
+site uses to render its own links (never a second hand-list):
+
+- **File-based router (Next.js):** `app/sitemap.ts` via `cmsSitemap` from
+  `@webhouse/cms/next`, or walk the App Router tree. (sanne.)
+- **Programmatic router (Hono/Express):** one exported `siteIndexGroups()`/enumerator
+  that both the human site-index AND `/sitemap.xml` consume, so they can never drift.
+  (broberg's `src/sitemap.ts` reuses `siteIndexGroups()` from `routes.tsx`.)
+
+If `sitemap.xml` is missing or serves a placeholder, that is itself a bug (SEO + gate
+coverage) — fix it first.
 
 ## 3. Wire the three scripts
 
