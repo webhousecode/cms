@@ -190,8 +190,9 @@ const coverage = defineCommand({
   },
   args: {
     schema: { type: 'string', description: 'Path or URL to webhouse-schema.json', required: true },
-    url: { type: 'string', description: 'Base URL of a running/served site (e.g. http://localhost:5000)', required: true },
-    pages: { type: 'string', description: 'Comma-separated page paths to check', default: '/' },
+    sitemap: { type: 'string', description: 'URL of the site sitemap.xml — discovers every page (preferred over --pages)', required: false },
+    url: { type: 'string', description: 'Base URL of a running/served site (with --pages)', required: false },
+    pages: { type: 'string', description: 'Comma-separated page paths (manual override; default "/")', required: false },
     ignore: { type: 'string', description: 'Comma-separated fields that are intentionally NOT editable', required: false },
     baseline: { type: 'string', description: 'Path to a baseline file of accepted collection/field gaps (F086 no-new-gaps)', required: false },
     json: { type: 'boolean', description: 'Emit the raw report as JSON', default: false },
@@ -199,9 +200,10 @@ const coverage = defineCommand({
   async run({ args }) {
     await coverageCommand({
       schema: args.schema,
-      url: args.url,
-      pages: args.pages,
       json: args.json,
+      ...(args.url !== undefined && { url: args.url }),
+      ...(args.sitemap !== undefined && { sitemap: args.sitemap }),
+      ...(args.pages !== undefined && { pages: args.pages }),
       ...(args.ignore !== undefined && { ignore: args.ignore }),
       ...(args.baseline !== undefined && { baseline: args.baseline }),
     });
@@ -233,17 +235,19 @@ const checkEditable = defineCommand({
     description: 'Gate A.1 — flag visible page text that is NOT inline-editable (F162)',
   },
   args: {
-    url: { type: 'string', description: 'Base URL of a running/served site (e.g. https://broberg.ai)', required: true },
-    pages: { type: 'string', description: 'Comma-separated page paths to check', default: '/' },
+    sitemap: { type: 'string', description: 'URL of the site sitemap.xml — discovers every page (preferred over --pages)', required: false },
+    url: { type: 'string', description: 'Base URL of a running/served site (with --pages)', required: false },
+    pages: { type: 'string', description: 'Comma-separated page paths (manual override; default "/")', required: false },
     'ignore-text': { type: 'string', description: 'Comma-separated text substrings that are intentionally NOT inline-editable (token fields)', required: false },
     'content-sel': { type: 'string', description: 'Override the content-leaf selector', required: false },
     json: { type: 'boolean', description: 'Emit the raw report as JSON', default: false },
   },
   async run({ args }) {
     await checkEditableCommand({
-      url: args.url,
-      pages: args.pages,
       json: args.json,
+      ...(args.url !== undefined && { url: args.url }),
+      ...(args.sitemap !== undefined && { sitemap: args.sitemap }),
+      ...(args.pages !== undefined && { pages: args.pages }),
       ...(args['ignore-text'] !== undefined && { ignoreText: args['ignore-text'] }),
       ...(args['content-sel'] !== undefined && { contentSel: args['content-sel'] }),
     });

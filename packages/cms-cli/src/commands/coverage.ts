@@ -18,6 +18,7 @@ import {
   type CoverageSchema,
   type CoverageReport,
 } from './coverage-schema.js';
+import { resolveTargets } from './resolve-targets.js';
 
 interface LensEngine {
   computeCoverage: (
@@ -44,9 +45,11 @@ async function loadEngine(): Promise<LensEngine> {
 export interface CoverageCommandOptions {
   /** Path OR URL to a webhouse-schema.json (or a pre-parsed CoverageSchema). */
   schema: string;
-  /** Base URL of a running/served site, e.g. http://localhost:5000. */
+  /** Base URL of a running/served site, e.g. http://localhost:5000 (with --pages). */
   url?: string;
-  /** Comma-separated page paths to check (default "/"). */
+  /** URL of the site's sitemap.xml — the preferred, self-maintaining page source. */
+  sitemap?: string;
+  /** Comma-separated page paths to check (manual list / override; default "/"). */
   pages?: string;
   /** Comma-separated field names that are intentionally NOT inline-editable. */
   ignore?: string;
@@ -85,8 +88,8 @@ async function loadSchema(schemaRef: string, cwd: string): Promise<CoverageSchem
 
 export async function coverageCommand(options: CoverageCommandOptions): Promise<void> {
   const cwd = options.cwd ?? process.cwd();
-  if (!options.url) {
-    logger.error('cms coverage requires --url <base> (a running or served site).');
+  if (!options.url && !options.sitemap) {
+    logger.error('cms coverage requires --sitemap <url> (preferred) or --url <base>.');
     process.exitCode = 1;
     return;
   }
@@ -97,15 +100,18 @@ export async function coverageCommand(options: CoverageCommandOptions): Promise<
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean);
-  const paths = (options.pages ?? '/')
-    .split(',')
-    .map((s) => s.trim())
-    .filter(Boolean);
 
-  const base = options.url.replace(/\/$/, '');
+  let targets;
+  try {
+    targets = await resolveTargets(options);
+  } catch (err) {
+    logger.error(`  ${(err as Error).message}`);
+    process.exitCode = 1;
+    return;
+  }
+
   const pages: CoverageReport['pages'] = [];
-  for (const path of paths) {
-    const pageUrl = base + (path.startsWith('/') ? path : `/${path}`);
+  for (const { label: path, url: pageUrl } of targets) {
     let res: Response;
     try {
       res = await fetch(pageUrl);

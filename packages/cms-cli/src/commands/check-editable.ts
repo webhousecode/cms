@@ -12,6 +12,7 @@
  */
 import { parse } from 'node-html-parser';
 import { logger } from '../utils/logger.js';
+import { resolveTargets } from './resolve-targets.js';
 
 /** Content-leaf elements that carry editable prose a visitor reads. */
 const DEFAULT_CONTENT_SEL = 'h1,h2,h3,h4,h5,h6,p,li,blockquote,figcaption,dd';
@@ -80,9 +81,11 @@ export function scanEditable(
 }
 
 export interface CheckEditableOptions {
-  /** Base URL of a running/served site, e.g. https://broberg.ai. */
-  url: string;
-  /** Comma-separated page paths to check (default "/"). */
+  /** Base URL of a running/served site, e.g. https://broberg.ai (with --pages). */
+  url?: string;
+  /** URL of the site's sitemap.xml — the preferred, self-maintaining page source. */
+  sitemap?: string;
+  /** Comma-separated page paths to check (manual list / override; default "/"). */
   pages?: string;
   /** Comma-separated text substrings that are intentionally NOT inline-editable. */
   ignoreText?: string;
@@ -100,20 +103,25 @@ function splitCsv(v: string | undefined): string[] {
 }
 
 export async function checkEditableCommand(options: CheckEditableOptions): Promise<void> {
-  if (!options.url) {
-    logger.error('cms check-editable requires --url <base> (a running or served site).');
+  if (!options.url && !options.sitemap) {
+    logger.error('cms check-editable requires --sitemap <url> (preferred) or --url <base>.');
     process.exitCode = 1;
     return;
   }
 
   const ignoreText = splitCsv(options.ignoreText);
-  const paths = splitCsv(options.pages);
-  if (paths.length === 0) paths.push('/');
-  const base = options.url.replace(/\/$/, '');
+  let targets;
+  try {
+    targets = await resolveTargets(options);
+  } catch (err) {
+    logger.error(`  ${(err as Error).message}`);
+    process.exitCode = 1;
+    return;
+  }
+  if (targets.length === 0) targets = [{ label: '/', url: (options.url ?? '').replace(/\/$/, '') + '/' }];
 
   const results: PageScan[] = [];
-  for (const path of paths) {
-    const pageUrl = base + (path.startsWith('/') ? path : `/${path}`);
+  for (const { label: path, url: pageUrl } of targets) {
     try {
       const res = await fetch(pageUrl, { headers: { 'user-agent': 'cms-check-editable' } });
       if (!res.ok) {
