@@ -10,6 +10,8 @@
  * Strict — 0 gaps required, no baseline. Complements Gate B (source AST) and
  * Gate A.2 (schema coverage). Pure node-html-parser: headless, no browser, no auth.
  */
+import { readFileSync, existsSync } from 'node:fs';
+import { resolve } from 'node:path';
 import { parse } from 'node-html-parser';
 import { logger } from '../utils/logger.js';
 import { resolveTargets } from './resolve-targets.js';
@@ -93,8 +95,13 @@ export interface CheckEditableOptions {
   ignoreText?: string;
   /** Override the content-leaf selector (default h1-h6,p,li,blockquote,figcaption,dd). */
   contentSel?: string;
+  /** Path to a baseline file of accepted page paths (F086 no-new-gaps): pages that
+   *  are not yet inline-wired today. Gaps on them are accepted; gaps on any OTHER
+   *  page fail. One path per line; a trailing `/` matches that path's descendants. */
+  baseline?: string;
   /** Emit the raw per-page report as JSON instead of a human summary. */
   json?: boolean;
+  cwd?: string;
 }
 
 function splitCsv(v: string | undefined): string[] {
@@ -102,6 +109,26 @@ function splitCsv(v: string | undefined): string[] {
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean);
+}
+
+/** Load a check-editable baseline: one accepted page path per line, `#` comments +
+ *  blanks ignored. A line ending in `/` accepts that path AND its descendants; an
+ *  exact path (no trailing slash) accepts only that page. */
+export function loadEditableBaseline(path: string | undefined, cwd: string): string[] {
+  if (!path) return [];
+  const abs = resolve(cwd, path);
+  if (!existsSync(abs)) return [];
+  return readFileSync(abs, 'utf-8')
+    .split('\n')
+    .map((l) => l.trim())
+    .filter((l) => l && !l.startsWith('#'));
+}
+
+/** A page is accepted if it exactly equals a baseline entry, or (for an entry
+ *  ending in `/`) sits under it. `/behandlinger/` accepts every detail page but
+ *  NOT the `/behandlinger` index; list `/behandlinger` separately to accept that. */
+export function pageMatchesBaseline(pagePath: string, patterns: readonly string[]): boolean {
+  return patterns.some((p) => (p.endsWith('/') ? pagePath.startsWith(p) : pagePath === p));
 }
 
 export async function checkEditableCommand(options: CheckEditableOptions): Promise<void> {
@@ -141,10 +168,15 @@ export async function checkEditableCommand(options: CheckEditableOptions): Promi
     }
   }
 
-  const totalGaps = results.reduce((n, r) => n + r.gaps.length, 0);
+  const baseline = loadEditableBaseline(options.baseline, options.cwd ?? process.cwd());
+  const isAccepted = (r: PageScan) => baseline.length > 0 && pageMatchesBaseline(r.path, baseline);
+
   const totalMarked = results.reduce((n, r) => n + r.marked, 0);
   const totalExcluded = results.reduce((n, r) => n + r.excluded.length, 0);
   const errors = results.filter((r) => r.error);
+  // A gap fails only if its page is NOT baselined as a known-not-yet-wired page.
+  const failingGaps = results.filter((r) => r.gaps.length && !isAccepted(r)).reduce((n, r) => n + r.gaps.length, 0);
+  const acceptedGaps = results.filter((r) => r.gaps.length && isAccepted(r)).reduce((n, r) => n + r.gaps.length, 0);
 
   if (options.json) {
     process.stdout.write(JSON.stringify({ pages: results }, null, 2) + '\n');
@@ -152,22 +184,24 @@ export async function checkEditableCommand(options: CheckEditableOptions): Promi
     logger.log('');
     for (const r of results) {
       if (r.error) logger.error(`  ⚠ ${r.path} → ${r.error}`);
+      else if (r.gaps.length && isAccepted(r)) logger.log(`  ⊘ ${r.path} → ${r.gaps.length} gap(s) [baselined]`);
       else if (r.gaps.length) logger.error(`  ✗ ${r.path} → ${r.gaps.length} gap(s)`);
       else logger.log(`  ✓ ${r.path}`);
-      for (const g of r.gaps) logger.error(`      <${g.tag}> ${g.text}`);
+      if (r.gaps.length && !isAccepted(r)) for (const g of r.gaps) logger.error(`      <${g.tag}> ${g.text}`);
     }
     logger.log('');
+    const baselineNote = acceptedGaps ? ` · ${acceptedGaps} baselined` : '';
     logger.log(
-      `${results.length} page(s) · ${totalMarked} editable field(s) · ${totalGaps} gap(s) · ${totalExcluded} token-excluded`,
+      `${results.length} page(s) · ${totalMarked} editable field(s) · ${failingGaps} gap(s)${baselineNote} · ${totalExcluded} token-excluded`,
     );
-    if (totalGaps === 0 && errors.length === 0) {
+    if (failingGaps === 0 && errors.length === 0) {
       logger.success('All visible content is inline-editable.');
-    } else if (totalGaps) {
-      logger.error(`${totalGaps} visible text element(s) are NOT inline-editable.`);
+    } else if (failingGaps) {
+      logger.error(`${failingGaps} visible text element(s) are NOT inline-editable.`);
     }
     if (errors.length) logger.error(`${errors.length} page(s) could not be scanned (see ⚠ above).`);
   }
 
   // A page you listed but can't scan (404/network) can't be proven covered → fail.
-  process.exitCode = totalGaps === 0 && errors.length === 0 ? 0 : 1;
+  process.exitCode = failingGaps === 0 && errors.length === 0 ? 0 : 1;
 }

@@ -1,5 +1,24 @@
 import { describe, it, expect } from 'vitest';
-import { scanEditable } from './check-editable.js';
+import { scanEditable, pageMatchesBaseline } from './check-editable.js';
+
+describe('pageMatchesBaseline', () => {
+  const baseline = ['/behandlinger/', '/om', '/en/treatments/'];
+
+  it('accepts descendants of a trailing-slash entry but NOT the index itself', () => {
+    expect(pageMatchesBaseline('/behandlinger/massage', baseline)).toBe(true);
+    expect(pageMatchesBaseline('/behandlinger', baseline)).toBe(false); // index stays strict
+  });
+
+  it('accepts an exact path entry only', () => {
+    expect(pageMatchesBaseline('/om', baseline)).toBe(true);
+    expect(pageMatchesBaseline('/om/team', baseline)).toBe(false);
+  });
+
+  it('does not accept an unlisted page', () => {
+    expect(pageMatchesBaseline('/kurser/qigong', baseline)).toBe(false);
+    expect(pageMatchesBaseline('/', baseline)).toBe(false);
+  });
+});
 
 describe('scanEditable', () => {
   it('passes when visible text sits inside a [data-cms-field]', () => {

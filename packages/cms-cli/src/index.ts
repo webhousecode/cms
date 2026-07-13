@@ -240,6 +240,7 @@ const checkEditable = defineCommand({
     pages: { type: 'string', description: 'Comma-separated page paths (manual override; default "/")', required: false },
     'ignore-text': { type: 'string', description: 'Comma-separated text substrings that are intentionally NOT inline-editable (token fields)', required: false },
     'content-sel': { type: 'string', description: 'Override the content-leaf selector', required: false },
+    baseline: { type: 'string', description: 'Path to a baseline of accepted page paths not yet inline-wired (F086 no-new-gaps)', required: false },
     json: { type: 'boolean', description: 'Emit the raw report as JSON', default: false },
   },
   async run({ args }) {
@@ -250,6 +251,7 @@ const checkEditable = defineCommand({
       ...(args.pages !== undefined && { pages: args.pages }),
       ...(args['ignore-text'] !== undefined && { ignoreText: args['ignore-text'] }),
       ...(args['content-sel'] !== undefined && { contentSel: args['content-sel'] }),
+      ...(args.baseline !== undefined && { baseline: args.baseline }),
     });
   },
 });
