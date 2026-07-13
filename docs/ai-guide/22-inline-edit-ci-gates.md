@@ -132,6 +132,12 @@ curl -H "Authorization: Bearer $WH_TOKEN" \
 - `.cms-coverage-baseline` — accepted `collection/field` gaps today (F086: only a
   NEW gap fails). Comment each entry (empty field / SEO-meta / HTML field / etc.).
 - `.cms-coverage-schema.json` — committed so CI runs without a CMS token.
+- `.cms-editable-baseline` (optional, A.1) — if some pages aren't inline-wired yet
+  (Phase-2 detail pages, placeholders), list their paths and pass
+  `cms check-editable --baseline .cms-editable-baseline`. A trailing `/` accepts a
+  path's descendants (`/behandlinger/`), an exact path accepts one page (`/om`).
+  Gaps on any OTHER page still fail — so you cover the whole sitemap now and wire the
+  rest incrementally (remove a line when its page is wired → it goes strict again).
 
 ## 5. CI job shape (gate → deploy → coverage)
 
