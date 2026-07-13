@@ -703,16 +703,19 @@ Apply these in every reply:
 
 **This is a CONTINUOUS obligation, not a one-time check before "building".** Every time you reach for a cross-cutting capability — mail, auth/session-mint, web-push, design tokens, secret-redaction, telemetry, LLM access, fleet comms, embeddable cc-chat, cron, infra setup, … — it goes through the shared `@broberg/*` inventory owned by `components`. Fleet rule: **reuse > re-roll** — a hand-rolled copy is drift waiting to happen.
 
+**It is now a REQUIRED planning step, not just a running obligation (F217).** When you author a feature/epic plan, the `feature` + `adopt` skills make you run a Discovery reuse check **before** the plan-doc is written (search `discovery.broberg.ai/api/search?q=<capability>` per capability) and record the reuse-vs-build decision in the plan-doc's mandatory **`## Reuse`** section. And every `cardmem_session_start` hands you this repo's **`discovery_reuse` gap** (the shipped `@broberg/*` packages it hasn't adopted). So the check is surfaced at session-start AND enforced at plan-time — see `.claude/skills/feature.md` Step 3.5.
+
 **The anti-pattern is a RAW provider integration.** A bare `fetch` to `api.resend.com`, a `new Resend()`, a raw Stripe/Twilio/S3/provider SDK wired directly into a repo — that IS the violation, even when it works and even when you didn't think of it as "building a capability". The test Christian applies: *if I want to swap the provider, do I change it in ONE place or in seventeen?* It must be one. So: **no raw provider SDKs/`fetch`es for anything a `@broberg/*` package owns** (mail → `@broberg/mail`, push → `@broberg/webpush`, LLM → `@broberg/ai-sdk`, …). "We don't use the shared package" is NOT a valid answer when you already have a raw integration doing that package's job — that's the thing to migrate, today.
 
 **If the shared package is MISSING something you need: EXTEND it, never work around it.** Tell `components` (intercom or PR) so the capability lands in the npm for *everyone* — a local workaround is the exact drift this rule exists to prevent. Precedent: `@broberg/webpush` gained `sendSilent()` because a consumer filed the gap instead of hand-rolling it; the package grew, the whole fleet benefits.
 
 **Discover it — `discovery.broberg.ai` is the source of truth, no auth on reads:**
-1. **Full roster:** `GET https://discovery.broberg.ai/api/packages` — every published `@broberg/*` package. Skim it so you KNOW what exists before you wire anything.
-2. **Self-describing:** `GET https://discovery.broberg.ai/api` — every endpoint + searchable vocabularies (layers, statuses, models, infra platforms, package names).
-3. **Search:** `GET https://discovery.broberg.ai/api/search?q=<what-you-need>` — spans components, packages, fleet + infra best-practices in one query.
-4. **Browse:** the live dashboard at https://discovery.broberg.ai (or `/api/components`, `/api/infra`).
-5. **Fallback:** `ask_peer({ to: "components", message: "har I en <X>-primitiv?" })`.
+1. **Browse the whole map FIRST — one fetch:** `GET https://discovery.broberg.ai/ai` — the ENTIRE inventory as a single llms.txt: every `@broberg/*` package grouped by layer AND all 107 fleet tips **inline** (packages + every tip in one response, nothing behind a further link). Read it top-to-bottom BEFORE you wire anything, so you know what already exists. Human page: `https://discovery.broberg.ai/onboarding`.
+2. **Search (targeted):** `GET https://discovery.broberg.ai/api/search?q=<what-you-need>` — once you know roughly what you need, this spans components, packages, fleet + infra best-practices in one query.
+3. **Full roster (JSON):** `GET https://discovery.broberg.ai/api/packages` — every published `@broberg/*` package, machine-readable.
+4. **Self-describing:** `GET https://discovery.broberg.ai/api` — every endpoint + searchable vocabularies (layers, statuses, models, infra platforms, package names).
+5. **Browse (dashboard):** the live dashboard at https://discovery.broberg.ai (or `/api/components`, `/api/infra`).
+6. **Fallback:** `ask_peer({ to: "components", message: "har I en <X>-primitiv?" })`.
 
 Found one? Consume it (exact-pin prod-auth deps). Missing? Build it (or ask `components` to), then tell `components` so it's added for everyone — and check `/api/infra` for our Fly/Cloudflare/Resend/Supabase/Turso/npm best-practices before you wire infra.
 
