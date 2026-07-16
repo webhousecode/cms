@@ -125,6 +125,7 @@ export async function proxy(request: NextRequest) {
   // keeps the pretty `/admin/{slug}/` URL. Reserved segments (content,
   // settings, …) and unknown slugs fall through untouched.
   let slugRewriteUrl: URL | null = null;
+  let slugActive: { orgId: string; siteId: string } | null = null;
   if (isAdminPath) {
     const parsed = parseSiteSlugPath(pathname);
     if (parsed) {
@@ -140,6 +141,14 @@ export async function proxy(request: NextRequest) {
             const cleaned = stripActiveSiteCookies(requestHeaders.get("cookie") ?? "");
             const injected = `cms-active-org=${org.id}; cms-active-site=${parsed.slug}`;
             requestHeaders.set("cookie", cleaned ? `${cleaned}; ${injected}` : injected);
+            // Also persist to the browser's cookie jar on the RESPONSE (below).
+            // Injecting only on the forwarded request fixes server-rendered
+            // components, but every CLIENT-side /api/* call carries no slug and
+            // sends the STALE browser cookie → the picker + page data resolve a
+            // DIFFERENT tenant than the URL (cross-tenant desync: the 2026-07-16
+            // broberg-ai/sanneandersen leak). The URL is authoritative, so the
+            // browser cookie must follow it.
+            slugActive = { orgId: org.id, siteId: parsed.slug };
             // Rewrite to the slug-stripped path so existing routes render.
             slugRewriteUrl = new URL(parsed.rest, request.url);
             slugRewriteUrl.search = request.nextUrl.search;
@@ -155,10 +164,24 @@ export async function proxy(request: NextRequest) {
   // resolved above we rewrite to the slug-stripped path; otherwise pass
   // through unchanged. Both carry the augmented requestHeaders (cookies +
   // x-pathname). All success-paths below go through this.
-  const forwardOk = () =>
-    slugRewriteUrl
+  const forwardOk = () => {
+    const res = slugRewriteUrl
       ? NextResponse.rewrite(slugRewriteUrl, { request: { headers: requestHeaders } })
       : NextResponse.next({ request: { headers: requestHeaders } });
+    // When the active site was resolved from the URL slug, write it to the
+    // browser's cookie jar too (same opts as /admin/switch/[slug]) so later
+    // CLIENT-side /api/* calls — which carry no slug — resolve the SAME tenant
+    // as the URL. Without this the cookie drifts from the URL and two tenants
+    // render on one screen. Scoped to the slug path only: the ?site= API
+    // override deliberately does NOT mutate the persistent cookie (it's a
+    // per-call override for token callers, not a UI site switch).
+    if (slugActive) {
+      const opts = { path: "/", maxAge: 60 * 60 * 24 * 365, sameSite: "lax" as const };
+      res.cookies.set("cms-active-org", slugActive.orgId, opts);
+      res.cookies.set("cms-active-site", slugActive.siteId, opts);
+    }
+    return res;
+  };
 
   // `?site=<id>` URL override for /api/* routes.
   //
