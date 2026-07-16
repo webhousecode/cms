@@ -4,14 +4,14 @@
 existing one to inline editing + pure CMS editing.
 
 **Goal:** make it *impossible* to ship a page where a visitor sees text that isn't
-in the CMS, or CMS content that a client can't click-to-edit. Three deterministic
-CI gates (NO LLM) enforce it. A red gate blocks deploy — back to development until
-green. Both reference sites run all three: **broberg.ai** (Preact + Hono, bun) and
-**sanneandersen** (Next.js, pnpm).
+in the CMS, CMS content that a client can't click-to-edit, or an interactive control
+that Lens can't drive. Four deterministic CI gates (NO LLM) enforce it. A red gate
+blocks deploy — back to development until green. Both reference sites run them:
+**broberg.ai** (Preact + Hono, bun) and **sanneandersen** (Next.js, pnpm).
 
 The single shared tool is **`@webhouse/cms-cli`** (`cms check-text`,
-`cms check-editable`, `cms coverage`). Never hand-roll a per-site copy of these
-scans — that is drift. Extend the tool if it's missing something.
+`cms check-editable`, `cms coverage`, `cms check-testids`). Never hand-roll a per-site
+copy of these scans — that is drift. Extend the tool if it's missing something.
 
 ---
 
@@ -20,8 +20,17 @@ scans — that is drift. Extend the tool if it's missing something.
 | Gate | Command | What it proves | When | Model |
 |---|---|---|---|---|
 | **B** | `cms check-text` | No user-visible hardcoded text in `src/` outside the CMS | pre-deploy | allowlist (no NEW hardcoded text) |
+| **C** | `cms check-testids` | Every interactive control in `src/` has a `data-testid` Lens anchor | pre-deploy | baseline (no NEW gaps, F086) |
 | **A.1** | `cms check-editable` | Every visible line a visitor reads sits in a `[data-cms-field]` | post-deploy | strict (0 gaps) |
 | **A.2** | `cms coverage` | Every rendered CMS *schema* field is inline-editable | post-deploy | baseline (no NEW gaps, F086) |
+
+**Gate C** is a source scan (like B): it flags interactive JSX — `button`, `input`,
+`select`, `textarea`, `a[href]`, and anything with an `onClick`/`onChange`/… handler —
+that carries no `data-testid`. Lens drives + asserts a site through those anchors
+(F086), so a control without one is untestable. Baseline is per-file accepted counts
+(`src/Foo.tsx 3`; a bare path grandfathers the whole file): a NEW untagged control
+pushes a file over its count → red. Elements that already have a `data-testid`, hidden
+inputs, and `{...spread}` elements (the testid may be in the spread) are never flagged.
 
 **Why both A.1 and A.2?** A.2 is schema-driven and unions per document — a field
 editable on *any* page counts as covered, so a field rendered non-editably on one
@@ -36,7 +45,7 @@ placeholder routes A.2 was blind to.)
 
 ```bash
 # in the workspace that owns the site
-pnpm add -D @webhouse/cms-cli@^0.4.23 @broberg/lens-engine@^0.4.0   # or: bun add -d …
+pnpm add -D @webhouse/cms-cli@^0.4.27 @broberg/lens-engine@^0.4.0   # or: bun add -d …
 ```
 
 - `@webhouse/cms-cli` provides all three commands. `check-editable` bundles its DOM
@@ -81,6 +90,7 @@ coverage) — fix it first.
 // package.json
 "scripts": {
   "gate:text":     "cms check-text --dir src --allowlist .cms-check-text-allowlist",
+  "gate:testids":  "cms check-testids --dir src --baseline .cms-testid-baseline",
   "gate:editable": "node scripts/gate-editable.mjs",   // bun scripts/… on bun
   "gate:coverage": "node scripts/gate-coverage.mjs"
 }
@@ -144,7 +154,7 @@ curl -H "Authorization: Bearer $WH_TOKEN" \
 ```yaml
 jobs:
   gate:            # pre-deploy, BLOCKS deploy
-    steps: [ checkout, install, typecheck, build, "run gate:text" ]
+    steps: [ checkout, install, typecheck, build, "run gate:text", "run gate:testids" ]
   deploy:
     needs: gate    # red gate = no deploy (no naked cutover)
     steps: [ "deploy your way" ]
@@ -182,7 +192,9 @@ An element becomes inline-editable by carrying:
 
 - [ ] `@webhouse/cms-cli` + `@broberg/lens-engine` devDeps
 - [ ] `scripts/lib/public-routes.mjs` single-source, imported by both A.1 + A.2
-- [ ] `gate:text` + `gate:editable` + `gate:coverage` scripts
+- [ ] `gate:text` + `gate:testids` + `gate:editable` + `gate:coverage` scripts
+- [ ] `.cms-testid-baseline` (per-file counts) committed — generate once via
+      `cms check-testids --dir src --json`, then only NEW untagged controls fail
 - [ ] `.cms-check-text-allowlist` (chrome only), `.cms-coverage-baseline`,
       `.cms-coverage-schema.json` committed
 - [ ] CI: `gate` (pre-deploy, blocking) → `deploy` → `coverage` (A.1 then A.2)

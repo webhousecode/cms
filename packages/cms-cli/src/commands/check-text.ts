@@ -14,16 +14,16 @@ import { join, resolve, relative } from 'node:path';
 import { logger } from '../utils/logger.js';
 import { findHardcodedStrings, type HardcodedString } from './gate-b.js';
 
-async function loadTs(): Promise<typeof import('typescript')> {
+export async function loadTs(): Promise<typeof import('typescript')> {
   try {
     const spec = 'typescript';
     return (await import(spec)) as typeof import('typescript');
   } catch {
-    throw new Error('cms check-text needs "typescript" (already a dependency of any TS site-repo).');
+    throw new Error('cms source gates need "typescript" (already a dependency of any TS site-repo).');
   }
 }
 
-function walkTsx(dir: string, out: string[] = []): string[] {
+export function walkTsx(dir: string, out: string[] = []): string[] {
   let entries: string[];
   try {
     entries = readdirSync(dir);

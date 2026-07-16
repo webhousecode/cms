@@ -28,6 +28,7 @@ import { exportSchemaCommand } from './commands/export-schema.js';
 import { coverageCommand } from './commands/coverage.js';
 import { checkEditableCommand } from './commands/check-editable.js';
 import { checkTextCommand } from './commands/check-text.js';
+import { checkTestidsCommand } from './commands/check-testids.js';
 
 const init = defineCommand({
   meta: { name: 'init', description: 'Initialize a new CMS project' },
@@ -256,13 +257,32 @@ const checkEditable = defineCommand({
   },
 });
 
+const checkTestids = defineCommand({
+  meta: {
+    name: 'check-testids',
+    description: 'Gate C — flag interactive elements (buttons/inputs/links/onClick) missing a data-testid Lens anchor (F162)',
+  },
+  args: {
+    dir: { type: 'string', description: 'Source directory to scan', default: 'src' },
+    baseline: { type: 'string', description: 'Path to a per-file accepted-gap-count baseline (F086 no-new-gaps)', required: false },
+    json: { type: 'boolean', description: 'Emit findings as JSON', default: false },
+  },
+  async run({ args }) {
+    await checkTestidsCommand({
+      dir: args.dir,
+      json: args.json,
+      ...(args.baseline !== undefined && { baseline: args.baseline }),
+    });
+  },
+});
+
 const main = defineCommand({
   meta: {
     name: 'cms',
     description: '@webhouse/cms — AI-native CMS engine',
     version: '0.1.1',
   },
-  subCommands: { init, dev, build, serve, ai, mcp, 'export-schema': exportSchema, coverage, 'check-text': checkText, 'check-editable': checkEditable },
+  subCommands: { init, dev, build, serve, ai, mcp, 'export-schema': exportSchema, coverage, 'check-text': checkText, 'check-editable': checkEditable, 'check-testids': checkTestids },
 });
 
 runMain(main);
