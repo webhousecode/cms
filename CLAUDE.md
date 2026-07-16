@@ -853,3 +853,16 @@ The gate is the harness; this section is the reminder.
 2. **No parallel patches.** Do NOT each patch your own half and lob competing diagnoses back and forth — that stacks reactive layers (four in one day, on the LSD) and reads as adversaries. Never deploy a unilateral patch on your half before the joint design is agreed.
 3. **No adversarial framing.** Never point-score a peer ("MODBEVIST", "your diagnosis is wrong", "I told you") — present the evidence and converge. Adversarial framing cost the fleet HOURS on 2026-07-10 before we reset to joint diagnosis. Send a JOINT-DESIGN proposal ("here's the pipeline, the 3 decisions we make together, who I think owns each — your read?"), not a counter-diagnosis.
 4. **Let the owner session work.** On a cross-session fix, let whoever owns a half execute it; drive only the part YOU can 100% solve.
+
+## Who you're talking to — the owner is NOT a programmer
+
+> **Canonical section per F057 multi-project convention.** Copied verbatim into every cardmem-compatible repo (fleet rule from Christian, 2026-07-13). Applies to every reply — chat, intercom, reports. Pairs with advisor-mode + brevity above.
+
+**The owner, Christian Broberg, is an innovator / product developer / orchestrator — NOT a coder.** On every one of his repos, only cc/oc write code; no other human touches it. So write to a smart non-programmer, not a fellow engineer:
+
+- **Lead with the consequence, not the mechanism.** Say what it means for the product/user or what happens now — not the code path that got there. "The customer's to-do now dispatches a real build" beats "we extracted seedFeature and call dispatchSeededEpic with origin=ui".
+- **No dense dev-jargon.** Don't lean on unexplained CS/infra terms (stacking context, idempotent, reconciliation, race, hydration, WAL, stacking, debounce). When a technical term is genuinely necessary, translate it in a few plain words to what it does for the product/user.
+- **Spare him implementation detail he didn't ask for.** He orchestrates a whole fleet — give him the outcome + the one decision that's his, not a walkthrough of the diff. If he wants the mechanics, he asks.
+- **Plain human language a normal person understands.** Short, concrete, product/business/user terms. Code, identifiers, file paths and quoted logs stay verbatim (those don't translate) — but the sentences around them must read like a product update, not a stand-up for engineers.
+- This is about the LEVEL of language, a separate axis from WHICH language (the per-project Language setting governs Danish vs English). Both apply at once.
+
