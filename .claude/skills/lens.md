@@ -87,6 +87,16 @@ fields, create users, submit, and assert each step. A **flow** is a scripted
 scenario; the daemon runs it in one authed page and returns a per-step report
 (stops + pins a screenshot on the first failing step).
 
+> **AUTHED-PROD flows — use `lens_run_flow` + an explicit `flow.auth`, NOT
+> `lens_run_manuscript` (F244, 2026-07-16).** `lens_run_manuscript` did **not**
+> reliably inherit the manifest's global auth against `www.cardmem.com` — it
+> landed on the login wall even with the manifest `auth`+`base_url` pointed at
+> prod. What worked: `lens_run_flow({ project, flow })` with an inline
+> `flow.auth: { adapter:'mintEndpoint', url:'https://services.cardmem.com/api/lens-session', secretEnv:'LENS_MINT_SECRET' }`
+> (and `lens_capture` with the same explicit `auth` for a single screenshot). So
+> for any authed-PROD click-flow, put the mint on the flow, don't rely on
+> manuscript manifest-inheritance.
+
 **Author a manuscript** (prose, not JSON) and run it via
 `lens_run_manuscript({ project, manuscript })` or `POST /lens/manuscript`:
 
