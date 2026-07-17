@@ -866,3 +866,20 @@ The gate is the harness; this section is the reminder.
 - **Plain human language a normal person understands.** Short, concrete, product/business/user terms. Code, identifiers, file paths and quoted logs stay verbatim (those don't translate) — but the sentences around them must read like a product update, not a stand-up for engineers.
 - This is about the LEVEL of language, a separate axis from WHICH language (the per-project Language setting governs Danish vs English). Both apply at once.
 
+
+## Secrets Vault — flådens delte krypterede secret-store
+
+> **Canonical section per F057 multi-project convention.** Copied into every enrolled repo. cardmems Secrets Vault er **vores alles unikke, delte vault til secrets** — én krypteret opbevaringsplads for hele flåden, ikke pr. maskine.
+
+**Hvis du har nogle secrets, så gem dem i din secrets vault via cardmem MCP.** En loss-risk-nøgle (Apple `.p8`, en mint-secret, en enroll-key, et provider-token) må aldrig kun ligge i én gitignored fil på én Mac — så forsvinder den når konteksten komprimeres eller maskinen skiftes. Læg den i vaulten, så overlever den, er auditeret, og enhver fleet-session kan hente den igen på dens id.
+
+Vaulten **erstatter ikke `.env`** — `.env` er stadig helt fint til lokal dev. Vaulten er den durable, delte, krypterede hjem OVENPÅ det: den ene kilde en secret altid kan genfindes fra.
+
+**Sådan (per-projekt, AES-256-GCM, auditeret, blokeret for den read-only Lens-principal):**
+- **Gem:** `cardmem_create_secret({ project, name, value, type?, env_var_name? })` — skriv-halvdelen. Multiline virker (en PEM / Apple `.p8` med newlines round-tripper). `type` auto-detekteres. Returnerer kun `{ id, name, type, preview }` — **aldrig** værdien.
+- **Hent:** `cardmem_get_secret({ secret_id })` → plaintext på id, så du kan skrive den i `.env` / `flyctl secrets set` / `gh secret set`. Auditeret.
+- **List (metadata):** `cardmem_list_secrets({ project })` → id, navn, type, maskeret preview — aldrig en værdi.
+- **Kortlæg env-var:** `cardmem_set_secret_env_name({ secret_id, env_var_name })`. Eller brug UI'et: **Settings → Secrets**.
+
+**Aldrig** paste en secret-værdi over intercom/chat/argv eller ind i en LLM-kontekst — `cardmem_create_secret` tager værdien server-side og returnerer kun id + maskeret preview. Læs værdien fra en gitignored fil ind i et script, send den over HTTPS, print kun id/preview.
+
