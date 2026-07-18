@@ -97,6 +97,31 @@ scenario; the daemon runs it in one authed page and returns a per-step report
 > for any authed-PROD click-flow, put the mint on the flow, don't rely on
 > manuscript manifest-inheritance.
 
+> **WRITE-MODE flows — mint the WRITE principal for anything that PERSISTS a
+> change (F213, proven end-to-end on F235.6, 2026-07-18).** The default mint is
+> READ-ONLY: it renders + reads server state fine, but its POST/PUT/PATCH/DELETE
+> are blocked (`rejectLensReadOnlyWrites` in `index.ts`), so a toggle / form-submit
+> click FIRES but never persists — the flow then times out waiting for the written
+> state (this is what looked like a "Lens can't write" gap on F249 + F235.6; it was
+> just the wrong mint). To DRIVE + verify a real write, add
+> `body: { mode: 'write', writes: true }` to the `mintEndpoint` auth — it mints the
+> DISTINCT write principal (`lens-write@cardmem.local`, audited as `lens_write_mint`),
+> which is **not** read-only. BOTH keys are required: a bare `{ mode:'write' }` 400s
+> by design (`write_mode_requires_writes_true`) so a flow can never mutate by
+> accident. Set `mutates: true` on the flow. Same `.lens-mint-secret` — no new key.
+>
+> ```jsonc
+> flow.auth: {
+>   adapter:   'mintEndpoint',
+>   url:       'https://www.cardmem.com/api/lens-session',
+>   secretPath: '.lens-mint-secret',
+>   body:      { mode: 'write', writes: true }   // ← write-capable; OMIT for read-only
+> }
+> ```
+> Read-only (no `body`) stays the right default for pure display / screenshot
+> checks — opt into write-mode ONLY when the AC needs a persisted mutation, so an
+> accidental click can never change prod data.
+
 **Author a manuscript** (prose, not JSON) and run it via
 `lens_run_manuscript({ project, manuscript })` or `POST /lens/manuscript`:
 
