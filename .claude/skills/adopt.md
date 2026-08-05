@@ -41,6 +41,13 @@ This is not cosmetic, it's operational:
 
 **Board ↔ Reader are fixed-linked.** Every card on the Board links to its plan-doc in the Reader; every plan-doc in the Reader maps back to its card. A plan that's only a file — never loaded — is invisible to cardmem. Adoption means *both*: the card on the board **and** its plan in the Reader.
 
+**Never write the plan-doc to disk yourself first.** `plan_md` / `cardmem_write_plan`
+*commits the file to the repo* — so writing it locally and then passing the same text
+to cardmem emits the whole document twice, for nothing. The order that works:
+author the plan → `cardmem_create_card({ plan_md })` (or `cardmem_write_plan` for an
+epic that already has a card) → `git pull` to bring the committed file down. Adopting
+28 epics the other way round is 28 documents paid for twice.
+
 ---
 
 ## 3. The cardmem tools you'll use
@@ -151,7 +158,11 @@ No F-docs yet, but a real spec. Read it fully, then for each logical epic:
 1. Use the local `feature` skill to author the epic's plan-doc — this includes the **Discovery reuse check** (feature Step 3.5, F217): before writing each epic's plan, `GET https://discovery.broberg.ai/api/search?q=<capability>` for every cross-cutting capability and record reuse-vs-build in the plan-doc's `## Reuse` section. Matching a new repo's plan against the shared `@broberg/*` inventory — instead of re-rolling a capability that already exists — is a core aim of adoption.
 2. `cardmem_create_card({ kind: 'epic', plan_md: <plan-doc> })` so the file lands at `docs/features/F<n>-<slug>.md` **and** in the Reader.
 3. **Decompose it into stories** — same as 6b step 4: stories with `parent_card_id`, AC, dependencies, each a small pick-up-able prompt. An epic with no stories is a rule violation.
-4. Everything starts in **Backlog** (nothing shipped yet — fresh planning).
+4. **Classify each epic from code + git — same as 6b step 2.** A prose spec does
+   NOT mean nothing is built: plenty of repos wrote the spec first and shipped
+   against it for months. Backlog is the right column only for the epics with no
+   implementing code. Check the code and the commits per epic; can't tell? Ask
+   the user — never default to Done, and never default the whole board to Backlog.
 
 Stop and ask the user if the prose is ambiguous about where one epic ends and the next begins.
 
