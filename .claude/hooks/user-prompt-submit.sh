@@ -59,7 +59,23 @@ fi
 # Auto-claiming on our own bridge-echo creates loops (e.g., a "Review →
 # Done" channel message contains "F033.3" and the word "pickup" via our
 # tool names, falsely triggering auto-claim back to in_progress).
-prompt_stripped=$(printf '%s' "$prompt" | sed 's|<channel[^>]*>.*</channel>||g' | sed 's|<projects:[^>]*>.*</projects:[^>]*>||g')
+#
+# F256 fix (beacon, 2026-08-06, measured not guessed): this used `sed`, which is
+# LINE-based, while a channel block spans many lines — open tag and close tag are
+# never on the same line. The expression matched nothing, so the whole intercom
+# text survived into the auto-claim input and the imperative regex below was the
+# ONLY thing standing between an incoming message and a claim. A two-layer
+# defence with one dead layer, and no test that said so — the same shape as the
+# other guards found the same day, where the one that LOOKED protective was not.
+#
+# perl -0777 slurps the whole input so `.` may span newlines; non-greedy so two
+# adjacent blocks are not swallowed as one. Falls back to the old behaviour if
+# perl is somehow missing — degraded, but never worse than before.
+if command -v perl >/dev/null 2>&1; then
+  prompt_stripped=$(printf '%s' "$prompt" | perl -0777 -pe 's|<channel[^>]*>.*?</channel>||gs; s|<projects:[^>]*>.*?</projects:[^>]*>||gs')
+else
+  prompt_stripped=$(printf '%s' "$prompt" | sed 's|<channel[^>]*>.*</channel>||g' | sed 's|<projects:[^>]*>.*</projects:[^>]*>||g')
+fi
 
 # Auto-claim requires imperative + F-number on the SAME line within ~40
 # chars — not just "anywhere in the prompt". Previous looser regex
