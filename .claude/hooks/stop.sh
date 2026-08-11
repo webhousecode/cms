@@ -127,9 +127,8 @@ maybe_record_run_report() {
     | grep -oE 'docs/features/[^"]*\.md' | sort -u | head -20 | jq -R . | jq -sc . 2>/dev/null || echo '[]')
 
   # Resolve the project (repo → active_project) the same way session-start does.
-  local repo proj_resp project_id
-  repo=$(resolve_repo)
-  proj_resp=$(call_mcp cardmem_session_start "$(jq -nc --arg sid "$session_id" --arg repo "$repo" '{session_id:$sid} + (if $repo!="" then {repo:$repo} else {} end)')")
+  local proj_resp project_id
+  proj_resp=$(call_mcp cardmem_session_start "$(session_start_args "$session_id")")
   project_id=$(printf '%s' "$proj_resp" | jq -r '.active_project.id // .active_project_id // empty' 2>/dev/null)
   [[ -z "$project_id" ]] && { hook_log "run-report: no project resolved; skip"; return 0; }
 
@@ -169,7 +168,11 @@ all_touched=$(printf '%s\n%s\n' "$touched" "$recent_commits" | sort -u | grep -v
 suspect_fnums=$(printf '%s' "$all_touched" | grep -oE 'F[0-9]+(\.[0-9]+)*' | sort -u || true)
 [[ -z "$suspect_fnums" ]] && exit 0
 
-args=$(jq -nc --arg sid "${session_id:-stop-hook}" '{ session_id: $sid }')
+# F260.5 — repo, or this reconciles our F-numbers against whatever board the
+# owner has open. It ran at every turn end and could only ever be wrong one way:
+# a handled F-number cannot appear in a log it was never written to, so finished
+# work got nudged as unfinished.
+args=$(session_start_args "${session_id:-stop-hook}")
 session_resp=$(call_mcp cardmem_session_start "$args")
 recent_actions=""
 if [[ -n "$session_resp" ]]; then

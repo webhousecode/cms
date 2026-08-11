@@ -34,7 +34,15 @@ branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "main")
 # Pull current in-progress F-numbers from session_start (so post-compact
 # SessionStart can show "you were working on these"). Cheap enough to
 # inline rather than reading from cc transcript.
-state_args=$(jq -nc --arg sid "$session_id" '{ session_id: $sid }')
+# F260.4 — `repo` is what decides WHICH project answers. Without it,
+# session_start falls back to whatever board the owner has open, so the
+# "you were working on these" list handed to the post-compact session can be
+# another project's cards — well-formed, real, and wrong. Found by buddy
+# (#19188) in their copy of this same hook; 27 of 28 repos carried it.
+# F260.5 — assembled by the ONE builder in _common.sh, so no call site can omit
+# a field it never assembles. stop.sh had a second, bare call site that a guard
+# reading whole files could not see.
+state_args=$(session_start_args "$session_id")
 state_resp=$(call_mcp cardmem_session_start "$state_args")
 fnums_json='[]'
 if [[ -n "$state_resp" ]]; then

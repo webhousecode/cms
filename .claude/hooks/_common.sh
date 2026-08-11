@@ -127,6 +127,29 @@ call_mcp() {
 # resolve_repo — best-effort "owner/name" for the current cwd. Empty string
 # if not a github clone. Uses bash parameter expansion only — macOS sed
 # does not support PCRE non-greedy quantifiers.
+# F260.5 — the ONE place session_start's arguments are assembled.
+#
+# Every hook that calls cardmem_session_start must build its args here. `repo` is
+# the field that decides WHICH PROJECT the call reads and writes; a call without
+# it is answered with whatever board the owner happens to have open, and the
+# caller cannot tell. stop.sh did exactly that at every turn end and reconciled
+# this repo's F-numbers against another project's audit log.
+#
+# The point of a builder is that a call site cannot forget a field it never
+# assembles. Four of the five call sites were already correct — the fifth was
+# correct-looking, in a file whose OTHER call site passed repo, which is why a
+# guard that read whole files stayed green over it.
+#
+# $1 = session id. $2 = optional extra JSON object, merged on top.
+session_start_args() {
+  local sid="$1" extra="${2:-{\}}" repo
+  repo=$(resolve_repo)
+  jq -nc --arg sid "$sid" --arg repo "$repo" --argjson extra "$extra" \
+    '{ session_id: $sid }
+       + (if $repo != "" then { repo: $repo } else {} end)
+       + $extra'
+}
+
 resolve_repo() {
   local origin
   origin=$(git remote get-url origin 2>/dev/null) || { printf ''; return 0; }

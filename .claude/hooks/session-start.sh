@@ -41,10 +41,8 @@ if [[ -f "$DIR/../.cardmem-templates.json" ]]; then
   tmpl_version=$(jq -r '.version // empty' "$DIR/../.cardmem-templates.json" 2>/dev/null || echo "")
 fi
 
-args=$(
+args=$(session_start_args "$session_id" "$(
   jq -nc \
-    --arg sid "$session_id" \
-    --arg repo "$repo" \
     --arg branch "$branch" \
     --arg buddy "${BUDDY_SESSION_NAME:-}" \
     --arg model "$model" \
@@ -52,16 +50,14 @@ args=$(
     --arg spawnedBranch "${CARDMEM_SPAWNED_BRANCH:-${PROJECTS_SPAWNED_BRANCH:-}}" \
     --arg parent "${CARDMEM_PARENT_SESSION_ID:-${PROJECTS_PARENT_SESSION_ID:-}}" \
     --arg tmplVersion "$tmpl_version" \
-    '{ session_id: $sid }
-       + (if $repo  != "" then { repo:  $repo  } else {} end)
-       + (if $branch!= "" then { branch:$branch} else {} end)
+    '(if $branch!= "" then { branch:$branch} else {} end)
        + (if $buddy != "" then { buddy_session_name: $buddy } else {} end)
        + (if $model != "" then { model: $model } else {} end)
        + (if $spawnedCard  != "" then { spawned_card_id: $spawnedCard } else {} end)
        + (if $spawnedBranch!= "" then { spawned_branch: $spawnedBranch } else {} end)
        + (if $parent       != "" then { parent_session_id: $parent } else {} end)
        + (if $tmplVersion  != "" then { template_version: $tmplVersion } else {} end)'
-)
+)")
 
 result=$(call_mcp cardmem_session_start "$args")
 if [[ -z "$result" ]]; then

@@ -28,7 +28,7 @@ the next card. Loop until Ready is empty.
    ```json
    { "project_id": "<id>", "patch": { "auto_pickup_mode": "queue-drain" } }
    ```
-4. Call `cardmem_session_start` again with `auto_pickup_mode: 'queue-drain'` to mark THIS session as opted-in (`cc_sessions.auto_pickup_mode`).
+4. Call `cardmem_session_start` again with **`repo` AND** `auto_pickup_mode: 'queue-drain'` to mark THIS session as opted-in (`cc_sessions.auto_pickup_mode`). `repo` is what decides which project the call writes to — omitting it used to repoint the session at whatever board the owner had open (F260.2).
 5. Confirm:
    ```
    ✓ Queue-drain ON
@@ -45,7 +45,7 @@ the next card. Loop until Ready is empty.
 ## Step 3 — `/queue-drain status`
 
 1. Call `cardmem_get_settings({ project_id })` to read the project mode.
-2. Call `cardmem_session_start({ session_id, project_id })` — idempotent heartbeat that returns the current session's row including the `queue_drain` block:
+2. Call `cardmem_session_start({ session_id, repo })` — idempotent heartbeat that returns the current session's row including the `queue_drain` block. (`project_id` is not a parameter of this tool; `repo` is how it resolves the project, and a call without it used to repoint the session at another board — F260.2.)
    ```json
    {
      "queue_drain": {

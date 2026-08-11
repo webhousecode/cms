@@ -30,17 +30,11 @@ branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "main")
 # Always touch cc_sessions.last_seen_at so the notify-bridge keeps routing
 # us. The response also brings the latest 5 audit entries — we'll surface
 # any that arrived since "last seen by this hook" using a marker-file.
-session_args=$(
-  jq -nc \
-    --arg sid "$session_id" \
-    --arg repo "$repo" \
-    --arg branch "$branch" \
-    --arg buddy "${BUDDY_SESSION_NAME:-}" \
-    '{ session_id: $sid }
-       + (if $repo  != "" then { repo:  $repo  } else {} end)
-       + (if $branch!= "" then { branch:$branch} else {} end)
+session_args=$(session_start_args "$session_id" "$(
+  jq -nc --arg branch "$branch" --arg buddy "${BUDDY_SESSION_NAME:-}" \
+    '(if $branch != "" then { branch: $branch } else {} end)
        + (if $buddy != "" then { buddy_session_name: $buddy } else {} end)'
-)
+)")
 
 session_resp=$(call_mcp cardmem_session_start "$session_args")
 
