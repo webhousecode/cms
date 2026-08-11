@@ -719,6 +719,8 @@ Apply these in every reply:
 
 Found one? Consume it (exact-pin prod-auth deps). Missing? Build it (or ask `components` to), then tell `components` so it's added for everyone — and check `/api/infra` for our Fly/Cloudflare/Resend/Supabase/Turso/npm best-practices before you wire infra.
 
+**And tell them when a release makes an EXISTING note WRONG — not only when it adds one.** A shared inventory cannot know it has gone stale; only the owner of the thing it describes can. Three notes bit the fleet in one week by being *correct when written* and dangerous by remaining: an adoption note that would have double-counted AI spend in production, "there is no EU route for video analysis" (disproved two days later by a shipped capability), and "not live-verified, blocked on GCP creds" (which stood from June until the creds quietly appeared). All three were caught because the OWNER spoke up; none because a reader noticed.
+
 **Enroll when you adopt (close the loop).** When this repo starts (or stops) using a `@broberg/*` package, tell Discovery so the shared roster updates itself — no intercom to components:
 
 - **Your status anytime:** `GET https://discovery.broberg.ai/api/sessions/<this-session>` → what you're enrolled in, the newest published versions, and your **gap** (shipped packages you haven't adopted yet — your reuse to-do list).
