@@ -62,3 +62,58 @@ describe("htmlToMarkdown — list integrity", () => {
     expect(md).toContain("2. b");
   });
 });
+
+// F164.1 — a link to a PAGE stores a reference (data-cms-ref) alongside a real
+// working href, so the site can re-resolve it when the page moves or is
+// renamed. Markdown link syntax has no slot for that metadata, so such links
+// serialise as inline HTML (which `marked` passes through). Without this the
+// reference would be stripped on the editor's FIRST save and the whole
+// live-reference feature would be silently dead.
+describe("htmlToMarkdown — page references survive a save", () => {
+  const REF = '<a href="/da/om-sanne" data-cms-ref="sider-content:om-sanne" data-cms-ref-label="auto">Om Sanne</a>';
+
+  it("keeps href AND the reference attributes on a page link", () => {
+    const md = htmlToMarkdown(`<p>Se ${REF} for mere.</p>`);
+    expect(md).toContain('href="/da/om-sanne"');
+    expect(md).toContain('data-cms-ref="sider-content:om-sanne"');
+    expect(md).toContain('data-cms-ref-label="auto"');
+    expect(md).toContain("Om Sanne");
+    // NOT collapsed to a plain markdown link — that is what loses the reference.
+    expect(md).not.toContain("[Om Sanne](/da/om-sanne)");
+  });
+
+  it("omits the auto-label marker when the editor wrote their own text", () => {
+    const md = htmlToMarkdown(
+      '<p><a href="/da/om-sanne" data-cms-ref="sider-content:om-sanne">min historie</a></p>',
+    );
+    expect(md).toContain('data-cms-ref="sider-content:om-sanne"');
+    expect(md).not.toContain("data-cms-ref-label");
+    expect(md).toContain("min historie");
+  });
+
+  it("leaves a plain link as ordinary markdown — unchanged behaviour", () => {
+    const md = htmlToMarkdown('<p><a href="https://example.com">eksternt</a></p>');
+    expect(md).toContain("[eksternt](https://example.com)");
+    expect(md).not.toContain("<a ");
+  });
+
+  it("is stable across a second save — the reference does not degrade", () => {
+    const once = htmlToMarkdown(`<p>Se ${REF} for mere.</p>`);
+    const twice = htmlToMarkdown(`<p>${once.trim()}</p>`);
+    expect(twice.trim()).toBe(once.trim());
+  });
+
+  it("keeps inline formatting inside a page link", () => {
+    const md = htmlToMarkdown(
+      '<p><a href="/x" data-cms-ref="pages:x"><strong>fed</strong> tekst</a></p>',
+    );
+    expect(md).toContain("**fed** tekst");
+    expect(md).toContain('data-cms-ref="pages:x"');
+  });
+
+  it("escapes quotes in attribute values so the anchor cannot break out", () => {
+    const md = htmlToMarkdown('<p><a href=\'/x?a="b\' data-cms-ref="pages:x">t</a></p>');
+    expect(md).not.toContain('href="/x?a="b"');
+    expect(md).toContain("&quot;");
+  });
+});

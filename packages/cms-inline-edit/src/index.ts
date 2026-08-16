@@ -865,6 +865,11 @@ function serializeList(listEl: HTMLElement, ordered: boolean): string {
   return items.join("\n");
 }
 
+/** Escape a value for use inside a double-quoted HTML attribute (F164). */
+function escapeAttr(value: string): string {
+  return value.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+}
+
 function serializeInline(node: Node): string {
   let out = "";
   node.childNodes.forEach((child) => {
@@ -893,7 +898,21 @@ function serializeInline(node: Node): string {
         break;
       case "a": {
         const href = el.getAttribute("href") || "";
-        out += href ? `[${inner}](${href})` : inner;
+        const ref = el.getAttribute("data-cms-ref");
+        if (ref) {
+          // F164 — a link to a PAGE on the site carries a reference so the page
+          // can re-resolve href (and optionally the label) when that page moves
+          // or is renamed. Markdown link syntax has nowhere to put that, so
+          // emit inline HTML, which `marked` passes through untouched.
+          // Collapsing to [text](href) here would strip the reference on the
+          // editor's very FIRST save and silently kill the whole feature.
+          const attrs = [`href="${escapeAttr(href)}"`, `data-cms-ref="${escapeAttr(ref)}"`];
+          const label = el.getAttribute("data-cms-ref-label");
+          if (label) attrs.push(`data-cms-ref-label="${escapeAttr(label)}"`);
+          out += `<a ${attrs.join(" ")}>${inner}</a>`;
+        } else {
+          out += href ? `[${inner}](${href})` : inner;
+        }
         break;
       }
       case "img": {
