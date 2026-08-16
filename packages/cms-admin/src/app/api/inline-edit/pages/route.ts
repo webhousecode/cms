@@ -59,8 +59,16 @@ export async function GET() {
       titleField?: string;
       hidden?: boolean;
     };
-    // A collection with no public URL isn't a link target (settings/globals).
+    // A collection is a link target only if it DECLARES where it renders —
+    // urlPrefix (or urlPattern). Without one, docPath falls back to guessing
+    // "/<collection>/<slug>", which for an internal collection is an address
+    // that does not exist: measured on sanneandersen, including everything gave
+    // 225 entries, mostly section fragments like "{antal} veje til balance"
+    // offered as if they were pages. An editor must not be able to pick those.
+    // The cost is explicit: a collection that renders publicly but declares
+    // neither will not appear until it does.
     if (c.hidden) continue;
+    if (c.urlPrefix === undefined && c.urlPattern === undefined) continue;
 
     let docs: Array<Record<string, unknown>> = [];
     try {
