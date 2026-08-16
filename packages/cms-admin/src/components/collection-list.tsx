@@ -10,6 +10,7 @@ import { formatDate } from "@/lib/utils";
 import { LOCALE_FLAGS } from "@/lib/locale";
 import { PreviewThumb, NoPreviewPlaceholder } from "@/components/preview-thumb";
 import { useHeaderData } from "@/lib/header-data-context";
+import { docPath, type LocaleStrategy } from "@/lib/doc-url";
 
 export type ViewMode = "list" | "grid";
 type StatusFilter = "all" | "published" | "draft" | "scheduled" | "expired" | "trashed";
@@ -440,45 +441,15 @@ export function CollectionList({ collection, titleField, fields, initialDocs, re
 
   function docPreviewUrl(doc: Doc): string {
     if (!previewBase) return "";
-    const prefix = (urlPrefix ?? `/${collection}`).replace(/\/$/, "");
-    const docLocale = doc.locale ?? "";
-
-    // Determine if locale prefix is used
-    const usesLocalePrefix =
-      (localeStrategy === "prefix-all" && !!docLocale) ||
-      (localeStrategy === "prefix-other" && !!docLocale && docLocale !== (defaultLocale ?? "en"));
-
-    // Strip locale suffix from slug when using prefix strategy
-    let baseSlug = doc.slug;
-    if (usesLocalePrefix && docLocale && docLocale !== (defaultLocale ?? "en")) {
-      const suffix = `-${docLocale}`;
-      if (baseSlug.endsWith(suffix)) {
-        baseSlug = baseSlug.slice(0, -suffix.length);
-      }
-    }
-
-    const isHomepage = (prefix === "" || prefix === "/") && (baseSlug === "home" || baseSlug === "index");
-
-    let slugPath = baseSlug;
-    if (urlPattern) {
-      slugPath = urlPattern.replace(/^\//, "").replace(/:([a-zA-Z_]+)/g, (_m, field) => {
-        if (field === "slug") return baseSlug;
-        const val = doc.data?.[field];
-        return typeof val === "string" ? val : "";
-      });
-    }
-
-    const locPrefix = usesLocalePrefix ? `/${docLocale}` : "";
-
-    // For "none" strategy, use original slug (locale baked in)
-    if (localeStrategy === "none") {
-      slugPath = doc.slug;
-    }
-
-    const pagePath = isHomepage
-      ? (locPrefix ? `${locPrefix}/` : "/")
-      : `${locPrefix}${prefix}/${slugPath}`;
-    return `${previewBase}${pagePath}`;
+    // Shared with the F164 link picker — see lib/doc-url.ts. One implementation
+    // so a link and its preview can never point at different paths.
+    return `${previewBase}${docPath(doc, {
+      collection,
+      urlPrefix,
+      urlPattern,
+      localeStrategy: localeStrategy as LocaleStrategy,
+      defaultLocale,
+    })}`;
   }
 
   return (

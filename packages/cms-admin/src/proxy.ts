@@ -45,7 +45,7 @@ function stripActiveSiteCookies(cookieHeader: string): string {
  * token's role to be "admin"). Everything else is denied — this is the
  * actual security boundary for inline editing.
  */
-function isAllowedForEditSession(
+export function isAllowedForEditSession(
   pathname: string,
   method: string,
   requestSite: string,
@@ -53,6 +53,9 @@ function isAllowedForEditSession(
 ): boolean {
   if (pathname === "/api/auth/me") return method === "GET";
   if (pathname === "/api/inline-edit/toggle") return method === "POST" && requestSite === tokenSite;
+  // F164.2 — the link picker's page list. Read-only, own site only: titles +
+  // public paths the site's own navigation already exposes.
+  if (pathname === "/api/inline-edit/pages") return method === "GET" && requestSite === tokenSite;
   const match = pathname.match(/^\/api\/cms\/([^/]+)\/([^/]+)\/?$/);
   if (!match) return false;
   if (method !== "GET" && method !== "PATCH") return false;

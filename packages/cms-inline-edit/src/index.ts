@@ -28,6 +28,27 @@ export interface InlineEditLabels {
   saving?: string;
   saved?: string;
   error?: string;
+  /** F164 — link dialog. */
+  link?: string;
+  linkTabPage?: string;
+  linkTabUrl?: string;
+  linkSearch?: string;
+  linkText?: string;
+  linkTextAuto?: string;
+  linkTextAutoHint?: string;
+  linkTextOwnHint?: string;
+  linkLiveHint?: string;
+  linkUrlHint?: string;
+  linkUrl?: string;
+  linkInsert?: string;
+  linkSave?: string;
+  linkCancel?: string;
+  linkRemove?: string;
+  linkRemoveConfirm?: string;
+  linkYes?: string;
+  linkNo?: string;
+  linkEmpty?: string;
+  linkLoading?: string;
 }
 
 export interface InlineEditOptions {
@@ -71,6 +92,30 @@ const DEFAULT_LABELS: Required<InlineEditLabels> = {
   saving: "Gemmer…",
   saved: "Gemt ✓",
   error: "Fejl — prøv igen",
+  link: "Link",
+  linkTabPage: "Side på sitet",
+  linkTabUrl: "Fri adresse",
+  linkSearch: "Søg efter en side…",
+  linkText: "Linktekst",
+  linkTextAuto: "Følger sidens titel",
+  linkTextAutoHint:
+    "<b>Tom = følger sidens titel.</b> Omdøbes siden, retter teksten sig selv. Skriver du din egen tekst, bliver den stående.",
+  linkTextOwnHint:
+    "Linket viser <b>din egen tekst</b>. Den bliver stående, også hvis siden omdøbes.",
+  linkLiveHint:
+    "Linket peger på <b>siden</b> — ikke på en adresse. Flyttes siden, eller får den et nyt navn, retter linket sig selv.",
+  linkUrlHint:
+    "En fri adresse peger præcis dér, du skriver. Den følger <b>ikke</b> med, hvis målet flytter sig.",
+  linkUrl: "Adresse",
+  linkInsert: "Indsæt link",
+  linkSave: "Gem ændring",
+  linkCancel: "Annullér",
+  linkRemove: "Fjern link",
+  linkRemoveConfirm: "Fjern?",
+  linkYes: "Ja",
+  linkNo: "Nej",
+  linkEmpty: "Ingen sider fundet",
+  linkLoading: "Henter sider…",
 };
 
 // Set once from resolved options in initInlineEdit(); read by the (singleton)
@@ -253,6 +298,14 @@ const OL_SVG =
   '<line x1="10" x2="21" y1="6" y2="6"/><line x1="10" x2="21" y1="12" y2="12"/>' +
   '<line x1="10" x2="21" y1="18" y2="18"/><path d="M4 6h1v4"/><path d="M4 10h2"/>' +
   '<path d="M6 18H4c0-1 2-2 2-3s-1-1.5-2-1"/>' +
+  "</svg>";
+
+const LINK_SVG =
+  '<svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" viewBox="0 0 24 24" ' +
+  'fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" ' +
+  'stroke-linejoin="round" aria-hidden="true">' +
+  '<path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/>' +
+  '<path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/>' +
   "</svg>";
 
 function makeIcon(): HTMLSpanElement {
@@ -514,6 +567,7 @@ function deactivateRich(): void {
   el.removeAttribute("contenteditable");
   el.classList.remove("cms-rich-editing");
   hideRichToolbar();
+  hideLinkDialog();
   if (el.innerHTML !== originalHtml) {
     const value = mode === "html" ? el.innerHTML : htmlToMarkdown(el.innerHTML);
     void saveField(el, value, token, options);
@@ -578,6 +632,13 @@ function buildRichToolbar(): HTMLElement {
 
   t.appendChild(sep());
 
+  // F164 — link: a free URL, or a live reference to a page on the site.
+  const linkBtn = toolbarButton(LINK_SVG, uiLabels.link, () => toggleLinkDialog(linkBtn));
+  linkBtn.setAttribute("data-testid", "inline-toolbar-link");
+  t.appendChild(linkBtn);
+
+  t.appendChild(sep());
+
   // Text color — execCommand foreColor applies to the current selection.
   const clrLabel = document.createElement("label");
   clrLabel.style.cssText = "display:flex;align-items:center;gap:5px;color:#9aa4b2;font-size:12px;cursor:pointer;";
@@ -622,6 +683,336 @@ const EMOJIS =
   );
 let emojiPicker: HTMLElement | null = null;
 let savedRange: Range | null = null;
+
+/* ------------------------------------------------------------------ F164 --
+ * Link dialog: a free URL, or a LIVE reference to a page on the site.
+ *
+ * A page link stores data-cms-ref="collection:slug" next to a real working
+ * href, so resolveCmsLinks() (see ./server) can re-point it when the page moves
+ * or is renamed. Leaving the label empty marks it data-cms-ref-label="auto" so
+ * the link shows the page's current title.
+ * -------------------------------------------------------------------------- */
+
+interface LinkablePage {
+  collection: string;
+  slug: string;
+  title: string;
+  path: string;
+  label: string;
+}
+
+let linkDialog: HTMLElement | null = null;
+let linkPages: LinkablePage[] | null = null;
+let linkPicked: LinkablePage | null = null;
+let linkEditing: HTMLAnchorElement | null = null;
+
+function hideLinkDialog(): void {
+  if (linkDialog) linkDialog.style.display = "none";
+  linkPicked = null;
+  linkEditing = null;
+}
+
+/** The <a> the caret sits inside, if any — so clicking Link EDITS it. */
+function anchorAtCaret(): HTMLAnchorElement | null {
+  const sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0) return null;
+  let node: Node | null = sel.getRangeAt(0).startContainer;
+  while (node && node !== document.body) {
+    if (node.nodeType === Node.ELEMENT_NODE && (node as HTMLElement).tagName === "A") {
+      return node as HTMLAnchorElement;
+    }
+    node = node.parentNode;
+  }
+  return null;
+}
+
+async function fetchLinkablePages(): Promise<LinkablePage[]> {
+  if (linkPages) return linkPages;
+  if (!richCtx) return [];
+  const { options, token } = richCtx;
+  const url = `${options.cmsBaseUrl}/api/inline-edit/pages?site=${encodeURIComponent(options.siteId)}`;
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+  if (!res.ok) throw new Error(`pages ${res.status}`);
+  const body = (await res.json()) as { pages?: LinkablePage[] };
+  linkPages = body.pages ?? [];
+  return linkPages;
+}
+
+function toggleLinkDialog(anchor: HTMLElement): void {
+  if (linkDialog && linkDialog.style.display === "block") {
+    hideLinkDialog();
+    return;
+  }
+  const sel = window.getSelection();
+  if (sel && sel.rangeCount > 0) savedRange = sel.getRangeAt(0).cloneRange();
+  linkEditing = anchorAtCaret();
+  if (!linkDialog) linkDialog = buildLinkDialog();
+  renderLinkDialog();
+  const rect = anchor.getBoundingClientRect();
+  linkDialog.style.top = `${rect.bottom + 8}px`;
+  linkDialog.style.left = `${Math.min(Math.max(8, rect.left - 180), window.innerWidth - 400)}px`;
+  linkDialog.style.display = "block";
+}
+
+function buildLinkDialog(): HTMLElement {
+  const d = document.createElement("div");
+  d.setAttribute("data-cms-inline-edit-toolbar", ""); // shares the "don't commit on click" guard
+  d.setAttribute("data-testid", "inline-link-dialog");
+  d.style.cssText =
+    "position:fixed;z-index:2147483646;background:#1c2027;border:1px solid #3a3f4a;" +
+    "border-radius:10px;width:392px;display:none;box-shadow:0 8px 32px rgba(0,0,0,.5);" +
+    "font-family:system-ui,sans-serif;color:#fff;overflow:hidden;";
+  // Keep the page selection alive while interacting with the dialog.
+  d.addEventListener("mousedown", (e) => {
+    const t = e.target as HTMLElement;
+    if (t.tagName !== "INPUT") e.preventDefault();
+    e.stopPropagation();
+  });
+  document.body.appendChild(d);
+  return d;
+}
+
+function renderLinkDialog(): void {
+  const d = linkDialog;
+  if (!d) return;
+  const L = uiLabels;
+  const editing = !!linkEditing;
+  const existingRef = linkEditing?.getAttribute("data-cms-ref") ?? "";
+  const onPageTab = !editing || !!existingRef;
+
+  d.innerHTML =
+    '<div style="display:flex;gap:4px;padding:8px 8px 0">' +
+    `<button type="button" data-testid="inline-link-tab-page" data-tab="page" style="${tabCss(onPageTab)}">${L.linkTabPage}</button>` +
+    `<button type="button" data-testid="inline-link-tab-url" data-tab="url" style="${tabCss(!onPageTab)}">${L.linkTabUrl}</button>` +
+    "</div>" +
+    '<div style="padding:10px 12px 12px">' +
+    `<div data-pane="page" style="display:${onPageTab ? "block" : "none"}">` +
+    `<input data-testid="inline-link-search" data-role="search" placeholder="${L.linkSearch}" style="${fieldCss()}">` +
+    `<div data-role="list" data-testid="inline-link-list" style="margin-top:8px;max-height:196px;overflow-y:auto;border:1px solid #3a3f4a;border-radius:8px;background:#141821"></div>` +
+    "</div>" +
+    `<div data-pane="url" style="display:${onPageTab ? "none" : "block"}">` +
+    `<label style="${labelCss()}">${L.linkUrl}</label>` +
+    `<input data-testid="inline-link-url" data-role="url" placeholder="https://…" style="${fieldCss()}">` +
+    "</div>" +
+    `<label style="${labelCss()}">${L.linkText}</label>` +
+    `<input data-testid="inline-link-text" data-role="text" placeholder="${L.linkTextAuto}" style="${fieldCss()}">` +
+    `<p data-role="hint" style="font-size:11.5px;color:#9aa3b2;margin:6px 0 0;line-height:1.5"></p>` +
+    `<div data-role="live" style="display:flex;gap:8px;margin-top:12px;padding:9px 10px;background:rgba(0,178,255,.08);border:1px solid rgba(0,178,255,.28);border-radius:8px">` +
+    `<p style="margin:0;font-size:11.5px;color:#c9d1dd;line-height:1.55">${L.linkLiveHint}</p></div>` +
+    '<div style="display:flex;gap:8px;align-items:center;margin-top:14px">' +
+    '<div data-role="remove"></div><div style="flex:1"></div>' +
+    `<button type="button" data-testid="inline-link-cancel" data-role="cancel" style="${btnCss(false)}">${L.linkCancel}</button>` +
+    `<button type="button" data-testid="inline-link-submit" data-role="submit" style="${btnCss(true)}" disabled>${editing ? L.linkSave : L.linkInsert}</button>` +
+    "</div></div>";
+
+  const q = <T extends HTMLElement>(role: string) => d.querySelector(`[data-role="${role}"]`) as T;
+  const text = q<HTMLInputElement>("text");
+  const urlIn = q<HTMLInputElement>("url");
+  const search = q<HTMLInputElement>("search");
+
+  if (editing) {
+    text.value = linkEditing?.getAttribute("data-cms-ref-label") === "auto" ? "" : (linkEditing?.textContent ?? "");
+    if (!existingRef) urlIn.value = linkEditing?.getAttribute("href") ?? "";
+    q<HTMLElement>("remove").appendChild(buildRemoveLink());
+  }
+
+  d.querySelectorAll<HTMLElement>("[data-tab]").forEach((btn) => {
+    btn.onclick = () => {
+      const page = btn.dataset.tab === "page";
+      d.querySelectorAll<HTMLElement>("[data-tab]").forEach((b) => {
+        b.setAttribute("style", tabCss(b.dataset.tab === "page" ? page : !page));
+      });
+      (d.querySelector('[data-pane="page"]') as HTMLElement).style.display = page ? "block" : "none";
+      (d.querySelector('[data-pane="url"]') as HTMLElement).style.display = page ? "none" : "block";
+      q<HTMLElement>("live").style.display = page ? "flex" : "none";
+      syncLinkDialog();
+    };
+  });
+
+  search.oninput = () => renderLinkList(search.value);
+  text.oninput = syncLinkDialog;
+  urlIn.oninput = syncLinkDialog;
+  q<HTMLElement>("cancel").onclick = hideLinkDialog;
+  q<HTMLElement>("submit").onclick = applyLink;
+
+  renderLinkList("");
+  syncLinkDialog();
+}
+
+function buildRemoveLink(): HTMLElement {
+  const wrap = document.createElement("div");
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.setAttribute("data-testid", "inline-link-remove");
+  btn.textContent = uiLabels.linkRemove;
+  btn.style.cssText =
+    "background:none;border:none;color:#ff8a8a;font-size:12.5px;cursor:pointer;padding:0 2px;";
+  btn.onclick = () => {
+    wrap.innerHTML =
+      `<span style="font-size:11.5px;color:#ff8a8a;font-weight:500;padding:0 2px">${uiLabels.linkRemoveConfirm}</span>` +
+      `<button type="button" data-testid="inline-link-remove-yes" style="font-size:11px;padding:2px 8px;border-radius:4px;border:none;background:#c0392b;color:#fff;cursor:pointer;line-height:1.4;margin-left:6px">${uiLabels.linkYes}</button>` +
+      `<button type="button" data-testid="inline-link-remove-no" style="font-size:11px;padding:2px 8px;border-radius:4px;border:1px solid #3a3f4a;background:none;color:#fff;cursor:pointer;line-height:1.4;margin-left:6px">${uiLabels.linkNo}</button>`;
+    (wrap.querySelector('[data-testid="inline-link-remove-no"]') as HTMLElement).onclick = () => {
+      wrap.innerHTML = "";
+      wrap.appendChild(btn);
+    };
+    (wrap.querySelector('[data-testid="inline-link-remove-yes"]') as HTMLElement).onclick = () => {
+      if (linkEditing) {
+        const parent = linkEditing.parentNode;
+        while (linkEditing.firstChild) parent?.insertBefore(linkEditing.firstChild, linkEditing);
+        parent?.removeChild(linkEditing);
+      }
+      hideLinkDialog();
+    };
+  };
+  wrap.appendChild(btn);
+  return wrap;
+}
+
+function renderLinkList(filter: string): void {
+  const d = linkDialog;
+  if (!d) return;
+  const list = d.querySelector('[data-role="list"]') as HTMLElement | null;
+  if (!list) return;
+
+  const paint = (pages: LinkablePage[]) => {
+    const f = filter.trim().toLowerCase();
+    const shown = pages.filter((p) => !f || `${p.title} ${p.path}`.toLowerCase().includes(f));
+    if (!shown.length) {
+      list.innerHTML = `<div style="padding:10px;font-size:12.5px;color:#9aa3b2">${uiLabels.linkEmpty}</div>`;
+      return;
+    }
+    list.innerHTML = "";
+    shown.forEach((p) => {
+      const on = linkPicked?.collection === p.collection && linkPicked?.slug === p.slug;
+      const row = document.createElement("div");
+      row.setAttribute("data-testid", `inline-link-page-${p.collection}-${p.slug}`);
+      row.style.cssText =
+        "display:flex;align-items:center;gap:10px;padding:8px 10px;cursor:pointer;" +
+        "border-bottom:1px solid #232833;" +
+        (on ? "background:rgba(0,178,255,.14);" : "");
+      row.innerHTML =
+        `<div style="min-width:0;flex:1"><div style="font-size:13.5px;line-height:1.3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(p.title)}</div>` +
+        `<div style="font-size:11.5px;color:#9aa3b2;font-family:ui-monospace,Menlo,monospace;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${escapeHtml(p.path)}</div></div>` +
+        `<span style="flex:none;font-size:10px;text-transform:uppercase;color:#9aa3b2;border:1px solid #3a3f4a;border-radius:4px;padding:2px 6px;white-space:nowrap">${escapeHtml(p.label)}</span>`;
+      row.onclick = () => {
+        linkPicked = p;
+        renderLinkList(filter);
+        syncLinkDialog();
+      };
+      list.appendChild(row);
+    });
+  };
+
+  if (linkPages) {
+    paint(linkPages);
+    return;
+  }
+  list.innerHTML = `<div style="padding:10px;font-size:12.5px;color:#9aa3b2">${uiLabels.linkLoading}</div>`;
+  fetchLinkablePages()
+    .then((pages) => {
+      // Pre-select the page an existing reference already points at.
+      const ref = linkEditing?.getAttribute("data-cms-ref");
+      if (ref && !linkPicked) {
+        const [c, ...rest] = ref.split(":");
+        linkPicked = pages.find((p) => p.collection === c && p.slug === rest.join(":")) ?? null;
+      }
+      paint(pages);
+      syncLinkDialog();
+    })
+    .catch(() => {
+      list.innerHTML = `<div style="padding:10px;font-size:12.5px;color:#ff8a8a">${uiLabels.error}</div>`;
+    });
+}
+
+function syncLinkDialog(): void {
+  const d = linkDialog;
+  if (!d) return;
+  const q = <T extends HTMLElement>(role: string) => d.querySelector(`[data-role="${role}"]`) as T;
+  const onPage = (d.querySelector('[data-pane="page"]') as HTMLElement).style.display !== "none";
+  const own = q<HTMLInputElement>("text").value.trim();
+  q<HTMLElement>("hint").innerHTML = own
+    ? (uiLabels.linkTextOwnHint as string)
+    : onPage
+      ? (uiLabels.linkTextAutoHint as string)
+      : (uiLabels.linkUrlHint as string);
+  q<HTMLElement>("live").style.display = onPage ? "flex" : "none";
+  (q<HTMLButtonElement>("submit")).disabled = onPage
+    ? !linkPicked
+    : !q<HTMLInputElement>("url").value.trim();
+}
+
+function applyLink(): void {
+  const d = linkDialog;
+  if (!d || !richCtx) return;
+  const q = <T extends HTMLElement>(role: string) => d.querySelector(`[data-role="${role}"]`) as T;
+  const onPage = (d.querySelector('[data-pane="page"]') as HTMLElement).style.display !== "none";
+  const own = q<HTMLInputElement>("text").value.trim();
+  const href = onPage ? (linkPicked?.path ?? "") : q<HTMLInputElement>("url").value.trim();
+  if (!href) return;
+
+  const ref = onPage && linkPicked ? `${linkPicked.collection}:${linkPicked.slug}` : "";
+  const label = own || (onPage ? (linkPicked?.title ?? href) : href);
+
+  if (linkEditing) {
+    linkEditing.setAttribute("href", href);
+    if (ref) linkEditing.setAttribute("data-cms-ref", ref);
+    else linkEditing.removeAttribute("data-cms-ref");
+    if (ref && !own) linkEditing.setAttribute("data-cms-ref-label", "auto");
+    else linkEditing.removeAttribute("data-cms-ref-label");
+    linkEditing.textContent = label;
+    hideLinkDialog();
+    return;
+  }
+
+  const a = document.createElement("a");
+  a.setAttribute("href", href);
+  if (ref) {
+    a.setAttribute("data-cms-ref", ref);
+    if (!own) a.setAttribute("data-cms-ref-label", "auto");
+  }
+  const sel = window.getSelection();
+  if (savedRange && sel) {
+    sel.removeAllRanges();
+    sel.addRange(savedRange);
+    const range = sel.getRangeAt(0);
+    a.textContent = own || range.toString() || label;
+    range.deleteContents();
+    range.insertNode(a);
+    sel.removeAllRanges();
+  } else {
+    a.textContent = label;
+    richCtx.el.appendChild(a);
+  }
+  savedRange = null;
+  hideLinkDialog();
+}
+
+function escapeHtml(v: string): string {
+  return v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+const tabCss = (on: boolean) =>
+  "flex:1;background:" +
+  (on ? "#2a2f38" : "none") +
+  ";border:1px solid " +
+  (on ? "#3a3f4a" : "transparent") +
+  ";color:" +
+  (on ? "#fff" : "#9aa3b2") +
+  ";height:32px;border-radius:7px;font-size:13px;cursor:pointer;font-weight:500;font-family:inherit;";
+
+const fieldCss = () =>
+  "width:100%;background:#141821;border:1px solid #3a3f4a;color:#fff;height:34px;" +
+  "border-radius:7px;padding:0 10px;font-size:13.5px;outline:none;font-family:inherit;box-sizing:border-box;";
+
+const labelCss = () =>
+  "font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:#9aa3b2;margin:12px 0 5px;display:block;";
+
+const btnCss = (primary: boolean) =>
+  "height:33px;border-radius:7px;font-size:13px;cursor:pointer;padding:0 14px;font-weight:600;font-family:inherit;" +
+  (primary
+    ? "background:#00b2ff;color:#04121b;border:none;"
+    : "background:none;border:1px solid #3a3f4a;color:#fff;font-weight:500;");
 
 function toggleEmojiPicker(anchor: HTMLElement): void {
   if (!emojiPicker) emojiPicker = buildEmojiPicker();

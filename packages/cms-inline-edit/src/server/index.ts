@@ -67,3 +67,63 @@ export async function verifyEditSession(
   const body = (await res.json()) as { user?: EditSessionUser | null };
   return body.user ?? null;
 }
+
+/* ------------------------------------------------------------------ F164 --
+ * Live page references.
+ *
+ * A link the editor made to a PAGE is stored as inline HTML carrying
+ * `data-cms-ref="collection:slug"` next to a real, working href — and
+ * optionally `data-cms-ref-label="auto"`, meaning "show the page's current
+ * title". Call resolveCmsLinks() when you render a richtext field and the link
+ * re-points itself after the page moves or is renamed, without anything having
+ * to rewrite stored content.
+ *
+ * Deliberately degrades: a site that never calls this still ships links that
+ * work — they just stop following the page. And an unknown reference (deleted
+ * page) keeps whatever href it had rather than emitting a dead or empty link.
+ * -------------------------------------------------------------------------- */
+
+export interface CmsLinkTarget {
+  /** Current public path or URL of the referenced page. */
+  url: string;
+  /** Current title, used when the link opted into the auto label. */
+  title?: string;
+}
+
+/** Resolve `collection:slug` → its current url + title, or null if it is gone. */
+export type CmsLinkLookup = (
+  collection: string,
+  slug: string,
+) => CmsLinkTarget | null | undefined;
+
+const ANCHOR_RE = /<a\b([^>]*\bdata-cms-ref="[^"]*"[^>]*)>([\s\S]*?)<\/a>/gi;
+const attr = (tag: string, name: string): string => {
+  const m = tag.match(new RegExp(`\\b${name}="([^"]*)"`, "i"));
+  return m?.[1] ?? "";
+};
+const escapeAttr = (v: string): string =>
+  v.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+const escapeText = (v: string): string =>
+  v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+export function resolveCmsLinks(html: string, lookup: CmsLinkLookup): string {
+  if (!html) return html;
+  return html.replace(ANCHOR_RE, (whole, attrs: string, inner: string) => {
+    const ref = attr(attrs, "data-cms-ref");
+    const sep = ref.indexOf(":");
+    if (sep < 1) return whole;
+    let target: CmsLinkTarget | null | undefined;
+    try {
+      target = lookup(ref.slice(0, sep), ref.slice(sep + 1));
+    } catch {
+      return whole; // a throwing lookup must never take the page down with it
+    }
+    if (!target?.url) return whole; // page gone → keep the last known href
+
+    const auto = attr(attrs, "data-cms-ref-label") === "auto";
+    const label = auto && target.title ? escapeText(target.title) : inner;
+    const rebuilt = attrs.replace(/\bhref="[^"]*"/i, `href="${escapeAttr(target.url)}"`);
+    const withHref = /\bhref=/i.test(attrs) ? rebuilt : `${attrs} href="${escapeAttr(target.url)}"`;
+    return `<a${withHref}>${label}</a>`;
+  });
+}
