@@ -7,6 +7,7 @@
 import { createCms, VALID_FIELD_TYPES } from "@webhouse/cms";
 import type { CmsConfig } from "@webhouse/cms";
 import { dirname, isAbsolute, join, resolve } from "node:path";
+import { stat } from "node:fs/promises";
 import type { SiteEntry } from "./site-registry";
 import { ZodError } from "zod";
 
@@ -207,6 +208,8 @@ export interface CmsInstance {
 
 const pool = new Map<string, CmsInstance>();
 const poolTimestamps = new Map<string, number>();
+/** mtime of the cms.config.ts each pooled filesystem instance was compiled from (F165). */
+const poolConfigMtimes = new Map<string, number>();
 
 /** GitHub config cache TTL — avoid re-fetching cms.config.ts on every request */
 const GITHUB_CACHE_TTL_MS = 120_000; // 2 minutes
@@ -224,12 +227,33 @@ export async function getOrCreateInstance(
   const key = poolKey(orgId, site.id);
 
   if (pool.has(key)) {
-    // Production: always use cache
-    if (process.env.NODE_ENV === "production") return pool.get(key)!;
-    // Dev: cache for TTL to avoid jiti re-import on every request
-    const ts = poolTimestamps.get(key) ?? 0;
-    const ttl = site.adapter === "github" ? GITHUB_CACHE_TTL_MS : FS_DEV_CACHE_TTL_MS;
-    if (Date.now() - ts < ttl) return pool.get(key)!;
+    if (process.env.NODE_ENV === "production") {
+      // F165: the pool used to return the cached instance FOREVER in prod, on
+      // the contract that every writer of cms.config.ts calls invalidate().
+      // That contract cannot hold: Next.js runs middleware, route handlers and
+      // server components as SEPARATE module instances with separate pools, so
+      // an invalidate() in one leaves the others stale — and the file also
+      // changes from outside the app entirely (a beam/ICD push), where there is
+      // no caller to forget. 2026-08-16: a schema change was on disk and in the
+      // schema API, while the document editor still rendered the OLD field type
+      // until a deploy restarted the process.
+      //
+      // The file is the shared signal. One cheap fs.stat per lookup — same
+      // pattern (and cost) as loadRegistry()'s registry.json check.
+      if (site.adapter === "github") return pool.get(key)!; // no local file to stat
+      try {
+        const { mtimeMs } = await stat(resolve(site.configPath));
+        if (mtimeMs === poolConfigMtimes.get(key)) return pool.get(key)!;
+        // Changed on disk → fall through and rebuild.
+      } catch {
+        return pool.get(key)!; // stat failed (file briefly absent mid-write) — keep last good copy
+      }
+    } else {
+      // Dev: cache for TTL to avoid jiti re-import on every request
+      const ts = poolTimestamps.get(key) ?? 0;
+      const ttl = site.adapter === "github" ? GITHUB_CACHE_TTL_MS : FS_DEV_CACHE_TTL_MS;
+      if (Date.now() - ts < ttl) return pool.get(key)!;
+    }
   }
 
   try {
@@ -245,6 +269,16 @@ export async function getOrCreateInstance(
     // Filesystem adapter — load config via jiti
     const absoluteConfigPath = resolve(site.configPath);
     const projectDir = dirname(absoluteConfigPath);
+
+    // stat BEFORE the import so a write landing mid-load only costs ONE
+    // redundant rebuild on the next call (recorded mtime older than the content
+    // we read → mismatch → rebuild), never a permanently stale cache.
+    let configMtimeMs = 0;
+    try {
+      configMtimeMs = (await stat(absoluteConfigPath)).mtimeMs;
+    } catch {
+      /* the import below will surface a missing/unreadable config */
+    }
 
     const { createJiti } = await import("jiti");
     const jiti = createJiti(absoluteConfigPath, { debug: false, moduleCache: false });
@@ -265,6 +299,7 @@ export async function getOrCreateInstance(
     const instance: CmsInstance = { cms, config, site };
     pool.set(key, instance);
     poolTimestamps.set(key, Date.now());
+    poolConfigMtimes.set(key, configMtimeMs);
     return instance;
   } catch (err) {
     // F79: Graceful error handling — format ZodError and config loading errors
@@ -276,11 +311,13 @@ export async function getOrCreateInstance(
 export function invalidate(orgId: string, siteId: string): void {
   pool.delete(poolKey(orgId, siteId));
   poolTimestamps.delete(poolKey(orgId, siteId));
+  poolConfigMtimes.delete(poolKey(orgId, siteId));
 }
 
 export function invalidateAll(): void {
   pool.clear();
   poolTimestamps.clear();
+  poolConfigMtimes.clear();
 }
 
 /**

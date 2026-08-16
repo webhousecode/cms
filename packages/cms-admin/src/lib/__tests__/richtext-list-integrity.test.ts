@@ -28,7 +28,7 @@ function roundTrip(content: string): string {
     extensions: [StarterKit, Markdown.configure({ html: true })],
     content,
   });
-  const md = (editor.storage as { markdown: { getMarkdown(): string } }).markdown.getMarkdown();
+  const md = (editor.storage as unknown as { markdown: { getMarkdown(): string } }).markdown.getMarkdown();
   editor.destroy();
   return md;
 }
