@@ -732,10 +732,49 @@ function setDeepField(data: Record<string, unknown>, path: string, value: string
  * anything unrecognised are passed through as their outerHTML for the same
  * reason: never drop content just because it doesn't map to a Markdown token.
  */
-function htmlToMarkdown(html: string): string {
+export function htmlToMarkdown(html: string): string {
   const container = document.createElement("div");
   container.innerHTML = html;
+  reattachOrphanListItems(container);
   return serializeBlockChildren(container).replace(/\n{3,}/g, "\n\n").trim() + "\n";
+}
+
+function isList(el: Element | null): el is HTMLElement {
+  if (!el) return false;
+  const tag = el.tagName.toLowerCase();
+  return tag === "ul" || tag === "ol";
+}
+
+/**
+ * A contenteditable region can end up with an <li> as a DIRECT child of the
+ * field container — browsers routinely split a list and orphan an item when the
+ * caret sits in it, and `execCommand("insertUnorderedList")` does the same.
+ * Serializing an orphan through the inline default silently drops its marker,
+ * so a list item degrades into a paragraph and the stored Markdown is corrupted
+ * (sanneandersen, 2026-08-16: a 13-item CV list saved back as 1 paragraph + 12
+ * bullets on a public page, on every single save).
+ *
+ * Put each orphan back in the adjacent list — before it if the list follows,
+ * after it if the list precedes — so author order survives. An orphan with no
+ * list next to it gets its own.
+ */
+function reattachOrphanListItems(container: HTMLElement): void {
+  const orphans = Array.from(container.children).filter(
+    (c) => c.tagName.toLowerCase() === "li",
+  );
+  for (const li of orphans) {
+    const prev = li.previousElementSibling;
+    const next = li.nextElementSibling;
+    if (isList(prev)) {
+      prev.appendChild(li);
+    } else if (isList(next)) {
+      next.insertBefore(li, next.firstChild);
+    } else {
+      const list = container.ownerDocument.createElement("ul");
+      li.replaceWith(list);
+      list.appendChild(li);
+    }
+  }
 }
 
 function serializeBlockChildren(parent: Node): string {
@@ -766,6 +805,11 @@ function serializeBlock(node: Node): string {
       return serializeList(el, false);
     case "ol":
       return serializeList(el, true);
+    // Backstop for an orphaned <li> that reattachOrphanListItems could not
+    // place (e.g. nested inside another block). Without this it falls through
+    // to the inline default and loses its marker — silent content loss.
+    case "li":
+      return "- " + serializeInline(el).trim();
     case "blockquote":
       // Serialize the quote's OWN block children (it usually wraps <p>s), then
       // prefix each line with "> " — treating it as inline dropped the <p> and
