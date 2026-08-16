@@ -63,6 +63,46 @@ describe("htmlToMarkdown — list integrity", () => {
   });
 });
 
+// Same class as the orphaned <li>, one tag deeper (reported by the sanne
+// session against 0.4.21). serializeBlock's default arm calls serializeInline
+// on the ELEMENT — but serializeInline iterates a node's CHILDREN and switches
+// on their tags, so the element's OWN formatting is never applied. A <strong>
+// sitting at the top level of an edited field therefore came back as bare text,
+// and mixed inline content was torn into separate blocks by the "\n\n" join.
+describe("htmlToMarkdown — top-level inline content keeps its formatting", () => {
+  it("keeps bold when <strong> is the whole field", () => {
+    expect(htmlToMarkdown("<strong>Alt fra Blad</strong>")).toContain("**Alt fra Blad**");
+  });
+
+  it("keeps text and bold on ONE line instead of splitting into blocks", () => {
+    const md = htmlToMarkdown("Noget <strong>fedt</strong> mere").trim();
+    expect(md).toBe("Noget **fedt** mere");
+    expect(md).not.toContain("\n");
+  });
+
+  it("keeps italic, code and links at the top level", () => {
+    expect(htmlToMarkdown("<em>kursiv</em>")).toContain("*kursiv*");
+    expect(htmlToMarkdown("<code>kode</code>")).toContain("`kode`");
+    expect(htmlToMarkdown('<a href="/x">y</a>')).toContain("[y](/x)");
+  });
+
+  it("does not silently delete a top-level image", () => {
+    expect(htmlToMarkdown('<img src="/u/a.jpg" alt="Sanne">')).toContain("![Sanne](/u/a.jpg)");
+  });
+
+  it("still separates real blocks with a blank line", () => {
+    const md = htmlToMarkdown("<p>en</p><p>to</p>");
+    expect(md).toContain("en\n\nto");
+  });
+
+  it("keeps an inline run next to a real block as its own paragraph", () => {
+    const md = htmlToMarkdown("Intro <strong>her</strong><ul><li>a</li></ul>");
+    expect(md).toContain("Intro **her**");
+    expect(md).toContain("- a");
+    expect(md).not.toContain("Intro\n\n**her**");
+  });
+});
+
 // F164.1 — a link to a PAGE stores a reference (data-cms-ref) alongside a real
 // working href, so the site can re-resolve it when the page moves or is
 // renamed. Markdown link syntax has no slot for that metadata, so such links

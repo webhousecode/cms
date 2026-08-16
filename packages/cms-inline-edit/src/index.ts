@@ -777,12 +777,44 @@ function reattachOrphanListItems(container: HTMLElement): void {
   }
 }
 
+/** Tags serializeBlock treats as their own block; everything else is inline. */
+const BLOCK_TAGS = new Set([
+  "h1", "h2", "h3", "h4", "h5", "h6",
+  "p", "div", "ul", "ol", "li", "blockquote", "pre", "hr", "table",
+]);
+
+function isBlockNode(node: Node): boolean {
+  return (
+    node.nodeType === Node.ELEMENT_NODE &&
+    BLOCK_TAGS.has((node as HTMLElement).tagName.toLowerCase())
+  );
+}
+
 function serializeBlockChildren(parent: Node): string {
   const blocks: string[] = [];
-  parent.childNodes.forEach((node) => {
-    const s = serializeBlock(node).trim();
+  // Text and inline elements sitting directly at block level form ONE implicit
+  // paragraph. Serialising them one-by-one and joining with "\n\n" tore a
+  // single sentence into separate blocks ("Noget <b>fedt</b> mere" became three
+  // paragraphs) and dropped each element's own formatting. Gather the run, then
+  // serialise it as the one paragraph the author actually wrote.
+  let inlineRun = "";
+  const flushInline = () => {
+    const s = inlineRun.trim();
     if (s) blocks.push(s);
+    inlineRun = "";
+  };
+
+  parent.childNodes.forEach((node) => {
+    if (isBlockNode(node)) {
+      flushInline();
+      const s = serializeBlock(node).trim();
+      if (s) blocks.push(s);
+    } else {
+      inlineRun += serializeInlineNode(node);
+    }
   });
+  flushInline();
+
   return blocks.join("\n\n");
 }
 
@@ -873,11 +905,28 @@ function escapeAttr(value: string): string {
 function serializeInline(node: Node): string {
   let out = "";
   node.childNodes.forEach((child) => {
-    if (child.nodeType === Node.TEXT_NODE) {
-      out += (child.textContent ?? "").replace(/\s+/g, " ");
-      return;
-    }
-    if (child.nodeType !== Node.ELEMENT_NODE) return;
+    out += serializeInlineNode(child);
+  });
+  return out;
+}
+
+/**
+ * Serialize ONE inline node, applying ITS OWN tag's formatting.
+ *
+ * Split out of serializeInline because that function only ever looked at a
+ * node's CHILDREN: handed an element it returned the element's text with the
+ * element's own markup dropped. serializeBlock's default arm did exactly that,
+ * so a <strong> (or <em>, <code>, <a>, <img>) sitting at the top level of an
+ * edited field lost its formatting — or, for an image, vanished entirely — on
+ * save. Same failure family as the orphaned <li>, one tag deeper.
+ */
+function serializeInlineNode(child: Node): string {
+  if (child.nodeType === Node.TEXT_NODE) {
+    return (child.textContent ?? "").replace(/\s+/g, " ");
+  }
+  if (child.nodeType !== Node.ELEMENT_NODE) return "";
+  {
+    let out = "";
     const el = child as HTMLElement;
     const tag = el.tagName.toLowerCase();
     const inner = serializeInline(el);
@@ -936,8 +985,8 @@ function serializeInline(node: Node): string {
       default:
         out += inner;
     }
-  });
-  return out;
+    return out;
+  }
 }
 
 async function saveField(el: HTMLElement, value: string, token: string, options: ResolvedOptions): Promise<void> {
