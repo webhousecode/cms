@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getAdminCms, getAdminConfig } from "@/lib/cms";
-import { getSiteRole } from "@/lib/require-role";
+import { requirePermission } from "@/lib/permissions";
 import { docPath } from "@/lib/doc-url";
 
 /**
@@ -44,10 +44,11 @@ interface LinkablePage {
 }
 
 export async function GET() {
-  const role = await getSiteRole();
-  if (!role) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401, headers: CORS_HEADERS });
-  }
+  // Gated on the permission, not on "has any role" — a viewer has no business
+  // enumerating a site's pages, and the repo's rule is that a direct role check
+  // is never the gate for a new route.
+  const denied = await requirePermission("content.edit");
+  if (denied) return denied;
 
   const [cms, config] = await Promise.all([getAdminCms(), getAdminConfig()]);
   const pages: LinkablePage[] = [];
