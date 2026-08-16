@@ -30,6 +30,28 @@ describe("docPath", () => {
     ).toBe("/ai-metode/min-post");
   });
 
+  // broberg-ai, measured on prod: posts declares urlPattern "/:category/:slug"
+  // and NO urlPrefix. The old "/<collection>" guess produced
+  // /en/posts/ai-metode/<slug> — a 404 — where the real page is
+  // /en/ai-metode/<slug>. Every blog-post link and preview pointed at nothing.
+  it("does not invent a collection prefix in front of a urlPattern", () => {
+    expect(
+      docPath(
+        { slug: "ai-in-your-processes", locale: "en", data: { category: "ai-metode" } },
+        { collection: "posts", urlPattern: "/:category/:slug", defaultLocale: "da" },
+      ),
+    ).toBe("/en/ai-metode/ai-in-your-processes");
+  });
+
+  it("still honours an EXPLICIT prefix alongside a pattern", () => {
+    expect(
+      docPath(
+        { slug: "min-post", data: { category: "nyheder" } },
+        { collection: "posts", urlPrefix: "/blog", urlPattern: "/:category/:slug" },
+      ),
+    ).toBe("/blog/nyheder/min-post");
+  });
+
   it("prefixes a non-default locale and strips the slug's locale suffix", () => {
     expect(
       docPath(

@@ -28,7 +28,15 @@ export interface DocUrlOptions {
 
 export function docPath(doc: DocUrlDoc, opts: DocUrlOptions): string {
   const { collection, urlPrefix, urlPattern, localeStrategy = "prefix-other", defaultLocale } = opts;
-  const prefix = (urlPrefix ?? `/${collection}`).replace(/\/$/, "");
+  // The "/<collection>" fallback is a GUESS for a collection that never said
+  // where it renders. A urlPattern IS that statement — it describes the whole
+  // path — so guessing a prefix in front of it invents a segment that does not
+  // exist. Measured on broberg-ai: posts declares urlPattern "/:category/:slug"
+  // and no urlPrefix, and the guess produced /en/posts/ai-metode/<slug> (404)
+  // instead of /en/ai-metode/<slug> (200). An explicit urlPrefix is still
+  // honoured alongside a pattern — that combination is a deliberate statement.
+  const defaultPrefix = urlPattern ? "" : `/${collection}`;
+  const prefix = (urlPrefix ?? defaultPrefix).replace(/\/$/, "");
   const docLocale = doc.locale ?? "";
   const fallbackLocale = defaultLocale ?? "en";
 
