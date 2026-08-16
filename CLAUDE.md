@@ -885,3 +885,31 @@ Vaulten **erstatter ikke `.env`** — `.env` er stadig helt fint til lokal dev. 
 
 **Aldrig** paste en secret-værdi over intercom/chat/argv eller ind i en LLM-kontekst — `cardmem_create_secret` tager værdien server-side og returnerer kun id + maskeret preview. Læs værdien fra en gitignored fil ind i et script, send den over HTTPS, print kun id/preview.
 
+
+## Et gem-felt SKAL bevises at gemme (HARD RULE) — læs det tilbage, hver gang
+
+> **Canonical section per F057.** Copied verbatim into every cardmem-compatible repo. Christian's rule, 2026-08-16, after seeing it happen far too many times across the fleet: *"Agenten laver en fornem form, man skriver en masse tekst, trykker gem, den skriver at data er gemt — og når man kommer tilbage er INTET gemt. Det må ALDRIG ske."*
+
+**Building any form/field/toggle that persists data is not done when it renders and says "Saved". It is done when you have READ THE VALUE BACK from a fresh load and seen your own input.** No exceptions, no "the endpoint returns 200 so it must have worked".
+
+**Why this specific failure keeps happening.** A save path has ~6 links (control → local state → request → validation → write → read-back), and a break in ANY of them looks identical from the user's chair: a green "Saved" toast. The UI reports what it *attempted*, not what the database *holds*. So the one thing that must never be skipped is the step that asks the database.
+
+**The required proof — all three, in this order:**
+
+1. **Write it.** Enter a value that could not already be there (a timestamp, a nonce — never "test", which may be sitting there from last time and would make a broken save look green).
+2. **Re-read it from a FRESH load.** Reload the page / re-fetch the endpoint / re-open the record — not the component's own state after saving, which is exactly what lies. Best: query the DB or the GET endpoint directly.
+3. **Prove the field can be empty.** Also check a NEGATIVE control — clear the field, save, reload, and confirm it is actually cleared. A field that always shows the same value passes step 2 by accident.
+
+**The traps that produce a green "Saved" over a silent no-op** — check yours against these:
+
+- **A column the ORM silently drops.** A newly added column can fail to persist through a typed `.set()` while the call returns success (measured on drizzle + bun-sqlite). Read the column back with a raw query, not through the same layer that wrote it.
+- **A field the API doesn't know.** An unknown key in a request body is silently ignored by most validators (Zod `.strip()` is the default!). The request 200s, the field vanishes. Assert the response *echoes* what you sent.
+- **The response was never read.** `await fetch(...)` without checking `res.ok` turns a 400/403 into a success path. A silent 4xx and a working save are indistinguishable unless you look.
+- **Optimistic UI.** The form shows the new value because the component put it there, not because the server did. Reload before believing it.
+- **Saving to the wrong scope** — a different tenant/project/record than the one on screen. It saved; just not where you're looking.
+- **A missing migration in prod.** Works locally, the column doesn't exist live. Verify on the environment that matters.
+
+**Seal it, don't just check it once.** A form is a load-bearing chain (see the Harness-kontrakt below), so it gets an automated test that writes a value and READS IT BACK — asserting the persisted value, never merely that the handler returned 200. Mutation-check that test: break the write, and it must go red.
+
+**And say what you actually proved.** "Saved and verified by reloading" and "the endpoint returned 200" are different claims. Never write the first when you only did the second — and if you could not verify, say so explicitly instead of implying it works.
+
