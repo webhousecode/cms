@@ -169,6 +169,25 @@ describe("mail gate boot check", () => {
     expect(said).toHaveLength(0);
   });
 
+  it("complains when a deployed instance is disabled outright", () => {
+    // The gap the package author named: more than one thing shuts the gate,
+    // and all of them return the same success-shaped result. A check written
+    // against "is it live" sails straight past MAIL_DISABLED.
+    vi.stubEnv("FLY_APP_NAME", "webhouse-app");
+    vi.stubEnv("NODE_ENV", "production");
+    vi.stubEnv("MAIL_DISABLED", "1");
+    expect(check()).toBe(false);
+    expect(said[0]).toContain('mode="disabled"');
+    expect(said[0]).toContain("NOTHING is sent");
+  });
+
+  it("names WHICH way the gate is shut, not just that it is", () => {
+    vi.stubEnv("FLY_APP_NAME", "webhouse-app");
+    vi.stubEnv("NODE_ENV", "development");
+    expect(check()).toBe(false);
+    expect(said[0]).toContain('mode="allowlist-only"');
+  });
+
   it("never complains on a laptop — a dev box is SUPPOSED to be gated", () => {
     vi.stubEnv("FLY_APP_NAME", "");
     vi.stubEnv("NODE_ENV", "development");

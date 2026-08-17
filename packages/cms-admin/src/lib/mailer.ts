@@ -35,6 +35,27 @@ export function isMailLive(): boolean {
 }
 
 /**
+ * What this process's delivery gate is set to, as one value with the reason in
+ * it — mirroring @broberg/mail 0.5.0's `mailer.mode` so the two can be compared
+ * directly once we upgrade.
+ *
+ * A boolean is the wrong shape here, which is the package author's point and it
+ * applies to us too: MORE THAN ONE thing shuts the gate, and all of them return
+ * the same success-shaped { ok: true, skipped: true }. A check written against
+ * "is it live" passes happily over a mailer that is disabled outright.
+ *
+ * "no-key" is deliberately absent: cms is multi-tenant and resolves the Resend
+ * key per site/org at send time, so key presence is not a boot-time property
+ * here. That gap is real and only the package's own `mode` can close it.
+ */
+export type MailGateMode = "live" | "allowlist-only" | "disabled";
+
+export function mailGateMode(): MailGateMode {
+  if (process.env.MAIL_DISABLED === "1") return "disabled";
+  return isMailLive() ? "live" : "allowlist-only";
+}
+
+/**
  * Shout if a DEPLOYED instance booted with the delivery gate shut.
  *
  * The signal for "this is a real deployment" must not be NODE_ENV, or the check
@@ -49,13 +70,18 @@ export function isMailLive(): boolean {
  */
 export function assertMailGateSane(log: (msg: string) => void = console.error): boolean {
   const isDeployed = !!process.env.FLY_APP_NAME;
-  if (!isDeployed || isMailLive()) return true;
+  const mode = mailGateMode();
+  if (!isDeployed || mode === "live") return true;
+  const why =
+    mode === "disabled"
+      ? "MAIL_DISABLED=1 is set, so NOTHING is sent at all."
+      : `NODE_ENV is "${process.env.NODE_ENV || "unset"}", not "production", ` +
+        "so mail reaches only MAIL_ALLOWLIST + fleet admins. Set MAIL_LIVE=1 " +
+        "to deliver anyway.";
   log(
-    `[mailer] ${process.env.FLY_APP_NAME} BOOTED WITH DELIVERY GATED OFF — ` +
-      "outgoing mail reaches only MAIL_ALLOWLIST + fleet admins, and nothing " +
-      "else will report this. NODE_ENV is " +
-      `"${process.env.NODE_ENV || "unset"}", not "production". ` +
-      "Set MAIL_LIVE=1 to deliver anyway.",
+    `[mailer] ${process.env.FLY_APP_NAME} BOOTED WITH DELIVERY GATED OFF ` +
+      `(mode="${mode}") — sends will keep reporting success and nothing else ` +
+      `will report this. ${why}`,
   );
   return false;
 }
