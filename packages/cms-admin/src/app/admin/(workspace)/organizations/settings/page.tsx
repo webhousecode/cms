@@ -6,6 +6,11 @@ import { CustomSelect } from "@/components/ui/custom-select";
 import { CustomTimeInput } from "@/components/ui/custom-time-input";
 import { CapabilitiesSettingsPanel } from "@/components/settings/capabilities-settings-panel";
 import { ExternalLink } from "lucide-react";
+// Placeholders must name a model this CMS can actually run — every AI call is
+// pinned to the Mistral (EU/GDPR) provider and there is no Anthropic adapter.
+// The Claude ids that used to sit here are how two sites ended up with a stored
+// model that 400s on every AI feature.
+import { DEFAULTS } from "@/lib/ai/model-defaults";
 
 interface OrgEntry {
   id: string;
@@ -434,7 +439,7 @@ export default function OrgSettingsPage() {
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.3rem" }}>
                 <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Content writing model</label>
                 <input data-testid="ai-content-model" type="text" value={creds.aiContentModel} onChange={(e) => setCreds((c) => ({ ...c, aiContentModel: e.target.value }))}
-                  placeholder="claude-haiku-4-5-20251001" style={credInputStyle} />
+                  placeholder={DEFAULTS.content} style={credInputStyle} />
               </div>
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.3rem" }}>
                 <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Max tokens</label>
@@ -446,7 +451,7 @@ export default function OrgSettingsPage() {
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.3rem" }}>
                 <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Interactives model</label>
                 <input data-testid="ai-interactives-model" type="text" value={creds.aiInteractivesModel} onChange={(e) => setCreds((c) => ({ ...c, aiInteractivesModel: e.target.value }))}
-                  placeholder="claude-sonnet-4-6" style={credInputStyle} />
+                  placeholder={DEFAULTS.code} style={credInputStyle} />
               </div>
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.3rem" }}>
                 <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Max tokens</label>
@@ -459,7 +464,7 @@ export default function OrgSettingsPage() {
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.3rem" }}>
                 <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Chat model</label>
                 <input data-testid="ai-chat-model" type="text" value={creds.aiChatModel} onChange={(e) => setCreds((c) => ({ ...c, aiChatModel: e.target.value }))}
-                  placeholder="claude-sonnet-4-6" style={credInputStyle} />
+                  placeholder={DEFAULTS.code} style={credInputStyle} />
               </div>
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: "0.3rem" }}>
                 <label style={{ fontSize: "0.75rem", fontWeight: 500 }}>Max tokens</label>

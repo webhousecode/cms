@@ -8,6 +8,7 @@ import { getAI, mistralModel } from "@/lib/ai/client";
 import type { SeoFields } from "@/lib/seo/score";
 import { buildLocaleInstruction, getSeoLimits } from "@/lib/ai/locale-prompt";
 import { readSiteConfig } from "@/lib/site-config";
+import { getDocLocale } from "@/lib/locale";
 
 /**
  * POST /api/admin/seo/optimize-bulk
@@ -34,7 +35,7 @@ export async function POST(req: NextRequest) {
   } catch { /* no body = all */ }
 
   // Collect docs to optimize
-  const toOptimize: Array<{ collection: string; slug: string; id: string; title: string; content: string; data: Record<string, unknown> }> = [];
+  const toOptimize: Array<{ collection: string; slug: string; id: string; title: string; content: string; locale?: string; data: Record<string, unknown> }> = [];
 
   for (const col of config.collections) {
     try {
@@ -54,6 +55,12 @@ export async function POST(req: NextRequest) {
           id: doc.id,
           title: String(data.title ?? data.name ?? doc.slug),
           content: String(data.content ?? data.body ?? "").slice(0, 2000),
+          // A document's locale is a DOCUMENT field, not a data field. Reading
+          // data.locale gets undefined on every document, so every page fell
+          // back to the site default — measured on sanneandersen.dk, where the
+          // English "Sanne's anti-stress treatment" was given the Danish meta
+          // title "Sanne's Anti-Stress Behandling" and Danish keywords.
+          locale: (doc as { locale?: string }).locale,
           data,
         });
       }
@@ -69,7 +76,7 @@ export async function POST(req: NextRequest) {
       let done = 0;
       for (const doc of toOptimize) {
         try {
-          const docLocale = (doc.data.locale as string) || siteConfig.defaultLocale || "en";
+          const docLocale = getDocLocale(doc, siteConfig.defaultLocale);
           const limits = getSeoLimits(docLocale);
 
           const { text: raw } = await ai.chat({

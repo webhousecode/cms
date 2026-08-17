@@ -16,3 +16,15 @@ export const DEFAULTS: Record<ModelPurpose, string> = {
   code: "mistral-large-latest",
   premium: "mistral-large-latest",
 };
+
+/**
+ * True for ids the Mistral provider accepts (mistral-large/small/medium,
+ * ministral, codestral, open-mistral/mixtral, pixtral). Everything else
+ * (claude-*, gpt-*, gemini-*, …) is rejected so it never reaches Mistral.
+ *
+ * Lives here rather than next to the chat resolver because it guards EVERY
+ * Mistral-pinned call, not just the chat's — see mistralModel() in ai/client.ts.
+ */
+export function isMistralModel(model: string): boolean {
+  return /^(mistral|ministral|codestral|open-m|pixtral)/.test(model);
+}

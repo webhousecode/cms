@@ -10,7 +10,10 @@ import { HelpCard } from "@/components/ui/help-card";
 
 interface Props {
   collection: string;
-  doc: { slug: string; data: Record<string, unknown> };
+  // `locale` is a DOCUMENT field, not a data field. The caller always passed
+  // the whole document; only this type hid the field, so `doc.data.locale`
+  // read undefined and every JSON-LD block was generated without a language.
+  doc: { slug: string; locale?: string; data: Record<string, unknown> };
   onUpdate: (seo: SeoFields) => void;
   onSave: () => void;
   onClose: () => void;
@@ -467,7 +470,7 @@ Rules:
                     const auto = autoFillFields(tmpl, enrichedData);
                     const merged = { ...auto, ...jsonLdValues };
                     setJsonLdValues(merged);
-                    setJsonLd(generateJsonLd(tmpl, merged, doc.data.locale as string | undefined));
+                    setJsonLd(generateJsonLd(tmpl, merged, doc.locale));
                   }
                 }}
                 options={[
@@ -499,7 +502,7 @@ Rules:
                           onChange={(e) => {
                             const next = { ...jsonLdValues, [f.key]: e.target.value };
                             setJsonLdValues(next);
-                            setJsonLd(generateJsonLd(tmpl, next, doc.data.locale as string | undefined));
+                            setJsonLd(generateJsonLd(tmpl, next, doc.locale));
                           }}
                           style={{ ...input, fontSize: "0.72rem", padding: "0.25rem 0.4rem" }}
                         />

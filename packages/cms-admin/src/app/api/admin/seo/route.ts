@@ -66,7 +66,9 @@ export async function GET() {
         hasDesc: !!(seo.metaDescription),
         hasOgImage: !!(seo.ogImage),
         hasKeywords: !!(seo.keywords?.length),
-        locale: (data.locale as string) || undefined,
+        // Document field, not a data field — data.locale is undefined on every
+        // document, which blanked the locale column in the SEO overview.
+        locale: (doc as { locale?: string }).locale || undefined,
         optimized: !!(seo.lastOptimized),
         publishAt: doc.publishAt ?? undefined,
       });

@@ -25,6 +25,7 @@ import {
   type TierSpec,
 } from "@broberg/ai-sdk";
 import { readAiConfig } from "@/lib/ai-config";
+import { DEFAULTS, isMistralModel } from "./model-defaults";
 
 /** Cost sink: forward usage to upmetrics when the cost-ingest key is present,
  *  else a no-op. The DSN (NEXT_PUBLIC_UPMETRICS_DSN, error/RUM) is a SEPARATE
@@ -83,10 +84,32 @@ export async function getAI(): Promise<AiClient> {
 
 type ModelOpts = { tier: Tier; override: TierSpec };
 
-/** Pin a Mistral model 1:1 for a single call. Spread into chat/chatStream:
- *  `ai.chat({ messages, ...mistralModel(model) })`. */
+/**
+ * Pin a Mistral model 1:1 for a single call. Spread into chat/chatStream:
+ * `ai.chat({ messages, ...mistralModel(model) })`.
+ *
+ * GUARDS THE MODEL ID, because this function is what pins the provider. Every
+ * model these call sites pass comes from site config (`aiContentModel`,
+ * `aiCodeModel`, …), which an admin can set to anything — and the settings
+ * picker offered ONLY Claude ids until this was fixed, so most sites had one
+ * stored. A Claude id sent to Mistral is a hard 400 ("Invalid model"), and
+ * since this helper is the single place the provider is chosen, it is the only
+ * place the guarantee can be made once instead of at 23 call sites.
+ *
+ * The chat resolver already did this for itself; the class was never closed,
+ * so bulk SEO optimisation on sanneandersen.dk failed on every document while
+ * chat worked fine on the same site.
+ */
 export function mistralModel(model: string): ModelOpts {
-  return { tier: "cheap", override: { provider: "mistral", model, transport: "http" } };
+  let safe = model;
+  if (!isMistralModel(safe)) {
+    console.warn(
+      `[ai] "${model}" is not a Mistral model but the call is pinned to Mistral; ` +
+        `using "${DEFAULTS.code}". Fix the model in Site Settings → AI defaults.`,
+    );
+    safe = DEFAULTS.code;
+  }
+  return { tier: "cheap", override: { provider: "mistral", model: safe, transport: "http" } };
 }
 
 /** Pin a Gemini model 1:1 (vision / image). */

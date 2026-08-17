@@ -17,7 +17,12 @@
  * Mistral no matter how the config drifted.
  */
 
-import { DEFAULTS } from "../ai/model-defaults";
+import { DEFAULTS, isMistralModel } from "../ai/model-defaults";
+
+// Re-exported for the existing importers/tests. The predicate now lives with
+// the defaults because it guards every Mistral-pinned call, not only the chat's
+// — see mistralModel() in ai/client.ts.
+export { isMistralModel };
 
 /** Models a chat request may explicitly ask for via the `model` param. */
 export const CHAT_REQUESTABLE_MODELS = [
@@ -27,13 +32,6 @@ export const CHAT_REQUESTABLE_MODELS = [
   "claude-opus-4-20250514",
   "claude-opus-4-6",
 ] as const;
-
-/** True for ids the Mistral provider accepts (mistral-large/small/medium,
- *  ministral, codestral, open-mistral/mixtral, pixtral). Everything else
- *  (claude-*, gpt-*, gemini-*, …) is rejected so it never reaches Mistral. */
-export function isMistralModel(model: string): boolean {
-  return /^(mistral|ministral|codestral|open-m|pixtral)/.test(model);
-}
 
 export function resolveChatModel(
   requestedModel: string | undefined,

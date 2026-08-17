@@ -6,6 +6,8 @@ import { SettingsCard } from "./settings-card";
 import { toast } from "sonner";
 import { CustomSelect } from "@/components/ui/custom-select";
 import { SectionHeading } from "@/components/ui/section-heading";
+import { listModels } from "@broberg/ai-sdk/registry";
+import { DEFAULTS } from "@/lib/ai/model-defaults";
 
 interface AiDefaults {
   aiContentModel: string;
@@ -18,13 +20,28 @@ interface AiDefaults {
   aiChatMaxToolIterations: number;
 }
 
-const MODEL_OPTIONS = [
-  { value: "claude-haiku-4-5-20251001", label: "Claude Haiku 4.5 — fast, affordable" },
-  { value: "claude-sonnet-4-20250514", label: "Claude Sonnet 4" },
-  { value: "claude-sonnet-4-6", label: "Claude Sonnet 4.6 — best for code" },
-  { value: "claude-opus-4-20250514", label: "Claude Opus 4" },
-  { value: "claude-opus-4-6", label: "Claude Opus 4.6 — most capable" },
-];
+/**
+ * The models this CMS can actually run.
+ *
+ * Every AI call is pinned to the Mistral (EU/GDPR) provider, and cms-admin
+ * wires up exactly three adapters — mistral, gemini, openai. There is no
+ * Anthropic adapter at all. This list used to offer five Claude ids and nothing
+ * else, so every model an admin could pick was one the system could not use:
+ * sanneandersen.dk and webhouse-site both ended up with a Claude id stored, and
+ * bulk SEO optimisation failed on every single document with "Invalid model".
+ * One of the five (claude-opus-4-6) did not exist in the model registry either.
+ *
+ * Sourced from the shared registry rather than retyped, so a model that is
+ * retired or suspended fleet-wide stops being offered here without an edit.
+ */
+const MODEL_LABELS: Record<string, string> = {
+  "mistral-small-latest": "Mistral Small — fast, affordable",
+  "mistral-large-latest": "Mistral Large — most capable",
+};
+
+const MODEL_OPTIONS = listModels()
+  .filter((m) => m.provider === "mistral" && m.available)
+  .map((m) => ({ value: m.id, label: MODEL_LABELS[m.id] ?? m.id }));
 
 const TOKEN_OPTIONS = [
   { value: "2048", label: "2,048 — short content" },
@@ -50,12 +67,12 @@ const ITERATION_OPTIONS = [
 
 export function AIDefaultsPanel() {
   const [config, setConfig] = useState<AiDefaults>({
-    aiContentModel: "claude-haiku-4-5-20251001",
+    aiContentModel: DEFAULTS.content,
     aiContentMaxTokens: 4096,
-    aiCodeModel: "claude-sonnet-4-6",
+    aiCodeModel: DEFAULTS.code,
     aiInteractivesMaxTokens: 16384,
-    aiPremiumModel: "claude-opus-4-6",
-    aiChatModel: "claude-sonnet-4-6",
+    aiPremiumModel: DEFAULTS.premium,
+    aiChatModel: DEFAULTS.code,
     aiChatMaxTokens: 16384,
     aiChatMaxToolIterations: 25,
   });
