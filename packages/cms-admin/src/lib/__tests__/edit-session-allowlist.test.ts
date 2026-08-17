@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isAllowedForEditSession } from "../../proxy";
+import { isAllowedForEditSession, isCorsPreflight } from "../../proxy";
 
 /**
  * The editSession allowlist IS the security boundary for inline editing — the
@@ -45,5 +45,33 @@ describe("editSession allowlist", () => {
     // Near-misses on the new route must not open anything.
     expect(allow("/api/inline-edit/pages/secret", "GET")).toBe(false);
     expect(allow("/api/inline-edit", "GET")).toBe(false);
+  });
+});
+
+/**
+ * A CORS preflight omits Authorization by spec, so it can never pass the
+ * session gate. If it 401s, the browser abandons the real request — the symptom
+ * is a feature that "just doesn't work" cross-origin with nothing in the app's
+ * own logs. F164.2 shipped with exactly that hole and the link dialog showed
+ * "Fejl — prøv igen" on a live site.
+ */
+describe("CORS preflight", () => {
+  it("lets the preflight through for every cross-origin inline-edit endpoint", () => {
+    expect(isCorsPreflight("/api/inline-edit/pages", "OPTIONS")).toBe(true);
+    expect(isCorsPreflight("/api/inline-edit/toggle", "OPTIONS")).toBe(true);
+    expect(isCorsPreflight("/api/cms/sider-content/om-sanne", "OPTIONS")).toBe(true);
+  });
+
+  it("is OPTIONS-only — it must not open the real methods", () => {
+    for (const m of ["GET", "POST", "PATCH", "DELETE", "PUT"]) {
+      expect(isCorsPreflight("/api/inline-edit/pages", m)).toBe(false);
+      expect(isCorsPreflight("/api/cms/sider-content/om-sanne", m)).toBe(false);
+    }
+  });
+
+  it("does not open unrelated routes to an unauthenticated preflight", () => {
+    expect(isCorsPreflight("/api/admin/site-config", "OPTIONS")).toBe(false);
+    expect(isCorsPreflight("/api/cms/registry", "OPTIONS")).toBe(false);
+    expect(isCorsPreflight("/api/inline-edit/token", "OPTIONS")).toBe(false);
   });
 });

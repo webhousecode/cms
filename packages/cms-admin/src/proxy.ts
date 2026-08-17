@@ -45,6 +45,28 @@ function stripActiveSiteCookies(cookieHeader: string): string {
  * token's role to be "admin"). Everything else is denied — this is the
  * actual security boundary for inline editing.
  */
+/**
+ * Cross-origin endpoints whose CORS preflight must reach the route.
+ *
+ * A preflight omits Authorization by spec, so it can NEVER pass the session
+ * gate — and a 401 on the preflight makes the browser abandon the real request
+ * before sending it. The preflight itself returns no data; the actual
+ * GET/POST/PATCH on the same path still hits the full auth gate.
+ *
+ * ADD A NEW CORS-ENABLED ENDPOINT HERE TOO. F164.2 shipped without
+ * /api/inline-edit/pages in this list and the link picker's dialog showed
+ * "Fejl — prøv igen" on a live site — the route had a perfectly good OPTIONS
+ * handler that was never reached.
+ */
+export function isCorsPreflight(pathname: string, method: string): boolean {
+  if (method !== "OPTIONS") return false;
+  return (
+    /^\/api\/cms\/[^/]+\/[^/]+\/?$/.test(pathname) ||
+    pathname === "/api/inline-edit/toggle" ||
+    pathname === "/api/inline-edit/pages"
+  );
+}
+
 export function isAllowedForEditSession(
   pathname: string,
   method: string,
@@ -268,14 +290,19 @@ export async function proxy(request: NextRequest) {
   // (e.g. F30 forms: honeypot + rate-limit, no login).
   if (isPublicPrefix) return forwardOk();
 
-  // F157: CORS preflight (OPTIONS) on /api/cms/{collection}/{slug} or
-  // /api/inline-edit/toggle never carries credentials — the route's own
-  // OPTIONS handler answers with its CORS headers. The actual GET/POST/PATCH
-  // on the same path still hits the full auth gate below.
-  if (
-    request.method === "OPTIONS" &&
-    (/^\/api\/cms\/[^/]+\/[^/]+\/?$/.test(pathname) || pathname === "/api/inline-edit/toggle")
-  ) {
+  // F157: CORS preflight (OPTIONS) on /api/cms/{collection}/{slug},
+  // /api/inline-edit/toggle or /api/inline-edit/pages never carries credentials
+  // — a preflight omits Authorization by spec, so it can NEVER pass the session
+  // gate, and a 401 on it makes the browser abandon the real request before it
+  // is ever sent. The route's own OPTIONS handler answers with its CORS
+  // headers; the actual GET/POST/PATCH on the same path still hits the full
+  // auth gate below, and a preflight returns no data of its own.
+  //
+  // F164.2 was shipped without /api/inline-edit/pages in this list: the link
+  // picker's own OPTIONS handler was never reached, and the dialog showed
+  // "Fejl — prøv igen" on a live site (reported 2026-08-17). Adding a
+  // CORS-enabled cross-origin endpoint means adding it HERE too.
+  if (isCorsPreflight(pathname, request.method)) {
     return forwardOk();
   }
 
