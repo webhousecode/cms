@@ -25,7 +25,27 @@ import { mintEditSessionToken } from "@/lib/inline-edit-token";
  * and the minted token can only GET/PATCH `/api/cms/*` (proxy.ts editSession
  * allowlist) — exactly what content.edit already permits.
  */
-export async function POST() {
+export async function POST(request: Request) {
+  // A `site` in the BODY is not part of the contract — this route takes the
+  // target from `?site=` (which proxy.ts resolves into the active-site cookies).
+  // Ignoring it silently handed the caller an admin-role token for the REGISTRY
+  // DEFAULT site instead, with a 200 and a valid-looking token: reported and
+  // reproduced 2026-08-17, `{"site":"sanneandersen"}` → token.site
+  // "webhouse-site". That is the same failure family as an unknown key being
+  // stripped by a validator — the call succeeds while doing something else. On
+  // a route that mints credentials, a quiet substitution of the target is the
+  // last place to be lenient, so say no.
+  const body = (await request.json().catch(() => null)) as Record<string, unknown> | null;
+  if (body && (("site" in body) || ("siteId" in body))) {
+    return NextResponse.json(
+      {
+        error:
+          "Pass the target site as the ?site= query parameter, not in the body — a body `site` was ignored and would have minted a token for a different site.",
+      },
+      { status: 400 },
+    );
+  }
+
   const role = await getSiteRole();
   if (!role || !hasPermission(ROLE_PERMISSIONS[role] ?? [], "content.edit")) {
     return NextResponse.json({ error: "Forbidden — content.edit required" }, { status: 403 });

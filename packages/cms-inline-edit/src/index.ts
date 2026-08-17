@@ -216,11 +216,33 @@ export function getConnectedToken(options: InlineEditOptions): string | null {
   captureTokenFromUrl(resolved);
   const token = localStorage.getItem(resolved.storageKey);
   if (!token) return null;
-  if (isExpired(token)) {
+  if (isExpired(token) || !isForThisSite(token, resolved.siteId)) {
     localStorage.removeItem(resolved.storageKey);
     return null;
   }
   return token;
+}
+
+/**
+ * Is this token scoped to the site this page belongs to?
+ *
+ * NOT an authorization check — the server is, and it holds: proxy.ts refuses a
+ * token whose `site` claim differs from the request's site, measured 2026-08-17
+ * at 403 on both GET and PATCH. This is a UX guard. Without it the editor
+ * entered edit mode with a foreign-site token, made the page look editable, and
+ * then failed EVERY save — and the natural reaction is to hunt for the bug in
+ * your own site rather than suspect the token (reported by the sanneandersen
+ * session, who predicted exactly that dead end). Better to not offer editing at
+ * all than to offer it and lose the work.
+ *
+ * A token that cannot be read at all is let through: the server decides, and an
+ * unreadable token simply fails there instead of being silently discarded here.
+ */
+function isForThisSite(token: string, siteId: string): boolean {
+  const claims = decodeJwtPayload(token);
+  const site = claims?.site;
+  if (typeof site !== "string" || !site) return true; // not ours to judge
+  return site === siteId;
 }
 
 /** The URL that mints a fresh 30-day site-scoped token and redirects back to `returnUrl`. */
