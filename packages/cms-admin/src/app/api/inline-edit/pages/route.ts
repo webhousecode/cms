@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAdminCms, getAdminConfig } from "@/lib/cms";
-import { requirePermission } from "@/lib/permissions";
+import { getSiteRole } from "@/lib/require-role";
+import { hasPermission, ROLE_PERMISSIONS } from "@/lib/permissions";
 import { readSiteConfig } from "@/lib/site-config";
 import {
   buildLinkablePages,
@@ -36,10 +37,23 @@ export async function OPTIONS() {
 }
 
 export async function GET() {
-  // Gated on the permission, not on "has any role" — a viewer has no business
-  // enumerating a site's pages, and a direct role check is never the gate.
-  const denied = await requirePermission("content.edit");
-  if (denied) return denied;
+  // Permission-gated, not "has any role" — a viewer has no business enumerating
+  // a site's pages.
+  //
+  // NOT requirePermission(): it runs tryTokenAuth() on ANY Bearer header and
+  // 401s a token it cannot verify as a `wh_` access token — which is every
+  // editSession JWT, i.e. exactly the caller this endpoint exists for. Shipping
+  // that turned the live link dialog into "Fejl — prøv igen" while the same
+  // token still returned 200 on /api/cms/*. This is the pattern
+  // /api/inline-edit/token uses for the same reason: read the role from the
+  // session the proxy resolved, then check the permission on it.
+  const role = await getSiteRole();
+  if (!role || !hasPermission(ROLE_PERMISSIONS[role] ?? [], "content.edit")) {
+    return NextResponse.json(
+      { error: "Forbidden — content.edit required" },
+      { status: 403, headers: CORS_HEADERS },
+    );
+  }
 
   const siteConfig = await readSiteConfig();
   const base = (siteConfig.previewSiteUrl ?? "").replace(/\/$/, "");
