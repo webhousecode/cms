@@ -1,24 +1,25 @@
 import { NextResponse } from "next/server";
 import { getAdminCms, getAdminConfig } from "@/lib/cms";
 import { requirePermission } from "@/lib/permissions";
-import { docPath } from "@/lib/doc-url";
+import { readSiteConfig } from "@/lib/site-config";
+import {
+  buildLinkablePages,
+  parseSitemapLocs,
+  type CmsDocIndexEntry,
+} from "@/lib/linkable-pages";
 
 /**
- * `GET /api/inline-edit/pages` — the link picker's page list (F164.2).
+ * `GET /api/inline-edit/pages` — the link picker's page list (F164.2/F164.5).
  *
- * Returns every PUBLISHED document on the active site as
- * `{ collection, slug, title, path, label }`, so the inline editor's link
- * dialog can offer "a page on the site" instead of asking an editor to type a
- * URL. The site is resolved from the request the same way every other route
- * does it (proxy injects the cookies for a `?site=` token caller) — this route
- * never reads `?site=` itself.
+ * The list comes from the SITE'S OWN sitemap, not from paths computed out of
+ * cms.config — see lib/linkable-pages.ts for the two measured failure modes
+ * that motivated the change. The CMS supplies titles so the picker stays
+ * searchable by name; it never supplies an address.
  *
- * Read-only and narrow on purpose: it is reachable by an editSession bearer
- * token (allowlisted in proxy.ts), which is a long-lived token living in a
- * browser on a public site. It exposes titles + public paths — the same
- * information any visitor can read off the site's own navigation — and nothing
- * else. Drafts are excluded: an editor must not be able to link to a page the
- * public cannot open.
+ * Read-only and narrow on purpose: reachable by an editSession bearer token
+ * (allowlisted in proxy.ts), which lives in a browser on a public site. It
+ * exposes page titles and public URLs — what the site's own navigation and
+ * sitemap already publish — and nothing else.
  */
 
 const CORS_HEADERS = { "Access-Control-Allow-Origin": "*" };
@@ -34,78 +35,82 @@ export async function OPTIONS() {
   });
 }
 
-interface LinkablePage {
-  collection: string;
-  slug: string;
-  title: string;
-  path: string;
-  /** Human label for the collection, for the picker's grouping tag. */
-  label: string;
-}
-
 export async function GET() {
   // Gated on the permission, not on "has any role" — a viewer has no business
-  // enumerating a site's pages, and the repo's rule is that a direct role check
-  // is never the gate for a new route.
+  // enumerating a site's pages, and a direct role check is never the gate.
   const denied = await requirePermission("content.edit");
   if (denied) return denied;
 
-  const [cms, config] = await Promise.all([getAdminCms(), getAdminConfig()]);
-  const pages: LinkablePage[] = [];
-
-  for (const col of config.collections) {
-    const c = col as typeof col & {
-      urlPrefix?: string;
-      urlPattern?: string;
-      titleField?: string;
-      hidden?: boolean;
-    };
-    // A collection is a link target only if it DECLARES where it renders —
-    // urlPrefix (or urlPattern). Without one, docPath falls back to guessing
-    // "/<collection>/<slug>", which for an internal collection is an address
-    // that does not exist: measured on sanneandersen, including everything gave
-    // 225 entries, mostly section fragments like "{antal} veje til balance"
-    // offered as if they were pages. An editor must not be able to pick those.
-    // The cost is explicit: a collection that renders publicly but declares
-    // neither will not appear until it does.
-    if (c.hidden) continue;
-    if (c.urlPrefix === undefined && c.urlPattern === undefined) continue;
-
-    let docs: Array<Record<string, unknown>> = [];
-    try {
-      const { documents } = await cms.content.findMany(col.name, {});
-      docs = documents as unknown as Array<Record<string, unknown>>;
-    } catch {
-      continue; // a collection that can't be read must not fail the whole list
-    }
-
-    for (const doc of docs) {
-      if (doc.status && doc.status !== "published") continue;
-      const slug = typeof doc.slug === "string" ? doc.slug : "";
-      if (!slug) continue;
-      const data = (doc.data ?? {}) as Record<string, unknown>;
-      const titleField = c.titleField ?? "title";
-      const rawTitle = data[titleField] ?? data.title ?? data.name;
-      pages.push({
-        collection: col.name,
-        slug,
-        title: typeof rawTitle === "string" && rawTitle.trim() ? rawTitle : slug,
-        path: docPath(
-          { slug, locale: typeof doc.locale === "string" ? doc.locale : undefined, data },
-          {
-            collection: col.name,
-            urlPrefix: c.urlPrefix,
-            urlPattern: c.urlPattern,
-            localeStrategy: (config as { localeStrategy?: "prefix-all" | "prefix-other" | "none" })
-              .localeStrategy,
-            defaultLocale: (config as { defaultLocale?: string }).defaultLocale,
-          },
-        ),
-        label: col.label ?? col.name,
-      });
-    }
+  const siteConfig = await readSiteConfig();
+  const base = (siteConfig.previewSiteUrl ?? "").replace(/\/$/, "");
+  if (!base) {
+    return NextResponse.json(
+      {
+        pages: [],
+        error: "no-preview-url",
+        message:
+          "Sitet har ingen adresse i indstillingerne, så vi kan ikke hente dets sideoversigt. Sæt site-adressen under Site Settings.",
+      },
+      { headers: CORS_HEADERS },
+    );
   }
 
-  pages.sort((a, b) => a.title.localeCompare(b.title, "da"));
-  return NextResponse.json({ pages }, { headers: CORS_HEADERS });
+  let locs: string[];
+  try {
+    const res = await fetch(`${base}/sitemap.xml`, {
+      headers: { accept: "application/xml,text/xml" },
+      signal: AbortSignal.timeout(10_000),
+    });
+    if (!res.ok) throw new Error(`sitemap ${res.status}`);
+    locs = parseSitemapLocs(await res.text());
+  } catch {
+    // Explicit and visible — NEVER a silent fall back to computed paths. Guessed
+    // addresses are exactly what this endpoint was rebuilt to stop offering, and
+    // a quiet fallback would reintroduce them the first time a sitemap 404s.
+    return NextResponse.json(
+      {
+        pages: [],
+        error: "no-sitemap",
+        message: `Kunne ikke hente ${base}/sitemap.xml. Vælgeren viser kun sider sitet selv oplyser, så listen er tom indtil sitemappet svarer.`,
+      },
+      { headers: CORS_HEADERS },
+    );
+  }
+
+  // CMS documents indexed BY SLUG — titles only. A miss just means the page is
+  // listed under a title derived from its URL.
+  const index = new Map<string, CmsDocIndexEntry>();
+  try {
+    const [cms, config] = await Promise.all([getAdminCms(), getAdminConfig()]);
+    for (const col of config.collections) {
+      const c = col as typeof col & { titleField?: string };
+      let docs: Array<Record<string, unknown>> = [];
+      try {
+        const { documents } = await cms.content.findMany(col.name, {});
+        docs = documents as unknown as Array<Record<string, unknown>>;
+      } catch {
+        continue;
+      }
+      for (const doc of docs) {
+        if (doc.status && doc.status !== "published") continue;
+        const slug = typeof doc.slug === "string" ? doc.slug : "";
+        if (!slug || index.has(slug)) continue;
+        const data = (doc.data ?? {}) as Record<string, unknown>;
+        const raw = data[c.titleField ?? "title"] ?? data.title ?? data.name;
+        index.set(slug, {
+          collection: col.name,
+          slug,
+          title: typeof raw === "string" && raw.trim() ? raw : slug,
+          label: col.label ?? col.name,
+        });
+      }
+    }
+  } catch {
+    // Titles are enrichment. Losing them must not lose the page list.
+  }
+
+  return NextResponse.json(
+    { pages: buildLinkablePages(locs, index), source: "sitemap" },
+    { headers: CORS_HEADERS },
+  );
 }
