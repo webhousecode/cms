@@ -3,6 +3,7 @@ import {
   buildLinkablePages,
   matchDoc,
   parseSitemapLocs,
+  isUsableTitle,
   titleFromPath,
   toPath,
   type CmsDocIndexEntry,
@@ -107,5 +108,28 @@ describe("parsing helpers", () => {
   it("derives a readable title from a path", () => {
     expect(titleFromPath("/da/behandlinger/ansigts-zoneterapi")).toBe("Ansigts zoneterapi");
     expect(titleFromPath("/")).toBe("Forside");
+  });
+});
+
+describe("titles that are not titles", () => {
+  it("falls back to the URL name when the CMS field holds a heading template", () => {
+    // Measured on sanneandersen: /da/behandlinger matched a field reading
+    // "{antal} veje ind — én vej hjem." — a placeholder the page fills in at
+    // render time. In a picker that is a leaked internal, not a page name.
+    const templated = new Map<string, CmsDocIndexEntry>([
+      ["behandlinger", {
+        collection: "sider-content",
+        slug: "behandlinger",
+        title: "{antal} veje ind — én vej hjem.",
+        label: "Sider — content",
+      }],
+    ]);
+    const pages = buildLinkablePages(parseSitemapLocs(sitemap(["/da/behandlinger"])), templated);
+    expect(pages[0]?.title).toBe("Behandlinger");
+  });
+
+  it("keeps an ordinary title untouched", () => {
+    expect(isUsableTitle("Om Sanne")).toBe(true);
+    expect(isUsableTitle("Priser {fra} kr")).toBe(false);
   });
 });

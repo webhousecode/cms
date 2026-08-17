@@ -101,6 +101,17 @@ export function matchDoc(
   return null;
 }
 
+/**
+ * A CMS field can hold a heading TEMPLATE rather than a display title —
+ * sanneandersen's /da/behandlinger matched a field reading "{antal} veje ind —
+ * én vej hjem.", which is a placeholder the page fills in at render time. Shown
+ * in a link picker it is not a page name, it is a leaked internal. Fall back to
+ * the name derived from the URL, which is always something a human can read.
+ */
+export function isUsableTitle(title: string): boolean {
+  return !/\{[^}]*\}/.test(title);
+}
+
 export function buildLinkablePages(
   locs: string[],
   index: Map<string, CmsDocIndexEntry>,
@@ -112,10 +123,11 @@ export function buildLinkablePages(
     if (!path || seen.has(path)) continue;
     seen.add(path);
     const doc = matchDoc(path, index);
+    const usable = doc && isUsableTitle(doc.title) ? doc : null;
     pages.push({
       collection: doc?.collection ?? "",
       slug: doc?.slug ?? path,
-      title: doc?.title ?? titleFromPath(path),
+      title: usable ? usable.title : titleFromPath(path),
       path,
       label: doc?.label ?? "Side",
     });
