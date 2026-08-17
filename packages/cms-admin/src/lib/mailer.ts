@@ -15,18 +15,62 @@
 import { createMailer, buildFrom, type Mailer } from "@broberg/mail";
 
 /**
+ * May this process deliver to ANY recipient, or only to the allowlist?
+ *
+ * The single definition of that question — `getMailer()` and the boot check in
+ * instrumentation-node.ts must never be able to disagree about it.
+ *
+ * We answer it explicitly rather than letting @broberg/mail default `live` to
+ * `!!apiKey`, which would make any dev box holding a Resend key mail real
+ * customers. Two fleet repos hit that default before we did.
+ *
+ * The mirror risk is real too and is why this is exported: an environment where
+ * NODE_ENV is not exactly "production" (unset, overwritten, a new base image)
+ * silently drops prod to allowlist-only. No error, no warning — the package
+ * only warns when `live` is left undefined, and we always pass a boolean.
+ * assertMailGateSane() below is what turns that silence into a complaint.
+ */
+export function isMailLive(): boolean {
+  return process.env.NODE_ENV === "production" || process.env.MAIL_LIVE === "1";
+}
+
+/**
+ * Shout if a DEPLOYED instance booted with the delivery gate shut.
+ *
+ * The signal for "this is a real deployment" must not be NODE_ENV, or the check
+ * is circular — isMailLive() is true precisely when NODE_ENV is "production",
+ * so a check gated on NODE_ENV could never fire. FLY_APP_NAME is injected by
+ * the platform itself, not by our Dockerfile or fly.toml [env], so it survives
+ * exactly the drift we are trying to catch.
+ *
+ * Deliberately does NOT throw: mail is one of many things cms-admin does, and
+ * taking the whole admin down over a mail misconfiguration would trade a quiet
+ * failure for a loud outage. Called once at boot.
+ */
+export function assertMailGateSane(log: (msg: string) => void = console.error): boolean {
+  const isDeployed = !!process.env.FLY_APP_NAME;
+  if (!isDeployed || isMailLive()) return true;
+  log(
+    `[mailer] ${process.env.FLY_APP_NAME} BOOTED WITH DELIVERY GATED OFF — ` +
+      "outgoing mail reaches only MAIL_ALLOWLIST + fleet admins, and nothing " +
+      "else will report this. NODE_ENV is " +
+      `"${process.env.NODE_ENV || "unset"}", not "production". ` +
+      "Set MAIL_LIVE=1 to deliver anyway.",
+  );
+  return false;
+}
+
+/**
  * Build a mailer for a resolved Resend key.
  *
  * `live` (delivers to ALL recipients) is on only in production or when
  * MAIL_LIVE=1 — so a local/preview run never mails a real customer by accident
  * (in dev only the MAIL_ALLOWLIST + the always-allowed fleet admins receive).
- * Note we set `live` explicitly: the package would otherwise default it to
- * `!!apiKey`, which would make a dev box with a key go live.
  */
 export function getMailer(apiKey?: string): Mailer {
   return createMailer({
     apiKey,
-    live: process.env.NODE_ENV === "production" || process.env.MAIL_LIVE === "1",
+    live: isMailLive(),
     disabled: process.env.MAIL_DISABLED === "1",
     allowlist: (process.env.MAIL_ALLOWLIST ?? "")
       .split(",")

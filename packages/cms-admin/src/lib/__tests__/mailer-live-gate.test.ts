@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { getMailer } from "../mailer";
+import { getMailer, assertMailGateSane } from "../mailer";
 
 /**
  * The one line that stands between a dev box and a customer's inbox.
@@ -115,5 +115,76 @@ describe("mailer live-gate", () => {
     });
     expect(res).toEqual({ ok: true, skipped: true });
     expect(fetchSpy).not.toHaveBeenCalled();
+  });
+});
+
+/**
+ * The mirror failure, raised by the package's author: guarding against
+ * "accidentally live" buys us "accidentally NOT live". If NODE_ENV is ever not
+ * exactly "production" in the container, prod delivers to allowlist + fleet
+ * admins only — and nothing says so. @broberg/mail warns only when `live` is
+ * left undefined, and we always pass a boolean, so its warning can never fire
+ * for us. This boot check is the thing that breaks that silence.
+ *
+ * A test cannot catch an environment that lies about itself; it can only make
+ * sure the complaint is wired up and does not cry wolf.
+ */
+describe("mail gate boot check", () => {
+  const said: string[] = [];
+  const check = () => {
+    said.length = 0;
+    return assertMailGateSane((m) => said.push(m));
+  };
+
+  it("complains when a DEPLOYED instance boots with the gate shut", () => {
+    // The drift case: the platform says this is webhouse-app, our own env says
+    // it is not production. Mail would keep "succeeding" while reaching nobody.
+    vi.stubEnv("FLY_APP_NAME", "webhouse-app");
+    vi.stubEnv("NODE_ENV", "development");
+    expect(check()).toBe(false);
+    expect(said).toHaveLength(1);
+    expect(said[0]).toContain("webhouse-app");
+    expect(said[0]).toContain("GATED OFF");
+  });
+
+  it("complains just as loudly when NODE_ENV is missing entirely", () => {
+    vi.stubEnv("FLY_APP_NAME", "webhouse-app");
+    vi.stubEnv("NODE_ENV", "");
+    expect(check()).toBe(false);
+    expect(said[0]).toContain("unset");
+  });
+
+  it("stays quiet on a healthy deployed boot", () => {
+    vi.stubEnv("FLY_APP_NAME", "webhouse-app");
+    vi.stubEnv("NODE_ENV", "production");
+    expect(check()).toBe(true);
+    expect(said).toHaveLength(0);
+  });
+
+  it("accepts MAIL_LIVE=1 as the deliberate override on a deployed box", () => {
+    vi.stubEnv("FLY_APP_NAME", "webhouse-app");
+    vi.stubEnv("NODE_ENV", "development");
+    vi.stubEnv("MAIL_LIVE", "1");
+    expect(check()).toBe(true);
+    expect(said).toHaveLength(0);
+  });
+
+  it("never complains on a laptop — a dev box is SUPPOSED to be gated", () => {
+    vi.stubEnv("FLY_APP_NAME", "");
+    vi.stubEnv("NODE_ENV", "development");
+    expect(check()).toBe(true);
+    expect(said).toHaveLength(0);
+  });
+
+  it("does not use NODE_ENV to decide whether it is deployed", () => {
+    // Guards the circularity this check was rewritten to escape: if "deployed"
+    // were read from NODE_ENV, the complaint branch could never be reached,
+    // because the gate is open exactly when NODE_ENV is "production".
+    vi.stubEnv("FLY_APP_NAME", "");
+    vi.stubEnv("NODE_ENV", "production");
+    expect(check()).toBe(true); // quiet: not deployed
+    vi.stubEnv("FLY_APP_NAME", "webhouse-app");
+    vi.stubEnv("NODE_ENV", "staging");
+    expect(check()).toBe(false); // loud: deployed, gate shut
   });
 });

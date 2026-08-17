@@ -158,6 +158,13 @@ async function reportDeploy() {
 }
 
 export function startSchedulers() {
+  // 0a. Mail delivery gate — complain at boot if production came up gated off.
+  // A test can prove the logic; only a boot check catches an ENVIRONMENT that
+  // lies (NODE_ENV not exactly "production"), and that failure is otherwise
+  // completely silent: mail keeps "succeeding", it just stops reaching anyone
+  // outside the allowlist.
+  void import("./lib/mailer").then(({ assertMailGateSane }) => assertMailGateSane());
+
   // 0. Deploy self-report — once, shortly after boot (fire-and-forget)
   setTimeout(() => { void reportDeploy(); }, 5_000);
 
