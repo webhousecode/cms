@@ -24,3 +24,18 @@ export function resolveJwtSecret(
 ): string {
   return env.CMS_JWT_SECRET || env.JWT_SECRET || DEV_JWT_SECRET;
 }
+
+/**
+ * The `sub` a test token must carry to get a role.
+ *
+ * require-role.ts resolves a role by looking the `sub` up in the team-member
+ * list, and short-circuits for three known principals: "dev-token",
+ * "service-token" and "lens". Every other sub gets `null` — no role, 403 on
+ * everything.
+ *
+ * Test helpers signed themselves as "test-user", which is not one of them. That
+ * happened to work on a machine where a team member with that id existed and
+ * gave nothing at all in CI, which is exactly the kind of difference that makes
+ * a suite "pass on my machine".
+ */
+export const TEST_PRINCIPAL = "dev-token";

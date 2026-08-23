@@ -3,3 +3,6 @@ node_modules/
 .env.local
 .env.secrets
 .certs/
+
+# Playwright E2E fixture state (registry/users for the examples/blog run)
+.e2e-data/

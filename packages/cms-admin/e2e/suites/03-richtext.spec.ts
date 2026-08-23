@@ -16,7 +16,7 @@ import {
   typeInEditor,
   saveDocument,
 } from "../fixtures/helpers";
-import { resolveJwtSecret } from "../../src/lib/dev-jwt-secret";
+import { resolveJwtSecret, TEST_PRINCIPAL } from "../../src/lib/dev-jwt-secret";
 
 const TEST_SLUG = "cms-chronicle-00-why-we-are-building-this";
 const COLLECTION = "posts";
@@ -86,7 +86,7 @@ test.describe("Richtext editor content roundtrip", () => {
     const context = await browser.newContext();
     const secret = new TextEncoder().encode(JWT_SECRET);
     const token = await new SignJWT({
-      sub: "test-user",
+      sub: TEST_PRINCIPAL,
       email: "cb@webhouse.dk",
       name: "Test Admin",
       role: "admin",

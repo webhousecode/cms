@@ -9,7 +9,7 @@
  *   const data = await res.json();
  */
 import { SignJWT } from "jose";
-import { resolveJwtSecret } from "../../src/lib/dev-jwt-secret";
+import { resolveJwtSecret, TEST_PRINCIPAL } from "../../src/lib/dev-jwt-secret";
 
 const BASE = process.env.TEST_BASE_URL ?? "http://localhost:3010";
 const SECRET = resolveJwtSecret();
@@ -21,7 +21,7 @@ export async function getTestToken(): Promise<string> {
   if (cachedToken) return cachedToken;
   const secret = new TextEncoder().encode(SECRET);
   cachedToken = await new SignJWT({
-    sub: "test-user",
+    sub: TEST_PRINCIPAL,
     email: "cb@webhouse.dk",
     name: "Test Admin",
     role: "admin",

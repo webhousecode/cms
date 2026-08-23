@@ -10,7 +10,7 @@
  */
 import { test as base } from "@playwright/test";
 import { SignJWT } from "jose";
-import { resolveJwtSecret } from "../../src/lib/dev-jwt-secret";
+import { resolveJwtSecret, TEST_PRINCIPAL } from "../../src/lib/dev-jwt-secret";
 
 /**
  * Must be the SAME secret the server under test verifies with, or every authed
@@ -32,7 +32,7 @@ export const test = base.extend<AuthFixtures>({
   authedPage: async ({ page, context }, use) => {
     const secret = new TextEncoder().encode(JWT_SECRET);
     const token = await new SignJWT({
-      sub: "test-user",
+      sub: TEST_PRINCIPAL,
       email: "cb@webhouse.dk",
       name: "Test Admin",
       role: "admin",
@@ -57,7 +57,7 @@ export { expect } from "@playwright/test";
 export async function signTestToken(claims: Record<string, unknown> = {}): Promise<string> {
   const secret = new TextEncoder().encode(JWT_SECRET);
   return new SignJWT({
-    sub: "test-user",
+    sub: TEST_PRINCIPAL,
     email: "cb@webhouse.dk",
     name: "Test Admin",
     role: "admin",

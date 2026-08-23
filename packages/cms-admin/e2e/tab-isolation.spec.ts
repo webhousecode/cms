@@ -1,12 +1,12 @@
 import { test, expect, type Page } from "@playwright/test";
 import { SignJWT } from "jose";
-import { resolveJwtSecret } from "../src/lib/dev-jwt-secret";
+import { resolveJwtSecret, TEST_PRINCIPAL } from "../src/lib/dev-jwt-secret";
 
 const JWT_SECRET = resolveJwtSecret();
 
 async function login(context: any) {
   const secret = new TextEncoder().encode(JWT_SECRET);
-  const token = await new SignJWT({ sub: "test-user", email: "cb@webhouse.dk", name: "Christian" })
+  const token = await new SignJWT({ sub: TEST_PRINCIPAL, email: "cb@webhouse.dk", name: "Christian" })
     .setProtectedHeader({ alg: "HS256" })
     .setExpirationTime("1h")
     .sign(secret);
