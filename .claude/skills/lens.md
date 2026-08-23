@@ -74,6 +74,37 @@ Commit a `lens.manifest.json` at the repo root listing your surfaces:
 }
 ```
 
+### Locale + timezone (F074.57) — a Danish site is not an `en-US` visitor
+
+By default the browser runs `en-US` and inherits the host machine's timezone. On a Danish
+or bilingual site that is the wrong visitor: prices render `1,234.5` instead of `1.234,5`,
+dates come out month-first (8 March photographs as `3/8/2026`), and a site that picks a
+language from the browser serves Lens the English half — so the Danish half is never
+captured and the gate stays green comparing English to English.
+
+Declare it **per project** in the manifest:
+
+```json
+{ "project": "<slug>", "locale": "da-DK", "timezone": "Europe/Copenhagen", … }
+```
+
+…and **override per call** for a bilingual site, which is the whole reason it is not
+project-only — that site needs one baseline per language:
+
+```
+lens_capture({ project, url, locale: "en-GB" })      // the other language, same surface
+```
+
+Precedence: **call > manifest > unset**. Unset passes *nothing* to the browser, so a repo
+that declares neither is byte-for-byte unchanged and its baselines cannot move.
+
+Declaring `timezone` also makes a project's captures machine-independent: without it the
+context takes the host's zone, so the same page renders different dates on a Mac and on
+Cloud Lens.
+
+> If your session's tool description does not list `locale`, your MCP client cached the tool
+> list at connect — restart the session, not the daemon.
+
 `POST /lens/gate { local_path }` reads it, verifies every surface, cross-checks
 each element selector's testid against the repo (a non-existent anchor is a hard
 **block** — "a visual AC cannot pass without its anchor"), and returns one
