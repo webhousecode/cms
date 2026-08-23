@@ -14,6 +14,7 @@
 import { describe, it, expect, vi, beforeAll } from 'vitest';
 import { NextRequest } from 'next/server';
 import { SignJWT } from 'jose';
+import { DEV_JWT_SECRET } from '../dev-jwt-secret';
 
 // Mock the registry proxy.ts dynamically imports (./lib/site-registry). Two orgs,
 // each owning one site — the exact shape of the real leak.
@@ -33,7 +34,7 @@ vi.mock('../site-registry', () => {
   };
 });
 
-const SECRET = new TextEncoder().encode('cms-dev-secret-change-me-in-production');
+const SECRET = new TextEncoder().encode(DEV_JWT_SECRET);
 let sessionCookie = '';
 
 beforeAll(async () => {

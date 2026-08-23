@@ -1,7 +1,8 @@
 import { test, expect, type Page } from "@playwright/test";
 import { SignJWT } from "jose";
+import { resolveJwtSecret } from "../src/lib/dev-jwt-secret";
 
-const JWT_SECRET = process.env.CMS_JWT_SECRET ?? process.env.JWT_SECRET ?? "";
+const JWT_SECRET = resolveJwtSecret();
 
 async function login(context: any) {
   const secret = new TextEncoder().encode(JWT_SECRET);

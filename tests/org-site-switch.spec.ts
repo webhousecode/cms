@@ -1,10 +1,9 @@
 import { test, expect } from "playwright/test";
 import { SignJWT } from "jose";
+import { resolveJwtSecret } from "../packages/cms-admin/src/lib/dev-jwt-secret";
 
 const BASE_URL = "http://localhost:3010";
-const JWT_SECRET =
-  process.env.CMS_JWT_SECRET ??
-  process.env.JWT_SECRET ?? "";
+const JWT_SECRET = resolveJwtSecret();
 
 /**
  * F141 — Site switch must fully re-hydrate workspace context.

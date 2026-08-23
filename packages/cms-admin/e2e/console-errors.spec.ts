@@ -1,7 +1,8 @@
 import { test, expect } from "@playwright/test";
 import { SignJWT } from "jose";
+import { resolveJwtSecret } from "../src/lib/dev-jwt-secret";
 
-const JWT_SECRET = process.env.CMS_JWT_SECRET ?? process.env.JWT_SECRET ?? "";
+const JWT_SECRET = resolveJwtSecret();
 
 test.beforeEach(async ({ context }) => {
   const secret = new TextEncoder().encode(JWT_SECRET);

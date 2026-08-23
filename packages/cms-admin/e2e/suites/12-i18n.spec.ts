@@ -9,11 +9,11 @@
 import { test as base, expect } from "../fixtures/auth";
 import { seedDocument, deleteDocument } from "../fixtures/test-data";
 import { SignJWT } from "jose";
+import { resolveJwtSecret } from "../../src/lib/dev-jwt-secret";
 
 // ── Custom fixture with Examples/Simple Blog org/site cookies ────
 
-const JWT_SECRET =
-  process.env.CMS_JWT_SECRET ?? "";
+const JWT_SECRET = resolveJwtSecret();
 
 // Use "dev-token" sub which bypasses team lookup in require-role.ts
 const test = base.extend({

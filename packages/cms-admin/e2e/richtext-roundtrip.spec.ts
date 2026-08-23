@@ -8,8 +8,9 @@
  */
 import { test, expect, type Page, type BrowserContext } from "@playwright/test";
 import { SignJWT } from "jose";
+import { resolveJwtSecret } from "../src/lib/dev-jwt-secret";
 
-const JWT_SECRET = process.env.CMS_JWT_SECRET ?? process.env.JWT_SECRET ?? "";
+const JWT_SECRET = resolveJwtSecret();
 const TEST_SLUG = "cms-chronicle-00-why-we-are-building-this";
 const COLLECTION = "posts";
 const UNIQUE_MARKER = `E2E-ROUNDTRIP-${Date.now()}`;

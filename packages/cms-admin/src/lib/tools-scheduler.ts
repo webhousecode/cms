@@ -8,6 +8,7 @@
 import { loadRegistry } from "./site-registry";
 import { readSiteConfigForSite, type SiteConfig } from "./site-config";
 import { dispatchWebhooks } from "./webhook-dispatch";
+import { resolveJwtSecret } from "./dev-jwt-secret";
 
 interface SchedulerState {
   lastBackupRun?: string;
@@ -52,7 +53,7 @@ export async function runToolsScheduler(): Promise<{ backupRan: boolean; linkChe
   let linkCheckRan = false;
 
   const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3010";
-  const serviceToken = process.env.CMS_JWT_SECRET ?? "";
+  const serviceToken = resolveJwtSecret();
 
   const registry = await loadRegistry();
   if (!registry) {

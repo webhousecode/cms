@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { SignJWT } from "jose";
 import { verifyPassword, createToken, getUsers, COOKIE_NAME } from "@/lib/auth";
+import { resolveJwtSecret } from "@/lib/dev-jwt-secret";
 
 const TOTP_PENDING_COOKIE = "cms-totp-pending";
 
 /** Short-lived JWT proving the password was already verified, awaiting TOTP. */
 async function createTotpPendingToken(userId: string): Promise<string> {
-  const secret = new TextEncoder().encode(process.env.CMS_JWT_SECRET ?? "cms-dev-secret-change-me-in-production");
+  const secret = new TextEncoder().encode(resolveJwtSecret());
   return new SignJWT({ sub: userId, stage: "totp-pending" })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()

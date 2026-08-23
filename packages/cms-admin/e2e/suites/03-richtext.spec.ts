@@ -16,6 +16,7 @@ import {
   typeInEditor,
   saveDocument,
 } from "../fixtures/helpers";
+import { resolveJwtSecret } from "../../src/lib/dev-jwt-secret";
 
 const TEST_SLUG = "cms-chronicle-00-why-we-are-building-this";
 const COLLECTION = "posts";
@@ -80,9 +81,7 @@ test.describe("Richtext editor content roundtrip", () => {
   // Cleanup: remove test markers from the document
   test.afterAll(async ({ browser }) => {
     const { SignJWT } = await import("jose");
-    const JWT_SECRET =
-      process.env.CMS_JWT_SECRET ??
-      process.env.JWT_SECRET ?? "";
+    const JWT_SECRET = resolveJwtSecret();
 
     const context = await browser.newContext();
     const secret = new TextEncoder().encode(JWT_SECRET);

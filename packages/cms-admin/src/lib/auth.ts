@@ -3,6 +3,7 @@ import { SignJWT, jwtVerify } from "jose";
 import fs from "fs/promises";
 import path from "path";
 import { getActiveSitePaths } from "./site-paths";
+import { resolveJwtSecret } from "./dev-jwt-secret";
 
 export type UserRole = "admin" | "editor" | "viewer";
 
@@ -57,11 +58,10 @@ export interface SessionPayload {
 export const COOKIE_NAME = "cms-session";
 
 function getJwtSecret(): Uint8Array {
-  const secret = process.env.CMS_JWT_SECRET;
-  if (!secret) {
+  if (!process.env.CMS_JWT_SECRET) {
     console.warn("[CMS Auth] CMS_JWT_SECRET not set — using insecure dev fallback");
   }
-  return new TextEncoder().encode(secret ?? "cms-dev-secret-change-me-in-production");
+  return new TextEncoder().encode(resolveJwtSecret());
 }
 
 async function getUsersFilePath(): Promise<string> {

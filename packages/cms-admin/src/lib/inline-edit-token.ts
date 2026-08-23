@@ -1,4 +1,5 @@
 import { SignJWT } from "jose";
+import { resolveJwtSecret } from "./dev-jwt-secret";
 
 /**
  * F157 — the single source of truth for minting inline-edit `editSession`
@@ -19,7 +20,7 @@ export const EDIT_SESSION_TTL_SECONDS = 60 * 60 * 24 * 30;
 
 function getJwtSecret(): Uint8Array {
   return new TextEncoder().encode(
-    process.env.CMS_JWT_SECRET ?? "cms-dev-secret-change-me-in-production",
+    resolveJwtSecret(),
   );
 }
 

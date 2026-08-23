@@ -170,7 +170,11 @@ describe("pinVersions — failure handling", () => {
     expect(result).toEqual(["lodash"]);
   });
 
-  it("respects timeout and falls back rather than hanging", async () => {
+  // Spawns a real process and waits for pinVersions' own 100ms timeout to fire.
+  // On a loaded CI runner the spawn alone can outlast vitest's 5s default, which
+  // is what timed this out in run 32343397458 — a slow machine, not a broken
+  // timeout. The assertion is unchanged; only the room to reach it is.
+  it("respects timeout and falls back rather than hanging", { timeout: 20_000 }, async () => {
     // Stub script that sleeps forever
     const dir = mkdtempSync(path.join(os.tmpdir(), "pnpm-hang-"));
     const stub = path.join(dir, "pnpm-hang");

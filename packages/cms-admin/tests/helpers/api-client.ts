@@ -9,11 +9,10 @@
  *   const data = await res.json();
  */
 import { SignJWT } from "jose";
+import { resolveJwtSecret } from "../../src/lib/dev-jwt-secret";
 
 const BASE = process.env.TEST_BASE_URL ?? "http://localhost:3010";
-const SECRET =
-  process.env.CMS_JWT_SECRET ??
-  process.env.JWT_SECRET ?? "";
+const SECRET = resolveJwtSecret();
 
 let cachedToken: string | null = null;
 

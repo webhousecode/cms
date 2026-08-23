@@ -10,10 +10,19 @@
  */
 import { test as base } from "@playwright/test";
 import { SignJWT } from "jose";
+import { resolveJwtSecret } from "../../src/lib/dev-jwt-secret";
 
-const JWT_SECRET =
-  process.env.CMS_JWT_SECRET ??
-  process.env.JWT_SECRET ?? "";
+/**
+ * Must be the SAME secret the server under test verifies with, or every authed
+ * test dies before it reaches the server.
+ *
+ * The old fallback here was "", which is not a missing value — `??` accepts it,
+ * so `jose` was handed a zero-length key and threw "Zero-length key is not
+ * supported" for 38 of 41 E2E tests. Falling back to the server's own dev
+ * secret means these tests run with or without CMS_JWT_SECRET being set, which
+ * is what CI needs: it has no secret to give them.
+ */
+const JWT_SECRET = resolveJwtSecret();
 
 type AuthFixtures = {
   authedPage: import("@playwright/test").Page;

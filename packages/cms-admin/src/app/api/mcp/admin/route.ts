@@ -5,6 +5,7 @@ import { getApiKey } from "@/lib/ai-config";
 import { resolveApiKeyToSite } from "@/lib/mcp-config";
 import fs from "fs/promises";
 import path from "path";
+import { resolveJwtSecret } from "@/lib/dev-jwt-secret";
 
 export const dynamic = "force-dynamic";
 
@@ -281,7 +282,7 @@ export async function GET(request: NextRequest) {
     async runAgent(agentId: string, prompt: string, collection?: string) {
       // runAgent is complex (calls AI APIs) — use internal HTTP endpoint
       const baseUrl = process.env.NEXTAUTH_URL || `http://localhost:${process.env.PORT || 3010}`;
-      const serviceToken = process.env.CMS_JWT_SECRET ?? "";
+      const serviceToken = resolveJwtSecret();
       const res = await fetch(`${baseUrl}/api/cms/agents/${agentId}/run`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-cms-service-token": serviceToken },
@@ -337,7 +338,7 @@ export async function GET(request: NextRequest) {
     async triggerDeploy() {
       // Deploy is very complex (Fly.io, Vercel, Netlify, GH Pages) — use internal HTTP
       const baseUrl = process.env.NEXTAUTH_URL || `http://localhost:${process.env.PORT || 3010}`;
-      const serviceToken = process.env.CMS_JWT_SECRET ?? "";
+      const serviceToken = resolveJwtSecret();
       const res = await fetch(`${baseUrl}/api/admin/deploy`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-cms-service-token": serviceToken },
@@ -371,7 +372,7 @@ export async function GET(request: NextRequest) {
     async createBackup() {
       // Backup is complex (zip creation) — use internal HTTP
       const baseUrl = process.env.NEXTAUTH_URL || `http://localhost:${process.env.PORT || 3010}`;
-      const serviceToken = process.env.CMS_JWT_SECRET ?? "";
+      const serviceToken = resolveJwtSecret();
       const res = await fetch(`${baseUrl}/api/admin/backup`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-cms-service-token": serviceToken },
@@ -384,7 +385,7 @@ export async function GET(request: NextRequest) {
     // ── Translation (internal HTTP — these endpoints handle their own site resolution) ─
     async translateDocument(collection: string, slug: string, targetLocale: string, publish: boolean) {
       const baseUrl = process.env.NEXTAUTH_URL || `http://localhost:${process.env.PORT || 3010}`;
-      const serviceToken = process.env.CMS_JWT_SECRET ?? "";
+      const serviceToken = resolveJwtSecret();
       const res = await fetch(`${baseUrl}/api/cms/${collection}/${slug}/translate`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-cms-service-token": serviceToken },
@@ -396,7 +397,7 @@ export async function GET(request: NextRequest) {
 
     async translateSite(targetLocale: string, publish: boolean) {
       const baseUrl = process.env.NEXTAUTH_URL || `http://localhost:${process.env.PORT || 3010}`;
-      const serviceToken = process.env.CMS_JWT_SECRET ?? "";
+      const serviceToken = resolveJwtSecret();
       const res = await fetch(`${baseUrl}/api/admin/translate-bulk`, {
         method: "POST",
         headers: { "Content-Type": "application/json", "x-cms-service-token": serviceToken },

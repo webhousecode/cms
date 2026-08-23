@@ -11,6 +11,7 @@ import { cookies } from "next/headers";
 import type { ToolDefinition, ToolHandler } from "@/lib/tools";
 import { buildWebSearchTool } from "@/lib/tools/web-search";
 import { hasPermission } from "@/lib/permissions-shared";
+import { resolveJwtSecret } from "../dev-jwt-secret";
 
 /**
  * Fire-and-forget ICD webhook for any chat tool that mutates a published
@@ -125,7 +126,7 @@ export async function buildChatTools(userPermissions?: string[]): Promise<ToolPa
 
 /** Build headers for internal API calls — service token + site context */
 function siteHeaders(activeOrg?: string, activeSite?: string): Record<string, string> {
-  const serviceToken = process.env.CMS_JWT_SECRET ?? "";
+  const serviceToken = resolveJwtSecret();
   const h: Record<string, string> = {
     "Content-Type": "application/json",
     "x-cms-service-token": serviceToken,
@@ -2098,7 +2099,7 @@ DESIGN GUIDELINES:
       handler: async (input: any) => {
         const { targetLocale, publish } = input;
         const baseUrl = process.env.NEXTAUTH_URL || `http://localhost:${process.env.PORT || 3010}`;
-        const serviceToken = process.env.CMS_JWT_SECRET ?? "";
+        const serviceToken = resolveJwtSecret();
         const res = await fetch(`${baseUrl}/api/admin/translate-bulk`, {
           method: "POST",
           headers: { "Content-Type": "application/json", "x-cms-service-token": serviceToken },
@@ -2244,7 +2245,7 @@ DESIGN GUIDELINES:
       handler: async () => {
         try {
           const baseUrl = process.env.NEXTAUTH_URL || `http://localhost:${process.env.PORT || 3010}`;
-          const serviceToken = process.env.CMS_JWT_SECRET ?? "";
+          const serviceToken = resolveJwtSecret();
           const res = await fetch(`${baseUrl}/api/admin/lighthouse/scan`, {
             method: "POST",
             headers: { "Content-Type": "application/json", "x-cms-service-token": serviceToken },

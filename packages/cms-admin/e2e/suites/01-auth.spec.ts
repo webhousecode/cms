@@ -70,10 +70,9 @@ test.describe("Login flow", () => {
 
 import { test as base } from "@playwright/test";
 import { SignJWT } from "jose";
+import { resolveJwtSecret } from "../../src/lib/dev-jwt-secret";
 
-const JWT_SECRET =
-  process.env.CMS_JWT_SECRET ??
-  process.env.JWT_SECRET ?? "";
+const JWT_SECRET = resolveJwtSecret();
 
 const viewerTest = base.extend<{ viewerPage: import("@playwright/test").Page }>({
   viewerPage: async ({ page, context }, use) => {

@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify, SignJWT } from "jose";
 import { parseSiteSlugPath } from "./lib/site-slug-routing";
+import { resolveJwtSecret } from "./lib/dev-jwt-secret";
 
 const COOKIE_NAME = "cms-session";
 
 function getJwtSecret(): Uint8Array {
-  const secret = process.env.CMS_JWT_SECRET ?? "cms-dev-secret-change-me-in-production";
+  const secret = resolveJwtSecret();
   return new TextEncoder().encode(secret);
 }
 
@@ -262,7 +263,7 @@ export async function proxy(request: NextRequest) {
   // Also honor X-CMS-Active-Site header to set site context without needing separate cookies.
   const serviceToken = request.headers.get("x-cms-service-token");
   if (serviceToken) {
-    const secret = process.env.CMS_JWT_SECRET ?? "cms-dev-secret-change-me-in-production";
+    const secret = resolveJwtSecret();
     if (serviceToken === secret) {
       const jwt = await new SignJWT({
         sub: "service-token",

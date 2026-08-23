@@ -16,13 +16,14 @@ import { chromium } from "playwright";
 import { SignJWT } from "jose";
 import path from "path";
 import fs from "fs";
+import { resolveJwtSecret } from "../packages/cms-admin/src/lib/dev-jwt-secret";
 
 /* ─── Config ─────────────────────────────────────────────────── */
 
 const BASE_URL = "http://localhost:3010";
 const OUT_DIR = path.resolve(import.meta.dirname ?? __dirname, "../docs/screenshots");
 const VIEWPORT = { width: 1440, height: 900 };
-const JWT_SECRET = process.env.CMS_JWT_SECRET ?? process.env.JWT_SECRET ?? "";
+const JWT_SECRET = resolveJwtSecret();
 
 // Static surfaces — always captured
 const STATIC_SURFACES: { name: string; sidebarClick?: string; path?: string }[] = [

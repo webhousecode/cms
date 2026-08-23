@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { SignJWT } from "jose";
 import { COOKIE_NAME, createToken } from "@/lib/auth";
+import { resolveJwtSecret } from "@/lib/dev-jwt-secret";
 import { confirmAuthentication, getRpFromRequest } from "@/lib/webauthn";
 
 const CHALLENGE_COOKIE = "cms-webauthn-challenge";
 const TOTP_PENDING_COOKIE = "cms-totp-pending";
 
 async function createTotpPendingToken(userId: string): Promise<string> {
-  const secret = new TextEncoder().encode(process.env.CMS_JWT_SECRET ?? "cms-dev-secret-change-me-in-production");
+  const secret = new TextEncoder().encode(resolveJwtSecret());
   return new SignJWT({ sub: userId, stage: "totp-pending" })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()

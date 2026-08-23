@@ -60,12 +60,10 @@ jobs:
       - name: CMS core tests
         run: cd packages/cms && npx vitest run
 
-      # cms-admin has 21 pre-existing failures in webauthn/totp/push-store
-      # tests (test-fixture data-dir resolution issue, tracked separately).
-      # Don't block CI on it; same continue-on-error pattern as
-      # _release-build.yml.
-      - name: CMS admin tests (non-blocking, see TODO)
-        continue-on-error: true
+      # The 21 webauthn/totp/push-store failures this step used to excuse are
+      # gone — the suite is 1017/1017 locally. A gate that cannot go red is not
+      # a gate, so it blocks again.
+      - name: CMS admin tests
         run: cd packages/cms-admin && npx vitest run
 
   e2e-tests:
@@ -84,10 +82,20 @@ jobs:
 
       - run: pnpm install --frozen-lockfile
 
+      # Without this the dev server cms-admin boots for the tests cannot
+      # require('@webhouse/cms') — /admin/login answered 500 and the scheduler
+      # died with MODULE_NOT_FOUND. typecheck and unit-tests already build the
+      # workspace; this job was the one that didn't.
+      - name: Build workspace deps
+        run: pnpm build --filter='!@webhouse/cms-admin' --filter='!@webhouse/cms-example-blog'
+
       - name: Install Playwright browsers
         run: cd packages/cms-admin && npx playwright install chromium --with-deps
 
       - name: Run E2E tests
         run: cd packages/cms-admin && npx playwright test
         env:
+          # Empty when the repo secret is unset. Both the fixture and the server
+          # treat that as "not set" and fall back to DEV_JWT_SECRET, so the two
+          # sides still agree and the suite runs without a secret.
           CMS_JWT_SECRET: ${{ secrets.CMS_JWT_SECRET }}

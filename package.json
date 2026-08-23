@@ -58,7 +58,9 @@
       "@parcel/watcher"
     ],
     "overrides": {
-      "protobufjs": ">=7.5.5"
+      "protobufjs": ">=7.5.5",
+      "websocket-driver": ">=0.7.5",
+      "tar": ">=7.5.19"
     }
   }
 }

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { SignJWT } from "jose";
+import { resolveJwtSecret } from "@/lib/dev-jwt-secret";
 
 /**
  * F151 — Lens mint-endpoint (fleet `mintEndpoint` standard).
@@ -31,7 +32,7 @@ const TTL_SECONDS = 600; // ~10 minutes — cookie + JWT share this expiry
 function getJwtSecret(): Uint8Array {
   // Same secret + fallback as proxy.ts so the minted cookie validates 1:1.
   return new TextEncoder().encode(
-    process.env.CMS_JWT_SECRET ?? "cms-dev-secret-change-me-in-production",
+    resolveJwtSecret(),
   );
 }
 

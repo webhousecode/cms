@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 import { COOKIE_NAME, createToken, getUserById } from "@/lib/auth";
+import { resolveJwtSecret } from "@/lib/dev-jwt-secret";
 import { verifyLoginCode } from "@/lib/totp";
 
 const TOTP_PENDING_COOKIE = "cms-totp-pending";
@@ -23,7 +24,7 @@ export async function POST(req: NextRequest) {
 
   let userId: string;
   try {
-    const secret = new TextEncoder().encode(process.env.CMS_JWT_SECRET ?? "cms-dev-secret-change-me-in-production");
+    const secret = new TextEncoder().encode(resolveJwtSecret());
     const { payload } = await jwtVerify(pending, secret);
     if (payload.stage !== "totp-pending" || typeof payload.sub !== "string") {
       throw new Error("Invalid pending token");
