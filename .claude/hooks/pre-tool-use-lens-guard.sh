@@ -74,4 +74,3 @@ EOF
 
 jq -nc --arg ctx "$reminder" '{hookSpecificOutput:{hookEventName:"PreToolUse",additionalContext:$ctx}}' 2>/dev/null || true
 exit 0
-
