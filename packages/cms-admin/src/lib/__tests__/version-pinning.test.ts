@@ -170,22 +170,30 @@ describe("pinVersions — failure handling", () => {
     expect(result).toEqual(["lodash"]);
   });
 
-  // Spawns a real process and waits for pinVersions' own 100ms timeout to fire.
-  // On a loaded CI runner the spawn alone can outlast vitest's 5s default, which
-  // is what timed this out in run 32343397458 — a slow machine, not a broken
-  // timeout. The assertion is unchanged; only the room to reach it is.
-  it("respects timeout and falls back rather than hanging", { timeout: 20_000 }, async () => {
+  // The stub sleeps as a GRANDCHILD of the spawned shell. Killing the shell
+  // does not reach it on Linux, so it keeps the stdout pipe open and the
+  // "close" event — which waits for the pipes — never fires. This test used to
+  // assert only the return value, so a promise that never settled looked
+  // identical to a slow machine: in CI run 32641242381 it consumed the whole
+  // 20s budget and reported "Test timed out", not "the timeout is broken".
+  // Asserting on ELAPSED TIME is what tells those two apart.
+  it("respects timeout and falls back rather than hanging", async () => {
     // Stub script that sleeps forever
     const dir = mkdtempSync(path.join(os.tmpdir(), "pnpm-hang-"));
     const stub = path.join(dir, "pnpm-hang");
     writeFileSync(stub, "#!/bin/sh\nsleep 60\n");
     chmodSync(stub, 0o755);
     try {
+      const started = Date.now();
       const result = await pinVersions(["lodash"], {
         pnpmBin: stub,
         timeoutMs: 100,
       });
+      const elapsed = Date.now() - started;
       expect(result).toEqual(["lodash"]);
+      // Generous for a loaded runner, but nowhere near the 60s the stub sleeps:
+      // this fails if the caller waits for the child instead of for the timer.
+      expect(elapsed).toBeLessThan(5_000);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }

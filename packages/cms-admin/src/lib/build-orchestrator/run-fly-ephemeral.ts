@@ -85,7 +85,18 @@ export async function runFlyEphemeralDeploy(
     };
   }
 
-  const sitePaths = await getActiveSitePaths();
+  // Every other guard above returns a Result; this one used to THROW
+  // ("CMS_CONFIG_PATH not set"), so a deploy attempted before the site was
+  // resolvable crashed the caller instead of telling the user what was wrong.
+  let sitePaths: Awaited<ReturnType<typeof getActiveSitePaths>>;
+  try {
+    sitePaths = await getActiveSitePaths();
+  } catch (err) {
+    return {
+      ok: false,
+      error: `fly-ephemeral could not resolve the site's paths: ${err instanceof Error ? err.message : String(err)}`,
+    };
+  }
   // SHA = latest content-hash signal we have, fallback to timestamp. The
   // resulting image tag uniquely identifies this build attempt and feeds
   // the rollback lookup key.

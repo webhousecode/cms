@@ -71,26 +71,37 @@ export function resolveLatestVersion(
     const child = spawn(pnpmBin, ["view", name, "version"], {
       stdio: ["ignore", "pipe", "pipe"],
     });
+    let settled = false;
     let killed = false;
+    const finish = (v: string | null) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      resolve(v);
+    };
+    // Give up on the TIMER, not on the child's cooperation. SIGTERM to a shell
+    // does not necessarily reach its grandchildren, and "close" only fires once
+    // every stdio pipe is closed — a surviving grandchild holds stdout open, so
+    // the promise never settles and the caller hangs forever despite having
+    // asked for a timeout. Seen on Linux (CI), not on macOS, where sh execs the
+    // single command and the kill lands on the real process.
     const timer = setTimeout(() => {
       killed = true;
-      try { child.kill("SIGTERM"); } catch { /* ignore */ }
+      try { child.kill("SIGKILL"); } catch { /* ignore */ }
+      finish(null);
     }, timeoutMs);
     child.stdout.on("data", (chunk: Buffer) => { stdout += chunk.toString(); });
     child.on("close", (code) => {
-      clearTimeout(timer);
       if (killed || code !== 0) {
-        resolve(null);
+        finish(null);
         return;
       }
       const v = stdout.trim();
       // Sanity-check: looks like a semver (digit at start, contains a dot)
-      if (/^\d+\.\d+/.test(v)) resolve(v);
-      else resolve(null);
+      finish(/^\d+\.\d+/.test(v) ? v : null);
     });
     child.on("error", () => {
-      clearTimeout(timer);
-      resolve(null);
+      finish(null);
     });
   });
 }
