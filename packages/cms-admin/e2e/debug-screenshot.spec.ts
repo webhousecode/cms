@@ -15,13 +15,11 @@ test.beforeEach(async ({ context }) => {
 
 test("screenshot agent detail page", async ({ page }) => {
   await page.goto("/admin/agents");
-  await page.waitForLoadState("networkidle");
   await page.screenshot({ path: "e2e/screenshots/agents-list.png", fullPage: true });
 
   const agentLink = page.locator("a[href*='/admin/agents/']").first();
   await expect(agentLink).toBeVisible({ timeout: 10_000 });
   await agentLink.click();
-  await page.waitForLoadState("networkidle");
   await page.waitForTimeout(2000);
   await page.screenshot({ path: "e2e/screenshots/agent-detail.png", fullPage: true });
 

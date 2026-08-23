@@ -12,14 +12,12 @@ import { collectConsoleErrors } from "../fixtures/helpers";
 /** Navigate to the first real agent (skip /admin/agents/new) */
 async function goToFirstAgent(page: import("@playwright/test").Page) {
   await page.goto("/admin/agents");
-  await page.waitForLoadState("networkidle");
 
   const agentLink = page
     .locator('a[href*="/admin/agents/"]:not([href$="/new"])')
     .first();
   await expect(agentLink).toBeVisible({ timeout: 10_000 });
   await agentLink.click();
-  await page.waitForLoadState("networkidle");
   await expect(page.locator('text="agents"').first()).toBeVisible({
     timeout: 10_000,
   });

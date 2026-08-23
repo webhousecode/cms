@@ -29,20 +29,17 @@ test("no console errors on agent pages", async ({ page }) => {
 
   // Navigate through several pages
   await page.goto("/admin/agents");
-  await page.waitForLoadState("networkidle");
   await page.waitForTimeout(2000);
 
   // Click into first agent
   const agentLink = page.locator('a[href*="/admin/agents/"]:not([href$="/new"])').first();
   if (await agentLink.isVisible()) {
     await agentLink.click();
-    await page.waitForLoadState("networkidle");
     await page.waitForTimeout(2000);
   }
 
   // Navigate to curation
   await page.goto("/admin/curation");
-  await page.waitForLoadState("networkidle");
   await page.waitForTimeout(2000);
 
   // Filter out known non-critical errors

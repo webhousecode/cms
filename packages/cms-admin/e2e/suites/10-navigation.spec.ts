@@ -12,7 +12,6 @@ import { gotoAdmin, getTabTitles } from "../fixtures/helpers";
 test.describe("Tab navigation", () => {
   test("dashboard loads with at least one tab", async ({ authedPage: page }) => {
     await gotoAdmin(page);
-    await page.waitForLoadState("networkidle");
 
     const tabBar = page.locator('[class*="tab"]').first();
     await expect(tabBar).toBeVisible({ timeout: 10_000 });
@@ -20,11 +19,9 @@ test.describe("Tab navigation", () => {
 
   test("navigating to media shows Media content", async ({ authedPage: page }) => {
     await gotoAdmin(page);
-    await page.waitForLoadState("networkidle");
     await page.waitForTimeout(1000);
 
     await gotoAdmin(page, "/media");
-    await page.waitForLoadState("networkidle");
     await page.waitForTimeout(1000);
 
     await expect(page.locator("text=Media")).toBeVisible({ timeout: 5000 });
@@ -32,7 +29,6 @@ test.describe("Tab navigation", () => {
 
   test("browser title includes site name", async ({ authedPage: page }) => {
     await gotoAdmin(page);
-    await page.waitForLoadState("networkidle");
     await page.waitForTimeout(2000);
 
     const title = await page.title();
@@ -47,7 +43,6 @@ test.describe("Sidebar", () => {
     authedPage: page,
   }) => {
     await gotoAdmin(page);
-    await page.waitForLoadState("networkidle");
 
     await expect(page.locator("text=Tools")).toBeVisible({ timeout: 10_000 });
     await expect(page.locator("text=Link Checker")).toBeVisible({ timeout: 5000 });
@@ -61,7 +56,6 @@ test.describe("Sidebar", () => {
 test.describe("Backup page", () => {
   test("backup page loads with Create Backup button", async ({ authedPage: page }) => {
     await gotoAdmin(page, "/backup");
-    await page.waitForLoadState("networkidle");
 
     await expect(page.locator("text=Backup & Restore")).toBeVisible({ timeout: 10_000 });
     await expect(page.locator("text=Create Backup")).toBeVisible({ timeout: 5000 });
@@ -73,7 +67,6 @@ test.describe("Backup page", () => {
 test.describe("Calendar", () => {
   test("calendar page loads with event type legend", async ({ authedPage: page }) => {
     await gotoAdmin(page, "/scheduled");
-    await page.waitForLoadState("networkidle");
 
     await expect(page.locator("text=Calendar").first()).toBeVisible({ timeout: 10_000 });
     await expect(page.locator("text=Publish")).toBeVisible({ timeout: 5000 });
@@ -88,7 +81,6 @@ test.describe("Calendar", () => {
 test.describe("Site Settings", () => {
   test("tools tab exists in site settings", async ({ authedPage: page }) => {
     await gotoAdmin(page, "/settings?tab=tools");
-    await page.waitForLoadState("networkidle");
 
     await expect(page.locator("text=Backup Schedule")).toBeVisible({ timeout: 10_000 });
     await expect(page.locator("text=Link Checker Schedule")).toBeVisible({ timeout: 5000 });

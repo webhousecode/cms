@@ -15,20 +15,17 @@ test.describe("Smoke: no critical console errors", () => {
     const failed = collect404s(page);
 
     await gotoAdmin(page, "/agents");
-    await page.waitForLoadState("networkidle");
     await page.waitForTimeout(2000);
 
     // Click into first agent if available
     const agentLink = page.locator('a[href*="/admin/agents/"]:not([href$="/new"])').first();
     if (await agentLink.isVisible()) {
       await agentLink.click();
-      await page.waitForLoadState("networkidle");
       await page.waitForTimeout(2000);
     }
 
     // Visit curation
     await gotoAdmin(page, "/curation");
-    await page.waitForLoadState("networkidle");
     await page.waitForTimeout(2000);
 
     expect(errors).toHaveLength(0);
@@ -57,7 +54,6 @@ test.describe("Landing page", () => {
 test.describe("Login flow", () => {
   test("dashboard loads when authenticated via JWT", async ({ authedPage: page }) => {
     await gotoAdmin(page);
-    await page.waitForLoadState("networkidle");
     await page.waitForTimeout(2000);
 
     // Should be on /admin, not redirected to login
@@ -100,7 +96,6 @@ const viewerTest = base.extend<{ viewerPage: import("@playwright/test").Page }>(
 viewerTest.describe("Viewer RBAC", () => {
   viewerTest("sidebar hides Settings for viewer", async ({ viewerPage: page }) => {
     await page.goto("/admin");
-    await page.waitForLoadState("networkidle");
     await page.waitForTimeout(2000);
     const settingsLink = page.locator('a[href="/admin/settings"]');
     await expect(settingsLink).toHaveCount(0);
@@ -108,7 +103,6 @@ viewerTest.describe("Viewer RBAC", () => {
 
   viewerTest("collection list hides New/Generate buttons", async ({ viewerPage: page }) => {
     await page.goto("/admin/pages", { timeout: 15000 });
-    await page.waitForLoadState("networkidle").catch(() => {});
     await page.waitForTimeout(2500);
     const newButton = page.locator('button:has-text("New")');
     await expect(newButton).toHaveCount(0);
@@ -118,14 +112,12 @@ viewerTest.describe("Viewer RBAC", () => {
 
   viewerTest("document editor is read-only for viewer", async ({ viewerPage: page }) => {
     await page.goto("/admin/pages");
-    await page.waitForLoadState("networkidle");
     const firstDoc = page.locator('a[href^="/admin/pages/"]').first();
     if ((await firstDoc.count()) === 0) {
       viewerTest.skip();
       return;
     }
     await firstDoc.click();
-    await page.waitForLoadState("networkidle");
     await page.waitForTimeout(2000);
 
     const readOnlyBadge = page.locator("text=Read only");

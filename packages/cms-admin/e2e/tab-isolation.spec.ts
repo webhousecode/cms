@@ -39,7 +39,6 @@ test.describe("Tab isolation between sites", () => {
 
   test("dashboard loads with at least one tab", async ({ page }) => {
     await page.goto("/admin");
-    await page.waitForLoadState("networkidle");
 
     // Should have at least a Dashboard tab
     const tabBar = page.locator('[class*="tab"]').first();
@@ -48,12 +47,10 @@ test.describe("Tab isolation between sites", () => {
 
   test("navigating to media creates/updates tab", async ({ page }) => {
     await page.goto("/admin");
-    await page.waitForLoadState("networkidle");
     await page.waitForTimeout(1000);
 
     // Navigate to Media
     await page.goto("/admin/media");
-    await page.waitForLoadState("networkidle");
     await page.waitForTimeout(1000);
 
     // Page should show Media content
@@ -62,7 +59,6 @@ test.describe("Tab isolation between sites", () => {
 
   test("site switcher is visible with multiple sites", async ({ page }) => {
     await page.goto("/admin");
-    await page.waitForLoadState("networkidle");
 
     // Look for the site switcher (Globe icon + site name + chevron)
     const siteSwitcher = page.locator("text=Freelancer").or(page.locator("text=SproutLake")).or(page.locator("text=Boutique"));
@@ -73,7 +69,6 @@ test.describe("Tab isolation between sites", () => {
 
   test("browser title includes site name", async ({ page }) => {
     await page.goto("/admin");
-    await page.waitForLoadState("networkidle");
     await page.waitForTimeout(2000);
 
     const title = await page.title();
@@ -89,14 +84,12 @@ test.describe("Backup page", () => {
 
   test("backup page loads", async ({ page }) => {
     await page.goto("/admin/backup");
-    await page.waitForLoadState("networkidle");
 
     await expect(page.locator("text=Backup & Restore")).toBeVisible({ timeout: 10_000 });
   });
 
   test("create backup button exists", async ({ page }) => {
     await page.goto("/admin/backup");
-    await page.waitForLoadState("networkidle");
 
     await expect(page.locator("text=Create Backup")).toBeVisible({ timeout: 5000 });
   });
@@ -109,7 +102,6 @@ test.describe("Tools sidebar", () => {
 
   test("tools group exists in sidebar with link checker, backup, performance", async ({ page }) => {
     await page.goto("/admin");
-    await page.waitForLoadState("networkidle");
 
     // Tools group should be visible
     await expect(page.locator("text=Tools")).toBeVisible({ timeout: 10_000 });
@@ -128,7 +120,6 @@ test.describe("Calendar", () => {
 
   test("calendar page loads with event type legend", async ({ page }) => {
     await page.goto("/admin/scheduled");
-    await page.waitForLoadState("networkidle");
 
     await expect(page.locator("text=Calendar").first()).toBeVisible({ timeout: 10_000 });
 
@@ -147,7 +138,6 @@ test.describe("Site Settings", () => {
 
   test("tools tab exists in site settings", async ({ page }) => {
     await page.goto("/admin/settings?tab=tools");
-    await page.waitForLoadState("networkidle");
 
     await expect(page.locator("text=Backup Schedule")).toBeVisible({ timeout: 10_000 });
     await expect(page.locator("text=Link Checker Schedule")).toBeVisible({ timeout: 5000 });

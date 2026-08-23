@@ -5,9 +5,21 @@
  */
 import type { Page } from "@playwright/test";
 
-/** Wait for network to settle (replaces waitForLoadState("networkidle")) */
+/**
+ * Wait for the document, NOT for the network.
+ *
+ * This used to call waitForLoadState("networkidle") behind a comment saying it
+ * replaced it. Against a Next.js DEV server that can never resolve: HMR holds a
+ * socket open for the life of the page, so the wait runs to its timeout every
+ * time. In CI run 32642441084 that was 34 of 36 failures — the pages had
+ * rendered correctly and the suite sat waiting for silence that never comes.
+ *
+ * Playwright discourages networkidle for exactly this reason. Every call site
+ * already followed it with a real expect(...).toBeVisible(), which is the wait
+ * that was doing the work.
+ */
 export async function waitForIdle(page: Page, timeout = 10_000) {
-  await page.waitForLoadState("networkidle", { timeout });
+  await page.waitForLoadState("domcontentloaded", { timeout });
 }
 
 /** Navigate to an admin page and wait for it to load */
