@@ -10,6 +10,7 @@ import { LOCALE_LABELS } from "@/lib/locale";
 import { GitHubStorageAdapter, generateId } from "@webhouse/cms";
 import { getAI, mistralModel } from "@/lib/ai/client";
 import {
+  applyArrayTranslations,
   collectTranslatableFields,
   findReadTimeField,
   findPrimaryBodyField,
@@ -136,6 +137,10 @@ Preserve:
 - Meaning, tone, and formatting
 - Cultural references should be adapted where relevant
 ${seoInstruction}${tagsInstruction}
+Keys of the form "field[0].label" are one entry of a repeating list (a nav item,
+a footer link, a philosophy point). Translate the VALUE and return the key
+EXACTLY as given, index included — do not renumber, merge, drop or add entries.
+
 Include a "_slug" field with a URL-friendly translated slug (lowercase, hyphens, no special chars).
 
 Return ONLY a JSON object with the translated fields. No explanation, no preamble.`;
@@ -202,8 +207,25 @@ Return ONLY a JSON object with the translated fields. No explanation, no preambl
     // Merge: keep non-translatable fields from source, override with translations.
     // For tags this means the source-language tags are fully replaced by the
     // AI's translated array — exactly what we want, never a mix of languages.
-    const mergedData = { ...sourceDoc.data };
+    //
+    // Array rows are deep-copied first. mergedData is a SHALLOW spread of the
+    // source, so its arrays are the very same objects the English document
+    // holds — writing a Danish label through one of them would edit the English
+    // original while translating it.
+    const mergedData: Record<string, unknown> = { ...sourceDoc.data };
+    for (const [k, v] of Object.entries(mergedData)) {
+      if (Array.isArray(v)) {
+        mergedData[k] = v.map((row) =>
+          row && typeof row === "object" && !Array.isArray(row) ? { ...row } : row,
+        );
+      }
+    }
+    // `field[0].label` keys go through the array writer; everything else is a
+    // plain field. Applying array keys blindly would create a literal
+    // "navLinks[0].label" property on the document.
+    const arrayKeys = new Set(applyArrayTranslations(mergedData, translatedData));
     for (const [key, val] of Object.entries(translatedData)) {
+      if (arrayKeys.has(key) || /^[A-Za-z0-9_]+\[\d+\]\.[A-Za-z0-9_]+$/.test(key)) continue;
       mergedData[key] = val;
     }
 
