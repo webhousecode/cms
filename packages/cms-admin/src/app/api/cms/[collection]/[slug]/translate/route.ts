@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAdminCms, getAdminConfig } from "@/lib/cms";
 import { getSessionWithSiteRole } from "@/lib/require-role";
+import { dispatchRevalidation } from "@/lib/revalidation";
+import { getActiveSiteEntry } from "@/lib/site-paths";
 import { readSiteConfig } from "@/lib/site-config";
 import { buildLocaleInstruction } from "@/lib/ai/locale-prompt";
 import { getModel } from "@/lib/ai/model-resolver";
@@ -300,15 +302,51 @@ Return ONLY a JSON object with the translated fields. No explanation, no preambl
       allDocs.find(d => d.slug === translationSlug && d.id !== sourceDoc.id) ||
       allDocs.find(d => (d as any).translationGroup === translationGroupId && d.locale === targetLocale && d.id !== sourceDoc.id);
 
+    /**
+     * Push the twin to the live site, exactly as a normal save does.
+     *
+     * Every other write path — POST /api/cms/{collection}, PATCH on a document,
+     * the chat tools — dispatches revalidation. This route did not, and it
+     * writes through cms.content directly, so a translation reached the CMS
+     * and stopped there. Measured on webhouse-site 2026-08-24: 30 Danish twins
+     * created, HTTP 200 on every one, and `ls /app/content/services` on the
+     * running site showed only the five English files. The Danish pages
+     * existed and were published and were unreachable.
+     *
+     * Not fatal on failure: a translation that saved is worth keeping even if
+     * the site is down — the next edit re-pushes it. Same posture as the
+     * document route.
+     */
+    const pushToSite = async (docSlug: string, doc: unknown, isNew: boolean) => {
+      try {
+        const site = await getActiveSiteEntry();
+        if (!site?.revalidateUrl) return;
+        const urlPrefix = (colConfig as { urlPrefix?: string })?.urlPrefix;
+        await dispatchRevalidation(
+          site,
+          {
+            collection,
+            slug: docSlug,
+            action: publish ? "published" : isNew ? "created" : "updated",
+            document: doc as Record<string, unknown>,
+          },
+          urlPrefix,
+        );
+      } catch (err) {
+        console.error("[translate] revalidation dispatch failed (non-fatal):", err);
+      }
+    };
+
     if (existingTranslation) {
       // Preserve existing status when re-translating (don't force to draft)
       const keepStatus = publish ? "published" : (existingTranslation.status ?? "draft");
-      await cms.content.update(collection, existingTranslation.id, {
+      const updated = await cms.content.update(collection, existingTranslation.id, {
         data: mergedData,
         status: keepStatus as "draft" | "published" | "archived",
         locale: targetLocale,
         translationGroup: translationGroupId,
       });
+      await pushToSite(existingTranslation.slug, updated ?? existingTranslation, false);
       return NextResponse.json({
         slug: existingTranslation.slug,
         action: "updated",
@@ -322,6 +360,7 @@ Return ONLY a JSON object with the translated fields. No explanation, no preambl
         locale: targetLocale,
         translationGroup: translationGroupId,
       });
+      await pushToSite(created.slug, created, true);
       return NextResponse.json({
         slug: created.slug,
         action: "created",
