@@ -143,9 +143,14 @@ Return ONLY a JSON object with the translated fields. No explanation, no preambl
   const userMessage = `Translate these fields from ${sourceLang} to ${targetLang}:\n\n${JSON.stringify(sourceData, null, 2)}`;
 
   try {
+    // 4096 was not enough for a real article. Three of webhouse-site's longest
+    // posts came back as truncated JSON and failed with "Failed to parse AI
+    // translation response" — the model had simply run out of room mid-object.
+    // A translation is roughly as long as its source plus the JSON envelope, so
+    // the ceiling has to fit the whole document, not a typical one.
     const { text: aiText } = await ai.chat({
       ...mistralModel(model),
-      maxTokens: 4096,
+      maxTokens: 16384,
       system: systemPrompt,
       messages: [{ role: "user", content: userMessage }],
       responseFormat: "json",
