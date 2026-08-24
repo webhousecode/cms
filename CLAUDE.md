@@ -943,3 +943,28 @@ The consequence is about the REPLY, not about the standard:
 - **Never route blame outward either** — not to the user, not to "the environment", not to a mystery. There is nobody else in the loop, so an explanation that ends anywhere except "we caused it, here is the fix" is wrong on the facts.
 
 **This removes the ceremony, not the report.** One line of what broke and what changed is still required, every time, and a thing you could not verify must still be called unverified. What is being cut is the *performance* of accountability, not accountability.
+
+## Decision Register — the settled choices you must not re-open (F271)
+
+> **Canonical section per F057 multi-project convention.** Copied verbatim into every cardmem-compatible repo.
+
+Each project has a **Decision Register**: a short list of choices the owner has already settled, so a new session does not re-open them. It is **delivered unasked** in the `cardmem_session_start` payload (a `decisions` block, beside `fleet_autonomy` / `agent_inbox` / `discovery_reuse`) — you never have to remember to look. Read it before proposing an approach.
+
+**An agent may PROPOSE, never decide.** `cardmem_propose_decision` lands an entry as `proposed`: it is NOT delivered to any other session and binds nobody until **the owner confirms it** in Settings → Decisions. There is deliberately no agent tool to create-active, edit, activate, delete or supersede an entry. The register's whole value is that it holds the OWNER's settled choices — if an agent could write to it, an agent could write its own misunderstanding in as law, and every session after that would obey it while it still looked like the owner's decision. `cardmem_list_decisions` reads it on demand (default `active`; it always states `total` alongside `shown`, so "I saw 15 of 40" can never be mistaken for "there are 15").
+
+**The one field worth writing carefully is `rejected`** — what was chosen AGAINST, and why it lost. Re-proposing an already-dead approach is where most wasted agent effort actually goes, and that is exactly the sentence that never survives a compaction.
+
+### Where does this belong? Four stores, one test
+
+| Store | Holds | How it reaches a session |
+|---|---|---|
+| **Decision Register** | **project-level settled choices that constrain FUTURE work** | **delivered every session start** |
+| `CLAUDE.md` | fleet + repo CONVENTIONS ("how we work here") | loaded every boot, prose |
+| Trail | RATIONALE + diagnoses ("we chose X over Y because Z") | only if someone searches |
+| plan-doc | decisions scoped to ONE F-number | only if that card is opened |
+
+**The routing test, in one sentence: *would a new session, not knowing this, go and do the wrong thing?*** If yes → Decision Register. If it is a rule for every repo → CLAUDE.md. If it is the story behind a past fix → Trail. If it only binds one card → that card's plan-doc.
+
+The four do not compete — a decision can be registered AND have its reasoning saved in Trail. What must not happen is a fourth overlapping store nobody maintains. The register stays small on purpose (only `active` entries are delivered, capped, pinned first) precisely so it stays read: a long register is not more coverage, it is a list nobody reads that still LOOKS like coverage.
+
+**Never DELETE a reversed decision** — supersede it, pointing at what replaced it, so a session that finds the old entry is told where the truth moved. `revisit` marks "no longer trusted" without pretending the decision was never made.
