@@ -1,3 +1,4 @@
+2026-08-24T16:38:11Z  weekly  2026.08.24  https://github.com/webhousecode/cms/releases/download/weekly/cms-admin-2026.08.24.tar.gz
 2026-08-17T16:27:05Z  weekly  2026.08.17  https://github.com/webhousecode/cms/releases/download/weekly/cms-admin-2026.08.17.tar.gz
 2026-08-10T16:56:06Z  weekly  2026.08.10  https://github.com/webhousecode/cms/releases/download/weekly/cms-admin-2026.08.10.tar.gz
 2026-08-03T17:52:37Z  weekly  2026.08.03  https://github.com/webhousecode/cms/releases/download/weekly/cms-admin-2026.08.03.tar.gz
