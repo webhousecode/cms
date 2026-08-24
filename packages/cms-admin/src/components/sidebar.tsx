@@ -21,6 +21,7 @@ import {
   Trash2,
   BarChart2,
   Settings2,
+  SquarePen,
   Zap,
   Boxes,
   Calendar,
@@ -89,7 +90,7 @@ export function AppSidebar({ collections }: Props) {
   });
 
   // Load logo preference from shared context (profile)
-  const { user: ctxUser, profile: ctxProfile, isAdminEmpty } = useHeaderData();
+  const { user: ctxUser, profile: ctxProfile, siteConfig: ctxSiteConfig, isAdminEmpty } = useHeaderData();
   // F153: per-tenant capability gate — hide whole feature areas this tenant has
   // turned off. Defaults ON (canUse → true) so untouched sites are unchanged.
   const canUse = useCapabilities();
@@ -126,6 +127,28 @@ export function AppSidebar({ collections }: Props) {
   const [readyCount, setReadyCount] = useState(0);
   const [formUnreadTotal, setFormUnreadTotal] = useState(0);
   const siteRole = ctxUser?.siteRole ?? null;
+
+  // "Redigér live" — one entry to the whole site in edit mode.
+  //
+  // The per-document button (document-editor.tsx) builds its URL from the
+  // DOCUMENT's slug, which only resolves on sites where the slug IS the path.
+  // On a site that routes by a fixed path and finds the document by
+  // translationGroup, that button lands on 404 for every translated document —
+  // measured on webhouse.dk, 10 of 22. This entry goes to the site's front page
+  // instead, which always resolves, and the edit token is scoped to the SITE
+  // rather than to one document — so from there every page is editable.
+  const [activeSiteId, setActiveSiteId] = useState<string | null>(null);
+  useEffect(() => {
+    const raw = document.cookie.match(/(?:^|; )cms-active-site=([^;]*)/)?.[1];
+    setActiveSiteId(raw ? decodeURIComponent(raw) : null);
+  }, [pathname]);
+  const previewSiteUrl = typeof ctxSiteConfig?.previewSiteUrl === "string" ? ctxSiteConfig.previewSiteUrl : "";
+  const inlineEditOn = ctxSiteConfig?.inlineEditEnabled === true;
+  const canLiveEdit = inlineEditOn && !!previewSiteUrl && !!activeSiteId
+    && !!ctxUser?.permissions?.includes("content.edit");
+  const liveEditHref = canLiveEdit
+    ? `/admin/inline-edit/connect?site=${encodeURIComponent(activeSiteId!)}&return=${encodeURIComponent(previewSiteUrl)}`
+    : "";
 
   // Listen for logo icon preference changes
   useEffect(() => {
@@ -554,6 +577,28 @@ export function AppSidebar({ collections }: Props) {
                 </span>
               </SidebarMenuButton>
             </SidebarMenuItem>
+            {/* Redigér live — the site-wide entry to inline editing. Gated on
+                the content.edit PERMISSION (not on a role): the connect route
+                enforces the same permission server-side, which is the actual
+                boundary; this only decides whether the door is visible. */}
+            {canLiveEdit && (
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  tooltip="Redigér teksten direkte på det færdige website"
+                  render={
+                    <a
+                      href={liveEditHref}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      data-testid="nav-link-live-edit"
+                    />
+                  }
+                >
+                  <SquarePen className="!w-5 !h-5" />
+                  <span>Redigér live</span>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            )}
             {/* Site Settings + Trash — role-gated. Sit directly under Search
                 instead of in the footer (F:no-footer-rearrange) so editors
                 don't have to scroll past collections to reach them. */}
