@@ -162,6 +162,30 @@ if [[ "$reuse_gap" =~ ^[0-9]+$ && "$reuse_gap" -gt 0 ]]; then
     '.discovery_reuse.gap[] | if type=="string" then "    - " + . else "    - " + (.pkg // .name // .package // (.|tostring)) + (if .version then " (" + (.version|tostring) + ")" else "" end) end' 2>/dev/null | head -12
 fi
 
+# F269.2 — the release gate's OWN coverage. The tool has returned this since the
+# card shipped; nothing printed it, so the verdict existed and reached nobody —
+# which is the exact failure the card's own comment names ("a finding that lives
+# only where somebody must remember to look"). buddy found it by asking why their
+# turbo-based gate was silent: it was not silent, it was unread.
+#
+# ALWAYS one line, including 'covered'. Printing only on trouble makes "the gate
+# is fine" and "nothing looked" the same silence — the same trap the F195.8 colour
+# sync fell into the same day. Detail only when there is something to act on.
+gate_state=$(printf '%s' "$result" | jq -r '.gate_coverage.state // empty')
+if [[ -n "$gate_state" ]]; then
+  gate_disk=$(printf '%s' "$result" | jq -r '.gate_coverage.on_disk // 0')
+  gate_cov=$(printf '%s' "$result" | jq -r '.gate_coverage.covered // "?"')
+  case "$gate_state" in
+    covered) printf '  ✓ Release gate sees all %s test file(s).\n' "$gate_disk" ;;
+    *)
+      # 'covered: ?' is UNKNOWN and must never render as 0.
+      printf '  ⚠ Release gate: %s (%s of %s test files covered)\n' "$gate_state" "$gate_cov" "$gate_disk"
+      printf '%s' "$result" | jq -r '"    " + (.gate_coverage.reason // "no reason given")' 2>/dev/null
+      printf '%s' "$result" | jq -r '(.gate_coverage.uncovered_sample // [])[] | "    - " + .' 2>/dev/null | head -8
+      ;;
+  esac
+fi
+
 printf '\n  Tools available via projects MCP. /board /pickup /handoff for shortcuts.\n'
 printf '</projects:state>\n'
 
