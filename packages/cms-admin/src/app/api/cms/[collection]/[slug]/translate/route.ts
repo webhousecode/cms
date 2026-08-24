@@ -166,9 +166,16 @@ Return ONLY a JSON object with the translated fields. No explanation, no preambl
     // Use AI-generated slug, fall back to {slug}-{locale}
     const aiSlug = translatedData["_slug"];
     delete translatedData["_slug"];
-    const translationSlug = aiSlug
+    let translationSlug = aiSlug
       ? aiSlug.toLowerCase().replace(/[^a-z0-9-]/g, "").replace(/-+/g, "-").replace(/^-|-$/g, "")
       : `${slug}-${targetLocale}`;
+    // A slug that survives translation unchanged — "site", "cms", "demo", any
+    // proper noun — makes the twin want the SOURCE's own address. Measured on
+    // webhouse-site 2026-08-24: translating globals/site to Danish returned
+    // _slug "site", so the lookup below matched the source and the English
+    // globals were overwritten in place. One document, no error, and the site
+    // title, footer and every nav label came back Danish.
+    if (translationSlug === slug) translationSlug = `${slug}-${targetLocale}`;
 
     // Extract translated SEO fields and rebuild _seo object
     const translatedSeo: Record<string, unknown> = {};
@@ -283,8 +290,14 @@ Return ONLY a JSON object with the translated fields. No explanation, no preambl
 
     // Check if translation already exists (by slug OR by translationGroup + locale)
     const { documents: allDocs } = await cms.content.findMany(collection, {});
+    // `d.id !== sourceDoc.id` on BOTH branches. The group-branch already had it;
+    // the slug-branch did not, and that asymmetry is the data-loss: whatever
+    // reason two documents end up sharing a slug, overwriting the SOURCE with
+    // its own translation is never the right answer. Belt and braces with the
+    // slug guard above — either one alone would have prevented the incident,
+    // and neither one alone is worth relying on for a destructive write.
     const existingTranslation =
-      allDocs.find(d => d.slug === translationSlug) ||
+      allDocs.find(d => d.slug === translationSlug && d.id !== sourceDoc.id) ||
       allDocs.find(d => (d as any).translationGroup === translationGroupId && d.locale === targetLocale && d.id !== sourceDoc.id);
 
     if (existingTranslation) {
