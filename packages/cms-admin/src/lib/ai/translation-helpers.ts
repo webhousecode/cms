@@ -109,8 +109,21 @@ export function collectTranslatableFields(
       if (!row || typeof row !== "object") return;
       for (const sub of translatableSubs) {
         const v = (row as Record<string, unknown>)[sub.name];
-        if (typeof v === "string" && v.trim().length > 0 && !isNonProse(sub.name, v)) {
-          out[`${field.name}[${i}].${sub.name}`] = v;
+        const key = `${field.name}[${i}].${sub.name}`;
+        // A `tags` sub-field is a LIST INSIDE A LIST — e.g. each product row on
+        // webhouse-site carries `features: string[]`. The string-only branch
+        // below skipped it silently, so a Danish product card kept four English
+        // bullets under a Danish heading. Nothing failed: a copied bullet is a
+        // valid bullet. Measured on webhouse-site 2026-08-24.
+        if (sub.type === "tags") {
+          if (Array.isArray(v)) {
+            const cleaned = v.filter(
+              (t): t is string => typeof t === "string" && t.trim().length > 0,
+            );
+            if (cleaned.length > 0) out[key] = cleaned;
+          }
+        } else if (typeof v === "string" && v.trim().length > 0 && !isNonProse(sub.name, v)) {
+          out[key] = v;
         }
       }
     });
@@ -136,7 +149,11 @@ export function applyArrayTranslations(
   const applied: string[] = [];
   for (const [key, value] of Object.entries(translated)) {
     const m = /^([A-Za-z0-9_]+)\[(\d+)\]\.([A-Za-z0-9_]+)$/.exec(key);
-    if (!m || typeof value !== "string") continue;
+    // A string OR an array of strings (a `tags` sub-field). Anything else is
+    // not something the translator was asked for, so it is not written back.
+    const isStringArray =
+      Array.isArray(value) && value.every((v) => typeof v === "string");
+    if (!m || (typeof value !== "string" && !isStringArray)) continue;
     const [, fieldName, idxRaw, subName] = m;
     const rows = merged[fieldName];
     if (!Array.isArray(rows)) continue;

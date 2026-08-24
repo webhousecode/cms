@@ -98,3 +98,106 @@ describe("array fields are translatable", () => {
     expect(Object.keys(out)).toHaveLength(0);
   });
 });
+
+/**
+ * A LIST INSIDE A LIST.
+ *
+ * MEASURED on webhouse-site, 2026-08-24, right after the array fix above
+ * shipped. The /products page stores each product as a row, and each row
+ * carries `features: string[]` — four bullet points. The Danish twin came back
+ * with a Danish name, a Danish tagline, a Danish description, and four English
+ * bullets underneath:
+ *
+ *   Produkter → @webhouse/cms → "Udvikler-først. AI-integreret."
+ *     · AI-native content workflows
+ *     · Static-first output
+ *
+ * Same failure shape as the parent bug, one level deeper: the collector only
+ * looked at STRING sub-fields, so a `tags` sub-field fell through the branch
+ * and was copied verbatim. Nothing failed — a copied bullet is a valid bullet.
+ */
+const PRODUCTS: FieldConfig = {
+  name: "products",
+  type: "array",
+  label: "Products",
+  fields: [
+    { name: "name", type: "text", label: "Name" },
+    { name: "tagline", type: "text", label: "Tagline" },
+    { name: "href", type: "text", label: "URL" },
+    { name: "features", type: "tags", label: "Feature bullets" },
+  ],
+} as unknown as FieldConfig;
+
+const PRODUCT_ROWS = {
+  products: [
+    {
+      name: "@webhouse/cms",
+      tagline: "Developer-first.",
+      href: "/cms",
+      features: ["AI-native content workflows", "Static-first output"],
+    },
+    {
+      name: "Senti.Cloud",
+      tagline: "Industrial IoT.",
+      href: "https://senti.cloud",
+      features: ["Real-time sensor data"],
+    },
+  ],
+};
+
+describe("tags sub-field inside an array row", () => {
+  it("collects the bullet list so the translator is asked for it at all", () => {
+    const out = collectTranslatableFields(PRODUCT_ROWS, [PRODUCTS]);
+    expect(out["products[0].features"]).toEqual([
+      "AI-native content workflows",
+      "Static-first output",
+    ]);
+    expect(out["products[1].features"]).toEqual(["Real-time sensor data"]);
+  });
+
+  it("still leaves the row's URL alone — a translated href 404s silently", () => {
+    const out = collectTranslatableFields(PRODUCT_ROWS, [PRODUCTS]);
+    expect(out["products[0].href"]).toBeUndefined();
+    expect(out["products[1].href"]).toBeUndefined();
+  });
+
+  it("writes the translated bullets back into the right row", () => {
+    const merged = JSON.parse(JSON.stringify(PRODUCT_ROWS));
+    const applied = applyArrayTranslations(merged, {
+      "products[0].features": ["AI-drevne arbejdsgange", "Statisk output"],
+      "products[1].features": ["Sensordata i realtid"],
+    });
+    expect(applied).toContain("products[0].features");
+    expect(merged.products[0].features).toEqual([
+      "AI-drevne arbejdsgange",
+      "Statisk output",
+    ]);
+    expect(merged.products[1].features).toEqual(["Sensordata i realtid"]);
+    // untouched siblings
+    expect(merged.products[0].name).toBe("@webhouse/cms");
+    expect(merged.products[0].href).toBe("/cms");
+  });
+
+  it("does not write the SOURCE object when merging a copy", () => {
+    const merged = JSON.parse(JSON.stringify(PRODUCT_ROWS));
+    applyArrayTranslations(merged, { "products[0].features": ["Dansk"] });
+    expect(PRODUCT_ROWS.products[0].features).toEqual([
+      "AI-native content workflows",
+      "Static-first output",
+    ]);
+  });
+
+  it("ignores a value that is neither a string nor a list of strings", () => {
+    const merged = JSON.parse(JSON.stringify(PRODUCT_ROWS));
+    const applied = applyArrayTranslations(merged, {
+      "products[0].features": [1, 2] as unknown as string[],
+      "products[0].name": { nope: true } as unknown as string,
+    });
+    expect(applied).toEqual([]);
+    expect(merged.products[0].features).toEqual([
+      "AI-native content workflows",
+      "Static-first output",
+    ]);
+    expect(merged.products[0].name).toBe("@webhouse/cms");
+  });
+});
