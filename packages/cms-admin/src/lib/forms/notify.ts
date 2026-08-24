@@ -76,15 +76,27 @@ async function resolveMailer(overrideFrom?: string): Promise<{
   };
 }
 
-/** Shared branded shell — dark card, gradient accent bar — matching
- *  lib/email.ts's renderInviteEmail so every cms-sent email looks the same
- *  shape. Colors + footer name are per-site (site-config emailAccentColor/
- *  emailAccentColor2/emailFooterName) so each brand keeps its own identity
- *  instead of every tenant's mail looking like webhouse.app's. The border +
- *  box-shadow glow is the accent color at low opacity — degrades gracefully
- *  in clients that strip box-shadow (Outlook), still reads fine as a plain
- *  bordered card there. */
-function wrapBrandedEmail(opts: {
+/**
+ * The shell every form notification is sent in.
+ *
+ * REPLACES a dark card with a gold glow. Christian, seeing one in Gmail:
+ * "frygteligt design". Three things were wrong with it, and only one was taste:
+ *
+ *  - It painted a black slab into a white inbox. An email does not get to
+ *    decide what the surrounding client looks like, so a dark design reads as a
+ *    hole in the page rather than as a brand.
+ *  - It was decorative where it needed to be useful. A notification exists to be
+ *    ACTED on, and this one carried no way to reply and no way to open the
+ *    submission.
+ *  - It printed the machine's own words at a human: raw field keys ("name",
+ *    "message") and an ISO timestamp, while the form config had proper labels
+ *    sitting right there unused.
+ *
+ * Light, quiet, and built out of table cells so Outlook renders it the same as
+ * everyone else. The accent survives as one thin rule — enough to be ours,
+ * not enough to be the subject.
+ */
+export function wrapBrandedEmail(opts: {
   title: string;
   bodyHtml: string;
   footerNote?: string;
@@ -95,58 +107,194 @@ function wrapBrandedEmail(opts: {
   const accent = opts.accentColor || "#F7BB2E";
   const accent2 = opts.accentColor2 || "#f59e0b";
   const footerName = opts.footerName || "webhouse.app";
-  const glow = hexToRgba(accent, 0.35);
-  const glowSoft = hexToRgba(accent, 0.15);
-  const borderColor = hexToRgba(accent, 0.4);
   return `<!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="color-scheme" content="light" />
   <title>${escHtml(opts.title)}</title>
 </head>
-<body style="margin:0;padding:0;background:#08090c;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
-  <div style="max-width:520px;margin:0 auto;padding:40px 20px;">
-    <div style="background:#12141a;border:1px solid ${borderColor};border-radius:16px;overflow:hidden;box-shadow:0 0 32px ${glow},0 0 64px ${glowSoft};">
-      <div style="height:3px;background:linear-gradient(90deg,${accent},${accent2},${accent});"></div>
-      <div style="padding:40px 36px;color:#e5e5e5;font-size:14px;line-height:1.6;">
-        ${opts.bodyHtml}
-      </div>
-    </div>
-    <div style="text-align:center;padding:24px 0 0;">
-      ${opts.footerNote ? `<p style="margin:0 0 6px;font-size:11px;color:#525252;">${escHtml(opts.footerNote)}</p>` : ""}
-      <p style="margin:0;font-size:10px;color:#333;">Sent by ${escHtml(footerName)}</p>
-    </div>
-  </div>
+<body style="margin:0;padding:0;background:#f4f5f7;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f4f5f7;">
+    <tr><td align="center" style="padding:32px 16px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;background:#ffffff;border:1px solid #e4e6eb;border-radius:12px;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+        <tr><td style="height:4px;background:linear-gradient(90deg,${accent},${accent2});font-size:0;line-height:0;">&nbsp;</td></tr>
+        <tr><td style="padding:32px 32px 28px;color:#1f2328;font-size:15px;line-height:1.55;">
+          ${opts.bodyHtml}
+        </td></tr>
+      </table>
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:560px;">
+        <tr><td align="center" style="padding:16px 8px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+          ${opts.footerNote
+            ? `<p style="margin:0;font-size:12px;color:#8a8f98;">${escHtml(opts.footerNote)}</p>`
+            : `<p style="margin:0;font-size:11px;color:#a4a9b3;">${escHtml(footerName)}</p>`}
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
 </body>
 </html>`;
 }
 
-function hexToRgba(hex: string, alpha: number): string {
-  const m = /^#?([0-9a-f]{6})$/i.exec(hex.trim());
-  if (!m) return `rgba(247,187,46,${alpha})`;
-  const n = parseInt(m[1]!, 16);
-  const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
-  return `rgba(${r},${g},${b},${alpha})`;
+/** A field's human label, from the form config. Falls back to a prettified key
+ *  so a field added outside the config still reads as words, not as a variable
+ *  name — which is exactly what the old template shipped. */
+function fieldLabel(form: FormConfig, key: string): string {
+  const field = form.fields?.find((f) => f.name === key);
+  if (field?.label) return field.label;
+  return key
+    .replace(/[_-]+/g, " ")
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/^./, (c) => c.toUpperCase());
+}
+
+/** A timestamp a person can read, in the site's own language and timezone.
+ *  The old template printed the stored ISO string verbatim. */
+function humanTime(iso: string, locale: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  try {
+    return new Intl.DateTimeFormat(locale === "da" ? "da-DK" : "en-GB", {
+      dateStyle: "long",
+      timeStyle: "short",
+      timeZone: "Europe/Copenhagen",
+    }).format(d);
+  } catch {
+    return iso;
+  }
+}
+
+const COPY = {
+  da: {
+    // Deliberately NOT built from form.label. That label is whatever the site
+    // author typed — on webhouse it is the English word "Contact", and forcing
+    // it lowercase produced "Ny henvendelse via contact". Which form it was is
+    // already in the footer line and in the subject; the heading only has to
+    // say what happened.
+    heading: (_label: string) => `Ny henvendelse`,
+    received: "Modtaget",
+    reply: "Svar til afsenderen",
+    open: "Åbn i CMS",
+    replySubject: "Sv:",
+    footerNote: (site: string) => `Sendt fra kontaktformularen på ${site}`,
+  },
+  en: {
+    heading: (_label: string) => `New enquiry`,
+    received: "Received",
+    reply: "Reply to sender",
+    open: "Open in the CMS",
+    replySubject: "Re:",
+    footerNote: (site: string) => `Sent from the contact form on ${site}`,
+  },
+} as const;
+
+/**
+ * The notification's body, as a pure function.
+ *
+ * Pulled out of the send path on purpose: an email nobody can render is an
+ * email nobody checks, and this template shipped for months looking like
+ * something none of us would have approved if we had looked at it once.
+ * Now it can be rendered to a file, screenshotted, and unit-tested.
+ */
+export function renderFormNotificationBody(input: {
+  form: FormConfig;
+  sub: FormSubmission;
+  lang: "da" | "en";
+  accent: string;
+  replyHref: string;
+  openHref: string;
+}): string {
+  const { form, sub, lang, accent, replyHref, openHref } = input;
+  const t = COPY[lang];
+
+  const fieldRows = Object.entries(sub.data)
+    .filter(([, v]) => v !== undefined && v !== null && String(v).trim() !== "")
+    .map(([k, v]) => {
+      const value = String(v);
+      const isEmail = value.includes("@") && !value.includes(" ");
+      const shown = isEmail
+        ? `<a href="mailto:${escHtml(value)}" style="color:#1f6feb;text-decoration:none;">${escHtml(value)}</a>`
+        : escHtml(value).replace(/\n/g, "<br />");
+      return `<tr>
+        <td style="padding:10px 16px 10px 0;color:#6a707c;font-size:13px;vertical-align:top;white-space:nowrap;border-top:1px solid #eef0f3;">${escHtml(fieldLabel(form, k))}</td>
+        <td style="padding:10px 0;color:#1f2328;font-size:15px;vertical-align:top;border-top:1px solid #eef0f3;">${shown}</td>
+      </tr>`;
+    })
+    .join("");
+
+  const buttons = [
+    replyHref
+      ? `<a href="${escHtml(replyHref)}" style="display:inline-block;padding:11px 20px;background:${escHtml(accent)};color:#1f2328;font-size:14px;font-weight:600;text-decoration:none;border-radius:8px;">${t.reply}</a>`
+      : "",
+    openHref
+      ? `<a href="${escHtml(openHref)}" style="display:inline-block;padding:11px 20px;margin-left:8px;background:#ffffff;color:#1f2328;font-size:14px;font-weight:600;text-decoration:none;border:1px solid #d6d9df;border-radius:8px;">${t.open}</a>`
+      : "",
+  ].filter(Boolean).join("");
+
+  return `
+    <h1 style="margin:0 0 6px;font-size:19px;font-weight:600;color:#1f2328;line-height:1.35;">${escHtml(t.heading(form.label))}</h1>
+    <p style="margin:0 0 22px;font-size:13px;color:#8a8f98;">${escHtml(t.received)} ${escHtml(humanTime(sub.createdAt, lang))}</p>
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;border-collapse:collapse;">${fieldRows}</table>
+    ${buttons ? `<div style="margin-top:26px;">${buttons}</div>` : ""}
+  `;
 }
 
 async function sendEmailNotification(form: FormConfig, sub: FormSubmission): Promise<void> {
-  const fieldRows = Object.entries(sub.data)
-    .map(([k, v]) => `<tr><td style="padding:6px 12px 6px 0;font-weight:600;color:#a3a3a3;vertical-align:top;white-space:nowrap">${escHtml(k)}</td><td style="padding:6px 0;color:#fafafa">${escHtml(String(v ?? ""))}</td></tr>`)
-    .join("");
+  const siteConfig = await readSiteConfig().catch(() => null);
+  const lang: "da" | "en" = siteConfig?.defaultLocale === "da" ? "da" : "en";
+  const t = COPY[lang];
+  const siteName = siteConfig?.emailFooterName || siteConfig?.emailFromName || "webhouse.app";
+  const accent = siteConfig?.emailAccentColor || "#F7BB2E";
 
-  const bodyHtml = `
-    <h1 style="margin:0 0 4px;font-size:20px;font-weight:700;color:#fafafa;">New ${escHtml(form.label)}</h1>
-    <p style="margin:0 0 24px;font-size:12px;color:#737373;">Submitted ${escHtml(sub.createdAt)}</p>
-    <table style="border-collapse:collapse;font-size:14px;width:100%">${fieldRows}</table>
-  `;
+  const senderEmail = typeof sub.data.email === "string" ? sub.data.email : "";
+  const replyHref = senderEmail
+    ? `mailto:${senderEmail}?subject=${encodeURIComponent(`${t.replySubject} ${form.label}`)}`
+    : "";
 
-  const subject = `[${form.label}] New submission`;
+  // Cross-workspace deep link (house rule): a raw /admin URL would drop the
+  // recipient into whichever site their browser last had open.
+  let openHref = "";
+  try {
+    const { buildAdminDeepLink } = await import("../goto-links");
+    const { getActiveSiteEntry } = await import("../site-paths");
+    const { cookies } = await import("next/headers");
+    const site = await getActiveSiteEntry().catch(() => null);
+    const orgId = await cookies().then((c) => c.get("cms-active-org")?.value ?? null).catch(() => null);
+    openHref = await buildAdminDeepLink({
+      base: process.env.NEXTAUTH_URL || `http://localhost:${process.env.PORT || 3010}`,
+      path: `/admin/forms/${encodeURIComponent(form.name)}`,
+      orgId,
+      siteId: site?.id ?? null,
+      label: `form.submitted → ${form.label}`,
+    });
+  } catch {
+    // No link is better than a link into the wrong workspace.
+  }
+
+  const bodyHtml = renderFormNotificationBody({ form, sub, lang, accent, replyHref, openHref });
+  const subject = lang === "da" ? `Ny henvendelse: ${form.label}` : `New enquiry: ${form.label}`;
   const to = form.notifications!.email!;
   const { apiKey, from, accentColor, accentColor2, footerName } = await resolveMailer();
-  const html = wrapBrandedEmail({ title: `New ${form.label} submission`, bodyHtml, accentColor, accentColor2, footerName });
+  const html = wrapBrandedEmail({
+    title: subject,
+    bodyHtml,
+    footerNote: t.footerNote(siteName),
+    accentColor,
+    accentColor2,
+    footerName,
+  });
 
-  await getMailer(apiKey).send({ from, to, subject, html, text: Object.entries(sub.data).map(([k, v]) => `${k}: ${v}`).join("\n") });
+  const text = [
+    t.heading(form.label),
+    `${t.received} ${humanTime(sub.createdAt, lang)}`,
+    "",
+    ...Object.entries(sub.data)
+      .filter(([, v]) => v !== undefined && v !== null && String(v).trim() !== "")
+      .map(([k, v]) => `${fieldLabel(form, k)}: ${v}`),
+  ].join("\n");
+
+  await getMailer(apiKey).send({ from, to, subject, html, text });
 }
 
 async function forwardToWebhook(url: string, form: FormConfig, sub: FormSubmission): Promise<void> {
