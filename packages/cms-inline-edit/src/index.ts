@@ -390,7 +390,45 @@ function setupFields(token: string, options: ResolvedOptions): void {
   if (fieldsWired) return;
   injectStyles();
   document.querySelectorAll<HTMLElement>("[data-cms-field]").forEach((el) => wireField(el, token, options));
+  observeNewFields();
   fieldsWired = true;
+}
+
+let fieldObserver: MutationObserver | null = null;
+
+/**
+ * Re-wire fields that appear after the first scan, without the consumer having
+ * to ask.
+ *
+ * rescanFields() below has existed for this since day one, and its own comment
+ * says "a consumer calls this on every route change". webhouse.dk did not, and
+ * the result was the worst shape a failure can take: the badge kept saying
+ * AFSLUT REDIGERING while every field on every page reached by clicking a link
+ * was dead. Nothing errored. Reported by the site owner, reproduced in a
+ * browser — after a soft navigation the clicked field's contenteditable stayed
+ * null and no toolbar appeared.
+ *
+ * A contract that depends on every consumer remembering a call is a contract
+ * that will be broken silently, so the package now keeps its own promise.
+ * rescanFields() stays exported and still works — a consumer that already calls
+ * it is unaffected, and wireField is idempotent, so the two cannot conflict.
+ *
+ * Cheap by construction: the observer only fires on childList changes and the
+ * rescan is coalesced into one animation frame, so a page inserting many nodes
+ * costs one scan, not one per node.
+ */
+function observeNewFields(): void {
+  if (fieldObserver || typeof MutationObserver === "undefined") return;
+  let queued = false;
+  fieldObserver = new MutationObserver(() => {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(() => {
+      queued = false;
+      rescanFields();
+    });
+  });
+  fieldObserver.observe(document.body, { childList: true, subtree: true });
 }
 
 /**
