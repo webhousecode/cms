@@ -157,3 +157,22 @@ describe("htmlToMarkdown — page references survive a save", () => {
     expect(md).toContain("&quot;");
   });
 });
+
+describe("htmlToMarkdown — an inline field is not a document", () => {
+  // Measured on webhouse.dk 2026-08-24, the day every heading on that site
+  // became a rich field: saving "Drift & Infrastruktur" untouched stored
+  // "Drift & Infrastruktur\n". The ampersand survived; a newline appeared out
+  // of nowhere. It is invisible on the page, and it is right there in the CMS
+  // editor — a value the editor never typed, added by the act of editing.
+  it("does not append a newline to a single-line value", () => {
+    expect(htmlToMarkdown("Drift &amp; Infrastruktur")).toBe("Drift & Infrastruktur");
+  });
+
+  it("keeps the ampersand a plain ampersand", () => {
+    expect(htmlToMarkdown("Drift &amp; Infrastruktur")).not.toContain("&amp;");
+  });
+
+  it("still ends a multi-block document with a newline", () => {
+    expect(htmlToMarkdown("<p>one</p><p>two</p>")).toBe("one\n\ntwo\n");
+  });
+});
