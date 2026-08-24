@@ -1187,7 +1187,14 @@ export function htmlToMarkdown(html: string): string {
   const container = document.createElement("div");
   container.innerHTML = html;
   reattachOrphanListItems(container);
-  return serializeBlockChildren(container).replace(/\n{3,}/g, "\n\n").trim() + "\n";
+  const md = serializeBlockChildren(container).replace(/\n{3,}/g, "\n\n").trim();
+  // A whole document keeps its trailing newline — that is the file convention
+  // a `richtext` body is stored with. A SINGLE-LINE inline field must NOT gain
+  // one: a heading is not a document, and the newline is stored, shows up in
+  // the CMS editor, and appears out of nowhere the first time anyone edits the
+  // field. Measured on webhouse.dk 2026-08-24, where every heading became a
+  // rich field: "Drift & Infrastruktur" came back as "Drift & Infrastruktur\n".
+  return md.includes("\n") ? md + "\n" : md;
 }
 
 function isList(el: Element | null): el is HTMLElement {
