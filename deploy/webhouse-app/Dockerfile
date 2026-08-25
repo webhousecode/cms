@@ -113,6 +113,15 @@ WORKDIR /app/packages/cms-admin
 ARG GIT_SHA=""
 ENV GIT_SHA=$GIT_SHA
 
+# The same DSN the browser bundle got at build time, now also readable AT
+# RUNTIME so the server half can report too (F171). Next inlines NEXT_PUBLIC_*
+# into the bundle, which is enough for the browser and NOT enough for
+# instrumentation-node — that reads process.env on a running machine, and the
+# runtime stage never carried the variable. One source: the same GitHub
+# repo Variable that feeds the builder stage above.
+ARG NEXT_PUBLIC_UPMETRICS_DSN=""
+ENV UPMETRICS_DSN=$NEXT_PUBLIC_UPMETRICS_DSN
+
 EXPOSE 3010
 
 CMD ["/start.sh"]

@@ -158,6 +158,12 @@ async function reportDeploy() {
 }
 
 export function startSchedulers() {
+  // 0. Error reporting FIRST — before any tick can throw. The SDK installs the
+  // process-level unhandledRejection/uncaughtException handlers here, which is
+  // what catches a scheduler blowing up in the background. Everything below
+  // this line was unmonitored until 25 Aug 2026.
+  void import("./lib/upmetrics-server").then(({ initServerReporting }) => initServerReporting());
+
   // 0a. Mail delivery gate — complain at boot if production came up gated off.
   // A test can prove the logic; only a boot check catches an ENVIRONMENT that
   // lies (NODE_ENV not exactly "production"), and that failure is otherwise
