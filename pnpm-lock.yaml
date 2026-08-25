@@ -323,8 +323,8 @@ importers:
         specifier: ^3.0.0
         version: 3.0.0
       '@upmetrics/sdk':
-        specifier: ^0.1.5
-        version: 0.1.5
+        specifier: ^0.4.0
+        version: 0.4.0
       '@webhouse/cms':
         specifier: workspace:*
         version: link:../cms
@@ -3060,8 +3060,8 @@ packages:
   '@types/ws@8.18.1':
     resolution: {integrity: sha512-ThVF6DCVhA8kUGy+aazFQ4kXQ7E1Ty7A3ypFOe0IcJV8O/M511G99AW24irKrW56Wt44yG9+ij8FaqoBGkuBXg==}
 
-  '@upmetrics/sdk@0.1.5':
-    resolution: {integrity: sha512-pA1f2a4xLVYVyzGu1R+KZLhqFHqEhbIx7Y+GczqeSntU+H07YTUYCuKKdffYGYg7W/r73wusCAwqmYSVaHADhQ==}
+  '@upmetrics/sdk@0.4.0':
+    resolution: {integrity: sha512-XYYRgaATQxAZNJYXbr5JVCO2A5qjBf2c86g/+dsp4U6W2tHfXw1xA4H5dTyC+95h+PYPnHceDvJv8f1AZ2q0tQ==}
 
   '@vitejs/plugin-react@4.7.0':
     resolution: {integrity: sha512-gUu9hwfWvvEDBBmgtAowQCojwZmJ5mcLn3aufeCsitijs3+f2NsrPtlAWIR6OPiqljl96GVCUbLe0HyqIpVaoA==}
@@ -9098,7 +9098,7 @@ snapshots:
     dependencies:
       '@types/node': 22.19.15
 
-  '@upmetrics/sdk@0.1.5': {}
+  '@upmetrics/sdk@0.4.0': {}
 
   '@vitejs/plugin-react@4.7.0(vite@5.4.21(@types/node@25.4.0)(lightningcss@1.31.1))':
     dependencies:
