@@ -1,0 +1,17 @@
+_dmarc.webhouse.dk.	IN	TXT	"v=DMARC1; p=quarantine;"
+osm.webhouse.dk.	IN	A	35.158.249.19
+osm1.webhouse.dk.	IN	A	35.158.249.19
+osm2.webhouse.dk.	IN	A	35.158.249.19
+osm3.webhouse.dk.	IN	A	35.158.249.19
+osm4.webhouse.dk.	IN	A	35.158.249.19
+webhouse.dk.		IN	A	35.158.249.19
+webhouse.dk.		IN	MX	1 ASPMX.L.GOOGLE.COM.
+webhouse.dk.		IN	MX	10 ALT3.ASPMX.L.GOOGLE.COM.
+webhouse.dk.		IN	MX	10 ALT4.ASPMX.L.GOOGLE.COM.
+webhouse.dk.		IN	MX	5 ALT1.ASPMX.L.GOOGLE.COM.
+webhouse.dk.		IN	MX	5 ALT2.ASPMX.L.GOOGLE.COM.
+webhouse.dk.		IN	NS	ns1.ppi.dk.
+webhouse.dk.		IN	NS	ns2.ppi.dk.
+webhouse.dk.		IN	TXT	"google-site-verification=v86zvYgyEl6nPZqbXP-o_73pfglD3VN6BIUeYGcstIc"
+webhouse.dk.		IN	TXT	"v=spf1 include:webhouse.net include:_spf.google.com include:mail.zendesk.com include:amazonses.com -all"
+www.webhouse.dk.	IN	A	35.158.249.19
