@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { describe, it, expect, afterAll, beforeEach, vi } from "vitest";
 
 /**
  * F171 — until 25 Aug 2026 the SDK was initialised only in a client component,
@@ -29,6 +29,15 @@ beforeEach(() => {
   delete process.env.UPMETRICS_DSN;
   delete process.env.NEXT_PUBLIC_UPMETRICS_DSN;
   delete process.env.GIT_SHA;
+});
+
+// Vitest runs several test FILES in one worker process, so an env var left
+// behind here is an env var the next file inherits. The onRequestError cases
+// below set UPMETRICS_DSN and NEXT_RUNTIME and the last one leaves
+// NEXT_RUNTIME=edge standing — enough to change how a neighbouring suite
+// behaves, with the failure landing in a file that did nothing wrong.
+afterAll(() => {
+  process.env = { ...ENV };
 });
 
 describe("initServerReporting", () => {
