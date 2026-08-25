@@ -8,7 +8,8 @@
  *
  * Unknown ids redirect to /admin with a query param so the UI can toast.
  */
-import { NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { redirectTo } from "@/lib/redirect";
 import { resolveGotoLink } from "@/lib/goto-links";
 
 export async function GET(
@@ -19,12 +20,13 @@ export async function GET(
   const entry = await resolveGotoLink(id);
 
   if (!entry) {
-    return NextResponse.redirect(new URL("/admin?error=goto-not-found", req.url));
+    return redirectTo("/admin?error=goto-not-found");
   }
 
-  // entry.path may include a query string and/or hash
-  const target = new URL(entry.path, req.url);
-  const res = NextResponse.redirect(target);
+  // entry.path may include a query string and/or hash — a relative Location
+  // carries both, and unlike `new URL(path, req.url)` it cannot inherit the
+  // address the process binds to (see lib/redirect.ts).
+  const res = redirectTo(entry.path);
 
   const cookieOpts = {
     path: "/",

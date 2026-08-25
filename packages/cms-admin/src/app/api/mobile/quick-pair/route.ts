@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+import { redirectTo } from "@/lib/redirect";
 import { NextRequest, NextResponse } from "next/server";
 import os from "os";
 import { getSessionUser, createToken, getUserById } from "@/lib/auth";
@@ -56,5 +57,5 @@ export async function GET(req: NextRequest) {
 
   // Redirect to the /api/mobile/open page which renders the "Open in app" button
   const openUrl = `/api/mobile/open?url=${encodeURIComponent(deepLink)}`;
-  return NextResponse.redirect(new URL(openUrl, req.url));
+  return redirectTo(openUrl);
 }

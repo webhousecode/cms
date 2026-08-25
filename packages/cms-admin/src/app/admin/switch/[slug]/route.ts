@@ -14,7 +14,8 @@
  * Slug = site.id (registry-wide unique by convention; first match wins
  * if not). Returns to /admin with ?error=site-not-found when unknown.
  */
-import { NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { redirectTo } from "@/lib/redirect";
 import { loadRegistry, findSite } from "@/lib/site-registry";
 
 export async function GET(
@@ -26,7 +27,7 @@ export async function GET(
 
   const registry = await loadRegistry();
   if (!registry) {
-    return NextResponse.redirect(new URL("/admin?error=no-registry", req.url));
+    return redirectTo("/admin?error=no-registry");
   }
 
   // Walk orgs to resolve (orgId, siteId). Site IDs are unique per org and
@@ -39,17 +40,14 @@ export async function GET(
     }
   }
   if (!resolved) {
-    return NextResponse.redirect(
-      new URL(`/admin?error=site-not-found&slug=${encodeURIComponent(slug)}`, req.url),
-    );
+    return redirectTo(`/admin?error=site-not-found&slug=${encodeURIComponent(slug)}`);
   }
 
   // Build target — only allow same-origin paths (defense against
   // open-redirect via crafted ?next=https://evil.com).
   const safeNext = next.startsWith("/") && !next.startsWith("//") ? next : "/admin";
-  const target = new URL(safeNext, req.url);
 
-  const res = NextResponse.redirect(target);
+  const res = redirectTo(safeNext);
   const cookieOpts = {
     path: "/",
     maxAge: 60 * 60 * 24 * 365,

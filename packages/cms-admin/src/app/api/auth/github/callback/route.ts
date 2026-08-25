@@ -1,4 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
+import { redirectTo } from "@/lib/redirect";
 import { getActiveSitePaths } from "@/lib/site-paths";
 import { getUsers, createUser, createToken, updateUser, COOKIE_NAME } from "@/lib/auth";
 import fs from "fs/promises";
@@ -18,7 +19,7 @@ export async function GET(request: NextRequest) {
   const storedState = request.cookies.get("github-oauth-state")?.value;
 
   if (!code || !stateParam || stateParam !== storedState) {
-    return NextResponse.redirect(new URL("/admin/login?error=github_csrf", request.url));
+    return redirectTo("/admin/login?error=github_csrf");
   }
 
   // Decode state to check if this is a login flow
@@ -31,7 +32,7 @@ export async function GET(request: NextRequest) {
   const clientId = process.env.GITHUB_OAUTH_CLIENT_ID;
   const clientSecret = process.env.GITHUB_OAUTH_CLIENT_SECRET;
   if (!clientId || !clientSecret) {
-    return NextResponse.redirect(new URL("/admin/login?error=github_not_configured", request.url));
+    return redirectTo("/admin/login?error=github_not_configured");
   }
 
   // Exchange code for access token
@@ -42,12 +43,12 @@ export async function GET(request: NextRequest) {
   });
 
   if (!tokenRes.ok) {
-    return NextResponse.redirect(new URL("/admin/login?error=github_token_failed", request.url));
+    return redirectTo("/admin/login?error=github_token_failed");
   }
 
   const tokenData = (await tokenRes.json()) as { access_token?: string; error?: string };
   if (!tokenData.access_token) {
-    return NextResponse.redirect(new URL(`/admin/login?error=${tokenData.error ?? "no_token"}`, request.url));
+    return redirectTo(`/admin/login?error=${tokenData.error ?? "no_token"}`);
   }
 
   const ghToken = tokenData.access_token;
@@ -67,7 +68,7 @@ export async function GET(request: NextRequest) {
     ]);
 
     if (!ghUserRes.ok) {
-      return NextResponse.redirect(new URL("/admin/login?error=github_api_failed", request.url));
+      return redirectTo("/admin/login?error=github_api_failed");
     }
 
     const ghUser = (await ghUserRes.json()) as { login: string; name?: string; email?: string; avatar_url?: string };
@@ -81,7 +82,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (!primaryEmail) {
-      return NextResponse.redirect(new URL("/admin/login?error=no_github_email", request.url));
+      return redirectTo("/admin/login?error=no_github_email");
     }
 
     // Find or create CMS user (account linking by email)
@@ -118,7 +119,7 @@ export async function GET(request: NextRequest) {
 
     // Issue CMS session JWT
     const sessionToken = await createToken(user);
-    const response = NextResponse.redirect(new URL("/admin", request.url));
+    const response = redirectTo("/admin");
 
     response.cookies.set(COOKIE_NAME, sessionToken, {
       httpOnly: true,
@@ -161,7 +162,7 @@ export async function GET(request: NextRequest) {
     );
   } catch { /* best effort — may fail if no active site yet */ }
 
-  const response = NextResponse.redirect(new URL("/admin/sites/new?github=connected", request.url));
+  const response = redirectTo("/admin/sites/new?github=connected");
   response.cookies.set("github-token", ghToken, {
     httpOnly: true,
     sameSite: "lax",
