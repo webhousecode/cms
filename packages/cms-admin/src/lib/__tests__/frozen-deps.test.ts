@@ -30,6 +30,9 @@ import path from "node:path";
 const LEDGER: Record<string, string> = {
   "@upmetrics/sdk":
     "Bumped to 0.4.1 on 2026-08-25. Fleet-owned; upmetrics tells us when to move.",
+  "@broberg/mail":
+    "Pinned EXACTLY on 0.1.0 while 0.5.0 exists. Not looked at — the mail gate " +
+    "was hardened against 0.1.0's behaviour, so the bump is its own piece of work.",
   "@broberg/cms-chat-client":
     "0.4.14 vs 0.4.20 — same minor, so the caret DOES reach it. Not frozen.",
   "class-variance-authority": "On the newest version (0.7.1).",
@@ -38,8 +41,9 @@ const LEDGER: Record<string, string> = {
 
   // ── Knowingly behind. Each has a card; none is a shrug. ──
   "@broberg/ai-sdk":
-    "FROZEN on 0.13.0, newest 0.28.0. F172.2 — the AI gateway; every LLM call " +
-    "goes through it, so the bump needs every AI surface re-proven in production.",
+    "Bumped 0.13.0 → 0.28.0 on 2026-08-25 (F172.2). Cost tracking stays on OUR " +
+    "explicit sink — from 0.24 a bare createAI() auto-attaches its own, and two " +
+    "sinks would count every call twice in production with no error anywhere.",
   "drizzle-orm":
     "FROZEN on 0.38.x, newest 0.45.2. F172 — touches the database; cms and " +
     "cms-admin must move together and the schema re-checked.",
@@ -61,6 +65,13 @@ function repoRoot(): string {
   throw new Error("repo root not found");
 }
 
+/**
+ * A caret is not the only way to freeze. `"@broberg/ai-sdk": "0.13.0"` — no
+ * caret at all — is frozen HARDER, and the first version of this test looked
+ * only for `^0.`, so cms-admin's exact pin walked straight past the ledger
+ * while cms-ai's caret was caught. Found the same evening, bumping that very
+ * package. Both shapes count now.
+ */
 function caretZeroPins(): Array<{ name: string; range: string; where: string }> {
   const root = repoRoot();
   const manifests = [path.join(root, "package.json")];
@@ -74,7 +85,7 @@ function caretZeroPins(): Array<{ name: string; range: string; where: string }> 
     const pkg = JSON.parse(readFileSync(file, "utf-8")) as Record<string, Record<string, string>>;
     for (const section of ["dependencies", "devDependencies"]) {
       for (const [name, range] of Object.entries(pkg[section] ?? {})) {
-        if (/^\^0\./.test(range)) {
+        if (/^\^?0\./.test(range)) {
           out.push({ name, range, where: path.relative(root, file) });
         }
       }
@@ -83,7 +94,7 @@ function caretZeroPins(): Array<{ name: string; range: string; where: string }> 
   return out;
 }
 
-describe("^0.x dependencies", () => {
+describe("0.x dependencies", () => {
   it("every one is a written decision, not an accident", () => {
     const undocumented = caretZeroPins()
       .filter((p) => !LEDGER[p.name])
@@ -100,7 +111,7 @@ describe("^0.x dependencies", () => {
   it("the ledger has no entries for dependencies that are gone", () => {
     const present = new Set(caretZeroPins().map((p) => p.name));
     const stale = Object.keys(LEDGER).filter((n) => !present.has(n));
-    expect(stale, `no longer pinned as ^0.x — remove from LEDGER: ${stale.join(", ")}`).toEqual([]);
+    expect(stale, `no longer pinned as 0.x — remove from LEDGER: ${stale.join(", ")}`).toEqual([]);
   });
 
   it("no entry is an empty gesture", () => {

@@ -1,5 +1,5 @@
 /**
- * Asks npm whether any ^0.x dependency has moved past the minor its caret pins.
+ * Asks npm whether any 0.x dependency has moved past what its range can reach.
  *
  * The other half of `frozen-deps.test.ts`. That test is offline on purpose —
  * it proves every ^0.x pin is a written decision, not that the decision is
@@ -27,7 +27,7 @@ for (const file of manifests) {
   const pkg = JSON.parse(readFileSync(file, "utf-8")) as Record<string, Record<string, string>>;
   for (const section of ["dependencies", "devDependencies"]) {
     for (const [name, range] of Object.entries(pkg[section] ?? {})) {
-      if (!/^\^0\./.test(range)) continue;
+      if (!/^\^?0\./.test(range)) continue;
       const rel = path.relative(root, file).replace("/package.json", "") || ".";
       const seen = pins.get(name);
       if (seen) seen.where.push(rel);

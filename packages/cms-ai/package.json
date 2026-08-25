@@ -51,14 +51,14 @@
     "access": "public"
   },
   "dependencies": {
+    "@broberg/ai-sdk": "^0.28.0",
     "@webhouse/cms": "workspace:*",
-    "@broberg/ai-sdk": "^0.13.0",
     "zod": "^3.24.1"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
-    "typescript": "^5.7.2",
     "tsup": "^8.3.5",
+    "typescript": "^5.7.2",
     "vite": "^7.3.5",
     "vitest": "^4.1.8"
   }
