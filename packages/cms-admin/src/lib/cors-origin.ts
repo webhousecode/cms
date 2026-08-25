@@ -23,3 +23,33 @@ export function originAllowed(origin: string | null, allowed: string[]): boolean
     }
   });
 }
+
+/**
+ * The hosts a site legitimately answers on, as browser origins.
+ *
+ * This used to be `previewSiteUrl` alone, inline in the route. The day
+ * webhouse.dk was pointed at the site and previewSiteUrl moved with it, every
+ * inline-edit save from the staging address stopped working: the response
+ * carried no `Access-Control-Allow-Origin`, the browser dropped it, and the
+ * editor saw a red pill with nothing in any log. A site having both a staging
+ * address and a live domain is normal, so all of its own configured hosts
+ * count — this widens nothing beyond the tenant.
+ *
+ * `deployCustomDomain` is stored as a BARE host ("wh-site.webhouse.net"). An
+ * Origin header never is, and originAllowed() parses each entry as a URL, so a
+ * bare host would silently match nothing. Scheme is added here, once.
+ */
+export function siteOrigins(config: {
+  previewSiteUrl?: string;
+  deployProductionUrl?: string;
+  deployCustomDomain?: string;
+}): string[] {
+  const out: string[] = [];
+  for (const raw of [config.previewSiteUrl, config.deployProductionUrl, config.deployCustomDomain]) {
+    const v = raw?.trim();
+    if (!v) continue;
+    const withScheme = /^https?:\/\//i.test(v) ? v : `https://${v}`;
+    if (!out.includes(withScheme)) out.push(withScheme);
+  }
+  return out;
+}

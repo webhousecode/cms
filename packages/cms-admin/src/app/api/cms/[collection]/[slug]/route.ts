@@ -10,7 +10,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { withSiteContext } from "@/lib/site-context";
 import { loadRegistry, findSite } from "@/lib/site-registry";
-import { originAllowed } from "@/lib/cors-origin";
+import { originAllowed, siteOrigins } from "@/lib/cors-origin";
 import { invalidateQuickCacheOnWrite } from "@/lib/chat/quick-prewarm";
 
 /**
@@ -62,8 +62,7 @@ async function getAllowedOrigins(): Promise<string[]> {
   const origins: string[] = [];
   try {
     const { readSiteConfig } = await import("@/lib/site-config");
-    const siteConfig = await readSiteConfig();
-    if (siteConfig.previewSiteUrl) origins.push(siteConfig.previewSiteUrl);
+    origins.push(...siteOrigins(await readSiteConfig()));
   } catch { /* no site config */ }
   if (process.env.NODE_ENV !== "production") {
     origins.push("http://localhost:3000", "http://localhost:3009", "http://localhost:3011", "https://localhost:3010");
