@@ -46,6 +46,8 @@ vent 30 minutter   ← hele pointen; springes det over, er der ingen hurtig vej 
 
 Det er det eneste trin der koster noget hvis det udelades.
 
+**Gem samtidig en fuld listning af zonen som fil.** Ikke antallet — indholdet. "112 records før, 112 efter" ville bestå selvom to var byttet om, og så er kontrollen et instrument der ikke kan se den fejl den bærer navn efter.
+
 ### 1 · Lad certifikaterne udstede før trafikken flyttes
 
 Certifikaterne er allerede oprettet på Fly. To CNAMEs lader dem udstede **inden** noget flyttes, så skiftet bliver uden nedetid:
@@ -93,11 +95,24 @@ Som **én** operation, ikke fire der kan strande halvvejs. Den gamle A-værdi sk
 - `sitemap.xml` nævner **www.webhouse.dk** og hverken webhouse.app eller wh-site
 - **en testmail sendes OG modtages** på en @webhouse.dk-adresse, og `dig MX` er uændret
 - klik-til-redigering kan gemme et felt på den nye adresse, læst tilbage fra serveren
+- **zonen sammenlignes mod filen fra trin 0** — indhold mod indhold, ikke antal mod antal
 - Turnstile: nøglen dækker allerede webhouse.dk + www.webhouse.dk
+
+## ⚠️ Den gamle maskine må IKKE slukkes bagefter
+
+`35.158.249.19` bærer **7 A-records**, ikke 2: `@`, `www`, og dertil **`osm`, `osm1`, `osm2`, `osm3`, `osm4`**.
+
+De fem osm-navne bliver stående på den maskine efter skiftet. AWS-instansen skal altså blive kørende, selvom "sitet er væk fra den". Det er præcis den slags der bliver slukket tre uger senere af en der kun husker at .dk blev flyttet.
+
+Selve skiftet rører dem ikke — kun `@` og `www` ændres, og de fem peger videre på samme IP.
 
 ## Tilbagerulning
 
-Sæt de to A-rækker tilbage til 35.158.249.19 og fjern de to AAAA. Med TTL 60 er alle tilbage inden for et minut. Certifikater og `_acme-challenge` kan blive stående — de gør ingen skade og sparer ventetid ved næste forsøg.
+```
+A @    id a938fd4bf2a3  → 35.158.249.19
+A www  id 6e74faafdf59  → 35.158.249.19
+```
+plus fjern de to AAAA. Med TTL 60 er alle tilbage inden for et minut. Certifikater og `_acme-challenge` kan blive stående — de gør ingen skade og sparer ventetid ved næste forsøg.
 
 ## Det der IKKE sker
 
@@ -105,8 +120,9 @@ Sæt de to A-rækker tilbage til 35.158.249.19 og fjern de to AAAA. Med TTL 60 e
 - `wh-site.webhouse.net` bliver ved med at svare. Den er staging-adressen og det er den Lens kører imod; redirecten rører den med vilje ikke.
 - Ingen mail-record ændres. Hverken MX, SPF, DKIM, DMARC eller verifikations-TXT.
 - Ingen af zonens øvrige 108 records ændres.
+- Den gamle AWS-maskine slukkes ikke.
 
 ## Stories
 
-- **F169.1** — forberedelse: certifikater, kanonisk redirect, runbook.
+- **F169.1** — forberedelse: certifikater, kanonisk redirect, runbook. ✔
 - **F169.2** — selve flippet. Venter på Christians GO.
